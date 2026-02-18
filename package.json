@@ -1,0 +1,39 @@
+{
+  "name": "pipelinq",
+  "version": "0.1.0",
+  "license": "AGPL-3.0-or-later",
+  "engines": {
+    "node": "^20.0.0",
+    "npm": "^10.0.0"
+  },
+  "scripts": {
+    "build": "NODE_ENV=production webpack --config webpack.config.js --progress",
+    "dev": "NODE_ENV=development webpack --config webpack.config.js --progress",
+    "watch": "NODE_ENV=development webpack --config webpack.config.js --progress --watch",
+    "lint": "eslint src",
+    "lint-fix": "npm run lint -- --fix"
+  },
+  "browserslist": [
+    "extends @nextcloud/browserslist-config"
+  ],
+  "dependencies": {
+    "@nextcloud/axios": "^2.5.0",
+    "@nextcloud/dialogs": "^3.2.0",
+    "@nextcloud/initial-state": "^2.2.0",
+    "@nextcloud/l10n": "^2.0.1",
+    "@nextcloud/router": "^2.0.1",
+    "@nextcloud/vue": "^8.12.0",
+    "pinia": "^2.1.7",
+    "vue": "^2.7.14",
+    "vue-material-design-icons": "^5.3.0",
+    "vue-router": "^3.6.5"
+  },
+  "devDependencies": {
+    "@nextcloud/browserslist-config": "^3.0.1",
+    "@nextcloud/eslint-config": "^8.4.1",
+    "@nextcloud/webpack-vue-config": "^6.0.1",
+    "css-loader": "~7.1.1",
+    "style-loader": "~4.0.0",
+    "vue-template-compiler": "^2.7.16"
+  }
+}
