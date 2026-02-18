@@ -1,5 +1,6 @@
 const path = require('path')
 const webpackConfig = require('@nextcloud/webpack-vue-config')
+const { VueLoaderPlugin } = require('vue-loader')
 
 const buildMode = process.env.NODE_ENV
 const isDev = buildMode === 'development'
@@ -28,5 +29,22 @@ webpackConfig.resolve = {
 		'@': path.resolve(__dirname, 'src'),
 	},
 }
+
+webpackConfig.module = {
+	rules: [
+		{
+			test: /\.vue$/,
+			loader: 'vue-loader',
+		},
+		{
+			test: /\.css$/,
+			use: ['style-loader', 'css-loader'],
+		},
+	],
+}
+
+webpackConfig.plugins = [
+	new VueLoaderPlugin(),
+]
 
 module.exports = webpackConfig
