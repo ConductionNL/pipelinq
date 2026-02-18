@@ -120,8 +120,8 @@ class InitializeSettings implements IRepairStep
         $this->appConfig->setValueString(Application::APP_ID, 'register', (string) $register->getId());
 
         // Create or find schemas
-        $schemaService = $this->container->get('OCA\OpenRegister\Service\SchemaService');
-        $existingSchemas = $schemaService->findAll();
+        $schemaMapper = $this->container->get('OCA\OpenRegister\Db\SchemaMapper');
+        $existingSchemas = $schemaMapper->findAll();
 
         foreach (self::SCHEMAS as $slug => $definition) {
             $configKey = $slug . '_schema';
@@ -141,7 +141,7 @@ class InitializeSettings implements IRepairStep
             }
 
             if ($found === null) {
-                $found = $schemaService->createFromArray([
+                $found = $schemaMapper->createFromArray([
                     'title' => $definition['title'],
                     'slug' => $slug,
                     'description' => $definition['description'],
