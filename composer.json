@@ -1,0 +1,27 @@
+{
+	"name": "conductionnl/pipelinq",
+	"description": "Client and request management for Nextcloud powered by OpenRegister",
+	"license": "AGPL-3.0-or-later",
+	"authors": [
+		{
+			"name": "Conduction b.v.",
+			"email": "info@conduction.nl",
+			"homepage": "https://conduction.nl"
+		}
+	],
+	"autoload": {
+		"psr-4": {
+			"OCA\\Pipelinq\\": "lib/"
+		}
+	},
+	"require": {
+		"php": "^8.1"
+	},
+	"config": {
+		"optimize-autoloader": true,
+		"sort-packages": true,
+		"platform": {
+			"php": "8.1"
+		}
+	}
+}

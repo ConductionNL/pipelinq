@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+    <id>pipelinq</id>
+    <name>Pipelinq</name>
+    <summary>Client and request management for Nextcloud powered by OpenRegister</summary>
+    <description><![CDATA[A Nextcloud app for client and request management.
+
+Pipelinq provides a lightweight client and request management interface on top of OpenRegister, supporting clients, requests (verzoeken), and contacts.
+
+- Manage clients with full CRUD support
+- Track requests as the pre-state of cases
+- Link contacts to clients
+- Multilingual (English and Dutch)
+- Thin client architecture — all data stored in OpenRegister
+
+Requires the OpenRegister app to be installed and enabled.
+    ]]></description>
+    <version>0.1.0</version>
+    <licence>agpl</licence>
+    <category>organization</category>
+    <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
+    <namespace>Pipelinq</namespace>
+    <website>https://github.com/ConductionNL/pipelinq</website>
+    <bugs>https://github.com/ConductionNL/pipelinq/issues</bugs>
+    <repository>https://github.com/ConductionNL/pipelinq</repository>
+
+    <dependencies>
+        <nextcloud min-version="28" max-version="33"/>
+        <php min-version="8.1"/>
+    </dependencies>
+
+    <repair-steps>
+        <post-migration>
+            <step>OCA\Pipelinq\Repair\InitializeSettings</step>
+        </post-migration>
+    </repair-steps>
+
+    <navigations>
+        <navigation>
+            <id>pipelinq</id>
+            <name>Pipelinq</name>
+            <route>pipelinq.dashboard.page</route>
+            <icon>app.svg</icon>
+        </navigation>
+    </navigations>
+
+    <settings>
+        <admin>OCA\Pipelinq\Settings\AdminSettings</admin>
+        <admin-section>OCA\Pipelinq\Sections\SettingsSection</admin-section>
+    </settings>
+</info>
