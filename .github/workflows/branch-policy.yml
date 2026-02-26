@@ -1,0 +1,21 @@
+name: Branch Policy
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-source-branch:
+    name: Branch Policy Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify source branch
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          if [ "$BRANCH" = "development" ] || [[ "$BRANCH" == hotfix/* ]]; then
+            echo "✅ Source branch '$BRANCH' is allowed to merge into main."
+          else
+            echo "❌ Source branch '$BRANCH' is not allowed to merge into main."
+            echo "Only 'development' and 'hotfix/*' branches can be merged into main."
+            exit 1
+          fi
