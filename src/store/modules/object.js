@@ -14,6 +14,7 @@ export const useObjectStore = defineStore('object', {
 		objectTypes: (state) => Object.keys(state.objectTypeRegistry),
 		getCollection: (state) => (type) => state.collections[type] || [],
 		getObject: (state) => (type, id) => state.objects[type]?.[id] || null,
+		getCachedObject: (state) => (type, id) => state.objects[type]?.[id] || null,
 		isLoading: (state) => (type) => state.loading[type] || false,
 		getError: (state) => (type) => state.errors[type] || null,
 		getPagination: (state) => (type) => state.pagination[type] || { total: 0, page: 1, pages: 1, limit: 20 },
@@ -65,6 +66,44 @@ export const useObjectStore = defineStore('object', {
 			return url
 		},
 
+		async _parseResponseError(response, fallbackMessage) {
+			const status = response.status
+			let message = ''
+			let fields = null
+
+			if (status === 404) {
+				message = t('pipelinq', 'The requested item was not found. It may have been deleted.')
+			} else if (status === 403) {
+				message = t('pipelinq', 'You do not have permission to perform this action.')
+			} else if (status === 422) {
+				try {
+					const data = await response.json()
+					message = data.message || t('pipelinq', 'Validation failed. Please check your input.')
+					fields = data.errors || data.validationErrors || null
+				} catch {
+					message = t('pipelinq', 'Validation failed. Please check your input.')
+				}
+			} else if (status >= 500) {
+				message = t('pipelinq', 'An unexpected server error occurred. Please try again.')
+			} else {
+				message = fallbackMessage || response.statusText || t('pipelinq', 'An unexpected error occurred.')
+			}
+
+			return { message, status, fields }
+		},
+
+		_networkError() {
+			return {
+				message: t('pipelinq', 'A network error occurred. Check your connection and try again.'),
+				status: 0,
+				fields: null,
+			}
+		},
+
+		clearError(type) {
+			this.errors[type] = null
+		},
+
 		async fetchCollection(type, params = {}) {
 			this.loading[type] = true
 			this.errors[type] = null
@@ -72,10 +111,14 @@ export const useObjectStore = defineStore('object', {
 			try {
 				const queryParams = new URLSearchParams()
 
-				if (params._limit) queryParams.set('_limit', params._limit)
-				if (params._offset !== undefined) queryParams.set('_offset', params._offset)
-				if (params._search) queryParams.set('_search', params._search)
-				if (params._order) queryParams.set('_order', JSON.stringify(params._order))
+				for (const [key, value] of Object.entries(params)) {
+					if (value === undefined || value === null || value === '') continue
+					if (key === '_order') {
+						queryParams.set(key, JSON.stringify(value))
+					} else {
+						queryParams.set(key, value)
+					}
+				}
 
 				const url = this._buildUrl(type) + (queryParams.toString() ? '?' + queryParams.toString() : '')
 
@@ -85,7 +128,9 @@ export const useObjectStore = defineStore('object', {
 				})
 
 				if (!response.ok) {
-					throw new Error(`Failed to fetch ${type}: ${response.statusText}`)
+					this.errors[type] = await this._parseResponseError(response, `Failed to fetch ${type}`)
+					console.error(`Error fetching ${type} collection:`, this.errors[type])
+					return []
 				}
 
 				const data = await response.json()
@@ -100,7 +145,9 @@ export const useObjectStore = defineStore('object', {
 
 				return this.collections[type]
 			} catch (error) {
-				this.errors[type] = error.message
+				this.errors[type] = error.name === 'TypeError'
+					? this._networkError()
+					: { message: error.message, status: null, fields: null }
 				console.error(`Error fetching ${type} collection:`, error)
 				return []
 			} finally {
@@ -121,7 +168,9 @@ export const useObjectStore = defineStore('object', {
 				})
 
 				if (!response.ok) {
-					throw new Error(`Failed to fetch ${type}/${id}: ${response.statusText}`)
+					this.errors[type] = await this._parseResponseError(response, `Failed to fetch ${type}/${id}`)
+					console.error(`Error fetching ${type}/${id}:`, this.errors[type])
+					return null
 				}
 
 				const data = await response.json()
@@ -133,7 +182,9 @@ export const useObjectStore = defineStore('object', {
 
 				return data
 			} catch (error) {
-				this.errors[type] = error.message
+				this.errors[type] = error.name === 'TypeError'
+					? this._networkError()
+					: { message: error.message, status: null, fields: null }
 				console.error(`Error fetching ${type}/${id}:`, error)
 				return null
 			} finally {
@@ -157,7 +208,12 @@ export const useObjectStore = defineStore('object', {
 				})
 
 				if (!response.ok) {
-					throw new Error(`Failed to ${isUpdate ? 'update' : 'create'} ${type}: ${response.statusText}`)
+					this.errors[type] = await this._parseResponseError(
+						response,
+						`Failed to ${isUpdate ? 'update' : 'create'} ${type}`,
+					)
+					console.error(`Error saving ${type}:`, this.errors[type])
+					return null
 				}
 
 				const data = await response.json()
@@ -170,7 +226,9 @@ export const useObjectStore = defineStore('object', {
 
 				return data
 			} catch (error) {
-				this.errors[type] = error.message
+				this.errors[type] = error.name === 'TypeError'
+					? this._networkError()
+					: { message: error.message, status: null, fields: null }
 				console.error(`Error saving ${type}:`, error)
 				return null
 			} finally {
@@ -191,7 +249,9 @@ export const useObjectStore = defineStore('object', {
 				})
 
 				if (!response.ok) {
-					throw new Error(`Failed to delete ${type}/${id}: ${response.statusText}`)
+					this.errors[type] = await this._parseResponseError(response, `Failed to delete ${type}/${id}`)
+					console.error(`Error deleting ${type}/${id}:`, this.errors[type])
+					return false
 				}
 
 				if (this.objects[type]) {
@@ -203,12 +263,54 @@ export const useObjectStore = defineStore('object', {
 
 				return true
 			} catch (error) {
-				this.errors[type] = error.message
+				this.errors[type] = error.name === 'TypeError'
+					? this._networkError()
+					: { message: error.message, status: null, fields: null }
 				console.error(`Error deleting ${type}/${id}:`, error)
 				return false
 			} finally {
 				this.loading[type] = false
 			}
+		},
+
+		async resolveReferences(type, ids) {
+			if (!ids || ids.length === 0) return {}
+
+			const uniqueIds = [...new Set(ids.filter(Boolean))]
+			const result = {}
+			const toFetch = []
+
+			for (const id of uniqueIds) {
+				const cached = this.objects[type]?.[id]
+				if (cached) {
+					result[id] = cached
+				} else {
+					toFetch.push(id)
+				}
+			}
+
+			if (toFetch.length > 0) {
+				const fetches = toFetch.map(async (id) => {
+					try {
+						const url = this._buildUrl(type, id)
+						const response = await fetch(url, {
+							method: 'GET',
+							headers: this._getHeaders(),
+						})
+						if (response.ok) {
+							const data = await response.json()
+							if (!this.objects[type]) this.objects[type] = {}
+							this.objects[type][id] = data
+							result[id] = data
+						}
+					} catch {
+						// Non-blocking — leave unresolved
+					}
+				})
+				await Promise.all(fetches)
+			}
+
+			return result
 		},
 
 		setSearchTerm(type, term) {

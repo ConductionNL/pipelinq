@@ -15,6 +15,12 @@ import ClientList from './views/clients/ClientList.vue'
 import ClientDetail from './views/clients/ClientDetail.vue'
 import RequestList from './views/requests/RequestList.vue'
 import RequestDetail from './views/requests/RequestDetail.vue'
+import ContactList from './views/contacts/ContactList.vue'
+import ContactDetail from './views/contacts/ContactDetail.vue'
+import LeadList from './views/leads/LeadList.vue'
+import LeadDetail from './views/leads/LeadDetail.vue'
+import PipelineBoard from './views/pipeline/PipelineBoard.vue'
+import MyWork from './views/MyWork.vue'
 import { initializeStores } from './store/store.js'
 
 export default {
@@ -28,6 +34,12 @@ export default {
 		ClientDetail,
 		RequestList,
 		RequestDetail,
+		ContactList,
+		ContactDetail,
+		LeadList,
+		LeadDetail,
+		PipelineBoard,
+		MyWork,
 	},
 	data() {
 		return {
@@ -47,6 +59,18 @@ export default {
 				return 'RequestList'
 			case 'request-detail':
 				return 'RequestDetail'
+			case 'contacts':
+				return 'ContactList'
+			case 'contact-detail':
+				return 'ContactDetail'
+			case 'leads':
+				return 'LeadList'
+			case 'lead-detail':
+				return 'LeadDetail'
+			case 'pipeline':
+				return 'PipelineBoard'
+			case 'my-work':
+				return 'MyWork'
 			default:
 				return 'Dashboard'
 			}
@@ -57,6 +81,12 @@ export default {
 			}
 			if (this.currentRoute === 'request-detail' && this.currentId) {
 				return { requestId: this.currentId }
+			}
+			if (this.currentRoute === 'contact-detail' && this.currentId) {
+				return { contactId: this.currentId }
+			}
+			if (this.currentRoute === 'lead-detail' && this.currentId) {
+				return { leadId: this.currentId }
 			}
 			return {}
 		},
@@ -91,6 +121,12 @@ export default {
 				}
 				if (parts[0] === 'requests' && parts[1]) {
 					this.currentRoute = 'request-detail'
+				}
+				if (parts[0] === 'contacts' && parts[1]) {
+					this.currentRoute = 'contact-detail'
+				}
+				if (parts[0] === 'leads' && parts[1]) {
+					this.currentRoute = 'lead-detail'
 				}
 			}
 		},
