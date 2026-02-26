@@ -1,0 +1,206 @@
+{
+  "change": "mvp-foundation",
+  "project": "pipelinq",
+  "created": "2026-02-25",
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Create pipelinq_register.json",
+      "spec_ref": "specs/register-config/spec.md#REQ-RC-001",
+      "status": "completed",
+      "files_likely_affected": [
+        "pipelinq/lib/Settings/pipelinq_register.json"
+      ],
+      "acceptance_criteria": [
+        "File is valid OpenAPI 3.0.0 JSON",
+        "Defines register with slug 'pipelinq'",
+        "Defines 5 schemas: client, contact, lead, request, pipeline",
+        "Lead schema has @type schema:Demand with all properties from ARCHITECTURE.md",
+        "Pipeline schema has @type schema:ItemList with stages array",
+        "Client schema has @type schema:Person/Organization"
+      ],
+      "context_files": [
+        "pipelinq/docs/ARCHITECTURE.md",
+        "pipelinq/openspec/specs/openregister-integration/spec.md",
+        "opencatalogi/lib/Settings/publication_register.json"
+      ]
+    },
+    {
+      "id": "2.1",
+      "title": "Rewrite repair step to use ConfigurationService",
+      "spec_ref": "specs/register-config/spec.md#REQ-RC-002",
+      "status": "completed",
+      "depends_on": ["1.1"],
+      "files_likely_affected": [
+        "pipelinq/lib/Repair/InitializeSettings.php"
+      ],
+      "acceptance_criteria": [
+        "Calls ConfigurationService::importFromApp('pipelinq')",
+        "Stores register ID and all 5 schema IDs in IAppConfig",
+        "Handles missing OpenRegister gracefully",
+        "Preserves existing data from old 3-schema setup"
+      ],
+      "context_files": [
+        "pipelinq/lib/Repair/InitializeSettings.php",
+        "pipelinq/lib/Settings/pipelinq_register.json"
+      ]
+    },
+    {
+      "id": "2.2",
+      "title": "Update SettingsService to include lead and pipeline schema keys",
+      "spec_ref": "specs/register-config/spec.md#REQ-RC-003",
+      "status": "completed",
+      "depends_on": ["2.1"],
+      "files_likely_affected": [
+        "pipelinq/lib/Service/SettingsService.php"
+      ],
+      "acceptance_criteria": [
+        "Settings response includes lead_schema and pipeline_schema keys",
+        "Existing client_schema, request_schema, contact_schema keys preserved"
+      ],
+      "context_files": [
+        "pipelinq/lib/Service/SettingsService.php"
+      ]
+    },
+    {
+      "id": "3.1",
+      "title": "Create PipelinqSection.php admin settings section",
+      "spec_ref": "specs/admin-settings/spec.md#REQ-AS-001",
+      "status": "completed",
+      "files_likely_affected": [
+        "pipelinq/lib/Sections/PipelinqSection.php"
+      ],
+      "acceptance_criteria": [
+        "Pipelinq section appears in Administration sidebar",
+        "Uses IURLGenerator for icon path"
+      ],
+      "context_files": []
+    },
+    {
+      "id": "3.2",
+      "title": "Create PipelinqAdmin.php admin settings page",
+      "spec_ref": "specs/admin-settings/spec.md#REQ-AS-001",
+      "status": "completed",
+      "depends_on": ["3.1"],
+      "files_likely_affected": [
+        "pipelinq/lib/Settings/PipelinqAdmin.php"
+      ],
+      "acceptance_criteria": [
+        "Renders admin template with initial state",
+        "Passes register ID and schema IDs to template",
+        "Only accessible by admins"
+      ],
+      "context_files": []
+    },
+    {
+      "id": "3.3",
+      "title": "Create admin re-import route and controller action",
+      "spec_ref": "specs/admin-settings/spec.md#REQ-AS-003",
+      "status": "completed",
+      "depends_on": ["2.1"],
+      "files_likely_affected": [
+        "pipelinq/appinfo/routes.php",
+        "pipelinq/lib/Controller/SettingsController.php"
+      ],
+      "acceptance_criteria": [
+        "POST /api/settings/reimport route exists",
+        "Calls ConfigurationService::importFromApp('pipelinq')",
+        "Returns updated register/schema IDs on success",
+        "Returns error message on failure"
+      ],
+      "context_files": [
+        "pipelinq/appinfo/routes.php",
+        "pipelinq/lib/Controller/SettingsController.php"
+      ]
+    },
+    {
+      "id": "3.4",
+      "title": "Register admin settings in info.xml",
+      "spec_ref": "specs/admin-settings/spec.md#REQ-AS-001",
+      "status": "completed",
+      "depends_on": ["3.1", "3.2"],
+      "files_likely_affected": [
+        "pipelinq/appinfo/info.xml"
+      ],
+      "acceptance_criteria": [
+        "Admin settings section and page registered via info.xml settings element"
+      ],
+      "context_files": [
+        "pipelinq/appinfo/info.xml"
+      ]
+    },
+    {
+      "id": "4.1",
+      "title": "Register lead and pipeline types in store.js",
+      "spec_ref": "specs/register-config/spec.md#REQ-RC-003",
+      "status": "completed",
+      "depends_on": ["2.2"],
+      "files_likely_affected": [
+        "pipelinq/src/store/store.js"
+      ],
+      "acceptance_criteria": [
+        "initializeStores() registers lead and pipeline types",
+        "Missing schema IDs handled gracefully (skip, don't crash)",
+        "Existing client/request/contact registration unchanged"
+      ],
+      "context_files": [
+        "pipelinq/src/store/store.js"
+      ]
+    },
+    {
+      "id": "5.1",
+      "title": "Create admin.php template",
+      "spec_ref": "specs/admin-settings/spec.md#REQ-AS-002",
+      "status": "completed",
+      "depends_on": ["3.2"],
+      "files_likely_affected": [
+        "pipelinq/templates/admin.php"
+      ],
+      "acceptance_criteria": [
+        "Template has div with id pipelinq-admin for Vue mounting",
+        "Passes initial state as data attributes"
+      ],
+      "context_files": []
+    },
+    {
+      "id": "5.2",
+      "title": "Create AdminSettings.vue component",
+      "spec_ref": "specs/admin-settings/spec.md#REQ-AS-002,REQ-AS-003",
+      "status": "completed",
+      "depends_on": ["5.1", "3.3"],
+      "files_likely_affected": [
+        "pipelinq/src/views/admin/AdminSettings.vue"
+      ],
+      "acceptance_criteria": [
+        "Shows register name, ID, and 'Connected' status when configured",
+        "Lists all 5 schemas with names and IDs",
+        "Shows 'Not configured' status when register missing",
+        "Re-import button POSTs to /api/settings/reimport",
+        "Shows success/error notification after re-import"
+      ],
+      "context_files": [
+        "pipelinq/openspec/changes/mvp-foundation/specs/admin-settings/spec.md"
+      ]
+    },
+    {
+      "id": "5.3",
+      "title": "Wire up settings.js entry point and webpack config",
+      "spec_ref": "specs/admin-settings/spec.md#REQ-AS-001",
+      "status": "completed",
+      "depends_on": ["5.2"],
+      "files_likely_affected": [
+        "pipelinq/src/settings.js",
+        "pipelinq/webpack.config.js"
+      ],
+      "acceptance_criteria": [
+        "settings.js mounts AdminSettings Vue component on #pipelinq-admin",
+        "Webpack builds the settings entry point",
+        "Admin settings page loads and renders correctly"
+      ],
+      "context_files": [
+        "pipelinq/src/settings.js",
+        "pipelinq/webpack.config.js"
+      ]
+    }
+  ]
+}

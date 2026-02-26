@@ -1,0 +1,52 @@
+schema: conduction
+
+context: |
+  Project: Pipelinq
+  Repo: ConductionNL/pipelinq
+  Type: Nextcloud App (PHP backend + Vue 2 frontend)
+  Description: Client Relationship Management (CRM) for Nextcloud — manages clients, contacts, and requests
+  Key components: Clients (person/org), Contact persons, Requests (verzoeken), Dashboard
+  Database: PostgreSQL (via OpenRegister's ObjectService)
+  Mount path: /var/www/html/custom_apps/pipelinq
+
+  Standards:
+    Primary: Schema.org + vCard (RFC 6350) for data model
+    Semantic: Schema.org JSON-LD type annotations
+    API mapping: VNG Klantinteracties + Verzoeken (Dutch government)
+    Pattern: Industry CRM consensus (Account/Contact/Deal)
+
+  Architecture:
+    Pattern: Thin client — Pipelinq owns no database tables
+    Data layer: OpenRegister (JSON object storage with schema validation)
+    Frontend: Vue 2.7 + Pinia stores querying OpenRegister API directly
+    Backend: Minimal — SettingsController + ConfigurationService for register setup
+    Nextcloud reuse: Contacts (IManager), Calendar (IManager), Files (IRootFolder),
+                     Activity (IManager), Talk (IBroker), Comments (ICommentsManager)
+
+  Sister app: Procest (case management) — receives cases via request-to-case conversion
+  Shared specs: See ../openspec/specs/ for cross-project conventions
+  Project guidelines: See ../project.md for workspace-wide standards
+  Architecture: See docs/ARCHITECTURE.md for standards research and data model decisions
+  Features: See docs/FEATURES.md for competitive analysis and feature roadmap
+
+rules:
+  proposal:
+    - Reference shared nextcloud-app spec for app structure requirements
+    - Reference docs/ARCHITECTURE.md for data model and standards decisions
+    - Consider impact on Procest (request-to-case bridge)
+    - Reference docs/FEATURES.md for feature tier (MVP/V1/Enterprise)
+  specs:
+    - Use Schema.org type annotations for all entities (e.g., schema:Person, schema:Demand)
+    - Reference vCard (RFC 6350) field conventions for contact properties
+    - Include VNG mapping column where applicable (Partij, Verzoek, etc.)
+    - Specify which Nextcloud OCP interfaces are used for integration features
+    - Reference FEATURES.md tier for each requirement (MVP/V1/Enterprise)
+  design:
+    - Uses OpenRegister API directly from frontend (no own backend CRUD)
+    - Register config in lib/Settings/pipelinq_register.json (OpenAPI 3.0.0 format)
+    - Imported via ConfigurationService::importFromApp() in repair step
+    - Reference Nextcloud OCP interfaces for all platform integrations
+  tasks:
+    - Tag tasks with feature tier (MVP/V1/Enterprise)
+    - Test with OpenRegister to verify schema validation works
+    - Verify Nextcloud integration features with actual OCP interfaces
