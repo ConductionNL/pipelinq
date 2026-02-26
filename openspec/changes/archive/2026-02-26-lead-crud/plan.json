@@ -1,0 +1,94 @@
+{
+  "change": "lead-crud",
+  "project": "pipelinq",
+  "repo": "ConductionNL/pipelinq",
+  "created": "2026-02-25",
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Create LeadForm.vue with validation and pipeline assignment",
+      "spec_ref": "specs/lead-crud/spec.md#REQ-LC-001, #REQ-LC-002, #REQ-LC-006",
+      "status": "completed",
+      "files_likely_affected": [
+        "pipelinq/src/views/leads/LeadForm.vue"
+      ],
+      "acceptance_criteria": [
+        "Title (required), description, value, probability, source, priority, expectedCloseDate, client, pipeline, and stage fields present",
+        "Validation: title required, value >= 0, probability 0-100",
+        "Pipeline dropdown filters to lead-compatible pipelines (entityType lead or both)",
+        "Stage dropdown shows stages from selected pipeline only, resets on pipeline change",
+        "Auto-populates default pipeline and first non-closed stage on create"
+      ],
+      "context_files": [
+        "pipelinq/src/views/clients/ClientDetail.vue",
+        "pipelinq/src/store/modules/object.js",
+        "pipelinq/lib/Settings/pipelinq_register.json"
+      ]
+    },
+    {
+      "id": "2.1",
+      "title": "Create LeadList.vue with search, filters, sort, and pagination",
+      "spec_ref": "specs/lead-crud/spec.md#REQ-LC-003",
+      "status": "completed",
+      "files_likely_affected": [
+        "pipelinq/src/views/leads/LeadList.vue"
+      ],
+      "acceptance_criteria": [
+        "Table columns: Title, Value (EUR formatted), Stage, Priority, Source, Expected Close",
+        "Search by title with 300ms debounce",
+        "Stage and source filter dropdowns",
+        "Click-to-sort on value, priority, expectedCloseDate columns",
+        "Pagination: 20 per page with page controls",
+        "Empty state with 'Create first lead' button",
+        "Rows clickable to navigate to lead detail"
+      ],
+      "context_files": [
+        "pipelinq/src/views/clients/ClientList.vue",
+        "pipelinq/src/store/modules/object.js"
+      ]
+    },
+    {
+      "id": "3.1",
+      "title": "Create LeadDetail.vue with info display, pipeline progress, and actions",
+      "spec_ref": "specs/lead-crud/spec.md#REQ-LC-004",
+      "status": "completed",
+      "depends_on": ["1.1"],
+      "files_likely_affected": [
+        "pipelinq/src/views/leads/LeadDetail.vue"
+      ],
+      "acceptance_criteria": [
+        "Info grid with all lead properties, value as 'EUR X,XXX', probability as 'X%'",
+        "Pipeline progress indicator showing completed/current/future stages",
+        "Client name as clickable link to client detail, 'No client linked' when empty",
+        "Contact name and role displayed",
+        "Edit button toggles to LeadForm, Delete button with NcDialog confirmation",
+        "Navigate back to lead list after delete"
+      ],
+      "context_files": [
+        "pipelinq/src/views/clients/ClientDetail.vue",
+        "pipelinq/src/views/leads/LeadForm.vue"
+      ]
+    },
+    {
+      "id": "4.1",
+      "title": "Add lead routing and navigation to App.vue and MainMenu.vue",
+      "spec_ref": "specs/lead-crud/spec.md#REQ-LC-005",
+      "status": "completed",
+      "depends_on": ["2.1", "3.1"],
+      "files_likely_affected": [
+        "pipelinq/src/App.vue",
+        "pipelinq/src/navigation/MainMenu.vue"
+      ],
+      "acceptance_criteria": [
+        "'Leads' menu item appears between Contacts and Requests in MainMenu",
+        "#/leads renders LeadList",
+        "#/leads/{id} renders LeadDetail with lead ID prop",
+        "Leads menu item highlights on leads and lead-detail routes"
+      ],
+      "context_files": [
+        "pipelinq/src/App.vue",
+        "pipelinq/src/navigation/MainMenu.vue"
+      ]
+    }
+  ]
+}
