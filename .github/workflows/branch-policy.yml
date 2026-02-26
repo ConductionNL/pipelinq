@@ -2,7 +2,7 @@ name: Branch Policy
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, beta, development]
 
 jobs:
   check-source-branch:
@@ -11,11 +11,44 @@ jobs:
     steps:
       - name: Verify source branch
         run: |
-          BRANCH="${{ github.head_ref }}"
-          if [ "$BRANCH" = "development" ] || [[ "$BRANCH" == hotfix/* ]]; then
-            echo "✅ Source branch '$BRANCH' is allowed to merge into main."
-          else
-            echo "❌ Source branch '$BRANCH' is not allowed to merge into main."
-            echo "Only 'development' and 'hotfix/*' branches can be merged into main."
-            exit 1
+          SOURCE="${{ github.head_ref }}"
+          TARGET="${{ github.base_ref }}"
+
+          # hotfix/* is always allowed
+          if [[ "$SOURCE" == hotfix/* ]]; then
+            echo "✅ Hotfix branch '$SOURCE' is allowed to merge into '$TARGET'."
+            exit 0
           fi
+
+          case "$TARGET" in
+            main)
+              if [ "$SOURCE" = "beta" ]; then
+                echo "✅ Branch '$SOURCE' is allowed to merge into main."
+              else
+                echo "❌ Branch '$SOURCE' is not allowed to merge into main."
+                echo "Only 'beta' and 'hotfix/*' branches can be merged into main."
+                exit 1
+              fi
+              ;;
+            beta)
+              if [ "$SOURCE" = "development" ]; then
+                echo "✅ Branch '$SOURCE' is allowed to merge into beta."
+              else
+                echo "❌ Branch '$SOURCE' is not allowed to merge into beta."
+                echo "Only 'development' and 'hotfix/*' branches can be merged into beta."
+                exit 1
+              fi
+              ;;
+            development)
+              if [[ "$SOURCE" == feature/* ]]; then
+                echo "✅ Branch '$SOURCE' is allowed to merge into development."
+              else
+                echo "❌ Branch '$SOURCE' is not allowed to merge into development."
+                echo "Only 'feature/*' and 'hotfix/*' branches can be merged into development."
+                exit 1
+              fi
+              ;;
+            *)
+              echo "✅ No branch policy for target '$TARGET'."
+              ;;
+          esac

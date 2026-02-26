@@ -2,7 +2,7 @@ name: Code Quality
 
 on:
   pull_request:
-    branches: [main, master, development]
+    branches: [main, beta, development]
 
 concurrency:
   group: quality-${{ github.head_ref || github.ref }}
