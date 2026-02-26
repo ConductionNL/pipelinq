@@ -17,7 +17,7 @@ Pipelinq provides a lightweight client and request management interface on top o
 Requires the OpenRegister app to be installed and enabled.
     ]]></description>
     <version>0.1.0</version>
-    <licence>agpl</licence>
+    <licence>EUPL-1.2</licence>
     <category>organization</category>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Pipelinq</namespace>

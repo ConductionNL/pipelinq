@@ -1,7 +1,7 @@
 {
 	"name": "conductionnl/pipelinq",
 	"description": "Client and request management for Nextcloud powered by OpenRegister",
-	"license": "AGPL-3.0-or-later",
+	"license": "EUPL-1.2",
 	"authors": [
 		{
 			"name": "Conduction b.v.",
