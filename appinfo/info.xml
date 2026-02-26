@@ -49,4 +49,22 @@ Requires the OpenRegister app to be installed and enabled.
         <admin>OCA\Pipelinq\Settings\AdminSettings</admin>
         <admin-section>OCA\Pipelinq\Sections\SettingsSection</admin-section>
     </settings>
+
+    <activity>
+        <providers>
+            <provider>OCA\Pipelinq\Activity\Provider</provider>
+        </providers>
+        <settings>
+            <setting>OCA\Pipelinq\Activity\Setting\AssignmentSetting</setting>
+            <setting>OCA\Pipelinq\Activity\Setting\StageStatusSetting</setting>
+            <setting>OCA\Pipelinq\Activity\Setting\NoteSetting</setting>
+        </settings>
+        <filters>
+            <filter>OCA\Pipelinq\Activity\Filter</filter>
+        </filters>
+    </activity>
+
+    <notification>
+        <service>OCA\Pipelinq\Notification\Notifier</service>
+    </notification>
 </info>

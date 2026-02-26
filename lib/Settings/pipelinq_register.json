@@ -1,0 +1,368 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Pipelinq CRM Register",
+    "description": "Client Relationship Management register for the Pipelinq Nextcloud app. Manages clients, contacts, leads, requests, and pipelines.",
+    "version": "1.0.0"
+  },
+  "x-openregister": {
+    "type": "application",
+    "app": "pipelinq",
+    "openregister": "^v0.2.10",
+    "description": "CRM data model — thin client on OpenRegister, no own database tables"
+  },
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "slug": "pipelinq",
+        "title": "Pipelinq",
+        "version": "1.0.0",
+        "description": "Client Relationship Management register for Pipelinq — manages clients, contacts, leads, requests, and pipelines using Schema.org and vCard (RFC 6350) standards.",
+        "published": "2026-02-25T00:00:00+00:00",
+        "schemas": [
+          "client",
+          "contact",
+          "lead",
+          "request",
+          "pipeline"
+        ],
+        "tablePrefix": "",
+        "folder": "Open Registers/Pipelinq"
+      }
+    },
+    "schemas": {
+      "client": {
+        "slug": "client",
+        "title": "Client",
+        "version": "1.0.0",
+        "summary": "A client (person or organization) in the CRM",
+        "description": "Represents a client entity — either a natural person or an organization. Mapped to Schema.org Person/Organization and vCard (RFC 6350) field conventions. Clients are the primary relationship entity in Pipelinq.",
+        "@type": "schema:Person",
+        "required": [
+          "name",
+          "type"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Full name of the person or organization (schema:name / vCard FN)",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "description": "Entity type — person or organization (maps to schema:Person or schema:Organization)",
+            "enum": ["person", "organization"],
+            "default": "person"
+          },
+          "email": {
+            "type": "string",
+            "description": "Primary email address (schema:email / vCard EMAIL)",
+            "format": "email"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Primary phone number (schema:telephone / vCard TEL)"
+          },
+          "address": {
+            "type": "string",
+            "description": "Postal address (schema:address)"
+          },
+          "website": {
+            "type": "string",
+            "description": "Website URL (schema:url)",
+            "format": "uri"
+          },
+          "industry": {
+            "type": "string",
+            "description": "Industry or sector (schema:industry)"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Free-text notes about the client (schema:description)"
+          },
+          "contactsUid": {
+            "type": "string",
+            "description": "Nextcloud Contacts UID linking this client to a vCard in the user's addressbook"
+          }
+        }
+      },
+      "contact": {
+        "slug": "contact",
+        "title": "Contact",
+        "version": "1.0.0",
+        "summary": "A contact person linked to a client",
+        "description": "Represents a contact person associated with a client organization. Properties align with vCard (RFC 6350) field conventions.",
+        "@type": "schema:ContactPoint",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Full name of the contact person (vCard FN)",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "email": {
+            "type": "string",
+            "description": "Email address (vCard EMAIL)",
+            "format": "email"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Phone number (vCard TEL)"
+          },
+          "role": {
+            "type": "string",
+            "description": "Job title or role within the organization (vCard ROLE)"
+          },
+          "client": {
+            "type": "string",
+            "description": "UUID reference to the parent client object",
+            "format": "uuid"
+          },
+          "contactsUid": {
+            "type": "string",
+            "description": "Nextcloud Contacts UID linking this contact to a vCard in the user's addressbook"
+          }
+        }
+      },
+      "lead": {
+        "slug": "lead",
+        "title": "Lead",
+        "version": "1.0.0",
+        "summary": "A sales lead or business opportunity",
+        "description": "Represents a sales lead — a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.",
+        "@type": "schema:Demand",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Lead title / opportunity name (schema:name)",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "client": {
+            "type": "string",
+            "description": "UUID reference to the associated client",
+            "format": "uuid"
+          },
+          "contact": {
+            "type": "string",
+            "description": "UUID reference to the associated contact person",
+            "format": "uuid"
+          },
+          "source": {
+            "type": "string",
+            "description": "Origin of the lead (e.g., website, referral, cold-call, advertisement, event)"
+          },
+          "value": {
+            "type": "number",
+            "description": "Estimated deal value in euros (schema:price)",
+            "default": 0
+          },
+          "probability": {
+            "type": "integer",
+            "description": "Estimated win probability as percentage (0-100)",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "expectedCloseDate": {
+            "type": "string",
+            "description": "Expected close date for the opportunity",
+            "format": "date"
+          },
+          "assignee": {
+            "type": "string",
+            "description": "Nextcloud user UID of the assigned sales representative"
+          },
+          "priority": {
+            "type": "string",
+            "description": "Lead priority level",
+            "enum": ["low", "normal", "high", "urgent"],
+            "default": "normal"
+          },
+          "pipeline": {
+            "type": "string",
+            "description": "UUID reference to the pipeline this lead is tracked in",
+            "format": "uuid"
+          },
+          "stage": {
+            "type": "string",
+            "description": "Current pipeline stage name"
+          },
+          "stageOrder": {
+            "type": "integer",
+            "description": "Numeric position of the current stage in the pipeline"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Free-text notes about the lead"
+          },
+          "status": {
+            "type": "string",
+            "description": "Lifecycle status of the lead",
+            "enum": ["open", "won", "lost"],
+            "default": "open"
+          }
+        }
+      },
+      "request": {
+        "slug": "request",
+        "title": "Request",
+        "version": "1.0.0",
+        "summary": "A service request (verzoek) — the pre-state of a case",
+        "description": "Represents a client service request that may be converted to a case in Procest. Tracks status lifecycle, priority, assignment, and optional pipeline placement.",
+        "@type": "schema:Demand",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Request title",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the request"
+          },
+          "client": {
+            "type": "string",
+            "description": "UUID reference to the associated client",
+            "format": "uuid"
+          },
+          "contact": {
+            "type": "string",
+            "description": "UUID reference to the associated contact person",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status in the request lifecycle",
+            "enum": ["new", "in_progress", "completed", "rejected", "converted"],
+            "default": "new"
+          },
+          "priority": {
+            "type": "string",
+            "description": "Request priority level",
+            "enum": ["low", "normal", "high", "urgent"],
+            "default": "normal"
+          },
+          "assignee": {
+            "type": "string",
+            "description": "Nextcloud user UID of the assigned handler"
+          },
+          "requestedAt": {
+            "type": "string",
+            "description": "Date and time the request was submitted",
+            "format": "date-time"
+          },
+          "category": {
+            "type": "string",
+            "description": "Request category for classification"
+          },
+          "pipeline": {
+            "type": "string",
+            "description": "UUID reference to the pipeline this request is tracked in",
+            "format": "uuid"
+          },
+          "stage": {
+            "type": "string",
+            "description": "Current pipeline stage name"
+          },
+          "stageOrder": {
+            "type": "integer",
+            "description": "Numeric position of the current stage in the pipeline"
+          },
+          "channel": {
+            "type": "string",
+            "description": "Intake channel for the request (e.g., phone, email, website)"
+          },
+          "caseReference": {
+            "type": "string",
+            "description": "UUID reference to the converted Procest case",
+            "format": "uuid"
+          }
+        }
+      },
+      "pipeline": {
+        "slug": "pipeline",
+        "title": "Pipeline",
+        "version": "1.0.0",
+        "summary": "A pipeline defining stages for tracking leads or requests",
+        "description": "Represents a sales or service pipeline — an ordered list of stages through which leads or requests progress. Each pipeline targets a specific entity type (lead, request, or both). Mapped to Schema.org ItemList.",
+        "@type": "schema:ItemList",
+        "required": [
+          "title",
+          "entityType",
+          "stages"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Pipeline name (e.g., 'Sales Pipeline', 'Service Pipeline')",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the pipeline's purpose"
+          },
+          "entityType": {
+            "type": "string",
+            "description": "Which entity types this pipeline tracks",
+            "enum": ["lead", "request", "both"]
+          },
+          "stages": {
+            "type": "array",
+            "description": "Ordered list of pipeline stages (schema:ItemListElement)",
+            "items": {
+              "type": "object",
+              "required": ["name", "order"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Stage name (e.g., 'Prospecting', 'Qualification')"
+                },
+                "order": {
+                  "type": "integer",
+                  "description": "Display order of the stage (1-based)"
+                },
+                "probability": {
+                  "type": "integer",
+                  "description": "Default win probability percentage for this stage (0-100)",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "isClosed": {
+                  "type": "boolean",
+                  "description": "Whether this stage represents a closed/terminal state",
+                  "default": false
+                },
+                "isWon": {
+                  "type": "boolean",
+                  "description": "Whether this closed stage represents a won/successful outcome. Only valid when isClosed is true.",
+                  "default": false
+                },
+                "color": {
+                  "type": "string",
+                  "description": "CSS hex color for the stage (e.g., '#10B981')"
+                }
+              }
+            }
+          },
+          "isDefault": {
+            "type": "boolean",
+            "description": "Whether this is the default pipeline for its entity type",
+            "default": false
+          }
+        }
+      }
+    }
+  }
+}
