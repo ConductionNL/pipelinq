@@ -11,7 +11,9 @@
     "dev": "NODE_ENV=development webpack --config webpack.config.js --progress",
     "watch": "NODE_ENV=development webpack --config webpack.config.js --progress --watch",
     "lint": "eslint src",
-    "lint-fix": "npm run lint -- --fix"
+    "lint-fix": "npm run lint -- --fix",
+    "stylelint": "stylelint src/**/*.vue src/**/*.scss src/**/*.css",
+    "stylelint-fix": "stylelint src/**/*.vue src/**/*.scss src/**/*.css --fix"
   },
   "browserslist": [
     "extends @nextcloud/browserslist-config"
@@ -26,14 +28,22 @@
     "pinia": "^2.1.7",
     "vue": "^2.7.14",
     "vue-material-design-icons": "^5.3.0",
-    "vue-router": "^3.6.5"
+    "vue-router": "^3.6.5",
+    "vuedraggable": "^2.24.3"
   },
   "devDependencies": {
+    "@eslint/config-helpers": "^0.4.2",
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.39.1",
     "@nextcloud/browserslist-config": "^3.0.1",
     "@nextcloud/eslint-config": "^8.4.1",
+    "@nextcloud/stylelint-config": "^2.4.0",
     "@nextcloud/webpack-vue-config": "^6.0.1",
     "css-loader": "~7.1.1",
+    "eslint": "^8.56.0",
+    "eslint-import-resolver-alias": "^1.1.2",
     "style-loader": "~4.0.0",
+    "stylelint": "^15.11.0",
     "vue-loader": "^15.11.1 <16.0.0",
     "vue-template-compiler": "^2.7.16",
     "webpack": "^5.94.0",
