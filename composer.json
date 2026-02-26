@@ -14,8 +14,33 @@
 			"OCA\\Pipelinq\\": "lib/"
 		}
 	},
+	"scripts": {
+		"lint": "find . -name \\*.php -not -path './vendor/*' -not -path './build/*' -print0 | xargs -0 -n1 php -l",
+		"cs:check": "./vendor/bin/phpcs --standard=phpcs.xml",
+		"cs:fix": "./vendor/bin/phpcbf --standard=phpcs.xml",
+		"phpcs": "./vendor/bin/phpcs --standard=phpcs.xml",
+		"phpcs:fix": "./vendor/bin/phpcbf --standard=phpcs.xml",
+		"phpmd": "phpmd lib text phpmd.xml || echo 'PHPMD not installed, skipping...'",
+		"phpmetrics": "./vendor/bin/phpmetrics --report-html=phpmetrics lib/",
+		"phpmetrics:violations": "./vendor/bin/phpmetrics --report-violations=phpmetrics/violations.xml lib/",
+		"test:unit": "./vendor/bin/phpunit --colors=always || echo 'Tests require Nextcloud environment, skipping...'",
+		"check": [
+			"@lint",
+			"@phpcs"
+		],
+		"fix": [
+			"@cs:fix"
+		]
+	},
 	"require": {
 		"php": "^8.1"
+	},
+	"require-dev": {
+		"nextcloud/ocp": "^31.0",
+		"phpmd/phpmd": "^2.15",
+		"phpmetrics/phpmetrics": "^2.8",
+		"phpunit/phpunit": "^10.5",
+		"squizlabs/php_codesniffer": "^3.9"
 	},
 	"config": {
 		"optimize-autoloader": true,
