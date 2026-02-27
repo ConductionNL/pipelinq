@@ -39,7 +39,8 @@
 			</NcEmptyContent>
 		</div>
 
-		<table v-else class="contact-list__table">
+		<div v-else class="viewTableContainer">
+			<table class="viewTable">
 			<thead>
 				<tr>
 					<th>{{ t('pipelinq', 'Name') }}</th>
@@ -52,7 +53,7 @@
 				<tr
 					v-for="contact in contacts"
 					:key="contact.id"
-					class="contact-list__row"
+					class="viewTableRow"
 					@click="openContact(contact.id)">
 					<td>{{ contact.name || '-' }}</td>
 					<td>{{ contact.role || '-' }}</td>
@@ -67,6 +68,7 @@
 				</tr>
 			</tbody>
 		</table>
+	</div>
 
 		<div v-if="pagination.pages > 1" class="contact-list__pagination">
 			<NcButton
@@ -203,23 +205,40 @@ export default {
 	max-width: 400px;
 }
 
-.contact-list__table {
+.viewTableContainer {
+	background: var(--color-main-background);
+	border-radius: var(--border-radius);
+	overflow: hidden;
+	box-shadow: 0 2px 4px var(--color-box-shadow);
+	border: 1px solid var(--color-border);
+}
+
+.viewTable {
 	width: 100%;
 	border-collapse: collapse;
+	background-color: var(--color-main-background);
 }
 
-.contact-list__table th,
-.contact-list__table td {
-	padding: 8px 12px;
+.viewTable th,
+.viewTable td {
+	padding: 12px;
 	text-align: left;
 	border-bottom: 1px solid var(--color-border);
+	vertical-align: middle;
 }
 
-.contact-list__row {
+.viewTable th {
+	background-color: var(--color-background-dark);
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+}
+
+.viewTableRow {
 	cursor: pointer;
+	transition: background-color 0.2s ease;
 }
 
-.contact-list__row:hover {
+.viewTableRow:hover {
 	background: var(--color-background-hover);
 }
 

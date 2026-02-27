@@ -58,7 +58,8 @@
 			</NcEmptyContent>
 		</div>
 
-		<table v-else class="client-list__table">
+		<div v-else class="viewTableContainer">
+			<table class="viewTable">
 			<thead>
 				<tr>
 					<th class="client-list__sortable" @click="toggleSort">
@@ -75,7 +76,7 @@
 				<tr
 					v-for="client in clients"
 					:key="client.id"
-					class="client-list__row"
+					class="viewTableRow"
 					@click="openClient(client.id)">
 					<td>{{ client.name || '-' }}</td>
 					<td>{{ client.type || '-' }}</td>
@@ -84,6 +85,7 @@
 				</tr>
 			</tbody>
 		</table>
+	</div>
 
 		<div v-if="pagination.pages > 1" class="client-list__pagination">
 			<NcButton
@@ -246,24 +248,40 @@ export default {
 	min-width: 180px;
 }
 
-.client-list__table {
+.viewTableContainer {
+	background: var(--color-main-background);
+	border-radius: var(--border-radius);
+	overflow: hidden;
+	box-shadow: 0 2px 4px var(--color-box-shadow);
+	border: 1px solid var(--color-border);
+}
+
+.viewTable {
 	width: 100%;
 	border-collapse: collapse;
+	background-color: var(--color-main-background);
 }
 
-.client-list__table th,
-.client-list__table td {
-	padding: 8px 12px;
+.viewTable th,
+.viewTable td {
+	padding: 12px;
 	text-align: left;
 	border-bottom: 1px solid var(--color-border);
+	vertical-align: middle;
 }
 
-.client-list__sortable {
+.viewTable th {
+	background-color: var(--color-background-dark);
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+}
+
+.viewTable th.sortable {
 	cursor: pointer;
 	user-select: none;
 }
 
-.client-list__sortable:hover {
+.viewTable th.sortable:hover {
 	color: var(--color-primary);
 }
 
@@ -272,11 +290,12 @@ export default {
 	margin-left: 4px;
 }
 
-.client-list__row {
+.viewTableRow {
 	cursor: pointer;
+	transition: background-color 0.2s ease;
 }
 
-.client-list__row:hover {
+.viewTableRow:hover {
 	background: var(--color-background-hover);
 }
 
