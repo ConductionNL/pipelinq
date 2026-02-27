@@ -1,4 +1,5 @@
 const path = require('path')
+const webpack = require('webpack')
 const webpackConfig = require('@nextcloud/webpack-vue-config')
 const { VueLoaderPlugin } = require('vue-loader')
 
@@ -27,6 +28,12 @@ webpackConfig.resolve = {
 	extensions: ['.vue', '.js'],
 	alias: {
 		'@': path.resolve(__dirname, 'src'),
+		'@conduction/nextcloud-vue': path.resolve(__dirname, '../nextcloud-vue/src'),
+		// Deduplicate shared packages so the aliased library source uses
+		// the same instances as the app (prevents dual-Pinia / dual-Vue bugs).
+		'vue$': path.resolve(__dirname, 'node_modules/vue'),
+		'pinia$': path.resolve(__dirname, 'node_modules/pinia'),
+		'@nextcloud/vue$': path.resolve(__dirname, 'node_modules/@nextcloud/vue'),
 	},
 }
 
@@ -45,6 +52,8 @@ webpackConfig.module = {
 
 webpackConfig.plugins = [
 	new VueLoaderPlugin(),
+	new webpack.DefinePlugin({ appName: JSON.stringify(appId) }),
+	new webpack.DefinePlugin({ appVersion: JSON.stringify(process.env.npm_package_version) }),
 ]
 
 module.exports = webpackConfig
