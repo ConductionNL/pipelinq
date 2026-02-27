@@ -1,10 +1,21 @@
 <template>
-	<div class="pipelinq-settings">
-		<h2>{{ t('pipelinq', 'Pipelinq') }}</h2>
+	<CnSettingsSection
+		:name="t('pipelinq', 'Pipelinq')"
+		:description="t('pipelinq', 'CRM settings and configuration')"
+		doc-url="https://pipelinq.app"
+		:loading="loading">
+		<template #actions>
+			<NcButton type="primary"
+				:disabled="reimporting"
+				@click="reimport">
+				<template #icon>
+					<NcLoadingIcon v-if="reimporting" :size="20" />
+				</template>
+				{{ t('pipelinq', 'Re-import configuration') }}
+			</NcButton>
+		</template>
 
-		<NcLoadingIcon v-if="loading" />
-
-		<div v-else>
+		<div v-if="!loading">
 			<!-- Register Status -->
 			<div class="status-section">
 				<h3>{{ t('pipelinq', 'Register Status') }}</h3>
@@ -77,18 +88,9 @@
 				@remove="removeRequestChannel"
 				@rename="renameRequestChannel" />
 
-			<!-- Re-import Action -->
-			<div class="actions-section">
-				<NcButton type="primary"
-					:disabled="reimporting"
-					@click="reimport">
-					<template #icon>
-						<NcLoadingIcon v-if="reimporting" :size="20" />
-					</template>
-					{{ t('pipelinq', 'Re-import configuration') }}
-				</NcButton>
-
-				<NcNoteCard v-if="message" :type="messageType">
+			<!-- Re-import Status -->
+			<div v-if="message" class="actions-section">
+				<NcNoteCard :type="messageType">
 					{{ message }}
 				</NcNoteCard>
 			</div>
@@ -116,10 +118,11 @@
 				</NcButton>
 			</details>
 		</div>
-	</div>
+	</CnSettingsSection>
 </template>
 
 <script>
+import { CnSettingsSection } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
 import { useSettingsStore } from '../../store/modules/settings.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
@@ -131,6 +134,7 @@ import TagManager from './TagManager.vue'
 export default {
 	name: 'Settings',
 	components: {
+		CnSettingsSection,
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,
@@ -293,11 +297,6 @@ export default {
 </script>
 
 <style scoped>
-.pipelinq-settings {
-	padding: 20px;
-	max-width: 900px;
-}
-
 .status-section,
 .schema-section,
 .actions-section {
