@@ -9,6 +9,10 @@ return [
         ['name' => 'settings#create', 'url' => '/api/settings', 'verb' => 'POST'],
         ['name' => 'settings#reimport', 'url' => '/api/settings/reimport', 'verb' => 'POST'],
 
+        // User settings
+        ['name' => 'settings#getUserSettings', 'url' => '/api/user/settings', 'verb' => 'GET'],
+        ['name' => 'settings#updateUserSettings', 'url' => '/api/user/settings', 'verb' => 'PUT'],
+
         // Lead sources
         ['name' => 'lead_source#index', 'url' => '/api/settings/lead-sources', 'verb' => 'GET'],
         ['name' => 'lead_source#create', 'url' => '/api/settings/lead-sources', 'verb' => 'POST'],
