@@ -19,7 +19,7 @@
     "extends @nextcloud/browserslist-config"
   ],
   "dependencies": {
-    "@conduction/nextcloud-vue": "github:ConductionNL/nextcloud-vue#main",
+    "@conduction/nextcloud-vue": "^0.1.0-beta.1",
     "@nextcloud/axios": "^2.5.0",
     "@nextcloud/dialogs": "^3.2.0",
     "@nextcloud/initial-state": "^2.2.0",
