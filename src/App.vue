@@ -4,6 +4,7 @@
 		<NcAppContent>
 			<component :is="currentView" v-bind="currentProps" @navigate="navigateTo" />
 		</NcAppContent>
+		<UserSettings :open.sync="showSettingsDialog" />
 	</NcContent>
 </template>
 
@@ -21,6 +22,8 @@ import LeadList from './views/leads/LeadList.vue'
 import LeadDetail from './views/leads/LeadDetail.vue'
 import PipelineBoard from './views/pipeline/PipelineBoard.vue'
 import MyWork from './views/MyWork.vue'
+import PipelineManager from './views/settings/PipelineManager.vue'
+import UserSettings from './views/settings/UserSettings.vue'
 import { initializeStores } from './store/store.js'
 
 export default {
@@ -40,12 +43,15 @@ export default {
 		LeadDetail,
 		PipelineBoard,
 		MyWork,
+		PipelineManager,
+		UserSettings,
 	},
 	data() {
 		return {
 			currentRoute: 'dashboard',
 			currentId: null,
 			storesReady: false,
+			showSettingsDialog: false,
 		}
 	},
 	computed: {
@@ -71,6 +77,8 @@ export default {
 				return 'PipelineBoard'
 			case 'my-work':
 				return 'MyWork'
+			case 'pipelines':
+				return 'PipelineManager'
 			default:
 				return 'Dashboard'
 			}
@@ -102,6 +110,10 @@ export default {
 	},
 	methods: {
 		navigateTo(route, id = null) {
+			if (route === 'settings') {
+				this.showSettingsDialog = true
+				return
+			}
 			this.currentRoute = route
 			this.currentId = id
 			if (id) {

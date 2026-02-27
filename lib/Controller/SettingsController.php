@@ -26,6 +26,7 @@ use OCA\Pipelinq\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUserSession;
 
 /**
  * Controller for Pipelinq settings.
@@ -37,10 +38,12 @@ class SettingsController extends Controller
      *
      * @param IRequest        $request         The request.
      * @param SettingsService $settingsService The settings service.
+     * @param IUserSession    $userSession     The user session.
      */
     public function __construct(
         IRequest $request,
         private SettingsService $settingsService,
+        private IUserSession $userSession,
     ) {
         parent::__construct(Application::APP_ID, $request);
     }//end __construct()
@@ -115,4 +118,37 @@ class SettingsController extends Controller
                     );
         }//end try
     }//end reimport()
+
+    /**
+     * Get user settings for the current user.
+     *
+     * @return JSONResponse The user settings response.
+     *
+     * @NoAdminRequired
+     */
+    public function getUserSettings(): JSONResponse
+    {
+        $userId = $this->userSession->getUser()->getUID();
+
+        return new JSONResponse(
+            data: $this->settingsService->getUserSettings(userId: $userId)
+        );
+    }//end getUserSettings()
+
+    /**
+     * Update user settings for the current user.
+     *
+     * @return JSONResponse The updated user settings response.
+     *
+     * @NoAdminRequired
+     */
+    public function updateUserSettings(): JSONResponse
+    {
+        $userId = $this->userSession->getUser()->getUID();
+        $data   = $this->request->getParams();
+
+        return new JSONResponse(
+            data: $this->settingsService->updateUserSettings(userId: $userId, data: $data)
+        );
+    }//end updateUserSettings()
 }//end class

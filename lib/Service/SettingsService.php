@@ -23,6 +23,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
+use OCP\IConfig;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -40,15 +41,28 @@ class SettingsService
     ];
 
     /**
+     * User setting keys and their defaults.
+     *
+     * @var array<string, string>
+     */
+    private const USER_SETTING_DEFAULTS = [
+        'notify_assignments'  => 'true',
+        'notify_stage_status' => 'true',
+        'notify_notes'        => 'true',
+    ];
+
+    /**
      * Constructor.
      *
      * @param IAppConfig             $appConfig           The app config.
+     * @param IConfig                $config              The user config service.
      * @param SettingsLoadService    $settingsLoadService The settings load service.
      * @param DefaultPipelineService $pipelineService     The default pipeline service.
      * @param LoggerInterface        $logger              The logger.
      */
     public function __construct(
         private IAppConfig $appConfig,
+        private IConfig $config,
         private SettingsLoadService $settingsLoadService,
         private DefaultPipelineService $pipelineService,
         private LoggerInterface $logger,
@@ -111,8 +125,54 @@ class SettingsService
      */
     public function createDefaultPipelines(): void
     {
-        $this->defaultPipelineService->createDefaultPipelines();
+        $this->pipelineService->createDefaultPipelines();
     }//end createDefaultPipelines()
+
+    /**
+     * Get user settings for the given user.
+     *
+     * @param string $userId The user ID.
+     *
+     * @return array The user settings as key-boolean pairs.
+     */
+    public function getUserSettings(string $userId): array
+    {
+        $settings = [];
+        foreach (self::USER_SETTING_DEFAULTS as $key => $default) {
+            $settings[$key] = $this->config->getUserValue(
+                userId: $userId,
+                appName: Application::APP_ID,
+                key: $key,
+                default: $default
+            ) === 'true';
+        }
+
+        return $settings;
+    }//end getUserSettings()
+
+    /**
+     * Update user settings for the given user.
+     *
+     * @param string $userId The user ID.
+     * @param array  $data   The settings data to update.
+     *
+     * @return array The updated user settings.
+     */
+    public function updateUserSettings(string $userId, array $data): array
+    {
+        foreach (self::USER_SETTING_DEFAULTS as $key => $default) {
+            if (array_key_exists(key: $key, array: $data) === true) {
+                $this->config->setUserValue(
+                    userId: $userId,
+                    appName: Application::APP_ID,
+                    key: $key,
+                    value: $data[$key] ? 'true' : 'false'
+                );
+            }
+        }
+
+        return $this->getUserSettings(userId: $userId);
+    }//end updateUserSettings()
 
     /**
      * Get a config value by key.

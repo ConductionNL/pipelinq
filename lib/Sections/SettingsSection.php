@@ -79,6 +79,6 @@ class SettingsSection implements IIconSection
      */
     public function getIcon(): string
     {
-        return $this->urlGenerator->imagePath(app: 'pipelinq', image: 'app.svg');
+        return $this->urlGenerator->imagePath(appName: 'pipelinq', file: 'app-dark.svg');
     }//end getIcon()
 }//end class
