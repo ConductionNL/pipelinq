@@ -4,23 +4,30 @@
 		<div class="dashboard-header">
 			<h2>{{ t('pipelinq', 'Dashboard') }}</h2>
 			<div class="quick-actions">
-				<NcButton type="primary" @click="$emit('navigate', 'lead-detail', 'new')">
+				<NcButton type="primary" @click="showLeadDialog = true">
 					<template #icon>
 						<Plus :size="20" />
 					</template>
 					{{ t('pipelinq', 'New Lead') }}
 				</NcButton>
-				<NcButton @click="$emit('navigate', 'request-detail', 'new')">
+				<NcButton @click="showRequestDialog = true">
 					<template #icon>
 						<Plus :size="20" />
 					</template>
 					{{ t('pipelinq', 'New Request') }}
 				</NcButton>
-				<NcButton @click="$emit('navigate', 'client-detail', 'new')">
+				<NcButton @click="showClientDialog = true">
 					<template #icon>
 						<Plus :size="20" />
 					</template>
 					{{ t('pipelinq', 'New Client') }}
+				</NcButton>
+				<NcButton :disabled="loading"
+					:aria-label="t('pipelinq', 'Refresh dashboard')"
+					@click="fetchAll">
+					<template #icon>
+						<Refresh :size="20" :class="{ 'icon-spinning': loading }" />
+					</template>
 				</NcButton>
 			</div>
 		</div>
@@ -141,17 +148,37 @@
 				</NcButton>
 			</div>
 		</template>
+
+		<!-- Create Dialogs -->
+		<LeadCreateDialog
+			v-if="showLeadDialog"
+			@created="onLeadCreated"
+			@close="showLeadDialog = false" />
+
+		<RequestCreateDialog
+			v-if="showRequestDialog"
+			@created="onRequestCreated"
+			@close="showRequestDialog = false" />
+
+		<ClientCreateDialog
+			v-if="showClientDialog"
+			@created="onClientCreated"
+			@close="showClientDialog = false" />
 	</div>
 </template>
 
 <script>
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
 import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
 import FileDocument from 'vue-material-design-icons/FileDocument.vue'
 import CurrencyEur from 'vue-material-design-icons/CurrencyEur.vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
 import { useObjectStore } from '../store/modules/object.js'
+import LeadCreateDialog from './leads/LeadCreateDialog.vue'
+import RequestCreateDialog from './requests/RequestCreateDialog.vue'
+import ClientCreateDialog from './clients/ClientCreateDialog.vue'
 import {
 	getStatusLabel,
 	getStatusColor,
@@ -165,15 +192,23 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 		Plus,
+		Refresh,
 		TrendingUp,
 		FileDocument,
 		CurrencyEur,
 		AlertCircle,
+		LeadCreateDialog,
+		RequestCreateDialog,
+		ClientCreateDialog,
 	},
 	data() {
 		return {
 			loading: false,
+			showLeadDialog: false,
+			showRequestDialog: false,
+			showClientDialog: false,
 			error: null,
+			refreshTimer: null,
 			allLeads: [],
 			allRequests: [],
 			allPipelines: [],
@@ -318,6 +353,15 @@ export default {
 	},
 	mounted() {
 		this.fetchAll()
+		this.refreshTimer = setInterval(() => {
+			this.fetchAll()
+		}, 5 * 60 * 1000)
+	},
+	beforeDestroy() {
+		if (this.refreshTimer) {
+			clearInterval(this.refreshTimer)
+			this.refreshTimer = null
+		}
 	},
 	methods: {
 		async fetchAll() {
@@ -412,6 +456,21 @@ export default {
 			} catch {
 				return dateStr
 			}
+		},
+
+		onLeadCreated(leadId) {
+			this.showLeadDialog = false
+			this.$emit('navigate', 'lead-detail', leadId)
+		},
+
+		onRequestCreated(requestId) {
+			this.showRequestDialog = false
+			this.$emit('navigate', 'request-detail', requestId)
+		},
+
+		onClientCreated(clientId) {
+			this.showClientDialog = false
+			this.$emit('navigate', 'client-detail', clientId)
 		},
 
 		openItem(item) {
@@ -696,5 +755,15 @@ export default {
 
 .dashboard-error p {
 	margin-bottom: 12px;
+}
+
+/* Refresh button spinning animation */
+.icon-spinning {
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
 }
 </style>

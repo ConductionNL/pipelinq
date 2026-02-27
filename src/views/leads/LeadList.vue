@@ -54,7 +54,8 @@
 			</NcEmptyContent>
 		</div>
 
-		<table v-else class="lead-list__table">
+		<div v-else class="viewTableContainer">
+			<table class="viewTable">
 			<thead>
 				<tr>
 					<th>{{ t('pipelinq', 'Title') }}</th>
@@ -81,7 +82,7 @@
 				<tr
 					v-for="lead in leads"
 					:key="lead.id"
-					class="lead-list__row"
+					class="viewTableRow"
 					@click="openLead(lead.id)">
 					<td>{{ lead.title || '-' }}</td>
 					<td>{{ formatValue(lead.value) }}</td>
@@ -97,6 +98,7 @@
 				</tr>
 			</tbody>
 		</table>
+	</div>
 
 		<div v-if="pagination.pages > 1" class="lead-list__pagination">
 			<NcButton
@@ -277,24 +279,40 @@ export default {
 	min-width: 160px;
 }
 
-.lead-list__table {
+.viewTableContainer {
+	background: var(--color-main-background);
+	border-radius: var(--border-radius);
+	overflow: hidden;
+	box-shadow: 0 2px 4px var(--color-box-shadow);
+	border: 1px solid var(--color-border);
+}
+
+.viewTable {
 	width: 100%;
 	border-collapse: collapse;
+	background-color: var(--color-main-background);
 }
 
-.lead-list__table th,
-.lead-list__table td {
-	padding: 8px 12px;
+.viewTable th,
+.viewTable td {
+	padding: 12px;
 	text-align: left;
 	border-bottom: 1px solid var(--color-border);
+	vertical-align: middle;
 }
 
-.lead-list__sortable {
+.viewTable th {
+	background-color: var(--color-background-dark);
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+}
+
+.viewTable th.sortable {
 	cursor: pointer;
 	user-select: none;
 }
 
-.lead-list__sortable:hover {
+.viewTable th.sortable:hover {
 	color: var(--color-primary);
 }
 
@@ -303,11 +321,12 @@ export default {
 	margin-left: 4px;
 }
 
-.lead-list__row {
+.viewTableRow {
 	cursor: pointer;
+	transition: background-color 0.2s ease;
 }
 
-.lead-list__row:hover {
+.viewTableRow:hover {
 	background: var(--color-background-hover);
 }
 

@@ -52,7 +52,8 @@
 			<p>{{ t('pipelinq', 'No requests found') }}</p>
 		</div>
 
-		<table v-else class="request-list__table">
+		<div v-else class="viewTableContainer">
+			<table class="viewTable">
 			<thead>
 				<tr>
 					<th class="col-title sortable" @click="toggleSort('title')">
@@ -76,7 +77,7 @@
 				<tr
 					v-for="request in requests"
 					:key="request.id"
-					class="request-list__row"
+					class="viewTableRow"
 					@click="openRequest(request.id)">
 					<td class="col-title">{{ request.title || '-' }}</td>
 					<td class="col-status" @click.stop>
@@ -107,6 +108,7 @@
 				</tr>
 			</tbody>
 		</table>
+	</div>
 
 		<div v-if="pagination.pages > 1" class="request-list__pagination">
 			<NcButton
@@ -319,24 +321,40 @@ export default {
 	max-width: 180px;
 }
 
-.request-list__table {
+.viewTableContainer {
+	background: var(--color-main-background);
+	border-radius: var(--border-radius);
+	overflow: hidden;
+	box-shadow: 0 2px 4px var(--color-box-shadow);
+	border: 1px solid var(--color-border);
+}
+
+.viewTable {
 	width: 100%;
 	border-collapse: collapse;
+	background-color: var(--color-main-background);
 }
 
-.request-list__table th,
-.request-list__table td {
-	padding: 8px 12px;
+.viewTable th,
+.viewTable td {
+	padding: 12px;
 	text-align: left;
 	border-bottom: 1px solid var(--color-border);
+	vertical-align: middle;
 }
 
-.request-list__table th.sortable {
+.viewTable th {
+	background-color: var(--color-background-dark);
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+}
+
+.viewTable th.sortable {
 	cursor: pointer;
 	user-select: none;
 }
 
-.request-list__table th.sortable:hover {
+.viewTable th.sortable:hover {
 	color: var(--color-main-text);
 	background: var(--color-background-hover);
 }
@@ -346,11 +364,12 @@ export default {
 	margin-left: 4px;
 }
 
-.request-list__row {
+.viewTableRow {
 	cursor: pointer;
+	transition: background-color 0.2s ease;
 }
 
-.request-list__row:hover {
+.viewTableRow:hover {
 	background: var(--color-background-hover);
 }
 

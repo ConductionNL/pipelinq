@@ -76,7 +76,8 @@
 			<div v-if="contacts.length === 0" class="section-empty">
 				<p>{{ t('pipelinq', 'No contacts found') }}</p>
 			</div>
-			<table v-else class="section-table">
+			<div v-else class="viewTableContainer">
+				<table class="viewTable">
 				<thead>
 					<tr>
 						<th>{{ t('pipelinq', 'Name') }}</th>
@@ -88,7 +89,7 @@
 					<tr
 						v-for="contact in contacts"
 						:key="contact.id"
-						class="section-row"
+						class="viewTableRow"
 						@click="$emit('navigate', 'contact-detail', contact.id)">
 						<td>{{ contact.name || '-' }}</td>
 						<td>{{ contact.role || '-' }}</td>
@@ -96,6 +97,7 @@
 					</tr>
 				</tbody>
 			</table>
+		</div>
 		</div>
 
 		<!-- Leads section -->
@@ -107,7 +109,8 @@
 			<div v-if="leads.length === 0" class="section-empty">
 				<p>{{ t('pipelinq', 'No leads found') }}</p>
 			</div>
-			<table v-else class="section-table">
+			<div v-else class="viewTableContainer">
+				<table class="viewTable">
 				<thead>
 					<tr>
 						<th>{{ t('pipelinq', 'Title') }}</th>
@@ -119,7 +122,7 @@
 					<tr
 						v-for="lead in leads"
 						:key="lead.id"
-						class="section-row"
+						class="viewTableRow"
 						@click="$emit('navigate', 'lead-detail', lead.id)">
 						<td>{{ lead.title || '-' }}</td>
 						<td>{{ lead.stage || '-' }}</td>
@@ -127,6 +130,7 @@
 					</tr>
 				</tbody>
 			</table>
+		</div>
 		</div>
 
 		<!-- Requests section -->
@@ -141,7 +145,8 @@
 			<div v-if="requests.length === 0" class="section-empty">
 				<p>{{ t('pipelinq', 'No requests found') }}</p>
 			</div>
-			<table v-else class="section-table">
+			<div v-else class="viewTableContainer">
+				<table class="viewTable">
 				<thead>
 					<tr>
 						<th>{{ t('pipelinq', 'Title') }}</th>
@@ -152,13 +157,14 @@
 					<tr
 						v-for="request in requests"
 						:key="request.id"
-						class="section-row"
+						class="viewTableRow"
 						@click="$emit('navigate', 'request-detail', request.id)">
 						<td>{{ request.title || '-' }}</td>
 						<td>{{ request.status || '-' }}</td>
 					</tr>
 				</tbody>
 			</table>
+		</div>
 		</div>
 
 		<!-- Notes section -->
@@ -407,23 +413,40 @@ export default {
 	margin-bottom: 16px;
 }
 
-.section-table {
+.viewTableContainer {
+	background: var(--color-main-background);
+	border-radius: var(--border-radius);
+	overflow: hidden;
+	box-shadow: 0 2px 4px var(--color-box-shadow);
+	border: 1px solid var(--color-border);
+}
+
+.viewTable {
 	width: 100%;
 	border-collapse: collapse;
+	background-color: var(--color-main-background);
 }
 
-.section-table th,
-.section-table td {
-	padding: 8px 12px;
+.viewTable th,
+.viewTable td {
+	padding: 12px;
 	text-align: left;
 	border-bottom: 1px solid var(--color-border);
+	vertical-align: middle;
 }
 
-.section-row {
+.viewTable th {
+	background-color: var(--color-background-dark);
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+}
+
+.viewTableRow {
 	cursor: pointer;
+	transition: background-color 0.2s ease;
 }
 
-.section-row:hover {
+.viewTableRow:hover {
 	background: var(--color-background-hover);
 }
 
