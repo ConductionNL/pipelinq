@@ -1,7 +1,7 @@
 <template>
 	<div class="client-detail">
 		<div class="client-detail__header">
-			<NcButton @click="$emit('navigate', 'clients')">
+			<NcButton @click="$router.push({ name: 'Clients' })">
 				{{ t('pipelinq', 'Back to list') }}
 			</NcButton>
 			<h2 v-if="isNew">
@@ -90,7 +90,7 @@
 						v-for="contact in contacts"
 						:key="contact.id"
 						class="viewTableRow"
-						@click="$emit('navigate', 'contact-detail', contact.id)">
+						@click="$router.push({ name: 'ContactDetail', params: { id: contact.id } })">
 						<td>{{ contact.name || '-' }}</td>
 						<td>{{ contact.role || '-' }}</td>
 						<td>{{ contact.email || '-' }}</td>
@@ -123,7 +123,7 @@
 						v-for="lead in leads"
 						:key="lead.id"
 						class="viewTableRow"
-						@click="$emit('navigate', 'lead-detail', lead.id)">
+						@click="$router.push({ name: 'LeadDetail', params: { id: lead.id } })">
 						<td>{{ lead.title || '-' }}</td>
 						<td>{{ lead.stage || '-' }}</td>
 						<td>{{ lead.value || '-' }}</td>
@@ -158,7 +158,7 @@
 						v-for="request in requests"
 						:key="request.id"
 						class="viewTableRow"
-						@click="$emit('navigate', 'request-detail', request.id)">
+						@click="$router.push({ name: 'RequestDetail', params: { id: request.id } })">
 						<td>{{ request.title || '-' }}</td>
 						<td>{{ request.status || '-' }}</td>
 					</tr>
@@ -246,7 +246,7 @@ export default {
 			return !this.clientId || this.clientId === 'new'
 		},
 		loading() {
-			return this.objectStore.isLoading('client')
+			return this.objectStore.loading.client || false
 		},
 		clientData() {
 			if (this.isNew) return {}
@@ -265,7 +265,7 @@ export default {
 			if (result) {
 				this.syncToContacts(result.id || this.clientId)
 				if (this.isNew) {
-					this.$emit('navigate', 'client-detail', result.id)
+					this.$router.push({ name: 'ClientDetail', params: { id: result.id } })
 				} else {
 					await this.objectStore.fetchObject('client', this.clientId)
 					this.editing = false
@@ -292,7 +292,7 @@ export default {
 		},
 		onFormCancel() {
 			if (this.isNew) {
-				this.$emit('navigate', 'clients')
+				this.$router.push({ name: 'Clients' })
 			} else {
 				this.editing = false
 			}
@@ -305,7 +305,7 @@ export default {
 			this.cleanupNotes('pipelinq_client', this.clientId)
 			const success = await this.objectStore.deleteObject('client', this.clientId)
 			if (success) {
-				this.$emit('navigate', 'clients')
+				this.$router.push({ name: 'Clients' })
 			} else {
 				const error = this.objectStore.getError('client')
 				showError(error?.message || t('pipelinq', 'Failed to delete client.'))
@@ -345,10 +345,10 @@ export default {
 			}
 		},
 		createRequest() {
-			this.$emit('navigate', 'request-detail', `new?client=${this.clientId}`)
+			this.$router.push({ name: 'RequestDetail', params: { id: 'new' }, query: { client: this.clientId } })
 		},
 		addContact() {
-			this.$emit('navigate', 'contact-detail', `new?client=${this.clientId}`)
+			this.$router.push({ name: 'ContactDetail', params: { id: 'new' }, query: { client: this.clientId } })
 		},
 	},
 }

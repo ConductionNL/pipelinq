@@ -7,12 +7,13 @@
  *
  * Plugins add sub-resource support for files, audit trails, and relations.
  */
-import { createObjectStore, filesPlugin, auditTrailsPlugin, relationsPlugin } from '@conduction/nextcloud-vue'
+import { createObjectStore, filesPlugin, auditTrailsPlugin, relationsPlugin, registerMappingPlugin } from '@conduction/nextcloud-vue'
 
 export const useObjectStore = createObjectStore('object', {
 	plugins: [
 		filesPlugin(),
 		auditTrailsPlugin(),
 		relationsPlugin(),
+		registerMappingPlugin(),
 	],
 })
