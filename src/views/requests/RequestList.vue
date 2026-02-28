@@ -1,135 +1,57 @@
 <template>
-	<div class="request-list">
-		<div class="request-list__header">
-			<h2>{{ t('pipelinq', 'Requests') }}</h2>
-			<NcButton type="primary" @click="createNew">
-				{{ t('pipelinq', 'New request') }}
-			</NcButton>
-		</div>
+	<CnIndexPage
+		:title="t('pipelinq', 'Requests')"
+		:description="t('pipelinq', 'Handle incoming requests')"
+		:schema="schema"
+		:objects="requests"
+		:pagination="pagination"
+		:loading="loading"
+		:sort-key="sortKey"
+		:sort-order="sortOrder"
+		:selectable="true"
+		:include-columns="visibleColumns"
+		@add="createNew"
+		@refresh="fetchRequests"
+		@sort="onSort"
+		@row-click="openRequest"
+		@page-changed="loadPage">
 
-		<!-- Search + Filters -->
-		<div class="request-list__filters">
-			<NcTextField
-				:value="searchTerm"
-				:label="t('pipelinq', 'Search')"
-				:show-trailing-button="searchTerm !== ''"
-				class="filter-search"
-				@update:value="onSearch"
-				@trailing-button-click="clearSearch" />
-			<NcSelect
-				v-model="filters.status"
-				:options="statusFilterOptions"
-				:placeholder="t('pipelinq', 'Status')"
-				:clearable="true"
-				class="filter-select"
-				@input="applyFilters" />
-			<NcSelect
-				v-model="filters.priority"
-				:options="priorityFilterOptions"
-				:placeholder="t('pipelinq', 'Priority')"
-				:clearable="true"
-				class="filter-select"
-				@input="applyFilters" />
-			<NcSelect
-				v-model="filters.channel"
-				:options="channelFilterOptions"
-				:placeholder="t('pipelinq', 'Channel')"
-				:clearable="true"
-				class="filter-select"
-				@input="applyFilters" />
-		</div>
+		<template #column-status="{ row }">
+			<div class="status-cell" @click.stop>
+				<span
+					class="status-badge"
+					:style="{ background: getStatusColor(row.status), color: '#fff' }">
+					{{ getStatusLabel(row.status) }}
+				</span>
+				<NcSelect
+					v-if="getAllowedTransitions(row.status).length > 0"
+					:value="null"
+					:options="getTransitionOptions(row.status)"
+					:placeholder="'\u2192'"
+					:clearable="false"
+					class="status-quick-change"
+					@input="v => quickStatusChange(row, v)" />
+			</div>
+		</template>
 
-		<NcLoadingIcon v-if="loading" />
+		<template #column-priority="{ row }">
+			<span
+				class="priority-text"
+				:style="{ color: getPriorityColor(row.priority) }">
+				{{ getPriorityLabel(row.priority) }}
+			</span>
+		</template>
 
-		<NcNoteCard v-if="error" type="error" class="request-list__error">
-			{{ error.message }}
-			<NcButton type="secondary" @click="fetchRequests()">
-				{{ t('pipelinq', 'Retry') }}
-			</NcButton>
-		</NcNoteCard>
-
-		<div v-else-if="requests.length === 0" class="request-list__empty">
-			<p>{{ t('pipelinq', 'No requests found') }}</p>
-		</div>
-
-		<div v-else class="viewTableContainer">
-			<table class="viewTable">
-			<thead>
-				<tr>
-					<th class="col-title sortable" @click="toggleSort('title')">
-						{{ t('pipelinq', 'Title') }}
-						<span v-if="sortField === 'title'" class="sort-icon">{{ sortDir === 'asc' ? '\u25B2' : '\u25BC' }}</span>
-					</th>
-					<th class="col-status">{{ t('pipelinq', 'Status') }}</th>
-					<th class="col-priority sortable" @click="toggleSort('priority')">
-						{{ t('pipelinq', 'Priority') }}
-						<span v-if="sortField === 'priority'" class="sort-icon">{{ sortDir === 'asc' ? '\u25B2' : '\u25BC' }}</span>
-					</th>
-					<th class="col-channel">{{ t('pipelinq', 'Channel') }}</th>
-					<th class="col-assignee">{{ t('pipelinq', 'Assigned to') }}</th>
-					<th class="col-date sortable" @click="toggleSort('requestedAt')">
-						{{ t('pipelinq', 'Requested at') }}
-						<span v-if="sortField === 'requestedAt'" class="sort-icon">{{ sortDir === 'asc' ? '\u25B2' : '\u25BC' }}</span>
-					</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr
-					v-for="request in requests"
-					:key="request.id"
-					class="viewTableRow"
-					@click="openRequest(request.id)">
-					<td class="col-title">{{ request.title || '-' }}</td>
-					<td class="col-status" @click.stop>
-						<span
-							class="status-badge"
-							:style="{ background: getStatusColor(request.status), color: '#fff' }">
-							{{ getStatusLabel(request.status) }}
-						</span>
-						<NcSelect
-							v-if="getAllowedTransitions(request.status).length > 0"
-							:value="null"
-							:options="getTransitionOptions(request.status)"
-							:placeholder="'\u2192'"
-							:clearable="false"
-							class="status-quick-change"
-							@input="v => quickStatusChange(request, v)" />
-					</td>
-					<td class="col-priority">
-						<span
-							class="priority-badge"
-							:style="{ color: getPriorityColor(request.priority) }">
-							{{ getPriorityLabel(request.priority) }}
-						</span>
-					</td>
-					<td class="col-channel">{{ request.channel || '-' }}</td>
-					<td class="col-assignee">{{ request.assignee || '-' }}</td>
-					<td class="col-date">{{ formatDate(request.requestedAt) }}</td>
-				</tr>
-			</tbody>
-		</table>
-	</div>
-
-		<div v-if="pagination.pages > 1" class="request-list__pagination">
-			<NcButton
-				:disabled="pagination.page <= 1"
-				@click="loadPage(pagination.page - 1)">
-				{{ t('pipelinq', 'Previous') }}
-			</NcButton>
-			<span>{{ pagination.page }} / {{ pagination.pages }}</span>
-			<NcButton
-				:disabled="pagination.page >= pagination.pages"
-				@click="loadPage(pagination.page + 1)">
-				{{ t('pipelinq', 'Next') }}
-			</NcButton>
-		</div>
-	</div>
+		<template #column-requestedAt="{ value }">
+			{{ formatDate(value) }}
+		</template>
+	</CnIndexPage>
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcSelect } from '@nextcloud/vue'
+import { CnIndexPage } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../store/modules/object.js'
-import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
 import {
 	getAllowedTransitions,
 	getStatusLabel,
@@ -141,53 +63,45 @@ import {
 export default {
 	name: 'RequestList',
 	components: {
-		NcButton,
-		NcLoadingIcon,
-		NcNoteCard,
 		NcSelect,
-		NcTextField,
+		CnIndexPage,
 	},
+
+	inject: {
+		sidebarState: { default: null },
+	},
+
 	data() {
 		return {
 			searchTerm: '',
 			searchTimeout: null,
-			filters: {
-				status: null,
-				priority: null,
-				channel: null,
-			},
-			sortField: 'requestedAt',
-			sortDir: 'desc',
-			statusFilterOptions: ['new', 'in_progress', 'completed', 'rejected', 'converted'],
-			priorityFilterOptions: ['low', 'normal', 'high', 'urgent'],
+			sortKey: 'requestedAt',
+			sortOrder: 'desc',
+			schema: null,
+			visibleColumns: null,
 		}
 	},
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
-		requestChannelsStore() {
-			return useRequestChannelsStore()
-		},
-		channelFilterOptions() {
-			return this.requestChannelsStore.channelNames
-		},
 		requests() {
-			return this.objectStore.getCollection('request')
+			return this.objectStore.collections.request || []
 		},
 		loading() {
-			return this.objectStore.isLoading('request')
-		},
-		error() {
-			return this.objectStore.getError('request')
+			return this.objectStore.loading.request || false
 		},
 		pagination() {
-			return this.objectStore.getPagination('request')
+			return this.objectStore.pagination.request || { total: 0, page: 1, pages: 1, limit: 20 }
 		},
 	},
-	mounted() {
-		this.requestChannelsStore.fetchChannels()
+	async mounted() {
+		this.schema = await this.objectStore.fetchSchema('request')
+		this.setupSidebar()
 		this.fetchRequests()
+	},
+	beforeDestroy() {
+		this.teardownSidebar()
 	},
 	methods: {
 		getAllowedTransitions,
@@ -195,6 +109,33 @@ export default {
 		getStatusColor,
 		getPriorityLabel,
 		getPriorityColor,
+
+		setupSidebar() {
+			if (!this.sidebarState) return
+			this.sidebarState.active = true
+			this.sidebarState.schema = this.schema
+			this.sidebarState.searchValue = this.searchTerm
+			this.sidebarState.activeFilters = {}
+			this.sidebarState.onSearch = (value) => {
+				this.onSearch(value)
+			}
+			this.sidebarState.onColumnsChange = (columns) => {
+				this.visibleColumns = columns
+			}
+			this.sidebarState.onFilterChange = ({ key, values }) => {
+				this.onFacetFilterChange(key, values)
+			}
+		},
+		teardownSidebar() {
+			if (!this.sidebarState) return
+			this.sidebarState.active = false
+			this.sidebarState.schema = null
+			this.sidebarState.activeFilters = {}
+			this.sidebarState.facetData = {}
+			this.sidebarState.onSearch = null
+			this.sidebarState.onColumnsChange = null
+			this.sidebarState.onFilterChange = null
+		},
 
 		getTransitionOptions(currentStatus) {
 			return getAllowedTransitions(currentStatus).map(s => ({
@@ -213,70 +154,61 @@ export default {
 			this.fetchRequests()
 		},
 
-		buildParams() {
+		async fetchRequests(page = 1) {
 			const params = {
 				_limit: 20,
-				_offset: 0,
+				_page: page,
 			}
 			if (this.searchTerm) {
 				params._search = this.searchTerm
 			}
-			if (this.filters.status) {
-				params.status = this.filters.status
+			if (this.sortKey) {
+				params._order = { [this.sortKey]: this.sortOrder }
 			}
-			if (this.filters.priority) {
-				params.priority = this.filters.priority
+			if (this.sidebarState?.activeFilters) {
+				for (const [key, values] of Object.entries(this.sidebarState.activeFilters)) {
+					if (values && values.length > 0) {
+						params[key] = values.length === 1 ? values[0] : values
+					}
+				}
 			}
-			if (this.filters.channel) {
-				params.channel = this.filters.channel
+			await this.objectStore.fetchCollection('request', params)
+			if (this.sidebarState) {
+				this.sidebarState.facetData = this.objectStore.facets.request || {}
 			}
-			if (this.sortField) {
-				params._order = { [this.sortField]: this.sortDir }
-			}
-			return params
 		},
 
-		async fetchRequests(extraParams = {}) {
-			await this.objectStore.fetchCollection('request', {
-				...this.buildParams(),
-				...extraParams,
-			})
-		},
-
-		applyFilters() {
-			this.fetchRequests()
-		},
-
-		toggleSort(field) {
-			if (this.sortField === field) {
-				this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc'
-			} else {
-				this.sortField = field
-				this.sortDir = 'asc'
-			}
-			this.fetchRequests()
-		},
-
-		openRequest(id) {
-			this.$emit('navigate', 'request-detail', id)
+		openRequest(row) {
+			this.$router.push({ name: 'RequestDetail', params: { id: row.id } })
 		},
 		createNew() {
-			this.$emit('navigate', 'request-detail', 'new')
+			this.$router.push({ name: 'RequestDetail', params: { id: 'new' } })
 		},
 		onSearch(value) {
 			this.searchTerm = value
+			if (this.sidebarState) {
+				this.sidebarState.searchValue = value
+			}
 			clearTimeout(this.searchTimeout)
 			this.searchTimeout = setTimeout(() => {
 				this.fetchRequests()
 			}, 300)
 		},
-		clearSearch() {
-			this.searchTerm = ''
+		onSort({ key, order }) {
+			this.sortKey = key
+			this.sortOrder = order
+			this.fetchRequests()
+		},
+		onFacetFilterChange(key, values) {
+			if (!this.sidebarState) return
+			this.sidebarState.activeFilters = {
+				...this.sidebarState.activeFilters,
+				[key]: values && values.length > 0 ? values : undefined,
+			}
 			this.fetchRequests()
 		},
 		loadPage(page) {
-			const offset = (page - 1) * this.pagination.limit
-			this.fetchRequests({ _offset: offset })
+			this.fetchRequests(page)
 		},
 		formatDate(dateStr) {
 			if (!dateStr) return '-'
@@ -291,86 +223,10 @@ export default {
 </script>
 
 <style scoped>
-.request-list {
-	padding: 20px;
-}
-
-.request-list__header {
+.status-cell {
 	display: flex;
-	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 16px;
-}
-
-.request-list__filters {
-	display: flex;
-	gap: 12px;
-	margin-bottom: 16px;
-	flex-wrap: wrap;
-	align-items: flex-end;
-}
-
-.filter-search {
-	flex: 1;
-	min-width: 200px;
-	max-width: 300px;
-}
-
-.filter-select {
-	min-width: 140px;
-	max-width: 180px;
-}
-
-.viewTableContainer {
-	background: var(--color-main-background);
-	border-radius: var(--border-radius);
-	overflow: hidden;
-	box-shadow: 0 2px 4px var(--color-box-shadow);
-	border: 1px solid var(--color-border);
-}
-
-.viewTable {
-	width: 100%;
-	border-collapse: collapse;
-	background-color: var(--color-main-background);
-}
-
-.viewTable th,
-.viewTable td {
-	padding: 12px;
-	text-align: left;
-	border-bottom: 1px solid var(--color-border);
-	vertical-align: middle;
-}
-
-.viewTable th {
-	background-color: var(--color-background-dark);
-	font-weight: 500;
-	color: var(--color-text-maxcontrast);
-}
-
-.viewTable th.sortable {
-	cursor: pointer;
-	user-select: none;
-}
-
-.viewTable th.sortable:hover {
-	color: var(--color-main-text);
-	background: var(--color-background-hover);
-}
-
-.sort-icon {
-	font-size: 10px;
-	margin-left: 4px;
-}
-
-.viewTableRow {
-	cursor: pointer;
-	transition: background-color 0.2s ease;
-}
-
-.viewTableRow:hover {
-	background: var(--color-background-hover);
+	gap: 6px;
 }
 
 .status-badge {
@@ -382,33 +238,13 @@ export default {
 	white-space: nowrap;
 }
 
-.priority-badge {
-	font-weight: 600;
-	font-size: 13px;
-}
-
-.col-status {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-}
-
 .status-quick-change {
 	width: 44px;
 	min-width: 44px;
 }
 
-.request-list__empty {
-	padding: 40px;
-	text-align: center;
-	color: var(--color-text-maxcontrast);
-}
-
-.request-list__pagination {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 12px;
-	margin-top: 16px;
+.priority-text {
+	font-weight: 600;
+	font-size: 13px;
 }
 </style>

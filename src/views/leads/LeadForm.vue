@@ -156,7 +156,7 @@ export default {
 			return !!this.lead?.id
 		},
 		pipelines() {
-			return this.objectStore.getCollection('pipeline') || []
+			return this.objectStore.collections.pipeline || []
 		},
 		leadPipelines() {
 			return this.pipelines.filter(p =>
@@ -180,7 +180,7 @@ export default {
 				.map(s => s.name)
 		},
 		clients() {
-			return this.objectStore.getCollection('client') || []
+			return this.objectStore.collections.client || []
 		},
 		clientOptions() {
 			return this.clients.map(c => ({

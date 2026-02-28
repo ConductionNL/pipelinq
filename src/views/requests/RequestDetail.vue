@@ -1,7 +1,7 @@
 <template>
 	<div class="request-detail">
 		<div class="request-detail__header">
-			<NcButton @click="$emit('navigate', 'requests')">
+			<NcButton @click="$router.push({ name: 'Requests' })">
 				{{ t('pipelinq', 'Back to list') }}
 			</NcButton>
 			<h2 v-if="isNew">
@@ -111,7 +111,7 @@
 					<div class="request-detail__section">
 						<h3>{{ t('pipelinq', 'Client') }}</h3>
 						<div v-if="clientData" class="client-link">
-							<a href="#" @click.prevent="$emit('navigate', 'client-detail', clientData.id)">
+							<a href="#" @click.prevent="$router.push({ name: 'ClientDetail', params: { id: clientData.id } })">
 								{{ clientData.name }}
 							</a>
 							<span v-if="clientData.email" class="client-meta">{{ clientData.email }}</span>
@@ -244,17 +244,13 @@ export default {
 			return useObjectStore()
 		},
 		isNew() {
-			if (!this.requestId) return true
-			return this.requestId.startsWith('new')
+			return !this.requestId || this.requestId === 'new'
 		},
 		preLinkedClient() {
-			if (this.requestId && this.requestId.includes('client=')) {
-				return this.requestId.split('client=')[1]
-			}
-			return null
+			return this.$route.query.client || null
 		},
 		loading() {
-			return this.objectStore.isLoading('request')
+			return this.objectStore.loading.request || false
 		},
 		requestData() {
 			if (this.isNew) return {}
@@ -404,7 +400,7 @@ export default {
 			const result = await this.objectStore.saveObject('request', formData)
 			if (result) {
 				if (this.isNew) {
-					this.$emit('navigate', 'request-detail', result.id)
+					this.$router.push({ name: 'RequestDetail', params: { id: result.id } })
 				} else {
 					await this.objectStore.fetchObject('request', this.requestId)
 					await this.fetchRelated()
@@ -418,7 +414,7 @@ export default {
 
 		onFormCancel() {
 			if (this.isNew) {
-				this.$emit('navigate', 'requests')
+				this.$router.push({ name: 'Requests' })
 			} else {
 				this.editing = false
 			}
@@ -429,7 +425,7 @@ export default {
 			this.cleanupNotes('pipelinq_request', this.requestId)
 			const success = await this.objectStore.deleteObject('request', this.requestId)
 			if (success) {
-				this.$emit('navigate', 'requests')
+				this.$router.push({ name: 'Requests' })
 			} else {
 				const error = this.objectStore.getError('request')
 				showError(error?.message || t('pipelinq', 'Failed to delete request.'))

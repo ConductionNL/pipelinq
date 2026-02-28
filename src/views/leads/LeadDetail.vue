@@ -1,7 +1,7 @@
 <template>
 	<div class="lead-detail">
 		<div class="lead-detail__header">
-			<NcButton @click="$emit('navigate', 'leads')">
+			<NcButton @click="$router.push({ name: 'Leads' })">
 				{{ t('pipelinq', 'Back to list') }}
 			</NcButton>
 			<h2 v-if="isNew">
@@ -71,7 +71,7 @@
 					<div class="lead-detail__section">
 						<h3>{{ t('pipelinq', 'Client') }}</h3>
 						<div v-if="clientData" class="client-link">
-							<a href="#" @click.prevent="$emit('navigate', 'client-detail', clientData.id)">
+							<a href="#" @click.prevent="$router.push({ name: 'ClientDetail', params: { id: clientData.id } })">
 								{{ clientData.name }}
 							</a>
 							<span v-if="clientData.email" class="client-meta">{{ clientData.email }}</span>
@@ -181,7 +181,7 @@ export default {
 			return !this.leadId || this.leadId === 'new'
 		},
 		loading() {
-			return this.objectStore.isLoading('lead')
+			return this.objectStore.loading.lead || false
 		},
 		leadData() {
 			if (this.isNew) return {}
@@ -243,7 +243,7 @@ export default {
 			const result = await this.objectStore.saveObject('lead', formData)
 			if (result) {
 				if (this.isNew) {
-					this.$emit('navigate', 'lead-detail', result.id)
+					this.$router.push({ name: 'LeadDetail', params: { id: result.id } })
 				} else {
 					await this.objectStore.fetchObject('lead', this.leadId)
 					await this.fetchRelated()
@@ -256,7 +256,7 @@ export default {
 		},
 		onFormCancel() {
 			if (this.isNew) {
-				this.$emit('navigate', 'leads')
+				this.$router.push({ name: 'Leads' })
 			} else {
 				this.editing = false
 			}
@@ -266,7 +266,7 @@ export default {
 			this.cleanupNotes('pipelinq_lead', this.leadId)
 			const success = await this.objectStore.deleteObject('lead', this.leadId)
 			if (success) {
-				this.$emit('navigate', 'leads')
+				this.$router.push({ name: 'Leads' })
 			} else {
 				const error = this.objectStore.getError('lead')
 				showError(error?.message || t('pipelinq', 'Failed to delete lead.'))

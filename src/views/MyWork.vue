@@ -396,9 +396,9 @@ export default {
 
 		openItem(item) {
 			if (item.entityType === 'lead') {
-				this.$emit('navigate', 'lead-detail', item.id)
+				this.$router.push({ name: 'LeadDetail', params: { id: item.id } })
 			} else {
-				this.$emit('navigate', 'request-detail', item.id)
+				this.$router.push({ name: 'RequestDetail', params: { id: item.id } })
 			}
 		},
 	},

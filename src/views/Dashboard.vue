@@ -128,7 +128,7 @@
 							v-if="myWorkTotal > 5"
 							type="tertiary"
 							class="view-all-link"
-							@click="$emit('navigate', 'my-work')">
+							@click="$router.push({ name: 'MyWork' })">
 							{{ t('pipelinq', 'View all ({count})', { count: myWorkTotal }) }}
 						</NcButton>
 					</div>
@@ -460,24 +460,24 @@ export default {
 
 		onLeadCreated(leadId) {
 			this.showLeadDialog = false
-			this.$emit('navigate', 'lead-detail', leadId)
+			this.$router.push({ name: 'LeadDetail', params: { id: leadId } })
 		},
 
 		onRequestCreated(requestId) {
 			this.showRequestDialog = false
-			this.$emit('navigate', 'request-detail', requestId)
+			this.$router.push({ name: 'RequestDetail', params: { id: requestId } })
 		},
 
 		onClientCreated(clientId) {
 			this.showClientDialog = false
-			this.$emit('navigate', 'client-detail', clientId)
+			this.$router.push({ name: 'ClientDetail', params: { id: clientId } })
 		},
 
 		openItem(item) {
 			if (item.entityType === 'lead') {
-				this.$emit('navigate', 'lead-detail', item.id)
+				this.$router.push({ name: 'LeadDetail', params: { id: item.id } })
 			} else {
-				this.$emit('navigate', 'request-detail', item.id)
+				this.$router.push({ name: 'RequestDetail', params: { id: item.id } })
 			}
 		},
 	},
