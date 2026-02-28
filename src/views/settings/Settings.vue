@@ -1,129 +1,82 @@
 <template>
-	<CnSettingsSection
-		:name="t('pipelinq', 'Pipelinq')"
-		:description="t('pipelinq', 'CRM settings and configuration')"
-		doc-url="https://pipelinq.app"
-		:loading="loading">
-		<template #actions>
-			<NcButton type="primary"
-				:disabled="reimporting"
-				@click="reimport">
-				<template #icon>
-					<NcLoadingIcon v-if="reimporting" :size="20" />
-				</template>
-				{{ t('pipelinq', 'Re-import configuration') }}
-			</NcButton>
-		</template>
+	<div>
+		<!-- Page Title -->
+		<NcSettingsSection
+			:name="t('pipelinq', 'Pipelinq Settings')"
+			:description="t('pipelinq', 'Configure your Pipelinq installation')"
+			doc-url="https://pipelinq.app" />
 
-		<div v-if="!loading">
-			<!-- Register Status -->
-			<div class="status-section">
-				<h3>{{ t('pipelinq', 'Register Status') }}</h3>
-
-				<div v-if="isConfigured" class="status-card">
-					<span class="status-indicator status-green" />
-					<div class="status-info">
-						<strong>{{ t('pipelinq', 'Connected') }}</strong>
-						<p>{{ t('pipelinq', 'Register') }}: pipelinq ({{ config.register }})</p>
-					</div>
-				</div>
-
-				<div v-else class="status-card">
-					<span class="status-indicator status-orange" />
-					<div class="status-info">
-						<strong>{{ t('pipelinq', 'Not configured') }}</strong>
-						<p>{{ t('pipelinq', 'OpenRegister is required. Install and enable it, then click Re-import.') }}</p>
-					</div>
-				</div>
-			</div>
-
-			<!-- Schema List -->
-			<div class="schema-section">
-				<h3>{{ t('pipelinq', 'Schemas') }}</h3>
-				<table class="schema-table">
-					<thead>
-						<tr>
-							<th>{{ t('pipelinq', 'Name') }}</th>
-							<th>{{ t('pipelinq', 'ID') }}</th>
-							<th>{{ t('pipelinq', 'Status') }}</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr v-for="schema in schemas" :key="schema.slug">
-							<td>{{ schema.label }}</td>
-							<td>{{ schema.id || '—' }}</td>
-							<td>
-								<span v-if="schema.id" class="status-indicator status-green" />
-								<span v-else class="status-indicator status-orange" />
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-
-			<!-- Pipeline Management -->
-			<PipelineManager v-if="isConfigured" />
-
-			<!-- Lead Sources -->
-			<TagManager v-if="isConfigured"
-				:title="t('pipelinq', 'Lead Sources')"
-				:tags="leadSourceTags"
-				:loading="leadSourcesLoading"
-				:add-label="t('pipelinq', '+ Add Source')"
-				:add-placeholder="t('pipelinq', 'Enter source name...')"
-				:usage-check="checkLeadSourceUsage"
-				@add="addLeadSource"
-				@remove="removeLeadSource"
-				@rename="renameLeadSource" />
-
-			<!-- Request Channels -->
-			<TagManager v-if="isConfigured"
-				:title="t('pipelinq', 'Request Channels')"
-				:tags="requestChannelTags"
-				:loading="requestChannelsLoading"
-				:add-label="t('pipelinq', '+ Add Channel')"
-				:add-placeholder="t('pipelinq', 'Enter channel name...')"
-				:usage-check="checkRequestChannelUsage"
-				@add="addRequestChannel"
-				@remove="removeRequestChannel"
-				@rename="renameRequestChannel" />
-
-			<!-- Re-import Status -->
-			<div v-if="message" class="actions-section">
-				<NcNoteCard :type="messageType">
-					{{ message }}
-				</NcNoteCard>
-			</div>
-
-			<!-- Manual Configuration -->
-			<details class="manual-config">
-				<summary>{{ t('pipelinq', 'Manual configuration') }}</summary>
-				<div class="form-group">
-					<label>{{ t('pipelinq', 'Register') }}</label>
-					<NcTextField
-						:value="form.register"
-						:label="t('pipelinq', 'Register')"
-						@update:value="v => form.register = v" />
-				</div>
-				<div v-for="schema in schemas" :key="schema.slug" class="form-group">
-					<label>{{ schema.label }}</label>
-					<NcTextField
-						:value="form[schema.key]"
-						:label="schema.label"
-						@update:value="v => form[schema.key] = v" />
-				</div>
-
-				<NcButton type="secondary" @click="save">
-					{{ t('pipelinq', 'Save') }}
+		<!-- Version Information -->
+		<CnVersionInfoCard
+			:app-name="'Pipelinq'"
+			:app-version="appVersion"
+			:is-up-to-date="true"
+			:show-update-button="true"
+			:title="t('pipelinq', 'Version Information')"
+			:description="t('pipelinq', 'Information about the current Pipelinq installation')">
+			<template #actions>
+				<NcButton type="primary"
+					:disabled="reimporting"
+					@click="reimport">
+					<template #icon>
+						<NcLoadingIcon v-if="reimporting" :size="20" />
+						<Refresh v-else :size="20" />
+					</template>
+					{{ reimporting ? t('pipelinq', 'Importing...') : t('pipelinq', 'Re-import configuration') }}
 				</NcButton>
-			</details>
+			</template>
+		</CnVersionInfoCard>
+
+		<!-- Register & Schema Mapping -->
+		<CnRegisterMapping
+			:name="t('pipelinq', 'Register Configuration')"
+			:description="t('pipelinq', 'Map Pipelinq object types to OpenRegister registers and schemas')"
+			:groups="registerGroups"
+			:configuration="config"
+			:saving="saving"
+			@update:configuration="config = $event"
+			@save="save" />
+
+		<!-- Pipeline Management -->
+		<PipelineManager v-if="isConfigured" />
+
+		<!-- Lead Sources -->
+		<TagManager v-if="isConfigured"
+			:title="t('pipelinq', 'Lead Sources')"
+			:tags="leadSourceTags"
+			:loading="leadSourcesLoading"
+			:add-label="t('pipelinq', '+ Add Source')"
+			:add-placeholder="t('pipelinq', 'Enter source name...')"
+			:usage-check="checkLeadSourceUsage"
+			@add="addLeadSource"
+			@remove="removeLeadSource"
+			@rename="renameLeadSource" />
+
+		<!-- Request Channels -->
+		<TagManager v-if="isConfigured"
+			:title="t('pipelinq', 'Request Channels')"
+			:tags="requestChannelTags"
+			:loading="requestChannelsLoading"
+			:add-label="t('pipelinq', '+ Add Channel')"
+			:add-placeholder="t('pipelinq', 'Enter channel name...')"
+			:usage-check="checkRequestChannelUsage"
+			@add="addRequestChannel"
+			@remove="removeRequestChannel"
+			@rename="renameRequestChannel" />
+
+		<!-- Re-import Status -->
+		<div v-if="message" class="actions-section">
+			<NcNoteCard :type="messageType">
+				{{ message }}
+			</NcNoteCard>
 		</div>
-	</CnSettingsSection>
+	</div>
 </template>
 
 <script>
-import { CnSettingsSection } from '@conduction/nextcloud-vue'
-import { NcButton, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import { CnRegisterMapping, CnVersionInfoCard } from '@conduction/nextcloud-vue'
+import { NcButton, NcLoadingIcon, NcNoteCard, NcSettingsSection } from '@nextcloud/vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
 import { useSettingsStore } from '../../store/modules/settings.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
 import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
@@ -134,26 +87,22 @@ import TagManager from './TagManager.vue'
 export default {
 	name: 'Settings',
 	components: {
-		CnSettingsSection,
+		CnRegisterMapping,
+		CnVersionInfoCard,
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,
-		NcTextField,
+		NcSettingsSection,
+		Refresh,
 		PipelineManager,
 		TagManager,
 	},
 	data() {
 		return {
-			form: {
-				register: '',
-				client_schema: '',
-				contact_schema: '',
-				lead_schema: '',
-				request_schema: '',
-				pipeline_schema: '',
-			},
 			config: {},
+			appVersion: document.getElementById('pipelinq-settings')?.dataset?.version || 'Unknown',
 			reimporting: false,
+			saving: false,
 			message: '',
 			messageType: 'success',
 		}
@@ -171,9 +120,6 @@ export default {
 		objectStore() {
 			return useObjectStore()
 		},
-		loading() {
-			return this.settingsStore.isLoading
-		},
 		isConfigured() {
 			return !!this.config.register
 		},
@@ -189,21 +135,25 @@ export default {
 		requestChannelsLoading() {
 			return this.requestChannelsStore.loading
 		},
-		schemas() {
-			return [
-				{ slug: 'client', key: 'client_schema', label: t('pipelinq', 'Client'), id: this.config.client_schema },
-				{ slug: 'contact', key: 'contact_schema', label: t('pipelinq', 'Contact'), id: this.config.contact_schema },
-				{ slug: 'lead', key: 'lead_schema', label: t('pipelinq', 'Lead'), id: this.config.lead_schema },
-				{ slug: 'request', key: 'request_schema', label: t('pipelinq', 'Request'), id: this.config.request_schema },
-				{ slug: 'pipeline', key: 'pipeline_schema', label: t('pipelinq', 'Pipeline'), id: this.config.pipeline_schema },
-			]
+		registerGroups() {
+			return [{
+				name: t('pipelinq', 'Pipelinq Objects'),
+				description: t('pipelinq', 'Core CRM object types used by Pipelinq'),
+				registerConfigKey: 'register',
+				types: [
+					{ slug: 'client', label: t('pipelinq', 'Client'), description: t('pipelinq', 'Companies and organisations') },
+					{ slug: 'contact', label: t('pipelinq', 'Contact'), description: t('pipelinq', 'Contact persons') },
+					{ slug: 'lead', label: t('pipelinq', 'Lead'), description: t('pipelinq', 'Sales leads') },
+					{ slug: 'request', label: t('pipelinq', 'Request'), description: t('pipelinq', 'Customer requests') },
+					{ slug: 'pipeline', label: t('pipelinq', 'Pipeline'), description: t('pipelinq', 'Pipeline stages') },
+				],
+			}]
 		},
 	},
 	async mounted() {
 		const config = await this.settingsStore.fetchSettings()
 		if (config) {
 			this.config = config
-			this.form = { ...this.form, ...config }
 		}
 
 		if (this.isConfigured) {
@@ -230,7 +180,6 @@ export default {
 
 				if (data.success) {
 					this.config = data.config || {}
-					this.form = { ...this.form, ...this.config }
 					this.message = t('pipelinq', 'Configuration re-imported successfully')
 					this.messageType = 'success'
 				} else {
@@ -244,14 +193,16 @@ export default {
 				this.reimporting = false
 			}
 		},
-		async save() {
+		async save(configuration) {
+			this.saving = true
 			this.message = ''
-			const result = await this.settingsStore.saveSettings(this.form)
+			const result = await this.settingsStore.saveSettings(configuration)
 			if (result) {
 				this.config = result
 				this.message = t('pipelinq', 'Configuration saved')
 				this.messageType = 'success'
 			}
+			this.saving = false
 		},
 		async addLeadSource(name) {
 			await this.leadSourcesStore.addSource(name)
@@ -297,83 +248,7 @@ export default {
 </script>
 
 <style scoped>
-.status-section,
-.schema-section,
 .actions-section {
-	margin-bottom: 24px;
-}
-
-.status-card {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	padding: 12px 16px;
-	border-radius: var(--border-radius-large);
-	border: 1px solid var(--color-border);
-}
-
-.status-info p {
-	margin: 4px 0 0;
-	color: var(--color-text-maxcontrast);
-}
-
-.status-indicator {
-	display: inline-block;
-	width: 10px;
-	height: 10px;
-	border-radius: 50%;
-	flex-shrink: 0;
-}
-
-.status-green {
-	background-color: var(--color-success);
-}
-
-.status-orange {
-	background-color: var(--color-warning);
-}
-
-.schema-table {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.schema-table th,
-.schema-table td {
-	padding: 8px 12px;
-	text-align: left;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.schema-table th {
-	font-weight: bold;
-	color: var(--color-text-maxcontrast);
-}
-
-.actions-section .notecard {
-	margin-top: 12px;
-}
-
-.manual-config {
-	margin-top: 24px;
-	padding: 12px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-large);
-}
-
-.manual-config summary {
-	cursor: pointer;
-	font-weight: bold;
-	margin-bottom: 12px;
-}
-
-.form-group {
-	margin-bottom: 16px;
-}
-
-.form-group label {
-	display: block;
-	margin-bottom: 4px;
-	font-weight: bold;
+	margin-top: 16px;
 }
 </style>

@@ -119,10 +119,10 @@ export default {
 			return useObjectStore()
 		},
 		pipelines() {
-			return this.objectStore.getCollection('pipeline') || []
+			return this.objectStore.collections.pipeline || []
 		},
 		loading() {
-			return this.objectStore.isLoading('pipeline')
+			return this.objectStore.loading.pipeline || false
 		},
 	},
 	async mounted() {
