@@ -42,19 +42,8 @@ webpackConfig.resolve = {
 	},
 }
 
-webpackConfig.module = {
-	rules: [
-		{
-			test: /\.vue$/,
-			loader: 'vue-loader',
-		},
-		{
-			test: /\.css$/,
-			use: ['style-loader', 'css-loader'],
-		},
-	],
-}
-
+// Keep the base module rules from @nextcloud/webpack-vue-config (VUE, CSS, SCSS, JS, ASSETS).
+// Only replace plugins to avoid duplicate VueLoaderPlugin (base config also registers one).
 webpackConfig.plugins = [
 	new VueLoaderPlugin(),
 	new webpack.DefinePlugin({ appName: JSON.stringify(appId) }),

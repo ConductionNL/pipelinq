@@ -1,28 +1,37 @@
 <template>
 	<NcContent app-name="pipelinq">
-		<MainMenu :current-route="currentRoute" @navigate="navigateTo" />
-		<NcAppContent>
-			<component :is="currentView" v-bind="currentProps" @navigate="navigateTo" />
+		<template v-if="storesReady">
+			<MainMenu @open-settings="showSettingsDialog = true" />
+			<NcAppContent>
+				<router-view />
+			</NcAppContent>
+			<CnIndexSidebar
+				v-if="sidebarState.active"
+				:schema="sidebarState.schema"
+				:visible-columns="sidebarState.visibleColumns"
+				:search-value="sidebarState.searchValue"
+				:active-filters="sidebarState.activeFilters"
+				:facet-data="sidebarState.facetData"
+				:open="sidebarState.open"
+				@update:open="sidebarState.open = $event"
+				@search="onSidebarSearch"
+				@columns-change="onSidebarColumnsChange"
+				@filter-change="onSidebarFilterChange" />
+			<UserSettings :open.sync="showSettingsDialog" />
+		</template>
+		<NcAppContent v-else>
+			<div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+				<NcLoadingIcon :size="64" />
+			</div>
 		</NcAppContent>
-		<UserSettings :open.sync="showSettingsDialog" />
 	</NcContent>
 </template>
 
 <script>
-import { NcContent, NcAppContent } from '@nextcloud/vue'
+import Vue from 'vue'
+import { NcContent, NcAppContent, NcLoadingIcon } from '@nextcloud/vue'
+import { CnIndexSidebar } from '@conduction/nextcloud-vue'
 import MainMenu from './navigation/MainMenu.vue'
-import Dashboard from './views/Dashboard.vue'
-import ClientList from './views/clients/ClientList.vue'
-import ClientDetail from './views/clients/ClientDetail.vue'
-import RequestList from './views/requests/RequestList.vue'
-import RequestDetail from './views/requests/RequestDetail.vue'
-import ContactList from './views/contacts/ContactList.vue'
-import ContactDetail from './views/contacts/ContactDetail.vue'
-import LeadList from './views/leads/LeadList.vue'
-import LeadDetail from './views/leads/LeadDetail.vue'
-import PipelineBoard from './views/pipeline/PipelineBoard.vue'
-import MyWork from './views/MyWork.vue'
-import PipelineManager from './views/settings/PipelineManager.vue'
 import UserSettings from './views/settings/UserSettings.vue'
 import { initializeStores } from './store/store.js'
 
@@ -31,115 +40,58 @@ export default {
 	components: {
 		NcContent,
 		NcAppContent,
+		NcLoadingIcon,
+		CnIndexSidebar,
 		MainMenu,
-		Dashboard,
-		ClientList,
-		ClientDetail,
-		RequestList,
-		RequestDetail,
-		ContactList,
-		ContactDetail,
-		LeadList,
-		LeadDetail,
-		PipelineBoard,
-		MyWork,
-		PipelineManager,
 		UserSettings,
 	},
-	data() {
+
+	provide() {
 		return {
-			currentRoute: 'dashboard',
-			currentId: null,
-			storesReady: false,
-			showSettingsDialog: false,
+			sidebarState: this.sidebarState,
 		}
 	},
-	computed: {
-		currentView() {
-			switch (this.currentRoute) {
-			case 'clients':
-				return 'ClientList'
-			case 'client-detail':
-				return 'ClientDetail'
-			case 'requests':
-				return 'RequestList'
-			case 'request-detail':
-				return 'RequestDetail'
-			case 'contacts':
-				return 'ContactList'
-			case 'contact-detail':
-				return 'ContactDetail'
-			case 'leads':
-				return 'LeadList'
-			case 'lead-detail':
-				return 'LeadDetail'
-			case 'pipeline':
-				return 'PipelineBoard'
-			case 'my-work':
-				return 'MyWork'
-			case 'pipelines':
-				return 'PipelineManager'
-			default:
-				return 'Dashboard'
-			}
-		},
-		currentProps() {
-			if (this.currentRoute === 'client-detail' && this.currentId) {
-				return { clientId: this.currentId }
-			}
-			if (this.currentRoute === 'request-detail' && this.currentId) {
-				return { requestId: this.currentId }
-			}
-			if (this.currentRoute === 'contact-detail' && this.currentId) {
-				return { contactId: this.currentId }
-			}
-			if (this.currentRoute === 'lead-detail' && this.currentId) {
-				return { leadId: this.currentId }
-			}
-			return {}
-		},
+
+	data() {
+		return {
+			storesReady: false,
+			showSettingsDialog: false,
+			sidebarState: Vue.observable({
+				active: false,
+				open: true,
+				schema: null,
+				visibleColumns: null,
+				searchValue: '',
+				activeFilters: {},
+				facetData: {},
+				onSearch: null,
+				onColumnsChange: null,
+				onFilterChange: null,
+			}),
+		}
 	},
+
 	async created() {
 		await initializeStores()
 		this.storesReady = true
-		this._handleHashRoute()
-		window.addEventListener('hashchange', this._handleHashRoute)
 	},
-	beforeDestroy() {
-		window.removeEventListener('hashchange', this._handleHashRoute)
-	},
+
 	methods: {
-		navigateTo(route, id = null) {
-			if (route === 'settings') {
-				this.showSettingsDialog = true
-				return
-			}
-			this.currentRoute = route
-			this.currentId = id
-			if (id) {
-				window.location.hash = `#/${route}/${id}`
-			} else {
-				window.location.hash = `#/${route}`
+		onSidebarSearch(value) {
+			this.sidebarState.searchValue = value
+			if (typeof this.sidebarState.onSearch === 'function') {
+				this.sidebarState.onSearch(value)
 			}
 		},
-		_handleHashRoute() {
-			const hash = window.location.hash.replace('#/', '')
-			const parts = hash.split('/')
-			if (parts[0]) {
-				this.currentRoute = parts[0]
-				this.currentId = parts[1] || null
-				if (parts[0] === 'clients' && parts[1]) {
-					this.currentRoute = 'client-detail'
-				}
-				if (parts[0] === 'requests' && parts[1]) {
-					this.currentRoute = 'request-detail'
-				}
-				if (parts[0] === 'contacts' && parts[1]) {
-					this.currentRoute = 'contact-detail'
-				}
-				if (parts[0] === 'leads' && parts[1]) {
-					this.currentRoute = 'lead-detail'
-				}
+		onSidebarColumnsChange(columns) {
+			this.sidebarState.visibleColumns = columns
+			if (typeof this.sidebarState.onColumnsChange === 'function') {
+				this.sidebarState.onColumnsChange(columns)
+			}
+		},
+		onSidebarFilterChange(filter) {
+			if (typeof this.sidebarState.onFilterChange === 'function') {
+				this.sidebarState.onFilterChange(filter)
 			}
 		},
 	},

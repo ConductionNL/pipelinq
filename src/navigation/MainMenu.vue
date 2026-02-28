@@ -3,56 +3,49 @@
 		<template #list>
 			<NcAppNavigationItem
 				:name="t('pipelinq', 'Dashboard')"
-				:class="{ active: currentRoute === 'dashboard' }"
-				@click="$emit('navigate', 'dashboard')">
+				:to="{ name: 'Dashboard' }">
 				<template #icon>
 					<ViewDashboard :size="20" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
 				:name="t('pipelinq', 'Clients')"
-				:class="{ active: currentRoute === 'clients' || currentRoute === 'client-detail' }"
-				@click="$emit('navigate', 'clients')">
+				:to="{ name: 'Clients' }">
 				<template #icon>
 					<AccountGroup :size="20" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
 				:name="t('pipelinq', 'Contacts')"
-				:class="{ active: currentRoute === 'contacts' || currentRoute === 'contact-detail' }"
-				@click="$emit('navigate', 'contacts')">
+				:to="{ name: 'Contacts' }">
 				<template #icon>
 					<AccountBox :size="20" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
 				:name="t('pipelinq', 'Leads')"
-				:class="{ active: currentRoute === 'leads' || currentRoute === 'lead-detail' }"
-				@click="$emit('navigate', 'leads')">
+				:to="{ name: 'Leads' }">
 				<template #icon>
 					<TrendingUp :size="20" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
 				:name="t('pipelinq', 'Requests')"
-				:class="{ active: currentRoute === 'requests' || currentRoute === 'request-detail' }"
-				@click="$emit('navigate', 'requests')">
+				:to="{ name: 'Requests' }">
 				<template #icon>
 					<FileDocument :size="20" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
 				:name="t('pipelinq', 'Pipeline')"
-				:class="{ active: currentRoute === 'pipeline' }"
-				@click="$emit('navigate', 'pipeline')">
+				:to="{ name: 'Pipeline' }">
 				<template #icon>
 					<ViewColumn :size="20" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
 				:name="t('pipelinq', 'My Work')"
-				:class="{ active: currentRoute === 'my-work' }"
-				@click="$emit('navigate', 'my-work')">
+				:to="{ name: 'MyWork' }">
 				<template #icon>
 					<AccountCheck :size="20" />
 				</template>
@@ -69,16 +62,14 @@
 			<NcAppNavigationSettings>
 				<NcAppNavigationItem
 					:name="t('pipelinq', 'Pipelines')"
-					:class="{ active: currentRoute === 'pipelines' }"
-					@click="$emit('navigate', 'pipelines')">
+					:to="{ name: 'Pipelines' }">
 					<template #icon>
 						<Pipe :size="20" />
 					</template>
 				</NcAppNavigationItem>
 				<NcAppNavigationItem
 					:name="t('pipelinq', 'Configuration')"
-					:class="{ active: currentRoute === 'settings' }"
-					@click="$emit('navigate', 'settings')">
+					@click="$emit('open-settings')">
 					<template #icon>
 						<Cog :size="20" />
 					</template>
@@ -117,12 +108,6 @@ export default {
 		BookOpenVariantOutline,
 		Cog,
 		Pipe,
-	},
-	props: {
-		currentRoute: {
-			type: String,
-			default: 'dashboard',
-		},
 	},
 	methods: {
 		openLink(url, target) {
