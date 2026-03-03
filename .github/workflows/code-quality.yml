@@ -57,6 +57,9 @@ jobs:
       - name: PHPUnit (Unit Tests)
         run: ./vendor/bin/phpunit --configuration phpunit.xml
 
+      - name: Psalm (Static Analysis)
+        run: ./vendor/bin/psalm --threads=1 --no-cache --output-format=github
+
   frontend-quality:
     name: Frontend Quality
     runs-on: ubuntu-latest
