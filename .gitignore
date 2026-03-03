@@ -1,3 +1,6 @@
 /node_modules/
 /js/
 /vendor/
+/docusaurus/node_modules/
+/docusaurus/build/
+/docusaurus/.docusaurus/

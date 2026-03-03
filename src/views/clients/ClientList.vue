@@ -1,81 +1,46 @@
 <template>
-	<div class="client-list">
-		<div class="client-list__header">
-			<h2>{{ t('pipelinq', 'Clients') }}</h2>
-			<NcButton type="primary" @click="createNew">
-				{{ t('pipelinq', 'New client') }}
-			</NcButton>
-		</div>
-
-		<div class="client-list__search">
-			<NcTextField
-				:value="searchTerm"
-				:label="t('pipelinq', 'Search')"
-				:show-trailing-button="searchTerm !== ''"
-				@update:value="onSearch"
-				@trailing-button-click="clearSearch" />
-		</div>
-
-		<NcLoadingIcon v-if="loading" />
-
-		<div v-else-if="clients.length === 0" class="client-list__empty">
-			<p>{{ t('pipelinq', 'No clients found') }}</p>
-		</div>
-
-		<table v-else class="client-list__table">
-			<thead>
-				<tr>
-					<th>{{ t('pipelinq', 'Name') }}</th>
-					<th>{{ t('pipelinq', 'Type') }}</th>
-					<th>{{ t('pipelinq', 'Email') }}</th>
-					<th>{{ t('pipelinq', 'Phone') }}</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr
-					v-for="client in clients"
-					:key="client.id"
-					class="client-list__row"
-					@click="openClient(client.id)">
-					<td>{{ client.name || '-' }}</td>
-					<td>{{ client.type || '-' }}</td>
-					<td>{{ client.email || '-' }}</td>
-					<td>{{ client.phone || '-' }}</td>
-				</tr>
-			</tbody>
-		</table>
-
-		<div v-if="pagination.pages > 1" class="client-list__pagination">
-			<NcButton
-				:disabled="pagination.page <= 1"
-				@click="loadPage(pagination.page - 1)">
-				{{ t('pipelinq', 'Previous') }}
-			</NcButton>
-			<span>{{ pagination.page }} / {{ pagination.pages }}</span>
-			<NcButton
-				:disabled="pagination.page >= pagination.pages"
-				@click="loadPage(pagination.page + 1)">
-				{{ t('pipelinq', 'Next') }}
-			</NcButton>
-		</div>
+	<div>
+		<CnIndexPage
+			:title="t('pipelinq', 'Clients')"
+			:description="t('pipelinq', 'Manage your client relationships')"
+			:schema="schema"
+			:objects="clients"
+			:pagination="pagination"
+			:loading="loading"
+			:sort-key="sortKey"
+			:sort-order="sortOrder"
+			:selectable="true"
+			:include-columns="visibleColumns"
+			@add="createNew"
+			@refresh="fetchClients"
+			@sort="onSort"
+			@row-click="openClient"
+			@page-changed="loadPage" />
 	</div>
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
+import { CnIndexPage } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'ClientList',
 	components: {
-		NcButton,
-		NcLoadingIcon,
-		NcTextField,
+		CnIndexPage,
 	},
+
+	inject: {
+		sidebarState: { default: null },
+	},
+
 	data() {
 		return {
 			searchTerm: '',
 			searchTimeout: null,
+			sortKey: null,
+			sortOrder: 'asc',
+			schema: null,
+			visibleColumns: null,
 		}
 	},
 	computed: {
@@ -83,102 +48,105 @@ export default {
 			return useObjectStore()
 		},
 		clients() {
-			return this.objectStore.getCollection('client')
+			return this.objectStore.collections.client || []
 		},
 		loading() {
-			return this.objectStore.isLoading('client')
+			return this.objectStore.loading.client || false
 		},
 		pagination() {
-			return this.objectStore.getPagination('client')
+			return this.objectStore.pagination.client || { total: 0, page: 1, pages: 1, limit: 20 }
 		},
 	},
-	mounted() {
+	async mounted() {
+		this.schema = await this.objectStore.fetchSchema('client')
+		this.setupSidebar()
 		this.fetchClients()
 	},
+	beforeDestroy() {
+		this.teardownSidebar()
+	},
 	methods: {
-		async fetchClients(params = {}) {
-			await this.objectStore.fetchCollection('client', {
-				_limit: 20,
-				_offset: 0,
-				...params,
-			})
+		setupSidebar() {
+			if (!this.sidebarState) return
+			this.sidebarState.active = true
+			this.sidebarState.schema = this.schema
+			this.sidebarState.searchValue = this.searchTerm
+			this.sidebarState.activeFilters = {}
+			this.sidebarState.onSearch = (value) => {
+				this.onSearch(value)
+			}
+			this.sidebarState.onColumnsChange = (columns) => {
+				this.visibleColumns = columns
+			}
+			this.sidebarState.onFilterChange = ({ key, values }) => {
+				this.onFilterChange(key, values)
+			}
 		},
-		openClient(id) {
-			this.$emit('navigate', 'client-detail', id)
+		teardownSidebar() {
+			if (!this.sidebarState) return
+			this.sidebarState.active = false
+			this.sidebarState.schema = null
+			this.sidebarState.activeFilters = {}
+			this.sidebarState.facetData = {}
+			this.sidebarState.onSearch = null
+			this.sidebarState.onColumnsChange = null
+			this.sidebarState.onFilterChange = null
+		},
+		async fetchClients(page = 1) {
+			const params = {
+				_limit: 20,
+				_page: page,
+			}
+			if (this.searchTerm) {
+				params._search = this.searchTerm
+			}
+			if (this.sortKey) {
+				params._order = { [this.sortKey]: this.sortOrder }
+			}
+			if (this.sidebarState?.activeFilters) {
+				for (const [key, values] of Object.entries(this.sidebarState.activeFilters)) {
+					if (values && values.length > 0) {
+						params[key] = values.length === 1 ? values[0] : values
+					}
+				}
+			}
+			await this.objectStore.fetchCollection('client', params)
+			if (this.sidebarState) {
+				this.sidebarState.facetData = this.objectStore.facets.client || {}
+			}
+		},
+		onFilterChange(key, values) {
+			if (!this.sidebarState) return
+			this.sidebarState.activeFilters = {
+				...this.sidebarState.activeFilters,
+				[key]: values && values.length > 0 ? values : undefined,
+			}
+			this.fetchClients()
+		},
+		openClient(row) {
+			this.$router.push({ name: 'ClientDetail', params: { id: row.id } })
 		},
 		createNew() {
-			this.$emit('navigate', 'client-detail', 'new')
+			this.$router.push({ name: 'ClientDetail', params: { id: 'new' } })
 		},
 		onSearch(value) {
 			this.searchTerm = value
+			if (this.sidebarState) {
+				this.sidebarState.searchValue = value
+			}
 			clearTimeout(this.searchTimeout)
 			this.searchTimeout = setTimeout(() => {
-				this.fetchClients({ _search: this.searchTerm })
+				this.fetchClients()
 			}, 300)
 		},
-		clearSearch() {
-			this.searchTerm = ''
+		onSort({ key, order }) {
+			this.sortKey = key
+			this.sortOrder = order
 			this.fetchClients()
 		},
 		loadPage(page) {
-			const offset = (page - 1) * this.pagination.limit
-			this.fetchClients({
-				_offset: offset,
-				_search: this.searchTerm || undefined,
-			})
+			this.fetchClients(page)
 		},
 	},
 }
 </script>
-
-<style scoped>
-.client-list {
-	padding: 20px;
-}
-
-.client-list__header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 16px;
-}
-
-.client-list__search {
-	margin-bottom: 16px;
-	max-width: 400px;
-}
-
-.client-list__table {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.client-list__table th,
-.client-list__table td {
-	padding: 8px 12px;
-	text-align: left;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.client-list__row {
-	cursor: pointer;
-}
-
-.client-list__row:hover {
-	background: var(--color-background-hover);
-}
-
-.client-list__empty {
-	padding: 40px;
-	text-align: center;
-	color: var(--color-text-maxcontrast);
-}
-
-.client-list__pagination {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 12px;
-	margin-top: 16px;
-}
-</style>
