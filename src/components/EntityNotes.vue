@@ -38,7 +38,9 @@
 						{{ t('pipelinq', 'Delete') }}
 					</NcButton>
 				</div>
-				<p class="entity-notes__message">{{ note.message }}</p>
+				<p class="entity-notes__message">
+					{{ note.message }}
+				</p>
 			</div>
 		</div>
 	</div>

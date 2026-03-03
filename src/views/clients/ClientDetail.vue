@@ -78,26 +78,26 @@
 			</div>
 			<div v-else class="viewTableContainer">
 				<table class="viewTable">
-				<thead>
-					<tr>
-						<th>{{ t('pipelinq', 'Name') }}</th>
-						<th>{{ t('pipelinq', 'Role') }}</th>
-						<th>{{ t('pipelinq', 'Email') }}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr
-						v-for="contact in contacts"
-						:key="contact.id"
-						class="viewTableRow"
-						@click="$router.push({ name: 'ContactDetail', params: { id: contact.id } })">
-						<td>{{ contact.name || '-' }}</td>
-						<td>{{ contact.role || '-' }}</td>
-						<td>{{ contact.email || '-' }}</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
+					<thead>
+						<tr>
+							<th>{{ t('pipelinq', 'Name') }}</th>
+							<th>{{ t('pipelinq', 'Role') }}</th>
+							<th>{{ t('pipelinq', 'Email') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="contact in contacts"
+							:key="contact.id"
+							class="viewTableRow"
+							@click="$router.push({ name: 'ContactDetail', params: { id: contact.id } })">
+							<td>{{ contact.name || '-' }}</td>
+							<td>{{ contact.role || '-' }}</td>
+							<td>{{ contact.email || '-' }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		</div>
 
 		<!-- Leads section -->
@@ -111,26 +111,26 @@
 			</div>
 			<div v-else class="viewTableContainer">
 				<table class="viewTable">
-				<thead>
-					<tr>
-						<th>{{ t('pipelinq', 'Title') }}</th>
-						<th>{{ t('pipelinq', 'Stage') }}</th>
-						<th>{{ t('pipelinq', 'Value') }}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr
-						v-for="lead in leads"
-						:key="lead.id"
-						class="viewTableRow"
-						@click="$router.push({ name: 'LeadDetail', params: { id: lead.id } })">
-						<td>{{ lead.title || '-' }}</td>
-						<td>{{ lead.stage || '-' }}</td>
-						<td>{{ lead.value || '-' }}</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
+					<thead>
+						<tr>
+							<th>{{ t('pipelinq', 'Title') }}</th>
+							<th>{{ t('pipelinq', 'Stage') }}</th>
+							<th>{{ t('pipelinq', 'Value') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="lead in leads"
+							:key="lead.id"
+							class="viewTableRow"
+							@click="$router.push({ name: 'LeadDetail', params: { id: lead.id } })">
+							<td>{{ lead.title || '-' }}</td>
+							<td>{{ lead.stage || '-' }}</td>
+							<td>{{ lead.value || '-' }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		</div>
 
 		<!-- Requests section -->
@@ -147,24 +147,24 @@
 			</div>
 			<div v-else class="viewTableContainer">
 				<table class="viewTable">
-				<thead>
-					<tr>
-						<th>{{ t('pipelinq', 'Title') }}</th>
-						<th>{{ t('pipelinq', 'Status') }}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr
-						v-for="request in requests"
-						:key="request.id"
-						class="viewTableRow"
-						@click="$router.push({ name: 'RequestDetail', params: { id: request.id } })">
-						<td>{{ request.title || '-' }}</td>
-						<td>{{ request.status || '-' }}</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
+					<thead>
+						<tr>
+							<th>{{ t('pipelinq', 'Title') }}</th>
+							<th>{{ t('pipelinq', 'Status') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="request in requests"
+							:key="request.id"
+							class="viewTableRow"
+							@click="$router.push({ name: 'RequestDetail', params: { id: request.id } })">
+							<td>{{ request.title || '-' }}</td>
+							<td>{{ request.status || '-' }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		</div>
 
 		<!-- Notes section -->
