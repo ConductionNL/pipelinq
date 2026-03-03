@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="img/app.svg" alt="Pipelinq logo" width="80" height="80">
+  <img src="img/app-store.svg" alt="Pipelinq logo" width="80" height="80">
 </p>
 
 <h1 align="center">Pipelinq</h1>
