@@ -45,7 +45,9 @@
 
 				<div class="pipeline-sidebar__summary">
 					<h4>{{ t('pipelinq', 'Stage flow') }}</h4>
-					<p class="pipeline-sidebar__flow">{{ stageFlow }}</p>
+					<p class="pipeline-sidebar__flow">
+						{{ stageFlow }}
+					</p>
 				</div>
 
 				<div class="pipeline-sidebar__button-row">
