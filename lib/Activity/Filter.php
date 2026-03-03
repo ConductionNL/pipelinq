@@ -81,7 +81,7 @@ class Filter implements IFilter
     public function getIcon(): string
     {
         return $this->urlGenerator->getAbsoluteURL(
-            $this->urlGenerator->imagePath(app: Application::APP_ID, image: 'app.svg')
+            $this->urlGenerator->imagePath(Application::APP_ID, 'app.svg')
         );
     }//end getIcon()
 

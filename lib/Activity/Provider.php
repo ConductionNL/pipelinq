@@ -91,7 +91,7 @@ class Provider implements IProvider
 
         $event->setIcon(
             $this->urlGenerator->getAbsoluteURL(
-                $this->urlGenerator->imagePath(app: Application::APP_ID, image: 'app.svg')
+                $this->urlGenerator->imagePath(Application::APP_ID, 'app.svg')
             )
         );
 

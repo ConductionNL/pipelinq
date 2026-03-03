@@ -90,7 +90,7 @@ class Notifier implements INotifier
 
         $notification->setIcon(
             $this->urlGenerator->getAbsoluteURL(
-                $this->urlGenerator->imagePath(app: Application::APP_ID, image: 'app-dark.svg')
+                $this->urlGenerator->imagePath(Application::APP_ID, 'app-dark.svg')
             )
         );
         $baseUrl    = $this->urlGenerator->linkToRouteAbsolute('pipelinq.dashboard.page');
