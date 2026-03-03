@@ -1,0 +1,163 @@
+{
+  "change": "client-management",
+  "project": "pipelinq",
+  "created": "2026-02-25",
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Create ClientForm.vue with field validation",
+      "spec_ref": "specs/client-crud/spec.md#REQ-CM-001",
+      "status": "completed",
+      "files_likely_affected": [
+        "pipelinq/src/views/clients/ClientForm.vue"
+      ],
+      "acceptance_criteria": [
+        "Name required and max 255 chars with inline error",
+        "Type required and enum (person/organization)",
+        "Email format validation if provided",
+        "Phone format validation if provided",
+        "Website URL validation if provided",
+        "Save button disabled while required fields empty",
+        "Edit mode pre-populates existing values"
+      ],
+      "context_files": [
+        "pipelinq/src/views/clients/ClientDetail.vue",
+        "pipelinq/src/store/modules/object.js"
+      ]
+    },
+    {
+      "id": "2.1",
+      "title": "Enhance ClientList with type filter, sort, empty state",
+      "spec_ref": "specs/client-crud/spec.md#REQ-CM-002",
+      "status": "completed",
+      "files_likely_affected": [
+        "pipelinq/src/views/clients/ClientList.vue"
+      ],
+      "acceptance_criteria": [
+        "Type filter dropdown (person/organization/all)",
+        "Sortable name column (asc/desc toggle)",
+        "Debounced search (300ms)",
+        "Empty state with create CTA",
+        "Pagination shows current page, total pages, total count"
+      ],
+      "context_files": [
+        "pipelinq/src/views/clients/ClientList.vue",
+        "pipelinq/src/store/modules/object.js"
+      ]
+    },
+    {
+      "id": "3.1",
+      "title": "Enhance ClientDetail with linked entities and delete warning",
+      "spec_ref": "specs/client-crud/spec.md#REQ-CM-003",
+      "status": "completed",
+      "files_likely_affected": [
+        "pipelinq/src/views/clients/ClientDetail.vue"
+      ],
+      "acceptance_criteria": [
+        "Contacts section lists linked contacts with name, role, email",
+        "Leads section lists linked leads with title, stage, value",
+        "Requests section lists linked requests with title, status",
+        "Clicking linked entity navigates to its detail",
+        "Add contact button visible in contacts section",
+        "Delete shows warning dialog with linked entity counts"
+      ],
+      "context_files": [
+        "pipelinq/src/views/clients/ClientDetail.vue"
+      ]
+    },
+    {
+      "id": "3.2",
+      "title": "Integrate ClientForm into create/edit flow",
+      "spec_ref": "specs/client-crud/spec.md#REQ-CM-001",
+      "status": "completed",
+      "depends_on": ["1.1"],
+      "files_likely_affected": [
+        "pipelinq/src/views/clients/ClientDetail.vue"
+      ],
+      "acceptance_criteria": [
+        "Edit button switches to ClientForm in edit mode",
+        "Create route uses ClientForm with empty fields",
+        "Save calls objectStore.saveObject and returns to detail"
+      ],
+      "context_files": [
+        "pipelinq/src/views/clients/ClientForm.vue",
+        "pipelinq/src/views/clients/ClientDetail.vue"
+      ]
+    },
+    {
+      "id": "4.1",
+      "title": "Create ContactList.vue",
+      "spec_ref": "specs/client-crud/spec.md#REQ-CM-005",
+      "status": "completed",
+      "files_likely_affected": [
+        "pipelinq/src/views/contacts/ContactList.vue"
+      ],
+      "acceptance_criteria": [
+        "Lists contacts with name, role, client name, email",
+        "Search filters by name",
+        "Client name is clickable and navigates to client detail",
+        "Pagination supported"
+      ],
+      "context_files": [
+        "pipelinq/src/views/clients/ClientList.vue",
+        "pipelinq/src/store/modules/object.js"
+      ]
+    },
+    {
+      "id": "4.2",
+      "title": "Create ContactDetail.vue",
+      "spec_ref": "specs/client-crud/spec.md#REQ-CM-004",
+      "status": "completed",
+      "files_likely_affected": [
+        "pipelinq/src/views/contacts/ContactDetail.vue"
+      ],
+      "acceptance_criteria": [
+        "Displays all contact fields",
+        "Client name shown and clickable",
+        "Edit and delete buttons available"
+      ],
+      "context_files": [
+        "pipelinq/src/views/clients/ClientDetail.vue"
+      ]
+    },
+    {
+      "id": "4.3",
+      "title": "Create ContactForm.vue",
+      "spec_ref": "specs/client-crud/spec.md#REQ-CM-004",
+      "status": "completed",
+      "files_likely_affected": [
+        "pipelinq/src/views/contacts/ContactForm.vue"
+      ],
+      "acceptance_criteria": [
+        "Name required with inline validation",
+        "Client selection required (dropdown/search)",
+        "Optional fields: email, phone, role",
+        "Edit mode pre-populates existing values"
+      ],
+      "context_files": [
+        "pipelinq/src/store/modules/object.js"
+      ]
+    },
+    {
+      "id": "5.1",
+      "title": "Add contact routes to App.vue and MainMenu",
+      "spec_ref": "specs/client-crud/spec.md#REQ-CM-005",
+      "status": "completed",
+      "depends_on": ["4.1", "4.2"],
+      "files_likely_affected": [
+        "pipelinq/src/App.vue",
+        "pipelinq/src/navigation/MainMenu.vue"
+      ],
+      "acceptance_criteria": [
+        "#/contacts renders ContactList",
+        "#/contacts/{id} renders ContactDetail",
+        "MainMenu includes Contacts navigation item",
+        "Client ↔ contact navigation works correctly"
+      ],
+      "context_files": [
+        "pipelinq/src/App.vue",
+        "pipelinq/src/navigation/MainMenu.vue"
+      ]
+    }
+  ]
+}
