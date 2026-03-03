@@ -3,7 +3,7 @@
 		:title="t('pipelinq', 'Contacts')"
 		:description="t('pipelinq', 'Manage your contacts')"
 		:schema="schema"
-		:objects="contacts"
+		:objects="objects"
 		:pagination="pagination"
 		:loading="loading"
 		:sort-key="sortKey"
@@ -11,10 +11,10 @@
 		:selectable="true"
 		:include-columns="visibleColumns"
 		@add="createNew"
-		@refresh="fetchContacts"
+		@refresh="refresh"
 		@sort="onSort"
 		@row-click="openContact"
-		@page-changed="loadPage">
+		@page-changed="onPageChange">
 		<template #column-client="{ row }">
 			<a
 				class="client-link"
@@ -26,7 +26,8 @@
 </template>
 
 <script>
-import { CnIndexPage } from '@conduction/nextcloud-vue'
+import { inject } from 'vue'
+import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -35,110 +36,32 @@ export default {
 		CnIndexPage,
 	},
 
-	inject: {
-		sidebarState: { default: null },
+	setup() {
+		const sidebarState = inject('sidebarState', null)
+		return useListView('contact', { sidebarState })
 	},
 
 	data() {
 		return {
-			searchTerm: '',
-			searchTimeout: null,
-			sortKey: null,
-			sortOrder: 'asc',
 			clientNames: {},
-			schema: null,
-			visibleColumns: null,
 		}
 	},
-	computed: {
-		objectStore() {
-			return useObjectStore()
-		},
-		contacts() {
-			return this.objectStore.collections.contact || []
-		},
-		loading() {
-			return this.objectStore.loading.contact || false
-		},
-		pagination() {
-			return this.objectStore.pagination.contact || { total: 0, page: 1, pages: 1, limit: 20 }
-		},
-	},
-	async mounted() {
-		this.schema = await this.objectStore.fetchSchema('contact')
-		this.setupSidebar()
-		await this.fetchContacts()
-		this.loadClientNames()
-	},
-	beforeDestroy() {
-		this.teardownSidebar()
-	},
-	methods: {
-		setupSidebar() {
-			if (!this.sidebarState) return
-			this.sidebarState.active = true
-			this.sidebarState.schema = this.schema
-			this.sidebarState.searchValue = this.searchTerm
-			this.sidebarState.activeFilters = {}
-			this.sidebarState.onSearch = (value) => {
-				this.onSearch(value)
-			}
-			this.sidebarState.onColumnsChange = (columns) => {
-				this.visibleColumns = columns
-			}
-			this.sidebarState.onFilterChange = ({ key, values }) => {
-				this.onFilterChange(key, values)
-			}
-		},
-		teardownSidebar() {
-			if (!this.sidebarState) return
-			this.sidebarState.active = false
-			this.sidebarState.schema = null
-			this.sidebarState.activeFilters = {}
-			this.sidebarState.facetData = {}
-			this.sidebarState.onSearch = null
-			this.sidebarState.onColumnsChange = null
-			this.sidebarState.onFilterChange = null
-		},
-		async fetchContacts(page = 1) {
-			const params = {
-				_limit: 20,
-				_page: page,
-			}
-			if (this.searchTerm) {
-				params._search = this.searchTerm
-			}
-			if (this.sortKey) {
-				params._order = { [this.sortKey]: this.sortOrder }
-			}
-			if (this.sidebarState?.activeFilters) {
-				for (const [key, values] of Object.entries(this.sidebarState.activeFilters)) {
-					if (values && values.length > 0) {
-						params[key] = values.length === 1 ? values[0] : values
-					}
-				}
-			}
-			await this.objectStore.fetchCollection('contact', params)
-			if (this.sidebarState) {
-				this.sidebarState.facetData = this.objectStore.facets.contact || {}
-			}
+
+	watch: {
+		objects() {
 			this.loadClientNames()
 		},
-		onFilterChange(key, values) {
-			if (!this.sidebarState) return
-			this.sidebarState.activeFilters = {
-				...this.sidebarState.activeFilters,
-				[key]: values && values.length > 0 ? values : undefined,
-			}
-			this.fetchContacts()
-		},
+	},
+
+	methods: {
 		async loadClientNames() {
-			const clientIds = this.contacts
+			const objectStore = useObjectStore()
+			const clientIds = this.objects
 				.map(c => c.client)
 				.filter(Boolean)
 			const uniqueIds = [...new Set(clientIds)]
 			if (uniqueIds.length === 0) return
-			const resolved = await this.objectStore.resolveReferences('client', uniqueIds)
+			const resolved = await objectStore.resolveReferences('client', uniqueIds)
 			for (const id of uniqueIds) {
 				this.$set(this.clientNames, id, resolved[id]?.name || t('pipelinq', '[Deleted]'))
 			}
@@ -157,24 +80,6 @@ export default {
 		},
 		createNew() {
 			this.$router.push({ name: 'ContactDetail', params: { id: 'new' } })
-		},
-		onSearch(value) {
-			this.searchTerm = value
-			if (this.sidebarState) {
-				this.sidebarState.searchValue = value
-			}
-			clearTimeout(this.searchTimeout)
-			this.searchTimeout = setTimeout(() => {
-				this.fetchContacts()
-			}, 300)
-		},
-		onSort({ key, order }) {
-			this.sortKey = key
-			this.sortOrder = order
-			this.fetchContacts()
-		},
-		loadPage(page) {
-			this.fetchContacts(page)
 		},
 	},
 }
