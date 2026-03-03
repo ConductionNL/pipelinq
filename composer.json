@@ -42,7 +42,7 @@
 		"phpmetrics:violations": "./vendor/bin/phpmetrics --violations-xml=phpmetrics/violations.xml lib/",
 		"psalm": "./vendor/bin/psalm --threads=1 --no-cache || echo 'Psalm not installed, skipping...'",
 		"phpstan": "./vendor/bin/phpstan analyse --memory-limit=1G || echo 'PHPStan not installed, skipping...'",
-		"test:unit": "./vendor/bin/phpunit --colors=always || echo 'Tests require Nextcloud environment, skipping...'",
+		"test:unit": "./vendor/bin/phpunit --configuration phpunit.xml --colors=always",
 		"check": [
 			"@lint",
 			"@phpcs"
