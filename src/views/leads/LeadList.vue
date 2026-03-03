@@ -3,7 +3,7 @@
 		:title="t('pipelinq', 'Leads')"
 		:description="t('pipelinq', 'Track and manage sales leads')"
 		:schema="schema"
-		:objects="leads"
+		:objects="objects"
 		:pagination="pagination"
 		:loading="loading"
 		:sort-key="sortKey"
@@ -11,10 +11,10 @@
 		:selectable="true"
 		:include-columns="visibleColumns"
 		@add="createNew"
-		@refresh="fetchLeads"
+		@refresh="refresh"
 		@sort="onSort"
 		@row-click="openLead"
-		@page-changed="loadPage">
+		@page-changed="onPageChange">
 		<template #column-value="{ value }">
 			{{ formatValue(value) }}
 		</template>
@@ -29,8 +29,8 @@
 </template>
 
 <script>
-import { CnIndexPage } from '@conduction/nextcloud-vue'
-import { useObjectStore } from '../../store/modules/object.js'
+import { inject } from 'vue'
+import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
 
 export default {
 	name: 'LeadList',
@@ -38,123 +38,17 @@ export default {
 		CnIndexPage,
 	},
 
-	inject: {
-		sidebarState: { default: null },
+	setup() {
+		const sidebarState = inject('sidebarState', null)
+		return useListView('lead', { sidebarState })
 	},
 
-	data() {
-		return {
-			searchTerm: '',
-			searchTimeout: null,
-			sortKey: null,
-			sortOrder: 'asc',
-			schema: null,
-			visibleColumns: null,
-		}
-	},
-	computed: {
-		objectStore() {
-			return useObjectStore()
-		},
-		leads() {
-			return this.objectStore.collections.lead || []
-		},
-		loading() {
-			return this.objectStore.loading.lead || false
-		},
-		pagination() {
-			return this.objectStore.pagination.lead || { total: 0, page: 1, pages: 1, limit: 20 }
-		},
-	},
-	async mounted() {
-		this.schema = await this.objectStore.fetchSchema('lead')
-		this.setupSidebar()
-		this.fetchLeads()
-	},
-	beforeDestroy() {
-		this.teardownSidebar()
-	},
 	methods: {
-		setupSidebar() {
-			if (!this.sidebarState) return
-			this.sidebarState.active = true
-			this.sidebarState.schema = this.schema
-			this.sidebarState.searchValue = this.searchTerm
-			this.sidebarState.activeFilters = {}
-			this.sidebarState.onSearch = (value) => {
-				this.onSearch(value)
-			}
-			this.sidebarState.onColumnsChange = (columns) => {
-				this.visibleColumns = columns
-			}
-			this.sidebarState.onFilterChange = ({ key, values }) => {
-				this.onFacetFilterChange(key, values)
-			}
-		},
-		teardownSidebar() {
-			if (!this.sidebarState) return
-			this.sidebarState.active = false
-			this.sidebarState.schema = null
-			this.sidebarState.activeFilters = {}
-			this.sidebarState.facetData = {}
-			this.sidebarState.onSearch = null
-			this.sidebarState.onColumnsChange = null
-			this.sidebarState.onFilterChange = null
-		},
-		async fetchLeads(page = 1) {
-			const params = {
-				_limit: 20,
-				_page: page,
-			}
-			if (this.searchTerm) {
-				params._search = this.searchTerm
-			}
-			if (this.sortKey) {
-				params._order = { [this.sortKey]: this.sortOrder }
-			}
-			if (this.sidebarState?.activeFilters) {
-				for (const [key, values] of Object.entries(this.sidebarState.activeFilters)) {
-					if (values && values.length > 0) {
-						params[key] = values.length === 1 ? values[0] : values
-					}
-				}
-			}
-			await this.objectStore.fetchCollection('lead', params)
-			if (this.sidebarState) {
-				this.sidebarState.facetData = this.objectStore.facets.lead || {}
-			}
-		},
 		openLead(row) {
 			this.$router.push({ name: 'LeadDetail', params: { id: row.id } })
 		},
 		createNew() {
 			this.$router.push({ name: 'LeadDetail', params: { id: 'new' } })
-		},
-		onSearch(value) {
-			this.searchTerm = value
-			if (this.sidebarState) {
-				this.sidebarState.searchValue = value
-			}
-			clearTimeout(this.searchTimeout)
-			this.searchTimeout = setTimeout(() => {
-				this.fetchLeads()
-			}, 300)
-		},
-		onSort({ key, order }) {
-			this.sortKey = key
-			this.sortOrder = order
-			this.fetchLeads()
-		},
-		onFacetFilterChange(key, values) {
-			if (!this.sidebarState) return
-			this.sidebarState.activeFilters = {
-				...this.sidebarState.activeFilters,
-				[key]: values && values.length > 0 ? values : undefined,
-			}
-			this.fetchLeads()
-		},
-		loadPage(page) {
-			this.fetchLeads(page)
 		},
 		formatValue(value) {
 			if (value === null || value === undefined) return '-'
