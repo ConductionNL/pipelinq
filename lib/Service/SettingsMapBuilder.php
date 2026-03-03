@@ -73,6 +73,40 @@ class SettingsMapBuilder
     }//end findRegisterIdBySlug()
 
     /**
+     * Find the default view ID from imported views.
+     *
+     * Looks for a view marked as default, or falls back to the first view.
+     *
+     * @param array $views The imported views.
+     *
+     * @return ?string The view ID or null.
+     */
+    public function findDefaultViewId(array $views): ?string
+    {
+        foreach ($views as $view) {
+            $viewArray = $this->normalizeToArray(value: $view);
+            if ($viewArray === null) {
+                continue;
+            }
+
+            $isDefault = $viewArray['isDefault'] ?? false;
+            if ($isDefault === true) {
+                return $viewArray['id'] ?? $viewArray['uuid'] ?? null;
+            }
+        }
+
+        // Fall back to the first view if none is marked as default.
+        if (empty($views) === false) {
+            $firstView = $this->normalizeToArray(value: reset($views));
+            if ($firstView !== null) {
+                return $firstView['id'] ?? $firstView['uuid'] ?? null;
+            }
+        }
+
+        return null;
+    }//end findDefaultViewId()
+
+    /**
      * Add a single schema entry to the slug map.
      *
      * @param mixed $schema    The schema object or array.

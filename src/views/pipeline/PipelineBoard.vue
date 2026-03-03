@@ -13,7 +13,7 @@
 					class="pipeline-selector"
 					@input="onPipelineChange" />
 				<NcSelect
-					v-if="isMixed"
+					v-if="hasMultipleSchemas"
 					v-model="showFilter"
 					:options="showFilterOptions"
 					:clearable="false"
@@ -36,6 +36,14 @@
 						</template>
 					</NcButton>
 				</div>
+				<NcButton
+					type="tertiary"
+					:aria-label="t('pipelinq', 'Pipeline settings')"
+					@click="toggleSidebar">
+					<template #icon>
+						<Cog :size="20" />
+					</template>
+				</NcButton>
 			</div>
 		</div>
 
@@ -58,8 +66,8 @@
 						<span class="column-title">{{ stage.name }}</span>
 						<span class="column-count">{{ getStageItems(stage.name).length }}</span>
 					</div>
-					<span class="column-value">
-						EUR {{ getStageTotalValue(stage.name).toLocaleString('nl-NL') }}
+					<span v-if="hasTotals" class="column-value">
+						{{ selectedPipeline.totalsLabel || '' }} {{ getStageTotalValue(stage.name).toLocaleString('nl-NL') }}
 					</span>
 				</div>
 				<div class="kanban-column__body">
@@ -67,8 +75,9 @@
 						v-for="item in getStageItems(stage.name)"
 						:key="item.id"
 						:item="item"
-						:entity-type="item._entityType"
+						:entity-type="item._schemaSlug"
 						:stages="sortedStages"
+						:column-property="getColumnProperty(item)"
 						@open="openItem"
 						@refresh="fetchPipelineItems" />
 				</div>
@@ -91,8 +100,9 @@
 							v-for="item in getStageItems(stage.name)"
 							:key="item.id"
 							:item="item"
-							:entity-type="item._entityType"
+							:entity-type="item._schemaSlug"
 							:stages="sortedStages"
+							:column-property="getColumnProperty(item)"
 							@open="openItem"
 							@refresh="fetchPipelineItems" />
 					</div>
@@ -109,9 +119,9 @@
 							{{ t('pipelinq', 'Title') }}
 							<span v-if="sortBy === 'title'" class="sort-indicator">{{ sortDir === 'asc' ? '\u25B2' : '\u25BC' }}</span>
 						</th>
-						<th class="sortable" @click="toggleSort('entityType')">
+						<th class="sortable" @click="toggleSort('schemaSlug')">
 							{{ t('pipelinq', 'Type') }}
-							<span v-if="sortBy === 'entityType'" class="sort-indicator">{{ sortDir === 'asc' ? '\u25B2' : '\u25BC' }}</span>
+							<span v-if="sortBy === 'schemaSlug'" class="sort-indicator">{{ sortDir === 'asc' ? '\u25B2' : '\u25BC' }}</span>
 						</th>
 						<th class="sortable" @click="toggleSort('stage')">
 							{{ t('pipelinq', 'Stage') }}
@@ -153,17 +163,17 @@
 							</span>
 						</td>
 						<td>
-							<span class="entity-badge" :class="'badge--' + item._entityType">
-								{{ item._entityType === 'lead' ? 'LEAD' : 'REQ' }}
+							<span class="entity-badge" :class="'badge--' + item._schemaSlug">
+								{{ item._schemaSlug.toUpperCase().slice(0, 4) }}
 							</span>
 						</td>
-						<td>{{ item.stage }}</td>
+						<td>{{ getItemColumnValue(item) }}</td>
 						<td>{{ item.assignee || '\u2014' }}</td>
 						<td>
-							<span v-if="item._entityType === 'lead' && item.value">
-								EUR {{ Number(item.value).toLocaleString('nl-NL') }}
+							<span v-if="getItemTotalsValue(item) !== null">
+								{{ selectedPipeline.totalsLabel || '' }} {{ Number(getItemTotalsValue(item)).toLocaleString('nl-NL') }}
 							</span>
-							<span v-else>\u2014</span>
+							<span v-else>&#x2014;</span>
 						</td>
 						<td :class="{ 'overdue-date': isItemOverdue(item) }">
 							{{ formatDate(item.expectedCloseDate || item.requestedAt) }}
@@ -192,6 +202,7 @@
 import { NcButton, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
 import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
+import Cog from 'vue-material-design-icons/Cog.vue'
 import PipelineCard from './PipelineCard.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { getPriorityLabel, getPriorityColor } from '../../services/requestStatus.js'
@@ -206,6 +217,10 @@ export default {
 		PipelineCard,
 		ViewColumn,
 		FormatListBulleted,
+		Cog,
+	},
+	inject: {
+		pipelineSidebarState: { default: null },
 	},
 	data() {
 		return {
@@ -213,8 +228,7 @@ export default {
 			showFilter: 'all',
 			expandedClosed: null,
 			loading: false,
-			leads: [],
-			requests: [],
+			items: [],
 			viewMode: 'kanban',
 			sortBy: 'title',
 			sortDir: 'asc',
@@ -230,22 +244,31 @@ export default {
 		pipelineSelectOptions() {
 			return this.pipelines.map(p => ({
 				value: p.id,
-				label: `${p.title} (${this.entityTypeLabel(p.entityType)})`,
+				label: p.title,
 			}))
 		},
 		selectedPipeline() {
 			if (!this.selectedPipelineId) return null
 			return this.pipelines.find(p => p.id === this.selectedPipelineId) || null
 		},
-		isMixed() {
-			return this.selectedPipeline?.entityType === 'both'
+		propertyMappings() {
+			return this.selectedPipeline?.propertyMappings || []
+		},
+		hasMultipleSchemas() {
+			return this.propertyMappings.length > 1
+		},
+		hasTotals() {
+			return this.propertyMappings.some(m => m.totalsProperty)
 		},
 		showFilterOptions() {
-			return [
-				{ id: 'all', label: t('pipelinq', 'All') },
-				{ id: 'lead', label: t('pipelinq', 'Leads only') },
-				{ id: 'request', label: t('pipelinq', 'Requests only') },
-			]
+			const options = [{ id: 'all', label: t('pipelinq', 'All') }]
+			for (const mapping of this.propertyMappings) {
+				options.push({
+					id: mapping.schemaSlug,
+					label: mapping.schemaSlug.charAt(0).toUpperCase() + mapping.schemaSlug.slice(1) + 's',
+				})
+			}
+			return options
 		},
 		sortedStages() {
 			if (!this.selectedPipeline?.stages) return []
@@ -258,23 +281,11 @@ export default {
 			return this.sortedStages.filter(s => s.isClosed)
 		},
 		allItems() {
-			let items = []
-			const et = this.selectedPipeline?.entityType
-
-			if (et === 'lead' || et === 'both') {
-				items = items.concat(this.leads.map(l => ({ ...l, _entityType: 'lead' })))
-			}
-			if (et === 'request' || et === 'both') {
-				items = items.concat(this.requests.map(r => ({ ...r, _entityType: 'request' })))
-			}
-
-			// Apply show filter
 			const filter = this.showFilter?.id || this.showFilter || 'all'
 			if (filter !== 'all') {
-				items = items.filter(i => i._entityType === filter)
+				return this.items.filter(i => i._schemaSlug === filter)
 			}
-
-			return items
+			return this.items
 		},
 		sortedListItems() {
 			const items = [...this.allItems]
@@ -286,13 +297,13 @@ export default {
 					valA = (a.title || '').toLowerCase()
 					valB = (b.title || '').toLowerCase()
 					break
-				case 'entityType':
-					valA = a._entityType
-					valB = b._entityType
+				case 'schemaSlug':
+					valA = a._schemaSlug
+					valB = b._schemaSlug
 					break
 				case 'stage':
-					valA = (a.stage || '').toLowerCase()
-					valB = (b.stage || '').toLowerCase()
+					valA = (this.getItemColumnValue(a) || '').toLowerCase()
+					valB = (this.getItemColumnValue(b) || '').toLowerCase()
 					break
 				case 'assignee':
 					valA = (a.assignee || '').toLowerCase()
@@ -324,7 +335,18 @@ export default {
 			return items
 		},
 	},
+	watch: {
+		selectedPipeline(val) {
+			this.syncSidebarState(val)
+		},
+	},
 	async mounted() {
+		// Activate pipeline sidebar
+		if (this.pipelineSidebarState) {
+			this.pipelineSidebarState.active = true
+			this.pipelineSidebarState.onSave = this.onSidebarSave
+		}
+
 		this.loading = true
 		await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
 
@@ -336,26 +358,78 @@ export default {
 		}
 		this.loading = false
 	},
+	beforeDestroy() {
+		if (this.pipelineSidebarState) {
+			this.pipelineSidebarState.active = false
+			this.pipelineSidebarState.pipeline = null
+			this.pipelineSidebarState.onSave = null
+		}
+	},
 	methods: {
 		getPriorityLabel,
 		getPriorityColor,
 
-		entityTypeLabel(type) {
-			if (type === 'both') return t('pipelinq', 'Leads, Requests')
-			if (type === 'request') return t('pipelinq', 'Requests')
-			return t('pipelinq', 'Leads')
+		syncSidebarState(pipeline) {
+			if (this.pipelineSidebarState) {
+				this.pipelineSidebarState.pipeline = pipeline
+			}
+		},
+
+		toggleSidebar() {
+			if (this.pipelineSidebarState) {
+				this.pipelineSidebarState.open = !this.pipelineSidebarState.open
+			}
+		},
+
+		async onSidebarSave(pipelineData) {
+			await this.objectStore.saveObject('pipeline', pipelineData)
+			await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
+			this.syncSidebarState(this.selectedPipeline)
+			await this.fetchPipelineItems()
+		},
+
+		getMappingForItem(item) {
+			return this.propertyMappings.find(m => m.schemaSlug === item._schemaSlug) || null
+		},
+
+		getColumnProperty(item) {
+			const mapping = this.getMappingForItem(item)
+			return mapping?.columnProperty || 'stage'
+		},
+
+		getItemColumnValue(item) {
+			return item[this.getColumnProperty(item)] || ''
+		},
+
+		getItemTotalsValue(item) {
+			const mapping = this.getMappingForItem(item)
+			if (!mapping?.totalsProperty) return null
+			const val = item[mapping.totalsProperty]
+			return val !== undefined && val !== null ? val : null
 		},
 
 		getStageItems(stageName) {
 			return this.allItems
-				.filter(i => i.stage === stageName)
+				.filter(item => {
+					const colValue = this.getItemColumnValue(item)
+					if (colValue === stageName) return true
+					// Items with no matching column go to first non-closed stage
+					if (!colValue && this.openStages.length > 0 && this.openStages[0].name === stageName) return true
+					return false
+				})
 				.sort((a, b) => (a.stageOrder || 0) - (b.stageOrder || 0))
 		},
 
 		getStageTotalValue(stageName) {
-			return this.getStageItems(stageName)
-				.filter(i => i._entityType === 'lead' && i.value)
-				.reduce((sum, i) => sum + Number(i.value), 0)
+			const stageItems = this.getStageItems(stageName)
+			let total = 0
+			for (const item of stageItems) {
+				const mapping = this.getMappingForItem(item)
+				if (mapping?.totalsProperty && item[mapping.totalsProperty]) {
+					total += Number(item[mapping.totalsProperty])
+				}
+			}
+			return total
 		},
 
 		async onPipelineChange() {
@@ -366,31 +440,54 @@ export default {
 			if (!this.selectedPipelineId) return
 			this.loading = true
 
-			const et = this.selectedPipeline?.entityType
-			const promises = []
-
-			if (et === 'lead' || et === 'both') {
-				promises.push(
-					this.fetchItems('lead').then(items => { this.leads = items }),
-				)
+			const pipeline = this.selectedPipeline
+			if (pipeline?.propertyMappings && pipeline.propertyMappings.length > 0) {
+				await this.fetchItemsViaMappings(pipeline)
 			} else {
-				this.leads = []
+				// Legacy fallback for pipelines without propertyMappings
+				await this.fetchItemsLegacy(pipeline)
 			}
 
-			if (et === 'request' || et === 'both') {
-				promises.push(
-					this.fetchItems('request').then(items => { this.requests = items }),
-				)
-			} else {
-				this.requests = []
-			}
-
-			await Promise.all(promises)
 			this.loading = false
 		},
 
-		async fetchItems(type) {
-			const config = this.objectStore.objectTypeRegistry[type]
+		async fetchItemsViaMappings(pipeline) {
+			const mappings = pipeline.propertyMappings || []
+			const promises = mappings.map(async (mapping) => {
+				const rawItems = await this.fetchSchemaItems(mapping.schemaSlug)
+				return rawItems.map(item => ({
+					...item,
+					_schemaSlug: mapping.schemaSlug,
+					_entityType: mapping.schemaSlug,
+				}))
+			})
+			const results = await Promise.all(promises)
+			this.items = results.flat()
+		},
+
+		async fetchItemsLegacy(pipeline) {
+			// Fallback for old pipelines with entityType
+			const et = pipeline?.entityType
+			const promises = []
+			let leads = []
+			let requests = []
+
+			if (et === 'lead' || et === 'both') {
+				promises.push(this.fetchSchemaItems('lead').then(items => { leads = items }))
+			}
+			if (et === 'request' || et === 'both') {
+				promises.push(this.fetchSchemaItems('request').then(items => { requests = items }))
+			}
+
+			await Promise.all(promises)
+			this.items = [
+				...leads.map(l => ({ ...l, _schemaSlug: 'lead', _entityType: 'lead' })),
+				...requests.map(r => ({ ...r, _schemaSlug: 'request', _entityType: 'request' })),
+			]
+		},
+
+		async fetchSchemaItems(schemaSlug) {
+			const config = this.objectStore.objectTypeRegistry[schemaSlug]
 			if (!config) return []
 
 			try {
@@ -413,13 +510,16 @@ export default {
 		async onDrop(event, targetStage) {
 			try {
 				const data = JSON.parse(event.dataTransfer.getData('application/json'))
-				if (data.stage === targetStage.name) return
+				const mapping = this.propertyMappings.find(m => m.schemaSlug === data._schemaSlug)
+				const columnProp = mapping?.columnProperty || 'stage'
 
-				await this.objectStore.saveObject(data.entityType, {
-					id: data.id,
-					stage: targetStage.name,
-					stageOrder: targetStage.order,
-				})
+				if (data[columnProp] === targetStage.name) return
+
+				const update = { id: data.id }
+				update[columnProp] = targetStage.name
+				update.stageOrder = targetStage.order
+
+				await this.objectStore.saveObject(data._schemaSlug, update)
 				await this.fetchPipelineItems()
 			} catch {
 				// Invalid drop
@@ -455,7 +555,7 @@ export default {
 		},
 
 		isItemStale(item) {
-			return isStale(item, item._entityType)
+			return isStale(item, item._schemaSlug)
 		},
 
 		getItemAgingClass(item) {
@@ -467,9 +567,9 @@ export default {
 		},
 
 		openItem(item) {
-			if (item._entityType === 'lead') {
+			if (item._schemaSlug === 'lead') {
 				this.$router.push({ name: 'LeadDetail', params: { id: item.id } })
-			} else {
+			} else if (item._schemaSlug === 'request') {
 				this.$router.push({ name: 'RequestDetail', params: { id: item.id } })
 			}
 		},
@@ -519,20 +619,22 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
-/* Kanban styles */
+/* Kanban styles — dashboard widget container pattern */
 .pipeline-board__columns {
 	display: flex;
 	gap: 12px;
 	overflow-x: auto;
 	flex: 1;
 	align-items: flex-start;
+	padding-bottom: 8px;
 }
 
 .kanban-column {
 	min-width: 260px;
 	max-width: 300px;
 	flex-shrink: 0;
-	background: var(--color-background-dark);
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius-large);
 	display: flex;
 	flex-direction: column;
@@ -540,9 +642,10 @@ export default {
 }
 
 .kanban-column__header {
-	padding: 12px;
+	padding: 10px 12px;
 	border-top: 3px solid var(--color-primary);
 	border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
+	border-bottom: 1px solid var(--color-border);
 }
 
 .column-header-top {
@@ -559,30 +662,32 @@ export default {
 }
 
 .column-count {
-	display: inline-block;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 	min-width: 20px;
-	text-align: center;
-	padding: 0 5px;
+	height: 20px;
+	padding: 0 6px;
 	border-radius: 10px;
 	font-size: 11px;
 	font-weight: 600;
-	background: var(--color-background-darker, rgba(0,0,0,0.07));
+	background: var(--color-background-dark);
 	color: var(--color-text-maxcontrast);
 }
 
 .column-value {
 	display: block;
-	font-size: 14px;
-	font-weight: 700;
-	color: var(--color-text-light);
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--color-text-maxcontrast);
 	margin-top: 2px;
 }
 
 .kanban-column__body {
-	padding: 8px;
+	padding: 4px;
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
+	gap: 1px;
 	overflow-y: auto;
 	flex: 1;
 }
@@ -597,11 +702,17 @@ export default {
 
 .kanban-closed-column {
 	min-width: 100px;
-	background: var(--color-background-dark);
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius-large);
 	padding: 12px;
 	cursor: pointer;
 	text-align: center;
+	transition: background 0.15s;
+}
+
+.kanban-closed-column:hover {
+	background: var(--color-background-hover);
 }
 
 .kanban-closed-column.expanded {
@@ -626,7 +737,7 @@ export default {
 	margin-top: 12px;
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
+	gap: 1px;
 }
 
 /* List view styles */

@@ -17,6 +17,12 @@
 				@search="onSidebarSearch"
 				@columns-change="onSidebarColumnsChange"
 				@filter-change="onSidebarFilterChange" />
+			<PipelineSidebar
+				v-if="pipelineSidebarState.active && !sidebarState.active"
+				:pipeline="pipelineSidebarState.pipeline"
+				:open="pipelineSidebarState.open"
+				@update:open="pipelineSidebarState.open = $event"
+				@save="onPipelineSidebarSave" />
 			<UserSettings :open.sync="showSettingsDialog" />
 		</template>
 		<NcAppContent v-else>
@@ -33,6 +39,7 @@ import { NcContent, NcAppContent, NcLoadingIcon } from '@nextcloud/vue'
 import { CnIndexSidebar } from '@conduction/nextcloud-vue'
 import MainMenu from './navigation/MainMenu.vue'
 import UserSettings from './views/settings/UserSettings.vue'
+import PipelineSidebar from './views/pipeline/PipelineSidebar.vue'
 import { initializeStores } from './store/store.js'
 
 export default {
@@ -44,11 +51,13 @@ export default {
 		CnIndexSidebar,
 		MainMenu,
 		UserSettings,
+		PipelineSidebar,
 	},
 
 	provide() {
 		return {
 			sidebarState: this.sidebarState,
+			pipelineSidebarState: this.pipelineSidebarState,
 		}
 	},
 
@@ -67,6 +76,12 @@ export default {
 				onSearch: null,
 				onColumnsChange: null,
 				onFilterChange: null,
+			}),
+			pipelineSidebarState: Vue.observable({
+				active: false,
+				open: true,
+				pipeline: null,
+				onSave: null,
 			}),
 		}
 	},
@@ -92,6 +107,11 @@ export default {
 		onSidebarFilterChange(filter) {
 			if (typeof this.sidebarState.onFilterChange === 'function') {
 				this.sidebarState.onFilterChange(filter)
+			}
+		},
+		onPipelineSidebarSave(pipelineData) {
+			if (typeof this.pipelineSidebarState.onSave === 'function') {
+				this.pipelineSidebarState.onSave(pipelineData)
 			}
 		},
 	},

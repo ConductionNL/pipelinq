@@ -1,62 +1,47 @@
 <template>
 	<div
 		class="pipeline-card"
-		:class="['pipeline-card--' + entityType, { 'pipeline-card--overdue': isOverdue }]"
+		:class="{ 'pipeline-card--overdue': isOverdue }"
 		draggable="true"
 		@dragstart="onDragStart"
 		@click="$emit('open', item)">
-		<div class="pipeline-card__header">
+		<!-- Compact single-row layout: badge → title → meta → age -->
+		<div class="pipeline-card__row">
 			<span class="entity-badge" :class="'badge--' + entityType">
-				{{ entityType === 'lead' ? 'LEAD' : 'REQ' }}
+				{{ entityType.toUpperCase().slice(0, 4) }}
 			</span>
-			<span
-				v-if="item.priority && item.priority !== 'normal'"
-				class="priority-badge"
-				:style="{ color: getPriorityColor(item.priority) }">
-				{{ getPriorityLabel(item.priority) }}
+			<span class="pipeline-card__title">
+				{{ item.title }}
 			</span>
-			<span v-if="isStaleItem" class="stale-badge">
-				{{ t('pipelinq', 'Stale') }}
+			<span v-if="item.priority && item.priority !== 'normal'" class="priority-indicator" :class="'priority--' + item.priority" />
+			<span v-if="item.value" class="card-meta">
+				{{ Number(item.value).toLocaleString('nl-NL') }}
 			</span>
-		</div>
-		<div class="pipeline-card__title">
-			{{ item.title }}
-		</div>
-		<div class="pipeline-card__meta">
-			<span v-if="entityType === 'lead' && item.value" class="card-value">
-				EUR {{ Number(item.value).toLocaleString('nl-NL') }}
-			</span>
-			<span v-if="entityType === 'request' && item.status" class="card-status">
-				{{ getStatusLabel(item.status) }}
-			</span>
-		</div>
-		<div class="pipeline-card__footer">
 			<span v-if="item.assignee" class="card-assignee">
 				{{ item.assignee }}
 			</span>
-			<span class="card-footer-right">
-				<span v-if="item.expectedCloseDate" class="card-date" :class="{ overdue: isOverdue }">
-					{{ formatDate(item.expectedCloseDate) }}
-				</span>
-				<span v-if="daysAge > 0" class="aging-badge" :class="agingClass">
-					{{ agingLabel }}
-				</span>
+			<span v-if="daysAge > 0" class="aging-badge" :class="agingClass">
+				{{ agingLabel }}
+			</span>
+			<span v-if="item.expectedCloseDate" class="card-date" :class="{ 'card-date--overdue': isOverdue }">
+				{{ formatDate(item.expectedCloseDate) }}
 			</span>
 		</div>
+		<!-- Quick actions row (click.stop prevents card navigation) -->
 		<div class="pipeline-card__actions" @click.stop>
 			<NcSelect
 				v-model="selectedStage"
 				:options="stageOptions"
 				:clearable="false"
 				:placeholder="t('pipelinq', 'Stage')"
-				class="quick-select quick-select--stage"
+				class="quick-select"
 				@input="onStageChange" />
 			<NcSelect
 				v-model="selectedAssignee"
 				:options="userOptions"
 				:clearable="true"
 				:placeholder="t('pipelinq', 'Assign')"
-				class="quick-select quick-select--assign"
+				class="quick-select"
 				@input="onAssignChange" />
 		</div>
 	</div>
@@ -84,11 +69,14 @@ export default {
 		entityType: {
 			type: String,
 			default: 'lead',
-			validator: v => ['lead', 'request'].includes(v),
 		},
 		stages: {
 			type: Array,
 			default: () => [],
+		},
+		columnProperty: {
+			type: String,
+			default: 'stage',
 		},
 	},
 	data() {
@@ -101,6 +89,9 @@ export default {
 	computed: {
 		objectStore() {
 			return useObjectStore()
+		},
+		currentColumnValue() {
+			return this.item[this.columnProperty] || ''
 		},
 		isOverdue() {
 			if (this.entityType === 'lead') {
@@ -134,7 +125,7 @@ export default {
 		},
 	},
 	watch: {
-		'item.stage': {
+		currentColumnValue: {
 			immediate: true,
 			handler(val) {
 				this.selectedStage = val || null
@@ -178,16 +169,17 @@ export default {
 		},
 
 		async onStageChange(newStage) {
-			if (!newStage || newStage === this.item.stage) return
+			if (!newStage || newStage === this.currentColumnValue) return
 			try {
 				const updated = { ...this.item }
 				delete updated._entityType
-				updated.stage = newStage
+				delete updated._schemaSlug
+				updated[this.columnProperty] = newStage
 				await this.objectStore.saveObject(this.entityType, updated)
 				this.$emit('refresh')
 			} catch {
 				// Revert on failure
-				this.selectedStage = this.item.stage
+				this.selectedStage = this.currentColumnValue
 			}
 		},
 
@@ -196,6 +188,7 @@ export default {
 			try {
 				const updated = { ...this.item }
 				delete updated._entityType
+				delete updated._schemaSlug
 				updated.assignee = newAssignee || ''
 				await this.objectStore.saveObject(this.entityType, updated)
 				this.$emit('refresh')
@@ -206,11 +199,12 @@ export default {
 		},
 
 		onDragStart(e) {
-			e.dataTransfer.setData('application/json', JSON.stringify({
+			const data = {
 				id: this.item.id,
-				entityType: this.entityType,
-				stage: this.item.stage,
-			}))
+				_schemaSlug: this.entityType,
+			}
+			data[this.columnProperty] = this.currentColumnValue
+			e.dataTransfer.setData('application/json', JSON.stringify(data))
 			e.dataTransfer.effectAllowed = 'move'
 		},
 
@@ -229,119 +223,100 @@ export default {
 <style scoped>
 .pipeline-card {
 	background: var(--color-main-background);
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-large);
-	padding: 10px 12px;
-	cursor: pointer;
-	transition: box-shadow 0.15s;
+	border-radius: var(--border-radius);
+	padding: 8px;
+	cursor: grab;
+	transition: background 0.15s;
 }
 
 .pipeline-card:hover {
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.pipeline-card[draggable="true"] {
-	cursor: grab;
-}
-
-.pipeline-card__header {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	margin-bottom: 4px;
-}
-
-.entity-badge {
-	display: inline-block;
-	padding: 1px 6px;
-	border-radius: 4px;
-	font-size: 10px;
-	font-weight: 700;
-	letter-spacing: 0.5px;
-}
-
-.badge--lead {
-	background: #dbeafe;
-	color: #1d4ed8;
-	border: 1px solid #93c5fd;
-}
-
-.badge--request {
-	background: #ffedd5;
-	color: #c2410c;
-	border: 1px solid #fdba74;
-}
-
-.priority-badge {
-	font-size: 11px;
-	font-weight: 600;
-}
-
-.pipeline-card__title {
-	font-weight: 600;
-	font-size: 13px;
-	margin-bottom: 4px;
-	line-height: 1.3;
-}
-
-.pipeline-card__meta {
-	font-size: 12px;
-	color: var(--color-text-maxcontrast);
-	margin-bottom: 4px;
-}
-
-.card-value {
-	font-weight: 600;
-	color: var(--color-text-light);
-}
-
-.pipeline-card__footer {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	font-size: 11px;
-	color: var(--color-text-maxcontrast);
-}
-
-.card-assignee {
-	max-width: 100px;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+	background: var(--color-background-hover);
 }
 
 .pipeline-card--overdue {
 	border-left: 3px solid var(--color-error);
 }
 
-.card-footer-right {
+/* Compact flex-row: badge → title → meta → age/date */
+.pipeline-card__row {
 	display: flex;
 	align-items: center;
-	gap: 6px;
+	gap: 8px;
+	min-height: 24px;
 }
 
-.card-date.overdue {
-	color: var(--color-error);
-	font-weight: 600;
-}
-
-.stale-badge {
-	display: inline-block;
-	padding: 1px 6px;
-	border-radius: 4px;
-	font-size: 10px;
+.entity-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1px 5px;
+	border-radius: 3px;
+	font-size: 9px;
 	font-weight: 700;
-	background: #fff7ed;
+	letter-spacing: 0.5px;
+	flex-shrink: 0;
+	line-height: 1;
+}
+
+.badge--lead {
+	background: #dbeafe;
+	color: #1d4ed8;
+}
+
+.badge--request {
+	background: #ffedd5;
 	color: #c2410c;
-	border: 1px solid #fdba74;
+}
+
+.pipeline-card__title {
+	flex: 1;
+	font-size: 13px;
+	font-weight: 500;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+
+.priority-indicator {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.priority--high {
+	background: #f59e0b;
+}
+
+.priority--urgent {
+	background: #ef4444;
+}
+
+.card-meta {
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--color-text-light);
+	flex-shrink: 0;
+	white-space: nowrap;
+}
+
+.card-assignee {
+	font-size: 11px;
+	color: var(--color-text-maxcontrast);
+	max-width: 60px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	flex-shrink: 0;
 }
 
 .aging-badge {
-	display: inline-block;
-	padding: 1px 5px;
-	border-radius: 4px;
 	font-size: 10px;
 	font-weight: 600;
+	padding: 0 4px;
+	border-radius: 3px;
+	flex-shrink: 0;
 	color: var(--color-text-maxcontrast);
 	background: var(--color-background-dark);
 }
@@ -356,12 +331,23 @@ export default {
 	background: #fee2e2;
 }
 
+.card-date {
+	font-size: 11px;
+	color: var(--color-text-maxcontrast);
+	flex-shrink: 0;
+	white-space: nowrap;
+}
+
+.card-date--overdue {
+	color: var(--color-error);
+	font-weight: 600;
+}
+
+/* Quick actions row */
 .pipeline-card__actions {
 	display: flex;
-	gap: 6px;
-	margin-top: 8px;
-	border-top: 1px solid var(--color-border);
-	padding-top: 8px;
+	gap: 4px;
+	margin-top: 6px;
 }
 
 .quick-select {
@@ -370,8 +356,14 @@ export default {
 }
 
 .quick-select :deep(.vs__dropdown-toggle) {
-	min-height: 28px;
+	min-height: 24px;
 	font-size: 11px;
+	border-color: transparent;
+	background: transparent;
+}
+
+.quick-select :deep(.vs__dropdown-toggle:hover) {
+	border-color: var(--color-border);
 }
 
 .quick-select :deep(.vs__search) {

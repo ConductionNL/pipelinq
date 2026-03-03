@@ -160,13 +160,18 @@ class SettingsService
      */
     public function updateUserSettings(string $userId, array $data): array
     {
-        foreach (self::USER_SETTING_DEFAULTS as $key => $default) {
+        foreach (array_keys(array: self::USER_SETTING_DEFAULTS) as $key) {
             if (array_key_exists(key: $key, array: $data) === true) {
+                $value = 'false';
+                if ($data[$key] === true) {
+                    $value = 'true';
+                }
+
                 $this->config->setUserValue(
                     userId: $userId,
                     appName: Application::APP_ID,
                     key: $key,
-                    value: $data[$key] ? 'true' : 'false'
+                    value: $value
                 );
             }
         }
