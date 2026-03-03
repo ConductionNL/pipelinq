@@ -15,7 +15,6 @@
 		@sort="onSort"
 		@row-click="openRequest"
 		@page-changed="loadPage">
-
 		<template #column-status="{ row }">
 			<div class="status-cell" @click.stop>
 				<span
