@@ -95,14 +95,18 @@
 					</div>
 					<div v-else-if="leadData.contact" class="lead-detail__section">
 						<h3>{{ t('pipelinq', 'Contact') }}</h3>
-						<p class="section-empty orphaned-ref">{{ t('pipelinq', '[Deleted contact]') }}</p>
+						<p class="section-empty orphaned-ref">
+							{{ t('pipelinq', '[Deleted contact]') }}
+						</p>
 					</div>
 				</div>
 
 				<!-- Right column: pipeline progress -->
 				<div v-if="pipelineData" class="lead-detail__pipeline">
 					<h3>{{ t('pipelinq', 'Pipeline') }}</h3>
-					<p class="pipeline-name">{{ pipelineData.title }}</p>
+					<p class="pipeline-name">
+						{{ pipelineData.title }}
+					</p>
 
 					<div class="pipeline-progress">
 						<div

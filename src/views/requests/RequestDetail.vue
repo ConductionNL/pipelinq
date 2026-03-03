@@ -147,7 +147,9 @@
 					<!-- Pipeline progress -->
 					<div v-if="pipelineData" class="sidebar-section">
 						<h3>{{ t('pipelinq', 'Pipeline') }}</h3>
-						<p class="pipeline-name">{{ pipelineData.title }}</p>
+						<p class="pipeline-name">
+							{{ pipelineData.title }}
+						</p>
 
 						<div class="pipeline-progress">
 							<div
@@ -169,7 +171,9 @@
 					</div>
 					<div v-else class="sidebar-section">
 						<h3>{{ t('pipelinq', 'Pipeline') }}</h3>
-						<p class="section-empty">{{ t('pipelinq', 'Not on pipeline') }}</p>
+						<p class="section-empty">
+							{{ t('pipelinq', 'Not on pipeline') }}
+						</p>
 					</div>
 				</div>
 			</div>
@@ -207,7 +211,6 @@ import EntityNotes from '../../components/EntityNotes.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import {
 	getAllowedTransitions,
-	isTerminalStatus,
 	getStatusLabel,
 	getStatusColor,
 	getPriorityLabel,

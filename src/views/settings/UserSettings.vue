@@ -1,8 +1,9 @@
 <template>
 	<NcAppSettingsDialog
-		:open.sync="open"
+		:open="open"
 		:show-navigation="true"
-		:name="t('pipelinq', 'Pipelinq settings')">
+		:name="t('pipelinq', 'Pipelinq settings')"
+		@update:open="$emit('update:open', $event)">
 		<NcAppSettingsSection
 			id="notifications"
 			:name="t('pipelinq', 'Notifications')">

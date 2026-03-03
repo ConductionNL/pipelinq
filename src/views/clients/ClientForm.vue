@@ -15,12 +15,14 @@
 			<div class="form-group">
 				<label for="client-type">{{ t('pipelinq', 'Type') }} *</label>
 				<NcSelect
-					input-id="client-type"
 					v-model="form.type"
+					input-id="client-type"
 					:options="typeOptions"
 					:placeholder="t('pipelinq', 'Select type')"
 					@input="validateField('type')" />
-				<p v-if="errors.type" class="field-error">{{ errors.type }}</p>
+				<p v-if="errors.type" class="field-error">
+					{{ errors.type }}
+				</p>
 			</div>
 			<div class="form-group">
 				<label for="client-email">{{ t('pipelinq', 'Email') }}</label>
