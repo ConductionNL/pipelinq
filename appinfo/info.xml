@@ -2,28 +2,70 @@
 <info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
     <id>pipelinq</id>
-    <name>Pipelinq</name>
-    <summary>Client and request management for Nextcloud powered by OpenRegister</summary>
-    <description><![CDATA[A Nextcloud app for client and request management.
+    <name lang="en">Pipelinq</name>
+    <name lang="nl">Pipelinq</name>
+    <summary lang="en">CRM with client management, lead pipelines, and request intake</summary>
+    <summary lang="nl">CRM met klantbeheer, lead-pipelines en verzoekintake</summary>
+    <description lang="en"><![CDATA[Pipelinq is a lightweight CRM for Nextcloud. Manage clients, track leads through visual pipelines, handle incoming requests, and keep a complete history of every interaction — all without leaving your Nextcloud workspace.
 
-Pipelinq provides a lightweight client and request management interface on top of OpenRegister, supporting clients, requests (verzoeken), and contacts.
+**Key Features**
 
-- Manage clients with full CRUD support
-- Track requests as the pre-state of cases
-- Link contacts to clients
-- Multilingual (English and Dutch)
-- Thin client architecture — all data stored in OpenRegister
+- **Client management** — Track persons and organizations with contact details, notes, and full history
+- **Contact persons** — Link individuals to organizations with roles like sales manager or project lead
+- **Lead pipeline** — Drag-and-drop kanban board with configurable stages, values, and close probabilities
+- **Request intake** — Capture incoming requests before they become formal cases
+- **Contact moments** — Log calls, emails, visits, and other interactions with clients
+- **My Work queue** — Personal overview of your assigned leads, requests, and follow-ups
+- **Nextcloud Contacts sync** — Two-way sync with the native Contacts app via CardDAV
+- **Duplicate detection** — Automatic warnings when creating clients with matching names or emails
+- **Import and export** — Bulk operations with CSV and vCard support
+- **Activity and notifications** — Stay updated on assignments, stage changes, and new notes
 
-Requires the OpenRegister app to be installed and enabled.
+Pairs naturally with [Procest](https://apps.nextcloud.com/apps/procest) — hand off requests to case management when they're ready.
+
+**Requires:** [OpenRegister](https://apps.nextcloud.com/apps/openregister) (install from the [Nextcloud App Store](https://apps.nextcloud.com/apps/openregister)).
+
+Free and open source under the AGPL license.
+    ]]></description>
+    <description lang="nl"><![CDATA[Pipelinq is een lichtgewicht CRM voor Nextcloud. Beheer klanten, volg leads door visuele pipelines, handel binnenkomende verzoeken af en houd een complete historie bij van elke interactie — allemaal zonder je Nextcloud-werkplek te verlaten.
+
+**Belangrijkste functies**
+
+- **Klantbeheer** — Volg personen en organisaties met contactgegevens, notities en volledige historie
+- **Contactpersonen** — Koppel individuen aan organisaties met rollen zoals salesmanager of projectleider
+- **Lead-pipeline** — Drag-and-drop kanbanbord met configureerbare fases, waarden en sluitingskansen
+- **Verzoekintake** — Vang binnenkomende verzoeken op voordat ze formele zaken worden
+- **Contactmomenten** — Log telefoongesprekken, e-mails, bezoeken en andere interacties met klanten
+- **Mijn Werk** — Persoonlijk overzicht van je toegewezen leads, verzoeken en opvolgingen
+- **Nextcloud Contacten sync** — Tweerichtingssynchronisatie met de native Contacten-app via CardDAV
+- **Duplicaatdetectie** — Automatische waarschuwingen bij het aanmaken van klanten met overeenkomende namen of e-mails
+- **Importeren en exporteren** — Bulkbewerkingen met CSV- en vCard-ondersteuning
+- **Activiteit en notificaties** — Blijf op de hoogte van toewijzingen, fasewijzigingen en nieuwe notities
+
+Sluit naadloos aan op [Procest](https://apps.nextcloud.com/apps/procest) — draag verzoeken over naar zaakafhandeling wanneer ze klaar zijn.
+
+**Vereist:** [OpenRegister](https://apps.nextcloud.com/apps/openregister) (installeer via de [Nextcloud App Store](https://apps.nextcloud.com/apps/openregister)).
+
+Vrij en open source onder de AGPL-licentie.
     ]]></description>
     <version>0.1.15</version>
     <licence>agpl</licence>
-    <category>organization</category>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Pipelinq</namespace>
+    <documentation>
+        <user>https://github.com/ConductionNL/pipelinq</user>
+        <admin>https://github.com/ConductionNL/pipelinq</admin>
+        <developer>https://github.com/ConductionNL/pipelinq</developer>
+    </documentation>
+    <category>organization</category>
+    <category>tools</category>
+    <category>workflow</category>
     <website>https://github.com/ConductionNL/pipelinq</website>
+    <discussion>https://github.com/ConductionNL/pipelinq/discussions</discussion>
     <bugs>https://github.com/ConductionNL/pipelinq/issues</bugs>
     <repository>https://github.com/ConductionNL/pipelinq</repository>
+
+    <screenshot>https://raw.githubusercontent.com/ConductionNL/pipelinq/main/img/app-store.svg</screenshot>
 
     <dependencies>
         <nextcloud min-version="28" max-version="33"/>

@@ -21,20 +21,84 @@
 
 				<div class="form-row">
 					<div class="form-group">
-						<label>{{ t('pipelinq', 'Entity type') }}</label>
-						<NcSelect v-model="form.entityType"
-							:options="entityTypeOptions"
-							:clearable="false"
+						<label>{{ t('pipelinq', 'View') }}</label>
+						<NcSelect v-model="form.viewId"
+							:options="viewOptions"
+							:clearable="true"
 							label="label"
 							:reduce="o => o.value"
-							:placeholder="t('pipelinq', 'Select type')" />
-						<span v-if="errors.entityType" class="error-text">{{ errors.entityType }}</span>
+							:loading="loadingViews"
+							:placeholder="t('pipelinq', 'Select a view')" />
+						<span class="help-text">{{ t('pipelinq', 'Select a saved view to define which schemas are shown in this pipeline.') }}</span>
 					</div>
 
 					<div class="form-group">
 						<NcCheckboxRadioSwitch :checked.sync="form.isDefault" type="switch">
 							{{ t('pipelinq', 'Default pipeline') }}
 						</NcCheckboxRadioSwitch>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<NcTextField :value="form.totalsLabel"
+						:label="t('pipelinq', 'Totals label')"
+						:placeholder="t('pipelinq', 'e.g. EUR, hours, items')"
+						@update:value="v => form.totalsLabel = v" />
+					<span class="help-text">{{ t('pipelinq', 'Label shown next to column totals. Leave empty to hide totals.') }}</span>
+				</div>
+			</div>
+
+			<!-- Property Mappings -->
+			<div class="form-section">
+				<div class="mappings-header">
+					<h4>{{ t('pipelinq', 'Property mappings') }}</h4>
+					<NcButton type="secondary" @click="addMapping">
+						<template #icon>
+							<Plus :size="20" />
+						</template>
+						{{ t('pipelinq', 'Add mapping') }}
+					</NcButton>
+				</div>
+
+				<span class="help-text mapping-help">
+					{{ t('pipelinq', 'Configure which property determines the column placement for each schema, and optionally which property to sum in column totals.') }}
+				</span>
+
+				<div v-if="form.propertyMappings.length === 0" class="mappings-empty">
+					{{ t('pipelinq', 'No mappings yet. Add at least one to map schema properties to pipeline columns.') }}
+				</div>
+
+				<div v-else class="mappings-list">
+					<div v-for="(mapping, index) in form.propertyMappings"
+						:key="index"
+						class="mapping-row">
+						<div class="mapping-fields">
+							<div class="mapping-field">
+								<NcTextField :value="mapping.schemaSlug"
+									:label="t('pipelinq', 'Schema slug')"
+									:placeholder="t('pipelinq', 'e.g. lead, request')"
+									@update:value="v => mapping.schemaSlug = v" />
+							</div>
+							<div class="mapping-field">
+								<NcTextField :value="mapping.columnProperty"
+									:label="t('pipelinq', 'Column property')"
+									:placeholder="t('pipelinq', 'e.g. stage, status')"
+									@update:value="v => mapping.columnProperty = v" />
+							</div>
+							<div class="mapping-field">
+								<NcTextField :value="mapping.totalsProperty || ''"
+									:label="t('pipelinq', 'Totals property')"
+									:placeholder="t('pipelinq', 'e.g. value (optional)')"
+									@update:value="v => mapping.totalsProperty = v || null" />
+							</div>
+						</div>
+						<NcButton type="tertiary"
+							class="mapping-delete"
+							@click="removeMapping(index)">
+							<template #icon>
+								<Delete :size="20" />
+							</template>
+						</NcButton>
 					</div>
 				</div>
 			</div>
@@ -151,6 +215,7 @@ import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
+import { getViews } from '../../services/viewService.js'
 
 export default {
 	name: 'PipelineForm',
@@ -176,20 +241,25 @@ export default {
 			form: {
 				title: '',
 				description: '',
-				entityType: 'lead',
+				viewId: null,
 				isDefault: false,
+				totalsLabel: '',
+				propertyMappings: [],
 				stages: [],
 			},
-			entityTypeOptions: [
-				{ value: 'lead', label: t('pipelinq', 'Leads') },
-				{ value: 'request', label: t('pipelinq', 'Requests') },
-				{ value: 'both', label: t('pipelinq', 'Leads & Requests') },
-			],
+			views: [],
+			loadingViews: false,
 		}
 	},
 	computed: {
 		isEdit() {
 			return !!this.pipeline
+		},
+		viewOptions() {
+			return this.views.map(v => ({
+				value: v.id || v.uuid,
+				label: v.name || v.slug || v.id,
+			}))
 		},
 		sortedStages() {
 			return [...this.form.stages].sort((a, b) => a.order - b.order)
@@ -198,9 +268,6 @@ export default {
 			const errors = {}
 			if (!this.form.title.trim()) {
 				errors.title = t('pipelinq', 'Pipeline title is required')
-			}
-			if (!this.form.entityType) {
-				errors.entityType = t('pipelinq', 'Entity type is required')
 			}
 			const nonClosedCount = this.form.stages.filter(s => !s.isClosed).length
 			if (this.form.stages.length > 0 && nonClosedCount === 0) {
@@ -227,19 +294,44 @@ export default {
 			return true
 		},
 	},
-	created() {
+	async created() {
 		if (this.pipeline) {
 			this.form = {
 				id: this.pipeline.id,
 				title: this.pipeline.title || '',
 				description: this.pipeline.description || '',
-				entityType: this.pipeline.entityType || 'lead',
+				viewId: this.pipeline.viewId || null,
 				isDefault: !!this.pipeline.isDefault,
+				totalsLabel: this.pipeline.totalsLabel || '',
+				propertyMappings: (this.pipeline.propertyMappings || []).map(m => ({ ...m })),
 				stages: (this.pipeline.stages || []).map(s => ({ ...s })),
 			}
 		}
+		await this.loadViews()
 	},
 	methods: {
+		async loadViews() {
+			this.loadingViews = true
+			try {
+				this.views = await getViews()
+			} catch {
+				this.views = []
+			}
+			this.loadingViews = false
+		},
+
+		addMapping() {
+			this.form.propertyMappings.push({
+				schemaSlug: '',
+				columnProperty: 'stage',
+				totalsProperty: null,
+			})
+		},
+
+		removeMapping(index) {
+			this.form.propertyMappings.splice(index, 1)
+		},
+
 		addStage() {
 			const maxOrder = this.form.stages.reduce((max, s) => Math.max(max, s.order), -1)
 			this.form.stages.push({
@@ -283,6 +375,11 @@ export default {
 
 			const data = {
 				...this.form,
+				propertyMappings: this.form.propertyMappings.map(m => ({
+					schemaSlug: m.schemaSlug,
+					columnProperty: m.columnProperty,
+					totalsProperty: m.totalsProperty || null,
+				})),
 				stages: this.form.stages.map(s => ({
 					name: s.name,
 					order: s.order,
@@ -347,6 +444,70 @@ export default {
 	flex: 1;
 }
 
+.help-text {
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+	display: block;
+	margin-top: 4px;
+}
+
+/* Property Mappings */
+.mappings-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 8px;
+}
+
+.mappings-header h4 {
+	margin: 0;
+}
+
+.mapping-help {
+	margin-bottom: 12px;
+}
+
+.mappings-empty {
+	text-align: center;
+	padding: 24px;
+	color: var(--color-text-maxcontrast);
+	border: 1px dashed var(--color-border);
+	border-radius: var(--border-radius-large);
+}
+
+.mappings-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.mapping-row {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	padding: 8px 12px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background: var(--color-main-background);
+}
+
+.mapping-fields {
+	display: flex;
+	gap: 8px;
+	flex: 1;
+	min-width: 0;
+}
+
+.mapping-field {
+	flex: 1;
+}
+
+.mapping-delete {
+	flex-shrink: 0;
+	align-self: center;
+}
+
+/* Stages */
 .stages-header {
 	display: flex;
 	justify-content: space-between;

@@ -236,7 +236,7 @@ class ActivityService
                 ->setType($type)
                 ->setAuthor($author)
                 ->setTimestamp(time())
-                ->setSubject(subject: $subject, subjectParameters: $parameters)
+                ->setSubject(subject: $subject, parameters: $parameters)
                 ->setObject(objectType: $objectType, objectId: (int) $objectId, objectName: $parameters['title'] ?? '');
 
             if ($affectedUser !== null && $affectedUser !== '') {

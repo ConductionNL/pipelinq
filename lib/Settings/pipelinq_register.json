@@ -362,13 +362,12 @@
         "slug": "pipeline",
         "title": "Pipeline",
         "icon": "Pipe",
-        "version": "1.0.0",
-        "summary": "A pipeline defining stages for tracking leads or requests",
-        "description": "Represents a sales or service pipeline \u2014 an ordered list of stages through which leads or requests progress. Each pipeline targets a specific entity type (lead, request, or both). Mapped to Schema.org ItemList.",
+        "version": "2.0.0",
+        "summary": "A view-backed pipeline defining stages for tracking entities",
+        "description": "Represents a pipeline \u2014 an ordered list of stages through which entities progress. Backed by an OpenRegister View that defines which schemas appear on the board. Each schema can have its own property-to-stage mapping and totals configuration. Mapped to Schema.org ItemList.",
         "@type": "schema:ItemList",
         "required": [
           "title",
-          "entityType",
           "stages"
         ],
         "properties": {
@@ -382,14 +381,39 @@
             "type": "string",
             "description": "Description of the pipeline's purpose"
           },
-          "entityType": {
+          "viewId": {
             "type": "string",
-            "description": "Which entity types this pipeline tracks",
-            "enum": [
-              "lead",
-              "request",
-              "both"
-            ]
+            "description": "UUID reference to the OpenRegister View defining which schemas this pipeline displays",
+            "format": "uuid"
+          },
+          "propertyMappings": {
+            "type": "array",
+            "description": "Per-schema configuration for column placement and totals aggregation",
+            "items": {
+              "type": "object",
+              "required": [
+                "schemaSlug",
+                "columnProperty"
+              ],
+              "properties": {
+                "schemaSlug": {
+                  "type": "string",
+                  "description": "Slug of the schema this mapping applies to (e.g., 'lead', 'request')"
+                },
+                "columnProperty": {
+                  "type": "string",
+                  "description": "Name of the property that determines which column an item appears in (e.g., 'stage', 'status')"
+                },
+                "totalsProperty": {
+                  "type": "string",
+                  "description": "Name of the numeric property to sum in column headers (e.g., 'value'). Null if no totals for this schema."
+                }
+              }
+            }
+          },
+          "totalsLabel": {
+            "type": "string",
+            "description": "Display label for column totals (e.g., 'EUR', 'Hours')"
           },
           "stages": {
             "type": "array",
@@ -438,6 +462,18 @@
             "default": false
           }
         }
+      }
+    },
+    "views": {
+      "default-pipeline-view": {
+        "slug": "default-pipeline-view",
+        "name": "Pipelinq Default View",
+        "description": "Default view for pipeline boards \u2014 includes leads and requests from the Pipelinq register",
+        "query": {
+          "registers": ["pipelinq"],
+          "schemas": ["lead", "request"]
+        },
+        "isDefault": true
       }
     }
   }

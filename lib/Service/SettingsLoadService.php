@@ -115,6 +115,14 @@ class SettingsLoadService
                 $this->appConfig->setValueString(Application::APP_ID, "{$slug}_schema", (string) $schemaMap[$slug]);
             }
         }
+
+        $defaultViewId = $this->mapBuilder->findDefaultViewId(
+            views: ($importResult['views'] ?? [])
+        );
+
+        if ($defaultViewId !== null) {
+            $this->appConfig->setValueString(Application::APP_ID, 'default_view', (string) $defaultViewId);
+        }
     }//end updateObjectTypeConfiguration()
 
     /**
