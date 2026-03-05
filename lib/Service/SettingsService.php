@@ -38,6 +38,20 @@ class SettingsService
         'lead_schema',
         'request_schema',
         'pipeline_schema',
+        'product_schema',
+        'productCategory_schema',
+        'leadProduct_schema',
+    ];
+
+    /**
+     * User setting keys and their defaults.
+     *
+     * @var array<string, string>
+     */
+    private const USER_SETTING_DEFAULTS = [
+        'notify_assignments'  => 'true',
+        'notify_stage_status' => 'true',
+        'notify_notes'        => 'true',
     ];
 
     /**

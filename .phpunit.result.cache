@@ -1,0 +1,1 @@
+{"version":2,"defects":[],"times":{"OCA\\Pipelinq\\Tests\\Unit\\Controller\\SettingsControllerTest::testIndexReturnsJsonResponseWithExpectedKeys":0.022,"OCA\\Pipelinq\\Tests\\Unit\\Controller\\SettingsControllerTest::testCreateCallsUpdateSettingsAndReturnsSuccess":0.002}}

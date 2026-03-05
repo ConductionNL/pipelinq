@@ -122,6 +122,14 @@
 			</div>
 		</div>
 
+		<!-- Products section -->
+		<LeadProducts
+			v-if="!isNew && !loading && !editing"
+			:lead-id="leadId"
+			:lead-value="Number(leadData.value) || null"
+			@value-changed="onProductValueChanged"
+			@sync-value="syncLeadValue" />
+
 		<!-- Notes section -->
 		<EntityNotes
 			v-if="!isNew && !loading && !editing"
@@ -151,6 +159,7 @@ import { NcButton, NcDialog, NcLoadingIcon } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import LeadForm from './LeadForm.vue'
 import EntityNotes from '../../components/EntityNotes.vue'
+import LeadProducts from '../../components/LeadProducts.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -161,6 +170,7 @@ export default {
 		NcLoadingIcon,
 		LeadForm,
 		EntityNotes,
+		LeadProducts,
 	},
 	props: {
 		leadId: {
@@ -275,6 +285,19 @@ export default {
 				const error = this.objectStore.getError('lead')
 				showError(error?.message || t('pipelinq', 'Failed to delete lead.'))
 			}
+		},
+		async onProductValueChanged(newTotal) {
+			// Auto-update lead value if no manual value was set or if it matches previous auto-calc
+			if (!this.leadData.value || Number(this.leadData.value) === 0) {
+				await this.syncLeadValue(newTotal)
+			}
+		},
+		async syncLeadValue(value) {
+			await this.objectStore.saveObject('lead', {
+				id: this.leadId,
+				value,
+			})
+			await this.objectStore.fetchObject('lead', this.leadId)
 		},
 		async cleanupNotes(objectType, objectId) {
 			try {
