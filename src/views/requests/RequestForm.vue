@@ -172,7 +172,7 @@ export default {
 			return [current, ...getAllowedTransitions(current)]
 		},
 		pipelines() {
-			return this.objectStore.getCollection('pipeline') || []
+			return this.objectStore.collections.pipeline || []
 		},
 		requestPipelines() {
 			return this.pipelines.filter(p =>
@@ -196,7 +196,7 @@ export default {
 				.map(s => s.name)
 		},
 		clients() {
-			return this.objectStore.getCollection('client') || []
+			return this.objectStore.collections.client || []
 		},
 		clientOptions() {
 			return this.clients.map(c => ({

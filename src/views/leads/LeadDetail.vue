@@ -1,7 +1,7 @@
 <template>
 	<div class="lead-detail">
 		<div class="lead-detail__header">
-			<NcButton @click="$emit('navigate', 'leads')">
+			<NcButton @click="$router.push({ name: 'Leads' })">
 				{{ t('pipelinq', 'Back to list') }}
 			</NcButton>
 			<h2 v-if="isNew">
@@ -71,7 +71,7 @@
 					<div class="lead-detail__section">
 						<h3>{{ t('pipelinq', 'Client') }}</h3>
 						<div v-if="clientData" class="client-link">
-							<a href="#" @click.prevent="$emit('navigate', 'client-detail', clientData.id)">
+							<a href="#" @click.prevent="$router.push({ name: 'ClientDetail', params: { id: clientData.id } })">
 								{{ clientData.name }}
 							</a>
 							<span v-if="clientData.email" class="client-meta">{{ clientData.email }}</span>
@@ -95,14 +95,18 @@
 					</div>
 					<div v-else-if="leadData.contact" class="lead-detail__section">
 						<h3>{{ t('pipelinq', 'Contact') }}</h3>
-						<p class="section-empty orphaned-ref">{{ t('pipelinq', '[Deleted contact]') }}</p>
+						<p class="section-empty orphaned-ref">
+							{{ t('pipelinq', '[Deleted contact]') }}
+						</p>
 					</div>
 				</div>
 
 				<!-- Right column: pipeline progress -->
 				<div v-if="pipelineData" class="lead-detail__pipeline">
 					<h3>{{ t('pipelinq', 'Pipeline') }}</h3>
-					<p class="pipeline-name">{{ pipelineData.title }}</p>
+					<p class="pipeline-name">
+						{{ pipelineData.title }}
+					</p>
 
 					<div class="pipeline-progress">
 						<div
@@ -117,6 +121,14 @@
 				</div>
 			</div>
 		</div>
+
+		<!-- Products section -->
+		<LeadProducts
+			v-if="!isNew && !loading && !editing"
+			:lead-id="leadId"
+			:lead-value="Number(leadData.value) || null"
+			@value-changed="onProductValueChanged"
+			@sync-value="syncLeadValue" />
 
 		<!-- Notes section -->
 		<EntityNotes
@@ -147,6 +159,7 @@ import { NcButton, NcDialog, NcLoadingIcon } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import LeadForm from './LeadForm.vue'
 import EntityNotes from '../../components/EntityNotes.vue'
+import LeadProducts from '../../components/LeadProducts.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -157,6 +170,7 @@ export default {
 		NcLoadingIcon,
 		LeadForm,
 		EntityNotes,
+		LeadProducts,
 	},
 	props: {
 		leadId: {
@@ -181,7 +195,7 @@ export default {
 			return !this.leadId || this.leadId === 'new'
 		},
 		loading() {
-			return this.objectStore.isLoading('lead')
+			return this.objectStore.loading.lead || false
 		},
 		leadData() {
 			if (this.isNew) return {}
@@ -243,7 +257,7 @@ export default {
 			const result = await this.objectStore.saveObject('lead', formData)
 			if (result) {
 				if (this.isNew) {
-					this.$emit('navigate', 'lead-detail', result.id)
+					this.$router.push({ name: 'LeadDetail', params: { id: result.id } })
 				} else {
 					await this.objectStore.fetchObject('lead', this.leadId)
 					await this.fetchRelated()
@@ -256,7 +270,7 @@ export default {
 		},
 		onFormCancel() {
 			if (this.isNew) {
-				this.$emit('navigate', 'leads')
+				this.$router.push({ name: 'Leads' })
 			} else {
 				this.editing = false
 			}
@@ -266,11 +280,24 @@ export default {
 			this.cleanupNotes('pipelinq_lead', this.leadId)
 			const success = await this.objectStore.deleteObject('lead', this.leadId)
 			if (success) {
-				this.$emit('navigate', 'leads')
+				this.$router.push({ name: 'Leads' })
 			} else {
 				const error = this.objectStore.getError('lead')
 				showError(error?.message || t('pipelinq', 'Failed to delete lead.'))
 			}
+		},
+		async onProductValueChanged(newTotal) {
+			// Auto-update lead value if no manual value was set or if it matches previous auto-calc
+			if (!this.leadData.value || Number(this.leadData.value) === 0) {
+				await this.syncLeadValue(newTotal)
+			}
+		},
+		async syncLeadValue(value) {
+			await this.objectStore.saveObject('lead', {
+				id: this.leadId,
+				value,
+			})
+			await this.objectStore.fetchObject('lead', this.leadId)
 		},
 		async cleanupNotes(objectType, objectId) {
 			try {

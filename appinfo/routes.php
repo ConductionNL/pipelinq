@@ -9,6 +9,10 @@ return [
         ['name' => 'settings#create', 'url' => '/api/settings', 'verb' => 'POST'],
         ['name' => 'settings#reimport', 'url' => '/api/settings/reimport', 'verb' => 'POST'],
 
+        // User settings
+        ['name' => 'settings#getUserSettings', 'url' => '/api/user/settings', 'verb' => 'GET'],
+        ['name' => 'settings#updateUserSettings', 'url' => '/api/user/settings', 'verb' => 'PUT'],
+
         // Lead sources
         ['name' => 'lead_source#index', 'url' => '/api/settings/lead-sources', 'verb' => 'GET'],
         ['name' => 'lead_source#create', 'url' => '/api/settings/lead-sources', 'verb' => 'POST'],
@@ -31,5 +35,13 @@ return [
         ['name' => 'request_channel#create', 'url' => '/api/settings/request-channels', 'verb' => 'POST'],
         ['name' => 'request_channel#update', 'url' => '/api/settings/request-channels/{id}', 'verb' => 'PUT'],
         ['name' => 'request_channel#destroy', 'url' => '/api/settings/request-channels/{id}', 'verb' => 'DELETE'],
+
+        // Prospect discovery
+        ['name' => 'prospect#index', 'url' => '/api/prospects', 'verb' => 'GET'],
+        ['name' => 'prospect#createLead', 'url' => '/api/prospects/create-lead', 'verb' => 'POST'],
+
+        // Prospect settings (admin only)
+        ['name' => 'prospect_settings#index', 'url' => '/api/prospects/settings', 'verb' => 'GET'],
+        ['name' => 'prospect_settings#update', 'url' => '/api/prospects/settings', 'verb' => 'PUT'],
     ],
 ];

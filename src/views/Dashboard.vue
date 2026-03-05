@@ -4,23 +4,36 @@
 		<div class="dashboard-header">
 			<h2>{{ t('pipelinq', 'Dashboard') }}</h2>
 			<div class="quick-actions">
-				<NcButton type="primary" @click="$emit('navigate', 'lead-detail', 'new')">
+				<NcButton type="primary" @click="showLeadDialog = true">
 					<template #icon>
 						<Plus :size="20" />
 					</template>
 					{{ t('pipelinq', 'New Lead') }}
 				</NcButton>
-				<NcButton @click="$emit('navigate', 'request-detail', 'new')">
+				<NcButton @click="showRequestDialog = true">
 					<template #icon>
 						<Plus :size="20" />
 					</template>
 					{{ t('pipelinq', 'New Request') }}
 				</NcButton>
-				<NcButton @click="$emit('navigate', 'client-detail', 'new')">
+				<NcButton @click="showClientDialog = true">
 					<template #icon>
 						<Plus :size="20" />
 					</template>
 					{{ t('pipelinq', 'New Client') }}
+				</NcButton>
+				<NcButton @click="showProductDialog = true">
+					<template #icon>
+						<Plus :size="20" />
+					</template>
+					{{ t('pipelinq', 'New Product') }}
+				</NcButton>
+				<NcButton :disabled="loading"
+					:aria-label="t('pipelinq', 'Refresh dashboard')"
+					@click="fetchAll">
+					<template #icon>
+						<Refresh :size="20" :class="{ 'icon-spinning': loading }" />
+					</template>
 				</NcButton>
 			</div>
 		</div>
@@ -64,6 +77,15 @@
 					<div class="kpi-content">
 						<span class="kpi-value">{{ kpi.overdueItems }}</span>
 						<span class="kpi-label">{{ t('pipelinq', 'Overdue') }}</span>
+					</div>
+				</div>
+				<div class="kpi-card">
+					<div class="kpi-icon">
+						<PackageVariant :size="24" />
+					</div>
+					<div class="kpi-content">
+						<span class="kpi-value">{{ kpi.productCount }}</span>
+						<span class="kpi-label">{{ t('pipelinq', 'Products') }}</span>
 					</div>
 				</div>
 			</div>
@@ -121,12 +143,18 @@
 							v-if="myWorkTotal > 5"
 							type="tertiary"
 							class="view-all-link"
-							@click="$emit('navigate', 'my-work')">
+							@click="$router.push({ name: 'MyWork' })">
 							{{ t('pipelinq', 'View all ({count})', { count: myWorkTotal }) }}
 						</NcButton>
 					</div>
 				</div>
 			</div>
+
+			<!-- Product Revenue -->
+			<ProductRevenue />
+
+			<!-- Prospect Discovery Widget -->
+			<ProspectWidget />
 
 			<!-- Welcome message for fresh installs -->
 			<div v-if="isEmpty" class="welcome-message">
@@ -141,17 +169,46 @@
 				</NcButton>
 			</div>
 		</template>
+
+		<!-- Create Dialogs -->
+		<LeadCreateDialog
+			v-if="showLeadDialog"
+			@created="onLeadCreated"
+			@close="showLeadDialog = false" />
+
+		<RequestCreateDialog
+			v-if="showRequestDialog"
+			@created="onRequestCreated"
+			@close="showRequestDialog = false" />
+
+		<ClientCreateDialog
+			v-if="showClientDialog"
+			@created="onClientCreated"
+			@close="showClientDialog = false" />
+
+		<ProductCreateDialog
+			v-if="showProductDialog"
+			@created="onProductCreated"
+			@close="showProductDialog = false" />
 	</div>
 </template>
 
 <script>
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
 import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
 import FileDocument from 'vue-material-design-icons/FileDocument.vue'
 import CurrencyEur from 'vue-material-design-icons/CurrencyEur.vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
+import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import { useObjectStore } from '../store/modules/object.js'
+import LeadCreateDialog from './leads/LeadCreateDialog.vue'
+import RequestCreateDialog from './requests/RequestCreateDialog.vue'
+import ClientCreateDialog from './clients/ClientCreateDialog.vue'
+import ProductCreateDialog from './products/ProductCreateDialog.vue'
+import ProductRevenue from '../components/ProductRevenue.vue'
+import ProspectWidget from '../components/ProspectWidget.vue'
 import {
 	getStatusLabel,
 	getStatusColor,
@@ -165,18 +222,32 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 		Plus,
+		Refresh,
 		TrendingUp,
 		FileDocument,
 		CurrencyEur,
 		AlertCircle,
+		LeadCreateDialog,
+		RequestCreateDialog,
+		ClientCreateDialog,
+		PackageVariant,
+		ProductCreateDialog,
+		ProductRevenue,
+		ProspectWidget,
 	},
 	data() {
 		return {
 			loading: false,
+			showLeadDialog: false,
+			showRequestDialog: false,
+			showClientDialog: false,
+			showProductDialog: false,
 			error: null,
+			refreshTimer: null,
 			allLeads: [],
 			allRequests: [],
 			allPipelines: [],
+			allProducts: [],
 			myLeads: [],
 			myRequests: [],
 		}
@@ -227,11 +298,14 @@ export default {
 				return new Date(r.requestedAt) < thirtyDaysAgo
 			}).length
 
+			const productCount = this.allProducts.filter(p => p.status !== 'inactive').length
+
 			return {
 				openLeads,
 				openRequests,
 				pipelineValue,
 				overdueItems: overdueLeads + overdueRequests,
+				productCount,
 			}
 		},
 
@@ -318,6 +392,15 @@ export default {
 	},
 	mounted() {
 		this.fetchAll()
+		this.refreshTimer = setInterval(() => {
+			this.fetchAll()
+		}, 5 * 60 * 1000)
+	},
+	beforeDestroy() {
+		if (this.refreshTimer) {
+			clearInterval(this.refreshTimer)
+			this.refreshTimer = null
+		}
 	},
 	methods: {
 		async fetchAll() {
@@ -348,6 +431,13 @@ export default {
 				if (config.pipeline) {
 					promises.push(
 						this.fetchRaw('pipeline', { _limit: 100 }).then(items => { this.allPipelines = items }),
+					)
+				}
+
+				// Fetch all products
+				if (config.product) {
+					promises.push(
+						this.fetchRaw('product', { _limit: 500 }).then(items => { this.allProducts = items }),
 					)
 				}
 
@@ -414,11 +504,31 @@ export default {
 			}
 		},
 
+		onLeadCreated(leadId) {
+			this.showLeadDialog = false
+			this.$router.push({ name: 'LeadDetail', params: { id: leadId } })
+		},
+
+		onRequestCreated(requestId) {
+			this.showRequestDialog = false
+			this.$router.push({ name: 'RequestDetail', params: { id: requestId } })
+		},
+
+		onClientCreated(clientId) {
+			this.showClientDialog = false
+			this.$router.push({ name: 'ClientDetail', params: { id: clientId } })
+		},
+
+		onProductCreated(productId) {
+			this.showProductDialog = false
+			this.$router.push({ name: 'ProductDetail', params: { id: productId } })
+		},
+
 		openItem(item) {
 			if (item.entityType === 'lead') {
-				this.$emit('navigate', 'lead-detail', item.id)
+				this.$router.push({ name: 'LeadDetail', params: { id: item.id } })
 			} else {
-				this.$emit('navigate', 'request-detail', item.id)
+				this.$router.push({ name: 'RequestDetail', params: { id: item.id } })
 			}
 		},
 	},
@@ -450,7 +560,7 @@ export default {
 /* KPI Cards */
 .kpi-row {
 	display: grid;
-	grid-template-columns: repeat(4, 1fr);
+	grid-template-columns: repeat(5, 1fr);
 	gap: 16px;
 	margin-bottom: 24px;
 }
@@ -696,5 +806,15 @@ export default {
 
 .dashboard-error p {
 	margin-bottom: 12px;
+}
+
+/* Refresh button spinning animation */
+.icon-spinning {
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
 }
 </style>

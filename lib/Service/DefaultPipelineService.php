@@ -68,31 +68,42 @@ class DefaultPipelineService
             $objectService = $this->getObjectService();
 
             $existing = $objectService->findAll(
-                    [
-                        'filters' => ['register' => $registerId, 'schema' => $pipelineSchemaId],
-                        'limit'   => 1,
+                [
+                    'filters' => [
+                        'register' => $registerId,
+                        'schema'   => $pipelineSchemaId,
+                        'title'    => 'Sales Pipeline',
                     ],
-                    _rbac: false,
-                    _multitenancy: false
-                    );
+                    'limit'   => 1,
+                ],
+                _rbac: false,
+                _multitenancy: false
+            );
 
             if (empty($existing) === false) {
                 $this->logger->info('Pipelinq: Default pipelines already exist, skipping creation');
                 return;
             }
 
+            // Retrieve the default view ID if available.
+            $defaultViewId = $this->appConfig->getValueString(Application::APP_ID, 'default_view', '');
+            $viewId        = null;
+            if ($defaultViewId !== '') {
+                $viewId = $defaultViewId;
+            }
+
             $this->savePipeline(
                 objectService: $objectService,
                 registerId: $registerId,
                 schemaId: $pipelineSchemaId,
-                data: $this->stageData->getSalesPipelineData()
+                data: $this->stageData->getSalesPipelineData(viewId: $viewId)
             );
 
             $this->savePipeline(
                 objectService: $objectService,
                 registerId: $registerId,
                 schemaId: $pipelineSchemaId,
-                data: $this->stageData->getServiceRequestsPipelineData()
+                data: $this->stageData->getServiceRequestsPipelineData(viewId: $viewId)
             );
         } catch (\Exception $e) {
             $this->logger->error('Pipelinq: Failed to create default pipelines', ['exception' => $e->getMessage()]);

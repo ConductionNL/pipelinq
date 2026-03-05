@@ -1,7 +1,7 @@
 <template>
 	<div class="client-detail">
 		<div class="client-detail__header">
-			<NcButton @click="$emit('navigate', 'clients')">
+			<NcButton @click="$router.push({ name: 'Clients' })">
 				{{ t('pipelinq', 'Back to list') }}
 			</NcButton>
 			<h2 v-if="isNew">
@@ -76,26 +76,28 @@
 			<div v-if="contacts.length === 0" class="section-empty">
 				<p>{{ t('pipelinq', 'No contacts found') }}</p>
 			</div>
-			<table v-else class="section-table">
-				<thead>
-					<tr>
-						<th>{{ t('pipelinq', 'Name') }}</th>
-						<th>{{ t('pipelinq', 'Role') }}</th>
-						<th>{{ t('pipelinq', 'Email') }}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr
-						v-for="contact in contacts"
-						:key="contact.id"
-						class="section-row"
-						@click="$emit('navigate', 'contact-detail', contact.id)">
-						<td>{{ contact.name || '-' }}</td>
-						<td>{{ contact.role || '-' }}</td>
-						<td>{{ contact.email || '-' }}</td>
-					</tr>
-				</tbody>
-			</table>
+			<div v-else class="viewTableContainer">
+				<table class="viewTable">
+					<thead>
+						<tr>
+							<th>{{ t('pipelinq', 'Name') }}</th>
+							<th>{{ t('pipelinq', 'Role') }}</th>
+							<th>{{ t('pipelinq', 'Email') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="contact in contacts"
+							:key="contact.id"
+							class="viewTableRow"
+							@click="$router.push({ name: 'ContactDetail', params: { id: contact.id } })">
+							<td>{{ contact.name || '-' }}</td>
+							<td>{{ contact.role || '-' }}</td>
+							<td>{{ contact.email || '-' }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		</div>
 
 		<!-- Leads section -->
@@ -107,26 +109,28 @@
 			<div v-if="leads.length === 0" class="section-empty">
 				<p>{{ t('pipelinq', 'No leads found') }}</p>
 			</div>
-			<table v-else class="section-table">
-				<thead>
-					<tr>
-						<th>{{ t('pipelinq', 'Title') }}</th>
-						<th>{{ t('pipelinq', 'Stage') }}</th>
-						<th>{{ t('pipelinq', 'Value') }}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr
-						v-for="lead in leads"
-						:key="lead.id"
-						class="section-row"
-						@click="$emit('navigate', 'lead-detail', lead.id)">
-						<td>{{ lead.title || '-' }}</td>
-						<td>{{ lead.stage || '-' }}</td>
-						<td>{{ lead.value || '-' }}</td>
-					</tr>
-				</tbody>
-			</table>
+			<div v-else class="viewTableContainer">
+				<table class="viewTable">
+					<thead>
+						<tr>
+							<th>{{ t('pipelinq', 'Title') }}</th>
+							<th>{{ t('pipelinq', 'Stage') }}</th>
+							<th>{{ t('pipelinq', 'Value') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="lead in leads"
+							:key="lead.id"
+							class="viewTableRow"
+							@click="$router.push({ name: 'LeadDetail', params: { id: lead.id } })">
+							<td>{{ lead.title || '-' }}</td>
+							<td>{{ lead.stage || '-' }}</td>
+							<td>{{ lead.value || '-' }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		</div>
 
 		<!-- Requests section -->
@@ -141,24 +145,26 @@
 			<div v-if="requests.length === 0" class="section-empty">
 				<p>{{ t('pipelinq', 'No requests found') }}</p>
 			</div>
-			<table v-else class="section-table">
-				<thead>
-					<tr>
-						<th>{{ t('pipelinq', 'Title') }}</th>
-						<th>{{ t('pipelinq', 'Status') }}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr
-						v-for="request in requests"
-						:key="request.id"
-						class="section-row"
-						@click="$emit('navigate', 'request-detail', request.id)">
-						<td>{{ request.title || '-' }}</td>
-						<td>{{ request.status || '-' }}</td>
-					</tr>
-				</tbody>
-			</table>
+			<div v-else class="viewTableContainer">
+				<table class="viewTable">
+					<thead>
+						<tr>
+							<th>{{ t('pipelinq', 'Title') }}</th>
+							<th>{{ t('pipelinq', 'Status') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="request in requests"
+							:key="request.id"
+							class="viewTableRow"
+							@click="$router.push({ name: 'RequestDetail', params: { id: request.id } })">
+							<td>{{ request.title || '-' }}</td>
+							<td>{{ request.status || '-' }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		</div>
 
 		<!-- Notes section -->
@@ -240,7 +246,7 @@ export default {
 			return !this.clientId || this.clientId === 'new'
 		},
 		loading() {
-			return this.objectStore.isLoading('client')
+			return this.objectStore.loading.client || false
 		},
 		clientData() {
 			if (this.isNew) return {}
@@ -259,7 +265,7 @@ export default {
 			if (result) {
 				this.syncToContacts(result.id || this.clientId)
 				if (this.isNew) {
-					this.$emit('navigate', 'client-detail', result.id)
+					this.$router.push({ name: 'ClientDetail', params: { id: result.id } })
 				} else {
 					await this.objectStore.fetchObject('client', this.clientId)
 					this.editing = false
@@ -286,7 +292,7 @@ export default {
 		},
 		onFormCancel() {
 			if (this.isNew) {
-				this.$emit('navigate', 'clients')
+				this.$router.push({ name: 'Clients' })
 			} else {
 				this.editing = false
 			}
@@ -299,7 +305,7 @@ export default {
 			this.cleanupNotes('pipelinq_client', this.clientId)
 			const success = await this.objectStore.deleteObject('client', this.clientId)
 			if (success) {
-				this.$emit('navigate', 'clients')
+				this.$router.push({ name: 'Clients' })
 			} else {
 				const error = this.objectStore.getError('client')
 				showError(error?.message || t('pipelinq', 'Failed to delete client.'))
@@ -339,10 +345,10 @@ export default {
 			}
 		},
 		createRequest() {
-			this.$emit('navigate', 'request-detail', `new?client=${this.clientId}`)
+			this.$router.push({ name: 'RequestDetail', params: { id: 'new' }, query: { client: this.clientId } })
 		},
 		addContact() {
-			this.$emit('navigate', 'contact-detail', `new?client=${this.clientId}`)
+			this.$router.push({ name: 'ContactDetail', params: { id: 'new' }, query: { client: this.clientId } })
 		},
 	},
 }
@@ -407,23 +413,40 @@ export default {
 	margin-bottom: 16px;
 }
 
-.section-table {
+.viewTableContainer {
+	background: var(--color-main-background);
+	border-radius: var(--border-radius);
+	overflow: hidden;
+	box-shadow: 0 2px 4px var(--color-box-shadow);
+	border: 1px solid var(--color-border);
+}
+
+.viewTable {
 	width: 100%;
 	border-collapse: collapse;
+	background-color: var(--color-main-background);
 }
 
-.section-table th,
-.section-table td {
-	padding: 8px 12px;
+.viewTable th,
+.viewTable td {
+	padding: 12px;
 	text-align: left;
 	border-bottom: 1px solid var(--color-border);
+	vertical-align: middle;
 }
 
-.section-row {
+.viewTable th {
+	background-color: var(--color-background-dark);
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+}
+
+.viewTableRow {
 	cursor: pointer;
+	transition: background-color 0.2s ease;
 }
 
-.section-row:hover {
+.viewTableRow:hover {
 	background: var(--color-background-hover);
 }
 

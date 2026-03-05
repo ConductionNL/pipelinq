@@ -23,6 +23,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use DateTime;
+use OCP\IConfig;
 use OCP\Notification\IManager;
 use Psr\Log\LoggerInterface;
 
@@ -32,13 +33,28 @@ use Psr\Log\LoggerInterface;
 class NotificationService
 {
     /**
+     * Map notification subjects to user setting keys.
+     *
+     * @var array<string, string>
+     */
+    private const SUBJECT_SETTING_MAP = [
+        'lead_assigned'          => 'notify_assignments',
+        'request_assigned'       => 'notify_assignments',
+        'lead_stage_changed'     => 'notify_stage_status',
+        'request_status_changed' => 'notify_stage_status',
+        'note_added'             => 'notify_notes',
+    ];
+
+    /**
      * Constructor.
      *
      * @param IManager        $notificationManager The notification manager.
+     * @param IConfig         $config              The config service.
      * @param LoggerInterface $logger              The logger.
      */
     public function __construct(
         private IManager $notificationManager,
+        private IConfig $config,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -207,6 +223,20 @@ class NotificationService
         string $objectType,
         string $objectId
     ): void {
+        // Check user setting for this notification type.
+        $settingKey = self::SUBJECT_SETTING_MAP[$subject] ?? null;
+        if ($settingKey !== null) {
+            $enabled = $this->config->getUserValue(
+                userId: $userId,
+                appName: Application::APP_ID,
+                key: $settingKey,
+                default: 'true'
+            );
+            if ($enabled !== 'true') {
+                return;
+            }
+        }
+
         try {
             $notification = $this->notificationManager->createNotification();
             $notification->setApp(Application::APP_ID)

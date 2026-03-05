@@ -14,15 +14,17 @@
 		<div class="form-group">
 			<label for="contact-client">{{ t('pipelinq', 'Client') }} *</label>
 			<NcSelect
-				input-id="contact-client"
 				v-model="selectedClient"
+				input-id="contact-client"
 				:options="clientOptions"
 				:placeholder="t('pipelinq', 'Search for a client...')"
 				label="name"
 				:reduce="c => c.id"
 				@search="searchClients"
 				@input="validateField('client')" />
-			<p v-if="errors.client" class="field-error">{{ errors.client }}</p>
+			<p v-if="errors.client" class="field-error">
+				{{ errors.client }}
+			</p>
 		</div>
 
 		<div class="form-row">

@@ -23,6 +23,7 @@ namespace OCA\Pipelinq\Settings;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\SettingsService;
+use OCP\App\IAppManager;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\Settings\ISettings;
 
@@ -35,9 +36,11 @@ class AdminSettings implements ISettings
      * Constructor.
      *
      * @param SettingsService $settingsService The settings service.
+     * @param IAppManager     $appManager      The app manager.
      */
     public function __construct(
         private SettingsService $settingsService,
+        private IAppManager $appManager,
     ) {
     }//end __construct()
 
@@ -48,13 +51,15 @@ class AdminSettings implements ISettings
      */
     public function getForm(): TemplateResponse
     {
-        $config = $this->settingsService->getSettings();
+        $config  = $this->settingsService->getSettings();
+        $version = $this->appManager->getAppVersion(appId: Application::APP_ID);
 
         return new TemplateResponse(
                 Application::APP_ID,
                 'settings/admin',
                 [
-                    'config' => json_encode($config),
+                    'config'  => json_encode($config),
+                    'version' => $version,
                 ]
                 );
     }//end getForm()
