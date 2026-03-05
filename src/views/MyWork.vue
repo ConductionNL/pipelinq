@@ -37,7 +37,9 @@
 
 		<div v-else-if="error" class="my-work__error">
 			<p>{{ error }}</p>
-			<NcButton @click="fetchAll">{{ t('pipelinq', 'Retry') }}</NcButton>
+			<NcButton @click="fetchAll">
+				{{ t('pipelinq', 'Retry') }}
+			</NcButton>
 		</div>
 
 		<div v-else-if="filteredItems.length === 0" class="my-work__empty">
@@ -117,7 +119,7 @@ import {
 	getPriorityLabel,
 	getPriorityColor,
 } from '../services/requestStatus.js'
-import { getDaysAge, isStale } from '../services/pipelineUtils.js'
+import { isStale } from '../services/pipelineUtils.js'
 
 const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 }
 
@@ -396,9 +398,9 @@ export default {
 
 		openItem(item) {
 			if (item.entityType === 'lead') {
-				this.$emit('navigate', 'lead-detail', item.id)
+				this.$router.push({ name: 'LeadDetail', params: { id: item.id } })
 			} else {
-				this.$emit('navigate', 'request-detail', item.id)
+				this.$router.push({ name: 'RequestDetail', params: { id: item.id } })
 			}
 		},
 	},

@@ -1,7 +1,7 @@
 <template>
 	<div class="contact-detail">
 		<div class="contact-detail__header">
-			<NcButton @click="$emit('navigate', 'contacts')">
+			<NcButton @click="$router.push({ name: 'Contacts' })">
 				{{ t('pipelinq', 'Back to list') }}
 			</NcButton>
 			<h2 v-if="isNew">
@@ -55,7 +55,7 @@
 					<a
 						v-if="contactData.client"
 						class="client-link"
-						@click="$emit('navigate', 'client-detail', contactData.client)">
+						@click="$router.push({ name: 'ClientDetail', params: { id: contactData.client } })">
 						{{ clientName }}
 					</a>
 					<span v-else>-</span>
@@ -103,17 +103,13 @@ export default {
 			return useObjectStore()
 		},
 		isNew() {
-			if (!this.contactId) return true
-			return this.contactId === 'new' || this.contactId.startsWith('new?')
+			return !this.contactId || this.contactId === 'new'
 		},
 		preSelectedClient() {
-			if (this.contactId && this.contactId.startsWith('new?client=')) {
-				return this.contactId.replace('new?client=', '')
-			}
-			return null
+			return this.$route.query.client || null
 		},
 		loading() {
-			return this.objectStore.isLoading('contact')
+			return this.objectStore.loading.contact || false
 		},
 		contactData() {
 			if (this.isNew) return {}
@@ -143,7 +139,7 @@ export default {
 			if (result) {
 				this.syncToContacts(result.id || this.contactId)
 				if (this.isNew) {
-					this.$emit('navigate', 'contact-detail', result.id)
+					this.$router.push({ name: 'ContactDetail', params: { id: result.id } })
 				} else {
 					await this.objectStore.fetchObject('contact', this.contactId)
 					this.loadClientName()
@@ -171,7 +167,7 @@ export default {
 		},
 		onFormCancel() {
 			if (this.isNew) {
-				this.$emit('navigate', 'contacts')
+				this.$router.push({ name: 'Contacts' })
 			} else {
 				this.editing = false
 			}
@@ -181,7 +177,7 @@ export default {
 				this.cleanupNotes('pipelinq_contact', this.contactId)
 				const success = await this.objectStore.deleteObject('contact', this.contactId)
 				if (success) {
-					this.$emit('navigate', 'contacts')
+					this.$router.push({ name: 'Contacts' })
 				} else {
 					const error = this.objectStore.getError('contact')
 					showError(error?.message || t('pipelinq', 'Failed to delete contact.'))

@@ -42,6 +42,9 @@ class SettingsLoadService
         'lead',
         'request',
         'pipeline',
+        'product',
+        'productCategory',
+        'leadProduct',
     ];
 
     /**
@@ -114,6 +117,14 @@ class SettingsLoadService
             if (isset($schemaMap[$slug]) === true && $schemaMap[$slug] !== null) {
                 $this->appConfig->setValueString(Application::APP_ID, "{$slug}_schema", (string) $schemaMap[$slug]);
             }
+        }
+
+        $defaultViewId = $this->mapBuilder->findDefaultViewId(
+            views: ($importResult['views'] ?? [])
+        );
+
+        if ($defaultViewId !== null) {
+            $this->appConfig->setValueString(Application::APP_ID, 'default_view', (string) $defaultViewId);
         }
     }//end updateObjectTypeConfiguration()
 

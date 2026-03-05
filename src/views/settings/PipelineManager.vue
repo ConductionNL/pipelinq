@@ -33,7 +33,7 @@
 					<div class="pipeline-title-row">
 						<Star v-if="pipeline.isDefault" :size="16" class="default-star" />
 						<strong>{{ pipeline.title }}</strong>
-						<span class="entity-type-badge">{{ entityTypeLabel(pipeline.entityType) }}</span>
+						<span class="entity-type-badge">{{ schemaLabel(pipeline) }}</span>
 					</div>
 					<div class="pipeline-meta">
 						{{ stageCount(pipeline) }} &middot; {{ stagePreview(pipeline) }}
@@ -119,23 +119,28 @@ export default {
 			return useObjectStore()
 		},
 		pipelines() {
-			return this.objectStore.getCollection('pipeline') || []
+			return this.objectStore.collections.pipeline || []
 		},
 		loading() {
-			return this.objectStore.isLoading('pipeline')
+			return this.objectStore.loading.pipeline || false
 		},
 	},
 	async mounted() {
 		await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
 	},
 	methods: {
-		entityTypeLabel(type) {
+		schemaLabel(pipeline) {
+			const mappings = pipeline.propertyMappings
+			if (mappings && mappings.length > 0) {
+				return mappings.map(m => m.schemaSlug).join(', ')
+			}
+			// Legacy fallback
 			const labels = {
 				lead: t('pipelinq', 'Leads'),
 				request: t('pipelinq', 'Requests'),
 				both: t('pipelinq', 'Leads & Requests'),
 			}
-			return labels[type] || type
+			return labels[pipeline.entityType] || pipeline.entityType || ''
 		},
 		stageCount(pipeline) {
 			const count = (pipeline.stages || []).length
@@ -194,9 +199,7 @@ export default {
 				const currentPipeline = this.pipelines.find(p => p.id === pipelineData.id)
 				if (currentPipeline && currentPipeline.isDefault) {
 					const otherDefaults = this.pipelines.filter(
-						p => p.entityType === pipelineData.entityType
-							&& p.isDefault
-							&& p.id !== pipelineData.id,
+						p => p.isDefault && p.id !== pipelineData.id,
 					)
 					if (otherDefaults.length === 0) {
 						showError(t('pipelinq', 'At least one pipeline must be set as default'))
@@ -205,12 +208,10 @@ export default {
 				}
 			}
 
-			// If setting as default, unset isDefault on other pipelines of the same entityType
+			// If setting as default, unset isDefault on other pipelines
 			if (pipelineData.isDefault) {
 				const others = this.pipelines.filter(
-					p => p.entityType === pipelineData.entityType
-						&& p.isDefault
-						&& p.id !== pipelineData.id,
+					p => p.isDefault && p.id !== pipelineData.id,
 				)
 				for (const other of others) {
 					await this.objectStore.saveObject('pipeline', { ...other, isDefault: false })
@@ -230,25 +231,25 @@ export default {
 			}
 			let total = 0
 
-			// Count leads on this pipeline
-			const leadConfig = this.objectStore.objectTypeRegistry.lead
-			if (leadConfig) {
-				const leadUrl = `/apps/openregister/api/objects/${leadConfig.register}/${leadConfig.schema}?pipeline=${pipelineId}&_limit=1`
-				const leadResp = await fetch(leadUrl, { headers })
-				if (leadResp.ok) {
-					const leadData = await leadResp.json()
-					total += leadData.total || 0
-				}
-			}
+			// Determine which schemas to count from the pipeline's mappings
+			const pipeline = this.pipelines.find(p => p.id === pipelineId)
+			const mappings = pipeline?.propertyMappings || []
+			const schemaSlugs = mappings.length > 0
+				? mappings.map(m => m.schemaSlug)
+				: ['lead', 'request'] // Legacy fallback
 
-			// Count requests on this pipeline
-			const requestConfig = this.objectStore.objectTypeRegistry.request
-			if (requestConfig) {
-				const requestUrl = `/apps/openregister/api/objects/${requestConfig.register}/${requestConfig.schema}?pipeline=${pipelineId}&_limit=1`
-				const requestResp = await fetch(requestUrl, { headers })
-				if (requestResp.ok) {
-					const requestData = await requestResp.json()
-					total += requestData.total || 0
+			for (const slug of schemaSlugs) {
+				const config = this.objectStore.objectTypeRegistry[slug]
+				if (!config) continue
+				try {
+					const url = `/apps/openregister/api/objects/${config.register}/${config.schema}?pipeline=${pipelineId}&_limit=1`
+					const resp = await fetch(url, { headers })
+					if (resp.ok) {
+						const data = await resp.json()
+						total += data.total || 0
+					}
+				} catch {
+					// Non-blocking
 				}
 			}
 

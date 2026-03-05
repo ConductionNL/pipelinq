@@ -65,7 +65,7 @@ class SystemTagCrudService
     public function getTagIdsForType(string $objectType): array
     {
         $tagIds = $this->tagMapper->getTagIdsForObjects(
-            objectIds: [$objectType],
+            objIds: [$objectType],
             objectType: $objectType
         );
 
@@ -200,7 +200,7 @@ class SystemTagCrudService
             }
 
             $otherTagIds = $this->tagMapper->getTagIdsForObjects(
-                objectIds: [$otherType],
+                objIds: [$otherType],
                 objectType: $otherType
             );
 

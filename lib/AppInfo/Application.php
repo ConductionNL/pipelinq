@@ -87,25 +87,25 @@ class Application extends App implements IBootstrap
             $commentsManager = $server->get(ICommentsManager::class);
             $commentsManager->registerDisplayNameResolver(
                 type: 'pipelinq_client',
-                callable: function (string $id): string {
+                closure: function (string $id): string {
                     return 'Client';
                 }
             );
             $commentsManager->registerDisplayNameResolver(
                 type: 'pipelinq_contact',
-                callable: function (string $id): string {
+                closure: function (string $id): string {
                     return 'Contact';
                 }
             );
             $commentsManager->registerDisplayNameResolver(
                 type: 'pipelinq_lead',
-                callable: function (string $id): string {
+                closure: function (string $id): string {
                     return 'Lead';
                 }
             );
             $commentsManager->registerDisplayNameResolver(
                 type: 'pipelinq_request',
-                callable: function (string $id): string {
+                closure: function (string $id): string {
                     return 'Request';
                 }
             );
