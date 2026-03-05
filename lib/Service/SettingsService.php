@@ -55,17 +55,6 @@ class SettingsService
     ];
 
     /**
-     * User setting keys and their defaults.
-     *
-     * @var array<string, string>
-     */
-    private const USER_SETTING_DEFAULTS = [
-        'notify_assignments'  => 'true',
-        'notify_stage_status' => 'true',
-        'notify_notes'        => 'true',
-    ];
-
-    /**
      * Constructor.
      *
      * @param IAppConfig             $appConfig           The app config.
