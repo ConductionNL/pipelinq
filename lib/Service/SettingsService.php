@@ -38,6 +38,9 @@ class SettingsService
         'lead_schema',
         'request_schema',
         'pipeline_schema',
+        'product_schema',
+        'productCategory_schema',
+        'leadProduct_schema',
     ];
 
     /**

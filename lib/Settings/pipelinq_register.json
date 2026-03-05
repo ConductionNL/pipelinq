@@ -24,7 +24,10 @@
           "contact",
           "lead",
           "request",
-          "pipeline"
+          "pipeline",
+          "product",
+          "productCategory",
+          "leadProduct"
         ],
         "tablePrefix": "",
         "folder": "Open Registers/Pipelinq"
@@ -460,6 +463,190 @@
             "type": "boolean",
             "description": "Whether this is the default pipeline for its entity type",
             "default": false
+          }
+        }
+      },
+      "product": {
+        "slug": "product",
+        "title": "Product",
+        "icon": "Package",
+        "version": "1.0.0",
+        "summary": "A product or service that the organization sells",
+        "description": "Represents a product or service in the CRM catalog. Linked to leads via LeadProduct line items for accurate pipeline valuation. Mapped to Schema.org Product.",
+        "@type": "schema:Product",
+        "required": [
+          "name",
+          "unitPrice",
+          "type"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Product or service name (schema:name)",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed product description (schema:description)",
+            "visible": false
+          },
+          "sku": {
+            "type": "string",
+            "description": "Stock keeping unit or product code (schema:sku)",
+            "maxLength": 100
+          },
+          "unitPrice": {
+            "type": "number",
+            "description": "Default selling price per unit in EUR (schema:price)",
+            "minimum": 0
+          },
+          "cost": {
+            "type": "number",
+            "description": "Cost to the organization per unit (for margin calculation)",
+            "minimum": 0,
+            "visible": false
+          },
+          "category": {
+            "type": "string",
+            "description": "UUID reference to a ProductCategory object",
+            "format": "uuid",
+            "title": "Category",
+            "facetable": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Whether this is a physical product or a service",
+            "enum": [
+              "product",
+              "service"
+            ],
+            "default": "product",
+            "title": "Type",
+            "facetable": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Whether the product is available for sale",
+            "enum": [
+              "active",
+              "inactive"
+            ],
+            "default": "active",
+            "title": "Status",
+            "facetable": true
+          },
+          "unit": {
+            "type": "string",
+            "description": "Unit of measure (e.g., each, hour, license, month)",
+            "visible": false
+          },
+          "taxRate": {
+            "type": "number",
+            "description": "Tax percentage (0-100). Default: 21 (Dutch BTW)",
+            "minimum": 0,
+            "maximum": 100,
+            "default": 21,
+            "visible": false
+          },
+          "image": {
+            "type": "string",
+            "description": "URL to product image",
+            "format": "uri",
+            "visible": false
+          }
+        }
+      },
+      "productCategory": {
+        "slug": "productCategory",
+        "title": "Product Category",
+        "icon": "Tag",
+        "version": "1.0.0",
+        "summary": "A category for grouping products",
+        "description": "Represents a product category for hierarchical grouping. Categories can have parent categories for tree structures. Mapped to Schema.org DefinedTermSet.",
+        "@type": "schema:DefinedTermSet",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Category name (schema:name)",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "Category description",
+            "visible": false
+          },
+          "parent": {
+            "type": "string",
+            "description": "UUID reference to parent category (for hierarchy)",
+            "format": "uuid",
+            "visible": false
+          },
+          "order": {
+            "type": "integer",
+            "description": "Display order within the same parent level",
+            "default": 0,
+            "visible": false
+          }
+        }
+      },
+      "leadProduct": {
+        "slug": "leadProduct",
+        "title": "Lead Product",
+        "icon": "CartOutline",
+        "version": "1.0.0",
+        "summary": "A line item linking a product to a lead",
+        "description": "Represents a product line item on a lead \u2014 an instance of a product with deal-specific quantity, pricing, and discount. The total is computed as quantity * unitPrice * (1 - discount/100). Mapped to Schema.org Offer.",
+        "@type": "schema:Offer",
+        "required": [
+          "lead",
+          "product",
+          "quantity",
+          "unitPrice"
+        ],
+        "properties": {
+          "lead": {
+            "type": "string",
+            "description": "UUID reference to the parent Lead",
+            "format": "uuid"
+          },
+          "product": {
+            "type": "string",
+            "description": "UUID reference to the Product",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "number",
+            "description": "Number of units",
+            "minimum": 0.01,
+            "default": 1
+          },
+          "unitPrice": {
+            "type": "number",
+            "description": "Price per unit (pre-populated from Product.unitPrice, can be overridden)",
+            "minimum": 0
+          },
+          "discount": {
+            "type": "number",
+            "description": "Discount percentage (0-100)",
+            "minimum": 0,
+            "maximum": 100,
+            "default": 0,
+            "visible": false
+          },
+          "total": {
+            "type": "number",
+            "description": "Computed total: quantity * unitPrice * (1 - discount/100)",
+            "minimum": 0
+          },
+          "notes": {
+            "type": "string",
+            "description": "Line item notes (e.g., annual license, setup fee)",
+            "visible": false
           }
         }
       }

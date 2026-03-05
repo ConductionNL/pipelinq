@@ -22,6 +22,12 @@
 					</template>
 					{{ t('pipelinq', 'New Client') }}
 				</NcButton>
+				<NcButton @click="showProductDialog = true">
+					<template #icon>
+						<Plus :size="20" />
+					</template>
+					{{ t('pipelinq', 'New Product') }}
+				</NcButton>
 				<NcButton :disabled="loading"
 					:aria-label="t('pipelinq', 'Refresh dashboard')"
 					@click="fetchAll">
@@ -71,6 +77,15 @@
 					<div class="kpi-content">
 						<span class="kpi-value">{{ kpi.overdueItems }}</span>
 						<span class="kpi-label">{{ t('pipelinq', 'Overdue') }}</span>
+					</div>
+				</div>
+				<div class="kpi-card">
+					<div class="kpi-icon">
+						<PackageVariant :size="24" />
+					</div>
+					<div class="kpi-content">
+						<span class="kpi-value">{{ kpi.productCount }}</span>
+						<span class="kpi-label">{{ t('pipelinq', 'Products') }}</span>
 					</div>
 				</div>
 			</div>
@@ -135,6 +150,12 @@
 				</div>
 			</div>
 
+			<!-- Product Revenue -->
+			<ProductRevenue />
+
+			<!-- Prospect Discovery Widget -->
+			<ProspectWidget />
+
 			<!-- Welcome message for fresh installs -->
 			<div v-if="isEmpty" class="welcome-message">
 				<p>{{ t('pipelinq', 'Welcome to Pipelinq! Get started by creating your first client, lead, or request using the buttons above.') }}</p>
@@ -164,6 +185,11 @@
 			v-if="showClientDialog"
 			@created="onClientCreated"
 			@close="showClientDialog = false" />
+
+		<ProductCreateDialog
+			v-if="showProductDialog"
+			@created="onProductCreated"
+			@close="showProductDialog = false" />
 	</div>
 </template>
 
@@ -175,10 +201,14 @@ import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
 import FileDocument from 'vue-material-design-icons/FileDocument.vue'
 import CurrencyEur from 'vue-material-design-icons/CurrencyEur.vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
+import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import { useObjectStore } from '../store/modules/object.js'
 import LeadCreateDialog from './leads/LeadCreateDialog.vue'
 import RequestCreateDialog from './requests/RequestCreateDialog.vue'
 import ClientCreateDialog from './clients/ClientCreateDialog.vue'
+import ProductCreateDialog from './products/ProductCreateDialog.vue'
+import ProductRevenue from '../components/ProductRevenue.vue'
+import ProspectWidget from '../components/ProspectWidget.vue'
 import {
 	getStatusLabel,
 	getStatusColor,
@@ -200,6 +230,10 @@ export default {
 		LeadCreateDialog,
 		RequestCreateDialog,
 		ClientCreateDialog,
+		PackageVariant,
+		ProductCreateDialog,
+		ProductRevenue,
+		ProspectWidget,
 	},
 	data() {
 		return {
@@ -207,11 +241,13 @@ export default {
 			showLeadDialog: false,
 			showRequestDialog: false,
 			showClientDialog: false,
+			showProductDialog: false,
 			error: null,
 			refreshTimer: null,
 			allLeads: [],
 			allRequests: [],
 			allPipelines: [],
+			allProducts: [],
 			myLeads: [],
 			myRequests: [],
 		}
@@ -262,11 +298,14 @@ export default {
 				return new Date(r.requestedAt) < thirtyDaysAgo
 			}).length
 
+			const productCount = this.allProducts.filter(p => p.status !== 'inactive').length
+
 			return {
 				openLeads,
 				openRequests,
 				pipelineValue,
 				overdueItems: overdueLeads + overdueRequests,
+				productCount,
 			}
 		},
 
@@ -395,6 +434,13 @@ export default {
 					)
 				}
 
+				// Fetch all products
+				if (config.product) {
+					promises.push(
+						this.fetchRaw('product', { _limit: 500 }).then(items => { this.allProducts = items }),
+					)
+				}
+
 				// Fetch my leads
 				if (config.lead && this.currentUser) {
 					promises.push(
@@ -473,6 +519,11 @@ export default {
 			this.$router.push({ name: 'ClientDetail', params: { id: clientId } })
 		},
 
+		onProductCreated(productId) {
+			this.showProductDialog = false
+			this.$router.push({ name: 'ProductDetail', params: { id: productId } })
+		},
+
 		openItem(item) {
 			if (item.entityType === 'lead') {
 				this.$router.push({ name: 'LeadDetail', params: { id: item.id } })
@@ -509,7 +560,7 @@ export default {
 /* KPI Cards */
 .kpi-row {
 	display: grid;
-	grid-template-columns: repeat(4, 1fr);
+	grid-template-columns: repeat(5, 1fr);
 	gap: 16px;
 	margin-bottom: 24px;
 }
