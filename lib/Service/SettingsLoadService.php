@@ -42,6 +42,9 @@ class SettingsLoadService
         'lead',
         'request',
         'pipeline',
+        'product',
+        'productCategory',
+        'leadProduct',
     ];
 
     /**

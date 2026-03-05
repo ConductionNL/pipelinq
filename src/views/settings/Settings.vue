@@ -40,6 +40,9 @@
 		<!-- Pipeline Management -->
 		<PipelineManager v-if="isConfigured" />
 
+		<!-- Product Categories -->
+		<ProductCategoryManager v-if="isConfigured" />
+
 		<!-- Lead Sources -->
 		<TagManager v-if="isConfigured"
 			:title="t('pipelinq', 'Lead Sources')"
@@ -64,6 +67,9 @@
 			@remove="removeRequestChannel"
 			@rename="renameRequestChannel" />
 
+		<!-- Prospect Discovery Settings -->
+		<ProspectSettings v-if="isConfigured" />
+
 		<!-- Re-import Status -->
 		<div v-if="message" class="actions-section">
 			<NcNoteCard :type="messageType">
@@ -82,6 +88,8 @@ import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
 import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import PipelineManager from './PipelineManager.vue'
+import ProductCategoryManager from './ProductCategoryManager.vue'
+import ProspectSettings from './ProspectSettings.vue'
 import TagManager from './TagManager.vue'
 
 export default {
@@ -95,6 +103,8 @@ export default {
 		NcSettingsSection,
 		Refresh,
 		PipelineManager,
+		ProductCategoryManager,
+		ProspectSettings,
 		TagManager,
 	},
 	data() {
@@ -146,6 +156,9 @@ export default {
 					{ slug: 'lead', label: t('pipelinq', 'Lead'), description: t('pipelinq', 'Sales leads') },
 					{ slug: 'request', label: t('pipelinq', 'Request'), description: t('pipelinq', 'Customer requests') },
 					{ slug: 'pipeline', label: t('pipelinq', 'Pipeline'), description: t('pipelinq', 'Pipeline stages') },
+					{ slug: 'product', label: t('pipelinq', 'Product'), description: t('pipelinq', 'Products and services') },
+					{ slug: 'productCategory', label: t('pipelinq', 'Product Category'), description: t('pipelinq', 'Product categories') },
+					{ slug: 'leadProduct', label: t('pipelinq', 'Lead Product'), description: t('pipelinq', 'Product line items on leads') },
 				],
 			}]
 		},

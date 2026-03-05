@@ -9,6 +9,8 @@ import ContactList from '../views/contacts/ContactList.vue'
 import ContactDetail from '../views/contacts/ContactDetail.vue'
 import LeadList from '../views/leads/LeadList.vue'
 import LeadDetail from '../views/leads/LeadDetail.vue'
+import ProductList from '../views/products/ProductList.vue'
+import ProductDetail from '../views/products/ProductDetail.vue'
 import PipelineBoard from '../views/pipeline/PipelineBoard.vue'
 import MyWork from '../views/MyWork.vue'
 import PipelineManager from '../views/settings/PipelineManager.vue'
@@ -27,6 +29,8 @@ export default new Router({
 		{ path: '/contacts/:id', name: 'ContactDetail', component: ContactDetail, props: route => ({ contactId: route.params.id }) },
 		{ path: '/leads', name: 'Leads', component: LeadList },
 		{ path: '/leads/:id', name: 'LeadDetail', component: LeadDetail, props: route => ({ leadId: route.params.id }) },
+		{ path: '/products', name: 'Products', component: ProductList },
+		{ path: '/products/:id', name: 'ProductDetail', component: ProductDetail, props: route => ({ productId: route.params.id }) },
 		{ path: '/pipeline', name: 'Pipeline', component: PipelineBoard },
 		{ path: '/my-work', name: 'MyWork', component: MyWork },
 		{ path: '/pipelines', name: 'Pipelines', component: PipelineManager },

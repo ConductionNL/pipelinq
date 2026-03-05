@@ -48,7 +48,7 @@ class NotesController extends Controller
         private NoteEventService $noteEventService,
         private LoggerInterface $logger,
     ) {
-        parent::__construct(Application::APP_ID, $request);
+        parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
 
     /**
