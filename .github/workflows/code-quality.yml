@@ -17,5 +17,3 @@ jobs:
       enable-phpmetrics: true
       enable-frontend: true
       enable-eslint: true
-    permissions:
-      pull-requests: write
