@@ -1,0 +1,67 @@
+name: Documentation
+
+on:
+  push:
+    branches:
+      - development
+  pull_request:
+    branches:
+      - development
+
+jobs:
+  deploy:
+    name: Deploy Documentation
+    runs-on: ubuntu-latest
+    # Only deploy on push, not on pull requests
+    if: github.event_name == 'push'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Clear build cache and install dependencies
+        timeout-minutes: 3
+        run: |
+          cd docusaurus
+          rm -rf node_modules/.cache
+          rm -rf .docusaurus
+          rm -rf build
+          npm run ci
+
+      - name: Verify build output
+        run: |
+          cd docusaurus/build
+          if [ ! -f index.html ]; then
+            echo "ERROR: index.html not found in build directory!"
+            exit 1
+          fi
+
+      - name: Create .nojekyll and CNAME files
+        run: |
+          cd docusaurus/build
+          touch .nojekyll
+          echo "pipelinq.app" > CNAME
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docusaurus/build
+          publish_branch: gh-pages
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          force_orphan: false
+          allow_empty_commit: true
+          keep_files: false
+
+      - name: Verify deployment
+        run: |
+          git fetch origin gh-pages
+          echo "Deployment completed. Latest commit: $(git rev-parse origin/gh-pages)"

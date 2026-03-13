@@ -1,0 +1,104 @@
+{
+  "change": "pipeline-foundation",
+  "project": "pipelinq",
+  "repo": "ConductionNL/pipelinq",
+  "created": "2026-02-25",
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Update pipeline schema with stage lifecycle properties",
+      "spec_ref": "specs/pipeline-foundation/spec.md#REQ-PF-001",
+      "status": "completed",
+      "files_likely_affected": [
+        "pipelinq/lib/Settings/pipelinq_register.json"
+      ],
+      "acceptance_criteria": [
+        "Stage items support isClosed (boolean), isWon (boolean), color (string)",
+        "Schema remains valid OpenAPI 3.0.0"
+      ],
+      "context_files": [
+        "pipelinq/lib/Settings/pipelinq_register.json"
+      ]
+    },
+    {
+      "id": "2.1",
+      "title": "Add default pipeline creation to SettingsService",
+      "spec_ref": "specs/pipeline-foundation/spec.md#REQ-PF-002",
+      "status": "completed",
+      "depends_on": ["1.1"],
+      "files_likely_affected": [
+        "pipelinq/lib/Service/SettingsService.php"
+      ],
+      "acceptance_criteria": [
+        "Sales Pipeline created with 7 stages (New through Lost) with correct probabilities and isClosed/isWon",
+        "Service Requests pipeline created with 5 stages",
+        "Idempotent — skip if pipelines already exist",
+        "Both pipelines have isDefault: true for their entity type"
+      ],
+      "context_files": [
+        "pipelinq/lib/Service/SettingsService.php",
+        "pipelinq/lib/Repair/InitializeSettings.php",
+        "pipelinq/lib/Settings/pipelinq_register.json"
+      ]
+    },
+    {
+      "id": "3.1",
+      "title": "Create PipelineManager.vue for admin settings",
+      "spec_ref": "specs/pipeline-foundation/spec.md#REQ-PF-003",
+      "status": "completed",
+      "files_likely_affected": [
+        "pipelinq/src/views/settings/PipelineManager.vue"
+      ],
+      "acceptance_criteria": [
+        "Lists all pipelines with title, entity type, stage count, stage preview",
+        "Default indicator (star) shown for default pipelines",
+        "Add pipeline button visible",
+        "Edit and delete actions per pipeline",
+        "Delete shows confirmation dialog"
+      ],
+      "context_files": [
+        "pipelinq/src/views/settings/Settings.vue",
+        "pipelinq/src/store/modules/object.js"
+      ]
+    },
+    {
+      "id": "3.2",
+      "title": "Create PipelineForm.vue with inline stage editor",
+      "spec_ref": "specs/pipeline-foundation/spec.md#REQ-PF-003",
+      "status": "completed",
+      "depends_on": ["3.1"],
+      "files_likely_affected": [
+        "pipelinq/src/views/settings/PipelineForm.vue"
+      ],
+      "acceptance_criteria": [
+        "Title (required), description, entity type (required), isDefault toggle",
+        "Stage list with name, order, probability, isClosed, isWon, color per stage",
+        "Add, edit, remove stages inline",
+        "Move up/down buttons for reordering",
+        "Validation: title required, at least one non-closed stage, isWon requires isClosed, stage name required"
+      ],
+      "context_files": [
+        "pipelinq/src/views/settings/PipelineManager.vue",
+        "pipelinq/src/store/modules/object.js"
+      ]
+    },
+    {
+      "id": "4.1",
+      "title": "Integrate PipelineManager into Settings.vue",
+      "spec_ref": "specs/pipeline-foundation/spec.md#REQ-PF-003",
+      "status": "completed",
+      "depends_on": ["3.1"],
+      "files_likely_affected": [
+        "pipelinq/src/views/settings/Settings.vue"
+      ],
+      "acceptance_criteria": [
+        "PipelineManager component rendered below schema section",
+        "Pipeline list loads on mount via objectStore.fetchCollection('pipeline')"
+      ],
+      "context_files": [
+        "pipelinq/src/views/settings/Settings.vue",
+        "pipelinq/src/views/settings/PipelineManager.vue"
+      ]
+    }
+  ]
+}
