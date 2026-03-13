@@ -17,6 +17,21 @@ export async function initializeStores() {
 		if (config.register && config.contact_schema) {
 			objectStore.registerObjectType('contact', config.contact_schema, config.register)
 		}
+		if (config.register && config.lead_schema) {
+			objectStore.registerObjectType('lead', config.lead_schema, config.register)
+		}
+		if (config.register && config.pipeline_schema) {
+			objectStore.registerObjectType('pipeline', config.pipeline_schema, config.register)
+		}
+		if (config.register && config.product_schema) {
+			objectStore.registerObjectType('product', config.product_schema, config.register)
+		}
+		if (config.register && config.productCategory_schema) {
+			objectStore.registerObjectType('productCategory', config.productCategory_schema, config.register)
+		}
+		if (config.register && config.leadProduct_schema) {
+			objectStore.registerObjectType('leadProduct', config.leadProduct_schema, config.register)
+		}
 	}
 
 	return { settingsStore, objectStore }
