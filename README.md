@@ -213,3 +213,4 @@ AGPL-3.0-or-later
 ## Authors
 
 Built by [Conduction](https://conduction.nl) — open-source software for Dutch government and public sector organizations.
+
