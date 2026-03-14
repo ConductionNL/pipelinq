@@ -5,6 +5,7 @@ on:
     branches: [main, development, feature/**, bugfix/**, hotfix/**]
   pull_request:
     branches: [main, beta, development]
+  workflow_dispatch:
 
 jobs:
   quality:
