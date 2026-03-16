@@ -109,3 +109,56 @@ Relationships MUST be stored as OpenRegister objects.
 - Pipelinq contact entities (OpenRegister)
 - Contact detail view (for relationship section integration)
 - OpenRegister for relationship object storage
+
+---
+
+### Current Implementation Status
+
+**NOT implemented.** No relationship entity, relationship types, or relationship management UI exists in the codebase.
+
+- No `relationship` schema in `lib/Settings/pipelinq_register.json` -- the register only defines: client, contact, lead, request, pipeline, product, productCategory, leadProduct.
+- No relationship-related controllers, services, or Vue components.
+- No relationship section on contact or client detail views.
+- The existing contact-to-client link (`contact.client` UUID reference) represents a simple parent link (contact works for client), not a typed bidirectional relationship system.
+- No inverse relationship auto-creation logic.
+- No configurable relationship types or admin UI for managing them.
+
+**Mock Registers (dependency):** This spec depends on mock BRP registers being available in OpenRegister for development and testing of family relationship features. These registers are available as JSON files that can be loaded on demand from `openregister/lib/Settings/`. Production deployments should connect to the actual Haal Centraal BRP API via OpenConnector.
+
+### Using Mock Register Data
+
+This spec depends on the **BRP** mock register for family relationship data (partners, kinderen, ouders).
+
+**Loading the register:**
+```bash
+# Load BRP register (35 persons with family relationships, register slug: "brp", schema: "ingeschreven-persoon")
+docker exec -u www-data nextcloud php occ openregister:load-register /var/www/html/custom_apps/openregister/lib/Settings/brp_register.json
+```
+
+**Test data for this spec's use cases:**
+- **Partner relationship**: BSN `999995376` (Brigitte Moulin) has partner Jean Roussaex -- test partner auto-linking
+- **Parent-child relationships**: BSN `999990627` (Stephan Janssen) is father of BSN `999997580` and BSN `999995145` -- test ouder/kind bidirectional relationships
+- **Family unit**: BSN `999992570` (Albert Vogel) has partner, child, and 2 parents -- test complete family network display
+- **Employer-employee**: Use KVK `69599084` (Test EMZ Dagobert) with any person contact -- test werkgever/werknemer relationship
+
+**Querying family data:**
+```bash
+# Find person with family references
+curl "http://localhost:8080/index.php/apps/openregister/api/objects/{brp_register_id}/{person_schema_id}?_search=999990627" -u admin:admin
+# Response includes: partners[], ouders[], kinderen[] arrays with BSN cross-references
+```
+
+### Standards & References
+- VNG Klantinteracties -- defines relationship concepts between `Partij` entities (`PartijRelatie`)
+- Schema.org `Person.knows`, `Person.relatedTo`, `Organization.member` -- relevant relationship predicates
+- Common Ground -- relationship modeling between subjects (personen/organisaties)
+- Haal Centraal BRP API -- family relationship data (partner, kinderen, ouders) can be retrieved from BRP
+
+### Specificity Assessment
+- The spec is reasonably specific for a first implementation -- relationship entity structure, default types with inverses, and UI scenarios are well-defined.
+- **Missing**: No API contract for relationship CRUD endpoints.
+- **Missing**: No specification of how relationship search/filtering integrates with OpenRegister's query API (e.g., filtering by `fromContact` or `toContact`).
+- **Missing**: No specification of cascade behavior -- what happens to relationships when a contact is deleted?
+- **Missing**: No specification of permissions -- can any user create/delete relationships, or are there role restrictions?
+- **Open question**: Should the `Relationship` be a new OpenRegister schema in the pipelinq register, or a generic OpenRegister feature (relationships between any objects)?
+- **Open question**: How should inverse auto-creation handle failures? (e.g., if creating the inverse fails, should the primary be rolled back?)

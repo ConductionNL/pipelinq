@@ -1,0 +1,2823 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1773413994">
+  <project timestamp="1773413994">
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Activity/Filter.php">
+      <class name="OCA\Pipelinq\Activity\Filter" namespace="global">
+        <metrics complexity="7" methods="7" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="9" coveredstatements="0" elements="16" coveredelements="0"/>
+      </class>
+      <line num="40" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="44" type="stmt" count="0"/>
+      <line num="51" type="method" name="getIdentifier" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="53" type="stmt" count="0"/>
+      <line num="61" type="method" name="getName" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="71" type="method" name="getPriority" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="73" type="stmt" count="0"/>
+      <line num="81" type="method" name="getIcon" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="83" type="stmt" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="85" type="stmt" count="0"/>
+      <line num="95" type="method" name="filterTypes" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="105" type="method" name="allowedApps" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="107" type="stmt" count="0"/>
+      <metrics loc="110" ncloc="45" classes="1" methods="7" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="9" coveredstatements="0" elements="16" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Activity/Provider.php">
+      <class name="OCA\Pipelinq\Activity\Provider" namespace="global">
+        <metrics complexity="4" methods="2" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="18" coveredstatements="0" elements="20" coveredelements="0"/>
+      </class>
+      <line num="57" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="62" type="stmt" count="0"/>
+      <line num="73" type="method" name="parse" visibility="public" complexity="3" crap="12" count="0"/>
+      <line num="75" type="stmt" count="0"/>
+      <line num="76" type="stmt" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="80" type="stmt" count="0"/>
+      <line num="83" type="stmt" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="86" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="88" type="stmt" count="0"/>
+      <line num="89" type="stmt" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="96" type="stmt" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <metrics loc="101" ncloc="58" classes="1" methods="2" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="18" coveredstatements="0" elements="20" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Activity/ProviderSubjectHandler.php">
+      <class name="OCA\Pipelinq\Activity\ProviderSubjectHandler" namespace="global">
+        <metrics complexity="10" methods="6" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="69" coveredstatements="0" elements="75" coveredelements="0"/>
+      </class>
+      <line num="51" type="method" name="applySubjectText" visibility="public" complexity="5" crap="30" count="0"/>
+      <line num="53" type="stmt" count="0"/>
+      <line num="54" type="stmt" count="0"/>
+      <line num="55" type="stmt" count="0"/>
+      <line num="56" type="stmt" count="0"/>
+      <line num="57" type="stmt" count="0"/>
+      <line num="59" type="stmt" count="0"/>
+      <line num="61" type="stmt" count="0"/>
+      <line num="62" type="stmt" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="64" type="stmt" count="0"/>
+      <line num="65" type="stmt" count="0"/>
+      <line num="66" type="stmt" count="0"/>
+      <line num="67" type="stmt" count="0"/>
+      <line num="68" type="stmt" count="0"/>
+      <line num="69" type="stmt" count="0"/>
+      <line num="70" type="stmt" count="0"/>
+      <line num="73" type="stmt" count="0"/>
+      <line num="74" type="stmt" count="0"/>
+      <line num="75" type="stmt" count="0"/>
+      <line num="76" type="stmt" count="0"/>
+      <line num="77" type="stmt" count="0"/>
+      <line num="78" type="stmt" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="80" type="stmt" count="0"/>
+      <line num="81" type="stmt" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="85" type="stmt" count="0"/>
+      <line num="86" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="88" type="stmt" count="0"/>
+      <line num="89" type="stmt" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="91" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="96" type="stmt" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="101" type="stmt" count="0"/>
+      <line num="102" type="stmt" count="0"/>
+      <line num="117" type="method" name="applyStageChangedSubject" visibility="private" complexity="1" crap="2" count="0"/>
+      <line num="124" type="stmt" count="0"/>
+      <line num="125" type="stmt" count="0"/>
+      <line num="126" type="stmt" count="0"/>
+      <line num="127" type="stmt" count="0"/>
+      <line num="128" type="stmt" count="0"/>
+      <line num="142" type="method" name="applyStatusChangedSubject" visibility="private" complexity="1" crap="2" count="0"/>
+      <line num="149" type="stmt" count="0"/>
+      <line num="150" type="stmt" count="0"/>
+      <line num="151" type="stmt" count="0"/>
+      <line num="152" type="stmt" count="0"/>
+      <line num="153" type="stmt" count="0"/>
+      <line num="167" type="method" name="applyNoteAddedSubject" visibility="private" complexity="1" crap="2" count="0"/>
+      <line num="174" type="stmt" count="0"/>
+      <line num="175" type="stmt" count="0"/>
+      <line num="176" type="stmt" count="0"/>
+      <line num="177" type="stmt" count="0"/>
+      <line num="178" type="stmt" count="0"/>
+      <line num="189" type="method" name="buildRichParams" visibility="private" complexity="1" crap="2" count="0"/>
+      <line num="191" type="stmt" count="0"/>
+      <line num="192" type="stmt" count="0"/>
+      <line num="193" type="stmt" count="0"/>
+      <line num="194" type="stmt" count="0"/>
+      <line num="195" type="stmt" count="0"/>
+      <line num="196" type="stmt" count="0"/>
+      <line num="197" type="stmt" count="0"/>
+      <line num="212" type="method" name="applySimpleSubject" visibility="private" complexity="1" crap="2" count="0"/>
+      <line num="220" type="stmt" count="0"/>
+      <line num="221" type="stmt" count="0"/>
+      <line num="222" type="stmt" count="0"/>
+      <line num="223" type="stmt" count="0"/>
+      <line num="224" type="stmt" count="0"/>
+      <metrics loc="227" ncloc="134" classes="1" methods="6" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="69" coveredstatements="0" elements="75" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Activity/Setting/AssignmentSetting.php">
+      <class name="OCA\Pipelinq\Activity\Setting\AssignmentSetting" namespace="global">
+        <metrics complexity="10" methods="10" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="10" coveredstatements="0" elements="20" coveredelements="0"/>
+      </class>
+      <line num="37" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="40" type="stmt" count="0"/>
+      <line num="47" type="method" name="getIdentifier" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="49" type="stmt" count="0"/>
+      <line num="57" type="method" name="getName" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="59" type="stmt" count="0"/>
+      <line num="67" type="method" name="getGroupIdentifier" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="69" type="stmt" count="0"/>
+      <line num="77" type="method" name="getGroupName" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="87" type="method" name="getPriority" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="89" type="stmt" count="0"/>
+      <line num="97" type="method" name="canChangeStream" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="107" type="method" name="isDefaultEnabledStream" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="109" type="stmt" count="0"/>
+      <line num="117" type="method" name="canChangeMail" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="119" type="stmt" count="0"/>
+      <line num="127" type="method" name="isDefaultEnabledMail" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="129" type="stmt" count="0"/>
+      <metrics loc="132" ncloc="52" classes="1" methods="10" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="10" coveredstatements="0" elements="20" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Activity/Setting/NoteSetting.php">
+      <class name="OCA\Pipelinq\Activity\Setting\NoteSetting" namespace="global">
+        <metrics complexity="10" methods="10" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="10" coveredstatements="0" elements="20" coveredelements="0"/>
+      </class>
+      <line num="37" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="40" type="stmt" count="0"/>
+      <line num="47" type="method" name="getIdentifier" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="49" type="stmt" count="0"/>
+      <line num="57" type="method" name="getName" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="59" type="stmt" count="0"/>
+      <line num="67" type="method" name="getGroupIdentifier" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="69" type="stmt" count="0"/>
+      <line num="77" type="method" name="getGroupName" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="87" type="method" name="getPriority" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="89" type="stmt" count="0"/>
+      <line num="97" type="method" name="canChangeStream" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="107" type="method" name="isDefaultEnabledStream" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="109" type="stmt" count="0"/>
+      <line num="117" type="method" name="canChangeMail" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="119" type="stmt" count="0"/>
+      <line num="127" type="method" name="isDefaultEnabledMail" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="129" type="stmt" count="0"/>
+      <metrics loc="132" ncloc="52" classes="1" methods="10" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="10" coveredstatements="0" elements="20" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Activity/Setting/StageStatusSetting.php">
+      <class name="OCA\Pipelinq\Activity\Setting\StageStatusSetting" namespace="global">
+        <metrics complexity="10" methods="10" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="10" coveredstatements="0" elements="20" coveredelements="0"/>
+      </class>
+      <line num="37" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="40" type="stmt" count="0"/>
+      <line num="47" type="method" name="getIdentifier" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="49" type="stmt" count="0"/>
+      <line num="57" type="method" name="getName" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="59" type="stmt" count="0"/>
+      <line num="67" type="method" name="getGroupIdentifier" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="69" type="stmt" count="0"/>
+      <line num="77" type="method" name="getGroupName" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="87" type="method" name="getPriority" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="89" type="stmt" count="0"/>
+      <line num="97" type="method" name="canChangeStream" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="107" type="method" name="isDefaultEnabledStream" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="109" type="stmt" count="0"/>
+      <line num="117" type="method" name="canChangeMail" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="119" type="stmt" count="0"/>
+      <line num="127" type="method" name="isDefaultEnabledMail" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="129" type="stmt" count="0"/>
+      <metrics loc="132" ncloc="52" classes="1" methods="10" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="10" coveredstatements="0" elements="20" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Controller/ContactSyncController.php">
+      <class name="OCA\Pipelinq\Controller\ContactSyncController" namespace="global">
+        <metrics complexity="12" methods="4" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="61" coveredstatements="0" elements="65" coveredelements="0"/>
+      </class>
+      <line num="41" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="45" type="stmt" count="0"/>
+      <line num="55" type="method" name="search" visibility="public" complexity="3" crap="12" count="0"/>
+      <line num="57" type="stmt" count="0"/>
+      <line num="58" type="stmt" count="0"/>
+      <line num="59" type="stmt" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="64" type="stmt" count="0"/>
+      <line num="65" type="stmt" count="0"/>
+      <line num="66" type="stmt" count="0"/>
+      <line num="67" type="stmt" count="0"/>
+      <line num="68" type="stmt" count="0"/>
+      <line num="69" type="stmt" count="0"/>
+      <line num="70" type="stmt" count="0"/>
+      <line num="71" type="stmt" count="0"/>
+      <line num="82" type="method" name="import" visibility="public" complexity="3" crap="12" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="85" type="stmt" count="0"/>
+      <line num="86" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="89" type="stmt" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="96" type="stmt" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="101" type="stmt" count="0"/>
+      <line num="102" type="stmt" count="0"/>
+      <line num="103" type="stmt" count="0"/>
+      <line num="104" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <line num="107" type="stmt" count="0"/>
+      <line num="108" type="stmt" count="0"/>
+      <line num="109" type="stmt" count="0"/>
+      <line num="110" type="stmt" count="0"/>
+      <line num="111" type="stmt" count="0"/>
+      <line num="112" type="stmt" count="0"/>
+      <line num="123" type="method" name="writeBack" visibility="public" complexity="5" crap="30" count="0"/>
+      <line num="125" type="stmt" count="0"/>
+      <line num="126" type="stmt" count="0"/>
+      <line num="128" type="stmt" count="0"/>
+      <line num="129" type="stmt" count="0"/>
+      <line num="132" type="stmt" count="0"/>
+      <line num="133" type="stmt" count="0"/>
+      <line num="137" type="stmt" count="0"/>
+      <line num="138" type="stmt" count="0"/>
+      <line num="139" type="stmt" count="0"/>
+      <line num="140" type="stmt" count="0"/>
+      <line num="141" type="stmt" count="0"/>
+      <line num="142" type="stmt" count="0"/>
+      <line num="143" type="stmt" count="0"/>
+      <line num="144" type="stmt" count="0"/>
+      <line num="145" type="stmt" count="0"/>
+      <line num="146" type="stmt" count="0"/>
+      <line num="147" type="stmt" count="0"/>
+      <line num="148" type="stmt" count="0"/>
+      <line num="149" type="stmt" count="0"/>
+      <line num="150" type="stmt" count="0"/>
+      <line num="151" type="stmt" count="0"/>
+      <line num="152" type="stmt" count="0"/>
+      <line num="153" type="stmt" count="0"/>
+      <metrics loc="157" ncloc="105" classes="1" methods="4" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="61" coveredstatements="0" elements="65" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Controller/DashboardController.php">
+      <class name="OCA\Pipelinq\Controller\DashboardController" namespace="global">
+        <metrics complexity="2" methods="2" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="2" coveredstatements="0" elements="4" coveredelements="0"/>
+      </class>
+      <line num="39" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="41" type="stmt" count="0"/>
+      <line num="52" type="method" name="page" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="54" type="stmt" count="0"/>
+      <metrics loc="57" ncloc="22" classes="1" methods="2" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="2" coveredstatements="0" elements="4" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Controller/LeadSourceController.php">
+      <class name="OCA\Pipelinq\Controller\LeadSourceController" namespace="global">
+        <metrics complexity="8" methods="5" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="33" coveredstatements="0" elements="38" coveredelements="0"/>
+      </class>
+      <line num="43" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="47" type="stmt" count="0"/>
+      <line num="57" type="method" name="index" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="59" type="stmt" count="0"/>
+      <line num="60" type="stmt" count="0"/>
+      <line num="61" type="stmt" count="0"/>
+      <line num="62" type="stmt" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="64" type="stmt" count="0"/>
+      <line num="72" type="method" name="create" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="74" type="stmt" count="0"/>
+      <line num="77" type="stmt" count="0"/>
+      <line num="78" type="stmt" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="80" type="stmt" count="0"/>
+      <line num="81" type="stmt" count="0"/>
+      <line num="82" type="stmt" count="0"/>
+      <line num="83" type="stmt" count="0"/>
+      <line num="94" type="method" name="update" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="96" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="101" type="stmt" count="0"/>
+      <line num="102" type="stmt" count="0"/>
+      <line num="103" type="stmt" count="0"/>
+      <line num="104" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <line num="117" type="method" name="destroy" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="120" type="stmt" count="0"/>
+      <line num="121" type="stmt" count="0"/>
+      <line num="122" type="stmt" count="0"/>
+      <line num="123" type="stmt" count="0"/>
+      <line num="124" type="stmt" count="0"/>
+      <line num="125" type="stmt" count="0"/>
+      <line num="126" type="stmt" count="0"/>
+      <line num="127" type="stmt" count="0"/>
+      <line num="128" type="stmt" count="0"/>
+      <metrics loc="132" ncloc="75" classes="1" methods="5" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="33" coveredstatements="0" elements="38" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Controller/NotesController.php">
+      <class name="OCA\Pipelinq\Controller\NotesController" namespace="global">
+        <metrics complexity="13" methods="5" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="40" coveredstatements="0" elements="45" coveredelements="0"/>
+      </class>
+      <line num="45" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="51" type="stmt" count="0"/>
+      <line num="64" type="method" name="list" visibility="public" complexity="3" crap="12" count="0"/>
+      <line num="66" type="stmt" count="0"/>
+      <line num="67" type="stmt" count="0"/>
+      <line num="71" type="stmt" count="0"/>
+      <line num="72" type="stmt" count="0"/>
+      <line num="73" type="stmt" count="0"/>
+      <line num="74" type="stmt" count="0"/>
+      <line num="75" type="stmt" count="0"/>
+      <line num="76" type="stmt" count="0"/>
+      <line num="77" type="stmt" count="0"/>
+      <line num="91" type="method" name="create" visibility="public" complexity="4" crap="20" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="103" type="stmt" count="0"/>
+      <line num="104" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <line num="107" type="stmt" count="0"/>
+      <line num="109" type="stmt" count="0"/>
+      <line num="110" type="stmt" count="0"/>
+      <line num="111" type="stmt" count="0"/>
+      <line num="112" type="stmt" count="0"/>
+      <line num="114" type="stmt" count="0"/>
+      <line num="115" type="stmt" count="0"/>
+      <line num="116" type="stmt" count="0"/>
+      <line num="130" type="method" name="deleteAll" visibility="public" complexity="3" crap="12" count="0"/>
+      <line num="132" type="stmt" count="0"/>
+      <line num="133" type="stmt" count="0"/>
+      <line num="137" type="stmt" count="0"/>
+      <line num="138" type="stmt" count="0"/>
+      <line num="139" type="stmt" count="0"/>
+      <line num="140" type="stmt" count="0"/>
+      <line num="141" type="stmt" count="0"/>
+      <line num="142" type="stmt" count="0"/>
+      <line num="143" type="stmt" count="0"/>
+      <line num="156" type="method" name="deleteSingle" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="159" type="stmt" count="0"/>
+      <line num="160" type="stmt" count="0"/>
+      <line num="161" type="stmt" count="0"/>
+      <line num="162" type="stmt" count="0"/>
+      <metrics loc="166" ncloc="94" classes="1" methods="5" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="40" coveredstatements="0" elements="45" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Controller/ProspectController.php">
+      <class name="OCA\Pipelinq\Controller\ProspectController" namespace="global">
+        <metrics complexity="9" methods="3" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="29" coveredstatements="0" elements="32" coveredelements="0"/>
+      </class>
+      <line num="41" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="45" type="stmt" count="0"/>
+      <line num="55" type="method" name="index" visibility="public" complexity="3" crap="12" count="0"/>
+      <line num="57" type="stmt" count="0"/>
+      <line num="60" type="stmt" count="0"/>
+      <line num="62" type="stmt" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="66" type="stmt" count="0"/>
+      <line num="67" type="stmt" count="0"/>
+      <line num="68" type="stmt" count="0"/>
+      <line num="69" type="stmt" count="0"/>
+      <line num="70" type="stmt" count="0"/>
+      <line num="71" type="stmt" count="0"/>
+      <line num="72" type="stmt" count="0"/>
+      <line num="73" type="stmt" count="0"/>
+      <line num="74" type="stmt" count="0"/>
+      <line num="85" type="method" name="createLead" visibility="public" complexity="5" crap="30" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="89" type="stmt" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="91" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="103" type="stmt" count="0"/>
+      <line num="104" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <line num="107" type="stmt" count="0"/>
+      <line num="108" type="stmt" count="0"/>
+      <metrics loc="112" ncloc="67" classes="1" methods="3" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="29" coveredstatements="0" elements="32" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Controller/ProspectSettingsController.php">
+      <class name="OCA\Pipelinq\Controller\ProspectSettingsController" namespace="global">
+        <metrics complexity="4" methods="3" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="15" coveredstatements="0" elements="18" coveredelements="0"/>
+      </class>
+      <line num="41" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="45" type="stmt" count="0"/>
+      <line num="55" type="method" name="index" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="57" type="stmt" count="0"/>
+      <line num="67" type="method" name="update" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="69" type="stmt" count="0"/>
+      <line num="72" type="stmt" count="0"/>
+      <line num="74" type="stmt" count="0"/>
+      <line num="75" type="stmt" count="0"/>
+      <line num="76" type="stmt" count="0"/>
+      <line num="77" type="stmt" count="0"/>
+      <line num="78" type="stmt" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="80" type="stmt" count="0"/>
+      <line num="81" type="stmt" count="0"/>
+      <line num="82" type="stmt" count="0"/>
+      <line num="83" type="stmt" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <metrics loc="88" ncloc="44" classes="1" methods="3" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="15" coveredstatements="0" elements="18" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Controller/RequestChannelController.php">
+      <class name="OCA\Pipelinq\Controller\RequestChannelController" namespace="global">
+        <metrics complexity="8" methods="5" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="33" coveredstatements="0" elements="38" coveredelements="0"/>
+      </class>
+      <line num="43" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="47" type="stmt" count="0"/>
+      <line num="57" type="method" name="index" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="59" type="stmt" count="0"/>
+      <line num="60" type="stmt" count="0"/>
+      <line num="61" type="stmt" count="0"/>
+      <line num="62" type="stmt" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="64" type="stmt" count="0"/>
+      <line num="72" type="method" name="create" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="74" type="stmt" count="0"/>
+      <line num="77" type="stmt" count="0"/>
+      <line num="78" type="stmt" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="80" type="stmt" count="0"/>
+      <line num="81" type="stmt" count="0"/>
+      <line num="82" type="stmt" count="0"/>
+      <line num="83" type="stmt" count="0"/>
+      <line num="94" type="method" name="update" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="96" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="101" type="stmt" count="0"/>
+      <line num="102" type="stmt" count="0"/>
+      <line num="103" type="stmt" count="0"/>
+      <line num="104" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <line num="117" type="method" name="destroy" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="120" type="stmt" count="0"/>
+      <line num="121" type="stmt" count="0"/>
+      <line num="122" type="stmt" count="0"/>
+      <line num="123" type="stmt" count="0"/>
+      <line num="124" type="stmt" count="0"/>
+      <line num="125" type="stmt" count="0"/>
+      <line num="126" type="stmt" count="0"/>
+      <line num="127" type="stmt" count="0"/>
+      <line num="128" type="stmt" count="0"/>
+      <metrics loc="132" ncloc="75" classes="1" methods="5" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="33" coveredstatements="0" elements="38" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Controller/SettingsController.php">
+      <class name="OCA\Pipelinq\Controller\SettingsController" namespace="global">
+        <metrics complexity="7" methods="6" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="44" coveredstatements="0" elements="50" coveredelements="0"/>
+      </class>
+      <line num="43" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="48" type="stmt" count="0"/>
+      <line num="58" type="method" name="index" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="60" type="stmt" count="0"/>
+      <line num="61" type="stmt" count="0"/>
+      <line num="62" type="stmt" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="64" type="stmt" count="0"/>
+      <line num="65" type="stmt" count="0"/>
+      <line num="77" type="method" name="create" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="80" type="stmt" count="0"/>
+      <line num="82" type="stmt" count="0"/>
+      <line num="83" type="stmt" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="85" type="stmt" count="0"/>
+      <line num="86" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="95" type="method" name="reimport" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="101" type="stmt" count="0"/>
+      <line num="102" type="stmt" count="0"/>
+      <line num="103" type="stmt" count="0"/>
+      <line num="104" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <line num="107" type="stmt" count="0"/>
+      <line num="108" type="stmt" count="0"/>
+      <line num="109" type="stmt" count="0"/>
+      <line num="110" type="stmt" count="0"/>
+      <line num="111" type="stmt" count="0"/>
+      <line num="112" type="stmt" count="0"/>
+      <line num="113" type="stmt" count="0"/>
+      <line num="114" type="stmt" count="0"/>
+      <line num="115" type="stmt" count="0"/>
+      <line num="116" type="stmt" count="0"/>
+      <line num="117" type="stmt" count="0"/>
+      <line num="118" type="stmt" count="0"/>
+      <line num="129" type="method" name="getUserSettings" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="131" type="stmt" count="0"/>
+      <line num="133" type="stmt" count="0"/>
+      <line num="134" type="stmt" count="0"/>
+      <line num="135" type="stmt" count="0"/>
+      <line num="145" type="method" name="updateUserSettings" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="147" type="stmt" count="0"/>
+      <line num="148" type="stmt" count="0"/>
+      <line num="150" type="stmt" count="0"/>
+      <line num="151" type="stmt" count="0"/>
+      <line num="152" type="stmt" count="0"/>
+      <metrics loc="155" ncloc="86" classes="1" methods="6" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="44" coveredstatements="0" elements="50" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Dashboard/ClientSearchWidget.php">
+      <class name="OCA\Pipelinq\Dashboard\ClientSearchWidget" namespace="global">
+        <metrics complexity="7" methods="7" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="8" coveredstatements="0" elements="15" coveredelements="0"/>
+      </class>
+      <line num="41" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="46" type="stmt" count="0"/>
+      <line num="52" type="method" name="getId" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="54" type="stmt" count="0"/>
+      <line num="62" type="method" name="getTitle" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="64" type="stmt" count="0"/>
+      <line num="72" type="method" name="getOrder" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="74" type="stmt" count="0"/>
+      <line num="82" type="method" name="getIconClass" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="92" type="method" name="getUrl" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="102" type="method" name="load" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="104" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <metrics loc="111" ncloc="60" classes="1" methods="7" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="8" coveredstatements="0" elements="15" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Dashboard/DealsOverviewWidget.php">
+      <class name="OCA\Pipelinq\Dashboard\DealsOverviewWidget" namespace="global">
+        <metrics complexity="7" methods="7" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="8" coveredstatements="0" elements="15" coveredelements="0"/>
+      </class>
+      <line num="42" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="47" type="stmt" count="0"/>
+      <line num="53" type="method" name="getId" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="55" type="stmt" count="0"/>
+      <line num="63" type="method" name="getTitle" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="65" type="stmt" count="0"/>
+      <line num="73" type="method" name="getOrder" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="75" type="stmt" count="0"/>
+      <line num="83" type="method" name="getIconClass" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="85" type="stmt" count="0"/>
+      <line num="93" type="method" name="getUrl" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="103" type="method" name="load" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <metrics loc="112" ncloc="60" classes="1" methods="7" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="8" coveredstatements="0" elements="15" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Dashboard/MyLeadsWidget.php">
+      <class name="OCA\Pipelinq\Dashboard\MyLeadsWidget" namespace="global">
+        <metrics complexity="7" methods="7" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="8" coveredstatements="0" elements="15" coveredelements="0"/>
+      </class>
+      <line num="42" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="47" type="stmt" count="0"/>
+      <line num="53" type="method" name="getId" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="55" type="stmt" count="0"/>
+      <line num="63" type="method" name="getTitle" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="65" type="stmt" count="0"/>
+      <line num="73" type="method" name="getOrder" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="75" type="stmt" count="0"/>
+      <line num="83" type="method" name="getIconClass" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="85" type="stmt" count="0"/>
+      <line num="93" type="method" name="getUrl" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="103" type="method" name="load" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <metrics loc="112" ncloc="60" classes="1" methods="7" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="8" coveredstatements="0" elements="15" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Dashboard/RecentActivitiesWidget.php">
+      <class name="OCA\Pipelinq\Dashboard\RecentActivitiesWidget" namespace="global">
+        <metrics complexity="7" methods="7" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="8" coveredstatements="0" elements="15" coveredelements="0"/>
+      </class>
+      <line num="41" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="46" type="stmt" count="0"/>
+      <line num="52" type="method" name="getId" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="54" type="stmt" count="0"/>
+      <line num="62" type="method" name="getTitle" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="64" type="stmt" count="0"/>
+      <line num="72" type="method" name="getOrder" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="74" type="stmt" count="0"/>
+      <line num="82" type="method" name="getIconClass" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="92" type="method" name="getUrl" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="102" type="method" name="load" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="104" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <metrics loc="111" ncloc="60" classes="1" methods="7" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="8" coveredstatements="0" elements="15" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Listener/DeepLinkRegistrationListener.php">
+      <class name="OCA\Pipelinq\Listener\DeepLinkRegistrationListener" namespace="global">
+        <metrics complexity="2" methods="1" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="26" coveredstatements="0" elements="27" coveredelements="0"/>
+      </class>
+      <line num="43" type="method" name="handle" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="45" type="stmt" count="0"/>
+      <line num="46" type="stmt" count="0"/>
+      <line num="49" type="stmt" count="0"/>
+      <line num="50" type="stmt" count="0"/>
+      <line num="51" type="stmt" count="0"/>
+      <line num="52" type="stmt" count="0"/>
+      <line num="53" type="stmt" count="0"/>
+      <line num="54" type="stmt" count="0"/>
+      <line num="56" type="stmt" count="0"/>
+      <line num="57" type="stmt" count="0"/>
+      <line num="58" type="stmt" count="0"/>
+      <line num="59" type="stmt" count="0"/>
+      <line num="60" type="stmt" count="0"/>
+      <line num="61" type="stmt" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="64" type="stmt" count="0"/>
+      <line num="65" type="stmt" count="0"/>
+      <line num="66" type="stmt" count="0"/>
+      <line num="67" type="stmt" count="0"/>
+      <line num="68" type="stmt" count="0"/>
+      <line num="70" type="stmt" count="0"/>
+      <line num="71" type="stmt" count="0"/>
+      <line num="72" type="stmt" count="0"/>
+      <line num="73" type="stmt" count="0"/>
+      <line num="74" type="stmt" count="0"/>
+      <line num="75" type="stmt" count="0"/>
+      <metrics loc="78" ncloc="47" classes="1" methods="1" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="26" coveredstatements="0" elements="27" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Listener/ObjectEventListener.php">
+      <class name="OCA\Pipelinq\Listener\ObjectEventListener" namespace="global">
+        <metrics complexity="4" methods="2" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="8" coveredstatements="0" elements="10" coveredelements="0"/>
+      </class>
+      <line num="40" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="43" type="stmt" count="0"/>
+      <line num="52" type="method" name="handle" visibility="public" complexity="3" crap="12" count="0"/>
+      <line num="54" type="stmt" count="0"/>
+      <line num="55" type="stmt" count="0"/>
+      <line num="56" type="stmt" count="0"/>
+      <line num="57" type="stmt" count="0"/>
+      <line num="58" type="stmt" count="0"/>
+      <line num="59" type="stmt" count="0"/>
+      <line num="60" type="stmt" count="0"/>
+      <metrics loc="64" ncloc="30" classes="1" methods="2" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="8" coveredstatements="0" elements="10" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Notification/Notifier.php">
+      <class name="OCA\Pipelinq\Notification\Notifier" namespace="global">
+        <metrics complexity="14" methods="7" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="84" coveredstatements="0" elements="91" coveredelements="0"/>
+      </class>
+      <line num="42" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="46" type="stmt" count="0"/>
+      <line num="53" type="method" name="getID" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="55" type="stmt" count="0"/>
+      <line num="63" type="method" name="getName" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="65" type="stmt" count="0"/>
+      <line num="76" type="method" name="prepare" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="78" type="stmt" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="82" type="stmt" count="0"/>
+      <line num="83" type="stmt" count="0"/>
+      <line num="85" type="stmt" count="0"/>
+      <line num="86" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="88" type="stmt" count="0"/>
+      <line num="89" type="stmt" count="0"/>
+      <line num="91" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="96" type="stmt" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="114" type="method" name="applyNotificationSubject" visibility="private" complexity="7" crap="56" count="0"/>
+      <line num="116" type="stmt" count="0"/>
+      <line num="117" type="stmt" count="0"/>
+      <line num="118" type="stmt" count="0"/>
+      <line num="119" type="stmt" count="0"/>
+      <line num="120" type="stmt" count="0"/>
+      <line num="122" type="stmt" count="0"/>
+      <line num="123" type="stmt" count="0"/>
+      <line num="124" type="stmt" count="0"/>
+      <line num="125" type="stmt" count="0"/>
+      <line num="126" type="stmt" count="0"/>
+      <line num="127" type="stmt" count="0"/>
+      <line num="128" type="stmt" count="0"/>
+      <line num="129" type="stmt" count="0"/>
+      <line num="130" type="stmt" count="0"/>
+      <line num="131" type="stmt" count="0"/>
+      <line num="132" type="stmt" count="0"/>
+      <line num="134" type="stmt" count="0"/>
+      <line num="135" type="stmt" count="0"/>
+      <line num="136" type="stmt" count="0"/>
+      <line num="137" type="stmt" count="0"/>
+      <line num="138" type="stmt" count="0"/>
+      <line num="139" type="stmt" count="0"/>
+      <line num="140" type="stmt" count="0"/>
+      <line num="141" type="stmt" count="0"/>
+      <line num="142" type="stmt" count="0"/>
+      <line num="143" type="stmt" count="0"/>
+      <line num="145" type="stmt" count="0"/>
+      <line num="146" type="stmt" count="0"/>
+      <line num="147" type="stmt" count="0"/>
+      <line num="148" type="stmt" count="0"/>
+      <line num="149" type="stmt" count="0"/>
+      <line num="150" type="stmt" count="0"/>
+      <line num="151" type="stmt" count="0"/>
+      <line num="152" type="stmt" count="0"/>
+      <line num="154" type="stmt" count="0"/>
+      <line num="155" type="stmt" count="0"/>
+      <line num="156" type="stmt" count="0"/>
+      <line num="157" type="stmt" count="0"/>
+      <line num="158" type="stmt" count="0"/>
+      <line num="159" type="stmt" count="0"/>
+      <line num="160" type="stmt" count="0"/>
+      <line num="161" type="stmt" count="0"/>
+      <line num="163" type="stmt" count="0"/>
+      <line num="164" type="stmt" count="0"/>
+      <line num="165" type="stmt" count="0"/>
+      <line num="166" type="stmt" count="0"/>
+      <line num="167" type="stmt" count="0"/>
+      <line num="168" type="stmt" count="0"/>
+      <line num="169" type="stmt" count="0"/>
+      <line num="170" type="stmt" count="0"/>
+      <line num="173" type="stmt" count="0"/>
+      <line num="185" type="method" name="buildRichParams" visibility="private" complexity="1" crap="2" count="0"/>
+      <line num="187" type="stmt" count="0"/>
+      <line num="188" type="stmt" count="0"/>
+      <line num="189" type="stmt" count="0"/>
+      <line num="190" type="stmt" count="0"/>
+      <line num="191" type="stmt" count="0"/>
+      <line num="192" type="stmt" count="0"/>
+      <line num="193" type="stmt" count="0"/>
+      <line num="208" type="method" name="applySimpleSubject" visibility="private" complexity="1" crap="2" count="0"/>
+      <line num="216" type="stmt" count="0"/>
+      <line num="217" type="stmt" count="0"/>
+      <line num="218" type="stmt" count="0"/>
+      <line num="219" type="stmt" count="0"/>
+      <line num="220" type="stmt" count="0"/>
+      <metrics loc="223" ncloc="140" classes="1" methods="7" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="84" coveredstatements="0" elements="91" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Repair/InitializeSettings.php">
+      <class name="OCA\Pipelinq\Repair\InitializeSettings" namespace="global">
+        <metrics complexity="7" methods="3" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="45" coveredstatements="0" elements="48" coveredelements="0"/>
+      </class>
+      <line num="45" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="50" type="stmt" count="0"/>
+      <line num="57" type="method" name="getName" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="59" type="stmt" count="0"/>
+      <line num="89" type="method" name="run" visibility="public" complexity="5" crap="30" count="0"/>
+      <line num="91" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="96" type="stmt" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <line num="101" type="stmt" count="0"/>
+      <line num="102" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <line num="108" type="stmt" count="0"/>
+      <line num="109" type="stmt" count="0"/>
+      <line num="111" type="stmt" count="0"/>
+      <line num="112" type="stmt" count="0"/>
+      <line num="113" type="stmt" count="0"/>
+      <line num="114" type="stmt" count="0"/>
+      <line num="115" type="stmt" count="0"/>
+      <line num="118" type="stmt" count="0"/>
+      <line num="121" type="stmt" count="0"/>
+      <line num="123" type="stmt" count="0"/>
+      <line num="124" type="stmt" count="0"/>
+      <line num="125" type="stmt" count="0"/>
+      <line num="126" type="stmt" count="0"/>
+      <line num="127" type="stmt" count="0"/>
+      <line num="128" type="stmt" count="0"/>
+      <line num="131" type="stmt" count="0"/>
+      <line num="134" type="stmt" count="0"/>
+      <line num="136" type="stmt" count="0"/>
+      <line num="137" type="stmt" count="0"/>
+      <line num="138" type="stmt" count="0"/>
+      <line num="139" type="stmt" count="0"/>
+      <line num="140" type="stmt" count="0"/>
+      <line num="141" type="stmt" count="0"/>
+      <line num="142" type="stmt" count="0"/>
+      <line num="143" type="stmt" count="0"/>
+      <line num="144" type="stmt" count="0"/>
+      <line num="145" type="stmt" count="0"/>
+      <line num="146" type="stmt" count="0"/>
+      <line num="147" type="stmt" count="0"/>
+      <line num="148" type="stmt" count="0"/>
+      <line num="151" type="stmt" count="0"/>
+      <line num="152" type="stmt" count="0"/>
+      <metrics loc="155" ncloc="111" classes="1" methods="3" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="45" coveredstatements="0" elements="48" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Sections/SettingsSection.php">
+      <class name="OCA\Pipelinq\Sections\SettingsSection" namespace="global">
+        <metrics complexity="5" methods="5" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="5" coveredstatements="0" elements="10" coveredelements="0"/>
+      </class>
+      <line num="39" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="43" type="stmt" count="0"/>
+      <line num="50" type="method" name="getID" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="52" type="stmt" count="0"/>
+      <line num="60" type="method" name="getName" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="62" type="stmt" count="0"/>
+      <line num="70" type="method" name="getPriority" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="72" type="stmt" count="0"/>
+      <line num="80" type="method" name="getIcon" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="82" type="stmt" count="0"/>
+      <metrics loc="85" ncloc="34" classes="1" methods="5" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="5" coveredstatements="0" elements="10" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/ActivityService.php">
+      <class name="OCA\Pipelinq\Service\ActivityService" namespace="global">
+        <metrics complexity="14" methods="7" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="88" coveredstatements="0" elements="95" coveredelements="0"/>
+      </class>
+      <line num="41" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="46" type="stmt" count="0"/>
+      <line num="58" type="method" name="publishCreated" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="64" type="stmt" count="0"/>
+      <line num="65" type="stmt" count="0"/>
+      <line num="67" type="stmt" count="0"/>
+      <line num="70" type="stmt" count="0"/>
+      <line num="71" type="stmt" count="0"/>
+      <line num="72" type="stmt" count="0"/>
+      <line num="73" type="stmt" count="0"/>
+      <line num="74" type="stmt" count="0"/>
+      <line num="75" type="stmt" count="0"/>
+      <line num="76" type="stmt" count="0"/>
+      <line num="77" type="stmt" count="0"/>
+      <line num="78" type="stmt" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="80" type="stmt" count="0"/>
+      <line num="93" type="method" name="publishAssigned" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="102" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <line num="107" type="stmt" count="0"/>
+      <line num="108" type="stmt" count="0"/>
+      <line num="109" type="stmt" count="0"/>
+      <line num="110" type="stmt" count="0"/>
+      <line num="111" type="stmt" count="0"/>
+      <line num="112" type="stmt" count="0"/>
+      <line num="113" type="stmt" count="0"/>
+      <line num="114" type="stmt" count="0"/>
+      <line num="115" type="stmt" count="0"/>
+      <line num="116" type="stmt" count="0"/>
+      <line num="129" type="method" name="publishStageChanged" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="135" type="stmt" count="0"/>
+      <line num="136" type="stmt" count="0"/>
+      <line num="137" type="stmt" count="0"/>
+      <line num="138" type="stmt" count="0"/>
+      <line num="139" type="stmt" count="0"/>
+      <line num="140" type="stmt" count="0"/>
+      <line num="141" type="stmt" count="0"/>
+      <line num="142" type="stmt" count="0"/>
+      <line num="143" type="stmt" count="0"/>
+      <line num="144" type="stmt" count="0"/>
+      <line num="145" type="stmt" count="0"/>
+      <line num="158" type="method" name="publishStatusChanged" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="164" type="stmt" count="0"/>
+      <line num="165" type="stmt" count="0"/>
+      <line num="166" type="stmt" count="0"/>
+      <line num="167" type="stmt" count="0"/>
+      <line num="168" type="stmt" count="0"/>
+      <line num="169" type="stmt" count="0"/>
+      <line num="170" type="stmt" count="0"/>
+      <line num="171" type="stmt" count="0"/>
+      <line num="172" type="stmt" count="0"/>
+      <line num="173" type="stmt" count="0"/>
+      <line num="174" type="stmt" count="0"/>
+      <line num="187" type="method" name="publishNoteAdded" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="193" type="stmt" count="0"/>
+      <line num="194" type="stmt" count="0"/>
+      <line num="195" type="stmt" count="0"/>
+      <line num="196" type="stmt" count="0"/>
+      <line num="197" type="stmt" count="0"/>
+      <line num="198" type="stmt" count="0"/>
+      <line num="199" type="stmt" count="0"/>
+      <line num="200" type="stmt" count="0"/>
+      <line num="201" type="stmt" count="0"/>
+      <line num="202" type="stmt" count="0"/>
+      <line num="203" type="stmt" count="0"/>
+      <line num="218" type="method" name="publish" visibility="private" complexity="6" crap="42" count="0"/>
+      <line num="227" type="stmt" count="0"/>
+      <line num="228" type="stmt" count="0"/>
+      <line num="229" type="stmt" count="0"/>
+      <line num="231" type="stmt" count="0"/>
+      <line num="234" type="stmt" count="0"/>
+      <line num="235" type="stmt" count="0"/>
+      <line num="236" type="stmt" count="0"/>
+      <line num="237" type="stmt" count="0"/>
+      <line num="238" type="stmt" count="0"/>
+      <line num="239" type="stmt" count="0"/>
+      <line num="240" type="stmt" count="0"/>
+      <line num="242" type="stmt" count="0"/>
+      <line num="243" type="stmt" count="0"/>
+      <line num="244" type="stmt" count="0"/>
+      <line num="245" type="stmt" count="0"/>
+      <line num="248" type="stmt" count="0"/>
+      <line num="249" type="stmt" count="0"/>
+      <line num="250" type="stmt" count="0"/>
+      <line num="251" type="stmt" count="0"/>
+      <line num="252" type="stmt" count="0"/>
+      <line num="253" type="stmt" count="0"/>
+      <line num="254" type="stmt" count="0"/>
+      <line num="255" type="stmt" count="0"/>
+      <line num="256" type="stmt" count="0"/>
+      <line num="257" type="stmt" count="0"/>
+      <metrics loc="261" ncloc="164" classes="1" methods="7" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="88" coveredstatements="0" elements="95" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/ConfigFileLoaderService.php">
+      <class name="OCA\Pipelinq\Service\ConfigFileLoaderService" namespace="global">
+        <metrics complexity="8" methods="3" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="17" coveredstatements="0" elements="20" coveredelements="0"/>
+      </class>
+      <line num="45" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="48" type="stmt" count="0"/>
+      <line num="57" type="method" name="loadConfigurationFile" visibility="public" complexity="4" crap="20" count="0"/>
+      <line num="59" type="stmt" count="0"/>
+      <line num="60" type="stmt" count="0"/>
+      <line num="62" type="stmt" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="66" type="stmt" count="0"/>
+      <line num="67" type="stmt" count="0"/>
+      <line num="68" type="stmt" count="0"/>
+      <line num="71" type="stmt" count="0"/>
+      <line num="72" type="stmt" count="0"/>
+      <line num="73" type="stmt" count="0"/>
+      <line num="76" type="stmt" count="0"/>
+      <line num="86" type="method" name="ensureSourceType" visibility="public" complexity="3" crap="12" count="0"/>
+      <line num="88" type="stmt" count="0"/>
+      <line num="89" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="96" type="stmt" count="0"/>
+      <metrics loc="99" ncloc="52" classes="1" methods="3" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="17" coveredstatements="0" elements="20" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/ContactDataBuilder.php">
+      <class name="OCA\Pipelinq\Service\ContactDataBuilder" namespace="global">
+        <metrics complexity="15" methods="4" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="40" coveredstatements="0" elements="44" coveredelements="0"/>
+      </class>
+      <line num="37" type="method" name="buildClientImportData" visibility="public" complexity="5" crap="30" count="0"/>
+      <line num="39" type="stmt" count="0"/>
+      <line num="40" type="stmt" count="0"/>
+      <line num="42" type="stmt" count="0"/>
+      <line num="44" type="stmt" count="0"/>
+      <line num="45" type="stmt" count="0"/>
+      <line num="48" type="stmt" count="0"/>
+      <line num="49" type="stmt" count="0"/>
+      <line num="51" type="stmt" count="0"/>
+      <line num="54" type="stmt" count="0"/>
+      <line num="55" type="stmt" count="0"/>
+      <line num="56" type="stmt" count="0"/>
+      <line num="57" type="stmt" count="0"/>
+      <line num="58" type="stmt" count="0"/>
+      <line num="59" type="stmt" count="0"/>
+      <line num="60" type="stmt" count="0"/>
+      <line num="61" type="stmt" count="0"/>
+      <line num="62" type="stmt" count="0"/>
+      <line num="64" type="stmt" count="0"/>
+      <line num="65" type="stmt" count="0"/>
+      <line num="66" type="stmt" count="0"/>
+      <line num="68" type="stmt" count="0"/>
+      <line num="80" type="method" name="buildContactImportData" visibility="public" complexity="4" crap="20" count="0"/>
+      <line num="82" type="stmt" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="85" type="stmt" count="0"/>
+      <line num="86" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="88" type="stmt" count="0"/>
+      <line num="89" type="stmt" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="96" type="stmt" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="110" type="method" name="determineClientType" visibility="private" complexity="4" crap="20" count="0"/>
+      <line num="112" type="stmt" count="0"/>
+      <line num="113" type="stmt" count="0"/>
+      <line num="116" type="stmt" count="0"/>
+      <line num="126" type="method" name="extractFirstValue" visibility="private" complexity="2" crap="6" count="0"/>
+      <line num="128" type="stmt" count="0"/>
+      <line num="129" type="stmt" count="0"/>
+      <line num="132" type="stmt" count="0"/>
+      <metrics loc="135" ncloc="79" classes="1" methods="4" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="40" coveredstatements="0" elements="44" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/ContactImportService.php">
+      <class name="OCA\Pipelinq\Service\ContactImportService" namespace="global">
+        <metrics complexity="9" methods="6" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="32" coveredstatements="0" elements="38" coveredelements="0"/>
+      </class>
+      <line num="40" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="45" type="stmt" count="0"/>
+      <line num="55" type="method" name="importAsClient" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="57" type="stmt" count="0"/>
+      <line num="58" type="stmt" count="0"/>
+      <line num="59" type="stmt" count="0"/>
+      <line num="60" type="stmt" count="0"/>
+      <line num="61" type="stmt" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="75" type="method" name="importAsContact" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="77" type="stmt" count="0"/>
+      <line num="78" type="stmt" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="80" type="stmt" count="0"/>
+      <line num="81" type="stmt" count="0"/>
+      <line num="82" type="stmt" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="95" type="method" name="saveAndSerialize" visibility="private" complexity="1" crap="2" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="101" type="stmt" count="0"/>
+      <line num="102" type="stmt" count="0"/>
+      <line num="103" type="stmt" count="0"/>
+      <line num="104" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <line num="107" type="stmt" count="0"/>
+      <line num="108" type="stmt" count="0"/>
+      <line num="110" type="stmt" count="0"/>
+      <line num="120" type="method" name="serializeResult" visibility="private" complexity="4" crap="20" count="0"/>
+      <line num="122" type="stmt" count="0"/>
+      <line num="123" type="stmt" count="0"/>
+      <line num="126" type="stmt" count="0"/>
+      <line num="127" type="stmt" count="0"/>
+      <line num="130" type="stmt" count="0"/>
+      <line num="138" type="method" name="getObjectService" visibility="private" complexity="1" crap="2" count="0"/>
+      <line num="140" type="stmt" count="0"/>
+      <metrics loc="143" ncloc="73" classes="1" methods="6" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="32" coveredstatements="0" elements="38" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/ContactLinkedUidsService.php">
+      <class name="OCA\Pipelinq\Service\ContactLinkedUidsService" namespace="global">
+        <metrics complexity="14" methods="5" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="37" coveredstatements="0" elements="42" coveredelements="0"/>
+      </class>
+      <line num="41" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="46" type="stmt" count="0"/>
+      <line num="53" type="method" name="getLinkedContactsUids" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="55" type="stmt" count="0"/>
+      <line num="56" type="stmt" count="0"/>
+      <line num="57" type="stmt" count="0"/>
+      <line num="59" type="stmt" count="0"/>
+      <line num="60" type="stmt" count="0"/>
+      <line num="61" type="stmt" count="0"/>
+      <line num="62" type="stmt" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="64" type="stmt" count="0"/>
+      <line num="65" type="stmt" count="0"/>
+      <line num="68" type="stmt" count="0"/>
+      <line num="80" type="method" name="getLinkedUidsForType" visibility="private" complexity="6" crap="42" count="0"/>
+      <line num="82" type="stmt" count="0"/>
+      <line num="83" type="stmt" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="91" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="96" type="stmt" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="102" type="stmt" count="0"/>
+      <line num="103" type="stmt" count="0"/>
+      <line num="104" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <line num="109" type="stmt" count="0"/>
+      <line num="119" type="method" name="serializeResult" visibility="private" complexity="4" crap="20" count="0"/>
+      <line num="121" type="stmt" count="0"/>
+      <line num="122" type="stmt" count="0"/>
+      <line num="125" type="stmt" count="0"/>
+      <line num="126" type="stmt" count="0"/>
+      <line num="129" type="stmt" count="0"/>
+      <line num="137" type="method" name="getObjectService" visibility="private" complexity="1" crap="2" count="0"/>
+      <line num="139" type="stmt" count="0"/>
+      <metrics loc="142" ncloc="83" classes="1" methods="5" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="37" coveredstatements="0" elements="42" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/ContactSyncService.php">
+      <class name="OCA\Pipelinq\Service\ContactSyncService" namespace="global">
+        <metrics complexity="17" methods="8" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="56" coveredstatements="0" elements="64" coveredelements="0"/>
+      </class>
+      <line num="42" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="49" type="stmt" count="0"/>
+      <line num="59" type="method" name="searchContacts" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="61" type="stmt" count="0"/>
+      <line num="62" type="stmt" count="0"/>
+      <line num="65" type="stmt" count="0"/>
+      <line num="67" type="stmt" count="0"/>
+      <line num="69" type="stmt" count="0"/>
+      <line num="70" type="stmt" count="0"/>
+      <line num="71" type="stmt" count="0"/>
+      <line num="72" type="stmt" count="0"/>
+      <line num="85" type="method" name="importContact" visibility="public" complexity="4" crap="20" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="88" type="stmt" count="0"/>
+      <line num="91" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="101" type="stmt" count="0"/>
+      <line num="104" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <line num="107" type="stmt" count="0"/>
+      <line num="108" type="stmt" count="0"/>
+      <line num="120" type="method" name="syncToContacts" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="122" type="stmt" count="0"/>
+      <line num="123" type="stmt" count="0"/>
+      <line num="124" type="stmt" count="0"/>
+      <line num="125" type="stmt" count="0"/>
+      <line num="136" type="method" name="buildContactResults" visibility="private" complexity="3" crap="12" count="0"/>
+      <line num="138" type="stmt" count="0"/>
+      <line num="139" type="stmt" count="0"/>
+      <line num="140" type="stmt" count="0"/>
+      <line num="141" type="stmt" count="0"/>
+      <line num="142" type="stmt" count="0"/>
+      <line num="145" type="stmt" count="0"/>
+      <line num="146" type="stmt" count="0"/>
+      <line num="147" type="stmt" count="0"/>
+      <line num="148" type="stmt" count="0"/>
+      <line num="149" type="stmt" count="0"/>
+      <line num="152" type="stmt" count="0"/>
+      <line num="164" type="method" name="formatContactResult" visibility="private" complexity="1" crap="2" count="0"/>
+      <line num="166" type="stmt" count="0"/>
+      <line num="167" type="stmt" count="0"/>
+      <line num="168" type="stmt" count="0"/>
+      <line num="169" type="stmt" count="0"/>
+      <line num="170" type="stmt" count="0"/>
+      <line num="171" type="stmt" count="0"/>
+      <line num="172" type="stmt" count="0"/>
+      <line num="173" type="stmt" count="0"/>
+      <line num="174" type="stmt" count="0"/>
+      <line num="184" type="method" name="findContactByUid" visibility="private" complexity="3" crap="12" count="0"/>
+      <line num="186" type="stmt" count="0"/>
+      <line num="188" type="stmt" count="0"/>
+      <line num="189" type="stmt" count="0"/>
+      <line num="190" type="stmt" count="0"/>
+      <line num="194" type="stmt" count="0"/>
+      <line num="204" type="method" name="extractFirstValue" visibility="private" complexity="2" crap="6" count="0"/>
+      <line num="206" type="stmt" count="0"/>
+      <line num="207" type="stmt" count="0"/>
+      <line num="210" type="stmt" count="0"/>
+      <metrics loc="213" ncloc="118" classes="1" methods="8" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="56" coveredstatements="0" elements="64" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/ContactVcardPropertyBuilder.php">
+      <class name="OCA\Pipelinq\Service\ContactVcardPropertyBuilder" namespace="global">
+        <metrics complexity="24" methods="7" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="57" coveredstatements="0" elements="64" coveredelements="0"/>
+      </class>
+      <line num="39" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="43" type="stmt" count="0"/>
+      <line num="53" type="method" name="buildProperties" visibility="public" complexity="5" crap="30" count="0"/>
+      <line num="55" type="stmt" count="0"/>
+      <line num="56" type="stmt" count="0"/>
+      <line num="58" type="stmt" count="0"/>
+      <line num="59" type="stmt" count="0"/>
+      <line num="62" type="stmt" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="66" type="stmt" count="0"/>
+      <line num="67" type="stmt" count="0"/>
+      <line num="68" type="stmt" count="0"/>
+      <line num="69" type="stmt" count="0"/>
+      <line num="70" type="stmt" count="0"/>
+      <line num="71" type="stmt" count="0"/>
+      <line num="74" type="stmt" count="0"/>
+      <line num="75" type="stmt" count="0"/>
+      <line num="76" type="stmt" count="0"/>
+      <line num="77" type="stmt" count="0"/>
+      <line num="78" type="stmt" count="0"/>
+      <line num="81" type="stmt" count="0"/>
+      <line num="93" type="method" name="addClientProperties" visibility="private" complexity="5" crap="30" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="96" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="103" type="stmt" count="0"/>
+      <line num="104" type="stmt" count="0"/>
+      <line num="107" type="stmt" count="0"/>
+      <line num="108" type="stmt" count="0"/>
+      <line num="111" type="stmt" count="0"/>
+      <line num="122" type="method" name="addContactProperties" visibility="private" complexity="4" crap="20" count="0"/>
+      <line num="124" type="stmt" count="0"/>
+      <line num="125" type="stmt" count="0"/>
+      <line num="128" type="stmt" count="0"/>
+      <line num="129" type="stmt" count="0"/>
+      <line num="130" type="stmt" count="0"/>
+      <line num="131" type="stmt" count="0"/>
+      <line num="135" type="stmt" count="0"/>
+      <line num="145" type="method" name="resolveClientName" visibility="private" complexity="4" crap="20" count="0"/>
+      <line num="147" type="stmt" count="0"/>
+      <line num="148" type="stmt" count="0"/>
+      <line num="149" type="stmt" count="0"/>
+      <line num="151" type="stmt" count="0"/>
+      <line num="152" type="stmt" count="0"/>
+      <line num="156" type="stmt" count="0"/>
+      <line num="157" type="stmt" count="0"/>
+      <line num="158" type="stmt" count="0"/>
+      <line num="159" type="stmt" count="0"/>
+      <line num="160" type="stmt" count="0"/>
+      <line num="161" type="stmt" count="0"/>
+      <line num="162" type="stmt" count="0"/>
+      <line num="163" type="stmt" count="0"/>
+      <line num="164" type="stmt" count="0"/>
+      <line num="165" type="stmt" count="0"/>
+      <line num="166" type="stmt" count="0"/>
+      <line num="177" type="method" name="serializeResult" visibility="private" complexity="4" crap="20" count="0"/>
+      <line num="179" type="stmt" count="0"/>
+      <line num="180" type="stmt" count="0"/>
+      <line num="183" type="stmt" count="0"/>
+      <line num="184" type="stmt" count="0"/>
+      <line num="187" type="stmt" count="0"/>
+      <line num="195" type="method" name="getObjectService" visibility="private" complexity="1" crap="2" count="0"/>
+      <line num="197" type="stmt" count="0"/>
+      <metrics loc="200" ncloc="123" classes="1" methods="7" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="57" coveredstatements="0" elements="64" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/ContactVcardService.php">
+      <class name="OCA\Pipelinq\Service\ContactVcardService" namespace="global">
+        <metrics complexity="13" methods="5" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="42" coveredstatements="0" elements="47" coveredelements="0"/>
+      </class>
+      <line num="45" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="53" type="stmt" count="0"/>
+      <line num="63" type="method" name="syncToContacts" visibility="public" complexity="3" crap="12" count="0"/>
+      <line num="65" type="stmt" count="0"/>
+      <line num="66" type="stmt" count="0"/>
+      <line num="67" type="stmt" count="0"/>
+      <line num="70" type="stmt" count="0"/>
+      <line num="71" type="stmt" count="0"/>
+      <line num="72" type="stmt" count="0"/>
+      <line num="73" type="stmt" count="0"/>
+      <line num="75" type="stmt" count="0"/>
+      <line num="76" type="stmt" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="80" type="stmt" count="0"/>
+      <line num="81" type="stmt" count="0"/>
+      <line num="82" type="stmt" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="85" type="stmt" count="0"/>
+      <line num="86" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="88" type="stmt" count="0"/>
+      <line num="99" type="method" name="fetchPipelinqObject" visibility="private" complexity="4" crap="20" count="0"/>
+      <line num="101" type="stmt" count="0"/>
+      <line num="102" type="stmt" count="0"/>
+      <line num="103" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <line num="107" type="stmt" count="0"/>
+      <line num="111" type="stmt" count="0"/>
+      <line num="112" type="stmt" count="0"/>
+      <line num="113" type="stmt" count="0"/>
+      <line num="114" type="stmt" count="0"/>
+      <line num="115" type="stmt" count="0"/>
+      <line num="116" type="stmt" count="0"/>
+      <line num="117" type="stmt" count="0"/>
+      <line num="118" type="stmt" count="0"/>
+      <line num="119" type="stmt" count="0"/>
+      <line num="120" type="stmt" count="0"/>
+      <line num="123" type="stmt" count="0"/>
+      <line num="133" type="method" name="serializeResult" visibility="private" complexity="4" crap="20" count="0"/>
+      <line num="135" type="stmt" count="0"/>
+      <line num="136" type="stmt" count="0"/>
+      <line num="139" type="stmt" count="0"/>
+      <line num="140" type="stmt" count="0"/>
+      <line num="143" type="stmt" count="0"/>
+      <line num="151" type="method" name="getObjectService" visibility="private" complexity="1" crap="2" count="0"/>
+      <line num="153" type="stmt" count="0"/>
+      <metrics loc="156" ncloc="93" classes="1" methods="5" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="42" coveredstatements="0" elements="47" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/ContactVcardWriterService.php">
+      <class name="OCA\Pipelinq\Service\ContactVcardWriterService" namespace="global">
+        <metrics complexity="18" methods="5" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="54" coveredstatements="0" elements="59" coveredelements="0"/>
+      </class>
+      <line num="43" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="49" type="stmt" count="0"/>
+      <line num="60" type="method" name="writeToAddressBook" visibility="public" complexity="8" crap="72" count="0"/>
+      <line num="62" type="stmt" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="64" type="stmt" count="0"/>
+      <line num="65" type="stmt" count="0"/>
+      <line num="68" type="stmt" count="0"/>
+      <line num="70" type="stmt" count="0"/>
+      <line num="71" type="stmt" count="0"/>
+      <line num="72" type="stmt" count="0"/>
+      <line num="76" type="stmt" count="0"/>
+      <line num="77" type="stmt" count="0"/>
+      <line num="78" type="stmt" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="80" type="stmt" count="0"/>
+      <line num="81" type="stmt" count="0"/>
+      <line num="82" type="stmt" count="0"/>
+      <line num="85" type="stmt" count="0"/>
+      <line num="86" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="88" type="stmt" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="91" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <line num="109" type="method" name="extractContactsUid" visibility="private" complexity="6" crap="42" count="0"/>
+      <line num="111" type="stmt" count="0"/>
+      <line num="112" type="stmt" count="0"/>
+      <line num="115" type="stmt" count="0"/>
+      <line num="116" type="stmt" count="0"/>
+      <line num="119" type="stmt" count="0"/>
+      <line num="120" type="stmt" count="0"/>
+      <line num="123" type="stmt" count="0"/>
+      <line num="135" type="method" name="storeContactsUidOnObject" visibility="private" complexity="2" crap="6" count="0"/>
+      <line num="138" type="stmt" count="0"/>
+      <line num="139" type="stmt" count="0"/>
+      <line num="140" type="stmt" count="0"/>
+      <line num="142" type="stmt" count="0"/>
+      <line num="143" type="stmt" count="0"/>
+      <line num="144" type="stmt" count="0"/>
+      <line num="145" type="stmt" count="0"/>
+      <line num="146" type="stmt" count="0"/>
+      <line num="147" type="stmt" count="0"/>
+      <line num="148" type="stmt" count="0"/>
+      <line num="149" type="stmt" count="0"/>
+      <line num="150" type="stmt" count="0"/>
+      <line num="151" type="stmt" count="0"/>
+      <line num="152" type="stmt" count="0"/>
+      <line num="153" type="stmt" count="0"/>
+      <line num="154" type="stmt" count="0"/>
+      <line num="155" type="stmt" count="0"/>
+      <line num="156" type="stmt" count="0"/>
+      <line num="157" type="stmt" count="0"/>
+      <line num="166" type="method" name="getObjectService" visibility="private" complexity="1" crap="2" count="0"/>
+      <line num="168" type="stmt" count="0"/>
+      <metrics loc="171" ncloc="106" classes="1" methods="5" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="54" coveredstatements="0" elements="59" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/DefaultPipelineService.php">
+      <class name="OCA\Pipelinq\Service\DefaultPipelineService" namespace="global">
+        <metrics complexity="9" methods="4" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="54" coveredstatements="0" elements="58" coveredelements="0"/>
+      </class>
+      <line num="42" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="48" type="stmt" count="0"/>
+      <line num="55" type="method" name="createDefaultPipelines" visibility="public" complexity="6" crap="42" count="0"/>
+      <line num="57" type="stmt" count="0"/>
+      <line num="58" type="stmt" count="0"/>
+      <line num="60" type="stmt" count="0"/>
+      <line num="61" type="stmt" count="0"/>
+      <line num="62" type="stmt" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="64" type="stmt" count="0"/>
+      <line num="68" type="stmt" count="0"/>
+      <line num="70" type="stmt" count="0"/>
+      <line num="71" type="stmt" count="0"/>
+      <line num="72" type="stmt" count="0"/>
+      <line num="73" type="stmt" count="0"/>
+      <line num="74" type="stmt" count="0"/>
+      <line num="75" type="stmt" count="0"/>
+      <line num="76" type="stmt" count="0"/>
+      <line num="77" type="stmt" count="0"/>
+      <line num="78" type="stmt" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="80" type="stmt" count="0"/>
+      <line num="81" type="stmt" count="0"/>
+      <line num="83" type="stmt" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="85" type="stmt" count="0"/>
+      <line num="89" type="stmt" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="91" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="96" type="stmt" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="102" type="stmt" count="0"/>
+      <line num="103" type="stmt" count="0"/>
+      <line num="104" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <line num="107" type="stmt" count="0"/>
+      <line num="108" type="stmt" count="0"/>
+      <line num="109" type="stmt" count="0"/>
+      <line num="123" type="method" name="savePipeline" visibility="private" complexity="1" crap="2" count="0"/>
+      <line num="125" type="stmt" count="0"/>
+      <line num="126" type="stmt" count="0"/>
+      <line num="127" type="stmt" count="0"/>
+      <line num="128" type="stmt" count="0"/>
+      <line num="129" type="stmt" count="0"/>
+      <line num="130" type="stmt" count="0"/>
+      <line num="131" type="stmt" count="0"/>
+      <line num="132" type="stmt" count="0"/>
+      <line num="133" type="stmt" count="0"/>
+      <line num="135" type="stmt" count="0"/>
+      <line num="136" type="stmt" count="0"/>
+      <line num="144" type="method" name="getObjectService" visibility="private" complexity="1" crap="2" count="0"/>
+      <line num="146" type="stmt" count="0"/>
+      <metrics loc="149" ncloc="95" classes="1" methods="4" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="54" coveredstatements="0" elements="58" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/IcpConfigService.php">
+      <class name="OCA\Pipelinq\Service\IcpConfigService" namespace="global">
+        <metrics complexity="27" methods="11" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="133" coveredstatements="0" elements="144" coveredelements="0"/>
+      </class>
+      <line num="55" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="58" type="stmt" count="0"/>
+      <line num="65" type="method" name="getSettings" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="67" type="stmt" count="0"/>
+      <line num="68" type="stmt" count="0"/>
+      <line num="69" type="stmt" count="0"/>
+      <line num="70" type="stmt" count="0"/>
+      <line num="71" type="stmt" count="0"/>
+      <line num="73" type="stmt" count="0"/>
+      <line num="74" type="stmt" count="0"/>
+      <line num="75" type="stmt" count="0"/>
+      <line num="76" type="stmt" count="0"/>
+      <line num="77" type="stmt" count="0"/>
+      <line num="78" type="stmt" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="80" type="stmt" count="0"/>
+      <line num="81" type="stmt" count="0"/>
+      <line num="82" type="stmt" count="0"/>
+      <line num="83" type="stmt" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="85" type="stmt" count="0"/>
+      <line num="86" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="88" type="stmt" count="0"/>
+      <line num="89" type="stmt" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="91" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="96" type="stmt" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="110" type="method" name="saveSettings" visibility="public" complexity="12" crap="156" count="0"/>
+      <line num="112" type="stmt" count="0"/>
+      <line num="113" type="stmt" count="0"/>
+      <line num="116" type="stmt" count="0"/>
+      <line num="117" type="stmt" count="0"/>
+      <line num="118" type="stmt" count="0"/>
+      <line num="119" type="stmt" count="0"/>
+      <line num="120" type="stmt" count="0"/>
+      <line num="121" type="stmt" count="0"/>
+      <line num="124" type="stmt" count="0"/>
+      <line num="125" type="stmt" count="0"/>
+      <line num="126" type="stmt" count="0"/>
+      <line num="127" type="stmt" count="0"/>
+      <line num="128" type="stmt" count="0"/>
+      <line num="129" type="stmt" count="0"/>
+      <line num="132" type="stmt" count="0"/>
+      <line num="133" type="stmt" count="0"/>
+      <line num="136" type="stmt" count="0"/>
+      <line num="137" type="stmt" count="0"/>
+      <line num="140" type="stmt" count="0"/>
+      <line num="141" type="stmt" count="0"/>
+      <line num="144" type="stmt" count="0"/>
+      <line num="145" type="stmt" count="0"/>
+      <line num="146" type="stmt" count="0"/>
+      <line num="147" type="stmt" count="0"/>
+      <line num="148" type="stmt" count="0"/>
+      <line num="149" type="stmt" count="0"/>
+      <line num="152" type="stmt" count="0"/>
+      <line num="153" type="stmt" count="0"/>
+      <line num="156" type="stmt" count="0"/>
+      <line num="157" type="stmt" count="0"/>
+      <line num="158" type="stmt" count="0"/>
+      <line num="159" type="stmt" count="0"/>
+      <line num="160" type="stmt" count="0"/>
+      <line num="161" type="stmt" count="0"/>
+      <line num="164" type="stmt" count="0"/>
+      <line num="165" type="stmt" count="0"/>
+      <line num="166" type="stmt" count="0"/>
+      <line num="167" type="stmt" count="0"/>
+      <line num="168" type="stmt" count="0"/>
+      <line num="169" type="stmt" count="0"/>
+      <line num="172" type="stmt" count="0"/>
+      <line num="180" type="method" name="isConfigured" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="182" type="stmt" count="0"/>
+      <line num="184" type="stmt" count="0"/>
+      <line num="192" type="method" name="getKvkApiKey" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="194" type="stmt" count="0"/>
+      <line num="195" type="stmt" count="0"/>
+      <line num="196" type="stmt" count="0"/>
+      <line num="197" type="stmt" count="0"/>
+      <line num="198" type="stmt" count="0"/>
+      <line num="206" type="method" name="getCriteria" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="208" type="stmt" count="0"/>
+      <line num="209" type="stmt" count="0"/>
+      <line num="210" type="stmt" count="0"/>
+      <line num="211" type="stmt" count="0"/>
+      <line num="212" type="stmt" count="0"/>
+      <line num="213" type="stmt" count="0"/>
+      <line num="214" type="stmt" count="0"/>
+      <line num="215" type="stmt" count="0"/>
+      <line num="216" type="stmt" count="0"/>
+      <line num="217" type="stmt" count="0"/>
+      <line num="218" type="stmt" count="0"/>
+      <line num="219" type="stmt" count="0"/>
+      <line num="220" type="stmt" count="0"/>
+      <line num="221" type="stmt" count="0"/>
+      <line num="222" type="stmt" count="0"/>
+      <line num="223" type="stmt" count="0"/>
+      <line num="224" type="stmt" count="0"/>
+      <line num="225" type="stmt" count="0"/>
+      <line num="226" type="stmt" count="0"/>
+      <line num="227" type="stmt" count="0"/>
+      <line num="235" type="method" name="getIcpHash" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="237" type="stmt" count="0"/>
+      <line num="238" type="stmt" count="0"/>
+      <line num="239" type="stmt" count="0"/>
+      <line num="240" type="stmt" count="0"/>
+      <line num="241" type="stmt" count="0"/>
+      <line num="242" type="stmt" count="0"/>
+      <line num="243" type="stmt" count="0"/>
+      <line num="246" type="stmt" count="0"/>
+      <line num="256" type="method" name="getJsonArray" visibility="private" complexity="2" crap="6" count="0"/>
+      <line num="258" type="stmt" count="0"/>
+      <line num="259" type="stmt" count="0"/>
+      <line num="260" type="stmt" count="0"/>
+      <line num="261" type="stmt" count="0"/>
+      <line num="262" type="stmt" count="0"/>
+      <line num="264" type="stmt" count="0"/>
+      <line num="266" type="stmt" count="0"/>
+      <line num="267" type="stmt" count="0"/>
+      <line num="270" type="stmt" count="0"/>
+      <line num="281" type="method" name="setJsonArray" visibility="private" complexity="2" crap="6" count="0"/>
+      <line num="283" type="stmt" count="0"/>
+      <line num="284" type="stmt" count="0"/>
+      <line num="285" type="stmt" count="0"/>
+      <line num="288" type="stmt" count="0"/>
+      <line num="289" type="stmt" count="0"/>
+      <line num="290" type="stmt" count="0"/>
+      <line num="291" type="stmt" count="0"/>
+      <line num="292" type="stmt" count="0"/>
+      <line num="302" type="method" name="boolToString" visibility="private" complexity="2" crap="6" count="0"/>
+      <line num="304" type="stmt" count="0"/>
+      <line num="305" type="stmt" count="0"/>
+      <line num="308" type="stmt" count="0"/>
+      <line num="318" type="method" name="maskApiKey" visibility="private" complexity="2" crap="6" count="0"/>
+      <line num="320" type="stmt" count="0"/>
+      <line num="321" type="stmt" count="0"/>
+      <line num="324" type="stmt" count="0"/>
+      <metrics loc="327" ncloc="225" classes="1" methods="11" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="133" coveredstatements="0" elements="144" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/KvkApiClient.php">
+      <class name="OCA\Pipelinq\Service\KvkApiClient" namespace="global">
+        <metrics complexity="14" methods="3" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="64" coveredstatements="0" elements="67" coveredelements="0"/>
+      </class>
+      <line num="45" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="49" type="stmt" count="0"/>
+      <line num="59" type="method" name="search" visibility="public" complexity="9" crap="90" count="0"/>
+      <line num="61" type="stmt" count="0"/>
+      <line num="62" type="stmt" count="0"/>
+      <line num="65" type="stmt" count="0"/>
+      <line num="66" type="stmt" count="0"/>
+      <line num="69" type="stmt" count="0"/>
+      <line num="71" type="stmt" count="0"/>
+      <line num="72" type="stmt" count="0"/>
+      <line num="73" type="stmt" count="0"/>
+      <line num="74" type="stmt" count="0"/>
+      <line num="75" type="stmt" count="0"/>
+      <line num="76" type="stmt" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="86" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="88" type="stmt" count="0"/>
+      <line num="89" type="stmt" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="91" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="101" type="stmt" count="0"/>
+      <line num="102" type="stmt" count="0"/>
+      <line num="103" type="stmt" count="0"/>
+      <line num="107" type="stmt" count="0"/>
+      <line num="108" type="stmt" count="0"/>
+      <line num="109" type="stmt" count="0"/>
+      <line num="110" type="stmt" count="0"/>
+      <line num="111" type="stmt" count="0"/>
+      <line num="115" type="stmt" count="0"/>
+      <line num="126" type="method" name="mapResult" visibility="private" complexity="4" crap="20" count="0"/>
+      <line num="128" type="stmt" count="0"/>
+      <line num="129" type="stmt" count="0"/>
+      <line num="130" type="stmt" count="0"/>
+      <line num="133" type="stmt" count="0"/>
+      <line num="134" type="stmt" count="0"/>
+      <line num="135" type="stmt" count="0"/>
+      <line num="137" type="stmt" count="0"/>
+      <line num="138" type="stmt" count="0"/>
+      <line num="139" type="stmt" count="0"/>
+      <line num="140" type="stmt" count="0"/>
+      <line num="144" type="stmt" count="0"/>
+      <line num="145" type="stmt" count="0"/>
+      <line num="146" type="stmt" count="0"/>
+      <line num="147" type="stmt" count="0"/>
+      <line num="148" type="stmt" count="0"/>
+      <line num="149" type="stmt" count="0"/>
+      <line num="150" type="stmt" count="0"/>
+      <line num="151" type="stmt" count="0"/>
+      <line num="152" type="stmt" count="0"/>
+      <line num="153" type="stmt" count="0"/>
+      <line num="154" type="stmt" count="0"/>
+      <line num="155" type="stmt" count="0"/>
+      <line num="156" type="stmt" count="0"/>
+      <line num="157" type="stmt" count="0"/>
+      <line num="158" type="stmt" count="0"/>
+      <line num="159" type="stmt" count="0"/>
+      <line num="160" type="stmt" count="0"/>
+      <line num="161" type="stmt" count="0"/>
+      <metrics loc="164" ncloc="108" classes="1" methods="3" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="64" coveredstatements="0" elements="67" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/NoteEventService.php">
+      <class name="OCA\Pipelinq\Service\NoteEventService" namespace="global">
+        <metrics complexity="13" methods="4" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="70" coveredstatements="0" elements="74" coveredelements="0"/>
+      </class>
+      <line num="48" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="55" type="stmt" count="0"/>
+      <line num="65" type="method" name="triggerNoteEvents" visibility="public" complexity="5" crap="30" count="0"/>
+      <line num="68" type="stmt" count="0"/>
+      <line num="69" type="stmt" count="0"/>
+      <line num="70" type="stmt" count="0"/>
+      <line num="73" type="stmt" count="0"/>
+      <line num="74" type="stmt" count="0"/>
+      <line num="77" type="stmt" count="0"/>
+      <line num="78" type="stmt" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="80" type="stmt" count="0"/>
+      <line num="82" type="stmt" count="0"/>
+      <line num="83" type="stmt" count="0"/>
+      <line num="86" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="88" type="stmt" count="0"/>
+      <line num="89" type="stmt" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="91" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="96" type="stmt" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="111" type="method" name="fetchEntityData" visibility="private" complexity="3" crap="12" count="0"/>
+      <line num="113" type="stmt" count="0"/>
+      <line num="114" type="stmt" count="0"/>
+      <line num="115" type="stmt" count="0"/>
+      <line num="116" type="stmt" count="0"/>
+      <line num="118" type="stmt" count="0"/>
+      <line num="119" type="stmt" count="0"/>
+      <line num="122" type="stmt" count="0"/>
+      <line num="123" type="stmt" count="0"/>
+      <line num="124" type="stmt" count="0"/>
+      <line num="126" type="stmt" count="0"/>
+      <line num="127" type="stmt" count="0"/>
+      <line num="128" type="stmt" count="0"/>
+      <line num="129" type="stmt" count="0"/>
+      <line num="130" type="stmt" count="0"/>
+      <line num="131" type="stmt" count="0"/>
+      <line num="132" type="stmt" count="0"/>
+      <line num="133" type="stmt" count="0"/>
+      <line num="134" type="stmt" count="0"/>
+      <line num="135" type="stmt" count="0"/>
+      <line num="136" type="stmt" count="0"/>
+      <line num="138" type="stmt" count="0"/>
+      <line num="150" type="method" name="publishNoteActivity" visibility="private" complexity="4" crap="20" count="0"/>
+      <line num="152" type="stmt" count="0"/>
+      <line num="153" type="stmt" count="0"/>
+      <line num="155" type="stmt" count="0"/>
+      <line num="156" type="stmt" count="0"/>
+      <line num="157" type="stmt" count="0"/>
+      <line num="159" type="stmt" count="0"/>
+      <line num="162" type="stmt" count="0"/>
+      <line num="163" type="stmt" count="0"/>
+      <line num="165" type="stmt" count="0"/>
+      <line num="168" type="stmt" count="0"/>
+      <line num="169" type="stmt" count="0"/>
+      <line num="170" type="stmt" count="0"/>
+      <line num="171" type="stmt" count="0"/>
+      <line num="172" type="stmt" count="0"/>
+      <line num="173" type="stmt" count="0"/>
+      <line num="175" type="stmt" count="0"/>
+      <line num="176" type="stmt" count="0"/>
+      <line num="177" type="stmt" count="0"/>
+      <line num="178" type="stmt" count="0"/>
+      <line num="179" type="stmt" count="0"/>
+      <line num="180" type="stmt" count="0"/>
+      <line num="181" type="stmt" count="0"/>
+      <line num="182" type="stmt" count="0"/>
+      <metrics loc="186" ncloc="127" classes="1" methods="4" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="70" coveredstatements="0" elements="74" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/NotesService.php">
+      <class name="OCA\Pipelinq\Service\NotesService" namespace="global">
+        <metrics complexity="10" methods="5" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="56" coveredstatements="0" elements="61" coveredelements="0"/>
+      </class>
+      <line num="50" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="56" type="stmt" count="0"/>
+      <line num="66" type="method" name="getNotes" visibility="public" complexity="3" crap="12" count="0"/>
+      <line num="68" type="stmt" count="0"/>
+      <line num="69" type="stmt" count="0"/>
+      <line num="70" type="stmt" count="0"/>
+      <line num="71" type="stmt" count="0"/>
+      <line num="72" type="stmt" count="0"/>
+      <line num="73" type="stmt" count="0"/>
+      <line num="74" type="stmt" count="0"/>
+      <line num="76" type="stmt" count="0"/>
+      <line num="77" type="stmt" count="0"/>
+      <line num="78" type="stmt" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="81" type="stmt" count="0"/>
+      <line num="82" type="stmt" count="0"/>
+      <line num="83" type="stmt" count="0"/>
+      <line num="86" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="88" type="stmt" count="0"/>
+      <line num="89" type="stmt" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="91" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="109" type="method" name="addNote" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="111" type="stmt" count="0"/>
+      <line num="112" type="stmt" count="0"/>
+      <line num="113" type="stmt" count="0"/>
+      <line num="116" type="stmt" count="0"/>
+      <line num="117" type="stmt" count="0"/>
+      <line num="118" type="stmt" count="0"/>
+      <line num="119" type="stmt" count="0"/>
+      <line num="120" type="stmt" count="0"/>
+      <line num="121" type="stmt" count="0"/>
+      <line num="122" type="stmt" count="0"/>
+      <line num="123" type="stmt" count="0"/>
+      <line num="124" type="stmt" count="0"/>
+      <line num="126" type="stmt" count="0"/>
+      <line num="128" type="stmt" count="0"/>
+      <line num="129" type="stmt" count="0"/>
+      <line num="130" type="stmt" count="0"/>
+      <line num="131" type="stmt" count="0"/>
+      <line num="132" type="stmt" count="0"/>
+      <line num="133" type="stmt" count="0"/>
+      <line num="134" type="stmt" count="0"/>
+      <line num="135" type="stmt" count="0"/>
+      <line num="145" type="method" name="deleteNote" visibility="public" complexity="3" crap="12" count="0"/>
+      <line num="147" type="stmt" count="0"/>
+      <line num="148" type="stmt" count="0"/>
+      <line num="149" type="stmt" count="0"/>
+      <line num="152" type="stmt" count="0"/>
+      <line num="153" type="stmt" count="0"/>
+      <line num="154" type="stmt" count="0"/>
+      <line num="157" type="stmt" count="0"/>
+      <line num="168" type="method" name="deleteAllNotes" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="170" type="stmt" count="0"/>
+      <line num="171" type="stmt" count="0"/>
+      <line num="172" type="stmt" count="0"/>
+      <line num="173" type="stmt" count="0"/>
+      <metrics loc="176" ncloc="110" classes="1" methods="5" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="56" coveredstatements="0" elements="61" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/NotificationService.php">
+      <class name="OCA\Pipelinq\Service\NotificationService" namespace="global">
+        <metrics complexity="14" methods="6" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="82" coveredstatements="0" elements="88" coveredelements="0"/>
+      </class>
+      <line num="55" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="60" type="stmt" count="0"/>
+      <line num="73" type="method" name="notifyAssignment" visibility="public" complexity="3" crap="12" count="0"/>
+      <line num="80" type="stmt" count="0"/>
+      <line num="81" type="stmt" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="85" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="91" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="96" type="stmt" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="114" type="method" name="notifyStageChange" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="121" type="stmt" count="0"/>
+      <line num="122" type="stmt" count="0"/>
+      <line num="125" type="stmt" count="0"/>
+      <line num="126" type="stmt" count="0"/>
+      <line num="127" type="stmt" count="0"/>
+      <line num="128" type="stmt" count="0"/>
+      <line num="129" type="stmt" count="0"/>
+      <line num="130" type="stmt" count="0"/>
+      <line num="131" type="stmt" count="0"/>
+      <line num="132" type="stmt" count="0"/>
+      <line num="133" type="stmt" count="0"/>
+      <line num="134" type="stmt" count="0"/>
+      <line num="135" type="stmt" count="0"/>
+      <line num="149" type="method" name="notifyStatusChange" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="156" type="stmt" count="0"/>
+      <line num="157" type="stmt" count="0"/>
+      <line num="160" type="stmt" count="0"/>
+      <line num="161" type="stmt" count="0"/>
+      <line num="162" type="stmt" count="0"/>
+      <line num="163" type="stmt" count="0"/>
+      <line num="164" type="stmt" count="0"/>
+      <line num="165" type="stmt" count="0"/>
+      <line num="166" type="stmt" count="0"/>
+      <line num="167" type="stmt" count="0"/>
+      <line num="168" type="stmt" count="0"/>
+      <line num="169" type="stmt" count="0"/>
+      <line num="170" type="stmt" count="0"/>
+      <line num="184" type="method" name="notifyNoteAdded" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="191" type="stmt" count="0"/>
+      <line num="192" type="stmt" count="0"/>
+      <line num="195" type="stmt" count="0"/>
+      <line num="196" type="stmt" count="0"/>
+      <line num="197" type="stmt" count="0"/>
+      <line num="198" type="stmt" count="0"/>
+      <line num="199" type="stmt" count="0"/>
+      <line num="200" type="stmt" count="0"/>
+      <line num="201" type="stmt" count="0"/>
+      <line num="202" type="stmt" count="0"/>
+      <line num="203" type="stmt" count="0"/>
+      <line num="204" type="stmt" count="0"/>
+      <line num="205" type="stmt" count="0"/>
+      <line num="219" type="method" name="send" visibility="private" complexity="4" crap="20" count="0"/>
+      <line num="227" type="stmt" count="0"/>
+      <line num="228" type="stmt" count="0"/>
+      <line num="229" type="stmt" count="0"/>
+      <line num="230" type="stmt" count="0"/>
+      <line num="231" type="stmt" count="0"/>
+      <line num="232" type="stmt" count="0"/>
+      <line num="233" type="stmt" count="0"/>
+      <line num="234" type="stmt" count="0"/>
+      <line num="235" type="stmt" count="0"/>
+      <line num="236" type="stmt" count="0"/>
+      <line num="241" type="stmt" count="0"/>
+      <line num="242" type="stmt" count="0"/>
+      <line num="243" type="stmt" count="0"/>
+      <line num="244" type="stmt" count="0"/>
+      <line num="245" type="stmt" count="0"/>
+      <line num="246" type="stmt" count="0"/>
+      <line num="248" type="stmt" count="0"/>
+      <line num="249" type="stmt" count="0"/>
+      <line num="250" type="stmt" count="0"/>
+      <line num="251" type="stmt" count="0"/>
+      <line num="252" type="stmt" count="0"/>
+      <line num="253" type="stmt" count="0"/>
+      <line num="254" type="stmt" count="0"/>
+      <line num="255" type="stmt" count="0"/>
+      <line num="256" type="stmt" count="0"/>
+      <line num="257" type="stmt" count="0"/>
+      <metrics loc="261" ncloc="167" classes="1" methods="6" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="82" coveredstatements="0" elements="88" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/ObjectEventDispatcher.php">
+      <class name="OCA\Pipelinq\Service\ObjectEventDispatcher" namespace="global">
+        <metrics complexity="12" methods="7" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="64" coveredstatements="0" elements="71" coveredelements="0"/>
+      </class>
+      <line num="38" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="43" type="stmt" count="0"/>
+      <line num="55" type="method" name="dispatchCreated" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="57" type="stmt" count="0"/>
+      <line num="58" type="stmt" count="0"/>
+      <line num="59" type="stmt" count="0"/>
+      <line num="60" type="stmt" count="0"/>
+      <line num="61" type="stmt" count="0"/>
+      <line num="62" type="stmt" count="0"/>
+      <line num="64" type="stmt" count="0"/>
+      <line num="65" type="stmt" count="0"/>
+      <line num="66" type="stmt" count="0"/>
+      <line num="67" type="stmt" count="0"/>
+      <line num="68" type="stmt" count="0"/>
+      <line num="69" type="stmt" count="0"/>
+      <line num="70" type="stmt" count="0"/>
+      <line num="71" type="stmt" count="0"/>
+      <line num="72" type="stmt" count="0"/>
+      <line num="86" type="method" name="dispatchAssigneeChange" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="96" type="stmt" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="101" type="stmt" count="0"/>
+      <line num="102" type="stmt" count="0"/>
+      <line num="103" type="stmt" count="0"/>
+      <line num="104" type="stmt" count="0"/>
+      <line num="117" type="method" name="dispatchStageChange" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="119" type="stmt" count="0"/>
+      <line num="120" type="stmt" count="0"/>
+      <line num="121" type="stmt" count="0"/>
+      <line num="122" type="stmt" count="0"/>
+      <line num="123" type="stmt" count="0"/>
+      <line num="124" type="stmt" count="0"/>
+      <line num="126" type="stmt" count="0"/>
+      <line num="127" type="stmt" count="0"/>
+      <line num="128" type="stmt" count="0"/>
+      <line num="129" type="stmt" count="0"/>
+      <line num="130" type="stmt" count="0"/>
+      <line num="131" type="stmt" count="0"/>
+      <line num="132" type="stmt" count="0"/>
+      <line num="133" type="stmt" count="0"/>
+      <line num="147" type="method" name="dispatchStatusChange" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="149" type="stmt" count="0"/>
+      <line num="150" type="stmt" count="0"/>
+      <line num="151" type="stmt" count="0"/>
+      <line num="152" type="stmt" count="0"/>
+      <line num="153" type="stmt" count="0"/>
+      <line num="154" type="stmt" count="0"/>
+      <line num="156" type="stmt" count="0"/>
+      <line num="157" type="stmt" count="0"/>
+      <line num="158" type="stmt" count="0"/>
+      <line num="159" type="stmt" count="0"/>
+      <line num="160" type="stmt" count="0"/>
+      <line num="161" type="stmt" count="0"/>
+      <line num="162" type="stmt" count="0"/>
+      <line num="163" type="stmt" count="0"/>
+      <line num="174" type="method" name="nullIfEmpty" visibility="private" complexity="2" crap="6" count="0"/>
+      <line num="176" type="stmt" count="0"/>
+      <line num="177" type="stmt" count="0"/>
+      <line num="180" type="stmt" count="0"/>
+      <line num="188" type="method" name="getCurrentUser" visibility="private" complexity="2" crap="6" count="0"/>
+      <line num="190" type="stmt" count="0"/>
+      <line num="191" type="stmt" count="0"/>
+      <line num="192" type="stmt" count="0"/>
+      <line num="195" type="stmt" count="0"/>
+      <metrics loc="198" ncloc="112" classes="1" methods="7" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="64" coveredstatements="0" elements="71" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/ObjectEventHandlerService.php">
+      <class name="OCA\Pipelinq\Service\ObjectEventHandlerService" namespace="global">
+        <metrics complexity="11" methods="5" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="52" coveredstatements="0" elements="57" coveredelements="0"/>
+      </class>
+      <line num="36" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="41" type="stmt" count="0"/>
+      <line num="50" type="method" name="handleCreated" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="52" type="stmt" count="0"/>
+      <line num="53" type="stmt" count="0"/>
+      <line num="54" type="stmt" count="0"/>
+      <line num="57" type="stmt" count="0"/>
+      <line num="58" type="stmt" count="0"/>
+      <line num="60" type="stmt" count="0"/>
+      <line num="61" type="stmt" count="0"/>
+      <line num="62" type="stmt" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="64" type="stmt" count="0"/>
+      <line num="65" type="stmt" count="0"/>
+      <line num="76" type="method" name="handleUpdated" visibility="public" complexity="4" crap="20" count="0"/>
+      <line num="78" type="stmt" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="80" type="stmt" count="0"/>
+      <line num="83" type="stmt" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="85" type="stmt" count="0"/>
+      <line num="86" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="89" type="stmt" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="91" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="96" type="stmt" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="101" type="stmt" count="0"/>
+      <line num="102" type="stmt" count="0"/>
+      <line num="103" type="stmt" count="0"/>
+      <line num="104" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <line num="109" type="stmt" count="0"/>
+      <line num="110" type="stmt" count="0"/>
+      <line num="111" type="stmt" count="0"/>
+      <line num="112" type="stmt" count="0"/>
+      <line num="113" type="stmt" count="0"/>
+      <line num="114" type="stmt" count="0"/>
+      <line num="115" type="stmt" count="0"/>
+      <line num="116" type="stmt" count="0"/>
+      <line num="117" type="stmt" count="0"/>
+      <line num="128" type="method" name="isRelevantEntityType" visibility="private" complexity="2" crap="6" count="0"/>
+      <line num="130" type="stmt" count="0"/>
+      <line num="131" type="stmt" count="0"/>
+      <line num="134" type="stmt" count="0"/>
+      <line num="144" type="method" name="extractOldData" visibility="private" complexity="2" crap="6" count="0"/>
+      <line num="146" type="stmt" count="0"/>
+      <line num="147" type="stmt" count="0"/>
+      <line num="150" type="stmt" count="0"/>
+      <metrics loc="153" ncloc="92" classes="1" methods="5" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="52" coveredstatements="0" elements="57" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/ObjectUpdateDiffService.php">
+      <class name="OCA\Pipelinq\Service\ObjectUpdateDiffService" namespace="global">
+        <metrics complexity="9" methods="3" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="29" coveredstatements="0" elements="32" coveredelements="0"/>
+      </class>
+      <line num="41" type="method" name="dispatchAssigneeChangeIfNeeded" visibility="public" complexity="3" crap="12" count="0"/>
+      <line num="49" type="stmt" count="0"/>
+      <line num="50" type="stmt" count="0"/>
+      <line num="51" type="stmt" count="0"/>
+      <line num="54" type="stmt" count="0"/>
+      <line num="55" type="stmt" count="0"/>
+      <line num="56" type="stmt" count="0"/>
+      <line num="57" type="stmt" count="0"/>
+      <line num="58" type="stmt" count="0"/>
+      <line num="59" type="stmt" count="0"/>
+      <line num="74" type="method" name="dispatchStageChangeIfNeeded" visibility="public" complexity="3" crap="12" count="0"/>
+      <line num="82" type="stmt" count="0"/>
+      <line num="83" type="stmt" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="85" type="stmt" count="0"/>
+      <line num="88" type="stmt" count="0"/>
+      <line num="89" type="stmt" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="91" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="108" type="method" name="dispatchStatusChangeIfNeeded" visibility="public" complexity="3" crap="12" count="0"/>
+      <line num="116" type="stmt" count="0"/>
+      <line num="117" type="stmt" count="0"/>
+      <line num="118" type="stmt" count="0"/>
+      <line num="119" type="stmt" count="0"/>
+      <line num="122" type="stmt" count="0"/>
+      <line num="123" type="stmt" count="0"/>
+      <line num="124" type="stmt" count="0"/>
+      <line num="125" type="stmt" count="0"/>
+      <line num="126" type="stmt" count="0"/>
+      <line num="127" type="stmt" count="0"/>
+      <metrics loc="130" ncloc="71" classes="1" methods="3" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="29" coveredstatements="0" elements="32" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/OpenCorporatesApiClient.php">
+      <class name="OCA\Pipelinq\Service\OpenCorporatesApiClient" namespace="global">
+        <metrics complexity="9" methods="3" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="56" coveredstatements="0" elements="59" coveredelements="0"/>
+      </class>
+      <line num="45" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="49" type="stmt" count="0"/>
+      <line num="58" type="method" name="search" visibility="public" complexity="6" crap="42" count="0"/>
+      <line num="60" type="stmt" count="0"/>
+      <line num="61" type="stmt" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="64" type="stmt" count="0"/>
+      <line num="67" type="stmt" count="0"/>
+      <line num="69" type="stmt" count="0"/>
+      <line num="70" type="stmt" count="0"/>
+      <line num="71" type="stmt" count="0"/>
+      <line num="72" type="stmt" count="0"/>
+      <line num="73" type="stmt" count="0"/>
+      <line num="74" type="stmt" count="0"/>
+      <line num="76" type="stmt" count="0"/>
+      <line num="78" type="stmt" count="0"/>
+      <line num="79" type="stmt" count="0"/>
+      <line num="80" type="stmt" count="0"/>
+      <line num="81" type="stmt" count="0"/>
+      <line num="82" type="stmt" count="0"/>
+      <line num="83" type="stmt" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="85" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="88" type="stmt" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="91" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="101" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="115" type="method" name="mapResult" visibility="private" complexity="2" crap="6" count="0"/>
+      <line num="117" type="stmt" count="0"/>
+      <line num="118" type="stmt" count="0"/>
+      <line num="119" type="stmt" count="0"/>
+      <line num="122" type="stmt" count="0"/>
+      <line num="124" type="stmt" count="0"/>
+      <line num="125" type="stmt" count="0"/>
+      <line num="126" type="stmt" count="0"/>
+      <line num="127" type="stmt" count="0"/>
+      <line num="128" type="stmt" count="0"/>
+      <line num="129" type="stmt" count="0"/>
+      <line num="130" type="stmt" count="0"/>
+      <line num="131" type="stmt" count="0"/>
+      <line num="132" type="stmt" count="0"/>
+      <line num="133" type="stmt" count="0"/>
+      <line num="134" type="stmt" count="0"/>
+      <line num="135" type="stmt" count="0"/>
+      <line num="136" type="stmt" count="0"/>
+      <line num="137" type="stmt" count="0"/>
+      <line num="138" type="stmt" count="0"/>
+      <line num="139" type="stmt" count="0"/>
+      <line num="140" type="stmt" count="0"/>
+      <line num="141" type="stmt" count="0"/>
+      <metrics loc="144" ncloc="94" classes="1" methods="3" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="56" coveredstatements="0" elements="59" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/PipelineStageData.php">
+      <class name="OCA\Pipelinq\Service\PipelineStageData" namespace="global">
+        <metrics complexity="4" methods="4" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="88" coveredstatements="0" elements="92" coveredelements="0"/>
+      </class>
+      <line num="36" type="method" name="getSalesPipelineData" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="38" type="stmt" count="0"/>
+      <line num="39" type="stmt" count="0"/>
+      <line num="40" type="stmt" count="0"/>
+      <line num="41" type="stmt" count="0"/>
+      <line num="42" type="stmt" count="0"/>
+      <line num="43" type="stmt" count="0"/>
+      <line num="44" type="stmt" count="0"/>
+      <line num="45" type="stmt" count="0"/>
+      <line num="46" type="stmt" count="0"/>
+      <line num="47" type="stmt" count="0"/>
+      <line num="48" type="stmt" count="0"/>
+      <line num="49" type="stmt" count="0"/>
+      <line num="59" type="method" name="getServiceRequestsPipelineData" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="61" type="stmt" count="0"/>
+      <line num="62" type="stmt" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="64" type="stmt" count="0"/>
+      <line num="65" type="stmt" count="0"/>
+      <line num="66" type="stmt" count="0"/>
+      <line num="67" type="stmt" count="0"/>
+      <line num="68" type="stmt" count="0"/>
+      <line num="69" type="stmt" count="0"/>
+      <line num="70" type="stmt" count="0"/>
+      <line num="71" type="stmt" count="0"/>
+      <line num="79" type="method" name="getSalesStages" visibility="private" complexity="1" crap="2" count="0"/>
+      <line num="81" type="stmt" count="0"/>
+      <line num="82" type="stmt" count="0"/>
+      <line num="83" type="stmt" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="85" type="stmt" count="0"/>
+      <line num="86" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="88" type="stmt" count="0"/>
+      <line num="89" type="stmt" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="91" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="96" type="stmt" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="101" type="stmt" count="0"/>
+      <line num="102" type="stmt" count="0"/>
+      <line num="103" type="stmt" count="0"/>
+      <line num="104" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <line num="107" type="stmt" count="0"/>
+      <line num="108" type="stmt" count="0"/>
+      <line num="109" type="stmt" count="0"/>
+      <line num="110" type="stmt" count="0"/>
+      <line num="111" type="stmt" count="0"/>
+      <line num="112" type="stmt" count="0"/>
+      <line num="113" type="stmt" count="0"/>
+      <line num="114" type="stmt" count="0"/>
+      <line num="115" type="stmt" count="0"/>
+      <line num="116" type="stmt" count="0"/>
+      <line num="117" type="stmt" count="0"/>
+      <line num="118" type="stmt" count="0"/>
+      <line num="119" type="stmt" count="0"/>
+      <line num="120" type="stmt" count="0"/>
+      <line num="121" type="stmt" count="0"/>
+      <line num="122" type="stmt" count="0"/>
+      <line num="123" type="stmt" count="0"/>
+      <line num="124" type="stmt" count="0"/>
+      <line num="125" type="stmt" count="0"/>
+      <line num="126" type="stmt" count="0"/>
+      <line num="127" type="stmt" count="0"/>
+      <line num="128" type="stmt" count="0"/>
+      <line num="129" type="stmt" count="0"/>
+      <line num="130" type="stmt" count="0"/>
+      <line num="131" type="stmt" count="0"/>
+      <line num="132" type="stmt" count="0"/>
+      <line num="133" type="stmt" count="0"/>
+      <line num="134" type="stmt" count="0"/>
+      <line num="135" type="stmt" count="0"/>
+      <line num="136" type="stmt" count="0"/>
+      <line num="137" type="stmt" count="0"/>
+      <line num="138" type="stmt" count="0"/>
+      <line num="146" type="method" name="getServiceRequestStages" visibility="private" complexity="1" crap="2" count="0"/>
+      <line num="148" type="stmt" count="0"/>
+      <line num="149" type="stmt" count="0"/>
+      <line num="150" type="stmt" count="0"/>
+      <line num="151" type="stmt" count="0"/>
+      <line num="152" type="stmt" count="0"/>
+      <line num="153" type="stmt" count="0"/>
+      <line num="154" type="stmt" count="0"/>
+      <metrics loc="157" ncloc="109" classes="1" methods="4" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="88" coveredstatements="0" elements="92" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/ProspectDiscoveryService.php">
+      <class name="OCA\Pipelinq\Service\ProspectDiscoveryService" namespace="global">
+        <metrics complexity="39" methods="8" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="131" coveredstatements="0" elements="139" coveredelements="0"/>
+      </class>
+      <line num="55" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="72" type="method" name="discover" visibility="public" complexity="12" crap="156" count="0"/>
+      <line num="74" type="stmt" count="0"/>
+      <line num="75" type="stmt" count="0"/>
+      <line num="76" type="stmt" count="0"/>
+      <line num="77" type="stmt" count="0"/>
+      <line num="78" type="stmt" count="0"/>
+      <line num="81" type="stmt" count="0"/>
+      <line num="82" type="stmt" count="0"/>
+      <line num="85" type="stmt" count="0"/>
+      <line num="86" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="88" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="101" type="stmt" count="0"/>
+      <line num="103" type="stmt" count="0"/>
+      <line num="104" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <line num="107" type="stmt" count="0"/>
+      <line num="112" type="stmt" count="0"/>
+      <line num="113" type="stmt" count="0"/>
+      <line num="114" type="stmt" count="0"/>
+      <line num="115" type="stmt" count="0"/>
+      <line num="116" type="stmt" count="0"/>
+      <line num="117" type="stmt" count="0"/>
+      <line num="121" type="stmt" count="0"/>
+      <line num="122" type="stmt" count="0"/>
+      <line num="123" type="stmt" count="0"/>
+      <line num="124" type="stmt" count="0"/>
+      <line num="125" type="stmt" count="0"/>
+      <line num="129" type="stmt" count="0"/>
+      <line num="132" type="stmt" count="0"/>
+      <line num="135" type="stmt" count="0"/>
+      <line num="136" type="stmt" count="0"/>
+      <line num="137" type="stmt" count="0"/>
+      <line num="138" type="stmt" count="0"/>
+      <line num="139" type="stmt" count="0"/>
+      <line num="140" type="stmt" count="0"/>
+      <line num="141" type="stmt" count="0"/>
+      <line num="144" type="stmt" count="0"/>
+      <line num="145" type="stmt" count="0"/>
+      <line num="146" type="stmt" count="0"/>
+      <line num="147" type="stmt" count="0"/>
+      <line num="148" type="stmt" count="0"/>
+      <line num="149" type="stmt" count="0"/>
+      <line num="150" type="stmt" count="0"/>
+      <line num="153" type="stmt" count="0"/>
+      <line num="155" type="stmt" count="0"/>
+      <line num="165" type="method" name="createLeadFromProspect" visibility="public" complexity="3" crap="12" count="0"/>
+      <line num="167" type="stmt" count="0"/>
+      <line num="168" type="stmt" count="0"/>
+      <line num="169" type="stmt" count="0"/>
+      <line num="171" type="stmt" count="0"/>
+      <line num="172" type="stmt" count="0"/>
+      <line num="176" type="stmt" count="0"/>
+      <line num="177" type="stmt" count="0"/>
+      <line num="178" type="stmt" count="0"/>
+      <line num="179" type="stmt" count="0"/>
+      <line num="180" type="stmt" count="0"/>
+      <line num="181" type="stmt" count="0"/>
+      <line num="182" type="stmt" count="0"/>
+      <line num="183" type="stmt" count="0"/>
+      <line num="184" type="stmt" count="0"/>
+      <line num="185" type="stmt" count="0"/>
+      <line num="188" type="stmt" count="0"/>
+      <line num="189" type="stmt" count="0"/>
+      <line num="190" type="stmt" count="0"/>
+      <line num="191" type="stmt" count="0"/>
+      <line num="192" type="stmt" count="0"/>
+      <line num="193" type="stmt" count="0"/>
+      <line num="194" type="stmt" count="0"/>
+      <line num="195" type="stmt" count="0"/>
+      <line num="197" type="stmt" count="0"/>
+      <line num="198" type="stmt" count="0"/>
+      <line num="199" type="stmt" count="0"/>
+      <line num="200" type="stmt" count="0"/>
+      <line num="210" type="method" name="excludeExistingClients" visibility="private" complexity="8" crap="72" count="0"/>
+      <line num="212" type="stmt" count="0"/>
+      <line num="214" type="stmt" count="0"/>
+      <line num="215" type="stmt" count="0"/>
+      <line num="218" type="stmt" count="0"/>
+      <line num="219" type="stmt" count="0"/>
+      <line num="220" type="stmt" count="0"/>
+      <line num="221" type="stmt" count="0"/>
+      <line num="222" type="stmt" count="0"/>
+      <line num="223" type="stmt" count="0"/>
+      <line num="224" type="stmt" count="0"/>
+      <line num="225" type="stmt" count="0"/>
+      <line num="229" type="stmt" count="0"/>
+      <line num="230" type="stmt" count="0"/>
+      <line num="231" type="stmt" count="0"/>
+      <line num="233" type="stmt" count="0"/>
+      <line num="238" type="stmt" count="0"/>
+      <line num="239" type="stmt" count="0"/>
+      <line num="240" type="stmt" count="0"/>
+      <line num="241" type="stmt" count="0"/>
+      <line num="249" type="method" name="getExistingClientNames" visibility="private" complexity="4" crap="20" count="0"/>
+      <line num="252" type="stmt" count="0"/>
+      <line num="253" type="stmt" count="0"/>
+      <line num="255" type="stmt" count="0"/>
+      <line num="256" type="stmt" count="0"/>
+      <line num="261" type="stmt" count="0"/>
+      <line num="262" type="stmt" count="0"/>
+      <line num="263" type="stmt" count="0"/>
+      <line num="264" type="stmt" count="0"/>
+      <line num="265" type="stmt" count="0"/>
+      <line num="266" type="stmt" count="0"/>
+      <line num="267" type="stmt" count="0"/>
+      <line num="276" type="method" name="getObjectStoreConfig" visibility="private" complexity="5" crap="30" count="0"/>
+      <line num="278" type="stmt" count="0"/>
+      <line num="279" type="stmt" count="0"/>
+      <line num="281" type="stmt" count="0"/>
+      <line num="282" type="stmt" count="0"/>
+      <line num="283" type="stmt" count="0"/>
+      <line num="284" type="stmt" count="0"/>
+      <line num="285" type="stmt" count="0"/>
+      <line num="288" type="stmt" count="0"/>
+      <line num="289" type="stmt" count="0"/>
+      <line num="290" type="stmt" count="0"/>
+      <line num="291" type="stmt" count="0"/>
+      <line num="292" type="stmt" count="0"/>
+      <line num="295" type="stmt" count="0"/>
+      <line num="305" type="method" name="getFromCache" visibility="private" complexity="4" crap="20" count="0"/>
+      <line num="307" type="stmt" count="0"/>
+      <line num="308" type="stmt" count="0"/>
+      <line num="311" type="stmt" count="0"/>
+      <line num="312" type="stmt" count="0"/>
+      <line num="314" type="stmt" count="0"/>
+      <line num="315" type="stmt" count="0"/>
+      <line num="318" type="stmt" count="0"/>
+      <line num="329" type="method" name="setInCache" visibility="private" complexity="2" crap="6" count="0"/>
+      <line num="331" type="stmt" count="0"/>
+      <line num="332" type="stmt" count="0"/>
+      <metrics loc="336" ncloc="227" classes="1" methods="8" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="131" coveredstatements="0" elements="139" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/ProspectScoringService.php">
+      <class name="OCA\Pipelinq\Service\ProspectScoringService" namespace="global">
+        <metrics complexity="27" methods="6" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="71" coveredstatements="0" elements="77" coveredelements="0"/>
+      </class>
+      <line num="44" type="method" name="score" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="46" type="stmt" count="0"/>
+      <line num="47" type="stmt" count="0"/>
+      <line num="48" type="stmt" count="0"/>
+      <line num="49" type="stmt" count="0"/>
+      <line num="50" type="stmt" count="0"/>
+      <line num="51" type="stmt" count="0"/>
+      <line num="52" type="stmt" count="0"/>
+      <line num="55" type="stmt" count="0"/>
+      <line num="56" type="stmt" count="0"/>
+      <line num="57" type="stmt" count="0"/>
+      <line num="58" type="stmt" count="0"/>
+      <line num="61" type="stmt" count="0"/>
+      <line num="62" type="stmt" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="64" type="stmt" count="0"/>
+      <line num="65" type="stmt" count="0"/>
+      <line num="68" type="stmt" count="0"/>
+      <line num="69" type="stmt" count="0"/>
+      <line num="70" type="stmt" count="0"/>
+      <line num="71" type="stmt" count="0"/>
+      <line num="74" type="stmt" count="0"/>
+      <line num="75" type="stmt" count="0"/>
+      <line num="76" type="stmt" count="0"/>
+      <line num="77" type="stmt" count="0"/>
+      <line num="80" type="stmt" count="0"/>
+      <line num="81" type="stmt" count="0"/>
+      <line num="83" type="stmt" count="0"/>
+      <line num="86" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="89" type="stmt" count="0"/>
+      <line num="100" type="method" name="scoreAll" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="102" type="stmt" count="0"/>
+      <line num="103" type="stmt" count="0"/>
+      <line num="104" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <line num="107" type="stmt" count="0"/>
+      <line num="108" type="stmt" count="0"/>
+      <line num="110" type="stmt" count="0"/>
+      <line num="111" type="stmt" count="0"/>
+      <line num="112" type="stmt" count="0"/>
+      <line num="113" type="stmt" count="0"/>
+      <line num="115" type="stmt" count="0"/>
+      <line num="126" type="method" name="scoreSbi" visibility="private" complexity="5" crap="30" count="0"/>
+      <line num="128" type="stmt" count="0"/>
+      <line num="129" type="stmt" count="0"/>
+      <line num="132" type="stmt" count="0"/>
+      <line num="133" type="stmt" count="0"/>
+      <line num="134" type="stmt" count="0"/>
+      <line num="138" type="stmt" count="0"/>
+      <line num="150" type="method" name="scoreEmployeeCount" visibility="private" complexity="9" crap="90" count="0"/>
+      <line num="152" type="stmt" count="0"/>
+      <line num="153" type="stmt" count="0"/>
+      <line num="156" type="stmt" count="0"/>
+      <line num="157" type="stmt" count="0"/>
+      <line num="160" type="stmt" count="0"/>
+      <line num="161" type="stmt" count="0"/>
+      <line num="164" type="stmt" count="0"/>
+      <line num="165" type="stmt" count="0"/>
+      <line num="168" type="stmt" count="0"/>
+      <line num="179" type="method" name="scoreLocation" visibility="private" complexity="5" crap="30" count="0"/>
+      <line num="181" type="stmt" count="0"/>
+      <line num="182" type="stmt" count="0"/>
+      <line num="185" type="stmt" count="0"/>
+      <line num="186" type="stmt" count="0"/>
+      <line num="187" type="stmt" count="0"/>
+      <line num="188" type="stmt" count="0"/>
+      <line num="192" type="stmt" count="0"/>
+      <line num="203" type="method" name="scoreLegalForm" visibility="private" complexity="5" crap="30" count="0"/>
+      <line num="205" type="stmt" count="0"/>
+      <line num="206" type="stmt" count="0"/>
+      <line num="209" type="stmt" count="0"/>
+      <line num="210" type="stmt" count="0"/>
+      <line num="211" type="stmt" count="0"/>
+      <line num="212" type="stmt" count="0"/>
+      <line num="216" type="stmt" count="0"/>
+      <metrics loc="219" ncloc="132" classes="1" methods="6" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="71" coveredstatements="0" elements="77" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/SchemaMapService.php">
+      <class name="OCA\Pipelinq\Service\SchemaMapService" namespace="global">
+        <metrics complexity="9" methods="3" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="19" coveredstatements="0" elements="22" coveredelements="0"/>
+      </class>
+      <line num="57" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="61" type="stmt" count="0"/>
+      <line num="70" type="method" name="resolveEntityType" visibility="public" complexity="4" crap="20" count="0"/>
+      <line num="72" type="stmt" count="0"/>
+      <line num="73" type="stmt" count="0"/>
+      <line num="76" type="stmt" count="0"/>
+      <line num="77" type="stmt" count="0"/>
+      <line num="80" type="stmt" count="0"/>
+      <line num="88" type="method" name="buildSchemaMap" visibility="private" complexity="4" crap="20" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="96" type="stmt" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <line num="101" type="stmt" count="0"/>
+      <line num="102" type="stmt" count="0"/>
+      <line num="103" type="stmt" count="0"/>
+      <line num="104" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <line num="107" type="stmt" count="0"/>
+      <metrics loc="111" ncloc="59" classes="1" methods="3" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="19" coveredstatements="0" elements="22" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/SettingsLoadService.php">
+      <class name="OCA\Pipelinq\Service\SettingsLoadService" namespace="global">
+        <metrics complexity="9" methods="4" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="30" coveredstatements="0" elements="34" coveredelements="0"/>
+      </class>
+      <line num="59" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="66" type="stmt" count="0"/>
+      <line num="75" type="method" name="loadSettings" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="77" type="stmt" count="0"/>
+      <line num="78" type="stmt" count="0"/>
+      <line num="80" type="stmt" count="0"/>
+      <line num="81" type="stmt" count="0"/>
+      <line num="83" type="stmt" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="85" type="stmt" count="0"/>
+      <line num="86" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="88" type="stmt" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="102" type="method" name="updateObjectTypeConfiguration" visibility="private" complexity="6" crap="42" count="0"/>
+      <line num="104" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <line num="108" type="stmt" count="0"/>
+      <line num="109" type="stmt" count="0"/>
+      <line num="110" type="stmt" count="0"/>
+      <line num="112" type="stmt" count="0"/>
+      <line num="113" type="stmt" count="0"/>
+      <line num="116" type="stmt" count="0"/>
+      <line num="117" type="stmt" count="0"/>
+      <line num="118" type="stmt" count="0"/>
+      <line num="122" type="stmt" count="0"/>
+      <line num="123" type="stmt" count="0"/>
+      <line num="124" type="stmt" count="0"/>
+      <line num="126" type="stmt" count="0"/>
+      <line num="127" type="stmt" count="0"/>
+      <line num="136" type="method" name="getConfigurationService" visibility="private" complexity="1" crap="2" count="0"/>
+      <line num="138" type="stmt" count="0"/>
+      <metrics loc="141" ncloc="84" classes="1" methods="4" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="30" coveredstatements="0" elements="34" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/SettingsMapBuilder.php">
+      <class name="OCA\Pipelinq\Service\SettingsMapBuilder" namespace="global">
+        <metrics complexity="22" methods="6" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="43" coveredstatements="0" elements="49" coveredelements="0"/>
+      </class>
+      <line num="43" type="method" name="buildSchemaSlugMap" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="45" type="stmt" count="0"/>
+      <line num="46" type="stmt" count="0"/>
+      <line num="47" type="stmt" count="0"/>
+      <line num="48" type="stmt" count="0"/>
+      <line num="49" type="stmt" count="0"/>
+      <line num="50" type="stmt" count="0"/>
+      <line num="53" type="stmt" count="0"/>
+      <line num="63" type="method" name="findRegisterIdBySlug" visibility="public" complexity="3" crap="12" count="0"/>
+      <line num="65" type="stmt" count="0"/>
+      <line num="66" type="stmt" count="0"/>
+      <line num="67" type="stmt" count="0"/>
+      <line num="68" type="stmt" count="0"/>
+      <line num="72" type="stmt" count="0"/>
+      <line num="84" type="method" name="findDefaultViewId" visibility="public" complexity="6" crap="42" count="0"/>
+      <line num="86" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="88" type="stmt" count="0"/>
+      <line num="89" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="101" type="stmt" count="0"/>
+      <line num="102" type="stmt" count="0"/>
+      <line num="106" type="stmt" count="0"/>
+      <line num="117" type="method" name="addSchemaToMap" visibility="private" complexity="3" crap="12" count="0"/>
+      <line num="119" type="stmt" count="0"/>
+      <line num="120" type="stmt" count="0"/>
+      <line num="121" type="stmt" count="0"/>
+      <line num="124" type="stmt" count="0"/>
+      <line num="125" type="stmt" count="0"/>
+      <line num="128" type="stmt" count="0"/>
+      <line num="138" type="method" name="extractRegisterIdIfMatch" visibility="private" complexity="4" crap="20" count="0"/>
+      <line num="140" type="stmt" count="0"/>
+      <line num="141" type="stmt" count="0"/>
+      <line num="142" type="stmt" count="0"/>
+      <line num="145" type="stmt" count="0"/>
+      <line num="146" type="stmt" count="0"/>
+      <line num="149" type="stmt" count="0"/>
+      <line num="150" type="stmt" count="0"/>
+      <line num="153" type="stmt" count="0"/>
+      <line num="163" type="method" name="normalizeToArray" visibility="private" complexity="4" crap="20" count="0"/>
+      <line num="165" type="stmt" count="0"/>
+      <line num="166" type="stmt" count="0"/>
+      <line num="169" type="stmt" count="0"/>
+      <line num="170" type="stmt" count="0"/>
+      <line num="173" type="stmt" count="0"/>
+      <metrics loc="176" ncloc="99" classes="1" methods="6" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="43" coveredstatements="0" elements="49" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/SettingsService.php">
+      <class name="OCA\Pipelinq\Service\SettingsService" namespace="global">
+        <metrics complexity="16" methods="9" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="35" coveredstatements="0" elements="44" coveredelements="0"/>
+      </class>
+      <line num="66" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="73" type="stmt" count="0"/>
+      <line num="80" type="method" name="getSettings" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="82" type="stmt" count="0"/>
+      <line num="83" type="stmt" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="97" type="method" name="updateSettings" visibility="public" complexity="3" crap="12" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="101" type="stmt" count="0"/>
+      <line num="105" type="stmt" count="0"/>
+      <line num="107" type="stmt" count="0"/>
+      <line num="118" type="method" name="loadSettings" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="120" type="stmt" count="0"/>
+      <line num="129" type="method" name="createDefaultPipelines" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="131" type="stmt" count="0"/>
+      <line num="141" type="method" name="getUserSettings" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="143" type="stmt" count="0"/>
+      <line num="144" type="stmt" count="0"/>
+      <line num="145" type="stmt" count="0"/>
+      <line num="146" type="stmt" count="0"/>
+      <line num="147" type="stmt" count="0"/>
+      <line num="148" type="stmt" count="0"/>
+      <line num="149" type="stmt" count="0"/>
+      <line num="150" type="stmt" count="0"/>
+      <line num="153" type="stmt" count="0"/>
+      <line num="164" type="method" name="updateUserSettings" visibility="public" complexity="4" crap="20" count="0"/>
+      <line num="166" type="stmt" count="0"/>
+      <line num="167" type="stmt" count="0"/>
+      <line num="168" type="stmt" count="0"/>
+      <line num="169" type="stmt" count="0"/>
+      <line num="170" type="stmt" count="0"/>
+      <line num="173" type="stmt" count="0"/>
+      <line num="174" type="stmt" count="0"/>
+      <line num="175" type="stmt" count="0"/>
+      <line num="176" type="stmt" count="0"/>
+      <line num="177" type="stmt" count="0"/>
+      <line num="178" type="stmt" count="0"/>
+      <line num="182" type="stmt" count="0"/>
+      <line num="193" type="method" name="getConfigValue" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="195" type="stmt" count="0"/>
+      <line num="206" type="method" name="setConfigValue" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="208" type="stmt" count="0"/>
+      <metrics loc="211" ncloc="111" classes="1" methods="9" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="35" coveredstatements="0" elements="44" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/SystemTagCrudService.php">
+      <class name="OCA\Pipelinq\Service\SystemTagCrudService" namespace="global">
+        <metrics complexity="16" methods="8" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="61" coveredstatements="0" elements="69" coveredelements="0"/>
+      </class>
+      <line num="51" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="56" type="stmt" count="0"/>
+      <line num="65" type="method" name="getTagIdsForType" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="67" type="stmt" count="0"/>
+      <line num="68" type="stmt" count="0"/>
+      <line num="69" type="stmt" count="0"/>
+      <line num="70" type="stmt" count="0"/>
+      <line num="72" type="stmt" count="0"/>
+      <line num="73" type="stmt" count="0"/>
+      <line num="76" type="stmt" count="0"/>
+      <line num="86" type="method" name="resolveTagData" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="88" type="stmt" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="91" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="98" type="stmt" count="0"/>
+      <line num="108" type="method" name="createOrReuseSystemTag" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="111" type="stmt" count="0"/>
+      <line num="112" type="stmt" count="0"/>
+      <line num="113" type="stmt" count="0"/>
+      <line num="114" type="stmt" count="0"/>
+      <line num="115" type="stmt" count="0"/>
+      <line num="116" type="stmt" count="0"/>
+      <line num="117" type="stmt" count="0"/>
+      <line num="118" type="stmt" count="0"/>
+      <line num="119" type="stmt" count="0"/>
+      <line num="120" type="stmt" count="0"/>
+      <line num="121" type="stmt" count="0"/>
+      <line num="133" type="method" name="assignTag" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="135" type="stmt" count="0"/>
+      <line num="136" type="stmt" count="0"/>
+      <line num="137" type="stmt" count="0"/>
+      <line num="138" type="stmt" count="0"/>
+      <line num="139" type="stmt" count="0"/>
+      <line num="150" type="method" name="unassignAndCleanup" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="152" type="stmt" count="0"/>
+      <line num="153" type="stmt" count="0"/>
+      <line num="154" type="stmt" count="0"/>
+      <line num="155" type="stmt" count="0"/>
+      <line num="156" type="stmt" count="0"/>
+      <line num="158" type="stmt" count="0"/>
+      <line num="159" type="stmt" count="0"/>
+      <line num="160" type="stmt" count="0"/>
+      <line num="161" type="stmt" count="0"/>
+      <line num="163" type="stmt" count="0"/>
+      <line num="164" type="stmt" count="0"/>
+      <line num="176" type="method" name="renameSystemTag" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="178" type="stmt" count="0"/>
+      <line num="179" type="stmt" count="0"/>
+      <line num="180" type="stmt" count="0"/>
+      <line num="181" type="stmt" count="0"/>
+      <line num="182" type="stmt" count="0"/>
+      <line num="183" type="stmt" count="0"/>
+      <line num="184" type="stmt" count="0"/>
+      <line num="195" type="method" name="isTagUsedByOtherTypes" visibility="private" complexity="5" crap="30" count="0"/>
+      <line num="197" type="stmt" count="0"/>
+      <line num="198" type="stmt" count="0"/>
+      <line num="199" type="stmt" count="0"/>
+      <line num="202" type="stmt" count="0"/>
+      <line num="203" type="stmt" count="0"/>
+      <line num="204" type="stmt" count="0"/>
+      <line num="205" type="stmt" count="0"/>
+      <line num="207" type="stmt" count="0"/>
+      <line num="208" type="stmt" count="0"/>
+      <line num="210" type="stmt" count="0"/>
+      <line num="214" type="stmt" count="0"/>
+      <metrics loc="217" ncloc="124" classes="1" methods="8" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="61" coveredstatements="0" elements="69" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Service/SystemTagService.php">
+      <class name="OCA\Pipelinq\Service\SystemTagService" namespace="global">
+        <metrics complexity="17" methods="7" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="64" coveredstatements="0" elements="71" coveredelements="0"/>
+      </class>
+      <line num="40" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="44" type="stmt" count="0"/>
+      <line num="53" type="method" name="getTags" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="55" type="stmt" count="0"/>
+      <line num="57" type="stmt" count="0"/>
+      <line num="58" type="stmt" count="0"/>
+      <line num="61" type="stmt" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="65" type="stmt" count="0"/>
+      <line num="78" type="method" name="addTag" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="80" type="stmt" count="0"/>
+      <line num="81" type="stmt" count="0"/>
+      <line num="82" type="stmt" count="0"/>
+      <line num="85" type="stmt" count="0"/>
+      <line num="86" type="stmt" count="0"/>
+      <line num="87" type="stmt" count="0"/>
+      <line num="88" type="stmt" count="0"/>
+      <line num="90" type="stmt" count="0"/>
+      <line num="92" type="stmt" count="0"/>
+      <line num="93" type="stmt" count="0"/>
+      <line num="94" type="stmt" count="0"/>
+      <line num="95" type="stmt" count="0"/>
+      <line num="97" type="stmt" count="0"/>
+      <line num="99" type="stmt" count="0"/>
+      <line num="100" type="stmt" count="0"/>
+      <line num="101" type="stmt" count="0"/>
+      <line num="102" type="stmt" count="0"/>
+      <line num="113" type="method" name="removeTag" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="115" type="stmt" count="0"/>
+      <line num="116" type="stmt" count="0"/>
+      <line num="117" type="stmt" count="0"/>
+      <line num="118" type="stmt" count="0"/>
+      <line num="120" type="stmt" count="0"/>
+      <line num="134" type="method" name="renameTag" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="136" type="stmt" count="0"/>
+      <line num="137" type="stmt" count="0"/>
+      <line num="138" type="stmt" count="0"/>
+      <line num="141" type="stmt" count="0"/>
+      <line num="142" type="stmt" count="0"/>
+      <line num="143" type="stmt" count="0"/>
+      <line num="144" type="stmt" count="0"/>
+      <line num="145" type="stmt" count="0"/>
+      <line num="147" type="stmt" count="0"/>
+      <line num="148" type="stmt" count="0"/>
+      <line num="149" type="stmt" count="0"/>
+      <line num="150" type="stmt" count="0"/>
+      <line num="152" type="stmt" count="0"/>
+      <line num="154" type="stmt" count="0"/>
+      <line num="155" type="stmt" count="0"/>
+      <line num="156" type="stmt" count="0"/>
+      <line num="157" type="stmt" count="0"/>
+      <line num="168" type="method" name="ensureDefaults" visibility="public" complexity="4" crap="20" count="0"/>
+      <line num="170" type="stmt" count="0"/>
+      <line num="171" type="stmt" count="0"/>
+      <line num="173" type="stmt" count="0"/>
+      <line num="174" type="stmt" count="0"/>
+      <line num="176" type="stmt" count="0"/>
+      <line num="177" type="stmt" count="0"/>
+      <line num="178" type="stmt" count="0"/>
+      <line num="179" type="stmt" count="0"/>
+      <line num="180" type="stmt" count="0"/>
+      <line num="181" type="stmt" count="0"/>
+      <line num="182" type="stmt" count="0"/>
+      <line num="183" type="stmt" count="0"/>
+      <line num="200" type="method" name="validateTagNameUnique" visibility="private" complexity="5" crap="30" count="0"/>
+      <line num="202" type="stmt" count="0"/>
+      <line num="203" type="stmt" count="0"/>
+      <line num="204" type="stmt" count="0"/>
+      <line num="205" type="stmt" count="0"/>
+      <line num="208" type="stmt" count="0"/>
+      <line num="209" type="stmt" count="0"/>
+      <metrics loc="214" ncloc="125" classes="1" methods="7" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="64" coveredstatements="0" elements="71" coveredelements="0"/>
+    </file>
+    <file name="/var/www/html/custom_apps/pipelinq/lib/Settings/AdminSettings.php">
+      <class name="OCA\Pipelinq\Settings\AdminSettings" namespace="global">
+        <metrics complexity="4" methods="4" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="13" coveredstatements="0" elements="17" coveredelements="0"/>
+      </class>
+      <line num="41" type="method" name="__construct" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="45" type="stmt" count="0"/>
+      <line num="52" type="method" name="getForm" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="54" type="stmt" count="0"/>
+      <line num="55" type="stmt" count="0"/>
+      <line num="57" type="stmt" count="0"/>
+      <line num="58" type="stmt" count="0"/>
+      <line num="59" type="stmt" count="0"/>
+      <line num="60" type="stmt" count="0"/>
+      <line num="61" type="stmt" count="0"/>
+      <line num="62" type="stmt" count="0"/>
+      <line num="63" type="stmt" count="0"/>
+      <line num="64" type="stmt" count="0"/>
+      <line num="72" type="method" name="getSection" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="74" type="stmt" count="0"/>
+      <line num="82" type="method" name="getPriority" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="84" type="stmt" count="0"/>
+      <metrics loc="87" ncloc="42" classes="1" methods="4" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="13" coveredstatements="0" elements="17" coveredelements="0"/>
+    </file>
+    <metrics files="52" loc="8161" ncloc="4767" classes="52" methods="284" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="2221" coveredstatements="0" elements="2505" coveredelements="0"/>
+  </project>
+</coverage>

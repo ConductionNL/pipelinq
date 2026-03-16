@@ -115,3 +115,45 @@ Automations MUST be stored and executed as n8n workflows.
 - Pipelinq event system (for detecting CRM state changes)
 - OpenRegister webhook infrastructure
 - Nextcloud notification system
+
+---
+
+### Current Implementation Status
+
+**Partially implemented** at the infrastructure level (event system and notifications), but the automation builder UI and n8n workflow creation from Pipelinq are NOT implemented.
+
+Implemented (infrastructure only):
+- **Event detection**: `lib/Listener/ObjectEventListener.php` listens to OpenRegister `ObjectCreatedEvent` and `ObjectUpdatedEvent`. `ObjectEventHandlerService.php` identifies entity types and detects changes (assignee, stage, status). `ObjectUpdateDiffService.php` computes diffs between old and new objects.
+- **Event dispatching**: `lib/Service/ObjectEventDispatcher.php` dispatches CRM events to the Activity stream and Notification system.
+- **Activity publishing**: `lib/Service/ActivityService.php` publishes events: `lead_created`, `request_created`, `lead_assigned`, `request_assigned`, `lead_stage_changed`, `request_status_changed`, `note_added`.
+- **Notifications**: `lib/Service/NotificationService.php` and `lib/Notification/Notifier.php` -- sends Nextcloud notifications on assignment and stage/status changes. Per-user notification preferences in `SettingsService` (`notify_assignments`, `notify_stage_status`, `notify_notes`).
+- **n8n MCP** is configured in the workspace `.mcp.json` and available for workflow creation, but not integrated into the Pipelinq UI.
+
+NOT implemented:
+- No automation builder UI (`Settings > Automatisering` does not exist).
+- No CRM automation triggers exposed in the UI (lead stage changed, lead created, etc.).
+- No CRM automation actions configurable from the UI (assign lead, move stage, send email, etc.).
+- No n8n workflow creation from Pipelinq (no programmatic bridge to n8n MCP).
+- No automation management list (active/inactive, execution history).
+- No webhook firing to n8n on CRM events.
+- No round-robin assignment logic.
+- No conditional trigger configuration.
+- No automation preview/dry-run capability.
+- No scheduled automation triggers.
+
+### Standards & References
+- n8n Workflow API -- for programmatic workflow creation and execution
+- n8n MCP (Model Context Protocol) -- stdio-based integration for workflow management
+- Nextcloud Activity API (`OCP\Activity\IManager`) -- used for event publishing
+- Nextcloud Notification API (`OCP\Notification\IManager`) -- used for user notifications
+- OpenRegister Event System (`ObjectCreatedEvent`, `ObjectUpdatedEvent`) -- triggers for CRM state changes
+
+### Specificity Assessment
+- The spec is well-structured with clear trigger/action definitions and UI scenarios.
+- **NOT implementable as a standalone spec** -- requires the n8n MCP integration layer to be built first, specifically a Pipelinq-to-n8n bridge service.
+- **Missing**: No specification of the webhook payload format sent to n8n.
+- **Missing**: No specification of how automation configurations are stored (OpenRegister objects? IAppConfig? n8n workflow metadata?).
+- **Missing**: No error handling specification for failed n8n workflow execution.
+- **Missing**: No specification of permissions -- who can create/manage automations?
+- **Open question**: Should the automation builder be a thin wrapper around n8n's workflow editor, or a completely custom UI that generates n8n workflows?
+- **Open question**: How should automations interact with Nextcloud's existing automation/flow capabilities?

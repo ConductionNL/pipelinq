@@ -3,7 +3,8 @@
 		<template #list>
 			<NcAppNavigationItem
 				:name="t('pipelinq', 'Dashboard')"
-				:to="{ name: 'Dashboard' }">
+				:to="{ name: 'Dashboard' }"
+				:exact="true">
 				<template #icon>
 					<ViewDashboard :size="20" />
 				</template>

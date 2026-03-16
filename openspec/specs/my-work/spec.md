@@ -198,3 +198,38 @@ Subheader: "Leads (5) . Requests (3)  --  8 items total"
 - The view is scrollable with all groups visible (no pagination)
 - The layout MUST be responsive and stack properly on narrow viewports
 - All interactive elements MUST be keyboard accessible (WCAG AA)
+
+---
+
+### Current Implementation Status
+
+**Implemented:**
+- Full `MyWork.vue` view exists at `src/views/MyWork.vue` with route `/my-work` (name `MyWork`) in `src/router/index.js`.
+- **REQ-MW-010 (Personal Workload View):** Fully implemented. Fetches leads and requests assigned to `OC.currentUser` via OpenRegister API. Shows entity type badge (LEAD/REQ), title, stage/status, pipeline name, value (leads only), due date, and priority badge.
+- **REQ-MW-020 (Sorting):** Implemented within each group -- items sorted by priority (urgent > high > normal > low), then by due date ascending.
+- **REQ-MW-030 (Temporal Grouping):** Fully implemented. Four groups: Overdue, Due This Week, Upcoming, No Due Date. Empty groups are hidden. Group headers include item count.
+- **REQ-MW-040 (Filtering):** Implemented. Filter buttons for All, Leads, Requests. Item counts update with filter.
+- **REQ-MW-050 (Overdue Highlighting):** Implemented. Overdue items have red left border (`work-card--overdue`), red text showing "N days overdue". "Due today" warning is shown.
+- **REQ-MW-060 (Item Navigation):** Implemented. Clicking a card navigates to `LeadDetail` or `RequestDetail` via `$router.push`. Cards are keyboard accessible with `tabindex="0"` and `@keydown.enter`.
+- **REQ-MW-080 (Item Card Layout):** Implemented with entity badge, title, stage/status, pipeline name, value (leads), due date, and priority badge.
+- Show completed toggle is implemented with visual distinction (opacity 0.6 via `work-card--completed` class).
+- Item count breakdown in header ("Leads (5) . Requests (3) -- 8 items total") is implemented.
+- Stale badge is shown on leads (14+ days since modification) using `isStale()` from `src/services/pipelineUtils.js`.
+
+**Not yet implemented:**
+- **REQ-MW-070 (Cross-App Workload with Procest):** Not implemented. No integration with Procest tasks/cases. The filter only shows All/Leads/Requests.
+- No pagination -- fetches up to 200 leads and 200 requests via `_limit: 200`.
+- Empty state message is generic ("No items assigned to you") rather than per-filter.
+
+**Partial implementations:**
+- Request overdue detection uses a fixed 30-day threshold from `requestedAt`, not the `expectedCloseDate` pattern. This may not match all user expectations.
+
+### Standards & References
+- WCAG AA: Keyboard accessibility implemented (tabindex, keydown.enter handlers). Color-only distinction is supplemented with text ("N days overdue", badges).
+- No specific API standard applies -- this is a frontend aggregation view.
+
+### Specificity Assessment
+- The spec is well-defined for MVP requirements. All MVP scenarios have clear acceptance criteria.
+- **V1 gap:** The cross-app Procest integration (REQ-MW-070) lacks detail on how Procest tasks will be discovered -- via direct API call, shared register, or cross-app event system.
+- **Open question:** The spec groups requests in "No Due Date" or "Overdue" only. Should requests with a `requestedAt` date use that as their temporal grouping date (current implementation) or only use explicit due dates?
+- **Missing:** No specification for responsiveness/mobile layout beyond "MUST stack properly on narrow viewports".

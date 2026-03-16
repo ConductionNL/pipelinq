@@ -101,3 +101,44 @@ The system MUST provide list and detail views for managing quotes.
 - Lead management spec (lead entity and detail view)
 - Docudesk for PDF generation
 - Admin settings for organization details and payment terms
+
+---
+
+### Current Implementation Status
+
+**Implemented:**
+- Nothing from this spec is implemented. The product catalog exists (products, categories, line items), but the quoting/proposal layer does not.
+
+**Not yet implemented:**
+- **Quote entity:** No `quote` schema in `pipelinq_register.json`. No Quote CRUD.
+- **Quote line items:** While `leadProduct` line items exist, there is no separate quote-scoped line item concept with discount percentages, BTW calculation, and quote-level totals.
+- **Quote lifecycle:** No status transitions (Concept -> Verzonden -> Geaccepteerd/Afgewezen/Verlopen).
+- **Quote numbering:** No auto-generated quote numbers (e.g., "OFF-2026-0042").
+- **PDF proposal generation:** No PDF generation capability. No Docudesk integration.
+- **Customizable PDF template:** No template management in admin settings.
+- **Quote list and detail views:** No routes, components, or views for quotes.
+- **Multiple quotes per lead:** No "Offertes" section in lead detail view.
+- **BTW calculation:** The `taxRate` field exists on products but is not used in any totaling logic.
+- **Quote acceptance updating lead value:** No integration between quote acceptance and lead value.
+- **Send quote to client:** No email/notification workflow for sending quotes.
+- **Expiry date management:** No auto-expiry logic.
+
+**Partial implementations:**
+- The `LeadProducts.vue` component provides basic line item functionality (quantity, price, discount, total) that could serve as a foundation for quote line items. However, the discount calculation currently uses subtraction instead of percentage.
+
+### Standards & References
+- **Dutch tax law:** BTW at 21% standard rate. Quotes must show subtotal, BTW, and total separately.
+- **Schema.org:** `Offer` type could be extended for quotes. `Invoice` type for accepted quotes.
+- **Docudesk:** Nextcloud ExApp for PDF generation. Listed as a dependency.
+- **NL Design System:** PDF styling should use design tokens for consistent government branding.
+
+### Specificity Assessment
+- The spec is well-structured with clear lifecycle states and calculation rules.
+- **Implementable** but requires significant new infrastructure: new schema, new views, PDF generation integration.
+- **Open questions:**
+  - Should quotes have their own route/navigation or be accessed only from lead detail views?
+  - How should the quote number sequence be managed? Per-organization? Per-year? Via IAppConfig counter?
+  - Should quotes support multiple currencies or is EUR hardcoded?
+  - How does the "Any status -> Concept" transition work -- does reverting to draft unlock editing?
+  - What payment terms and conditions are configurable? Free text or structured fields?
+- **Dependencies:** Requires Docudesk for PDF generation, product catalog for products, lead management for lead linking, admin settings for organization details.

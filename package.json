@@ -34,6 +34,7 @@
     "vuedraggable": "^2.24.3"
   },
   "devDependencies": {
+    "@cyclonedx/cyclonedx-npm": "^4.2.1",
     "@eslint/config-helpers": "^0.4.2",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.39.1",

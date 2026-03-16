@@ -39,54 +39,50 @@
 
 			<!-- Open Leads count widget -->
 			<template #widget-count-open-leads>
-				<div class="kpi-card">
-					<div class="kpi-icon">
-						<TrendingUp :size="24" />
-					</div>
-					<div class="kpi-content">
-						<span class="kpi-value">{{ kpi.openLeads }}</span>
-						<span class="kpi-label">{{ t('pipelinq', 'Open Leads') }}</span>
-					</div>
-				</div>
+				<CnStatsBlock
+					:title="t('pipelinq', 'Open Leads')"
+					:count="kpi.openLeads"
+					:count-label="t('pipelinq', 'leads')"
+					:icon="TrendingUp"
+					variant="primary"
+					horizontal
+					:route="{ name: 'Leads', query: { status: 'open' } }" />
 			</template>
 
 			<!-- Open Requests count widget -->
 			<template #widget-count-open-requests>
-				<div class="kpi-card">
-					<div class="kpi-icon">
-						<FileDocument :size="24" />
-					</div>
-					<div class="kpi-content">
-						<span class="kpi-value">{{ kpi.openRequests }}</span>
-						<span class="kpi-label">{{ t('pipelinq', 'Open Requests') }}</span>
-					</div>
-				</div>
+				<CnStatsBlock
+					:title="t('pipelinq', 'Open Requests')"
+					:count="kpi.openRequests"
+					:count-label="t('pipelinq', 'requests')"
+					:icon="FileDocument"
+					variant="primary"
+					horizontal
+					:route="{ name: 'Requests', query: { status: 'open' } }" />
 			</template>
 
 			<!-- Pipeline Value count widget -->
 			<template #widget-count-pipeline-value>
-				<div class="kpi-card">
-					<div class="kpi-icon kpi-icon--value">
-						<CurrencyEur :size="24" />
-					</div>
-					<div class="kpi-content">
-						<span class="kpi-value">{{ formatCurrency(kpi.pipelineValue) }}</span>
-						<span class="kpi-label">{{ t('pipelinq', 'Pipeline Value') }}</span>
-					</div>
-				</div>
+				<CnStatsBlock
+					:title="t('pipelinq', 'Pipeline Value')"
+					:count="kpi.pipelineValue"
+					:count-label="'EUR'"
+					:icon="CurrencyEur"
+					variant="success"
+					horizontal
+					:route="{ name: 'Pipeline' }" />
 			</template>
 
 			<!-- Overdue count widget -->
 			<template #widget-count-overdue>
-				<div class="kpi-card" :class="{ 'kpi-card--warning': kpi.overdueItems > 0 }">
-					<div class="kpi-icon" :class="{ 'kpi-icon--warning': kpi.overdueItems > 0 }">
-						<AlertCircle :size="24" />
-					</div>
-					<div class="kpi-content">
-						<span class="kpi-value">{{ kpi.overdueItems }}</span>
-						<span class="kpi-label">{{ t('pipelinq', 'Overdue') }}</span>
-					</div>
-				</div>
+				<CnStatsBlock
+					:title="t('pipelinq', 'Overdue')"
+					:count="kpi.overdueItems"
+					:count-label="t('pipelinq', 'overdue')"
+					:icon="AlertCircle"
+					:variant="kpi.overdueItems > 0 ? 'error' : 'default'"
+					horizontal
+					:route="{ name: 'Leads', query: { overdue: 'true' } }" />
 			</template>
 
 			<!-- Deals by Stage widget -->
@@ -207,7 +203,7 @@
 
 <script>
 import { NcButton } from '@nextcloud/vue'
-import { CnDashboardPage } from '@conduction/nextcloud-vue'
+import { CnDashboardPage, CnStatsBlock } from '@conduction/nextcloud-vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
@@ -245,18 +241,20 @@ export default {
 	components: {
 		NcButton,
 		CnDashboardPage,
+		CnStatsBlock,
 		Plus,
 		Refresh,
-		TrendingUp,
-		FileDocument,
-		CurrencyEur,
-		AlertCircle,
 		LeadCreateDialog,
 		RequestCreateDialog,
 		ClientCreateDialog,
 	},
 	data() {
 		return {
+			// Icon components for CnStatsBlock :icon prop
+			TrendingUp,
+			FileDocument,
+			CurrencyEur,
+			AlertCircle,
 			loading: false,
 			showLeadDialog: false,
 			showRequestDialog: false,
@@ -569,62 +567,6 @@ export default {
 </script>
 
 <style scoped>
-/* KPI Cards -- each card is its own widget (border comes from .cn-dashboard-widget) */
-.kpi-card {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	padding: 16px;
-	height: 100%;
-	box-sizing: border-box;
-}
-
-
-.kpi-card--warning {
-	margin: -16px;
-	padding: 16px;
-	border-radius: var(--border-radius-large);
-	background: var(--color-warning-hover, rgba(233, 163, 0, 0.05));
-}
-
-.kpi-icon {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 44px;
-	height: 44px;
-	border-radius: 50%;
-	background: var(--color-primary-element-light, rgba(0, 130, 201, 0.1));
-	color: var(--color-primary-element);
-	flex-shrink: 0;
-}
-
-.kpi-icon--value {
-	background: rgba(70, 186, 97, 0.1);
-	color: #46ba61;
-}
-
-.kpi-icon--warning {
-	background: rgba(233, 50, 45, 0.1);
-	color: var(--color-error);
-}
-
-.kpi-content {
-	display: flex;
-	flex-direction: column;
-}
-
-.kpi-value {
-	font-size: 24px;
-	font-weight: 700;
-	line-height: 1.2;
-}
-
-.kpi-label {
-	font-size: 13px;
-	color: var(--color-text-maxcontrast);
-}
-
 /* Status chart widget */
 .status-widget-content {
 	padding: 12px;

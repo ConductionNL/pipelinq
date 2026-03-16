@@ -163,3 +163,44 @@ The system MUST support registering multiple contactmomenten at once for batch p
 - AND allow per-contact fields (client, subject, summary) per row
 - AND create all 15 contactmomenten in a single operation
 - AND report how many were created successfully and how many failed validation
+
+---
+
+### Current Implementation Status
+
+**Implemented:**
+- Request channels are defined as SystemTag-based configuration in the repair step (`lib/Repair/InitializeSettings.php`, lines 74-80): phone, email, website, counter, post.
+- `lib/Controller/RequestChannelController.php` provides CRUD for managing request channels via SystemTags.
+- `src/store/modules/requestChannels.js` provides frontend state management for channel options.
+- The `request` schema in `lib/Settings/pipelinq_register.json` does NOT currently include a `channel` field (noted as a gap in the request-management spec).
+- Request forms include a channel dropdown sourced from SystemTag-based admin settings.
+
+**Not yet implemented:**
+- **Unified Contact Registration Form:** No `contactmoment` entity or schema exists. The entire omnichannel contact registration concept is not implemented.
+- **Channel-specific metadata:** No adaptive form fields based on selected channel (phone-specific fields like gespreksduur, email-specific fields like thread-ID, etc.).
+- **Channel Configuration admin UI:** No admin panel for enabling/disabling channels or adding custom metadata fields per channel.
+- **Auto-linking to Client and Case:** No auto-population of client from identified caller, no case suggestion system.
+- **Channel Statistics:** No per-channel contact volume tracking or trend analysis.
+- **Bulk Registration:** No batch processing for contactmomenten.
+- **VNG Klantinteracties integration:** No `Contactmoment` or `Kanaal` entity alignment.
+- **Email integration:** No link to Nextcloud Mail for auto-populating email contact details.
+- **Chat/Social media/Brief channels:** Not available -- only basic channel list exists.
+
+**Partial implementations:**
+- The existing request channel infrastructure (SystemTags) provides a foundation for channel management but does not support channel-specific metadata or the contactmoment concept.
+
+### Standards & References
+- **VNG Klantinteracties API:** `Contactmoment` entity with `Kanaal` enum (telefoon, email, balie, chat, social, brief). This is the primary standard for Dutch municipal contact registration.
+- **Schema.org:** `InteractionCounter`, `CommunicateAction` for contact event modeling.
+- **Common Ground:** Contact registration is a core component of the Common Ground architecture for municipalities.
+- **WCAG AA:** All forms must be accessible.
+
+### Specificity Assessment
+- The spec is well-structured with detailed scenarios for each channel type including expected metadata fields and stored data format.
+- **Highly specific:** Each channel scenario defines exact metadata structures (JSON format).
+- **Gap:** The spec references a "KCC werkplek" but does not define how the omnichannel form integrates with the broader KCC workflow (separate spec `kcc-werkplek`).
+- **Open questions:**
+  - How should the contactmoment relate to the existing `request` entity? Are they separate entities or should requests become contactmomenten?
+  - Should contactmomenten be stored as a new schema in the pipelinq register or in a separate register?
+  - How does the auto-linking to zaak work if Procest is not installed?
+- **Dependency:** Requires `kcc-werkplek` and `klantbeeld-360` specs for full context.

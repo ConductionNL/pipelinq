@@ -117,3 +117,47 @@ The system MUST provide a management interface for forms.
 - Pipeline configuration (for default lead placement)
 - Nextcloud notification system
 - CORS configuration for cross-origin form submissions
+
+---
+
+### Current Implementation Status
+
+**Implemented:**
+- Nothing from this spec is implemented. There are no form builder components, public form endpoints, or embed code generation.
+
+**Not yet implemented:**
+- **Form builder:** No form builder UI or form entity/schema.
+- **Form field types:** No configurable field type system.
+- **Field-to-entity mapping:** No mechanism to map form fields to contact/lead properties.
+- **Form submission creates CRM entities:** No public submission endpoint. No contact deduplication by email.
+- **Form embedding:** No iframe or JavaScript embed snippet generation.
+- **Custom styling:** No form style configuration.
+- **Spam protection:** No honeypot field, rate limiting, or CAPTCHA integration.
+- **Form management:** No form list, submission history, or CSV export.
+- **Public API routes:** No public (non-authenticated) controller endpoints for form rendering or submission.
+- **CORS configuration:** No cross-origin headers for external form submissions.
+
+**Partial implementations:**
+- None. This is a greenfield feature.
+
+### Standards & References
+- **CORS (Cross-Origin Resource Sharing):** Required for forms embedded on external websites.
+- **hCaptcha / Cloudflare Turnstile:** CAPTCHA providers mentioned in the spec.
+- **HTTPS:** All public form endpoints must be served over HTTPS.
+- **GDPR/AVG:** Public forms collecting personal data must comply with privacy regulations. Not addressed in the spec.
+- **Nextcloud public routes:** Nextcloud supports public (non-authenticated) controller routes via `#[PublicPage]` attribute.
+
+### Specificity Assessment
+- The spec provides a solid foundation but needs more detail for implementation.
+- **Missing details:**
+  - How are forms stored? As OpenRegister objects with a `form` schema, or via IAppConfig?
+  - What is the public URL structure for forms? `/apps/pipelinq/public/forms/{formId}`?
+  - How does the file upload field work for public submissions? Where are files stored?
+  - What is the authentication model? Are forms truly public (no login required)?
+  - How does CORS configuration work? Per-form allowed origins or global setting?
+  - Should form submissions trigger n8n workflows?
+- **Open questions:**
+  - Should forms support multi-step wizards or only single-page forms?
+  - How should the "duplicate contact handling" (matching by email) handle partial matches (same name, different email)?
+  - What rate limiting storage backend should be used? APCu, database, or Redis?
+  - Should forms support conditional field visibility (show field B only if field A equals X)?

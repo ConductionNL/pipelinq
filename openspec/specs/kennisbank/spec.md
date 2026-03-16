@@ -178,3 +178,40 @@ The system MUST distinguish between articles visible only to agents (internal) a
 - WHEN a citizen accesses the public knowledge base (if available)
 - THEN the article MUST be visible and searchable
 - AND internal notes or annotations on the article MUST NOT be shown to citizens
+
+---
+
+### Current Implementation Status
+
+**NOT implemented.** No knowledge base functionality exists in the codebase.
+
+- No `kennisartikel` schema in `lib/Settings/pipelinq_register.json`. The register defines: client, contact, lead, request, pipeline, product, productCategory, leadProduct -- but no knowledge base entities.
+- No article management controllers, services, or Vue components.
+- No article category taxonomy.
+- No full-text search for articles.
+- No zaaktype linking.
+- No agent feedback/rating system.
+- No public vs internal article visibility logic.
+- No article versioning system.
+- No rich text editor integration.
+- No kennisbank route in `src/router/index.js`.
+
+### Standards & References
+- Schema.org `Article`, `FAQPage`, `HowTo` -- content modeling standards
+- KCS (Knowledge-Centered Service) methodology -- industry standard for knowledge management
+- Nextcloud Text app -- potential integration for rich text editing (Markdown-based)
+- Nextcloud Full Text Search -- potential backend for article search indexing
+- WCAG AA -- accessibility for knowledge base content
+- Dutch government NORA (Nederlandse Overheid Referentie Architectuur) -- knowledge management principles
+
+### Specificity Assessment
+- The spec is well-structured with clear CRUD scenarios, search requirements, and taxonomy design.
+- **Implementable as-is** for the core functionality, but requires several design decisions first:
+- **Missing**: No specification of the `kennisartikel` schema definition (properties, required fields). This needs to be added to `pipelinq_register.json`.
+- **Missing**: No specification of the rich text format -- Markdown? HTML? Nextcloud Text (ProseMirror)?
+- **Missing**: No specification of how full-text search is implemented -- OpenRegister's built-in search, Nextcloud Full Text Search, or ElasticSearch/Solr?
+- **Missing**: No specification of article versioning storage -- does each version create a new OpenRegister object, or is versioning handled by OpenRegister's built-in audit log?
+- **Missing**: No specification of how "public" articles are served to citizens -- public API endpoint? Separate public UI? Integration with the municipality website?
+- **Missing**: No specification of the feedback/rating storage model (separate entity? property on article? ICommentsManager?).
+- **Open question**: Should the kennisbank be a separate Nextcloud app or a module within Pipelinq?
+- **Open question**: How does the 500ms search performance requirement align with OpenRegister's query capabilities for 200+ articles?

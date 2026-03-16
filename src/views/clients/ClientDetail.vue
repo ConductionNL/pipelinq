@@ -1,7 +1,7 @@
 <template>
-	<div class="client-detail">
+	<div v-if="editing || isNew">
 		<div class="client-detail__header">
-			<NcButton @click="$router.push({ name: 'Clients' })">
+			<NcButton @click="onFormCancel">
 				{{ t('pipelinq', 'Back to list') }}
 			</NcButton>
 			<h2 v-if="isNew">
@@ -11,27 +11,33 @@
 				{{ clientData.name || t('pipelinq', 'Client') }}
 			</h2>
 		</div>
-
-		<NcLoadingIcon v-if="loading" />
-
-		<!-- Edit / Create mode -->
 		<ClientForm
-			v-else-if="editing || isNew"
 			:client="clientData"
 			@save="onFormSave"
 			@cancel="onFormCancel" />
+	</div>
 
-		<!-- View mode -->
-		<div v-else class="client-detail__info">
-			<div class="client-detail__actions">
-				<NcButton type="primary" @click="editing = true">
-					{{ t('pipelinq', 'Edit') }}
-				</NcButton>
-				<NcButton type="error" @click="showDeleteWarning">
-					{{ t('pipelinq', 'Delete') }}
-				</NcButton>
-			</div>
+	<CnDetailPage
+		v-else
+		:title="clientData.name || t('pipelinq', 'Client')"
+		:subtitle="t('pipelinq', 'Client')"
+		:back-route="{ name: 'Clients' }"
+		:back-label="t('pipelinq', 'Back to list')"
+		:loading="loading"
+		:sidebar="!isNew && !loading"
+		object-type="pipelinq_client"
+		:object-id="clientId"
+		:sidebar-props="sidebarProps">
+		<template #header-actions>
+			<NcButton type="primary" @click="editing = true">
+				{{ t('pipelinq', 'Edit') }}
+			</NcButton>
+			<NcButton type="error" @click="showDeleteWarning">
+				{{ t('pipelinq', 'Delete') }}
+			</NcButton>
+		</template>
 
+		<CnDetailCard :title="t('pipelinq', 'Client Information')">
 			<div v-if="clientData.contactsUid" class="sync-badge">
 				{{ t('pipelinq', 'Synced with Contacts') }}
 			</div>
@@ -62,16 +68,14 @@
 				<label>{{ t('pipelinq', 'Notes') }}</label>
 				<p>{{ clientData.notes }}</p>
 			</div>
-		</div>
+		</CnDetailCard>
 
-		<!-- Contacts section -->
-		<div v-if="!isNew && !loading && !editing" class="client-detail__section">
-			<div class="section-header">
-				<h3>{{ t('pipelinq', 'Contacts') }}</h3>
+		<CnDetailCard :title="t('pipelinq', 'Contacts')">
+			<template #actions>
 				<NcButton @click="addContact">
 					{{ t('pipelinq', 'Add contact') }}
 				</NcButton>
-			</div>
+			</template>
 
 			<div v-if="contacts.length === 0" class="section-empty">
 				<p>{{ t('pipelinq', 'No contacts found') }}</p>
@@ -98,14 +102,9 @@
 					</tbody>
 				</table>
 			</div>
-		</div>
+		</CnDetailCard>
 
-		<!-- Leads section -->
-		<div v-if="!isNew && !loading && !editing" class="client-detail__section">
-			<div class="section-header">
-				<h3>{{ t('pipelinq', 'Leads') }}</h3>
-			</div>
-
+		<CnDetailCard :title="t('pipelinq', 'Leads')">
 			<div v-if="leads.length === 0" class="section-empty">
 				<p>{{ t('pipelinq', 'No leads found') }}</p>
 			</div>
@@ -131,16 +130,14 @@
 					</tbody>
 				</table>
 			</div>
-		</div>
+		</CnDetailCard>
 
-		<!-- Requests section -->
-		<div v-if="!isNew && !loading && !editing" class="client-detail__section">
-			<div class="section-header">
-				<h3>{{ t('pipelinq', 'Requests') }}</h3>
+		<CnDetailCard :title="t('pipelinq', 'Requests')">
+			<template #actions>
 				<NcButton @click="createRequest">
 					{{ t('pipelinq', 'New request') }}
 				</NcButton>
-			</div>
+			</template>
 
 			<div v-if="requests.length === 0" class="section-empty">
 				<p>{{ t('pipelinq', 'No requests found') }}</p>
@@ -165,13 +162,7 @@
 					</tbody>
 				</table>
 			</div>
-		</div>
-
-		<!-- Notes section -->
-		<EntityNotes
-			v-if="!isNew && !loading && !editing"
-			object-type="pipelinq_client"
-			:object-id="clientId" />
+		</CnDetailCard>
 
 		<!-- Delete warning dialog -->
 		<NcDialog
@@ -204,24 +195,24 @@
 				</NcButton>
 			</template>
 		</NcDialog>
-	</div>
+	</CnDetailPage>
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcDialog } from '@nextcloud/vue'
+import { NcButton, NcDialog } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
+import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import ClientForm from './ClientForm.vue'
-import EntityNotes from '../../components/EntityNotes.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'ClientDetail',
 	components: {
 		NcButton,
-		NcLoadingIcon,
 		NcDialog,
+		CnDetailPage,
+		CnDetailCard,
 		ClientForm,
-		EntityNotes,
 	},
 	props: {
 		clientId: {
@@ -251,6 +242,14 @@ export default {
 		clientData() {
 			if (this.isNew) return {}
 			return this.objectStore.getObject('client', this.clientId) || {}
+		},
+		sidebarProps() {
+			const config = this.objectStore.objectTypeRegistry.client || {}
+			return {
+				register: config.register || '',
+				schema: config.schema || '',
+				hiddenTabs: ['tasks'],
+			}
 		},
 	},
 	async mounted() {
@@ -302,23 +301,12 @@ export default {
 		},
 		async confirmDelete() {
 			this.showDelete = false
-			this.cleanupNotes('pipelinq_client', this.clientId)
 			const success = await this.objectStore.deleteObject('client', this.clientId)
 			if (success) {
 				this.$router.push({ name: 'Clients' })
 			} else {
 				const error = this.objectStore.getError('client')
 				showError(error?.message || t('pipelinq', 'Failed to delete client.'))
-			}
-		},
-		async cleanupNotes(objectType, objectId) {
-			try {
-				await fetch(`/apps/pipelinq/api/notes/${objectType}/${objectId}`, {
-					method: 'DELETE',
-					headers: { requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' },
-				})
-			} catch {
-				// Cleanup failure is non-blocking
 			}
 		},
 		async fetchRelated() {
@@ -355,22 +343,12 @@ export default {
 </script>
 
 <style scoped>
-.client-detail {
-	padding: 20px;
-	max-width: 800px;
-}
-
 .client-detail__header {
 	display: flex;
 	align-items: center;
 	gap: 16px;
 	margin-bottom: 20px;
-}
-
-.client-detail__actions {
-	display: flex;
-	gap: 12px;
-	margin-bottom: 20px;
+	padding: 20px 20px 0;
 }
 
 .info-grid {
@@ -398,19 +376,6 @@ export default {
 
 .info-field--full {
 	margin-top: 16px;
-}
-
-.client-detail__section {
-	margin-top: 40px;
-	border-top: 1px solid var(--color-border);
-	padding-top: 20px;
-}
-
-.section-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 16px;
 }
 
 .viewTableContainer {

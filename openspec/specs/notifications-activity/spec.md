@@ -115,3 +115,52 @@ Notifications MUST be properly localized and formatted for display.
 - GIVEN any Pipelinq notification
 - WHEN displayed in the notification center
 - THEN the Pipelinq app icon MUST be shown
+
+---
+
+### Current Implementation Status
+
+**Implemented:**
+- **CRM Notifications:** Fully implemented in `lib/Service/NotificationService.php` with methods:
+  - `notifyAssignment()` for lead and request assignments.
+  - `notifyStageChange()` for lead stage changes.
+  - `notifyStatusChange()` for request status changes.
+  - `notifyNoteAdded()` for notes on any entity.
+- **Self-action suppression:** All notification methods check `if ($author === $assigneeUserId) return;` to prevent self-notifications.
+- **Notifier rendering:** `lib/Notification/Notifier.php` handles all 5 notification subjects (`lead_assigned`, `request_assigned`, `lead_stage_changed`, `request_status_changed`, `note_added`) with localized text and rich parameters.
+- **Notification links:** Notifier constructs deep links to entity detail views using `#/{objectType}s/{objectId}` pattern.
+- **Notification icon:** Uses `app-dark.svg` via `IURLGenerator::imagePath`.
+- **Rich parameters:** Entity title rendered as highlighted/bold parameter in notification center.
+- **CRM Activity Stream:** Fully implemented in `lib/Service/ActivityService.php` with methods:
+  - `publishCreated()` for lead/request creation.
+  - `publishAssigned()` for assignments.
+  - `publishStageChanged()` for lead stage changes.
+  - `publishStatusChanged()` for request status changes.
+  - `publishNoteAdded()` for notes.
+- **Activity Provider:** `lib/Activity/Provider.php` handles 6 subjects: `lead_created`, `lead_assigned`, `lead_stage_changed`, `request_created`, `request_status_changed`, `note_added`.
+- **Per-Category Notification Preferences:** Three activity settings implemented:
+  - `lib/Activity/Setting/AssignmentSetting.php` -- "Lead & request assignments" (stream enabled by default, email disabled by default).
+  - `lib/Activity/Setting/StageStatusSetting.php` -- "Pipeline stage & status changes".
+  - `lib/Activity/Setting/NoteSetting.php` -- "Notes & comments".
+  - All support independent stream and email toggles, grouped under "Pipelinq".
+- **User-level notification preferences:** `NotificationService::send()` checks per-user settings via `IConfig::getUserValue()` with `SUBJECT_SETTING_MAP` mapping subjects to `notify_assignments`, `notify_stage_status`, `notify_notes` keys (default enabled).
+- **Activity Provider subject handler:** `lib/Activity/ProviderSubjectHandler.php` handles text formatting per subject type.
+- **Event listener:** `lib/Listener/ObjectEventListener.php` listens for OpenRegister object events and triggers notifications/activities via `lib/Service/ObjectEventHandlerService.php`.
+
+**Not yet implemented:**
+- All specified functionality appears to be implemented. The implementation is comprehensive.
+
+**Partial implementations:**
+- None identified -- the implementation covers all specified scenarios.
+
+### Standards & References
+- Nextcloud Activity API (`OCP\Activity\IManager`, `IProvider`, `ActivitySettings`).
+- Nextcloud Notification API (`OCP\Notification\IManager`, `INotifier`).
+- Localization via `OCP\L10N\IFactory` for multi-language support (Dutch/English).
+- EUPL-1.2 license.
+
+### Specificity Assessment
+- The spec is highly specific and well-structured with clear scenarios for each notification type.
+- **Implementation-complete:** All scenarios are implemented including self-action suppression, localization, rich parameters, per-category settings, and default preferences.
+- **Open question:** The spec mentions "if the previous assignee is different, no notification is sent to them" -- the implementation only notifies the new assignee, which satisfies this implicitly. Should the previous assignee receive an "unassigned" notification?
+- **Missing:** No specification for notification batching/deduplication (e.g., multiple rapid stage changes).

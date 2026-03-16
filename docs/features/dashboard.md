@@ -27,7 +27,7 @@ Compact preview of the user's assigned items (top 5), linking to the full My Wor
 
 ### Quick Actions (MVP)
 
-Shortcut buttons for common operations: create new lead, create new request, create new client.
+Shortcut buttons for common operations: create new lead, create new request, create new client, new product.
 
 ### Dashboard Data Refresh (MVP)
 
@@ -36,6 +36,22 @@ Dashboard data refreshes on mount and supports manual refresh. Data scoped to us
 ### Empty State Handling (MVP)
 
 Fresh installations show a welcoming empty state with getting-started guidance instead of empty charts.
+
+### Product Revenue KPI Card (V1)
+
+Shows top 3 products by total pipeline value based on lead-product line items. Displays "No product data yet" when no line items exist.
+
+### Products Count KPI Card (V1)
+
+Displays total count of active products as a KPI card in the top row.
+
+### Prospect Discovery Widget (V1)
+
+Dashboard widget showing top 10 prospects based on ICP configuration. Features:
+- Prospect cards with company name, fit score, SBI, employees, city, KVK number
+- "Create Lead" action to convert prospect to client + lead
+- Setup prompt when ICP is not configured
+- Manual refresh to clear cache and re-fetch
 
 ### Planned (V1)
 

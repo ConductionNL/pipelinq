@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <title>Dashboard for /var/www/html/custom_apps/pipelinq/lib/Service</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../_css/bootstrap.min.css?v=10.1.16" rel="stylesheet" type="text/css">
+  <link href="../_css/nv.d3.min.css?v=10.1.16" rel="stylesheet" type="text/css">
+  <link href="../_css/style.css?v=10.1.16" rel="stylesheet" type="text/css">
+  <link href="../_css/custom.css" rel="stylesheet" type="text/css">
+ </head>
+ <body>
+  <header>
+   <div class="container-fluid">
+    <div class="row">
+     <div class="col-md-12">
+      <nav aria-label="breadcrumb">
+       <ol class="breadcrumb">
+         <li class="breadcrumb-item"><a href="../index.html">/var/www/html/custom_apps/pipelinq/lib</a></li>
+         <li class="breadcrumb-item"><a href="index.html">Service</a></li>
+         <li class="breadcrumb-item active">(Dashboard)</li>
+
+       </ol>
+      </nav>
+     </div>
+    </div>
+   </div>
+  </header>
+  <div class="container-fluid">
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Classes</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="classCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="classComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="ActivityService.php.html#32">OCA\Pipelinq\Service\ActivityService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ConfigFileLoaderService.php.html#31">OCA\Pipelinq\Service\ConfigFileLoaderService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactDataBuilder.php.html#27">OCA\Pipelinq\Service\ContactDataBuilder</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactImportService.php.html#31">OCA\Pipelinq\Service\ContactImportService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactLinkedUidsService.php.html#32">OCA\Pipelinq\Service\ContactLinkedUidsService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactSyncService.php.html#31">OCA\Pipelinq\Service\ContactSyncService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactVcardPropertyBuilder.php.html#31">OCA\Pipelinq\Service\ContactVcardPropertyBuilder</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactVcardService.php.html#33">OCA\Pipelinq\Service\ContactVcardService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactVcardWriterService.php.html#33">OCA\Pipelinq\Service\ContactVcardWriterService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="DefaultPipelineService.php.html#32">OCA\Pipelinq\Service\DefaultPipelineService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="IcpConfigService.php.html#30">OCA\Pipelinq\Service\IcpConfigService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="KvkApiClient.php.html#30">OCA\Pipelinq\Service\KvkApiClient</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NoteEventService.php.html#30">OCA\Pipelinq\Service\NoteEventService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NotesService.php.html#33">OCA\Pipelinq\Service\NotesService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NotificationService.php.html#33">OCA\Pipelinq\Service\NotificationService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ObjectEventDispatcher.php.html#29">OCA\Pipelinq\Service\ObjectEventDispatcher</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ObjectEventHandlerService.php.html#27">OCA\Pipelinq\Service\ObjectEventHandlerService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ObjectUpdateDiffService.php.html#27">OCA\Pipelinq\Service\ObjectUpdateDiffService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="OpenCorporatesApiClient.php.html#30">OCA\Pipelinq\Service\OpenCorporatesApiClient</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="PipelineStageData.php.html#27">OCA\Pipelinq\Service\PipelineStageData</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ProspectDiscoveryService.php.html#29">OCA\Pipelinq\Service\ProspectDiscoveryService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ProspectScoringService.php.html#34">OCA\Pipelinq\Service\ProspectScoringService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SchemaMapService.php.html#29">OCA\Pipelinq\Service\SchemaMapService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsLoadService.php.html#32">OCA\Pipelinq\Service\SettingsLoadService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsMapBuilder.php.html#27">OCA\Pipelinq\Service\SettingsMapBuilder</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsService.php.html#32">OCA\Pipelinq\Service\SettingsService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SystemTagCrudService.php.html#32">OCA\Pipelinq\Service\SystemTagCrudService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SystemTagService.php.html#32">OCA\Pipelinq\Service\SystemTagService</a></td><td class="text-right">0%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="ProspectDiscoveryService.php.html#29">OCA\Pipelinq\Service\ProspectDiscoveryService</a></td><td class="text-right">1560</td></tr>
+       <tr><td><a href="IcpConfigService.php.html#30">OCA\Pipelinq\Service\IcpConfigService</a></td><td class="text-right">756</td></tr>
+       <tr><td><a href="ProspectScoringService.php.html#34">OCA\Pipelinq\Service\ProspectScoringService</a></td><td class="text-right">756</td></tr>
+       <tr><td><a href="ContactVcardPropertyBuilder.php.html#31">OCA\Pipelinq\Service\ContactVcardPropertyBuilder</a></td><td class="text-right">600</td></tr>
+       <tr><td><a href="SettingsMapBuilder.php.html#27">OCA\Pipelinq\Service\SettingsMapBuilder</a></td><td class="text-right">506</td></tr>
+       <tr><td><a href="ContactVcardWriterService.php.html#33">OCA\Pipelinq\Service\ContactVcardWriterService</a></td><td class="text-right">342</td></tr>
+       <tr><td><a href="ContactSyncService.php.html#31">OCA\Pipelinq\Service\ContactSyncService</a></td><td class="text-right">306</td></tr>
+       <tr><td><a href="SystemTagService.php.html#32">OCA\Pipelinq\Service\SystemTagService</a></td><td class="text-right">306</td></tr>
+       <tr><td><a href="SettingsService.php.html#32">OCA\Pipelinq\Service\SettingsService</a></td><td class="text-right">272</td></tr>
+       <tr><td><a href="SystemTagCrudService.php.html#32">OCA\Pipelinq\Service\SystemTagCrudService</a></td><td class="text-right">272</td></tr>
+       <tr><td><a href="ContactDataBuilder.php.html#27">OCA\Pipelinq\Service\ContactDataBuilder</a></td><td class="text-right">240</td></tr>
+       <tr><td><a href="ActivityService.php.html#32">OCA\Pipelinq\Service\ActivityService</a></td><td class="text-right">210</td></tr>
+       <tr><td><a href="ContactLinkedUidsService.php.html#32">OCA\Pipelinq\Service\ContactLinkedUidsService</a></td><td class="text-right">210</td></tr>
+       <tr><td><a href="KvkApiClient.php.html#30">OCA\Pipelinq\Service\KvkApiClient</a></td><td class="text-right">210</td></tr>
+       <tr><td><a href="NotificationService.php.html#33">OCA\Pipelinq\Service\NotificationService</a></td><td class="text-right">210</td></tr>
+       <tr><td><a href="ContactVcardService.php.html#33">OCA\Pipelinq\Service\ContactVcardService</a></td><td class="text-right">182</td></tr>
+       <tr><td><a href="NoteEventService.php.html#30">OCA\Pipelinq\Service\NoteEventService</a></td><td class="text-right">182</td></tr>
+       <tr><td><a href="ObjectEventDispatcher.php.html#29">OCA\Pipelinq\Service\ObjectEventDispatcher</a></td><td class="text-right">156</td></tr>
+       <tr><td><a href="ObjectEventHandlerService.php.html#27">OCA\Pipelinq\Service\ObjectEventHandlerService</a></td><td class="text-right">132</td></tr>
+       <tr><td><a href="NotesService.php.html#33">OCA\Pipelinq\Service\NotesService</a></td><td class="text-right">110</td></tr>
+       <tr><td><a href="ContactImportService.php.html#31">OCA\Pipelinq\Service\ContactImportService</a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="DefaultPipelineService.php.html#32">OCA\Pipelinq\Service\DefaultPipelineService</a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="ObjectUpdateDiffService.php.html#27">OCA\Pipelinq\Service\ObjectUpdateDiffService</a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="OpenCorporatesApiClient.php.html#30">OCA\Pipelinq\Service\OpenCorporatesApiClient</a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="SchemaMapService.php.html#29">OCA\Pipelinq\Service\SchemaMapService</a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="SettingsLoadService.php.html#32">OCA\Pipelinq\Service\SettingsLoadService</a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="ConfigFileLoaderService.php.html#31">OCA\Pipelinq\Service\ConfigFileLoaderService</a></td><td class="text-right">72</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Methods</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="methodCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="methodComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="ActivityService.php.html#41"><abbr title="OCA\Pipelinq\Service\ActivityService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ActivityService.php.html#58"><abbr title="OCA\Pipelinq\Service\ActivityService::publishCreated">publishCreated</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ActivityService.php.html#93"><abbr title="OCA\Pipelinq\Service\ActivityService::publishAssigned">publishAssigned</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ActivityService.php.html#129"><abbr title="OCA\Pipelinq\Service\ActivityService::publishStageChanged">publishStageChanged</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ActivityService.php.html#158"><abbr title="OCA\Pipelinq\Service\ActivityService::publishStatusChanged">publishStatusChanged</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ActivityService.php.html#187"><abbr title="OCA\Pipelinq\Service\ActivityService::publishNoteAdded">publishNoteAdded</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ActivityService.php.html#218"><abbr title="OCA\Pipelinq\Service\ActivityService::publish">publish</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ConfigFileLoaderService.php.html#45"><abbr title="OCA\Pipelinq\Service\ConfigFileLoaderService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ConfigFileLoaderService.php.html#57"><abbr title="OCA\Pipelinq\Service\ConfigFileLoaderService::loadConfigurationFile">loadConfigurationFile</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ConfigFileLoaderService.php.html#86"><abbr title="OCA\Pipelinq\Service\ConfigFileLoaderService::ensureSourceType">ensureSourceType</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactDataBuilder.php.html#37"><abbr title="OCA\Pipelinq\Service\ContactDataBuilder::buildClientImportData">buildClientImportData</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactDataBuilder.php.html#80"><abbr title="OCA\Pipelinq\Service\ContactDataBuilder::buildContactImportData">buildContactImportData</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactDataBuilder.php.html#110"><abbr title="OCA\Pipelinq\Service\ContactDataBuilder::determineClientType">determineClientType</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactDataBuilder.php.html#126"><abbr title="OCA\Pipelinq\Service\ContactDataBuilder::extractFirstValue">extractFirstValue</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactImportService.php.html#40"><abbr title="OCA\Pipelinq\Service\ContactImportService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactImportService.php.html#55"><abbr title="OCA\Pipelinq\Service\ContactImportService::importAsClient">importAsClient</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactImportService.php.html#75"><abbr title="OCA\Pipelinq\Service\ContactImportService::importAsContact">importAsContact</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactImportService.php.html#95"><abbr title="OCA\Pipelinq\Service\ContactImportService::saveAndSerialize">saveAndSerialize</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactImportService.php.html#120"><abbr title="OCA\Pipelinq\Service\ContactImportService::serializeResult">serializeResult</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactImportService.php.html#138"><abbr title="OCA\Pipelinq\Service\ContactImportService::getObjectService">getObjectService</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactLinkedUidsService.php.html#41"><abbr title="OCA\Pipelinq\Service\ContactLinkedUidsService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactLinkedUidsService.php.html#53"><abbr title="OCA\Pipelinq\Service\ContactLinkedUidsService::getLinkedContactsUids">getLinkedContactsUids</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactLinkedUidsService.php.html#80"><abbr title="OCA\Pipelinq\Service\ContactLinkedUidsService::getLinkedUidsForType">getLinkedUidsForType</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactLinkedUidsService.php.html#119"><abbr title="OCA\Pipelinq\Service\ContactLinkedUidsService::serializeResult">serializeResult</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactLinkedUidsService.php.html#137"><abbr title="OCA\Pipelinq\Service\ContactLinkedUidsService::getObjectService">getObjectService</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactSyncService.php.html#42"><abbr title="OCA\Pipelinq\Service\ContactSyncService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactSyncService.php.html#59"><abbr title="OCA\Pipelinq\Service\ContactSyncService::searchContacts">searchContacts</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactSyncService.php.html#85"><abbr title="OCA\Pipelinq\Service\ContactSyncService::importContact">importContact</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactSyncService.php.html#120"><abbr title="OCA\Pipelinq\Service\ContactSyncService::syncToContacts">syncToContacts</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactSyncService.php.html#136"><abbr title="OCA\Pipelinq\Service\ContactSyncService::buildContactResults">buildContactResults</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactSyncService.php.html#164"><abbr title="OCA\Pipelinq\Service\ContactSyncService::formatContactResult">formatContactResult</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactSyncService.php.html#184"><abbr title="OCA\Pipelinq\Service\ContactSyncService::findContactByUid">findContactByUid</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactSyncService.php.html#204"><abbr title="OCA\Pipelinq\Service\ContactSyncService::extractFirstValue">extractFirstValue</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactVcardPropertyBuilder.php.html#39"><abbr title="OCA\Pipelinq\Service\ContactVcardPropertyBuilder::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactVcardPropertyBuilder.php.html#53"><abbr title="OCA\Pipelinq\Service\ContactVcardPropertyBuilder::buildProperties">buildProperties</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactVcardPropertyBuilder.php.html#93"><abbr title="OCA\Pipelinq\Service\ContactVcardPropertyBuilder::addClientProperties">addClientProperties</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactVcardPropertyBuilder.php.html#122"><abbr title="OCA\Pipelinq\Service\ContactVcardPropertyBuilder::addContactProperties">addContactProperties</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactVcardPropertyBuilder.php.html#145"><abbr title="OCA\Pipelinq\Service\ContactVcardPropertyBuilder::resolveClientName">resolveClientName</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactVcardPropertyBuilder.php.html#177"><abbr title="OCA\Pipelinq\Service\ContactVcardPropertyBuilder::serializeResult">serializeResult</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactVcardPropertyBuilder.php.html#195"><abbr title="OCA\Pipelinq\Service\ContactVcardPropertyBuilder::getObjectService">getObjectService</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactVcardService.php.html#45"><abbr title="OCA\Pipelinq\Service\ContactVcardService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactVcardService.php.html#63"><abbr title="OCA\Pipelinq\Service\ContactVcardService::syncToContacts">syncToContacts</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactVcardService.php.html#99"><abbr title="OCA\Pipelinq\Service\ContactVcardService::fetchPipelinqObject">fetchPipelinqObject</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactVcardService.php.html#133"><abbr title="OCA\Pipelinq\Service\ContactVcardService::serializeResult">serializeResult</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactVcardService.php.html#151"><abbr title="OCA\Pipelinq\Service\ContactVcardService::getObjectService">getObjectService</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactVcardWriterService.php.html#43"><abbr title="OCA\Pipelinq\Service\ContactVcardWriterService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactVcardWriterService.php.html#60"><abbr title="OCA\Pipelinq\Service\ContactVcardWriterService::writeToAddressBook">writeToAddressBook</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactVcardWriterService.php.html#109"><abbr title="OCA\Pipelinq\Service\ContactVcardWriterService::extractContactsUid">extractContactsUid</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactVcardWriterService.php.html#135"><abbr title="OCA\Pipelinq\Service\ContactVcardWriterService::storeContactsUidOnObject">storeContactsUidOnObject</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ContactVcardWriterService.php.html#166"><abbr title="OCA\Pipelinq\Service\ContactVcardWriterService::getObjectService">getObjectService</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="DefaultPipelineService.php.html#42"><abbr title="OCA\Pipelinq\Service\DefaultPipelineService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="DefaultPipelineService.php.html#55"><abbr title="OCA\Pipelinq\Service\DefaultPipelineService::createDefaultPipelines">createDefaultPipelines</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="DefaultPipelineService.php.html#123"><abbr title="OCA\Pipelinq\Service\DefaultPipelineService::savePipeline">savePipeline</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="DefaultPipelineService.php.html#144"><abbr title="OCA\Pipelinq\Service\DefaultPipelineService::getObjectService">getObjectService</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="IcpConfigService.php.html#55"><abbr title="OCA\Pipelinq\Service\IcpConfigService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="IcpConfigService.php.html#65"><abbr title="OCA\Pipelinq\Service\IcpConfigService::getSettings">getSettings</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="IcpConfigService.php.html#110"><abbr title="OCA\Pipelinq\Service\IcpConfigService::saveSettings">saveSettings</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="IcpConfigService.php.html#180"><abbr title="OCA\Pipelinq\Service\IcpConfigService::isConfigured">isConfigured</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="IcpConfigService.php.html#192"><abbr title="OCA\Pipelinq\Service\IcpConfigService::getKvkApiKey">getKvkApiKey</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="IcpConfigService.php.html#206"><abbr title="OCA\Pipelinq\Service\IcpConfigService::getCriteria">getCriteria</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="IcpConfigService.php.html#235"><abbr title="OCA\Pipelinq\Service\IcpConfigService::getIcpHash">getIcpHash</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="IcpConfigService.php.html#256"><abbr title="OCA\Pipelinq\Service\IcpConfigService::getJsonArray">getJsonArray</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="IcpConfigService.php.html#281"><abbr title="OCA\Pipelinq\Service\IcpConfigService::setJsonArray">setJsonArray</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="IcpConfigService.php.html#302"><abbr title="OCA\Pipelinq\Service\IcpConfigService::boolToString">boolToString</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="IcpConfigService.php.html#318"><abbr title="OCA\Pipelinq\Service\IcpConfigService::maskApiKey">maskApiKey</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="KvkApiClient.php.html#45"><abbr title="OCA\Pipelinq\Service\KvkApiClient::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="KvkApiClient.php.html#59"><abbr title="OCA\Pipelinq\Service\KvkApiClient::search">search</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="KvkApiClient.php.html#126"><abbr title="OCA\Pipelinq\Service\KvkApiClient::mapResult">mapResult</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NoteEventService.php.html#48"><abbr title="OCA\Pipelinq\Service\NoteEventService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NoteEventService.php.html#65"><abbr title="OCA\Pipelinq\Service\NoteEventService::triggerNoteEvents">triggerNoteEvents</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NoteEventService.php.html#111"><abbr title="OCA\Pipelinq\Service\NoteEventService::fetchEntityData">fetchEntityData</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NoteEventService.php.html#150"><abbr title="OCA\Pipelinq\Service\NoteEventService::publishNoteActivity">publishNoteActivity</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NotesService.php.html#50"><abbr title="OCA\Pipelinq\Service\NotesService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NotesService.php.html#66"><abbr title="OCA\Pipelinq\Service\NotesService::getNotes">getNotes</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NotesService.php.html#109"><abbr title="OCA\Pipelinq\Service\NotesService::addNote">addNote</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NotesService.php.html#145"><abbr title="OCA\Pipelinq\Service\NotesService::deleteNote">deleteNote</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NotesService.php.html#168"><abbr title="OCA\Pipelinq\Service\NotesService::deleteAllNotes">deleteAllNotes</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NotificationService.php.html#55"><abbr title="OCA\Pipelinq\Service\NotificationService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NotificationService.php.html#73"><abbr title="OCA\Pipelinq\Service\NotificationService::notifyAssignment">notifyAssignment</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NotificationService.php.html#114"><abbr title="OCA\Pipelinq\Service\NotificationService::notifyStageChange">notifyStageChange</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NotificationService.php.html#149"><abbr title="OCA\Pipelinq\Service\NotificationService::notifyStatusChange">notifyStatusChange</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NotificationService.php.html#184"><abbr title="OCA\Pipelinq\Service\NotificationService::notifyNoteAdded">notifyNoteAdded</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NotificationService.php.html#219"><abbr title="OCA\Pipelinq\Service\NotificationService::send">send</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ObjectEventDispatcher.php.html#38"><abbr title="OCA\Pipelinq\Service\ObjectEventDispatcher::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ObjectEventDispatcher.php.html#55"><abbr title="OCA\Pipelinq\Service\ObjectEventDispatcher::dispatchCreated">dispatchCreated</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ObjectEventDispatcher.php.html#86"><abbr title="OCA\Pipelinq\Service\ObjectEventDispatcher::dispatchAssigneeChange">dispatchAssigneeChange</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ObjectEventDispatcher.php.html#117"><abbr title="OCA\Pipelinq\Service\ObjectEventDispatcher::dispatchStageChange">dispatchStageChange</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ObjectEventDispatcher.php.html#147"><abbr title="OCA\Pipelinq\Service\ObjectEventDispatcher::dispatchStatusChange">dispatchStatusChange</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ObjectEventDispatcher.php.html#174"><abbr title="OCA\Pipelinq\Service\ObjectEventDispatcher::nullIfEmpty">nullIfEmpty</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ObjectEventDispatcher.php.html#188"><abbr title="OCA\Pipelinq\Service\ObjectEventDispatcher::getCurrentUser">getCurrentUser</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ObjectEventHandlerService.php.html#36"><abbr title="OCA\Pipelinq\Service\ObjectEventHandlerService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ObjectEventHandlerService.php.html#50"><abbr title="OCA\Pipelinq\Service\ObjectEventHandlerService::handleCreated">handleCreated</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ObjectEventHandlerService.php.html#76"><abbr title="OCA\Pipelinq\Service\ObjectEventHandlerService::handleUpdated">handleUpdated</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ObjectEventHandlerService.php.html#128"><abbr title="OCA\Pipelinq\Service\ObjectEventHandlerService::isRelevantEntityType">isRelevantEntityType</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ObjectEventHandlerService.php.html#144"><abbr title="OCA\Pipelinq\Service\ObjectEventHandlerService::extractOldData">extractOldData</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ObjectUpdateDiffService.php.html#41"><abbr title="OCA\Pipelinq\Service\ObjectUpdateDiffService::dispatchAssigneeChangeIfNeeded">dispatchAssigneeChangeIfNeeded</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ObjectUpdateDiffService.php.html#74"><abbr title="OCA\Pipelinq\Service\ObjectUpdateDiffService::dispatchStageChangeIfNeeded">dispatchStageChangeIfNeeded</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ObjectUpdateDiffService.php.html#108"><abbr title="OCA\Pipelinq\Service\ObjectUpdateDiffService::dispatchStatusChangeIfNeeded">dispatchStatusChangeIfNeeded</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="OpenCorporatesApiClient.php.html#45"><abbr title="OCA\Pipelinq\Service\OpenCorporatesApiClient::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="OpenCorporatesApiClient.php.html#58"><abbr title="OCA\Pipelinq\Service\OpenCorporatesApiClient::search">search</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="OpenCorporatesApiClient.php.html#115"><abbr title="OCA\Pipelinq\Service\OpenCorporatesApiClient::mapResult">mapResult</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="PipelineStageData.php.html#36"><abbr title="OCA\Pipelinq\Service\PipelineStageData::getSalesPipelineData">getSalesPipelineData</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="PipelineStageData.php.html#59"><abbr title="OCA\Pipelinq\Service\PipelineStageData::getServiceRequestsPipelineData">getServiceRequestsPipelineData</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="PipelineStageData.php.html#79"><abbr title="OCA\Pipelinq\Service\PipelineStageData::getSalesStages">getSalesStages</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="PipelineStageData.php.html#146"><abbr title="OCA\Pipelinq\Service\PipelineStageData::getServiceRequestStages">getServiceRequestStages</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ProspectDiscoveryService.php.html#55"><abbr title="OCA\Pipelinq\Service\ProspectDiscoveryService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ProspectDiscoveryService.php.html#72"><abbr title="OCA\Pipelinq\Service\ProspectDiscoveryService::discover">discover</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ProspectDiscoveryService.php.html#165"><abbr title="OCA\Pipelinq\Service\ProspectDiscoveryService::createLeadFromProspect">createLeadFromProspect</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ProspectDiscoveryService.php.html#210"><abbr title="OCA\Pipelinq\Service\ProspectDiscoveryService::excludeExistingClients">excludeExistingClients</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ProspectDiscoveryService.php.html#249"><abbr title="OCA\Pipelinq\Service\ProspectDiscoveryService::getExistingClientNames">getExistingClientNames</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ProspectDiscoveryService.php.html#276"><abbr title="OCA\Pipelinq\Service\ProspectDiscoveryService::getObjectStoreConfig">getObjectStoreConfig</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ProspectDiscoveryService.php.html#305"><abbr title="OCA\Pipelinq\Service\ProspectDiscoveryService::getFromCache">getFromCache</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ProspectDiscoveryService.php.html#329"><abbr title="OCA\Pipelinq\Service\ProspectDiscoveryService::setInCache">setInCache</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ProspectScoringService.php.html#44"><abbr title="OCA\Pipelinq\Service\ProspectScoringService::score">score</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ProspectScoringService.php.html#100"><abbr title="OCA\Pipelinq\Service\ProspectScoringService::scoreAll">scoreAll</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ProspectScoringService.php.html#126"><abbr title="OCA\Pipelinq\Service\ProspectScoringService::scoreSbi">scoreSbi</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ProspectScoringService.php.html#150"><abbr title="OCA\Pipelinq\Service\ProspectScoringService::scoreEmployeeCount">scoreEmployeeCount</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ProspectScoringService.php.html#179"><abbr title="OCA\Pipelinq\Service\ProspectScoringService::scoreLocation">scoreLocation</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ProspectScoringService.php.html#203"><abbr title="OCA\Pipelinq\Service\ProspectScoringService::scoreLegalForm">scoreLegalForm</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SchemaMapService.php.html#57"><abbr title="OCA\Pipelinq\Service\SchemaMapService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SchemaMapService.php.html#70"><abbr title="OCA\Pipelinq\Service\SchemaMapService::resolveEntityType">resolveEntityType</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SchemaMapService.php.html#88"><abbr title="OCA\Pipelinq\Service\SchemaMapService::buildSchemaMap">buildSchemaMap</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsLoadService.php.html#59"><abbr title="OCA\Pipelinq\Service\SettingsLoadService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsLoadService.php.html#75"><abbr title="OCA\Pipelinq\Service\SettingsLoadService::loadSettings">loadSettings</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsLoadService.php.html#102"><abbr title="OCA\Pipelinq\Service\SettingsLoadService::updateObjectTypeConfiguration">updateObjectTypeConfiguration</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsLoadService.php.html#136"><abbr title="OCA\Pipelinq\Service\SettingsLoadService::getConfigurationService">getConfigurationService</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsMapBuilder.php.html#43"><abbr title="OCA\Pipelinq\Service\SettingsMapBuilder::buildSchemaSlugMap">buildSchemaSlugMap</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsMapBuilder.php.html#63"><abbr title="OCA\Pipelinq\Service\SettingsMapBuilder::findRegisterIdBySlug">findRegisterIdBySlug</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsMapBuilder.php.html#84"><abbr title="OCA\Pipelinq\Service\SettingsMapBuilder::findDefaultViewId">findDefaultViewId</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsMapBuilder.php.html#117"><abbr title="OCA\Pipelinq\Service\SettingsMapBuilder::addSchemaToMap">addSchemaToMap</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsMapBuilder.php.html#138"><abbr title="OCA\Pipelinq\Service\SettingsMapBuilder::extractRegisterIdIfMatch">extractRegisterIdIfMatch</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsMapBuilder.php.html#163"><abbr title="OCA\Pipelinq\Service\SettingsMapBuilder::normalizeToArray">normalizeToArray</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsService.php.html#66"><abbr title="OCA\Pipelinq\Service\SettingsService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsService.php.html#80"><abbr title="OCA\Pipelinq\Service\SettingsService::getSettings">getSettings</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsService.php.html#97"><abbr title="OCA\Pipelinq\Service\SettingsService::updateSettings">updateSettings</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsService.php.html#118"><abbr title="OCA\Pipelinq\Service\SettingsService::loadSettings">loadSettings</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsService.php.html#129"><abbr title="OCA\Pipelinq\Service\SettingsService::createDefaultPipelines">createDefaultPipelines</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsService.php.html#141"><abbr title="OCA\Pipelinq\Service\SettingsService::getUserSettings">getUserSettings</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsService.php.html#164"><abbr title="OCA\Pipelinq\Service\SettingsService::updateUserSettings">updateUserSettings</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsService.php.html#193"><abbr title="OCA\Pipelinq\Service\SettingsService::getConfigValue">getConfigValue</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SettingsService.php.html#206"><abbr title="OCA\Pipelinq\Service\SettingsService::setConfigValue">setConfigValue</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SystemTagCrudService.php.html#51"><abbr title="OCA\Pipelinq\Service\SystemTagCrudService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SystemTagCrudService.php.html#65"><abbr title="OCA\Pipelinq\Service\SystemTagCrudService::getTagIdsForType">getTagIdsForType</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SystemTagCrudService.php.html#86"><abbr title="OCA\Pipelinq\Service\SystemTagCrudService::resolveTagData">resolveTagData</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SystemTagCrudService.php.html#108"><abbr title="OCA\Pipelinq\Service\SystemTagCrudService::createOrReuseSystemTag">createOrReuseSystemTag</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SystemTagCrudService.php.html#133"><abbr title="OCA\Pipelinq\Service\SystemTagCrudService::assignTag">assignTag</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SystemTagCrudService.php.html#150"><abbr title="OCA\Pipelinq\Service\SystemTagCrudService::unassignAndCleanup">unassignAndCleanup</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SystemTagCrudService.php.html#176"><abbr title="OCA\Pipelinq\Service\SystemTagCrudService::renameSystemTag">renameSystemTag</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SystemTagCrudService.php.html#195"><abbr title="OCA\Pipelinq\Service\SystemTagCrudService::isTagUsedByOtherTypes">isTagUsedByOtherTypes</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SystemTagService.php.html#40"><abbr title="OCA\Pipelinq\Service\SystemTagService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SystemTagService.php.html#53"><abbr title="OCA\Pipelinq\Service\SystemTagService::getTags">getTags</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SystemTagService.php.html#78"><abbr title="OCA\Pipelinq\Service\SystemTagService::addTag">addTag</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SystemTagService.php.html#113"><abbr title="OCA\Pipelinq\Service\SystemTagService::removeTag">removeTag</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SystemTagService.php.html#134"><abbr title="OCA\Pipelinq\Service\SystemTagService::renameTag">renameTag</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SystemTagService.php.html#168"><abbr title="OCA\Pipelinq\Service\SystemTagService::ensureDefaults">ensureDefaults</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SystemTagService.php.html#200"><abbr title="OCA\Pipelinq\Service\SystemTagService::validateTagNameUnique">validateTagNameUnique</abbr></a></td><td class="text-right">0%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="IcpConfigService.php.html#110"><abbr title="OCA\Pipelinq\Service\IcpConfigService::saveSettings">saveSettings</abbr></a></td><td class="text-right">156</td></tr>
+       <tr><td><a href="ProspectDiscoveryService.php.html#72"><abbr title="OCA\Pipelinq\Service\ProspectDiscoveryService::discover">discover</abbr></a></td><td class="text-right">156</td></tr>
+       <tr><td><a href="KvkApiClient.php.html#59"><abbr title="OCA\Pipelinq\Service\KvkApiClient::search">search</abbr></a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="ProspectScoringService.php.html#150"><abbr title="OCA\Pipelinq\Service\ProspectScoringService::scoreEmployeeCount">scoreEmployeeCount</abbr></a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="ContactVcardWriterService.php.html#60"><abbr title="OCA\Pipelinq\Service\ContactVcardWriterService::writeToAddressBook">writeToAddressBook</abbr></a></td><td class="text-right">72</td></tr>
+       <tr><td><a href="ProspectDiscoveryService.php.html#210"><abbr title="OCA\Pipelinq\Service\ProspectDiscoveryService::excludeExistingClients">excludeExistingClients</abbr></a></td><td class="text-right">72</td></tr>
+       <tr><td><a href="ActivityService.php.html#218"><abbr title="OCA\Pipelinq\Service\ActivityService::publish">publish</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="ContactLinkedUidsService.php.html#80"><abbr title="OCA\Pipelinq\Service\ContactLinkedUidsService::getLinkedUidsForType">getLinkedUidsForType</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="ContactVcardWriterService.php.html#109"><abbr title="OCA\Pipelinq\Service\ContactVcardWriterService::extractContactsUid">extractContactsUid</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="DefaultPipelineService.php.html#55"><abbr title="OCA\Pipelinq\Service\DefaultPipelineService::createDefaultPipelines">createDefaultPipelines</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="OpenCorporatesApiClient.php.html#58"><abbr title="OCA\Pipelinq\Service\OpenCorporatesApiClient::search">search</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="SettingsLoadService.php.html#102"><abbr title="OCA\Pipelinq\Service\SettingsLoadService::updateObjectTypeConfiguration">updateObjectTypeConfiguration</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="SettingsMapBuilder.php.html#84"><abbr title="OCA\Pipelinq\Service\SettingsMapBuilder::findDefaultViewId">findDefaultViewId</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="ContactDataBuilder.php.html#37"><abbr title="OCA\Pipelinq\Service\ContactDataBuilder::buildClientImportData">buildClientImportData</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="ContactVcardPropertyBuilder.php.html#53"><abbr title="OCA\Pipelinq\Service\ContactVcardPropertyBuilder::buildProperties">buildProperties</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="ContactVcardPropertyBuilder.php.html#93"><abbr title="OCA\Pipelinq\Service\ContactVcardPropertyBuilder::addClientProperties">addClientProperties</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="NoteEventService.php.html#65"><abbr title="OCA\Pipelinq\Service\NoteEventService::triggerNoteEvents">triggerNoteEvents</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="ProspectDiscoveryService.php.html#276"><abbr title="OCA\Pipelinq\Service\ProspectDiscoveryService::getObjectStoreConfig">getObjectStoreConfig</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="ProspectScoringService.php.html#126"><abbr title="OCA\Pipelinq\Service\ProspectScoringService::scoreSbi">scoreSbi</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="ProspectScoringService.php.html#179"><abbr title="OCA\Pipelinq\Service\ProspectScoringService::scoreLocation">scoreLocation</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="ProspectScoringService.php.html#203"><abbr title="OCA\Pipelinq\Service\ProspectScoringService::scoreLegalForm">scoreLegalForm</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="SystemTagCrudService.php.html#195"><abbr title="OCA\Pipelinq\Service\SystemTagCrudService::isTagUsedByOtherTypes">isTagUsedByOtherTypes</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="SystemTagService.php.html#200"><abbr title="OCA\Pipelinq\Service\SystemTagService::validateTagNameUnique">validateTagNameUnique</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="ConfigFileLoaderService.php.html#57"><abbr title="OCA\Pipelinq\Service\ConfigFileLoaderService::loadConfigurationFile">loadConfigurationFile</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ContactDataBuilder.php.html#80"><abbr title="OCA\Pipelinq\Service\ContactDataBuilder::buildContactImportData">buildContactImportData</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ContactDataBuilder.php.html#110"><abbr title="OCA\Pipelinq\Service\ContactDataBuilder::determineClientType">determineClientType</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ContactImportService.php.html#120"><abbr title="OCA\Pipelinq\Service\ContactImportService::serializeResult">serializeResult</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ContactLinkedUidsService.php.html#119"><abbr title="OCA\Pipelinq\Service\ContactLinkedUidsService::serializeResult">serializeResult</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ContactSyncService.php.html#85"><abbr title="OCA\Pipelinq\Service\ContactSyncService::importContact">importContact</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ContactVcardPropertyBuilder.php.html#122"><abbr title="OCA\Pipelinq\Service\ContactVcardPropertyBuilder::addContactProperties">addContactProperties</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ContactVcardPropertyBuilder.php.html#145"><abbr title="OCA\Pipelinq\Service\ContactVcardPropertyBuilder::resolveClientName">resolveClientName</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ContactVcardPropertyBuilder.php.html#177"><abbr title="OCA\Pipelinq\Service\ContactVcardPropertyBuilder::serializeResult">serializeResult</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ContactVcardService.php.html#99"><abbr title="OCA\Pipelinq\Service\ContactVcardService::fetchPipelinqObject">fetchPipelinqObject</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ContactVcardService.php.html#133"><abbr title="OCA\Pipelinq\Service\ContactVcardService::serializeResult">serializeResult</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="KvkApiClient.php.html#126"><abbr title="OCA\Pipelinq\Service\KvkApiClient::mapResult">mapResult</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="NoteEventService.php.html#150"><abbr title="OCA\Pipelinq\Service\NoteEventService::publishNoteActivity">publishNoteActivity</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="NotificationService.php.html#219"><abbr title="OCA\Pipelinq\Service\NotificationService::send">send</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ObjectEventHandlerService.php.html#76"><abbr title="OCA\Pipelinq\Service\ObjectEventHandlerService::handleUpdated">handleUpdated</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ProspectDiscoveryService.php.html#249"><abbr title="OCA\Pipelinq\Service\ProspectDiscoveryService::getExistingClientNames">getExistingClientNames</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ProspectDiscoveryService.php.html#305"><abbr title="OCA\Pipelinq\Service\ProspectDiscoveryService::getFromCache">getFromCache</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="SchemaMapService.php.html#70"><abbr title="OCA\Pipelinq\Service\SchemaMapService::resolveEntityType">resolveEntityType</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="SchemaMapService.php.html#88"><abbr title="OCA\Pipelinq\Service\SchemaMapService::buildSchemaMap">buildSchemaMap</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="SettingsMapBuilder.php.html#138"><abbr title="OCA\Pipelinq\Service\SettingsMapBuilder::extractRegisterIdIfMatch">extractRegisterIdIfMatch</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="SettingsMapBuilder.php.html#163"><abbr title="OCA\Pipelinq\Service\SettingsMapBuilder::normalizeToArray">normalizeToArray</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="SettingsService.php.html#164"><abbr title="OCA\Pipelinq\Service\SettingsService::updateUserSettings">updateUserSettings</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="SystemTagService.php.html#168"><abbr title="OCA\Pipelinq\Service\SystemTagService::ensureDefaults">ensureDefaults</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ConfigFileLoaderService.php.html#86"><abbr title="OCA\Pipelinq\Service\ConfigFileLoaderService::ensureSourceType">ensureSourceType</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ContactSyncService.php.html#136"><abbr title="OCA\Pipelinq\Service\ContactSyncService::buildContactResults">buildContactResults</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ContactSyncService.php.html#184"><abbr title="OCA\Pipelinq\Service\ContactSyncService::findContactByUid">findContactByUid</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ContactVcardService.php.html#63"><abbr title="OCA\Pipelinq\Service\ContactVcardService::syncToContacts">syncToContacts</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="NoteEventService.php.html#111"><abbr title="OCA\Pipelinq\Service\NoteEventService::fetchEntityData">fetchEntityData</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="NotesService.php.html#66"><abbr title="OCA\Pipelinq\Service\NotesService::getNotes">getNotes</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="NotesService.php.html#145"><abbr title="OCA\Pipelinq\Service\NotesService::deleteNote">deleteNote</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="NotificationService.php.html#73"><abbr title="OCA\Pipelinq\Service\NotificationService::notifyAssignment">notifyAssignment</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ObjectUpdateDiffService.php.html#41"><abbr title="OCA\Pipelinq\Service\ObjectUpdateDiffService::dispatchAssigneeChangeIfNeeded">dispatchAssigneeChangeIfNeeded</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ObjectUpdateDiffService.php.html#74"><abbr title="OCA\Pipelinq\Service\ObjectUpdateDiffService::dispatchStageChangeIfNeeded">dispatchStageChangeIfNeeded</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ObjectUpdateDiffService.php.html#108"><abbr title="OCA\Pipelinq\Service\ObjectUpdateDiffService::dispatchStatusChangeIfNeeded">dispatchStatusChangeIfNeeded</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ProspectDiscoveryService.php.html#165"><abbr title="OCA\Pipelinq\Service\ProspectDiscoveryService::createLeadFromProspect">createLeadFromProspect</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="SettingsMapBuilder.php.html#63"><abbr title="OCA\Pipelinq\Service\SettingsMapBuilder::findRegisterIdBySlug">findRegisterIdBySlug</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="SettingsMapBuilder.php.html#117"><abbr title="OCA\Pipelinq\Service\SettingsMapBuilder::addSchemaToMap">addSchemaToMap</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="SettingsService.php.html#97"><abbr title="OCA\Pipelinq\Service\SettingsService::updateSettings">updateSettings</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ActivityService.php.html#58"><abbr title="OCA\Pipelinq\Service\ActivityService::publishCreated">publishCreated</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ActivityService.php.html#93"><abbr title="OCA\Pipelinq\Service\ActivityService::publishAssigned">publishAssigned</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ContactDataBuilder.php.html#126"><abbr title="OCA\Pipelinq\Service\ContactDataBuilder::extractFirstValue">extractFirstValue</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ContactLinkedUidsService.php.html#53"><abbr title="OCA\Pipelinq\Service\ContactLinkedUidsService::getLinkedContactsUids">getLinkedContactsUids</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ContactSyncService.php.html#59"><abbr title="OCA\Pipelinq\Service\ContactSyncService::searchContacts">searchContacts</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ContactSyncService.php.html#204"><abbr title="OCA\Pipelinq\Service\ContactSyncService::extractFirstValue">extractFirstValue</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ContactVcardWriterService.php.html#135"><abbr title="OCA\Pipelinq\Service\ContactVcardWriterService::storeContactsUidOnObject">storeContactsUidOnObject</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="IcpConfigService.php.html#235"><abbr title="OCA\Pipelinq\Service\IcpConfigService::getIcpHash">getIcpHash</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="IcpConfigService.php.html#256"><abbr title="OCA\Pipelinq\Service\IcpConfigService::getJsonArray">getJsonArray</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="IcpConfigService.php.html#281"><abbr title="OCA\Pipelinq\Service\IcpConfigService::setJsonArray">setJsonArray</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="IcpConfigService.php.html#302"><abbr title="OCA\Pipelinq\Service\IcpConfigService::boolToString">boolToString</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="IcpConfigService.php.html#318"><abbr title="OCA\Pipelinq\Service\IcpConfigService::maskApiKey">maskApiKey</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="NotesService.php.html#109"><abbr title="OCA\Pipelinq\Service\NotesService::addNote">addNote</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="NotificationService.php.html#114"><abbr title="OCA\Pipelinq\Service\NotificationService::notifyStageChange">notifyStageChange</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="NotificationService.php.html#149"><abbr title="OCA\Pipelinq\Service\NotificationService::notifyStatusChange">notifyStatusChange</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="NotificationService.php.html#184"><abbr title="OCA\Pipelinq\Service\NotificationService::notifyNoteAdded">notifyNoteAdded</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ObjectEventDispatcher.php.html#55"><abbr title="OCA\Pipelinq\Service\ObjectEventDispatcher::dispatchCreated">dispatchCreated</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ObjectEventDispatcher.php.html#117"><abbr title="OCA\Pipelinq\Service\ObjectEventDispatcher::dispatchStageChange">dispatchStageChange</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ObjectEventDispatcher.php.html#147"><abbr title="OCA\Pipelinq\Service\ObjectEventDispatcher::dispatchStatusChange">dispatchStatusChange</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ObjectEventDispatcher.php.html#174"><abbr title="OCA\Pipelinq\Service\ObjectEventDispatcher::nullIfEmpty">nullIfEmpty</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ObjectEventDispatcher.php.html#188"><abbr title="OCA\Pipelinq\Service\ObjectEventDispatcher::getCurrentUser">getCurrentUser</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ObjectEventHandlerService.php.html#50"><abbr title="OCA\Pipelinq\Service\ObjectEventHandlerService::handleCreated">handleCreated</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ObjectEventHandlerService.php.html#128"><abbr title="OCA\Pipelinq\Service\ObjectEventHandlerService::isRelevantEntityType">isRelevantEntityType</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ObjectEventHandlerService.php.html#144"><abbr title="OCA\Pipelinq\Service\ObjectEventHandlerService::extractOldData">extractOldData</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="OpenCorporatesApiClient.php.html#115"><abbr title="OCA\Pipelinq\Service\OpenCorporatesApiClient::mapResult">mapResult</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ProspectDiscoveryService.php.html#329"><abbr title="OCA\Pipelinq\Service\ProspectDiscoveryService::setInCache">setInCache</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ProspectScoringService.php.html#44"><abbr title="OCA\Pipelinq\Service\ProspectScoringService::score">score</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="SettingsMapBuilder.php.html#43"><abbr title="OCA\Pipelinq\Service\SettingsMapBuilder::buildSchemaSlugMap">buildSchemaSlugMap</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="SettingsService.php.html#80"><abbr title="OCA\Pipelinq\Service\SettingsService::getSettings">getSettings</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="SettingsService.php.html#141"><abbr title="OCA\Pipelinq\Service\SettingsService::getUserSettings">getUserSettings</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="SystemTagCrudService.php.html#65"><abbr title="OCA\Pipelinq\Service\SystemTagCrudService::getTagIdsForType">getTagIdsForType</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="SystemTagCrudService.php.html#86"><abbr title="OCA\Pipelinq\Service\SystemTagCrudService::resolveTagData">resolveTagData</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="SystemTagCrudService.php.html#108"><abbr title="OCA\Pipelinq\Service\SystemTagCrudService::createOrReuseSystemTag">createOrReuseSystemTag</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="SystemTagCrudService.php.html#150"><abbr title="OCA\Pipelinq\Service\SystemTagCrudService::unassignAndCleanup">unassignAndCleanup</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="SystemTagService.php.html#53"><abbr title="OCA\Pipelinq\Service\SystemTagService::getTags">getTags</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="SystemTagService.php.html#78"><abbr title="OCA\Pipelinq\Service\SystemTagService::addTag">addTag</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="SystemTagService.php.html#134"><abbr title="OCA\Pipelinq\Service\SystemTagService::renameTag">renameTag</abbr></a></td><td class="text-right">6</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <footer>
+    <hr/>
+    <p>
+     <small>Generated by <a href="https://github.com/sebastianbergmann/php-code-coverage" target="_top">php-code-coverage 10.1.16</a> using <a href="https://www.php.net/" target="_top">PHP 8.3.30</a> and <a href="https://phpunit.de/">PHPUnit 10.5.63</a> at Fri Mar 13 14:59:55 UTC 2026.</small>
+    </p>
+   </footer>
+  </div>
+  <script src="../_js/jquery.min.js?v=10.1.16" type="text/javascript"></script>
+  <script src="../_js/d3.min.js?v=10.1.16" type="text/javascript"></script>
+  <script src="../_js/nv.d3.min.js?v=10.1.16" type="text/javascript"></script>
+  <script type="text/javascript">
+$(document).ready(function() {
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#classCoverageDistribution svg')
+      .datum(getCoverageDistributionData([28,0,0,0,0,0,0,0,0,0,0,0], "Class Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#methodCoverageDistribution svg')
+      .datum(getCoverageDistributionData([156,0,0,0,0,0,0,0,0,0,0,0], "Method Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getCoverageDistributionData(data, label) {
+    var labels = [
+      '0%',
+      '0-10%',
+      '10-20%',
+      '20-30%',
+      '30-40%',
+      '40-50%',
+      '50-60%',
+      '60-70%',
+      '70-80%',
+      '80-90%',
+      '90-100%',
+      '100%'
+    ];
+    var values = [];
+    $.each(labels, function(key) {
+      values.push({x: labels[key], y: data[key]});
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Cyclomatic Complexity');
+
+    d3.select('#classComplexity svg')
+      .datum(getComplexityData([[0,14,"<a href=\"ActivityService.php.html#32\">OCA\\Pipelinq\\Service\\ActivityService<\/a>"],[0,8,"<a href=\"ConfigFileLoaderService.php.html#31\">OCA\\Pipelinq\\Service\\ConfigFileLoaderService<\/a>"],[0,15,"<a href=\"ContactDataBuilder.php.html#27\">OCA\\Pipelinq\\Service\\ContactDataBuilder<\/a>"],[0,9,"<a href=\"ContactImportService.php.html#31\">OCA\\Pipelinq\\Service\\ContactImportService<\/a>"],[0,14,"<a href=\"ContactLinkedUidsService.php.html#32\">OCA\\Pipelinq\\Service\\ContactLinkedUidsService<\/a>"],[0,17,"<a href=\"ContactSyncService.php.html#31\">OCA\\Pipelinq\\Service\\ContactSyncService<\/a>"],[0,24,"<a href=\"ContactVcardPropertyBuilder.php.html#31\">OCA\\Pipelinq\\Service\\ContactVcardPropertyBuilder<\/a>"],[0,13,"<a href=\"ContactVcardService.php.html#33\">OCA\\Pipelinq\\Service\\ContactVcardService<\/a>"],[0,18,"<a href=\"ContactVcardWriterService.php.html#33\">OCA\\Pipelinq\\Service\\ContactVcardWriterService<\/a>"],[0,9,"<a href=\"DefaultPipelineService.php.html#32\">OCA\\Pipelinq\\Service\\DefaultPipelineService<\/a>"],[0,27,"<a href=\"IcpConfigService.php.html#30\">OCA\\Pipelinq\\Service\\IcpConfigService<\/a>"],[0,14,"<a href=\"KvkApiClient.php.html#30\">OCA\\Pipelinq\\Service\\KvkApiClient<\/a>"],[0,13,"<a href=\"NoteEventService.php.html#30\">OCA\\Pipelinq\\Service\\NoteEventService<\/a>"],[0,10,"<a href=\"NotesService.php.html#33\">OCA\\Pipelinq\\Service\\NotesService<\/a>"],[0,14,"<a href=\"NotificationService.php.html#33\">OCA\\Pipelinq\\Service\\NotificationService<\/a>"],[0,12,"<a href=\"ObjectEventDispatcher.php.html#29\">OCA\\Pipelinq\\Service\\ObjectEventDispatcher<\/a>"],[0,11,"<a href=\"ObjectEventHandlerService.php.html#27\">OCA\\Pipelinq\\Service\\ObjectEventHandlerService<\/a>"],[0,9,"<a href=\"ObjectUpdateDiffService.php.html#27\">OCA\\Pipelinq\\Service\\ObjectUpdateDiffService<\/a>"],[0,9,"<a href=\"OpenCorporatesApiClient.php.html#30\">OCA\\Pipelinq\\Service\\OpenCorporatesApiClient<\/a>"],[0,4,"<a href=\"PipelineStageData.php.html#27\">OCA\\Pipelinq\\Service\\PipelineStageData<\/a>"],[0,39,"<a href=\"ProspectDiscoveryService.php.html#29\">OCA\\Pipelinq\\Service\\ProspectDiscoveryService<\/a>"],[0,27,"<a href=\"ProspectScoringService.php.html#34\">OCA\\Pipelinq\\Service\\ProspectScoringService<\/a>"],[0,9,"<a href=\"SchemaMapService.php.html#29\">OCA\\Pipelinq\\Service\\SchemaMapService<\/a>"],[0,9,"<a href=\"SettingsLoadService.php.html#32\">OCA\\Pipelinq\\Service\\SettingsLoadService<\/a>"],[0,22,"<a href=\"SettingsMapBuilder.php.html#27\">OCA\\Pipelinq\\Service\\SettingsMapBuilder<\/a>"],[0,16,"<a href=\"SettingsService.php.html#32\">OCA\\Pipelinq\\Service\\SettingsService<\/a>"],[0,16,"<a href=\"SystemTagCrudService.php.html#32\">OCA\\Pipelinq\\Service\\SystemTagCrudService<\/a>"],[0,17,"<a href=\"SystemTagService.php.html#32\">OCA\\Pipelinq\\Service\\SystemTagService<\/a>"]], 'Class Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Method Complexity');
+
+    d3.select('#methodComplexity svg')
+      .datum(getComplexityData([[0,1,"<a href=\"ActivityService.php.html#41\">OCA\\Pipelinq\\Service\\ActivityService::__construct<\/a>"],[0,2,"<a href=\"ActivityService.php.html#58\">OCA\\Pipelinq\\Service\\ActivityService::publishCreated<\/a>"],[0,2,"<a href=\"ActivityService.php.html#93\">OCA\\Pipelinq\\Service\\ActivityService::publishAssigned<\/a>"],[0,1,"<a href=\"ActivityService.php.html#129\">OCA\\Pipelinq\\Service\\ActivityService::publishStageChanged<\/a>"],[0,1,"<a href=\"ActivityService.php.html#158\">OCA\\Pipelinq\\Service\\ActivityService::publishStatusChanged<\/a>"],[0,1,"<a href=\"ActivityService.php.html#187\">OCA\\Pipelinq\\Service\\ActivityService::publishNoteAdded<\/a>"],[0,6,"<a href=\"ActivityService.php.html#218\">OCA\\Pipelinq\\Service\\ActivityService::publish<\/a>"],[0,1,"<a href=\"ConfigFileLoaderService.php.html#45\">OCA\\Pipelinq\\Service\\ConfigFileLoaderService::__construct<\/a>"],[0,4,"<a href=\"ConfigFileLoaderService.php.html#57\">OCA\\Pipelinq\\Service\\ConfigFileLoaderService::loadConfigurationFile<\/a>"],[0,3,"<a href=\"ConfigFileLoaderService.php.html#86\">OCA\\Pipelinq\\Service\\ConfigFileLoaderService::ensureSourceType<\/a>"],[0,5,"<a href=\"ContactDataBuilder.php.html#37\">OCA\\Pipelinq\\Service\\ContactDataBuilder::buildClientImportData<\/a>"],[0,4,"<a href=\"ContactDataBuilder.php.html#80\">OCA\\Pipelinq\\Service\\ContactDataBuilder::buildContactImportData<\/a>"],[0,4,"<a href=\"ContactDataBuilder.php.html#110\">OCA\\Pipelinq\\Service\\ContactDataBuilder::determineClientType<\/a>"],[0,2,"<a href=\"ContactDataBuilder.php.html#126\">OCA\\Pipelinq\\Service\\ContactDataBuilder::extractFirstValue<\/a>"],[0,1,"<a href=\"ContactImportService.php.html#40\">OCA\\Pipelinq\\Service\\ContactImportService::__construct<\/a>"],[0,1,"<a href=\"ContactImportService.php.html#55\">OCA\\Pipelinq\\Service\\ContactImportService::importAsClient<\/a>"],[0,1,"<a href=\"ContactImportService.php.html#75\">OCA\\Pipelinq\\Service\\ContactImportService::importAsContact<\/a>"],[0,1,"<a href=\"ContactImportService.php.html#95\">OCA\\Pipelinq\\Service\\ContactImportService::saveAndSerialize<\/a>"],[0,4,"<a href=\"ContactImportService.php.html#120\">OCA\\Pipelinq\\Service\\ContactImportService::serializeResult<\/a>"],[0,1,"<a href=\"ContactImportService.php.html#138\">OCA\\Pipelinq\\Service\\ContactImportService::getObjectService<\/a>"],[0,1,"<a href=\"ContactLinkedUidsService.php.html#41\">OCA\\Pipelinq\\Service\\ContactLinkedUidsService::__construct<\/a>"],[0,2,"<a href=\"ContactLinkedUidsService.php.html#53\">OCA\\Pipelinq\\Service\\ContactLinkedUidsService::getLinkedContactsUids<\/a>"],[0,6,"<a href=\"ContactLinkedUidsService.php.html#80\">OCA\\Pipelinq\\Service\\ContactLinkedUidsService::getLinkedUidsForType<\/a>"],[0,4,"<a href=\"ContactLinkedUidsService.php.html#119\">OCA\\Pipelinq\\Service\\ContactLinkedUidsService::serializeResult<\/a>"],[0,1,"<a href=\"ContactLinkedUidsService.php.html#137\">OCA\\Pipelinq\\Service\\ContactLinkedUidsService::getObjectService<\/a>"],[0,1,"<a href=\"ContactSyncService.php.html#42\">OCA\\Pipelinq\\Service\\ContactSyncService::__construct<\/a>"],[0,2,"<a href=\"ContactSyncService.php.html#59\">OCA\\Pipelinq\\Service\\ContactSyncService::searchContacts<\/a>"],[0,4,"<a href=\"ContactSyncService.php.html#85\">OCA\\Pipelinq\\Service\\ContactSyncService::importContact<\/a>"],[0,1,"<a href=\"ContactSyncService.php.html#120\">OCA\\Pipelinq\\Service\\ContactSyncService::syncToContacts<\/a>"],[0,3,"<a href=\"ContactSyncService.php.html#136\">OCA\\Pipelinq\\Service\\ContactSyncService::buildContactResults<\/a>"],[0,1,"<a href=\"ContactSyncService.php.html#164\">OCA\\Pipelinq\\Service\\ContactSyncService::formatContactResult<\/a>"],[0,3,"<a href=\"ContactSyncService.php.html#184\">OCA\\Pipelinq\\Service\\ContactSyncService::findContactByUid<\/a>"],[0,2,"<a href=\"ContactSyncService.php.html#204\">OCA\\Pipelinq\\Service\\ContactSyncService::extractFirstValue<\/a>"],[0,1,"<a href=\"ContactVcardPropertyBuilder.php.html#39\">OCA\\Pipelinq\\Service\\ContactVcardPropertyBuilder::__construct<\/a>"],[0,5,"<a href=\"ContactVcardPropertyBuilder.php.html#53\">OCA\\Pipelinq\\Service\\ContactVcardPropertyBuilder::buildProperties<\/a>"],[0,5,"<a href=\"ContactVcardPropertyBuilder.php.html#93\">OCA\\Pipelinq\\Service\\ContactVcardPropertyBuilder::addClientProperties<\/a>"],[0,4,"<a href=\"ContactVcardPropertyBuilder.php.html#122\">OCA\\Pipelinq\\Service\\ContactVcardPropertyBuilder::addContactProperties<\/a>"],[0,4,"<a href=\"ContactVcardPropertyBuilder.php.html#145\">OCA\\Pipelinq\\Service\\ContactVcardPropertyBuilder::resolveClientName<\/a>"],[0,4,"<a href=\"ContactVcardPropertyBuilder.php.html#177\">OCA\\Pipelinq\\Service\\ContactVcardPropertyBuilder::serializeResult<\/a>"],[0,1,"<a href=\"ContactVcardPropertyBuilder.php.html#195\">OCA\\Pipelinq\\Service\\ContactVcardPropertyBuilder::getObjectService<\/a>"],[0,1,"<a href=\"ContactVcardService.php.html#45\">OCA\\Pipelinq\\Service\\ContactVcardService::__construct<\/a>"],[0,3,"<a href=\"ContactVcardService.php.html#63\">OCA\\Pipelinq\\Service\\ContactVcardService::syncToContacts<\/a>"],[0,4,"<a href=\"ContactVcardService.php.html#99\">OCA\\Pipelinq\\Service\\ContactVcardService::fetchPipelinqObject<\/a>"],[0,4,"<a href=\"ContactVcardService.php.html#133\">OCA\\Pipelinq\\Service\\ContactVcardService::serializeResult<\/a>"],[0,1,"<a href=\"ContactVcardService.php.html#151\">OCA\\Pipelinq\\Service\\ContactVcardService::getObjectService<\/a>"],[0,1,"<a href=\"ContactVcardWriterService.php.html#43\">OCA\\Pipelinq\\Service\\ContactVcardWriterService::__construct<\/a>"],[0,8,"<a href=\"ContactVcardWriterService.php.html#60\">OCA\\Pipelinq\\Service\\ContactVcardWriterService::writeToAddressBook<\/a>"],[0,6,"<a href=\"ContactVcardWriterService.php.html#109\">OCA\\Pipelinq\\Service\\ContactVcardWriterService::extractContactsUid<\/a>"],[0,2,"<a href=\"ContactVcardWriterService.php.html#135\">OCA\\Pipelinq\\Service\\ContactVcardWriterService::storeContactsUidOnObject<\/a>"],[0,1,"<a href=\"ContactVcardWriterService.php.html#166\">OCA\\Pipelinq\\Service\\ContactVcardWriterService::getObjectService<\/a>"],[0,1,"<a href=\"DefaultPipelineService.php.html#42\">OCA\\Pipelinq\\Service\\DefaultPipelineService::__construct<\/a>"],[0,6,"<a href=\"DefaultPipelineService.php.html#55\">OCA\\Pipelinq\\Service\\DefaultPipelineService::createDefaultPipelines<\/a>"],[0,1,"<a href=\"DefaultPipelineService.php.html#123\">OCA\\Pipelinq\\Service\\DefaultPipelineService::savePipeline<\/a>"],[0,1,"<a href=\"DefaultPipelineService.php.html#144\">OCA\\Pipelinq\\Service\\DefaultPipelineService::getObjectService<\/a>"],[0,1,"<a href=\"IcpConfigService.php.html#55\">OCA\\Pipelinq\\Service\\IcpConfigService::__construct<\/a>"],[0,1,"<a href=\"IcpConfigService.php.html#65\">OCA\\Pipelinq\\Service\\IcpConfigService::getSettings<\/a>"],[0,12,"<a href=\"IcpConfigService.php.html#110\">OCA\\Pipelinq\\Service\\IcpConfigService::saveSettings<\/a>"],[0,1,"<a href=\"IcpConfigService.php.html#180\">OCA\\Pipelinq\\Service\\IcpConfigService::isConfigured<\/a>"],[0,1,"<a href=\"IcpConfigService.php.html#192\">OCA\\Pipelinq\\Service\\IcpConfigService::getKvkApiKey<\/a>"],[0,1,"<a href=\"IcpConfigService.php.html#206\">OCA\\Pipelinq\\Service\\IcpConfigService::getCriteria<\/a>"],[0,2,"<a href=\"IcpConfigService.php.html#235\">OCA\\Pipelinq\\Service\\IcpConfigService::getIcpHash<\/a>"],[0,2,"<a href=\"IcpConfigService.php.html#256\">OCA\\Pipelinq\\Service\\IcpConfigService::getJsonArray<\/a>"],[0,2,"<a href=\"IcpConfigService.php.html#281\">OCA\\Pipelinq\\Service\\IcpConfigService::setJsonArray<\/a>"],[0,2,"<a href=\"IcpConfigService.php.html#302\">OCA\\Pipelinq\\Service\\IcpConfigService::boolToString<\/a>"],[0,2,"<a href=\"IcpConfigService.php.html#318\">OCA\\Pipelinq\\Service\\IcpConfigService::maskApiKey<\/a>"],[0,1,"<a href=\"KvkApiClient.php.html#45\">OCA\\Pipelinq\\Service\\KvkApiClient::__construct<\/a>"],[0,9,"<a href=\"KvkApiClient.php.html#59\">OCA\\Pipelinq\\Service\\KvkApiClient::search<\/a>"],[0,4,"<a href=\"KvkApiClient.php.html#126\">OCA\\Pipelinq\\Service\\KvkApiClient::mapResult<\/a>"],[0,1,"<a href=\"NoteEventService.php.html#48\">OCA\\Pipelinq\\Service\\NoteEventService::__construct<\/a>"],[0,5,"<a href=\"NoteEventService.php.html#65\">OCA\\Pipelinq\\Service\\NoteEventService::triggerNoteEvents<\/a>"],[0,3,"<a href=\"NoteEventService.php.html#111\">OCA\\Pipelinq\\Service\\NoteEventService::fetchEntityData<\/a>"],[0,4,"<a href=\"NoteEventService.php.html#150\">OCA\\Pipelinq\\Service\\NoteEventService::publishNoteActivity<\/a>"],[0,1,"<a href=\"NotesService.php.html#50\">OCA\\Pipelinq\\Service\\NotesService::__construct<\/a>"],[0,3,"<a href=\"NotesService.php.html#66\">OCA\\Pipelinq\\Service\\NotesService::getNotes<\/a>"],[0,2,"<a href=\"NotesService.php.html#109\">OCA\\Pipelinq\\Service\\NotesService::addNote<\/a>"],[0,3,"<a href=\"NotesService.php.html#145\">OCA\\Pipelinq\\Service\\NotesService::deleteNote<\/a>"],[0,1,"<a href=\"NotesService.php.html#168\">OCA\\Pipelinq\\Service\\NotesService::deleteAllNotes<\/a>"],[0,1,"<a href=\"NotificationService.php.html#55\">OCA\\Pipelinq\\Service\\NotificationService::__construct<\/a>"],[0,3,"<a href=\"NotificationService.php.html#73\">OCA\\Pipelinq\\Service\\NotificationService::notifyAssignment<\/a>"],[0,2,"<a href=\"NotificationService.php.html#114\">OCA\\Pipelinq\\Service\\NotificationService::notifyStageChange<\/a>"],[0,2,"<a href=\"NotificationService.php.html#149\">OCA\\Pipelinq\\Service\\NotificationService::notifyStatusChange<\/a>"],[0,2,"<a href=\"NotificationService.php.html#184\">OCA\\Pipelinq\\Service\\NotificationService::notifyNoteAdded<\/a>"],[0,4,"<a href=\"NotificationService.php.html#219\">OCA\\Pipelinq\\Service\\NotificationService::send<\/a>"],[0,1,"<a href=\"ObjectEventDispatcher.php.html#38\">OCA\\Pipelinq\\Service\\ObjectEventDispatcher::__construct<\/a>"],[0,2,"<a href=\"ObjectEventDispatcher.php.html#55\">OCA\\Pipelinq\\Service\\ObjectEventDispatcher::dispatchCreated<\/a>"],[0,1,"<a href=\"ObjectEventDispatcher.php.html#86\">OCA\\Pipelinq\\Service\\ObjectEventDispatcher::dispatchAssigneeChange<\/a>"],[0,2,"<a href=\"ObjectEventDispatcher.php.html#117\">OCA\\Pipelinq\\Service\\ObjectEventDispatcher::dispatchStageChange<\/a>"],[0,2,"<a href=\"ObjectEventDispatcher.php.html#147\">OCA\\Pipelinq\\Service\\ObjectEventDispatcher::dispatchStatusChange<\/a>"],[0,2,"<a href=\"ObjectEventDispatcher.php.html#174\">OCA\\Pipelinq\\Service\\ObjectEventDispatcher::nullIfEmpty<\/a>"],[0,2,"<a href=\"ObjectEventDispatcher.php.html#188\">OCA\\Pipelinq\\Service\\ObjectEventDispatcher::getCurrentUser<\/a>"],[0,1,"<a href=\"ObjectEventHandlerService.php.html#36\">OCA\\Pipelinq\\Service\\ObjectEventHandlerService::__construct<\/a>"],[0,2,"<a href=\"ObjectEventHandlerService.php.html#50\">OCA\\Pipelinq\\Service\\ObjectEventHandlerService::handleCreated<\/a>"],[0,4,"<a href=\"ObjectEventHandlerService.php.html#76\">OCA\\Pipelinq\\Service\\ObjectEventHandlerService::handleUpdated<\/a>"],[0,2,"<a href=\"ObjectEventHandlerService.php.html#128\">OCA\\Pipelinq\\Service\\ObjectEventHandlerService::isRelevantEntityType<\/a>"],[0,2,"<a href=\"ObjectEventHandlerService.php.html#144\">OCA\\Pipelinq\\Service\\ObjectEventHandlerService::extractOldData<\/a>"],[0,3,"<a href=\"ObjectUpdateDiffService.php.html#41\">OCA\\Pipelinq\\Service\\ObjectUpdateDiffService::dispatchAssigneeChangeIfNeeded<\/a>"],[0,3,"<a href=\"ObjectUpdateDiffService.php.html#74\">OCA\\Pipelinq\\Service\\ObjectUpdateDiffService::dispatchStageChangeIfNeeded<\/a>"],[0,3,"<a href=\"ObjectUpdateDiffService.php.html#108\">OCA\\Pipelinq\\Service\\ObjectUpdateDiffService::dispatchStatusChangeIfNeeded<\/a>"],[0,1,"<a href=\"OpenCorporatesApiClient.php.html#45\">OCA\\Pipelinq\\Service\\OpenCorporatesApiClient::__construct<\/a>"],[0,6,"<a href=\"OpenCorporatesApiClient.php.html#58\">OCA\\Pipelinq\\Service\\OpenCorporatesApiClient::search<\/a>"],[0,2,"<a href=\"OpenCorporatesApiClient.php.html#115\">OCA\\Pipelinq\\Service\\OpenCorporatesApiClient::mapResult<\/a>"],[0,1,"<a href=\"PipelineStageData.php.html#36\">OCA\\Pipelinq\\Service\\PipelineStageData::getSalesPipelineData<\/a>"],[0,1,"<a href=\"PipelineStageData.php.html#59\">OCA\\Pipelinq\\Service\\PipelineStageData::getServiceRequestsPipelineData<\/a>"],[0,1,"<a href=\"PipelineStageData.php.html#79\">OCA\\Pipelinq\\Service\\PipelineStageData::getSalesStages<\/a>"],[0,1,"<a href=\"PipelineStageData.php.html#146\">OCA\\Pipelinq\\Service\\PipelineStageData::getServiceRequestStages<\/a>"],[0,1,"<a href=\"ProspectDiscoveryService.php.html#55\">OCA\\Pipelinq\\Service\\ProspectDiscoveryService::__construct<\/a>"],[0,12,"<a href=\"ProspectDiscoveryService.php.html#72\">OCA\\Pipelinq\\Service\\ProspectDiscoveryService::discover<\/a>"],[0,3,"<a href=\"ProspectDiscoveryService.php.html#165\">OCA\\Pipelinq\\Service\\ProspectDiscoveryService::createLeadFromProspect<\/a>"],[0,8,"<a href=\"ProspectDiscoveryService.php.html#210\">OCA\\Pipelinq\\Service\\ProspectDiscoveryService::excludeExistingClients<\/a>"],[0,4,"<a href=\"ProspectDiscoveryService.php.html#249\">OCA\\Pipelinq\\Service\\ProspectDiscoveryService::getExistingClientNames<\/a>"],[0,5,"<a href=\"ProspectDiscoveryService.php.html#276\">OCA\\Pipelinq\\Service\\ProspectDiscoveryService::getObjectStoreConfig<\/a>"],[0,4,"<a href=\"ProspectDiscoveryService.php.html#305\">OCA\\Pipelinq\\Service\\ProspectDiscoveryService::getFromCache<\/a>"],[0,2,"<a href=\"ProspectDiscoveryService.php.html#329\">OCA\\Pipelinq\\Service\\ProspectDiscoveryService::setInCache<\/a>"],[0,2,"<a href=\"ProspectScoringService.php.html#44\">OCA\\Pipelinq\\Service\\ProspectScoringService::score<\/a>"],[0,1,"<a href=\"ProspectScoringService.php.html#100\">OCA\\Pipelinq\\Service\\ProspectScoringService::scoreAll<\/a>"],[0,5,"<a href=\"ProspectScoringService.php.html#126\">OCA\\Pipelinq\\Service\\ProspectScoringService::scoreSbi<\/a>"],[0,9,"<a href=\"ProspectScoringService.php.html#150\">OCA\\Pipelinq\\Service\\ProspectScoringService::scoreEmployeeCount<\/a>"],[0,5,"<a href=\"ProspectScoringService.php.html#179\">OCA\\Pipelinq\\Service\\ProspectScoringService::scoreLocation<\/a>"],[0,5,"<a href=\"ProspectScoringService.php.html#203\">OCA\\Pipelinq\\Service\\ProspectScoringService::scoreLegalForm<\/a>"],[0,1,"<a href=\"SchemaMapService.php.html#57\">OCA\\Pipelinq\\Service\\SchemaMapService::__construct<\/a>"],[0,4,"<a href=\"SchemaMapService.php.html#70\">OCA\\Pipelinq\\Service\\SchemaMapService::resolveEntityType<\/a>"],[0,4,"<a href=\"SchemaMapService.php.html#88\">OCA\\Pipelinq\\Service\\SchemaMapService::buildSchemaMap<\/a>"],[0,1,"<a href=\"SettingsLoadService.php.html#59\">OCA\\Pipelinq\\Service\\SettingsLoadService::__construct<\/a>"],[0,1,"<a href=\"SettingsLoadService.php.html#75\">OCA\\Pipelinq\\Service\\SettingsLoadService::loadSettings<\/a>"],[0,6,"<a href=\"SettingsLoadService.php.html#102\">OCA\\Pipelinq\\Service\\SettingsLoadService::updateObjectTypeConfiguration<\/a>"],[0,1,"<a href=\"SettingsLoadService.php.html#136\">OCA\\Pipelinq\\Service\\SettingsLoadService::getConfigurationService<\/a>"],[0,2,"<a href=\"SettingsMapBuilder.php.html#43\">OCA\\Pipelinq\\Service\\SettingsMapBuilder::buildSchemaSlugMap<\/a>"],[0,3,"<a href=\"SettingsMapBuilder.php.html#63\">OCA\\Pipelinq\\Service\\SettingsMapBuilder::findRegisterIdBySlug<\/a>"],[0,6,"<a href=\"SettingsMapBuilder.php.html#84\">OCA\\Pipelinq\\Service\\SettingsMapBuilder::findDefaultViewId<\/a>"],[0,3,"<a href=\"SettingsMapBuilder.php.html#117\">OCA\\Pipelinq\\Service\\SettingsMapBuilder::addSchemaToMap<\/a>"],[0,4,"<a href=\"SettingsMapBuilder.php.html#138\">OCA\\Pipelinq\\Service\\SettingsMapBuilder::extractRegisterIdIfMatch<\/a>"],[0,4,"<a href=\"SettingsMapBuilder.php.html#163\">OCA\\Pipelinq\\Service\\SettingsMapBuilder::normalizeToArray<\/a>"],[0,1,"<a href=\"SettingsService.php.html#66\">OCA\\Pipelinq\\Service\\SettingsService::__construct<\/a>"],[0,2,"<a href=\"SettingsService.php.html#80\">OCA\\Pipelinq\\Service\\SettingsService::getSettings<\/a>"],[0,3,"<a href=\"SettingsService.php.html#97\">OCA\\Pipelinq\\Service\\SettingsService::updateSettings<\/a>"],[0,1,"<a href=\"SettingsService.php.html#118\">OCA\\Pipelinq\\Service\\SettingsService::loadSettings<\/a>"],[0,1,"<a href=\"SettingsService.php.html#129\">OCA\\Pipelinq\\Service\\SettingsService::createDefaultPipelines<\/a>"],[0,2,"<a href=\"SettingsService.php.html#141\">OCA\\Pipelinq\\Service\\SettingsService::getUserSettings<\/a>"],[0,4,"<a href=\"SettingsService.php.html#164\">OCA\\Pipelinq\\Service\\SettingsService::updateUserSettings<\/a>"],[0,1,"<a href=\"SettingsService.php.html#193\">OCA\\Pipelinq\\Service\\SettingsService::getConfigValue<\/a>"],[0,1,"<a href=\"SettingsService.php.html#206\">OCA\\Pipelinq\\Service\\SettingsService::setConfigValue<\/a>"],[0,1,"<a href=\"SystemTagCrudService.php.html#51\">OCA\\Pipelinq\\Service\\SystemTagCrudService::__construct<\/a>"],[0,2,"<a href=\"SystemTagCrudService.php.html#65\">OCA\\Pipelinq\\Service\\SystemTagCrudService::getTagIdsForType<\/a>"],[0,2,"<a href=\"SystemTagCrudService.php.html#86\">OCA\\Pipelinq\\Service\\SystemTagCrudService::resolveTagData<\/a>"],[0,2,"<a href=\"SystemTagCrudService.php.html#108\">OCA\\Pipelinq\\Service\\SystemTagCrudService::createOrReuseSystemTag<\/a>"],[0,1,"<a href=\"SystemTagCrudService.php.html#133\">OCA\\Pipelinq\\Service\\SystemTagCrudService::assignTag<\/a>"],[0,2,"<a href=\"SystemTagCrudService.php.html#150\">OCA\\Pipelinq\\Service\\SystemTagCrudService::unassignAndCleanup<\/a>"],[0,1,"<a href=\"SystemTagCrudService.php.html#176\">OCA\\Pipelinq\\Service\\SystemTagCrudService::renameSystemTag<\/a>"],[0,5,"<a href=\"SystemTagCrudService.php.html#195\">OCA\\Pipelinq\\Service\\SystemTagCrudService::isTagUsedByOtherTypes<\/a>"],[0,1,"<a href=\"SystemTagService.php.html#40\">OCA\\Pipelinq\\Service\\SystemTagService::__construct<\/a>"],[0,2,"<a href=\"SystemTagService.php.html#53\">OCA\\Pipelinq\\Service\\SystemTagService::getTags<\/a>"],[0,2,"<a href=\"SystemTagService.php.html#78\">OCA\\Pipelinq\\Service\\SystemTagService::addTag<\/a>"],[0,1,"<a href=\"SystemTagService.php.html#113\">OCA\\Pipelinq\\Service\\SystemTagService::removeTag<\/a>"],[0,2,"<a href=\"SystemTagService.php.html#134\">OCA\\Pipelinq\\Service\\SystemTagService::renameTag<\/a>"],[0,4,"<a href=\"SystemTagService.php.html#168\">OCA\\Pipelinq\\Service\\SystemTagService::ensureDefaults<\/a>"],[0,5,"<a href=\"SystemTagService.php.html#200\">OCA\\Pipelinq\\Service\\SystemTagService::validateTagNameUnique<\/a>"]], 'Method Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getComplexityData(data, label) {
+    var values = [];
+    $.each(data, function(key) {
+      var value = Math.round(data[key][0]*100) / 100;
+      values.push({
+        x: value,
+        y: data[key][1],
+        class: data[key][2],
+        size: 0.05,
+        shape: 'diamond'
+      });
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+});
+  </script>
+ </body>
+</html>
