@@ -117,3 +117,13 @@ export default {
 	},
 }
 </script>
+
+<style>
+/* Fix KPI card centering inside CnDashboardPage widget wrappers.
+   Must be unscoped in root component to override library scoped styles. */
+.cn-widget-wrapper__content {
+	display: flex !important;
+	align-items: center !important;
+	padding: 16px !important;
+}
+</style>
