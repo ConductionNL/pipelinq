@@ -104,3 +104,43 @@ External systems and dashboards need timeline data.
 - WHEN `GET /api/contacts/{contact-1}/timeline?page=1&limit=20` is called
 - THEN the first 20 entries (newest first) MUST be returned
 - AND pagination metadata MUST indicate total count and available pages
+
+---
+
+### Current Implementation Status
+
+**Partially implemented.** The app has Nextcloud Activity integration for CRM events, but not a dedicated per-entity unified timeline.
+
+Implemented:
+- `lib/Service/ActivityService.php` -- publishes events to the Nextcloud activity stream: `publishCreated()`, `publishAssigned()`, `publishStageChanged()`, `publishStatusChanged()`, `publishNoteAdded()`. Covers lead/request creation, assignment, stage/status changes, and note additions.
+- `lib/Activity/Provider.php` -- renders activity events with human-readable messages and Pipelinq deep links.
+- `lib/Activity/Filter.php` -- filters the activity stream to show only Pipelinq events.
+- `lib/Activity/Setting/AssignmentSetting.php`, `StageStatusSetting.php`, `NoteSetting.php` -- user-configurable notification preferences for activity types.
+- `lib/Listener/ObjectEventListener.php` + `lib/Service/ObjectEventHandlerService.php` -- listens to OpenRegister `ObjectCreatedEvent` and `ObjectUpdatedEvent` to trigger activity publishing for leads and requests.
+- `lib/Service/ObjectUpdateDiffService.php` -- detects assignee, stage, and status changes between old and new object versions.
+- `src/views/Dashboard.vue` -- the Nextcloud dashboard widget `RecentActivitiesWidget` (registered in `lib/Dashboard/RecentActivitiesWidget.php`) shows recent activities.
+- The `CnDetailPage` component used by `ClientDetail.vue`, `LeadDetail.vue`, `RequestDetail.vue` renders a sidebar that uses OpenRegister's audit log, which provides a basic timeline.
+
+NOT implemented:
+- No dedicated per-entity timeline API endpoint (`GET /api/contacts/{id}/timeline`).
+- No unified timeline view that aggregates notes, emails, documents, field changes, and case events into a single chronological feed per contact/organization/pipeline item.
+- No manual entry types for calls and meetings (call logging, meeting logging forms).
+- No timeline filtering or search capability within entity detail views.
+- No cross-entity aggregation (organization timeline aggregating all linked contacts' events).
+- No linked Procest case event integration in the contact timeline.
+- Activity events only cover leads and requests -- client and contact entity events are NOT published to the activity stream.
+- Document upload and field change events are NOT captured as timeline entries.
+
+### Standards & References
+- Nextcloud Activity API (`OCP\Activity\IManager`) -- currently used for event publishing
+- Schema.org `Action` / `InteractionCounter` -- could model timeline events
+- VNG Klantinteracties `Contactmoment` -- relevant for government-facing timeline entries
+- OpenRegister audit log -- provides basic versioned change history per object
+
+### Specificity Assessment
+- The spec is well-structured with clear scenarios and event types.
+- **Missing**: The spec does not specify how timeline entries are stored -- are they OpenRegister objects, Nextcloud Activity entries, or a separate storage mechanism? The current implementation uses Nextcloud Activity (global stream) which is not the same as a per-entity timeline.
+- **Missing**: No API contract for the timeline endpoint (response schema, pagination format).
+- **Missing**: No specification of how manual entries (calls, meetings) link to multiple entities simultaneously.
+- **Ambiguous**: The spec says "timeline MUST integrate with linked cases" but does not define how Procest case events are discovered or polled.
+- **Open question**: Should the timeline be powered by the Nextcloud Activity stream, OpenRegister audit log, or a dedicated timeline entity? Each approach has different trade-offs for querying and performance.

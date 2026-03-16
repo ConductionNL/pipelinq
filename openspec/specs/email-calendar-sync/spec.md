@@ -114,3 +114,42 @@ Each user controls their own email sync preferences.
 - THEN email sync MUST be disabled by default
 - AND the user MUST explicitly enable it and select mail accounts
 - AND an admin MUST be able to enforce email sync for all users (organization policy)
+
+---
+
+### Current Implementation Status
+
+**NOT implemented.** No email or calendar sync functionality exists in the codebase.
+
+- No integration with Nextcloud Mail app (`OCA\Mail`).
+- No integration with Nextcloud Calendar app (`OCA\DAV`).
+- No email-to-contact matching logic.
+- No email sync configuration UI.
+- No calendar event creation from Pipelinq.
+- No follow-up/meeting scheduling from entity detail views.
+- No domain-based organization matching.
+- No "Link to Pipelinq" action in Nextcloud Mail.
+- No mail account selection or sync scope configuration.
+- No sync frequency or conflict handling.
+- The Nextcloud Contacts sync (`ContactSyncService`) is implemented but is separate from email/calendar sync.
+
+### Standards & References
+- Nextcloud Mail API -- `OCA\Mail\Service\MailManager` for accessing email accounts and messages
+- Nextcloud Calendar/DAV API -- `OCA\DAV\CalDAV\CalDavBackend` for calendar event creation
+- CalDAV (RFC 4791) -- calendar protocol used by Nextcloud Calendar
+- iCalendar (RFC 5545) -- event format for calendar entries
+- IMAP (RFC 3501) -- email retrieval protocol
+- vCard RFC 6350 -- for contact matching via email addresses
+- GDPR/AVG -- privacy considerations for email content indexing
+
+### Specificity Assessment
+- The spec is well-structured with clear scenarios covering the full sync lifecycle.
+- **NOT implementable as-is** -- several critical design decisions are unresolved:
+- **Missing**: No specification of how to access Nextcloud Mail messages programmatically. The Mail app's internal API is not stable or documented for third-party integration.
+- **Missing**: No specification of the sync mechanism (cron job, background task, event listener on Mail app events).
+- **Missing**: No specification of email content storage -- does Pipelinq store email bodies, or just metadata (subject, sender, date)?
+- **Missing**: No specification of the "Link to Pipelinq" UI integration in Nextcloud Mail (requires Mail app modification or extension point).
+- **Open question**: Does Nextcloud Mail expose events for new email arrival that Pipelinq can listen to? If not, polling is required, which has performance implications.
+- **Open question**: How should email thread tracking work across multiple contacts (CC'd contacts, forwarded emails)?
+- **Open question**: Should calendar sync create events in a dedicated "Pipelinq" calendar or the user's default calendar?
+- **Significant risk**: Nextcloud Mail and Calendar are separate apps with their own data models. Deep integration may require changes to those apps or use of unstable internal APIs.

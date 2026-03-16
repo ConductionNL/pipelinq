@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
+import { generateUrl } from '@nextcloud/router'
 import Dashboard from '../views/Dashboard.vue'
 import ClientList from '../views/clients/ClientList.vue'
 import ClientDetail from '../views/clients/ClientDetail.vue'
@@ -18,7 +19,8 @@ import PipelineManager from '../views/settings/PipelineManager.vue'
 Vue.use(Router)
 
 export default new Router({
-	mode: 'hash',
+	mode: 'history',
+	base: generateUrl('/apps/pipelinq'),
 	routes: [
 		{ path: '/', name: 'Dashboard', component: Dashboard },
 		{ path: '/clients', name: 'Clients', component: ClientList },

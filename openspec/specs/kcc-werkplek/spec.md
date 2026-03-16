@@ -212,3 +212,76 @@ The system MUST provide quick-action buttons for common KCC operations to minimi
 - WHEN the agent clicks "Status mededelen" on the zaak
 - THEN the system MUST display the current status in a citizen-friendly format
 - AND the agent MUST be able to mark the contactmoment as "Status informatieverzoek - afgehandeld"
+
+---
+
+### Current Implementation Status
+
+**NOT implemented.** No KCC werkplek (agent workspace) exists in the codebase.
+
+- No dedicated KCC agent landing screen or route.
+- No `contactmoment` schema in `lib/Settings/pipelinq_register.json` -- the register does not include this entity.
+- No citizen/business identification UI (BSN/KVK lookup).
+- No BRP or KVK API integration for identity verification (though `lib/Service/KvkApiClient.php` exists for prospect discovery, it is not used for KCC identification).
+- No open cases/zaken view integrated into the workspace.
+- No contact moment registration form.
+- No backoffice routing mechanism.
+- No contact timer component.
+- No quick-action buttons for KCC operations.
+- No queue management or display.
+- The existing `request` entity with `channel` property provides basic intake channel tracking, but is not the same as a VNG `Contactmoment`.
+- The existing client search functionality (`ClientSearchWidget`) could serve as a foundation for citizen identification, but lacks BSN/KVK lookup.
+
+**Mock Registers (dependency):** This spec depends on mock BRP and KVK registers being available in OpenRegister for development and testing. These registers are available as JSON files that can be loaded on demand from `openregister/lib/Settings/`. Production deployments should connect to the actual Haal Centraal BRP API and KVK Handelsregister API via OpenConnector.
+
+### Using Mock Register Data
+
+This spec depends on the **BRP** and **KVK** mock registers for citizen/business identification.
+
+**Loading the registers:**
+```bash
+# Load BRP register (35 persons, register slug: "brp", schema: "ingeschreven-persoon")
+docker exec -u www-data nextcloud php occ openregister:load-register /var/www/html/custom_apps/openregister/lib/Settings/brp_register.json
+
+# Load KVK register (16 businesses + 14 branches, register slug: "kvk", schemas: "maatschappelijke-activiteit", "vestiging")
+docker exec -u www-data nextcloud php occ openregister:load-register /var/www/html/custom_apps/openregister/lib/Settings/kvk_register.json
+```
+
+**Test data for this spec's use cases:**
+- **Citizen identification by BSN**: BSN `999993653` (Suzanne Moulin) -- test BSN lookup in identification panel, verify name/address/municipality display
+- **Citizen identification by BSN**: BSN `999992570` (Albert Vogel, man with partner and child) -- test person with partner info
+- **Business identification by KVK**: KVK `69599084` (Test EMZ Dagobert, Amsterdam) -- test KVK lookup, verify business name/address/legal form display
+- **Business identification by KVK**: KVK `68727720` (Test NV Katrien, Veendam) -- test NV legal form display
+- **No match scenario**: BSN `000000000` -- test "no matching client" flow, verify "Nieuwe klant aanmaken" pre-population
+
+**Querying mock data:**
+```bash
+# Identify citizen by BSN
+curl "http://localhost:8080/index.php/apps/openregister/api/objects/{brp_register_id}/{person_schema_id}?_search=999993653" -u admin:admin
+
+# Identify business by KVK number
+curl "http://localhost:8080/index.php/apps/openregister/api/objects/{kvk_register_id}/{business_schema_id}?_search=69599084" -u admin:admin
+```
+
+### Standards & References
+- VNG Klantinteracties API -- defines `Contactmoment`, `Klant`, `Medewerker`, `Organisatorische eenheid` entities
+- Haal Centraal BRP Personen Bevragen API v2 -- for BSN-based citizen lookup (requires DigiD/PKI certificate)
+- KVK API (Basisregistratie Handelsregister) -- for KVK number-based business lookup
+- ZGW Zaken API (Zaak-Documentservices) -- for retrieving open cases per citizen/business
+- Common Ground -- architectural principles for cross-system data access
+- AVG/GDPR -- doelbinding requirements for accessing personal data
+- WCAG AA -- accessibility for government-facing interfaces
+- NEN-ISO 18295 -- Customer contact centres service requirements
+
+### Specificity Assessment
+- The spec is comprehensive and well-structured, covering the full KCC agent workflow.
+- **NOT implementable as-is** due to significant external dependencies:
+- **Missing**: No specification of how BRP/KVK sources are configured in OpenConnector. This requires OpenConnector source definitions and likely API keys/certificates.
+- **Missing**: No specification of the `contactmoment` schema (entity definition, properties, required fields). This needs to be added to `pipelinq_register.json`.
+- **Missing**: No specification of how ZGW Zaken API is called -- is it via OpenConnector, direct HTTP, or via the Procest app?
+- **Missing**: No specification of queue management -- does Pipelinq manage the phone queue, or integrate with a telephony system (e.g., Asterisk, Microsoft Teams)?
+- **Missing**: No specification of user roles/permissions for KCC agents vs regular CRM users.
+- **Missing**: No specification of the "departments" list for backoffice routing -- where are departments configured?
+- **Open question**: Should the KCC werkplek be a separate Nextcloud app or a module within Pipelinq?
+- **Open question**: How does the KCC werkplek relate to the existing client/request management? Should contactmomenten be a separate entity or an extension of requests?
+- **Significant dependency**: BRP API access requires government certificates and agreements -- not available in development environments.

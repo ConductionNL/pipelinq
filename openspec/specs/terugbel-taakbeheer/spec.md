@@ -201,3 +201,44 @@ Tasks created via terugbel-taakbeheer MUST integrate seamlessly with the existin
 - GIVEN Petra has 5 terugbelverzoeken, 3 lead follow-ups, and 2 request tasks
 - WHEN she filters her `my-work` inbox by type "Terugbelverzoek"
 - THEN only the 5 terugbelverzoeken MUST be displayed
+
+---
+
+### Current Implementation Status
+
+**Implemented:**
+- Nothing from this spec is implemented. There is no task/terugbelverzoek entity, no callback workflow, and no backoffice routing system.
+
+**Not yet implemented:**
+- **Create Terugbelverzoek:** No `taak` schema in `pipelinq_register.json`. No callback creation form or API.
+- **Create Follow-up Task:** No generic follow-up task entity separate from leads and requests.
+- **Task Assignment and Routing:** No group/department assignment. No Nextcloud group inbox concept. No claim mechanism.
+- **Task Status Tracking:** No task status lifecycle (open, in_behandeling, afgerond, verlopen). No auto-expiry for missed deadlines.
+- **Priority and Deadline Management:** While lead/request priorities exist, there is no task-specific priority/deadline system with escalation.
+- **Citizen Status Notification:** No outbound citizen notification system (email, MijnOverheid, SMS).
+- **Overlap with My-Work:** The My Work view (`MyWork.vue`) exists but only shows leads and requests. It does not include tasks, terugbelverzoeken, or support filtering by task type.
+- **Group-based routing:** No Nextcloud group integration for team inboxes.
+- **Escalation notifications:** No automated escalation when deadlines approach.
+- **Task history/audit trail:** While the audit trail plugin exists, there is no task-specific history for reassignments and status changes.
+
+**Partial implementations:**
+- The My Work view provides the "personal inbox" pattern that terugbelverzoeken should integrate with. The temporal grouping, priority sorting, and overdue detection patterns could be reused.
+- The notification infrastructure (`NotificationService`) could be extended to support task assignment and escalation notifications.
+- The request channel system (SystemTags) provides a pattern for task type configuration.
+
+### Standards & References
+- **VNG Klantinteracties:** `InterneTaak` entity from the VNG API specification for internal task management in municipalities.
+- **Schema.org:** `Action` and `ScheduleAction` types for task modeling.
+- **Common Ground:** Task management is a core component of KCC workflows in Dutch municipal IT architecture.
+- **MijnOverheid:** Dutch government citizen portal for status notifications (V1 feature).
+
+### Specificity Assessment
+- The spec is well-structured with clear scenarios for callback creation, assignment routing, status tracking, and priority management.
+- **Implementation complexity is high:** Requires new schema, group-based routing, deadline monitoring (background job), escalation logic, and citizen notification channels.
+- **Open questions:**
+  - How should group/department assignment work with Nextcloud groups? Are departments modeled as Nextcloud groups, OpenRegister objects, or a separate concept?
+  - Should the `taak` entity be a new schema in the `pipelinq` register or should it reuse/extend the `request` schema with a `type` field?
+  - How does the auto-expiry system work? Nextcloud background job (cron)? Or checked on-demand when inbox is viewed?
+  - What notification channels are supported for citizen notifications? The spec mentions email, MijnOverheid, and SMS but does not specify integration details.
+  - How should the "claim" mechanism work in a concurrent environment? Optimistic locking?
+  - What is the relationship between `taak` and `request`? Can a request become a task, or are they separate entities with separate lifecycles?

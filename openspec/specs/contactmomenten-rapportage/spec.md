@@ -195,3 +195,37 @@ The system MUST allow administrators to configure SLA targets per channel and co
 - WHEN the administrator configures: telefoon (30s wait, 5min handle), e-mail (8h response, 24h resolution), balie (5min wait, 10min handle), chat (30s response, 10min handle)
 - THEN the system MUST store separate targets per channel
 - AND the dashboard MUST evaluate each channel against its own targets
+
+---
+
+### Current Implementation Status
+
+**NOT implemented.** No contactmomenten schema, KPI dashboard, reporting, or SLA monitoring exists in the codebase.
+
+- No `contactmoment` schema in `lib/Settings/pipelinq_register.json`. The register defines: client, contact, lead, request, pipeline, product, productCategory, leadProduct -- but no contactmoment entity.
+- No reporting controllers, services, or dashboard components for contact moment analytics.
+- No SLA configuration storage or monitoring.
+- No agent performance tracking.
+- No channel analytics or wait time monitoring.
+- No CSV/PDF export for reports.
+- No scheduled report delivery mechanism.
+- The existing `src/views/Dashboard.vue` shows CRM KPIs (open leads, open requests, pipeline value, overdue items) but no contactmoment-based metrics.
+- The existing `request` entity has a `channel` property which could map to contactmoment channels, but the request entity is not the same as a contactmoment.
+
+### Standards & References
+- VNG Klantinteracties API -- defines `Contactmoment` entity with properties: kanaal, tekst, onderwerpLinks, initiatiefnemer, registratiedatum, medewerker, klant
+- Common Ground -- API-based data extraction for reporting
+- KCS (Knowledge-Centered Service) -- methodology for first-call resolution tracking
+- ISO 18295 -- Customer contact centres, requirements for service provision
+- WCAG AA -- for dashboard accessibility
+- Dutch government SLA standards for KCC operations (typically 80% calls answered within 30 seconds)
+
+### Specificity Assessment
+- The spec is well-structured with clear KPI definitions and calculation formulas.
+- **Implementable as-is** for the dashboard and basic KPIs, but depends on the contactmoment entity being implemented first (see kcc-werkplek spec).
+- **Missing**: No specification of the contactmoment schema (this is defined in the kcc-werkplek spec, creating a dependency).
+- **Missing**: No specification of how "real-time" data is delivered (WebSocket, polling interval, Server-Sent Events).
+- **Missing**: No specification of data retention -- how long should contactmoment data be kept for trend analysis?
+- **Ambiguous**: "Average handling time" requires a timer or duration field on contactmomenten -- how is this captured? Auto-timer vs manual entry?
+- **Open question**: Should reporting use OpenRegister's aggregation API or a dedicated analytics service?
+- **Open question**: How does the "queue length" KPI work? Pipelinq does not manage telephony queues -- is this an integration with an external PBX system?

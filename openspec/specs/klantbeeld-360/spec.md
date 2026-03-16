@@ -187,3 +187,90 @@ The system MUST support adding internal notes to the klantbeeld that are visible
 - WHEN any agent opens the klantbeeld for this client
 - THEN the pinned note MUST be displayed prominently at the top of the klantbeeld
 - AND the pinned note MUST have a visual distinction (e.g., warning banner)
+
+---
+
+### Current Implementation Status
+
+**Partially implemented.** The client detail view provides a basic customer profile, but the full 360-degree view with interaction history, cases, documents, and BRP/KVK enrichment is NOT implemented.
+
+Implemented (partial, via existing client detail view):
+- **Client profile**: `src/views/clients/ClientDetail.vue` displays: name, type, email, phone, website, address, notes. Shows "Synced with Contacts" badge when linked to Nextcloud Contacts.
+- **Linked contacts**: Contact persons list with name, role, email on client detail.
+- **Linked leads**: Leads list with title, stage, value on client detail.
+- **Linked requests**: Requests list with title, status on client detail.
+- **Delete with warnings**: Delete dialog warns about linked contacts/leads/requests.
+- **Sidebar**: `CnDetailPage` renders OpenRegister's sidebar with audit log (basic change history).
+- **Entity notes**: `EntityNotes.vue` component provides notes functionality via `ICommentsManager` (see entity-notes spec).
+- **KVK API client**: `lib/Service/KvkApiClient.php` exists for prospect discovery but could be repurposed for KVK enrichment.
+
+NOT implemented:
+- **Unified interaction history/timeline** -- no chronological timeline aggregating contactmomenten, zaak events, notes, and documents. The sidebar shows OpenRegister audit log but not a CRM-level timeline.
+- **Open/closed cases overview** -- no ZGW Zaken API integration to display open and closed zaken for a client.
+- **Documents overview** -- no document listing from linked cases or direct client attachments.
+- **BRP enrichment** -- no BSN field on client schema, no BRP API integration, no "Verrijk met BRP" button.
+- **KVK enrichment** -- the KVK API client exists but is not integrated into the client detail view for on-demand enrichment.
+- **Summary statistics** -- no aggregated stats panel (open leads count/value, won value, case duration, last activity).
+- **Privacy/access control** -- no doelbinding logging, no AVG audit trail for data access, no role-based visibility filtering.
+- **Pinned notes** -- no pin/unpin functionality for important notes.
+- **Filter by type/date** on interaction history -- not applicable since timeline does not exist.
+- **BSN field** -- not in the client schema (`pipelinq_register.json`). The schema has: name, type, email, phone, address, website, industry, notes, contactsUid -- but no BSN, KVK number, or taxID field.
+
+**Mock Registers (dependency):** This spec depends on mock BRP and KVK registers being available in OpenRegister for development and testing. These registers are available as JSON files that can be loaded on demand from `openregister/lib/Settings/`. Production deployments should connect to the actual Haal Centraal BRP API and KVK Handelsregister API via OpenConnector.
+
+### Using Mock Register Data
+
+This spec depends on the **BRP** and **KVK** mock registers.
+
+**Loading the registers:**
+```bash
+# Load BRP register (35 persons, register slug: "brp", schema: "ingeschreven-persoon")
+docker exec -u www-data nextcloud php occ openregister:load-register /var/www/html/custom_apps/openregister/lib/Settings/brp_register.json
+
+# Load KVK register (16 businesses + 14 branches, register slug: "kvk", schemas: "maatschappelijke-activiteit", "vestiging")
+docker exec -u www-data nextcloud php occ openregister:load-register /var/www/html/custom_apps/openregister/lib/Settings/kvk_register.json
+```
+
+**Test data for this spec's use cases:**
+- **BRP enrichment**: BSN `999993653` (Suzanne Moulin, French national in Rotterdam) -- test "Verrijk met BRP" button to display address, nationality, partner info
+- **BRP enrichment**: BSN `999990627` (Stephan Janssen, father with 2 children) -- test family relationships display
+- **BRP enrichment**: BSN `999999655` (Astrid Abels, deceased) -- test edge case handling
+- **KVK enrichment**: KVK `69599084` (Test EMZ Dagobert, Eenmanszaak Amsterdam) -- test "Verrijk met KVK" button
+- **KVK enrichment**: KVK `68750110` (Test BV Donald, BV Lollum) -- test business data display with vestiging
+
+**Querying mock data:**
+```bash
+# Find person by BSN
+curl "http://localhost:8080/index.php/apps/openregister/api/objects/{brp_register_id}/{person_schema_id}?_search=999993653" -u admin:admin
+
+# Find business by KVK number
+curl "http://localhost:8080/index.php/apps/openregister/api/objects/{kvk_register_id}/{business_schema_id}?_search=69599084" -u admin:admin
+```
+
+**In Vue frontend stores:**
+```javascript
+const brpRegisterId = store.getters.getRegisterBySlug('brp')?.id
+const personSchemaId = store.getters.getSchemaBySlug('ingeschreven-persoon')?.id
+const response = await fetch(`/index.php/apps/openregister/api/objects/${brpRegisterId}/${personSchemaId}?_search=${bsn}`)
+```
+
+### Standards & References
+- VNG Klantinteracties API -- `Partij`, `Betrokkene`, `Contactmoment` entities for unified customer view
+- Haal Centraal BRP Personen Bevragen API v2 -- for BSN-based citizen data enrichment
+- KVK API (Basisregistratie Handelsregister) -- for KVK-based business data enrichment
+- ZGW Zaken API -- for retrieving cases linked to a citizen/business
+- AVG (Algemene Verordening Gegevensbescherming) -- doelbinding requirements for personal data access
+- Common Ground -- federated data access principles
+- WCAG AA -- accessibility for government-facing interfaces
+
+### Specificity Assessment
+- The spec is comprehensive and covers the full 360-degree customer view with detailed scenarios.
+- **NOT fully implementable as-is** due to significant external dependencies:
+- **Missing**: The client schema needs BSN and KVK number fields to enable identification and enrichment. These are not in the current data model.
+- **Missing**: No specification of how BRP/KVK data is cached or stored -- should enrichment data be saved on the client object or fetched on demand each time?
+- **Missing**: No specification of the ZGW Zaken API integration -- which endpoint, authentication, and how to discover cases by BSN/KVK.
+- **Missing**: No specification of the audit log format for AVG compliance -- what is logged, where, and how is it made immutable?
+- **Missing**: No specification of role definitions (frontoffice/backoffice) -- where are roles managed? Nextcloud groups? Custom role system?
+- **Open question**: Should the klantbeeld be a separate route/view or an enhanced version of the existing client detail view?
+- **Open question**: How does the doelbinding requirement work in practice? Is it a modal dialog before each BRP query, or a one-time declaration per session?
+- **Dependency**: BRP API access requires government certificates and secure connections -- not available in standard development environments.

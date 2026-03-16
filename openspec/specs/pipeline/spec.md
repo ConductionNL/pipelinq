@@ -650,3 +650,61 @@ See DESIGN-REFERENCES.md Section 3.7 for the admin settings wireframe showing:
 - "+ Add Pipeline" button
 - Default pipeline star indicator
 - Stage management within the edit view (ordered list with drag-and-drop reorder)
+
+---
+
+### Current Implementation Status
+
+**Implemented:**
+- **REQ-PIPE-001 (Pipeline CRUD):** Implemented via `src/views/settings/PipelineManager.vue` (admin settings) and `src/views/settings/PipelineForm.vue`. Pipelines stored as OpenRegister objects. Create, edit, delete operations are functional. Pipeline list shows title, stage count, entity types, stage preview, edit/delete actions, and default star indicator.
+- **REQ-PIPE-002 (Pipeline Entity Types):** Implemented via `propertyMappings` in the pipeline object. The `PipelineBoard.vue` supports multiple schema mappings per pipeline and includes a "Show" filter dropdown for mixed pipelines. Entity type badge distinction ([LEAD] blue, [REQ] orange) is implemented.
+- **REQ-PIPE-003 (Default Pipelines):** Implemented in `lib/Service/DefaultPipelineService.php` with `PipelineStageData` providing Sales Pipeline (7 stages with probabilities) and Service Requests pipeline. Idempotent check by title before creation.
+- **REQ-PIPE-004 (Stage CRUD):** Stages are embedded arrays within pipeline objects (not separate OpenRegister objects as the separate-entity model in this spec suggests). Stage management is in `PipelineForm.vue`.
+- **REQ-PIPE-006 (Kanban Board View):** Fully implemented in `src/views/pipeline/PipelineBoard.vue`:
+  - Stage columns with headers showing title, item count, and total value.
+  - `PipelineCard.vue` with entity type badge, title, priority indicator, value, assignee, aging badge, due date, and overdue styling.
+  - Drag-and-drop between stages using HTML5 drag API.
+  - Request cards are visually distinct from lead cards with different badge colors.
+  - Mixed entity kanban with "Show" filter (All, Leads only, Requests only).
+- **REQ-PIPE-007 (Pipeline View Toggle):** Implemented. Toggle between kanban and list view. List view has sortable columns (Title, Type, Stage, Assignee, Value, Due Date, Priority, Age). Filters preserved across toggle.
+- **REQ-PIPE-008 (Stage Column Headers):** Implemented with item count and total value. Value calculation sums only items with a `totalsProperty` mapping (leads have value, requests do not).
+- **REQ-PIPE-009 (Add Entity from Stage Column):** Not directly visible in current PipelineBoard -- no "+ Add" button per column.
+- **REQ-PIPE-010 (Pipeline Selection on Entity):** Leads and requests have `pipeline` and `stage` fields in their schemas. Default pipeline auto-assignment is handled in the lead/request creation forms.
+- **REQ-PIPE-014 (Stage Revenue Summary):** Column headers show total value. No pipeline-wide footer with total/weighted values.
+- **REQ-PIPE-015 (Error Scenarios):** Partial -- drag to same stage prevention is in `onDrop()` method (checks `data[columnProp] === targetStage.name`).
+- **REQ-PIPE-016 (Pipeline List on Admin Settings):** Implemented in `PipelineManager.vue` with star indicator for default, stage count, entity types, stage preview, edit/delete buttons.
+- **REQ-PIPE-017 (Pipeline Selector Dropdown):** Implemented in `PipelineBoard.vue` with NcSelect dropdown. Auto-selects default pipeline on mount.
+- **REQ-PIPE-018 (Pipeline Card Quick Actions):** Implemented in `PipelineCard.vue` with quick stage change dropdown and quick assign dropdown. Actions use `@click.stop` to prevent card navigation.
+- **Collapsed closed stages:** Implemented. Closed stages render as compact columns with title (uppercase) and count. Click to expand/collapse.
+- **Overdue highlighting:** Red left border on overdue cards (`pipeline-card--overdue`). Red date text in list view.
+- **Stale detection:** Stale badge shown on leads 14+ days since modification.
+- **Aging indicator:** "Xd" badge on cards with color coding (amber 7+, red 14+).
+
+**Not yet implemented:**
+- **REQ-PIPE-005 (Stage Validation):** No client-side or server-side validation for: unique order within pipeline, at least one non-closed stage, isWon requires isClosed, probability range 0-100. (Validation relies on OpenRegister schema constraints only.)
+- **REQ-PIPE-009 (Add Entity from Stage Column):** No "+ Add" button within stage columns.
+- **REQ-PIPE-011 (Stage Probability Mapping):** No auto-population of lead probability from stage probability on drag-and-drop. Stage probability values exist on default pipelines but are not applied to leads.
+- **REQ-PIPE-012 (Pipeline Analytics):** Not implemented. No conversion rate calculations, no average time per stage analysis.
+- **REQ-PIPE-013 (Pipeline Funnel Visualization):** Not implemented. No funnel chart on dashboard.
+- **REQ-PIPE-014 (Stage Revenue Summary) - Pipeline-wide footer:** No footer showing total pipeline value or weighted pipeline value.
+- **REQ-PIPE-006 Scenario 6 (Delete pipeline with active items):** Warning about active items and reference clearing is not verified in the current UI.
+- **List view footer:** No "Showing N items - Total value: EUR X - Weighted: EUR Y" footer in list view.
+- **View persistence:** Selected view mode (kanban/list) is not persisted across navigation.
+
+**Partial implementations:**
+- Stage data model uses embedded arrays within pipeline objects (simpler) rather than separate OpenRegister objects (as some parts of this spec describe). The spec has an internal contradiction between the "embedded array" model in openregister-integration spec and the "separate OpenRegister objects" model here.
+
+### Standards & References
+- **Schema.org:** `ItemList` for Pipeline, `DefinedTerm` for stages (spec reference, but implementation uses embedded arrays).
+- **Industry patterns:** Trello-style kanban boards, HubSpot pipeline model, Nextcloud Deck column pattern.
+- **HTML5 Drag and Drop API:** Used for card movement between stages.
+- **WCAG AA:** Entity type distinction uses both color and text badges (not color-alone).
+
+### Specificity Assessment
+- This is the most comprehensive spec in the batch with 65 scenarios across 18 requirements. It is highly specific and implementable.
+- **Key contradiction:** Stages as embedded arrays (openregister-integration spec) vs. stages as separate OpenRegister objects (this spec's REQ-PIPE-004). The implementation uses embedded arrays. This needs resolution.
+- **Missing:** No specification for pipeline permissions (who can create/edit/delete pipelines -- admins only? any user?). The spec references "admin settings" but doesn't define the permission model.
+- **Open questions:**
+  - Should the pipeline selector show entity type labels? (Spec says yes in Scenario 59, implementation does not currently.)
+  - How should the "propertyMappings" approach (current implementation) relate to the "entityTypes" array (spec)? The implementation has evolved beyond the spec.
+  - What happens when a lead is dragged to a closed stage (Won/Lost)? Should the lead status automatically change to "won"/"lost"?

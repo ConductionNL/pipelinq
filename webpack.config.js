@@ -23,6 +23,22 @@ webpackConfig.entry = {
 		import: path.join(__dirname, 'src', 'settings.js'),
 		filename: appId + '-settings.js',
 	},
+	dealsOverviewWidget: {
+		import: path.join(__dirname, 'src', 'dealsOverviewWidget.js'),
+		filename: appId + '-dealsOverviewWidget.js',
+	},
+	myLeadsWidget: {
+		import: path.join(__dirname, 'src', 'myLeadsWidget.js'),
+		filename: appId + '-myLeadsWidget.js',
+	},
+	recentActivitiesWidget: {
+		import: path.join(__dirname, 'src', 'recentActivitiesWidget.js'),
+		filename: appId + '-recentActivitiesWidget.js',
+	},
+	clientSearchWidget: {
+		import: path.join(__dirname, 'src', 'clientSearchWidget.js'),
+		filename: appId + '-clientSearchWidget.js',
+	},
 }
 
 // Use local source when available (monorepo dev), otherwise fall back to npm package

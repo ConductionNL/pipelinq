@@ -578,3 +578,47 @@ The system SHOULD support exporting clients to CSV and vCard formats.
 - WHEN the user exports the client as vCard
 - THEN the system MUST generate a valid RFC 6350 vCard
 - AND the vCard MUST include FN, EMAIL, TEL, ADR, and URL properties
+
+---
+
+### Current Implementation Status
+
+**Substantially implemented.** Core CRUD, list view, detail view, contact persons, and Nextcloud Contacts sync are all in place. V1 features (duplicate detection, import/export) are NOT implemented.
+
+Implemented:
+- **Data model**: `lib/Settings/pipelinq_register.json` defines the `client` schema with properties: `name` (required), `type` (required, enum: person/organization), `email`, `phone`, `address`, `website`, `industry`, `notes`, `contactsUid`. Also defines the `contact` schema with: `name` (required), `email`, `phone`, `role`, `client` (UUID reference), `contactsUid`.
+- **Client CRUD**: `src/store/modules/object.js` provides generic `saveObject()`, `deleteObject()`, `fetchObject()`, `fetchCollection()` via OpenRegister API. No dedicated client controller -- all CRUD goes through OpenRegister's object API directly.
+- **Client List View**: `src/views/clients/ClientList.vue` -- displays client list with search, sort, and filter using OpenRegister's built-in query capabilities. Uses the `CnListPage` component.
+- **Client Detail View**: `src/views/clients/ClientDetail.vue` -- displays client info (type, email, phone, website, address, notes), linked contacts table, linked leads table, linked requests table. Shows a "Synced with Contacts" badge when `contactsUid` is set. Uses `CnDetailPage` with sidebar (audit log). Has edit/delete actions with delete confirmation dialog that warns about linked entities.
+- **Client Form**: `src/views/clients/ClientForm.vue` -- create/edit form for clients.
+- **Client Create Dialog**: `src/views/clients/ClientCreateDialog.vue` -- quick-create dialog used from the dashboard.
+- **Contact Person CRUD**: `src/views/contacts/ContactDetail.vue`, `ContactForm.vue`, `ContactList.vue` -- full CRUD for contact persons with client linking.
+- **Client-to-Lead relationship**: LeadDetail shows linked client, ClientDetail shows linked leads (fetched via `client` filter on lead collection).
+- **Client-to-Request relationship**: Same pattern as leads -- RequestDetail links to client, ClientDetail shows requests.
+- **Nextcloud Contacts sync**: See contacts-sync spec for details. `ContactSyncService`, `ContactVcardService`, `ContactImportService` handle bidirectional sync.
+- **Routing**: `/clients` (list), `/clients/:id` (detail), `/clients/new` (create), `/contacts` (list), `/contacts/:id` (detail).
+
+NOT implemented:
+- **Summary statistics** on client detail (open leads count/value, won leads count/value, open requests count, total value, last activity, client since) -- the detail view shows raw lists but no aggregated stats panel.
+- **Activity timeline** on client detail -- the sidebar provides OpenRegister audit log but no unified CRM timeline.
+- **Validation rules**: Email format, telephone format, website URL, name max length validation -- these are defined in the JSON schema (`format: email`, `format: uri`, `maxLength: 255`) but client-side inline validation may be missing.
+- **Duplicate detection** (V1) -- not implemented.
+- **Client import from CSV/vCard** (V1) -- not implemented.
+- **Client export to CSV/vCard** (V1) -- not implemented.
+- **`@type` mapping** -- the spec requires `@type` set to `schema:Person` or `schema:Organization` based on client type. The schema defaults to `schema:Person` but dynamic switching based on `type` field is not implemented.
+- **Audit trail for field changes** -- relies on OpenRegister's built-in audit log, not a CRM-level audit trail.
+
+### Standards & References
+- Schema.org `Person`, `Organization`, `ContactPoint` -- mapped in the register JSON schema
+- vCard RFC 6350 -- field naming conventions followed (FN, EMAIL, TEL)
+- VNG Klantinteracties `Partij`, `Betrokkene`, `DigitaalAdres` -- mentioned in spec but no explicit mapping layer implemented
+- WCAG AA -- Nextcloud Vue components provide baseline accessibility
+- OpenRegister object API for all CRUD operations
+
+### Specificity Assessment
+- The spec is comprehensive and well-structured for MVP implementation. Scenarios are detailed and testable.
+- **Implementable as-is** for all MVP requirements. V1 features need additional design work.
+- **Gap**: The spec references `taxID` field but the actual schema uses `industry` instead -- the data model does not include `taxID` or `KVK number`.
+- **Gap**: The spec mentions `schema:worksFor` for contact-to-client linking but the actual schema uses a simple `client` UUID reference field.
+- **Open question**: Should validation happen at the OpenRegister schema level (JSON Schema validation) or in the Pipelinq application layer? Currently there is no Pipelinq-specific validation controller.
+- **Open question**: How should the contact person list (cross-client) be navigated? The current implementation has a dedicated `/contacts` route, but the spec does not discuss whether this is a top-level navigation item.
