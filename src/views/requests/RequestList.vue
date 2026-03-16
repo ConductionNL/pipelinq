@@ -69,8 +69,10 @@ export default {
 
 	setup() {
 		const sidebarState = inject('sidebarState', null)
+		const objectStore = useObjectStore()
 		return useListView('request', {
 			sidebarState,
+			objectStore,
 			defaultSort: { key: 'requestedAt', order: 'desc' },
 		})
 	},
