@@ -206,6 +206,12 @@ Full documentation is available at **[pipelinq.app](https://pipelinq.app)**
 - **[OpenRegister](https://github.com/ConductionNL/openregister)** — Object storage layer (required dependency)
 - **[OpenCatalogi](https://github.com/ConductionNL/opencatalogi)** — Application catalogue
 
+## Support
+
+For support, contact us at [support@conduction.nl](mailto:support@conduction.nl).
+
+For a Service Level Agreement (SLA), contact [sales@conduction.nl](mailto:sales@conduction.nl).
+
 ## License
 
 This project is licensed under the [EUPL-1.2](LICENSE).
