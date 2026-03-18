@@ -28,6 +28,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
+use RuntimeException;
 
 /**
  * Controller for prospect ICP settings (admin only).
@@ -73,7 +74,7 @@ class ProspectSettingsController extends Controller
             return $this->objectService;
         }
 
-        throw new \RuntimeException('OpenRegister service is not available.');
+        throw new RuntimeException('OpenRegister service is not available.');
 
     }//end getObjectService()
 
@@ -91,7 +92,7 @@ class ProspectSettingsController extends Controller
             return $configurationService;
         }
 
-        throw new \RuntimeException('Configuration service is not available.');
+        throw new RuntimeException('Configuration service is not available.');
 
     }//end getConfigurationService()
 
