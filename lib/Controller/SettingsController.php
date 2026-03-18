@@ -27,6 +27,7 @@ use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -53,6 +54,7 @@ class SettingsController extends Controller
      * @param IGroupManager      $groupManager    The group manager.
      * @param SettingsService    $settingsService The settings service.
      * @param IUserSession       $userSession     The user session.
+     * @param IL10N              $l10n            The localization service.
      */
     public function __construct(
         IRequest $request,
@@ -61,6 +63,7 @@ class SettingsController extends Controller
         private readonly IGroupManager $groupManager,
         private SettingsService $settingsService,
         private IUserSession $userSession,
+        private IL10N $l10n,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -158,7 +161,7 @@ class SettingsController extends Controller
             return new JSONResponse(
                     [
                         'success' => true,
-                        'message' => 'Configuration re-imported successfully',
+                        'message' => $this->l10n->t('Configuration re-imported successfully'),
                         'config'  => $this->settingsService->getSettings(),
                         'result'  => [
                             'registers' => count($result['registers'] ?? []),

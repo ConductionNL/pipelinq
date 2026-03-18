@@ -4,7 +4,7 @@
 		:item-menu="itemMenu"
 		@show="onShow">
 		<template #empty-content>
-			<NcEmptyContent :title="t('pipelinq', 'Geen leads aan u toegewezen')">
+			<NcEmptyContent :title="t('pipelinq', 'No leads assigned to you')">
 				<template #icon>
 					<AccountCheck />
 				</template>
@@ -17,8 +17,6 @@
 import { NcDashboardWidget, NcEmptyContent } from '@nextcloud/vue'
 import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import { initializeStores } from '../../store/store.js'
-
-const PRIORITY_LABELS = { low: 'Laag', normal: 'Normaal', high: 'Hoog', urgent: 'Urgent' }
 
 export default {
 	name: 'MyLeadsWidget',
@@ -50,7 +48,7 @@ export default {
 			const now = new Date()
 			return this.leads.map((lead) => {
 				const isOverdue = lead.expectedCloseDate && new Date(lead.expectedCloseDate) < now
-				const priorityLabel = PRIORITY_LABELS[lead.priority] || ''
+				const priorityLabel = lead.priority ? t('pipelinq', lead.priority) : ''
 				const dueStr = lead.expectedCloseDate
 					? new Date(lead.expectedCloseDate).toLocaleDateString('nl-NL', { month: 'short', day: 'numeric' })
 					: ''

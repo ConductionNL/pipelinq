@@ -4,7 +4,7 @@
 		:item-menu="itemMenu"
 		@show="onShow">
 		<template #empty-content>
-			<NcEmptyContent :title="t('pipelinq', 'Geen recente activiteiten')">
+			<NcEmptyContent :title="t('pipelinq', 'No recent activities')">
 				<template #icon>
 					<ClockOutline />
 				</template>

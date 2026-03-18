@@ -26,6 +26,7 @@ use OCA\Pipelinq\Service\NoteEventService;
 use OCA\Pipelinq\Service\NotesService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
@@ -41,12 +42,14 @@ class NotesController extends Controller
      * @param NotesService     $notesService     The notes service.
      * @param NoteEventService $noteEventService The note event service.
      * @param LoggerInterface  $logger           The logger.
+     * @param IL10N            $l10n             The localization service.
      */
     public function __construct(
         IRequest $request,
         private NotesService $notesService,
         private NoteEventService $noteEventService,
         private LoggerInterface $logger,
+        private IL10N $l10n,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -64,7 +67,7 @@ class NotesController extends Controller
     public function list(string $objectType, string $objectId): JSONResponse
     {
         if (in_array($objectType, NotesService::VALID_TYPES, true) === false) {
-            return new JSONResponse(['error' => 'Invalid object type'], 400);
+            return new JSONResponse(['error' => $this->l10n->t('Invalid object type')], 400);
         }
 
         try {
@@ -91,12 +94,12 @@ class NotesController extends Controller
     public function create(string $objectType, string $objectId): JSONResponse
     {
         if (in_array($objectType, NotesService::VALID_TYPES, true) === false) {
-            return new JSONResponse(['error' => 'Invalid object type'], 400);
+            return new JSONResponse(['error' => $this->l10n->t('Invalid object type')], 400);
         }
 
         $message = $this->request->getParam('message', '');
         if (trim($message) === '') {
-            return new JSONResponse(['error' => 'Message is required'], 400);
+            return new JSONResponse(['error' => $this->l10n->t('Message is required')], 400);
         }
 
         try {
@@ -130,7 +133,7 @@ class NotesController extends Controller
     public function deleteAll(string $objectType, string $objectId): JSONResponse
     {
         if (in_array($objectType, NotesService::VALID_TYPES, true) === false) {
-            return new JSONResponse(['error' => 'Invalid object type'], 400);
+            return new JSONResponse(['error' => $this->l10n->t('Invalid object type')], 400);
         }
 
         try {

@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import { PiniaVuePlugin } from 'pinia'
+import { translate as t, translatePlural as n } from '@nextcloud/l10n'
 import pinia from './pinia.js'
 import router from './router/index.js'
 import App from './App.vue'
