@@ -29,6 +29,7 @@ module.exports = defineConfig([{
 	rules: {
 		'jsdoc/require-jsdoc': 'off',
 		'vue/first-attribute-linebreak': 'off',
+		'vue/enforce-style-attribute': ['error', { allow: ['scoped'] }],
 		'@typescript-eslint/no-explicit-any': 'off',
 		'n/no-missing-import': 'off',
 		'import/namespace': 'off',
