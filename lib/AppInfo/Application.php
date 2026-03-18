@@ -38,6 +38,8 @@ use OCP\Comments\ICommentsManager;
 
 /**
  * Main application class for the Pipelinq client and request management app.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class Application extends App implements IBootstrap
 {
