@@ -26,6 +26,8 @@ Pairs naturally with [Procest](https://apps.nextcloud.com/apps/procest) — hand
 **Requires:** [OpenRegister](https://apps.nextcloud.com/apps/openregister) (install from the [Nextcloud App Store](https://apps.nextcloud.com/apps/openregister)).
 
 Free and open source under the AGPL license.
+
+**Support:** For support, contact support@conduction.nl. For a Service Level Agreement (SLA), contact sales@conduction.nl.
     ]]></description>
     <description lang="nl"><![CDATA[Pipelinq is een lichtgewicht CRM voor Nextcloud. Beheer klanten, volg leads door visuele pipelines, handel binnenkomende verzoeken af en houd een complete historie bij van elke interactie — allemaal zonder je Nextcloud-werkplek te verlaten.
 
@@ -47,6 +49,8 @@ Sluit naadloos aan op [Procest](https://apps.nextcloud.com/apps/procest) — dra
 **Vereist:** [OpenRegister](https://apps.nextcloud.com/apps/openregister) (installeer via de [Nextcloud App Store](https://apps.nextcloud.com/apps/openregister)).
 
 Vrij en open source onder de AGPL-licentie.
+
+**Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
     <version>0.1.15</version>
     <licence>agpl</licence>
