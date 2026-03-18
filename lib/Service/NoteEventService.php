@@ -107,6 +107,8 @@ class NoteEventService
      * @param string $objectId   The object ID.
      *
      * @return ?array The entity data with title and assignee, or null on failure.
+     *
+     * @psalm-suppress UnusedParam $objectId is used in URL interpolation
      */
     private function fetchEntityData(string $entityType, string $objectId): ?array
     {

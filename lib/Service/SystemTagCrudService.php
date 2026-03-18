@@ -180,7 +180,7 @@ class SystemTagCrudService
             newName: $newName,
             userVisible: true,
             userAssignable: false,
-            description: null
+            color: null
         );
     }//end renameSystemTag()
 

@@ -30,6 +30,8 @@ use OCP\EventDispatcher\IEventListener;
  *
  * When a user searches in Nextcloud's unified search, results for Pipelinq schemas
  * (clients, leads, requests, contacts) will link directly to Pipelinq's detail views.
+ *
+ * @implements IEventListener<Event>
  */
 class DeepLinkRegistrationListener implements IEventListener
 {

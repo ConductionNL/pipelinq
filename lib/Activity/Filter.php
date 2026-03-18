@@ -90,7 +90,7 @@ class Filter implements IFilter
      *
      * @param array $types The available types.
      *
-     * @return array The filtered types.
+     * @return array<array-key, string> The filtered types.
      */
     public function filterTypes(array $types): array
     {
@@ -100,7 +100,7 @@ class Filter implements IFilter
     /**
      * Get the allowed apps for this filter.
      *
-     * @return array The allowed app IDs.
+     * @return array<array-key, string> The allowed app IDs.
      */
     public function allowedApps(): array
     {
