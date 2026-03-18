@@ -25,6 +25,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ContactSyncService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 
 /**
@@ -37,10 +38,12 @@ class ContactSyncController extends Controller
      *
      * @param IRequest           $request            The request.
      * @param ContactSyncService $contactSyncService The contact sync service.
+     * @param IL10N              $l10n               The localization service.
      */
     public function __construct(
         IRequest $request,
         private ContactSyncService $contactSyncService,
+        private IL10N $l10n,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -87,7 +90,7 @@ class ContactSyncController extends Controller
         $clientId       = $this->request->getParam('clientId');
 
         if ($uid === '') {
-            return new JSONResponse(['error' => 'Missing uid parameter'], 400);
+            return new JSONResponse(['error' => $this->l10n->t('Missing uid parameter')], 400);
         }
 
         try {
@@ -126,11 +129,11 @@ class ContactSyncController extends Controller
         $objectId   = $this->request->getParam('objectId', '');
 
         if ($objectType === '' || $objectId === '') {
-            return new JSONResponse(['error' => 'Missing objectType or objectId'], 400);
+            return new JSONResponse(['error' => $this->l10n->t('Missing objectType or objectId')], 400);
         }
 
         if (in_array($objectType, ['client', 'contact'], true) === false) {
-            return new JSONResponse(['error' => 'Invalid objectType -- must be client or contact'], 400);
+            return new JSONResponse(['error' => $this->l10n->t('Invalid objectType -- must be client or contact')], 400);
         }
 
         try {

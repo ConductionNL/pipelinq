@@ -4,7 +4,7 @@
 		:item-menu="itemMenu"
 		@show="onShow">
 		<template #empty-content>
-			<NcEmptyContent :title="t('pipelinq', 'Geen open leads gevonden')">
+			<NcEmptyContent :title="t('pipelinq', 'No leads found')">
 				<template #icon>
 					<TrendingUp />
 				</template>

@@ -8,7 +8,7 @@
 				<input
 					v-model="searchQuery"
 					type="text"
-					:placeholder="t('pipelinq', 'Zoek klanten...')"
+					:placeholder="t('pipelinq', 'Search clients...')"
 					class="client-search-field"
 					@input="onSearch">
 			</div>
@@ -57,9 +57,9 @@ export default {
 	computed: {
 		emptyTitle() {
 			if (this.searchQuery) {
-				return t('pipelinq', 'Geen klanten gevonden voor "{query}"', { query: this.searchQuery })
+				return t('pipelinq', 'No clients found for "{query}"', { query: this.searchQuery })
 			}
-			return t('pipelinq', 'Geen klanten gevonden')
+			return t('pipelinq', 'No clients found')
 		},
 		allItems() {
 			return this.clients.map((client) => ({

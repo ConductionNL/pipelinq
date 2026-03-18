@@ -61,7 +61,7 @@ class ClientSearchWidget implements IWidget
      */
     public function getTitle(): string
     {
-        return $this->l10n->t('Klant zoeken');
+        return $this->l10n->t('Client Search');
 
     }//end getTitle()
 

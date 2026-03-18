@@ -61,7 +61,7 @@ class RecentActivitiesWidget implements IWidget
      */
     public function getTitle(): string
     {
-        return $this->l10n->t('Recente activiteiten');
+        return $this->l10n->t('Recent Activities');
 
     }//end getTitle()
 

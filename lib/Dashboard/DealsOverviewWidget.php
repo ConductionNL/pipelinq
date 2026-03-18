@@ -62,7 +62,7 @@ class DealsOverviewWidget implements IWidget
      */
     public function getTitle(): string
     {
-        return $this->l10n->t('Deals overzicht');
+        return $this->l10n->t('Deals overview');
 
     }//end getTitle()
 

@@ -62,7 +62,7 @@ class MyLeadsWidget implements IWidget
      */
     public function getTitle(): string
     {
-        return $this->l10n->t('Mijn leads');
+        return $this->l10n->t('My Leads');
 
     }//end getTitle()
 
