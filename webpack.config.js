@@ -66,4 +66,8 @@ webpackConfig.plugins = [
 	new webpack.DefinePlugin({ appVersion: JSON.stringify(process.env.npm_package_version) }),
 ]
 
+// Force all shared packages to resolve from pipelinq's own node_modules,
+// preventing the nextcloud-vue submodule's nested deps (Vue 3) from leaking in.
+webpackConfig.resolve.alias['@nextcloud/dialogs'] = path.resolve(__dirname, 'node_modules/@nextcloud/dialogs')
+
 module.exports = webpackConfig
