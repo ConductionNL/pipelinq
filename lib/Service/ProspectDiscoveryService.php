@@ -329,7 +329,7 @@ class ProspectDiscoveryService
     private function setInCache(string $key, array $data): void
     {
         if (function_exists(function: 'apcu_store') === true) {
-            apcu_store(key: $key, value: $data, ttl: self::CACHE_TTL);
+            apcu_store($key, $data, self::CACHE_TTL);
         }
     }//end setInCache()
 }//end class
