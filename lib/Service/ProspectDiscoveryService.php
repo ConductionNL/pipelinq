@@ -69,9 +69,9 @@ class ProspectDiscoveryService
      *
      * @return array The discovery results.
      *
-     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) — $refresh is a simple cache bypass toggle
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity) — orchestration method with multiple data sources
-     * @SuppressWarnings(PHPMD.NPathComplexity) — orchestration method with multiple data sources
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)  — $refresh is a simple cache bypass toggle
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) — orchestration method with multiple sources
+     * @SuppressWarnings(PHPMD.NPathComplexity)      — orchestration method with multiple sources
      */
     public function discover(bool $refresh=false): array
     {

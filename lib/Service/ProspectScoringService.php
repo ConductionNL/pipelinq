@@ -77,7 +77,12 @@ class ProspectScoringService
         );
 
         // Active registration (10 points).
-        $breakdown['activeMatch'] = (($prospect['isActive'] ?? false) === true) ? 10 : 0;
+        $isActive = ($prospect['isActive'] ?? false) === true;
+
+        $breakdown['activeMatch'] = 0;
+        if ($isActive === true) {
+            $breakdown['activeMatch'] = 10;
+        }
 
         $prospect['fitScore']     = array_sum(array: $breakdown);
         $prospect['fitBreakdown'] = $breakdown;

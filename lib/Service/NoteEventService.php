@@ -155,9 +155,15 @@ class NoteEventService
         $assignee    = $entityData['assignee'] ?? '';
 
         $currentUser = $this->userSession->getUser();
-        $author = ($currentUser !== null) ? $currentUser->getUID() : '';
+        $author      = '';
+        if ($currentUser !== null) {
+            $author = $currentUser->getUID();
+        }
 
-        $assigneeOrNull = ($assignee !== '') ? $assignee : null;
+        $assigneeOrNull = null;
+        if ($assignee !== '') {
+            $assigneeOrNull = $assignee;
+        }
 
         $this->activityService->publishNoteAdded(
             entityType: $entityType,

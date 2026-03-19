@@ -45,7 +45,10 @@ class ContactDataBuilder
             $name = $org;
         }
 
-        $industry = ($clientType === 'person') ? $org : '';
+        $industry = '';
+        if ($clientType === 'person') {
+            $industry = $org;
+        }
 
         $data = [
             'name'        => $name,
