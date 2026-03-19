@@ -17,7 +17,11 @@ const config = {
 
   i18n: {
     defaultLocale: 'en',
-    locales: ['en'],
+    locales: ['en', 'nl'],
+    localeConfigs: {
+      en: { label: 'English' },
+      nl: { label: 'Nederlands' },
+    },
   },
 
   presets: [
@@ -27,9 +31,10 @@ const config = {
       ({
         docs: {
           path: './',
+          exclude: ['**/node_modules/**'],
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl:
-            'https://github.com/ConductionNL/pipelinq/tree/main/docusaurus/',
+            'https://github.com/ConductionNL/pipelinq/tree/main/docs/',
         },
         blog: false,
         theme: {
@@ -58,6 +63,10 @@ const config = {
           {
             href: 'https://github.com/ConductionNL/pipelinq',
             label: 'GitHub',
+            position: 'right',
+          },
+          {
+            type: 'localeDropdown',
             position: 'right',
           },
         ],
