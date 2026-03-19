@@ -22,7 +22,6 @@ namespace OCA\Pipelinq\Dashboard;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\Dashboard\IWidget;
 use OCP\IL10N;
-use OCP\IURLGenerator;
 use OCP\Util;
 
 /**
@@ -33,12 +32,10 @@ class ClientSearchWidget implements IWidget
     /**
      * Constructor.
      *
-     * @param IL10N         $l10n         Localisation service
-     * @param IURLGenerator $urlGenerator URL generator
+     * @param IL10N $l10n Localisation service
      */
     public function __construct(
         private IL10N $l10n,
-        private IURLGenerator $urlGenerator
     ) {
 
     }//end __construct()

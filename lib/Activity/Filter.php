@@ -91,6 +91,8 @@ class Filter implements IFilter
      * @param array $types The available types.
      *
      * @return array<array-key, string> The filtered types.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) — $types required by IFilter interface
      */
     public function filterTypes(array $types): array
     {

@@ -83,6 +83,23 @@ class SettingsMapBuilder
      */
     public function findDefaultViewId(array $views): ?string
     {
+        $defaultId = $this->findMarkedDefaultViewId($views);
+        if ($defaultId !== null) {
+            return $defaultId;
+        }
+
+        return $this->getFirstViewId($views);
+    }//end findDefaultViewId()
+
+    /**
+     * Find the ID of the view marked as default.
+     *
+     * @param array $views The imported views.
+     *
+     * @return ?string The view ID or null.
+     */
+    private function findMarkedDefaultViewId(array $views): ?string
+    {
         foreach ($views as $view) {
             $viewArray = $this->normalizeToArray(value: $view);
             if ($viewArray === null) {
@@ -95,16 +112,29 @@ class SettingsMapBuilder
             }
         }
 
-        // Fall back to the first view if none is marked as default.
-        if (empty($views) === false) {
-            $firstView = $this->normalizeToArray(value: reset($views));
-            if ($firstView !== null) {
-                return $firstView['id'] ?? $firstView['uuid'] ?? null;
-            }
+        return null;
+    }//end findMarkedDefaultViewId()
+
+    /**
+     * Get the ID of the first view in the list.
+     *
+     * @param array $views The imported views.
+     *
+     * @return ?string The view ID or null.
+     */
+    private function getFirstViewId(array $views): ?string
+    {
+        if (empty($views) === true) {
+            return null;
         }
 
-        return null;
-    }//end findDefaultViewId()
+        $firstView = $this->normalizeToArray(value: reset($views));
+        if ($firstView === null) {
+            return null;
+        }
+
+        return $firstView['id'] ?? $firstView['uuid'] ?? null;
+    }//end getFirstViewId()
 
     /**
      * Add a single schema entry to the slug map.
