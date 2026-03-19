@@ -4,3 +4,7 @@
 /docusaurus/node_modules/
 /docusaurus/build/
 /docusaurus/.docusaurus/
+
+.phpunit.cache/
+coverage/
+phpmetrics/
