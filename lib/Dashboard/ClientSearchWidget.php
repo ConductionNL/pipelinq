@@ -30,8 +30,6 @@ use OCP\Util;
  */
 class ClientSearchWidget implements IWidget
 {
-
-
     /**
      * Constructor.
      *
@@ -45,9 +43,10 @@ class ClientSearchWidget implements IWidget
 
     }//end __construct()
 
-
     /**
-     * @inheritDoc
+     * Get the unique widget identifier.
+     *
+     * @return string The widget ID
      */
     public function getId(): string
     {
@@ -55,9 +54,10 @@ class ClientSearchWidget implements IWidget
 
     }//end getId()
 
-
     /**
-     * @inheritDoc
+     * Get the translated widget title.
+     *
+     * @return string The widget title
      */
     public function getTitle(): string
     {
@@ -65,9 +65,10 @@ class ClientSearchWidget implements IWidget
 
     }//end getTitle()
 
-
     /**
-     * @inheritDoc
+     * Get the display order of this widget.
+     *
+     * @return int The sort order
      */
     public function getOrder(): int
     {
@@ -75,9 +76,10 @@ class ClientSearchWidget implements IWidget
 
     }//end getOrder()
 
-
     /**
-     * @inheritDoc
+     * Get the CSS class for the widget icon.
+     *
+     * @return string The icon CSS class
      */
     public function getIconClass(): string
     {
@@ -85,9 +87,10 @@ class ClientSearchWidget implements IWidget
 
     }//end getIconClass()
 
-
     /**
-     * @inheritDoc
+     * Get the URL for the widget header link.
+     *
+     * @return string|null The URL or null if none
      */
     public function getUrl(): ?string
     {
@@ -95,16 +98,15 @@ class ClientSearchWidget implements IWidget
 
     }//end getUrl()
 
-
     /**
-     * @inheritDoc
+     * Load the widget scripts and styles.
+     *
+     * @return void
      */
     public function load(): void
     {
-        Util::addScript(Application::APP_ID, Application::APP_ID . '-clientSearchWidget');
+        Util::addScript(Application::APP_ID, Application::APP_ID.'-clientSearchWidget');
         Util::addStyle(Application::APP_ID, 'dashboardWidgets');
 
     }//end load()
-
-
 }//end class
