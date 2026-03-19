@@ -61,7 +61,10 @@ class ActivityService
         string $objectId,
         ?string $affectedUser=null
     ): void {
-        $type = ($entityType === 'request') ? 'request_created' : 'lead_created';
+        $type = 'lead_created';
+        if ($entityType === 'request') {
+            $type = 'request_created';
+        }
 
         $this->publish(
             subject: $type,
@@ -92,7 +95,10 @@ class ActivityService
         string $newAssignee,
         string $objectId
     ): void {
-        $type = ($entityType === 'request') ? 'request_assigned' : 'lead_assigned';
+        $type = 'lead_assigned';
+        if ($entityType === 'request') {
+            $type = 'request_assigned';
+        }
 
         $this->publish(
             subject: $type,
@@ -217,7 +223,10 @@ class ActivityService
     ): void {
         try {
             $currentUser = $this->userSession->getUser();
-            $author = ($currentUser !== null) ? $currentUser->getUID() : '';
+            $author      = '';
+            if ($currentUser !== null) {
+                $author = $currentUser->getUID();
+            }
 
             $event = $this->activityManager->generateEvent();
             $event->setApp(Application::APP_ID)

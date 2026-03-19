@@ -39,12 +39,14 @@ class OpenCorporatesApiClient
     /**
      * Constructor.
      *
-     * @param IClientService  $clientService The HTTP client service.
-     * @param LoggerInterface $logger        The logger.
+     * @param IClientService             $clientService The HTTP client service.
+     * @param LoggerInterface            $logger        The logger.
+     * @param OpenCorporatesResultMapper $resultMapper  The result mapper.
      */
     public function __construct(
         private IClientService $clientService,
         private LoggerInterface $logger,
+        private OpenCorporatesResultMapper $resultMapper,
     ) {
     }//end __construct()
 
@@ -65,7 +67,7 @@ class OpenCorporatesApiClient
 
         $results = [];
         foreach ($keywords as $keyword) {
-            $this->searchByKeyword($keyword, $results);
+            $this->searchByKeyword(keyword: $keyword, results: $results);
         }
 
         return array_values(array: $results);
@@ -82,12 +84,12 @@ class OpenCorporatesApiClient
     private function searchByKeyword(string $keyword, array &$results): void
     {
         try {
-            $body      = $this->fetchCompanies($keyword);
+            $body      = $this->fetchCompanies(keyword: $keyword);
             $companies = $body['results']['companies'] ?? [];
 
             foreach ($companies as $entry) {
                 $company = $entry['company'] ?? [];
-                $mapped  = $this->mapResult(company: $company);
+                $mapped  = $this->resultMapper->mapResult(company: $company);
                 if ($mapped !== null) {
                     $results[$mapped['kvkNumber']] = $mapped;
                 }
@@ -127,54 +129,12 @@ class OpenCorporatesApiClient
             ]
         );
 
-        return json_decode(json: $response->getBody(), associative: true) ?: [];
-    }//end fetchCompanies()
+        $decoded = json_decode(json: $response->getBody(), associative: true);
 
-    /**
-     * Map an OpenCorporates result to our prospect format.
-     *
-     * @param array $company The raw company data.
-     *
-     * @return array|null The mapped result or null.
-     */
-    private function mapResult(array $company): ?array
-    {
-        $companyNumber = $company['company_number'] ?? null;
-        if ($companyNumber === null) {
-            return null;
+        if (is_array(value: $decoded) === true) {
+            return $decoded;
         }
 
-        $address = $company['registered_address'] ?? [];
-
-        return [
-            'kvkNumber'        => (string) $companyNumber,
-            'tradeName'        => $company['name'] ?? '',
-            'legalForm'        => $company['company_type'] ?? '',
-            'sbiCode'          => '',
-            'sbiDescription'   => $company['industry_codes'][0]['description'] ?? '',
-            'employeeCount'    => null,
-            'address'          => $this->mapAddress($address),
-            'website'          => null,
-            'registrationDate' => $company['incorporation_date'] ?? null,
-            'isActive'         => ($company['current_status'] ?? 'Active') === 'Active',
-            'source'           => 'opencorporates',
-        ];
-    }//end mapResult()
-
-    /**
-     * Map an OpenCorporates address to our format.
-     *
-     * @param array $address The raw address data.
-     *
-     * @return array The mapped address.
-     */
-    private function mapAddress(array $address): array
-    {
-        return [
-            'street'     => $address['street_address'] ?? '',
-            'city'       => $address['locality'] ?? '',
-            'province'   => $address['region'] ?? '',
-            'postalCode' => $address['postal_code'] ?? '',
-        ];
-    }//end mapAddress()
+        return [];
+    }//end fetchCompanies()
 }//end class

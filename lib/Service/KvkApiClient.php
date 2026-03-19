@@ -41,10 +41,12 @@ class KvkApiClient
      *
      * @param IClientService  $clientService The HTTP client service.
      * @param LoggerInterface $logger        The logger.
+     * @param KvkResultMapper $resultMapper  The result mapper.
      */
     public function __construct(
         private IClientService $clientService,
         private LoggerInterface $logger,
+        private KvkResultMapper $resultMapper,
     ) {
     }//end __construct()
 
@@ -66,7 +68,7 @@ class KvkApiClient
         $sbiCodes = $criteria['sbiCodes'] ?? [];
 
         foreach ($sbiCodes as $sbiCode) {
-            $this->searchBySbiCode($apiKey, $sbiCode, $results);
+            $this->searchBySbiCode(apiKey: $apiKey, sbiCode: $sbiCode, results: $results);
         }
 
         return array_values(array: $results);
@@ -84,14 +86,14 @@ class KvkApiClient
     private function searchBySbiCode(string $apiKey, string $sbiCode, array &$results): void
     {
         try {
-            $body = $this->fetchResults($apiKey);
+            $body = $this->fetchResults(apiKey: $apiKey);
 
             if (isset($body['resultaten']) === false) {
                 return;
             }
 
             foreach ($body['resultaten'] as $item) {
-                $mapped = $this->mapResult(item: $item, sbiCode: $sbiCode);
+                $mapped = $this->resultMapper->mapResult(item: $item, sbiCode: $sbiCode);
                 if ($mapped !== null) {
                     $results[$mapped['kvkNumber']] = $mapped;
                 }
@@ -126,84 +128,17 @@ class KvkApiClient
         $response = $client->get(
             uri: $url,
             options: [
-                'headers' => [
-                    'Accept' => 'application/json',
-                ],
+                'headers' => ['Accept' => 'application/json'],
                 'timeout' => 15,
             ]
         );
 
-        return json_decode(json: $response->getBody(), associative: true) ?: [];
+        $decoded = json_decode(json: $response->getBody(), associative: true);
+
+        if (is_array(value: $decoded) === true) {
+            return $decoded;
+        }
+
+        return [];
     }//end fetchResults()
-
-    /**
-     * Map a KVK API result to our prospect format.
-     *
-     * @param array  $item    The raw API result item.
-     * @param string $sbiCode The SBI code that matched.
-     *
-     * @return array|null The mapped result or null.
-     */
-    private function mapResult(array $item, string $sbiCode): ?array
-    {
-        $kvkNumber = $item['kvkNummer'] ?? null;
-        if ($kvkNumber === null) {
-            return null;
-        }
-
-        $address = $item['adres'] ?? ($item['vestingAdres'] ?? []);
-
-        return [
-            'kvkNumber'        => (string) $kvkNumber,
-            'tradeName'        => $item['eersteHandelsnaam'] ?? ($item['naam'] ?? ''),
-            'legalForm'        => $item['rechtsvorm'] ?? '',
-            'sbiCode'          => $sbiCode,
-            'sbiDescription'   => $this->findSbiDescription($item, $sbiCode),
-            'employeeCount'    => $item['totaalWerkzamePersonen'] ?? null,
-            'address'          => $this->mapAddress($address),
-            'website'          => null,
-            'registrationDate' => $item['registratieDatum'] ?? null,
-            'isActive'         => ($item['actief'] ?? 'Ja') === 'Ja',
-            'source'           => 'kvk',
-        ];
-    }//end mapResult()
-
-    /**
-     * Find the SBI description matching the given code.
-     *
-     * @param array  $item    The raw API result item.
-     * @param string $sbiCode The SBI code to look for.
-     *
-     * @return string The SBI description or empty string.
-     */
-    private function findSbiDescription(array $item, string $sbiCode): string
-    {
-        $sbiActivities = $item['spiActiviteiten'] ?? [];
-
-        foreach ($sbiActivities as $activity) {
-            $activityCode = (string) ($activity['sbiCode'] ?? '');
-            if (str_starts_with(haystack: $activityCode, needle: $sbiCode) === true) {
-                return $activity['sbiOmschrijving'] ?? '';
-            }
-        }
-
-        return '';
-    }//end findSbiDescription()
-
-    /**
-     * Map a KVK address to our format.
-     *
-     * @param array $address The raw address data.
-     *
-     * @return array The mapped address.
-     */
-    private function mapAddress(array $address): array
-    {
-        return [
-            'street'     => ($address['straatnaam'] ?? '').' '.($address['huisnummer'] ?? ''),
-            'city'       => $address['plaats'] ?? '',
-            'province'   => $address['provincie'] ?? '',
-            'postalCode' => $address['postcode'] ?? '',
-        ];
-    }//end mapAddress()
 }//end class

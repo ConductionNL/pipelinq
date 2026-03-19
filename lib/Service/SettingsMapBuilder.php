@@ -83,12 +83,12 @@ class SettingsMapBuilder
      */
     public function findDefaultViewId(array $views): ?string
     {
-        $defaultId = $this->findMarkedDefaultViewId($views);
+        $defaultId = $this->findMarkedDefaultViewId(views: $views);
         if ($defaultId !== null) {
             return $defaultId;
         }
 
-        return $this->getFirstViewId($views);
+        return $this->getFirstViewId(views: $views);
     }//end findDefaultViewId()
 
     /**
