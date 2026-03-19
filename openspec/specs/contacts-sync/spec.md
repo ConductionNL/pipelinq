@@ -63,3 +63,38 @@ Client and contact detail views MUST show whether the entity is linked to a Next
 #### Scenario: Unlinked entity shows no badge
 - WHEN viewing a client or contact without a `contactsUid`
 - THEN no sync indicator MUST be shown
+
+---
+
+### Current Implementation Status
+
+**Fully implemented.** All MVP requirements (write-back sync, import from contacts, sync status indicator) are implemented.
+
+Implemented:
+- **Write-back sync**: `lib/Service/ContactSyncService.php` -- `syncToContacts()` delegates to `ContactVcardService`. Called automatically from `src/views/clients/ClientDetail.vue` on save (`syncToContacts()` method POSTs to `/api/contacts-sync/write-back`).
+- **vCard creation/update**: `lib/Service/ContactVcardService.php`, `ContactVcardWriterService.php`, `ContactVcardPropertyBuilder.php` -- creates/updates vCards in a "Pipelinq CRM" addressbook via `IContactsManager`. Maps Pipelinq fields to vCard properties (FN, EMAIL, TEL, ORG, ROLE).
+- **Import from contacts**: `lib/Service/ContactSyncService.php` -- `searchContacts()` searches Nextcloud addressbooks via `IContactsManager::search()` across FN, EMAIL, TEL, ORG fields. `importContact()` creates a Pipelinq client or contact from a Nextcloud contact. `ContactImportService.php` handles the field mapping (FN->name, EMAIL->email, TEL->phone, ORG->industry/org).
+- **Already-linked detection**: `ContactLinkedUidsService.php` -- collects all `contactsUid` values from existing Pipelinq objects. `searchContacts()` marks results with `alreadyLinked: true` if their UID is already in use.
+- **API routes**: `GET /api/contacts-sync/search` (search Nextcloud contacts), `POST /api/contacts-sync/import` (import contact), `POST /api/contacts-sync/write-back` (sync to Nextcloud).
+- **Controller**: `lib/Controller/ContactSyncController.php` -- handles all three endpoints.
+- **Import dialog**: `src/components/ContactImportDialog.vue` -- UI for searching and importing Nextcloud contacts.
+- **Sync status indicator**: `src/views/clients/ClientDetail.vue` shows a "Synced with Contacts" badge when `clientData.contactsUid` is set.
+- **Graceful degradation**: `ContactSyncService::searchContacts()` returns empty array when contacts manager is disabled. `importContact()` throws `RuntimeException` when not available.
+- **Data model**: Both `client` and `contact` schemas include a `contactsUid` property (type: string, visible: false).
+- **`ContactDataBuilder.php`** -- builds Pipelinq object data from Nextcloud contact properties for import.
+
+NOT implemented:
+- Automatic sync on contact update (currently only triggered manually on client save, not on contact save).
+- Organization client ORG property mapping during write-back may need verification.
+- Contact detail view does not show the "Synced with Contacts" badge (only client detail does).
+
+### Standards & References
+- vCard RFC 6350 -- field conventions for FN, EMAIL, TEL, ORG, ROLE
+- Nextcloud Contacts IManager API (`OCP\Contacts\IManager`) -- used for search and CRUD
+- CardDAV (RFC 6352) -- underlying protocol for Nextcloud Contacts storage
+
+### Specificity Assessment
+- The spec is specific and well-aligned with the implementation. All scenarios are testable.
+- **Fully implementable as-is** -- and largely already implemented.
+- **Minor gap**: The spec says "subsequent updates to the client SHOULD propagate to the linked vCard" -- this works for clients but may not be triggered for contact person updates.
+- **Minor gap**: The spec does not specify what happens if the Nextcloud contact is deleted externally -- should the `contactsUid` be cleared?

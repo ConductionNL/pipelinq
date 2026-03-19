@@ -596,3 +596,49 @@ The system MUST handle data volumes typical of a municipal CRM (thousands of cli
 - THEN the frontend MUST send the search query to the server via `_search` parameter
 - AND the frontend MUST NOT download all 5,000 clients for client-side filtering
 - AND the frontend SHOULD debounce search input (e.g., 300ms delay) to avoid excessive API calls
+
+---
+
+### Current Implementation Status
+
+**Implemented:**
+- **Register Configuration File:** `lib/Settings/pipelinq_register.json` exists and is valid JSON with `openapi: "3.0.0"`. It defines the `pipelinq` register with 8 schemas: `client`, `contact`, `lead`, `request`, `pipeline`, `product`, `productCategory`, `leadProduct`. The spec calls for 5 schemas but the implementation has expanded to 8 with the product catalog additions.
+- **All entity schemas defined:** Client (schema:Person), Contact (schema:ContactPoint), Lead (schema:Demand), Request (schema:Demand), Pipeline (schema:ItemList), Product (schema:Product), ProductCategory (schema:DefinedTermSet), LeadProduct (schema:Offer). Each has `@type` annotations.
+- **Auto-Configuration (Repair Step):** `lib/Repair/InitializeSettings.php` implements a full repair step that:
+  - Checks if OpenRegister is installed (skips gracefully if not).
+  - Calls `SettingsService::loadSettings()` which delegates to `ConfigurationService::importFromApp()`.
+  - Creates default pipelines via `SettingsService::createDefaultPipelines()` delegating to `DefaultPipelineService`.
+  - Creates default lead sources and request channels via `SystemTagService::ensureDefaults()`.
+  - Is idempotent (checks for existing pipelines before creating defaults).
+- **Default Pipelines:** `lib/Service/DefaultPipelineService.php` creates "Sales Pipeline" (7 stages with probability values) and "Service Requests" pipeline. Uses `PipelineStageData` for stage definitions. Checks for existing "Sales Pipeline" by title before creating.
+- **Store Registration:** `src/store/store.js` `initializeStores()` registers all 8 entity types (client, contact, lead, request, pipeline, product, productCategory, leadProduct) with schema and register IDs from settings.
+- **Frontend API Interaction (CRUD):** Uses `@conduction/nextcloud-vue`'s `createObjectStore` with plugins (`filesPlugin`, `auditTrailsPlugin`, `relationsPlugin`, `registerMappingPlugin`). All CRUD operations follow the `/apps/openregister/api/objects/{register}/{schema}` pattern.
+- **Search and Filtering:** Used throughout views via `_search`, `_order`, `_page`, `_limit` query parameters (e.g., `PipelineBoard.vue` fetches with `pipeline={id}&_limit=200`).
+- **Pinia Store Pattern:** Centralized via `createObjectStore('object')` from `@conduction/nextcloud-vue`. All entity types share the same store instance with per-type registration. The store manages loading states, collections, and CRUD actions.
+- **Schema Validation:** Handled server-side by OpenRegister. Frontend displays validation errors from API responses.
+- **Cross-Entity References:** Lead references client, contact, pipeline. Contact references client. All resolved by the object store's `relationsPlugin`.
+- **Audit Trail:** Enabled via the `auditTrailsPlugin` in the object store.
+- **Performance:** Server-side pagination used throughout. `PipelineBoard.vue` fetches with `_limit=200`. `MyWork.vue` fetches with `_limit=200`.
+
+**Not yet implemented:**
+- **RBAC Integration:** No frontend visibility/permission checks based on user roles. No 403 handling in the UI for insufficient permissions. No organisation-scoped data filtering.
+- **Concurrent modification conflict detection:** No ETag or version-based conflict detection.
+- **Batched reference resolution:** The `relationsPlugin` from `@conduction/nextcloud-vue` handles this, but the implementation details depend on the library version.
+- **Client-side validation before submission:** Minimal -- most validation is server-side.
+- **Missing schema handling:** The graceful skip for missing schemas in `initializeStores()` is implemented (conditional checks), but no user-facing warning is shown.
+
+**Partial implementations:**
+- Error handling exists but is minimal in some views -- generic `showError()` calls without detailed field-level validation display.
+- The spec mentions 5 schemas but the implementation has 8 (product, productCategory, leadProduct were added).
+
+### Standards & References
+- **OpenAPI 3.0.0:** Used as the format for `pipelinq_register.json`.
+- **Schema.org:** Type annotations on all schemas (Person, ContactPoint, Demand, ItemList, Product, DefinedTermSet, Offer).
+- **vCard (RFC 6350):** Contact schema field conventions.
+- **OpenRegister API conventions:** REST patterns for CRUD, pagination (`_page`, `_limit`), search (`_search`), sorting (`_order`), filtering.
+
+### Specificity Assessment
+- This is the most detailed spec in the set and is highly specific with concrete API endpoint patterns, schema definitions, and error scenarios.
+- **Spec is outdated:** It references 5 schemas but the implementation has 8. The spec should be updated to include product, productCategory, and leadProduct schemas.
+- **Pipeline schema discrepancy:** The spec says stages are "stored as an embedded array within the pipeline schema" with `stages: [{ name, order, probability? }]`. The implementation uses embedded stages within the pipeline object (confirmed by `PipelineBoard.vue` reading `selectedPipeline.stages`). However, the separate Pipeline spec (REQ-PIPE-004) describes stages as separate OpenRegister objects with `@type: schema:DefinedTerm`. This is a contradiction that needs resolution.
+- **Open question:** Should the RBAC integration be part of this spec or a separate cross-cutting spec?

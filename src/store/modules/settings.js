@@ -3,6 +3,8 @@ import { defineStore } from 'pinia'
 export const useSettingsStore = defineStore('settings', {
 	state: () => ({
 		config: null,
+		openRegisters: false,
+		isAdmin: false,
 		loading: false,
 		error: null,
 		initialized: false,
@@ -12,6 +14,8 @@ export const useSettingsStore = defineStore('settings', {
 		getError: (state) => state.error,
 		isInitialized: (state) => state.initialized,
 		getConfig: (state) => state.config,
+		hasOpenRegisters: (state) => state.openRegisters,
+		getIsAdmin: (state) => state.isAdmin,
 	},
 	actions: {
 		async fetchSettings() {
@@ -34,6 +38,8 @@ export const useSettingsStore = defineStore('settings', {
 
 				const data = await response.json()
 				this.config = data.config || data
+				this.openRegisters = data.openRegisters ?? false
+				this.isAdmin = data.isAdmin ?? false
 				this.initialized = true
 
 				return this.config

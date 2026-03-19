@@ -41,10 +41,12 @@ class KvkApiClient
      *
      * @param IClientService  $clientService The HTTP client service.
      * @param LoggerInterface $logger        The logger.
+     * @param KvkResultMapper $resultMapper  The result mapper.
      */
     public function __construct(
         private IClientService $clientService,
         private LoggerInterface $logger,
+        private KvkResultMapper $resultMapper,
     ) {
     }//end __construct()
 
@@ -65,99 +67,78 @@ class KvkApiClient
         $results  = [];
         $sbiCodes = $criteria['sbiCodes'] ?? [];
 
-        // Search by SBI codes.
         foreach ($sbiCodes as $sbiCode) {
-            try {
-                $queryParams = [
-                    'apikey' => $apiKey,
-                    'type'   => 'hoofdvestiging',
-                    'pagina' => '1',
-                    'aantal' => '50',
-                ];
-
-                // Add location filters.
-                if (isset($criteria['provinces']) === true && count($criteria['provinces']) > 0) {
-                    // KVK API doesn't support province filter directly,
-                    // so we filter in post-processing.
-                }
-
-                $url = self::API_BASE.'/zoeken?'.http_build_query(data: $queryParams);
-
-                $client   = $this->clientService->newClient();
-                $response = $client->get(
-                    uri: $url,
-                    options: [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                        ],
-                        'timeout' => 15,
-                    ]
-                );
-
-                $body = json_decode(json: $response->getBody(), associative: true);
-
-                if (isset($body['resultaten']) === true) {
-                    foreach ($body['resultaten'] as $item) {
-                        $mapped = $this->mapResult(item: $item, sbiCode: $sbiCode);
-                        if ($mapped !== null) {
-                            $results[$mapped['kvkNumber']] = $mapped;
-                        }
-                    }
-                }
-            } catch (\Exception $e) {
-                $this->logger->warning(
-                    message: 'KVK API search failed for SBI code {sbi}',
-                    context: ['sbi' => $sbiCode, 'error' => $e->getMessage()]
-                );
-            }//end try
-        }//end foreach
+            $this->searchBySbiCode(apiKey: $apiKey, sbiCode: $sbiCode, results: $results);
+        }
 
         return array_values(array: $results);
     }//end search()
 
     /**
-     * Map a KVK API result to our prospect format.
+     * Search for a single SBI code and merge results.
      *
-     * @param array  $item    The raw API result item.
-     * @param string $sbiCode The SBI code that matched.
+     * @param string $apiKey  The KVK API key.
+     * @param string $sbiCode The SBI code to search.
+     * @param array  $results The results array to populate (by reference).
      *
-     * @return array|null The mapped result or null.
+     * @return void
      */
-    private function mapResult(array $item, string $sbiCode): ?array
+    private function searchBySbiCode(string $apiKey, string $sbiCode, array &$results): void
     {
-        $kvkNumber = $item['kvkNummer'] ?? null;
-        if ($kvkNumber === null) {
-            return null;
-        }
+        try {
+            $body = $this->fetchResults(apiKey: $apiKey);
 
-        $address        = $item['adres'] ?? ($item['vestingAdres'] ?? []);
-        $sbiActivities  = $item['spiActiviteiten'] ?? [];
-        $sbiDescription = '';
-
-        foreach ($sbiActivities as $activity) {
-            if (str_starts_with(haystack: (string) ($activity['sbiCode'] ?? ''), needle: $sbiCode) === true) {
-                $sbiDescription = $activity['sbiOmschrijving'] ?? '';
-                break;
+            if (isset($body['resultaten']) === false) {
+                return;
             }
+
+            foreach ($body['resultaten'] as $item) {
+                $mapped = $this->resultMapper->mapResult(item: $item, sbiCode: $sbiCode);
+                if ($mapped !== null) {
+                    $results[$mapped['kvkNumber']] = $mapped;
+                }
+            }
+        } catch (\Exception $e) {
+            $this->logger->warning(
+                message: 'KVK API search failed for SBI code {sbi}',
+                context: ['sbi' => $sbiCode, 'error' => $e->getMessage()]
+            );
+        }//end try
+    }//end searchBySbiCode()
+
+    /**
+     * Fetch results from the KVK API.
+     *
+     * @param string $apiKey The KVK API key.
+     *
+     * @return array The decoded response body.
+     */
+    private function fetchResults(string $apiKey): array
+    {
+        $queryParams = [
+            'apikey' => $apiKey,
+            'type'   => 'hoofdvestiging',
+            'pagina' => '1',
+            'aantal' => '50',
+        ];
+
+        $url = self::API_BASE.'/zoeken?'.http_build_query(data: $queryParams);
+
+        $client   = $this->clientService->newClient();
+        $response = $client->get(
+            uri: $url,
+            options: [
+                'headers' => ['Accept' => 'application/json'],
+                'timeout' => 15,
+            ]
+        );
+
+        $decoded = json_decode(json: $response->getBody(), associative: true);
+
+        if (is_array(value: $decoded) === true) {
+            return $decoded;
         }
 
-        return [
-            'kvkNumber'        => (string) $kvkNumber,
-            'tradeName'        => $item['eersteHandelsnaam'] ?? ($item['naam'] ?? ''),
-            'legalForm'        => $item['rechtsvorm'] ?? '',
-            'sbiCode'          => $sbiCode,
-            'sbiDescription'   => $sbiDescription,
-            'employeeCount'    => $item['totaalWerkzamePersonen'] ?? null,
-            'address'          => [
-                'street'     => ($address['straatnaam'] ?? '').' '.($address['huisnummer'] ?? ''),
-                'city'       => $address['plaats'] ?? '',
-                'province'   => $address['provincie'] ?? '',
-                'postalCode' => $address['postcode'] ?? '',
-            ],
-            'website'          => null,
-            'registrationDate' => $item['registratieDatum'] ?? null,
-            'isActive'         => ($item['actief'] ?? 'Ja') === 'Ja',
-            'source'           => 'kvk',
-        ];
-    }//end mapResult()
+        return [];
+    }//end fetchResults()
 }//end class

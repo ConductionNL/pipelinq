@@ -25,6 +25,19 @@
 					{{ reimporting ? t('pipelinq', 'Importing...') : t('pipelinq', 'Re-import configuration') }}
 				</NcButton>
 			</template>
+			<template #footer>
+				<div class="cn-support-info">
+					<h4>{{ t('pipelinq', 'Support') }}</h4>
+					<p>
+						{{ t('pipelinq', 'For support, contact us at') }}
+						<a href="mailto:support@conduction.nl">support@conduction.nl</a>
+					</p>
+					<p>
+						{{ t('pipelinq', 'For a Service Level Agreement (SLA), contact') }}
+						<a href="mailto:sales@conduction.nl">sales@conduction.nl</a>
+					</p>
+				</div>
+			</template>
 		</CnVersionInfoCard>
 
 		<!-- Register & Schema Mapping -->

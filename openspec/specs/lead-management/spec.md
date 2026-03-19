@@ -600,3 +600,53 @@ See DESIGN-REFERENCES.md Section 3.2 card anatomy:
 - Due date + assignee avatar
 - Overdue warning (if applicable)
 - Days in current stage (V1)
+
+---
+
+### Current Implementation Status
+
+**Substantially implemented.** Core lead CRUD, list view, detail view, pipeline stage lifecycle, source tracking, assignment, value/probability, priority, and kanban board are all functional. V1 features (stale detection, aging indicator, import/export) are NOT implemented.
+
+Implemented:
+- **Data model**: `lib/Settings/pipelinq_register.json` defines the `lead` schema with: `title` (required), `client`, `contact`, `source`, `value`, `probability` (0-100), `expectedCloseDate`, `assignee`, `priority` (low/normal/high/urgent), `pipeline`, `stage`, `stageOrder`, `notes`, `status` (open/won/lost). Mapped to `schema:Demand`.
+- **Lead CRUD**: Handled via the generic object store (`src/store/modules/object.js`) calling OpenRegister's object API. No dedicated lead controller -- all CRUD goes through OpenRegister.
+- **Lead List View**: `src/views/leads/LeadList.vue` -- table with columns for title, value, stage, priority, source, assignee, expected close date. Supports search, sort, filter, and pagination via OpenRegister's query API.
+- **Lead Detail View**: `src/views/leads/LeadDetail.vue` -- displays core info (value formatted as EUR, probability as %, source, priority, expected close date, category), pipeline progress indicator, client/contact links, assignee section, activity timeline via sidebar. Edit/delete actions with confirmation dialog.
+- **Lead Form**: `src/views/leads/LeadForm.vue` -- create/edit form with all lead fields.
+- **Lead Create Dialog**: `src/views/leads/LeadCreateDialog.vue` -- quick-create dialog used from dashboard.
+- **Pipeline Board (Kanban)**: `src/views/pipeline/PipelineBoard.vue` -- kanban board with columns per stage, drag-and-drop for stage changes. `PipelineCard.vue` -- card with title, value, priority badge, due date, assignee. `PipelineSidebar.vue` -- sidebar for the pipeline view.
+- **Lead Source Tracking**: `source` field on lead with configurable values managed by `LeadSourceController` and `TagManager` in admin settings. Default sources: website, email, phone, referral, partner, campaign, social_media, event, other.
+- **Lead Assignment**: `assignee` field stores Nextcloud user UID. Activity events published on assignment change. Leads appear in My Work view when assigned to current user.
+- **Lead Priority**: Four levels (low, normal, high, urgent) with visual badges on kanban cards.
+- **Pipeline Stage Lifecycle**: Moving leads between stages via kanban drag-and-drop or detail view. Stage changes trigger activity events (`publishStageChanged`). Closed stages (isClosed/isWon) handled in dashboard KPI calculations.
+- **Lead Value/Probability**: Value displayed with EUR formatting. Probability stored as 0-100 integer.
+- **Expected Close Date**: Stored as date string. Overdue detection in dashboard (leads past close date in non-closed stages).
+- **Event handling**: `ObjectEventListener` detects lead creation, assignment changes, and stage changes, publishing to Activity stream and sending notifications.
+- **Lead Products**: `src/components/LeadProducts.vue` -- line items linking products to leads with quantity, unit price, discount, and computed total.
+- **Routing**: `/leads` (list), `/leads/:id` (detail), `/pipeline` (kanban board).
+
+NOT implemented:
+- **Quick actions on kanban cards** (REQ-LEAD-011) -- no right-click context menu or action menu on kanban cards for quick move/assign/priority changes.
+- **Stale lead detection** (REQ-LEAD-012, V1) -- no staleness threshold configuration, no "days since last activity" calculation.
+- **Aging indicator** (REQ-LEAD-013, V1) -- no "days in current stage" display on kanban cards or detail view.
+- **Lead import/export CSV** (REQ-LEAD-014, V1) -- no import or export functionality.
+- **Validation** -- basic validation exists in the schema (required title, value minimum 0, probability 0-100), but client-side inline validation (REQ-LEAD-002) with highlighted invalid fields may be incomplete. No backend validation controller for Pipelinq-specific rules.
+- **Concurrent edit conflict detection** (Scenario 57) -- relies on OpenRegister's versioning but no UI for conflict resolution.
+- **Lead value auto-calculation from line items** -- LeadProducts component exists but may not automatically update the lead's `value` field from line item totals.
+- **Overdue indicator on lead list/detail** -- overdue detection works on the dashboard but individual lead views may not show the "X days overdue" indicator.
+
+### Standards & References
+- Schema.org `Demand` -- lead entity mapping
+- ISO 4217 -- currency codes (EUR default)
+- CRM industry patterns (HubSpot, Salesforce, EspoCRM) -- pipeline stage lifecycle, kanban board UX
+- OpenRegister Object API -- all CRUD operations
+- Nextcloud Activity API -- event publishing for lead lifecycle events
+- WCAG AA -- accessible form labels and keyboard navigation
+
+### Specificity Assessment
+- The spec is highly detailed with 57 scenarios covering all aspects of lead management. Very specific and testable.
+- **Mostly implementable as-is** -- MVP requirements are largely complete. Remaining work is V1 features and polish.
+- **Gap**: The spec uses `assignedTo` as the field name but the implementation uses `assignee`. This naming discrepancy should be resolved.
+- **Gap**: The spec says leads should be placed on the "first non-closed stage" of the default pipeline on creation, but this default assignment logic may not be implemented in the frontend form.
+- **Gap**: The spec references `currency` as a separate field (ISO 4217), but the schema does not include a `currency` property -- EUR is assumed/hardcoded in the UI.
+- **Open question**: Should lead validation happen in a Pipelinq validation service or rely entirely on OpenRegister's JSON Schema validation?
