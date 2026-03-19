@@ -81,11 +81,7 @@ class NotificationService
             return;
         }
 
-        if ($entityType === 'request') {
-            $subject = 'request_assigned';
-        } else {
-            $subject = 'lead_assigned';
-        }
+        $subject = ($entityType === 'request') ? 'request_assigned' : 'lead_assigned';
 
         $this->send(
             subject: $subject,
