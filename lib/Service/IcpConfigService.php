@@ -21,16 +21,13 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCP\IAppConfig;
-
 /**
  * Service for reading/writing ICP settings via IAppConfig.
  */
 class IcpConfigService
 {
     /**
-     * ICP config keys.
+     * ICP config keys for hash calculation.
      *
      * @var array<string>
      */
@@ -53,20 +50,20 @@ class IcpConfigService
      * @var array<string, string>
      */
     private const JSON_ARRAY_FIELDS = [
-        'sbiCodes'  => 'icp_sbi_codes',
-        'provinces' => 'icp_provinces',
-        'cities'    => 'icp_cities',
+        'sbiCodes'   => 'icp_sbi_codes',
+        'provinces'  => 'icp_provinces',
+        'cities'     => 'icp_cities',
         'legalForms' => 'icp_legal_forms',
-        'keywords'  => 'icp_keywords',
+        'keywords'   => 'icp_keywords',
     ];
 
     /**
      * Constructor.
      *
-     * @param IAppConfig $appConfig The app config service.
+     * @param IcpConfigReader $reader The config reader.
      */
     public function __construct(
-        private IAppConfig $appConfig,
+        private IcpConfigReader $reader,
     ) {
     }//end __construct()
 
@@ -77,19 +74,22 @@ class IcpConfigService
      */
     public function getSettings(): array
     {
-        $kvkApiKey = $this->getConfigString(key: 'icp_kvk_api_key');
+        $kvkApiKey = $this->reader->getString(key: 'icp_kvk_api_key');
 
         return [
-            'sbiCodes'              => $this->getJsonArray(key: 'icp_sbi_codes'),
-            'employeeCountMin'      => (int) $this->getConfigString(key: 'icp_employee_count_min', default: '0'),
-            'employeeCountMax'      => (int) $this->getConfigString(key: 'icp_employee_count_max', default: '0'),
-            'provinces'             => $this->getJsonArray(key: 'icp_provinces'),
-            'cities'                => $this->getJsonArray(key: 'icp_cities'),
-            'legalForms'            => $this->getJsonArray(key: 'icp_legal_forms'),
-            'excludeInactive'       => $this->getConfigString(key: 'icp_exclude_inactive', default: 'true') === 'true',
-            'keywords'              => $this->getJsonArray(key: 'icp_keywords'),
+            'sbiCodes'              => $this->reader->getJsonArray(key: 'icp_sbi_codes'),
+            'employeeCountMin'      => $this->reader->getInt(key: 'icp_employee_count_min'),
+            'employeeCountMax'      => $this->reader->getInt(key: 'icp_employee_count_max'),
+            'provinces'             => $this->reader->getJsonArray(key: 'icp_provinces'),
+            'cities'                => $this->reader->getJsonArray(key: 'icp_cities'),
+            'legalForms'            => $this->reader->getJsonArray(key: 'icp_legal_forms'),
+            'excludeInactive'       => $this->reader->isBoolTrue(key: 'icp_exclude_inactive'),
+            'keywords'              => $this->reader->getJsonArray(key: 'icp_keywords'),
             'kvkApiKey'             => $this->maskApiKey(apiKey: $kvkApiKey),
-            'openCorporatesEnabled' => $this->getConfigString(key: 'icp_opencorporates_enabled', default: 'false') === 'true',
+            'openCorporatesEnabled' => $this->reader->isBoolTrue(
+                key: 'icp_opencorporates_enabled',
+                default: 'false'
+            ),
         ];
     }//end getSettings()
 
@@ -102,10 +102,10 @@ class IcpConfigService
      */
     public function saveSettings(array $data): string
     {
-        $this->saveJsonArrayFields($data);
-        $this->saveIntegerFields($data);
-        $this->saveBooleanFields($data);
-        $this->saveApiKeyField($data);
+        $this->saveJsonArrayFields(data: $data);
+        $this->saveIntegerFields(data: $data);
+        $this->saveBooleanFields(data: $data);
+        $this->saveApiKeyField(data: $data);
 
         return $this->getIcpHash();
     }//end saveSettings()
@@ -117,7 +117,7 @@ class IcpConfigService
      */
     public function isConfigured(): bool
     {
-        $sbiCodes = $this->getJsonArray(key: 'icp_sbi_codes');
+        $sbiCodes = $this->reader->getJsonArray(key: 'icp_sbi_codes');
 
         return count($sbiCodes) > 0;
     }//end isConfigured()
@@ -129,7 +129,7 @@ class IcpConfigService
      */
     public function getKvkApiKey(): string
     {
-        return $this->getConfigString(key: 'icp_kvk_api_key');
+        return $this->reader->getString(key: 'icp_kvk_api_key');
     }//end getKvkApiKey()
 
     /**
@@ -140,12 +140,12 @@ class IcpConfigService
     public function getCriteria(): array
     {
         return [
-            'sbiCodes'         => $this->getJsonArray(key: 'icp_sbi_codes'),
-            'employeeCountMin' => (int) $this->getConfigString(key: 'icp_employee_count_min', default: '0'),
-            'employeeCountMax' => (int) $this->getConfigString(key: 'icp_employee_count_max', default: '0'),
-            'provinces'        => $this->getJsonArray(key: 'icp_provinces'),
-            'legalForms'       => $this->getJsonArray(key: 'icp_legal_forms'),
-            'excludeInactive'  => $this->getConfigString(key: 'icp_exclude_inactive', default: 'true') === 'true',
+            'sbiCodes'         => $this->reader->getJsonArray(key: 'icp_sbi_codes'),
+            'employeeCountMin' => $this->reader->getInt(key: 'icp_employee_count_min'),
+            'employeeCountMax' => $this->reader->getInt(key: 'icp_employee_count_max'),
+            'provinces'        => $this->reader->getJsonArray(key: 'icp_provinces'),
+            'legalForms'       => $this->reader->getJsonArray(key: 'icp_legal_forms'),
+            'excludeInactive'  => $this->reader->isBoolTrue(key: 'icp_exclude_inactive'),
         ];
     }//end getCriteria()
 
@@ -158,7 +158,7 @@ class IcpConfigService
     {
         $values = [];
         foreach (self::ICP_KEYS as $key) {
-            $values[$key] = $this->getConfigString(key: $key);
+            $values[$key] = $this->reader->getString(key: $key);
         }
 
         return substr(md5(string: json_encode(value: $values)), offset: 0, length: 8);
@@ -175,7 +175,7 @@ class IcpConfigService
     {
         foreach (self::JSON_ARRAY_FIELDS as $dataKey => $configKey) {
             if (isset($data[$dataKey]) === true) {
-                $this->setJsonArray(key: $configKey, value: $data[$dataKey]);
+                $this->reader->setJsonArray(key: $configKey, value: $data[$dataKey]);
             }
         }
     }//end saveJsonArrayFields()
@@ -190,11 +190,11 @@ class IcpConfigService
     private function saveIntegerFields(array $data): void
     {
         if (isset($data['employeeCountMin']) === true) {
-            $this->setConfigString(key: 'icp_employee_count_min', value: (string) (int) $data['employeeCountMin']);
+            $this->reader->setInt(key: 'icp_employee_count_min', value: $data['employeeCountMin']);
         }
 
         if (isset($data['employeeCountMax']) === true) {
-            $this->setConfigString(key: 'icp_employee_count_max', value: (string) (int) $data['employeeCountMax']);
+            $this->reader->setInt(key: 'icp_employee_count_max', value: $data['employeeCountMax']);
         }
     }//end saveIntegerFields()
 
@@ -208,11 +208,11 @@ class IcpConfigService
     private function saveBooleanFields(array $data): void
     {
         if (isset($data['excludeInactive']) === true) {
-            $this->setConfigString(key: 'icp_exclude_inactive', value: $this->boolToString(value: $data['excludeInactive']));
+            $this->reader->setBool(key: 'icp_exclude_inactive', value: $data['excludeInactive']);
         }
 
         if (isset($data['openCorporatesEnabled']) === true) {
-            $this->setConfigString(key: 'icp_opencorporates_enabled', value: $this->boolToString(value: $data['openCorporatesEnabled']));
+            $this->reader->setBool(key: 'icp_opencorporates_enabled', value: $data['openCorporatesEnabled']);
         }
     }//end saveBooleanFields()
 
@@ -226,96 +226,9 @@ class IcpConfigService
     private function saveApiKeyField(array $data): void
     {
         if (isset($data['kvkApiKey']) === true && $data['kvkApiKey'] !== '***configured***') {
-            $this->setConfigString(key: 'icp_kvk_api_key', value: (string) $data['kvkApiKey']);
+            $this->reader->setString(key: 'icp_kvk_api_key', value: (string) $data['kvkApiKey']);
         }
     }//end saveApiKeyField()
-
-    /**
-     * Get a string value from app config.
-     *
-     * @param string $key     The config key.
-     * @param string $default The default value.
-     *
-     * @return string The config value.
-     */
-    private function getConfigString(string $key, string $default = ''): string
-    {
-        return $this->appConfig->getValueString(
-            app: Application::APP_ID,
-            key: $key,
-            default: $default
-        );
-    }//end getConfigString()
-
-    /**
-     * Set a string value in app config.
-     *
-     * @param string $key   The config key.
-     * @param string $value The value to store.
-     *
-     * @return void
-     */
-    private function setConfigString(string $key, string $value): void
-    {
-        $this->appConfig->setValueString(
-            app: Application::APP_ID,
-            key: $key,
-            value: $value
-        );
-    }//end setConfigString()
-
-    /**
-     * Get a JSON array from app config.
-     *
-     * @param string $key The config key.
-     *
-     * @return array The decoded array.
-     */
-    private function getJsonArray(string $key): array
-    {
-        $value   = $this->getConfigString(key: $key, default: '[]');
-        $decoded = json_decode(json: $value, associative: true);
-
-        if (is_array(value: $decoded) === true) {
-            return $decoded;
-        }
-
-        return [];
-    }//end getJsonArray()
-
-    /**
-     * Set a JSON array in app config.
-     *
-     * @param string $key   The config key.
-     * @param mixed  $value The array to encode and store.
-     *
-     * @return void
-     */
-    private function setJsonArray(string $key, mixed $value): void
-    {
-        $arrayValue = [];
-        if (is_array(value: $value) === true) {
-            $arrayValue = $value;
-        }
-
-        $this->setConfigString(key: $key, value: json_encode(value: $arrayValue));
-    }//end setJsonArray()
-
-    /**
-     * Convert a boolean to a string value.
-     *
-     * @param mixed $value The boolean value.
-     *
-     * @return string The string 'true' or 'false'.
-     */
-    private function boolToString(mixed $value): string
-    {
-        if ($value === true) {
-            return 'true';
-        }
-
-        return 'false';
-    }//end boolToString()
 
     /**
      * Mask an API key for display.
