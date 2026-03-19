@@ -366,3 +366,50 @@ Priority badge (if not normal)
 Due date (if available) + Assignee avatar
 Overdue warning (if applicable)
 ```
+
+---
+
+### Current Implementation Status
+
+**Implemented:**
+- **REQ-RM-010 (Request CRUD):** Fully implemented. Request schema defined in `lib/Settings/pipelinq_register.json` with `@type: schema:Demand`. Properties include title, description, client, status, priority, category, requestedAt, pipeline, stage, stageOrder, assignee. CRUD via OpenRegister API.
+- **REQ-RM-020 (Request Status Lifecycle):** Fully implemented in `src/services/requestStatus.js`:
+  - Status transitions: `new -> [in_progress, rejected, completed]`, `in_progress -> [completed, rejected, converted]`, terminal states: `completed`, `rejected`, `converted`.
+  - `getAllowedTransitions()`, `isValidTransition()`, `isTerminalStatus()` functions.
+  - Status labels (Dutch): New, In progress, Completed, Rejected, Converted to case.
+  - Status colors: blue (new), amber (in_progress), green (completed), red (rejected), purple (converted).
+- **REQ-RM-030 (Request List View):** Implemented in `src/views/requests/RequestList.vue` using `CnIndexPage` from `@conduction/nextcloud-vue`. Default sort by `requestedAt` descending. Quick status change dropdown on each row. Status and priority badges.
+- **REQ-RM-040 (Request Detail View):** Implemented in `src/views/requests/RequestDetail.vue` using `CnDetailPage`. Shows status/priority badges, status transition dropdown, edit button, "Convert to case" button (conditional), delete button (conditional). Converted request notice with case link. Client link section.
+- **REQ-RM-050 (Request Assignment):** Implemented with user picker. Assignment, reassignment, and unassignment supported.
+- **REQ-RM-060 (Request Priority):** Four priority levels (low, normal, high, urgent) with color-coded labels. Priority labels and colors in `requestStatus.js`.
+- **REQ-RM-070 (Channel Tracking):** Default channels (phone, email, website, counter, post) created via SystemTags in repair step. `RequestChannelController` and `requestChannels.js` store manage channel options. Channel field exists in request form.
+- **REQ-RM-090 (Request-to-Case Conversion):** Partially implemented. "Convert to case" button visible when `canConvert` is true. Converted requests show read-only notice. Status transition to `converted` is defined. However, actual Procest case creation integration is not verified.
+- **REQ-RM-100 (Request on Pipeline):** Request schema includes `pipeline`, `stage`, `stageOrder` fields. Requests appear on pipeline kanban board with [REQ] badge. Request cards show title, status, priority, assignee (no value field).
+- **REQ-RM-110 (Validation Rules):** Frontend validation via `requestStatus.js` for allowed transitions. Priority validation via `isValidPriority()`. Server-side validation via OpenRegister schema constraints.
+
+**Not yet implemented:**
+- **REQ-RM-030 (List View) - Filtering:** Filtering by status, priority, assignee, and channel is not fully implemented in the current `CnIndexPage`-based list. The spec requires filter bar controls above the table.
+- **REQ-RM-070 (Channel Tracking) - Schema field:** The `channel` field is noted as needing to be added to the OpenRegister schema. It is NOT present in the current `request` schema in `pipelinq_register.json` (confirmed by checking the register JSON -- the request schema properties do not include `channel`).
+- **REQ-RM-080 (Category/Product Classification):** Category is a free-text string. No admin-configurable pre-populated list of categories.
+- **REQ-RM-090 (Request-to-Case Conversion):** Actual Procest integration (creating a case via Procest API) is likely not functional if Procest is not installed. The `caseReference` storage and case link navigation need verification.
+- **REQ-RM-040 (Detail View) - Pipeline progress indicator:** Visual stage progression indicator in request detail is not clearly implemented.
+- **REQ-RM-040 (Detail View) - Activity timeline:** Notes, status changes, and assignment history timeline at the bottom of the detail view is not explicitly visible in the current template.
+
+**Partial implementations:**
+- Quick status change from list view works but the list filtering capabilities are limited compared to the spec's requirements.
+- Channel tracking is structurally supported but the `channel` field is missing from the schema definition.
+
+### Standards & References
+- **Schema.org:** `Demand` type for requests (same as leads).
+- **VNG Verzoeken API:** `Verzoek` entity mapping is documented in the data model table. Properties map to VNG fields (Verzoek.tekst, Verzoek.status, registratiedatum, KlantVerzoek).
+- **Common Ground:** Request-to-case conversion bridges CRM and case management (Procest).
+- **WCAG AA:** Priority badges use color AND text labels for accessibility.
+
+### Specificity Assessment
+- The spec is very detailed with clear status lifecycle rules, validation requirements, and UI layout references.
+- **Key gap:** The `channel` field must be added to the request schema in `pipelinq_register.json`.
+- **Open questions:**
+  - Should the category field use a predefined list or free text? The spec says "free-text strings that MAY be pre-populated."
+  - How does the "Convert to case" integration with Procest work technically? Direct API call? Shared register? Event-based?
+  - Should deleted requests be soft-deleted (archived) or hard-deleted?
+  - The spec says converted requests cannot be deleted, but can they be archived?

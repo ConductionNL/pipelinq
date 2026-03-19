@@ -22,7 +22,6 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCP\Contacts\IManager as IContactsManager;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -37,14 +36,12 @@ class ContactSyncService
      * @param ContactImportService     $contactImportService The contact import service.
      * @param ContactVcardService      $contactVcardService  The vCard sync service.
      * @param ContactLinkedUidsService $linkedUidsService    The linked UIDs service.
-     * @param LoggerInterface          $logger               The logger.
      */
     public function __construct(
         private IContactsManager $contactsManager,
         private ContactImportService $contactImportService,
         private ContactVcardService $contactVcardService,
         private ContactLinkedUidsService $linkedUidsService,
-        private LoggerInterface $logger,
     ) {
     }//end __construct()
 
@@ -81,6 +78,8 @@ class ContactSyncService
      * @param ?string $clientId       The optional client ID for contact imports.
      *
      * @return array The created object data.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) — $addressBookKey kept for future per-book import support
      */
     public function importContact(string $uid, string $addressBookKey, string $type='client', ?string $clientId=null): array
     {

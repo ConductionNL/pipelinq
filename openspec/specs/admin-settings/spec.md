@@ -424,3 +424,46 @@ REQUEST CHANNELS [V1]                           [+ Add Channel]
 - Source/channel items MUST use chip/tag components with inline remove buttons
 - All form inputs MUST have accessible labels (WCAG AA)
 - Destructive actions (delete pipeline, remove source) MUST require confirmation
+
+---
+
+### Current Implementation Status
+
+**Substantially implemented.** Most MVP requirements are complete, V1 features (lead sources, request channels) are also implemented.
+
+Implemented:
+- `lib/Settings/AdminSettings.php` -- registers the Pipelinq admin settings section (`ISettings` implementation, section ID `pipelinq`, priority 10). Returns `TemplateResponse` with config JSON and app version.
+- `lib/Sections/SettingsSection.php` -- registers the "Pipelinq" section in Nextcloud admin navigation.
+- `lib/Controller/SettingsController.php` -- `GET /api/settings` (read, `@NoAdminRequired`), `POST /api/settings` (update, admin-only), `POST /api/settings/reimport` (re-import, admin-only). Also `GET/PUT /api/user/settings` for per-user notification preferences.
+- `lib/Service/SettingsService.php` -- manages config keys (`register`, `client_schema`, `contact_schema`, `lead_schema`, `request_schema`, `pipeline_schema`, `product_schema`, `productCategory_schema`, `leadProduct_schema`). Delegates to `SettingsLoadService` for import and `DefaultPipelineService` for pipeline creation.
+- `lib/Repair/InitializeSettings.php` -- repair step that imports register/schemas via `ConfigurationService`, creates default pipelines, and ensures default lead sources and request channels via `SystemTagService`.
+- `lib/Service/DefaultPipelineService.php` -- creates "Sales Pipeline" and "Service Pipeline" with stages (idempotent -- checks if "Sales Pipeline" already exists).
+- `lib/Service/PipelineStageData.php` -- defines default stage data for Sales Pipeline (7 stages: New through Won/Lost) and Service Pipeline (5 stages: New through Converted to Case).
+- `src/views/settings/Settings.vue` -- full admin settings page with: version info, register configuration mapping (via `CnRegisterMapping`), pipeline management, product categories, lead source tags, request channel tags, prospect settings, and re-import button.
+- `src/views/settings/PipelineManager.vue` -- pipeline CRUD with: list view showing title/default indicator/stage count/entity types/stage preview, add/edit/delete actions, default pipeline protection (cannot delete default), affected items count on delete confirmation, auto-set first pipeline as default, prevent unsetting default without replacement.
+- `src/views/settings/PipelineForm.vue` -- pipeline edit form with stage management.
+- `src/views/settings/TagManager.vue` -- reusable tag/chip manager for lead sources and request channels with add/remove/rename and usage checking.
+- `lib/Controller/LeadSourceController.php` -- CRUD for lead sources (`GET/POST /api/settings/lead-sources`, `PUT/DELETE /api/settings/lead-sources/{id}`).
+- `lib/Controller/RequestChannelController.php` -- CRUD for request channels (`GET/POST /api/settings/request-channels`, `PUT/DELETE /api/settings/request-channels/{id}`).
+- `lib/Service/SystemTagService.php` + `lib/Service/SystemTagCrudService.php` -- manages lead sources and request channels as system tags.
+- `src/store/modules/settings.js`, `leadSources.js`, `requestChannels.js` -- Pinia stores for settings, lead sources, and request channels.
+
+NOT implemented:
+- Register status display (REQ-AS-012) -- the settings page does not show a "Connected" / "Not configured" status indicator with schema list. It shows the register mapping form but no explicit status indicator.
+- Stage drag-and-drop reorder -- the spec requires drag-and-drop reordering of stages, which may not be fully implemented in `PipelineForm.vue`.
+- Stage validation for "at least one non-closed stage" -- not enforced in the UI or backend.
+- Stage deletion with item migration (moving items to previous stage) -- not implemented; items stay on deleted stage.
+- Duplicate source/channel prevention -- may not be validated on the frontend or backend.
+- Source/channel removal warning with usage count -- the `TagManager` component has a `usageCheck` prop, but the warning behavior needs verification.
+
+### Standards & References
+- Nextcloud Admin Settings API (`OCP\Settings\ISettings`, `OCP\Settings\IIconSection`)
+- Nextcloud IAppConfig for persisting application settings
+- OpenRegister `ConfigurationService::importFromApp()` for register/schema import
+- WCAG AA for accessible form labels and keyboard navigation
+
+### Specificity Assessment
+- The spec is highly specific and implementable as-is. Scenarios cover edge cases well (delete default prevention, unique order enforcement, idempotent repair step).
+- **Gap**: The stage management UI details (drag-and-drop library, re-order API call) are not specified.
+- **Gap**: No specification of how the repair step handles schema version upgrades (e.g., adding new properties to existing schemas).
+- **Minor ambiguity**: The spec mentions stages are stored as "OpenRegister objects with schema `stage`", but the actual implementation stores stages as a JSON array within the pipeline object (`pipeline.stages[]`), not as separate objects. This is a significant architectural difference from what the spec describes.

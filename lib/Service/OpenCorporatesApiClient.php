@@ -39,12 +39,14 @@ class OpenCorporatesApiClient
     /**
      * Constructor.
      *
-     * @param IClientService  $clientService The HTTP client service.
-     * @param LoggerInterface $logger        The logger.
+     * @param IClientService             $clientService The HTTP client service.
+     * @param LoggerInterface            $logger        The logger.
+     * @param OpenCorporatesResultMapper $resultMapper  The result mapper.
      */
     public function __construct(
         private IClientService $clientService,
         private LoggerInterface $logger,
+        private OpenCorporatesResultMapper $resultMapper,
     ) {
     }//end __construct()
 
@@ -57,87 +59,82 @@ class OpenCorporatesApiClient
      */
     public function search(array $criteria): array
     {
-        $results  = [];
         $keywords = $criteria['keywords'] ?? [];
 
         if (count($keywords) === 0) {
             return [];
         }
 
+        $results = [];
         foreach ($keywords as $keyword) {
-            try {
-                $queryParams = [
-                    'q'                 => $keyword,
-                    'jurisdiction_code' => 'nl',
-                    'per_page'          => '30',
-                    'order'             => 'score',
-                ];
-
-                $url = self::API_BASE.'/companies/search?'.http_build_query(data: $queryParams);
-
-                $client   = $this->clientService->newClient();
-                $response = $client->get(
-                    uri: $url,
-                    options: [
-                        'headers' => ['Accept' => 'application/json'],
-                        'timeout' => 15,
-                    ]
-                );
-
-                $body      = json_decode(json: $response->getBody(), associative: true);
-                $companies = $body['results']['companies'] ?? [];
-
-                foreach ($companies as $entry) {
-                    $company = $entry['company'] ?? [];
-                    $mapped  = $this->mapResult(company: $company);
-                    if ($mapped !== null) {
-                        $results[$mapped['kvkNumber']] = $mapped;
-                    }
-                }
-            } catch (\Exception $e) {
-                $this->logger->warning(
-                    message: 'OpenCorporates search failed for keyword {kw}',
-                    context: ['kw' => $keyword, 'error' => $e->getMessage()]
-                );
-            }//end try
-        }//end foreach
+            $this->searchByKeyword(keyword: $keyword, results: $results);
+        }
 
         return array_values(array: $results);
     }//end search()
 
     /**
-     * Map an OpenCorporates result to our prospect format.
+     * Search for a single keyword and merge results.
      *
-     * @param array $company The raw company data.
+     * @param string $keyword The keyword to search.
+     * @param array  $results The results array to populate (by reference).
      *
-     * @return array|null The mapped result or null.
+     * @return void
      */
-    private function mapResult(array $company): ?array
+    private function searchByKeyword(string $keyword, array &$results): void
     {
-        $companyNumber = $company['company_number'] ?? null;
-        if ($companyNumber === null) {
-            return null;
+        try {
+            $body      = $this->fetchCompanies(keyword: $keyword);
+            $companies = $body['results']['companies'] ?? [];
+
+            foreach ($companies as $entry) {
+                $company = $entry['company'] ?? [];
+                $mapped  = $this->resultMapper->mapResult(company: $company);
+                if ($mapped !== null) {
+                    $results[$mapped['kvkNumber']] = $mapped;
+                }
+            }
+        } catch (\Exception $e) {
+            $this->logger->warning(
+                message: 'OpenCorporates search failed for keyword {kw}',
+                context: ['kw' => $keyword, 'error' => $e->getMessage()]
+            );
+        }//end try
+    }//end searchByKeyword()
+
+    /**
+     * Fetch companies from the OpenCorporates API.
+     *
+     * @param string $keyword The search keyword.
+     *
+     * @return array The decoded response body.
+     */
+    private function fetchCompanies(string $keyword): array
+    {
+        $queryParams = [
+            'q'                 => $keyword,
+            'jurisdiction_code' => 'nl',
+            'per_page'          => '30',
+            'order'             => 'score',
+        ];
+
+        $url = self::API_BASE.'/companies/search?'.http_build_query(data: $queryParams);
+
+        $client   = $this->clientService->newClient();
+        $response = $client->get(
+            uri: $url,
+            options: [
+                'headers' => ['Accept' => 'application/json'],
+                'timeout' => 15,
+            ]
+        );
+
+        $decoded = json_decode(json: $response->getBody(), associative: true);
+
+        if (is_array(value: $decoded) === true) {
+            return $decoded;
         }
 
-        $address = $company['registered_address'] ?? [];
-
-        return [
-            'kvkNumber'        => (string) $companyNumber,
-            'tradeName'        => $company['name'] ?? '',
-            'legalForm'        => $company['company_type'] ?? '',
-            'sbiCode'          => '',
-            'sbiDescription'   => $company['industry_codes'][0]['description'] ?? '',
-            'employeeCount'    => null,
-            'address'          => [
-                'street'     => $address['street_address'] ?? '',
-                'city'       => $address['locality'] ?? '',
-                'province'   => $address['region'] ?? '',
-                'postalCode' => $address['postal_code'] ?? '',
-            ],
-            'website'          => null,
-            'registrationDate' => $company['incorporation_date'] ?? null,
-            'isActive'         => ($company['current_status'] ?? 'Active') === 'Active',
-            'source'           => 'opencorporates',
-        ];
-    }//end mapResult()
+        return [];
+    }//end fetchCompanies()
 }//end class

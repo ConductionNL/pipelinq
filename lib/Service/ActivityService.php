@@ -61,10 +61,9 @@ class ActivityService
         string $objectId,
         ?string $affectedUser=null
     ): void {
+        $type = 'lead_created';
         if ($entityType === 'request') {
             $type = 'request_created';
-        } else {
-            $type = 'lead_created';
         }
 
         $this->publish(
@@ -96,10 +95,9 @@ class ActivityService
         string $newAssignee,
         string $objectId
     ): void {
+        $type = 'lead_assigned';
         if ($entityType === 'request') {
             $type = 'request_assigned';
-        } else {
-            $type = 'lead_assigned';
         }
 
         $this->publish(
@@ -225,10 +223,9 @@ class ActivityService
     ): void {
         try {
             $currentUser = $this->userSession->getUser();
+            $author      = '';
             if ($currentUser !== null) {
                 $author = $currentUser->getUID();
-            } else {
-                $author = '';
             }
 
             $event = $this->activityManager->generateEvent();

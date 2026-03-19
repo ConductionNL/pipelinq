@@ -1,7 +1,7 @@
 <template>
-	<div class="request-detail">
+	<div v-if="editing || isNew">
 		<div class="request-detail__header">
-			<NcButton @click="$router.push({ name: 'Requests' })">
+			<NcButton @click="onFormCancel">
 				{{ t('pipelinq', 'Back to list') }}
 			</NcButton>
 			<h2 v-if="isNew">
@@ -11,179 +11,164 @@
 				{{ requestData.title || t('pipelinq', 'Request') }}
 			</h2>
 		</div>
-
-		<NcLoadingIcon v-if="loading" />
-
-		<!-- Edit / Create mode -->
 		<RequestForm
-			v-else-if="editing || isNew"
 			:request="isNew ? null : requestData"
 			:pre-linked-client="preLinkedClient"
 			@save="onFormSave"
 			@cancel="onFormCancel" />
+	</div>
 
-		<!-- View mode -->
-		<div v-else class="request-detail__content">
-			<!-- Converted notice -->
-			<div v-if="isConverted" class="request-detail__notice">
-				{{ t('pipelinq', 'This request has been converted to a case and can no longer be edited.') }}
-				<a v-if="requestData.caseReference" href="#" @click.prevent="viewCase">
-					{{ t('pipelinq', 'View case') }}
-				</a>
-			</div>
+	<CnDetailPage
+		v-else
+		:title="requestData.title || t('pipelinq', 'Request')"
+		:subtitle="t('pipelinq', 'Request')"
+		:back-route="{ name: 'Requests' }"
+		:back-label="t('pipelinq', 'Back to list')"
+		:loading="loading"
+		:sidebar="!isNew && !loading"
+		object-type="pipelinq_request"
+		:object-id="requestId"
+		:sidebar-props="sidebarProps">
+		<template #header-actions>
+			<NcButton v-if="!isConverted" type="primary" @click="editing = true">
+				{{ t('pipelinq', 'Edit') }}
+			</NcButton>
+			<NcButton
+				v-if="canConvert"
+				@click="convertToCase">
+				{{ t('pipelinq', 'Convert to case') }}
+			</NcButton>
+			<NcButton
+				v-if="canDelete"
+				type="error"
+				@click="showDeleteDialog = true">
+				{{ t('pipelinq', 'Delete') }}
+			</NcButton>
+		</template>
 
-			<div class="request-detail__actions">
-				<NcButton v-if="!isConverted" type="primary" @click="editing = true">
-					{{ t('pipelinq', 'Edit') }}
-				</NcButton>
-				<NcButton
-					v-if="canConvert"
-					@click="convertToCase">
-					{{ t('pipelinq', 'Convert to case') }}
-				</NcButton>
-				<NcButton
-					v-if="canDelete"
-					type="error"
-					@click="showDeleteDialog = true">
-					{{ t('pipelinq', 'Delete') }}
-				</NcButton>
-			</div>
-
-			<div class="request-detail__layout">
-				<!-- Left column: core info -->
-				<div class="request-detail__info">
-					<!-- Status + Priority row -->
-					<div class="info-row">
-						<div class="info-field">
-							<label>{{ t('pipelinq', 'Status') }}</label>
-							<div class="status-control">
-								<span
-									class="status-badge"
-									:style="{ background: getStatusColor(requestData.status), color: '#fff' }">
-									{{ getStatusLabel(requestData.status) }}
-								</span>
-								<NcSelect
-									v-if="statusTransitions.length > 0 && !isConverted"
-									:value="null"
-									:options="statusTransitionOptions"
-									:placeholder="t('pipelinq', 'Change status')"
-									:clearable="false"
-									class="status-transition-select"
-									@input="onStatusChange" />
-							</div>
-						</div>
-						<div class="info-field">
-							<label>{{ t('pipelinq', 'Priority') }}</label>
-							<span
-								class="priority-badge"
-								:style="{ color: getPriorityColor(requestData.priority) }">
-								{{ getPriorityLabel(requestData.priority) }}
-							</span>
-						</div>
-					</div>
-
-					<!-- Info grid -->
-					<div class="info-grid">
-						<div class="info-field">
-							<label>{{ t('pipelinq', 'Channel') }}</label>
-							<span>{{ requestData.channel || '-' }}</span>
-						</div>
-						<div class="info-field">
-							<label>{{ t('pipelinq', 'Category') }}</label>
-							<span>{{ requestData.category || '-' }}</span>
-						</div>
-						<div class="info-field">
-							<label>{{ t('pipelinq', 'Requested at') }}</label>
-							<span>{{ formatDate(requestData.requestedAt) }}</span>
-						</div>
-						<div class="info-field">
-							<label>{{ t('pipelinq', 'Assigned to') }}</label>
-							<span>{{ requestData.assignee || t('pipelinq', 'Unassigned') }}</span>
-						</div>
-					</div>
-
-					<div v-if="requestData.description" class="info-field info-field--full">
-						<label>{{ t('pipelinq', 'Description') }}</label>
-						<p>{{ requestData.description }}</p>
-					</div>
-
-					<!-- Client section -->
-					<div class="request-detail__section">
-						<h3>{{ t('pipelinq', 'Client') }}</h3>
-						<div v-if="clientData" class="client-link">
-							<a href="#" @click.prevent="$router.push({ name: 'ClientDetail', params: { id: clientData.id } })">
-								{{ clientData.name }}
-							</a>
-							<span v-if="clientData.email" class="client-meta">{{ clientData.email }}</span>
-							<span v-if="clientData.phone" class="client-meta">{{ clientData.phone }}</span>
-						</div>
-						<p v-else-if="requestData.client" class="section-empty orphaned-ref">
-							{{ t('pipelinq', '[Deleted client]') }}
-						</p>
-						<p v-else class="section-empty">
-							{{ t('pipelinq', 'No client linked') }}
-						</p>
-					</div>
-				</div>
-
-				<!-- Right column: pipeline + assignment -->
-				<div class="request-detail__sidebar">
-					<!-- Assignment -->
-					<div class="sidebar-section">
-						<h3>{{ t('pipelinq', 'Assignment') }}</h3>
-						<NcSelect
-							v-if="!isConverted"
-							:value="assigneeOption"
-							:options="userOptions"
-							:clearable="true"
-							label="label"
-							:reduce="o => o.value"
-							:placeholder="t('pipelinq', 'Assign to user')"
-							:filterable="true"
-							@input="onAssigneeChange" />
-						<span v-else>{{ requestData.assignee || t('pipelinq', 'Unassigned') }}</span>
-					</div>
-
-					<!-- Pipeline progress -->
-					<div v-if="pipelineData" class="sidebar-section">
-						<h3>{{ t('pipelinq', 'Pipeline') }}</h3>
-						<p class="pipeline-name">
-							{{ pipelineData.title }}
-						</p>
-
-						<div class="pipeline-progress">
-							<div
-								v-for="stage in sortedStages"
-								:key="stage.name"
-								class="pipeline-stage"
-								:class="stageClass(stage)">
-								<span class="stage-indicator" />
-								<span class="stage-name">{{ stage.name }}</span>
-							</div>
-						</div>
-
-						<NcButton
-							v-if="nextStage && !isConverted"
-							class="next-stage-btn"
-							@click="moveToNextStage">
-							{{ t('pipelinq', 'Move to {stage}', { stage: nextStage.name }) }}
-						</NcButton>
-					</div>
-					<div v-else class="sidebar-section">
-						<h3>{{ t('pipelinq', 'Pipeline') }}</h3>
-						<p class="section-empty">
-							{{ t('pipelinq', 'Not on pipeline') }}
-						</p>
-					</div>
-				</div>
-			</div>
+		<!-- Converted notice -->
+		<div v-if="isConverted" class="request-detail__notice">
+			{{ t('pipelinq', 'This request has been converted to a case and can no longer be edited.') }}
+			<a v-if="requestData.caseReference" href="#" @click.prevent="viewCase">
+				{{ t('pipelinq', 'View case') }}
+			</a>
 		</div>
 
-		<!-- Notes section -->
-		<EntityNotes
-			v-if="!isNew && !loading && !editing"
-			object-type="pipelinq_request"
-			:object-id="requestId" />
+		<CnDetailCard :title="t('pipelinq', 'Status & Priority')">
+			<div class="info-row">
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Status') }}</label>
+					<div class="status-control">
+						<span
+							class="status-badge"
+							:style="{ background: getStatusColor(requestData.status), color: '#fff' }">
+							{{ getStatusLabel(requestData.status) }}
+						</span>
+						<NcSelect
+							v-if="statusTransitions.length > 0 && !isConverted"
+							:value="null"
+							:options="statusTransitionOptions"
+							:placeholder="t('pipelinq', 'Change status')"
+							:clearable="false"
+							class="status-transition-select"
+							@input="onStatusChange" />
+					</div>
+				</div>
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Priority') }}</label>
+					<span
+						class="priority-badge"
+						:style="{ color: getPriorityColor(requestData.priority) }">
+						{{ getPriorityLabel(requestData.priority) }}
+					</span>
+				</div>
+			</div>
+		</CnDetailCard>
+
+		<CnDetailCard :title="t('pipelinq', 'Request Information')">
+			<div class="info-grid">
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Channel') }}</label>
+					<span>{{ requestData.channel || '-' }}</span>
+				</div>
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Category') }}</label>
+					<span>{{ requestData.category || '-' }}</span>
+				</div>
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Requested at') }}</label>
+					<span>{{ formatDate(requestData.requestedAt) }}</span>
+				</div>
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Assigned to') }}</label>
+					<span>{{ requestData.assignee || t('pipelinq', 'Unassigned') }}</span>
+				</div>
+			</div>
+
+			<div v-if="requestData.description" class="info-field info-field--full">
+				<label>{{ t('pipelinq', 'Description') }}</label>
+				<p>{{ requestData.description }}</p>
+			</div>
+		</CnDetailCard>
+
+		<CnDetailCard :title="t('pipelinq', 'Client')">
+			<div v-if="clientData" class="client-link">
+				<a href="#" @click.prevent="$router.push({ name: 'ClientDetail', params: { id: clientData.id } })">
+					{{ clientData.name }}
+				</a>
+				<span v-if="clientData.email" class="client-meta">{{ clientData.email }}</span>
+				<span v-if="clientData.phone" class="client-meta">{{ clientData.phone }}</span>
+			</div>
+			<p v-else-if="requestData.client" class="section-empty orphaned-ref">
+				{{ t('pipelinq', '[Deleted client]') }}
+			</p>
+			<p v-else class="section-empty">
+				{{ t('pipelinq', 'No client linked') }}
+			</p>
+		</CnDetailCard>
+
+		<CnDetailCard :title="t('pipelinq', 'Assignment')">
+			<NcSelect
+				v-if="!isConverted"
+				:value="assigneeOption"
+				:options="userOptions"
+				:clearable="true"
+				label="label"
+				:reduce="o => o.value"
+				:placeholder="t('pipelinq', 'Assign to user')"
+				:filterable="true"
+				@input="onAssigneeChange" />
+			<span v-else>{{ requestData.assignee || t('pipelinq', 'Unassigned') }}</span>
+		</CnDetailCard>
+
+		<CnDetailCard :title="t('pipelinq', 'Pipeline')">
+			<div v-if="pipelineData">
+				<p class="pipeline-name">
+					{{ pipelineData.title }}
+				</p>
+
+				<div class="pipeline-progress">
+					<div
+						v-for="stage in sortedStages"
+						:key="stage.name"
+						class="pipeline-stage"
+						:class="stageClass(stage)">
+						<span class="stage-indicator" />
+						<span class="stage-name">{{ stage.name }}</span>
+					</div>
+				</div>
+
+				<NcButton
+					v-if="nextStage && !isConverted"
+					class="next-stage-btn"
+					@click="moveToNextStage">
+					{{ t('pipelinq', 'Move to {stage}', { stage: nextStage.name }) }}
+				</NcButton>
+			</div>
+			<p v-else class="section-empty">
+				{{ t('pipelinq', 'Not on pipeline') }}
+			</p>
+		</CnDetailCard>
 
 		<!-- Delete dialog -->
 		<NcDialog
@@ -200,14 +185,14 @@
 				</NcButton>
 			</template>
 		</NcDialog>
-	</div>
+	</CnDetailPage>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcSelect } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
+import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import RequestForm from './RequestForm.vue'
-import EntityNotes from '../../components/EntityNotes.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import {
 	getAllowedTransitions,
@@ -222,10 +207,10 @@ export default {
 	components: {
 		NcButton,
 		NcDialog,
-		NcLoadingIcon,
 		NcSelect,
+		CnDetailPage,
+		CnDetailCard,
 		RequestForm,
-		EntityNotes,
 	},
 	props: {
 		requestId: {
@@ -258,6 +243,13 @@ export default {
 		requestData() {
 			if (this.isNew) return {}
 			return this.objectStore.getObject('request', this.requestId) || {}
+		},
+		sidebarProps() {
+			const config = this.objectStore.objectTypeRegistry.request || {}
+			return {
+				register: config.register || '',
+				schema: config.schema || '',
+			}
 		},
 		isConverted() {
 			return this.requestData.status === 'converted'
@@ -425,23 +417,12 @@ export default {
 
 		async confirmDelete() {
 			this.showDeleteDialog = false
-			this.cleanupNotes('pipelinq_request', this.requestId)
 			const success = await this.objectStore.deleteObject('request', this.requestId)
 			if (success) {
 				this.$router.push({ name: 'Requests' })
 			} else {
 				const error = this.objectStore.getError('request')
 				showError(error?.message || t('pipelinq', 'Failed to delete request.'))
-			}
-		},
-		async cleanupNotes(objectType, objectId) {
-			try {
-				await fetch(`/apps/pipelinq/api/notes/${objectType}/${objectId}`, {
-					method: 'DELETE',
-					headers: { requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' },
-				})
-			} catch {
-				// Cleanup failure is non-blocking
 			}
 		},
 
@@ -458,16 +439,12 @@ export default {
 </script>
 
 <style scoped>
-.request-detail {
-	padding: 20px;
-	max-width: 900px;
-}
-
 .request-detail__header {
 	display: flex;
 	align-items: center;
 	gap: 16px;
 	margin-bottom: 20px;
+	padding: 20px 20px 0;
 }
 
 .request-detail__notice {
@@ -486,31 +463,9 @@ export default {
 	margin-left: 8px;
 }
 
-.request-detail__actions {
-	display: flex;
-	gap: 12px;
-	margin-bottom: 20px;
-}
-
-.request-detail__layout {
-	display: flex;
-	gap: 32px;
-}
-
-.request-detail__info {
-	flex: 1;
-	min-width: 0;
-}
-
-.request-detail__sidebar {
-	width: 260px;
-	flex-shrink: 0;
-}
-
 .info-row {
 	display: flex;
 	gap: 24px;
-	margin-bottom: 16px;
 }
 
 .info-grid {
@@ -564,17 +519,6 @@ export default {
 	font-size: 14px;
 }
 
-/* Sections */
-.request-detail__section {
-	margin-top: 24px;
-	border-top: 1px solid var(--color-border);
-	padding-top: 16px;
-}
-
-.request-detail__section h3 {
-	margin: 0 0 8px;
-}
-
 .client-link a {
 	font-weight: bold;
 	color: var(--color-primary);
@@ -593,15 +537,6 @@ export default {
 .orphaned-ref {
 	font-style: italic;
 	color: var(--color-warning);
-}
-
-/* Sidebar */
-.sidebar-section {
-	margin-bottom: 24px;
-}
-
-.sidebar-section h3 {
-	margin: 0 0 8px;
 }
 
 .pipeline-name {

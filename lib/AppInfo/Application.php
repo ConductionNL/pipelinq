@@ -24,6 +24,10 @@ namespace OCA\Pipelinq\AppInfo;
 use OCA\OpenRegister\Event\DeepLinkRegistrationEvent;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\Pipelinq\Dashboard\ClientSearchWidget;
+use OCA\Pipelinq\Dashboard\DealsOverviewWidget;
+use OCA\Pipelinq\Dashboard\MyLeadsWidget;
+use OCA\Pipelinq\Dashboard\RecentActivitiesWidget;
 use OCA\Pipelinq\Listener\DeepLinkRegistrationListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCP\AppFramework\App;
@@ -34,6 +38,9 @@ use OCP\Comments\ICommentsManager;
 
 /**
  * Main application class for the Pipelinq client and request management app.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.UnusedFormalParameter)
  */
 class Application extends App implements IBootstrap
 {
@@ -70,6 +77,11 @@ class Application extends App implements IBootstrap
             event: ObjectUpdatedEvent::class,
             listener: ObjectEventListener::class
         );
+
+        $context->registerDashboardWidget(DealsOverviewWidget::class);
+        $context->registerDashboardWidget(MyLeadsWidget::class);
+        $context->registerDashboardWidget(RecentActivitiesWidget::class);
+        $context->registerDashboardWidget(ClientSearchWidget::class);
     }//end register()
 
     /**
@@ -87,25 +99,25 @@ class Application extends App implements IBootstrap
             $commentsManager = $server->get(ICommentsManager::class);
             $commentsManager->registerDisplayNameResolver(
                 type: 'pipelinq_client',
-                closure: function (string $id): string {
+                closure: function (string $_id): string {
                     return 'Client';
                 }
             );
             $commentsManager->registerDisplayNameResolver(
                 type: 'pipelinq_contact',
-                closure: function (string $id): string {
+                closure: function (string $_id): string {
                     return 'Contact';
                 }
             );
             $commentsManager->registerDisplayNameResolver(
                 type: 'pipelinq_lead',
-                closure: function (string $id): string {
+                closure: function (string $_id): string {
                     return 'Lead';
                 }
             );
             $commentsManager->registerDisplayNameResolver(
                 type: 'pipelinq_request',
-                closure: function (string $id): string {
+                closure: function (string $_id): string {
                     return 'Request';
                 }
             );
