@@ -50,3 +50,4 @@ rules:
     - Tag tasks with feature tier (MVP/V1/Enterprise)
     - Test with OpenRegister to verify schema validation works
     - Verify Nextcloud integration features with actual OCP interfaces
+    - Follow mandatory task categories from ADRs 005, 009, 010, 011
