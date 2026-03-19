@@ -84,7 +84,7 @@ class MetricsController extends Controller
 
         $lines[] = '# HELP pipelinq_info Application information';
         $lines[] = '# TYPE pipelinq_info gauge';
-        $lines[] = 'pipelinq_info{version="' . $version . '",php_version="' . $phpVersion . '"} 1';
+        $lines[] = 'pipelinq_info{version="'.$version.'",php_version="'.$phpVersion.'"} 1';
         $lines[] = '';
 
         // App up gauge.
@@ -94,57 +94,57 @@ class MetricsController extends Controller
         $lines[] = '';
 
         // Leads total by status and pipeline.
-        $lines[] = '# HELP pipelinq_leads_total Total leads by status and pipeline';
-        $lines[] = '# TYPE pipelinq_leads_total gauge';
+        $lines[]    = '# HELP pipelinq_leads_total Total leads by status and pipeline';
+        $lines[]    = '# TYPE pipelinq_leads_total gauge';
         $leadCounts = $this->getLeadCounts();
         foreach ($leadCounts as $row) {
-            $status   = $this->sanitizeLabel($row['status'] ?? 'unknown');
-            $pipeline = $this->sanitizeLabel($row['pipeline'] ?? 'unknown');
+            $status   = $this->sanitizeLabel(value: $row['status'] ?? 'unknown');
+            $pipeline = $this->sanitizeLabel(value: $row['pipeline'] ?? 'unknown');
             $count    = (int) $row['cnt'];
-            $lines[]  = 'pipelinq_leads_total{status="' . $status . '",pipeline="' . $pipeline . '"} ' . $count;
+            $lines[]  = 'pipelinq_leads_total{status="'.$status.'",pipeline="'.$pipeline.'"} '.$count;
         }
 
         $lines[] = '';
 
         // Leads value total by pipeline.
-        $lines[] = '# HELP pipelinq_leads_value_total Total pipeline value in EUR';
-        $lines[] = '# TYPE pipelinq_leads_value_total gauge';
+        $lines[]     = '# HELP pipelinq_leads_value_total Total pipeline value in EUR';
+        $lines[]     = '# TYPE pipelinq_leads_value_total gauge';
         $valueCounts = $this->getLeadValueByPipeline();
         foreach ($valueCounts as $row) {
-            $pipeline = $this->sanitizeLabel($row['pipeline'] ?? 'unknown');
+            $pipeline = $this->sanitizeLabel(value: $row['pipeline'] ?? 'unknown');
             $value    = (float) $row['total_value'];
-            $lines[]  = 'pipelinq_leads_value_total{pipeline="' . $pipeline . '"} ' . $value;
+            $lines[]  = 'pipelinq_leads_value_total{pipeline="'.$pipeline.'"} '.$value;
         }
 
         $lines[] = '';
 
         // Clients total.
-        $clientsTotal = $this->countObjectsBySchemaPattern('%client%');
+        $clientsTotal = $this->countObjectsBySchemaPattern(pattern: '%client%');
         $lines[]      = '# HELP pipelinq_clients_total Total clients';
         $lines[]      = '# TYPE pipelinq_clients_total gauge';
-        $lines[]      = 'pipelinq_clients_total ' . $clientsTotal;
+        $lines[]      = 'pipelinq_clients_total '.$clientsTotal;
         $lines[]      = '';
 
         // Contacts total.
-        $contactsTotal = $this->countObjectsBySchemaPattern('%contact%');
+        $contactsTotal = $this->countObjectsBySchemaPattern(pattern: '%contact%');
         $lines[]       = '# HELP pipelinq_contacts_total Total contacts';
         $lines[]       = '# TYPE pipelinq_contacts_total gauge';
-        $lines[]       = 'pipelinq_contacts_total ' . $contactsTotal;
+        $lines[]       = 'pipelinq_contacts_total '.$contactsTotal;
         $lines[]       = '';
 
         // Requests total by status.
-        $lines[] = '# HELP pipelinq_service_requests_total Total service requests by status';
-        $lines[] = '# TYPE pipelinq_service_requests_total gauge';
+        $lines[]       = '# HELP pipelinq_service_requests_total Total service requests by status';
+        $lines[]       = '# TYPE pipelinq_service_requests_total gauge';
         $requestCounts = $this->getRequestCounts();
         foreach ($requestCounts as $row) {
-            $status  = $this->sanitizeLabel($row['status'] ?? 'unknown');
+            $status  = $this->sanitizeLabel(value: $row['status'] ?? 'unknown');
             $count   = (int) $row['cnt'];
-            $lines[] = 'pipelinq_service_requests_total{status="' . $status . '"} ' . $count;
+            $lines[] = 'pipelinq_service_requests_total{status="'.$status.'"} '.$count;
         }
 
         $lines[] = '';
 
-        return implode("\n", $lines) . "\n";
+        return implode("\n", $lines)."\n";
     }//end collectMetrics()
 
     /**
@@ -174,7 +174,7 @@ class MetricsController extends Controller
         } catch (\Exception $e) {
             $this->logger->warning('[MetricsController] Failed to get lead counts', ['error' => $e->getMessage()]);
             return [];
-        }
+        }//end try
     }//end getLeadCounts()
 
     /**
@@ -185,12 +185,14 @@ class MetricsController extends Controller
     private function getLeadValueByPipeline(): array
     {
         try {
+            $valueSumExpr = "COALESCE(SUM(CAST(JSON_UNQUOTE(JSON_EXTRACT(o.object, '$.value')) AS DECIMAL(15,2))), 0)";
+
             $qb = $this->db->getQueryBuilder();
             $qb->select(
                 $qb->createFunction("JSON_UNQUOTE(JSON_EXTRACT(o.object, '$.pipeline')) AS pipeline"),
             )
                 ->selectAlias(
-                    $qb->createFunction("COALESCE(SUM(CAST(JSON_UNQUOTE(JSON_EXTRACT(o.object, '$.value')) AS DECIMAL(15,2))), 0)"),
+                    $qb->createFunction($valueSumExpr),
                     'total_value'
                 )
                 ->from('openregister_objects', 'o')
@@ -206,7 +208,7 @@ class MetricsController extends Controller
         } catch (\Exception $e) {
             $this->logger->warning('[MetricsController] Failed to get lead values', ['error' => $e->getMessage()]);
             return [];
-        }
+        }//end try
     }//end getLeadValueByPipeline()
 
     /**

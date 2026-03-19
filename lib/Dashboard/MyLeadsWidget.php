@@ -31,8 +31,6 @@ use OCP\Util;
  */
 class MyLeadsWidget implements IWidget
 {
-
-
     /**
      * Constructor.
      *
@@ -46,9 +44,10 @@ class MyLeadsWidget implements IWidget
 
     }//end __construct()
 
-
     /**
-     * @inheritDoc
+     * Get the unique widget identifier.
+     *
+     * @return string The widget ID
      */
     public function getId(): string
     {
@@ -56,9 +55,10 @@ class MyLeadsWidget implements IWidget
 
     }//end getId()
 
-
     /**
-     * @inheritDoc
+     * Get the translated widget title.
+     *
+     * @return string The widget title
      */
     public function getTitle(): string
     {
@@ -66,9 +66,10 @@ class MyLeadsWidget implements IWidget
 
     }//end getTitle()
 
-
     /**
-     * @inheritDoc
+     * Get the display order of this widget.
+     *
+     * @return int The sort order
      */
     public function getOrder(): int
     {
@@ -76,9 +77,10 @@ class MyLeadsWidget implements IWidget
 
     }//end getOrder()
 
-
     /**
-     * @inheritDoc
+     * Get the CSS class for the widget icon.
+     *
+     * @return string The icon CSS class
      */
     public function getIconClass(): string
     {
@@ -86,9 +88,10 @@ class MyLeadsWidget implements IWidget
 
     }//end getIconClass()
 
-
     /**
-     * @inheritDoc
+     * Get the URL for the widget header link.
+     *
+     * @return string|null The URL or null if none
      */
     public function getUrl(): ?string
     {
@@ -96,16 +99,15 @@ class MyLeadsWidget implements IWidget
 
     }//end getUrl()
 
-
     /**
-     * @inheritDoc
+     * Load the widget scripts and styles.
+     *
+     * @return void
      */
     public function load(): void
     {
-        Util::addScript(Application::APP_ID, Application::APP_ID . '-myLeadsWidget');
+        Util::addScript(Application::APP_ID, Application::APP_ID.'-myLeadsWidget');
         Util::addStyle(Application::APP_ID, 'dashboardWidgets');
 
     }//end load()
-
-
 }//end class
