@@ -121,7 +121,7 @@ class IcpConfigReader
     public function isBoolTrue(string $key, string $default='true'): bool
     {
         return $this->getString(key: $key, default: $default) === 'true';
-    }//end getBool()
+    }//end isBoolTrue()
 
     /**
      * Set a boolean value in app config.
