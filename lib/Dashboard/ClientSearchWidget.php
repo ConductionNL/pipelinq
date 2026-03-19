@@ -99,6 +99,8 @@ class ClientSearchWidget implements IWidget
      * Load the widget scripts and styles.
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess) — Nextcloud Util API is static by design
      */
     public function load(): void
     {

@@ -78,6 +78,8 @@ class ContactSyncService
      * @param ?string $clientId       The optional client ID for contact imports.
      *
      * @return array The created object data.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) — $addressBookKey kept for future per-book import support
      */
     public function importContact(string $uid, string $addressBookKey, string $type='client', ?string $clientId=null): array
     {
