@@ -27,6 +27,7 @@ const config = {
       ({
         docs: {
           path: './',
+          exclude: ['**/node_modules/**'],
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl:
             'https://github.com/ConductionNL/pipelinq/tree/main/docs/',
