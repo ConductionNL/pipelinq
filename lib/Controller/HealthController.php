@@ -74,19 +74,11 @@ class HealthController extends Controller
 
         // Check filesystem.
         $checks['filesystem'] = $this->checkFilesystem();
-        if ($checks['filesystem'] !== 'ok') {
-            if ($status === 'error') {
-                $status = 'error';
-            } else {
-                $status = 'degraded';
-            }
+        if ($checks['filesystem'] !== 'ok' && $status !== 'error') {
+            $status = 'degraded';
         }
 
-        if ($status === 'ok') {
-            $httpStatus = Http::STATUS_OK;
-        } else {
-            $httpStatus = Http::STATUS_SERVICE_UNAVAILABLE;
-        }
+        $httpStatus = ($status === 'ok') ? Http::STATUS_OK : Http::STATUS_SERVICE_UNAVAILABLE;
 
         return new JSONResponse(
             [

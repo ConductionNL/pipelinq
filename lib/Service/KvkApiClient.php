@@ -65,55 +65,76 @@ class KvkApiClient
         $results  = [];
         $sbiCodes = $criteria['sbiCodes'] ?? [];
 
-        // Search by SBI codes.
         foreach ($sbiCodes as $sbiCode) {
-            try {
-                $queryParams = [
-                    'apikey' => $apiKey,
-                    'type'   => 'hoofdvestiging',
-                    'pagina' => '1',
-                    'aantal' => '50',
-                ];
-
-                // Add location filters.
-                if (isset($criteria['provinces']) === true && count($criteria['provinces']) > 0) {
-                    // KVK API doesn't support province filter directly,
-                    // so we filter in post-processing.
-                }
-
-                $url = self::API_BASE.'/zoeken?'.http_build_query(data: $queryParams);
-
-                $client   = $this->clientService->newClient();
-                $response = $client->get(
-                    uri: $url,
-                    options: [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                        ],
-                        'timeout' => 15,
-                    ]
-                );
-
-                $body = json_decode(json: $response->getBody(), associative: true);
-
-                if (isset($body['resultaten']) === true) {
-                    foreach ($body['resultaten'] as $item) {
-                        $mapped = $this->mapResult(item: $item, sbiCode: $sbiCode);
-                        if ($mapped !== null) {
-                            $results[$mapped['kvkNumber']] = $mapped;
-                        }
-                    }
-                }
-            } catch (\Exception $e) {
-                $this->logger->warning(
-                    message: 'KVK API search failed for SBI code {sbi}',
-                    context: ['sbi' => $sbiCode, 'error' => $e->getMessage()]
-                );
-            }//end try
-        }//end foreach
+            $this->searchBySbiCode($apiKey, $sbiCode, $results);
+        }
 
         return array_values(array: $results);
     }//end search()
+
+    /**
+     * Search for a single SBI code and merge results.
+     *
+     * @param string $apiKey  The KVK API key.
+     * @param string $sbiCode The SBI code to search.
+     * @param array  $results The results array to populate (by reference).
+     *
+     * @return void
+     */
+    private function searchBySbiCode(string $apiKey, string $sbiCode, array &$results): void
+    {
+        try {
+            $body = $this->fetchResults($apiKey);
+
+            if (isset($body['resultaten']) === false) {
+                return;
+            }
+
+            foreach ($body['resultaten'] as $item) {
+                $mapped = $this->mapResult(item: $item, sbiCode: $sbiCode);
+                if ($mapped !== null) {
+                    $results[$mapped['kvkNumber']] = $mapped;
+                }
+            }
+        } catch (\Exception $e) {
+            $this->logger->warning(
+                message: 'KVK API search failed for SBI code {sbi}',
+                context: ['sbi' => $sbiCode, 'error' => $e->getMessage()]
+            );
+        }//end try
+    }//end searchBySbiCode()
+
+    /**
+     * Fetch results from the KVK API.
+     *
+     * @param string $apiKey The KVK API key.
+     *
+     * @return array The decoded response body.
+     */
+    private function fetchResults(string $apiKey): array
+    {
+        $queryParams = [
+            'apikey' => $apiKey,
+            'type'   => 'hoofdvestiging',
+            'pagina' => '1',
+            'aantal' => '50',
+        ];
+
+        $url = self::API_BASE.'/zoeken?'.http_build_query(data: $queryParams);
+
+        $client   = $this->clientService->newClient();
+        $response = $client->get(
+            uri: $url,
+            options: [
+                'headers' => [
+                    'Accept' => 'application/json',
+                ],
+                'timeout' => 15,
+            ]
+        );
+
+        return json_decode(json: $response->getBody(), associative: true) ?: [];
+    }//end fetchResults()
 
     /**
      * Map a KVK API result to our prospect format.
@@ -130,34 +151,59 @@ class KvkApiClient
             return null;
         }
 
-        $address        = $item['adres'] ?? ($item['vestingAdres'] ?? []);
-        $sbiActivities  = $item['spiActiviteiten'] ?? [];
-        $sbiDescription = '';
-
-        foreach ($sbiActivities as $activity) {
-            if (str_starts_with(haystack: (string) ($activity['sbiCode'] ?? ''), needle: $sbiCode) === true) {
-                $sbiDescription = $activity['sbiOmschrijving'] ?? '';
-                break;
-            }
-        }
+        $address = $item['adres'] ?? ($item['vestingAdres'] ?? []);
 
         return [
             'kvkNumber'        => (string) $kvkNumber,
             'tradeName'        => $item['eersteHandelsnaam'] ?? ($item['naam'] ?? ''),
             'legalForm'        => $item['rechtsvorm'] ?? '',
             'sbiCode'          => $sbiCode,
-            'sbiDescription'   => $sbiDescription,
+            'sbiDescription'   => $this->findSbiDescription($item, $sbiCode),
             'employeeCount'    => $item['totaalWerkzamePersonen'] ?? null,
-            'address'          => [
-                'street'     => ($address['straatnaam'] ?? '').' '.($address['huisnummer'] ?? ''),
-                'city'       => $address['plaats'] ?? '',
-                'province'   => $address['provincie'] ?? '',
-                'postalCode' => $address['postcode'] ?? '',
-            ],
+            'address'          => $this->mapAddress($address),
             'website'          => null,
             'registrationDate' => $item['registratieDatum'] ?? null,
             'isActive'         => ($item['actief'] ?? 'Ja') === 'Ja',
             'source'           => 'kvk',
         ];
     }//end mapResult()
+
+    /**
+     * Find the SBI description matching the given code.
+     *
+     * @param array  $item    The raw API result item.
+     * @param string $sbiCode The SBI code to look for.
+     *
+     * @return string The SBI description or empty string.
+     */
+    private function findSbiDescription(array $item, string $sbiCode): string
+    {
+        $sbiActivities = $item['spiActiviteiten'] ?? [];
+
+        foreach ($sbiActivities as $activity) {
+            $activityCode = (string) ($activity['sbiCode'] ?? '');
+            if (str_starts_with(haystack: $activityCode, needle: $sbiCode) === true) {
+                return $activity['sbiOmschrijving'] ?? '';
+            }
+        }
+
+        return '';
+    }//end findSbiDescription()
+
+    /**
+     * Map a KVK address to our format.
+     *
+     * @param array $address The raw address data.
+     *
+     * @return array The mapped address.
+     */
+    private function mapAddress(array $address): array
+    {
+        return [
+            'street'     => ($address['straatnaam'] ?? '').' '.($address['huisnummer'] ?? ''),
+            'city'       => $address['plaats'] ?? '',
+            'province'   => $address['provincie'] ?? '',
+            'postalCode' => $address['postcode'] ?? '',
+        ];
+    }//end mapAddress()
 }//end class

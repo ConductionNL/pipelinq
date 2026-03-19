@@ -69,6 +69,8 @@ class Provider implements IProvider
      * @param ?IEvent $previousEvent The previous event or null.
      *
      * @return IEvent The parsed event.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) — $previousEvent required by IProvider interface
      */
     public function parse($language, IEvent $event, ?IEvent $previousEvent=null): IEvent
     {

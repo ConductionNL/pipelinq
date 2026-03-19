@@ -78,7 +78,23 @@ class MetricsController extends Controller
     {
         $lines = [];
 
-        // App info gauge.
+        $this->addAppInfoMetrics($lines);
+        $this->addLeadMetrics($lines);
+        $this->addEntityCountMetrics($lines);
+        $this->addRequestMetrics($lines);
+
+        return implode("\n", $lines)."\n";
+    }//end collectMetrics()
+
+    /**
+     * Add application info and health metrics.
+     *
+     * @param array $lines The metrics lines to append to.
+     *
+     * @return void
+     */
+    private function addAppInfoMetrics(array &$lines): void
+    {
         $version    = $this->getAppVersion();
         $phpVersion = PHP_VERSION;
 
@@ -86,66 +102,87 @@ class MetricsController extends Controller
         $lines[] = '# TYPE pipelinq_info gauge';
         $lines[] = 'pipelinq_info{version="'.$version.'",php_version="'.$phpVersion.'"} 1';
         $lines[] = '';
-
-        // App up gauge.
         $lines[] = '# HELP pipelinq_up Whether the application is healthy';
         $lines[] = '# TYPE pipelinq_up gauge';
         $lines[] = 'pipelinq_up 1';
         $lines[] = '';
+    }//end addAppInfoMetrics()
 
-        // Leads total by status and pipeline.
+    /**
+     * Add lead count and value metrics.
+     *
+     * @param array $lines The metrics lines to append to.
+     *
+     * @return void
+     */
+    private function addLeadMetrics(array &$lines): void
+    {
         $lines[]    = '# HELP pipelinq_leads_total Total leads by status and pipeline';
         $lines[]    = '# TYPE pipelinq_leads_total gauge';
         $leadCounts = $this->getLeadCounts();
         foreach ($leadCounts as $row) {
-            $status   = $this->sanitizeLabel(value: $row['status'] ?? 'unknown');
-            $pipeline = $this->sanitizeLabel(value: $row['pipeline'] ?? 'unknown');
+            $status   = $this->sanitizeLabel(value: $row['status']);
+            $pipeline = $this->sanitizeLabel(value: $row['pipeline']);
             $count    = (int) $row['cnt'];
             $lines[]  = 'pipelinq_leads_total{status="'.$status.'",pipeline="'.$pipeline.'"} '.$count;
         }
 
         $lines[] = '';
 
-        // Leads value total by pipeline.
         $lines[]     = '# HELP pipelinq_leads_value_total Total pipeline value in EUR';
         $lines[]     = '# TYPE pipelinq_leads_value_total gauge';
         $valueCounts = $this->getLeadValueByPipeline();
         foreach ($valueCounts as $row) {
-            $pipeline = $this->sanitizeLabel(value: $row['pipeline'] ?? 'unknown');
+            $pipeline = $this->sanitizeLabel(value: $row['pipeline']);
             $value    = (float) $row['total_value'];
             $lines[]  = 'pipelinq_leads_value_total{pipeline="'.$pipeline.'"} '.$value;
         }
 
         $lines[] = '';
+    }//end addLeadMetrics()
 
-        // Clients total.
+    /**
+     * Add entity count metrics (clients and contacts).
+     *
+     * @param array $lines The metrics lines to append to.
+     *
+     * @return void
+     */
+    private function addEntityCountMetrics(array &$lines): void
+    {
         $clientsTotal = $this->countObjectsBySchemaPattern(pattern: '%client%');
         $lines[]      = '# HELP pipelinq_clients_total Total clients';
         $lines[]      = '# TYPE pipelinq_clients_total gauge';
         $lines[]      = 'pipelinq_clients_total '.$clientsTotal;
         $lines[]      = '';
 
-        // Contacts total.
         $contactsTotal = $this->countObjectsBySchemaPattern(pattern: '%contact%');
         $lines[]       = '# HELP pipelinq_contacts_total Total contacts';
         $lines[]       = '# TYPE pipelinq_contacts_total gauge';
         $lines[]       = 'pipelinq_contacts_total '.$contactsTotal;
         $lines[]       = '';
+    }//end addEntityCountMetrics()
 
-        // Requests total by status.
+    /**
+     * Add service request metrics.
+     *
+     * @param array $lines The metrics lines to append to.
+     *
+     * @return void
+     */
+    private function addRequestMetrics(array &$lines): void
+    {
         $lines[]       = '# HELP pipelinq_service_requests_total Total service requests by status';
         $lines[]       = '# TYPE pipelinq_service_requests_total gauge';
         $requestCounts = $this->getRequestCounts();
         foreach ($requestCounts as $row) {
-            $status  = $this->sanitizeLabel(value: $row['status'] ?? 'unknown');
+            $status  = $this->sanitizeLabel(value: $row['status']);
             $count   = (int) $row['cnt'];
             $lines[] = 'pipelinq_service_requests_total{status="'.$status.'"} '.$count;
         }
 
         $lines[] = '';
-
-        return implode("\n", $lines)."\n";
-    }//end collectMetrics()
+    }//end addRequestMetrics()
 
     /**
      * Get lead counts grouped by status and pipeline.

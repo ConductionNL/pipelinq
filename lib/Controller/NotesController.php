@@ -28,7 +28,6 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
-use Psr\Log\LoggerInterface;
 
 /**
  * Controller for managing notes on Pipelinq entities.
@@ -41,14 +40,12 @@ class NotesController extends Controller
      * @param IRequest         $request          The request.
      * @param NotesService     $notesService     The notes service.
      * @param NoteEventService $noteEventService The note event service.
-     * @param LoggerInterface  $logger           The logger.
      * @param IL10N            $l10n             The localization service.
      */
     public function __construct(
         IRequest $request,
         private NotesService $notesService,
         private NoteEventService $noteEventService,
-        private LoggerInterface $logger,
         private IL10N $l10n,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);

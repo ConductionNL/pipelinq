@@ -1,2 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<pmd version="@package_version@" timestamp="2026-02-26T13:49:08+00:00"/>
+<pmd version="@package_version@" timestamp="2026-03-19T08:35:25+00:00">
+  <file name="OCA\Pipelinq\Controller\MetricsController">
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.85 bugs.
+
+            * Calculation is based on number of operators, operands, cyclomatic complexity
+            * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
+            *  testsuites has dependency to this class.
+
+            Maybe you should check your unit tests for this class.</violation>
+  </file>
+  <file name="OCA\Pipelinq\Service\OpenCorporatesApiClient">
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.36 bugs.
+
+            * Calculation is based on number of operators, operands, cyclomatic complexity
+            * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
+            *  testsuites has dependency to this class.
+
+            Maybe you should check your unit tests for this class.</violation>
+  </file>
+  <file name="OCA\Pipelinq\Service\KvkApiClient">
+    <violation beginline="1" rule="Too complex method code" ruleset="Too complex method code" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="2">            This class looks really complex.
+
+            * Algorithms are complex (Max cyclomatic complexity of class methods is 11)
+
+            Maybe you should delegate some code to other objects or split complex method.</violation>
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.44 bugs.
+
+            * Calculation is based on number of operators, operands, cyclomatic complexity
+            * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
+            *  testsuites has dependency to this class.
+
+            Maybe you should check your unit tests for this class.</violation>
+  </file>
+  <file name="OCA\Pipelinq\Service\IcpConfigService">
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.47 bugs.
+
+            * Calculation is based on number of operators, operands, cyclomatic complexity
+            * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
+            *  testsuites has dependency to this class.
+
+            Maybe you should check your unit tests for this class.</violation>
+  </file>
+</pmd>

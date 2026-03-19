@@ -24,7 +24,6 @@ namespace OCA\Pipelinq\Service;
 use OCP\SystemTag\ISystemTagManager;
 use OCP\SystemTag\ISystemTagObjectMapper;
 use OCP\SystemTag\TagAlreadyExistsException;
-use Psr\Log\LoggerInterface;
 
 /**
  * Low-level CRUD operations for SystemTag-based lists.
@@ -46,12 +45,10 @@ class SystemTagCrudService
      *
      * @param ISystemTagManager      $tagManager The system tag manager.
      * @param ISystemTagObjectMapper $tagMapper  The system tag object mapper.
-     * @param LoggerInterface        $logger     The logger.
      */
     public function __construct(
         private ISystemTagManager $tagManager,
         private ISystemTagObjectMapper $tagMapper,
-        private LoggerInterface $logger,
     ) {
     }//end __construct()
 

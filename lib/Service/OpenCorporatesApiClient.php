@@ -57,53 +57,78 @@ class OpenCorporatesApiClient
      */
     public function search(array $criteria): array
     {
-        $results  = [];
         $keywords = $criteria['keywords'] ?? [];
 
         if (count($keywords) === 0) {
             return [];
         }
 
+        $results = [];
         foreach ($keywords as $keyword) {
-            try {
-                $queryParams = [
-                    'q'                 => $keyword,
-                    'jurisdiction_code' => 'nl',
-                    'per_page'          => '30',
-                    'order'             => 'score',
-                ];
-
-                $url = self::API_BASE.'/companies/search?'.http_build_query(data: $queryParams);
-
-                $client   = $this->clientService->newClient();
-                $response = $client->get(
-                    uri: $url,
-                    options: [
-                        'headers' => ['Accept' => 'application/json'],
-                        'timeout' => 15,
-                    ]
-                );
-
-                $body      = json_decode(json: $response->getBody(), associative: true);
-                $companies = $body['results']['companies'] ?? [];
-
-                foreach ($companies as $entry) {
-                    $company = $entry['company'] ?? [];
-                    $mapped  = $this->mapResult(company: $company);
-                    if ($mapped !== null) {
-                        $results[$mapped['kvkNumber']] = $mapped;
-                    }
-                }
-            } catch (\Exception $e) {
-                $this->logger->warning(
-                    message: 'OpenCorporates search failed for keyword {kw}',
-                    context: ['kw' => $keyword, 'error' => $e->getMessage()]
-                );
-            }//end try
-        }//end foreach
+            $this->searchByKeyword($keyword, $results);
+        }
 
         return array_values(array: $results);
     }//end search()
+
+    /**
+     * Search for a single keyword and merge results.
+     *
+     * @param string $keyword The keyword to search.
+     * @param array  $results The results array to populate (by reference).
+     *
+     * @return void
+     */
+    private function searchByKeyword(string $keyword, array &$results): void
+    {
+        try {
+            $body      = $this->fetchCompanies($keyword);
+            $companies = $body['results']['companies'] ?? [];
+
+            foreach ($companies as $entry) {
+                $company = $entry['company'] ?? [];
+                $mapped  = $this->mapResult(company: $company);
+                if ($mapped !== null) {
+                    $results[$mapped['kvkNumber']] = $mapped;
+                }
+            }
+        } catch (\Exception $e) {
+            $this->logger->warning(
+                message: 'OpenCorporates search failed for keyword {kw}',
+                context: ['kw' => $keyword, 'error' => $e->getMessage()]
+            );
+        }//end try
+    }//end searchByKeyword()
+
+    /**
+     * Fetch companies from the OpenCorporates API.
+     *
+     * @param string $keyword The search keyword.
+     *
+     * @return array The decoded response body.
+     */
+    private function fetchCompanies(string $keyword): array
+    {
+        $queryParams = [
+            'q'                 => $keyword,
+            'jurisdiction_code' => 'nl',
+            'per_page'          => '30',
+            'order'             => 'score',
+        ];
+
+        $url = self::API_BASE.'/companies/search?'.http_build_query(data: $queryParams);
+
+        $client   = $this->clientService->newClient();
+        $response = $client->get(
+            uri: $url,
+            options: [
+                'headers' => ['Accept' => 'application/json'],
+                'timeout' => 15,
+            ]
+        );
+
+        return json_decode(json: $response->getBody(), associative: true) ?: [];
+    }//end fetchCompanies()
 
     /**
      * Map an OpenCorporates result to our prospect format.
@@ -128,16 +153,28 @@ class OpenCorporatesApiClient
             'sbiCode'          => '',
             'sbiDescription'   => $company['industry_codes'][0]['description'] ?? '',
             'employeeCount'    => null,
-            'address'          => [
-                'street'     => $address['street_address'] ?? '',
-                'city'       => $address['locality'] ?? '',
-                'province'   => $address['region'] ?? '',
-                'postalCode' => $address['postal_code'] ?? '',
-            ],
+            'address'          => $this->mapAddress($address),
             'website'          => null,
             'registrationDate' => $company['incorporation_date'] ?? null,
             'isActive'         => ($company['current_status'] ?? 'Active') === 'Active',
             'source'           => 'opencorporates',
         ];
     }//end mapResult()
+
+    /**
+     * Map an OpenCorporates address to our format.
+     *
+     * @param array $address The raw address data.
+     *
+     * @return array The mapped address.
+     */
+    private function mapAddress(array $address): array
+    {
+        return [
+            'street'     => $address['street_address'] ?? '',
+            'city'       => $address['locality'] ?? '',
+            'province'   => $address['region'] ?? '',
+            'postalCode' => $address['postal_code'] ?? '',
+        ];
+    }//end mapAddress()
 }//end class
