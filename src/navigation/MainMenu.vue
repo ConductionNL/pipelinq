@@ -45,6 +45,13 @@
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
+				:name="t('pipelinq', 'Quotes')"
+				:to="{ name: 'Quotes' }">
+				<template #icon>
+					<FileDocumentEdit :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
 				:name="t('pipelinq', 'Pipeline')"
 				:to="{ name: 'Pipeline' }">
 				<template #icon>
@@ -98,6 +105,7 @@ import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
 import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
+import FileDocumentEdit from 'vue-material-design-icons/FileDocumentEdit.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
 
@@ -116,6 +124,7 @@ export default {
 		AccountCheck,
 		BookOpenVariantOutline,
 		PackageVariant,
+		FileDocumentEdit,
 		Cog,
 		Pipe,
 	},

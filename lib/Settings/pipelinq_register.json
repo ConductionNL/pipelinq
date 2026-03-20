@@ -27,7 +27,9 @@
           "pipeline",
           "product",
           "productCategory",
-          "leadProduct"
+          "leadProduct",
+          "quote",
+          "quoteLineItem"
         ],
         "tablePrefix": "",
         "folder": "Open Registers/Pipelinq"
@@ -646,6 +648,187 @@
           "notes": {
             "type": "string",
             "description": "Line item notes (e.g., annual license, setup fee)",
+            "visible": false
+          }
+        }
+      },
+      "quote": {
+        "slug": "quote",
+        "title": "Quote",
+        "icon": "FileDocumentEdit",
+        "version": "1.0.0",
+        "summary": "A formal quote or proposal linked to a lead",
+        "description": "Represents a quote (offerte) with line items, lifecycle status, and financial summary. Linked to leads and clients for proposal management. Mapped to Schema.org Offer.",
+        "@type": "schema:Offer",
+        "required": [
+          "title",
+          "status"
+        ],
+        "properties": {
+          "quoteNumber": {
+            "type": "string",
+            "description": "Auto-generated sequential quote number (e.g., OFF-2026-0042)",
+            "maxLength": 50
+          },
+          "lead": {
+            "type": "string",
+            "description": "UUID reference to the parent Lead",
+            "format": "uuid"
+          },
+          "client": {
+            "type": "string",
+            "description": "UUID reference to the Client",
+            "format": "uuid"
+          },
+          "contact": {
+            "type": "string",
+            "description": "UUID reference to the Contact person",
+            "format": "uuid",
+            "visible": false
+          },
+          "status": {
+            "type": "string",
+            "description": "Quote lifecycle status",
+            "enum": [
+              "concept",
+              "verzonden",
+              "geaccepteerd",
+              "afgewezen",
+              "verlopen"
+            ],
+            "default": "concept",
+            "title": "Status",
+            "facetable": true
+          },
+          "title": {
+            "type": "string",
+            "description": "Quote title or subject line",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "sentDate": {
+            "type": "string",
+            "description": "Date the quote was sent to the client",
+            "format": "date",
+            "visible": false
+          },
+          "expiryDate": {
+            "type": "string",
+            "description": "Date the quote expires",
+            "format": "date"
+          },
+          "subtotal": {
+            "type": "number",
+            "description": "Sum of all line item totals (excl. BTW)",
+            "minimum": 0
+          },
+          "taxRate": {
+            "type": "number",
+            "description": "Tax rate as percentage. Default: 21 (Dutch BTW)",
+            "minimum": 0,
+            "maximum": 100,
+            "default": 21,
+            "visible": false
+          },
+          "taxAmount": {
+            "type": "number",
+            "description": "Computed: subtotal * (taxRate / 100)",
+            "minimum": 0,
+            "visible": false
+          },
+          "total": {
+            "type": "number",
+            "description": "Computed: subtotal + taxAmount",
+            "minimum": 0
+          },
+          "paymentTerms": {
+            "type": "string",
+            "description": "Free-text payment terms and conditions",
+            "visible": false
+          },
+          "notes": {
+            "type": "string",
+            "description": "Internal notes (not shown on PDF)",
+            "visible": false
+          },
+          "version": {
+            "type": "integer",
+            "description": "Version number for revised quotes",
+            "default": 1,
+            "visible": false
+          },
+          "assignee": {
+            "type": "string",
+            "description": "Nextcloud user ID of the quote owner",
+            "title": "Assignee",
+            "facetable": true
+          }
+        }
+      },
+      "quoteLineItem": {
+        "slug": "quoteLineItem",
+        "title": "Quote Line Item",
+        "icon": "FormatListNumbered",
+        "version": "1.0.0",
+        "summary": "A line item within a quote",
+        "description": "Represents a line item in a quote with quantity, pricing, and discount. Can reference a product from the catalog or be a custom free-text item.",
+        "@type": "schema:Offer",
+        "required": [
+          "quote",
+          "description",
+          "quantity",
+          "unitPrice"
+        ],
+        "properties": {
+          "quote": {
+            "type": "string",
+            "description": "UUID reference to the parent Quote",
+            "format": "uuid"
+          },
+          "product": {
+            "type": "string",
+            "description": "UUID reference to a Product (optional for custom items)",
+            "format": "uuid",
+            "visible": false
+          },
+          "description": {
+            "type": "string",
+            "description": "Line item description (pre-populated from Product.name if linked)",
+            "maxLength": 500
+          },
+          "quantity": {
+            "type": "number",
+            "description": "Number of units",
+            "minimum": 0.01,
+            "default": 1
+          },
+          "unitPrice": {
+            "type": "number",
+            "description": "Price per unit in EUR",
+            "minimum": 0
+          },
+          "discount": {
+            "type": "number",
+            "description": "Discount as percentage (0-100)",
+            "minimum": 0,
+            "maximum": 100,
+            "default": 0,
+            "visible": false
+          },
+          "total": {
+            "type": "number",
+            "description": "Computed: quantity * unitPrice * (1 - discount/100)",
+            "minimum": 0
+          },
+          "sortOrder": {
+            "type": "integer",
+            "description": "Display order within the quote",
+            "default": 0,
+            "visible": false
+          },
+          "notes": {
+            "type": "string",
+            "description": "Line item notes (shown on PDF)",
             "visible": false
           }
         }
