@@ -17,6 +17,7 @@
 import { NcDashboardWidget, NcEmptyContent } from '@nextcloud/vue'
 import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
 import { initializeStores } from '../../store/store.js'
+import { formatCurrency } from '../../services/localeUtils.js'
 
 export default {
 	name: 'DealsOverviewWidget',
@@ -56,7 +57,7 @@ export default {
 			return this.leads.map((lead) => {
 				const client = this.clientMap[lead.client] || this.clientMap[lead.clientId]
 				const clientName = client ? (client.name || client.title || '') : ''
-				const value = lead.value ? 'EUR ' + Number(lead.value).toLocaleString('nl-NL') : ''
+				const value = lead.value ? formatCurrency(lead.value) : ''
 				const subParts = [clientName, value, lead.stage].filter(Boolean)
 
 				return {
