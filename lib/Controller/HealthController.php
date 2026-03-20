@@ -4,6 +4,7 @@
  * Pipelinq Health Controller
  *
  * Exposes health check endpoint for container orchestration and monitoring.
+ * Checks database, filesystem, and OpenRegister dependency health.
  *
  * @category Controller
  * @package  OCA\Pipelinq\Controller
@@ -25,6 +26,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IAppConfig;
 use OCP\IDBConnection;
 use OCP\IRequest;
 use OCP\App\IAppManager;
@@ -43,12 +45,14 @@ class HealthController extends Controller
      * @param IRequest        $request    The HTTP request
      * @param IDBConnection   $db         Database connection
      * @param IAppManager     $appManager App manager
+     * @param IAppConfig      $appConfig  App configuration
      * @param LoggerInterface $logger     Logger
      */
     public function __construct(
         IRequest $request,
         private IDBConnection $db,
         private IAppManager $appManager,
+        private IAppConfig $appConfig,
         private LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
@@ -78,8 +82,21 @@ class HealthController extends Controller
             $status = 'degraded';
         }
 
+        // Check OpenRegister dependency.
+        $checks['openregister'] = $this->checkOpenRegister();
+        if ($checks['openregister'] !== 'ok') {
+            // OpenRegister is critical — Pipelinq cannot function without it.
+            $status = 'error';
+        }
+
+        // Check register configuration.
+        $checks['register_configured'] = $this->checkRegisterConfigured();
+        if ($checks['register_configured'] !== 'ok' && $status === 'ok') {
+            $status = 'degraded';
+        }
+
         $httpStatus = Http::STATUS_SERVICE_UNAVAILABLE;
-        if ($status === 'ok') {
+        if ($status === 'ok' || $status === 'degraded') {
             $httpStatus = Http::STATUS_OK;
         }
 
@@ -134,6 +151,53 @@ class HealthController extends Controller
             return 'failed: '.$e->getMessage();
         }
     }//end checkFilesystem()
+
+    /**
+     * Check whether the OpenRegister app is installed and enabled.
+     *
+     * @return string 'ok' or status message
+     */
+    private function checkOpenRegister(): string
+    {
+        try {
+            $installedApps = $this->appManager->getInstalledApps();
+            if (in_array('openregister', $installedApps, true) === false) {
+                return 'unavailable: app not installed';
+            }
+
+            if ($this->appManager->isEnabledForUser('openregister') === false) {
+                return 'unavailable: app disabled';
+            }
+
+            return 'ok';
+        } catch (\Exception $e) {
+            $this->logger->error(
+                '[HealthController] OpenRegister check failed',
+                ['error' => $e->getMessage()]
+            );
+            return 'failed: '.$e->getMessage();
+        }
+    }//end checkOpenRegister()
+
+    /**
+     * Check whether the Pipelinq register has been configured.
+     *
+     * @return string 'ok' or 'missing'
+     */
+    private function checkRegisterConfigured(): string
+    {
+        $registerId = $this->appConfig->getValueString(
+            Application::APP_ID,
+            'register',
+            ''
+        );
+
+        if ($registerId === '') {
+            return 'missing';
+        }
+
+        return 'ok';
+    }//end checkRegisterConfigured()
 
     /**
      * Get the app version.
