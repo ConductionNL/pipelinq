@@ -2,6 +2,12 @@
 
 Service intake and request tracking before conversion to formal cases. Requests bridge the gap between CRM (Pipelinq) and case management (Procest).
 
+## Screenshot
+
+![Request Management](../screenshots/request-management.png)
+
+The request list view uses the same Cards/Table interface as other entity views, with an "Add Item" button and bulk Actions menu. Requests can be filtered, sorted, and searched.
+
 ## Specs
 
 - `openspec/specs/request-management/spec.md`
@@ -19,7 +25,7 @@ Full create, read, update, and delete for request records. Requests represent se
 
 ### Request Status Lifecycle (MVP)
 
-Requests follow a defined status flow: `new` → `in_progress` → `completed` / `rejected` / `converted`. Status changes are tracked for audit purposes.
+Requests follow a defined status flow: `new` -> `in_progress` -> `completed` / `rejected` / `converted`. Status changes are tracked for audit purposes.
 
 ### Request Priority (MVP)
 

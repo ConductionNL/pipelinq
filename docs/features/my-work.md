@@ -2,6 +2,12 @@
 
 Personal productivity hub aggregating all work items assigned to the current user into a single prioritized view. Answers: "What do I need to work on next?"
 
+## Screenshot
+
+![My Work](../screenshots/my-work.png)
+
+The My Work view shows filter buttons (All, Leads, Requests) and a "Show completed" checkbox toggle. Items assigned to the current user are displayed below, grouped by urgency. When no items are assigned, the message "No items assigned to you" appears.
+
 ## Specs
 
 - `openspec/specs/my-work/spec.md`
@@ -26,7 +32,7 @@ Items are organized into urgency-based groups:
 
 ### Sorting (MVP)
 
-Items sorted by priority first (urgent → high → normal → low), then by due date within each priority level.
+Items sorted by priority first (urgent -> high -> normal -> low), then by due date within each priority level.
 
 ### Filtering (MVP)
 
@@ -35,6 +41,8 @@ Filter tabs to focus on specific entity types:
 - All (leads + requests combined)
 - Leads only
 - Requests only
+
+Additionally, a "Show completed" checkbox toggles visibility of completed items.
 
 ### Overdue Item Highlighting (MVP)
 
