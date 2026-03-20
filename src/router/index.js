@@ -15,6 +15,9 @@ import ProductDetail from '../views/products/ProductDetail.vue'
 import PipelineBoard from '../views/pipeline/PipelineBoard.vue'
 import MyWork from '../views/MyWork.vue'
 import PipelineManager from '../views/settings/PipelineManager.vue'
+import TaskList from '../views/tasks/TaskList.vue'
+import TaskDetail from '../views/tasks/TaskDetail.vue'
+import TaskForm from '../views/tasks/TaskForm.vue'
 
 Vue.use(Router)
 
@@ -35,6 +38,9 @@ export default new Router({
 		{ path: '/products/:id', name: 'ProductDetail', component: ProductDetail, props: route => ({ productId: route.params.id }) },
 		{ path: '/pipeline', name: 'Pipeline', component: PipelineBoard },
 		{ path: '/my-work', name: 'MyWork', component: MyWork },
+		{ path: '/tasks', name: 'Tasks', component: TaskList },
+		{ path: '/tasks/new', name: 'TaskNew', component: TaskForm },
+		{ path: '/tasks/:id', name: 'TaskDetail', component: TaskDetail, props: route => ({ taskId: route.params.id }) },
 		{ path: '/pipelines', name: 'Pipelines', component: PipelineManager },
 		{ path: '*', redirect: '/' },
 	],
