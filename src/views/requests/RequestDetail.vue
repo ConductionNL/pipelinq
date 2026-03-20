@@ -170,6 +170,12 @@
 			</p>
 		</CnDetailCard>
 
+		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Activity Timeline')">
+			<ActivityTimeline
+				entity-type="request"
+				:entity-id="requestId" />
+		</CnDetailCard>
+
 		<!-- Delete dialog -->
 		<NcDialog
 			v-if="showDeleteDialog"
@@ -193,6 +199,7 @@ import { NcButton, NcDialog, NcSelect } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import RequestForm from './RequestForm.vue'
+import ActivityTimeline from '../../components/ActivityTimeline.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import {
 	getAllowedTransitions,
@@ -211,6 +218,7 @@ export default {
 		CnDetailPage,
 		CnDetailCard,
 		RequestForm,
+		ActivityTimeline,
 	},
 	props: {
 		requestId: {
