@@ -206,7 +206,7 @@ import Cog from 'vue-material-design-icons/Cog.vue'
 import PipelineCard from './PipelineCard.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { getPriorityLabel, getPriorityColor } from '../../services/requestStatus.js'
-import { getDaysAge, isStale, getAgingClass, formatAge } from '../../services/pipelineUtils.js'
+import { getDaysAge, isStale, getAgingClass, formatAge, isItemOverdue as checkItemOverdue } from '../../services/pipelineUtils.js'
 
 export default {
 	name: 'PipelineBoard',
@@ -540,9 +540,10 @@ export default {
 		},
 
 		isItemOverdue(item) {
-			const dateStr = item.expectedCloseDate || item.requestedAt
-			if (!dateStr) return false
-			return new Date(dateStr) < new Date()
+			// Find the item's current stage to check isClosed
+			const colValue = this.getItemColumnValue(item)
+			const stage = this.sortedStages.find(s => s.name === colValue) || null
+			return checkItemOverdue(item, item._schemaSlug || 'lead', stage)
 		},
 
 		formatDate(dateStr) {
