@@ -43,6 +43,8 @@ class NotificationService
         'lead_stage_changed'     => 'notify_stage_status',
         'request_status_changed' => 'notify_stage_status',
         'note_added'             => 'notify_notes',
+        'lead_won'               => 'notify_deals',
+        'lead_lost'              => 'notify_deals',
     ];
 
     /**
@@ -203,6 +205,65 @@ class NotificationService
             objectId: $objectId
         );
     }//end notifyNoteAdded()
+
+    /**
+     * Notify a user about a deal being won.
+     *
+     * @param string $title          The lead title.
+     * @param string $value          The deal value.
+     * @param string $assigneeUserId The assignee user ID.
+     * @param string $objectId       The object ID.
+     * @param string $author         The author user ID.
+     *
+     * @return void
+     */
+    public function notifyDealWon(
+        string $title,
+        string $value,
+        string $assigneeUserId,
+        string $objectId,
+        string $author
+    ): void {
+        $this->send(
+            subject: 'lead_won',
+            parameters: [
+                'title'  => $title,
+                'value'  => $value,
+                'author' => $author,
+            ],
+            userId: $assigneeUserId,
+            objectType: 'lead',
+            objectId: $objectId
+        );
+    }//end notifyDealWon()
+
+    /**
+     * Notify a user about a deal being lost.
+     *
+     * @param string $title          The lead title.
+     * @param string $assigneeUserId The assignee user ID.
+     * @param string $objectId       The object ID.
+     * @param string $author         The author user ID.
+     *
+     * @return void
+     */
+    public function notifyDealLost(
+        string $title,
+        string $assigneeUserId,
+        string $objectId,
+        string $author
+    ): void {
+        $this->send(
+            subject: 'lead_lost',
+            parameters: [
+                'title'  => $title,
+                'author' => $author,
+            ],
+            userId: $assigneeUserId,
+            objectType: 'lead',
+            objectId: $objectId
+        );
+    }//end notifyDealLost()
 
     /**
      * Send a notification to a user.
