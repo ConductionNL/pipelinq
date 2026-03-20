@@ -1,0 +1,7 @@
+schema: spec-driven
+status: proposed
+name: crm-workflow-automation-ui
+title: CRM Workflow Automation UI
+description: Visual automation builder UI and n8n workflow creation from Pipelinq
+feature_tier: V1
+created: "2026-03-20"

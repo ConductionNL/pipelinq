@@ -1,0 +1,7 @@
+schema: spec-driven
+status: proposed
+name: terugbel-taakbeheer
+title: Terugbel- en Taakbeheer
+description: Callback requests and task management for KCC backoffice routing
+feature_tier: MVP
+created: "2026-03-20"

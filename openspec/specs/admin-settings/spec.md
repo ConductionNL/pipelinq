@@ -1,5 +1,7 @@
 # Admin Settings Specification
 
+## Status: implemented
+
 ## Purpose
 
 The admin settings page provides a Nextcloud admin panel for configuring Pipelinq. Administrators can manage pipelines and their stages, set a default pipeline, configure lead source and request channel values, manage product categories, and configure prospect discovery (ICP) settings. Only Nextcloud admin users can access the admin settings page; regular users access per-user notification preferences via an in-app settings dialog. The design follows the wireframe in DESIGN-REFERENCES.md section 3.7.
@@ -10,7 +12,7 @@ The admin settings page provides a Nextcloud admin panel for configuring Pipelin
 
 ## Requirements
 
-### REQ-AS-010: Nextcloud Admin Panel Registration [MVP]
+### Requirement: Nextcloud Admin Panel Registration [MVP]
 
 The system MUST register a settings page in the Nextcloud admin panel under "Administration". Only users with Nextcloud admin privileges MUST be able to access this page. The implementation uses `OCP\Settings\ISettings` (`AdminSettings.php`) and `OCP\Settings\IIconSection` (`SettingsSection.php`) to register the "Pipelinq" section with priority 10.
 
@@ -49,7 +51,7 @@ The system MUST register a settings page in the Nextcloud admin panel under "Adm
 
 ## ADDED Requirements
 
-### Requirement: REQ-AS-011: Version Information Display [MVP]
+### Requirement: Version Information Display [MVP]
 
 The admin settings page MUST display version information about the Pipelinq installation so administrators can verify which version is running and access support.
 
@@ -68,7 +70,7 @@ The admin settings page MUST display version information about the Pipelinq inst
 
 ---
 
-### Requirement: REQ-AS-012: Register Configuration Mapping [MVP]
+### Requirement: Register Configuration Mapping [MVP]
 
 The admin settings page MUST display a register configuration mapping interface that allows administrators to map Pipelinq object types to OpenRegister registers and schemas. This uses the shared `CnRegisterMapping` component from `@conduction/nextcloud-vue`.
 
@@ -104,7 +106,7 @@ The admin settings page MUST display a register configuration mapping interface 
 
 ---
 
-### Requirement: REQ-AS-013: Re-import Configuration Action [MVP]
+### Requirement: Re-import Configuration Action [MVP]
 
 The admin settings page MUST provide a button to re-run the register configuration import, allowing administrators to recover from failed imports or apply updated schemas.
 
@@ -132,7 +134,7 @@ The admin settings page MUST provide a button to re-run the register configurati
 
 ---
 
-### Requirement: REQ-AS-020: Pipeline Management [MVP]
+### Requirement: Pipeline Management [MVP]
 
 The admin settings MUST provide full CRUD operations for pipelines. Pipelines are stored as OpenRegister objects with schema `pipeline`. Stages are stored as a JSON array within each pipeline object (`pipeline.stages[]`), not as separate OpenRegister objects.
 
@@ -185,7 +187,7 @@ The admin settings MUST provide full CRUD operations for pipelines. Pipelines ar
 
 ---
 
-### Requirement: REQ-AS-030: Stage Management within Pipelines [MVP]
+### Requirement: Stage Management within Pipelines [MVP]
 
 The admin settings MUST provide CRUD operations for stages within each pipeline via the `PipelineForm` component. Stages are stored as a JSON array on the pipeline object, each with: `name`, `order`, `probability`, `isClosed`, `isWon`, and `color`.
 
@@ -242,7 +244,7 @@ The admin settings MUST provide CRUD operations for stages within each pipeline 
 
 ---
 
-### Requirement: REQ-AS-035: Pipeline Property Mappings [MVP]
+### Requirement: Pipeline Property Mappings [MVP]
 
 The PipelineForm MUST allow administrators to configure property mappings that define which schemas participate in the pipeline and how objects are placed into columns.
 
@@ -264,7 +266,7 @@ The PipelineForm MUST allow administrators to configure property mappings that d
 
 ---
 
-### Requirement: REQ-AS-040: Default Pipeline Selection [MVP]
+### Requirement: Default Pipeline Selection [MVP]
 
 The admin settings MUST allow selecting one pipeline as the default. The default pipeline is used when creating new leads or requests that are not explicitly assigned to a pipeline.
 
@@ -294,7 +296,7 @@ The admin settings MUST allow selecting one pipeline as the default. The default
 
 ---
 
-### Requirement: REQ-AS-045: Pipeline View Association [MVP]
+### Requirement: Pipeline View Association [MVP]
 
 The PipelineForm MUST allow associating a pipeline with a saved view to define which schemas are displayed in the pipeline board.
 
@@ -311,7 +313,7 @@ The PipelineForm MUST allow associating a pipeline with a saved view to define w
 
 ---
 
-### Requirement: REQ-AS-050: Lead Source Configuration [V1]
+### Requirement: Lead Source Configuration [V1]
 
 The admin settings MUST allow customizing the list of available lead source values. Lead sources are managed as system tags (via `SystemTagService`) and displayed using the reusable `TagManager` component.
 
@@ -348,7 +350,7 @@ The admin settings MUST allow customizing the list of available lead source valu
 
 ---
 
-### Requirement: REQ-AS-060: Request Channel Configuration [V1]
+### Requirement: Request Channel Configuration [V1]
 
 The admin settings MUST allow customizing the list of available request channel values, using the same `TagManager` component as lead sources.
 
@@ -375,7 +377,7 @@ The admin settings MUST allow customizing the list of available request channel 
 
 ---
 
-### Requirement: REQ-AS-065: Prospect Discovery Settings [V1]
+### Requirement: Prospect Discovery Settings [V1]
 
 The admin settings MUST include an Ideal Customer Profile (ICP) configuration section for prospect discovery, rendered via the `ProspectSettings` component.
 
@@ -410,7 +412,7 @@ The admin settings MUST include an Ideal Customer Profile (ICP) configuration se
 
 ---
 
-### Requirement: REQ-AS-070: Default Pipelines on Installation [MVP]
+### Requirement: Default Pipelines on Installation [MVP]
 
 When Pipelinq is installed for the first time, the system MUST create default pipelines and stages via the repair step / configuration import.
 
@@ -458,7 +460,7 @@ When Pipelinq is installed for the first time, the system MUST create default pi
 
 ---
 
-### Requirement: REQ-AS-075: User Notification Preferences [MVP]
+### Requirement: User Notification Preferences [MVP]
 
 Each user MUST be able to configure their notification preferences via a per-user settings dialog (`UserSettings.vue`), separate from the admin settings.
 
@@ -486,7 +488,7 @@ Each user MUST be able to configure their notification preferences via a per-use
 
 ---
 
-### Requirement: REQ-AS-080: Settings Persistence [MVP]
+### Requirement: Settings Persistence [MVP]
 
 All admin settings MUST be persisted via `OCP\IAppConfig` and survive app updates and server restarts.
 
@@ -513,7 +515,7 @@ All admin settings MUST be persisted via `OCP\IAppConfig` and survive app update
 
 ---
 
-### Requirement: REQ-AS-085: Internationalization (i18n) [MVP]
+### Requirement: Internationalization (i18n) [MVP]
 
 All admin settings UI text MUST support Dutch (nl) and English (en) translations via the Nextcloud `t()` and `n()` translation functions.
 
@@ -530,7 +532,7 @@ All admin settings UI text MUST support Dutch (nl) and English (en) translations
 
 ---
 
-### Requirement: REQ-AS-090: Accessible Form Controls [MVP]
+### Requirement: Accessible Form Controls [MVP]
 
 The admin settings page MUST comply with WCAG AA accessibility standards for all interactive elements.
 
