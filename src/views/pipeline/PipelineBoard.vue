@@ -18,6 +18,11 @@
 					:options="showFilterOptions"
 					:clearable="false"
 					class="show-filter" />
+				<NcTextField
+					:value="searchQuery"
+					:placeholder="t('pipelinq', 'Search items...')"
+					class="pipeline-search"
+					@update:value="v => searchQuery = v" />
 				<div class="view-toggle">
 					<NcButton
 						:type="viewMode === 'kanban' ? 'primary' : 'tertiary'"
@@ -67,7 +72,7 @@
 						<span class="column-count">{{ getStageItems(stage.name).length }}</span>
 					</div>
 					<span v-if="hasTotals" class="column-value">
-						{{ selectedPipeline.totalsLabel || '' }} {{ getStageTotalValue(stage.name).toLocaleString('nl-NL') }}
+						{{ selectedPipeline.totalsLabel || '' }} {{ getStageTotalValue(stage.name).toLocaleString() }}
 					</span>
 				</div>
 				<div class="kanban-column__body">
@@ -171,7 +176,7 @@
 						<td>{{ item.assignee || '\u2014' }}</td>
 						<td>
 							<span v-if="getItemTotalsValue(item) !== null">
-								{{ selectedPipeline.totalsLabel || '' }} {{ Number(getItemTotalsValue(item)).toLocaleString('nl-NL') }}
+								{{ selectedPipeline.totalsLabel || '' }} {{ Number(getItemTotalsValue(item)).toLocaleString() }}
 							</span>
 							<span v-else>&#x2014;</span>
 						</td>
@@ -199,7 +204,7 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
 import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
 import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
@@ -207,6 +212,7 @@ import PipelineCard from './PipelineCard.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { getPriorityLabel, getPriorityColor } from '../../services/requestStatus.js'
 import { getDaysAge, isStale, getAgingClass, formatAge } from '../../services/pipelineUtils.js'
+import { formatNumber, formatDate } from '../../services/localeUtils.js'
 
 export default {
 	name: 'PipelineBoard',
@@ -214,6 +220,7 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 		NcSelect,
+		NcTextField,
 		PipelineCard,
 		ViewColumn,
 		FormatListBulleted,
@@ -226,6 +233,7 @@ export default {
 		return {
 			selectedPipelineId: null,
 			showFilter: 'all',
+			searchQuery: '',
 			expandedClosed: null,
 			loading: false,
 			items: [],
@@ -281,11 +289,16 @@ export default {
 			return this.sortedStages.filter(s => s.isClosed)
 		},
 		allItems() {
+			let result = this.items
 			const filter = this.showFilter?.id || this.showFilter || 'all'
 			if (filter !== 'all') {
-				return this.items.filter(i => i._schemaSlug === filter)
+				result = result.filter(i => i._schemaSlug === filter)
 			}
-			return this.items
+			if (this.searchQuery.trim()) {
+				const query = this.searchQuery.trim().toLowerCase()
+				result = result.filter(i => (i.title || '').toLowerCase().includes(query))
+			}
+			return result
 		},
 		sortedListItems() {
 			const items = [...this.allItems]
@@ -547,11 +560,7 @@ export default {
 
 		formatDate(dateStr) {
 			if (!dateStr) return '\u2014'
-			try {
-				return new Date(dateStr).toLocaleDateString('nl-NL', { month: 'short', day: 'numeric' })
-			} catch {
-				return dateStr
-			}
+			return formatDate(dateStr)
 		},
 
 		isItemStale(item) {
@@ -605,6 +614,11 @@ export default {
 
 .show-filter {
 	min-width: 140px;
+}
+
+.pipeline-search {
+	min-width: 200px;
+	max-width: 300px;
 }
 
 .view-toggle {

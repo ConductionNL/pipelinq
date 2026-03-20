@@ -17,6 +17,7 @@
 import { NcDashboardWidget, NcEmptyContent } from '@nextcloud/vue'
 import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import { initializeStores } from '../../store/store.js'
+import { formatDate } from '../../services/localeUtils.js'
 
 export default {
 	name: 'MyLeadsWidget',
@@ -50,7 +51,7 @@ export default {
 				const isOverdue = lead.expectedCloseDate && new Date(lead.expectedCloseDate) < now
 				const priorityLabel = lead.priority ? t('pipelinq', lead.priority) : ''
 				const dueStr = lead.expectedCloseDate
-					? new Date(lead.expectedCloseDate).toLocaleDateString('nl-NL', { month: 'short', day: 'numeric' })
+					? formatDate(lead.expectedCloseDate)
 					: ''
 				const subParts = [
 					priorityLabel,

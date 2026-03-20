@@ -17,6 +17,7 @@
 import { NcDashboardWidget, NcEmptyContent } from '@nextcloud/vue'
 import ClockOutline from 'vue-material-design-icons/ClockOutline.vue'
 import { initializeStores } from '../../store/store.js'
+import { formatDate } from '../../services/localeUtils.js'
 
 export default {
 	name: 'RecentActivitiesWidget',
@@ -81,7 +82,7 @@ export default {
 				if (diffMinutes < 60) return t('pipelinq', '{minutes}m ago', { minutes: diffMinutes })
 				if (diffHours < 24) return t('pipelinq', '{hours}h ago', { hours: diffHours })
 				if (diffDays < 7) return t('pipelinq', '{days}d ago', { days: diffDays })
-				return date.toLocaleDateString('nl-NL', { month: 'short', day: 'numeric' })
+				return formatDate(dateStr)
 			} catch {
 				return dateStr
 			}
