@@ -76,6 +76,13 @@
 					</template>
 				</NcAppNavigationItem>
 				<NcAppNavigationItem
+					:name="t('pipelinq', 'Forms')"
+					:to="{ name: 'Forms' }">
+					<template #icon>
+						<FormTextboxPassword :size="20" />
+					</template>
+				</NcAppNavigationItem>
+				<NcAppNavigationItem
 					:name="t('pipelinq', 'Configuration')"
 					@click="$emit('open-settings')">
 					<template #icon>
@@ -99,6 +106,7 @@ import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
+import FormTextboxPassword from 'vue-material-design-icons/FormTextboxPassword.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
 
 export default {
@@ -117,6 +125,7 @@ export default {
 		BookOpenVariantOutline,
 		PackageVariant,
 		Cog,
+		FormTextboxPassword,
 		Pipe,
 	},
 	methods: {
