@@ -25,11 +25,16 @@ namespace OCA\Pipelinq\Service;
  * Calculates fit scores based on ICP criteria.
  *
  * Score breakdown (max 100):
- * - SBI code match: 30 points
+ * - SBI code match: 30 points (exact) or 15 points (prefix)
  * - Employee count match: 25 points
- * - Location (province) match: 20 points
+ * - Location (province or city) match: 20 points
  * - Legal form match: 15 points
  * - Active registration: 10 points
+ * - Keyword match: +10 per keyword, max +20
+ *
+ * Total capped at 100.
+ *
+ * @SuppressWarnings(PHPMD.CyclomaticComplexity) — scoring method with multiple branches
  */
 class ProspectScoringService
 {
@@ -49,9 +54,10 @@ class ProspectScoringService
             'locationMatch'  => 0,
             'legalFormMatch' => 0,
             'activeMatch'    => 0,
+            'keywordMatch'   => 0,
         ];
 
-        // SBI code match (30 points).
+        // SBI code match (30 exact / 15 prefix).
         $breakdown['sbiMatch'] = $this->scoreSbi(
             sbiCode: $prospect['sbiCode'] ?? '',
             targetCodes: $criteria['sbiCodes'] ?? []
@@ -64,10 +70,12 @@ class ProspectScoringService
             max: $criteria['employeeCountMax'] ?? 0
         );
 
-        // Location match (20 points).
+        // Location match — province OR city (20 points).
         $breakdown['locationMatch'] = $this->scoreLocation(
             province: $prospect['address']['province'] ?? '',
-            targetProvinces: $criteria['provinces'] ?? []
+            targetProvinces: $criteria['provinces'] ?? [],
+            city: $prospect['address']['city'] ?? '',
+            targetCities: $criteria['cities'] ?? []
         );
 
         // Legal form match (15 points).
@@ -84,7 +92,14 @@ class ProspectScoringService
             $breakdown['activeMatch'] = 10;
         }
 
-        $prospect['fitScore']     = array_sum(array: $breakdown);
+        // Keyword match (+10 per keyword, max +20).
+        $breakdown['keywordMatch'] = $this->scoreKeywords(
+            tradeName: $prospect['tradeName'] ?? '',
+            sbiDescription: $prospect['sbiDescription'] ?? '',
+            keywords: $criteria['keywords'] ?? []
+        );
+
+        $prospect['fitScore']     = min(100, array_sum(array: $breakdown));
         $prospect['fitBreakdown'] = $breakdown;
 
         return $prospect;
@@ -117,12 +132,12 @@ class ProspectScoringService
     }//end scoreAll()
 
     /**
-     * Score SBI code match.
+     * Score SBI code match with exact vs prefix differentiation.
      *
      * @param string $sbiCode     The prospect's SBI code.
      * @param array  $targetCodes The target SBI codes.
      *
-     * @return int The SBI score (0 or 30).
+     * @return int The SBI score (0, 15, or 30).
      */
     private function scoreSbi(string $sbiCode, array $targetCodes): int
     {
@@ -130,13 +145,22 @@ class ProspectScoringService
             return 0;
         }
 
+        $bestScore = 0;
+
         foreach ($targetCodes as $target) {
-            if (str_starts_with(haystack: $sbiCode, needle: (string) $target) === true) {
+            $target = (string) $target;
+            if ($sbiCode === $target) {
+                // Exact match — 30 points (max possible).
                 return 30;
+            }
+
+            if (str_starts_with(haystack: $sbiCode, needle: $target) === true) {
+                // Prefix match — 15 points.
+                $bestScore = max($bestScore, 15);
             }
         }
 
-        return 0;
+        return $bestScore;
     }//end scoreSbi()
 
     /**
@@ -170,23 +194,38 @@ class ProspectScoringService
     }//end scoreEmployeeCount()
 
     /**
-     * Score location match.
+     * Score location match — province OR city (either triggers 20 points).
      *
      * @param string $province        The prospect's province.
      * @param array  $targetProvinces The target provinces.
+     * @param string $city            The prospect's city.
+     * @param array  $targetCities    The target cities.
      *
      * @return int The location score (0 or 20).
      */
-    private function scoreLocation(string $province, array $targetProvinces): int
-    {
-        if (count($targetProvinces) === 0 || $province === '') {
-            return 0;
+    private function scoreLocation(
+        string $province,
+        array $targetProvinces,
+        string $city='',
+        array $targetCities=[]
+    ): int {
+        // Check province match.
+        if (count($targetProvinces) > 0 && $province !== '') {
+            $normalised = strtolower(string: trim(string: $province));
+            foreach ($targetProvinces as $target) {
+                if (strtolower(string: trim(string: (string) $target)) === $normalised) {
+                    return 20;
+                }
+            }
         }
 
-        $normalised = strtolower(string: trim(string: $province));
-        foreach ($targetProvinces as $target) {
-            if (strtolower(string: trim(string: (string) $target)) === $normalised) {
-                return 20;
+        // Check city match (OR logic).
+        if (count($targetCities) > 0 && $city !== '') {
+            $normalisedCity = strtolower(string: trim(string: $city));
+            foreach ($targetCities as $targetCity) {
+                if (strtolower(string: trim(string: (string) $targetCity)) === $normalisedCity) {
+                    return 20;
+                }
             }
         }
 
@@ -216,4 +255,37 @@ class ProspectScoringService
 
         return 0;
     }//end scoreLegalForm()
+
+    /**
+     * Score keyword matches in trade name and SBI description.
+     *
+     * Awards +10 per keyword match, capped at +20.
+     *
+     * @param string $tradeName      The prospect's trade name.
+     * @param string $sbiDescription The prospect's SBI activity description.
+     * @param array  $keywords       The ICP keyword list.
+     *
+     * @return int The keyword score (0, 10, or 20).
+     */
+    private function scoreKeywords(string $tradeName, string $sbiDescription, array $keywords): int
+    {
+        if (count($keywords) === 0) {
+            return 0;
+        }
+
+        $searchText = strtolower(string: $tradeName.' '.$sbiDescription);
+        $score      = 0;
+
+        foreach ($keywords as $keyword) {
+            $keyword = strtolower(string: trim(string: (string) $keyword));
+            if ($keyword !== '' && str_contains(haystack: $searchText, needle: $keyword) === true) {
+                $score += 10;
+                if ($score >= 20) {
+                    return 20;
+                }
+            }
+        }
+
+        return $score;
+    }//end scoreKeywords()
 }//end class
