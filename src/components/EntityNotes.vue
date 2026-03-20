@@ -7,7 +7,8 @@
 				v-model="newMessage"
 				:placeholder="t('pipelinq', 'Add a note...')"
 				class="entity-notes__textarea"
-				rows="3" />
+				rows="3"
+				@keydown="onNewNoteKeydown" />
 			<NcButton
 				type="primary"
 				:disabled="submitting || newMessage.trim() === ''"
@@ -30,15 +31,44 @@
 				<div class="entity-notes__item-header">
 					<span class="entity-notes__author">{{ note.authorName }}</span>
 					<span class="entity-notes__time">{{ formatTime(note.timestamp) }}</span>
-					<NcButton
-						v-if="note.isOwn"
-						type="tertiary"
-						class="entity-notes__delete"
-						@click="deleteNote(note.id)">
-						{{ t('pipelinq', 'Delete') }}
-					</NcButton>
+					<template v-if="note.isOwn && editingNoteId !== note.id">
+						<NcButton
+							type="tertiary"
+							class="entity-notes__action"
+							@click="startEditing(note)">
+							{{ t('pipelinq', 'Edit') }}
+						</NcButton>
+						<NcButton
+							type="tertiary"
+							class="entity-notes__action"
+							@click="deleteNote(note.id)">
+							{{ t('pipelinq', 'Delete') }}
+						</NcButton>
+					</template>
 				</div>
-				<p class="entity-notes__message">
+
+				<!-- Inline editing mode -->
+				<div v-if="editingNoteId === note.id" class="entity-notes__edit">
+					<textarea
+						v-model="editMessage"
+						class="entity-notes__textarea"
+						rows="3"
+						@keydown="onEditKeydown" />
+					<div class="entity-notes__edit-actions">
+						<NcButton
+							type="primary"
+							:disabled="saving || editMessage.trim() === ''"
+							@click="saveEdit(note.id)">
+							{{ saving ? t('pipelinq', 'Saving...') : t('pipelinq', 'Save') }}
+						</NcButton>
+						<NcButton @click="cancelEditing">
+							{{ t('pipelinq', 'Cancel') }}
+						</NcButton>
+					</div>
+				</div>
+
+				<!-- Display mode -->
+				<p v-else class="entity-notes__message">
 					{{ note.message }}
 				</p>
 			</div>
@@ -71,6 +101,9 @@ export default {
 			newMessage: '',
 			loading: false,
 			submitting: false,
+			editingNoteId: null,
+			editMessage: '',
+			saving: false,
 		}
 	},
 	watch: {
@@ -105,6 +138,13 @@ export default {
 			this.loading = false
 		},
 
+		onNewNoteKeydown(event) {
+			if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+				event.preventDefault()
+				this.addNote()
+			}
+		},
+
 		async addNote() {
 			if (this.newMessage.trim() === '') return
 			this.submitting = true
@@ -129,6 +169,52 @@ export default {
 				// Submit failed silently
 			}
 			this.submitting = false
+		},
+
+		startEditing(note) {
+			this.editingNoteId = note.id
+			this.editMessage = note.message
+		},
+
+		cancelEditing() {
+			this.editingNoteId = null
+			this.editMessage = ''
+		},
+
+		onEditKeydown(event) {
+			if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+				event.preventDefault()
+				if (this.editingNoteId !== null) {
+					this.saveEdit(this.editingNoteId)
+				}
+			}
+		},
+
+		async saveEdit(noteId) {
+			if (this.editMessage.trim() === '') return
+			this.saving = true
+			try {
+				const response = await fetch(
+					`/apps/pipelinq/api/notes/single/${noteId}`,
+					{
+						method: 'PUT',
+						headers: {
+							'Content-Type': 'application/json',
+							requesttoken: OC.requestToken,
+							'OCS-APIREQUEST': 'true',
+						},
+						body: JSON.stringify({ message: this.editMessage }),
+					},
+				)
+				if (response.ok) {
+					this.editingNoteId = null
+					this.editMessage = ''
+					await this.fetchNotes()
+				}
+			} catch {
+				// Edit failed silently
+			}
+			this.saving = false
 		},
 
 		async deleteNote(noteId) {
@@ -249,8 +335,22 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
-.entity-notes__delete {
+.entity-notes__action {
 	margin-left: auto;
+}
+
+.entity-notes__action + .entity-notes__action {
+	margin-left: 0;
+}
+
+.entity-notes__edit {
+	margin-top: 8px;
+}
+
+.entity-notes__edit-actions {
+	display: flex;
+	gap: 8px;
+	margin-top: 8px;
 }
 
 .entity-notes__message {
