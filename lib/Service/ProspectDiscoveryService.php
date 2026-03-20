@@ -260,9 +260,34 @@ class ProspectDiscoveryService
                 return [];
             }
 
-            // Use the OpenRegister API internally via curl to get clients.
-            // This is a simplification; in production, inject ObjectService.
-            return [];
+            $url = \OC::$server->getURLGenerator()->getAbsoluteURL(
+                "/apps/openregister/api/objects/{$register}/{$schema}?_limit=500"
+            );
+
+            $client   = \OC::$server->getHTTPClientService()->newClient();
+            $response = $client->get(
+                $url,
+                [
+                    'headers'   => [
+                        'OCS-APIREQUEST' => 'true',
+                        'requesttoken'   => \OC::$server->getCsrfTokenManager()->getToken()->getEncryptedValue(),
+                    ],
+                    'nextcloud' => ['allow_local_address' => true],
+                ]
+            );
+
+            $data    = json_decode($response->getBody(), true);
+            $results = $data['results'] ?? $data ?? [];
+            $names   = [];
+
+            foreach ($results as $item) {
+                $name = trim($item['name'] ?? '');
+                if ($name !== '') {
+                    $names[] = strtolower($name);
+                }
+            }
+
+            return $names;
         } catch (\Exception $e) {
             $this->logger->warning(
                 message: 'Failed to fetch existing clients for exclusion',

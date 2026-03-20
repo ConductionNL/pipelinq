@@ -2,7 +2,10 @@
 	<div class="prospect-card" tabindex="0" @keyup.enter="$emit('create-lead', prospect)">
 		<div class="prospect-card__header">
 			<span class="prospect-card__name">{{ prospect.tradeName }}</span>
-			<span class="prospect-card__score" :class="scoreClass">
+			<span
+				class="prospect-card__score"
+				:class="scoreClass"
+				:title="scoreTooltip">
 				{{ prospect.fitScore }}%
 			</span>
 		</div>
@@ -19,6 +22,10 @@
 			<div v-if="prospect.address && prospect.address.city" class="prospect-card__detail">
 				<span class="detail-label">{{ t('pipelinq', 'Location') }}</span>
 				<span>{{ prospect.address.city }}{{ prospect.address.province ? ', ' + prospect.address.province : '' }}</span>
+			</div>
+			<div v-if="prospect.legalForm" class="prospect-card__detail">
+				<span class="detail-label">{{ t('pipelinq', 'Legal form') }}</span>
+				<span>{{ prospect.legalForm }}</span>
 			</div>
 			<div class="prospect-card__detail">
 				<span class="detail-label">{{ t('pipelinq', 'KVK') }}</span>
@@ -57,6 +64,21 @@ export default {
 			if (score >= 40) return 'score--medium'
 			return 'score--low'
 		},
+		scoreTooltip() {
+			const b = this.prospect.fitBreakdown
+			if (!b) return ''
+
+			const lines = []
+			lines.push(t('pipelinq', 'SBI match: {pts}/{max}', { pts: b.sbiMatch || 0, max: 30 }))
+			lines.push(t('pipelinq', 'Employees: {pts}/{max}', { pts: b.employeeMatch || 0, max: 25 }))
+			lines.push(t('pipelinq', 'Location: {pts}/{max}', { pts: b.locationMatch || 0, max: 20 }))
+			lines.push(t('pipelinq', 'Legal form: {pts}/{max}', { pts: b.legalFormMatch || 0, max: 15 }))
+			lines.push(t('pipelinq', 'Active: {pts}/{max}', { pts: b.activeMatch || 0, max: 10 }))
+			if (b.keywordMatch !== undefined) {
+				lines.push(t('pipelinq', 'Keywords: {pts}/{max}', { pts: b.keywordMatch || 0, max: 20 }))
+			}
+			return lines.join('\n')
+		},
 	},
 }
 </script>
@@ -93,6 +115,7 @@ export default {
 	border-radius: 12px;
 	font-size: 12px;
 	font-weight: 700;
+	cursor: help;
 }
 
 .score--high {
