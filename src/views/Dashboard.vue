@@ -167,6 +167,16 @@
 				</div>
 			</template>
 
+			<!-- Top Products widget -->
+			<template #widget-top-products>
+				<ProductRevenue />
+			</template>
+
+			<!-- Prospect Discovery widget -->
+			<template #widget-prospect-discovery>
+				<ProspectWidget />
+			</template>
+
 			<!-- Empty state override with welcome message -->
 			<template #empty>
 				<div v-if="isEmpty" class="welcome-message">
@@ -211,6 +221,8 @@ import FileDocument from 'vue-material-design-icons/FileDocument.vue'
 import CurrencyEur from 'vue-material-design-icons/CurrencyEur.vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
 import { useObjectStore } from '../store/modules/object.js'
+import ProductRevenue from '../components/ProductRevenue.vue'
+import ProspectWidget from '../components/ProspectWidget.vue'
 import LeadCreateDialog from './leads/LeadCreateDialog.vue'
 import RequestCreateDialog from './requests/RequestCreateDialog.vue'
 import ClientCreateDialog from './clients/ClientCreateDialog.vue'
@@ -234,6 +246,8 @@ const DEFAULT_LAYOUT = [
 	{ id: 5, widgetId: 'deals-by-stage', gridX: 0, gridY: 2, gridWidth: 6, gridHeight: 4 },
 	{ id: 6, widgetId: 'my-work', gridX: 6, gridY: 2, gridWidth: 6, gridHeight: 4 },
 	{ id: 7, widgetId: 'client-overview', gridX: 0, gridY: 6, gridWidth: 12, gridHeight: 3 },
+	{ id: 8, widgetId: 'top-products', gridX: 0, gridY: 9, gridWidth: 6, gridHeight: 4 },
+	{ id: 9, widgetId: 'prospect-discovery', gridX: 6, gridY: 9, gridWidth: 6, gridHeight: 4 },
 ]
 
 export default {
@@ -244,6 +258,8 @@ export default {
 		CnStatsBlock,
 		Plus,
 		Refresh,
+		ProductRevenue,
+		ProspectWidget,
 		LeadCreateDialog,
 		RequestCreateDialog,
 		ClientCreateDialog,
@@ -292,6 +308,8 @@ export default {
 				{ id: 'deals-by-stage', title: t('pipelinq', 'Requests by Status'), type: 'custom' },
 				{ id: 'my-work', title: t('pipelinq', 'My Work'), type: 'custom' },
 				{ id: 'client-overview', title: t('pipelinq', 'Client Overview'), type: 'custom' },
+				{ id: 'top-products', title: t('pipelinq', 'Top Products by Pipeline Value'), type: 'custom' },
+				{ id: 'prospect-discovery', title: t('pipelinq', 'Prospect Discovery'), type: 'custom' },
 			]
 		},
 
