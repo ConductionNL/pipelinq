@@ -76,6 +76,13 @@
 					</template>
 				</NcAppNavigationItem>
 				<NcAppNavigationItem
+					:name="t('pipelinq', 'Automations')"
+					:to="{ name: 'Automations' }">
+					<template #icon>
+						<RobotOutline :size="20" />
+					</template>
+				</NcAppNavigationItem>
+				<NcAppNavigationItem
 					:name="t('pipelinq', 'Configuration')"
 					@click="$emit('open-settings')">
 					<template #icon>
@@ -99,6 +106,7 @@ import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
+import RobotOutline from 'vue-material-design-icons/RobotOutline.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
 
 export default {
@@ -117,6 +125,7 @@ export default {
 		BookOpenVariantOutline,
 		PackageVariant,
 		Cog,
+		RobotOutline,
 		Pipe,
 	},
 	methods: {
