@@ -1,3 +1,7 @@
+---
+status: implemented
+---
+
 # Prometheus Metrics Endpoint
 
 ## Purpose

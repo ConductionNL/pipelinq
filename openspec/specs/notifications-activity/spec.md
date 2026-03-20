@@ -1,3 +1,7 @@
+---
+status: implemented
+---
+
 # Notifications & Activity Stream Specification
 
 ## Purpose

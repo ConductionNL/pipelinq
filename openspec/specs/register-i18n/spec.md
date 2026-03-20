@@ -1,3 +1,7 @@
+---
+status: implemented
+---
+
 # Register Content Internationalization
 
 ## Purpose
@@ -59,7 +63,7 @@ API responses MUST accept `Accept-Language` header and MUST include `Content-Lan
 - THEN the response MUST return the product name as "Consultation"
 - AND the response MUST include the header `Content-Language: en`
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: App UI MUST provide complete Dutch and English translations per ADR-005
 

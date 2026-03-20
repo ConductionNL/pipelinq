@@ -1,3 +1,7 @@
+---
+status: implemented
+---
+
 # Request Management Specification
 
 ## Purpose
@@ -334,7 +338,7 @@ The system MUST enforce validation rules for request data integrity.
 
 ---
 
-## ADDED Requirements
+## Requirements
 
 ### REQ-RM-120: Request-Contact Linking [MVP]
 

@@ -1,0 +1,5 @@
+name: product-catalog-quoting
+status: proposed
+created: 2026-03-20
+specs:
+  - specs/product-catalog-quoting/spec.md
