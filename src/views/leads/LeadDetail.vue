@@ -118,6 +118,11 @@
 			</div>
 		</CnDetailCard>
 
+		<!-- Contact Roles -->
+		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Contact Roles')">
+			<LeadContactRoles :lead-id="leadId" />
+		</CnDetailCard>
+
 		<!-- Products -->
 		<CnDetailCard :title="t('pipelinq', 'Products')">
 			<LeadProducts
@@ -151,6 +156,7 @@ import { showError } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import LeadForm from './LeadForm.vue'
 import LeadProducts from '../../components/LeadProducts.vue'
+import LeadContactRoles from '../../components/LeadContactRoles.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -162,6 +168,7 @@ export default {
 		CnDetailCard,
 		LeadForm,
 		LeadProducts,
+		LeadContactRoles,
 	},
 	props: {
 		leadId: {
