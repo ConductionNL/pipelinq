@@ -226,6 +226,7 @@ import {
 	getStatusLabel,
 	getStatusColor,
 } from '../services/requestStatus.js'
+import { formatCurrency, formatDate } from '../services/localeUtils.js'
 
 const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 }
 
@@ -545,17 +546,11 @@ export default {
 		},
 
 		formatCurrency(value) {
-			if (!value) return 'EUR 0'
-			return 'EUR ' + Number(value).toLocaleString('nl-NL')
+			return formatCurrency(value)
 		},
 
 		formatDate(dateStr) {
-			if (!dateStr) return ''
-			try {
-				return new Date(dateStr).toLocaleDateString('nl-NL', { month: 'short', day: 'numeric' })
-			} catch {
-				return dateStr
-			}
+			return formatDate(dateStr)
 		},
 
 		onLeadCreated(leadId) {
