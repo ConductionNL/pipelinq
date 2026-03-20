@@ -59,6 +59,13 @@
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
+				:name="t('pipelinq', 'Tasks')"
+				:to="{ name: 'Tasks' }">
+				<template #icon>
+					<ClipboardCheck :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
 				:name="t('pipelinq', 'Documentation')"
 				@click="openLink('https://pipelinq.app', '_blank')">
 				<template #icon>
@@ -97,6 +104,7 @@ import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
 import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
 import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
+import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
@@ -115,6 +123,7 @@ export default {
 		ViewColumn,
 		AccountCheck,
 		BookOpenVariantOutline,
+		ClipboardCheck,
 		PackageVariant,
 		Cog,
 		Pipe,
