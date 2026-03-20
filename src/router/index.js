@@ -15,6 +15,9 @@ import ProductDetail from '../views/products/ProductDetail.vue'
 import PipelineBoard from '../views/pipeline/PipelineBoard.vue'
 import MyWork from '../views/MyWork.vue'
 import PipelineManager from '../views/settings/PipelineManager.vue'
+import FormManager from '../views/forms/FormManager.vue'
+import FormBuilder from '../views/forms/FormBuilder.vue'
+import FormSubmissions from '../views/forms/FormSubmissions.vue'
 
 Vue.use(Router)
 
@@ -36,6 +39,10 @@ export default new Router({
 		{ path: '/pipeline', name: 'Pipeline', component: PipelineBoard },
 		{ path: '/my-work', name: 'MyWork', component: MyWork },
 		{ path: '/pipelines', name: 'Pipelines', component: PipelineManager },
+		{ path: '/forms', name: 'Forms', component: FormManager },
+		{ path: '/forms/new', name: 'FormNew', component: FormBuilder },
+		{ path: '/forms/:id', name: 'FormDetail', component: FormBuilder, props: route => ({ formId: route.params.id }) },
+		{ path: '/forms/:id/submissions', name: 'FormSubmissions', component: FormSubmissions, props: route => ({ formId: route.params.id }) },
 		{ path: '*', redirect: '/' },
 	],
 })
