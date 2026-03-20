@@ -37,6 +37,8 @@ class ProviderSubjectHandler
         'lead_created'    => ['Lead created: %s', 'Lead created: {title}'],
         'lead_assigned'   => ['Lead assigned: %s', 'Lead assigned: {title}'],
         'request_created' => ['Request created: %s', 'Request created: {title}'],
+        'client_created'  => ['Client created: %s', 'Client created: {title}'],
+        'contact_created' => ['Contact created: %s', 'Contact created: {title}'],
     ];
 
     /**

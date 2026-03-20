@@ -164,6 +164,12 @@
 			</div>
 		</CnDetailCard>
 
+		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Activity Timeline')">
+			<ActivityTimeline
+				entity-type="client"
+				:entity-id="clientId" />
+		</CnDetailCard>
+
 		<!-- Delete warning dialog -->
 		<NcDialog
 			v-if="showDelete"
@@ -203,6 +209,7 @@ import { NcButton, NcDialog } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import ClientForm from './ClientForm.vue'
+import ActivityTimeline from '../../components/ActivityTimeline.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -213,6 +220,7 @@ export default {
 		CnDetailPage,
 		CnDetailCard,
 		ClientForm,
+		ActivityTimeline,
 	},
 	props: {
 		clientId: {

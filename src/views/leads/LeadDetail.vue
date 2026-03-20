@@ -127,6 +127,12 @@
 				@sync-value="syncLeadValue" />
 		</CnDetailCard>
 
+		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Activity Timeline')">
+			<ActivityTimeline
+				entity-type="lead"
+				:entity-id="leadId" />
+		</CnDetailCard>
+
 		<!-- Delete dialog -->
 		<NcDialog
 			v-if="showDeleteDialog"
@@ -151,6 +157,7 @@ import { showError } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import LeadForm from './LeadForm.vue'
 import LeadProducts from '../../components/LeadProducts.vue'
+import ActivityTimeline from '../../components/ActivityTimeline.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -162,6 +169,7 @@ export default {
 		CnDetailCard,
 		LeadForm,
 		LeadProducts,
+		ActivityTimeline,
 	},
 	props: {
 		leadId: {
