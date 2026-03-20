@@ -1,3 +1,7 @@
+---
+status: implemented
+---
+
 # Entity Notes Specification
 
 ## Purpose

@@ -1,3 +1,7 @@
+---
+status: implemented
+---
+
 # activity-timeline Specification
 
 ## Purpose
@@ -107,7 +111,7 @@ The system MUST expose timeline data via API for external systems and dashboards
 
 ---
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Activity events MUST cover all entity types
 The current ActivityService only publishes events for leads and requests. All Pipelinq entity types -- clients, contacts, leads, and requests -- MUST generate activity events on create and update.

@@ -1,3 +1,7 @@
+---
+status: implemented
+---
+
 # Admin Settings Specification
 
 ## Purpose
@@ -47,7 +51,7 @@ The system MUST register a settings page in the Nextcloud admin panel under "Adm
 
 ---
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: REQ-AS-011: Version Information Display [MVP]
 

@@ -1,0 +1,5 @@
+name: crm-workflow-automation
+status: proposed
+created: 2026-03-20
+specs:
+  - specs/crm-workflow-automation/spec.md

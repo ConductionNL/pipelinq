@@ -1,3 +1,7 @@
+---
+status: implemented
+---
+
 # Contacts Sync Specification
 
 ## Purpose
@@ -64,7 +68,7 @@ Client and contact detail views MUST show whether the entity is linked to a Next
 - WHEN viewing a client or contact without a `contactsUid`
 - THEN no sync indicator MUST be shown
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: vCard Field Mapping Completeness [V1]
 

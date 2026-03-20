@@ -1,0 +1,5 @@
+name: kennisbank
+status: proposed
+created: 2026-03-20
+specs:
+  - specs/kennisbank/spec.md

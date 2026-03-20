@@ -1,0 +1,5 @@
+name: pipeline-insights
+status: proposed
+created: 2026-03-20
+specs:
+  - specs/pipeline-insights/spec.md

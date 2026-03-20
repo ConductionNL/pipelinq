@@ -1,3 +1,7 @@
+---
+status: partial
+---
+
 # Omnichannel Registratie Specification
 
 ## Purpose

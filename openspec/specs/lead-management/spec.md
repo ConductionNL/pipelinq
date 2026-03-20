@@ -1,3 +1,7 @@
+---
+status: implemented
+---
+
 # Lead Management Specification
 
 ## Purpose
@@ -581,7 +585,7 @@ The system MUST handle error conditions gracefully and provide meaningful feedba
 
 ---
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Lead Capture from External Sources [V1]
 

@@ -1,3 +1,7 @@
+---
+status: implemented
+---
+
 # Prospect Discovery Specification
 
 ## Purpose

@@ -1,3 +1,7 @@
+---
+status: implemented
+---
+
 # OpenRegister Integration Specification
 
 ## Purpose
@@ -1132,7 +1136,7 @@ The object store MUST support file attachments on OpenRegister objects via the `
 
 ---
 
-## ADDED Requirements
+## Requirements
 
 ---
 
