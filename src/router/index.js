@@ -15,6 +15,10 @@ import ProductDetail from '../views/products/ProductDetail.vue'
 import PipelineBoard from '../views/pipeline/PipelineBoard.vue'
 import MyWork from '../views/MyWork.vue'
 import PipelineManager from '../views/settings/PipelineManager.vue'
+import KennisbankHome from '../views/kennisbank/KennisbankHome.vue'
+import ArticleDetail from '../views/kennisbank/ArticleDetail.vue'
+import ArticleEditor from '../views/kennisbank/ArticleEditor.vue'
+import CategoryManager from '../views/kennisbank/CategoryManager.vue'
 
 Vue.use(Router)
 
@@ -35,6 +39,11 @@ export default new Router({
 		{ path: '/products/:id', name: 'ProductDetail', component: ProductDetail, props: route => ({ productId: route.params.id }) },
 		{ path: '/pipeline', name: 'Pipeline', component: PipelineBoard },
 		{ path: '/my-work', name: 'MyWork', component: MyWork },
+		{ path: '/kennisbank', name: 'Kennisbank', component: KennisbankHome },
+		{ path: '/kennisbank/articles/new', name: 'KennisbankNew', component: ArticleEditor },
+		{ path: '/kennisbank/articles/:id', name: 'KennisbankDetail', component: ArticleDetail, props: route => ({ articleId: route.params.id }) },
+		{ path: '/kennisbank/articles/:id/edit', name: 'KennisbankEdit', component: ArticleEditor, props: route => ({ articleId: route.params.id }) },
+		{ path: '/kennisbank/categories', name: 'KennisbankCategories', component: CategoryManager },
 		{ path: '/pipelines', name: 'Pipelines', component: PipelineManager },
 		{ path: '*', redirect: '/' },
 	],

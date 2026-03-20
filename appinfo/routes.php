@@ -44,6 +44,11 @@ return [
         ['name' => 'prospect_settings#index', 'url' => '/api/prospects/settings', 'verb' => 'GET'],
         ['name' => 'prospect_settings#update', 'url' => '/api/prospects/settings', 'verb' => 'PUT'],
 
+        // Kennisbank public API
+        ['name' => 'kennisbank#publicIndex', 'url' => '/api/kennisbank/public', 'verb' => 'GET'],
+        ['name' => 'kennisbank#publicShow', 'url' => '/api/kennisbank/public/{id}', 'verb' => 'GET'],
+        ['name' => 'kennisbank#submitFeedback', 'url' => '/api/kennisbank/feedback', 'verb' => 'POST'],
+
         // Prometheus metrics endpoint.
         ['name' => 'metrics#index', 'url' => '/api/metrics', 'verb' => 'GET'],
         // Health check endpoint.
