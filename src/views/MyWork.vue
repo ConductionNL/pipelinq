@@ -87,7 +87,7 @@
 							<span v-if="item.stageOrStatus" class="meta-stage">{{ item.stageOrStatus }}</span>
 							<span v-if="item.pipelineName" class="meta-pipeline">{{ item.pipelineName }}</span>
 							<span v-if="item.entityType === 'lead' && item.value" class="meta-value">
-								EUR {{ Number(item.value).toLocaleString('nl-NL') }}
+								EUR {{ formatNumber(item.value) }}
 							</span>
 						</div>
 						<div class="work-card__footer">
@@ -120,6 +120,7 @@ import {
 	getPriorityColor,
 } from '../services/requestStatus.js'
 import { isStale } from '../services/pipelineUtils.js'
+import { formatNumber, formatDateFull } from '../services/localeUtils.js'
 
 const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 }
 
@@ -390,7 +391,7 @@ export default {
 		formatDate(dateStr) {
 			if (!dateStr) return ''
 			try {
-				return new Date(dateStr).toLocaleDateString('nl-NL', { month: 'short', day: 'numeric', year: 'numeric' })
+				return formatDateFull(dateStr)
 			} catch {
 				return dateStr
 			}
