@@ -164,6 +164,14 @@
 			</div>
 		</CnDetailCard>
 
+		<!-- Relationships -->
+		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Relationships')">
+			<ContactRelationships
+				:entity-id="clientId"
+				entity-type="client"
+				:entity-name="clientData.name || ''" />
+		</CnDetailCard>
+
 		<!-- Delete warning dialog -->
 		<NcDialog
 			v-if="showDelete"
@@ -203,6 +211,7 @@ import { NcButton, NcDialog } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import ClientForm from './ClientForm.vue'
+import ContactRelationships from '../../components/ContactRelationships.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -213,6 +222,7 @@ export default {
 		CnDetailPage,
 		CnDetailCard,
 		ClientForm,
+		ContactRelationships,
 	},
 	props: {
 		clientId: {
