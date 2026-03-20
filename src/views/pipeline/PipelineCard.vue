@@ -50,7 +50,7 @@
 <script>
 import { NcSelect } from '@nextcloud/vue'
 import { getPriorityLabel, getPriorityColor, getStatusLabel } from '../../services/requestStatus.js'
-import { getDaysAge, isStale, getAgingClass, formatAge } from '../../services/pipelineUtils.js'
+import { getDaysAge, isStale, getAgingClass, formatAge, isItemOverdue } from '../../services/pipelineUtils.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
 // Module-level user cache shared across all PipelineCard instances
@@ -94,16 +94,8 @@ export default {
 			return this.item[this.columnProperty] || ''
 		},
 		isOverdue() {
-			if (this.entityType === 'lead') {
-				if (!this.item.expectedCloseDate) return false
-				return new Date(this.item.expectedCloseDate) < new Date()
-			}
-			if (this.entityType === 'request') {
-				if (!this.item.requestedAt) return false
-				const daysSince = Math.floor((Date.now() - new Date(this.item.requestedAt).getTime()) / 86400000)
-				return daysSince > 30
-			}
-			return false
+			const currentStage = this.stages.find(s => s.name === this.currentColumnValue) || null
+			return isItemOverdue(this.item, this.entityType, currentStage)
 		},
 		daysAge() {
 			return getDaysAge(this.item)
