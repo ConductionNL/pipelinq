@@ -1,0 +1,7 @@
+schema: spec-driven
+status: proposed
+name: activity-timeline-v2
+title: Activity Timeline V2 - Unified Per-Entity Timeline
+description: Dedicated per-entity unified timeline UI with filtering, manual entries, and cross-entity aggregation
+feature_tier: V1
+created: "2026-03-20"

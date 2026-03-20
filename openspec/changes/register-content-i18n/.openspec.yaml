@@ -1,0 +1,7 @@
+schema: spec-driven
+status: proposed
+name: register-content-i18n
+title: Register Content Internationalization
+description: Multi-language register content (translatable pipeline names, product descriptions) and language switching UI
+feature_tier: V1
+created: "2026-03-20"
