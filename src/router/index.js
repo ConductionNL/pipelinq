@@ -15,6 +15,9 @@ import ProductDetail from '../views/products/ProductDetail.vue'
 import PipelineBoard from '../views/pipeline/PipelineBoard.vue'
 import MyWork from '../views/MyWork.vue'
 import PipelineManager from '../views/settings/PipelineManager.vue'
+import RapportageDashboard from '../views/rapportage/RapportageDashboard.vue'
+import ChannelAnalytics from '../views/rapportage/ChannelAnalytics.vue'
+import AgentPerformance from '../views/rapportage/AgentPerformance.vue'
 
 Vue.use(Router)
 
@@ -35,6 +38,9 @@ export default new Router({
 		{ path: '/products/:id', name: 'ProductDetail', component: ProductDetail, props: route => ({ productId: route.params.id }) },
 		{ path: '/pipeline', name: 'Pipeline', component: PipelineBoard },
 		{ path: '/my-work', name: 'MyWork', component: MyWork },
+		{ path: '/rapportage', name: 'Rapportage', component: RapportageDashboard },
+		{ path: '/rapportage/channels', name: 'ChannelAnalytics', component: ChannelAnalytics },
+		{ path: '/rapportage/agents', name: 'AgentPerformance', component: AgentPerformance },
 		{ path: '/pipelines', name: 'Pipelines', component: PipelineManager },
 		{ path: '*', redirect: '/' },
 	],
