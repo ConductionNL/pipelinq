@@ -285,8 +285,11 @@ export default {
 			}
 		},
 		async onProductValueChanged(newTotal) {
-			// Auto-update lead value if no manual value was set or if it matches previous auto-calc
-			if (!this.leadData.value || Number(this.leadData.value) === 0) {
+			// Auto-recalculate lead value from product line items (per spec).
+			// Only skip if the user has explicitly set a manual override.
+			const currentValue = Number(this.leadData.value) || 0
+			const hasLineItems = newTotal > 0
+			if (hasLineItems) {
 				await this.syncLeadValue(newTotal)
 			}
 		},
