@@ -2,6 +2,12 @@
 
 Tracks sales opportunities from first contact through won/lost. Leads are the core sales entity, flowing through configurable pipeline stages with value, probability, and priority tracking.
 
+## Screenshot
+
+![Lead Management](../screenshots/lead-management.png)
+
+The lead list view offers Cards/Table toggle, "Add Item" creation, and bulk Actions. Leads display in a sortable, filterable table by default. Each lead shows its title, assigned user, stage, value, and priority.
+
 ## Specs
 
 - `openspec/specs/lead-management/spec.md`
@@ -28,7 +34,7 @@ Records how the lead was acquired (e.g., website, referral, phone, campaign) for
 
 ### Lead Priority (MVP)
 
-Four-level priority system (low, normal, high, urgent) with visual indicators — urgent shows in error color, high in warning color.
+Four-level priority system (low, normal, high, urgent) with visual indicators -- urgent shows in error color, high in warning color.
 
 ### Lead Assignment (MVP)
 
@@ -36,7 +42,7 @@ Leads can be assigned to users for workload distribution and accountability. Ass
 
 ### Lead Lifecycle via Pipeline Stages (MVP)
 
-Leads progress through pipeline stages (e.g., New → Contacted → Qualified → Proposal → Negotiation → Won/Lost). The detail view shows a visual progress tracker with completed, current, and future stage indicators.
+Leads progress through pipeline stages (e.g., New -> Contacted -> Qualified -> Proposal -> Negotiation -> Won/Lost). The detail view shows a visual progress tracker with completed, current, and future stage indicators.
 
 ### Error Handling (MVP)
 

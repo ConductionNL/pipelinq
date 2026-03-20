@@ -2,6 +2,20 @@
 
 Nextcloud admin panel for configuring Pipelinq, plus the foundational OpenRegister integration that stores all CRM data.
 
+## Screenshot
+
+![Admin Settings](../screenshots/admin-settings.png)
+
+The Pipelinq admin settings page at `/settings/admin/pipelinq` shows:
+- **Version Information**: Application name (Pipelinq), version (0.1.15), "Up to date" status badge, and "Re-import configuration" action button
+- **Support**: Links to support@conduction.nl and sales@conduction.nl
+- **Register Configuration**: Maps 8 Pipelinq object types (Client, Contact, Lead, Request, Pipeline, Product, Product Category, Lead Product) to OpenRegister schemas, with register selector dropdown showing "Pipelinq" register. Shows "8/8 configured" status.
+- **Pipelines**: Pipeline CRUD with "Add pipeline" and "Create first pipeline" actions
+- **Product Categories**: Category management with "+ Add Category"
+- **Lead Sources**: Source value configuration with "+ Add Source"
+- **Request Channels**: Channel configuration with "+ Add Channel"
+- **Prospect Discovery**: ICP (Ideal Customer Profile) configuration section
+
 ## Specs
 
 - `openspec/specs/admin-settings/spec.md`
@@ -29,8 +43,12 @@ Full CRUD for pipelines and their stages from the admin panel:
 
 Two default pipelines are created automatically during app installation via the repair step:
 
-- **Sales Pipeline** (default): New → Contacted → Qualified → Proposal → Negotiation → Won → Lost
-- **Service Requests**: New → In Progress → Completed → Rejected → Converted
+- **Sales Pipeline** (default): New -> Contacted -> Qualified -> Proposal -> Negotiation -> Won -> Lost
+- **Service Requests**: New -> In Progress -> Completed -> Rejected -> Converted
+
+### Register Configuration (MVP)
+
+Maps Pipelinq object types to OpenRegister registers and schemas. The admin UI displays all 8 object types with their schema assignments and register selection dropdown.
 
 ### Settings Persistence (MVP)
 
@@ -38,13 +56,16 @@ All configuration is stored in Nextcloud's IAppConfig and survives app updates a
 
 ### OpenRegister Integration (MVP)
 
-Pipelinq owns no database tables — all data is stored as OpenRegister objects in the `pipelinq` register with 5 schemas:
+Pipelinq owns no database tables -- all data is stored as OpenRegister objects in the `pipelinq` register with 8 schemas:
 
-- `client` — Person or organization
-- `contact` — Contact person linked to a client
-- `lead` — Sales opportunity
-- `request` — Service/intake request
-- `pipeline` — Configurable workflow board with stages
+- `client` -- Person or organization
+- `contact` -- Contact person linked to a client
+- `lead` -- Sales opportunity
+- `request` -- Service/intake request
+- `pipeline` -- Configurable workflow board with stages
+- `product` -- Product or service in the catalog
+- `productCategory` -- Product category for grouping
+- `leadProduct` -- Product line item linked to a lead
 
 ### Auto-Configuration on Install (MVP)
 
