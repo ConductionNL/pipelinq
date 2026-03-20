@@ -7,7 +7,67 @@
 				<span v-if="totalCount > 0" class="my-work__counts">
 					{{ t('pipelinq', 'Leads') }} ({{ leadCount }}) · {{ t('pipelinq', 'Requests') }} ({{ requestCount }}) — {{ totalCount }} {{ t('pipelinq', 'items total') }}
 				</span>
+				<NcButton
+					:disabled="loading"
+					:aria-label="t('pipelinq', 'Refresh')"
+					class="my-work__refresh"
+					@click="fetchAll">
+					<template #icon>
+						<span :class="{ 'icon-spinning': loading }">&#x21BB;</span>
+					</template>
+				</NcButton>
 			</div>
+
+			<!-- Quick Actions (REQ-MW-100) -->
+			<div class="my-work__quick-actions">
+				<NcButton type="primary" @click="createLead">
+					{{ t('pipelinq', '+ New Lead') }}
+				</NcButton>
+				<NcButton @click="createRequest">
+					{{ t('pipelinq', '+ New Request') }}
+				</NcButton>
+				<NcButton @click="createContact">
+					{{ t('pipelinq', '+ New Contact') }}
+				</NcButton>
+			</div>
+
+			<!-- KPI Tiles (REQ-MW-090) -->
+			<div v-if="!loading" class="my-work__kpi-row">
+				<div class="kpi-tile" @click="filter = 'lead'">
+					<div class="kpi-tile__value">
+						{{ kpi.openLeads }}
+					</div>
+					<div class="kpi-tile__label">
+						{{ t('pipelinq', 'Open Leads') }}
+					</div>
+				</div>
+				<div class="kpi-tile" @click="filter = 'request'">
+					<div class="kpi-tile__value">
+						{{ kpi.openRequests }}
+					</div>
+					<div class="kpi-tile__label">
+						{{ t('pipelinq', 'Open Requests') }}
+					</div>
+				</div>
+				<div class="kpi-tile" :class="{ 'kpi-tile--error': kpi.overdue > 0 }">
+					<div class="kpi-tile__value">
+						{{ kpi.overdue }}
+					</div>
+					<div class="kpi-tile__label">
+						{{ t('pipelinq', 'Overdue') }}
+					</div>
+				</div>
+				<div class="kpi-tile kpi-tile--success" @click="filter = 'lead'">
+					<div class="kpi-tile__value">
+						EUR {{ kpi.pipelineValue.toLocaleString('nl-NL') }}
+					</div>
+					<div class="kpi-tile__label">
+						{{ t('pipelinq', 'Pipeline Value') }}
+					</div>
+				</div>
+			</div>
+
+			<!-- Filter Bar (REQ-MW-040 + REQ-MW-200) -->
 			<div class="my-work__controls">
 				<div class="filter-buttons">
 					<NcButton
@@ -26,14 +86,44 @@
 						{{ t('pipelinq', 'Requests') }}
 					</NcButton>
 				</div>
+				<select v-model="priorityFilter" class="my-work__priority-filter">
+					<option value="">
+						{{ t('pipelinq', 'All priorities') }}
+					</option>
+					<option value="urgent">
+						{{ t('pipelinq', 'Urgent') }}
+					</option>
+					<option value="high">
+						{{ t('pipelinq', 'High') }}
+					</option>
+					<option value="normal">
+						{{ t('pipelinq', 'Normal') }}
+					</option>
+					<option value="low">
+						{{ t('pipelinq', 'Low') }}
+					</option>
+				</select>
 				<label class="show-completed-toggle">
 					<input v-model="showCompleted" type="checkbox">
 					{{ t('pipelinq', 'Show completed') }}
 				</label>
+				<NcButton
+					v-if="hasActiveFilters"
+					@click="clearFilters">
+					{{ t('pipelinq', 'Clear filters') }}
+				</NcButton>
+			</div>
+
+			<!-- Stale data warning (REQ-MW-190) -->
+			<div v-if="isStaleData" class="my-work__stale-warning">
+				{{ t('pipelinq', 'Data may be outdated. Last updated: {time}', { time: lastFetchFormatted }) }}
+				<NcButton @click="fetchAll">
+					{{ t('pipelinq', 'Retry') }}
+				</NcButton>
 			</div>
 		</div>
 
-		<NcLoadingIcon v-if="loading" />
+		<NcLoadingIcon v-if="loading && !hasData" />
 
 		<div v-else-if="error" class="my-work__error">
 			<p>{{ error }}</p>
@@ -122,6 +212,8 @@ import {
 import { isStale } from '../services/pipelineUtils.js'
 
 const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 }
+const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000 // 5 minutes
+const STALE_THRESHOLD = 10 * 60 * 1000 // 10 minutes
 
 function startOfToday() {
 	const d = new Date()
@@ -154,10 +246,13 @@ export default {
 			loading: false,
 			error: null,
 			filter: 'all',
+			priorityFilter: '',
 			showCompleted: false,
 			myLeads: [],
 			myRequests: [],
 			pipelines: [],
+			refreshTimer: null,
+			lastFetchTime: null,
 		}
 	},
 	computed: {
@@ -166,6 +261,38 @@ export default {
 		},
 		currentUser() {
 			return OC.currentUser
+		},
+
+		hasData() {
+			return this.myLeads.length > 0 || this.myRequests.length > 0
+		},
+
+		hasActiveFilters() {
+			return this.filter !== 'all' || this.priorityFilter !== '' || this.showCompleted
+		},
+
+		isStaleData() {
+			if (!this.lastFetchTime) return false
+			return (Date.now() - this.lastFetchTime) > STALE_THRESHOLD
+		},
+
+		lastFetchFormatted() {
+			if (!this.lastFetchTime) return ''
+			return new Date(this.lastFetchTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })
+		},
+
+		// KPI computations (REQ-MW-090)
+		kpi() {
+			const openLeads = this.allItems.filter(i => i.entityType === 'lead' && !i.isClosed).length
+			const openRequests = this.allItems.filter(i => i.entityType === 'request' && !i.isClosed).length
+			const overdue = this.allItems.filter(i => i.isOverdue && !i.isClosed).length
+			let pipelineValue = 0
+			for (const item of this.allItems) {
+				if (item.entityType === 'lead' && !item.isClosed && item.value) {
+					pipelineValue += Number(item.value) || 0
+				}
+			}
+			return { openLeads, openRequests, overdue, pipelineValue }
 		},
 
 		closedStageNames() {
@@ -252,8 +379,17 @@ export default {
 		},
 
 		filteredItems() {
-			if (this.filter === 'all') return this.allItems
-			return this.allItems.filter(i => i.entityType === this.filter)
+			let result = this.allItems
+
+			if (this.filter !== 'all') {
+				result = result.filter(i => i.entityType === this.filter)
+			}
+
+			if (this.priorityFilter) {
+				result = result.filter(i => i.priority === this.priorityFilter)
+			}
+
+			return result
 		},
 
 		leadCount() {
@@ -312,6 +448,10 @@ export default {
 	},
 	mounted() {
 		this.fetchAll()
+		this.startAutoRefresh()
+	},
+	beforeDestroy() {
+		this.stopAutoRefresh()
 	},
 	methods: {
 		getPriorityLabel,
@@ -323,6 +463,36 @@ export default {
 			if (due < now) return 'overdue'
 			if (due <= weekEnd) return 'due-this-week'
 			return 'upcoming'
+		},
+
+		clearFilters() {
+			this.filter = 'all'
+			this.priorityFilter = ''
+			this.showCompleted = false
+		},
+
+		// Quick actions (REQ-MW-100)
+		createLead() {
+			this.$router.push({ name: 'LeadDetail', params: { id: 'new' } })
+		},
+		createRequest() {
+			this.$router.push({ name: 'RequestDetail', params: { id: 'new' } })
+		},
+		createContact() {
+			this.$router.push({ name: 'ContactDetail', params: { id: 'new' } })
+		},
+
+		// Auto-refresh (REQ-MW-190)
+		startAutoRefresh() {
+			this.refreshTimer = setInterval(() => {
+				this.fetchAll()
+			}, AUTO_REFRESH_INTERVAL)
+		},
+		stopAutoRefresh() {
+			if (this.refreshTimer) {
+				clearInterval(this.refreshTimer)
+				this.refreshTimer = null
+			}
 		},
 
 		async fetchAll() {
@@ -353,6 +523,7 @@ export default {
 				}
 
 				await Promise.all(promises)
+				this.lastFetchTime = Date.now()
 			} catch (err) {
 				this.error = err.message || t('pipelinq', 'Failed to load work items')
 				console.error('MyWork fetch error:', err)
@@ -431,6 +602,82 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
+.my-work__refresh {
+	margin-left: auto;
+}
+
+.icon-spinning {
+	display: inline-block;
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
+}
+
+/* Quick actions */
+.my-work__quick-actions {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 16px;
+	flex-wrap: wrap;
+}
+
+/* KPI tiles */
+.my-work__kpi-row {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 12px;
+	margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+	.my-work__kpi-row {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+.kpi-tile {
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+	padding: 12px 16px;
+	text-align: center;
+	cursor: pointer;
+	transition: box-shadow 0.15s;
+}
+
+.kpi-tile:hover {
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.kpi-tile--error {
+	border-color: var(--color-error);
+}
+
+.kpi-tile--error .kpi-tile__value {
+	color: var(--color-error);
+}
+
+.kpi-tile--success .kpi-tile__value {
+	color: var(--color-success);
+}
+
+.kpi-tile__value {
+	font-size: 20px;
+	font-weight: 700;
+	margin-bottom: 4px;
+}
+
+.kpi-tile__label {
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+/* Controls */
 .my-work__controls {
 	display: flex;
 	align-items: center;
@@ -443,6 +690,14 @@ export default {
 	gap: 4px;
 }
 
+.my-work__priority-filter {
+	padding: 4px 8px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background: var(--color-main-background);
+	font-size: 13px;
+}
+
 .show-completed-toggle {
 	display: flex;
 	align-items: center;
@@ -450,6 +705,20 @@ export default {
 	font-size: 14px;
 	cursor: pointer;
 	color: var(--color-text-maxcontrast);
+}
+
+/* Stale data warning */
+.my-work__stale-warning {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 8px 12px;
+	margin-top: 12px;
+	background: #fff7ed;
+	border: 1px solid #fdba74;
+	border-radius: var(--border-radius);
+	color: #c2410c;
+	font-size: 13px;
 }
 
 /* Empty / error */
