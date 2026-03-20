@@ -70,6 +70,29 @@
 			</div>
 		</CnDetailCard>
 
+		<CnDetailCard :title="t('pipelinq', 'Summary')">
+			<div class="summary-grid">
+				<div class="summary-item">
+					<span class="summary-value">{{ openLeadsCount }}</span>
+					<span class="summary-label">{{ t('pipelinq', 'Open leads') }}</span>
+					<span class="summary-sub">{{ formatCurrency(openLeadsValue) }}</span>
+				</div>
+				<div class="summary-item">
+					<span class="summary-value">{{ wonLeadsCount }}</span>
+					<span class="summary-label">{{ t('pipelinq', 'Won leads') }}</span>
+					<span class="summary-sub">{{ formatCurrency(wonLeadsValue) }}</span>
+				</div>
+				<div class="summary-item">
+					<span class="summary-value">{{ openRequestsCount }}</span>
+					<span class="summary-label">{{ t('pipelinq', 'Open requests') }}</span>
+				</div>
+				<div class="summary-item">
+					<span class="summary-value summary-value--total">{{ formatCurrency(totalValue) }}</span>
+					<span class="summary-label">{{ t('pipelinq', 'Total value') }}</span>
+				</div>
+			</div>
+		</CnDetailCard>
+
 		<CnDetailCard :title="t('pipelinq', 'Contacts')">
 			<template #actions>
 				<NcButton @click="addContact">
@@ -251,6 +274,28 @@ export default {
 				hiddenTabs: ['tasks'],
 			}
 		},
+		openLeadsCount() {
+			return this.leads.filter(l => !this.isClosedLead(l)).length
+		},
+		openLeadsValue() {
+			return this.leads
+				.filter(l => !this.isClosedLead(l))
+				.reduce((sum, l) => sum + (parseFloat(l.value) || 0), 0)
+		},
+		wonLeadsCount() {
+			return this.leads.filter(l => l.status === 'won').length
+		},
+		wonLeadsValue() {
+			return this.leads
+				.filter(l => l.status === 'won')
+				.reduce((sum, l) => sum + (parseFloat(l.value) || 0), 0)
+		},
+		openRequestsCount() {
+			return this.requests.filter(r => r.status === 'new' || r.status === 'in_progress').length
+		},
+		totalValue() {
+			return this.openLeadsValue + this.wonLeadsValue
+		},
 	},
 	async mounted() {
 		if (!this.isNew) {
@@ -337,6 +382,13 @@ export default {
 		},
 		addContact() {
 			this.$router.push({ name: 'ContactDetail', params: { id: 'new' }, query: { client: this.clientId } })
+		},
+		isClosedLead(lead) {
+			return lead.status === 'won' || lead.status === 'lost'
+		},
+		formatCurrency(value) {
+			if (value === 0 || value == null) return 'EUR 0'
+			return 'EUR ' + new Intl.NumberFormat('nl-NL').format(value)
 		},
 	},
 }
@@ -441,5 +493,42 @@ export default {
 	font-size: 12px;
 	font-weight: 600;
 	margin-bottom: 16px;
+}
+
+.summary-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 16px;
+}
+
+.summary-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 12px;
+	border-radius: var(--border-radius-large);
+	background: var(--color-background-dark);
+}
+
+.summary-value {
+	font-size: 24px;
+	font-weight: bold;
+	color: var(--color-main-text);
+}
+
+.summary-value--total {
+	color: var(--color-primary);
+}
+
+.summary-label {
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
+	margin-top: 4px;
+}
+
+.summary-sub {
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+	margin-top: 2px;
 }
 </style>
