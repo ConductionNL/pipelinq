@@ -44,6 +44,10 @@ return [
         ['name' => 'prospect_settings#index', 'url' => '/api/prospects/settings', 'verb' => 'GET'],
         ['name' => 'prospect_settings#update', 'url' => '/api/prospects/settings', 'verb' => 'PUT'],
 
+        // Automations
+        ['name' => 'automation#metadata', 'url' => '/api/automations/metadata', 'verb' => 'GET'],
+        ['name' => 'automation#test', 'url' => '/api/automations/test', 'verb' => 'POST'],
+
         // Prometheus metrics endpoint.
         ['name' => 'metrics#index', 'url' => '/api/metrics', 'verb' => 'GET'],
         // Health check endpoint.
