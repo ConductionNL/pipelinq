@@ -39,8 +39,21 @@
 		</template>
 
 		<CnDetailCard :title="t('pipelinq', 'Contact Information')">
-			<div v-if="contactData.contactsUid" class="sync-badge">
-				{{ t('pipelinq', 'Synced with Contacts') }}
+			<div v-if="contactData.contactsUid" class="sync-row">
+				<span class="sync-badge">
+					{{ t('pipelinq', 'Synced with Contacts') }}
+				</span>
+				<NcButton type="tertiary" @click="resyncToContacts">
+					{{ t('pipelinq', 'Re-sync') }}
+				</NcButton>
+				<NcButton type="tertiary" @click="unlinkContact">
+					{{ t('pipelinq', 'Unlink') }}
+				</NcButton>
+			</div>
+			<div v-else class="sync-row">
+				<NcButton type="tertiary" @click="resyncToContacts">
+					{{ t('pipelinq', 'Sync to Contacts') }}
+				</NcButton>
 			</div>
 
 			<div class="info-grid">
@@ -173,6 +186,17 @@ export default {
 				// Sync failure is non-blocking
 			}
 		},
+		async resyncToContacts() {
+			await this.syncToContacts(this.contactId)
+			await this.objectStore.fetchObject('contact', this.contactId)
+		},
+		async unlinkContact() {
+			await this.objectStore.saveObject('contact', {
+				...this.contactData,
+				contactsUid: null,
+			})
+			await this.objectStore.fetchObject('contact', this.contactId)
+		},
 		onFormCancel() {
 			if (this.isNew) {
 				this.$router.push({ name: 'Contacts' })
@@ -232,6 +256,13 @@ export default {
 	color: var(--color-primary-hover);
 }
 
+.sync-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 16px;
+}
+
 .sync-badge {
 	display: inline-block;
 	padding: 4px 10px;
@@ -241,6 +272,5 @@ export default {
 	border-radius: 12px;
 	font-size: 12px;
 	font-weight: 600;
-	margin-bottom: 16px;
 }
 </style>
