@@ -127,6 +127,23 @@
 			</p>
 		</CnDetailCard>
 
+		<CnDetailCard v-if="contactPersonData || requestData.contact" :title="t('pipelinq', 'Contact Person')">
+			<div v-if="contactPersonData" class="contact-person-info">
+				<a
+					href="#"
+					class="contact-person-link"
+					@click.prevent="$router.push({ name: 'ContactDetail', params: { id: contactPersonData.id } })">
+					{{ contactPersonData.name }}
+				</a>
+				<span v-if="contactPersonData.role" class="contact-person-meta">{{ contactPersonData.role }}</span>
+				<span v-if="contactPersonData.email" class="contact-person-meta">{{ contactPersonData.email }}</span>
+				<span v-if="contactPersonData.phone" class="contact-person-meta">{{ contactPersonData.phone }}</span>
+			</div>
+			<p v-else class="section-empty orphaned-ref">
+				{{ t('pipelinq', '[Deleted contact]') }}
+			</p>
+		</CnDetailCard>
+
 		<CnDetailCard :title="t('pipelinq', 'Assignment')">
 			<NcSelect
 				v-if="!isConverted"
@@ -223,6 +240,7 @@ export default {
 			editing: false,
 			showDeleteDialog: false,
 			clientData: null,
+			contactPersonData: null,
 			pipelineData: null,
 			users: [],
 		}
@@ -309,6 +327,14 @@ export default {
 			if (this.requestData.client) {
 				const client = await this.objectStore.fetchObject('client', this.requestData.client)
 				this.clientData = client || null
+			}
+			if (this.requestData.contact) {
+				try {
+					const contact = await this.objectStore.fetchObject('contact', this.requestData.contact)
+					this.contactPersonData = contact || null
+				} catch {
+					this.contactPersonData = null
+				}
 			}
 			if (this.requestData.pipeline) {
 				const pipeline = await this.objectStore.fetchObject('pipeline', this.requestData.pipeline)
@@ -605,5 +631,27 @@ export default {
 
 .next-stage-btn {
 	margin-top: 12px;
+}
+
+.contact-person-info {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.contact-person-link {
+	font-weight: bold;
+	color: var(--color-primary);
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+.contact-person-link:hover {
+	color: var(--color-primary-hover);
+}
+
+.contact-person-meta {
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
 }
 </style>
