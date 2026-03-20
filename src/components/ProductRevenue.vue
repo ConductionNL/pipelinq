@@ -28,6 +28,7 @@
 <script>
 import { NcLoadingIcon } from '@nextcloud/vue'
 import { useObjectStore } from '../store/modules/object.js'
+import { formatCurrency as formatLocaleCurrency } from '../services/localeUtils.js'
 
 export default {
 	name: 'ProductRevenue',
@@ -123,8 +124,7 @@ export default {
 			}
 		},
 		formatCurrency(value) {
-			if (!value) return 'EUR 0'
-			return 'EUR ' + Number(value).toLocaleString('nl-NL')
+			return formatLocaleCurrency(value)
 		},
 	},
 }
