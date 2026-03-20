@@ -1,0 +1,7 @@
+schema: spec-driven
+status: proposed
+name: product-catalog-quoting
+title: Product Catalog Quoting
+description: Quote generation from product catalog with lifecycle management and PDF export
+feature_tier: Enterprise
+created: "2026-03-20"

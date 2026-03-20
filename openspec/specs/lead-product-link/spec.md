@@ -1,5 +1,7 @@
 # Lead-Product Link Specification
 
+## Status: implemented
+
 ## Purpose
 
 The lead-product link enables sales reps to attach specific products (with quantities and pricing) to leads, replacing or supplementing manual value entry. This creates an accurate, auditable breakdown of what a lead is worth based on actual product line items. It follows the standard CRM pattern where Products are the master catalog and Line Items are deal-specific instances.

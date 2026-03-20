@@ -1,5 +1,7 @@
 # Prometheus Metrics Endpoint
 
+## Status: implemented
+
 ## Purpose
 Expose application metrics in Prometheus text exposition format at `GET /api/metrics` for monitoring, alerting, and operational dashboards. Provide a complementary health check endpoint for container orchestration. Enable CRM-specific observability covering pipeline value, client counts, conversion rates, and OpenRegister integration health.
 

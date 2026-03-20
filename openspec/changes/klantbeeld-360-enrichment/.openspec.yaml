@@ -1,0 +1,7 @@
+schema: spec-driven
+status: proposed
+name: klantbeeld-360-enrichment
+title: Klantbeeld 360 - Full Enrichment
+description: Complete 360-degree customer view with BRP/KVK enrichment, interaction history, cases, and documents
+feature_tier: MVP
+created: "2026-03-20"

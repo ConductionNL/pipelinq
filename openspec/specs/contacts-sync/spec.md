@@ -1,5 +1,7 @@
 # Contacts Sync Specification
 
+## Status: implemented
+
 ## Purpose
 
 Sync Pipelinq clients and contacts with Nextcloud Contacts via IManager to eliminate duplicate data entry and keep address books current.

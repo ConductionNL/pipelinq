@@ -1,0 +1,7 @@
+schema: spec-driven
+status: proposed
+name: contactmomenten-rapportage
+title: Contactmomenten Rapportage
+description: KPI dashboards and reporting on registered contact moments
+feature_tier: MVP
+created: "2026-03-20"
