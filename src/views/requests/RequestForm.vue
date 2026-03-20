@@ -77,6 +77,19 @@
 				:placeholder="t('pipelinq', 'Select client')" />
 		</div>
 
+		<!-- Contact person -->
+		<div class="form-group">
+			<label>{{ t('pipelinq', 'Contact person') }}</label>
+			<NcSelect
+				v-model="form.contact"
+				:options="contactOptions"
+				:clearable="true"
+				:disabled="!form.client"
+				label="label"
+				:reduce="o => o.value"
+				:placeholder="form.client ? t('pipelinq', 'Select contact person') : t('pipelinq', 'Select a client first')" />
+		</div>
+
 		<!-- Pipeline + Stage row -->
 		<div class="form-row">
 			<div class="form-group">
@@ -147,9 +160,11 @@ export default {
 				category: '',
 				requestedAt: null,
 				client: null,
+				contact: null,
 				pipeline: null,
 				stage: null,
 			},
+			contactsForClient: [],
 			priorityOptions: ['low', 'normal', 'high', 'urgent'],
 		}
 	},
@@ -204,6 +219,12 @@ export default {
 				label: c.name || c.id,
 			}))
 		},
+		contactOptions() {
+			return this.contactsForClient.map(c => ({
+				value: c.id,
+				label: c.name + (c.role ? ' (' + c.role + ')' : ''),
+			}))
+		},
 		errors() {
 			const errors = {}
 			if (!this.form.title || !this.form.title.trim()) {
@@ -213,6 +234,14 @@ export default {
 		},
 		isValid() {
 			return Object.keys(this.errors).length === 0 && this.form.title?.trim()
+		},
+	},
+	watch: {
+		'form.client'(newClient, oldClient) {
+			if (newClient !== oldClient) {
+				this.form.contact = null
+				this.fetchContactsForClient(newClient)
+			}
 		},
 	},
 	async created() {
@@ -233,8 +262,12 @@ export default {
 				category: this.request.category || '',
 				requestedAt: this.request.requestedAt || null,
 				client: this.request.client || null,
+				contact: this.request.contact || null,
 				pipeline: this.request.pipeline || null,
 				stage: this.request.stage || null,
+			}
+			if (this.request.client) {
+				await this.fetchContactsForClient(this.request.client)
 			}
 		} else {
 			if (this.preLinkedClient) {
@@ -265,6 +298,21 @@ export default {
 				}
 			}
 		},
+		async fetchContactsForClient(clientId) {
+			if (!clientId) {
+				this.contactsForClient = []
+				return
+			}
+			try {
+				const contacts = await this.objectStore.fetchCollection('contact', {
+					_limit: 100,
+					client: clientId,
+				})
+				this.contactsForClient = contacts || []
+			} catch {
+				this.contactsForClient = []
+			}
+		},
 		onSave() {
 			if (!this.isValid) return
 
@@ -272,6 +320,7 @@ export default {
 			if (!data.channel) delete data.channel
 			if (!data.requestedAt) delete data.requestedAt
 			if (!data.client) delete data.client
+			if (!data.contact) delete data.contact
 			if (!data.pipeline) delete data.pipeline
 			if (!data.stage) delete data.stage
 			if (!data.category) delete data.category
