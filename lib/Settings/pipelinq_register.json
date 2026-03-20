@@ -27,7 +27,10 @@
           "pipeline",
           "product",
           "productCategory",
-          "leadProduct"
+          "leadProduct",
+          "kennisartikel",
+          "kenniscategorie",
+          "kennisfeedback"
         ],
         "tablePrefix": "",
         "folder": "Open Registers/Pipelinq"
@@ -647,6 +650,222 @@
             "type": "string",
             "description": "Line item notes (e.g., annual license, setup fee)",
             "visible": false
+          }
+        }
+      }
+      "kennisartikel": {
+        "slug": "kennisartikel",
+        "title": "Knowledge Article",
+        "icon": "BookOpenPageVariant",
+        "version": "1.0.0",
+        "summary": "A knowledge base article for KCC agents and citizens",
+        "description": "Represents a knowledge base article with rich text content, categorization, versioning, and visibility controls. Mapped to Schema.org Article. Used by KCC agents for first-call resolution and optionally published for citizen self-service.",
+        "@type": "schema:Article",
+        "required": [
+          "title",
+          "body",
+          "status",
+          "visibility",
+          "author"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Article title (schema:headline)",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "body": {
+            "type": "string",
+            "description": "Article content in Markdown format (schema:articleBody)",
+            "visible": false
+          },
+          "summary": {
+            "type": "string",
+            "description": "Short summary for search result snippets (schema:abstract)",
+            "maxLength": 500
+          },
+          "status": {
+            "type": "string",
+            "description": "Article lifecycle status",
+            "enum": [
+              "concept",
+              "gepubliceerd",
+              "gearchiveerd"
+            ],
+            "default": "concept",
+            "title": "Status",
+            "facetable": true
+          },
+          "visibility": {
+            "type": "string",
+            "description": "Access level — intern (agents only) or openbaar (public)",
+            "enum": [
+              "intern",
+              "openbaar"
+            ],
+            "default": "intern",
+            "title": "Visibility",
+            "facetable": true
+          },
+          "categories": {
+            "type": "array",
+            "description": "UUID references to kenniscategorie objects",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "description": "Searchable tags for article discovery",
+            "items": {
+              "type": "string"
+            }
+          },
+          "zaaktypeLinks": {
+            "type": "array",
+            "description": "References to zaaktypen for context-aware suggestions",
+            "items": {
+              "type": "string"
+            },
+            "visible": false
+          },
+          "author": {
+            "type": "string",
+            "description": "Nextcloud user UID of the article author",
+            "title": "Author",
+            "facetable": true
+          },
+          "lastUpdatedBy": {
+            "type": "string",
+            "description": "Nextcloud user UID of the last editor",
+            "visible": false
+          },
+          "version": {
+            "type": "integer",
+            "description": "Article version number, incremented on each edit",
+            "default": 1,
+            "visible": false
+          },
+          "publishedAt": {
+            "type": "string",
+            "description": "Publication timestamp",
+            "format": "date-time",
+            "visible": false
+          },
+          "archivedAt": {
+            "type": "string",
+            "description": "Archive timestamp",
+            "format": "date-time",
+            "visible": false
+          },
+          "usefulnessScore": {
+            "type": "number",
+            "description": "Aggregate usefulness rating score (percentage of positive ratings)",
+            "default": 0,
+            "visible": false
+          }
+        }
+      },
+      "kenniscategorie": {
+        "slug": "kenniscategorie",
+        "title": "Knowledge Category",
+        "icon": "FolderOpen",
+        "version": "1.0.0",
+        "summary": "A hierarchical category for organizing knowledge articles",
+        "description": "Represents a category in the knowledge base taxonomy. Supports up to 3 levels of hierarchy via parent references.",
+        "@type": "schema:DefinedTermSet",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Category name",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "slug": {
+            "type": "string",
+            "description": "URL-friendly name for the category",
+            "maxLength": 255
+          },
+          "parent": {
+            "type": "string",
+            "description": "UUID reference to parent category for hierarchy",
+            "format": "uuid",
+            "visible": false
+          },
+          "description": {
+            "type": "string",
+            "description": "Category description",
+            "visible": false
+          },
+          "order": {
+            "type": "integer",
+            "description": "Display order within the same parent level",
+            "default": 0,
+            "visible": false
+          },
+          "icon": {
+            "type": "string",
+            "description": "Icon identifier for the category",
+            "visible": false
+          }
+        }
+      },
+      "kennisfeedback": {
+        "slug": "kennisfeedback",
+        "title": "Knowledge Feedback",
+        "icon": "ThumbsUpDown",
+        "version": "1.0.0",
+        "summary": "Agent feedback on a knowledge article",
+        "description": "Represents an agent's rating and optional improvement suggestion for a knowledge article. Supports KCS methodology for continuous knowledge improvement.",
+        "@type": "schema:ReviewAction",
+        "required": [
+          "article",
+          "rating",
+          "agent"
+        ],
+        "properties": {
+          "article": {
+            "type": "string",
+            "description": "UUID reference to the rated kennisartikel",
+            "format": "uuid"
+          },
+          "rating": {
+            "type": "string",
+            "description": "Usefulness rating",
+            "enum": [
+              "nuttig",
+              "niet_nuttig"
+            ],
+            "title": "Rating",
+            "facetable": true
+          },
+          "comment": {
+            "type": "string",
+            "description": "Improvement suggestion text",
+            "visible": false
+          },
+          "agent": {
+            "type": "string",
+            "description": "Nextcloud user UID of the rating agent",
+            "title": "Agent",
+            "facetable": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Feedback processing status",
+            "enum": [
+              "nieuw",
+              "in_behandeling",
+              "verwerkt"
+            ],
+            "default": "nieuw",
+            "title": "Status",
+            "facetable": true
           }
         }
       }
