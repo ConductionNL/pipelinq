@@ -1,3 +1,7 @@
+---
+status: partial
+---
+
 # Contact Relationship Mapping Specification
 
 ## Purpose

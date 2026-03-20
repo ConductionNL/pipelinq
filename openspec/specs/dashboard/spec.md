@@ -1,3 +1,7 @@
+---
+status: implemented
+---
+
 # Dashboard Specification
 
 ## Purpose

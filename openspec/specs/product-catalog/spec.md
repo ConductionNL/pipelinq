@@ -1,3 +1,7 @@
+---
+status: implemented
+---
+
 # Product Catalog Specification
 
 ## Purpose

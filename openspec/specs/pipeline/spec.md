@@ -1,3 +1,7 @@
+---
+status: implemented
+---
+
 # Pipeline & Kanban Specification
 
 ## Purpose
@@ -625,7 +629,7 @@ Pipeline cards MUST support quick actions for moving between stages and assignin
 
 ---
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: REQ-PIPE-019: Multiple Pipelines per Organization [V1]
 

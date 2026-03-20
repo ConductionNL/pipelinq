@@ -1,3 +1,7 @@
+---
+status: implemented
+---
+
 # Lead-Product Link Specification
 
 ## Purpose
