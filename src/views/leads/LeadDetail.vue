@@ -59,6 +59,9 @@
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'Expected Close') }}</label>
 					<span>{{ leadData.expectedCloseDate || '-' }}</span>
+					<span v-if="overdueDays > 0" class="overdue-badge">
+						{{ t('pipelinq', '{days} days overdue', { days: overdueDays }) }}
+					</span>
 				</div>
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'Category') }}</label>
@@ -152,6 +155,7 @@ import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import LeadForm from './LeadForm.vue'
 import LeadProducts from '../../components/LeadProducts.vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import { formatCurrency } from '../../services/localeUtils.js'
 
 export default {
 	name: 'LeadDetail',
@@ -215,6 +219,16 @@ export default {
 				hiddenTabs: ['tasks'],
 			}
 		},
+		overdueDays() {
+			if (!this.leadData.expectedCloseDate) return 0
+			if (this.leadData.status === 'won' || this.leadData.status === 'lost') return 0
+			const closeDate = new Date(this.leadData.expectedCloseDate)
+			const today = new Date()
+			today.setHours(0, 0, 0, 0)
+			closeDate.setHours(0, 0, 0, 0)
+			const diff = Math.floor((today - closeDate) / (1000 * 60 * 60 * 24))
+			return diff > 0 ? diff : 0
+		},
 	},
 	async mounted() {
 		if (!this.isNew) {
@@ -250,7 +264,7 @@ export default {
 		},
 		formatValue(value) {
 			if (value === null || value === undefined) return '-'
-			return 'EUR ' + Number(value).toLocaleString('nl-NL')
+			return formatCurrency(value)
 		},
 		async onFormSave(formData) {
 			const result = await this.objectStore.saveObject('lead', formData)
@@ -438,5 +452,17 @@ export default {
 
 .stage-completed:not(:last-child)::after {
 	background: var(--color-success);
+}
+
+.overdue-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	background: #fef2f2;
+	color: var(--color-error);
+	border: 1px solid #fecaca;
+	border-radius: 10px;
+	font-size: 11px;
+	font-weight: 600;
+	margin-left: 8px;
 }
 </style>
