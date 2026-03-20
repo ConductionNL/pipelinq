@@ -9,7 +9,7 @@
     "type": "application",
     "app": "pipelinq",
     "openregister": "^v0.2.10",
-    "description": "CRM data model \u2014 thin client on OpenRegister, no own database tables"
+    "description": "CRM data model — thin client on OpenRegister, no own database tables"
   },
   "components": {
     "registers": {
@@ -17,7 +17,7 @@
         "slug": "pipelinq",
         "title": "Pipelinq",
         "version": "1.0.0",
-        "description": "Client Relationship Management register for Pipelinq \u2014 manages clients, contacts, leads, requests, and pipelines using Schema.org and vCard (RFC 6350) standards.",
+        "description": "Client Relationship Management register for Pipelinq — manages clients, contacts, leads, requests, and pipelines using Schema.org and vCard (RFC 6350) standards.",
         "published": "2026-02-25T00:00:00+00:00",
         "schemas": [
           "client",
@@ -27,7 +27,9 @@
           "pipeline",
           "product",
           "productCategory",
-          "leadProduct"
+          "leadProduct",
+          "automation",
+          "automationLog"
         ],
         "tablePrefix": "",
         "folder": "Open Registers/Pipelinq"
@@ -40,7 +42,7 @@
         "icon": "AccountGroup",
         "version": "1.0.0",
         "summary": "A client (person or organization) in the CRM",
-        "description": "Represents a client entity \u2014 either a natural person or an organization. Mapped to Schema.org Person/Organization and vCard (RFC 6350) field conventions. Clients are the primary relationship entity in Pipelinq.",
+        "description": "Represents a client entity — either a natural person or an organization. Mapped to Schema.org Person/Organization and vCard (RFC 6350) field conventions. Clients are the primary relationship entity in Pipelinq.",
         "@type": "schema:Person",
         "required": [
           "name",
@@ -55,7 +57,7 @@
           },
           "type": {
             "type": "string",
-            "description": "Entity type \u2014 person or organization (maps to schema:Person or schema:Organization)",
+            "description": "Entity type — person or organization (maps to schema:Person or schema:Organization)",
             "enum": [
               "person",
               "organization"
@@ -153,7 +155,7 @@
         "icon": "TrendingUp",
         "version": "1.0.0",
         "summary": "A sales lead or business opportunity",
-        "description": "Represents a sales lead \u2014 a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.",
+        "description": "Represents a sales lead — a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.",
         "@type": "schema:Demand",
         "required": [
           "title"
@@ -258,7 +260,7 @@
         "title": "Request",
         "icon": "FileDocumentOutline",
         "version": "1.0.0",
-        "summary": "A service request (verzoek) \u2014 the pre-state of a case",
+        "summary": "A service request (verzoek) — the pre-state of a case",
         "description": "Represents a client service request that may be converted to a case in Procest. Tracks status lifecycle, priority, assignment, and optional pipeline placement.",
         "@type": "schema:Demand",
         "required": [
@@ -367,7 +369,7 @@
         "icon": "Pipe",
         "version": "2.0.0",
         "summary": "A view-backed pipeline defining stages for tracking entities",
-        "description": "Represents a pipeline \u2014 an ordered list of stages through which entities progress. Backed by an OpenRegister View that defines which schemas appear on the board. Each schema can have its own property-to-stage mapping and totals configuration. Mapped to Schema.org ItemList.",
+        "description": "Represents a pipeline — an ordered list of stages through which entities progress. Backed by an OpenRegister View that defines which schemas appear on the board. Each schema can have its own property-to-stage mapping and totals configuration. Mapped to Schema.org ItemList.",
         "@type": "schema:ItemList",
         "required": [
           "title",
@@ -600,7 +602,7 @@
         "icon": "CartOutline",
         "version": "1.0.0",
         "summary": "A line item linking a product to a lead",
-        "description": "Represents a product line item on a lead \u2014 an instance of a product with deal-specific quantity, pricing, and discount. The total is computed as quantity * unitPrice * (1 - discount/100). Mapped to Schema.org Offer.",
+        "description": "Represents a product line item on a lead — an instance of a product with deal-specific quantity, pricing, and discount. The total is computed as quantity * unitPrice * (1 - discount/100). Mapped to Schema.org Offer.",
         "@type": "schema:Offer",
         "required": [
           "lead",
@@ -649,16 +651,168 @@
             "visible": false
           }
         }
+      },
+      "automation": {
+        "slug": "automation",
+        "title": "Automation",
+        "icon": "RobotOutline",
+        "version": "1.0.0",
+        "summary": "A CRM workflow automation rule",
+        "description": "Represents a trigger-action automation for CRM events. When the trigger fires and conditions match, the configured actions execute in sequence. Optionally fires an n8n webhook.",
+        "@type": "schema:Action",
+        "required": [
+          "name",
+          "trigger"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Automation name",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "trigger": {
+            "type": "string",
+            "description": "The CRM event that activates this automation",
+            "enum": [
+              "lead_created",
+              "lead_stage_changed",
+              "lead_assigned",
+              "lead_value_changed",
+              "contact_created",
+              "request_created",
+              "request_status_changed"
+            ],
+            "title": "Trigger",
+            "facetable": true
+          },
+          "triggerConditions": {
+            "type": "object",
+            "description": "Filter conditions for the trigger (e.g., stage, pipeline, value threshold)",
+            "visible": false
+          },
+          "actions": {
+            "type": "array",
+            "description": "Ordered list of actions to execute when triggered",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "assign_lead",
+                    "move_stage",
+                    "send_notification",
+                    "update_field",
+                    "add_note",
+                    "webhook"
+                  ]
+                },
+                "config": {
+                  "type": "object",
+                  "description": "Action-specific configuration"
+                }
+              }
+            }
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the automation is enabled",
+            "default": true,
+            "title": "Active",
+            "facetable": true
+          },
+          "lastRun": {
+            "type": "string",
+            "description": "ISO timestamp of last execution",
+            "format": "date-time",
+            "visible": false
+          },
+          "runCount": {
+            "type": "integer",
+            "description": "Total number of times this automation has executed",
+            "default": 0,
+            "visible": false
+          },
+          "webhookUrl": {
+            "type": "string",
+            "description": "n8n webhook URL for external workflow execution",
+            "format": "uri",
+            "visible": false
+          },
+          "n8nWorkflowId": {
+            "type": "string",
+            "description": "Reference to the n8n workflow ID",
+            "visible": false
+          }
+        }
+      },
+      "automationLog": {
+        "slug": "automationLog",
+        "title": "Automation Log",
+        "icon": "History",
+        "version": "1.0.0",
+        "summary": "Execution log entry for a CRM automation",
+        "description": "Records each execution of an automation including trigger details, actions executed, and outcome.",
+        "@type": "schema:Action",
+        "required": [
+          "automation",
+          "triggeredAt",
+          "status"
+        ],
+        "properties": {
+          "automation": {
+            "type": "string",
+            "description": "UUID reference to the automation that executed",
+            "format": "uuid"
+          },
+          "triggeredAt": {
+            "type": "string",
+            "description": "When the automation was triggered",
+            "format": "date-time"
+          },
+          "triggerEntity": {
+            "type": "string",
+            "description": "UUID of the entity that triggered the automation",
+            "format": "uuid"
+          },
+          "actionsExecuted": {
+            "type": "array",
+            "description": "List of actions executed and their results",
+            "visible": false
+          },
+          "status": {
+            "type": "string",
+            "description": "Execution outcome",
+            "enum": [
+              "success",
+              "failure",
+              "partial"
+            ],
+            "title": "Status",
+            "facetable": true
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message if execution failed",
+            "visible": false
+          }
+        }
       }
     },
     "views": {
       "default-pipeline-view": {
         "slug": "default-pipeline-view",
         "name": "Pipelinq Default View",
-        "description": "Default view for pipeline boards \u2014 includes leads and requests from the Pipelinq register",
+        "description": "Default view for pipeline boards — includes leads and requests from the Pipelinq register",
         "query": {
-          "registers": ["pipelinq"],
-          "schemas": ["lead", "request"]
+          "registers": [
+            "pipelinq"
+          ],
+          "schemas": [
+            "lead",
+            "request"
+          ]
         },
         "isDefault": true
       }
