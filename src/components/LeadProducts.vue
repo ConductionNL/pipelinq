@@ -28,7 +28,12 @@
 					</thead>
 					<tbody>
 						<tr v-for="item in lineItems" :key="item.id">
-							<td>{{ getProductName(item.product) }}</td>
+							<td :class="{ 'product-inactive': isProductInactive(item.product) }">
+								{{ getProductName(item.product) }}
+								<span v-if="isProductInactive(item.product)" class="inactive-badge">
+									{{ t('pipelinq', '(inactive)') }}
+								</span>
+							</td>
 							<td>
 								<input
 									v-model.number="item.quantity"
@@ -196,7 +201,9 @@ export default {
 			return useObjectStore()
 		},
 		productOptions() {
-			return this.products.map(p => ({ id: p.id, name: p.name || p.id }))
+			return this.products
+				.filter(p => p.status !== 'inactive')
+				.map(p => ({ id: p.id, name: p.name || p.id }))
 		},
 		grandTotal() {
 			return this.lineItems.reduce((sum, item) => sum + this.calculateTotal(item), 0)
@@ -233,6 +240,10 @@ export default {
 		getProductName(productId) {
 			const product = this.products.find(p => p.id === productId)
 			return product?.name || productId || '-'
+		},
+		isProductInactive(productId) {
+			const product = this.products.find(p => p.id === productId)
+			return product?.status === 'inactive'
 		},
 		calculateTotal(item) {
 			const qty = Number(item.quantity) || 0
@@ -482,5 +493,15 @@ export default {
 	display: flex;
 	gap: 8px;
 	margin-top: 16px;
+}
+
+.product-inactive {
+	color: var(--color-text-maxcontrast);
+}
+
+.inactive-badge {
+	font-size: 11px;
+	font-style: italic;
+	color: var(--color-text-maxcontrast);
 }
 </style>

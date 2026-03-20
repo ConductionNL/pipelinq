@@ -73,6 +73,12 @@
 					<label>{{ t('pipelinq', 'Category') }}</label>
 					<span>{{ categoryName || '-' }}</span>
 				</div>
+				<div v-if="hasMargin" class="info-field">
+					<label>{{ t('pipelinq', 'Margin') }}</label>
+					<span :class="marginClass">
+						{{ formatCurrency(marginAmount) }} ({{ marginPercentage }}%)
+					</span>
+				</div>
 			</div>
 			<div v-if="productData.description" class="info-field info-field--full">
 				<label>{{ t('pipelinq', 'Description') }}</label>
@@ -154,6 +160,22 @@ export default {
 			if (this.isNew) return {}
 			return this.objectStore.getObject('product', this.productId) || {}
 		},
+		hasMargin() {
+			const cost = Number(this.productData.cost)
+			const price = Number(this.productData.unitPrice)
+			return cost > 0 && price > 0
+		},
+		marginAmount() {
+			return Number(this.productData.unitPrice) - Number(this.productData.cost)
+		},
+		marginPercentage() {
+			const price = Number(this.productData.unitPrice)
+			if (price === 0) return '0.0'
+			return ((this.marginAmount / price) * 100).toFixed(1)
+		},
+		marginClass() {
+			return this.marginAmount >= 0 ? 'margin--positive' : 'margin--negative'
+		},
 		sidebarProps() {
 			const config = this.objectStore.objectTypeRegistry.product || {}
 			return {
@@ -192,14 +214,38 @@ export default {
 			}
 		},
 		async confirmDelete() {
-			if (confirm(t('pipelinq', 'Are you sure you want to delete this product?'))) {
-				const success = await this.objectStore.deleteObject('product', this.productId)
-				if (success) {
-					this.$router.push({ name: 'Products' })
-				} else {
-					const error = this.objectStore.getError('product')
-					showError(error?.message || t('pipelinq', 'Failed to delete product.'))
+			if (this.linkedLeads.length > 0) {
+				const count = this.linkedLeads.length
+				const message = t('pipelinq', 'This product is linked to {count} lead(s). Do you want to set it to inactive instead of deleting?', { count })
+				const choice = confirm(message + '\n\n' + t('pipelinq', 'OK = Set to inactive, Cancel = Delete anyway'))
+				if (choice) {
+					// Set to inactive
+					const result = await this.objectStore.saveObject('product', {
+						id: this.productId,
+						status: 'inactive',
+					})
+					if (result) {
+						await this.objectStore.fetchObject('product', this.productId)
+						this.editing = false
+					} else {
+						showError(t('pipelinq', 'Failed to deactivate product.'))
+					}
+					return
 				}
+				// User chose "Cancel" = delete anyway, ask for final confirmation
+				if (!confirm(t('pipelinq', 'Are you sure you want to permanently delete this product?'))) {
+					return
+				}
+			} else if (!confirm(t('pipelinq', 'Are you sure you want to delete this product?'))) {
+				return
+			}
+
+			const success = await this.objectStore.deleteObject('product', this.productId)
+			if (success) {
+				this.$router.push({ name: 'Products' })
+			} else {
+				const error = this.objectStore.getError('product')
+				showError(error?.message || t('pipelinq', 'Failed to delete product.'))
 			}
 		},
 		async fetchRelated() {
@@ -332,5 +378,15 @@ export default {
 	text-align: center;
 	color: var(--color-text-maxcontrast);
 	padding: 20px;
+}
+
+.margin--positive {
+	color: #166534;
+	font-weight: 600;
+}
+
+.margin--negative {
+	color: #dc2626;
+	font-weight: 600;
 }
 </style>
