@@ -37,6 +37,45 @@
 			</NcButton>
 		</template>
 
+		<!-- Summary Statistics (klantbeeld-360) -->
+		<div v-if="!isNew" class="klantbeeld-stats">
+			<div class="stat-tile" @click="scrollToSection('leads')">
+				<div class="stat-tile__value">
+					{{ openLeadsCount }}
+				</div>
+				<div class="stat-tile__label">
+					{{ t('pipelinq', 'Open Leads') }}
+				</div>
+				<div v-if="totalLeadValue > 0" class="stat-tile__sub">
+					EUR {{ totalLeadValue.toLocaleString('nl-NL') }}
+				</div>
+			</div>
+			<div class="stat-tile" @click="scrollToSection('requests')">
+				<div class="stat-tile__value">
+					{{ openRequestsCount }}
+				</div>
+				<div class="stat-tile__label">
+					{{ t('pipelinq', 'Open Requests') }}
+				</div>
+			</div>
+			<div class="stat-tile">
+				<div class="stat-tile__value">
+					{{ contacts.length }}
+				</div>
+				<div class="stat-tile__label">
+					{{ t('pipelinq', 'Contacts') }}
+				</div>
+			</div>
+			<div class="stat-tile">
+				<div class="stat-tile__value">
+					{{ lastContactLabel }}
+				</div>
+				<div class="stat-tile__label">
+					{{ t('pipelinq', 'Last Contact') }}
+				</div>
+			</div>
+		</div>
+
 		<CnDetailCard :title="t('pipelinq', 'Client Information')">
 			<div v-if="clientData.contactsUid" class="sync-badge">
 				{{ t('pipelinq', 'Synced with Contacts') }}
@@ -104,35 +143,72 @@
 			</div>
 		</CnDetailCard>
 
-		<CnDetailCard :title="t('pipelinq', 'Leads')">
+		<CnDetailCard ref="leads" :title="t('pipelinq', 'Leads')">
+			<template #actions>
+				<NcButton @click="$router.push({ name: 'LeadDetail', params: { id: 'new' }, query: { client: clientId } })">
+					{{ t('pipelinq', 'New lead') }}
+				</NcButton>
+			</template>
+
 			<div v-if="leads.length === 0" class="section-empty">
 				<p>{{ t('pipelinq', 'No leads found') }}</p>
 			</div>
-			<div v-else class="viewTableContainer">
-				<table class="viewTable">
-					<thead>
-						<tr>
-							<th>{{ t('pipelinq', 'Title') }}</th>
-							<th>{{ t('pipelinq', 'Stage') }}</th>
-							<th>{{ t('pipelinq', 'Value') }}</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr
-							v-for="lead in leads"
-							:key="lead.id"
-							class="viewTableRow"
-							@click="$router.push({ name: 'LeadDetail', params: { id: lead.id } })">
-							<td>{{ lead.title || '-' }}</td>
-							<td>{{ lead.stage || '-' }}</td>
-							<td>{{ lead.value || '-' }}</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
+			<template v-else>
+				<div v-if="openLeads.length > 0" class="viewTableContainer">
+					<table class="viewTable">
+						<thead>
+							<tr>
+								<th>{{ t('pipelinq', 'Title') }}</th>
+								<th>{{ t('pipelinq', 'Stage') }}</th>
+								<th>{{ t('pipelinq', 'Value') }}</th>
+								<th>{{ t('pipelinq', 'Assignee') }}</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr
+								v-for="lead in openLeads"
+								:key="lead.id"
+								class="viewTableRow"
+								@click="$router.push({ name: 'LeadDetail', params: { id: lead.id } })">
+								<td>{{ lead.title || '-' }}</td>
+								<td>{{ lead.stage || '-' }}</td>
+								<td>{{ lead.value ? 'EUR ' + Number(lead.value).toLocaleString('nl-NL') : '-' }}</td>
+								<td>{{ lead.assignee || '-' }}</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div v-if="closedLeads.length > 0" class="closed-section">
+					<button class="closed-toggle" @click="showClosedLeads = !showClosedLeads">
+						{{ showClosedLeads ? t('pipelinq', 'Hide closed') : t('pipelinq', 'Show {count} closed', { count: closedLeads.length }) }}
+					</button>
+					<div v-if="showClosedLeads" class="viewTableContainer">
+						<table class="viewTable">
+							<thead>
+								<tr>
+									<th>{{ t('pipelinq', 'Title') }}</th>
+									<th>{{ t('pipelinq', 'Stage') }}</th>
+									<th>{{ t('pipelinq', 'Value') }}</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr
+									v-for="lead in closedLeads"
+									:key="lead.id"
+									class="viewTableRow viewTableRow--muted"
+									@click="$router.push({ name: 'LeadDetail', params: { id: lead.id } })">
+									<td>{{ lead.title || '-' }}</td>
+									<td>{{ lead.stage || '-' }}</td>
+									<td>{{ lead.value ? 'EUR ' + Number(lead.value).toLocaleString('nl-NL') : '-' }}</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</template>
 		</CnDetailCard>
 
-		<CnDetailCard :title="t('pipelinq', 'Requests')">
+		<CnDetailCard ref="requests" :title="t('pipelinq', 'Requests')">
 			<template #actions>
 				<NcButton @click="createRequest">
 					{{ t('pipelinq', 'New request') }}
@@ -227,6 +303,7 @@ export default {
 			contacts: [],
 			leads: [],
 			showDelete: false,
+			showClosedLeads: false,
 		}
 	},
 	computed: {
@@ -250,6 +327,44 @@ export default {
 				schema: config.schema || '',
 				hiddenTabs: ['tasks'],
 			}
+		},
+
+		// Klantbeeld-360 computed properties
+		openLeads() {
+			const closedStages = ['won', 'gewonnen', 'lost', 'verloren', 'closed won', 'closed lost']
+			return this.leads.filter(l => !closedStages.includes((l.stage || '').toLowerCase()))
+		},
+		closedLeads() {
+			const closedStages = ['won', 'gewonnen', 'lost', 'verloren', 'closed won', 'closed lost']
+			return this.leads.filter(l => closedStages.includes((l.stage || '').toLowerCase()))
+		},
+		openLeadsCount() {
+			return this.openLeads.length
+		},
+		totalLeadValue() {
+			let total = 0
+			for (const lead of this.openLeads) {
+				total += Number(lead.value) || 0
+			}
+			return total
+		},
+		openRequestsCount() {
+			return this.requests.filter(r => !['completed', 'rejected', 'converted'].includes(r.status)).length
+		},
+		lastContactLabel() {
+			// Use the most recent updated timestamp from any related entity
+			const dates = []
+			for (const r of this.requests) {
+				if (r.updated) dates.push(new Date(r.updated))
+				if (r.created) dates.push(new Date(r.created))
+			}
+			if (dates.length === 0) return t('pipelinq', 'None')
+			dates.sort((a, b) => b - a)
+			const lastDate = dates[0]
+			const diffDays = Math.floor((Date.now() - lastDate.getTime()) / 86400000)
+			if (diffDays === 0) return t('pipelinq', 'Today')
+			if (diffDays === 1) return t('pipelinq', 'Yesterday')
+			return t('pipelinq', '{count}d ago', { count: diffDays })
 		},
 	},
 	async mounted() {
@@ -337,6 +452,12 @@ export default {
 		},
 		addContact() {
 			this.$router.push({ name: 'ContactDetail', params: { id: 'new' }, query: { client: this.clientId } })
+		},
+		scrollToSection(refName) {
+			const el = this.$refs[refName]?.$el || this.$refs[refName]
+			if (el) {
+				el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+			}
 		},
 	},
 }
@@ -441,5 +562,76 @@ export default {
 	font-size: 12px;
 	font-weight: 600;
 	margin-bottom: 16px;
+}
+
+/* Klantbeeld-360 summary stats */
+.klantbeeld-stats {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 12px;
+	margin-bottom: 20px;
+	padding: 0 20px;
+}
+
+@media (max-width: 768px) {
+	.klantbeeld-stats {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+.stat-tile {
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+	padding: 12px 16px;
+	text-align: center;
+	cursor: pointer;
+	transition: box-shadow 0.15s;
+}
+
+.stat-tile:hover {
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stat-tile__value {
+	font-size: 20px;
+	font-weight: 700;
+}
+
+.stat-tile__label {
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.stat-tile__sub {
+	font-size: 12px;
+	color: var(--color-success);
+	font-weight: 600;
+	margin-top: 2px;
+}
+
+/* Closed leads toggle */
+.closed-section {
+	margin-top: 12px;
+}
+
+.closed-toggle {
+	background: none;
+	border: none;
+	color: var(--color-primary);
+	cursor: pointer;
+	font-size: 13px;
+	padding: 4px 0;
+	margin-bottom: 8px;
+}
+
+.closed-toggle:hover {
+	text-decoration: underline;
+}
+
+.viewTableRow--muted {
+	opacity: 0.6;
 }
 </style>
