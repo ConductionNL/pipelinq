@@ -2,6 +2,12 @@
 
 Configurable kanban-style boards where leads and requests flow through ordered stages. The primary visual workflow tool for managing sales and service pipelines.
 
+## Screenshot
+
+![Pipeline](../screenshots/pipeline.png)
+
+The pipeline view shows a kanban board with the "Sales Pipeline" selected. Stage columns (NEW, CONTACTED, etc.) display item counts and EUR value totals. The right sidebar shows pipeline details: linked schemas (lead, request), default pipeline status, 7 stages, EUR totals label, and the complete stage flow (New -> Contacted -> Qualified -> ...). Tabs for Details and Stages allow pipeline configuration.
+
 ## Specs
 
 - `openspec/specs/pipeline/spec.md`
@@ -14,8 +20,8 @@ Configurable kanban-style boards where leads and requests flow through ordered s
 Administrators create and configure pipelines with ordered stages. Each pipeline has a title, description, entity type scope, and ordered list of stages.
 
 - Pipeline entity types: `lead`, `request`, or `mixed`
-- Default Sales Pipeline: New → Contacted → Qualified → Proposal → Negotiation → Won → Lost (7 stages)
-- Default Service Pipeline: New → In Progress → Completed → Rejected → Converted (5 stages)
+- Default Sales Pipeline: New -> Contacted -> Qualified -> Proposal -> Negotiation -> Won -> Lost (7 stages)
+- Default Service Pipeline: New -> In Progress -> Completed -> Rejected -> Converted (5 stages)
 - One pipeline marked as default (isDefault: true)
 
 ### Stage Management (MVP)
@@ -29,27 +35,33 @@ Stages are ordered steps within a pipeline. Each stage has a name and order numb
 
 Visual board layout with pipeline stages as columns. Leads and/or requests appear as cards in their current stage column.
 
-- Stage column headers with entity counts
+- Stage column headers with entity counts and EUR value totals
 - Pipeline selector dropdown to switch between pipelines
 - Add entity directly from a stage column
 
 ### Pipeline View Toggle (MVP)
 
-Users can switch between kanban (visual board) and list (data-dense table) views of the same pipeline data.
+Users can switch between kanban (visual board) and list (data-dense table) views of the same pipeline data. Toggle buttons for Kanban view and List view are available in the header.
 
 ### Quick Actions on Cards (MVP)
 
-Common actions available directly on pipeline cards without opening the detail view — move to next/previous stage, assign to user.
+Common actions available directly on pipeline cards without opening the detail view -- move to next/previous stage, assign to user.
 
 ### Pipeline Selection on Entity (MVP)
 
 When creating or editing a lead/request, users can select which pipeline and stage to place it on.
 
+### Pipeline Sidebar (MVP)
+
+Right sidebar panel showing pipeline details with two tabs:
+- **Details**: Pipeline metadata (schemas, default status, stage count, totals label, stage flow)
+- **Stages**: Stage management (add, reorder, delete stages)
+
 ### Pipeline on Admin Settings (MVP)
 
 Pipeline management is accessible from the Nextcloud admin settings page with full CRUD and stage management.
 
-### Planned (V1) — Pipeline Insights
+### Planned (V1) -- Pipeline Insights
 
 Temporal and financial context overlays for pipeline views:
 
@@ -58,7 +70,7 @@ Temporal and financial context overlays for pipeline views:
 - **Aging Indicator**: Shows days in current stage on each lead card
 - **Overdue Item Highlighting**: Red indicators for items past their due/expected close date
 
-### Planned (V1) — Analytics
+### Planned (V1) -- Analytics
 
 - Stage probability mapping (auto-populates lead probability from stage config)
 - Pipeline analytics (conversion rates, stage duration)
