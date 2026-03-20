@@ -15,6 +15,9 @@ import ProductDetail from '../views/products/ProductDetail.vue'
 import PipelineBoard from '../views/pipeline/PipelineBoard.vue'
 import MyWork from '../views/MyWork.vue'
 import PipelineManager from '../views/settings/PipelineManager.vue'
+import ContactmomentList from '../views/contactmomenten/ContactmomentList.vue'
+import ContactmomentForm from '../views/contactmomenten/ContactmomentForm.vue'
+import ContactmomentDetail from '../views/contactmomenten/ContactmomentDetail.vue'
 
 Vue.use(Router)
 
@@ -35,6 +38,9 @@ export default new Router({
 		{ path: '/products/:id', name: 'ProductDetail', component: ProductDetail, props: route => ({ productId: route.params.id }) },
 		{ path: '/pipeline', name: 'Pipeline', component: PipelineBoard },
 		{ path: '/my-work', name: 'MyWork', component: MyWork },
+		{ path: '/contactmomenten', name: 'Contactmomenten', component: ContactmomentList },
+		{ path: '/contactmomenten/new', name: 'ContactmomentNew', component: ContactmomentForm },
+		{ path: '/contactmomenten/:id', name: 'ContactmomentDetail', component: ContactmomentDetail, props: route => ({ contactmomentId: route.params.id }) },
 		{ path: '/pipelines', name: 'Pipelines', component: PipelineManager },
 		{ path: '*', redirect: '/' },
 	],
