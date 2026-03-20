@@ -419,7 +419,7 @@ Leads and requests MUST be assignable to a pipeline and stage, either during cre
 
 ### REQ-PIPE-011: Stage Probability Mapping [V1]
 
-When a lead is moved to a stage that has a probability value set, the system SHOULD automatically update the lead's probability to match the stage probability.
+When a lead is moved to a stage that has a probability value set, the system MUST automatically update the lead's probability to match the stage probability.
 
 #### Scenario 43: Auto-populate probability on stage change
 
@@ -446,7 +446,7 @@ When a lead is moved to a stage that has a probability value set, the system SHO
 
 ### REQ-PIPE-012: Pipeline Analytics [V1]
 
-The system SHOULD provide analytics for each pipeline to help managers understand conversion rates and bottlenecks.
+The system MUST provide analytics for each pipeline to help managers understand conversion rates and bottlenecks.
 
 #### Scenario 46: Conversion rate between stages
 
@@ -475,7 +475,7 @@ The system SHOULD provide analytics for each pipeline to help managers understan
 
 ### REQ-PIPE-013: Pipeline Funnel Visualization [V1]
 
-The system SHOULD display a funnel chart showing the distribution of leads/requests across pipeline stages.
+The system MUST display a funnel chart showing the distribution of leads/requests across pipeline stages.
 
 #### Scenario 48: Render pipeline funnel
 
@@ -491,7 +491,7 @@ The system SHOULD display a funnel chart showing the distribution of leads/reque
 
 ### REQ-PIPE-014: Stage Revenue Summary [V1]
 
-The system SHOULD display the total monetary value of leads in each stage to provide at-a-glance pipeline valuation.
+The system MUST display the total monetary value of leads in each stage to provide at-a-glance pipeline valuation.
 
 #### Scenario 49: Revenue per stage column
 
@@ -625,6 +625,464 @@ Pipeline cards MUST support quick actions for moving between stages and assignin
 
 ---
 
+## ADDED Requirements
+
+### Requirement: REQ-PIPE-019: Multiple Pipelines per Organization [V1]
+
+Organizations MUST be able to maintain multiple active pipelines simultaneously, each targeting different workflows or teams. This enables separate sales processes (e.g., government deals vs. commercial, inbound vs. outbound) and prevents forcing all leads through a single funnel. Inspired by EspoCRM's multi-pipeline opportunities and Krayin's pipeline-per-team model.
+
+#### Scenario: Create team-specific pipelines
+
+- GIVEN an organization with two sales teams: "Government" and "Commercial"
+- WHEN an admin creates two pipelines:
+  - "Government Sales" with stages: New, Assessment, Tender, Award, Won, Lost
+  - "Commercial Sales" with stages: New, Contacted, Demo, Proposal, Won, Lost
+- THEN both pipelines MUST coexist and be selectable from the pipeline dropdown
+- AND each pipeline MUST independently track its own leads
+- AND the dashboard KPI "Pipeline Value" MUST aggregate values across all active pipelines
+
+#### Scenario: Pipeline-specific stage sequences
+
+- GIVEN a "Government Sales" pipeline with 6 stages including "Tender" and "Award"
+- AND a "Commercial Sales" pipeline with 6 stages including "Demo" and "Proposal"
+- WHEN a user views each pipeline's kanban board
+- THEN each board MUST show only its own stage columns
+- AND stage names, probabilities, and colors MUST be independently configurable per pipeline
+
+#### Scenario: Cross-pipeline lead overview
+
+- GIVEN 15 leads on "Government Sales" and 30 leads on "Commercial Sales"
+- WHEN a manager navigates to the lead list view (not the kanban)
+- THEN all 45 leads MUST be visible in the list regardless of pipeline
+- AND the "Pipeline" column MUST show which pipeline each lead belongs to
+- AND filtering by pipeline MUST be available in the list view
+
+---
+
+### Requirement: REQ-PIPE-020: Pipeline Template Creation [Enterprise]
+
+The system SHOULD allow admins to save an existing pipeline configuration as a reusable template. Templates accelerate onboarding by providing pre-built pipeline configurations that match common workflows (sales, service, hiring, procurement). Krayin ships with a default pipeline template; EspoCRM uses installable extension packs.
+
+#### Scenario: Save pipeline as template
+
+- GIVEN an admin viewing the "Government Sales" pipeline with 6 custom stages, probabilities, and colors
+- WHEN the admin clicks "Save as template" and enters a template name "Government Tender Process"
+- THEN the system MUST store a template object containing:
+  - Template title and description
+  - Stage definitions (names, order, probabilities, isClosed, isWon, colors)
+  - Entity type configuration
+- AND the template MUST appear in a "Templates" section on the admin settings page
+
+#### Scenario: Create pipeline from template
+
+- GIVEN a template "Government Tender Process" with 6 stages
+- WHEN an admin clicks "Create from template" and selects this template
+- THEN the system MUST create a new pipeline pre-populated with all template stages
+- AND the admin MUST be able to modify the pipeline title and customize stages before saving
+- AND the new pipeline MUST be independent of the template (changes to one do not affect the other)
+
+#### Scenario: Built-in templates available on fresh install
+
+- GIVEN a fresh Pipelinq installation
+- WHEN the admin navigates to pipeline settings and clicks "Create from template"
+- THEN at least two built-in templates MUST be available:
+  - "Sales Pipeline" (7 stages: New through Won/Lost with probabilities)
+  - "Service Request Pipeline" (5 stages: New through Completed/Rejected/Converted)
+- AND built-in templates MUST NOT be deletable
+
+---
+
+### Requirement: REQ-PIPE-021: Stage Automation on Transition [Enterprise]
+
+The system SHOULD support configurable automation actions triggered when a lead or request moves to a specific stage. This reduces manual work and ensures consistency in follow-up actions. EspoCRM implements this via its BPM engine; Krayin uses a workflow automation system with event-based triggers on lead stage changes.
+
+#### Scenario: Auto-assign on stage transition
+
+- GIVEN a pipeline stage "Qualified" with an automation rule: "Auto-assign to team lead jan@example.nl"
+- WHEN a lead is moved from "Contacted" to "Qualified" (via drag-and-drop or quick action)
+- THEN the system MUST automatically set the lead's assignee to "jan@example.nl"
+- AND the audit trail MUST record: "Auto-assigned to jan@example.nl (triggered by stage change to Qualified)"
+- AND a Nextcloud notification MUST be sent to jan@example.nl: "Lead 'TechCorp deal' has been assigned to you"
+
+#### Scenario: Auto-notify on stage transition
+
+- GIVEN a pipeline stage "Won" with an automation rule: "Notify manager piet@example.nl"
+- WHEN a lead is moved to "Won"
+- THEN the system MUST send a Nextcloud notification to piet@example.nl: "Lead 'Gemeente ABC deal' has been won (EUR 50,000)"
+- AND the notification MUST include a link to the lead detail view
+
+#### Scenario: Auto-update field on stage transition
+
+- GIVEN a pipeline stage "Lost" with automation rules:
+  - "Set probability to 0"
+  - "Set lostReason field to required"
+- WHEN a lead is moved to "Lost"
+- THEN the system MUST automatically set the lead's probability to 0
+- AND the system MUST prompt the user to fill in a "Lost reason" before the transition completes
+- AND if the user cancels the reason prompt, the lead MUST remain in its previous stage
+
+#### Scenario: Configure stage automation via admin settings
+
+- GIVEN an admin editing the "Qualified" stage in pipeline settings
+- WHEN the admin opens the "Automation" section of the stage editor
+- THEN the admin MUST be able to configure zero or more actions from:
+  - Auto-assign to a specific user
+  - Send notification to a specific user or group
+  - Set a field value (e.g., probability, priority)
+  - Require a field to be filled (e.g., lostReason)
+- AND each action MUST show a preview summary (e.g., "Assign to jan@example.nl on entry")
+
+---
+
+### Requirement: REQ-PIPE-022: Pipeline Filtering and Search [MVP]
+
+The pipeline kanban and list views MUST support filtering and searching items to help users focus on specific subsets of leads or requests. This is a fundamental CRM capability present in all competitors (EspoCRM, Krayin, Twenty, BottleCRM).
+
+#### Scenario: Search by title within pipeline
+
+- GIVEN a pipeline with 50 leads across all stages
+- WHEN the user types "Gemeente" in the pipeline search bar
+- THEN the kanban MUST show only leads whose title contains "Gemeente" (case-insensitive)
+- AND stage columns MUST only display matching cards (empty columns remain visible)
+- AND column headers MUST update counts and values to reflect filtered results only
+- AND the list view MUST filter the same way if active
+
+#### Scenario: Filter by assignee
+
+- GIVEN a pipeline with leads assigned to users "jan", "piet", and "klaas"
+- WHEN the user selects assignee filter "jan"
+- THEN only leads assigned to "jan" MUST be displayed on the kanban board
+- AND the filter MUST persist when switching between kanban and list views
+
+#### Scenario: Filter by priority
+
+- GIVEN a pipeline with leads at priorities: urgent (2), high (5), normal (30), low (8)
+- WHEN the user selects priority filter "urgent" and "high"
+- THEN only the 7 matching leads MUST be displayed
+- AND column counts and values MUST reflect filtered results
+
+#### Scenario: Filter by due date range
+
+- GIVEN a pipeline with leads having various expected close dates
+- WHEN the user selects the date filter "Overdue" (expectedCloseDate < today)
+- THEN only overdue leads MUST be displayed
+- AND the filter MUST also support: "This week", "This month", "This quarter", "Custom range"
+
+#### Scenario: Combined filters
+
+- GIVEN a pipeline with 100 leads
+- WHEN the user applies multiple filters: assignee = "jan", priority = "high", entity type = "Leads only"
+- THEN the system MUST apply all filters with AND logic
+- AND the result count MUST be displayed: "Showing 3 of 100 items"
+- AND clearing all filters MUST restore the full pipeline view
+
+---
+
+### Requirement: REQ-PIPE-023: Pipeline Access Control [V1]
+
+The system SHOULD enforce access control on pipelines to ensure users only see and interact with pipelines relevant to their role. Access control is managed via OpenRegister's RBAC system. EspoCRM uses team-based access with role-level restrictions; Krayin has a "bouncer" system with all/group/individual permission levels.
+
+#### Scenario: Admin-only pipeline configuration
+
+- GIVEN a regular user (non-admin) logged into Pipelinq
+- WHEN the user navigates to the app
+- THEN the pipeline management section in admin settings MUST NOT be accessible
+- AND the user MUST NOT be able to create, edit, or delete pipelines or stages
+- AND the user MUST still be able to view and interact with pipeline kanban boards
+
+#### Scenario: Pipeline visibility by role
+
+- GIVEN a pipeline "Executive Sales" with access restricted to the "Sales Managers" group
+- AND a user "jan" who is a member of "Sales Managers"
+- AND a user "piet" who is NOT a member of "Sales Managers"
+- WHEN "jan" opens the pipeline dropdown
+- THEN "Executive Sales" MUST appear in the dropdown
+- AND when "piet" opens the pipeline dropdown
+- THEN "Executive Sales" MUST NOT appear in piet's dropdown
+
+#### Scenario: Pipeline items respect entity-level permissions
+
+- GIVEN a pipeline showing leads from multiple users
+- AND OpenRegister RBAC restricts user "jan" to only see leads assigned to himself
+- WHEN "jan" views the pipeline kanban board
+- THEN only leads assigned to "jan" MUST be visible as cards
+- AND column headers MUST show counts and values based only on jan's visible leads
+
+---
+
+### Requirement: REQ-PIPE-024: Pipeline Dashboard Widgets [V1]
+
+The Pipelinq dashboard MUST include pipeline-specific widgets that provide at-a-glance visibility into pipeline health and performance. These widgets complement the full kanban view by surfacing key metrics on the landing page.
+
+#### Scenario: Pipeline value KPI widget
+
+- GIVEN a dashboard with the "Pipeline Value" widget configured
+- AND 3 active pipelines with open leads totaling EUR 150,000 in value
+- WHEN the dashboard loads
+- THEN the widget MUST display "EUR 150,000" as the aggregate pipeline value
+- AND clicking the widget MUST navigate to the pipeline view
+
+#### Scenario: Pipeline funnel widget on dashboard
+
+- GIVEN a dashboard with the "Pipeline Funnel" widget
+- AND the default Sales Pipeline with leads distributed across stages
+- WHEN the dashboard loads
+- THEN the widget MUST render a horizontal bar chart showing lead counts per stage
+- AND the chart MUST use stage colors if configured
+- AND stages MUST be ordered from first (top) to last (bottom)
+- AND closed stages (Won/Lost) SHOULD be shown separately at the bottom of the funnel
+
+#### Scenario: Deals by stage widget
+
+- GIVEN a dashboard with the "Deals by Stage" widget
+- AND open leads: New (5, EUR 25k), Qualified (3, EUR 40k), Proposal (2, EUR 30k)
+- WHEN the dashboard loads
+- THEN the widget MUST display bars for each stage with count and value
+- AND the bar width MUST be proportional to the count (not value)
+
+#### Scenario: Overdue items widget
+
+- GIVEN 3 leads past their expected close date and 2 requests older than 30 days
+- WHEN the dashboard loads
+- THEN the "Overdue" widget MUST display "5" with error styling
+- AND clicking the widget MUST navigate to a filtered view showing only overdue items
+
+---
+
+### Requirement: REQ-PIPE-025: Stage SLA and Deadline Tracking [Enterprise]
+
+The system SHOULD support configuring maximum time limits (SLAs) per stage so that leads and requests that exceed the expected duration are flagged for attention. SLA tracking is a common feature in government CRM contexts where response time commitments are contractual. EspoCRM offers SLA tracking in its Cases module; Krayin does not have built-in SLA.
+
+#### Scenario: Configure stage SLA
+
+- GIVEN an admin editing the "New" stage of the Sales Pipeline
+- WHEN the admin sets the SLA to "3 business days"
+- THEN the system MUST store the SLA value on the stage object
+- AND the admin MUST be able to choose between "calendar days" and "business days"
+
+#### Scenario: SLA breach warning on kanban card
+
+- GIVEN a lead "Late Deal" that has been in the "New" stage for 5 business days
+- AND the "New" stage has an SLA of 3 business days
+- WHEN the kanban board is rendered
+- THEN the card for "Late Deal" MUST display a visual SLA breach indicator (e.g., red clock icon)
+- AND the card MUST show "2d overdue" relative to the SLA deadline
+- AND the SLA indicator MUST be distinct from the existing aging badge (aging = total age, SLA = stage-specific)
+
+#### Scenario: SLA breach notification
+
+- GIVEN a lead that exceeds the stage SLA threshold
+- WHEN the SLA breach is detected (via periodic check or on board load)
+- THEN the system MUST send a Nextcloud notification to the lead's assignee: "Lead 'Late Deal' has exceeded the SLA for stage 'New' (3 business days)"
+- AND if the lead has no assignee, the notification MUST go to the pipeline's default admin
+
+#### Scenario: SLA metrics in pipeline analytics
+
+- GIVEN pipeline analytics for a Sales Pipeline with SLA-configured stages
+- WHEN the admin views the analytics panel
+- THEN the system MUST display SLA compliance rates per stage:
+  - New: 85% within SLA (17 of 20 leads)
+  - Contacted: 92% within SLA
+  - Qualified: 78% within SLA (highlighted as below target)
+- AND stages below 80% compliance SHOULD be highlighted as needing attention
+
+---
+
+### Requirement: REQ-PIPE-026: Pipeline Reporting [V1]
+
+The system SHOULD provide exportable pipeline reports that summarize pipeline performance over a configurable time period. Reports complement real-time analytics by providing historical snapshots for management review and tender compliance.
+
+#### Scenario: Generate pipeline summary report
+
+- GIVEN a Sales Pipeline with historical data over the past quarter
+- WHEN the admin selects "Pipeline Report" and sets date range to "Q1 2026" (Jan 1 - Mar 31)
+- THEN the system MUST generate a report containing:
+  - Total leads entered: count of leads that entered the pipeline during the period
+  - Total leads won: count of leads that reached a Won stage
+  - Total leads lost: count of leads that reached a Lost stage
+  - Win rate: won / (won + lost) as a percentage
+  - Total value won: sum of values of won leads
+  - Average deal time: mean days from pipeline entry to Won stage
+  - Stage-by-stage conversion rates
+
+#### Scenario: Export report as CSV
+
+- GIVEN a generated pipeline summary report
+- WHEN the admin clicks "Export CSV"
+- THEN the system MUST download a CSV file with columns: Lead Title, Client, Value, Stage, Days in Pipeline, Outcome (Won/Lost/Open), Close Date
+- AND all leads that were active in the pipeline during the selected period MUST be included
+
+#### Scenario: Pipeline velocity report
+
+- GIVEN a Sales Pipeline with historical data
+- WHEN the admin views the velocity report
+- THEN the system MUST display:
+  - Average deal cycle time (days from first stage to closed stage)
+  - Median deal cycle time
+  - Deal cycle time trend over the last 6 months (line chart)
+  - Breakdown by stage showing average days per stage
+- AND the report MUST allow filtering by: pipeline, date range, assignee, value range
+
+---
+
+### Requirement: REQ-PIPE-027: Win/Loss Tracking [Enterprise]
+
+The system SHOULD track the outcome of closed leads with structured reason data to enable analysis of why deals are won or lost. This is a standard CRM feature in EspoCRM (close reason field on opportunities), Krayin (lost reason on leads), and all enterprise CRMs.
+
+#### Scenario: Record loss reason when moving to Lost stage
+
+- GIVEN a lead "Gemeente XYZ" in stage "Negotiation"
+- WHEN the user drags the lead to the "Lost" stage
+- THEN the system MUST display a modal dialog asking for:
+  - Lost reason (required, select from predefined list): "Price too high", "Chose competitor", "No budget", "Requirements changed", "No response", "Other"
+  - Lost reason notes (optional, free text, max 500 chars)
+- AND the user MUST NOT be able to complete the move without selecting a reason
+- AND the lead MUST store the `lostReason` and `lostReasonNotes` fields
+
+#### Scenario: Record win details when moving to Won stage
+
+- GIVEN a lead "BigCorp deal" in stage "Proposal"
+- WHEN the user moves the lead to the "Won" stage
+- THEN the system SHOULD display a dialog asking for:
+  - Actual close date (pre-filled with today's date)
+  - Actual value (pre-filled with the lead's current value, editable)
+  - Win notes (optional, free text)
+- AND the lead MUST store `actualCloseDate` and `actualValue` fields
+
+#### Scenario: Win/loss analysis report
+
+- GIVEN 50 closed leads over the past quarter (30 won, 20 lost)
+- WHEN the admin views the "Win/Loss Analysis" report
+- THEN the system MUST display:
+  - Win rate: 60%
+  - Top loss reasons: "Price too high" (8), "Chose competitor" (5), "No budget" (4), "Other" (3)
+  - Average deal value: Won EUR 45,000 vs Lost EUR 32,000
+  - Win rate by assignee: jan 70%, piet 55%, klaas 50%
+- AND the report MUST be filterable by time period, pipeline, and assignee
+
+---
+
+### Requirement: REQ-PIPE-028: Pipeline Sidebar Details [MVP]
+
+The pipeline view MUST include a sidebar panel that displays detailed information about the currently selected pipeline and its stages without navigating away from the board. The sidebar provides quick access to pipeline metadata and stage configuration.
+
+#### Scenario: View pipeline details in sidebar
+
+- GIVEN a user viewing the Sales Pipeline kanban board
+- WHEN the user clicks the settings/gear icon in the pipeline header
+- THEN a sidebar MUST open showing:
+  - Pipeline title and description
+  - Schema mappings (e.g., "lead, request")
+  - Default pipeline indicator (star icon + Yes/No)
+  - Stage count
+  - Totals label (e.g., "EUR")
+  - Color preview swatch
+  - Stage flow preview (e.g., "New -> Contacted -> Qualified -> ... -> Won -> Lost")
+  - Edit pipeline button
+  - New pipeline button
+
+#### Scenario: View stage list in sidebar
+
+- GIVEN the sidebar is open on the "Stages" tab
+- WHEN the user switches to the stages tab
+- THEN the sidebar MUST display all stages in order, each showing:
+  - Color dot indicator
+  - Stage name
+  - Order number
+  - Probability percentage (if set)
+  - "Closed" badge (if isClosed)
+  - "Won" badge (if isWon)
+- AND an "Edit stages" button MUST open the pipeline form for stage editing
+
+#### Scenario: Sidebar does not block board interaction
+
+- GIVEN the pipeline sidebar is open
+- WHEN the user drags a card between stages on the kanban board
+- THEN the drag-and-drop MUST work normally
+- AND the sidebar MUST remain open during and after the drag operation
+
+---
+
+### Requirement: REQ-PIPE-029: View Persistence and User Preferences [V1]
+
+The system MUST remember per-user pipeline view preferences so that returning to the pipeline view restores the user's last configuration. This reduces friction when users have consistent workflow patterns.
+
+#### Scenario: Remember selected pipeline across navigation
+
+- GIVEN user "jan" who last viewed the "Enterprise Pipeline"
+- WHEN "jan" navigates away to the lead list and then returns to the pipeline view
+- THEN the system MUST restore "Enterprise Pipeline" as the selected pipeline
+- AND the kanban board MUST load with Enterprise Pipeline stages and items
+
+#### Scenario: Remember view mode preference
+
+- GIVEN user "jan" who switched to list view on their last pipeline visit
+- WHEN "jan" returns to the pipeline view
+- THEN the system MUST restore list view mode
+- AND the list MUST show the previously selected pipeline's data
+
+#### Scenario: Remember filter state
+
+- GIVEN user "jan" who applied filters: entity type = "Leads only", assignee = "jan"
+- WHEN "jan" returns to the pipeline view after navigating elsewhere
+- THEN the previously applied filters SHOULD be restored
+- AND the board MUST display the filtered results
+
+#### Scenario: Preferences are per-user
+
+- GIVEN user "jan" prefers list view on "Enterprise Pipeline"
+- AND user "piet" prefers kanban view on "Sales Pipeline"
+- WHEN each user navigates to the pipeline view
+- THEN each user MUST see their own last-used configuration
+- AND changing one user's preference MUST NOT affect the other user
+
+---
+
+### Requirement: REQ-PIPE-030: Weighted Pipeline Value and Sales Forecast [V1]
+
+The system MUST calculate and display weighted pipeline values to provide a realistic forecast of expected revenue. The weighted value multiplies each lead's value by its stage probability, giving a more accurate picture than raw totals. This is a standard feature in EspoCRM (opportunity reports), Krayin (pipeline dashboard), and all enterprise CRMs.
+
+#### Scenario: Weighted value in pipeline footer
+
+- GIVEN a Sales Pipeline with open leads:
+  - "Deal A": EUR 100,000 in stage "Qualified" (probability 40%) -> weighted EUR 40,000
+  - "Deal B": EUR 50,000 in stage "Proposal" (probability 60%) -> weighted EUR 30,000
+  - "Deal C": EUR 200,000 in stage "Negotiation" (probability 80%) -> weighted EUR 160,000
+- WHEN the kanban board is rendered
+- THEN the pipeline footer MUST display:
+  - "Total value: EUR 350,000"
+  - "Weighted value: EUR 230,000"
+- AND in list view, the same footer values MUST be shown
+
+#### Scenario: Weighted value per stage column
+
+- GIVEN the "Qualified" stage with 3 leads:
+  - EUR 100,000 (prob 40%), EUR 50,000 (prob 40%), EUR 30,000 (prob 40%)
+- WHEN the column header is rendered
+- THEN the header MUST display the raw total: "EUR 180,000"
+- AND the header MAY additionally display the weighted total: "Weighted: EUR 72,000"
+
+#### Scenario: Weighted value on dashboard KPI
+
+- GIVEN the dashboard "Pipeline Value" widget
+- WHEN the dashboard loads
+- THEN the widget SHOULD display both:
+  - Raw pipeline value (sum of all open lead values)
+  - Weighted pipeline value (sum of value * probability / 100)
+- AND the weighted value MUST be clearly labeled to distinguish it from the raw total
+
+#### Scenario: Forecast by expected close date
+
+- GIVEN leads with expected close dates in the current quarter
+- WHEN the admin views the sales forecast
+- THEN the system MUST display a monthly breakdown:
+  - April 2026: EUR 80,000 weighted (5 deals)
+  - May 2026: EUR 120,000 weighted (3 deals)
+  - June 2026: EUR 50,000 weighted (7 deals)
+- AND leads without an expected close date MUST be grouped separately as "Unscheduled"
+
+---
+
 ## UI Reference
 
 ### Kanban Board Layout
@@ -675,6 +1133,7 @@ See DESIGN-REFERENCES.md Section 3.7 for the admin settings wireframe showing:
 - **REQ-PIPE-016 (Pipeline List on Admin Settings):** Implemented in `PipelineManager.vue` with star indicator for default, stage count, entity types, stage preview, edit/delete buttons.
 - **REQ-PIPE-017 (Pipeline Selector Dropdown):** Implemented in `PipelineBoard.vue` with NcSelect dropdown. Auto-selects default pipeline on mount.
 - **REQ-PIPE-018 (Pipeline Card Quick Actions):** Implemented in `PipelineCard.vue` with quick stage change dropdown and quick assign dropdown. Actions use `@click.stop` to prevent card navigation.
+- **REQ-PIPE-028 (Pipeline Sidebar Details):** Implemented in `PipelineSidebar.vue` with Details tab (pipeline metadata, schema labels, default indicator, stage flow preview, edit/create buttons) and Stages tab (ordered stage list with color dots, probability, closed/won badges, edit button).
 - **Collapsed closed stages:** Implemented. Closed stages render as compact columns with title (uppercase) and count. Click to expand/collapse.
 - **Overdue highlighting:** Red left border on overdue cards (`pipeline-card--overdue`). Red date text in list view.
 - **Stale detection:** Stale badge shown on leads 14+ days since modification.
@@ -688,8 +1147,18 @@ See DESIGN-REFERENCES.md Section 3.7 for the admin settings wireframe showing:
 - **REQ-PIPE-013 (Pipeline Funnel Visualization):** Not implemented. No funnel chart on dashboard.
 - **REQ-PIPE-014 (Stage Revenue Summary) - Pipeline-wide footer:** No footer showing total pipeline value or weighted pipeline value.
 - **REQ-PIPE-006 Scenario 6 (Delete pipeline with active items):** Warning about active items and reference clearing is not verified in the current UI.
+- **REQ-PIPE-019 (Multiple Pipelines per Organization):** Partially implemented -- multiple pipelines can coexist and the dropdown switches between them, but there is no cross-pipeline list filter or aggregate dashboard KPI.
+- **REQ-PIPE-020 (Pipeline Template Creation):** Not implemented. No template save/load functionality.
+- **REQ-PIPE-021 (Stage Automation on Transition):** Not implemented. No automation rules on stage change.
+- **REQ-PIPE-022 (Pipeline Filtering and Search):** Not implemented. No search bar or filter controls on the pipeline/kanban view beyond the entity type "Show" filter.
+- **REQ-PIPE-023 (Pipeline Access Control):** Not implemented. All pipelines visible to all users. Admin-only pipeline management is enforced by Nextcloud's admin settings page.
+- **REQ-PIPE-024 (Pipeline Dashboard Widgets):** Partially implemented. Dashboard has "Pipeline Value" KPI, "Overdue" KPI, "Deals by Stage" chart, and "My Work" widget. Missing: funnel widget, weighted value widget.
+- **REQ-PIPE-025 (Stage SLA and Deadline Tracking):** Not implemented. No SLA configuration on stages, no breach indicators.
+- **REQ-PIPE-026 (Pipeline Reporting):** Not implemented. No exportable reports or velocity metrics.
+- **REQ-PIPE-027 (Win/Loss Tracking):** Not implemented. No lost reason prompt, no win details dialog, no win/loss analysis report.
+- **REQ-PIPE-029 (View Persistence and User Preferences):** Not implemented. Selected view mode (kanban/list), pipeline selection, and filters are not persisted across navigation.
+- **REQ-PIPE-030 (Weighted Pipeline Value and Sales Forecast):** Not implemented. No weighted value calculation, no pipeline footer with totals, no forecast by close date.
 - **List view footer:** No "Showing N items - Total value: EUR X - Weighted: EUR Y" footer in list view.
-- **View persistence:** Selected view mode (kanban/list) is not persisted across navigation.
 
 **Partial implementations:**
 - Stage data model uses embedded arrays within pipeline objects (simpler) rather than separate OpenRegister objects (as some parts of this spec describe). The spec has an internal contradiction between the "embedded array" model in openregister-integration spec and the "separate OpenRegister objects" model here.
@@ -699,12 +1168,13 @@ See DESIGN-REFERENCES.md Section 3.7 for the admin settings wireframe showing:
 - **Industry patterns:** Trello-style kanban boards, HubSpot pipeline model, Nextcloud Deck column pattern.
 - **HTML5 Drag and Drop API:** Used for card movement between stages.
 - **WCAG AA:** Entity type distinction uses both color and text badges (not color-alone).
+- **Competitor references:** EspoCRM (multi-pipeline opportunities, BPM automation, formula engine), Krayin (pipeline-per-team, lost reason, web forms, workflow automation), Twenty (modern UI, custom objects), BottleCRM (lightweight pipeline management).
 
 ### Specificity Assessment
-- This is the most comprehensive spec in the batch with 65 scenarios across 18 requirements. It is highly specific and implementable.
+- This spec contains 30 requirements with 80+ scenarios across MVP, V1, and Enterprise tiers. It is highly specific and implementable.
 - **Key contradiction:** Stages as embedded arrays (openregister-integration spec) vs. stages as separate OpenRegister objects (this spec's REQ-PIPE-004). The implementation uses embedded arrays. This needs resolution.
-- **Missing:** No specification for pipeline permissions (who can create/edit/delete pipelines -- admins only? any user?). The spec references "admin settings" but doesn't define the permission model.
+- **Missing:** No specification for pipeline permissions (who can create/edit/delete pipelines -- admins only? any user?). REQ-PIPE-023 now addresses this at V1 tier.
 - **Open questions:**
   - Should the pipeline selector show entity type labels? (Spec says yes in Scenario 59, implementation does not currently.)
   - How should the "propertyMappings" approach (current implementation) relate to the "entityTypes" array (spec)? The implementation has evolved beyond the spec.
-  - What happens when a lead is dragged to a closed stage (Won/Lost)? Should the lead status automatically change to "won"/"lost"?
+  - What happens when a lead is dragged to a closed stage (Won/Lost)? REQ-PIPE-027 now specifies win/loss tracking with reason prompts.
