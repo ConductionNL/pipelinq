@@ -60,7 +60,7 @@
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
 				:name="t('pipelinq', 'Documentation')"
-				@click="openLink('https://pipelinq.app', '_blank')">
+				@click="openLink('https://conduction.gitbook.io/pipelinq-nextcloud', '_blank')">
 				<template #icon>
 					<BookOpenVariantOutline :size="20" />
 				</template>
