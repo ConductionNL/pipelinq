@@ -109,6 +109,7 @@ Vrij en open source onder de AGPL-licentie.
             <setting>OCA\Pipelinq\Activity\Setting\AssignmentSetting</setting>
             <setting>OCA\Pipelinq\Activity\Setting\StageStatusSetting</setting>
             <setting>OCA\Pipelinq\Activity\Setting\NoteSetting</setting>
+            <setting>OCA\Pipelinq\Activity\Setting\DealSetting</setting>
         </settings>
         <filters>
             <filter>OCA\Pipelinq\Activity\Filter</filter>
