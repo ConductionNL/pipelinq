@@ -31,6 +31,7 @@
           "leadProduct",
           "emailLink",
           "calendarLink"
+          "relationship"
           "survey",
           "surveyResponse"
           "queue",
@@ -914,6 +915,81 @@
           }
         }
       },
+      "relationship": {
+        "slug": "relationship",
+        "title": "Relationship",
+        "icon": "AccountMultiple",
+        "version": "1.0.0",
+        "summary": "A typed bidirectional relationship between two contacts or clients",
+        "description": "Represents a relationship between two entities (contacts and/or clients) with a typed, bidirectional link. Inverse relationships are auto-created. Mapped to Schema.org Person.knows.",
+        "@type": "schema:Relationship",
+        "required": [
+          "fromContact",
+          "toContact",
+          "type",
+          "inverseType"
+        ],
+        "properties": {
+          "fromContact": {
+            "type": "string",
+            "description": "UUID reference to the source contact or client",
+            "format": "uuid"
+          },
+          "toContact": {
+            "type": "string",
+            "description": "UUID reference to the target contact or client",
+            "format": "uuid"
+          },
+          "fromType": {
+            "type": "string",
+            "description": "Entity type of source: contact or client",
+            "enum": ["contact", "client"],
+            "default": "contact"
+          },
+          "toType": {
+            "type": "string",
+            "description": "Entity type of target: contact or client",
+            "enum": ["contact", "client"],
+            "default": "contact"
+          },
+          "type": {
+            "type": "string",
+            "description": "Relationship type identifier (e.g., partner, ouder, werkgever)",
+            "title": "Type",
+            "facetable": true
+          },
+          "inverseType": {
+            "type": "string",
+            "description": "The inverse relationship type identifier"
+          },
+          "category": {
+            "type": "string",
+            "description": "Category grouping for the relationship type (Familie, Professioneel, Organisatie, CRM Rol)",
+            "title": "Category",
+            "facetable": true
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional free text context for this relationship",
+            "visible": false
+          },
+          "startDate": {
+            "type": "string",
+            "description": "Date when the relationship started",
+            "format": "date",
+            "visible": false
+          },
+          "endDate": {
+            "type": "string",
+            "description": "Date when the relationship ended (null = active)",
+            "format": "date",
+            "visible": false
+          },
+          "strength": {
+            "type": "string",
+            "description": "Relationship strength: strong, medium, weak",
+            "enum": ["strong", "medium", "weak"],
+            "default": "medium",
       "kennisartikel": {
         "slug": "kennisartikel",
         "title": "Knowledge Article",

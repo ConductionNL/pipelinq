@@ -35,6 +35,7 @@ rules:
     - Reference docs/ARCHITECTURE.md for data model and standards decisions
     - Consider impact on Procest (request-to-case bridge)
     - Reference docs/FEATURES.md for feature tier (MVP/V1/Enterprise)
+    - "ADR-011: Before implementing ANY utility (validation, formatting, parsing), search OpenRegister lib/Formats/, lib/Service/, and lib/Handler/ for existing implementations. Common duplications: BSN validation (BsnFormat.php), date formatting, slug generation, UUID handling. If found, reuse via DI or document why duplication is necessary."
   specs:
     - Use Schema.org type annotations for all entities (e.g., schema:Person, schema:Demand)
     - Reference vCard (RFC 6350) field conventions for contact properties

@@ -187,6 +187,7 @@ export default {
 					{ slug: 'product', label: t('pipelinq', 'Product'), description: t('pipelinq', 'Products and services') },
 					{ slug: 'productCategory', label: t('pipelinq', 'Product Category'), description: t('pipelinq', 'Product categories') },
 					{ slug: 'leadProduct', label: t('pipelinq', 'Lead Product'), description: t('pipelinq', 'Product line items on leads') },
+					{ slug: 'relationship', label: t('pipelinq', 'Relationship'), description: t('pipelinq', 'Typed relationships between contacts and clients') },
 					{ slug: 'queue', label: t('pipelinq', 'Queue'), description: t('pipelinq', 'Work queues for routing') },
 					{ slug: 'skill', label: t('pipelinq', 'Skill'), description: t('pipelinq', 'Skills for agent routing') },
 					{ slug: 'agentProfile', label: t('pipelinq', 'Agent Profile'), description: t('pipelinq', 'Agent skill profiles') },
