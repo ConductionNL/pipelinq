@@ -32,6 +32,9 @@ export async function initializeStores() {
 		if (config.register && config.leadProduct_schema) {
 			objectStore.registerObjectType('leadProduct', config.leadProduct_schema, config.register)
 		}
+		if (config.register && config.complaint_schema) {
+			objectStore.registerObjectType('complaint', config.complaint_schema, config.register)
+		}
 	}
 
 	return { settingsStore, objectStore }
