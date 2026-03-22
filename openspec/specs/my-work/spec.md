@@ -167,6 +167,39 @@ Each item MUST follow a consistent card layout showing entity badge, title, stag
 
 ---
 
+### REQ-MW-090: Queue-Based Work Section [Enterprise]
+
+The My Work view SHALL include a "My Queues" tab showing items from queues the current user is assigned to, providing a queue-centric view of incoming work alongside the existing time-based grouping.
+
+#### Scenario: View items from assigned queues
+- WHEN the current user is assigned to queues "Vergunningen" and "Klachten"
+- THEN the My Work view SHALL display a "My Queues" tab/section
+- THEN the section SHALL show items grouped by queue name
+- THEN within each queue group, items SHALL be sorted by priority then age
+
+#### Scenario: Queue section shows unassigned items
+- WHEN queue "Vergunningen" contains 5 items (3 unassigned, 2 assigned to others)
+- THEN the "My Queues" section SHALL show all 5 items
+- THEN unassigned items SHALL be visually distinguished (e.g., "Unassigned" badge)
+- THEN items assigned to others SHALL show the assignee name
+
+#### Scenario: Pick from queue in My Work
+- WHEN an agent clicks "Pick" on an unassigned item in the My Queues section
+- THEN the item's assignee SHALL be set to the current user
+- THEN the item SHALL move to the "My Items" section (existing temporal grouping)
+
+#### Scenario: No queue assignments
+- WHEN the current user is not assigned to any queues
+- THEN the "My Queues" tab/section SHALL display "You are not assigned to any queues"
+- THEN the existing time-based My Work view SHALL still function normally
+
+#### Scenario: Toggle between views
+- WHEN the My Work view is displayed
+- THEN the user SHALL be able to toggle between "My Items" (existing temporal view) and "My Queues" (queue-based view)
+- THEN the default view SHALL be "My Items"
+
+---
+
 ## UI Layout Reference
 
 The My Work view follows the wireframe in DESIGN-REFERENCES.md section 3.5:

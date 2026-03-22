@@ -14,6 +14,8 @@ import ProductList from '../views/products/ProductList.vue'
 import ProductDetail from '../views/products/ProductDetail.vue'
 import PipelineBoard from '../views/pipeline/PipelineBoard.vue'
 import MyWork from '../views/MyWork.vue'
+import QueueList from '../views/queues/QueueList.vue'
+import QueueDetail from '../views/queues/QueueDetail.vue'
 import PipelineManager from '../views/settings/PipelineManager.vue'
 
 Vue.use(Router)
@@ -34,6 +36,8 @@ export default new Router({
 		{ path: '/products', name: 'Products', component: ProductList },
 		{ path: '/products/:id', name: 'ProductDetail', component: ProductDetail, props: route => ({ productId: route.params.id }) },
 		{ path: '/pipeline', name: 'Pipeline', component: PipelineBoard },
+		{ path: '/queues', name: 'Queues', component: QueueList },
+		{ path: '/queues/:id', name: 'QueueDetail', component: QueueDetail, props: route => ({ queueId: route.params.id }) },
 		{ path: '/my-work', name: 'MyWork', component: MyWork },
 		{ path: '/pipelines', name: 'Pipelines', component: PipelineManager },
 		{ path: '*', redirect: '/' },

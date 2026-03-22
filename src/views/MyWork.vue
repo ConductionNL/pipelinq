@@ -4,11 +4,26 @@
 		<div class="my-work__header">
 			<div class="my-work__title-row">
 				<h2>{{ t('pipelinq', 'My Work') }}</h2>
-				<span v-if="totalCount > 0" class="my-work__counts">
+				<span v-if="activeTab === 'items' && totalCount > 0" class="my-work__counts">
 					{{ t('pipelinq', 'Leads') }} ({{ leadCount }}) · {{ t('pipelinq', 'Requests') }} ({{ requestCount }}) — {{ totalCount }} {{ t('pipelinq', 'items total') }}
 				</span>
 			</div>
-			<div class="my-work__controls">
+
+			<!-- Tab switcher -->
+			<div class="my-work__tabs">
+				<NcButton
+					:type="activeTab === 'items' ? 'primary' : 'secondary'"
+					@click="activeTab = 'items'">
+					{{ t('pipelinq', 'My Items') }}
+				</NcButton>
+				<NcButton
+					:type="activeTab === 'queues' ? 'primary' : 'secondary'"
+					@click="switchToQueues">
+					{{ t('pipelinq', 'My Queues') }}
+				</NcButton>
+			</div>
+
+			<div v-if="activeTab === 'items'" class="my-work__controls">
 				<div class="filter-buttons">
 					<NcButton
 						:type="filter === 'all' ? 'primary' : 'secondary'"
@@ -42,84 +57,140 @@
 			</NcButton>
 		</div>
 
-		<div v-else-if="filteredItems.length === 0" class="my-work__empty">
-			<p>{{ emptyMessage }}</p>
-		</div>
+		<!-- My Items tab -->
+		<template v-else-if="activeTab === 'items'">
+			<div v-if="filteredItems.length === 0" class="my-work__empty">
+				<p>{{ emptyMessage }}</p>
+			</div>
 
-		<div v-else class="my-work__groups">
-			<div
-				v-for="group in visibleGroups"
-				:key="group.key"
-				class="work-group">
-				<div class="work-group__header" :class="'work-group__header--' + group.key">
-					{{ group.label }}
-					<span class="group-count" :class="{ 'group-count--overdue': group.key === 'overdue' }">
-						{{ group.items.length }}
-					</span>
-				</div>
-				<div class="work-group__items">
-					<div
-						v-for="item in group.items"
-						:key="item.id"
-						class="work-card"
-						:class="{ 'work-card--overdue': item.isOverdue, 'work-card--completed': item.isClosed }"
-						tabindex="0"
-						@click="openItem(item)"
-						@keydown.enter="openItem(item)">
-						<div class="work-card__top">
-							<span class="entity-badge" :class="'badge--' + item.entityType">
-								{{ item.entityType === 'lead' ? 'LEAD' : 'REQ' }}
-							</span>
-							<span
-								v-if="item.priority && item.priority !== 'normal'"
-								class="priority-badge"
-								:style="{ color: getPriorityColor(item.priority) }">
-								{{ getPriorityLabel(item.priority) }}
-							</span>
-						</div>
-						<div class="work-card__title">
-							{{ item.title }}
-							<span v-if="item.isStale" class="stale-badge">
-								{{ t('pipelinq', 'Stale') }}
-							</span>
-						</div>
-						<div class="work-card__meta">
-							<span v-if="item.stageOrStatus" class="meta-stage">{{ item.stageOrStatus }}</span>
-							<span v-if="item.pipelineName" class="meta-pipeline">{{ item.pipelineName }}</span>
-							<span v-if="item.entityType === 'lead' && item.value" class="meta-value">
-								EUR {{ Number(item.value).toLocaleString('nl-NL') }}
-							</span>
-						</div>
-						<div class="work-card__footer">
-							<span v-if="item.isOverdue" class="overdue-text">
-								{{ item.overdueDays }} {{ item.overdueDays === 1 ? t('pipelinq', 'day overdue') : t('pipelinq', 'days overdue') }}
-							</span>
-							<span v-else-if="item.isDueToday" class="due-today-text">
-								{{ t('pipelinq', 'Due today') }}
-							</span>
-							<span v-else-if="item.dueDate" class="due-date-text">
-								{{ formatDate(item.dueDate) }}
-							</span>
-							<span v-else class="no-due-text">
-								{{ t('pipelinq', 'No due date') }}
-							</span>
+			<div v-else class="my-work__groups">
+				<div
+					v-for="group in visibleGroups"
+					:key="group.key"
+					class="work-group">
+					<div class="work-group__header" :class="'work-group__header--' + group.key">
+						{{ group.label }}
+						<span class="group-count" :class="{ 'group-count--overdue': group.key === 'overdue' }">
+							{{ group.items.length }}
+						</span>
+					</div>
+					<div class="work-group__items">
+						<div
+							v-for="item in group.items"
+							:key="item.id"
+							class="work-card"
+							:class="{ 'work-card--overdue': item.isOverdue, 'work-card--completed': item.isClosed }"
+							tabindex="0"
+							@click="openItem(item)"
+							@keydown.enter="openItem(item)">
+							<div class="work-card__top">
+								<span class="entity-badge" :class="'badge--' + item.entityType">
+									{{ item.entityType === 'lead' ? 'LEAD' : 'REQ' }}
+								</span>
+								<span
+									v-if="item.priority && item.priority !== 'normal'"
+									class="priority-badge"
+									:style="{ color: getPriorityColor(item.priority) }">
+									{{ getPriorityLabel(item.priority) }}
+								</span>
+							</div>
+							<div class="work-card__title">
+								{{ item.title }}
+								<span v-if="item.isStale" class="stale-badge">
+									{{ t('pipelinq', 'Stale') }}
+								</span>
+							</div>
+							<div class="work-card__meta">
+								<span v-if="item.stageOrStatus" class="meta-stage">{{ item.stageOrStatus }}</span>
+								<span v-if="item.pipelineName" class="meta-pipeline">{{ item.pipelineName }}</span>
+								<span v-if="item.entityType === 'lead' && item.value" class="meta-value">
+									EUR {{ Number(item.value).toLocaleString('nl-NL') }}
+								</span>
+							</div>
+							<div class="work-card__footer">
+								<span v-if="item.isOverdue" class="overdue-text">
+									{{ item.overdueDays }} {{ item.overdueDays === 1 ? t('pipelinq', 'day overdue') : t('pipelinq', 'days overdue') }}
+								</span>
+								<span v-else-if="item.isDueToday" class="due-today-text">
+									{{ t('pipelinq', 'Due today') }}
+								</span>
+								<span v-else-if="item.dueDate" class="due-date-text">
+									{{ formatDate(item.dueDate) }}
+								</span>
+								<span v-else class="no-due-text">
+									{{ t('pipelinq', 'No due date') }}
+								</span>
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>
+		</template>
+
+		<!-- My Queues tab -->
+		<template v-else-if="activeTab === 'queues'">
+			<div v-if="myQueueGroups.length === 0" class="my-work__empty">
+				<p>{{ t('pipelinq', 'You are not assigned to any queues') }}</p>
+			</div>
+
+			<div v-else class="my-work__groups">
+				<div
+					v-for="group in myQueueGroups"
+					:key="group.queueId"
+					class="work-group">
+					<div class="work-group__header">
+						{{ group.queueTitle }}
+						<span class="group-count">{{ group.items.length }}</span>
+					</div>
+					<div class="work-group__items">
+						<div
+							v-for="item in group.items"
+							:key="item.id"
+							class="work-card"
+							tabindex="0"
+							@click="openItem({ id: item.id, entityType: 'request' })"
+							@keydown.enter="openItem({ id: item.id, entityType: 'request' })">
+							<div class="work-card__top">
+								<span class="entity-badge badge--request">REQ</span>
+								<span
+									v-if="item.priority && item.priority !== 'normal'"
+									class="priority-badge"
+									:style="{ color: getPriorityColor(item.priority) }">
+									{{ getPriorityLabel(item.priority) }}
+								</span>
+							</div>
+							<div class="work-card__title">{{ item.title }}</div>
+							<div class="work-card__meta">
+								<span v-if="item.assignee" class="meta-stage">{{ item.assignee }}</span>
+								<span v-else class="meta-unassigned">{{ t('pipelinq', 'Unassigned') }}</span>
+								<span v-if="item.category" class="meta-pipeline">{{ item.category }}</span>
+							</div>
+							<div class="work-card__footer">
+								<NcButton
+									v-if="!item.assignee"
+									@click.stop="pickQueueItem(item)">
+									{{ t('pipelinq', 'Pick') }}
+								</NcButton>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</template>
 	</div>
 </template>
 
 <script>
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import { useObjectStore } from '../store/modules/object.js'
+import { useQueuesStore } from '../store/modules/queues.js'
 import {
 	getStatusLabel,
 	getPriorityLabel,
 	getPriorityColor,
 } from '../services/requestStatus.js'
 import { isStale } from '../services/pipelineUtils.js'
+import { prioritySortComparator } from '../services/queueUtils.js'
 
 const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 }
 
@@ -151,6 +222,7 @@ export default {
 	},
 	data() {
 		return {
+			activeTab: 'items',
 			loading: false,
 			error: null,
 			filter: 'all',
@@ -158,11 +230,16 @@ export default {
 			myLeads: [],
 			myRequests: [],
 			pipelines: [],
+			myQueues: [],
+			queueItemsMap: {},
 		}
 	},
 	computed: {
 		objectStore() {
 			return useObjectStore()
+		},
+		queuesStore() {
+			return useQueuesStore()
 		},
 		currentUser() {
 			return OC.currentUser
@@ -309,6 +386,19 @@ export default {
 			if (this.filter === 'request') return t('pipelinq', 'No requests assigned to you')
 			return t('pipelinq', 'No items assigned to you')
 		},
+
+		myQueueGroups() {
+			return this.myQueues.map(queue => {
+				const items = (this.queueItemsMap[queue.id] || [])
+					.slice()
+					.sort(prioritySortComparator)
+				return {
+					queueId: queue.id,
+					queueTitle: queue.title,
+					items,
+				}
+			}).filter(g => g.items.length > 0 || true) // Show all assigned queues including empty
+		},
 	},
 	mounted() {
 		this.fetchAll()
@@ -358,6 +448,52 @@ export default {
 				console.error('MyWork fetch error:', err)
 			} finally {
 				this.loading = false
+			}
+		},
+
+		async switchToQueues() {
+			this.activeTab = 'queues'
+			if (this.myQueues.length === 0) {
+				await this.fetchMyQueues()
+			}
+		},
+
+		async fetchMyQueues() {
+			this.loading = true
+			try {
+				await this.queuesStore.fetchQueues()
+				// Filter queues where current user is an assigned agent
+				this.myQueues = this.queuesStore.queues.filter(q => {
+					const agents = q.assignedAgents || []
+					return agents.includes(this.currentUser)
+				})
+
+				// Fetch items for each queue
+				const itemPromises = this.myQueues.map(async (queue) => {
+					const items = await this.fetchRaw('request', { queue: queue.id, _limit: 200 })
+					this.queueItemsMap = { ...this.queueItemsMap, [queue.id]: items }
+				})
+				await Promise.all(itemPromises)
+			} catch (err) {
+				console.error('MyQueues fetch error:', err)
+			} finally {
+				this.loading = false
+			}
+		},
+
+		async pickQueueItem(item) {
+			await this.objectStore.saveObject('request', {
+				...item,
+				assignee: this.currentUser,
+			})
+			// Refresh queue items
+			if (item.queue) {
+				const items = await this.fetchRaw('request', { queue: item.queue, _limit: 200 })
+				this.queueItemsMap = { ...this.queueItemsMap, [item.queue]: items }
+			}
+			// Refresh my items
+			if (this.objectStore.objectTypeRegistry.request) {
+				this.myRequests = await this.fetchRaw('request', { assignee: this.currentUser, _limit: 200 })
 			}
 		},
 
@@ -429,6 +565,12 @@ export default {
 .my-work__counts {
 	font-size: 14px;
 	color: var(--color-text-maxcontrast);
+}
+
+.my-work__tabs {
+	display: flex;
+	gap: 4px;
+	margin-bottom: 12px;
 }
 
 .my-work__controls {
@@ -594,6 +736,10 @@ export default {
 
 .meta-value {
 	font-weight: 600;
+}
+
+.meta-unassigned {
+	font-style: italic;
 }
 
 .work-card__footer {
