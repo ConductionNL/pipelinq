@@ -40,6 +40,8 @@ export async function initializeStores() {
 		}
 		if (config.register && config.agentProfile_schema) {
 			objectStore.registerObjectType('agentProfile', config.agentProfile_schema, config.register)
+		if (config.register && config.complaint_schema) {
+			objectStore.registerObjectType('complaint', config.complaint_schema, config.register)
 		}
 	}
 
