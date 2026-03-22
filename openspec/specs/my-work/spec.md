@@ -1,3 +1,7 @@
+---
+status: implemented
+---
+
 # My Work (Werkvoorraad) Specification
 
 ## Purpose
@@ -443,7 +447,7 @@ Each item MUST follow a consistent card layout showing entity badge, title, stag
 
 ---
 
-## ADDED Requirements
+## Requirements
 
 ### REQ-MW-090: KPI Summary Widgets [V1]
 
