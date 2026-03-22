@@ -51,6 +51,13 @@ return [
         // Intake form management (authenticated)
         ['name' => 'intake_form#embed', 'url' => '/api/forms/{id}/embed', 'verb' => 'GET'],
         ['name' => 'intake_form#export', 'url' => '/api/forms/{id}/submissions/export', 'verb' => 'GET'],
+        // Public survey endpoints (unauthenticated)
+        ['name' => 'public_survey#show', 'url' => '/public/survey/{token}', 'verb' => 'GET'],
+        ['name' => 'public_survey#submit', 'url' => '/public/survey/{token}/respond', 'verb' => 'POST'],
+
+        // Public kennisbank API (unauthenticated)
+        ['name' => 'public_kennisbank#index', 'url' => '/api/public/kennisbank/articles', 'verb' => 'GET'],
+        ['name' => 'public_kennisbank#show', 'url' => '/api/public/kennisbank/articles/{id}', 'verb' => 'GET'],
 
         // Prometheus metrics endpoint.
         ['name' => 'metrics#index', 'url' => '/api/metrics', 'verb' => 'GET'],
