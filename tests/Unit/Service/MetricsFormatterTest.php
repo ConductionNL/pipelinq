@@ -57,6 +57,7 @@ class MetricsFormatterTest extends TestCase
         $this->assertContains('pipelinq_info{version="1.0.0",php_version="8.1.0"} 1', $lines);
         $this->assertIsArray($lines);
         $this->assertContains('# HELP pipelinq_info Application information', $lines);
+        $this->assertContains('pipelinq_info{version="1.0.0",php_version="8.1.0"} 1', $lines);
         $this->assertContains('# TYPE pipelinq_info gauge', $lines);
         $this->assertContains('pipelinq_info{version="1.0.0",php_version="8.1.0"} 1', $lines);
         $this->assertContains('# HELP pipelinq_up Whether the application is healthy', $lines);
@@ -98,6 +99,9 @@ class MetricsFormatterTest extends TestCase
      */
     public function testFormatLeadCountsEmptyInput(): void
     {
+        $lines     = $this->formatter->formatLeadCounts(leadCounts: []);
+        $dataLines = array_filter($lines, fn($l) => str_starts_with($l, 'pipelinq_leads_total{'));
+
         $lines = $this->formatter->formatLeadCounts(leadCounts: []);
 
         $this->assertContains('# HELP pipelinq_leads_total Total leads by status and pipeline', $lines);
@@ -176,6 +180,10 @@ class MetricsFormatterTest extends TestCase
 
         $this->assertStringContainsString('\\"', $dataLine);
     }//end testSanitizesSpecialCharsInLabels()
+        $rows  = [['status' => 'open', 'cnt' => '10']];
+        $lines = $this->formatter->formatRequestCounts(requestCounts: $rows);
+
+        $this->assertContains('pipelinq_service_requests_total{status="open"} 10', $lines);
         $rows = [
             ['status' => 'open', 'cnt' => '10'],
             ['status' => 'closed', 'cnt' => '7'],
@@ -194,6 +202,10 @@ class MetricsFormatterTest extends TestCase
      */
     public function testFormatLeadCountsSanitizesSpecialCharsInLabels(): void
     {
+        $rows     = [['status' => 'test"value', 'pipeline' => "line\nbreak", 'cnt' => '1']];
+        $lines    = $this->formatter->formatLeadCounts(leadCounts: $rows);
+        $dataLine = array_values(array_filter($lines, fn($l) => str_starts_with($l, 'pipelinq_leads_total{')))[0] ?? '';
+
         $rows = [
             ['status' => 'test"value', 'pipeline' => "line\nbreak", 'cnt' => '1'],
         ];

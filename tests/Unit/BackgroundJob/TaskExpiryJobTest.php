@@ -33,6 +33,18 @@ use Psr\Log\LoggerInterface;
  */
 class TaskExpiryJobTest extends TestCase
 {
+    /** @var ITimeFactory&MockObject */
+    private ITimeFactory $timeFactory;
+
+    /** @var IAppConfig&MockObject */
+    private IAppConfig $appConfig;
+
+    /** @var NotificationService&MockObject */
+    private NotificationService $notificationService;
+
+    /** @var LoggerInterface&MockObject */
+    private LoggerInterface $logger;
+
     /**
      * The time factory mock.
      *
@@ -92,12 +104,18 @@ class TaskExpiryJobTest extends TestCase
     }//end buildJob()
 
     /**
+     * Test that the job can be instantiated.
      * Test that the job can be instantiated without errors.
      *
      * @return void
      */
     public function testJobCanBeInstantiated(): void
     {
+        $this->assertInstanceOf(TaskExpiryJob::class, $this->buildJob());
+    }//end testJobCanBeInstantiated()
+
+    /**
+     * Test that the job skips when register is not configured.
         $job = $this->buildJob();
 
         $this->assertInstanceOf(TaskExpiryJob::class, $job);
@@ -110,6 +128,20 @@ class TaskExpiryJobTest extends TestCase
      */
     public function testJobSkipsWhenRegisterNotConfigured(): void
     {
+        $this->appConfig->method('getValueString')->willReturnMap([
+            [Application::APP_ID, 'register', '', ''],
+            [Application::APP_ID, 'task_schema', '', ''],
+        ]);
+
+        $this->notificationService->expects($this->never())->method($this->anything());
+
+        $ref = new \ReflectionMethod($this->buildJob(), 'run');
+        $ref->setAccessible(true);
+        $ref->invoke($this->buildJob(), null);
+    }//end testJobSkipsWhenRegisterNotConfigured()
+
+    /**
+     * Test that the job logs start/completion when fully configured.
         $this->appConfig
             ->method('getValueString')
             ->willReturnMap([
@@ -162,6 +194,14 @@ class TaskExpiryJobTest extends TestCase
      */
     public function testJobLogsStartAndCompletionWithConfig(): void
     {
+        $this->appConfig->method('getValueString')->willReturnMap([
+            [Application::APP_ID, 'register', '', 'register-uuid'],
+            [Application::APP_ID, 'task_schema', '', 'schema-uuid'],
+        ]);
+
+        $this->logger->expects($this->atLeastOnce())->method('info');
+
+        $job = $this->buildJob();
         $this->appConfig
             ->method('getValueString')
             ->willReturnMap([
