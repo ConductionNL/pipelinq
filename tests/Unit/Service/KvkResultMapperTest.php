@@ -89,6 +89,7 @@ class KvkResultMapperTest extends TestCase
         $this->assertSame('12345678', $result['kvkNumber']);
         $this->assertSame('Acme B.V.', $result['tradeName']);
         $this->assertSame('Software', $result['sbiDescription']);
+        $this->assertTrue($result['isActive']);
         $this->assertSame('kvk', $result['source']);
         $this->assertNotNull($result);
         $this->assertSame('12345678', $result['kvkNumber']);
@@ -147,6 +148,7 @@ class KvkResultMapperTest extends TestCase
     }//end testMapResultMapsInactiveCompany()
 
     /**
+     * Test that SBI prefix matching finds the description.
      * Test SBI prefix matching.
      *
      * @return void
