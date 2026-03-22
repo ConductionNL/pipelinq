@@ -89,6 +89,10 @@
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
+				:name="t('pipelinq', 'Contact Moments')"
+				:to="{ name: 'Contactmomenten' }">
+				<template #icon>
+					<PhoneInTalk :size="20" />
 				:name="t('pipelinq', 'Tasks')"
 				:to="{ name: 'Tasks' }">
 				<template #icon>
@@ -144,6 +148,7 @@ import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
 import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
+import PhoneInTalk from 'vue-material-design-icons/PhoneInTalk.vue'
 import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
 import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import ChartBar from 'vue-material-design-icons/ChartBar.vue'
@@ -175,6 +180,7 @@ export default {
 		ClipboardCheck,
 		BookOpenPageVariant,
 		BookOpenVariantOutline,
+		PhoneInTalk,
 		ClipboardCheck,
 		BookOpenPageVariant,
 		ChartBar,

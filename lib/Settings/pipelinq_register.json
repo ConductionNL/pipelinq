@@ -29,6 +29,7 @@
           "product",
           "productCategory",
           "leadProduct",
+          "contactmoment"
           "taak"
           "kennisartikel",
           "kenniscategorie",
@@ -1672,6 +1673,31 @@
           }
         }
       }
+      "contactmoment": {
+        "slug": "contactmoment",
+        "title": "Contact Moment",
+        "icon": "PhoneInTalk",
+        "version": "1.0.0",
+        "summary": "A registered contact interaction from any channel",
+        "description": "Represents a contact moment with a citizen or client, registered from any channel (phone, email, counter, chat, social media, letter). Aligned to VNG Klantinteracties Contactmoment entity.",
+        "@type": "schema:CommunicateAction",
+        "required": [
+          "timestamp",
+          "agent",
+          "kanaal",
+          "onderwerp"
+        ],
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "description": "When the contact occurred",
+            "format": "date-time"
+          },
+          "agent": {
+            "type": "string",
+            "description": "Nextcloud user UID of the handling agent",
+            "title": "Agent",
+            "facetable": true
       "taak": {
         "slug": "taak",
         "title": "Task",
@@ -1718,6 +1744,15 @@
             "description": "UUID reference to the client",
             "format": "uuid"
           },
+          "contact": {
+            "type": "string",
+            "description": "UUID reference to the contact person",
+            "format": "uuid",
+            "visible": false
+          },
+          "zaak": {
+            "type": "string",
+            "description": "UUID reference to the linked case (Procest)",
           "zaak": {
             "type": "string",
             "description": "UUID reference to the linked case",
@@ -1736,6 +1771,56 @@
             "format": "uuid",
             "visible": false
           },
+          "kanaal": {
+            "type": "string",
+            "description": "Communication channel type (VNG Kanaal)",
+            "enum": [
+              "telefoon",
+              "email",
+              "balie",
+              "chat",
+              "social",
+              "brief"
+            ],
+            "title": "Channel",
+            "facetable": true
+          },
+          "onderwerp": {
+            "type": "string",
+            "description": "Subject or topic of the contact",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "toelichting": {
+            "type": "string",
+            "description": "Detailed notes and summary of the contact",
+            "visible": false
+          },
+          "resultaat": {
+            "type": "string",
+            "description": "Outcome of the contact (afgehandeld, doorverwezen, terugbelverzoek)",
+            "title": "Result",
+            "facetable": true
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Channel-specific metadata (gespreksduur, threadId, locatie, etc.)",
+            "visible": false
+          },
+          "initiatiefnemer": {
+            "type": "string",
+            "description": "Who initiated the contact",
+            "enum": [
+              "klant",
+              "medewerker"
+            ],
+            "title": "Initiator",
+            "facetable": true
+          },
+          "registratiedatum": {
+            "type": "string",
+            "description": "Auto-set registration timestamp",
+            "format": "date-time",
           "assignee": {
             "type": "string",
             "description": "Nextcloud user UID or group ID of the assignee",
