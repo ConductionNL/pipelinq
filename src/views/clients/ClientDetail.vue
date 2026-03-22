@@ -164,6 +164,40 @@
 			</div>
 		</CnDetailCard>
 
+		<CnDetailCard :title="t('pipelinq', 'Complaints')">
+			<template #actions>
+				<NcButton @click="createComplaint">
+					{{ t('pipelinq', 'Add complaint') }}
+				</NcButton>
+			</template>
+
+			<div v-if="complaints.length === 0" class="section-empty">
+				<p>{{ t('pipelinq', 'No complaints found') }}</p>
+			</div>
+			<div v-else class="viewTableContainer">
+				<table class="viewTable">
+					<thead>
+						<tr>
+							<th>{{ t('pipelinq', 'Title') }}</th>
+							<th>{{ t('pipelinq', 'Status') }}</th>
+							<th>{{ t('pipelinq', 'Date') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="complaint in complaints"
+							:key="complaint.id"
+							class="viewTableRow"
+							@click="$router.push({ name: 'ComplaintDetail', params: { id: complaint.id } })">
+							<td>{{ complaint.title || '-' }}</td>
+							<td>{{ complaint.status || '-' }}</td>
+							<td>{{ formatDate(complaint._dateCreated || complaint.dateCreated) }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</CnDetailCard>
+
 		<!-- Delete warning dialog -->
 		<NcDialog
 			v-if="showDelete"
@@ -172,10 +206,10 @@
 			<p>
 				{{ t('pipelinq', 'Are you sure you want to delete "{name}"?', { name: clientData.name }) }}
 			</p>
-			<p v-if="contacts.length || leads.length || requests.length" class="delete-warning">
+			<p v-if="contacts.length || leads.length || requests.length || complaints.length" class="delete-warning">
 				{{ t('pipelinq', 'This client has linked entities:') }}
 			</p>
-			<ul v-if="contacts.length || leads.length || requests.length" class="delete-warning-list">
+			<ul v-if="contacts.length || leads.length || requests.length || complaints.length" class="delete-warning-list">
 				<li v-if="contacts.length">
 					{{ n('pipelinq', '%n contact', '%n contacts', contacts.length) }}
 				</li>
@@ -184,6 +218,9 @@
 				</li>
 				<li v-if="requests.length">
 					{{ n('pipelinq', '%n request', '%n requests', requests.length) }}
+				</li>
+				<li v-if="complaints.length">
+					{{ n('pipelinq', '%n complaint', '%n complaints', complaints.length) }}
 				</li>
 			</ul>
 			<template #actions>
@@ -226,6 +263,7 @@ export default {
 			requests: [],
 			contacts: [],
 			leads: [],
+			complaints: [],
 			showDelete: false,
 		}
 	},
@@ -331,12 +369,33 @@ export default {
 			} catch {
 				this.leads = []
 			}
+
+			try {
+				const allComplaints = await this.objectStore.fetchCollection('complaint', {
+					_limit: 50,
+					client: this.clientId,
+				})
+				this.complaints = allComplaints || []
+			} catch {
+				this.complaints = []
+			}
 		},
 		createRequest() {
 			this.$router.push({ name: 'RequestDetail', params: { id: 'new' }, query: { client: this.clientId } })
 		},
 		addContact() {
 			this.$router.push({ name: 'ContactDetail', params: { id: 'new' }, query: { client: this.clientId } })
+		},
+		createComplaint() {
+			this.$router.push({ name: 'ComplaintDetail', params: { id: 'new' }, query: { client: this.clientId } })
+		},
+		formatDate(dateStr) {
+			if (!dateStr) return '-'
+			try {
+				return new Date(dateStr).toLocaleDateString()
+			} catch {
+				return dateStr
+			}
 		},
 	},
 }

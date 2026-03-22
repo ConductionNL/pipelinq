@@ -60,6 +60,16 @@ class KvkResultMapperTest extends TestCase
             'actief'                 => 'Ja',
             'adres'                  => ['straatnaam' => 'Teststraat', 'huisnummer' => '10', 'plaats' => 'Amsterdam', 'provincie' => 'Noord-Holland', 'postcode' => '1234AB'],
             'spiActiviteiten'        => [['sbiCode' => '6201', 'sbiOmschrijving' => 'Software development']],
+            'adres'                  => [
+                'straatnaam'  => 'Teststraat',
+                'huisnummer'  => '10',
+                'plaats'      => 'Amsterdam',
+                'provincie'   => 'Noord-Holland',
+                'postcode'    => '1234AB',
+            ],
+            'spiActiviteiten'        => [
+                ['sbiCode' => '6201', 'sbiOmschrijving' => 'Software development'],
+            ],
         ];
 
         $result = $this->mapper->mapResult(item: $item, sbiCode: '6201');
@@ -71,6 +81,16 @@ class KvkResultMapperTest extends TestCase
         $this->assertTrue($result['isActive']);
         $this->assertSame('kvk', $result['source']);
         $this->assertSame('Amsterdam', $result['address']['city']);
+        $this->assertSame('BV', $result['legalForm']);
+        $this->assertSame('6201', $result['sbiCode']);
+        $this->assertSame('Software development', $result['sbiDescription']);
+        $this->assertSame(42, $result['employeeCount']);
+        $this->assertSame('2010-01-15', $result['registrationDate']);
+        $this->assertTrue($result['isActive']);
+        $this->assertSame('kvk', $result['source']);
+        $this->assertSame('Amsterdam', $result['address']['city']);
+        $this->assertSame('Noord-Holland', $result['address']['province']);
+        $this->assertSame('1234AB', $result['address']['postalCode']);
     }//end testMapResultMapsFullItem()
 
     /**
@@ -81,6 +101,13 @@ class KvkResultMapperTest extends TestCase
     public function testMapResultReturnsNullWithoutKvkNumber(): void
     {
         $this->assertNull($this->mapper->mapResult(item: ['naam' => 'Test'], sbiCode: ''));
+        $item = [
+            'eersteHandelsnaam' => 'No Number B.V.',
+        ];
+
+        $result = $this->mapper->mapResult(item: $item, sbiCode: '6201');
+
+        $this->assertNull($result);
     }//end testMapResultReturnsNullWithoutKvkNumber()
 
     /**
@@ -92,6 +119,14 @@ class KvkResultMapperTest extends TestCase
     {
         $result = $this->mapper->mapResult(item: ['kvkNummer' => '99999999', 'actief' => 'Nee'], sbiCode: '62');
 
+        $item = [
+            'kvkNummer' => '99999999',
+            'actief'    => 'Nee',
+        ];
+
+        $result = $this->mapper->mapResult(item: $item, sbiCode: '62');
+
+        $this->assertNotNull($result);
         $this->assertFalse($result['isActive']);
     }//end testMapResultMapsInactiveCompany()
 
@@ -109,6 +144,25 @@ class KvkResultMapperTest extends TestCase
 
     /**
      * Test that SBI prefix matching finds the description.
+     * Test that the fallback trade name field 'naam' is used when no eersteHandelsnaam.
+     *
+     * @return void
+     */
+    public function testMapResultFallsBackToNaamForTradeName(): void
+    {
+        $item = [
+            'kvkNummer' => '11111111',
+            'naam'      => 'Fallback Naam B.V.',
+        ];
+
+        $result = $this->mapper->mapResult(item: $item, sbiCode: '62');
+
+        $this->assertNotNull($result);
+        $this->assertSame('Fallback Naam B.V.', $result['tradeName']);
+    }//end testMapResultFallsBackToNaamForTradeName()
+
+    /**
+     * Test that SBI prefix matching finds the description when code is a prefix.
      *
      * @return void
      */
@@ -119,4 +173,61 @@ class KvkResultMapperTest extends TestCase
 
         $this->assertSame('Software', $result['sbiDescription']);
     }//end testMapResultFindsSbiDescriptionByPrefix()
+        $item = [
+            'kvkNummer'         => '22222222',
+            'spiActiviteiten'   => [
+                ['sbiCode' => '6201', 'sbiOmschrijving' => 'Ontwikkelen en produceren van software'],
+            ],
+        ];
+
+        // sbiCode '62' is a prefix of '6201'.
+        $result = $this->mapper->mapResult(item: $item, sbiCode: '62');
+
+        $this->assertNotNull($result);
+        $this->assertSame('Ontwikkelen en produceren van software', $result['sbiDescription']);
+    }//end testMapResultFindsSbiDescriptionByPrefix()
+
+    /**
+     * Test that an empty item with just kvkNummer returns a minimal valid record.
+     *
+     * @return void
+     */
+    public function testMapResultHandlesMinimalItem(): void
+    {
+        $item = ['kvkNummer' => '00000001'];
+
+        $result = $this->mapper->mapResult(item: $item, sbiCode: '');
+
+        $this->assertNotNull($result);
+        $this->assertSame('00000001', $result['kvkNumber']);
+        $this->assertSame('', $result['tradeName']);
+        $this->assertSame('', $result['legalForm']);
+        $this->assertNull($result['employeeCount']);
+        $this->assertTrue($result['isActive']); // Default 'actief' => 'Ja'.
+        $this->assertSame('', $result['sbiDescription']);
+    }//end testMapResultHandlesMinimalItem()
+
+    /**
+     * Test that address falls back to vestingAdres when adres is absent.
+     *
+     * @return void
+     */
+    public function testMapResultUsesVestingAdresFallback(): void
+    {
+        $item = [
+            'kvkNummer'    => '33333333',
+            'vestingAdres' => [
+                'straatnaam' => 'Vestigingstraat',
+                'huisnummer' => '5',
+                'plaats'     => 'Utrecht',
+                'provincie'  => 'Utrecht',
+                'postcode'   => '3500AA',
+            ],
+        ];
+
+        $result = $this->mapper->mapResult(item: $item, sbiCode: '');
+
+        $this->assertNotNull($result);
+        $this->assertSame('Utrecht', $result['address']['city']);
+    }//end testMapResultUsesVestingAdresFallback()
 }//end class
