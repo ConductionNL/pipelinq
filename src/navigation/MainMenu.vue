@@ -93,6 +93,10 @@
 				:to="{ name: 'Tasks' }">
 				<template #icon>
 					<ClipboardCheck :size="20" />
+				:name="t('pipelinq', 'Knowledge Base')"
+				:to="{ name: 'Kennisbank' }">
+				<template #icon>
+					<BookOpenPageVariant :size="20" />
 				:name="t('pipelinq', 'Reporting')"
 				:to="{ name: 'Rapportage' }">
 				<template #icon>
@@ -141,6 +145,7 @@ import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
 import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
+import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import ChartBar from 'vue-material-design-icons/ChartBar.vue'
 import EmoticonHappyOutline from 'vue-material-design-icons/EmoticonHappyOutline.vue'
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
@@ -171,6 +176,7 @@ export default {
 		BookOpenPageVariant,
 		BookOpenVariantOutline,
 		ClipboardCheck,
+		BookOpenPageVariant,
 		ChartBar,
 		PackageVariant,
 		InboxMultiple,
