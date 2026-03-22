@@ -38,13 +38,19 @@ All configuration is stored in Nextcloud's IAppConfig and survives app updates a
 
 ### OpenRegister Integration (MVP)
 
-Pipelinq owns no database tables — all data is stored as OpenRegister objects in the `pipelinq` register with 5 schemas:
+Pipelinq owns no database tables — all data is stored as OpenRegister objects in the `pipelinq` register with 11 schemas:
 
 - `client` — Person or organization
 - `contact` — Contact person linked to a client
 - `lead` — Sales opportunity
 - `request` — Service/intake request
 - `pipeline` — Configurable workflow board with stages
+- `product` — Product or service catalog item
+- `productCategory` — Product category hierarchy
+- `leadProduct` — Product line items on leads
+- `queue` — Priority work queue for routing
+- `skill` — Skill/expertise definition for routing
+- `agentProfile` — Agent skill profile and routing configuration
 
 ### Auto-Configuration on Install (MVP)
 
@@ -89,6 +95,23 @@ OpenRegister automatically tracks who created/modified objects and when, providi
 - Lead source value configuration (admin-customizable dropdown values)
 - Request channel value configuration
 - NL Design System theming support
+
+### Queue Management (Enterprise)
+
+Admin section for managing work queues:
+
+- Queue CRUD with inline edit (title, description, categories, maxCapacity, active toggle)
+- Agent assignment to queues via user picker
+- Category tags input for routing configuration
+- Default queues created on install: Algemeen, Vergunningen, Klachten
+
+### Skill Management (Enterprise)
+
+Admin section for managing skill definitions and agent profiles:
+
+- Skill CRUD with category mapping (title, description, categories, active toggle)
+- Agent profile management: assign/remove skills, set maxConcurrent, toggle availability
+- Default skills created on install: Algemene Dienstverlening, Vergunningen, Belastingen, WMO / Zorg, Klachten
 
 ### Planned (Enterprise)
 
