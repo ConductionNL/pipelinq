@@ -24,6 +24,7 @@
           "contact",
           "lead",
           "request",
+          "complaint",
           "pipeline",
           "product",
           "productCategory",
@@ -593,6 +594,117 @@
             "type": "integer",
             "description": "Display order within the same parent level",
             "default": 0,
+            "visible": false
+          }
+        }
+      },
+      "complaint": {
+        "slug": "complaint",
+        "title": "Complaint",
+        "icon": "AlertCircleOutline",
+        "version": "1.0.0",
+        "summary": "A customer complaint registered for tracking and resolution",
+        "description": "Represents a customer complaint linked to a client and optionally a contact person. Tracks status lifecycle, priority, category, SLA deadline, and resolution. Mapped to Schema.org ComplainAction.",
+        "@type": "schema:ComplainAction",
+        "required": [
+          "title",
+          "category"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Complaint title or subject",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the complaint",
+            "visible": false
+          },
+          "category": {
+            "type": "string",
+            "description": "Complaint category for classification",
+            "enum": [
+              "service",
+              "product",
+              "communication",
+              "billing",
+              "other"
+            ],
+            "title": "Category",
+            "facetable": true
+          },
+          "priority": {
+            "type": "string",
+            "description": "Complaint priority level",
+            "enum": [
+              "low",
+              "normal",
+              "high",
+              "urgent"
+            ],
+            "default": "normal",
+            "title": "Priority",
+            "facetable": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status in the complaint lifecycle",
+            "enum": [
+              "new",
+              "in_progress",
+              "resolved",
+              "rejected"
+            ],
+            "default": "new",
+            "title": "Status",
+            "facetable": true
+          },
+          "channel": {
+            "type": "string",
+            "description": "Channel through which the complaint was received",
+            "enum": [
+              "phone",
+              "email",
+              "web",
+              "counter",
+              "letter",
+              "other"
+            ],
+            "title": "Channel",
+            "facetable": true
+          },
+          "client": {
+            "type": "string",
+            "description": "UUID reference to the associated client",
+            "format": "uuid"
+          },
+          "contact": {
+            "type": "string",
+            "description": "UUID reference to the associated contact person",
+            "format": "uuid"
+          },
+          "assignedTo": {
+            "type": "string",
+            "description": "Nextcloud user UID of the assigned handler",
+            "title": "Assigned to",
+            "facetable": true
+          },
+          "slaDeadline": {
+            "type": "string",
+            "description": "SLA deadline for complaint resolution, calculated from category config",
+            "format": "date-time"
+          },
+          "resolvedAt": {
+            "type": "string",
+            "description": "Date and time the complaint was resolved or rejected",
+            "format": "date-time",
+            "visible": false
+          },
+          "resolution": {
+            "type": "string",
+            "description": "Explanation of how the complaint was resolved or why it was rejected",
             "visible": false
           }
         }
