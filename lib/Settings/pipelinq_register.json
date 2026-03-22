@@ -27,7 +27,9 @@
           "pipeline",
           "product",
           "productCategory",
-          "leadProduct"
+          "leadProduct",
+          "survey",
+          "surveyResponse"
         ],
         "tablePrefix": "",
         "folder": "Open Registers/Pipelinq"
@@ -648,6 +650,49 @@
             "description": "Line item notes (e.g., annual license, setup fee)",
             "visible": false
           }
+        }
+      },
+      "survey": {
+        "slug": "survey",
+        "title": "Survey",
+        "icon": "ClipboardCheckOutline",
+        "version": "1.0.0",
+        "summary": "A customer satisfaction (KTO) survey definition",
+        "description": "Represents a KTO survey with configurable questions, public access token, and entity linking.",
+        "@type": "schema:Survey",
+        "required": ["title", "questions"],
+        "properties": {
+          "title": { "type": "string", "maxLength": 255, "minLength": 1 },
+          "description": { "type": "string", "maxLength": 2000 },
+          "questions": { "type": "array", "maxItems": 50, "items": { "type": "object", "required": ["id", "type", "text"], "properties": { "id": { "type": "string", "format": "uuid" }, "type": { "type": "string", "enum": ["nps", "rating", "multiple_choice", "open_text", "yes_no"] }, "text": { "type": "string", "maxLength": 500 }, "required": { "type": "boolean", "default": true }, "options": { "type": "array", "maxItems": 20, "items": { "type": "string" } }, "order": { "type": "integer" } } } },
+          "status": { "type": "string", "enum": ["draft", "active", "closed"], "default": "draft", "title": "Status", "facetable": true },
+          "token": { "type": "string", "format": "uuid" },
+          "linkedEntityType": { "type": "string", "enum": ["request", "contactmoment", "lead"], "title": "Linked Entity Type", "facetable": true },
+          "linkedEntityId": { "type": "string", "format": "uuid", "visible": false },
+          "activeFrom": { "type": "string", "format": "date-time" },
+          "activeUntil": { "type": "string", "format": "date-time" },
+          "createdBy": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "surveyResponse": {
+        "slug": "surveyResponse",
+        "title": "Survey Response",
+        "icon": "ClipboardTextOutline",
+        "version": "1.0.0",
+        "summary": "A completed survey response from a client",
+        "description": "Represents a single completed survey response.",
+        "@type": "schema:CompletedSurvey",
+        "required": ["surveyId", "answers"],
+        "properties": {
+          "surveyId": { "type": "string", "format": "uuid" },
+          "answers": { "type": "array", "items": { "type": "object", "required": ["questionId", "value"], "properties": { "questionId": { "type": "string", "format": "uuid" }, "value": { "type": "string" } } } },
+          "respondentId": { "type": "string", "visible": false },
+          "entityType": { "type": "string", "enum": ["request", "contactmoment", "lead"], "title": "Entity Type", "facetable": true },
+          "entityId": { "type": "string", "format": "uuid", "visible": false },
+          "completedAt": { "type": "string", "format": "date-time" },
+          "ipHash": { "type": "string", "visible": false }
         }
       }
     },
