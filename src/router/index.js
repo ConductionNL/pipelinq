@@ -31,6 +31,9 @@ import SurveyForm from '../views/surveys/SurveyForm.vue'
 import SurveyAnalytics from '../views/surveys/SurveyAnalytics.vue'
 import PublicSurveyForm from '../views/surveys/PublicSurveyForm.vue'
 import PipelineManager from '../views/settings/PipelineManager.vue'
+import AutomationList from '../views/automations/AutomationList.vue'
+import AutomationBuilder from '../views/automations/AutomationBuilder.vue'
+import AutomationHistory from '../views/automations/AutomationHistory.vue'
 import ContactmomentList from '../views/contactmomenten/ContactmomentList.vue'
 import ContactmomentForm from '../views/contactmomenten/ContactmomentForm.vue'
 import ContactmomentDetail from '../views/contactmomenten/ContactmomentDetail.vue'
@@ -99,6 +102,10 @@ export default new Router({
 		{ path: '/rapportage/channels', name: 'ChannelAnalytics', component: ChannelAnalytics },
 		{ path: '/rapportage/agents', name: 'AgentPerformance', component: AgentPerformance },
 		{ path: '/pipelines', name: 'Pipelines', component: PipelineManager },
+		{ path: '/automations', name: 'Automations', component: AutomationList },
+		{ path: '/automations/new', name: 'AutomationNew', component: AutomationBuilder },
+		{ path: '/automations/:id', name: 'AutomationDetail', component: AutomationBuilder, props: route => ({ automationId: route.params.id }) },
+		{ path: '/automations/:id/history', name: 'AutomationHistory', component: AutomationHistory, props: route => ({ automationId: route.params.id }) },
 		{ path: '*', redirect: '/' },
 	],
 })
