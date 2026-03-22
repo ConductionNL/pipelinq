@@ -34,6 +34,9 @@ import PipelineManager from '../views/settings/PipelineManager.vue'
 import ContactmomentList from '../views/contactmomenten/ContactmomentList.vue'
 import ContactmomentForm from '../views/contactmomenten/ContactmomentForm.vue'
 import ContactmomentDetail from '../views/contactmomenten/ContactmomentDetail.vue'
+import TaskList from '../views/tasks/TaskList.vue'
+import TaskDetail from '../views/tasks/TaskDetail.vue'
+import TaskForm from '../views/tasks/TaskForm.vue'
 import KennisbankHome from '../views/kennisbank/KennisbankHome.vue'
 import ArticleDetail from '../views/kennisbank/ArticleDetail.vue'
 import ArticleEditor from '../views/kennisbank/ArticleEditor.vue'
@@ -83,6 +86,9 @@ export default new Router({
 		{ path: '/contactmomenten', name: 'Contactmomenten', component: ContactmomentList },
 		{ path: '/contactmomenten/new', name: 'ContactmomentNew', component: ContactmomentForm },
 		{ path: '/contactmomenten/:id', name: 'ContactmomentDetail', component: ContactmomentDetail, props: route => ({ contactmomentId: route.params.id }) },
+		{ path: '/tasks', name: 'Tasks', component: TaskList },
+		{ path: '/tasks/new', name: 'TaskNew', component: TaskForm },
+		{ path: '/tasks/:id', name: 'TaskDetail', component: TaskDetail, props: route => ({ taskId: route.params.id }) },
 		{ path: '/kennisbank', name: 'Kennisbank', component: KennisbankHome },
 		{ path: '/kennisbank/articles/new', name: 'KennisbankNew', component: ArticleEditor },
 		{ path: '/kennisbank/articles/:id', name: 'KennisbankDetail', component: ArticleDetail, props: route => ({ articleId: route.params.id }) },
