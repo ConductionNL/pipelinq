@@ -2,6 +2,12 @@
 
 Landing page providing an at-a-glance CRM overview with KPI cards, charts, activity previews, and quick actions.
 
+## Screenshot
+
+![Dashboard](../screenshots/dashboard.png)
+
+The dashboard displays four KPI cards (Open Leads, Open Requests, Pipeline Value, Overdue), a Requests by Status summary, and a My Work preview. Quick action buttons for creating leads, requests, and clients are prominently placed in the header.
+
 ## Specs
 
 - `openspec/specs/dashboard/spec.md`
@@ -14,8 +20,8 @@ Top row of metric cards showing key CRM numbers at a glance:
 
 - Open Leads (count of non-terminal leads)
 - Open Requests (count of non-terminal requests)
-- Total Clients (client count)
-- Items Due This Week (leads + requests with upcoming deadlines)
+- Pipeline Value (total EUR value of active pipeline items)
+- Overdue (count of items past their due date)
 
 ### Requests by Status Chart (MVP)
 
@@ -27,11 +33,11 @@ Compact preview of the user's assigned items (top 5), linking to the full My Wor
 
 ### Quick Actions (MVP)
 
-Shortcut buttons for common operations: create new lead, create new request, create new client, new product.
+Shortcut buttons for common operations: create new lead, create new request, create new client. These appear as prominent colored buttons in the dashboard header bar.
 
 ### Dashboard Data Refresh (MVP)
 
-Dashboard data refreshes on mount and supports manual refresh. Data scoped to user's RBAC permissions.
+Dashboard data refreshes on mount and supports manual refresh via the refresh button. Data scoped to user's RBAC permissions.
 
 ### Empty State Handling (MVP)
 

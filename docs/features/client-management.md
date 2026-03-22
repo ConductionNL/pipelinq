@@ -2,6 +2,16 @@
 
 Manages persons and organizations as CRM clients, with linked contact persons and optional sync to Nextcloud's native Contacts app.
 
+## Screenshot
+
+![Client Management](../screenshots/client-management.png)
+
+The client list view provides Cards/Table toggle, an "Add Item" button, and a bulk Actions menu. The table view is the default. When the OpenRegister schemas are configured, clients appear here with search, sort, and filter capabilities.
+
+![Contacts](../screenshots/contacts.png)
+
+The contacts view shares the same list interface, managing contact persons linked to organization-type clients.
+
 ## Specs
 
 - `openspec/specs/client-management/spec.md`
