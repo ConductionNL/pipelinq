@@ -93,6 +93,10 @@
 				:to="{ name: 'Contactmomenten' }">
 				<template #icon>
 					<PhoneInTalk :size="20" />
+				:name="t('pipelinq', 'Tasks')"
+				:to="{ name: 'Tasks' }">
+				<template #icon>
+					<ClipboardCheck :size="20" />
 				:name="t('pipelinq', 'Knowledge Base')"
 				:to="{ name: 'Kennisbank' }">
 				<template #icon>
@@ -145,6 +149,7 @@ import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
 import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import PhoneInTalk from 'vue-material-design-icons/PhoneInTalk.vue'
+import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
 import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import ChartBar from 'vue-material-design-icons/ChartBar.vue'
 import EmoticonHappyOutline from 'vue-material-design-icons/EmoticonHappyOutline.vue'
@@ -176,6 +181,7 @@ export default {
 		BookOpenPageVariant,
 		BookOpenVariantOutline,
 		PhoneInTalk,
+		ClipboardCheck,
 		BookOpenPageVariant,
 		ChartBar,
 		PackageVariant,
