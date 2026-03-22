@@ -16,6 +16,7 @@ import QuoteList from '../views/quotes/QuoteList.vue'
 import QuoteDetail from '../views/quotes/QuoteDetail.vue'
 import PipelineBoard from '../views/pipeline/PipelineBoard.vue'
 import MyWork from '../views/MyWork.vue'
+import KccWerkplek from '../views/kcc/KccWerkplek.vue'
 import PipelineManager from '../views/settings/PipelineManager.vue'
 
 Vue.use(Router)
@@ -39,6 +40,7 @@ export default new Router({
 		{ path: '/quotes/:id', name: 'QuoteDetail', component: QuoteDetail, props: route => ({ quoteId: route.params.id }) },
 		{ path: '/pipeline', name: 'Pipeline', component: PipelineBoard },
 		{ path: '/my-work', name: 'MyWork', component: MyWork },
+		{ path: '/kcc', name: 'KccWerkplek', component: KccWerkplek },
 		{ path: '/pipelines', name: 'Pipelines', component: PipelineManager },
 		{ path: '*', redirect: '/' },
 	],

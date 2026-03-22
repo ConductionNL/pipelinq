@@ -66,6 +66,13 @@
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
+				:name="t('pipelinq', 'KCC Werkplek')"
+				:to="{ name: 'KccWerkplek' }">
+				<template #icon>
+					<Phone :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
 				:name="t('pipelinq', 'Documentation')"
 				@click="openLink('https://pipelinq.app', '_blank')">
 				<template #icon>
@@ -108,6 +115,7 @@ import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import FileDocumentEdit from 'vue-material-design-icons/FileDocumentEdit.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
+import Phone from 'vue-material-design-icons/Phone.vue'
 
 export default {
 	name: 'MainMenu',
@@ -127,6 +135,7 @@ export default {
 		FileDocumentEdit,
 		Cog,
 		Pipe,
+		Phone,
 	},
 	methods: {
 		openLink(url, target) {
