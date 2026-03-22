@@ -30,6 +30,8 @@ See [ARCHITECTURE.md](../../../docs/ARCHITECTURE.md) for the full Lead entity de
 | `assignedTo` | string (user UID) | No | -- | MUST reference a valid Nextcloud user UID |
 | `priority` | enum | No | normal | One of: low, normal, high, urgent |
 | `category` | string | No | -- | Max 100 chars |
+| `tags` | array of strings | No | [] | Each tag max 100 chars, max 20 tags per lead |
+| `qualificationScore` | integer | No | -- | MUST be 0--100 inclusive |
 
 ---
 
@@ -265,7 +267,7 @@ The system MUST provide a detail view for each lead that displays all properties
 
 ### REQ-LEAD-005: Lead Source Tracking [MVP]
 
-The system MUST support tracking where leads originate from. Source values MUST be one of the predefined enum values.
+The system MUST support tracking where leads originate from. Source values are managed via the lead sources admin settings (TagManager-based CRUD at `/api/settings/lead-sources`).
 
 #### Scenario 26: Set lead source on creation
 
@@ -279,8 +281,9 @@ The system MUST support tracking where leads originate from. Source values MUST 
 
 - GIVEN a user creating or editing a lead
 - WHEN they open the source dropdown
-- THEN the system MUST display all 9 source options: Website, Email, Phone, Referral, Partner, Campaign, Social Media, Event, Other
+- THEN the system MUST display all configured source options (defaults: Website, Email, Phone, Referral, Partner, Campaign, Social Media, Event, Other)
 - AND the labels MUST be localized (e.g., Dutch: "Doorverwijzing" for Referral)
+- AND admins MUST be able to add, rename, or remove source options via the lead source settings
 
 #### Scenario 28: Leave source unset
 
@@ -333,7 +336,7 @@ The system MUST support assigning leads to Nextcloud users. Assignment determine
 
 ### REQ-LEAD-007: Lead Lifecycle via Pipeline Stages [MVP]
 
-A lead's lifecycle from creation to won/lost is driven by pipeline stages. Moving a lead to a closed stage (isClosed: true) represents the end of the sales process for that lead.
+A lead's lifecycle from creation to won/lost MUST be driven by pipeline stages. Moving a lead to a closed stage (isClosed: true) represents the end of the sales process for that lead.
 
 #### Scenario 33: Move lead to Won stage
 
@@ -480,7 +483,7 @@ The system MUST support quick actions on lead cards (in kanban and list views) t
 
 ### REQ-LEAD-012: Stale Lead Detection [V1]
 
-The system SHOULD detect leads with no activity for a configurable number of days and highlight them to prevent forgotten opportunities.
+The system MUST detect leads with no activity for a configurable number of days and highlight them to prevent forgotten opportunities.
 
 #### Scenario 48: Identify stale leads
 
@@ -502,7 +505,7 @@ The system SHOULD detect leads with no activity for a configurable number of day
 
 ### REQ-LEAD-013: Aging Indicator [V1]
 
-The system SHOULD display how long a lead has been in its current stage to help identify bottlenecks.
+The system MUST display how long a lead has been in its current stage to help identify bottlenecks.
 
 #### Scenario 50: Display days in current stage
 
@@ -522,7 +525,7 @@ The system SHOULD display how long a lead has been in its current stage to help 
 
 ### REQ-LEAD-014: Lead Import/Export CSV [V1]
 
-The system SHOULD support importing leads from CSV and exporting leads to CSV for migration and reporting.
+The system MUST support importing leads from CSV and exporting leads to CSV for migration and reporting.
 
 #### Scenario 52: Export current lead list to CSV
 
@@ -578,6 +581,361 @@ The system MUST handle error conditions gracefully and provide meaningful feedba
 
 ---
 
+## ADDED Requirements
+
+### Requirement: Lead Capture from External Sources [V1]
+
+The system SHOULD support creating leads from external channels beyond manual entry. This includes web form submissions, email parsing, and integration with the prospect discovery module. External lead capture reduces data entry and ensures no potential opportunity is missed.
+
+#### Scenario: Create lead from prospect discovery widget
+
+- GIVEN the prospect discovery widget displays a prospect "TechBedrijf BV" (KVK: 12345678, SBI: 62 - IT-dienstverlening, fitScore: 82%, city: Amsterdam)
+- WHEN the user clicks "Create Lead" on the prospect card
+- THEN the system MUST call the `/api/prospects/create-lead` endpoint with the prospect data
+- AND a new lead MUST be created with `title` set to the prospect's trade name ("TechBedrijf BV")
+- AND the lead's `source` MUST be set to "prospect_discovery"
+- AND if the prospect has a matching client in the system (by KVK number), the lead MUST be auto-linked to that client
+- AND the lead MUST be placed on the default pipeline's first non-closed stage
+- AND a success notification MUST be displayed: "Lead created from prospect: TechBedrijf BV"
+
+#### Scenario: Create lead via public web form API
+
+- GIVEN an admin has configured a lead capture endpoint with allowed fields (title, description, contactEmail, contactName, source)
+- WHEN an external system POSTs to `/api/public/lead-capture/{apiKey}` with valid data
+- THEN the system MUST create a new lead with `source` set to "website"
+- AND the lead MUST be assigned to the configured default assignee (if set)
+- AND the lead MUST appear in the lead list and on the pipeline kanban
+- AND the system MUST return HTTP 201 with the created lead's ID
+
+#### Scenario: Reject lead capture with invalid API key
+
+- GIVEN a public lead capture endpoint
+- WHEN an external system POSTs to `/api/public/lead-capture/{invalidKey}`
+- THEN the system MUST return HTTP 401 Unauthorized
+- AND no lead MUST be created
+- AND the system SHOULD log the failed attempt for security monitoring
+
+#### Scenario: Create lead from inbound email
+
+- GIVEN n8n workflow configured with an email-to-lead trigger
+- WHEN a new email arrives at the configured inbox matching lead capture rules
+- THEN the n8n workflow MUST extract sender name, email, subject, and body
+- AND create a lead via the OpenRegister API with `title` set to the email subject
+- AND `source` set to "email"
+- AND `description` set to the email body (first 2000 characters)
+- AND if a contact with the sender's email exists, the lead MUST be linked to that contact
+
+---
+
+### Requirement: Lead Qualification Scoring [V1]
+
+The system SHOULD support scoring leads based on configurable qualification criteria to help sales teams prioritize effort. Scoring provides an objective measure complementing the subjective pipeline stage progression.
+
+#### Scenario: Configure scoring criteria in admin settings
+
+- GIVEN the admin navigates to Pipelinq settings
+- WHEN they open the "Lead Scoring" section
+- THEN the system MUST display configurable scoring criteria:
+  - Value present: +10 points
+  - Value above threshold (configurable, default EUR 10,000): +20 points
+  - Client linked: +15 points
+  - Contact linked: +10 points
+  - Source is "referral" or "partner": +15 points
+  - Expected close date within 30 days: +10 points
+  - Priority "high" or "urgent": +10 points
+  - Has description: +5 points
+  - Has products/line items: +5 points
+- AND the admin MUST be able to enable/disable individual criteria
+- AND the admin MUST be able to adjust point values
+
+#### Scenario: Auto-calculate qualification score on lead save
+
+- GIVEN a lead "Gemeente XYZ digitalisering" with value EUR 50,000, linked client, source "referral", priority "high", expectedCloseDate in 15 days
+- WHEN the lead is saved or updated
+- THEN the system MUST calculate `qualificationScore` based on all enabled criteria
+- AND the score for this lead SHOULD be: 10 (value present) + 20 (above threshold) + 15 (client linked) + 15 (source referral) + 10 (close date within 30 days) + 10 (priority high) = 80
+- AND the score MUST be stored on the lead object as `qualificationScore`
+
+#### Scenario: Display qualification score on lead list and detail
+
+- GIVEN a lead with qualificationScore 80
+- WHEN the lead is displayed in the lead list or detail view
+- THEN the system MUST display the score as a badge or meter (e.g., "80/100")
+- AND scores above 70 SHOULD be visually highlighted as "hot" (e.g., green/warm color)
+- AND scores between 40-70 SHOULD be shown as "warm"
+- AND scores below 40 SHOULD be shown as "cold"
+
+#### Scenario: Sort leads by qualification score
+
+- GIVEN multiple leads with different qualification scores
+- WHEN the user sorts the lead list by "Score" descending
+- THEN leads MUST be ordered by `qualificationScore` from highest to lowest
+- AND leads without a score SHOULD appear last
+
+---
+
+### Requirement: Lead-to-Client Conversion [V1]
+
+The system SHOULD support converting a lead into a client record when the lead reaches a sufficient qualification stage. Unlike EspoCRM's atomic conversion that creates separate Account + Contact + Opportunity, Pipelinq's unified model keeps the lead as the deal record and promotes the associated entity to a full client.
+
+#### Scenario: Convert lead with no existing client
+
+- GIVEN a lead "Acme Corp Infrastructure Upgrade" in stage "Qualified" with no linked client
+- AND the lead has contact name "Petra Jansen", email "petra@acme.nl"
+- WHEN the user clicks "Create Client" on the lead detail view
+- THEN the system MUST display a pre-filled client creation form with data extracted from the lead (title from lead description, contact information)
+- AND upon saving, the new client MUST be created as an OpenRegister object
+- AND the lead MUST be automatically linked to the new client via the `client` reference
+- AND a contact person record SHOULD be created and linked to both the client and the lead
+
+#### Scenario: Link lead to existing client via search
+
+- GIVEN a lead "Website Redesign" with no linked client
+- WHEN the user clicks "Link Client" and searches for "Gemeente Utrecht"
+- THEN the system MUST search existing client objects by name
+- AND display matching results with organization name, email, and phone
+- AND selecting a client MUST update the lead's `client` reference
+- AND the lead MUST appear on the client's detail view under "Leads"
+
+#### Scenario: Bulk convert leads to clients
+
+- GIVEN 5 selected leads in stage "Qualified" with no linked clients
+- WHEN the user selects "Create Clients" from the bulk actions menu
+- THEN the system MUST create a client for each lead that does not already have one
+- AND link each lead to its newly created client
+- AND display a summary: "Created 5 clients from 5 leads"
+- AND leads that already have a linked client MUST be skipped with a note
+
+---
+
+### Requirement: Lead Assignment Rules [V1]
+
+The system SHOULD support automated lead assignment based on configurable rules to distribute incoming leads fairly across the sales team.
+
+#### Scenario: Configure round-robin assignment
+
+- GIVEN the admin navigates to Pipelinq settings -> "Assignment Rules"
+- WHEN they enable round-robin assignment and select users "jan", "maria", "pieter"
+- THEN the configuration MUST be stored via IAppConfig
+- AND new leads created without an explicit assignee MUST be assigned to the next user in the rotation
+- AND the rotation MUST cycle: jan -> maria -> pieter -> jan -> ...
+
+#### Scenario: Round-robin assignment on lead creation
+
+- GIVEN round-robin is enabled with users ["jan", "maria", "pieter"] and the last assigned user was "jan"
+- WHEN a new lead is created (via form, API, or prospect conversion) without specifying an assignee
+- THEN the system MUST assign the lead to "maria" (next in rotation)
+- AND the next lead MUST be assigned to "pieter"
+- AND if "maria" is disabled or deleted from Nextcloud, the system MUST skip to "pieter"
+
+#### Scenario: Manual assignment overrides round-robin
+
+- GIVEN round-robin is enabled
+- WHEN a user explicitly selects an assignee during lead creation
+- THEN the manual selection MUST take precedence over round-robin
+- AND the round-robin counter MUST NOT advance (the explicit choice does not consume a rotation slot)
+
+#### Scenario: Assignment based on lead source
+
+- GIVEN the admin has configured source-based assignment rules:
+  - source "website" -> assign to "jan"
+  - source "referral" -> assign to "maria"
+  - all others -> round-robin
+- WHEN a new lead is created with source "referral" and no explicit assignee
+- THEN the lead MUST be assigned to "maria"
+- AND the round-robin counter MUST NOT advance
+
+---
+
+### Requirement: Lead Deduplication [V1]
+
+The system SHOULD detect and help resolve duplicate leads to maintain data quality. Deduplication checks during creation and provides a merge interface for existing duplicates.
+
+#### Scenario: Warn on potential duplicate during creation
+
+- GIVEN an existing lead titled "Gemeente Utrecht Website Redesign" linked to client "Gemeente Utrecht"
+- WHEN a user creates a new lead with title "Website Redesign Gemeente Utrecht"
+- THEN the system MUST perform a fuzzy match against existing leads by title and client
+- AND if a potential duplicate is found (similarity score > 70%), display a warning: "Possible duplicate: 'Gemeente Utrecht Website Redesign' (stage: Qualified, value: EUR 25,000)"
+- AND the user MUST be able to dismiss the warning and create the lead anyway
+- AND the user MUST be able to click "View existing" to navigate to the potential duplicate
+
+#### Scenario: Detect duplicate by client and similar value
+
+- GIVEN an existing lead for client "Acme Corp" with value EUR 50,000, source "website"
+- WHEN a user creates a new lead for the same client "Acme Corp" with value EUR 50,000
+- THEN the system MUST flag it as a high-confidence duplicate (same client + similar value)
+- AND the warning MUST be more prominent than a title-only match
+
+#### Scenario: Merge two duplicate leads
+
+- GIVEN two leads:
+  - Lead A: "Acme Digitalization" (value: EUR 25,000, source: "website", stage: "Contacted", notes: 3)
+  - Lead B: "Acme Digital Transformation" (value: EUR 30,000, source: "referral", stage: "Qualified", notes: 1)
+- WHEN the user selects both leads and clicks "Merge"
+- THEN the system MUST display a merge dialog showing all fields side by side
+- AND the user MUST be able to choose which value to keep for each conflicting field
+- AND upon confirmation, the primary lead MUST be updated with the selected values
+- AND all notes from the secondary lead MUST be moved to the primary lead
+- AND the secondary lead MUST be deleted
+- AND the audit trail MUST record the merge with details of which lead was merged into which
+
+---
+
+### Requirement: Lead Tagging and Categorization [V1]
+
+The system SHOULD support tagging leads with user-defined labels beyond the single `category` field to enable flexible grouping and filtering. Tags use the same TagManager pattern as lead sources.
+
+#### Scenario: Add tags to a lead
+
+- GIVEN a lead "Gemeente ABC deal" with no tags
+- WHEN the user adds tags "government", "digital-transformation", "Q2-2026"
+- THEN the lead MUST store `tags: ["government", "digital-transformation", "Q2-2026"]`
+- AND the tags MUST be displayed on the lead detail view as clickable chips
+- AND the tags MUST be displayed on the kanban card (if configured in card settings)
+
+#### Scenario: Filter leads by tag
+
+- GIVEN 10 leads: 4 tagged "government", 3 tagged "enterprise", 2 tagged both "government" and "enterprise", 1 untagged
+- WHEN the user filters the lead list by tag "government"
+- THEN exactly 4 leads MUST be shown (including the 2 that also have "enterprise")
+- AND the user SHOULD be able to combine tag filters with other filters (source, stage, assignee)
+
+#### Scenario: Manage lead tags in admin settings
+
+- GIVEN the admin navigates to Pipelinq settings
+- WHEN they open the "Lead Tags" section
+- THEN the system MUST display a TagManager interface (same pattern as lead sources)
+- AND the admin MUST be able to add, rename, and remove tags
+- AND removing a tag MUST remove it from all leads that use it
+- AND the admin SHOULD be warned before removing a tag used by existing leads
+
+#### Scenario: Auto-tag leads based on source
+
+- GIVEN the admin has configured auto-tagging rules:
+  - source "website" -> tag "inbound"
+  - source "referral" -> tag "warm-intro"
+  - source "campaign" -> tag "marketing"
+- WHEN a new lead is created with source "referral"
+- THEN the system MUST automatically add the tag "warm-intro" to the lead
+- AND the user MUST be able to add additional tags or remove the auto-tag
+
+---
+
+### Requirement: Lead Nurturing Workflow [Enterprise]
+
+The system MUST support automated nurturing workflows that trigger actions based on lead stage, age, or score. Nurturing workflows are implemented as n8n workflows triggered by OpenRegister object events.
+
+#### Scenario: Configure stage-based follow-up reminders
+
+- GIVEN an n8n workflow configured to listen for lead stage changes
+- WHEN a lead enters the "Contacted" stage
+- THEN the workflow MUST schedule a follow-up reminder for the assigned user after 3 days (configurable)
+- AND the reminder MUST appear as a Nextcloud notification
+- AND if the lead moves to a different stage before the reminder triggers, the reminder MUST be cancelled
+
+#### Scenario: Nurture stale leads with automated notifications
+
+- GIVEN an n8n workflow configured with a stale lead trigger (threshold: 14 days)
+- WHEN a lead has had no activity for 14 days and is in a non-closed stage
+- THEN the workflow MUST send a notification to the assigned user: "Lead '{title}' has been inactive for 14 days"
+- AND the workflow SHOULD offer quick actions in the notification: "Add Note", "View Lead", "Mark as Lost"
+
+#### Scenario: Escalate high-value stale leads
+
+- GIVEN an n8n workflow configured for escalation
+- WHEN a lead with value above EUR 50,000 has been stale for more than 7 days
+- THEN the workflow MUST notify the lead's assignee AND the configured sales manager
+- AND the notification MUST include the lead value, stage, and days since last activity
+- AND the lead SHOULD be automatically re-prioritized to "high" if currently "normal" or "low"
+
+---
+
+### Requirement: Lead Reporting and Analytics [V1]
+
+The system SHOULD provide reporting and analytics for lead management performance, pipeline health, and conversion metrics. Reports complement the existing dashboard KPIs with deeper drill-down capabilities.
+
+#### Scenario: Pipeline value summary by stage
+
+- GIVEN 20 leads distributed across pipeline stages with various values
+- WHEN the user views the pipeline dashboard
+- THEN the system MUST display total value per stage (e.g., New: EUR 45,000, Contacted: EUR 80,000, Qualified: EUR 120,000)
+- AND the system MUST display weighted value per stage (value * probability for each lead, summed)
+- AND the system MUST display the total pipeline value (sum of all open leads)
+- AND the system MUST display the weighted pipeline value (sum of all weighted values)
+
+#### Scenario: Lead conversion rate by source
+
+- GIVEN leads from multiple sources over a configurable date range
+- WHEN the user views the "Source Performance" report
+- THEN the system MUST display for each source:
+  - Total leads created
+  - Leads converted (reached Won stage)
+  - Conversion rate (won / total * 100)
+  - Average deal value of won leads
+  - Average time to close (days from creation to Won stage)
+- AND sources MUST be sorted by conversion rate descending
+
+#### Scenario: Lead aging report
+
+- GIVEN leads in various pipeline stages
+- WHEN the user views the "Lead Aging" report
+- THEN the system MUST display a breakdown of leads by days in current stage:
+  - 0-7 days: on track
+  - 8-14 days: attention needed
+  - 15-30 days: at risk
+  - 30+ days: stale
+- AND each category MUST show lead count and total value
+- AND clicking a category MUST filter the lead list to show those leads
+
+#### Scenario: Won/lost analysis
+
+- GIVEN closed leads (won and lost) over the past 12 months
+- WHEN the user views the "Win/Loss Analysis" report
+- THEN the system MUST display:
+  - Total won vs lost count and ratio
+  - Average deal size for won vs lost leads
+  - Most common "lost" stage (where leads were before moving to Lost)
+  - Win rate trend over time (monthly)
+- AND the report MUST support filtering by source, assignee, and date range
+
+---
+
+### Requirement: Lead Products and Line Items [MVP]
+
+The system MUST support attaching products as line items to leads to detail the commercial offering. Line items allow granular value tracking and generate the lead's total value from individual product entries.
+
+#### Scenario: Add product line item to a lead
+
+- GIVEN a lead "Server Upgrade Project" and a product "Cloud Server License" (unit price: EUR 500)
+- WHEN the user opens the LeadProducts component and clicks "Add Product"
+- THEN the system MUST display a product search/selector
+- AND upon selecting "Cloud Server License", a line item MUST be added with:
+  - product reference
+  - quantity: 1 (default)
+  - unitPrice: EUR 500 (from product)
+  - discount: 0%
+  - lineTotal: EUR 500
+
+#### Scenario: Calculate lead value from line items
+
+- GIVEN a lead with line items:
+  - Cloud Server License: qty 10, unitPrice EUR 500, discount 10% -> lineTotal EUR 4,500
+  - Setup Fee: qty 1, unitPrice EUR 1,000, discount 0% -> lineTotal EUR 1,000
+- WHEN the user saves the lead
+- THEN the system SHOULD offer to update the lead's `value` field to the sum of line totals (EUR 5,500)
+- AND if auto-sync is enabled, the `value` field MUST be automatically updated
+- AND the lead detail MUST show both the individual line items and the total value
+
+#### Scenario: Remove product line item
+
+- GIVEN a lead with 3 line items totaling EUR 10,000
+- WHEN the user removes one line item worth EUR 3,000
+- THEN the lead MUST update to show 2 line items totaling EUR 7,000
+- AND if value auto-sync is enabled, the lead's `value` MUST update to EUR 7,000
+
+---
+
 ## UI Reference
 
 ### Lead List View
@@ -623,16 +981,25 @@ Implemented:
 - **Expected Close Date**: Stored as date string. Overdue detection in dashboard (leads past close date in non-closed stages).
 - **Event handling**: `ObjectEventListener` detects lead creation, assignment changes, and stage changes, publishing to Activity stream and sending notifications.
 - **Lead Products**: `src/components/LeadProducts.vue` -- line items linking products to leads with quantity, unit price, discount, and computed total.
+- **Prospect-to-Lead conversion**: `src/store/modules/prospect.js` -- `createLeadFromProspect()` action calls `/api/prospects/create-lead` to convert prospect discovery results into leads.
 - **Routing**: `/leads` (list), `/leads/:id` (detail), `/pipeline` (kanban board).
 
 NOT implemented:
+- **Lead capture from external sources** (REQ-LEAD-CAPTURE) -- no public API endpoint for web form lead capture; prospect-to-lead exists but no email-to-lead workflow.
+- **Lead qualification scoring** (REQ-LEAD-SCORING) -- no scoring criteria configuration or auto-calculation.
+- **Lead-to-client conversion** (REQ-LEAD-CONVERSION) -- client can be linked manually but no pre-filled conversion wizard or bulk conversion.
+- **Lead assignment rules** (REQ-LEAD-ASSIGNMENT-RULES) -- manual assignment only; no round-robin or source-based rules.
+- **Lead deduplication** (REQ-LEAD-DEDUP) -- no duplicate detection during creation or merge interface.
+- **Lead tagging** (REQ-LEAD-TAGS) -- single `category` field exists but no multi-tag system with TagManager.
+- **Lead nurturing workflows** (REQ-LEAD-NURTURE) -- no n8n workflow templates for follow-up reminders or stale escalation.
+- **Lead reporting/analytics** (REQ-LEAD-REPORTING) -- dashboard has basic KPIs but no drill-down reports for source performance, aging, or win/loss analysis.
+- **Lead value auto-calculation from line items** -- LeadProducts component exists but does not automatically update the lead's `value` field from line item totals.
 - **Quick actions on kanban cards** (REQ-LEAD-011) -- no right-click context menu or action menu on kanban cards for quick move/assign/priority changes.
 - **Stale lead detection** (REQ-LEAD-012, V1) -- no staleness threshold configuration, no "days since last activity" calculation.
 - **Aging indicator** (REQ-LEAD-013, V1) -- no "days in current stage" display on kanban cards or detail view.
 - **Lead import/export CSV** (REQ-LEAD-014, V1) -- no import or export functionality.
 - **Validation** -- basic validation exists in the schema (required title, value minimum 0, probability 0-100), but client-side inline validation (REQ-LEAD-002) with highlighted invalid fields may be incomplete. No backend validation controller for Pipelinq-specific rules.
 - **Concurrent edit conflict detection** (Scenario 57) -- relies on OpenRegister's versioning but no UI for conflict resolution.
-- **Lead value auto-calculation from line items** -- LeadProducts component exists but may not automatically update the lead's `value` field from line item totals.
 - **Overdue indicator on lead list/detail** -- overdue detection works on the dashboard but individual lead views may not show the "X days overdue" indicator.
 
 ### Standards & References
@@ -644,9 +1011,10 @@ NOT implemented:
 - WCAG AA -- accessible form labels and keyboard navigation
 
 ### Specificity Assessment
-- The spec is highly detailed with 57 scenarios covering all aspects of lead management. Very specific and testable.
-- **Mostly implementable as-is** -- MVP requirements are largely complete. Remaining work is V1 features and polish.
+- The spec is highly detailed with 57+ base scenarios plus ADDED requirements covering lead capture, scoring, conversion, assignment rules, deduplication, tagging, nurturing, reporting, and line items.
+- **Mostly implementable as-is** -- MVP requirements are largely complete. Remaining work is V1/Enterprise features and polish.
 - **Gap**: The spec uses `assignedTo` as the field name but the implementation uses `assignee`. This naming discrepancy should be resolved.
 - **Gap**: The spec says leads should be placed on the "first non-closed stage" of the default pipeline on creation, but this default assignment logic may not be implemented in the frontend form.
 - **Gap**: The spec references `currency` as a separate field (ISO 4217), but the schema does not include a `currency` property -- EUR is assumed/hardcoded in the UI.
 - **Open question**: Should lead validation happen in a Pipelinq validation service or rely entirely on OpenRegister's JSON Schema validation?
+- **Open question**: Should lead scoring be computed on the frontend (Vue computed property) or backend (n8n workflow / PHP service)?
