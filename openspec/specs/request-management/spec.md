@@ -24,6 +24,7 @@ Request management handles the intake and tracking of requests (verzoeken) — s
 | `stage` | reference | -- | -- | No | -- |
 | `stageOrder` | integer | -- | -- | No | 0 |
 | `assignedTo` | string (user UID) | `schema:agent` | -- | No | -- |
+| `queue` | reference | -- | -- | No | -- |
 | `caseReference` | reference | -- | -- | No | -- |
 
 ### Status Lifecycle
@@ -330,6 +331,36 @@ The system MUST enforce validation rules for request data integrity.
 #### Scenario: Client reference must be valid
 - **WHEN** a client reference does not exist in OpenRegister
 - **THEN** the system MUST reject with "Referenced client not found"
+
+---
+
+### REQ-RM-120: Request Queue Assignment [Enterprise]
+
+The request entity SHALL support an optional `queue` reference field linking the request to a queue for workload management.
+
+#### Scenario: Request with queue reference
+- **WHEN** a request is assigned to queue "Vergunningen"
+- **THEN** the request's `queue` field SHALL store the queue's UUID
+- **THEN** the request SHALL appear in the queue's item list view
+
+#### Scenario: Request without queue
+- **WHEN** a request has no queue assigned
+- **THEN** the `queue` field SHALL be null
+- **THEN** the request SHALL function normally with its existing status lifecycle and pipeline placement
+
+#### Scenario: Queue field in request list view
+- **WHEN** the request list is displayed
+- **THEN** a "Queue" column SHALL be available showing the queue title or "--" if unqueued
+
+#### Scenario: Queue field in request detail view
+- **WHEN** the request detail view is displayed for a queued request
+- **THEN** the queue name SHALL be displayed as a link to the queue detail view
+- **THEN** a "Change queue" action SHALL be available
+
+#### Scenario: Assign to queue from request detail
+- **WHEN** an agent clicks "Change queue" on a request detail view
+- **THEN** a dropdown SHALL show all active queues
+- **THEN** selecting a queue SHALL update the request's `queue` field
 
 ---
 
