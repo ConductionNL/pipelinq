@@ -52,6 +52,13 @@
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
+				:name="t('pipelinq', 'Kennisbank')"
+				:to="{ name: 'Kennisbank' }">
+				<template #icon>
+					<BookOpenPageVariant :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
 				:name="t('pipelinq', 'My Work')"
 				:to="{ name: 'MyWork' }">
 				<template #icon>
@@ -96,6 +103,7 @@ import FileDocument from 'vue-material-design-icons/FileDocument.vue'
 import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
 import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
 import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
+import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
@@ -114,6 +122,7 @@ export default {
 		TrendingUp,
 		ViewColumn,
 		AccountCheck,
+		BookOpenPageVariant,
 		BookOpenVariantOutline,
 		PackageVariant,
 		Cog,

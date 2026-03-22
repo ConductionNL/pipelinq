@@ -32,6 +32,12 @@ export async function initializeStores() {
 		if (config.register && config.leadProduct_schema) {
 			objectStore.registerObjectType('leadProduct', config.leadProduct_schema, config.register)
 		}
+		if (config.register && config.survey_schema) {
+			objectStore.registerObjectType('survey', config.survey_schema, config.register)
+		}
+		if (config.register && config.surveyResponse_schema) {
+			objectStore.registerObjectType('surveyResponse', config.surveyResponse_schema, config.register)
+		}
 	}
 
 	return { settingsStore, objectStore }
