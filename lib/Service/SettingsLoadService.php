@@ -45,6 +45,9 @@ class SettingsLoadService
         'product',
         'productCategory',
         'leadProduct',
+        'kennisartikel',
+        'kenniscategorie',
+        'kennisfeedback',
     ];
 
     /**
