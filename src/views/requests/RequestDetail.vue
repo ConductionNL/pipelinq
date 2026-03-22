@@ -170,6 +170,56 @@
 			</p>
 		</CnDetailCard>
 
+		<CnDetailCard :title="t('pipelinq', 'Contactmomenten')">
+			<template #actions>
+				<NcButton @click="showContactmomentQuickLog = true">
+					{{ t('pipelinq', 'Log contactmoment') }}
+				</NcButton>
+			</template>
+
+			<div v-if="contactmomenten.length === 0" class="section-empty">
+				<p>{{ t('pipelinq', 'Geen contactmomenten geregistreerd') }}</p>
+			</div>
+			<div v-else class="viewTableContainer">
+				<table class="viewTable">
+					<thead>
+						<tr>
+							<th>{{ t('pipelinq', 'Subject') }}</th>
+							<th>{{ t('pipelinq', 'Channel') }}</th>
+							<th>{{ t('pipelinq', 'Agent') }}</th>
+							<th>{{ t('pipelinq', 'Date') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="cm in contactmomenten"
+							:key="cm.id"
+							class="viewTableRow"
+							@click="$router.push({ name: 'ContactmomentDetail', params: { id: cm.id } })">
+							<td>{{ cm.subject || '-' }}</td>
+							<td>{{ cm.channel || '-' }}</td>
+							<td>{{ cm.agent || '-' }}</td>
+							<td>{{ formatDatetime(cm.contactedAt) }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</CnDetailCard>
+
+		<!-- Contactmoment quick-log dialog -->
+		<NcDialog
+			v-if="showContactmomentQuickLog"
+			:name="t('pipelinq', 'Log contactmoment')"
+			size="normal"
+			@closing="showContactmomentQuickLog = false">
+			<ContactmomentQuickLog
+				:client-id="requestData.client || null"
+				:request-id="requestId"
+				:inline="true"
+				@saved="onContactmomentSaved"
+				@cancel="showContactmomentQuickLog = false" />
+		</NcDialog>
+
 		<!-- Delete dialog -->
 		<NcDialog
 			v-if="showDeleteDialog"
@@ -193,6 +243,7 @@ import { NcButton, NcDialog, NcSelect } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import RequestForm from './RequestForm.vue'
+import ContactmomentQuickLog from '../../components/ContactmomentQuickLog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import {
 	getAllowedTransitions,
@@ -211,6 +262,7 @@ export default {
 		CnDetailPage,
 		CnDetailCard,
 		RequestForm,
+		ContactmomentQuickLog,
 	},
 	props: {
 		requestId: {
@@ -222,8 +274,10 @@ export default {
 		return {
 			editing: false,
 			showDeleteDialog: false,
+			showContactmomentQuickLog: false,
 			clientData: null,
 			pipelineData: null,
+			contactmomenten: [],
 			users: [],
 		}
 	},
@@ -313,6 +367,37 @@ export default {
 			if (this.requestData.pipeline) {
 				const pipeline = await this.objectStore.fetchObject('pipeline', this.requestData.pipeline)
 				this.pipelineData = pipeline || null
+			}
+			try {
+				const allContactmomenten = await this.objectStore.fetchCollection('contactmoment', {
+					_limit: 50,
+					request: this.requestId,
+					_order: { contactedAt: 'desc' },
+				})
+				this.contactmomenten = allContactmomenten || []
+			} catch {
+				this.contactmomenten = []
+			}
+		},
+		formatDatetime(dateStr) {
+			if (!dateStr) return '-'
+			try {
+				return new Date(dateStr).toLocaleString()
+			} catch {
+				return dateStr
+			}
+		},
+		async onContactmomentSaved() {
+			this.showContactmomentQuickLog = false
+			try {
+				const allContactmomenten = await this.objectStore.fetchCollection('contactmoment', {
+					_limit: 50,
+					request: this.requestId,
+					_order: { contactedAt: 'desc' },
+				})
+				this.contactmomenten = allContactmomenten || []
+			} catch {
+				this.contactmomenten = []
 			}
 		},
 
@@ -605,5 +690,42 @@ export default {
 
 .next-stage-btn {
 	margin-top: 12px;
+}
+
+.viewTableContainer {
+	background: var(--color-main-background);
+	border-radius: var(--border-radius);
+	overflow: hidden;
+	box-shadow: 0 2px 4px var(--color-box-shadow);
+	border: 1px solid var(--color-border);
+}
+
+.viewTable {
+	width: 100%;
+	border-collapse: collapse;
+	background-color: var(--color-main-background);
+}
+
+.viewTable th,
+.viewTable td {
+	padding: 12px;
+	text-align: left;
+	border-bottom: 1px solid var(--color-border);
+	vertical-align: middle;
+}
+
+.viewTable th {
+	background-color: var(--color-background-dark);
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+}
+
+.viewTableRow {
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+
+.viewTableRow:hover {
+	background: var(--color-background-hover);
 }
 </style>

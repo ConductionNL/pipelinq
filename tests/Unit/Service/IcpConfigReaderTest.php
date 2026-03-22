@@ -120,6 +120,11 @@ class IcpConfigReaderTest extends TestCase
             ->with(Application::APP_ID, 'json_key', '[]')
             ->willReturn('["a","b","c"]');
 
+        $this->assertSame(['a', 'b', 'c'], $this->reader->getJsonArray(key: 'json_key'));
+    }//end testGetJsonArrayDecodesStoredArray()
+
+    /**
+     * Test that getJsonArray returns empty array for invalid JSON.
         $result = $this->reader->getJsonArray(key: 'json_key');
 
         $this->assertSame(['a', 'b', 'c'], $result);
