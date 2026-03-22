@@ -32,6 +32,15 @@ export async function initializeStores() {
 		if (config.register && config.leadProduct_schema) {
 			objectStore.registerObjectType('leadProduct', config.leadProduct_schema, config.register)
 		}
+		if (config.register && config.kennisartikel_schema) {
+			objectStore.registerObjectType('kennisartikel', config.kennisartikel_schema, config.register)
+		}
+		if (config.register && config.kenniscategorie_schema) {
+			objectStore.registerObjectType('kenniscategorie', config.kenniscategorie_schema, config.register)
+		}
+		if (config.register && config.kennisfeedback_schema) {
+			objectStore.registerObjectType('kennisfeedback', config.kennisfeedback_schema, config.register)
+		}
 	}
 
 	return { settingsStore, objectStore }
