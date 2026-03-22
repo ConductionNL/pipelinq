@@ -141,6 +141,48 @@
 			<span v-else>{{ requestData.assignee || t('pipelinq', 'Unassigned') }}</span>
 		</CnDetailCard>
 
+		<CnDetailCard :title="t('pipelinq', 'Queue')">
+			<div v-if="queueData" class="queue-link">
+				<a href="#" @click.prevent="$router.push({ name: 'QueueDetail', params: { id: queueData.id } })">
+					{{ queueData.title }}
+				</a>
+				<NcSelect
+					v-if="!isConverted"
+					:value="queueOption"
+					:options="queueOptions"
+					:clearable="true"
+					label="label"
+					:reduce="o => o.value"
+					:placeholder="t('pipelinq', 'Change queue')"
+					:filterable="true"
+					class="queue-select"
+					@input="onQueueChange" />
+			</div>
+			<div v-else>
+				<NcSelect
+					v-if="!isConverted"
+					:value="null"
+					:options="queueOptions"
+					:clearable="true"
+					label="label"
+					:reduce="o => o.value"
+					:placeholder="t('pipelinq', 'Assign to queue')"
+					:filterable="true"
+					class="queue-select"
+					@input="onQueueChange" />
+				<p v-else class="section-empty">
+					{{ t('pipelinq', 'Not in a queue') }}
+				</p>
+			</div>
+		</CnDetailCard>
+
+		<!-- Routing Suggestions -->
+		<CnDetailCard v-if="showRoutingSuggestions" :title="t('pipelinq', 'Routing')">
+			<RoutingSuggestionPanel
+				:category="requestData.category"
+				@assign="onRoutingAssign" />
+		</CnDetailCard>
+
 		<CnDetailCard :title="t('pipelinq', 'Pipeline')">
 			<div v-if="pipelineData">
 				<p class="pipeline-name">
@@ -243,8 +285,10 @@ import { NcButton, NcDialog, NcSelect } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import RequestForm from './RequestForm.vue'
+import RoutingSuggestionPanel from '../../components/RoutingSuggestionPanel.vue'
 import ContactmomentQuickLog from '../../components/ContactmomentQuickLog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import { useQueuesStore } from '../../store/modules/queues.js'
 import {
 	getAllowedTransitions,
 	getStatusLabel,
@@ -262,6 +306,7 @@ export default {
 		CnDetailPage,
 		CnDetailCard,
 		RequestForm,
+		RoutingSuggestionPanel,
 		ContactmomentQuickLog,
 	},
 	props: {
@@ -277,6 +322,8 @@ export default {
 			showContactmomentQuickLog: false,
 			clientData: null,
 			pipelineData: null,
+			queueData: null,
+			allQueues: [],
 			contactmomenten: [],
 			users: [],
 		}
@@ -331,6 +378,18 @@ export default {
 		userOptions() {
 			return this.users
 		},
+		queueOption() {
+			if (!this.queueData) return null
+			return { value: this.queueData.id, label: this.queueData.title }
+		},
+		queueOptions() {
+			return this.allQueues
+				.filter(q => q.isActive !== false)
+				.map(q => ({ value: q.id, label: q.title }))
+		},
+		showRoutingSuggestions() {
+			return !this.isNew && !this.isConverted && (this.requestData.queue || this.requestData.category)
+		},
 		sortedStages() {
 			if (!this.pipelineData?.stages) return []
 			return [...this.pipelineData.stages].sort((a, b) => a.order - b.order)
@@ -368,6 +427,14 @@ export default {
 				const pipeline = await this.objectStore.fetchObject('pipeline', this.requestData.pipeline)
 				this.pipelineData = pipeline || null
 			}
+			if (this.requestData.queue) {
+				const queue = await this.objectStore.fetchObject('queue', this.requestData.queue)
+				this.queueData = queue || null
+			}
+			// Fetch all queues for the dropdown
+			const queuesStore = useQueuesStore()
+			await queuesStore.fetchQueues()
+			this.allQueues = queuesStore.queues
 			try {
 				const allContactmomenten = await this.objectStore.fetchCollection('contactmoment', {
 					_limit: 50,
@@ -430,6 +497,28 @@ export default {
 			await this.objectStore.saveObject('request', {
 				...this.requestData,
 				status: newStatus,
+			})
+			await this.objectStore.fetchObject('request', this.requestId)
+		},
+
+		async onQueueChange(queueId) {
+			await this.objectStore.saveObject('request', {
+				...this.requestData,
+				queue: queueId || null,
+			})
+			await this.objectStore.fetchObject('request', this.requestId)
+			if (queueId) {
+				const queue = await this.objectStore.fetchObject('queue', queueId)
+				this.queueData = queue || null
+			} else {
+				this.queueData = null
+			}
+		},
+
+		async onRoutingAssign(userId) {
+			await this.objectStore.saveObject('request', {
+				...this.requestData,
+				assignee: userId,
 			})
 			await this.objectStore.fetchObject('request', this.requestId)
 		},
@@ -692,6 +781,14 @@ export default {
 	margin-top: 12px;
 }
 
+.queue-link a {
+	font-weight: bold;
+	color: var(--color-primary);
+}
+
+.queue-select {
+	margin-top: 8px;
+	min-width: 200px;
 .viewTableContainer {
 	background: var(--color-main-background);
 	border-radius: var(--border-radius);

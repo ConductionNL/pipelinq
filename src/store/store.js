@@ -32,6 +32,14 @@ export async function initializeStores() {
 		if (config.register && config.leadProduct_schema) {
 			objectStore.registerObjectType('leadProduct', config.leadProduct_schema, config.register)
 		}
+		if (config.register && config.queue_schema) {
+			objectStore.registerObjectType('queue', config.queue_schema, config.register)
+		}
+		if (config.register && config.skill_schema) {
+			objectStore.registerObjectType('skill', config.skill_schema, config.register)
+		}
+		if (config.register && config.agentProfile_schema) {
+			objectStore.registerObjectType('agentProfile', config.agentProfile_schema, config.register)
 		if (config.register && config.task_schema) {
 			objectStore.registerObjectType('task', config.task_schema, config.register)
 		}

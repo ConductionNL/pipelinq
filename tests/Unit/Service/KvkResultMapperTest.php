@@ -45,6 +45,7 @@ class KvkResultMapperTest extends TestCase
     }//end setUp()
 
     /**
+     * Test that a full KVK result is mapped correctly.
      * Test that a complete KVK result is mapped correctly.
      *
      * @return void
@@ -52,6 +53,12 @@ class KvkResultMapperTest extends TestCase
     public function testMapResultMapsFullItem(): void
     {
         $item = [
+            'kvkNummer'         => '12345678',
+            'eersteHandelsnaam' => 'Acme B.V.',
+            'rechtsvorm'        => 'BV',
+            'actief'            => 'Ja',
+            'adres'             => ['straatnaam' => 'Str', 'huisnummer' => '1', 'plaats' => 'Amsterdam', 'provincie' => 'NH', 'postcode' => '1234AB'],
+            'spiActiviteiten'   => [['sbiCode' => '6201', 'sbiOmschrijving' => 'Software']],
             'kvkNummer'              => '12345678',
             'eersteHandelsnaam'      => 'Acme B.V.',
             'rechtsvorm'             => 'BV',
@@ -79,6 +86,10 @@ class KvkResultMapperTest extends TestCase
 
         $result = $this->mapper->mapResult(item: $item, sbiCode: '6201');
 
+        $this->assertSame('12345678', $result['kvkNumber']);
+        $this->assertSame('Acme B.V.', $result['tradeName']);
+        $this->assertSame('Software', $result['sbiDescription']);
+        $this->assertSame('kvk', $result['source']);
         $this->assertNotNull($result);
         $this->assertSame('12345678', $result['kvkNumber']);
         $this->assertSame('Acme B.V.', $result['tradeName']);
@@ -110,6 +121,10 @@ class KvkResultMapperTest extends TestCase
     public function testMapResultReturnsNullWithoutKvkNumber(): void
     {
         $this->assertNull($this->mapper->mapResult(item: ['naam' => 'Test'], sbiCode: ''));
+    }//end testMapResultReturnsNullWithoutKvkNumber()
+
+    /**
+     * Test that inactive company is mapped correctly.
         $this->assertNull($this->mapper->mapResult(item: ['eersteHandelsnaam' => 'No Number'], sbiCode: '6201'));
         $result = $this->mapper->mapResult(item: ['eersteHandelsnaam' => 'No Number B.V.'], sbiCode: '6201');
         $item = [
@@ -128,6 +143,21 @@ class KvkResultMapperTest extends TestCase
      */
     public function testMapResultMapsInactiveCompany(): void
     {
+        $this->assertFalse($this->mapper->mapResult(item: ['kvkNummer' => '1', 'actief' => 'Nee'], sbiCode: '')['isActive']);
+    }//end testMapResultMapsInactiveCompany()
+
+    /**
+     * Test SBI prefix matching.
+     *
+     * @return void
+     */
+    public function testMapResultFindsSbiByPrefix(): void
+    {
+        $item   = ['kvkNummer' => '2', 'spiActiviteiten' => [['sbiCode' => '6201', 'sbiOmschrijving' => 'Dev']]];
+        $result = $this->mapper->mapResult(item: $item, sbiCode: '62');
+
+        $this->assertSame('Dev', $result['sbiDescription']);
+    }//end testMapResultFindsSbiByPrefix()
         $result = $this->mapper->mapResult(item: ['kvkNummer' => '99999999', 'actief' => 'Nee'], sbiCode: '62');
 
         $item = [
