@@ -65,6 +65,8 @@ class KvkResultMapperTest extends TestCase
             'totaalWerkzamePersonen' => 42,
             'registratieDatum'       => '2010-01-15',
             'actief'                 => 'Ja',
+            'adres'                  => ['straatnaam' => 'Teststraat', 'huisnummer' => '10', 'plaats' => 'Amsterdam', 'provincie' => 'Noord-Holland', 'postcode' => '1234AB'],
+            'spiActiviteiten'        => [['sbiCode' => '6201', 'sbiOmschrijving' => 'Software development']],
             'adres'                  => [
                 'straatnaam' => 'Teststraat',
                 'huisnummer' => '10',
@@ -91,6 +93,10 @@ class KvkResultMapperTest extends TestCase
         $this->assertNotNull($result);
         $this->assertSame('12345678', $result['kvkNumber']);
         $this->assertSame('Acme B.V.', $result['tradeName']);
+        $this->assertSame('Software development', $result['sbiDescription']);
+        $this->assertTrue($result['isActive']);
+        $this->assertSame('kvk', $result['source']);
+        $this->assertSame('Amsterdam', $result['address']['city']);
         $this->assertSame('BV', $result['legalForm']);
         $this->assertSame('Software development', $result['sbiDescription']);
         $this->assertTrue($result['isActive']);
@@ -153,6 +159,7 @@ class KvkResultMapperTest extends TestCase
         $this->assertSame('Dev', $result['sbiDescription']);
     }//end testMapResultFindsSbiByPrefix()
         $result = $this->mapper->mapResult(item: ['kvkNummer' => '99999999', 'actief' => 'Nee'], sbiCode: '62');
+
         $item = [
             'kvkNummer' => '99999999',
             'actief'    => 'Nee',
@@ -165,6 +172,19 @@ class KvkResultMapperTest extends TestCase
     }//end testMapResultMapsInactiveCompany()
 
     /**
+     * Test that 'naam' is used as fallback trade name.
+     *
+     * @return void
+     */
+    public function testMapResultFallsBackToNaam(): void
+    {
+        $result = $this->mapper->mapResult(item: ['kvkNummer' => '11111111', 'naam' => 'Fallback'], sbiCode: '');
+
+        $this->assertSame('Fallback', $result['tradeName']);
+    }//end testMapResultFallsBackToNaam()
+
+    /**
+     * Test that SBI prefix matching finds the description.
      * Test that fallback trade name 'naam' is used when eersteHandelsnaam is absent.
      * Test that the fallback trade name 'naam' is used when eersteHandelsnaam is absent.
      * Test that the fallback trade name field 'naam' is used when no eersteHandelsnaam.
