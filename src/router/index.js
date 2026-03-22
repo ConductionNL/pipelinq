@@ -34,6 +34,9 @@ import PipelineManager from '../views/settings/PipelineManager.vue'
 import FormManager from '../views/forms/FormManager.vue'
 import FormBuilder from '../views/forms/FormBuilder.vue'
 import FormSubmissions from '../views/forms/FormSubmissions.vue'
+import TaskList from '../views/tasks/TaskList.vue'
+import TaskDetail from '../views/tasks/TaskDetail.vue'
+import TaskForm from '../views/tasks/TaskForm.vue'
 import KennisbankHome from '../views/kennisbank/KennisbankHome.vue'
 import ArticleDetail from '../views/kennisbank/ArticleDetail.vue'
 import ArticleEditor from '../views/kennisbank/ArticleEditor.vue'
@@ -80,6 +83,9 @@ export default new Router({
 		{ path: '/surveys/:id/analytics', name: 'SurveyAnalytics', component: SurveyAnalytics, props: route => ({ surveyId: route.params.id }) },
 		{ path: '/public/survey/:token', name: 'PublicSurvey', component: PublicSurveyForm, props: route => ({ token: route.params.token }) },
 		{ path: '/my-work', name: 'MyWork', component: MyWork },
+		{ path: '/tasks', name: 'Tasks', component: TaskList },
+		{ path: '/tasks/new', name: 'TaskNew', component: TaskForm },
+		{ path: '/tasks/:id', name: 'TaskDetail', component: TaskDetail, props: route => ({ taskId: route.params.id }) },
 		{ path: '/kennisbank', name: 'Kennisbank', component: KennisbankHome },
 		{ path: '/kennisbank/articles/new', name: 'KennisbankNew', component: ArticleEditor },
 		{ path: '/kennisbank/articles/:id', name: 'KennisbankDetail', component: ArticleDetail, props: route => ({ articleId: route.params.id }) },

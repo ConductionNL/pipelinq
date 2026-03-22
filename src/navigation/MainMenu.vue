@@ -89,6 +89,10 @@
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
+				:name="t('pipelinq', 'Tasks')"
+				:to="{ name: 'Tasks' }">
+				<template #icon>
+					<ClipboardCheck :size="20" />
 				:name="t('pipelinq', 'Knowledge Base')"
 				:to="{ name: 'Kennisbank' }">
 				<template #icon>
@@ -147,6 +151,7 @@ import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
 import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
+import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
 import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import ChartBar from 'vue-material-design-icons/ChartBar.vue'
 import EmoticonHappyOutline from 'vue-material-design-icons/EmoticonHappyOutline.vue'
@@ -178,6 +183,7 @@ export default {
 		ClipboardCheck,
 		BookOpenPageVariant,
 		BookOpenVariantOutline,
+		ClipboardCheck,
 		BookOpenPageVariant,
 		ChartBar,
 		PackageVariant,
