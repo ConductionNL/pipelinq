@@ -46,7 +46,19 @@ class ActivityService
     }//end __construct()
 
     /**
-     * Publish a created event for a lead or request.
+     * Map entity types to their activity subject names for creation events.
+     *
+     * @var array<string, string>
+     */
+    private const CREATED_SUBJECT_MAP = [
+        'lead'    => 'lead_created',
+        'request' => 'request_created',
+        'client'  => 'client_created',
+        'contact' => 'contact_created',
+    ];
+
+    /**
+     * Publish a created event for any Pipelinq entity.
      *
      * @param string  $entityType   The entity type.
      * @param string  $title        The entity title.
@@ -61,13 +73,10 @@ class ActivityService
         string $objectId,
         ?string $affectedUser=null
     ): void {
-        $type = 'lead_created';
-        if ($entityType === 'request') {
-            $type = 'request_created';
-        }
+        $subject = self::CREATED_SUBJECT_MAP[$entityType] ?? ($entityType . '_created');
 
         $this->publish(
-            subject: $type,
+            subject: $subject,
             type: 'pipelinq_assignment',
             parameters: [
                 'title'      => $title,

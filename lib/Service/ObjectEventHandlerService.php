@@ -59,7 +59,7 @@ class ObjectEventHandlerService
 
         $this->dispatcher->dispatchCreated(
             entityType: $entityType,
-            title: ($data['title'] ?? ''),
+            title: $this->resolveTitle($data, $entityType),
             objectId: $objectId,
             assignee: ($data['assignee'] ?? '')
         );
@@ -82,7 +82,7 @@ class ObjectEventHandlerService
 
         $newData  = $newObject->getObject();
         $oldData  = $this->extractOldData(oldObject: $oldObject);
-        $title    = $newData['title'] ?? '';
+        $title    = $this->resolveTitle($newData, $entityType);
         $objectId = (string) $newObject->getId();
         $assignee = $newData['assignee'] ?? '';
 
@@ -131,8 +131,27 @@ class ObjectEventHandlerService
             return false;
         }
 
-        return in_array($entityType, ['lead', 'request'], true);
+        return in_array($entityType, ['lead', 'request', 'client', 'contact'], true);
     }//end isRelevantEntityType()
+
+    /**
+     * Resolve the display title from object data.
+     *
+     * Client and contact entities use "name" instead of "title".
+     *
+     * @param array  $data       The object data.
+     * @param string $entityType The entity type.
+     *
+     * @return string The resolved title.
+     */
+    private function resolveTitle(array $data, string $entityType): string
+    {
+        if (in_array($entityType, ['client', 'contact'], true) === true) {
+            return $data['name'] ?? '';
+        }
+
+        return $data['title'] ?? '';
+    }//end resolveTitle()
 
     /**
      * Extract old data from an old object entity.
