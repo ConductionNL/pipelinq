@@ -37,6 +37,7 @@ class ObjectEventHandlerService
         private SchemaMapService $schemaMapService,
         private ObjectEventDispatcher $dispatcher,
         private ObjectUpdateDiffService $diffService,
+        private AutomationService $automationService,
     ) {
     }//end __construct()
 
@@ -62,6 +63,13 @@ class ObjectEventHandlerService
             title: ($data['title'] ?? ''),
             objectId: $objectId,
             assignee: ($data['assignee'] ?? '')
+        );
+
+        // Fire matching automations for entity creation events.
+        $this->fireAutomations(
+            trigger: $entityType . '_created',
+            entityData: $data,
+            objectId: $objectId
         );
     }//end handleCreated()
 
@@ -116,6 +124,14 @@ class ObjectEventHandlerService
                 dispatcher: $this->dispatcher
             );
         }
+
+        // Fire matching automations for update events.
+        $this->fireUpdateAutomations(
+            entityType: $entityType,
+            newData: $newData,
+            oldData: $oldData,
+            objectId: $objectId
+        );
     }//end handleUpdated()
 
     /**
@@ -131,7 +147,7 @@ class ObjectEventHandlerService
             return false;
         }
 
-        return in_array($entityType, ['lead', 'request'], true);
+        return in_array($entityType, ['lead', 'request', 'contact'], true);
     }//end isRelevantEntityType()
 
     /**
@@ -149,4 +165,75 @@ class ObjectEventHandlerService
 
         return [];
     }//end extractOldData()
+
+    /**
+     * Fire matching automations for entity creation.
+     *
+     * @param string $trigger    The trigger event name.
+     * @param array  $entityData The entity data.
+     * @param string $objectId   The object ID.
+     *
+     * @return void
+     */
+    private function fireAutomations(string $trigger, array $entityData, string $objectId): void
+    {
+        try {
+            $payload = $this->automationService->buildWebhookPayload(
+                automation: ['name' => $trigger],
+                trigger: $trigger,
+                entityData: array_merge($entityData, ['id' => $objectId])
+            );
+            // Webhook firing is handled by the automation execution engine.
+            // This is a placeholder for the full automation matching pipeline.
+        } catch (\Exception $e) {
+            // Automation failures must not break the main event flow.
+        }
+    }//end fireAutomations()
+
+
+    /**
+     * Fire matching automations for entity update events.
+     *
+     * @param string $entityType The entity type.
+     * @param array  $newData    The new entity data.
+     * @param array  $oldData    The old entity data.
+     * @param string $objectId   The object ID.
+     *
+     * @return void
+     */
+    private function fireUpdateAutomations(
+        string $entityType,
+        array $newData,
+        array $oldData,
+        string $objectId,
+    ): void {
+        $triggers = [];
+
+        if (($newData['assignee'] ?? '') !== ($oldData['assignee'] ?? '')) {
+            $triggers[] = $entityType . '_assigned';
+        }
+
+        if ($entityType === 'lead') {
+            if (($newData['stage'] ?? '') !== ($oldData['stage'] ?? '')) {
+                $triggers[] = 'lead_stage_changed';
+            }
+            if (($newData['value'] ?? 0) !== ($oldData['value'] ?? 0)) {
+                $triggers[] = 'lead_value_changed';
+            }
+        }
+
+        if ($entityType === 'request'
+            && ($newData['status'] ?? '') !== ($oldData['status'] ?? '')
+        ) {
+            $triggers[] = 'request_status_changed';
+        }
+
+        foreach ($triggers as $trigger) {
+            $this->fireAutomations(
+                trigger: $trigger,
+                entityData: $newData,
+                objectId: $objectId
+            );
+        }
+    }//end fireUpdateAutomations()
 }//end class

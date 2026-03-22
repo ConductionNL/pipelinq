@@ -34,6 +34,9 @@ import PipelineManager from '../views/settings/PipelineManager.vue'
 import FormManager from '../views/forms/FormManager.vue'
 import FormBuilder from '../views/forms/FormBuilder.vue'
 import FormSubmissions from '../views/forms/FormSubmissions.vue'
+import AutomationList from '../views/automations/AutomationList.vue'
+import AutomationBuilder from '../views/automations/AutomationBuilder.vue'
+import AutomationHistory from '../views/automations/AutomationHistory.vue'
 import ContactmomentList from '../views/contactmomenten/ContactmomentList.vue'
 import ContactmomentForm from '../views/contactmomenten/ContactmomentForm.vue'
 import ContactmomentDetail from '../views/contactmomenten/ContactmomentDetail.vue'
@@ -106,6 +109,10 @@ export default new Router({
 		{ path: '/forms/new', name: 'FormNew', component: FormBuilder },
 		{ path: '/forms/:id', name: 'FormDetail', component: FormBuilder, props: route => ({ formId: route.params.id }) },
 		{ path: '/forms/:id/submissions', name: 'FormSubmissions', component: FormSubmissions, props: route => ({ formId: route.params.id }) },
+		{ path: '/automations', name: 'Automations', component: AutomationList },
+		{ path: '/automations/new', name: 'AutomationNew', component: AutomationBuilder },
+		{ path: '/automations/:id', name: 'AutomationDetail', component: AutomationBuilder, props: route => ({ automationId: route.params.id }) },
+		{ path: '/automations/:id/history', name: 'AutomationHistory', component: AutomationHistory, props: route => ({ automationId: route.params.id }) },
 		{ path: '*', redirect: '/' },
 	],
 })
