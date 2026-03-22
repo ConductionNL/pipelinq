@@ -9,7 +9,7 @@
     "type": "application",
     "app": "pipelinq",
     "openregister": "^v0.2.10",
-    "description": "CRM data model \u2014 thin client on OpenRegister, no own database tables"
+    "description": "CRM data model — thin client on OpenRegister, no own database tables"
   },
   "components": {
     "registers": {
@@ -17,7 +17,7 @@
         "slug": "pipelinq",
         "title": "Pipelinq",
         "version": "1.0.0",
-        "description": "Client Relationship Management register for Pipelinq \u2014 manages clients, contacts, leads, requests, and pipelines using Schema.org and vCard (RFC 6350) standards.",
+        "description": "Client Relationship Management register for Pipelinq — manages clients, contacts, leads, requests, and pipelines using Schema.org and vCard (RFC 6350) standards.",
         "published": "2026-02-25T00:00:00+00:00",
         "schemas": [
           "client",
@@ -42,7 +42,7 @@
         "icon": "AccountGroup",
         "version": "1.0.0",
         "summary": "A client (person or organization) in the CRM",
-        "description": "Represents a client entity \u2014 either a natural person or an organization. Mapped to Schema.org Person/Organization and vCard (RFC 6350) field conventions. Clients are the primary relationship entity in Pipelinq.",
+        "description": "Represents a client entity — either a natural person or an organization. Mapped to Schema.org Person/Organization and vCard (RFC 6350) field conventions. Clients are the primary relationship entity in Pipelinq.",
         "@type": "schema:Person",
         "required": [
           "name",
@@ -57,7 +57,7 @@
           },
           "type": {
             "type": "string",
-            "description": "Entity type \u2014 person or organization (maps to schema:Person or schema:Organization)",
+            "description": "Entity type — person or organization (maps to schema:Person or schema:Organization)",
             "enum": [
               "person",
               "organization"
@@ -155,7 +155,7 @@
         "icon": "TrendingUp",
         "version": "1.0.0",
         "summary": "A sales lead or business opportunity",
-        "description": "Represents a sales lead \u2014 a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.",
+        "description": "Represents a sales lead — a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.",
         "@type": "schema:Demand",
         "required": [
           "title"
@@ -260,7 +260,7 @@
         "title": "Request",
         "icon": "FileDocumentOutline",
         "version": "1.0.0",
-        "summary": "A service request (verzoek) \u2014 the pre-state of a case",
+        "summary": "A service request (verzoek) — the pre-state of a case",
         "description": "Represents a client service request that may be converted to a case in Procest. Tracks status lifecycle, priority, assignment, and optional pipeline placement.",
         "@type": "schema:Demand",
         "required": [
@@ -369,7 +369,7 @@
         "icon": "Pipe",
         "version": "2.0.0",
         "summary": "A view-backed pipeline defining stages for tracking entities",
-        "description": "Represents a pipeline \u2014 an ordered list of stages through which entities progress. Backed by an OpenRegister View that defines which schemas appear on the board. Each schema can have its own property-to-stage mapping and totals configuration. Mapped to Schema.org ItemList.",
+        "description": "Represents a pipeline — an ordered list of stages through which entities progress. Backed by an OpenRegister View that defines which schemas appear on the board. Each schema can have its own property-to-stage mapping and totals configuration. Mapped to Schema.org ItemList.",
         "@type": "schema:ItemList",
         "required": [
           "title",
@@ -602,7 +602,7 @@
         "icon": "CartOutline",
         "version": "1.0.0",
         "summary": "A line item linking a product to a lead",
-        "description": "Represents a product line item on a lead \u2014 an instance of a product with deal-specific quantity, pricing, and discount. The total is computed as quantity * unitPrice * (1 - discount/100). Mapped to Schema.org Offer.",
+        "description": "Represents a product line item on a lead — an instance of a product with deal-specific quantity, pricing, and discount. The total is computed as quantity * unitPrice * (1 - discount/100). Mapped to Schema.org Offer.",
         "@type": "schema:Offer",
         "required": [
           "lead",
@@ -658,22 +658,116 @@
         "icon": "ClipboardCheckOutline",
         "version": "1.0.0",
         "summary": "A customer satisfaction (KTO) survey definition",
-        "description": "Represents a KTO survey with configurable questions, public access token, and entity linking.",
         "@type": "schema:Survey",
-        "required": ["title", "questions"],
+        "required": [
+          "title",
+          "questions"
+        ],
         "properties": {
-          "title": { "type": "string", "maxLength": 255, "minLength": 1 },
-          "description": { "type": "string", "maxLength": 2000 },
-          "questions": { "type": "array", "maxItems": 50, "items": { "type": "object", "required": ["id", "type", "text"], "properties": { "id": { "type": "string", "format": "uuid" }, "type": { "type": "string", "enum": ["nps", "rating", "multiple_choice", "open_text", "yes_no"] }, "text": { "type": "string", "maxLength": 500 }, "required": { "type": "boolean", "default": true }, "options": { "type": "array", "maxItems": 20, "items": { "type": "string" } }, "order": { "type": "integer" } } } },
-          "status": { "type": "string", "enum": ["draft", "active", "closed"], "default": "draft", "title": "Status", "facetable": true },
-          "token": { "type": "string", "format": "uuid" },
-          "linkedEntityType": { "type": "string", "enum": ["request", "contactmoment", "lead"], "title": "Linked Entity Type", "facetable": true },
-          "linkedEntityId": { "type": "string", "format": "uuid", "visible": false },
-          "activeFrom": { "type": "string", "format": "date-time" },
-          "activeUntil": { "type": "string", "format": "date-time" },
-          "createdBy": { "type": "string" },
-          "createdAt": { "type": "string", "format": "date-time" },
-          "updatedAt": { "type": "string", "format": "date-time" }
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "questions": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "type",
+                "text"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "nps",
+                    "rating",
+                    "multiple_choice",
+                    "open_text",
+                    "yes_no"
+                  ]
+                },
+                "text": {
+                  "type": "string",
+                  "maxLength": 500
+                },
+                "required": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "options": {
+                  "type": "array",
+                  "maxItems": 20,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "order": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "active",
+              "closed"
+            ],
+            "default": "draft",
+            "title": "Status",
+            "facetable": true
+          },
+          "token": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "linkedEntityType": {
+            "type": "string",
+            "enum": [
+              "request",
+              "contactmoment",
+              "lead"
+            ],
+            "title": "Linked Entity Type",
+            "facetable": true
+          },
+          "linkedEntityId": {
+            "type": "string",
+            "format": "uuid",
+            "visible": false
+          },
+          "activeFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "activeUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       },
       "surveyResponse": {
@@ -682,17 +776,62 @@
         "icon": "ClipboardTextOutline",
         "version": "1.0.0",
         "summary": "A completed survey response from a client",
-        "description": "Represents a single completed survey response.",
         "@type": "schema:CompletedSurvey",
-        "required": ["surveyId", "answers"],
+        "required": [
+          "surveyId",
+          "answers"
+        ],
         "properties": {
-          "surveyId": { "type": "string", "format": "uuid" },
-          "answers": { "type": "array", "items": { "type": "object", "required": ["questionId", "value"], "properties": { "questionId": { "type": "string", "format": "uuid" }, "value": { "type": "string" } } } },
-          "respondentId": { "type": "string", "visible": false },
-          "entityType": { "type": "string", "enum": ["request", "contactmoment", "lead"], "title": "Entity Type", "facetable": true },
-          "entityId": { "type": "string", "format": "uuid", "visible": false },
-          "completedAt": { "type": "string", "format": "date-time" },
-          "ipHash": { "type": "string", "visible": false }
+          "surveyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "answers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "questionId",
+                "value"
+              ],
+              "properties": {
+                "questionId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "respondentId": {
+            "type": "string",
+            "visible": false
+          },
+          "entityType": {
+            "type": "string",
+            "enum": [
+              "request",
+              "contactmoment",
+              "lead"
+            ],
+            "title": "Entity Type",
+            "facetable": true
+          },
+          "entityId": {
+            "type": "string",
+            "format": "uuid",
+            "visible": false
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ipHash": {
+            "type": "string",
+            "visible": false
+          }
         }
       }
     },
@@ -700,10 +839,15 @@
       "default-pipeline-view": {
         "slug": "default-pipeline-view",
         "name": "Pipelinq Default View",
-        "description": "Default view for pipeline boards \u2014 includes leads and requests from the Pipelinq register",
+        "description": "Default view for pipeline boards — includes leads and requests from the Pipelinq register",
         "query": {
-          "registers": ["pipelinq"],
-          "schemas": ["lead", "request"]
+          "registers": [
+            "pipelinq"
+          ],
+          "schemas": [
+            "lead",
+            "request"
+          ]
         },
         "isDefault": true
       }
