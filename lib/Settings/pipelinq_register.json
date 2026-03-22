@@ -9,7 +9,7 @@
     "type": "application",
     "app": "pipelinq",
     "openregister": "^v0.2.10",
-    "description": "CRM data model \u2014 thin client on OpenRegister, no own database tables"
+    "description": "CRM data model — thin client on OpenRegister, no own database tables"
   },
   "components": {
     "registers": {
@@ -17,7 +17,7 @@
         "slug": "pipelinq",
         "title": "Pipelinq",
         "version": "1.0.0",
-        "description": "Client Relationship Management register for Pipelinq \u2014 manages clients, contacts, leads, requests, and pipelines using Schema.org and vCard (RFC 6350) standards.",
+        "description": "Client Relationship Management register for Pipelinq — manages clients, contacts, leads, requests, and pipelines using Schema.org and vCard (RFC 6350) standards.",
         "published": "2026-02-25T00:00:00+00:00",
         "schemas": [
           "client",
@@ -31,6 +31,18 @@
           "leadProduct",
           "emailLink",
           "calendarLink"
+          "survey",
+          "surveyResponse"
+          "queue",
+          "skill",
+          "agentProfile"
+          "kennisartikel",
+          "kenniscategorie",
+          "kennisfeedback",
+          "contactmoment",
+          "survey",
+          "surveyResponse",
+          "task"
         ],
         "tablePrefix": "",
         "folder": "Open Registers/Pipelinq"
@@ -43,7 +55,7 @@
         "icon": "AccountGroup",
         "version": "1.0.0",
         "summary": "A client (person or organization) in the CRM",
-        "description": "Represents a client entity \u2014 either a natural person or an organization. Mapped to Schema.org Person/Organization and vCard (RFC 6350) field conventions. Clients are the primary relationship entity in Pipelinq.",
+        "description": "Represents a client entity — either a natural person or an organization. Mapped to Schema.org Person/Organization and vCard (RFC 6350) field conventions. Clients are the primary relationship entity in Pipelinq.",
         "@type": "schema:Person",
         "required": [
           "name",
@@ -58,7 +70,7 @@
           },
           "type": {
             "type": "string",
-            "description": "Entity type \u2014 person or organization (maps to schema:Person or schema:Organization)",
+            "description": "Entity type — person or organization (maps to schema:Person or schema:Organization)",
             "enum": [
               "person",
               "organization"
@@ -156,7 +168,7 @@
         "icon": "TrendingUp",
         "version": "1.0.0",
         "summary": "A sales lead or business opportunity",
-        "description": "Represents a sales lead \u2014 a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.",
+        "description": "Represents a sales lead — a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.",
         "@type": "schema:Demand",
         "required": [
           "title"
@@ -261,7 +273,7 @@
         "title": "Request",
         "icon": "FileDocumentOutline",
         "version": "1.0.0",
-        "summary": "A service request (verzoek) \u2014 the pre-state of a case",
+        "summary": "A service request (verzoek) — the pre-state of a case",
         "description": "Represents a client service request that may be converted to a case in Procest. Tracks status lifecycle, priority, assignment, and optional pipeline placement.",
         "@type": "schema:Demand",
         "required": [
@@ -356,6 +368,13 @@
             "title": "Channel",
             "facetable": true
           },
+          "queue": {
+            "type": "string",
+            "description": "UUID reference to the queue this request is assigned to",
+            "format": "uuid",
+            "title": "Queue",
+            "facetable": true
+          },
           "caseReference": {
             "type": "string",
             "description": "UUID reference to the converted Procest case",
@@ -370,7 +389,7 @@
         "icon": "Pipe",
         "version": "2.0.0",
         "summary": "A view-backed pipeline defining stages for tracking entities",
-        "description": "Represents a pipeline \u2014 an ordered list of stages through which entities progress. Backed by an OpenRegister View that defines which schemas appear on the board. Each schema can have its own property-to-stage mapping and totals configuration. Mapped to Schema.org ItemList.",
+        "description": "Represents a pipeline — an ordered list of stages through which entities progress. Backed by an OpenRegister View that defines which schemas appear on the board. Each schema can have its own property-to-stage mapping and totals configuration. Mapped to Schema.org ItemList.",
         "@type": "schema:ItemList",
         "required": [
           "title",
@@ -597,6 +616,16 @@
           }
         }
       },
+      "queue": {
+        "slug": "queue",
+        "title": "Queue",
+        "icon": "Tray",
+        "version": "1.0.0",
+        "summary": "A priority queue for organizing work items",
+        "description": "Represents a named queue for organizing requests with priority-based ordering. Used for workload distribution and skill-based routing in KCC/service desk scenarios. Mapped to Schema.org ItemList.",
+        "@type": "schema:ItemList",
+        "required": [
+          "title"
       "complaint": {
         "slug": "complaint",
         "title": "Complaint",
@@ -612,12 +641,133 @@
         "properties": {
           "title": {
             "type": "string",
+            "description": "Queue name (e.g., 'Algemene Zaken', 'Vergunningen')",
             "description": "Complaint title or subject",
             "maxLength": 255,
             "minLength": 1
           },
           "description": {
             "type": "string",
+            "description": "Description of the queue's purpose",
+            "visible": false
+          },
+          "categories": {
+            "type": "array",
+            "description": "Category tags for routing (matched against request categories and agent skills)",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the queue is active and accepting items",
+            "default": true,
+            "title": "Active",
+            "facetable": true
+          },
+          "maxCapacity": {
+            "type": "integer",
+            "description": "Maximum number of items allowed in the queue (null = unlimited)",
+            "minimum": 1
+          },
+          "sortOrder": {
+            "type": "integer",
+            "description": "Display order of the queue in the list",
+            "default": 0,
+            "visible": false
+          },
+          "assignedAgents": {
+            "type": "array",
+            "description": "Nextcloud user UIDs of agents assigned to work this queue",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          }
+        }
+      },
+      "skill": {
+        "slug": "skill",
+        "title": "Skill",
+        "icon": "SchoolOutline",
+        "version": "1.0.0",
+        "summary": "A skill or expertise area for routing",
+        "description": "Represents a defined skill or area of expertise that can be assigned to agents. Skills are matched against request categories for routing suggestions. Mapped to Schema.org DefinedTerm.",
+        "@type": "schema:DefinedTerm",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Skill name (e.g., 'Vergunningen', 'WMO / Zorg')",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the skill",
+            "visible": false
+          },
+          "categories": {
+            "type": "array",
+            "description": "Category tags this skill covers (matched against request categories)",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether this skill is active for routing",
+            "default": true,
+            "title": "Active",
+            "facetable": true
+          }
+        }
+      },
+      "agentProfile": {
+        "slug": "agentProfile",
+        "title": "Agent Profile",
+        "icon": "AccountCog",
+        "version": "1.0.0",
+        "summary": "Agent skill profile for routing",
+        "description": "Links a Nextcloud user to their assigned skills and routing configuration. Used for skill-based routing suggestions and workload management.",
+        "@type": "schema:Person",
+        "required": [
+          "userId"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Nextcloud user UID",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "User",
+            "facetable": true
+          },
+          "skills": {
+            "type": "array",
+            "description": "UUID references to assigned Skill objects",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "default": []
+          },
+          "maxConcurrent": {
+            "type": "integer",
+            "description": "Maximum number of concurrent open items for this agent",
+            "default": 10,
+            "minimum": 1
+          },
+          "isAvailable": {
+            "type": "boolean",
+            "description": "Whether this agent is available for routing suggestions",
+            "default": true,
+            "title": "Available",
+            "facetable": true
             "description": "Detailed description of the complaint",
             "visible": false
           },
@@ -714,7 +864,7 @@
         "icon": "CartOutline",
         "version": "1.0.0",
         "summary": "A line item linking a product to a lead",
-        "description": "Represents a product line item on a lead \u2014 an instance of a product with deal-specific quantity, pricing, and discount. The total is computed as quantity * unitPrice * (1 - discount/100). Mapped to Schema.org Offer.",
+        "description": "Represents a product line item on a lead — an instance of a product with deal-specific quantity, pricing, and discount. The total is computed as quantity * unitPrice * (1 - discount/100). Mapped to Schema.org Offer.",
         "@type": "schema:Offer",
         "required": [
           "lead",
@@ -760,6 +910,684 @@
           "notes": {
             "type": "string",
             "description": "Line item notes (e.g., annual license, setup fee)",
+            "visible": false
+          }
+        }
+      },
+      "kennisartikel": {
+        "slug": "kennisartikel",
+        "title": "Knowledge Article",
+        "icon": "BookOpenPageVariant",
+        "version": "1.0.0",
+        "summary": "A knowledge base article for KCC agents",
+        "description": "Represents a knowledge base article with rich text content, categorization, and lifecycle management. Used by KCC agents to find answers during live citizen contacts. Mapped to Schema.org Article.",
+        "@type": "schema:Article",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Article title (schema:headline)",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "body": {
+            "type": "string",
+            "description": "Article body content in Markdown format (schema:articleBody)",
+            "format": "markdown"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Short summary of the article (schema:abstract)",
+            "maxLength": 500
+          },
+          "category": {
+            "type": "string",
+            "description": "UUID reference to a kenniscategorie object",
+            "format": "uuid",
+            "title": "Category",
+            "facetable": true
+          },
+          "tags": {
+            "type": "array",
+            "description": "Tags for article classification and search",
+            "items": {
+              "type": "string"
+            }
+          },
+          "zaaktypeLinks": {
+            "type": "array",
+            "description": "UUIDs of linked zaaktypen for contextual article discovery",
+            "items": {
+              "type": "string"
+            },
+            "visible": false
+          },
+          "visibility": {
+            "type": "string",
+            "description": "Article visibility \u2014 openbaar (public) or intern (internal only)",
+            "enum": [
+              "openbaar",
+              "intern"
+            ],
+            "default": "intern",
+            "title": "Visibility",
+            "facetable": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Article lifecycle status",
+            "enum": [
+              "concept",
+              "gepubliceerd",
+              "gearchiveerd"
+            ],
+            "default": "concept",
+            "title": "Status",
+            "facetable": true
+          },
+          "version": {
+            "type": "integer",
+            "description": "Article version number, incremented on each edit of a published article",
+            "default": 1
+          },
+          "author": {
+            "type": "string",
+            "description": "Nextcloud user UID of the article author"
+          },
+          "lastUpdatedBy": {
+            "type": "string",
+            "description": "Nextcloud user UID of the last editor"
+          },
+          "publishedAt": {
+            "type": "string",
+            "description": "Date and time the article was published",
+            "format": "date-time"
+          },
+          "archivedAt": {
+            "type": "string",
+            "description": "Date and time the article was archived",
+            "format": "date-time"
+          }
+        }
+      },
+      "kenniscategorie": {
+        "slug": "kenniscategorie",
+        "title": "Knowledge Category",
+        "icon": "FolderOutline",
+        "version": "1.0.0",
+        "summary": "A category for organizing knowledge base articles",
+        "description": "Represents a hierarchical category for grouping knowledge base articles. Supports up to 3 levels of nesting. Mapped to Schema.org ItemList.",
+        "@type": "schema:ItemList",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Category name (schema:name)",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "slug": {
+            "type": "string",
+            "description": "URL-friendly slug for the category",
+            "maxLength": 100
+          },
+          "parent": {
+            "type": "string",
+            "description": "UUID reference to parent category (for hierarchy, max 3 levels)",
+            "format": "uuid",
+            "visible": false
+          },
+          "description": {
+            "type": "string",
+            "description": "Category description",
+            "maxLength": 500
+          },
+          "order": {
+            "type": "integer",
+            "description": "Display order within the same parent level",
+            "default": 0,
+            "visible": false
+          },
+          "icon": {
+            "type": "string",
+            "description": "Icon identifier for the category",
+            "maxLength": 50,
+            "visible": false
+          }
+        }
+      },
+      "kennisfeedback": {
+        "slug": "kennisfeedback",
+        "title": "Knowledge Feedback",
+        "icon": "ThumbsUpDown",
+        "version": "1.0.0",
+        "summary": "Agent feedback on a knowledge base article",
+        "description": "Represents agent feedback on a knowledge base article \u2014 thumbs up/down rating and optional improvement suggestions. Follows KCS (Knowledge-Centered Service) methodology. Mapped to Schema.org Review.",
+        "@type": "schema:Review",
+        "required": [
+          "article",
+          "rating"
+        ],
+        "properties": {
+          "article": {
+            "type": "string",
+            "description": "UUID reference to the kennisartikel being rated",
+            "format": "uuid"
+          },
+          "rating": {
+            "type": "string",
+            "description": "Article usefulness rating",
+            "enum": [
+              "nuttig",
+              "niet_nuttig"
+            ],
+            "title": "Rating",
+            "facetable": true
+          },
+          "comment": {
+            "type": "string",
+            "description": "Optional improvement suggestion from the agent",
+            "maxLength": 2000
+          },
+          "agent": {
+            "type": "string",
+            "description": "Nextcloud user UID of the agent providing feedback"
+          },
+          "status": {
+            "type": "string",
+            "description": "Feedback processing status",
+            "enum": [
+              "nieuw",
+              "in_behandeling",
+              "verwerkt"
+            ],
+            "default": "nieuw",
+            "title": "Status",
+            "facetable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Date and time the feedback was submitted",
+            "format": "date-time"
+          }
+        }
+      },
+      "contactmoment": {
+        "slug": "contactmoment",
+        "title": "Contactmoment",
+        "icon": "PhoneMessage",
+        "version": "1.0.0",
+        "summary": "A registered contact moment (interaction) with a client",
+        "description": "Represents a single interaction with a client across any channel (phone, email, counter, chat, social media, letter). Mapped to Schema.org CommunicateAction and VNG Klantinteracties Contactmoment.",
+        "@type": "schema:CommunicateAction",
+        "required": [
+          "subject",
+          "channel"
+        ],
+        "properties": {
+          "subject": {
+            "type": "string",
+            "description": "Subject of the contact moment (schema:about / Contactmoment.onderwerp)",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "description": "Summary or notes of the interaction (schema:description / Contactmoment.tekst)"
+          },
+          "channel": {
+            "type": "string",
+            "description": "Communication channel used (schema:instrument / Contactmoment.kanaal)",
+            "enum": [
+              "telefoon",
+              "email",
+              "balie",
+              "chat",
+              "social",
+              "brief"
+            ],
+            "title": "Channel",
+            "facetable": true
+          },
+          "outcome": {
+            "type": "string",
+            "description": "Result of the interaction (schema:result / Contactmoment.resultaat)",
+            "enum": [
+              "afgehandeld",
+              "doorverbonden",
+              "terugbelverzoek",
+              "vervolgactie"
+            ],
+            "title": "Outcome",
+            "facetable": true
+          },
+          "client": {
+            "type": "string",
+            "description": "UUID reference to the associated client (schema:recipient / KlantContactmoment)",
+            "format": "uuid"
+          },
+          "request": {
+            "type": "string",
+            "description": "UUID reference to the associated request (schema:object / ObjectContactmoment)",
+            "format": "uuid"
+          },
+          "agent": {
+            "type": "string",
+            "description": "Nextcloud user UID of the agent who handled the interaction (schema:agent / Contactmoment.medewerker)",
+            "title": "Agent",
+            "facetable": true
+          },
+          "contactedAt": {
+            "type": "string",
+            "description": "Date and time of the interaction (schema:startTime / Contactmoment.registratiedatum)",
+            "format": "date-time"
+          },
+          "duration": {
+            "type": "string",
+            "description": "Duration of the interaction in ISO 8601 format (schema:duration / Contactmoment.gespreksduur)",
+            "visible": false
+          },
+          "channelMetadata": {
+            "type": "object",
+            "description": "Channel-specific metadata (e.g., call direction, email thread ID, counter location)",
+            "visible": false
+          },
+          "notes": {
+            "type": "string",
+            "description": "Additional internal notes (schema:text / Contactmoment.notitie)",
+            "visible": false
+          }
+        }
+      },
+      "survey": {
+        "slug": "survey",
+        "title": "Survey",
+        "icon": "ClipboardCheckOutline",
+        "version": "1.0.0",
+        "summary": "A customer satisfaction (KTO) survey definition",
+        "description": "Represents a KTO survey with configurable questions, public access token, and entity linking.",
+        "@type": "schema:Survey",
+        "required": ["title", "questions"],
+        "properties": {
+          "title": { "type": "string", "maxLength": 255, "minLength": 1 },
+          "description": { "type": "string", "maxLength": 2000 },
+          "questions": { "type": "array", "maxItems": 50, "items": { "type": "object", "required": ["id", "type", "text"], "properties": { "id": { "type": "string", "format": "uuid" }, "type": { "type": "string", "enum": ["nps", "rating", "multiple_choice", "open_text", "yes_no"] }, "text": { "type": "string", "maxLength": 500 }, "required": { "type": "boolean", "default": true }, "options": { "type": "array", "maxItems": 20, "items": { "type": "string" } }, "order": { "type": "integer" } } } },
+          "status": { "type": "string", "enum": ["draft", "active", "closed"], "default": "draft", "title": "Status", "facetable": true },
+          "token": { "type": "string", "format": "uuid" },
+          "linkedEntityType": { "type": "string", "enum": ["request", "contactmoment", "lead"], "title": "Linked Entity Type", "facetable": true },
+          "linkedEntityId": { "type": "string", "format": "uuid", "visible": false },
+          "activeFrom": { "type": "string", "format": "date-time" },
+          "activeUntil": { "type": "string", "format": "date-time" },
+          "createdBy": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        "description": "Represents a KTO (klanttevredenheidsonderzoek) survey with configurable questions, public access token, and entity linking. Mapped to Schema.org Survey.",
+        "@type": "schema:Survey",
+        "required": [
+          "title",
+          "questions"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Survey title (schema:name)",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "Survey description shown to respondents (schema:description)",
+            "maxLength": 2000
+          },
+          "questions": {
+            "type": "array",
+            "description": "Ordered list of survey questions",
+            "maxItems": 50,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "type",
+                "text"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Unique question identifier (UUID)",
+                  "format": "uuid"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Question type",
+                  "enum": [
+                    "nps",
+                    "rating",
+                    "multiple_choice",
+                    "open_text",
+                    "yes_no"
+                  ]
+                },
+                "text": {
+                  "type": "string",
+                  "description": "Question text displayed to respondent",
+                  "maxLength": 500
+                },
+                "required": {
+                  "type": "boolean",
+                  "description": "Whether the question must be answered",
+                  "default": true
+                },
+                "options": {
+                  "type": "array",
+                  "description": "Answer options (required for multiple_choice type)",
+                  "maxItems": 20,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "order": {
+                  "type": "integer"
+                  "type": "integer",
+                  "description": "Display order of the question"
+                }
+              }
+            }
+          },
+          "status": {
+            "type": "string",
+            "description": "Survey lifecycle status",
+            "enum": [
+              "draft",
+              "active",
+              "closed"
+            ],
+            "default": "draft",
+            "title": "Status",
+            "facetable": true
+          },
+          "token": {
+            "type": "string",
+            "description": "Unique public access token (UUID) for the survey response URL",
+            "format": "uuid"
+          },
+          "linkedEntityType": {
+            "type": "string",
+            "description": "Entity type this survey is linked to",
+            "enum": [
+              "request",
+              "contactmoment",
+              "lead"
+            ],
+            "title": "Linked Entity Type",
+            "facetable": true
+          },
+          "linkedEntityId": {
+            "type": "string",
+            "description": "UUID of the specific entity this survey is linked to",
+            "format": "uuid",
+            "visible": false
+          },
+          "activeFrom": {
+            "type": "string",
+            "description": "Start date for accepting responses",
+            "format": "date-time"
+          },
+          "activeUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "End date for accepting responses",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "Nextcloud user UID of the survey creator"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Date and time the survey was created",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Date and time the survey was last updated",
+            "format": "date-time"
+          }
+        }
+      },
+      "surveyResponse": {
+        "slug": "surveyResponse",
+        "title": "Survey Response",
+        "icon": "ClipboardTextOutline",
+        "version": "1.0.0",
+        "summary": "A completed survey response from a client",
+        "description": "Represents a single completed survey response.",
+        "@type": "schema:CompletedSurvey",
+        "required": ["surveyId", "answers"],
+        "properties": {
+          "surveyId": { "type": "string", "format": "uuid" },
+          "answers": { "type": "array", "items": { "type": "object", "required": ["questionId", "value"], "properties": { "questionId": { "type": "string", "format": "uuid" }, "value": { "type": "string" } } } },
+          "respondentId": { "type": "string", "visible": false },
+          "entityType": { "type": "string", "enum": ["request", "contactmoment", "lead"], "title": "Entity Type", "facetable": true },
+          "entityId": { "type": "string", "format": "uuid", "visible": false },
+          "completedAt": { "type": "string", "format": "date-time" },
+          "ipHash": { "type": "string", "visible": false }
+        "description": "Represents a single completed survey response with answers to survey questions. Linked to the parent survey via surveyId. Mapped to Schema.org CompletedSurvey.",
+        "@type": "schema:CompletedSurvey",
+        "required": [
+          "surveyId",
+          "answers"
+        ],
+        "properties": {
+          "surveyId": {
+            "type": "string",
+            "description": "UUID reference to the parent survey",
+            "format": "uuid"
+          },
+          "answers": {
+            "type": "array",
+            "description": "List of question answers",
+            "items": {
+              "type": "object",
+              "required": [
+                "questionId",
+                "value"
+              ],
+              "properties": {
+                "questionId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "value": {
+                  "type": "string"
+                  "description": "UUID of the answered question",
+                  "format": "uuid"
+                },
+                "value": {
+                  "type": "string",
+                  "description": "The response value (number as string for NPS/rating, text for open/multiple choice)"
+                }
+              }
+            }
+          },
+          "respondentId": {
+            "type": "string",
+            "description": "Optional respondent identifier for deduplication",
+            "visible": false
+          },
+          "entityType": {
+            "type": "string",
+            "description": "Entity type that triggered this survey response",
+            "enum": [
+              "request",
+              "contactmoment",
+              "lead"
+            ],
+            "title": "Entity Type",
+            "facetable": true
+          },
+          "entityId": {
+            "type": "string",
+            "description": "UUID of the entity that triggered this response",
+            "format": "uuid",
+            "visible": false
+          },
+          "completedAt": {
+            "type": "string",
+            "description": "Date and time the response was submitted",
+            "format": "date-time"
+          },
+          "ipHash": {
+            "type": "string",
+            "description": "SHA-256 hash of respondent IP address for abuse detection",
+            "visible": false
+          }
+        }
+      },
+      "task": {
+        "slug": "task",
+        "title": "Task",
+        "icon": "ClipboardCheck",
+        "version": "1.0.0",
+        "summary": "A callback request or follow-up task (terugbelverzoek / opvolgtaak / informatievraag)",
+        "description": "Represents an internal task — a callback request (terugbelverzoek), follow-up task (opvolgtaak), or information request (informatievraag) assigned to a user or department. Maps to VNG InterneTaak and Schema.org Action.",
+        "@type": "schema:Action",
+        "required": [
+          "subject",
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Task type — terugbelverzoek (callback), opvolgtaak (follow-up), or informatievraag (information request)",
+            "enum": [
+              "terugbelverzoek",
+              "opvolgtaak",
+              "informatievraag"
+            ],
+            "title": "Type",
+            "facetable": true
+          },
+          "subject": {
+            "type": "string",
+            "description": "Task subject line (VNG gevraagdeHandeling / schema:name)",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed task description (VNG toelichting / schema:description)",
+            "visible": false
+          },
+          "status": {
+            "type": "string",
+            "description": "Task lifecycle status (VNG status)",
+            "enum": [
+              "open",
+              "in_behandeling",
+              "afgerond",
+              "verlopen"
+            ],
+            "default": "open",
+            "title": "Status",
+            "facetable": true
+          },
+          "priority": {
+            "type": "string",
+            "description": "Task priority level",
+            "enum": [
+              "laag",
+              "normaal",
+              "hoog"
+            ],
+            "default": "normaal",
+            "title": "Priority",
+            "facetable": true
+          },
+          "deadline": {
+            "type": "string",
+            "description": "Task deadline date and time",
+            "format": "date-time"
+          },
+          "assigneeUserId": {
+            "type": "string",
+            "description": "Nextcloud user UID of the assigned handler (VNG toegewezenAanMedewerker)",
+            "title": "Assignee",
+            "facetable": true
+          },
+          "assigneeGroupId": {
+            "type": "string",
+            "description": "Nextcloud group ID for team/department assignment",
+            "title": "Group",
+            "facetable": true
+          },
+          "clientId": {
+            "type": "string",
+            "description": "UUID reference to the associated client",
+            "format": "uuid"
+          },
+          "requestId": {
+            "type": "string",
+            "description": "UUID reference to the associated request",
+            "format": "uuid"
+          },
+          "contactMomentSummary": {
+            "type": "string",
+            "description": "Summary text from the originating contact moment",
+            "visible": false
+          },
+          "callbackPhoneNumber": {
+            "type": "string",
+            "description": "Override phone number for callback (may differ from client's primary phone)"
+          },
+          "preferredTimeSlot": {
+            "type": "string",
+            "description": "Citizen's preferred callback time window (e.g., 'Dinsdag 14:00 - 16:00')"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "Nextcloud user UID of the agent who created this task",
+            "title": "Created by",
+            "facetable": true
+          },
+          "completedAt": {
+            "type": "string",
+            "description": "Timestamp when the task was completed",
+            "format": "date-time",
+            "visible": false
+          },
+          "resultText": {
+            "type": "string",
+            "description": "Completion summary text",
+            "visible": false
+          },
+          "attempts": {
+            "type": "array",
+            "description": "Callback attempt log — each entry has timestamp, result, and notes",
+            "items": {
+              "type": "object",
+              "properties": {
+                "timestamp": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "result": {
+                  "type": "string"
+                },
+                "notes": {
+                  "type": "string"
+                }
+              }
+            },
             "visible": false
           }
         }
@@ -920,10 +1748,15 @@
       "default-pipeline-view": {
         "slug": "default-pipeline-view",
         "name": "Pipelinq Default View",
-        "description": "Default view for pipeline boards \u2014 includes leads and requests from the Pipelinq register",
+        "description": "Default view for pipeline boards — includes leads and requests from the Pipelinq register",
         "query": {
-          "registers": ["pipelinq"],
-          "schemas": ["lead", "request"]
+          "registers": [
+            "pipelinq"
+          ],
+          "schemas": [
+            "lead",
+            "request"
+          ]
         },
         "isDefault": true
       }
