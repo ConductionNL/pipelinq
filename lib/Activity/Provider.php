@@ -45,6 +45,8 @@ class Provider implements IProvider
         'request_created',
         'request_status_changed',
         'note_added',
+        'client_created',
+        'contact_created',
     ];
 
     /**
