@@ -129,6 +129,10 @@
 					:to="{ name: 'Forms' }">
 					<template #icon>
 						<FormTextboxPassword :size="20" />
+					:name="t('pipelinq', 'Automations')"
+					:to="{ name: 'Automations' }">
+					<template #icon>
+						<RobotOutline :size="20" />
 					</template>
 				</NcAppNavigationItem>
 				<NcAppNavigationItem
@@ -164,6 +168,7 @@ import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import FormTextboxPassword from 'vue-material-design-icons/FormTextboxPassword.vue'
+import RobotOutline from 'vue-material-design-icons/RobotOutline.vue'
 import InboxMultiple from 'vue-material-design-icons/InboxMultiple.vue'
 import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
@@ -198,6 +203,7 @@ export default {
 		AlertCircleOutline,
 		Cog,
 		FormTextboxPassword,
+		RobotOutline,
 		Pipe,
 	},
 	methods: {
