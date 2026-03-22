@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 return [
     'routes' => [
-        ['name' => 'dashboard#page', 'url' => '/', 'verb' => 'GET'],
         ['name' => 'settings#index', 'url' => '/api/settings', 'verb' => 'GET'],
         ['name' => 'settings#create', 'url' => '/api/settings', 'verb' => 'POST'],
         ['name' => 'settings#reimport', 'url' => '/api/settings/reimport', 'verb' => 'POST'],
@@ -62,6 +61,6 @@ return [
         ['name' => 'health#index', 'url' => '/api/health', 'verb' => 'GET'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
-        ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
+        ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
 ];
