@@ -1,0 +1,6 @@
+schema: spec-driven
+name: kcc-werkplek
+status: proposed
+created: 2026-03-20
+specs:
+  - specs/kcc-werkplek/spec.md

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 return [
     'routes' => [
-        ['name' => 'dashboard#page', 'url' => '/', 'verb' => 'GET'],
         ['name' => 'settings#index', 'url' => '/api/settings', 'verb' => 'GET'],
         ['name' => 'settings#create', 'url' => '/api/settings', 'verb' => 'POST'],
         ['name' => 'settings#reimport', 'url' => '/api/settings/reimport', 'verb' => 'POST'],
@@ -48,6 +47,10 @@ return [
         ['name' => 'kennisbank#publicIndex', 'url' => '/api/kennisbank/public', 'verb' => 'GET'],
         ['name' => 'kennisbank#publicShow', 'url' => '/api/kennisbank/public/{id}', 'verb' => 'GET'],
         ['name' => 'kennisbank#submitFeedback', 'url' => '/api/kennisbank/feedback', 'verb' => 'POST'],
+        // Rapportage / reporting
+        ['name' => 'reporting#getSla', 'url' => '/api/rapportage/sla', 'verb' => 'GET'],
+        ['name' => 'reporting#updateSla', 'url' => '/api/rapportage/sla', 'verb' => 'PUT'],
+        ['name' => 'reporting#exportCsv', 'url' => '/api/rapportage/export', 'verb' => 'GET'],
         // Public survey endpoints (unauthenticated)
         ['name' => 'public_survey#show', 'url' => '/public/survey/{token}', 'verb' => 'GET'],
         ['name' => 'public_survey#submit', 'url' => '/public/survey/{token}/respond', 'verb' => 'POST'],
@@ -62,6 +65,6 @@ return [
         ['name' => 'health#index', 'url' => '/api/health', 'verb' => 'GET'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
-        ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
+        ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
 ];
