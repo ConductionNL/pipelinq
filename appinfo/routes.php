@@ -43,6 +43,13 @@ return [
         ['name' => 'prospect_settings#index', 'url' => '/api/prospects/settings', 'verb' => 'GET'],
         ['name' => 'prospect_settings#update', 'url' => '/api/prospects/settings', 'verb' => 'PUT'],
 
+        // Public intake forms (no auth)
+        ['name' => 'public_form#show', 'url' => '/api/public/forms/{id}', 'verb' => 'GET'],
+        ['name' => 'public_form#submit', 'url' => '/api/public/forms/{id}/submit', 'verb' => 'POST'],
+
+        // Intake form management (authenticated)
+        ['name' => 'intake_form#embed', 'url' => '/api/forms/{id}/embed', 'verb' => 'GET'],
+        ['name' => 'intake_form#export', 'url' => '/api/forms/{id}/submissions/export', 'verb' => 'GET'],
         // Automations
         ['name' => 'automation#metadata', 'url' => '/api/automations/metadata', 'verb' => 'GET'],
         ['name' => 'automation#test', 'url' => '/api/automations/test', 'verb' => 'POST'],
