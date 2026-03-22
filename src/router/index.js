@@ -34,6 +34,10 @@ import PipelineManager from '../views/settings/PipelineManager.vue'
 import FormManager from '../views/forms/FormManager.vue'
 import FormBuilder from '../views/forms/FormBuilder.vue'
 import FormSubmissions from '../views/forms/FormSubmissions.vue'
+import KennisbankHome from '../views/kennisbank/KennisbankHome.vue'
+import ArticleDetail from '../views/kennisbank/ArticleDetail.vue'
+import ArticleEditor from '../views/kennisbank/ArticleEditor.vue'
+import CategoryManager from '../views/kennisbank/CategoryManager.vue'
 import SyncSettings from '../views/sync/SyncSettings.vue'
 import RapportageDashboard from '../views/rapportage/RapportageDashboard.vue'
 import ChannelAnalytics from '../views/rapportage/ChannelAnalytics.vue'
@@ -76,6 +80,11 @@ export default new Router({
 		{ path: '/surveys/:id/analytics', name: 'SurveyAnalytics', component: SurveyAnalytics, props: route => ({ surveyId: route.params.id }) },
 		{ path: '/public/survey/:token', name: 'PublicSurvey', component: PublicSurveyForm, props: route => ({ token: route.params.token }) },
 		{ path: '/my-work', name: 'MyWork', component: MyWork },
+		{ path: '/kennisbank', name: 'Kennisbank', component: KennisbankHome },
+		{ path: '/kennisbank/articles/new', name: 'KennisbankNew', component: ArticleEditor },
+		{ path: '/kennisbank/articles/:id', name: 'KennisbankDetail', component: ArticleDetail, props: route => ({ articleId: route.params.id }) },
+		{ path: '/kennisbank/articles/:id/edit', name: 'KennisbankEdit', component: ArticleEditor, props: route => ({ articleId: route.params.id }) },
+		{ path: '/kennisbank/categories', name: 'KennisbankCategories', component: CategoryManager },
 		{ path: '/sync-settings', name: 'SyncSettings', component: SyncSettings },
 		{ path: '/rapportage', name: 'Rapportage', component: RapportageDashboard },
 		{ path: '/rapportage/channels', name: 'ChannelAnalytics', component: ChannelAnalytics },
