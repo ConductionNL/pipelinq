@@ -37,6 +37,8 @@ export async function initializeStores() {
 		}
 		if (config.register && config.automationLog_schema) {
 			objectStore.registerObjectType('automationLog', config.automationLog_schema, config.register)
+		if (config.register && config.complaint_schema) {
+			objectStore.registerObjectType('complaint', config.complaint_schema, config.register)
 		}
 	}
 
