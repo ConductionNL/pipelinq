@@ -65,6 +65,11 @@ class KvkResultMapperTest extends TestCase
             'registratieDatum'       => '2010-01-15',
             'actief'                 => 'Ja',
             'adres'                  => [
+                'straatnaam' => 'Teststraat',
+                'huisnummer' => '10',
+                'plaats'     => 'Amsterdam',
+                'provincie'  => 'Noord-Holland',
+                'postcode'   => '1234AB',
                 'straatnaam'  => 'Teststraat',
                 'huisnummer'  => '10',
                 'plaats'      => 'Amsterdam',
@@ -87,6 +92,10 @@ class KvkResultMapperTest extends TestCase
         $this->assertSame('12345678', $result['kvkNumber']);
         $this->assertSame('Acme B.V.', $result['tradeName']);
         $this->assertSame('BV', $result['legalForm']);
+        $this->assertSame('Software development', $result['sbiDescription']);
+        $this->assertTrue($result['isActive']);
+        $this->assertSame('kvk', $result['source']);
+        $this->assertSame('Amsterdam', $result['address']['city']);
         $this->assertSame('6201', $result['sbiCode']);
         $this->assertSame('Software development', $result['sbiDescription']);
         $this->assertSame(42, $result['employeeCount']);
@@ -106,6 +115,7 @@ class KvkResultMapperTest extends TestCase
     public function testMapResultReturnsNullWithoutKvkNumber(): void
     {
         $this->assertNull($this->mapper->mapResult(item: ['naam' => 'Test'], sbiCode: ''));
+        $this->assertNull($this->mapper->mapResult(item: ['eersteHandelsnaam' => 'No Number'], sbiCode: '6201'));
         $result = $this->mapper->mapResult(item: ['eersteHandelsnaam' => 'No Number B.V.'], sbiCode: '6201');
         $item = [
             'eersteHandelsnaam' => 'No Number B.V.',
@@ -151,6 +161,7 @@ class KvkResultMapperTest extends TestCase
     }//end testMapResultMapsInactiveCompany()
 
     /**
+     * Test that fallback trade name 'naam' is used when eersteHandelsnaam is absent.
      * Test that the fallback trade name 'naam' is used when eersteHandelsnaam is absent.
      * Test that the fallback trade name field 'naam' is used when no eersteHandelsnaam.
      *
@@ -158,6 +169,13 @@ class KvkResultMapperTest extends TestCase
      */
     public function testMapResultFallsBackToNaamForTradeName(): void
     {
+        $result = $this->mapper->mapResult(item: ['kvkNummer' => '11111111', 'naam' => 'Fallback'], sbiCode: '62');
+
+        $this->assertSame('Fallback', $result['tradeName']);
+    }//end testMapResultFallsBackToNaamForTradeName()
+
+    /**
+     * Test that SBI prefix matching finds the description.
         $result = $this->mapper->mapResult(item: ['kvkNummer' => '11111111', 'naam' => 'Fallback Naam B.V.'], sbiCode: '62');
         $item = [
             'kvkNummer' => '11111111',
@@ -177,6 +195,13 @@ class KvkResultMapperTest extends TestCase
      */
     public function testMapResultFindsSbiDescriptionByPrefix(): void
     {
+        $item   = ['kvkNummer' => '22222222', 'spiActiviteiten' => [['sbiCode' => '6201', 'sbiOmschrijving' => 'Software']]];
+        $result = $this->mapper->mapResult(item: $item, sbiCode: '62');
+
+        $this->assertSame('Software', $result['sbiDescription']);
+    }//end testMapResultFindsSbiDescriptionByPrefix()
+
+    /**
         $item = [
             'kvkNummer'       => '22222222',
             'spiActiviteiten' => [
@@ -224,6 +249,9 @@ class KvkResultMapperTest extends TestCase
      */
     public function testMapResultUsesVestingAdresFallback(): void
     {
+        $item   = ['kvkNummer' => '33333333', 'vestingAdres' => ['plaats' => 'Utrecht', 'provincie' => 'Utrecht', 'postcode' => '3500AA', 'straatnaam' => 'Str', 'huisnummer' => '1']];
+        $result = $this->mapper->mapResult(item: $item, sbiCode: '');
+
         $item = [
             'kvkNummer'    => '33333333',
             'vestingAdres' => [
