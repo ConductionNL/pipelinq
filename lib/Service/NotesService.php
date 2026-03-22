@@ -133,6 +133,41 @@ class NotesService
     }//end addNote()
 
     /**
+     * Update a note's message. Only the author may edit their own note.
+     *
+     * @param int    $noteId  The note ID.
+     * @param string $message The updated message.
+     *
+     * @return array The updated note data.
+     */
+    public function updateNote(int $noteId, string $message): array
+    {
+        $userId = $this->userSession->getUser()?->getUID();
+        if ($userId === null) {
+            throw new RuntimeException('No authenticated user');
+        }
+
+        $comment = $this->commentsManager->get((string) $noteId);
+        if ($comment->getActorId() !== $userId) {
+            throw new RuntimeException('You can only edit your own notes');
+        }
+
+        $comment->setMessage(trim($message));
+        $this->commentsManager->save($comment);
+
+        $user = $this->userManager->get($userId);
+
+        return [
+            'id'         => (int) $comment->getId(),
+            'message'    => $comment->getMessage(),
+            'authorId'   => $userId,
+            'authorName' => $user?->getDisplayName() ?? $userId,
+            'timestamp'  => $comment->getCreationDateTime()->format('c'),
+            'isOwn'      => true,
+        ];
+    }//end updateNote()
+
+    /**
      * Delete a single note. Only the author may delete their own note.
      *
      * @param int $noteId The note ID.
