@@ -29,6 +29,9 @@
           "product",
           "productCategory",
           "leadProduct",
+          "queue",
+          "skill",
+          "agentProfile"
           "kennisartikel",
           "kenniscategorie",
           "kennisfeedback",
@@ -361,6 +364,13 @@
             "title": "Channel",
             "facetable": true
           },
+          "queue": {
+            "type": "string",
+            "description": "UUID reference to the queue this request is assigned to",
+            "format": "uuid",
+            "title": "Queue",
+            "facetable": true
+          },
           "caseReference": {
             "type": "string",
             "description": "UUID reference to the converted Procest case",
@@ -602,6 +612,16 @@
           }
         }
       },
+      "queue": {
+        "slug": "queue",
+        "title": "Queue",
+        "icon": "Tray",
+        "version": "1.0.0",
+        "summary": "A priority queue for organizing work items",
+        "description": "Represents a named queue for organizing requests with priority-based ordering. Used for workload distribution and skill-based routing in KCC/service desk scenarios. Mapped to Schema.org ItemList.",
+        "@type": "schema:ItemList",
+        "required": [
+          "title"
       "complaint": {
         "slug": "complaint",
         "title": "Complaint",
@@ -617,12 +637,133 @@
         "properties": {
           "title": {
             "type": "string",
+            "description": "Queue name (e.g., 'Algemene Zaken', 'Vergunningen')",
             "description": "Complaint title or subject",
             "maxLength": 255,
             "minLength": 1
           },
           "description": {
             "type": "string",
+            "description": "Description of the queue's purpose",
+            "visible": false
+          },
+          "categories": {
+            "type": "array",
+            "description": "Category tags for routing (matched against request categories and agent skills)",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the queue is active and accepting items",
+            "default": true,
+            "title": "Active",
+            "facetable": true
+          },
+          "maxCapacity": {
+            "type": "integer",
+            "description": "Maximum number of items allowed in the queue (null = unlimited)",
+            "minimum": 1
+          },
+          "sortOrder": {
+            "type": "integer",
+            "description": "Display order of the queue in the list",
+            "default": 0,
+            "visible": false
+          },
+          "assignedAgents": {
+            "type": "array",
+            "description": "Nextcloud user UIDs of agents assigned to work this queue",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          }
+        }
+      },
+      "skill": {
+        "slug": "skill",
+        "title": "Skill",
+        "icon": "SchoolOutline",
+        "version": "1.0.0",
+        "summary": "A skill or expertise area for routing",
+        "description": "Represents a defined skill or area of expertise that can be assigned to agents. Skills are matched against request categories for routing suggestions. Mapped to Schema.org DefinedTerm.",
+        "@type": "schema:DefinedTerm",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Skill name (e.g., 'Vergunningen', 'WMO / Zorg')",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the skill",
+            "visible": false
+          },
+          "categories": {
+            "type": "array",
+            "description": "Category tags this skill covers (matched against request categories)",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether this skill is active for routing",
+            "default": true,
+            "title": "Active",
+            "facetable": true
+          }
+        }
+      },
+      "agentProfile": {
+        "slug": "agentProfile",
+        "title": "Agent Profile",
+        "icon": "AccountCog",
+        "version": "1.0.0",
+        "summary": "Agent skill profile for routing",
+        "description": "Links a Nextcloud user to their assigned skills and routing configuration. Used for skill-based routing suggestions and workload management.",
+        "@type": "schema:Person",
+        "required": [
+          "userId"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Nextcloud user UID",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "User",
+            "facetable": true
+          },
+          "skills": {
+            "type": "array",
+            "description": "UUID references to assigned Skill objects",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "default": []
+          },
+          "maxConcurrent": {
+            "type": "integer",
+            "description": "Maximum number of concurrent open items for this agent",
+            "default": 10,
+            "minimum": 1
+          },
+          "isAvailable": {
+            "type": "boolean",
+            "description": "Whether this agent is available for routing suggestions",
+            "default": true,
+            "title": "Available",
+            "facetable": true
             "description": "Detailed description of the complaint",
             "visible": false
           },

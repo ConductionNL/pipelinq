@@ -42,6 +42,9 @@ class SettingsService
         'product_schema',
         'productCategory_schema',
         'leadProduct_schema',
+        'queue_schema',
+        'skill_schema',
+        'agentProfile_schema',
         'task_schema',
         'kennisartikel_schema',
         'kenniscategorie_schema',
@@ -76,6 +79,7 @@ class SettingsService
      * @param IConfig                $config              The user config service.
      * @param SettingsLoadService    $settingsLoadService The settings load service.
      * @param DefaultPipelineService $pipelineService     The default pipeline service.
+     * @param DefaultQueueService    $queueService        The default queue service.
      * @param LoggerInterface        $logger              The logger.
      */
     public function __construct(
@@ -83,6 +87,7 @@ class SettingsService
         private IConfig $config,
         private SettingsLoadService $settingsLoadService,
         private DefaultPipelineService $pipelineService,
+        private DefaultQueueService $queueService,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -147,6 +152,28 @@ class SettingsService
     {
         $this->pipelineService->createDefaultPipelines();
     }//end createDefaultPipelines()
+
+    /**
+     * Create default queues if none exist.
+     * Delegates to DefaultQueueService.
+     *
+     * @return void
+     */
+    public function createDefaultQueues(): void
+    {
+        $this->queueService->createDefaultQueues();
+    }//end createDefaultQueues()
+
+    /**
+     * Create default skills if none exist.
+     * Delegates to DefaultQueueService.
+     *
+     * @return void
+     */
+    public function createDefaultSkills(): void
+    {
+        $this->queueService->createDefaultSkills();
+    }//end createDefaultSkills()
 
     /**
      * Get user settings for the given user.

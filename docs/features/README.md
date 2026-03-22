@@ -13,6 +13,7 @@ Feature documentation organized by functional group. Each file describes impleme
 | Dashboard | [dashboard.md](dashboard.md) | dashboard |
 | My Work | [my-work.md](my-work.md) | my-work |
 | Collaboration | [collaboration.md](collaboration.md) | entity-notes, notifications-activity |
+| Queue Management | [queue-management.md](queue-management.md) | queue-management, skill-routing |
 | Administration | [administration.md](administration.md) | admin-settings, openregister-integration |
 
 ## Spec-to-Feature Mapping
@@ -30,6 +31,8 @@ dashboard → dashboard.md
 my-work → my-work.md
 entity-notes → collaboration.md
 notifications-activity → collaboration.md
+queue-management → queue-management.md
+skill-routing → queue-management.md
 admin-settings → administration.md
 openregister-integration → administration.md
 ```
