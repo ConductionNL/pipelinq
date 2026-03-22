@@ -49,6 +49,15 @@ Clicking any item navigates to its detail view (lead-detail or request-detail) f
 - Cross-app workload: include Procest tasks alongside Pipelinq items
 - Additional sort options
 
+### Queue-Based Work Section (Enterprise)
+
+A "My Queues" tab alongside the existing "My Items" temporal view, showing items from queues the user is assigned to.
+
+- Tab navigation: My Items (default) / My Queues
+- Items grouped by queue name with priority-based ordering within each queue
+- "Pick" action on unassigned items to self-assign from queue
+- Empty state when user is not assigned to any queues
+
 ### Planned (Enterprise)
 
 - Workload analytics (items per user for management visibility)
