@@ -37,6 +37,8 @@ export async function initializeStores() {
 		}
 		if (config.register && config.intakeSubmission_schema) {
 			objectStore.registerObjectType('intakeSubmission', config.intakeSubmission_schema, config.register)
+		if (config.register && config.relationship_schema) {
+			objectStore.registerObjectType('relationship', config.relationship_schema, config.register)
 		if (config.register && config.queue_schema) {
 			objectStore.registerObjectType('queue', config.queue_schema, config.register)
 		}

@@ -85,6 +85,30 @@ class ObjectUpdateDiffService
             return;
         }
 
+        // Detect deal won or lost based on stage name.
+        $wonNames  = ['won', 'gewonnen', 'closed won'];
+        $lostNames = ['lost', 'verloren', 'closed lost'];
+        $stageLower = strtolower($newStage);
+
+        if (in_array($stageLower, $wonNames, true) === true) {
+            $dispatcher->dispatchDealWon(
+                title: $title,
+                value: (string) ($newData['value'] ?? '0'),
+                objectId: $objectId,
+                assignee: $assignee
+            );
+            return;
+        }
+
+        if (in_array($stageLower, $lostNames, true) === true) {
+            $dispatcher->dispatchDealLost(
+                title: $title,
+                objectId: $objectId,
+                assignee: $assignee
+            );
+            return;
+        }
+
         $dispatcher->dispatchStageChange(
             title: $title,
             objectId: $objectId,
