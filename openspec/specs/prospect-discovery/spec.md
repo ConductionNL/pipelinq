@@ -1,5 +1,7 @@
 # Prospect Discovery Specification
 
+## Status: implemented
+
 ## Purpose
 
 The prospect discovery capability enables sales teams to find new potential clients by searching public company registries (KVK Handelsregister, OpenCorporates) against a configurable Ideal Customer Profile (ICP). Results are displayed in a dashboard widget, scored by fit, with existing clients excluded. This transforms prospecting from a manual external research task into an integrated, data-driven workflow within the CRM.

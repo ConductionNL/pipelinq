@@ -1,0 +1,7 @@
+schema: spec-driven
+status: proposed
+name: kcc-werkplek
+title: KCC Werkplek
+description: Unified KCC agent workspace for citizen/business identification and contact registration
+feature_tier: MVP
+created: "2026-03-20"

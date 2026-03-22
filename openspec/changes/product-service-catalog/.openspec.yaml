@@ -1,0 +1,7 @@
+schema: spec-driven
+status: proposed
+name: product-service-catalog
+title: Product & Service Catalog (PDC)
+description: Government product and service catalog conforming to UPL and SDG standards
+feature_tier: V1
+created: "2026-03-20"
