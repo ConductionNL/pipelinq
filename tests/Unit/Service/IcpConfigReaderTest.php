@@ -112,6 +112,11 @@ class IcpConfigReaderTest extends TestCase
             ->with(Application::APP_ID, 'json_key', '[]')
             ->willReturn('["a","b","c"]');
 
+        $this->assertSame(['a', 'b', 'c'], $this->reader->getJsonArray(key: 'json_key'));
+    }//end testGetJsonArrayDecodesStoredArray()
+
+    /**
+     * Test that getJsonArray returns empty array for invalid JSON.
         $result = $this->reader->getJsonArray(key: 'json_key');
 
         $this->assertSame(['a', 'b', 'c'], $result);
@@ -124,6 +129,9 @@ class IcpConfigReaderTest extends TestCase
      */
     public function testGetJsonArrayReturnsEmptyArrayOnInvalidJson(): void
     {
+        $this->appConfig->method('getValueString')->willReturn('not-valid-json');
+
+        $this->assertSame([], $this->reader->getJsonArray(key: 'bad_key'));
         $this->appConfig
             ->method('getValueString')
             ->willReturn('not-valid-json');
@@ -140,6 +148,7 @@ class IcpConfigReaderTest extends TestCase
      */
     public function testIsBoolTrueReturnsTrueForTrueString(): void
     {
+        $this->appConfig->method('getValueString')->willReturn('true');
         $this->appConfig
             ->method('getValueString')
             ->willReturn('true');
@@ -154,6 +163,7 @@ class IcpConfigReaderTest extends TestCase
      */
     public function testIsBoolTrueReturnsFalseForFalseString(): void
     {
+        $this->appConfig->method('getValueString')->willReturn('false');
         $this->appConfig
             ->method('getValueString')
             ->willReturn('false');
@@ -168,6 +178,7 @@ class IcpConfigReaderTest extends TestCase
      */
     public function testGetIntConvertsStringToInt(): void
     {
+        $this->appConfig->method('getValueString')->willReturn('99');
         $this->appConfig
             ->method('getValueString')
             ->willReturn('99');
