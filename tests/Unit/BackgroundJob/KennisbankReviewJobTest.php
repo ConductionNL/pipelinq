@@ -138,6 +138,21 @@ class KennisbankReviewJobTest extends TestCase
 
     /**
      * Test that the job skips when not configured.
+        $this->appManager
+            ->method('getInstalledApps')
+            ->willReturn(['pipelinq', 'contacts']);
+
+        // No notification should be sent.
+        $this->notificationService->expects($this->never())->method($this->anything());
+
+        $job = $this->buildJob();
+        $ref = new \ReflectionMethod($job, 'run');
+        $ref->setAccessible(true);
+        $ref->invoke($job, null);
+    }//end testJobSkipsWhenOpenRegisterNotInstalled()
+
+    /**
+     * Test that the job skips when register or schema is not configured.
      *
      * @return void
      */
@@ -151,6 +166,10 @@ class KennisbankReviewJobTest extends TestCase
         $ref = new \ReflectionMethod($this->buildJob(), 'run');
         $ref->setAccessible(true);
         $ref->invoke($this->buildJob(), null);
+        $job = $this->buildJob();
+        $ref = new \ReflectionMethod($job, 'run');
+        $ref->setAccessible(true);
+        $ref->invoke($job, null);
     }//end testJobSkipsWhenNotConfigured()
 
     /**
@@ -175,6 +194,28 @@ class KennisbankReviewJobTest extends TestCase
         $this->container->method('get')->willReturn($objectServiceMock);
 
         $this->notificationService->expects($this->once())->method('sendNotification')
+        $staleDate = (new \DateTime())->modify('-200 days')->format('c');
+
+        $objectServiceMock = $this->getMockBuilder(\stdClass::class)
+            ->addMethods(['findAll'])
+            ->getMock();
+        $objectServiceMock->method('findAll')->willReturn([
+            'results' => [
+                [
+                    'id'           => 'article-1',
+                    'title'        => 'Stale Article',
+                    'status'       => 'gepubliceerd',
+                    'author'       => 'user1',
+                    'dateModified' => $staleDate,
+                ],
+            ],
+        ]);
+
+        $this->container->method('get')->willReturn($objectServiceMock);
+
+        $this->notificationService
+            ->expects($this->once())
+            ->method('sendNotification')
             ->with('user1', 'kennisbank_review_needed', $this->arrayHasKey('articleTitle'));
 
         $job = $this->buildJob();
@@ -185,6 +226,7 @@ class KennisbankReviewJobTest extends TestCase
 
     /**
      * Test that the job does not notify for recently updated articles.
+     * Test that the job does not send notifications for recently updated articles.
      *
      * @return void
      */
@@ -201,6 +243,21 @@ class KennisbankReviewJobTest extends TestCase
         $objectServiceMock->method('findAll')->willReturn([
             'results' => [['id' => '2', 'title' => 'Fresh', 'status' => 'gepubliceerd', 'author' => 'user1', 'dateModified' => $recentDate]],
         ]);
+        $objectServiceMock = $this->getMockBuilder(\stdClass::class)
+            ->addMethods(['findAll'])
+            ->getMock();
+        $objectServiceMock->method('findAll')->willReturn([
+            'results' => [
+                [
+                    'id'           => 'article-2',
+                    'title'        => 'Fresh Article',
+                    'status'       => 'gepubliceerd',
+                    'author'       => 'user1',
+                    'dateModified' => $recentDate,
+                ],
+            ],
+        ]);
+
         $this->container->method('get')->willReturn($objectServiceMock);
 
         $this->notificationService->expects($this->never())->method($this->anything());
@@ -220,6 +277,7 @@ class KennisbankReviewJobTest extends TestCase
     {
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
         $this->settingsService->method('getSettings')->willThrowException(new \RuntimeException('err'));
+        $this->settingsService->method('getSettings')->willThrowException(new \RuntimeException('Test error'));
 
         $this->logger->expects($this->once())->method('error');
 
