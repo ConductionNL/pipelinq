@@ -91,6 +91,7 @@ class MetricsFormatterTest extends TestCase
         $lines = $this->formatter->formatLeadCounts(leadCounts: []);
 
         $this->assertContains('# HELP pipelinq_leads_total Total leads by status and pipeline', $lines);
+        // No data lines beyond the header.
         $dataLines = array_filter($lines, fn($l) => str_starts_with($l, 'pipelinq_leads_total{'));
         $this->assertEmpty($dataLines);
     }//end testFormatLeadCountsEmptyInput()
@@ -168,6 +169,7 @@ class MetricsFormatterTest extends TestCase
 
         $lines = $this->formatter->formatLeadCounts(leadCounts: $rows);
 
+        // Double-quotes and newlines must be escaped in label values.
         $dataLine = array_values(array_filter($lines, fn($l) => str_starts_with($l, 'pipelinq_leads_total{')))[0] ?? '';
         $this->assertStringNotContainsString('"test"value"', $dataLine);
         $this->assertStringContainsString('\\"', $dataLine);

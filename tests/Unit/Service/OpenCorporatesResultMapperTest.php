@@ -61,6 +61,16 @@ class OpenCorporatesResultMapperTest extends TestCase
                 ['description' => 'Software development'],
             ],
             'registered_address' => [
+            'company_number'      => 'NL12345678',
+            'name'                => 'Acme Corp',
+            'company_type'        => 'Private Limited Company',
+            'incorporation_date'  => '2005-06-15',
+            'current_status'      => 'Active',
+            'industry_codes'      => [
+                ['description' => 'Software development'],
+                ['description' => 'IT consulting'],
+            ],
+            'registered_address'  => [
                 'street_address' => 'Tech Street 1',
                 'locality'       => 'Rotterdam',
                 'region'         => 'Zuid-Holland',
@@ -75,10 +85,16 @@ class OpenCorporatesResultMapperTest extends TestCase
         $this->assertSame('Acme Corp', $result['tradeName']);
         $this->assertSame('Private Limited Company', $result['legalForm']);
         $this->assertSame('Software development', $result['sbiDescription']);
+        $this->assertSame('', $result['sbiCode']);
+        $this->assertSame('Software development', $result['sbiDescription']);
+        $this->assertNull($result['employeeCount']);
+        $this->assertSame('2005-06-15', $result['registrationDate']);
         $this->assertTrue($result['isActive']);
         $this->assertSame('opencorporates', $result['source']);
         $this->assertSame('Rotterdam', $result['address']['city']);
         $this->assertSame('Zuid-Holland', $result['address']['province']);
+        $this->assertSame('3000AA', $result['address']['postalCode']);
+        $this->assertSame('Tech Street 1', $result['address']['street']);
     }//end testMapResultMapsFullCompany()
 
     /**
@@ -89,6 +105,11 @@ class OpenCorporatesResultMapperTest extends TestCase
     public function testMapResultReturnsNullWithoutCompanyNumber(): void
     {
         $result = $this->mapper->mapResult(company: ['name' => 'No Number Corp']);
+        $company = [
+            'name' => 'No Number Corp',
+        ];
+
+        $result = $this->mapper->mapResult(company: $company);
 
         $this->assertNull($result);
     }//end testMapResultReturnsNullWithoutCompanyNumber()
@@ -101,6 +122,12 @@ class OpenCorporatesResultMapperTest extends TestCase
     public function testMapResultMapsInactiveCompany(): void
     {
         $result = $this->mapper->mapResult(company: ['company_number' => 'NL99999999', 'current_status' => 'Dissolved']);
+        $company = [
+            'company_number' => 'NL99999999',
+            'current_status' => 'Dissolved',
+        ];
+
+        $result = $this->mapper->mapResult(company: $company);
 
         $this->assertNotNull($result);
         $this->assertFalse($result['isActive']);
@@ -114,6 +141,11 @@ class OpenCorporatesResultMapperTest extends TestCase
     public function testMapResultHandlesNoIndustryCodes(): void
     {
         $result = $this->mapper->mapResult(company: ['company_number' => 'NL11111111']);
+        $company = [
+            'company_number' => 'NL11111111',
+        ];
+
+        $result = $this->mapper->mapResult(company: $company);
 
         $this->assertNotNull($result);
         $this->assertSame('', $result['sbiDescription']);
@@ -129,6 +161,14 @@ class OpenCorporatesResultMapperTest extends TestCase
         $result = $this->mapper->mapResult(company: ['company_number' => 'NL22222222']);
 
         $this->assertNotNull($result);
+        $company = [
+            'company_number' => 'NL22222222',
+        ];
+
+        $result = $this->mapper->mapResult(company: $company);
+
+        $this->assertNotNull($result);
+        $this->assertSame('', $result['address']['street']);
         $this->assertSame('', $result['address']['city']);
         $this->assertSame('', $result['address']['province']);
         $this->assertSame('', $result['address']['postalCode']);
@@ -136,6 +176,7 @@ class OpenCorporatesResultMapperTest extends TestCase
 
     /**
      * Test that a minimal company returns a valid record with source 'opencorporates'.
+     * Test that a minimal company with only company_number returns a valid record.
      *
      * @return void
      */
@@ -147,5 +188,15 @@ class OpenCorporatesResultMapperTest extends TestCase
         $this->assertSame('UK000001', $result['kvkNumber']);
         $this->assertSame('opencorporates', $result['source']);
         $this->assertTrue($result['isActive']);
+        $company = ['company_number' => 'UK000001'];
+
+        $result = $this->mapper->mapResult(company: $company);
+
+        $this->assertNotNull($result);
+        $this->assertSame('UK000001', $result['kvkNumber']);
+        $this->assertSame('', $result['tradeName']);
+        $this->assertSame('opencorporates', $result['source']);
+        $this->assertNull($result['website']);
+        $this->assertTrue($result['isActive']); // Default 'Active'.
     }//end testMapResultHandlesMinimalCompany()
 }//end class
