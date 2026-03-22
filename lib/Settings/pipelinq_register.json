@@ -29,6 +29,8 @@
           "product",
           "productCategory",
           "leadProduct",
+          "intakeForm",
+          "intakeSubmission"
           "automation",
           "automationLog"
           "contactmoment"
@@ -922,6 +924,14 @@
           }
         }
       },
+      "intakeForm": {
+        "slug": "intakeForm",
+        "title": "Intake Form",
+        "icon": "FormTextboxPassword",
+        "version": "1.0.0",
+        "summary": "A public intake form for capturing leads from external websites",
+        "description": "Defines a customizable web form that can be embedded on external websites. Submissions create contacts and leads in Pipelinq.",
+        "@type": "schema:WebPageElement",
       "automation": {
         "slug": "automation",
         "title": "Automation",
@@ -1120,6 +1130,47 @@
         "properties": {
           "name": {
             "type": "string",
+            "description": "Form name",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "fields": {
+            "type": "array",
+            "description": "Ordered list of form field definitions",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Field identifier"
+                },
+                "label": {
+                  "type": "string",
+                  "description": "Display label"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "text",
+                    "textarea",
+                    "email",
+                    "phone",
+                    "select",
+                    "checkbox",
+                    "file",
+                    "hidden"
+                  ]
+                },
+                "required": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "placeholder": {
+                  "type": "string"
+                },
+                "options": {
+                  "type": "array",
+                  "description": "Options for select fields"
             "description": "Automation name",
             "maxLength": 255,
             "minLength": 1
@@ -1435,6 +1486,30 @@
               }
             }
           },
+          "fieldMappings": {
+            "type": "object",
+            "description": "Maps form field names to contact/lead properties",
+            "visible": false
+          },
+          "targetPipeline": {
+            "type": "string",
+            "description": "UUID of the pipeline where new leads are placed",
+            "format": "uuid",
+            "visible": false
+          },
+          "targetStage": {
+            "type": "string",
+            "description": "Initial pipeline stage for new leads",
+            "visible": false
+          },
+          "notifyUser": {
+            "type": "string",
+            "description": "Nextcloud user ID to notify on new submissions",
+            "visible": false
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the form accepts submissions",
           "isActive": {
             "type": "boolean",
             "description": "Whether the automation is enabled",
@@ -1442,6 +1517,15 @@
             "title": "Active",
             "facetable": true
           },
+          "submitCount": {
+            "type": "integer",
+            "description": "Total number of submissions received",
+            "default": 0,
+            "visible": false
+          },
+          "successMessage": {
+            "type": "string",
+            "description": "Message shown after successful submission",
           "lastRun": {
             "type": "string",
             "description": "ISO timestamp of last execution",
@@ -1619,6 +1703,61 @@
           }
         }
       },
+      "intakeSubmission": {
+        "slug": "intakeSubmission",
+        "title": "Intake Submission",
+        "icon": "FileDocumentCheck",
+        "version": "1.0.0",
+        "summary": "A submission received through a public intake form",
+        "description": "Records each submission with submitted data, created entities, and processing status.",
+        "@type": "schema:Action",
+        "required": [
+          "form",
+          "submittedAt",
+          "status"
+        ],
+        "properties": {
+          "form": {
+            "type": "string",
+            "description": "UUID reference to the intake form",
+            "format": "uuid"
+          },
+          "submittedAt": {
+            "type": "string",
+            "description": "When the submission was received",
+            "format": "date-time"
+          },
+          "data": {
+            "type": "object",
+            "description": "Submitted form data (key-value pairs)",
+            "visible": false
+          },
+          "contactId": {
+            "type": "string",
+            "description": "UUID of created or matched contact",
+            "format": "uuid"
+          },
+          "leadId": {
+            "type": "string",
+            "description": "UUID of created lead",
+            "format": "uuid"
+          },
+          "ip": {
+            "type": "string",
+            "description": "Submitter IP address (for rate limiting audit)",
+            "visible": false
+          },
+          "status": {
+            "type": "string",
+            "description": "Processing status",
+            "enum": [
+              "processed",
+              "rejected",
+              "spam"
+            ],
+            "default": "processed",
+            "title": "Status",
+            "facetable": true
       "automationLog": {
         "slug": "automationLog",
         "title": "Automation Log",

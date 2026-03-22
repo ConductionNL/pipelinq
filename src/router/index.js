@@ -31,6 +31,9 @@ import SurveyForm from '../views/surveys/SurveyForm.vue'
 import SurveyAnalytics from '../views/surveys/SurveyAnalytics.vue'
 import PublicSurveyForm from '../views/surveys/PublicSurveyForm.vue'
 import PipelineManager from '../views/settings/PipelineManager.vue'
+import FormManager from '../views/forms/FormManager.vue'
+import FormBuilder from '../views/forms/FormBuilder.vue'
+import FormSubmissions from '../views/forms/FormSubmissions.vue'
 import AutomationList from '../views/automations/AutomationList.vue'
 import AutomationBuilder from '../views/automations/AutomationBuilder.vue'
 import AutomationHistory from '../views/automations/AutomationHistory.vue'
@@ -102,6 +105,10 @@ export default new Router({
 		{ path: '/rapportage/channels', name: 'ChannelAnalytics', component: ChannelAnalytics },
 		{ path: '/rapportage/agents', name: 'AgentPerformance', component: AgentPerformance },
 		{ path: '/pipelines', name: 'Pipelines', component: PipelineManager },
+		{ path: '/forms', name: 'Forms', component: FormManager },
+		{ path: '/forms/new', name: 'FormNew', component: FormBuilder },
+		{ path: '/forms/:id', name: 'FormDetail', component: FormBuilder, props: route => ({ formId: route.params.id }) },
+		{ path: '/forms/:id/submissions', name: 'FormSubmissions', component: FormSubmissions, props: route => ({ formId: route.params.id }) },
 		{ path: '/automations', name: 'Automations', component: AutomationList },
 		{ path: '/automations/new', name: 'AutomationNew', component: AutomationBuilder },
 		{ path: '/automations/:id', name: 'AutomationDetail', component: AutomationBuilder, props: route => ({ automationId: route.params.id }) },
