@@ -32,6 +32,12 @@ export async function initializeStores() {
 		if (config.register && config.leadProduct_schema) {
 			objectStore.registerObjectType('leadProduct', config.leadProduct_schema, config.register)
 		}
+		if (config.register && config.quote_schema) {
+			objectStore.registerObjectType('quote', config.quote_schema, config.register)
+		}
+		if (config.register && config.quoteLineItem_schema) {
+			objectStore.registerObjectType('quoteLineItem', config.quoteLineItem_schema, config.register)
+		}
 	}
 
 	return { settingsStore, objectStore }
