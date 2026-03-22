@@ -38,6 +38,13 @@
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
+				:name="t('pipelinq', 'Complaints')"
+				:to="{ name: 'Complaints' }">
+				<template #icon>
+					<AlertCircleOutline :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
 				:name="t('pipelinq', 'Products')"
 				:to="{ name: 'Products' }">
 				<template #icon>
@@ -99,6 +106,7 @@ import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
+import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
 
 export default {
@@ -116,6 +124,7 @@ export default {
 		AccountCheck,
 		BookOpenVariantOutline,
 		PackageVariant,
+		AlertCircleOutline,
 		Cog,
 		Pipe,
 	},
