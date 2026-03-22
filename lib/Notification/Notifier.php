@@ -110,6 +110,8 @@ class Notifier implements INotifier
      * @return void
      *
      * @throws UnknownNotificationException If the subject is not recognized.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) — switch handles all notification types
      */
     private function applyNotificationSubject(INotification $notification, object $l, array $params): void
     {
@@ -140,6 +142,46 @@ class Notifier implements INotifier
                     title: $title,
                     richParams: $richParams
                 );
+                break;
+
+            case 'task_assigned':
+                $this->applySimpleSubject(
+                    notification: $notification,
+                    l: $l,
+                    parsedKey: 'Task assigned: %s',
+                    richKey: 'Task assigned: {title}',
+                    title: $title,
+                    richParams: $richParams
+                );
+                break;
+
+            case 'task_completed':
+                $resultText = $params['resultText'] ?? '';
+                $notification->setParsedSubject($l->t('Task completed: %1$s — %2$s', [$title, $resultText]));
+                $notification->setRichSubject(
+                        subject: $l->t('Task completed: {title}'),
+                        parameters: $richParams
+                        );
+                break;
+
+            case 'task_reassigned':
+                $this->applySimpleSubject(
+                    notification: $notification,
+                    l: $l,
+                    parsedKey: 'Task reassigned to you: %s',
+                    richKey: 'Task reassigned to you: {title}',
+                    title: $title,
+                    richParams: $richParams
+                );
+                break;
+
+            case 'task_expired':
+                $deadline = $params['deadline'] ?? '';
+                $notification->setParsedSubject($l->t('Task expired: %1$s (deadline: %2$s)', [$title, $deadline]));
+                $notification->setRichSubject(
+                        subject: $l->t('Task expired: {title}'),
+                        parameters: $richParams
+                        );
                 break;
 
             case 'lead_stage_changed':

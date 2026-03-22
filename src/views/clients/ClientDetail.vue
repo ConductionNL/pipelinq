@@ -170,6 +170,15 @@
 				:entity-id="clientId"
 				entity-type="client"
 				:entity-name="clientData.name || ''" />
+		<CnDetailCard :title="t('pipelinq', 'Contactmomenten')">
+			<template #actions>
+				<NcButton @click="showContactmomentQuickLog = true">
+					{{ t('pipelinq', 'Log contactmoment') }}
+				</NcButton>
+			</template>
+
+			<div v-if="contactmomenten.length === 0" class="section-empty">
+				<p>{{ t('pipelinq', 'Geen contactmomenten geregistreerd') }}</p>
 		<CnDetailCard :title="t('pipelinq', 'Complaints')">
 			<template #actions>
 				<NcButton @click="createComplaint">
@@ -184,6 +193,9 @@
 				<table class="viewTable">
 					<thead>
 						<tr>
+							<th>{{ t('pipelinq', 'Subject') }}</th>
+							<th>{{ t('pipelinq', 'Channel') }}</th>
+							<th>{{ t('pipelinq', 'Agent') }}</th>
 							<th>{{ t('pipelinq', 'Title') }}</th>
 							<th>{{ t('pipelinq', 'Status') }}</th>
 							<th>{{ t('pipelinq', 'Date') }}</th>
@@ -191,6 +203,14 @@
 					</thead>
 					<tbody>
 						<tr
+							v-for="cm in contactmomenten"
+							:key="cm.id"
+							class="viewTableRow"
+							@click="$router.push({ name: 'ContactmomentDetail', params: { id: cm.id } })">
+							<td>{{ cm.subject || '-' }}</td>
+							<td>{{ cm.channel || '-' }}</td>
+							<td>{{ cm.agent || '-' }}</td>
+							<td>{{ formatDate(cm.contactedAt) }}</td>
 							v-for="complaint in complaints"
 							:key="complaint.id"
 							class="viewTableRow"
@@ -203,6 +223,19 @@
 				</table>
 			</div>
 		</CnDetailCard>
+
+		<!-- Contactmoment quick-log dialog -->
+		<NcDialog
+			v-if="showContactmomentQuickLog"
+			:name="t('pipelinq', 'Log contactmoment')"
+			size="normal"
+			@closing="showContactmomentQuickLog = false">
+			<ContactmomentQuickLog
+				:client-id="clientId"
+				:inline="true"
+				@saved="onContactmomentSaved"
+				@cancel="showContactmomentQuickLog = false" />
+		</NcDialog>
 
 		<!-- Delete warning dialog -->
 		<NcDialog
@@ -247,6 +280,7 @@ import { showError } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import ClientForm from './ClientForm.vue'
 import ContactRelationships from '../../components/ContactRelationships.vue'
+import ContactmomentQuickLog from '../../components/ContactmomentQuickLog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -258,6 +292,7 @@ export default {
 		CnDetailCard,
 		ClientForm,
 		ContactRelationships,
+		ContactmomentQuickLog,
 	},
 	props: {
 		clientId: {
@@ -271,8 +306,10 @@ export default {
 			requests: [],
 			contacts: [],
 			leads: [],
+			contactmomenten: [],
 			complaints: [],
 			showDelete: false,
+			showContactmomentQuickLog: false,
 		}
 	},
 	computed: {
@@ -379,6 +416,27 @@ export default {
 			}
 
 			try {
+				const allContactmomenten = await this.objectStore.fetchCollection('contactmoment', {
+					_limit: 50,
+					client: this.clientId,
+					_order: { contactedAt: 'desc' },
+				})
+				this.contactmomenten = allContactmomenten || []
+			} catch {
+				this.contactmomenten = []
+			}
+		},
+		formatDate(dateStr) {
+			if (!dateStr) return '-'
+			try {
+				return new Date(dateStr).toLocaleString()
+			} catch {
+				return dateStr
+			}
+		},
+		async onContactmomentSaved() {
+			this.showContactmomentQuickLog = false
+			await this.fetchRelated()
 				const allComplaints = await this.objectStore.fetchCollection('complaint', {
 					_limit: 50,
 					client: this.clientId,
