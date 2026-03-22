@@ -42,6 +42,15 @@ class SchemaMapService
         'queue_schema'        => 'queue',
         'skill_schema'        => 'skill',
         'agentProfile_schema' => 'agentProfile',
+        'client_schema'   => 'client',
+        'contact_schema'  => 'contact',
+        'lead_schema'     => 'lead',
+        'request_schema'  => 'request',
+        'pipeline_schema'      => 'pipeline',
+        'task_schema'           => 'task',
+        'contactmoment_schema'  => 'contactmoment',
+        'survey_schema'         => 'survey',
+        'surveyResponse_schema' => 'surveyResponse',
     ];
 
     /**
