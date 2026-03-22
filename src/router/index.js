@@ -34,6 +34,9 @@ import PipelineManager from '../views/settings/PipelineManager.vue'
 import TaskList from '../views/tasks/TaskList.vue'
 import TaskDetail from '../views/tasks/TaskDetail.vue'
 import TaskForm from '../views/tasks/TaskForm.vue'
+import RapportageDashboard from '../views/rapportage/RapportageDashboard.vue'
+import ChannelAnalytics from '../views/rapportage/ChannelAnalytics.vue'
+import AgentPerformance from '../views/rapportage/AgentPerformance.vue'
 
 Vue.use(Router)
 
@@ -75,6 +78,9 @@ export default new Router({
 		{ path: '/tasks', name: 'Tasks', component: TaskList },
 		{ path: '/tasks/new', name: 'TaskNew', component: TaskForm },
 		{ path: '/tasks/:id', name: 'TaskDetail', component: TaskDetail, props: route => ({ taskId: route.params.id }) },
+		{ path: '/rapportage', name: 'Rapportage', component: RapportageDashboard },
+		{ path: '/rapportage/channels', name: 'ChannelAnalytics', component: ChannelAnalytics },
+		{ path: '/rapportage/agents', name: 'AgentPerformance', component: AgentPerformance },
 		{ path: '/pipelines', name: 'Pipelines', component: PipelineManager },
 		{ path: '*', redirect: '/' },
 	],

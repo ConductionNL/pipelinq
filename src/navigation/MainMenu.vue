@@ -93,11 +93,15 @@
 				:to="{ name: 'Tasks' }">
 				<template #icon>
 					<ClipboardCheck :size="20" />
+				:name="t('pipelinq', 'Reporting')"
+				:to="{ name: 'Rapportage' }">
+				<template #icon>
+					<ChartBar :size="20" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
 				:name="t('pipelinq', 'Documentation')"
-				@click="openLink('https://pipelinq.app', '_blank')">
+				@click="openLink('https://conduction.gitbook.io/pipelinq-nextcloud', '_blank')">
 				<template #icon>
 					<BookOpenVariantOutline :size="20" />
 				</template>
@@ -137,6 +141,7 @@ import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
 import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
+import ChartBar from 'vue-material-design-icons/ChartBar.vue'
 import EmoticonHappyOutline from 'vue-material-design-icons/EmoticonHappyOutline.vue'
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
@@ -166,6 +171,7 @@ export default {
 		BookOpenPageVariant,
 		BookOpenVariantOutline,
 		ClipboardCheck,
+		ChartBar,
 		PackageVariant,
 		InboxMultiple,
 		PhoneMessage,
