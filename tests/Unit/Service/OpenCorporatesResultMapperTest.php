@@ -45,6 +45,7 @@ class OpenCorporatesResultMapperTest extends TestCase
     }//end setUp()
 
     /**
+     * Test that a full company is mapped correctly.
      * Test that a complete OpenCorporates result is mapped correctly.
      *
      * @return void
@@ -52,6 +53,11 @@ class OpenCorporatesResultMapperTest extends TestCase
     public function testMapResultMapsFullCompany(): void
     {
         $company = [
+            'company_number'     => 'NL1',
+            'name'               => 'Corp',
+            'current_status'     => 'Active',
+            'industry_codes'     => [['description' => 'Dev']],
+            'registered_address' => ['locality' => 'City', 'region' => 'Region', 'postal_code' => '1234', 'street_address' => 'Str 1'],
             'company_number'     => 'NL12345678',
             'name'               => 'Acme Corp',
             'company_type'       => 'BV',
@@ -86,6 +92,24 @@ class OpenCorporatesResultMapperTest extends TestCase
 
         $result = $this->mapper->mapResult(company: $company);
 
+        $this->assertSame('NL1', $result['kvkNumber']);
+        $this->assertSame('Dev', $result['sbiDescription']);
+        $this->assertSame('opencorporates', $result['source']);
+        $this->assertTrue($result['isActive']);
+    }//end testMapResultMapsFullCompany()
+
+    /**
+     * Test that missing company_number returns null.
+     *
+     * @return void
+     */
+    public function testMapResultReturnsNullWithoutNumber(): void
+    {
+        $this->assertNull($this->mapper->mapResult(company: ['name' => 'No']));
+    }//end testMapResultReturnsNullWithoutNumber()
+
+    /**
+     * Test that inactive status maps correctly.
         $this->assertNotNull($result);
         $this->assertSame('NL12345678', $result['kvkNumber']);
         $this->assertSame('Software', $result['sbiDescription']);
@@ -141,6 +165,11 @@ class OpenCorporatesResultMapperTest extends TestCase
     {
         $result = $this->mapper->mapResult(company: ['company_number' => 'NL99', 'current_status' => 'Dissolved']);
 
+        $this->assertFalse($this->mapper->mapResult(company: ['company_number' => 'X', 'current_status' => 'Dissolved'])['isActive']);
+    }//end testMapResultMapsInactiveCompany()
+
+    /**
+     * Test that no industry codes returns empty sbiDescription.
         $result = $this->mapper->mapResult(company: ['company_number' => 'NL99999999', 'current_status' => 'Dissolved']);
 
         $company = [
@@ -164,6 +193,7 @@ class OpenCorporatesResultMapperTest extends TestCase
         $result = $this->mapper->mapResult(company: ['company_number' => 'NL1']);
 
         $this->assertSame('', $result['sbiDescription']);
+        $this->assertSame('', $this->mapper->mapResult(company: ['company_number' => 'Y'])['sbiDescription']);
     }//end testMapResultHandlesNoIndustryCodes()
         $result = $this->mapper->mapResult(company: ['company_number' => 'NL11111111']);
 

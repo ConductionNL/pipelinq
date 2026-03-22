@@ -57,6 +57,67 @@ class IcpConfigReaderTest extends TestCase
 
     /**
      * Test getString returns the configured value.
+     * Test getString returns configured value.
+     *
+     * @return void
+     */
+    public function testGetStringReturnsValue(): void
+    {
+        $this->appConfig->method('getValueString')->with(Application::APP_ID, 'k', '')->willReturn('v');
+
+        $this->assertSame('v', $this->reader->getString(key: 'k'));
+    }//end testGetStringReturnsValue()
+
+    /**
+     * Test getJsonArray decodes stored JSON.
+     *
+     * @return void
+     */
+    public function testGetJsonArrayDecodesJson(): void
+    {
+        $this->appConfig->method('getValueString')->willReturn('["a"]');
+
+        $this->assertSame(['a'], $this->reader->getJsonArray(key: 'k'));
+    }//end testGetJsonArrayDecodesJson()
+
+    /**
+     * Test getJsonArray returns empty array for invalid JSON.
+     *
+     * @return void
+     */
+    public function testGetJsonArrayReturnsEmptyForInvalidJson(): void
+    {
+        $this->appConfig->method('getValueString')->willReturn('bad');
+
+        $this->assertSame([], $this->reader->getJsonArray(key: 'k'));
+    }//end testGetJsonArrayReturnsEmptyForInvalidJson()
+
+    /**
+     * Test isBoolTrue returns true for 'true'.
+     *
+     * @return void
+     */
+    public function testIsBoolTrueForTrueString(): void
+    {
+        $this->appConfig->method('getValueString')->willReturn('true');
+
+        $this->assertTrue($this->reader->isBoolTrue(key: 'k'));
+    }//end testIsBoolTrueForTrueString()
+
+    /**
+     * Test isBoolTrue returns false for 'false'.
+     *
+     * @return void
+     */
+    public function testIsBoolFalseForFalseString(): void
+    {
+        $this->appConfig->method('getValueString')->willReturn('false');
+
+        $this->assertFalse($this->reader->isBoolTrue(key: 'k'));
+    }//end testIsBoolFalseForFalseString()
+
+    /**
+     * Test getInt converts string to int.
      * Test that getString returns the configured value.
      *
      * @return void
@@ -247,6 +308,13 @@ class IcpConfigReaderTest extends TestCase
      */
     public function testGetIntConvertsStringToInt(): void
     {
+        $this->appConfig->method('getValueString')->willReturn('7');
+
+        $this->assertSame(7, $this->reader->getInt(key: 'k'));
+    }//end testGetIntConvertsStringToInt()
+
+    /**
+     * Test setBool stores 'true'.
         $this->appConfig->method('getValueString')->willReturn('99');
         $this->appConfig
             ->method('getValueString')
@@ -284,6 +352,7 @@ class IcpConfigReaderTest extends TestCase
 
     /**
      * Test setInt stores integer as string.
+     * Test setInt stores int as string.
      *
      * @return void
      */

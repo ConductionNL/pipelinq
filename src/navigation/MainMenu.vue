@@ -70,6 +70,10 @@
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
+				:name="t('pipelinq', 'Queues')"
+				:to="{ name: 'Queues' }">
+				<template #icon>
+					<InboxMultiple :size="20" />
 				:name="t('pipelinq', 'Kennisbank')"
 				:to="{ name: 'Kennisbank' }">
 				<template #icon>
@@ -127,6 +131,7 @@ import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOut
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
+import InboxMultiple from 'vue-material-design-icons/InboxMultiple.vue'
 import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
 
@@ -147,6 +152,7 @@ export default {
 		BookOpenPageVariant,
 		BookOpenVariantOutline,
 		PackageVariant,
+		InboxMultiple,
 		PhoneMessage,
 		AlertCircleOutline,
 		Cog,

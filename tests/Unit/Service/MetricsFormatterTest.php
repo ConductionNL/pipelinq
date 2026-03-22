@@ -66,6 +66,7 @@ class MetricsFormatterTest extends TestCase
 
     /**
      * Test that formatLeadCounts returns correct gauge lines.
+     * Test that formatLeadCounts returns gauge lines for each row.
      * Test that formatLeadCounts returns correct gauge lines for each row.
      *
      * @return void
@@ -74,6 +75,7 @@ class MetricsFormatterTest extends TestCase
     {
         $rows  = [['status' => 'new', 'pipeline' => 'Default', 'cnt' => '5']];
         $lines = $this->formatter->formatLeadCounts(leadCounts: $rows);
+        $lines = $this->formatter->formatLeadCounts(leadCounts: [['status' => 'new', 'pipeline' => 'Default', 'cnt' => '5']]);
 
         $this->assertContains('pipelinq_leads_total{status="new",pipeline="Default"} 5', $lines);
     }//end testFormatLeadCountsReturnsGaugeLines()
@@ -164,6 +166,23 @@ class MetricsFormatterTest extends TestCase
      */
     public function testFormatRequestCountsFormatsStatusCounts(): void
     {
+        $lines = $this->formatter->formatRequestCounts(requestCounts: [['status' => 'open', 'cnt' => '10']]);
+
+        $this->assertContains('pipelinq_service_requests_total{status="open"} 10', $lines);
+    }//end testFormatRequestCountsFormatsStatusCounts()
+
+    /**
+     * Test that labels with special characters are sanitized.
+     *
+     * @return void
+     */
+    public function testSanitizesSpecialCharsInLabels(): void
+    {
+        $lines    = $this->formatter->formatLeadCounts(leadCounts: [['status' => 'test"val', 'pipeline' => "br\nak", 'cnt' => '1']]);
+        $dataLine = array_values(array_filter($lines, fn($l) => str_starts_with($l, 'pipelinq_leads_total{')))[0] ?? '';
+
+        $this->assertStringContainsString('\\"', $dataLine);
+    }//end testSanitizesSpecialCharsInLabels()
         $rows  = [['status' => 'open', 'cnt' => '10']];
         $lines = $this->formatter->formatRequestCounts(requestCounts: $rows);
 
