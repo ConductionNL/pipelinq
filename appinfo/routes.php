@@ -46,6 +46,10 @@ return [
         // Automations
         ['name' => 'automation#metadata', 'url' => '/api/automations/metadata', 'verb' => 'GET'],
         ['name' => 'automation#test', 'url' => '/api/automations/test', 'verb' => 'POST'],
+        // Kennisbank public API
+        ['name' => 'kennisbank#publicIndex', 'url' => '/api/kennisbank/public', 'verb' => 'GET'],
+        ['name' => 'kennisbank#publicShow', 'url' => '/api/kennisbank/public/{id}', 'verb' => 'GET'],
+        ['name' => 'kennisbank#submitFeedback', 'url' => '/api/kennisbank/feedback', 'verb' => 'POST'],
         // Rapportage / reporting
         ['name' => 'reporting#getSla', 'url' => '/api/rapportage/sla', 'verb' => 'GET'],
         ['name' => 'reporting#updateSla', 'url' => '/api/rapportage/sla', 'verb' => 'PUT'],
