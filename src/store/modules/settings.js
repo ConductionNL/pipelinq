@@ -16,6 +16,18 @@ export const useSettingsStore = defineStore('settings', {
 		getConfig: (state) => state.config,
 		hasOpenRegisters: (state) => state.openRegisters,
 		getIsAdmin: (state) => state.isAdmin,
+		/**
+		 * Get configured SLA hours for a complaint category.
+		 *
+		 * @param {object} state The store state.
+		 * @return {function(string): number}
+		 */
+		getComplaintSlaHours: (state) => (category) => {
+			if (!state.config) return 0
+			const key = 'complaint_sla_' + category
+			const value = parseInt(state.config[key], 10)
+			return isNaN(value) ? 0 : value
+		},
 	},
 	actions: {
 		async fetchSettings() {
