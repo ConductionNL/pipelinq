@@ -14,6 +14,14 @@ import ProductList from '../views/products/ProductList.vue'
 import ProductDetail from '../views/products/ProductDetail.vue'
 import PipelineBoard from '../views/pipeline/PipelineBoard.vue'
 import MyWork from '../views/MyWork.vue'
+import KennisbankHome from '../views/kennisbank/KennisbankHome.vue'
+import KennisbankDetail from '../views/kennisbank/KennisbankDetail.vue'
+import KennisbankEditor from '../views/kennisbank/KennisbankEditor.vue'
+import SurveyList from '../views/surveys/SurveyList.vue'
+import SurveyDetail from '../views/surveys/SurveyDetail.vue'
+import SurveyForm from '../views/surveys/SurveyForm.vue'
+import SurveyAnalytics from '../views/surveys/SurveyAnalytics.vue'
+import PublicSurveyForm from '../views/surveys/PublicSurveyForm.vue'
 import PipelineManager from '../views/settings/PipelineManager.vue'
 
 Vue.use(Router)
@@ -34,6 +42,16 @@ export default new Router({
 		{ path: '/products', name: 'Products', component: ProductList },
 		{ path: '/products/:id', name: 'ProductDetail', component: ProductDetail, props: route => ({ productId: route.params.id }) },
 		{ path: '/pipeline', name: 'Pipeline', component: PipelineBoard },
+		{ path: '/kennisbank', name: 'Kennisbank', component: KennisbankHome },
+		{ path: '/kennisbank/new', name: 'KennisbankNew', component: KennisbankEditor, props: () => ({ articleId: 'new' }) },
+		{ path: '/kennisbank/:id', name: 'KennisbankDetail', component: KennisbankDetail, props: route => ({ articleId: route.params.id }) },
+		{ path: '/kennisbank/:id/edit', name: 'KennisbankEdit', component: KennisbankEditor, props: route => ({ articleId: route.params.id }) },
+		{ path: '/surveys', name: 'Surveys', component: SurveyList },
+		{ path: '/surveys/new', name: 'SurveyCreate', component: SurveyForm },
+		{ path: '/surveys/:id', name: 'SurveyDetail', component: SurveyDetail, props: route => ({ surveyId: route.params.id }) },
+		{ path: '/surveys/:id/edit', name: 'SurveyEdit', component: SurveyForm, props: route => ({ surveyId: route.params.id }) },
+		{ path: '/surveys/:id/analytics', name: 'SurveyAnalytics', component: SurveyAnalytics, props: route => ({ surveyId: route.params.id }) },
+		{ path: '/public/survey/:token', name: 'PublicSurvey', component: PublicSurveyForm, props: route => ({ token: route.params.token }) },
 		{ path: '/my-work', name: 'MyWork', component: MyWork },
 		{ path: '/pipelines', name: 'Pipelines', component: PipelineManager },
 		{ path: '*', redirect: '/' },
