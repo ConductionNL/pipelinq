@@ -34,6 +34,9 @@ import PipelineManager from '../views/settings/PipelineManager.vue'
 import AutomationList from '../views/automations/AutomationList.vue'
 import AutomationBuilder from '../views/automations/AutomationBuilder.vue'
 import AutomationHistory from '../views/automations/AutomationHistory.vue'
+import RapportageDashboard from '../views/rapportage/RapportageDashboard.vue'
+import ChannelAnalytics from '../views/rapportage/ChannelAnalytics.vue'
+import AgentPerformance from '../views/rapportage/AgentPerformance.vue'
 
 Vue.use(Router)
 
@@ -72,6 +75,9 @@ export default new Router({
 		{ path: '/surveys/:id/analytics', name: 'SurveyAnalytics', component: SurveyAnalytics, props: route => ({ surveyId: route.params.id }) },
 		{ path: '/public/survey/:token', name: 'PublicSurvey', component: PublicSurveyForm, props: route => ({ token: route.params.token }) },
 		{ path: '/my-work', name: 'MyWork', component: MyWork },
+		{ path: '/rapportage', name: 'Rapportage', component: RapportageDashboard },
+		{ path: '/rapportage/channels', name: 'ChannelAnalytics', component: ChannelAnalytics },
+		{ path: '/rapportage/agents', name: 'AgentPerformance', component: AgentPerformance },
 		{ path: '/pipelines', name: 'Pipelines', component: PipelineManager },
 		{ path: '/automations', name: 'Automations', component: AutomationList },
 		{ path: '/automations/new', name: 'AutomationNew', component: AutomationBuilder },
