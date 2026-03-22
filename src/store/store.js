@@ -34,6 +34,8 @@ export async function initializeStores() {
 		}
 		if (config.register && config.relationship_schema) {
 			objectStore.registerObjectType('relationship', config.relationship_schema, config.register)
+		if (config.register && config.complaint_schema) {
+			objectStore.registerObjectType('complaint', config.complaint_schema, config.register)
 		}
 	}
 
