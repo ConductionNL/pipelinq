@@ -5,7 +5,7 @@
 			<div class="my-work__title-row">
 				<h2>{{ t('pipelinq', 'My Work') }}</h2>
 				<span v-if="totalCount > 0" class="my-work__counts">
-					{{ t('pipelinq', 'Leads') }} ({{ leadCount }}) · {{ t('pipelinq', 'Requests') }} ({{ requestCount }}) — {{ totalCount }} {{ t('pipelinq', 'items total') }}
+					{{ t('pipelinq', 'Leads') }} ({{ leadCount }}) · {{ t('pipelinq', 'Requests') }} ({{ requestCount }}) · {{ t('pipelinq', 'Tasks') }} ({{ taskCount }}) — {{ totalCount }} {{ t('pipelinq', 'items total') }}
 				</span>
 			</div>
 			<div class="my-work__controls">
@@ -24,6 +24,11 @@
 						:type="filter === 'request' ? 'primary' : 'secondary'"
 						@click="filter = 'request'">
 						{{ t('pipelinq', 'Requests') }}
+					</NcButton>
+					<NcButton
+						:type="filter === 'task' ? 'primary' : 'secondary'"
+						@click="filter = 'task'">
+						{{ t('pipelinq', 'Tasks') }}
 					</NcButton>
 				</div>
 				<label class="show-completed-toggle">
@@ -60,7 +65,7 @@
 				<div class="work-group__items">
 					<div
 						v-for="item in group.items"
-						:key="item.id"
+						:key="item.entityType + '-' + item.id"
 						class="work-card"
 						:class="{ 'work-card--overdue': item.isOverdue, 'work-card--completed': item.isClosed }"
 						tabindex="0"
@@ -68,10 +73,13 @@
 						@keydown.enter="openItem(item)">
 						<div class="work-card__top">
 							<span class="entity-badge" :class="'badge--' + item.entityType">
-								{{ item.entityType === 'lead' ? 'LEAD' : 'REQ' }}
+								{{ badgeLabel(item) }}
+							</span>
+							<span v-if="item.typeSubLabel" class="type-sub-label">
+								{{ item.typeSubLabel }}
 							</span>
 							<span
-								v-if="item.priority && item.priority !== 'normal'"
+								v-if="item.priority && item.priority !== 'normal' && item.priority !== 'normaal'"
 								class="priority-badge"
 								:style="{ color: getPriorityColor(item.priority) }">
 								{{ getPriorityLabel(item.priority) }}
@@ -89,6 +97,7 @@
 							<span v-if="item.entityType === 'lead' && item.value" class="meta-value">
 								EUR {{ Number(item.value).toLocaleString('nl-NL') }}
 							</span>
+							<span v-if="item.assigneeName" class="meta-assignee">{{ item.assigneeName }}</span>
 						</div>
 						<div class="work-card__footer">
 							<span v-if="item.isOverdue" class="overdue-text">
@@ -102,6 +111,9 @@
 							</span>
 							<span v-else class="no-due-text">
 								{{ t('pipelinq', 'No due date') }}
+							</span>
+							<span v-if="item.preferredTimeSlot" class="time-slot-text">
+								{{ item.preferredTimeSlot }}
 							</span>
 						</div>
 					</div>
@@ -120,8 +132,16 @@ import {
 	getPriorityColor,
 } from '../services/requestStatus.js'
 import { isStale } from '../services/pipelineUtils.js'
+import {
+	getTaskTypeLabel,
+	getTaskStatusLabel,
+	getTaskPriorityLabel,
+	getTaskPriorityColor,
+	fetchUserGroups,
+	TASK_PRIORITY_ORDER,
+} from '../services/taskUtils.js'
 
-const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 }
+const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3, hoog: 0, normaal: 2, laag: 3 }
 
 function startOfToday() {
 	const d = new Date()
@@ -157,7 +177,9 @@ export default {
 			showCompleted: false,
 			myLeads: [],
 			myRequests: [],
+			myTasks: [],
 			pipelines: [],
+			userGroups: [],
 		}
 	},
 	computed: {
@@ -216,6 +238,9 @@ export default {
 					overdueDays: isOverdue ? daysBetween(due, now) : 0,
 					isClosed,
 					isStale: isStale(l, 'lead'),
+					typeSubLabel: null,
+					assigneeName: null,
+					preferredTimeSlot: null,
 					_dueMs: due ? due.getTime() : Infinity,
 					_group: this.computeGroup(due, now, weekEnd, isClosed),
 				})
@@ -243,8 +268,43 @@ export default {
 					overdueDays,
 					isClosed: isTerminal,
 					isStale: false,
+					typeSubLabel: null,
+					assigneeName: null,
+					preferredTimeSlot: null,
 					_dueMs: due ? due.getTime() : Infinity,
 					_group: isOverdue ? 'overdue' : 'no-due-date',
+				})
+			}
+
+			// Tasks
+			for (const t of this.myTasks) {
+				const isTerminal = ['afgerond', 'verlopen'].includes(t.status)
+				if (!this.showCompleted && isTerminal) continue
+
+				const due = t.deadline ? new Date(t.deadline) : null
+				const isOverdue = !isTerminal && due ? due < now : false
+				const isDueToday = due ? (due >= now && due < new Date(now.getTime() + 24 * 60 * 60 * 1000)) : false
+				const overdueDays = isOverdue ? daysBetween(due, now) : 0
+
+				items.push({
+					id: t.id,
+					entityType: 'task',
+					title: t.subject || '-',
+					stageOrStatus: getTaskStatusLabel(t.status),
+					pipelineName: '',
+					priority: t.priority || 'normaal',
+					value: null,
+					dueDate: t.deadline,
+					isOverdue,
+					isDueToday,
+					overdueDays,
+					isClosed: isTerminal,
+					isStale: false,
+					typeSubLabel: getTaskTypeLabel(t.type),
+					assigneeName: t.assigneeUserId || t.assigneeGroupId || null,
+					preferredTimeSlot: t.type === 'terugbelverzoek' ? t.preferredTimeSlot : null,
+					_dueMs: due ? due.getTime() : Infinity,
+					_group: this.computeGroup(due, now, weekEnd, isTerminal),
 				})
 			}
 
@@ -257,10 +317,13 @@ export default {
 		},
 
 		leadCount() {
-			return this.filteredItems.filter(i => i.entityType === 'lead').length
+			return this.allItems.filter(i => i.entityType === 'lead').length
 		},
 		requestCount() {
-			return this.filteredItems.filter(i => i.entityType === 'request').length
+			return this.allItems.filter(i => i.entityType === 'request').length
+		},
+		taskCount() {
+			return this.allItems.filter(i => i.entityType === 'task').length
 		},
 		totalCount() {
 			return this.filteredItems.length
@@ -307,6 +370,7 @@ export default {
 		emptyMessage() {
 			if (this.filter === 'lead') return t('pipelinq', 'No leads assigned to you')
 			if (this.filter === 'request') return t('pipelinq', 'No requests assigned to you')
+			if (this.filter === 'task') return t('pipelinq', 'No tasks assigned to you')
 			return t('pipelinq', 'No items assigned to you')
 		},
 	},
@@ -314,8 +378,25 @@ export default {
 		this.fetchAll()
 	},
 	methods: {
-		getPriorityLabel,
-		getPriorityColor,
+		getPriorityLabel(priority) {
+			// Handle both lead/request (English) and task (Dutch) priorities
+			if (['hoog', 'normaal', 'laag'].includes(priority)) {
+				return getTaskPriorityLabel(priority)
+			}
+			return getPriorityLabel(priority)
+		},
+		getPriorityColor(priority) {
+			if (['hoog', 'normaal', 'laag'].includes(priority)) {
+				return getTaskPriorityColor(priority)
+			}
+			return getPriorityColor(priority)
+		},
+
+		badgeLabel(item) {
+			if (item.entityType === 'lead') return 'LEAD'
+			if (item.entityType === 'request') return 'REQ'
+			return 'TASK'
+		},
 
 		computeGroup(due, now, weekEnd, isClosed) {
 			if (!due) return 'no-due-date'
@@ -351,8 +432,36 @@ export default {
 							.then(items => { this.pipelines = items }),
 					)
 				}
+				if (config.task && this.currentUser) {
+					// Fetch user groups for group task inbox
+					promises.push(
+						fetchUserGroups().then(groups => { this.userGroups = groups }),
+					)
+					// Fetch tasks assigned to current user
+					promises.push(
+						this.fetchRaw('task', { assigneeUserId: this.currentUser, _limit: 200 })
+							.then(items => { this.myTasks = items }),
+					)
+				}
 
 				await Promise.all(promises)
+
+				// Also fetch group-assigned tasks
+				if (this.userGroups.length > 0) {
+					const groupTaskPromises = this.userGroups.map(groupId =>
+						this.fetchRaw('task', { assigneeGroupId: groupId, _limit: 100 }),
+					)
+					const groupTaskResults = await Promise.all(groupTaskPromises)
+					const existingIds = new Set(this.myTasks.map(t => t.id))
+					for (const tasks of groupTaskResults) {
+						for (const task of tasks) {
+							if (!existingIds.has(task.id)) {
+								this.myTasks.push(task)
+								existingIds.add(task.id)
+							}
+						}
+					}
+				}
 			} catch (err) {
 				this.error = err.message || t('pipelinq', 'Failed to load work items')
 				console.error('MyWork fetch error:', err)
@@ -399,6 +508,8 @@ export default {
 		openItem(item) {
 			if (item.entityType === 'lead') {
 				this.$router.push({ name: 'LeadDetail', params: { id: item.id } })
+			} else if (item.entityType === 'task') {
+				this.$router.push({ name: 'TaskDetail', params: { id: item.id } })
 			} else {
 				this.$router.push({ name: 'RequestDetail', params: { id: item.id } })
 			}
@@ -568,6 +679,18 @@ export default {
 	border: 1px solid #fdba74;
 }
 
+.badge--task {
+	background: #f3e8ff;
+	color: #7c3aed;
+	border: 1px solid #c4b5fd;
+}
+
+.type-sub-label {
+	font-size: 10px;
+	color: var(--color-text-maxcontrast);
+	font-weight: 600;
+}
+
 .priority-badge {
 	font-size: 11px;
 	font-weight: 600;
@@ -588,7 +711,8 @@ export default {
 }
 
 .meta-stage,
-.meta-pipeline {
+.meta-pipeline,
+.meta-assignee {
 	white-space: nowrap;
 }
 
@@ -599,6 +723,8 @@ export default {
 .work-card__footer {
 	margin-top: 6px;
 	font-size: 12px;
+	display: flex;
+	gap: 12px;
 }
 
 .overdue-text {
@@ -618,6 +744,11 @@ export default {
 .no-due-text {
 	color: var(--color-text-maxcontrast);
 	font-style: italic;
+}
+
+.time-slot-text {
+	color: #92400e;
+	font-weight: 600;
 }
 
 .stale-badge {
