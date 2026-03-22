@@ -41,6 +41,15 @@ class SettingsService
         'product_schema',
         'productCategory_schema',
         'leadProduct_schema',
+        'task_schema',
+        'kennisartikel_schema',
+        'kenniscategorie_schema',
+        'kennisfeedback_schema',
+        'kennisbank_review_interval',
+        'kennisbank_default_visibility',
+        'kennisbank_editor_group',
+        'survey_schema',
+        'surveyResponse_schema',
     ];
 
     /**
