@@ -1,5 +1,7 @@
 # Notifications & Activity Stream Specification
 
+## Status: implemented
+
 ## Purpose
 
 Deliver real-time notifications and a team-visible activity timeline for CRM events so users stay informed about leads, requests, and collaboration actions. This spec covers the notification dispatch logic, activity stream integration, per-category user preferences, notification rendering, and CRM-specific event types including SLA breach warnings, deal won celebrations, and quote lifecycle events.

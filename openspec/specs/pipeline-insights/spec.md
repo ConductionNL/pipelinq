@@ -1,5 +1,7 @@
 # Pipeline Insights Specification
 
+## Status: implemented
+
 ## Purpose
 
 Add temporal, financial, and analytical context to pipeline views so users can spot bottlenecks, prioritize overdue items, forecast revenue, and see conversion metrics at a glance. This spec covers both the real-time visual indicators on pipeline views and the analytical dashboard components for pipeline performance tracking.

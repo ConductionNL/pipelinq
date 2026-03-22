@@ -1,0 +1,7 @@
+schema: spec-driven
+status: proposed
+name: public-intake-forms
+title: Public Intake Forms
+description: Embeddable web forms for external websites that create contacts and leads
+feature_tier: MVP
+created: "2026-03-20"

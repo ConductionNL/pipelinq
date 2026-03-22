@@ -1,0 +1,7 @@
+schema: spec-driven
+status: proposed
+name: contact-relationship-mapping
+title: Contact Relationship Mapping
+description: Bidirectional typed relationships between contacts and clients
+feature_tier: V1
+created: "2026-03-20"

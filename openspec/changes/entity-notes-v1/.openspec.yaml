@@ -1,0 +1,7 @@
+schema: spec-driven
+status: proposed
+name: entity-notes-v1
+title: Entity Notes V1 Features
+description: Note types, rich text, @mentions, attachments, and privacy controls
+feature_tier: V1
+created: "2026-03-20"

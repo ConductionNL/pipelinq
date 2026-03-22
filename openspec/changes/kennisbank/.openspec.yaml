@@ -1,0 +1,7 @@
+schema: spec-driven
+status: proposed
+name: kennisbank
+title: Kennisbank (Knowledge Base)
+description: Searchable knowledge base for KCC agents with articles, FAQs, and procedures
+feature_tier: V1
+created: "2026-03-20"
