@@ -65,6 +65,7 @@ class MetricsFormatterTest extends TestCase
     }//end testFormatAppInfoReturnsCorrectLines()
 
     /**
+     * Test that formatLeadCounts returns correct gauge lines.
      * Test that formatLeadCounts returns gauge lines for each row.
      * Test that formatLeadCounts returns correct gauge lines for each row.
      *
@@ -72,6 +73,8 @@ class MetricsFormatterTest extends TestCase
      */
     public function testFormatLeadCountsReturnsGaugeLines(): void
     {
+        $rows  = [['status' => 'new', 'pipeline' => 'Default', 'cnt' => '5']];
+        $lines = $this->formatter->formatLeadCounts(leadCounts: $rows);
         $lines = $this->formatter->formatLeadCounts(leadCounts: [['status' => 'new', 'pipeline' => 'Default', 'cnt' => '5']]);
 
         $this->assertContains('pipelinq_leads_total{status="new",pipeline="Default"} 5', $lines);
@@ -200,6 +203,14 @@ class MetricsFormatterTest extends TestCase
      *
      * @return void
      */
+    public function testFormatLeadCountsSanitizesSpecialChars(): void
+    {
+        $rows     = [['status' => 'test"value', 'pipeline' => "line\nbreak", 'cnt' => '1']];
+        $lines    = $this->formatter->formatLeadCounts(leadCounts: $rows);
+        $dataLine = array_values(array_filter($lines, fn($l) => str_starts_with($l, 'pipelinq_leads_total{')))[0] ?? '';
+
+        $this->assertStringContainsString('\\"', $dataLine);
+    }//end testFormatLeadCountsSanitizesSpecialChars()
     public function testFormatLeadCountsSanitizesSpecialCharsInLabels(): void
     {
         $rows     = [['status' => 'test"value', 'pipeline' => "line\nbreak", 'cnt' => '1']];
