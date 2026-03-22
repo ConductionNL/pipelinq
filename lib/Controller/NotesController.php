@@ -145,6 +145,33 @@ class NotesController extends Controller
     }//end deleteAll()
 
     /**
+     * Update a single note's message (own notes only).
+     *
+     * @param int $noteId The note ID.
+     *
+     * @return JSONResponse The response containing the updated note.
+     *
+     * @NoAdminRequired
+     */
+    public function update(int $noteId): JSONResponse
+    {
+        $message = $this->request->getParam('message', '');
+        if (trim($message) === '') {
+            return new JSONResponse(['error' => $this->l10n->t('Message is required')], 400);
+        }
+
+        try {
+            $note = $this->notesService->updateNote(
+                noteId: $noteId,
+                message: $message
+            );
+            return new JSONResponse(['note' => $note]);
+        } catch (\Exception $e) {
+            return new JSONResponse(['error' => $e->getMessage()], 403);
+        }
+    }//end update()
+
+    /**
      * Delete a single note (own notes only).
      *
      * @param int $noteId The note ID.

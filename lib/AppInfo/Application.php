@@ -23,12 +23,14 @@ namespace OCA\Pipelinq\AppInfo;
 
 use OCA\OpenRegister\Event\DeepLinkRegistrationEvent;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
+use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\Pipelinq\Dashboard\ClientSearchWidget;
 use OCA\Pipelinq\Dashboard\DealsOverviewWidget;
 use OCA\Pipelinq\Dashboard\MyLeadsWidget;
 use OCA\Pipelinq\Dashboard\RecentActivitiesWidget;
 use OCA\Pipelinq\Listener\DeepLinkRegistrationListener;
+use OCA\Pipelinq\Listener\ObjectDeletedListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -76,6 +78,10 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(
             event: ObjectUpdatedEvent::class,
             listener: ObjectEventListener::class
+        );
+        $context->registerEventListener(
+            event: ObjectDeletedEvent::class,
+            listener: ObjectDeletedListener::class
         );
 
         $context->registerDashboardWidget(DealsOverviewWidget::class);
