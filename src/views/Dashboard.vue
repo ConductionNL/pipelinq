@@ -167,6 +167,13 @@
 				</div>
 			</template>
 
+			<!-- Complaints Overview widget -->
+			<template #widget-complaints-overview>
+				<ComplaintsOverviewWidget
+					:complaints="allComplaints"
+					:loading="loading" />
+			</template>
+
 			<!-- Empty state override with welcome message -->
 			<template #empty>
 				<div v-if="isEmpty" class="welcome-message">
@@ -214,6 +221,7 @@ import { useObjectStore } from '../store/modules/object.js'
 import LeadCreateDialog from './leads/LeadCreateDialog.vue'
 import RequestCreateDialog from './requests/RequestCreateDialog.vue'
 import ClientCreateDialog from './clients/ClientCreateDialog.vue'
+import ComplaintsOverviewWidget from './widgets/ComplaintsOverviewWidget.vue'
 import {
 	getStatusLabel,
 	getStatusColor,
@@ -232,8 +240,9 @@ const DEFAULT_LAYOUT = [
 	{ id: 3, widgetId: 'count-pipeline-value', gridX: 6, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
 	{ id: 4, widgetId: 'count-overdue', gridX: 9, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
 	{ id: 5, widgetId: 'deals-by-stage', gridX: 0, gridY: 2, gridWidth: 6, gridHeight: 4 },
-	{ id: 6, widgetId: 'my-work', gridX: 6, gridY: 2, gridWidth: 6, gridHeight: 4 },
-	{ id: 7, widgetId: 'client-overview', gridX: 0, gridY: 6, gridWidth: 12, gridHeight: 3 },
+	{ id: 6, widgetId: 'complaints-overview', gridX: 6, gridY: 2, gridWidth: 6, gridHeight: 4 },
+	{ id: 7, widgetId: 'my-work', gridX: 0, gridY: 6, gridWidth: 6, gridHeight: 4 },
+	{ id: 8, widgetId: 'client-overview', gridX: 6, gridY: 6, gridWidth: 6, gridHeight: 3 },
 ]
 
 export default {
@@ -247,6 +256,7 @@ export default {
 		LeadCreateDialog,
 		RequestCreateDialog,
 		ClientCreateDialog,
+		ComplaintsOverviewWidget,
 	},
 	data() {
 		return {
@@ -263,6 +273,7 @@ export default {
 			refreshTimer: null,
 			allLeads: [],
 			allRequests: [],
+			allComplaints: [],
 			allPipelines: [],
 			allClients: [],
 			myLeads: [],
@@ -290,6 +301,7 @@ export default {
 				{ id: 'count-pipeline-value', title: t('pipelinq', 'Pipeline Value'), type: 'custom' },
 				{ id: 'count-overdue', title: t('pipelinq', 'Overdue'), type: 'custom' },
 				{ id: 'deals-by-stage', title: t('pipelinq', 'Requests by Status'), type: 'custom' },
+				{ id: 'complaints-overview', title: t('pipelinq', 'Complaints'), type: 'custom' },
 				{ id: 'my-work', title: t('pipelinq', 'My Work'), type: 'custom' },
 				{ id: 'client-overview', title: t('pipelinq', 'Client Overview'), type: 'custom' },
 			]
@@ -466,6 +478,12 @@ export default {
 				if (config.pipeline) {
 					promises.push(
 						this.fetchRaw('pipeline', { _limit: 100 }).then(items => { this.allPipelines = items }),
+					)
+				}
+
+				if (config.complaint) {
+					promises.push(
+						this.fetchRaw('complaint', { _limit: 500 }).then(items => { this.allComplaints = items }),
 					)
 				}
 
