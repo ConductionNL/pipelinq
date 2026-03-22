@@ -41,6 +41,11 @@
 			</span>
 		</template>
 
+		<template #column-queue="{ value }">
+			<span v-if="value && queueMap[value]" class="queue-name">{{ queueMap[value] }}</span>
+			<span v-else>--</span>
+		</template>
+
 		<template #column-requestedAt="{ value }">
 			{{ formatDate(value) }}
 		</template>
@@ -52,6 +57,7 @@ import { inject } from 'vue'
 import { NcSelect } from '@nextcloud/vue'
 import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import { useQueuesStore } from '../../store/modules/queues.js'
 import {
 	getAllowedTransitions,
 	getStatusLabel,
@@ -70,11 +76,25 @@ export default {
 	setup() {
 		const sidebarState = inject('sidebarState', null)
 		const objectStore = useObjectStore()
-		return useListView('request', {
-			sidebarState,
-			objectStore,
-			defaultSort: { key: 'requestedAt', order: 'desc' },
-		})
+		const queuesStore = useQueuesStore()
+		queuesStore.fetchQueues()
+		return {
+			...useListView('request', {
+				sidebarState,
+				objectStore,
+				defaultSort: { key: 'requestedAt', order: 'desc' },
+			}),
+			queuesStore,
+		}
+	},
+	computed: {
+		queueMap() {
+			const map = {}
+			for (const q of this.queuesStore.queues) {
+				map[q.id] = q.title
+			}
+			return map
+		},
 	},
 
 	methods: {
@@ -143,6 +163,10 @@ export default {
 
 .priority-text {
 	font-weight: 600;
+	font-size: 13px;
+}
+
+.queue-name {
 	font-size: 13px;
 }
 </style>

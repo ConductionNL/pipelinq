@@ -56,12 +56,82 @@ class IcpConfigReaderTest extends TestCase
     }//end setUp()
 
     /**
+     * Test getString returns the configured value.
+     * Test getString returns configured value.
+     *
+     * @return void
+     */
+    public function testGetStringReturnsValue(): void
+    {
+        $this->appConfig->method('getValueString')->with(Application::APP_ID, 'k', '')->willReturn('v');
+
+        $this->assertSame('v', $this->reader->getString(key: 'k'));
+    }//end testGetStringReturnsValue()
+
+    /**
+     * Test getJsonArray decodes stored JSON.
+     *
+     * @return void
+     */
+    public function testGetJsonArrayDecodesJson(): void
+    {
+        $this->appConfig->method('getValueString')->willReturn('["a"]');
+
+        $this->assertSame(['a'], $this->reader->getJsonArray(key: 'k'));
+    }//end testGetJsonArrayDecodesJson()
+
+    /**
+     * Test getJsonArray returns empty array for invalid JSON.
+     *
+     * @return void
+     */
+    public function testGetJsonArrayReturnsEmptyForInvalidJson(): void
+    {
+        $this->appConfig->method('getValueString')->willReturn('bad');
+
+        $this->assertSame([], $this->reader->getJsonArray(key: 'k'));
+    }//end testGetJsonArrayReturnsEmptyForInvalidJson()
+
+    /**
+     * Test isBoolTrue returns true for 'true'.
+     *
+     * @return void
+     */
+    public function testIsBoolTrueForTrueString(): void
+    {
+        $this->appConfig->method('getValueString')->willReturn('true');
+
+        $this->assertTrue($this->reader->isBoolTrue(key: 'k'));
+    }//end testIsBoolTrueForTrueString()
+
+    /**
+     * Test isBoolTrue returns false for 'false'.
+     *
+     * @return void
+     */
+    public function testIsBoolFalseForFalseString(): void
+    {
+        $this->appConfig->method('getValueString')->willReturn('false');
+
+        $this->assertFalse($this->reader->isBoolTrue(key: 'k'));
+    }//end testIsBoolFalseForFalseString()
+
+    /**
+     * Test getInt converts string to int.
      * Test that getString returns the configured value.
      *
      * @return void
      */
     public function testGetStringReturnsConfiguredValue(): void
     {
+        $this->appConfig->method('getValueString')->with(Application::APP_ID, 'k', '')->willReturn('v');
+
+        $this->assertSame('v', $this->reader->getString(key: 'k'));
+    }//end testGetStringReturnsConfiguredValue()
+
+    /**
+     * Test getJsonArray decodes stored array.
+        $this->appConfig->method('getValueString')->with(Application::APP_ID, 'my_key', '')->willReturn('hello');
         $this->appConfig
             ->method('getValueString')
             ->with(Application::APP_ID, 'my_key', '')
@@ -107,11 +177,76 @@ class IcpConfigReaderTest extends TestCase
      */
     public function testGetJsonArrayDecodesStoredArray(): void
     {
+        $this->appConfig->method('getValueString')->willReturn('["a","b"]');
+
+        $this->assertSame(['a', 'b'], $this->reader->getJsonArray(key: 'k'));
+    }//end testGetJsonArrayDecodesStoredArray()
+
+    /**
+     * Test getJsonArray returns empty array on invalid JSON.
+     *
+     * @return void
+     */
+    public function testGetJsonArrayReturnsEmptyOnInvalidJson(): void
+    {
+        $this->appConfig->method('getValueString')->willReturn('not-json');
+
+        $this->assertSame([], $this->reader->getJsonArray(key: 'k'));
+    }//end testGetJsonArrayReturnsEmptyOnInvalidJson()
+
+    /**
+     * Test isBoolTrue returns true for 'true'.
+     *
+     * @return void
+     */
+    public function testIsBoolTrueForTrueString(): void
+    {
+        $this->appConfig->method('getValueString')->willReturn('true');
+
+        $this->assertTrue($this->reader->isBoolTrue(key: 'k'));
+    }//end testIsBoolTrueForTrueString()
+
+    /**
+     * Test isBoolTrue returns false for 'false'.
+     *
+     * @return void
+     */
+    public function testIsBoolFalseForFalseString(): void
+    {
+        $this->appConfig->method('getValueString')->willReturn('false');
+
+        $this->assertFalse($this->reader->isBoolTrue(key: 'k'));
+    }//end testIsBoolFalseForFalseString()
+
+    /**
+     * Test getInt converts string to integer.
+     *
+     * @return void
+     */
+    public function testGetIntConvertsString(): void
+    {
+        $this->appConfig->method('getValueString')->willReturn('7');
+
+        $this->assertSame(7, $this->reader->getInt(key: 'k'));
+    }//end testGetIntConvertsString()
+
+    /**
+     * Test setBool stores 'true' string.
+        $this->assertSame(['a', 'b'], $this->reader->getJsonArray(key: 'json_key'));
+    }//end testGetJsonArrayDecodesStoredArray()
+
+    /**
+     * Test that getJsonArray returns empty array for invalid JSON.
         $this->appConfig
             ->method('getValueString')
             ->with(Application::APP_ID, 'json_key', '[]')
             ->willReturn('["a","b","c"]');
 
+        $this->assertSame(['a', 'b', 'c'], $this->reader->getJsonArray(key: 'json_key'));
+    }//end testGetJsonArrayDecodesStoredArray()
+
+    /**
+     * Test that getJsonArray returns empty array for invalid JSON.
         $result = $this->reader->getJsonArray(key: 'json_key');
 
         $this->assertSame(['a', 'b', 'c'], $result);
@@ -124,6 +259,9 @@ class IcpConfigReaderTest extends TestCase
      */
     public function testGetJsonArrayReturnsEmptyArrayOnInvalidJson(): void
     {
+        $this->appConfig->method('getValueString')->willReturn('not-valid-json');
+
+        $this->assertSame([], $this->reader->getJsonArray(key: 'bad_key'));
         $this->appConfig
             ->method('getValueString')
             ->willReturn('not-valid-json');
@@ -140,6 +278,7 @@ class IcpConfigReaderTest extends TestCase
      */
     public function testIsBoolTrueReturnsTrueForTrueString(): void
     {
+        $this->appConfig->method('getValueString')->willReturn('true');
         $this->appConfig
             ->method('getValueString')
             ->willReturn('true');
@@ -154,6 +293,7 @@ class IcpConfigReaderTest extends TestCase
      */
     public function testIsBoolTrueReturnsFalseForFalseString(): void
     {
+        $this->appConfig->method('getValueString')->willReturn('false');
         $this->appConfig
             ->method('getValueString')
             ->willReturn('false');
@@ -168,6 +308,15 @@ class IcpConfigReaderTest extends TestCase
      */
     public function testGetIntConvertsStringToInt(): void
     {
+        $this->appConfig->method('getValueString')->willReturn('7');
+
+        $this->assertSame(7, $this->reader->getInt(key: 'k'));
+    }//end testGetIntConvertsStringToInt()
+
+    /**
+     * Test setBool stores 'true' string.
+     * Test setBool stores 'true'.
+        $this->appConfig->method('getValueString')->willReturn('99');
         $this->appConfig
             ->method('getValueString')
             ->willReturn('99');
@@ -176,6 +325,7 @@ class IcpConfigReaderTest extends TestCase
     }//end testGetIntConvertsStringToInt()
 
     /**
+     * Test that setBool stores 'true' string when passed true.
      * Test that getInt returns zero for an empty stored value.
      *
      * @return void
@@ -196,6 +346,27 @@ class IcpConfigReaderTest extends TestCase
      */
     public function testSetBoolStoresTrueString(): void
     {
+        $this->appConfig->expects($this->once())->method('setValueString')->with(Application::APP_ID, 'k', 'true');
+
+        $this->reader->setBool(key: 'k', value: true);
+    }//end testSetBoolStoresTrueString()
+
+    /**
+     * Test setInt stores integer as string.
+     * Test setInt stores int as string.
+     *
+     * @return void
+     */
+    public function testSetIntStoresAsString(): void
+    {
+        $this->appConfig->expects($this->once())->method('setValueString')->with(Application::APP_ID, 'k', '5');
+
+        $this->reader->setInt(key: 'k', value: 5);
+    }//end testSetIntStoresAsString()
+
+    /**
+     * Test setJsonArray stores array as JSON.
+        $this->appConfig->expects($this->once())->method('setValueString')->with(Application::APP_ID, 'bool_key', 'true');
         $this->appConfig
             ->expects($this->once())
             ->method('setValueString')
@@ -205,12 +376,14 @@ class IcpConfigReaderTest extends TestCase
     }//end testSetBoolStoresTrueString()
 
     /**
+     * Test that setBool stores 'false' string when passed false.
      * Test that setBool stores 'false' when passed false.
      *
      * @return void
      */
     public function testSetBoolStoresFalseString(): void
     {
+        $this->appConfig->expects($this->once())->method('setValueString')->with(Application::APP_ID, 'bool_key', 'false');
         $this->appConfig
             ->expects($this->once())
             ->method('setValueString')
@@ -226,6 +399,7 @@ class IcpConfigReaderTest extends TestCase
      */
     public function testSetIntStoresIntAsString(): void
     {
+        $this->appConfig->expects($this->once())->method('setValueString')->with(Application::APP_ID, 'int_key', '42');
         $this->appConfig
             ->expects($this->once())
             ->method('setValueString')
@@ -241,6 +415,11 @@ class IcpConfigReaderTest extends TestCase
      */
     public function testSetJsonArrayStoresAsJson(): void
     {
+        $this->appConfig->expects($this->once())->method('setValueString')->with(Application::APP_ID, 'k', '["x"]');
+
+        $this->reader->setJsonArray(key: 'k', value: ['x']);
+    }//end testSetJsonArrayStoresAsJson()
+        $this->appConfig->expects($this->once())->method('setValueString')->with(Application::APP_ID, 'arr_key', '["x","y"]');
         $this->appConfig
             ->expects($this->once())
             ->method('setValueString')
@@ -250,12 +429,14 @@ class IcpConfigReaderTest extends TestCase
     }//end testSetJsonArrayStoresAsJson()
 
     /**
+     * Test that setJsonArray stores empty array for non-array input.
      * Test that setJsonArray stores an empty array when passed a non-array.
      *
      * @return void
      */
     public function testSetJsonArrayStoresEmptyArrayForNonArray(): void
     {
+        $this->appConfig->expects($this->once())->method('setValueString')->with(Application::APP_ID, 'arr_key', '[]');
         $this->appConfig
             ->expects($this->once())
             ->method('setValueString')
