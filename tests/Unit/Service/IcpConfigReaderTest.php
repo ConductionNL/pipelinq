@@ -117,6 +117,13 @@ class IcpConfigReaderTest extends TestCase
 
     /**
      * Test that getJsonArray returns empty array for invalid JSON.
+        $result = $this->reader->getJsonArray(key: 'json_key');
+
+        $this->assertSame(['a', 'b', 'c'], $result);
+    }//end testGetJsonArrayDecodesStoredArray()
+
+    /**
+     * Test that getJsonArray returns empty array when value is not valid JSON.
      *
      * @return void
      */
@@ -125,6 +132,13 @@ class IcpConfigReaderTest extends TestCase
         $this->appConfig->method('getValueString')->willReturn('not-valid-json');
 
         $this->assertSame([], $this->reader->getJsonArray(key: 'bad_key'));
+        $this->appConfig
+            ->method('getValueString')
+            ->willReturn('not-valid-json');
+
+        $result = $this->reader->getJsonArray(key: 'bad_key');
+
+        $this->assertSame([], $result);
     }//end testGetJsonArrayReturnsEmptyArrayOnInvalidJson()
 
     /**
@@ -135,6 +149,9 @@ class IcpConfigReaderTest extends TestCase
     public function testIsBoolTrueReturnsTrueForTrueString(): void
     {
         $this->appConfig->method('getValueString')->willReturn('true');
+        $this->appConfig
+            ->method('getValueString')
+            ->willReturn('true');
 
         $this->assertTrue($this->reader->isBoolTrue(key: 'flag_key'));
     }//end testIsBoolTrueReturnsTrueForTrueString()
@@ -147,6 +164,9 @@ class IcpConfigReaderTest extends TestCase
     public function testIsBoolTrueReturnsFalseForFalseString(): void
     {
         $this->appConfig->method('getValueString')->willReturn('false');
+        $this->appConfig
+            ->method('getValueString')
+            ->willReturn('false');
 
         $this->assertFalse($this->reader->isBoolTrue(key: 'flag_key'));
     }//end testIsBoolTrueReturnsFalseForFalseString()
@@ -159,9 +179,26 @@ class IcpConfigReaderTest extends TestCase
     public function testGetIntConvertsStringToInt(): void
     {
         $this->appConfig->method('getValueString')->willReturn('99');
+        $this->appConfig
+            ->method('getValueString')
+            ->willReturn('99');
 
         $this->assertSame(99, $this->reader->getInt(key: 'count_key'));
     }//end testGetIntConvertsStringToInt()
+
+    /**
+     * Test that getInt returns zero for an empty stored value.
+     *
+     * @return void
+     */
+    public function testGetIntReturnsZeroForEmpty(): void
+    {
+        $this->appConfig
+            ->method('getValueString')
+            ->willReturn('0');
+
+        $this->assertSame(0, $this->reader->getInt(key: 'count_key'));
+    }//end testGetIntReturnsZeroForEmpty()
 
     /**
      * Test that setBool stores 'true' when passed true.

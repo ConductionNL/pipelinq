@@ -37,6 +37,7 @@ class SettingsService
         'contact_schema',
         'lead_schema',
         'request_schema',
+        'complaint_schema',
         'pipeline_schema',
         'product_schema',
         'productCategory_schema',
@@ -50,6 +51,11 @@ class SettingsService
         'kennisbank_editor_group',
         'survey_schema',
         'surveyResponse_schema',
+        'complaint_sla_service',
+        'complaint_sla_product',
+        'complaint_sla_communication',
+        'complaint_sla_billing',
+        'complaint_sla_other',
     ];
 
     /**
