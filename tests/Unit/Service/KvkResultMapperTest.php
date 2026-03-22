@@ -45,6 +45,7 @@ class KvkResultMapperTest extends TestCase
     }//end setUp()
 
     /**
+     * Test that a full KVK result is mapped correctly.
      * Test that a complete KVK result is mapped correctly.
      *
      * @return void
@@ -115,6 +116,10 @@ class KvkResultMapperTest extends TestCase
     public function testMapResultReturnsNullWithoutKvkNumber(): void
     {
         $this->assertNull($this->mapper->mapResult(item: ['naam' => 'Test'], sbiCode: ''));
+    }//end testMapResultReturnsNullWithoutKvkNumber()
+
+    /**
+     * Test that inactive company is mapped correctly.
         $this->assertNull($this->mapper->mapResult(item: ['eersteHandelsnaam' => 'No Number'], sbiCode: '6201'));
         $result = $this->mapper->mapResult(item: ['eersteHandelsnaam' => 'No Number B.V.'], sbiCode: '6201');
         $item = [
@@ -138,6 +143,7 @@ class KvkResultMapperTest extends TestCase
 
     /**
      * Test that SBI prefix matching finds the description.
+     * Test SBI prefix matching.
      *
      * @return void
      */

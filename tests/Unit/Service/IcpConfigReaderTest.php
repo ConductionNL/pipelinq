@@ -254,6 +254,7 @@ class IcpConfigReaderTest extends TestCase
 
     /**
      * Test setBool stores 'true' string.
+     * Test setBool stores 'true'.
         $this->appConfig->method('getValueString')->willReturn('99');
         $this->appConfig
             ->method('getValueString')

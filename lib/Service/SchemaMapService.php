@@ -34,6 +34,14 @@ class SchemaMapService
      * @var array<string, string>
      */
     private const SCHEMA_MAPPING = [
+        'client_schema'       => 'client',
+        'contact_schema'      => 'contact',
+        'lead_schema'         => 'lead',
+        'request_schema'      => 'request',
+        'pipeline_schema'     => 'pipeline',
+        'queue_schema'        => 'queue',
+        'skill_schema'        => 'skill',
+        'agentProfile_schema' => 'agentProfile',
         'client_schema'   => 'client',
         'contact_schema'  => 'contact',
         'lead_schema'     => 'lead',

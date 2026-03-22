@@ -71,6 +71,10 @@
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
 				:name="t('pipelinq', 'Surveys')"\n\t\t\t\t:to="{ name: 'Surveys' }">\n\t\t\t\t<template #icon>\n\t\t\t\t\t<EmoticonHappyOutline :size="20" />\n\t\t\t\t</template>\n\t\t\t</NcAppNavigationItem>\n\t\t\t<NcAppNavigationItem\n\t\t\t\t:name="t('pipelinq', 'Kennisbank')"
+				:name="t('pipelinq', 'Queues')"
+				:to="{ name: 'Queues' }">
+				<template #icon>
+					<InboxMultiple :size="20" />
 				:name="t('pipelinq', 'Kennisbank')"
 				:to="{ name: 'Kennisbank' }">
 				<template #icon>
@@ -129,6 +133,7 @@ import EmoticonHappyOutline from 'vue-material-design-icons/EmoticonHappyOutline
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
+import InboxMultiple from 'vue-material-design-icons/InboxMultiple.vue'
 import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
 
@@ -153,6 +158,7 @@ export default {
 		BookOpenPageVariant,
 		BookOpenVariantOutline,
 		PackageVariant,
+		InboxMultiple,
 		PhoneMessage,
 		AlertCircleOutline,
 		Cog,
