@@ -32,6 +32,8 @@
           "kennisartikel",
           "kenniscategorie",
           "kennisfeedback"
+          "emailLink",
+          "calendarLink"
           "relationship"
           "survey",
           "surveyResponse"
@@ -1780,6 +1782,82 @@
             "type": "number",
             "description": "Aggregate usefulness rating score (percentage of positive ratings)",
             "default": 0,
+      "emailLink": {
+        "slug": "emailLink",
+        "title": "Email Link",
+        "icon": "EmailOutline",
+        "version": "1.0.0",
+        "summary": "A link between an email and a CRM entity",
+        "description": "Stores metadata for emails synced from Nextcloud Mail and linked to Pipelinq entities. Full email body is accessed on-demand from Nextcloud Mail.",
+        "@type": "schema:EmailMessage",
+        "required": [
+          "messageId",
+          "linkedEntityType",
+          "linkedEntityId"
+        ],
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "description": "Email message ID from Nextcloud Mail"
+          },
+          "subject": {
+            "type": "string",
+            "description": "Email subject line"
+          },
+          "sender": {
+            "type": "string",
+            "description": "Sender email address"
+          },
+          "recipients": {
+            "type": "array",
+            "description": "Recipient email addresses",
+            "items": { "type": "string" },
+            "visible": false
+          },
+          "date": {
+            "type": "string",
+            "description": "Email date",
+            "format": "date-time"
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Email thread ID for conversation grouping",
+            "visible": false
+          },
+          "linkedEntityType": {
+            "type": "string",
+            "description": "Type of linked CRM entity",
+            "enum": ["client", "contact", "lead", "request"],
+            "title": "Entity Type",
+            "facetable": true
+          },
+          "linkedEntityId": {
+            "type": "string",
+            "description": "UUID of the linked CRM entity",
+            "format": "uuid"
+          },
+          "direction": {
+            "type": "string",
+            "description": "Email direction",
+            "enum": ["inbound", "outbound"],
+            "title": "Direction",
+            "facetable": true
+          },
+          "syncSource": {
+            "type": "string",
+            "description": "Nextcloud Mail account ID",
+            "visible": false
+          },
+          "excluded": {
+            "type": "boolean",
+            "description": "Whether this email is excluded from future sync",
+            "default": false,
+            "visible": false
+          },
+          "deleted": {
+            "type": "boolean",
+            "description": "Whether the source email has been deleted",
+            "default": false,
             "visible": false
           }
         }
@@ -1882,6 +1960,74 @@
             "default": "nieuw",
             "title": "Status",
             "facetable": true
+      "calendarLink": {
+        "slug": "calendarLink",
+        "title": "Calendar Link",
+        "icon": "CalendarCheck",
+        "version": "1.0.0",
+        "summary": "A link between a calendar event and a CRM entity",
+        "description": "Stores metadata for calendar events synced with Nextcloud Calendar and linked to Pipelinq entities.",
+        "@type": "schema:Event",
+        "required": [
+          "eventUid",
+          "linkedEntityType",
+          "linkedEntityId"
+        ],
+        "properties": {
+          "eventUid": {
+            "type": "string",
+            "description": "Calendar event UID"
+          },
+          "title": {
+            "type": "string",
+            "description": "Event title"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "Event start date and time",
+            "format": "date-time"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "Event end date and time",
+            "format": "date-time"
+          },
+          "attendees": {
+            "type": "array",
+            "description": "Attendee email addresses",
+            "items": { "type": "string" },
+            "visible": false
+          },
+          "linkedEntityType": {
+            "type": "string",
+            "description": "Type of linked CRM entity",
+            "enum": ["client", "contact", "lead", "request"],
+            "title": "Entity Type",
+            "facetable": true
+          },
+          "linkedEntityId": {
+            "type": "string",
+            "description": "UUID of the linked CRM entity",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "description": "Event status",
+            "enum": ["scheduled", "completed", "cancelled"],
+            "default": "scheduled",
+            "title": "Status",
+            "facetable": true
+          },
+          "createdFrom": {
+            "type": "string",
+            "description": "Where the event was created",
+            "enum": ["pipelinq", "calendar"],
+            "visible": false
+          },
+          "notes": {
+            "type": "string",
+            "description": "Post-event notes",
+            "visible": false
           }
         }
       }
