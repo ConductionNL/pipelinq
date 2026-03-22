@@ -35,6 +35,9 @@ import KennisbankHome from '../views/kennisbank/KennisbankHome.vue'
 import ArticleDetail from '../views/kennisbank/ArticleDetail.vue'
 import ArticleEditor from '../views/kennisbank/ArticleEditor.vue'
 import CategoryManager from '../views/kennisbank/CategoryManager.vue'
+import RapportageDashboard from '../views/rapportage/RapportageDashboard.vue'
+import ChannelAnalytics from '../views/rapportage/ChannelAnalytics.vue'
+import AgentPerformance from '../views/rapportage/AgentPerformance.vue'
 
 Vue.use(Router)
 
@@ -78,6 +81,9 @@ export default new Router({
 		{ path: '/kennisbank/articles/:id', name: 'KennisbankDetail', component: ArticleDetail, props: route => ({ articleId: route.params.id }) },
 		{ path: '/kennisbank/articles/:id/edit', name: 'KennisbankEdit', component: ArticleEditor, props: route => ({ articleId: route.params.id }) },
 		{ path: '/kennisbank/categories', name: 'KennisbankCategories', component: CategoryManager },
+		{ path: '/rapportage', name: 'Rapportage', component: RapportageDashboard },
+		{ path: '/rapportage/channels', name: 'ChannelAnalytics', component: ChannelAnalytics },
+		{ path: '/rapportage/agents', name: 'AgentPerformance', component: AgentPerformance },
 		{ path: '/pipelines', name: 'Pipelines', component: PipelineManager },
 		{ path: '*', redirect: '/' },
 	],
