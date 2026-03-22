@@ -52,7 +52,7 @@
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
-				:name="t('pipelinq', 'Kennisbank')"
+				:name="t('pipelinq', 'Surveys')"\n\t\t\t\t:to="{ name: 'Surveys' }">\n\t\t\t\t<template #icon>\n\t\t\t\t\t<EmoticonHappyOutline :size="20" />\n\t\t\t\t</template>\n\t\t\t</NcAppNavigationItem>\n\t\t\t<NcAppNavigationItem\n\t\t\t\t:name="t('pipelinq', 'Kennisbank')"
 				:to="{ name: 'Kennisbank' }">
 				<template #icon>
 					<BookOpenPageVariant :size="20" />
@@ -105,6 +105,7 @@ import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
 import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
+import EmoticonHappyOutline from 'vue-material-design-icons/EmoticonHappyOutline.vue'
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
@@ -125,6 +126,7 @@ export default {
 		BookOpenPageVariant,
 		BookOpenVariantOutline,
 		PackageVariant,
+		EmoticonHappyOutline,
 		Cog,
 		Pipe,
 	},
