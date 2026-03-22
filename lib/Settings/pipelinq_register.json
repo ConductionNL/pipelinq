@@ -29,6 +29,7 @@
           "product",
           "productCategory",
           "leadProduct",
+          "taak"
           "kennisartikel",
           "kenniscategorie",
           "kennisfeedback"
@@ -1671,6 +1672,153 @@
           }
         }
       }
+      "taak": {
+        "slug": "taak",
+        "title": "Task",
+        "icon": "ClipboardCheck",
+        "version": "1.0.0",
+        "summary": "A callback request or follow-up task",
+        "description": "Represents a terugbelverzoek (callback request) or opvolgtaak (follow-up task) assigned to a user or department. Tracks priority, deadline, status lifecycle, and callback attempts. Mapped to VNG InterneTaak and Schema.org Action.",
+        "@type": "schema:Action",
+        "required": [
+          "type",
+          "subject",
+          "assignee",
+          "assigneeType",
+          "priority",
+          "deadline",
+          "status",
+          "createdBy"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Task type — terugbelverzoek (callback), opvolgtaak (follow-up), or informatievraag (information request)",
+            "enum": [
+              "terugbelverzoek",
+              "opvolgtaak",
+              "informatievraag"
+            ],
+            "title": "Type",
+            "facetable": true
+          },
+          "subject": {
+            "type": "string",
+            "description": "Task subject line",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description or context",
+            "visible": false
+          },
+          "client": {
+            "type": "string",
+            "description": "UUID reference to the client",
+            "format": "uuid"
+          },
+          "zaak": {
+            "type": "string",
+            "description": "UUID reference to the linked case",
+            "format": "uuid",
+            "visible": false
+          },
+          "contactmoment": {
+            "type": "string",
+            "description": "UUID reference to the originating contactmoment",
+            "format": "uuid",
+            "visible": false
+          },
+          "request": {
+            "type": "string",
+            "description": "UUID reference to the linked request",
+            "format": "uuid",
+            "visible": false
+          },
+          "assignee": {
+            "type": "string",
+            "description": "Nextcloud user UID or group ID of the assignee",
+            "title": "Assignee",
+            "facetable": true
+          },
+          "assigneeType": {
+            "type": "string",
+            "description": "Whether the assignee is a user or group",
+            "enum": [
+              "user",
+              "group"
+            ],
+            "default": "user",
+            "visible": false
+          },
+          "priority": {
+            "type": "string",
+            "description": "Task priority level",
+            "enum": [
+              "hoog",
+              "normaal",
+              "laag"
+            ],
+            "default": "normaal",
+            "title": "Priority",
+            "facetable": true
+          },
+          "deadline": {
+            "type": "string",
+            "description": "Completion deadline",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "description": "Task lifecycle status",
+            "enum": [
+              "open",
+              "in_behandeling",
+              "afgerond",
+              "verlopen"
+            ],
+            "default": "open",
+            "title": "Status",
+            "facetable": true
+          },
+          "preferredTimeSlot": {
+            "type": "string",
+            "description": "Preferred callback time window (e.g., 'Dinsdag 14:00 - 16:00')",
+            "visible": false
+          },
+          "callbackPhone": {
+            "type": "string",
+            "description": "Override callback phone number (different from client's primary)",
+            "visible": false
+          },
+          "result": {
+            "type": "string",
+            "description": "Completion result text",
+            "visible": false
+          },
+          "completedAt": {
+            "type": "string",
+            "description": "Completion timestamp",
+            "format": "date-time",
+            "visible": false
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "Nextcloud user UID of the creating agent",
+            "title": "Created by",
+            "facetable": true
+          },
+          "attempts": {
+            "type": "integer",
+            "description": "Number of callback attempts made",
+            "default": 0,
+            "visible": false
+          },
+          "sourceApp": {
+            "type": "string",
+            "description": "Originating app identifier",
+            "default": "pipelinq",
       "kennisartikel": {
         "slug": "kennisartikel",
         "title": "Knowledge Article",
