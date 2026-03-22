@@ -1,0 +1,6 @@
+schema: spec-driven
+name: klantbeeld-360
+status: proposed
+created: 2026-03-20
+specs:
+  - specs/klantbeeld-360/spec.md
