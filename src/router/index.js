@@ -20,6 +20,8 @@ import ContactmomentDetail from '../views/contactmomenten/ContactmomentDetail.vu
 import TaskList from '../views/tasks/TaskList.vue'
 import TaskDetail from '../views/tasks/TaskDetail.vue'
 import MyWork from '../views/MyWork.vue'
+import QueueList from '../views/queues/QueueList.vue'
+import QueueDetail from '../views/queues/QueueDetail.vue'
 import KennisbankHome from '../views/kennisbank/KennisbankHome.vue'
 import KennisbankDetail from '../views/kennisbank/KennisbankDetail.vue'
 import KennisbankEditor from '../views/kennisbank/KennisbankEditor.vue'
@@ -54,6 +56,8 @@ export default new Router({
 		{ path: '/products', name: 'Products', component: ProductList },
 		{ path: '/products/:id', name: 'ProductDetail', component: ProductDetail, props: route => ({ productId: route.params.id }) },
 		{ path: '/pipeline', name: 'Pipeline', component: PipelineBoard },
+		{ path: '/queues', name: 'Queues', component: QueueList },
+		{ path: '/queues/:id', name: 'QueueDetail', component: QueueDetail, props: route => ({ queueId: route.params.id }) },
 		{ path: '/kennisbank', name: 'Kennisbank', component: KennisbankHome },
 		{ path: '/kennisbank/new', name: 'KennisbankNew', component: KennisbankEditor, props: () => ({ articleId: 'new' }) },
 		{ path: '/kennisbank/:id', name: 'KennisbankDetail', component: KennisbankDetail, props: route => ({ articleId: route.params.id }) },

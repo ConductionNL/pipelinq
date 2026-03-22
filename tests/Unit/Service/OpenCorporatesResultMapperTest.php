@@ -46,6 +46,7 @@ class OpenCorporatesResultMapperTest extends TestCase
 
     /**
      * Test that a complete company is mapped correctly.
+     * Test that a full company is mapped correctly.
      * Test that a complete OpenCorporates result is mapped correctly.
      *
      * @return void
