@@ -38,6 +38,20 @@
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
+				:name="t('pipelinq', 'Tasks')"
+				:to="{ name: 'Tasks' }">
+				<template #icon>
+					<ClipboardCheck :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
+				:name="t('pipelinq', 'Contactmomenten')"
+				:to="{ name: 'Contactmomenten' }">
+				<template #icon>
+					<PhoneMessage :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
 				:name="t('pipelinq', 'Products')"
 				:to="{ name: 'Products' }">
 				<template #icon>
@@ -49,6 +63,13 @@
 				:to="{ name: 'Pipeline' }">
 				<template #icon>
 					<ViewColumn :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
+				:name="t('pipelinq', 'Kennisbank')"
+				:to="{ name: 'Kennisbank' }">
+				<template #icon>
+					<BookOpenPageVariant :size="20" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
@@ -96,8 +117,11 @@ import FileDocument from 'vue-material-design-icons/FileDocument.vue'
 import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
 import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
 import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
+import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
+import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
+import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
 
@@ -114,8 +138,11 @@ export default {
 		TrendingUp,
 		ViewColumn,
 		AccountCheck,
+		ClipboardCheck,
+		BookOpenPageVariant,
 		BookOpenVariantOutline,
 		PackageVariant,
+		PhoneMessage,
 		Cog,
 		Pipe,
 	},

@@ -13,7 +13,14 @@ import LeadDetail from '../views/leads/LeadDetail.vue'
 import ProductList from '../views/products/ProductList.vue'
 import ProductDetail from '../views/products/ProductDetail.vue'
 import PipelineBoard from '../views/pipeline/PipelineBoard.vue'
+import ContactmomentenList from '../views/contactmomenten/ContactmomentenList.vue'
+import ContactmomentDetail from '../views/contactmomenten/ContactmomentDetail.vue'
+import TaskList from '../views/tasks/TaskList.vue'
+import TaskDetail from '../views/tasks/TaskDetail.vue'
 import MyWork from '../views/MyWork.vue'
+import KennisbankHome from '../views/kennisbank/KennisbankHome.vue'
+import KennisbankDetail from '../views/kennisbank/KennisbankDetail.vue'
+import KennisbankEditor from '../views/kennisbank/KennisbankEditor.vue'
 import PipelineManager from '../views/settings/PipelineManager.vue'
 
 Vue.use(Router)
@@ -31,9 +38,17 @@ export default new Router({
 		{ path: '/contacts/:id', name: 'ContactDetail', component: ContactDetail, props: route => ({ contactId: route.params.id }) },
 		{ path: '/leads', name: 'Leads', component: LeadList },
 		{ path: '/leads/:id', name: 'LeadDetail', component: LeadDetail, props: route => ({ leadId: route.params.id }) },
+		{ path: '/contactmomenten', name: 'Contactmomenten', component: ContactmomentenList },
+		{ path: '/contactmomenten/:id', name: 'ContactmomentDetail', component: ContactmomentDetail, props: route => ({ contactmomentId: route.params.id }) },
+		{ path: '/tasks', name: 'Tasks', component: TaskList },
+		{ path: '/tasks/:id', name: 'TaskDetail', component: TaskDetail, props: route => ({ taskId: route.params.id }) },
 		{ path: '/products', name: 'Products', component: ProductList },
 		{ path: '/products/:id', name: 'ProductDetail', component: ProductDetail, props: route => ({ productId: route.params.id }) },
 		{ path: '/pipeline', name: 'Pipeline', component: PipelineBoard },
+		{ path: '/kennisbank', name: 'Kennisbank', component: KennisbankHome },
+		{ path: '/kennisbank/new', name: 'KennisbankNew', component: KennisbankEditor, props: () => ({ articleId: 'new' }) },
+		{ path: '/kennisbank/:id', name: 'KennisbankDetail', component: KennisbankDetail, props: route => ({ articleId: route.params.id }) },
+		{ path: '/kennisbank/:id/edit', name: 'KennisbankEdit', component: KennisbankEditor, props: route => ({ articleId: route.params.id }) },
 		{ path: '/my-work', name: 'MyWork', component: MyWork },
 		{ path: '/pipelines', name: 'Pipelines', component: PipelineManager },
 		{ path: '*', redirect: '/' },
