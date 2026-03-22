@@ -32,6 +32,11 @@ export async function initializeStores() {
 		if (config.register && config.leadProduct_schema) {
 			objectStore.registerObjectType('leadProduct', config.leadProduct_schema, config.register)
 		}
+		if (config.register && config.automation_schema) {
+			objectStore.registerObjectType('automation', config.automation_schema, config.register)
+		}
+		if (config.register && config.automationLog_schema) {
+			objectStore.registerObjectType('automationLog', config.automationLog_schema, config.register)
 		if (config.register && config.relationship_schema) {
 			objectStore.registerObjectType('relationship', config.relationship_schema, config.register)
 		if (config.register && config.queue_schema) {

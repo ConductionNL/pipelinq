@@ -43,6 +43,9 @@ return [
         ['name' => 'prospect_settings#index', 'url' => '/api/prospects/settings', 'verb' => 'GET'],
         ['name' => 'prospect_settings#update', 'url' => '/api/prospects/settings', 'verb' => 'PUT'],
 
+        // Automations
+        ['name' => 'automation#metadata', 'url' => '/api/automations/metadata', 'verb' => 'GET'],
+        ['name' => 'automation#test', 'url' => '/api/automations/test', 'verb' => 'POST'],
         // Kennisbank public API
         ['name' => 'kennisbank#publicIndex', 'url' => '/api/kennisbank/public', 'verb' => 'GET'],
         ['name' => 'kennisbank#publicShow', 'url' => '/api/kennisbank/public/{id}', 'verb' => 'GET'],
