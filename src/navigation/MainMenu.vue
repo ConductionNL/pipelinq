@@ -38,6 +38,17 @@
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
+				:name="t('pipelinq', 'Tasks')"
+				:to="{ name: 'Tasks' }">
+				<template #icon>
+					<ClipboardCheck :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
+				:name="t('pipelinq', 'Contactmomenten')"
+				:to="{ name: 'Contactmomenten' }">
+				<template #icon>
+					<PhoneMessage :size="20" />
 				:name="t('pipelinq', 'Complaints')"
 				:to="{ name: 'Complaints' }">
 				<template #icon>
@@ -60,6 +71,7 @@
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
 				:name="t('pipelinq', 'Surveys')"\n\t\t\t\t:to="{ name: 'Surveys' }">\n\t\t\t\t<template #icon>\n\t\t\t\t\t<EmoticonHappyOutline :size="20" />\n\t\t\t\t</template>\n\t\t\t</NcAppNavigationItem>\n\t\t\t<NcAppNavigationItem\n\t\t\t\t:name="t('pipelinq', 'Kennisbank')"
+				:name="t('pipelinq', 'Kennisbank')"
 				:to="{ name: 'Kennisbank' }">
 				<template #icon>
 					<BookOpenPageVariant :size="20" />
@@ -110,10 +122,12 @@ import FileDocument from 'vue-material-design-icons/FileDocument.vue'
 import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
 import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
 import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
+import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
 import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import EmoticonHappyOutline from 'vue-material-design-icons/EmoticonHappyOutline.vue'
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
+import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
@@ -135,6 +149,11 @@ export default {
 		BookOpenVariantOutline,
 		PackageVariant,
 		EmoticonHappyOutline,
+		ClipboardCheck,
+		BookOpenPageVariant,
+		BookOpenVariantOutline,
+		PackageVariant,
+		PhoneMessage,
 		AlertCircleOutline,
 		Cog,
 		Pipe,
