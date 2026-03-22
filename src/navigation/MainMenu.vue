@@ -49,6 +49,10 @@
 				:to="{ name: 'Contactmomenten' }">
 				<template #icon>
 					<PhoneMessage :size="20" />
+				:name="t('pipelinq', 'Complaints')"
+				:to="{ name: 'Complaints' }">
+				<template #icon>
+					<AlertCircleOutline :size="20" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
@@ -123,6 +127,7 @@ import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOut
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
+import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
 
 export default {
@@ -143,6 +148,7 @@ export default {
 		BookOpenVariantOutline,
 		PackageVariant,
 		PhoneMessage,
+		AlertCircleOutline,
 		Cog,
 		Pipe,
 	},
