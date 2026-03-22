@@ -37,6 +37,8 @@ export async function initializeStores() {
 		}
 		if (config.register && config.surveyResponse_schema) {
 			objectStore.registerObjectType('surveyResponse', config.surveyResponse_schema, config.register)
+		if (config.register && config.complaint_schema) {
+			objectStore.registerObjectType('complaint', config.complaint_schema, config.register)
 		}
 	}
 
