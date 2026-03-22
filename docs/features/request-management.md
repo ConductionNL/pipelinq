@@ -51,8 +51,16 @@ Requests can optionally be placed on a pipeline board alongside leads for visual
 - Request category/product classification
 - Request-to-case conversion (bridge to Procest)
 
+### Request Queue Assignment (Enterprise)
+
+Requests can be assigned to work queues for structured workload distribution. Queue assignment is optional and independent of pipeline placement.
+
+- Queue field on request entity (UUID reference)
+- Queue name displayed in request list view as column
+- Queue link and "Change queue" dropdown in request detail view
+- Routing suggestion panel shown when request is queued with a category
+
 ### Planned (Enterprise)
 
 - SLA tracking (response/resolution time)
-- Automated assignment rules
 - Configurable pipeline stages
