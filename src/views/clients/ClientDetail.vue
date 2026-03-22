@@ -164,6 +164,12 @@
 			</div>
 		</CnDetailCard>
 
+		<!-- Relationships -->
+		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Relationships')">
+			<ContactRelationships
+				:entity-id="clientId"
+				entity-type="client"
+				:entity-name="clientData.name || ''" />
 		<CnDetailCard :title="t('pipelinq', 'Contactmomenten')">
 			<template #actions>
 				<NcButton @click="showContactmomentQuickLog = true">
@@ -273,6 +279,7 @@ import { NcButton, NcDialog } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import ClientForm from './ClientForm.vue'
+import ContactRelationships from '../../components/ContactRelationships.vue'
 import ContactmomentQuickLog from '../../components/ContactmomentQuickLog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
@@ -284,6 +291,7 @@ export default {
 		CnDetailPage,
 		CnDetailCard,
 		ClientForm,
+		ContactRelationships,
 		ContactmomentQuickLog,
 	},
 	props: {
