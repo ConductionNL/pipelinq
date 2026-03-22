@@ -65,6 +65,7 @@ class MetricsFormatterTest extends TestCase
     }//end testFormatAppInfoReturnsCorrectLines()
 
     /**
+     * Test that formatLeadCounts returns gauge lines.
      * Test that formatLeadCounts returns correct gauge lines.
      * Test that formatLeadCounts returns gauge lines for each row.
      * Test that formatLeadCounts returns correct gauge lines for each row.
@@ -172,6 +173,7 @@ class MetricsFormatterTest extends TestCase
     }//end testFormatRequestCountsFormatsStatusCounts()
 
     /**
+     * Test that special characters in labels are sanitized.
      * Test that labels with special characters are sanitized.
      *
      * @return void

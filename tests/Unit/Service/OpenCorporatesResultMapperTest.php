@@ -45,6 +45,7 @@ class OpenCorporatesResultMapperTest extends TestCase
     }//end setUp()
 
     /**
+     * Test that a complete company is mapped correctly.
      * Test that a full company is mapped correctly.
      * Test that a complete OpenCorporates result is mapped correctly.
      *

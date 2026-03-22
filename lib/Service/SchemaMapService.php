@@ -46,6 +46,7 @@ class SchemaMapService
         'contact_schema'  => 'contact',
         'lead_schema'     => 'lead',
         'request_schema'  => 'request',
+        'pipeline_schema'       => 'pipeline',
         'pipeline_schema'      => 'pipeline',
         'task_schema'           => 'task',
         'contactmoment_schema'  => 'contactmoment',
