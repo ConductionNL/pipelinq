@@ -1,3 +1,7 @@
+---
+status: implemented
+---
+
 # Client Management Specification
 
 ## Purpose
@@ -581,7 +585,7 @@ The system MUST support exporting clients to CSV and vCard formats.
 
 ---
 
-## ADDED Requirements
+## Requirements
 
 ---
 
