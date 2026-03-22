@@ -211,6 +211,26 @@ class Notifier implements INotifier
                         );
                 break;
 
+            case 'lead_won':
+                $value = $params['value'] ?? '';
+                $notification->setParsedSubject($l->t('Deal won: %1$s (EUR %2$s)', [$title, $value]));
+                $notification->setRichSubject(
+                        subject: $l->t('Deal won: {title} (EUR %1$s)', [$value]),
+                        parameters: $richParams
+                        );
+                break;
+
+            case 'lead_lost':
+                $this->applySimpleSubject(
+                    notification: $notification,
+                    l: $l,
+                    parsedKey: 'Deal lost: %s',
+                    richKey: 'Deal lost: {title}',
+                    title: $title,
+                    richParams: $richParams
+                );
+                break;
+
             default:
                 throw new UnknownNotificationException();
         }//end switch

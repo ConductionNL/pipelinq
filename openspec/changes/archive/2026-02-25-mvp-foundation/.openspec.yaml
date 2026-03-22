@@ -1,0 +1,8 @@
+name: mvp-foundation
+status: archived
+created: 2026-02-25
+archived: 2026-02-25
+specs:
+  - specs/openregister-integration/spec.md
+  - specs/pipeline/spec.md
+  - specs/admin-settings/spec.md

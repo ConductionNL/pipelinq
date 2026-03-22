@@ -32,6 +32,9 @@ import SurveyAnalytics from '../views/surveys/SurveyAnalytics.vue'
 import PublicSurveyForm from '../views/surveys/PublicSurveyForm.vue'
 import PipelineManager from '../views/settings/PipelineManager.vue'
 import SyncSettings from '../views/sync/SyncSettings.vue'
+import RapportageDashboard from '../views/rapportage/RapportageDashboard.vue'
+import ChannelAnalytics from '../views/rapportage/ChannelAnalytics.vue'
+import AgentPerformance from '../views/rapportage/AgentPerformance.vue'
 
 Vue.use(Router)
 
@@ -71,6 +74,9 @@ export default new Router({
 		{ path: '/public/survey/:token', name: 'PublicSurvey', component: PublicSurveyForm, props: route => ({ token: route.params.token }) },
 		{ path: '/my-work', name: 'MyWork', component: MyWork },
 		{ path: '/sync-settings', name: 'SyncSettings', component: SyncSettings },
+		{ path: '/rapportage', name: 'Rapportage', component: RapportageDashboard },
+		{ path: '/rapportage/channels', name: 'ChannelAnalytics', component: ChannelAnalytics },
+		{ path: '/rapportage/agents', name: 'AgentPerformance', component: AgentPerformance },
 		{ path: '/pipelines', name: 'Pipelines', component: PipelineManager },
 		{ path: '*', redirect: '/' },
 	],

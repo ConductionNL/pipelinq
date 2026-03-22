@@ -23,6 +23,7 @@
 							<th>{{ t('pipelinq', 'Unit Price') }}</th>
 							<th>{{ t('pipelinq', 'Discount') }}</th>
 							<th>{{ t('pipelinq', 'Total') }}</th>
+							<th>{{ t('pipelinq', 'Notes') }}</th>
 							<th />
 						</tr>
 					</thead>
@@ -59,6 +60,14 @@
 								{{ formatCurrency(calculateTotal(item)) }}
 							</td>
 							<td>
+								<input
+									v-model="item.notes"
+									type="text"
+									class="inline-input inline-input--notes"
+									:placeholder="t('pipelinq', 'Notes...')"
+									@change="updateLineItem(item)">
+							</td>
+							<td>
 								<NcButton type="tertiary" @click="removeLineItem(item)">
 									{{ t('pipelinq', 'Remove') }}
 								</NcButton>
@@ -67,7 +76,7 @@
 					</tbody>
 					<tfoot>
 						<tr class="total-row">
-							<td colspan="4" class="total-label">
+							<td colspan="5" class="total-label">
 								{{ t('pipelinq', 'Total') }}
 							</td>
 							<td class="total-cell total-cell--grand">
@@ -196,7 +205,10 @@ export default {
 			return useObjectStore()
 		},
 		productOptions() {
-			return this.products.map(p => ({ id: p.id, name: p.name || p.id }))
+			return this.products.map(p => {
+				const sku = p.sku ? ' (' + p.sku + ')' : ''
+				return { id: p.id, name: (p.name || p.id) + sku }
+			})
 		},
 		grandTotal() {
 			return this.lineItems.reduce((sum, item) => sum + this.calculateTotal(item), 0)
@@ -378,6 +390,10 @@ export default {
 .inline-input--price,
 .inline-input--discount {
 	width: 90px;
+}
+
+.inline-input--notes {
+	width: 150px;
 }
 
 .total-cell {
