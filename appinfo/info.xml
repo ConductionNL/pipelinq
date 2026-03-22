@@ -82,6 +82,10 @@ Vrij en open source onder de AGPL-licentie.
         </post-migration>
     </repair-steps>
 
+    <background-jobs>
+        <job>OCA\Pipelinq\BackgroundJob\KennisbankReviewJob</job>
+    </background-jobs>
+
     <navigations>
         <navigation>
             <id>pipelinq</id>
