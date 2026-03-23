@@ -139,6 +139,73 @@ class MetricsRepository
     }//end countObjectsBySchemaPattern()
 
     /**
+     * Get lead conversion rates grouped by pipeline.
+     *
+     * Conversion rate = won / (won + lost) per pipeline.
+     * Returns 0 if no resolved leads exist in a pipeline.
+     *
+     * @return array<array{pipeline: string, won: int, resolved: int, rate: float}> Conversion data.
+     */
+    public function getConversionRates(): array
+    {
+        try {
+            $qb = $this->db->getQueryBuilder();
+            $qb->select(
+                $qb->createFunction("JSON_UNQUOTE(JSON_EXTRACT(o.object, '$.pipeline')) AS pipeline"),
+                $qb->createFunction("JSON_UNQUOTE(JSON_EXTRACT(o.object, '$.status')) AS status"),
+            )
+                ->selectAlias($qb->func()->count('o.id'), 'cnt')
+                ->from('openregister_objects', 'o')
+                ->innerJoin('o', 'openregister_schemas', 's', $qb->expr()->eq('o.schema', 's.id'))
+                ->where($qb->expr()->like('s.title', $qb->createNamedParameter('%ead%')))
+                ->andWhere(
+                    $qb->expr()->in(
+                        $qb->createFunction("JSON_UNQUOTE(JSON_EXTRACT(o.object, '$.status'))"),
+                        [$qb->createNamedParameter('won'), $qb->createNamedParameter('lost')]
+                    )
+                )
+                ->groupBy('pipeline', 'status');
+
+            $result = $qb->executeQuery();
+            $rows   = $result->fetchAll();
+            $result->closeCursor();
+
+            // Aggregate won and resolved counts per pipeline.
+            $pipelines = [];
+            foreach ($rows as $row) {
+                $pipeline = $row['pipeline'] ?? 'unknown';
+                if (isset($pipelines[$pipeline]) === false) {
+                    $pipelines[$pipeline] = ['pipeline' => $pipeline, 'won' => 0, 'resolved' => 0];
+                }
+
+                $count = (int) $row['cnt'];
+                $pipelines[$pipeline]['resolved'] += $count;
+
+                if ($row['status'] === 'won') {
+                    $pipelines[$pipeline]['won'] += $count;
+                }
+            }
+
+            // Calculate rate for each pipeline.
+            $rates = [];
+            foreach ($pipelines as $data) {
+                $data['rate'] = $data['resolved'] > 0
+                    ? round($data['won'] / $data['resolved'], 4)
+                    : 0.0;
+                $rates[] = $data;
+            }
+
+            return $rates;
+        } catch (\Exception $e) {
+            $this->logger->warning(
+                message: '[MetricsRepository] Failed to get conversion rates',
+                context: ['error' => $e->getMessage()]
+            );
+            return [];
+        }//end try
+    }//end getConversionRates()
+
+    /**
      * Get service request counts grouped by status.
      *
      * @return array<array{status: string, cnt: string}> Grouped counts.

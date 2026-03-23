@@ -141,6 +141,51 @@ class MetricsFormatter
     }//end formatRequestCounts()
 
     /**
+     * Format conversion rate metrics.
+     *
+     * @param array $rates The conversion rate data rows.
+     *
+     * @return array The formatted metric lines.
+     */
+    public function formatConversionRates(array $rates): array
+    {
+        $lines   = [];
+        $lines[] = '# HELP pipelinq_conversion_rate Lead conversion rate per pipeline';
+        $lines[] = '# TYPE pipelinq_conversion_rate gauge';
+
+        foreach ($rates as $row) {
+            $pipeline = $this->sanitizeLabel(value: (string) ($row['pipeline'] ?? 'unknown'));
+            $rate     = (float) ($row['rate'] ?? 0);
+            $lines[]  = 'pipelinq_conversion_rate{pipeline="'.$pipeline.'"} '.$rate;
+        }
+
+        $lines[] = '';
+
+        return $lines;
+    }//end formatConversionRates()
+
+    /**
+     * Format a dependency up/down metric.
+     *
+     * @param string $name The dependency name.
+     * @param bool   $up   Whether the dependency is available.
+     *
+     * @return array The formatted metric lines.
+     */
+    public function formatDependencyUp(string $name, bool $up): array
+    {
+        $safeName = $this->sanitizeLabel(value: $name);
+        $value    = $up ? 1 : 0;
+
+        return [
+            '# HELP pipelinq_dependency_up Whether a dependency is available',
+            '# TYPE pipelinq_dependency_up gauge',
+            'pipelinq_dependency_up{dependency="'.$safeName.'"} '.$value,
+            '',
+        ];
+    }//end formatDependencyUp()
+
+    /**
      * Sanitize a label value for Prometheus format.
      *
      * @param string $value The label value.
