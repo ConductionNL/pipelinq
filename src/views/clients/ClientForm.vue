@@ -211,6 +211,12 @@ export default {
 			if (this.client?.id) {
 				data.id = this.client.id
 			}
+			// Set Schema.org @type based on client type
+			if (data.type === 'organization') {
+				data['@type'] = 'schema:Organization'
+			} else {
+				data['@type'] = 'schema:Person'
+			}
 			this.$emit('save', data)
 		},
 	},
