@@ -1,0 +1,340 @@
+{
+  "info": {
+    "name": "Pipelinq API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Newman API tests for Pipelinq Nextcloud app"
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      { "key": "username", "value": "{{username}}", "type": "string" },
+      { "key": "password", "value": "{{password}}", "type": "string" }
+    ]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "username", "value": "admin" },
+    { "key": "password", "value": "admin" }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has status field', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.status).to.eql('ok');",
+                  "});",
+                  "pm.test('Response has version', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.version).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "item": [
+        {
+          "name": "GET /settings",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/settings",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has config', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.config).to.be.an('object');",
+                  "});",
+                  "pm.test('Config has register key', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.config).to.have.property('register');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /settings (update)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/settings",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"register\": \"1\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has success', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.success).to.eql(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Lead Sources",
+      "item": [
+        {
+          "name": "GET /lead-sources",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/lead-sources",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has tags array', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.tags).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Request Channels",
+      "item": [
+        {
+          "name": "GET /request-channels",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/request-channels",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has tags array', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.tags).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Prospects",
+      "item": [
+        {
+          "name": "GET /prospects",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/prospects",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 or 400', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+                  "});",
+                  "pm.test('Response is JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Prospect Settings",
+      "item": [
+        {
+          "name": "GET /prospect-settings",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/prospect-settings",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has sbiCodes', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('sbiCodes');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Metrics",
+      "item": [
+        {
+          "name": "GET /metrics",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/metrics"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response contains pipelinq_info', function () {",
+                  "  pm.expect(pm.response.text()).to.include('pipelinq_info');",
+                  "});",
+                  "pm.test('Content-Type is text/plain', function () {",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('text/plain');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Notes",
+      "item": [
+        {
+          "name": "GET /notes (invalid type returns 400)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/notes/invalid_type/123",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "User Settings",
+      "item": [
+        {
+          "name": "GET /settings/user",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/settings/user",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has notification settings', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('notify_assignments');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
