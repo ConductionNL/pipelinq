@@ -17,6 +17,7 @@
     "Address": "Address",
     "Age": "Age",
     "All": "All",
+    "An item with the name \"{name}\" already exists.": "An item with the name \"{name}\" already exists.",
     "Already linked": "Already linked",
     "Are you sure you want to delete \"{name}\"?": "Are you sure you want to delete \"{name}\"?",
     "Are you sure you want to delete \"{title}\"?": "Are you sure you want to delete \"{title}\"?",
