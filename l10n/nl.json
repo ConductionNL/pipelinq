@@ -17,6 +17,7 @@
     "Address": "Adres",
     "Age": "Leeftijd",
     "All": "Alle",
+    "An item with the name \"{name}\" already exists.": "Er bestaat al een item met de naam \"{name}\".",
     "Already linked": "Reeds gekoppeld",
     "Are you sure you want to delete \"{name}\"?": "Weet u zeker dat u \"{name}\" wilt verwijderen?",
     "Are you sure you want to delete \"{title}\"?": "Weet u zeker dat u \"{title}\" wilt verwijderen?",

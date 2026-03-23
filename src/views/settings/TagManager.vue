@@ -139,6 +139,15 @@ export default {
 			const name = this.newName.trim()
 			if (!name) return
 
+			// Check for duplicate names.
+			const duplicate = this.tags.some(
+				tag => tag.name.toLowerCase() === name.toLowerCase(),
+			)
+			if (duplicate) {
+				this.error = t('pipelinq', 'An item with the name "{name}" already exists.', { name })
+				return
+			}
+
 			this.error = null
 			try {
 				await this.$emit('add', name)
@@ -164,6 +173,15 @@ export default {
 		async saveRename(id) {
 			const name = this.editName.trim()
 			if (!name) return
+
+			// Check for duplicate names (excluding the item being renamed).
+			const duplicate = this.tags.some(
+				tag => tag.id !== id && tag.name.toLowerCase() === name.toLowerCase(),
+			)
+			if (duplicate) {
+				this.error = t('pipelinq', 'An item with the name "{name}" already exists.', { name })
+				return
+			}
 
 			this.error = null
 			try {
