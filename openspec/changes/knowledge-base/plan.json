@@ -1,0 +1,127 @@
+{
+  "change": "knowledge-base",
+  "tracking_issue": 105,
+  "original_issue": 104,
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Fix KennisbankHome.vue — remove duplicate blocks and consolidate",
+      "section": "Frontend Components",
+      "github_issue": 106,
+      "spec_ref": "specs.md#delta-1",
+      "acceptance_criteria": ["Single clean component renders without errors", "Uses Pinia kennisbank store", "Search, autocomplete, category filter work"],
+      "files_likely_affected": ["src/views/kennisbank/KennisbankHome.vue"],
+      "status": "todo"
+    },
+    {
+      "id": 2,
+      "title": "Implement ArticleListItem component",
+      "section": "Frontend Components",
+      "github_issue": 107,
+      "spec_ref": "specs.md#delta-2",
+      "acceptance_criteria": ["Component renders article data with proper badges", "Click handling works", "Search query highlighting"],
+      "files_likely_affected": ["src/components/kennisbank/ArticleListItem.vue"],
+      "status": "todo"
+    },
+    {
+      "id": 3,
+      "title": "Implement CategoryTree and CategoryTreeNode components",
+      "section": "Frontend Components",
+      "github_issue": 108,
+      "spec_ref": "specs.md#delta-3",
+      "acceptance_criteria": ["Hierarchical categories render with counts", "Selection state works", "Expand/collapse for nested nodes"],
+      "files_likely_affected": ["src/components/kennisbank/CategoryTree.vue", "src/components/kennisbank/CategoryTreeNode.vue"],
+      "status": "todo"
+    },
+    {
+      "id": 4,
+      "title": "Implement ArticleFeedback and FeedbackSummary components",
+      "section": "Frontend Components",
+      "github_issue": 109,
+      "spec_ref": "specs.md#delta-4",
+      "acceptance_criteria": ["Feedback submission works via store", "Summary shows aggregated data"],
+      "files_likely_affected": ["src/components/kennisbank/ArticleFeedback.vue", "src/components/kennisbank/FeedbackSummary.vue"],
+      "status": "todo"
+    },
+    {
+      "id": 5,
+      "title": "Wire ArticleDetail.vue to Pinia store",
+      "section": "Frontend Views",
+      "github_issue": 110,
+      "spec_ref": "specs.md#delta-7",
+      "acceptance_criteria": ["Article loads from store", "Markdown renders with markdown-it", "Feedback works"],
+      "files_likely_affected": ["src/views/kennisbank/ArticleDetail.vue"],
+      "status": "todo"
+    },
+    {
+      "id": 6,
+      "title": "Wire ArticleEditor.vue to Pinia store",
+      "section": "Frontend Views",
+      "github_issue": 111,
+      "spec_ref": "specs.md#delta-8",
+      "acceptance_criteria": ["Create/edit articles via store", "Preview renders with markdown-it", "Duplicate title warning"],
+      "files_likely_affected": ["src/views/kennisbank/ArticleEditor.vue"],
+      "status": "todo"
+    },
+    {
+      "id": 7,
+      "title": "Wire CategoryManager.vue to Pinia store",
+      "section": "Frontend Views",
+      "github_issue": 112,
+      "spec_ref": "specs.md#delta-9",
+      "acceptance_criteria": ["Full CRUD for categories via store", "Parent category selector"],
+      "files_likely_affected": ["src/views/kennisbank/CategoryManager.vue"],
+      "status": "todo"
+    },
+    {
+      "id": 8,
+      "title": "Fix PublicKennisbankControllerTest",
+      "section": "Backend Tests",
+      "github_issue": 113,
+      "spec_ref": "specs.md#delta-10",
+      "acceptance_criteria": ["phpunit --filter PublicKennisbankControllerTest passes with 0 errors"],
+      "files_likely_affected": ["tests/Unit/Controller/PublicKennisbankControllerTest.php"],
+      "status": "todo"
+    },
+    {
+      "id": 9,
+      "title": "Fix KennisbankReviewJobTest",
+      "section": "Backend Tests",
+      "github_issue": 114,
+      "spec_ref": "specs.md#delta-11",
+      "acceptance_criteria": ["phpunit --filter KennisbankReviewJobTest passes with 0 errors"],
+      "files_likely_affected": ["tests/Unit/BackgroundJob/KennisbankReviewJobTest.php"],
+      "status": "todo"
+    },
+    {
+      "id": 10,
+      "title": "Add KennisbankServiceTest",
+      "section": "Backend Tests",
+      "github_issue": 115,
+      "spec_ref": "specs.md#delta-11",
+      "acceptance_criteria": ["5+ test methods", "All pass"],
+      "files_likely_affected": ["tests/Unit/Service/KennisbankServiceTest.php"],
+      "status": "todo"
+    },
+    {
+      "id": 11,
+      "title": "Add KennisbankControllerTest",
+      "section": "Backend Tests",
+      "github_issue": 116,
+      "spec_ref": "specs.md#delta-12",
+      "acceptance_criteria": ["3+ test methods", "All pass"],
+      "files_likely_affected": ["tests/Unit/Controller/KennisbankControllerTest.php"],
+      "status": "todo"
+    },
+    {
+      "id": 12,
+      "title": "Run quality checks and fix issues",
+      "section": "Quality",
+      "github_issue": 117,
+      "spec_ref": "specs.md#quality",
+      "acceptance_criteria": ["All quality checks pass"],
+      "files_likely_affected": [],
+      "status": "todo"
+    }
+  ]
+}
