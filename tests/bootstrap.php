@@ -21,22 +21,30 @@ declare(strict_types=1);
 define('PHPUNIT_RUN', 1);
 
 // Include Composer's autoloader.
-require_once __DIR__ . '/../vendor/autoload.php';
+$loader = include __DIR__.'/../vendor/autoload.php';
+
+// Register OCP stubs for standalone testing (outside Nextcloud server tree).
+// Check without triggering autoload to avoid failures.
+$ocpDir = __DIR__.'/../vendor/nextcloud/ocp';
+if (is_dir($ocpDir) && !interface_exists('OCP\\IUser', false)) {
+    $loader->addPsr4('OCP\\', $ocpDir.'/OCP');
+    $loader->addPsr4('NCU\\', $ocpDir.'/NCU');
+}
 
 // Bootstrap Nextcloud if not already done.
 if (!defined('OC_CONSOLE')) {
     // Try to include the main Nextcloud bootstrap.
-    if (file_exists(__DIR__ . '/../../../lib/base.php')) {
-        require_once __DIR__ . '/../../../lib/base.php';
+    if (file_exists(__DIR__.'/../../../lib/base.php')) {
+        include_once __DIR__.'/../../../lib/base.php';
     }
 
     // Load Test\TestCase and other NC test classes (NC convention).
-    if (file_exists(__DIR__ . '/../../../tests/autoload.php')) {
-        require_once __DIR__ . '/../../../tests/autoload.php';
+    if (file_exists(__DIR__.'/../../../tests/autoload.php')) {
+        include_once __DIR__.'/../../../tests/autoload.php';
     }
 
     // Load all enabled apps if Nextcloud is available.
-    if (class_exists('OC_App')) {
+    if (class_exists('OC_App') === true) {
         \OC_App::loadApps();
 
         // Load our specific app.
@@ -45,4 +53,4 @@ if (!defined('OC_CONSOLE')) {
         // Clear hooks for testing.
         OC_Hook::clear();
     }
-}
+}//end if
