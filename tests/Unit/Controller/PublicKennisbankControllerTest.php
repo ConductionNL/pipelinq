@@ -34,6 +34,7 @@ use Psr\Log\LoggerInterface;
  */
 class PublicKennisbankControllerTest extends TestCase
 {
+
     /**
      * The request mock.
      *
@@ -100,8 +101,100 @@ class PublicKennisbankControllerTest extends TestCase
     }//end buildController()
 
     /**
+     * Create a mock object service with findAll returning given data.
+     *
+     * @param array<string, mixed> $findAllReturn The data findAll should return.
+     *
+     * @return object The mock object service.
+     */
+    private function createObjectServiceWithFindAll(array $findAllReturn): object
+    {
+        return new class($findAllReturn) {
+            /**
+             * Constructor.
+             *
+             * @param array<string, mixed> $data The data to return.
+             */
+            public function __construct(private array $data)
+            {
+            }//end __construct()
+
+            /**
+             * Mock findAll matching ObjectService signature.
+             *
+             * @param string|null          $register The register.
+             * @param string|null          $schema   The schema.
+             * @param array<string, mixed> $filters  The filters.
+             *
+             * @return array<string, mixed> The results.
+             */
+            public function findAll(
+                ?string $register=null,
+                ?string $schema=null,
+                array $filters=[],
+            ): array {
+                return $this->data;
+            }//end findAll()
+
+            /**
+             * Mock findOne matching ObjectService signature.
+             *
+             * @param string|null $register The register.
+             * @param string|null $schema   The schema.
+             * @param string|null $id       The object ID.
+             *
+             * @return array<string, mixed>|null The result.
+             */
+            public function findOne(
+                ?string $register=null,
+                ?string $schema=null,
+                ?string $id=null,
+            ): ?array {
+                return $this->data;
+            }//end findOne()
+        };
+    }//end createObjectServiceWithFindAll()
+
+    /**
+     * Create a mock object service with findOne returning given data.
+     *
+     * @param array<string, mixed>|null $data The data findOne should return.
+     *
+     * @return object The mock object service.
+     */
+    private function createObjectServiceWithFindOne(?array $data): object
+    {
+        return new class($data) {
+            /**
+             * Constructor.
+             *
+             * @param array<string, mixed>|null $data The data to return.
+             */
+            public function __construct(private ?array $data)
+            {
+            }//end __construct()
+
+            /**
+             * Mock findOne matching ObjectService signature.
+             *
+             * @param string|null $register The register.
+             * @param string|null $schema   The schema.
+             * @param string|null $id       The object ID.
+             *
+             * @return array<string, mixed>|null The result.
+             */
+            public function findOne(
+                ?string $register=null,
+                ?string $schema=null,
+                ?string $id=null,
+            ): ?array {
+                return $this->data;
+            }//end findOne()
+        };
+    }//end createObjectServiceWithFindOne()
+
+    /**
      * Test that index returns empty results when not configured.
-     * Test that index returns empty results when register is not configured.
      *
      * @return void
      */
@@ -110,10 +203,9 @@ class PublicKennisbankControllerTest extends TestCase
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
         $this->settingsService->method('getSettings')->willReturn([]);
 
-        $response = $this->buildController()->index();
-        $data     = $response->getData();
+        $objectService = $this->createObjectServiceWithFindAll(['results' => [], 'total' => 0]);
+        $this->container->method('get')->willReturn($objectService);
 
-        $this->assertInstanceOf(JSONResponse::class, $response);
         $controller = $this->buildController();
         $response   = $controller->index();
 
@@ -131,45 +223,23 @@ class PublicKennisbankControllerTest extends TestCase
     public function testIndexReturnsArticles(): void
     {
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
-        $this->settingsService->method('getSettings')->willReturn(['register' => 'r', 'kennisartikel_schema' => 's']);
+        $this->settingsService->method('getSettings')->willReturn(
+                [
+                    'register'             => 'reg-uuid',
+                    'kennisartikel_schema' => 'schema-uuid',
+                ]
+                );
         $this->request->method('getParam')->willReturn('');
 
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)->addMethods(['findAll'])->getMock();
-        $objectServiceMock->method('findAll')->willReturn(['results' => [['id' => '1', 'title' => 'Article']], 'total' => 1]);
-        $this->container->method('get')->willReturn($objectServiceMock);
-
-        $data = $this->buildController()->index()->getData();
-
-        $this->assertSame(1, $data['total']);
-        $this->assertSame('Article', $data['results'][0]['title']);
-    }//end testIndexReturnsArticles()
-
-    /**
-     * Test that index strips internal fields from results.
-     * Test that index returns articles when OpenRegister is available.
-     *
-     * @return void
-     */
-    public function testIndexReturnsArticlesFromObjectService(): void
-    {
-        $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
-        $this->settingsService->method('getSettings')->willReturn([
-            'register'           => 'reg-uuid',
-            'kennisartikel_schema' => 'schema-uuid',
-        ]);
-
-        $this->request->method('getParam')->with('_search', '')->willReturn('');
-
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['findAll'])
-            ->getMock();
-        $objectServiceMock->method('findAll')->willReturn([
-            'results' => [
-                ['id' => '1', 'title' => 'Test Article', 'status' => 'gepubliceerd', 'visibility' => 'openbaar'],
-            ],
-            'total' => 1,
-        ]);
-        $this->container->method('get')->willReturn($objectServiceMock);
+        $objectService = $this->createObjectServiceWithFindAll(
+                [
+                    'results' => [
+                        ['id' => '1', 'title' => 'Test Article', 'status' => 'gepubliceerd', 'visibility' => 'openbaar'],
+                    ],
+                    'total'   => 1,
+                ]
+                );
+        $this->container->method('get')->willReturn($objectService);
 
         $response = $this->buildController()->index();
         $data     = $response->getData();
@@ -177,7 +247,7 @@ class PublicKennisbankControllerTest extends TestCase
         $this->assertSame(1, $data['total']);
         $this->assertCount(1, $data['results']);
         $this->assertSame('Test Article', $data['results'][0]['title']);
-    }//end testIndexReturnsArticlesFromObjectService()
+    }//end testIndexReturnsArticles()
 
     /**
      * Test that index strips internal fields from the results.
@@ -187,33 +257,28 @@ class PublicKennisbankControllerTest extends TestCase
     public function testIndexStripsInternalFields(): void
     {
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
-        $this->settingsService->method('getSettings')->willReturn(['register' => 'r', 'kennisartikel_schema' => 's']);
+        $this->settingsService->method('getSettings')->willReturn(
+                [
+                    'register'             => 'reg-uuid',
+                    'kennisartikel_schema' => 'schema-uuid',
+                ]
+                );
         $this->request->method('getParam')->willReturn('');
 
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)->addMethods(['findAll'])->getMock();
-        $objectServiceMock->method('findAll')->willReturn(['results' => [['id' => '1', 'title' => 'A', 'author' => 'secret', 'lastUpdatedBy' => 'u', 'zaaktypeLinks' => []]]]);
-        $this->container->method('get')->willReturn($objectServiceMock);
-
-        $article = $this->buildController()->index()->getData()['results'][0];
-        $this->settingsService->method('getSettings')->willReturn([
-            'register'           => 'reg-uuid',
-            'kennisartikel_schema' => 'schema-uuid',
-        ]);
-        $this->request->method('getParam')->willReturn('');
-
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['findAll'])
-            ->getMock();
-        $objectServiceMock->method('findAll')->willReturn([
-            'results' => [[
-                'id'            => '1',
-                'title'         => 'Article',
-                'author'        => 'secret-user',
-                'lastUpdatedBy' => 'another-user',
-                'zaaktypeLinks' => ['link1'],
-            ]],
-        ]);
-        $this->container->method('get')->willReturn($objectServiceMock);
+        $objectService = $this->createObjectServiceWithFindAll(
+                [
+                    'results' => [
+                        [
+                            'id'            => '1',
+                            'title'         => 'Article',
+                            'author'        => 'secret-user',
+                            'lastUpdatedBy' => 'another-user',
+                            'zaaktypeLinks' => ['link1'],
+                        ],
+                    ],
+                ]
+                );
+        $this->container->method('get')->willReturn($objectService);
 
         $response = $this->buildController()->index();
         $article  = $response->getData()['results'][0];
@@ -233,40 +298,12 @@ class PublicKennisbankControllerTest extends TestCase
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
         $this->settingsService->method('getSettings')->willThrowException(new \RuntimeException('fail'));
 
+        $objectService = $this->createObjectServiceWithFindAll(['results' => []]);
+        $this->container->method('get')->willReturn($objectService);
+
         $response = $this->buildController()->index();
 
         $this->assertSame(500, $response->getStatus());
-    }//end testIndexReturns500OnException()
-
-    /**
-     * Test that show returns 404 for nonexistent article.
-     *
-     * @return void
-     */
-    public function testShowReturns404ForMissingArticle(): void
-    {
-        $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
-        $this->settingsService->method('getSettings')->willReturn(['register' => 'r', 'kennisartikel_schema' => 's']);
-
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)->addMethods(['findOne'])->getMock();
-        $objectServiceMock->method('findOne')->willReturn(null);
-        $this->container->method('get')->willReturn($objectServiceMock);
-
-        $this->assertSame(404, $this->buildController()->show(id: 'missing')->getStatus());
-    }//end testShowReturns404ForMissingArticle()
-
-    /**
-     * Test that show returns public article successfully.
-     *
-     * @return void
-     */
-    public function testShowReturnsPublicArticle(): void
-    {
-        $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
-        $this->settingsService->method('getSettings')->willReturn(['register' => 'r', 'kennisartikel_schema' => 's']);
-
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)->addMethods(['findOne'])->getMock();
-        $objectServiceMock->method('findOne')->willReturn(['id' => 'abc', 'title' => 'Public', 'status' => 'gepubliceerd', 'visibility' => 'openbaar']);
         $this->assertArrayHasKey('error', $response->getData());
     }//end testIndexReturns500OnException()
 
@@ -278,16 +315,15 @@ class PublicKennisbankControllerTest extends TestCase
     public function testShowReturns404WhenArticleNotFound(): void
     {
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
-        $this->settingsService->method('getSettings')->willReturn([
-            'register'           => 'reg-uuid',
-            'kennisartikel_schema' => 'schema-uuid',
-        ]);
+        $this->settingsService->method('getSettings')->willReturn(
+                [
+                    'register'             => 'reg-uuid',
+                    'kennisartikel_schema' => 'schema-uuid',
+                ]
+                );
 
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['findOne'])
-            ->getMock();
-        $objectServiceMock->method('findOne')->willReturn(null);
-        $this->container->method('get')->willReturn($objectServiceMock);
+        $objectService = $this->createObjectServiceWithFindOne(null);
+        $this->container->method('get')->willReturn($objectService);
 
         $response = $this->buildController()->show(id: 'nonexistent');
 
@@ -302,17 +338,21 @@ class PublicKennisbankControllerTest extends TestCase
     public function testShowReturns404ForNonPublicArticle(): void
     {
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
-        $this->settingsService->method('getSettings')->willReturn([
-            'register'           => 'reg-uuid',
-            'kennisartikel_schema' => 'schema-uuid',
-        ]);
+        $this->settingsService->method('getSettings')->willReturn(
+                [
+                    'register'             => 'reg-uuid',
+                    'kennisartikel_schema' => 'schema-uuid',
+                ]
+                );
 
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['findOne'])
-            ->getMock();
-        // Article exists but visibility is 'intern', not 'openbaar'.
-        $objectServiceMock->method('findOne')->willReturn(['id' => '1', 'status' => 'gepubliceerd', 'visibility' => 'intern']);
-        $this->container->method('get')->willReturn($objectServiceMock);
+        $objectService = $this->createObjectServiceWithFindOne(
+                [
+                    'id'         => '1',
+                    'status'     => 'gepubliceerd',
+                    'visibility' => 'intern',
+                ]
+                );
+        $this->container->method('get')->willReturn($objectService);
 
         $response = $this->buildController()->show(id: '1');
 
@@ -327,27 +367,26 @@ class PublicKennisbankControllerTest extends TestCase
     public function testShowReturnsArticleForPublicArticle(): void
     {
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
-        $this->settingsService->method('getSettings')->willReturn([
-            'register'           => 'reg-uuid',
-            'kennisartikel_schema' => 'schema-uuid',
-        ]);
+        $this->settingsService->method('getSettings')->willReturn(
+                [
+                    'register'             => 'reg-uuid',
+                    'kennisartikel_schema' => 'schema-uuid',
+                ]
+                );
 
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['findOne'])
-            ->getMock();
-        $objectServiceMock->method('findOne')->willReturn([
-            'id'         => 'abc',
-            'title'      => 'Public Article',
-            'status'     => 'gepubliceerd',
-            'visibility' => 'openbaar',
-        ]);
-        $this->container->method('get')->willReturn($objectServiceMock);
+        $objectService = $this->createObjectServiceWithFindOne(
+                [
+                    'id'         => 'abc',
+                    'title'      => 'Public Article',
+                    'status'     => 'gepubliceerd',
+                    'visibility' => 'openbaar',
+                ]
+                );
+        $this->container->method('get')->willReturn($objectService);
 
         $response = $this->buildController()->show(id: 'abc');
 
         $this->assertSame(200, $response->getStatus());
-        $this->assertSame('Public', $response->getData()['title']);
-    }//end testShowReturnsPublicArticle()
         $this->assertSame('Public Article', $response->getData()['title']);
     }//end testShowReturnsArticleForPublicArticle()
 }//end class

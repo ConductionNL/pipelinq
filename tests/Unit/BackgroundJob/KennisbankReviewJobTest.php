@@ -34,6 +34,7 @@ use Psr\Log\LoggerInterface;
  */
 class KennisbankReviewJobTest extends TestCase
 {
+
     /**
      * The time factory mock.
      *
@@ -88,7 +89,7 @@ class KennisbankReviewJobTest extends TestCase
         $this->notificationService = $this->createMock(NotificationService::class);
         $this->appManager          = $this->createMock(IAppManager::class);
         $this->container           = $this->createMock(ContainerInterface::class);
-        $this->logger              = $this->createMock(LoggerInterface::class);
+        $this->logger = $this->createMock(LoggerInterface::class);
 
         $this->timeFactory->method('getTime')->willReturn(time());
     }//end setUp()
@@ -111,6 +112,44 @@ class KennisbankReviewJobTest extends TestCase
     }//end buildJob()
 
     /**
+     * Create a mock object service with findAll returning given data.
+     *
+     * @param array<string, mixed> $data The data to return.
+     *
+     * @return object The mock object service.
+     */
+    private function createObjectServiceWithFindAll(array $data): object
+    {
+        return new class($data) {
+            /**
+             * Constructor.
+             *
+             * @param array<string, mixed> $data The data to return.
+             */
+            public function __construct(private array $data)
+            {
+            }//end __construct()
+
+            /**
+             * Mock findAll matching ObjectService signature.
+             *
+             * @param string|null          $register The register.
+             * @param string|null          $schema   The schema.
+             * @param array<string, mixed> $filters  The filters.
+             *
+             * @return array<string, mixed> The results.
+             */
+            public function findAll(
+                ?string $register=null,
+                ?string $schema=null,
+                array $filters=[],
+            ): array {
+                return $this->data;
+            }//end findAll()
+        };
+    }//end createObjectServiceWithFindAll()
+
+    /**
      * Test that the job can be instantiated.
      *
      * @return void
@@ -127,22 +166,8 @@ class KennisbankReviewJobTest extends TestCase
      */
     public function testJobSkipsWhenOpenRegisterNotInstalled(): void
     {
-        $this->appManager->method('getInstalledApps')->willReturn(['pipelinq']);
+        $this->appManager->method('getInstalledApps')->willReturn(['pipelinq', 'contacts']);
 
-        $this->notificationService->expects($this->never())->method($this->anything());
-
-        $ref = new \ReflectionMethod($this->buildJob(), 'run');
-        $ref->setAccessible(true);
-        $ref->invoke($this->buildJob(), null);
-    }//end testJobSkipsWhenOpenRegisterNotInstalled()
-
-    /**
-     * Test that the job skips when not configured.
-        $this->appManager
-            ->method('getInstalledApps')
-            ->willReturn(['pipelinq', 'contacts']);
-
-        // No notification should be sent.
         $this->notificationService->expects($this->never())->method($this->anything());
 
         $job = $this->buildJob();
@@ -163,9 +188,6 @@ class KennisbankReviewJobTest extends TestCase
 
         $this->notificationService->expects($this->never())->method($this->anything());
 
-        $ref = new \ReflectionMethod($this->buildJob(), 'run');
-        $ref->setAccessible(true);
-        $ref->invoke($this->buildJob(), null);
         $job = $this->buildJob();
         $ref = new \ReflectionMethod($job, 'run');
         $ref->setAccessible(true);
@@ -180,38 +202,30 @@ class KennisbankReviewJobTest extends TestCase
     public function testJobSendsNotificationForStaleArticle(): void
     {
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
-        $this->settingsService->method('getSettings')->willReturn([
-            'register'                  => 'reg-uuid',
-            'kennisartikel_schema'       => 'schema-uuid',
-            'kennisbank_review_interval' => 180,
-        ]);
-
-        $staleDate         = (new \DateTime())->modify('-200 days')->format('c');
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)->addMethods(['findAll'])->getMock();
-        $objectServiceMock->method('findAll')->willReturn([
-            'results' => [['id' => '1', 'title' => 'Stale', 'status' => 'gepubliceerd', 'author' => 'user1', 'dateModified' => $staleDate]],
-        ]);
-        $this->container->method('get')->willReturn($objectServiceMock);
-
-        $this->notificationService->expects($this->once())->method('sendNotification')
-        $staleDate = (new \DateTime())->modify('-200 days')->format('c');
-
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['findAll'])
-            ->getMock();
-        $objectServiceMock->method('findAll')->willReturn([
-            'results' => [
+        $this->settingsService->method('getSettings')->willReturn(
                 [
-                    'id'           => 'article-1',
-                    'title'        => 'Stale Article',
-                    'status'       => 'gepubliceerd',
-                    'author'       => 'user1',
-                    'dateModified' => $staleDate,
-                ],
-            ],
-        ]);
+                    'register'                   => 'reg-uuid',
+                    'kennisartikel_schema'       => 'schema-uuid',
+                    'kennisbank_review_interval' => 180,
+                ]
+                );
 
-        $this->container->method('get')->willReturn($objectServiceMock);
+        $staleDate     = (new \DateTime())->modify('-200 days')->format('c');
+        $objectService = $this->createObjectServiceWithFindAll(
+                [
+                    'results' => [
+                        [
+                            'id'           => 'article-1',
+                            'title'        => 'Stale Article',
+                            'status'       => 'gepubliceerd',
+                            'author'       => 'user1',
+                            'dateModified' => $staleDate,
+                        ],
+                    ],
+                ]
+                );
+
+        $this->container->method('get')->willReturn($objectService);
 
         $this->notificationService
             ->expects($this->once())
@@ -225,7 +239,6 @@ class KennisbankReviewJobTest extends TestCase
     }//end testJobSendsNotificationForStaleArticle()
 
     /**
-     * Test that the job does not notify for recently updated articles.
      * Test that the job does not send notifications for recently updated articles.
      *
      * @return void
@@ -233,32 +246,29 @@ class KennisbankReviewJobTest extends TestCase
     public function testJobSkipsRecentlyUpdatedArticle(): void
     {
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
-        $this->settingsService->method('getSettings')->willReturn([
-            'register'            => 'reg-uuid',
-            'kennisartikel_schema' => 'schema-uuid',
-        ]);
-
-        $recentDate        = (new \DateTime())->modify('-10 days')->format('c');
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)->addMethods(['findAll'])->getMock();
-        $objectServiceMock->method('findAll')->willReturn([
-            'results' => [['id' => '2', 'title' => 'Fresh', 'status' => 'gepubliceerd', 'author' => 'user1', 'dateModified' => $recentDate]],
-        ]);
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['findAll'])
-            ->getMock();
-        $objectServiceMock->method('findAll')->willReturn([
-            'results' => [
+        $this->settingsService->method('getSettings')->willReturn(
                 [
-                    'id'           => 'article-2',
-                    'title'        => 'Fresh Article',
-                    'status'       => 'gepubliceerd',
-                    'author'       => 'user1',
-                    'dateModified' => $recentDate,
-                ],
-            ],
-        ]);
+                    'register'             => 'reg-uuid',
+                    'kennisartikel_schema' => 'schema-uuid',
+                ]
+                );
 
-        $this->container->method('get')->willReturn($objectServiceMock);
+        $recentDate    = (new \DateTime())->modify('-10 days')->format('c');
+        $objectService = $this->createObjectServiceWithFindAll(
+                [
+                    'results' => [
+                        [
+                            'id'           => 'article-2',
+                            'title'        => 'Fresh Article',
+                            'status'       => 'gepubliceerd',
+                            'author'       => 'user1',
+                            'dateModified' => $recentDate,
+                        ],
+                    ],
+                ]
+                );
+
+        $this->container->method('get')->willReturn($objectService);
 
         $this->notificationService->expects($this->never())->method($this->anything());
 
@@ -276,7 +286,6 @@ class KennisbankReviewJobTest extends TestCase
     public function testJobLogsErrorOnException(): void
     {
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
-        $this->settingsService->method('getSettings')->willThrowException(new \RuntimeException('err'));
         $this->settingsService->method('getSettings')->willThrowException(new \RuntimeException('Test error'));
 
         $this->logger->expects($this->once())->method('error');
