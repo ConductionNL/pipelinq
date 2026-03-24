@@ -353,3 +353,13 @@ NOT implemented:
 - **Mostly implementable as-is** -- the remaining work is integrating existing components (ProspectWidget, ProductRevenue) into the dashboard layout.
 - **Gap**: The spec does not define the "Products" KPI card calculation -- should it count all products or only `status: active` products?
 - **Gap**: The Prospect Discovery widget spec says "collapsed by default" with expand/collapse behavior, but the exact placement and interaction with the grid layout system is not defined.
+
+### Requirement: Customer Satisfaction KPI Card (V1)
+
+The dashboard KPI row SHOULD include a satisfaction score card alongside existing KPI cards.
+
+#### Scenario: Satisfaction KPI card
+- **GIVEN** the dashboard loads and surveys with responses exist
+- **WHEN** the KPI cards render
+- **THEN** a "Customer Satisfaction" KPI card SHOULD display the average satisfaction score
+- **AND** clicking the card SHOULD navigate to the surveys section
