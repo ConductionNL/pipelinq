@@ -1,5 +1,5 @@
 ---
-status: draft
+status: implemented
 ---
 
 # Kennisbank Specification
@@ -385,17 +385,20 @@ The system MUST provide a dedicated navigation section for the kennisbank within
 
 ### Current Implementation Status
 
-**NOT implemented.** No knowledge base functionality exists in the codebase.
+**Implemented (V1 core).** Knowledge base functionality is live as of 2026-03-24.
 
-- No `kennisartikel` or `kenniscategorie` schema in `lib/Settings/pipelinq_register.json`. The register defines: client, contact, lead, request, pipeline, product, productCategory, leadProduct -- but no knowledge base entities.
-- No article management controllers, services, or Vue components.
-- No article category taxonomy.
-- No full-text search for articles (OpenRegister's `_search` parameter would be the starting point).
-- No zaaktype linking.
-- No agent feedback/rating system.
-- No public vs internal article visibility logic.
-- No article versioning system (OpenRegister's audit trail provides basic change history).
-- No rich text editor integration (Markdown rendering would use a library like `marked` or `markdown-it`).
+- Schemas `kennisartikel`, `kenniscategorie`, `kennisfeedback` defined in `lib/Settings/pipelinq_register.json`
+- Backend: `KennisbankService`, `KennisbankController`, `PublicKennisbankController`, `KennisbankReviewJob`
+- Frontend: `KennisbankHome`, `ArticleDetail`, `ArticleEditor`, `CategoryManager` views
+- Components: `ArticleListItem`, `CategoryTree`, `CategoryTreeNode`, `ArticleFeedback`, `FeedbackSummary`
+- Pinia store: `kennisbank.js` with full CRUD, search, autocomplete, feedback, recently viewed
+- Rich text: Markdown editor with live preview using `markdown-it`
+- Full-text search via OpenRegister `_search` parameter
+- Agent feedback with thumbs up/down + improvement suggestions
+- Public vs internal article visibility with public API endpoint
+- Article lifecycle notifications via `KennisbankReviewJob` background job
+- 31 PHPUnit tests covering service, controllers, and background job
+- **Not yet implemented**: Zaaktype linking (deferred), Article Analytics (Enterprise tier)
 - No kennisbank route in `src/router/index.js`.
 - No `NotificationService` integration for article lifecycle events (though the service exists).
 
