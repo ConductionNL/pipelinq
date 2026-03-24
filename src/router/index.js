@@ -15,7 +15,6 @@ import ProductDetail from '../views/products/ProductDetail.vue'
 import ComplaintList from '../views/complaints/ComplaintList.vue'
 import ComplaintDetail from '../views/complaints/ComplaintDetail.vue'
 import PipelineBoard from '../views/pipeline/PipelineBoard.vue'
-import ContactmomentenList from '../views/contactmomenten/ContactmomentenList.vue'
 import ContactmomentDetail from '../views/contactmomenten/ContactmomentDetail.vue'
 import TaskList from '../views/tasks/TaskList.vue'
 import TaskDetail from '../views/tasks/TaskDetail.vue'
@@ -23,8 +22,6 @@ import MyWork from '../views/MyWork.vue'
 import QueueList from '../views/queues/QueueList.vue'
 import QueueDetail from '../views/queues/QueueDetail.vue'
 import KennisbankHome from '../views/kennisbank/KennisbankHome.vue'
-import KennisbankDetail from '../views/kennisbank/KennisbankDetail.vue'
-import KennisbankEditor from '../views/kennisbank/KennisbankEditor.vue'
 import SurveyList from '../views/surveys/SurveyList.vue'
 import SurveyDetail from '../views/surveys/SurveyDetail.vue'
 import SurveyForm from '../views/surveys/SurveyForm.vue'
@@ -39,11 +36,7 @@ import AutomationBuilder from '../views/automations/AutomationBuilder.vue'
 import AutomationHistory from '../views/automations/AutomationHistory.vue'
 import ContactmomentList from '../views/contactmomenten/ContactmomentList.vue'
 import ContactmomentForm from '../views/contactmomenten/ContactmomentForm.vue'
-import ContactmomentDetail from '../views/contactmomenten/ContactmomentDetail.vue'
-import TaskList from '../views/tasks/TaskList.vue'
-import TaskDetail from '../views/tasks/TaskDetail.vue'
 import TaskForm from '../views/tasks/TaskForm.vue'
-import KennisbankHome from '../views/kennisbank/KennisbankHome.vue'
 import ArticleDetail from '../views/kennisbank/ArticleDetail.vue'
 import ArticleEditor from '../views/kennisbank/ArticleEditor.vue'
 import CategoryManager from '../views/kennisbank/CategoryManager.vue'
@@ -69,9 +62,11 @@ export default new Router({
 		{ path: '/contacts/:id', name: 'ContactDetail', component: ContactDetail, props: route => ({ contactId: route.params.id }) },
 		{ path: '/leads', name: 'Leads', component: LeadList },
 		{ path: '/leads/:id', name: 'LeadDetail', component: LeadDetail, props: route => ({ leadId: route.params.id }) },
-		{ path: '/contactmomenten', name: 'Contactmomenten', component: ContactmomentenList },
+		{ path: '/contactmomenten', name: 'Contactmomenten', component: ContactmomentList },
+		{ path: '/contactmomenten/new', name: 'ContactmomentNew', component: ContactmomentForm },
 		{ path: '/contactmomenten/:id', name: 'ContactmomentDetail', component: ContactmomentDetail, props: route => ({ contactmomentId: route.params.id }) },
 		{ path: '/tasks', name: 'Tasks', component: TaskList },
+		{ path: '/tasks/new', name: 'TaskNew', component: TaskForm },
 		{ path: '/tasks/:id', name: 'TaskDetail', component: TaskDetail, props: route => ({ taskId: route.params.id }) },
 		{ path: '/products', name: 'Products', component: ProductList },
 		{ path: '/products/:id', name: 'ProductDetail', component: ProductDetail, props: route => ({ productId: route.params.id }) },
@@ -79,9 +74,10 @@ export default new Router({
 		{ path: '/queues', name: 'Queues', component: QueueList },
 		{ path: '/queues/:id', name: 'QueueDetail', component: QueueDetail, props: route => ({ queueId: route.params.id }) },
 		{ path: '/kennisbank', name: 'Kennisbank', component: KennisbankHome },
-		{ path: '/kennisbank/new', name: 'KennisbankNew', component: KennisbankEditor, props: () => ({ articleId: 'new' }) },
-		{ path: '/kennisbank/:id', name: 'KennisbankDetail', component: KennisbankDetail, props: route => ({ articleId: route.params.id }) },
-		{ path: '/kennisbank/:id/edit', name: 'KennisbankEdit', component: KennisbankEditor, props: route => ({ articleId: route.params.id }) },
+		{ path: '/kennisbank/articles/new', name: 'KennisbankNew', component: ArticleEditor },
+		{ path: '/kennisbank/articles/:id', name: 'KennisbankDetail', component: ArticleDetail, props: route => ({ articleId: route.params.id }) },
+		{ path: '/kennisbank/articles/:id/edit', name: 'KennisbankEdit', component: ArticleEditor, props: route => ({ articleId: route.params.id }) },
+		{ path: '/kennisbank/categories', name: 'KennisbankCategories', component: CategoryManager },
 		{ path: '/surveys', name: 'Surveys', component: SurveyList },
 		{ path: '/surveys/new', name: 'SurveyCreate', component: SurveyForm },
 		{ path: '/surveys/:id', name: 'SurveyDetail', component: SurveyDetail, props: route => ({ surveyId: route.params.id }) },
@@ -89,17 +85,6 @@ export default new Router({
 		{ path: '/surveys/:id/analytics', name: 'SurveyAnalytics', component: SurveyAnalytics, props: route => ({ surveyId: route.params.id }) },
 		{ path: '/public/survey/:token', name: 'PublicSurvey', component: PublicSurveyForm, props: route => ({ token: route.params.token }) },
 		{ path: '/my-work', name: 'MyWork', component: MyWork },
-		{ path: '/contactmomenten', name: 'Contactmomenten', component: ContactmomentList },
-		{ path: '/contactmomenten/new', name: 'ContactmomentNew', component: ContactmomentForm },
-		{ path: '/contactmomenten/:id', name: 'ContactmomentDetail', component: ContactmomentDetail, props: route => ({ contactmomentId: route.params.id }) },
-		{ path: '/tasks', name: 'Tasks', component: TaskList },
-		{ path: '/tasks/new', name: 'TaskNew', component: TaskForm },
-		{ path: '/tasks/:id', name: 'TaskDetail', component: TaskDetail, props: route => ({ taskId: route.params.id }) },
-		{ path: '/kennisbank', name: 'Kennisbank', component: KennisbankHome },
-		{ path: '/kennisbank/articles/new', name: 'KennisbankNew', component: ArticleEditor },
-		{ path: '/kennisbank/articles/:id', name: 'KennisbankDetail', component: ArticleDetail, props: route => ({ articleId: route.params.id }) },
-		{ path: '/kennisbank/articles/:id/edit', name: 'KennisbankEdit', component: ArticleEditor, props: route => ({ articleId: route.params.id }) },
-		{ path: '/kennisbank/categories', name: 'KennisbankCategories', component: CategoryManager },
 		{ path: '/sync-settings', name: 'SyncSettings', component: SyncSettings },
 		{ path: '/rapportage', name: 'Rapportage', component: RapportageDashboard },
 		{ path: '/rapportage/channels', name: 'ChannelAnalytics', component: ChannelAnalytics },

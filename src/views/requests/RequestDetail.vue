@@ -348,6 +348,7 @@ export default {
 		sidebarProps() {
 			const config = this.objectStore.objectTypeRegistry.request || {}
 			return {
+				title: t('pipelinq', 'Request'),
 				register: config.register || '',
 				schema: config.schema || '',
 			}

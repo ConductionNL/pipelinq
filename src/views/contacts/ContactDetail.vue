@@ -128,6 +128,7 @@ export default {
 		sidebarProps() {
 			const config = this.objectStore.objectTypeRegistry.contact || {}
 			return {
+				title: t('pipelinq', 'Contact'),
 				register: config.register || '',
 				schema: config.schema || '',
 				hiddenTabs: ['tasks'],

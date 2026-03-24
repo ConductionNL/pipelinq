@@ -43,6 +43,7 @@
     "@nextcloud/eslint-config": "^8.4.1",
     "@nextcloud/stylelint-config": "^2.4.0",
     "@nextcloud/webpack-vue-config": "^6.0.1",
+    "@playwright/test": "^1.58.2",
     "css-loader": "~7.1.1",
     "eslint": "^8.56.0",
     "eslint-import-resolver-alias": "^1.1.2",
