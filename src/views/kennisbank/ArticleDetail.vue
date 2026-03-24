@@ -51,41 +51,11 @@
 
 			<div class="article-detail__body" v-html="renderedBody" />
 
-			<div class="article-detail__feedback">
-				<h3>{{ t('pipelinq', 'Was this article helpful?') }}</h3>
-				<div class="feedback-buttons">
-					<NcButton
-						:type="userRating === 'nuttig' ? 'primary' : 'secondary'"
-						@click="submitRating('nuttig')">
-						{{ t('pipelinq', 'Helpful') }}
-					</NcButton>
-					<NcButton
-						:type="userRating === 'niet_nuttig' ? 'error' : 'secondary'"
-						@click="submitRating('niet_nuttig')">
-						{{ t('pipelinq', 'Not helpful') }}
-					</NcButton>
-				</div>
+			<FeedbackSummary v-if="feedback.length > 0" :feedback="feedback" />
 
-				<div v-if="showSuggestionForm" class="feedback-suggestion">
-					<NcTextField
-						:value.sync="suggestionText"
-						:label="t('pipelinq', 'Suggest an improvement...')"
-						:multiline="true" />
-					<NcButton
-						type="primary"
-						:disabled="!suggestionText.trim()"
-						@click="submitSuggestion">
-						{{ t('pipelinq', 'Submit suggestion') }}
-					</NcButton>
-				</div>
-
-				<NcButton
-					v-if="!showSuggestionForm"
-					type="tertiary"
-					@click="showSuggestionForm = true">
-					{{ t('pipelinq', 'Suggest improvement') }}
-				</NcButton>
-			</div>
+			<ArticleFeedback
+				:article-id="articleId"
+				@feedback-submitted="onFeedbackSubmitted" />
 		</template>
 
 		<NcEmptyContent
@@ -102,10 +72,13 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcEmptyContent, NcTextField } from '@nextcloud/vue'
-import { generateUrl } from '@nextcloud/router'
-import { showSuccess, showError } from '@nextcloud/dialogs'
-import axios from '@nextcloud/axios'
+import { NcButton, NcLoadingIcon, NcEmptyContent } from '@nextcloud/vue'
+import MarkdownIt from 'markdown-it'
+import { useKennisbankStore } from '../../store/modules/kennisbank.js'
+import ArticleFeedback from '../../components/kennisbank/ArticleFeedback.vue'
+import FeedbackSummary from '../../components/kennisbank/FeedbackSummary.vue'
+
+const md = new MarkdownIt({ html: false, linkify: true, typographer: true })
 
 export default {
 	name: 'ArticleDetail',
@@ -113,7 +86,8 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 		NcEmptyContent,
-		NcTextField,
+		ArticleFeedback,
+		FeedbackSummary,
 	},
 	props: {
 		articleId: {
@@ -123,70 +97,45 @@ export default {
 	},
 	data() {
 		return {
-			article: null,
-			loading: true,
-			userRating: null,
-			showSuggestionForm: false,
-			suggestionText: '',
+			feedback: [],
 		}
 	},
 	computed: {
+		store() {
+			return useKennisbankStore()
+		},
+		article() {
+			return this.store.currentArticle
+		},
+		loading() {
+			return this.store.loading
+		},
 		renderedBody() {
 			if (!this.article || !this.article.body) {
 				return ''
 			}
-			// Basic Markdown rendering — in production, use marked or markdown-it
-			return this.article.body
-				.replace(/^### (.*$)/gim, '<h3>$1</h3>')
-				.replace(/^## (.*$)/gim, '<h2>$1</h2>')
-				.replace(/^# (.*$)/gim, '<h1>$1</h1>')
-				.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-				.replace(/\*(.*?)\*/gim, '<em>$1</em>')
-				.replace(/\n/gim, '<br>')
+			return md.render(this.article.body)
 		},
 	},
-	mounted() {
-		this.fetchArticle()
+	watch: {
+		articleId: {
+			immediate: true,
+			async handler(id) {
+				if (id && id !== 'new') {
+					await this.store.fetchArticle(id)
+					this.feedback = await this.store.fetchArticleFeedback(id)
+				}
+			},
+		},
+	},
+	created() {
+		if (!this.store.categories.length) {
+			this.store.fetchCategories()
+		}
 	},
 	methods: {
-		async fetchArticle() {
-			this.loading = true
-			try {
-				// Article is fetched from OpenRegister directly
-				this.article = null
-			} catch (error) {
-				console.error('Failed to fetch article:', error)
-			} finally {
-				this.loading = false
-			}
-		},
-		async submitRating(rating) {
-			try {
-				const url = generateUrl('/apps/pipelinq/api/kennisbank/feedback')
-				await axios.post(url, {
-					articleId: this.articleId,
-					rating,
-				})
-				this.userRating = rating
-				showSuccess(t('pipelinq', 'Thank you for your feedback'))
-			} catch (error) {
-				showError(t('pipelinq', 'Failed to submit feedback'))
-			}
-		},
-		async submitSuggestion() {
-			try {
-				const url = generateUrl('/apps/pipelinq/api/kennisbank/feedback')
-				await axios.post(url, {
-					articleId: this.articleId,
-					rating: 'niet_nuttig',
-					comment: this.suggestionText,
-				})
-				this.suggestionText = ''
-				this.showSuggestionForm = false
-				showSuccess(t('pipelinq', 'Suggestion submitted successfully'))
-			} catch (error) {
-				showError(t('pipelinq', 'Failed to submit suggestion'))
-			}
+		async onFeedbackSubmitted() {
+			this.feedback = await this.store.fetchArticleFeedback(this.articleId)
 		},
 	},
 }
@@ -249,25 +198,9 @@ export default {
 	margin-bottom: 32px;
 }
 
-.article-detail__feedback {
-	border-top: 1px solid var(--color-border);
-	padding-top: 20px;
-}
-
-.feedback-buttons {
-	display: flex;
-	gap: 8px;
-	margin-top: 8px;
-	margin-bottom: 16px;
-}
-
-.feedback-suggestion {
-	margin-top: 12px;
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	max-width: 500px;
-}
+.article-detail__body :deep(img) { max-width: 100%; }
+.article-detail__body :deep(code) { background: var(--color-background-dark); padding: 2px 6px; border-radius: 4px; }
+.article-detail__body :deep(pre) { background: var(--color-background-dark); padding: 12px; border-radius: var(--border-radius); overflow-x: auto; }
 
 .status-badge {
 	padding: 2px 8px;
