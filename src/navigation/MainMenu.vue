@@ -49,6 +49,9 @@
 				:to="{ name: 'Contactmomenten' }">
 				<template #icon>
 					<PhoneMessage :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
 				:name="t('pipelinq', 'Complaints')"
 				:to="{ name: 'Complaints' }">
 				<template #icon>
@@ -70,11 +73,20 @@
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
-				:name="t('pipelinq', 'Surveys')"\n\t\t\t\t:to="{ name: 'Surveys' }">\n\t\t\t\t<template #icon>\n\t\t\t\t\t<EmoticonHappyOutline :size="20" />\n\t\t\t\t</template>\n\t\t\t</NcAppNavigationItem>\n\t\t\t<NcAppNavigationItem\n\t\t\t\t:name="t('pipelinq', 'Kennisbank')"
+				:name="t('pipelinq', 'Surveys')"
+				:to="{ name: 'Surveys' }">
+				<template #icon>
+					<EmoticonHappyOutline :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
 				:name="t('pipelinq', 'Queues')"
 				:to="{ name: 'Queues' }">
 				<template #icon>
 					<InboxMultiple :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
 				:name="t('pipelinq', 'Kennisbank')"
 				:to="{ name: 'Kennisbank' }">
 				<template #icon>
@@ -89,18 +101,6 @@
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
-				:name="t('pipelinq', 'Contact Moments')"
-				:to="{ name: 'Contactmomenten' }">
-				<template #icon>
-					<PhoneInTalk :size="20" />
-				:name="t('pipelinq', 'Tasks')"
-				:to="{ name: 'Tasks' }">
-				<template #icon>
-					<ClipboardCheck :size="20" />
-				:name="t('pipelinq', 'Knowledge Base')"
-				:to="{ name: 'Kennisbank' }">
-				<template #icon>
-					<BookOpenPageVariant :size="20" />
 				:name="t('pipelinq', 'Reporting')"
 				:to="{ name: 'Rapportage' }">
 				<template #icon>
@@ -129,6 +129,9 @@
 					:to="{ name: 'Forms' }">
 					<template #icon>
 						<FormTextboxPassword :size="20" />
+					</template>
+				</NcAppNavigationItem>
+				<NcAppNavigationItem
 					:name="t('pipelinq', 'Automations')"
 					:to="{ name: 'Automations' }">
 					<template #icon>
@@ -160,8 +163,6 @@ import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
 import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import PhoneInTalk from 'vue-material-design-icons/PhoneInTalk.vue'
-import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
-import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import ChartBar from 'vue-material-design-icons/ChartBar.vue'
 import EmoticonHappyOutline from 'vue-material-design-icons/EmoticonHappyOutline.vue'
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
@@ -191,13 +192,8 @@ export default {
 		PackageVariant,
 		EmoticonHappyOutline,
 		ClipboardCheck,
-		BookOpenPageVariant,
-		BookOpenVariantOutline,
 		PhoneInTalk,
-		ClipboardCheck,
-		BookOpenPageVariant,
 		ChartBar,
-		PackageVariant,
 		InboxMultiple,
 		PhoneMessage,
 		AlertCircleOutline,

@@ -789,6 +789,8 @@ export default {
 .queue-select {
 	margin-top: 8px;
 	min-width: 200px;
+}
+
 .viewTableContainer {
 	background: var(--color-main-background);
 	border-radius: var(--border-radius);
