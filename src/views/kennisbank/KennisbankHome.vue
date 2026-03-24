@@ -344,6 +344,7 @@ export default {
 .kennisbank-home__empty {
 	padding: 40px 0;
 }
+</style>
 <script>
 import { NcButton, NcTextField, NcLoadingIcon } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
