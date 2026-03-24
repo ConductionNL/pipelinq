@@ -2,9 +2,8 @@
 	<div class="contact-relationships">
 		<NcLoadingIcon v-if="loading" :size="24" />
 
-		<div v-else-if="relationships.length === 0" class="contact-relationships__empty">
-			<p>{{ t('pipelinq', 'No relationships yet.') }}</p>
-		</div>
+		<NcEmptyContent v-else-if="relationships.length === 0"
+			:description="t('pipelinq', 'No relationships yet.')" />
 
 		<div v-else>
 			<div v-for="group in groupedRelationships" :key="group.category" class="relationship-group">
@@ -151,7 +150,7 @@
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { useObjectStore } from '../store/modules/object.js'
 
@@ -176,6 +175,7 @@ export default {
 	components: {
 		NcButton,
 		NcDialog,
+		NcEmptyContent,
 		NcLoadingIcon,
 		NcSelect,
 	},
@@ -629,7 +629,7 @@ export default {
 }
 
 .form-group textarea,
-.form-group input[type="date"] {
+.form-group input[type='date'] {
 	width: 100%;
 	padding: 8px;
 	border: 1px solid var(--color-border);

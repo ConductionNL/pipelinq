@@ -193,26 +193,6 @@ class KennisbankReviewJobTest extends TestCase
         ]);
         $this->container->method('get')->willReturn($objectServiceMock);
 
-        $this->notificationService->expects($this->once())->method('sendNotification')
-        $staleDate = (new \DateTime())->modify('-200 days')->format('c');
-
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['findAll'])
-            ->getMock();
-        $objectServiceMock->method('findAll')->willReturn([
-            'results' => [
-                [
-                    'id'           => 'article-1',
-                    'title'        => 'Stale Article',
-                    'status'       => 'gepubliceerd',
-                    'author'       => 'user1',
-                    'dateModified' => $staleDate,
-                ],
-            ],
-        ]);
-
-        $this->container->method('get')->willReturn($objectServiceMock);
-
         $this->notificationService
             ->expects($this->once())
             ->method('sendNotification')
@@ -225,7 +205,6 @@ class KennisbankReviewJobTest extends TestCase
     }//end testJobSendsNotificationForStaleArticle()
 
     /**
-     * Test that the job does not notify for recently updated articles.
      * Test that the job does not send notifications for recently updated articles.
      *
      * @return void

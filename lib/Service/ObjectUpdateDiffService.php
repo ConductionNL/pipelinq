@@ -86,8 +86,8 @@ class ObjectUpdateDiffService
         }
 
         // Detect deal won or lost based on stage name.
-        $wonNames  = ['won', 'gewonnen', 'closed won'];
-        $lostNames = ['lost', 'verloren', 'closed lost'];
+        $wonNames   = ['won', 'gewonnen', 'closed won'];
+        $lostNames  = ['lost', 'verloren', 'closed lost'];
         $stageLower = strtolower($newStage);
 
         if (in_array($stageLower, $wonNames, true) === true) {

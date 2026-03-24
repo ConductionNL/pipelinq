@@ -16,8 +16,12 @@
 						</span>
 					</div>
 					<div class="agent-item__actions">
-						<NcButton @click="startEdit(profile)">{{ t('pipelinq', 'Edit') }}</NcButton>
-						<NcButton type="error" @click="deleteProfile(profile)">{{ t('pipelinq', 'Delete') }}</NcButton>
+						<NcButton @click="startEdit(profile)">
+							{{ t('pipelinq', 'Edit') }}
+						</NcButton>
+						<NcButton type="error" @click="deleteProfile(profile)">
+							{{ t('pipelinq', 'Delete') }}
+						</NcButton>
 					</div>
 				</div>
 
@@ -51,14 +55,20 @@
 						</div>
 					</div>
 					<div class="edit-actions">
-						<NcButton @click="cancelEdit">{{ t('pipelinq', 'Cancel') }}</NcButton>
-						<NcButton type="primary" @click="saveEdit">{{ t('pipelinq', 'Save') }}</NcButton>
+						<NcButton @click="cancelEdit">
+							{{ t('pipelinq', 'Cancel') }}
+						</NcButton>
+						<NcButton type="primary" @click="saveEdit">
+							{{ t('pipelinq', 'Save') }}
+						</NcButton>
 					</div>
 				</div>
 			</div>
 
 			<div class="agent-add">
-				<NcButton @click="addProfile">{{ t('pipelinq', '+ Add Agent Profile') }}</NcButton>
+				<NcButton @click="addProfile">
+					{{ t('pipelinq', '+ Add Agent Profile') }}
+				</NcButton>
 			</div>
 		</div>
 	</NcSettingsSection>
@@ -215,8 +225,8 @@ export default {
 	font-size: 13px;
 }
 
-.edit-field input[type="text"],
-.edit-field input[type="number"] {
+.edit-field input[type='text'],
+.edit-field input[type='number'] {
 	padding: 6px 8px;
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);

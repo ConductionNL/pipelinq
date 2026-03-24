@@ -315,6 +315,7 @@ export default {
 		this.fetchAll()
 	},
 	methods: {
+		formatNumber,
 		getPriorityLabel,
 		getPriorityColor,
 

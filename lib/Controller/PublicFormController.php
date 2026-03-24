@@ -39,7 +39,7 @@ class PublicFormController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest          $request          The request.
+     * @param IRequest          $request           The request.
      * @param IntakeFormService $intakeFormService The intake form service.
      */
     public function __construct(
@@ -48,7 +48,6 @@ class PublicFormController extends Controller
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
-
 
     /**
      * Get a public form definition for rendering.
@@ -69,16 +68,17 @@ class PublicFormController extends Controller
     {
         // Form data would be fetched from OpenRegister in production.
         // This endpoint returns the public-facing form definition.
-        $response = new JSONResponse([
-            'id'             => $id,
-            'fields'         => [],
-            'successMessage' => '',
-            'isActive'       => true,
-        ]);
+        $response = new JSONResponse(
+                [
+                    'id'             => $id,
+                    'fields'         => [],
+                    'successMessage' => '',
+                    'isActive'       => true,
+                ]
+                );
 
         return $this->addCorsHeaders(response: $response);
     }//end show()
-
 
     /**
      * Process a public form submission.
@@ -100,14 +100,14 @@ class PublicFormController extends Controller
         $submission = $this->request->getParams();
         $ip         = $this->request->getRemoteAddress();
 
-        // Check honeypot
+        // Check honeypot.
         if ($this->intakeFormService->isSpam(submission: $submission) === true) {
-            // Silently accept but discard (don't reveal spam detection)
+            // Silently accept but discard (don't reveal spam detection).
             $response = new JSONResponse(['success' => true, 'message' => 'Thank you for your submission.']);
             return $this->addCorsHeaders(response: $response);
         }
 
-        // Check rate limiting
+        // Check rate limiting.
         if ($this->intakeFormService->isRateLimited(ip: $ip, formId: $id) === true) {
             $response = new JSONResponse(
                 ['success' => false, 'message' => 'Too many submissions. Please try again later.'],
@@ -123,16 +123,16 @@ class PublicFormController extends Controller
         // 4. Deduplicate contact by email
         // 5. Create contact and lead
         // 6. Record submission
-        // 7. Notify configured user
-
-        $response = new JSONResponse([
-            'success' => true,
-            'message' => 'Thank you for your submission.',
-        ]);
+        // 7. Notify configured user.
+        $response = new JSONResponse(
+                [
+                    'success' => true,
+                    'message' => 'Thank you for your submission.',
+                ]
+                );
 
         return $this->addCorsHeaders(response: $response);
     }//end submit()
-
 
     /**
      * Add CORS headers to allow cross-origin form embedding.

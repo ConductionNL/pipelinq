@@ -70,16 +70,16 @@ class KennisbankService
      * @return array{articles: array<mixed>, total: int} Articles and total count.
      */
     public function getPublicArticles(
-        ?string $search = null,
-        ?string $category = null,
-        int $limit = 20,
-        int $offset = 0,
+        ?string $search=null,
+        ?string $category=null,
+        int $limit=20,
+        int $offset=0,
     ): array {
         // This method returns the filter parameters for use by the controller.
         // The actual OpenRegister query is performed by the controller using
         // the ObjectService or direct API calls.
         $filters = [
-            'status' => 'gepubliceerd',
+            'status'     => 'gepubliceerd',
             'visibility' => 'openbaar',
         ];
 
@@ -88,10 +88,10 @@ class KennisbankService
         }
 
         return [
-            'filters' => $filters,
-            'search' => $search,
-            'limit' => $limit,
-            'offset' => $offset,
+            'filters'       => $filters,
+            'search'        => $search,
+            'limit'         => $limit,
+            'offset'        => $offset,
             'excludeFields' => self::PUBLIC_EXCLUDED_FIELDS,
         ];
     }//end getPublicArticles()
@@ -124,7 +124,7 @@ class KennisbankService
     public function validateFeedback(
         string $articleId,
         string $rating,
-        ?string $comment = null,
+        ?string $comment=null,
     ): array {
         $errors = [];
 
@@ -142,7 +142,7 @@ class KennisbankService
         }
 
         return [
-            'valid' => count($errors) === 0,
+            'valid'  => count($errors) === 0,
             'errors' => $errors,
         ];
     }//end validateFeedback()
@@ -159,15 +159,20 @@ class KennisbankService
     public function buildFeedbackData(
         string $articleId,
         string $rating,
-        ?string $comment = null,
+        ?string $comment=null,
     ): array {
         $user = $this->userSession->getUser();
 
+        $agent = '';
+        if ($user !== null) {
+            $agent = $user->getUID();
+        }
+
         $data = [
             'article' => $articleId,
-            'rating' => $rating,
-            'agent' => $user !== null ? $user->getUID() : '',
-            'status' => 'nieuw',
+            'rating'  => $rating,
+            'agent'   => $agent,
+            'status'  => 'nieuw',
         ];
 
         if ($comment !== null && trim($comment) !== '') {

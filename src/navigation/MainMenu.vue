@@ -162,7 +162,6 @@ import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
 import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
-import PhoneInTalk from 'vue-material-design-icons/PhoneInTalk.vue'
 import ChartBar from 'vue-material-design-icons/ChartBar.vue'
 import EmoticonHappyOutline from 'vue-material-design-icons/EmoticonHappyOutline.vue'
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
@@ -192,7 +191,6 @@ export default {
 		PackageVariant,
 		EmoticonHappyOutline,
 		ClipboardCheck,
-		PhoneInTalk,
 		ChartBar,
 		InboxMultiple,
 		PhoneMessage,
