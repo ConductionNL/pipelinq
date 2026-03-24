@@ -13,3 +13,8 @@ jobs:
     with:
       app-name: pipelinq
       enable-sbom: true
+      enable-playwright: true
+      enable-playwright-coverage: true
+      playwright-coverage-threshold: 75
+      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister"}]'
+      playwright-seed-command: 'php occ maintenance:repair'
