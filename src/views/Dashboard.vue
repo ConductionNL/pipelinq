@@ -242,8 +242,8 @@ const DEFAULT_LAYOUT = [
 	{ id: 4, widgetId: 'count-overdue', gridX: 9, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
 	{ id: 5, widgetId: 'deals-by-stage', gridX: 0, gridY: 2, gridWidth: 6, gridHeight: 4 },
 	{ id: 6, widgetId: 'complaints-overview', gridX: 6, gridY: 2, gridWidth: 6, gridHeight: 4 },
-	{ id: 7, widgetId: 'my-work', gridX: 0, gridY: 6, gridWidth: 6, gridHeight: 4 },
-	{ id: 8, widgetId: 'client-overview', gridX: 6, gridY: 6, gridWidth: 6, gridHeight: 3 },
+	{ id: 7, widgetId: 'my-work', gridX: 0, gridY: 6, gridWidth: 6, gridHeight: 4, flush: true },
+	{ id: 8, widgetId: 'client-overview', gridX: 6, gridY: 6, gridWidth: 6, gridHeight: 3, flush: true },
 ]
 
 export default {
@@ -637,7 +637,6 @@ export default {
 
 /* My Work widget */
 .my-work-widget-content {
-	padding: 4px 0;
 	height: 100%;
 	overflow: auto;
 }
@@ -719,7 +718,6 @@ export default {
 
 /* Client overview widget */
 .client-overview-content {
-	padding: 4px 0;
 	height: 100%;
 	overflow: auto;
 }

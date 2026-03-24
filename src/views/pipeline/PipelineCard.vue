@@ -143,6 +143,7 @@ export default {
 		await this.loadUsers()
 	},
 	methods: {
+		formatNumber,
 		getPriorityLabel,
 		getPriorityColor,
 		getStatusLabel,

@@ -39,12 +39,20 @@
 			</div>
 			<div class="detail-body" v-html="renderedBody" />
 			<div style="margin-top:24px;padding:16px;border:1px solid var(--color-border);border-radius:var(--border-radius);background:var(--color-background-dark)">
-				<h3 style="margin:0 0 12px">{{ t('pipelinq', 'Was this article helpful?') }}</h3>
+				<h3 style="margin:0 0 12px">
+					{{ t('pipelinq', 'Was this article helpful?') }}
+				</h3>
 				<div style="display:flex;gap:8px">
-					<NcButton :type="submitted === 'nuttig' ? 'primary' : 'secondary'" @click="rate('nuttig')">{{ t('pipelinq', 'Helpful') }}</NcButton>
-					<NcButton :type="submitted === 'niet_nuttig' ? 'error' : 'secondary'" @click="rate('niet_nuttig')">{{ t('pipelinq', 'Not helpful') }}</NcButton>
+					<NcButton :type="submitted === 'nuttig' ? 'primary' : 'secondary'" @click="rate('nuttig')">
+						{{ t('pipelinq', 'Helpful') }}
+					</NcButton>
+					<NcButton :type="submitted === 'niet_nuttig' ? 'error' : 'secondary'" @click="rate('niet_nuttig')">
+						{{ t('pipelinq', 'Not helpful') }}
+					</NcButton>
 				</div>
-				<div v-if="submitted" style="margin-top:8px;color:var(--color-success);font-size:13px">{{ t('pipelinq', 'Thank you!') }}</div>
+				<div v-if="submitted" style="margin-top:8px;color:var(--color-success);font-size:13px">
+					{{ t('pipelinq', 'Thank you!') }}
+				</div>
 			</div>
 		</template>
 		<div v-else style="text-align:center;padding:80px;color:var(--color-text-maxcontrast)">
@@ -77,14 +85,24 @@ export default {
 </script>
 <style scoped>
 .kennisbank-detail { padding: 20px; max-width: 900px }
+
 .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600 }
+
 .badge--public { background: #dcfce7; color: #166534 }
+
 .badge--internal { background: var(--color-background-dark); color: var(--color-text-maxcontrast) }
+
 .badge--archived { background: #fef3c7; color: #92400e }
+
 .badge--draft { background: #dbeafe; color: #1e40af }
+
 .badge--review { background: #fee2e2; color: #991b1b }
+
 .detail-body { line-height: 1.6; font-size: 15px }
+
 .detail-body :deep(img) { max-width: 100% }
+
 .detail-body :deep(code) { background: var(--color-background-dark); padding: 2px 6px; border-radius: 4px }
+
 .detail-body :deep(pre) { background: var(--color-background-dark); padding: 12px; border-radius: var(--border-radius); overflow-x: auto }
 </style>

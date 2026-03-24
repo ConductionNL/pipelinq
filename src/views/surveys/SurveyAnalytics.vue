@@ -3,9 +3,15 @@
 		<NcLoadingIcon v-if="loading" />
 		<template v-else-if="survey">
 			<h2>{{ survey.title }} — {{ t('pipelinq', 'Analytics') }}</h2>
-			<div class="metrics"><span>{{ t('pipelinq', 'Responses') }}: {{ store.responseCount }}</span><span v-if="store.npsScore !== null">NPS: {{ store.npsScore }}</span><span v-if="store.satisfactionAverage !== null">{{ t('pipelinq', 'Avg Rating') }}: {{ store.satisfactionAverage }}/5</span></div>
-			<NcButton @click="exportCsv">{{ t('pipelinq', 'Export CSV') }}</NcButton>
-			<div v-for="q in survey.questions || []" :key="q.id" class="q-result"><h4>{{ q.text }} ({{ q.type }})</h4></div>
+			<div class="metrics">
+				<span>{{ t('pipelinq', 'Responses') }}: {{ store.responseCount }}</span><span v-if="store.npsScore !== null">NPS: {{ store.npsScore }}</span><span v-if="store.satisfactionAverage !== null">{{ t('pipelinq', 'Avg Rating') }}: {{ store.satisfactionAverage }}/5</span>
+			</div>
+			<NcButton @click="exportCsv">
+				{{ t('pipelinq', 'Export CSV') }}
+			</NcButton>
+			<div v-for="q in survey.questions || []" :key="q.id" class="q-result">
+				<h4>{{ q.text }} ({{ q.type }})</h4>
+			</div>
 		</template>
 	</div>
 </template>
@@ -32,6 +38,8 @@ export default {
 </script>
 <style scoped>
 .analytics { padding: 20px; max-width: 900px; }
+
 .metrics { display: flex; gap: 20px; margin: 16px 0; font-weight: 600; }
+
 .q-result { margin: 12px 0; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; }
 </style>

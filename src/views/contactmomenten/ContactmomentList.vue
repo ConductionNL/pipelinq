@@ -21,19 +21,41 @@
 				@trailing-button-click="searchQuery = ''" />
 			<div class="filter-row">
 				<select v-model="filterChannel" class="filter-select">
-					<option value="">{{ t('pipelinq', 'All channels') }}</option>
-					<option value="telefoon">{{ t('pipelinq', 'Phone') }}</option>
-					<option value="email">{{ t('pipelinq', 'Email') }}</option>
-					<option value="balie">{{ t('pipelinq', 'Counter') }}</option>
-					<option value="chat">{{ t('pipelinq', 'Chat') }}</option>
-					<option value="social">{{ t('pipelinq', 'Social') }}</option>
-					<option value="brief">{{ t('pipelinq', 'Letter') }}</option>
+					<option value="">
+						{{ t('pipelinq', 'All channels') }}
+					</option>
+					<option value="telefoon">
+						{{ t('pipelinq', 'Phone') }}
+					</option>
+					<option value="email">
+						{{ t('pipelinq', 'Email') }}
+					</option>
+					<option value="balie">
+						{{ t('pipelinq', 'Counter') }}
+					</option>
+					<option value="chat">
+						{{ t('pipelinq', 'Chat') }}
+					</option>
+					<option value="social">
+						{{ t('pipelinq', 'Social') }}
+					</option>
+					<option value="brief">
+						{{ t('pipelinq', 'Letter') }}
+					</option>
 				</select>
 				<select v-model="filterResult" class="filter-select">
-					<option value="">{{ t('pipelinq', 'All results') }}</option>
-					<option value="afgehandeld">{{ t('pipelinq', 'Resolved') }}</option>
-					<option value="doorverwezen">{{ t('pipelinq', 'Forwarded') }}</option>
-					<option value="terugbelverzoek">{{ t('pipelinq', 'Callback') }}</option>
+					<option value="">
+						{{ t('pipelinq', 'All results') }}
+					</option>
+					<option value="afgehandeld">
+						{{ t('pipelinq', 'Resolved') }}
+					</option>
+					<option value="doorverwezen">
+						{{ t('pipelinq', 'Forwarded') }}
+					</option>
+					<option value="terugbelverzoek">
+						{{ t('pipelinq', 'Callback') }}
+					</option>
 				</select>
 			</div>
 		</div>
@@ -107,8 +129,11 @@ export default {
 		formatDate(dateStr) {
 			if (!dateStr) return ''
 			return new Date(dateStr).toLocaleString('nl-NL', {
-				day: '2-digit', month: '2-digit', year: 'numeric',
-				hour: '2-digit', minute: '2-digit',
+				day: '2-digit',
+				month: '2-digit',
+				year: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit',
 			})
 		},
 		exportCsv() {
@@ -120,22 +145,40 @@ export default {
 
 <style scoped>
 .contactmoment-list { padding: 20px; max-width: 1100px; margin: 0 auto; }
+
 .contactmoment-list__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+
 .contactmoment-list__actions { display: flex; gap: 8px; }
+
 .contactmoment-list__filters { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+
 .filter-row { display: flex; gap: 8px; }
+
 .filter-select { padding: 8px; border: 1px solid var(--color-border); border-radius: var(--border-radius); background: var(--color-main-background); }
+
 .data-table { width: 100%; border-collapse: collapse; }
+
 .data-table th, .data-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--color-border); }
+
 .data-table th { font-weight: 600; font-size: 0.85em; color: var(--color-text-lighter); }
+
 .clickable-row { cursor: pointer; }
+
 .clickable-row:hover { background: var(--color-background-hover); }
+
 .channel-badge { padding: 2px 8px; border-radius: var(--border-radius); font-size: 0.75em; font-weight: 600; text-transform: capitalize; }
+
 .channel-badge--telefoon { background: #bee3f8; color: #2a4365; }
+
 .channel-badge--email { background: #c6f6d5; color: #22543d; }
+
 .channel-badge--balie { background: #fefcbf; color: #744210; }
+
 .channel-badge--chat { background: #e9d8fd; color: #44337a; }
+
 .channel-badge--social { background: #fed7e2; color: #702459; }
+
 .channel-badge--brief { background: #e2e8f0; color: #2d3748; }
+
 .contactmoment-list__empty { padding: 40px 0; }
 </style>

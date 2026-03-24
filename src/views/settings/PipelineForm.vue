@@ -606,7 +606,7 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
-.stage-color-field input[type="color"] {
+.stage-color-field input[type='color'] {
 	width: 32px;
 	height: 32px;
 	padding: 0;
