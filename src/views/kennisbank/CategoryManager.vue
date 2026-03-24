@@ -26,7 +26,7 @@
 				v-for="category in sortedCategories"
 				:key="category.id"
 				class="category-item"
-				:style="{ paddingLeft: (getCategoryDepth(category) * 24) + 'px' }">
+				:style="{ paddingLeft: (getCategoryDepth(category) * 24 + 16) + 'px' }">
 				<span class="category-item__name">{{ category.name }}</span>
 				<span v-if="category.description" class="category-item__desc">
 					{{ category.description }}
@@ -51,6 +51,18 @@
 			<NcTextField
 				:value.sync="formData.description"
 				:label="t('pipelinq', 'Description')" />
+			<div class="form-row">
+				<label>{{ t('pipelinq', 'Parent category') }}</label>
+				<select v-model="formData.parent" class="form-select">
+					<option :value="null">{{ t('pipelinq', 'None (root level)') }}</option>
+					<option
+						v-for="cat in availableParents"
+						:key="cat.id"
+						:value="cat.id">
+						{{ cat.name }}
+					</option>
+				</select>
+			</div>
 			<div class="category-form__actions">
 				<NcButton type="tertiary" @click="cancelForm">
 					{{ t('pipelinq', 'Cancel') }}
@@ -69,6 +81,7 @@
 <script>
 import { NcButton, NcLoadingIcon, NcEmptyContent, NcTextField } from '@nextcloud/vue'
 import { showSuccess, showError } from '@nextcloud/dialogs'
+import { useKennisbankStore } from '../../store/modules/kennisbank.js'
 
 export default {
 	name: 'CategoryManager',
@@ -80,7 +93,6 @@ export default {
 	},
 	data() {
 		return {
-			categories: [],
 			loading: false,
 			showNewForm: false,
 			editingCategory: null,
@@ -93,30 +105,35 @@ export default {
 		}
 	},
 	computed: {
+		store() {
+			return useKennisbankStore()
+		},
+		categories() {
+			return this.store.categories
+		},
 		sortedCategories() {
 			return [...this.categories].sort((a, b) => (a.order || 0) - (b.order || 0))
 		},
+		availableParents() {
+			const editId = this.editingCategory ? this.editingCategory.id : null
+			return this.categories.filter(c => c.id !== editId)
+		},
 	},
-	mounted() {
-		this.fetchCategories()
+	async mounted() {
+		this.loading = true
+		await this.store.fetchCategories()
+		this.loading = false
 	},
 	methods: {
-		async fetchCategories() {
-			this.loading = true
-			try {
-				// Fetch from OpenRegister
-				this.categories = []
-			} finally {
-				this.loading = false
-			}
-		},
 		getCategoryDepth(category) {
 			let depth = 0
 			let current = category
 			while (current.parent) {
 				depth++
 				current = this.categories.find(c => c.id === current.parent) || {}
-				if (depth > 3) break
+				if (depth > 3) {
+					break
+				}
 			}
 			return depth
 		},
@@ -136,10 +153,13 @@ export default {
 		},
 		async saveCategory() {
 			try {
-				// Save via OpenRegister objectStore
+				if (this.editingCategory) {
+					await this.store.updateCategory(this.editingCategory.id, this.formData)
+				} else {
+					await this.store.createCategory(this.formData)
+				}
 				showSuccess(t('pipelinq', 'Category saved'))
 				this.cancelForm()
-				this.fetchCategories()
 			} catch (error) {
 				showError(t('pipelinq', 'Failed to save category'))
 			}
@@ -149,9 +169,8 @@ export default {
 				return
 			}
 			try {
-				// Delete via OpenRegister
+				await this.store.deleteCategory(category.id)
 				showSuccess(t('pipelinq', 'Category deleted'))
-				this.fetchCategories()
 			} catch (error) {
 				showError(t('pipelinq', 'Failed to delete category'))
 			}
@@ -230,5 +249,20 @@ export default {
 
 .category-manager__empty {
 	padding: 40px 0;
+}
+
+.form-row label {
+	display: block;
+	margin-bottom: 4px;
+	font-weight: 600;
+	font-size: 0.9em;
+}
+
+.form-select {
+	width: 100%;
+	padding: 8px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background: var(--color-main-background);
 }
 </style>

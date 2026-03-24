@@ -3,7 +3,7 @@
 		<div class="article-editor__header">
 			<h2>{{ isNew ? t('pipelinq', 'New Article') : t('pipelinq', 'Edit Article') }}</h2>
 			<div class="article-editor__actions">
-				<NcButton type="tertiary" @click="$router.back()">
+				<NcButton type="tertiary" @click="goBack">
 					{{ t('pipelinq', 'Cancel') }}
 				</NcButton>
 				<NcButton
@@ -21,13 +21,20 @@
 			</div>
 		</div>
 
+		<div v-if="duplicateWarning" class="article-editor__warning">
+			{{ t('pipelinq', 'An article with this title already exists.') }}
+			<NcButton type="tertiary" @click="goToDuplicate">
+				{{ t('pipelinq', 'View existing article') }}
+			</NcButton>
+		</div>
+
 		<div class="article-editor__form">
 			<div class="form-row">
 				<NcTextField
 					:value.sync="form.title"
 					:label="t('pipelinq', 'Title')"
 					:required="true"
-					:error="errors.title" />
+					@update:value="checkDuplicate" />
 			</div>
 
 			<div class="form-row">
@@ -39,18 +46,30 @@
 
 			<div class="form-row form-row--split">
 				<div class="form-col">
+					<label>{{ t('pipelinq', 'Category') }}</label>
+					<select v-model="form.category" class="form-select">
+						<option :value="null">{{ t('pipelinq', 'No category') }}</option>
+						<option
+							v-for="cat in categories"
+							:key="cat.id"
+							:value="cat.id">
+							{{ cat.name }}
+						</option>
+					</select>
+				</div>
+				<div class="form-col">
 					<label>{{ t('pipelinq', 'Visibility') }}</label>
 					<select v-model="form.visibility" class="form-select">
 						<option value="intern">{{ t('pipelinq', 'Internal (agents only)') }}</option>
 						<option value="openbaar">{{ t('pipelinq', 'Public (citizen-facing)') }}</option>
 					</select>
 				</div>
-				<div class="form-col">
-					<label>{{ t('pipelinq', 'Tags (comma-separated)') }}</label>
-					<NcTextField
-						:value.sync="tagsInput"
-						:label="t('pipelinq', 'e.g. paspoort, burgerzaken')" />
-				</div>
+			</div>
+
+			<div class="form-row">
+				<NcTextField
+					:value.sync="tagsInput"
+					:label="t('pipelinq', 'Tags (comma-separated)')" />
 			</div>
 
 			<div class="article-editor__body">
@@ -74,6 +93,11 @@
 <script>
 import { NcButton, NcTextField } from '@nextcloud/vue'
 import { showSuccess, showError } from '@nextcloud/dialogs'
+import MarkdownIt from 'markdown-it'
+import { useKennisbankStore } from '../../store/modules/kennisbank.js'
+
+const md = new MarkdownIt({ html: false, linkify: true, typographer: true })
+let duplicateCheckTimeout = null
 
 export default {
 	name: 'ArticleEditor',
@@ -93,17 +117,20 @@ export default {
 				title: '',
 				body: '',
 				summary: '',
+				category: null,
 				visibility: 'intern',
-				categories: [],
 				tags: [],
 				status: 'concept',
 			},
 			tagsInput: '',
 			saving: false,
-			errors: {},
+			duplicateWarning: null,
 		}
 	},
 	computed: {
+		store() {
+			return useKennisbankStore()
+		},
 		isNew() {
 			return !this.articleId
 		},
@@ -111,14 +138,13 @@ export default {
 			return this.form.title.trim() !== '' && this.form.body.trim() !== ''
 		},
 		renderedPreview() {
-			if (!this.form.body) return ''
-			return this.form.body
-				.replace(/^### (.*$)/gim, '<h3>$1</h3>')
-				.replace(/^## (.*$)/gim, '<h2>$1</h2>')
-				.replace(/^# (.*$)/gim, '<h1>$1</h1>')
-				.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-				.replace(/\*(.*?)\*/gim, '<em>$1</em>')
-				.replace(/\n/gim, '<br>')
+			if (!this.form.body) {
+				return ''
+			}
+			return md.render(this.form.body)
+		},
+		categories() {
+			return this.store.categories
 		},
 	},
 	watch: {
@@ -126,37 +152,80 @@ export default {
 			this.form.tags = val.split(',').map(t => t.trim()).filter(t => t !== '')
 		},
 	},
-	mounted() {
+	async created() {
+		if (!this.store.categories.length) {
+			await this.store.fetchCategories()
+		}
 		if (this.articleId) {
-			this.loadArticle()
+			await this.loadArticle()
 		}
 	},
 	methods: {
 		async loadArticle() {
-			// Load article from OpenRegister for editing
+			const article = await this.store.fetchArticle(this.articleId)
+			if (article) {
+				this.form = {
+					title: article.title || '',
+					body: article.body || '',
+					summary: article.summary || '',
+					category: article.category || null,
+					visibility: article.visibility || 'intern',
+					tags: article.tags || [],
+					status: article.status || 'concept',
+				}
+				this.tagsInput = (article.tags || []).join(', ')
+			}
 		},
 		async save(status) {
-			if (!this.isValid) return
+			if (!this.isValid) {
+				return
+			}
 
 			this.saving = true
-			this.form.status = status
-
 			try {
-				if (status === 'gepubliceerd') {
-					this.form.publishedAt = new Date().toISOString()
+				const data = { ...this.form, status }
+				let result
+				if (this.isNew) {
+					result = await this.store.createArticle(data)
+				} else {
+					result = await this.store.updateArticle(this.articleId, data)
 				}
 
-				// Save via OpenRegister objectStore
-				showSuccess(
-					status === 'gepubliceerd'
-						? t('pipelinq', 'Article published')
-						: t('pipelinq', 'Draft saved'),
-				)
-				this.$router.push({ name: 'Kennisbank' })
+				if (result && result.id) {
+					showSuccess(
+						status === 'gepubliceerd'
+							? t('pipelinq', 'Article published')
+							: t('pipelinq', 'Draft saved'),
+					)
+					this.$router.push({ name: 'KennisbankDetail', params: { id: result.id } })
+				}
 			} catch (error) {
 				showError(t('pipelinq', 'Failed to save article'))
 			} finally {
 				this.saving = false
+			}
+		},
+		goBack() {
+			if (this.isNew) {
+				this.$router.push({ name: 'Kennisbank' })
+			} else {
+				this.$router.push({ name: 'KennisbankDetail', params: { id: this.articleId } })
+			}
+		},
+		checkDuplicate(title) {
+			clearTimeout(duplicateCheckTimeout)
+			duplicateCheckTimeout = setTimeout(async () => {
+				if (title && title.trim().length > 3) {
+					const duplicate = await this.store.checkDuplicateTitle(title, this.articleId)
+					this.duplicateWarning = duplicate || null
+				} else {
+					this.duplicateWarning = null
+				}
+			}, 500)
+		},
+		goToDuplicate() {
+			if (this.duplicateWarning && this.duplicateWarning.id) {
+				this.$router.push({ name: 'KennisbankDetail', params: { id: this.duplicateWarning.id } })
 			}
 		},
 	},
@@ -180,6 +249,17 @@ export default {
 .article-editor__actions {
 	display: flex;
 	gap: 8px;
+}
+
+.article-editor__warning {
+	background: var(--color-warning);
+	color: #000;
+	padding: 8px 16px;
+	border-radius: var(--border-radius);
+	margin-bottom: 16px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
 }
 
 .article-editor__form {
