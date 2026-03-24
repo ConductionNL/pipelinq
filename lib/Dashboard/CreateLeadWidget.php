@@ -37,8 +37,7 @@ class CreateLeadWidget implements IWidget
     public function __construct(
         private IL10N $l10n,
     ) {
-
-    }//end __construct()
+    }
 
     /**
      * Get the unique widget identifier.
@@ -48,8 +47,7 @@ class CreateLeadWidget implements IWidget
     public function getId(): string
     {
         return 'pipelinq_create_lead_widget';
-
-    }//end getId()
+    }
 
     /**
      * Get the translated widget title.
@@ -59,8 +57,7 @@ class CreateLeadWidget implements IWidget
     public function getTitle(): string
     {
         return $this->l10n->t('Create Lead');
-
-    }//end getTitle()
+    }
 
     /**
      * Get the display order of this widget.
@@ -70,8 +67,7 @@ class CreateLeadWidget implements IWidget
     public function getOrder(): int
     {
         return 15;
-
-    }//end getOrder()
+    }
 
     /**
      * Get the CSS class for the widget icon.
@@ -81,8 +77,7 @@ class CreateLeadWidget implements IWidget
     public function getIconClass(): string
     {
         return 'icon-pipelinq-widget';
-
-    }//end getIconClass()
+    }
 
     /**
      * Get the URL for the widget header link.
@@ -92,8 +87,7 @@ class CreateLeadWidget implements IWidget
     public function getUrl(): ?string
     {
         return null;
-
-    }//end getUrl()
+    }
 
     /**
      * Load the widget scripts and styles.
@@ -104,8 +98,7 @@ class CreateLeadWidget implements IWidget
      */
     public function load(): void
     {
-        Util::addScript(Application::APP_ID, Application::APP_ID.'-createLeadWidget');
+        Util::addScript(Application::APP_ID, Application::APP_ID . '-createLeadWidget');
         Util::addStyle(Application::APP_ID, 'dashboardWidgets');
-
-    }//end load()
-}//end class
+    }
+}

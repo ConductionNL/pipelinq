@@ -38,8 +38,7 @@ class FindClientWidget implements IWidget
     public function __construct(
         private IL10N $l10n,
     ) {
-
-    }//end __construct()
+    }
 
     /**
      * Get the unique widget identifier.
@@ -49,8 +48,7 @@ class FindClientWidget implements IWidget
     public function getId(): string
     {
         return 'pipelinq_find_client_widget';
-
-    }//end getId()
+    }
 
     /**
      * Get the translated widget title.
@@ -60,8 +58,7 @@ class FindClientWidget implements IWidget
     public function getTitle(): string
     {
         return $this->l10n->t('Find Client');
-
-    }//end getTitle()
+    }
 
     /**
      * Get the display order of this widget.
@@ -71,8 +68,7 @@ class FindClientWidget implements IWidget
     public function getOrder(): int
     {
         return 13;
-
-    }//end getOrder()
+    }
 
     /**
      * Get the CSS class for the widget icon.
@@ -82,8 +78,7 @@ class FindClientWidget implements IWidget
     public function getIconClass(): string
     {
         return 'icon-pipelinq-widget';
-
-    }//end getIconClass()
+    }
 
     /**
      * Get the URL for the widget header link.
@@ -93,8 +88,7 @@ class FindClientWidget implements IWidget
     public function getUrl(): ?string
     {
         return null;
-
-    }//end getUrl()
+    }
 
     /**
      * Load the widget scripts and styles.
@@ -105,8 +99,7 @@ class FindClientWidget implements IWidget
      */
     public function load(): void
     {
-        Util::addScript(Application::APP_ID, Application::APP_ID.'-findClientWidget');
+        Util::addScript(Application::APP_ID, Application::APP_ID . '-findClientWidget');
         Util::addStyle(Application::APP_ID, 'dashboardWidgets');
-
-    }//end load()
-}//end class
+    }
+}
