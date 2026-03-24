@@ -30,6 +30,7 @@ Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klan
 | Request Management | Service intake and citizen inquiry handling before case conversion | Implemented | GEMMA Callcenter; TEC 3.1–3.4; VNG Verzoeken | [request-management.md](request-management.md) |
 | Pipeline & Kanban | Configurable kanban boards with stage management for leads and requests | Implemented | TEC 1.10; GEMMA CRM | [pipeline-kanban.md](pipeline-kanban.md) |
 | Dashboard | KPI cards, charts, activity preview, quick actions | Implemented | TEC 4.3 | [dashboard.md](dashboard.md) |
+| Action Widgets | Dashboard widgets for quick request, lead, and client actions | Implemented | GEMMA Callcenter; TEC 1.1, 3.1; Nextcloud IWidget | [action-widgets.md](action-widgets.md) |
 | My Work | Personal work queue aggregating all assigned items | Implemented | TEC 1.5 | [my-work.md](my-work.md) |
 | Contacts Sync | Two-way sync with Nextcloud Contacts via IManager | Implemented | vCard RFC 6350 | [contacts-sync.md](contacts-sync.md) |
 | Entity Notes | Internal notes and comments on all CRM entities | Implemented | TEC 5.3 | [entity-notes.md](entity-notes.md) |
@@ -72,6 +73,7 @@ The foundational sales and relationship management layer. These features are liv
 | Pipeline & Kanban | [pipeline-kanban.md](pipeline-kanban.md) |
 | Request Management | [request-management.md](request-management.md) |
 | Dashboard | [dashboard.md](dashboard.md) |
+| Action Widgets | [action-widgets.md](action-widgets.md) |
 | My Work | [my-work.md](my-work.md) |
 | Contacts Sync | [contacts-sync.md](contacts-sync.md) |
 | Entity Notes | [entity-notes.md](entity-notes.md) |
@@ -141,6 +143,7 @@ request-management      → request-management.md
 pipeline                → pipeline-kanban.md
 pipeline-insights       → pipeline-insights.md
 dashboard               → dashboard.md
+action-widgets          → action-widgets.md
 my-work                 → my-work.md
 entity-notes            → entity-notes.md
 notifications-activity  → notifications-activity.md
