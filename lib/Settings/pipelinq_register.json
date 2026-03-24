@@ -9,7 +9,174 @@
     "type": "application",
     "app": "pipelinq",
     "openregister": "^v0.2.10",
-    "description": "CRM data model — thin client on OpenRegister, no own database tables"
+    "description": "CRM data model — thin client on OpenRegister, no own database tables",
+    "seedData": {
+      "description": "Sample survey and response data for development and demonstration",
+      "objects": {
+        "survey": [
+          {
+            "title": "Klanttevredenheid Burgerzaken",
+            "description": "Enquete over uw ervaring met de dienstverlening van Burgerzaken. Uw feedback helpt ons verbeteren.",
+            "questions": [
+              {
+                "id": "q-nps-001",
+                "type": "nps",
+                "text": "Hoe waarschijnlijk is het dat u onze dienstverlening aanbeveelt aan anderen?",
+                "required": true,
+                "order": 1
+              },
+              {
+                "id": "q-rating-001",
+                "type": "rating",
+                "text": "Hoe beoordeelt u de snelheid van afhandeling?",
+                "required": true,
+                "order": 2
+              },
+              {
+                "id": "q-mc-001",
+                "type": "multiple_choice",
+                "text": "Via welk kanaal heeft u contact gehad?",
+                "required": true,
+                "options": ["Balie", "Telefoon", "E-mail", "Website", "Chat"],
+                "order": 3
+              },
+              {
+                "id": "q-open-001",
+                "type": "open_text",
+                "text": "Heeft u nog suggesties ter verbetering?",
+                "required": false,
+                "order": 4
+              }
+            ],
+            "status": "active",
+            "token": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "linkedEntityType": "request",
+            "activeFrom": "2026-01-01T00:00:00+00:00",
+            "activeUntil": "2026-12-31T23:59:59+00:00",
+            "createdBy": "admin",
+            "createdAt": "2026-01-15T10:00:00+00:00",
+            "updatedAt": "2026-01-15T10:00:00+00:00"
+          },
+          {
+            "title": "Product Feedback Q1 2026",
+            "description": "Help ons begrijpen hoe tevreden u bent met onze producten en diensten.",
+            "questions": [
+              {
+                "id": "q-rating-002",
+                "type": "rating",
+                "text": "Hoe tevreden bent u met het product?",
+                "required": true,
+                "order": 1
+              },
+              {
+                "id": "q-yesno-001",
+                "type": "yes_no",
+                "text": "Zou u dit product opnieuw aanschaffen?",
+                "required": true,
+                "order": 2
+              },
+              {
+                "id": "q-open-002",
+                "type": "open_text",
+                "text": "Wat vond u het meest waardevol?",
+                "required": false,
+                "order": 3
+              }
+            ],
+            "status": "draft",
+            "token": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
+            "createdBy": "admin",
+            "createdAt": "2026-03-01T09:00:00+00:00",
+            "updatedAt": "2026-03-01T09:00:00+00:00"
+          },
+          {
+            "title": "Afgerond Service Onderzoek",
+            "description": "Bedankt voor uw deelname aan dit onderzoek naar de kwaliteit van onze dienstverlening.",
+            "questions": [
+              {
+                "id": "q-nps-002",
+                "type": "nps",
+                "text": "Hoe waarschijnlijk is het dat u ons aanbeveelt?",
+                "required": true,
+                "order": 1
+              },
+              {
+                "id": "q-rating-003",
+                "type": "rating",
+                "text": "Hoe beoordeelt u de vriendelijkheid van onze medewerkers?",
+                "required": true,
+                "order": 2
+              }
+            ],
+            "status": "closed",
+            "token": "c3d4e5f6-a7b8-9012-cdef-345678901234",
+            "linkedEntityType": "contactmoment",
+            "activeFrom": "2025-10-01T00:00:00+00:00",
+            "activeUntil": "2025-12-31T23:59:59+00:00",
+            "createdBy": "admin",
+            "createdAt": "2025-10-01T08:00:00+00:00",
+            "updatedAt": "2026-01-02T10:00:00+00:00"
+          }
+        ],
+        "surveyResponse": [
+          {
+            "surveyId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "answers": [
+              {"questionId": "q-nps-001", "value": "9"},
+              {"questionId": "q-rating-001", "value": "5"},
+              {"questionId": "q-mc-001", "value": "Balie"},
+              {"questionId": "q-open-001", "value": "Snelle en vriendelijke service, bedankt!"}
+            ],
+            "entityType": "request",
+            "completedAt": "2026-02-10T14:30:00+00:00",
+            "ipHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "surveyId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "answers": [
+              {"questionId": "q-nps-001", "value": "7"},
+              {"questionId": "q-rating-001", "value": "4"},
+              {"questionId": "q-mc-001", "value": "Telefoon"}
+            ],
+            "entityType": "request",
+            "completedAt": "2026-02-15T09:15:00+00:00",
+            "ipHash": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2"
+          },
+          {
+            "surveyId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "answers": [
+              {"questionId": "q-nps-001", "value": "3"},
+              {"questionId": "q-rating-001", "value": "2"},
+              {"questionId": "q-mc-001", "value": "E-mail"},
+              {"questionId": "q-open-001", "value": "Wachttijd was te lang, graag sneller reageren."}
+            ],
+            "entityType": "request",
+            "completedAt": "2026-03-01T16:45:00+00:00",
+            "ipHash": "b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3"
+          },
+          {
+            "surveyId": "c3d4e5f6-a7b8-9012-cdef-345678901234",
+            "answers": [
+              {"questionId": "q-nps-002", "value": "8"},
+              {"questionId": "q-rating-003", "value": "4"}
+            ],
+            "entityType": "contactmoment",
+            "completedAt": "2025-11-20T11:00:00+00:00",
+            "ipHash": "c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4"
+          },
+          {
+            "surveyId": "c3d4e5f6-a7b8-9012-cdef-345678901234",
+            "answers": [
+              {"questionId": "q-nps-002", "value": "6"},
+              {"questionId": "q-rating-003", "value": "3"}
+            ],
+            "entityType": "contactmoment",
+            "completedAt": "2025-12-05T14:20:00+00:00",
+            "ipHash": "d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5"
+          }
+        ]
+      }
+    }
   },
   "components": {
     "registers": {

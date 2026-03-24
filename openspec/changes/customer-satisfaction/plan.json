@@ -1,0 +1,282 @@
+{
+  "change": "customer-satisfaction",
+  "project": "pipelinq",
+  "repo": "ConductionNL/pipelinq",
+  "created": "2026-03-24T00:00:00Z",
+  "tracking_issue": 118,
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Add survey schema to pipelinq_register.json",
+      "description": "Add the survey schema with Schema.org type schema:Survey and all required properties.",
+      "github_issue": 119,
+      "status": "done",
+      "spec_ref": "specs/customer-satisfaction/spec.md#survey-and-surveyresponse-schema-registration",
+      "acceptance_criteria": [
+        "survey schema exists with all properties (title, description, questions, status, token, linkedEntityType, linkedEntityId, activeFrom, activeUntil, createdBy, createdAt, updatedAt)",
+        "@type is set to schema:Survey"
+      ],
+      "files_likely_affected": ["lib/Settings/pipelinq_register.json"],
+      "labels": ["openspec", "customer-satisfaction"]
+    },
+    {
+      "id": "1.2",
+      "title": "Add surveyResponse schema to pipelinq_register.json",
+      "description": "Add the surveyResponse schema with Schema.org type schema:CompletedSurvey.",
+      "github_issue": 120,
+      "status": "done",
+      "spec_ref": "specs/customer-satisfaction/spec.md#survey-and-surveyresponse-schema-registration",
+      "acceptance_criteria": [
+        "surveyResponse schema exists with all properties (surveyId, answers, respondentId, entityType, entityId, completedAt, ipHash)",
+        "@type is set to schema:CompletedSurvey"
+      ],
+      "files_likely_affected": ["lib/Settings/pipelinq_register.json"],
+      "labels": ["openspec", "customer-satisfaction"]
+    },
+    {
+      "id": "1.3",
+      "title": "Add schema config keys to SettingsService and SchemaMapService",
+      "description": "Add survey_schema and surveyResponse_schema config keys.",
+      "github_issue": 121,
+      "status": "done",
+      "spec_ref": "specs/customer-satisfaction/spec.md#survey-and-surveyresponse-schema-registration",
+      "acceptance_criteria": [
+        "SettingsService exposes survey_schema and surveyResponse_schema keys",
+        "SchemaMapService includes mappings for both schemas"
+      ],
+      "files_likely_affected": ["lib/Service/SettingsService.php", "lib/Service/SchemaMapService.php"],
+      "labels": ["openspec", "customer-satisfaction"]
+    },
+    {
+      "id": "2.1",
+      "title": "Create PublicSurveyController",
+      "description": "Create controller extending PublicShareController with show and submit methods.",
+      "github_issue": 122,
+      "status": "done",
+      "spec_ref": "specs/customer-satisfaction/spec.md#public-survey-response-collection",
+      "acceptance_criteria": [
+        "Controller extends PublicShareController",
+        "show() returns survey data excluding sensitive fields for active surveys",
+        "submit() creates surveyResponse via ObjectService"
+      ],
+      "files_likely_affected": ["lib/Controller/PublicSurveyController.php"],
+      "labels": ["openspec", "customer-satisfaction"]
+    },
+    {
+      "id": "2.2",
+      "title": "Register public routes",
+      "description": "Register routes for public survey endpoints.",
+      "github_issue": 123,
+      "status": "done",
+      "spec_ref": "specs/customer-satisfaction/spec.md#public-survey-response-collection",
+      "acceptance_criteria": [
+        "GET /public/survey/{token} route exists",
+        "POST /public/survey/{token}/respond route exists"
+      ],
+      "files_likely_affected": ["appinfo/routes.php"],
+      "labels": ["openspec", "customer-satisfaction"]
+    },
+    {
+      "id": "2.3",
+      "title": "Implement token validation and status checks",
+      "description": "Implement validation for invalid tokens, inactive surveys, missing answers, unconfigured system.",
+      "github_issue": 124,
+      "status": "done",
+      "spec_ref": "specs/customer-satisfaction/spec.md#public-survey-response-collection",
+      "acceptance_criteria": [
+        "Returns 404 with throttle for invalid token",
+        "Returns 410 for inactive/expired survey",
+        "Returns 400 for missing answers",
+        "Returns 503 when not configured"
+      ],
+      "files_likely_affected": ["lib/Controller/PublicSurveyController.php"],
+      "labels": ["openspec", "customer-satisfaction"]
+    },
+    {
+      "id": "2.4",
+      "title": "Add brute force protection",
+      "description": "Add @BruteForceProtection annotations to public endpoints.",
+      "github_issue": 125,
+      "status": "done",
+      "spec_ref": "specs/customer-satisfaction/spec.md#public-survey-response-collection",
+      "acceptance_criteria": [
+        "@BruteForceProtection(action=pipelinq_survey) on show method",
+        "@BruteForceProtection(action=pipelinq_survey_submit) on submit method"
+      ],
+      "files_likely_affected": ["lib/Controller/PublicSurveyController.php"],
+      "labels": ["openspec", "customer-satisfaction"]
+    },
+    {
+      "id": "3.1",
+      "title": "Create surveyStore with CRUD actions",
+      "description": "Create Pinia store with CRUD actions for surveys and responses.",
+      "github_issue": 126,
+      "status": "done",
+      "spec_ref": "specs/customer-satisfaction/spec.md#survey-crud-management",
+      "acceptance_criteria": [
+        "fetchSurveys, fetchSurvey, createSurvey, updateSurvey, deleteSurvey actions exist",
+        "fetchResponses and submitPublicResponse actions exist"
+      ],
+      "files_likely_affected": ["src/store/modules/survey.js"],
+      "labels": ["openspec", "customer-satisfaction"]
+    },
+    {
+      "id": "3.2",
+      "title": "Add NPS and satisfaction computed getters",
+      "description": "Add computed getters for NPS score, satisfaction average, response count, completion rate.",
+      "github_issue": 127,
+      "status": "done",
+      "spec_ref": "specs/customer-satisfaction/spec.md#nps-and-satisfaction-calculation",
+      "acceptance_criteria": [
+        "npsScore getter calculates (Promoters-Detractors)/Total*100",
+        "satisfactionAverage getter returns mean of ratings rounded to one decimal",
+        "Both return null with no responses"
+      ],
+      "files_likely_affected": ["src/store/modules/survey.js"],
+      "labels": ["openspec", "customer-satisfaction"]
+    },
+    {
+      "id": "3.3",
+      "title": "Register store in store.js",
+      "description": "Register surveyStore in the main store configuration.",
+      "github_issue": 128,
+      "status": "done",
+      "spec_ref": "specs/customer-satisfaction/spec.md#survey-crud-management",
+      "acceptance_criteria": [
+        "surveyStore is importable and initialized via store.js"
+      ],
+      "files_likely_affected": ["src/store/store.js"],
+      "labels": ["openspec", "customer-satisfaction"]
+    },
+    {
+      "id": "4.1",
+      "title": "Create SurveyList view",
+      "description": "Create SurveyList Vue component listing surveys.",
+      "github_issue": 129,
+      "status": "done",
+      "spec_ref": "specs/customer-satisfaction/spec.md#survey-crud-management",
+      "acceptance_criteria": [
+        "Lists all surveys with title, status, response count",
+        "Supports navigation to detail and create views"
+      ],
+      "files_likely_affected": ["src/views/surveys/SurveyList.vue"],
+      "labels": ["openspec", "customer-satisfaction"]
+    },
+    {
+      "id": "4.2",
+      "title": "Create SurveyDetail view",
+      "description": "Create SurveyDetail Vue component.",
+      "github_issue": 130,
+      "status": "done",
+      "spec_ref": "specs/customer-satisfaction/spec.md#survey-crud-management",
+      "acceptance_criteria": [
+        "Shows survey details and questions",
+        "Links to analytics and edit views"
+      ],
+      "files_likely_affected": ["src/views/surveys/SurveyDetail.vue"],
+      "labels": ["openspec", "customer-satisfaction"]
+    },
+    {
+      "id": "4.3",
+      "title": "Create SurveyForm with QuestionEditor",
+      "description": "Create SurveyForm with QuestionEditor component.",
+      "github_issue": 131,
+      "status": "done",
+      "spec_ref": "specs/customer-satisfaction/spec.md#question-types",
+      "acceptance_criteria": [
+        "Form supports create and edit modes",
+        "QuestionEditor allows type selection (nps, rating, multiple_choice, open_text, yes_no)",
+        "Each question has label, required flag, options for multiple choice"
+      ],
+      "files_likely_affected": ["src/views/surveys/SurveyForm.vue"],
+      "labels": ["openspec", "customer-satisfaction"]
+    },
+    {
+      "id": "4.4",
+      "title": "Create SurveyAnalytics with CSV export",
+      "description": "Create SurveyAnalytics with response statistics and export.",
+      "github_issue": 132,
+      "status": "done",
+      "spec_ref": "specs/customer-satisfaction/spec.md#survey-analytics",
+      "acceptance_criteria": [
+        "Shows NPS score, satisfaction average, response count, completion rate",
+        "Answer breakdown per question",
+        "CSV export generates downloadable file"
+      ],
+      "files_likely_affected": ["src/views/surveys/SurveyAnalytics.vue"],
+      "labels": ["openspec", "customer-satisfaction"]
+    },
+    {
+      "id": "4.5",
+      "title": "Create PublicSurveyForm",
+      "description": "Create public survey form for unauthenticated respondents.",
+      "github_issue": 133,
+      "status": "done",
+      "spec_ref": "specs/customer-satisfaction/spec.md#public-survey-response-collection",
+      "acceptance_criteria": [
+        "Renders survey questions for unauthenticated respondents",
+        "Submits via public API",
+        "Shows thank-you message on success",
+        "Shows error for expired/invalid surveys"
+      ],
+      "files_likely_affected": ["src/views/surveys/PublicSurveyForm.vue"],
+      "labels": ["openspec", "customer-satisfaction"]
+    },
+    {
+      "id": "5.1",
+      "title": "Add Surveys menu item to navigation",
+      "description": "Add Surveys item to Pipelinq navigation menu.",
+      "github_issue": 134,
+      "status": "done",
+      "spec_ref": "specs/customer-satisfaction/spec.md#survey-navigation",
+      "acceptance_criteria": [
+        "Surveys menu item visible in navigation for authenticated users"
+      ],
+      "files_likely_affected": ["src/navigation/MainMenu.vue"],
+      "labels": ["openspec", "customer-satisfaction"]
+    },
+    {
+      "id": "5.2",
+      "title": "Add survey routes to router",
+      "description": "Add all survey routes to Vue router.",
+      "github_issue": 135,
+      "status": "done",
+      "spec_ref": "specs/customer-satisfaction/spec.md#survey-navigation",
+      "acceptance_criteria": [
+        "Routes exist for /surveys, /surveys/new, /surveys/:id, /surveys/:id/edit, /surveys/:id/analytics, /public/survey/:token"
+      ],
+      "files_likely_affected": ["src/router/index.js"],
+      "labels": ["openspec", "customer-satisfaction"]
+    },
+    {
+      "id": "6.1",
+      "title": "Write PublicSurveyController unit tests",
+      "description": "Write unit tests covering all PublicSurveyController scenarios.",
+      "github_issue": 136,
+      "status": "done",
+      "spec_ref": "specs/customer-satisfaction/spec.md#public-survey-response-collection",
+      "acceptance_criteria": [
+        "Tests for show (active, inactive, not found)",
+        "Tests for submit (missing answers, not configured)",
+        "Tests for isPasswordProtected and isValidToken",
+        "Minimum 3 test methods"
+      ],
+      "files_likely_affected": ["tests/Unit/Controller/PublicSurveyControllerTest.php"],
+      "labels": ["openspec", "customer-satisfaction"]
+    },
+    {
+      "id": "7.1",
+      "title": "Add survey and surveyResponse seed data",
+      "description": "Add seed data for survey and surveyResponse schemas.",
+      "github_issue": 137,
+      "status": "done",
+      "spec_ref": "specs/customer-satisfaction/spec.md#survey-and-surveyresponse-schema-registration",
+      "acceptance_criteria": [
+        "3 survey objects (active, draft, closed)",
+        "5 response objects with varied NPS/rating values"
+      ],
+      "files_likely_affected": ["lib/Settings/pipelinq_register.json"],
+      "labels": ["openspec", "customer-satisfaction"]
+    }
+  ]
+}
