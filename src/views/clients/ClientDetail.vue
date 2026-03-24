@@ -193,6 +193,8 @@
 				:entity-id="clientId"
 				entity-type="client"
 				:entity-name="clientData.name || ''" />
+		</CnDetailCard>
+
 		<CnDetailCard :title="t('pipelinq', 'Contactmomenten')">
 			<template #actions>
 				<NcButton @click="showContactmomentQuickLog = true">
@@ -352,6 +354,7 @@ export default {
 		sidebarProps() {
 			const config = this.objectStore.objectTypeRegistry.client || {}
 			return {
+				title: t('pipelinq', 'Client'),
 				register: config.register || '',
 				schema: config.schema || '',
 				hiddenTabs: ['tasks'],
@@ -482,14 +485,6 @@ export default {
 		async onContactmomentSaved() {
 			this.showContactmomentQuickLog = false
 			await this.fetchRelated()
-				const allComplaints = await this.objectStore.fetchCollection('complaint', {
-					_limit: 50,
-					client: this.clientId,
-				})
-				this.complaints = allComplaints || []
-			} catch {
-				this.complaints = []
-			}
 		},
 		createRequest() {
 			this.$router.push({ name: 'RequestDetail', params: { id: 'new' }, query: { client: this.clientId } })
