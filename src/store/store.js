@@ -37,13 +37,16 @@ export async function initializeStores() {
 		}
 		if (config.register && config.intakeSubmission_schema) {
 			objectStore.registerObjectType('intakeSubmission', config.intakeSubmission_schema, config.register)
+		}
 		if (config.register && config.automation_schema) {
 			objectStore.registerObjectType('automation', config.automation_schema, config.register)
 		}
 		if (config.register && config.automationLog_schema) {
 			objectStore.registerObjectType('automationLog', config.automationLog_schema, config.register)
+		}
 		if (config.register && config.relationship_schema) {
 			objectStore.registerObjectType('relationship', config.relationship_schema, config.register)
+		}
 		if (config.register && config.queue_schema) {
 			objectStore.registerObjectType('queue', config.queue_schema, config.register)
 		}
@@ -52,8 +55,6 @@ export async function initializeStores() {
 		}
 		if (config.register && config.agentProfile_schema) {
 			objectStore.registerObjectType('agentProfile', config.agentProfile_schema, config.register)
-		if (config.register && config.task_schema) {
-			objectStore.registerObjectType('task', config.task_schema, config.register)
 		}
 		if (config.register && config.kennisartikel_schema) {
 			objectStore.registerObjectType('kennisartikel', config.kennisartikel_schema, config.register)
@@ -72,6 +73,7 @@ export async function initializeStores() {
 		}
 		if (config.register && config.surveyResponse_schema) {
 			objectStore.registerObjectType('surveyResponse', config.surveyResponse_schema, config.register)
+		}
 		if (config.register && config.complaint_schema) {
 			objectStore.registerObjectType('complaint', config.complaint_schema, config.register)
 		}
