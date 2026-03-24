@@ -1,263 +1,138 @@
 <template>
 	<div class="task-form">
 		<div class="task-form__header">
-			<h2>{{ t('pipelinq', 'Create Task') }}</h2>
+			<h2>{{ task ? t('pipelinq', 'Edit Task') : t('pipelinq', 'Create Task') }}</h2>
 		</div>
 
 		<div class="task-form__body">
-			<div class="form-row">
+			<div class="form-group">
 				<label>{{ t('pipelinq', 'Task type') }} *</label>
-				<select v-model="form.type" class="form-select">
-					<option value="terugbelverzoek">{{ t('pipelinq', 'Callback request (terugbelverzoek)') }}</option>
-					<option value="opvolgtaak">{{ t('pipelinq', 'Follow-up task') }}</option>
-					<option value="informatievraag">{{ t('pipelinq', 'Information request') }}</option>
+				<select v-model="form.type" class="form-select" required>
+					<option value="terugbelverzoek">
+						{{ t('pipelinq', 'Callback request (terugbelverzoek)') }}
+					</option>
+					<option value="opvolgtaak">
+						{{ t('pipelinq', 'Follow-up task') }}
+					</option>
+					<option value="informatievraag">
+						{{ t('pipelinq', 'Information request') }}
+					</option>
 				</select>
 			</div>
 
-			<div class="form-row">
-				<NcTextField
-					:value.sync="form.subject"
-					:label="t('pipelinq', 'Subject') + ' *'"
-					:required="true"
-					:error="errors.subject" />
+			<div class="form-group">
+				<label>{{ t('pipelinq', 'Subject') }} *</label>
+				<input
+					v-model="form.subject"
+					type="text"
+					required
+					:placeholder="t('pipelinq', 'Enter task subject...')"
+					class="form-input">
+				<span v-if="errors.subject" class="form-error">{{ errors.subject }}</span>
 			</div>
 
-			<div class="form-row">
-				<NcTextField
-					:value.sync="form.description"
-					:label="t('pipelinq', 'Description / context')"
-					:multiline="true" />
+			<div class="form-group">
+				<label>{{ t('pipelinq', 'Description') }}</label>
+				<textarea
+					v-model="form.description"
+					rows="3"
+					class="form-input"
+					:placeholder="t('pipelinq', 'Optional description...')" />
 			</div>
 
-			<div class="form-row form-row--split">
-				<div class="form-col">
-					<NcTextField
-						:value.sync="form.assignee"
-						:label="t('pipelinq', 'Assign to') + ' *'"
-						:required="true"
-						:error="errors.assignee" />
+			<div class="form-group">
+				<label>{{ t('pipelinq', 'Assign to') }} *</label>
+				<input
+					v-model="assigneeQuery"
+					type="text"
+					class="form-input"
+					:placeholder="t('pipelinq', 'Search users or groups...')"
+					@input="onAssigneeSearch">
+				<div v-if="assigneeResults.length > 0" class="assignee-dropdown">
+					<div
+						v-for="item in assigneeResults"
+						:key="item.type + '-' + item.id"
+						class="assignee-option"
+						@click="selectAssignee(item)">
+						<span class="assignee-icon">{{ item.type === 'group' ? '\uD83D\uDC65' : '\uD83D\uDC64' }}</span>
+						{{ item.label }}
+						<span class="assignee-type">({{ item.type }})</span>
+					</div>
 				</div>
-				<div class="form-col">
-					<label>{{ t('pipelinq', 'Assignment type') }}</label>
-					<select v-model="form.assigneeType" class="form-select">
-						<option value="user">{{ t('pipelinq', 'User') }}</option>
-						<option value="group">{{ t('pipelinq', 'Department (group)') }}</option>
-					</select>
+				<div v-if="selectedAssignee" class="selected-assignee">
+					{{ selectedAssignee.type === 'group' ? '\uD83D\uDC65' : '\uD83D\uDC64' }}
+					{{ selectedAssignee.label }}
+					<button class="clear-assignee" @click="clearAssignee">
+						&times;
+					</button>
 				</div>
+				<span v-if="errors.assignee" class="form-error">{{ errors.assignee }}</span>
 			</div>
 
-			<div class="form-row form-row--split">
-				<div class="form-col">
+			<div class="form-row">
+				<div class="form-group">
 					<label>{{ t('pipelinq', 'Priority') }}</label>
 					<select v-model="form.priority" class="form-select">
-						<option value="laag">{{ t('pipelinq', 'Low') }}</option>
-						<option value="normaal">{{ t('pipelinq', 'Normal') }}</option>
-						<option value="hoog">{{ t('pipelinq', 'High') }}</option>
+						<option value="laag">
+							{{ t('pipelinq', 'Low') }}
+						</option>
+						<option value="normaal">
+							{{ t('pipelinq', 'Normal') }}
+						</option>
+						<option value="hoog">
+							{{ t('pipelinq', 'High') }}
+						</option>
 					</select>
 				</div>
-				<div class="form-col">
+
+				<div class="form-group">
 					<label>{{ t('pipelinq', 'Deadline') }}</label>
 					<input v-model="form.deadline" type="datetime-local" class="form-input">
 				</div>
 			</div>
 
-			<template v-if="form.type === 'terugbelverzoek'">
-				<div class="form-row form-row--split">
-					<div class="form-col">
-						<NcTextField
-							:value.sync="form.preferredTimeSlot"
-							:label="t('pipelinq', 'Preferred callback time (e.g., Tuesday 14:00-16:00)')" />
-					</div>
-					<div class="form-col">
-						<NcTextField
-							:value.sync="form.callbackPhone"
-							:label="t('pipelinq', 'Callback phone number (override)')" />
-					</div>
+			<div v-if="form.type === 'terugbelverzoek'" class="form-row">
+				<div class="form-group">
+					<label>{{ t('pipelinq', 'Callback phone number') }}</label>
+					<input
+						v-model="form.callbackPhoneNumber"
+						type="tel"
+						class="form-input"
+						:placeholder="t('pipelinq', '+31 6 12345678')">
 				</div>
-			</template>
 
-			<div class="form-row form-row--actions">
-				<NcButton type="tertiary" @click="$router.back()">
+				<div class="form-group">
+					<label>{{ t('pipelinq', 'Preferred time slot') }}</label>
+					<input
+						v-model="form.preferredTimeSlot"
+						type="text"
+						class="form-input"
+						:placeholder="t('pipelinq', 'e.g., Tuesday 14:00-16:00')">
+				</div>
+			</div>
+
+			<div class="form-group">
+				<label>{{ t('pipelinq', 'Contact moment summary') }}</label>
+				<textarea
+					v-model="form.contactMomentSummary"
+					rows="2"
+					class="form-input"
+					:placeholder="t('pipelinq', 'Context from the contact...')" />
+			</div>
+
+			<div class="form-actions">
+				<NcButton @click="$emit('cancel')">
 					{{ t('pipelinq', 'Cancel') }}
 				</NcButton>
-				<NcButton
-					type="primary"
-					:disabled="saving || !isValid"
-					@click="save">
-					{{ t('pipelinq', 'Create task') }}
+				<NcButton type="primary" :disabled="saving" @click="save">
+					{{ saving ? t('pipelinq', 'Saving...') : t('pipelinq', 'Save') }}
 				</NcButton>
 			</div>
-		</div>
-		<div class="form-group">
-			<label>{{ t('pipelinq', 'Type') }} *</label>
-			<select v-model="form.type" required>
-				<option value="terugbelverzoek">
-					{{ t('pipelinq', 'Terugbelverzoek') }}
-				</option>
-				<option value="opvolgtaak">
-					{{ t('pipelinq', 'Opvolgtaak') }}
-				</option>
-				<option value="informatievraag">
-					{{ t('pipelinq', 'Informatievraag') }}
-				</option>
-			</select>
-		</div>
-
-		<div class="form-group">
-			<label>{{ t('pipelinq', 'Subject') }} *</label>
-			<input
-				v-model="form.subject"
-				type="text"
-				required
-				:placeholder="t('pipelinq', 'Enter task subject...')">
-			<span v-if="errors.subject" class="form-error">{{ errors.subject }}</span>
-		</div>
-
-		<div class="form-group">
-			<label>{{ t('pipelinq', 'Description') }}</label>
-			<textarea
-				v-model="form.description"
-				rows="3"
-				:placeholder="t('pipelinq', 'Optional description...')" />
-		</div>
-
-		<div class="form-group">
-			<label>{{ t('pipelinq', 'Assign to') }} *</label>
-			<input
-				v-model="assigneeQuery"
-				type="text"
-				:placeholder="t('pipelinq', 'Search users or groups...')"
-				@input="onAssigneeSearch">
-			<div v-if="assigneeResults.length > 0" class="assignee-dropdown">
-				<div
-					v-for="item in assigneeResults"
-					:key="item.type + '-' + item.id"
-					class="assignee-option"
-					@click="selectAssignee(item)">
-					<span class="assignee-icon">{{ item.type === 'group' ? '\uD83D\uDC65' : '\uD83D\uDC64' }}</span>
-					{{ item.label }}
-					<span class="assignee-type">({{ item.type }})</span>
-				</div>
-			</div>
-			<div v-if="selectedAssignee" class="selected-assignee">
-				{{ selectedAssignee.type === 'group' ? '\uD83D\uDC65' : '\uD83D\uDC64' }}
-				{{ selectedAssignee.label }}
-				<button class="clear-assignee" @click="clearAssignee">
-					&times;
-				</button>
-			</div>
-			<span v-if="errors.assignee" class="form-error">{{ errors.assignee }}</span>
-		</div>
-
-		<div class="form-row">
-			<div class="form-group">
-				<label>{{ t('pipelinq', 'Priority') }}</label>
-				<select v-model="form.priority">
-					<option value="laag">
-						{{ t('pipelinq', 'Laag') }}
-					</option>
-					<option value="normaal">
-						{{ t('pipelinq', 'Normaal') }}
-					</option>
-					<option value="hoog">
-						{{ t('pipelinq', 'Hoog') }}
-					</option>
-				</select>
-			</div>
-
-			<div class="form-group">
-				<label>{{ t('pipelinq', 'Deadline') }}</label>
-				<input v-model="form.deadline" type="datetime-local">
-			</div>
-		</div>
-
-		<div v-if="form.type === 'terugbelverzoek'" class="form-row">
-			<div class="form-group">
-				<label>{{ t('pipelinq', 'Callback phone number') }}</label>
-				<input
-					v-model="form.callbackPhoneNumber"
-					type="tel"
-					:placeholder="t('pipelinq', '+31 6 12345678')">
-			</div>
-
-			<div class="form-group">
-				<label>{{ t('pipelinq', 'Preferred time slot') }}</label>
-				<input
-					v-model="form.preferredTimeSlot"
-					type="text"
-					:placeholder="t('pipelinq', 'e.g., Dinsdag 14:00 - 16:00')">
-			</div>
-		</div>
-
-		<div class="form-group">
-			<label>{{ t('pipelinq', 'Contact moment summary') }}</label>
-			<textarea
-				v-model="form.contactMomentSummary"
-				rows="2"
-				:placeholder="t('pipelinq', 'Context from the contact...')" />
-		</div>
-
-		<div class="form-actions">
-			<NcButton @click="$emit('cancel')">
-				{{ t('pipelinq', 'Cancel') }}
-			</NcButton>
-			<NcButton type="primary" :disabled="saving" @click="save">
-				{{ saving ? t('pipelinq', 'Saving...') : t('pipelinq', 'Save') }}
-			</NcButton>
 		</div>
 	</div>
 </template>
 
 <script>
-import { NcButton, NcTextField } from '@nextcloud/vue'
-import { showSuccess, showError } from '@nextcloud/dialogs'
-
-export default {
-	name: 'TaskForm',
-	components: { NcButton, NcTextField },
-	data() {
-		return {
-			form: {
-				type: 'terugbelverzoek',
-				subject: '',
-				description: '',
-				assignee: '',
-				assigneeType: 'user',
-				priority: 'normaal',
-				deadline: '',
-				preferredTimeSlot: '',
-				callbackPhone: '',
-				status: 'open',
-			},
-			errors: {},
-			saving: false,
-		}
-	},
-	computed: {
-		isValid() {
-			return this.form.subject.trim() !== '' && this.form.assignee.trim() !== ''
-		},
-	},
-	mounted() {
-		// Set default deadline to next business day 17:00
-		const tomorrow = new Date()
-		tomorrow.setDate(tomorrow.getDate() + 1)
-		while (tomorrow.getDay() === 0 || tomorrow.getDay() === 6) {
-			tomorrow.setDate(tomorrow.getDate() + 1)
-		}
-		tomorrow.setHours(17, 0, 0, 0)
-		this.form.deadline = tomorrow.toISOString().slice(0, 16)
-	},
-	methods: {
-		async save() {
-			if (!this.isValid) return
-			this.saving = true
-			try {
-				// Save via OpenRegister objectStore
-				showSuccess(t('pipelinq', 'Task created'))
-				this.$router.push({ name: 'Tasks' })
-			} catch (error) {
-				showError(t('pipelinq', 'Failed to create task'))
 import { NcButton } from '@nextcloud/vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { getDefaultDeadline, searchAssignees } from '../../services/taskUtils.js'
@@ -399,21 +274,24 @@ export default {
 </script>
 
 <style scoped>
-.task-form { padding: 20px; max-width: 700px; margin: 0 auto; }
-.task-form__header { margin-bottom: 20px; }
-.task-form__body { display: flex; flex-direction: column; gap: 16px; }
-.form-row--split { display: flex; gap: 16px; }
-.form-col { flex: 1; }
-.form-col label, .form-row > label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.9em; }
-.form-select, .form-input { width: 100%; padding: 8px; border: 1px solid var(--color-border); border-radius: var(--border-radius); background: var(--color-main-background); }
-.form-row--actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
 .task-form {
 	padding: 20px;
 	max-width: 700px;
+	margin: 0 auto;
+}
+
+.task-form__header {
+	margin-bottom: 20px;
+}
+
+.task-form__body {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
 }
 
 .form-group {
-	margin-bottom: 16px;
+	margin-bottom: 0;
 }
 
 .form-group label {
@@ -423,6 +301,8 @@ export default {
 	margin-bottom: 4px;
 }
 
+.form-input,
+.form-select,
 .form-group input,
 .form-group select,
 .form-group textarea {
@@ -431,6 +311,7 @@ export default {
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
 	font-size: 14px;
+	background: var(--color-main-background);
 }
 
 .form-row {
