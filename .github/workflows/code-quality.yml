@@ -17,4 +17,4 @@ jobs:
       enable-playwright-coverage: true
       playwright-coverage-threshold: 75
       additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister"}]'
-      playwright-seed-command: 'php occ maintenance:repair'
+      playwright-seed-command: 'php occ app:disable pipelinq && php occ app:enable pipelinq'
