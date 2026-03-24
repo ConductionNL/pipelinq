@@ -8,8 +8,12 @@ test.describe('Sidebar Navigation', () => {
 		await page.goto('/apps/pipelinq/')
 		const nav = sidebarNav(page)
 
-		for (const label of ['Dashboard', 'Clients', 'Contacts', 'Leads', 'Requests', 'Products', 'Pipeline', 'My Work', 'Documentation']) {
-			await expect(nav.getByText(label, { exact: label !== 'Pipeline' })).toBeVisible()
+		for (const label of [
+			'Dashboard', 'Clients', 'Contacts', 'Leads', 'Requests',
+			'Tasks', 'Contactmomenten', 'Complaints', 'Products', 'Pipeline',
+			'Surveys', 'Queues', 'Kennisbank', 'My Work', 'Reporting', 'Documentation',
+		]) {
+			await expect(nav.getByText(label, { exact: true })).toBeVisible()
 		}
 	})
 
@@ -22,9 +26,16 @@ test.describe('Sidebar Navigation', () => {
 			Contacts: '/apps/pipelinq/contacts',
 			Leads: '/apps/pipelinq/leads',
 			Requests: '/apps/pipelinq/requests',
+			Tasks: '/apps/pipelinq/tasks',
+			Contactmomenten: '/apps/pipelinq/contactmomenten',
+			Complaints: '/apps/pipelinq/complaints',
 			Products: '/apps/pipelinq/products',
 			Pipeline: '/apps/pipelinq/pipeline',
+			Surveys: '/apps/pipelinq/surveys',
+			Queues: '/apps/pipelinq/queues',
+			Kennisbank: '/apps/pipelinq/kennisbank',
 			'My Work': '/apps/pipelinq/my-work',
+			Reporting: '/apps/pipelinq/rapportage',
 		}
 
 		for (const [name, href] of Object.entries(expected)) {
@@ -34,9 +45,10 @@ test.describe('Sidebar Navigation', () => {
 
 	test('settings button expands sub-menu', async ({ page }) => {
 		await page.goto('/apps/pipelinq/')
-		// Settings button is at bottom of nav, may need JS click
 		await page.evaluate(() => document.querySelector('.settings-button')?.dispatchEvent(new Event('click', { bubbles: true })))
 		await expect(page.getByText('Pipelines')).toBeVisible()
+		await expect(page.getByText('Forms')).toBeVisible()
+		await expect(page.getByText('Automations')).toBeVisible()
 		await expect(page.getByText('Configuration')).toBeVisible()
 	})
 

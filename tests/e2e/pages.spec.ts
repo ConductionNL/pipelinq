@@ -161,3 +161,70 @@ test.describe('My Work page', () => {
 		await expect(page.getByRole('checkbox', { name: 'Show completed' })).toBeVisible()
 	})
 })
+
+test.describe('Tasks page', () => {
+
+	test('renders list view with correct controls', async ({ page }) => {
+		await page.goto('/apps/pipelinq/tasks')
+		await expect(page.getByRole('radio', { name: 'Table' })).toBeChecked({ timeout: 10000 })
+		await expect(page.getByRole('button', { name: 'Add Item' })).toBeVisible()
+		await expect(page.getByRole('button', { name: 'Actions' })).toBeVisible()
+	})
+})
+
+test.describe('Contactmomenten page', () => {
+
+	test('renders list view with correct controls', async ({ page }) => {
+		await page.goto('/apps/pipelinq/contactmomenten')
+		await expect(page.getByRole('radio', { name: 'Table' })).toBeChecked({ timeout: 10000 })
+		await expect(page.getByRole('button', { name: 'Add Item' })).toBeVisible()
+		await expect(page.getByRole('button', { name: 'Actions' })).toBeVisible()
+	})
+})
+
+test.describe('Complaints page', () => {
+
+	test('renders list view with correct controls', async ({ page }) => {
+		await page.goto('/apps/pipelinq/complaints')
+		await expect(page.getByRole('radio', { name: 'Table' })).toBeChecked({ timeout: 10000 })
+		await expect(page.getByRole('button', { name: 'Add Item' })).toBeVisible()
+		await expect(page.getByRole('button', { name: 'Actions' })).toBeVisible()
+	})
+})
+
+test.describe('Surveys page', () => {
+
+	test('renders list view with correct controls', async ({ page }) => {
+		await page.goto('/apps/pipelinq/surveys')
+		await expect(page.getByRole('radio', { name: 'Table' })).toBeChecked({ timeout: 10000 })
+		await expect(page.getByRole('button', { name: 'Add Item' })).toBeVisible()
+		await expect(page.getByRole('button', { name: 'Actions' })).toBeVisible()
+	})
+})
+
+test.describe('Queues page', () => {
+
+	test('renders list view with correct controls', async ({ page }) => {
+		await page.goto('/apps/pipelinq/queues')
+		await expect(page.getByRole('radio', { name: 'Table' })).toBeChecked({ timeout: 10000 })
+		await expect(page.getByRole('button', { name: 'Add Item' })).toBeVisible()
+		await expect(page.getByRole('button', { name: 'Actions' })).toBeVisible()
+	})
+})
+
+test.describe('Kennisbank page', () => {
+
+	test('renders knowledge base home', async ({ page }) => {
+		await page.goto('/apps/pipelinq/kennisbank')
+		// Kennisbank has its own layout, not CnIndexPage
+		await expect(page.locator('main')).toBeVisible({ timeout: 10000 })
+	})
+})
+
+test.describe('Reporting page', () => {
+
+	test('renders reporting dashboard', async ({ page }) => {
+		await page.goto('/apps/pipelinq/rapportage')
+		await expect(page.locator('main')).toBeVisible({ timeout: 10000 })
+	})
+})
