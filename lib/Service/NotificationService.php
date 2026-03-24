@@ -90,7 +90,7 @@ class NotificationService
         $subject = 'lead_assigned';
         if ($entityType === 'request') {
             $subject = 'request_assigned';
-        } elseif ($entityType === 'task') {
+        } else if ($entityType === 'task') {
             $subject = 'task_assigned';
         }
 
@@ -368,6 +368,33 @@ class NotificationService
             objectId: $objectId
         );
     }//end notifyDealLost()
+
+    /**
+     * Send a generic notification to a user.
+     *
+     * Public method used by background jobs and other services
+     * that need to send notifications with custom subjects.
+     *
+     * @param string               $userId     The target user ID.
+     * @param string               $subject    The notification subject.
+     * @param array<string, mixed> $parameters The notification parameters.
+     *
+     * @return void
+     */
+    public function sendNotification(
+        string $userId,
+        string $subject,
+        array $parameters=[],
+    ): void {
+        $objectId = $parameters['articleId'] ?? ($parameters['objectId'] ?? 'unknown');
+        $this->send(
+            subject: $subject,
+            parameters: $parameters,
+            userId: $userId,
+            objectType: 'kennisartikel',
+            objectId: $objectId,
+        );
+    }//end sendNotification()
 
     /**
      * Send a notification to a user.
