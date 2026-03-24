@@ -352,6 +352,7 @@ export default {
 		sidebarProps() {
 			const config = this.objectStore.objectTypeRegistry.client || {}
 			return {
+				title: t('pipelinq', 'Client'),
 				register: config.register || '',
 				schema: config.schema || '',
 				hiddenTabs: ['tasks'],
