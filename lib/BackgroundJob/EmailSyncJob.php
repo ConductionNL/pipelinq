@@ -77,7 +77,6 @@ class EmailSyncJob extends TimedJob
             // 2. For each user, query their configured mail accounts
             // 3. Process new emails since last sync
             // 4. Match and create EmailLink objects
-
             $this->logger->info('EmailSyncJob: Email sync completed');
         } catch (\Exception $e) {
             $this->logger->error(

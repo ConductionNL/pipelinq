@@ -168,6 +168,8 @@ class MetricsFormatterTest extends TestCase
 
         $this->assertTrue($found, 'Special characters should be escaped in Prometheus labels');
     }//end testLabelSanitization()
+
+    /**
      * Test that formatAppInfo returns the correct Prometheus lines.
      *
      * @return void
@@ -176,8 +178,6 @@ class MetricsFormatterTest extends TestCase
     {
         $lines = $this->formatter->formatAppInfo(version: '1.0.0', phpVersion: '8.1.0');
 
-        $this->assertContains('# HELP pipelinq_info Application information', $lines);
-        $this->assertContains('pipelinq_info{version="1.0.0",php_version="8.1.0"} 1', $lines);
         $this->assertIsArray($lines);
         $this->assertContains('# HELP pipelinq_info Application information', $lines);
         $this->assertContains('pipelinq_info{version="1.0.0",php_version="8.1.0"} 1', $lines);

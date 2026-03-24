@@ -41,7 +41,6 @@ class IntakeFormService
      */
     private const RATE_LIMIT_WINDOW = 300;
 
-
     /**
      * Constructor.
      *
@@ -53,7 +52,6 @@ class IntakeFormService
         private LoggerInterface $logger,
     ) {
     }//end __construct()
-
 
     /**
      * Validate submission data against form field definitions.
@@ -94,7 +92,6 @@ class IntakeFormService
         ];
     }//end validateSubmission()
 
-
     /**
      * Check if a submission is spam (honeypot field filled).
      *
@@ -110,7 +107,6 @@ class IntakeFormService
         return $honeypot !== '';
     }//end isSpam()
 
-
     /**
      * Check rate limiting for form submissions from an IP.
      *
@@ -121,7 +117,7 @@ class IntakeFormService
      */
     public function isRateLimited(string $ip, string $formId): bool
     {
-        $key = 'pipelinq_intake_' . md5($ip . '_' . $formId);
+        $key = 'pipelinq_intake_'.md5($ip.'_'.$formId);
 
         if (function_exists('apcu_fetch') === false) {
             return false;
@@ -141,19 +137,18 @@ class IntakeFormService
         return false;
     }//end isRateLimited()
 
-
     /**
      * Map submitted form data to entity properties using field mappings.
      *
-     * @param array $fieldMappings The field-to-property mappings.
-     * @param array $submission    The submitted data.
-     * @param string $entityType   The target entity type ('contact' or 'lead').
+     * @param array  $fieldMappings The field-to-property mappings.
+     * @param array  $submission    The submitted data.
+     * @param string $entityType    The target entity type ('contact' or 'lead').
      *
      * @return array Mapped entity data.
      */
     public function mapToEntity(array $fieldMappings, array $submission, string $entityType): array
     {
-        $mapped = [];
+        $mapped   = [];
         $unmapped = [];
 
         foreach ($submission as $fieldName => $value) {
@@ -176,7 +171,6 @@ class IntakeFormService
         return $mapped;
     }//end mapToEntity()
 
-
     /**
      * Generate iframe embed code for a form.
      *
@@ -187,11 +181,9 @@ class IntakeFormService
      */
     public function generateIframeEmbed(string $formId, string $baseUrl): string
     {
-        $url = rtrim($baseUrl, '/') . '/index.php/apps/pipelinq/api/public/forms/' . $formId;
-        return '<iframe src="' . htmlspecialchars($url)
-            . '" width="100%" height="500" frameborder="0" style="border:none;"></iframe>';
+        $url = rtrim($baseUrl, '/').'/index.php/apps/pipelinq/api/public/forms/'.$formId;
+        return '<iframe src="'.htmlspecialchars($url).'" width="100%" height="500" frameborder="0" style="border:none;"></iframe>';
     }//end generateIframeEmbed()
-
 
     /**
      * Generate JavaScript embed snippet for a form.
@@ -203,19 +195,9 @@ class IntakeFormService
      */
     public function generateJsEmbed(string $formId, string $baseUrl): string
     {
-        $url = rtrim($baseUrl, '/') . '/index.php/apps/pipelinq/api/public/forms/' . $formId;
-        return '<div id="pipelinq-form-' . htmlspecialchars($formId) . '"></div>'
-            . "\n<script>"
-            . "\n(function(){"
-            . "\n  var c=document.getElementById('pipelinq-form-" . htmlspecialchars($formId) . "');"
-            . "\n  var f=document.createElement('iframe');"
-            . "\n  f.src='" . $url . "';"
-            . "\n  f.style.cssText='width:100%;height:500px;border:none;';"
-            . "\n  c.appendChild(f);"
-            . "\n})();"
-            . "\n</script>";
+        $url = rtrim($baseUrl, '/').'/index.php/apps/pipelinq/api/public/forms/'.$formId;
+        return '<div id="pipelinq-form-'.htmlspecialchars($formId).'"></div>'."\n<script>"."\n(function(){"."\n  var c=document.getElementById('pipelinq-form-".htmlspecialchars($formId)."');"."\n  var f=document.createElement('iframe');"."\n  f.src='".$url."';"."\n  f.style.cssText='width:100%;height:500px;border:none;';"."\n  c.appendChild(f);"."\n})();"."\n</script>";
     }//end generateJsEmbed()
-
 
     /**
      * Generate CSV content from submission records.
@@ -232,10 +214,10 @@ class IntakeFormService
             $headers[] = $field['label'] ?? $field['name'] ?? 'Unknown';
         }
 
-        $rows = [implode(',', array_map(fn($h) => '"' . str_replace('"', '""', $h) . '"', $headers))];
+        $rows = [implode(',', array_map(fn($h) => '"'.str_replace('"', '""', $h).'"', $headers))];
 
         foreach ($submissions as $sub) {
-            $row = [
+            $row  = [
                 $sub['submittedAt'] ?? '',
                 $sub['status'] ?? '',
                 $sub['contactId'] ?? '',
@@ -248,7 +230,7 @@ class IntakeFormService
                 $row[] = $value;
             }
 
-            $rows[] = implode(',', array_map(fn($v) => '"' . str_replace('"', '""', (string) $v) . '"', $row));
+            $rows[] = implode(',', array_map(fn($v) => '"'.str_replace('"', '""', (string) $v).'"', $row));
         }//end foreach
 
         return implode("\n", $rows);

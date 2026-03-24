@@ -39,7 +39,7 @@ class PublicFormController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest          $request          The request.
+     * @param IRequest          $request           The request.
      * @param IntakeFormService $intakeFormService The intake form service.
      */
     public function __construct(
@@ -48,7 +48,6 @@ class PublicFormController extends Controller
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
-
 
     /**
      * Get a public form definition for rendering.
@@ -69,16 +68,17 @@ class PublicFormController extends Controller
     {
         // Form data would be fetched from OpenRegister in production.
         // This endpoint returns the public-facing form definition.
-        $response = new JSONResponse([
-            'id'             => $id,
-            'fields'         => [],
-            'successMessage' => '',
-            'isActive'       => true,
-        ]);
+        $response = new JSONResponse(
+                [
+                    'id'             => $id,
+                    'fields'         => [],
+                    'successMessage' => '',
+                    'isActive'       => true,
+                ]
+                );
 
         return $this->addCorsHeaders(response: $response);
     }//end show()
-
 
     /**
      * Process a public form submission.
@@ -124,15 +124,15 @@ class PublicFormController extends Controller
         // 5. Create contact and lead
         // 6. Record submission
         // 7. Notify configured user
-
-        $response = new JSONResponse([
-            'success' => true,
-            'message' => 'Thank you for your submission.',
-        ]);
+        $response = new JSONResponse(
+                [
+                    'success' => true,
+                    'message' => 'Thank you for your submission.',
+                ]
+                );
 
         return $this->addCorsHeaders(response: $response);
     }//end submit()
-
 
     /**
      * Add CORS headers to allow cross-origin form embedding.

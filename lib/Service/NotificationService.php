@@ -90,7 +90,7 @@ class NotificationService
         $subject = 'lead_assigned';
         if ($entityType === 'request') {
             $subject = 'request_assigned';
-        } elseif ($entityType === 'task') {
+        } else if ($entityType === 'task') {
             $subject = 'task_assigned';
         }
 

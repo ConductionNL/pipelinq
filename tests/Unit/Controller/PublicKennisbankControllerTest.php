@@ -348,6 +348,4 @@ class PublicKennisbankControllerTest extends TestCase
         $this->assertSame(200, $response->getStatus());
         $this->assertSame('Public', $response->getData()['title']);
     }//end testShowReturnsPublicArticle()
-        $this->assertSame('Public Article', $response->getData()['title']);
-    }//end testShowReturnsArticleForPublicArticle()
 }//end class

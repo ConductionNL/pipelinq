@@ -186,14 +186,6 @@ class KennisbankReviewJobTest extends TestCase
             'kennisbank_review_interval' => 180,
         ]);
 
-        $staleDate         = (new \DateTime())->modify('-200 days')->format('c');
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)->addMethods(['findAll'])->getMock();
-        $objectServiceMock->method('findAll')->willReturn([
-            'results' => [['id' => '1', 'title' => 'Stale', 'status' => 'gepubliceerd', 'author' => 'user1', 'dateModified' => $staleDate]],
-        ]);
-        $this->container->method('get')->willReturn($objectServiceMock);
-
-        $this->notificationService->expects($this->once())->method('sendNotification')
         $staleDate = (new \DateTime())->modify('-200 days')->format('c');
 
         $objectServiceMock = $this->getMockBuilder(\stdClass::class)
@@ -225,7 +217,6 @@ class KennisbankReviewJobTest extends TestCase
     }//end testJobSendsNotificationForStaleArticle()
 
     /**
-     * Test that the job does not notify for recently updated articles.
      * Test that the job does not send notifications for recently updated articles.
      *
      * @return void
@@ -238,11 +229,8 @@ class KennisbankReviewJobTest extends TestCase
             'kennisartikel_schema' => 'schema-uuid',
         ]);
 
-        $recentDate        = (new \DateTime())->modify('-10 days')->format('c');
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)->addMethods(['findAll'])->getMock();
-        $objectServiceMock->method('findAll')->willReturn([
-            'results' => [['id' => '2', 'title' => 'Fresh', 'status' => 'gepubliceerd', 'author' => 'user1', 'dateModified' => $recentDate]],
-        ]);
+        $recentDate = (new \DateTime())->modify('-10 days')->format('c');
+
         $objectServiceMock = $this->getMockBuilder(\stdClass::class)
             ->addMethods(['findAll'])
             ->getMock();

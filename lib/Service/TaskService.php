@@ -98,7 +98,7 @@ class TaskService
      */
     public function getDefaultDeadline(): string
     {
-        $now = new \DateTime();
+        $now      = new \DateTime();
         $deadline = clone $now;
 
         // Move to next business day
@@ -125,7 +125,7 @@ class TaskService
      */
     public function calculateDeadline(string $createdAt, int $businessHours): string
     {
-        $start = new \DateTime($createdAt);
+        $start     = new \DateTime($createdAt);
         $remaining = $businessHours;
 
         while ($remaining > 0) {
@@ -176,7 +176,7 @@ class TaskService
         }
 
         return [
-            'valid' => count($errors) === 0,
+            'valid'  => count($errors) === 0,
             'errors' => $errors,
         ];
     }//end validateTask()
@@ -189,11 +189,11 @@ class TaskService
      *
      * @return bool True if the deadline is within the threshold.
      */
-    public function isDeadlineApproaching(string $deadline, int $thresholdHours = 4): bool
+    public function isDeadlineApproaching(string $deadline, int $thresholdHours=4): bool
     {
         $deadlineDate = new \DateTime($deadline);
-        $now = new \DateTime();
-        $threshold = clone $deadlineDate;
+        $now          = new \DateTime();
+        $threshold    = clone $deadlineDate;
         $threshold->modify("-{$thresholdHours} hours");
 
         return $now >= $threshold && $now < $deadlineDate;
@@ -209,7 +209,7 @@ class TaskService
     public function isDeadlinePassed(string $deadline): bool
     {
         $deadlineDate = new \DateTime($deadline);
-        $now = new \DateTime();
+        $now          = new \DateTime();
 
         return $now > $deadlineDate;
     }//end isDeadlinePassed()

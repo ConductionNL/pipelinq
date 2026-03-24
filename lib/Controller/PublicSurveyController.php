@@ -63,7 +63,7 @@ class PublicSurveyController extends PublicShareController
         private readonly SettingsService $settingsService,
         private readonly LoggerInterface $logger,
     ) {
-        parent::__construct(Application::APP_ID, $request, $session);
+        parent::__construct(appName: Application::APP_ID, request: $request, session: $session);
     }//end __construct()
 
     /**
@@ -131,21 +131,27 @@ class PublicSurveyController extends PublicShareController
     public function show(string $token): JSONResponse
     {
         try {
-            $survey = $this->findSurveyByToken($token);
+            $survey = $this->findSurveyByToken(token: $token);
             if ($survey === null) {
                 $resp = new JSONResponse(['error' => 'Survey not found'], Http::STATUS_NOT_FOUND);
                 $resp->throttle();
                 return $resp;
             }
 
-            $data = is_array($survey) ? $survey : (array) $survey;
+            $data = $this->toArray(value: $survey);
             if (($data['status'] ?? 'draft') !== 'active') {
-                return new JSONResponse(['error' => 'This survey is no longer accepting responses'], Http::STATUS_GONE);
+                return new JSONResponse(
+                    ['error' => 'This survey is no longer accepting responses'],
+                    Http::STATUS_GONE,
+                );
             }
 
             $until = $data['activeUntil'] ?? null;
             if ($until !== null && $until !== '' && strtotime($until) < time()) {
-                return new JSONResponse(['error' => 'This survey is no longer accepting responses'], Http::STATUS_GONE);
+                return new JSONResponse(
+                    ['error' => 'This survey is no longer accepting responses'],
+                    Http::STATUS_GONE,
+                );
             }
 
             unset($data['createdBy'], $data['linkedEntityId']);
@@ -169,16 +175,19 @@ class PublicSurveyController extends PublicShareController
     public function submit(string $token): JSONResponse
     {
         try {
-            $survey = $this->findSurveyByToken($token);
+            $survey = $this->findSurveyByToken(token: $token);
             if ($survey === null) {
                 $resp = new JSONResponse(['error' => 'Survey not found'], Http::STATUS_NOT_FOUND);
                 $resp->throttle();
                 return $resp;
             }
 
-            $data = is_array($survey) ? $survey : (array) $survey;
+            $data = $this->toArray(value: $survey);
             if (($data['status'] ?? 'draft') !== 'active') {
-                return new JSONResponse(['error' => 'This survey is no longer accepting responses'], Http::STATUS_GONE);
+                return new JSONResponse(
+                    ['error' => 'This survey is no longer accepting responses'],
+                    Http::STATUS_GONE,
+                );
             }
 
             $body    = $this->request->getParams();
@@ -191,7 +200,10 @@ class PublicSurveyController extends PublicShareController
             $registerId       = $settings['register'] ?? '';
             $responseSchemaId = $settings['surveyResponse_schema'] ?? '';
             if ($registerId === '' || $responseSchemaId === '') {
-                return new JSONResponse(['error' => 'Survey system is not configured'], Http::STATUS_SERVICE_UNAVAILABLE);
+                return new JSONResponse(
+                    ['error' => 'Survey system is not configured'],
+                    Http::STATUS_SERVICE_UNAVAILABLE,
+                );
             }
 
             $responseData = [
@@ -201,16 +213,39 @@ class PublicSurveyController extends PublicShareController
                 'entityType'   => $body['entityType'] ?? null,
                 'entityId'     => $body['entityId'] ?? null,
                 'completedAt'  => (new \DateTime())->format('c'),
-                'ipHash'       => hash('sha256', $this->request->getRemoteAddress()),
+                'ipHash'       => hash(algo: 'sha256', data: $this->request->getRemoteAddress()),
             ];
 
-            $created = $this->getObjectService()->saveObject($registerId, $responseSchemaId, $responseData);
-            return new JSONResponse(['message' => 'Thank you for your feedback!', 'id' => $created->getUuid()], Http::STATUS_CREATED);
+            $created = $this->getObjectService()->saveObject(
+                $registerId,
+                $responseSchemaId,
+                $responseData,
+            );
+            return new JSONResponse(
+                ['message' => 'Thank you for your feedback!', 'id' => $created->getUuid()],
+                Http::STATUS_CREATED,
+            );
         } catch (\Exception $e) {
             $this->logger->error('Failed to submit survey response', ['exception' => $e->getMessage()]);
             return new JSONResponse(['error' => 'Failed to submit response'], Http::STATUS_INTERNAL_SERVER_ERROR);
         }//end try
     }//end submit()
+
+    /**
+     * Convert a value to an array.
+     *
+     * @param mixed $value The value to convert.
+     *
+     * @return array The array representation.
+     */
+    private function toArray(mixed $value): array
+    {
+        if (is_array($value) === true) {
+            return $value;
+        }
+
+        return (array) $value;
+    }//end toArray()
 
     /**
      * Find survey by token.
@@ -228,12 +263,32 @@ class PublicSurveyController extends PublicShareController
             return null;
         }
 
-        $results = $this->getObjectService()->getObjects($regId, $schemaId, ['token' => $token, '_limit' => 1]);
+        $results = $this->getObjectService()->getObjects(
+            $regId,
+            $schemaId,
+            ['token' => $token, '_limit' => 1],
+        );
         $items   = $results['results'] ?? $results ?? [];
         if (empty($items) === true) {
             return null;
         }
 
-        return is_array($items) ? $items[0] : $items;
+        return $this->extractFirstItem(items: $items);
     }//end findSurveyByToken()
+
+    /**
+     * Extract the first item from a list.
+     *
+     * @param mixed $items The items list.
+     *
+     * @return mixed The first item or the items themselves.
+     */
+    private function extractFirstItem(mixed $items): mixed
+    {
+        if (is_array($items) === true) {
+            return $items[0];
+        }
+
+        return $items;
+    }//end extractFirstItem()
 }//end class

@@ -159,7 +159,7 @@ class EmailSyncService
     /**
      * Set the mail accounts to sync for a user.
      *
-     * @param string    $userId   The user ID.
+     * @param string     $userId   The user ID.
      * @param array<int> $accounts Array of mail account IDs.
      *
      * @return void
@@ -235,22 +235,22 @@ class EmailSyncService
         string $linkedEntityType,
         string $linkedEntityId,
         string $direction,
-        ?string $threadId = null,
-        ?string $syncSource = null,
+        ?string $threadId=null,
+        ?string $syncSource=null,
     ): array {
         return [
-            'messageId' => $messageId,
-            'subject' => $subject,
-            'sender' => $sender,
-            'recipients' => $recipients,
-            'date' => $date,
-            'threadId' => $threadId,
+            'messageId'        => $messageId,
+            'subject'          => $subject,
+            'sender'           => $sender,
+            'recipients'       => $recipients,
+            'date'             => $date,
+            'threadId'         => $threadId,
             'linkedEntityType' => $linkedEntityType,
-            'linkedEntityId' => $linkedEntityId,
-            'direction' => $direction,
-            'syncSource' => $syncSource,
-            'excluded' => false,
-            'deleted' => false,
+            'linkedEntityId'   => $linkedEntityId,
+            'direction'        => $direction,
+            'syncSource'       => $syncSource,
+            'excluded'         => false,
+            'deleted'          => false,
         ];
     }//end buildEmailLinkData()
 }//end class

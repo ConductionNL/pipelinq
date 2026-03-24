@@ -81,7 +81,6 @@ class TaskEscalationJob extends TimedJob
             // For each task:
             // 1. If deadline passed and status is open -> change to verlopen
             // 2. If deadline approaching -> send escalation notification
-
             $this->logger->info('TaskEscalationJob: Deadline check completed');
         } catch (\Exception $e) {
             $this->logger->error(

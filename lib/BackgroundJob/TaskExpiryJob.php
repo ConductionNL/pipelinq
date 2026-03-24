@@ -99,7 +99,6 @@ class TaskExpiryJob extends TimedJob
         // The actual OpenRegister API calls require the ObjectService which
         // needs a user context. For now, we log that the job ran.
         // Full implementation requires OpenRegister's system-level API access.
-
         $this->logger->info('TaskExpiryJob: completed check cycle');
     }//end run()
 }//end class

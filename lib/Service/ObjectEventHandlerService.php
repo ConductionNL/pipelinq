@@ -67,7 +67,7 @@ class ObjectEventHandlerService
 
         // Fire matching automations for entity creation events.
         $this->fireAutomations(
-            trigger: $entityType . '_created',
+            trigger: $entityType.'_created',
             entityData: $data,
             objectId: $objectId
         );
@@ -190,7 +190,6 @@ class ObjectEventHandlerService
         }
     }//end fireAutomations()
 
-
     /**
      * Fire matching automations for entity update events.
      *
@@ -210,13 +209,14 @@ class ObjectEventHandlerService
         $triggers = [];
 
         if (($newData['assignee'] ?? '') !== ($oldData['assignee'] ?? '')) {
-            $triggers[] = $entityType . '_assigned';
+            $triggers[] = $entityType.'_assigned';
         }
 
         if ($entityType === 'lead') {
             if (($newData['stage'] ?? '') !== ($oldData['stage'] ?? '')) {
                 $triggers[] = 'lead_stage_changed';
             }
+
             if (($newData['value'] ?? 0) !== ($oldData['value'] ?? 0)) {
                 $triggers[] = 'lead_value_changed';
             }

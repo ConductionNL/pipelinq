@@ -57,7 +57,6 @@ class AutomationService
         'webhook',
     ];
 
-
     /**
      * Constructor.
      *
@@ -72,7 +71,6 @@ class AutomationService
     ) {
     }//end __construct()
 
-
     /**
      * Get the list of valid trigger types.
      *
@@ -83,7 +81,6 @@ class AutomationService
         return self::VALID_TRIGGERS;
     }//end getValidTriggers()
 
-
     /**
      * Get the list of valid action types.
      *
@@ -93,7 +90,6 @@ class AutomationService
     {
         return self::VALID_ACTIONS;
     }//end getValidActions()
-
 
     /**
      * Check if an automation matches a given trigger event and entity data.
@@ -121,7 +117,6 @@ class AutomationService
 
         return $this->evaluateConditions(conditions: $conditions, entityData: $entityData);
     }//end matchesConditions()
-
 
     /**
      * Evaluate trigger conditions against entity data.
@@ -168,7 +163,6 @@ class AutomationService
         return true;
     }//end evaluateConditions()
 
-
     /**
      * Evaluate a comparison operator.
      *
@@ -191,7 +185,6 @@ class AutomationService
         };
     }//end evaluateOperator()
 
-
     /**
      * Build a webhook payload for an automation trigger.
      *
@@ -212,7 +205,6 @@ class AutomationService
             'actions'        => $automation['actions'] ?? [],
         ];
     }//end buildWebhookPayload()
-
 
     /**
      * Execute a webhook action by sending entity data to the configured URL.

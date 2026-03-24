@@ -44,14 +44,14 @@ class CalendarSyncService
     /**
      * Build a CalendarLink data array for OpenRegister storage.
      *
-     * @param string      $eventUid         The calendar event UID.
-     * @param string      $title            The event title.
-     * @param string      $startDate        ISO 8601 start date.
-     * @param string      $endDate          ISO 8601 end date.
-     * @param string      $linkedEntityType The entity type.
-     * @param string      $linkedEntityId   The entity UUID.
-     * @param string      $createdFrom      Where the event was created.
-     * @param array       $attendees        Attendee email addresses.
+     * @param string $eventUid         The calendar event UID.
+     * @param string $title            The event title.
+     * @param string $startDate        ISO 8601 start date.
+     * @param string $endDate          ISO 8601 end date.
+     * @param string $linkedEntityType The entity type.
+     * @param string $linkedEntityId   The entity UUID.
+     * @param string $createdFrom      Where the event was created.
+     * @param array  $attendees        Attendee email addresses.
      *
      * @return array<string, mixed> The CalendarLink data.
      */
@@ -62,19 +62,19 @@ class CalendarSyncService
         string $endDate,
         string $linkedEntityType,
         string $linkedEntityId,
-        string $createdFrom = 'pipelinq',
-        array $attendees = [],
+        string $createdFrom='pipelinq',
+        array $attendees=[],
     ): array {
         return [
-            'eventUid' => $eventUid,
-            'title' => $title,
-            'startDate' => $startDate,
-            'endDate' => $endDate,
-            'attendees' => $attendees,
+            'eventUid'         => $eventUid,
+            'title'            => $title,
+            'startDate'        => $startDate,
+            'endDate'          => $endDate,
+            'attendees'        => $attendees,
             'linkedEntityType' => $linkedEntityType,
-            'linkedEntityId' => $linkedEntityId,
-            'status' => 'scheduled',
-            'createdFrom' => $createdFrom,
+            'linkedEntityId'   => $linkedEntityId,
+            'status'           => 'scheduled',
+            'createdFrom'      => $createdFrom,
         ];
     }//end buildCalendarLinkData()
 
@@ -94,16 +94,16 @@ class CalendarSyncService
         string $title,
         string $startDate,
         string $endDate,
-        string $description = '',
-        string $entityUrl = '',
-        array $attendees = [],
+        string $description='',
+        string $entityUrl='',
+        array $attendees=[],
     ): string {
-        $uid = bin2hex(random_bytes(16)) . '@pipelinq';
-        $now = gmdate('Ymd\THis\Z');
+        $uid   = bin2hex(random_bytes(16)).'@pipelinq';
+        $now   = gmdate('Ymd\THis\Z');
         $start = gmdate('Ymd\THis\Z', strtotime($startDate));
-        $end = gmdate('Ymd\THis\Z', strtotime($endDate));
+        $end   = gmdate('Ymd\THis\Z', strtotime($endDate));
 
-        $vcal = "BEGIN:VCALENDAR\r\n";
+        $vcal  = "BEGIN:VCALENDAR\r\n";
         $vcal .= "VERSION:2.0\r\n";
         $vcal .= "PRODID:-//Pipelinq//CRM//NL\r\n";
         $vcal .= "BEGIN:VEVENT\r\n";
@@ -116,8 +116,9 @@ class CalendarSyncService
         if ($description !== '' || $entityUrl !== '') {
             $desc = $description;
             if ($entityUrl !== '') {
-                $desc .= ($desc !== '' ? '\n\n' : '') . 'Pipelinq: ' . $entityUrl;
+                $desc .= ($desc !== '' ? '\n\n' : '').'Pipelinq: '.$entityUrl;
             }
+
             $vcal .= "DESCRIPTION:{$desc}\r\n";
         }
 
