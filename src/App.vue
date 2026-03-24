@@ -40,6 +40,17 @@
 				@search="onSidebarSearch"
 				@columns-change="onSidebarColumnsChange"
 				@filter-change="onSidebarFilterChange" />
+			<CnObjectSidebar
+				v-if="objectSidebarState.active && !sidebarState.active && !pipelineSidebarState.active"
+				:title="objectSidebarState.title"
+				:subtitle="objectSidebarState.subtitle"
+				:object-type="objectSidebarState.objectType"
+				:object-id="objectSidebarState.objectId"
+				:register="objectSidebarState.register"
+				:schema="objectSidebarState.schema"
+				:hidden-tabs="objectSidebarState.hiddenTabs"
+				:open="objectSidebarState.open"
+				@update:open="objectSidebarState.open = $event" />
 			<PipelineSidebar
 				v-if="pipelineSidebarState.active && !sidebarState.active"
 				:pipeline="pipelineSidebarState.pipeline"
@@ -61,7 +72,7 @@
 <script>
 import Vue from 'vue'
 import { NcContent, NcAppContent, NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
-import { CnIndexSidebar } from '@conduction/nextcloud-vue'
+import { CnIndexSidebar, CnObjectSidebar } from '@conduction/nextcloud-vue'
 import { generateUrl, imagePath } from '@nextcloud/router'
 import MainMenu from './navigation/MainMenu.vue'
 import UserSettings from './views/settings/UserSettings.vue'
@@ -77,6 +88,7 @@ export default {
 		NcEmptyContent,
 		NcLoadingIcon,
 		CnIndexSidebar,
+		CnObjectSidebar,
 		MainMenu,
 		UserSettings,
 		PipelineSidebar,
@@ -86,6 +98,7 @@ export default {
 		return {
 			sidebarState: this.sidebarState,
 			pipelineSidebarState: this.pipelineSidebarState,
+			objectSidebarState: this.objectSidebarState,
 		}
 	},
 
@@ -110,6 +123,17 @@ export default {
 				open: true,
 				pipeline: null,
 				onSave: null,
+			}),
+			objectSidebarState: Vue.observable({
+				active: false,
+				open: true,
+				objectType: '',
+				objectId: '',
+				title: '',
+				subtitle: '',
+				register: '',
+				schema: '',
+				hiddenTabs: [],
 			}),
 		}
 	},
