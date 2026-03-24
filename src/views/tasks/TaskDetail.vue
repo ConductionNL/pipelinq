@@ -1,98 +1,4 @@
 <template>
-	<div class="task-detail">
-		<NcLoadingIcon v-if="loading" />
-
-		<template v-else-if="task">
-			<div class="task-detail__header">
-				<router-link :to="{ name: 'Tasks' }">
-					{{ t('pipelinq', 'Back to Tasks') }}
-				</router-link>
-				<div class="task-detail__actions">
-					<NcButton
-						v-if="task.status === 'open'"
-						type="primary"
-						@click="claimTask">
-						{{ t('pipelinq', 'Claim task') }}
-					</NcButton>
-					<NcButton
-						v-if="task.status === 'in_behandeling'"
-						type="primary"
-						@click="showCompleteDialog = true">
-						{{ t('pipelinq', 'Complete') }}
-					</NcButton>
-					<NcButton
-						v-if="task.status === 'in_behandeling' && task.type === 'terugbelverzoek'"
-						type="secondary"
-						@click="logAttempt">
-						{{ t('pipelinq', 'Log attempt (not reached)') }}
-					</NcButton>
-					<NcButton
-						v-if="task.status === 'afgerond' || task.status === 'verlopen'"
-						type="secondary"
-						@click="reopenTask">
-						{{ t('pipelinq', 'Reopen') }}
-					</NcButton>
-				</div>
-			</div>
-
-			<div class="task-detail__badges">
-				<span class="type-badge" :class="'type-badge--' + task.type">
-					{{ getTypeLabel(task.type) }}
-				</span>
-				<span class="status-badge" :class="'status-badge--' + task.status">
-					{{ task.status }}
-				</span>
-				<span class="priority-badge" :style="{ color: getPriorityColor(task.priority) }">
-					{{ task.priority }}
-				</span>
-			</div>
-
-			<h2>{{ task.subject }}</h2>
-
-			<div v-if="task.description" class="task-detail__description">
-				<p>{{ task.description }}</p>
-			</div>
-
-			<div class="task-detail__info">
-				<div class="info-row">
-					<span class="info-label">{{ t('pipelinq', 'Assigned to') }}</span>
-					<span>{{ task.assignee }} ({{ task.assigneeType }})</span>
-				</div>
-				<div class="info-row">
-					<span class="info-label">{{ t('pipelinq', 'Deadline') }}</span>
-					<span :class="{ 'deadline--urgent': isOverdue }">{{ formatDate(task.deadline) }}</span>
-				</div>
-				<div v-if="task.preferredTimeSlot" class="info-row info-row--highlight">
-					<span class="info-label">{{ t('pipelinq', 'Preferred callback time') }}</span>
-					<span>{{ task.preferredTimeSlot }}</span>
-				</div>
-				<div v-if="task.callbackPhone" class="info-row info-row--highlight">
-					<span class="info-label">{{ t('pipelinq', 'Callback phone') }}</span>
-					<span>{{ task.callbackPhone }}</span>
-				</div>
-				<div class="info-row">
-					<span class="info-label">{{ t('pipelinq', 'Created by') }}</span>
-					<span>{{ task.createdBy }}</span>
-				</div>
-				<div v-if="task.attempts > 0" class="info-row">
-					<span class="info-label">{{ t('pipelinq', 'Callback attempts') }}</span>
-					<span>{{ task.attempts }}</span>
-				</div>
-				<div v-if="task.result" class="info-row">
-					<span class="info-label">{{ t('pipelinq', 'Result') }}</span>
-					<span>{{ task.result }}</span>
-				</div>
-			</div>
-
-			<!-- Complete dialog -->
-			<div v-if="showCompleteDialog" class="complete-dialog">
-				<h3>{{ t('pipelinq', 'Complete task') }}</h3>
-				<NcTextField
-					:value.sync="resultText"
-					:label="t('pipelinq', 'Result / notes')"
-					:multiline="true" />
-				<div class="complete-dialog__actions">
-					<NcButton type="tertiary" @click="showCompleteDialog = false">
 	<div v-if="editing || isNew">
 		<div class="task-detail__header">
 			<NcButton @click="onFormCancel">
@@ -113,28 +19,18 @@
 			@cancel="onFormCancel" />
 	</div>
 
-	<div v-else-if="loading" class="task-detail__loading">
-		<NcLoadingIcon :size="64" />
-	</div>
-
-	<div v-else class="task-detail">
-		<div class="task-detail__header">
-			<NcButton @click="$router.push({ name: 'Tasks' })">
-				{{ t('pipelinq', 'Back to list') }}
-			</NcButton>
-			<h2>{{ taskData.subject || t('pipelinq', 'Task') }}</h2>
-		</div>
-
-		<!-- Banners -->
-		<div v-if="taskData.callbackPhoneNumber" class="task-banner task-banner--phone">
-			<strong>{{ t('pipelinq', 'Callback number:') }}</strong> {{ taskData.callbackPhoneNumber }}
-		</div>
-		<div v-if="taskData.preferredTimeSlot" class="task-banner task-banner--time">
-			<strong>{{ t('pipelinq', 'Preferred time:') }}</strong> {{ taskData.preferredTimeSlot }}
-		</div>
-
-		<!-- Actions -->
-		<div class="task-detail__actions">
+	<CnDetailPage
+		v-else
+		:title="taskData.subject || t('pipelinq', 'Task')"
+		:subtitle="t('pipelinq', 'Task')"
+		:back-route="{ name: 'Tasks' }"
+		:back-label="t('pipelinq', 'Back to list')"
+		:loading="loading"
+		:sidebar="!isNew && !loading"
+		object-type="pipelinq_task"
+		:object-id="taskId"
+		:sidebar-props="sidebarProps">
+		<template #header-actions>
 			<NcButton type="primary" @click="editing = true">
 				{{ t('pipelinq', 'Edit') }}
 			</NcButton>
@@ -171,11 +67,17 @@
 			<NcButton type="error" @click="showDeleteDialog = true">
 				{{ t('pipelinq', 'Delete') }}
 			</NcButton>
+		</template>
+
+		<!-- Callback banners -->
+		<div v-if="taskData.callbackPhoneNumber" class="task-banner task-banner--phone">
+			<strong>{{ t('pipelinq', 'Callback number:') }}</strong> {{ taskData.callbackPhoneNumber }}
+		</div>
+		<div v-if="taskData.preferredTimeSlot" class="task-banner task-banner--time">
+			<strong>{{ t('pipelinq', 'Preferred time:') }}</strong> {{ taskData.preferredTimeSlot }}
 		</div>
 
-		<!-- Info grid -->
-		<div class="task-detail__card">
-			<h3>{{ t('pipelinq', 'Details') }}</h3>
+		<CnDetailCard :title="t('pipelinq', 'Details')">
 			<div class="info-grid">
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'Type') }}</label>
@@ -219,11 +121,11 @@
 				<label>{{ t('pipelinq', 'Contact moment') }}</label>
 				<p>{{ taskData.contactMomentSummary }}</p>
 			</div>
-		</div>
+		</CnDetailCard>
 
-		<!-- Client / Request links -->
-		<div v-if="taskData.clientId || taskData.requestId" class="task-detail__card">
-			<h3>{{ t('pipelinq', 'Linked items') }}</h3>
+		<CnDetailCard
+			v-if="taskData.clientId || taskData.requestId"
+			:title="t('pipelinq', 'Linked items')">
 			<div v-if="taskData.clientId" class="linked-item">
 				<a href="#" @click.prevent="$router.push({ name: 'ClientDetail', params: { id: taskData.clientId } })">
 					{{ t('pipelinq', 'View client') }}
@@ -234,11 +136,11 @@
 					{{ t('pipelinq', 'View request') }}
 				</a>
 			</div>
-		</div>
+		</CnDetailCard>
 
-		<!-- Completion info -->
-		<div v-if="taskData.status === 'afgerond'" class="task-detail__card">
-			<h3>{{ t('pipelinq', 'Completion') }}</h3>
+		<CnDetailCard
+			v-if="taskData.status === 'afgerond'"
+			:title="t('pipelinq', 'Completion')">
 			<div class="info-grid">
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'Completed at') }}</label>
@@ -249,14 +151,14 @@
 					<p>{{ taskData.resultText }}</p>
 				</div>
 			</div>
-		</div>
+		</CnDetailCard>
 
-		<!-- Callback attempts -->
-		<div v-if="attemptsList.length > 0" class="task-detail__card">
-			<h3>
-				{{ t('pipelinq', 'Attempts') }}
+		<CnDetailCard
+			v-if="attemptsList.length > 0"
+			:title="t('pipelinq', 'Attempts')">
+			<template #actions>
 				<span class="attempt-count">{{ attemptsList.length }}/3</span>
-			</h3>
+			</template>
 			<div class="attempts-list">
 				<div v-for="(attempt, idx) in attemptsList" :key="idx" class="attempt-entry">
 					<span class="attempt-time">{{ formatDate(attempt.timestamp) }}</span>
@@ -266,7 +168,7 @@
 					<span v-if="attempt.notes" class="attempt-notes">{{ attempt.notes }}</span>
 				</div>
 			</div>
-		</div>
+		</CnDetailCard>
 
 		<!-- Complete dialog -->
 		<NcDialog
@@ -276,20 +178,15 @@
 			<div class="dialog-body">
 				<label>{{ t('pipelinq', 'Result text') }}</label>
 				<textarea v-model="resultText" rows="3" class="dialog-textarea" />
-				<div class="dialog-actions">
-					<NcButton @click="showCompleteDialog = false">
-						{{ t('pipelinq', 'Cancel') }}
-					</NcButton>
-					<NcButton type="primary" @click="completeTask">
-						{{ t('pipelinq', 'Mark as completed') }}
-					</NcButton>
-				</div>
 			</div>
-		</template>
-
-		<NcEmptyContent
-			v-else
-			:name="t('pipelinq', 'Task not found')" />
+			<template #actions>
+				<NcButton @click="showCompleteDialog = false">
+					{{ t('pipelinq', 'Cancel') }}
+				</NcButton>
+				<NcButton type="primary" @click="completeTask">
+					{{ t('pipelinq', 'Mark as completed') }}
+				</NcButton>
+			</template>
 		</NcDialog>
 
 		<!-- Reassign dialog -->
@@ -316,12 +213,12 @@
 						<span class="assignee-type">({{ item.type }})</span>
 					</div>
 				</div>
-				<div class="dialog-actions">
-					<NcButton @click="showReassignDialog = false">
-						{{ t('pipelinq', 'Cancel') }}
-					</NcButton>
-				</div>
 			</div>
+			<template #actions>
+				<NcButton @click="showReassignDialog = false">
+					{{ t('pipelinq', 'Cancel') }}
+				</NcButton>
+			</template>
 		</NcDialog>
 
 		<!-- Delete dialog -->
@@ -329,74 +226,22 @@
 			v-if="showDeleteDialog"
 			:name="t('pipelinq', 'Delete task')"
 			@closing="showDeleteDialog = false">
-			<div class="dialog-body">
-				<p>{{ t('pipelinq', 'Are you sure you want to delete this task?') }}</p>
-				<div class="dialog-actions">
-					<NcButton @click="showDeleteDialog = false">
-						{{ t('pipelinq', 'Cancel') }}
-					</NcButton>
-					<NcButton type="error" @click="deleteTask">
-						{{ t('pipelinq', 'Delete') }}
-					</NcButton>
-				</div>
-			</div>
+			<p>{{ t('pipelinq', 'Are you sure you want to delete this task?') }}</p>
+			<template #actions>
+				<NcButton @click="showDeleteDialog = false">
+					{{ t('pipelinq', 'Cancel') }}
+				</NcButton>
+				<NcButton type="error" @click="deleteTask">
+					{{ t('pipelinq', 'Delete') }}
+				</NcButton>
+			</template>
 		</NcDialog>
-	</div>
+	</CnDetailPage>
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcEmptyContent, NcTextField } from '@nextcloud/vue'
-import { showSuccess, showError } from '@nextcloud/dialogs'
-
-export default {
-	name: 'TaskDetail',
-	components: { NcButton, NcLoadingIcon, NcEmptyContent, NcTextField },
-	props: {
-		taskId: { type: String, required: true },
-	},
-	data() {
-		return {
-			task: null,
-			loading: true,
-			showCompleteDialog: false,
-			resultText: '',
-		}
-	},
-	computed: {
-		isOverdue() {
-			if (!this.task || !this.task.deadline || this.task.status === 'afgerond') return false
-			return new Date(this.task.deadline) < new Date()
-		},
-	},
-	mounted() { this.fetchTask() },
-	methods: {
-		async fetchTask() {
-			this.loading = true
-			try { this.task = null } finally { this.loading = false }
-		},
-		async claimTask() {
-			showSuccess(t('pipelinq', 'Task claimed'))
-		},
-		async completeTask() {
-			showSuccess(t('pipelinq', 'Task completed'))
-			this.showCompleteDialog = false
-		},
-		async logAttempt() {
-			showSuccess(t('pipelinq', 'Attempt logged'))
-		},
-		async reopenTask() {
-			showSuccess(t('pipelinq', 'Task reopened'))
-		},
-		formatDate(dateStr) {
-			if (!dateStr) return ''
-			return new Date(dateStr).toLocaleString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-		},
-		getTypeLabel(type) {
-			return { terugbelverzoek: t('pipelinq', 'Callback'), opvolgtaak: t('pipelinq', 'Follow-up'), informatievraag: t('pipelinq', 'Info request') }[type] || type
-		},
-		getPriorityColor(priority) {
-			return { hoog: '#e53e3e', normaal: '#3182ce', laag: '#718096' }[priority] || '#718096'
-import { NcButton, NcLoadingIcon, NcDialog } from '@nextcloud/vue'
+import { NcButton, NcDialog } from '@nextcloud/vue'
+import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import {
 	getTaskTypeLabel,
@@ -413,8 +258,9 @@ export default {
 	name: 'TaskDetail',
 	components: {
 		NcButton,
-		NcLoadingIcon,
 		NcDialog,
+		CnDetailPage,
+		CnDetailCard,
 		TaskForm,
 	},
 	props: {
@@ -425,8 +271,6 @@ export default {
 	},
 	data() {
 		return {
-			taskData: {},
-			loading: false,
 			editing: false,
 			showCompleteDialog: false,
 			showReassignDialog: false,
@@ -444,6 +288,21 @@ export default {
 		},
 		isNew() {
 			return this.taskId === 'new'
+		},
+		loading() {
+			return this.objectStore.loading.task || false
+		},
+		taskData() {
+			if (this.isNew) return {}
+			return this.objectStore.getObject('task', this.taskId) || {}
+		},
+		sidebarProps() {
+			const config = this.objectStore.objectTypeRegistry.task || {}
+			return {
+				title: t('pipelinq', 'Task'),
+				register: config.register || '',
+				schema: config.schema || '',
+			}
 		},
 		isOverdue() {
 			return isTaskOverdue(this.taskData)
@@ -477,9 +336,8 @@ export default {
 		taskId: {
 			handler(id) {
 				if (id && id !== 'new') {
-					this.fetchTask()
+					this.objectStore.fetchObject('task', id)
 				} else {
-					this.taskData = {}
 					this.editing = true
 				}
 			},
@@ -492,53 +350,19 @@ export default {
 		getTaskPriorityLabel,
 		getTaskPriorityColor,
 
-		async fetchTask() {
-			this.loading = true
-			try {
-				const config = this.objectStore.objectTypeRegistry.task
-				if (!config) {
-					this.taskData = {}
-					return
-				}
-				const url = '/apps/openregister/api/objects/' + config.register + '/' + config.schema + '/' + this.taskId
-				const response = await fetch(url, {
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
-					},
-				})
-				if (!response.ok) throw new Error('Failed to fetch task')
-				this.taskData = await response.json()
-			} catch (err) {
-				console.error('TaskDetail fetch error:', err)
-				this.taskData = {}
-			} finally {
-				this.loading = false
-			}
-		},
-
 		async updateTask(data) {
-			const config = this.objectStore.objectTypeRegistry.task
-			if (!config) return
-			const url = '/apps/openregister/api/objects/' + config.register + '/' + config.schema + '/' + this.taskData.id
-			const response = await fetch(url, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json',
-					requesttoken: OC.requestToken,
-					'OCS-APIREQUEST': 'true',
-				},
-				body: JSON.stringify({ ...this.taskData, ...data }),
+			const result = await this.objectStore.saveObject('task', {
+				...this.taskData,
+				...data,
 			})
-			if (response.status === 409) {
-				alert(t('pipelinq', 'This task has already been claimed by another user. Please refresh.'))
-				await this.fetchTask()
-				return false
+			if (!result) {
+				const error = this.objectStore.getError('task')
+				if (error?.status === 409) {
+					alert(t('pipelinq', 'This task has already been claimed by another user. Please refresh.'))
+				}
+				await this.objectStore.fetchObject('task', this.taskId)
 			}
-			if (!response.ok) throw new Error('Failed to update task')
-			this.taskData = await response.json()
-			return true
+			return !!result
 		},
 
 		async claimTask() {
@@ -625,17 +449,11 @@ export default {
 		},
 
 		async deleteTask() {
-			const config = this.objectStore.objectTypeRegistry.task
-			if (!config) return
-			const url = '/apps/openregister/api/objects/' + config.register + '/' + config.schema + '/' + this.taskData.id
-			await fetch(url, {
-				method: 'DELETE',
-				headers: {
-					requesttoken: OC.requestToken,
-					'OCS-APIREQUEST': 'true',
-				},
-			})
-			this.$router.push({ name: 'Tasks' })
+			this.showDeleteDialog = false
+			const success = await this.objectStore.deleteObject('task', this.taskId)
+			if (success) {
+				this.$router.push({ name: 'Tasks' })
+			}
 		},
 
 		async onFormSave(saved) {
@@ -643,7 +461,7 @@ export default {
 				this.$router.replace({ name: 'TaskDetail', params: { id: saved.id } })
 			} else {
 				this.editing = false
-				await this.fetchTask()
+				await this.objectStore.fetchObject('task', this.taskId)
 			}
 		},
 
@@ -656,7 +474,7 @@ export default {
 		},
 
 		formatDate(dateStr) {
-			if (!dateStr) return ''
+			if (!dateStr) return '-'
 			try {
 				return new Date(dateStr).toLocaleDateString('nl-NL', {
 					year: 'numeric',
@@ -674,49 +492,12 @@ export default {
 </script>
 
 <style scoped>
-.task-detail { padding: 20px; max-width: 800px; margin: 0 auto; }
-.task-detail__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.task-detail__actions { display: flex; gap: 8px; }
-.task-detail__badges { display: flex; gap: 8px; margin-bottom: 12px; }
-.task-detail__description { margin: 12px 0; padding: 12px; background: var(--color-background-dark); border-radius: var(--border-radius); }
-.task-detail__info { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
-.info-row { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--color-border); }
-.info-row--highlight { background: var(--color-primary-element-light); padding: 8px 12px; border-radius: var(--border-radius); border-bottom: none; }
-.info-label { font-weight: 600; min-width: 180px; color: var(--color-text-lighter); }
-.deadline--urgent { color: #e53e3e; font-weight: 600; }
-.complete-dialog { margin-top: 20px; padding: 16px; border: 1px solid var(--color-border); border-radius: var(--border-radius-large); }
-.complete-dialog__actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
-.type-badge { padding: 2px 8px; border-radius: var(--border-radius); font-size: 0.75em; font-weight: 600; }
-.type-badge--terugbelverzoek { background: #bee3f8; color: #2a4365; }
-.type-badge--opvolgtaak { background: #fefcbf; color: #744210; }
-.type-badge--informatievraag { background: #c6f6d5; color: #22543d; }
-.status-badge { padding: 2px 8px; border-radius: var(--border-radius); font-size: 0.75em; }
-.status-badge--open { background: var(--color-primary-element-light); }
-.status-badge--in_behandeling { background: var(--color-warning); color: #000; }
-.status-badge--afgerond { background: var(--color-success); color: #fff; }
-.status-badge--verlopen { background: #e53e3e; color: #fff; }
-.priority-badge { font-size: 0.75em; font-weight: 700; text-transform: uppercase; }
-.task-detail {
-	padding: 20px;
-	max-width: 900px;
-}
-
 .task-detail__header {
 	display: flex;
 	align-items: center;
-	gap: 12px;
-	margin-bottom: 16px;
-}
-
-.task-detail__header h2 {
-	margin: 0;
-}
-
-.task-detail__loading {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	height: 300px;
+	gap: 16px;
+	margin-bottom: 20px;
+	padding: 20px 20px 0;
 }
 
 .task-banner {
@@ -736,38 +517,27 @@ export default {
 	border: 1px solid #fcd34d;
 }
 
-.task-detail__actions {
-	display: flex;
-	gap: 8px;
-	margin-bottom: 20px;
-	flex-wrap: wrap;
-}
-
-.task-detail__card {
-	background: var(--color-main-background);
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-large);
-	padding: 16px;
-	margin-bottom: 16px;
-}
-
-.task-detail__card h3 {
-	margin: 0 0 12px;
-	font-size: 16px;
-}
-
 .info-grid {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
-	gap: 12px;
+	gap: 16px;
+}
+
+.info-field {
+	margin-bottom: 8px;
 }
 
 .info-field label {
 	display: block;
-	font-size: 12px;
-	font-weight: 600;
-	color: var(--color-text-maxcontrast);
+	font-weight: bold;
 	margin-bottom: 2px;
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+}
+
+.info-field span,
+.info-field p {
+	margin: 0;
 }
 
 .info-field--full {
@@ -778,10 +548,11 @@ export default {
 .type-badge,
 .status-badge {
 	display: inline-block;
-	padding: 2px 8px;
-	border-radius: var(--border-radius-pill);
+	padding: 2px 10px;
+	border-radius: 12px;
 	font-size: 12px;
-	font-weight: bold;
+	font-weight: 600;
+	white-space: nowrap;
 }
 
 .type-terugbelverzoek { background: #dbeafe; color: #1d4ed8; }
@@ -806,6 +577,11 @@ export default {
 
 .linked-item {
 	margin-bottom: 8px;
+}
+
+.linked-item a {
+	font-weight: bold;
+	color: var(--color-primary);
 }
 
 .attempt-count {
@@ -855,13 +631,6 @@ export default {
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
 	font-size: 14px;
-}
-
-.dialog-actions {
-	display: flex;
-	justify-content: flex-end;
-	gap: 8px;
-	margin-top: 12px;
 }
 
 .assignee-results {

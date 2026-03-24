@@ -170,15 +170,36 @@ test.describe('Tasks page', () => {
 		await expect(page.getByRole('button', { name: 'Add Item' })).toBeVisible()
 		await expect(page.getByRole('button', { name: 'Actions' })).toBeVisible()
 	})
+
+	test('new task form has correct fields', async ({ page }) => {
+		await page.goto('/apps/pipelinq/tasks/new')
+		await expect(page.getByRole('heading', { name: 'New task', level: 2 })).toBeVisible({ timeout: 10000 })
+		await expect(page.getByRole('textbox', { name: 'Subject' })).toBeVisible()
+		await expect(page.getByRole('textbox', { name: 'Description' })).toBeVisible()
+		await expect(page.getByRole('button', { name: 'Save' })).toBeVisible()
+		await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible()
+	})
 })
 
 test.describe('Contactmomenten page', () => {
 
-	test('renders list view with correct controls', async ({ page }) => {
+	test('renders with heading and action buttons', async ({ page }) => {
 		await page.goto('/apps/pipelinq/contactmomenten')
-		await expect(page.getByRole('radio', { name: 'Table' })).toBeChecked({ timeout: 10000 })
-		await expect(page.getByRole('button', { name: 'Add Item' })).toBeVisible()
-		await expect(page.getByRole('button', { name: 'Actions' })).toBeVisible()
+		await expect(page.getByRole('heading', { name: 'Contact Moments', level: 2 })).toBeVisible({ timeout: 10000 })
+		await expect(page.getByRole('button', { name: 'New contact moment' })).toBeVisible()
+		await expect(page.getByRole('button', { name: 'Export CSV' })).toBeVisible()
+	})
+
+	test('has search and filter controls', async ({ page }) => {
+		await page.goto('/apps/pipelinq/contactmomenten')
+		await expect(page.getByPlaceholder('Search by subject')).toBeVisible({ timeout: 10000 })
+	})
+
+	test('new contactmoment form has channel buttons', async ({ page }) => {
+		await page.goto('/apps/pipelinq/contactmomenten/new')
+		await expect(page.getByRole('heading', { name: /Register Contact Moment/i })).toBeVisible({ timeout: 10000 })
+		await expect(page.getByRole('textbox', { name: 'Subject' })).toBeVisible()
+		await expect(page.getByRole('button', { name: 'Register' })).toBeVisible()
 	})
 })
 
@@ -190,41 +211,104 @@ test.describe('Complaints page', () => {
 		await expect(page.getByRole('button', { name: 'Add Item' })).toBeVisible()
 		await expect(page.getByRole('button', { name: 'Actions' })).toBeVisible()
 	})
+
+	test('new complaint form has correct fields', async ({ page }) => {
+		await page.goto('/apps/pipelinq/complaints/new')
+		await expect(page.getByRole('heading', { name: 'New complaint', level: 2 })).toBeVisible({ timeout: 10000 })
+		await expect(page.getByRole('textbox', { name: 'Title' })).toBeVisible()
+		await expect(page.getByRole('textbox', { name: 'Description' })).toBeVisible()
+		await expect(page.getByRole('combobox', { name: 'Select category' })).toBeVisible()
+		await expect(page.getByRole('combobox', { name: 'Select channel' })).toBeVisible()
+		await expect(page.getByRole('combobox', { name: 'Search client' })).toBeVisible()
+		await expect(page.getByRole('button', { name: 'Create' })).toBeDisabled()
+	})
 })
 
 test.describe('Surveys page', () => {
 
-	test('renders list view with correct controls', async ({ page }) => {
+	test('renders with heading and create button', async ({ page }) => {
 		await page.goto('/apps/pipelinq/surveys')
-		await expect(page.getByRole('radio', { name: 'Table' })).toBeChecked({ timeout: 10000 })
-		await expect(page.getByRole('button', { name: 'Add Item' })).toBeVisible()
-		await expect(page.getByRole('button', { name: 'Actions' })).toBeVisible()
+		await expect(page.getByRole('heading', { name: 'Surveys', level: 2 })).toBeVisible({ timeout: 10000 })
+		await expect(page.getByRole('button', { name: 'New Survey' })).toBeVisible()
+	})
+
+	test('new survey form has correct fields', async ({ page }) => {
+		await page.goto('/apps/pipelinq/surveys/new')
+		await expect(page.getByRole('textbox', { name: 'Title' })).toBeVisible({ timeout: 10000 })
+		await expect(page.getByRole('textbox', { name: 'Description' })).toBeVisible()
+		await expect(page.getByRole('button', { name: /Add Question/i })).toBeVisible()
+		await expect(page.getByRole('button', { name: 'Save' })).toBeVisible()
+		await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible()
 	})
 })
 
 test.describe('Queues page', () => {
 
-	test('renders list view with correct controls', async ({ page }) => {
+	test('renders with heading and create button', async ({ page }) => {
 		await page.goto('/apps/pipelinq/queues')
-		await expect(page.getByRole('radio', { name: 'Table' })).toBeChecked({ timeout: 10000 })
-		await expect(page.getByRole('button', { name: 'Add Item' })).toBeVisible()
-		await expect(page.getByRole('button', { name: 'Actions' })).toBeVisible()
+		await expect(page.getByRole('heading', { name: 'Queues', level: 2 })).toBeVisible({ timeout: 10000 })
+		await expect(page.getByRole('button', { name: 'Add queue' })).toBeVisible()
+	})
+
+	test('Add queue opens modal with correct fields', async ({ page }) => {
+		await page.goto('/apps/pipelinq/queues')
+		await page.getByRole('button', { name: 'Add queue' }).click()
+		await expect(page.getByRole('heading', { name: 'Create queue' })).toBeVisible({ timeout: 5000 })
+		await expect(page.getByPlaceholder('Queue name')).toBeVisible()
+		await expect(page.getByPlaceholder('Optional description')).toBeVisible()
+		await expect(page.getByRole('button', { name: 'Create' })).toBeVisible()
+		await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible()
 	})
 })
 
 test.describe('Kennisbank page', () => {
 
-	test('renders knowledge base home', async ({ page }) => {
+	test('renders knowledge base with search and categories', async ({ page }) => {
 		await page.goto('/apps/pipelinq/kennisbank')
-		// Kennisbank has its own layout, not CnIndexPage
-		await expect(page.locator('main')).toBeVisible({ timeout: 10000 })
+		await expect(page.getByRole('heading', { name: 'Knowledge Base', level: 2 })).toBeVisible({ timeout: 10000 })
+		await expect(page.getByPlaceholder('Search articles')).toBeVisible()
+		await expect(page.getByRole('button', { name: 'New Article' })).toBeVisible()
+	})
+
+	test('new article form has correct fields', async ({ page }) => {
+		await page.goto('/apps/pipelinq/kennisbank/articles/new')
+		await expect(page.getByRole('heading', { name: 'New Article', level: 2 })).toBeVisible({ timeout: 10000 })
+		await expect(page.getByRole('textbox', { name: 'Title' })).toBeVisible()
+		await expect(page.getByRole('textbox', { name: /Summary/i })).toBeVisible()
+		await expect(page.getByPlaceholder(/Markdown/i)).toBeVisible()
+		await expect(page.getByRole('button', { name: 'Publish' })).toBeVisible()
+		await expect(page.getByRole('button', { name: 'Save as draft' })).toBeVisible()
 	})
 })
 
 test.describe('Reporting page', () => {
 
-	test('renders reporting dashboard', async ({ page }) => {
+	test('renders reporting dashboard with KPIs', async ({ page }) => {
 		await page.goto('/apps/pipelinq/rapportage')
-		await expect(page.locator('main')).toBeVisible({ timeout: 10000 })
+		await expect(page.getByRole('heading', { name: 'Reporting Dashboard', level: 2 })).toBeVisible({ timeout: 10000 })
+		await expect(page.getByRole('button', { name: 'Export CSV' })).toBeVisible()
+		await expect(page.getByText('Contacts today')).toBeVisible()
+		await expect(page.getByText('SLA compliance')).toBeVisible()
+	})
+
+	test('has analytics tabs', async ({ page }) => {
+		await page.goto('/apps/pipelinq/rapportage')
+		await expect(page.getByRole('button', { name: 'Channel Analytics' })).toBeVisible({ timeout: 10000 })
+		await expect(page.getByRole('button', { name: 'Agent Performance' })).toBeVisible()
+	})
+})
+
+test.describe('Pipelines settings page', () => {
+
+	test('renders with heading and create button', async ({ page }) => {
+		await page.goto('/apps/pipelinq/pipelines')
+		await expect(page.getByRole('heading', { name: 'Pipelines' })).toBeVisible({ timeout: 10000 })
+		await expect(page.getByRole('button', { name: 'Add pipeline' })).toBeVisible()
+	})
+
+	test('shows empty state prompting pipeline creation', async ({ page }) => {
+		await page.goto('/apps/pipelinq/pipelines')
+		await expect(page.getByText('No pipelines configured')).toBeVisible({ timeout: 10000 })
+		await expect(page.getByRole('button', { name: 'Create first pipeline' })).toBeVisible()
 	})
 })
