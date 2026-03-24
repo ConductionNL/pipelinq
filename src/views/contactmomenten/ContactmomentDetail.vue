@@ -299,6 +299,7 @@ export default {
 		sidebarProps() {
 			const config = this.objectStore.objectTypeRegistry.contactmoment || {}
 			return {
+				title: t('pipelinq', 'Contactmoment'),
 				register: config.register || '',
 				schema: config.schema || '',
 			}

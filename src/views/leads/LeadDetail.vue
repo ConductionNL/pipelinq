@@ -217,6 +217,7 @@ export default {
 		sidebarProps() {
 			const config = this.objectStore.objectTypeRegistry.lead || {}
 			return {
+				title: t('pipelinq', 'Lead'),
 				register: config.register || '',
 				schema: config.schema || '',
 				hiddenTabs: ['tasks'],
