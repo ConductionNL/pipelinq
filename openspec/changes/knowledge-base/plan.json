@@ -11,7 +11,7 @@
       "spec_ref": "specs.md#delta-1",
       "acceptance_criteria": ["Single clean component renders without errors", "Uses Pinia kennisbank store", "Search, autocomplete, category filter work"],
       "files_likely_affected": ["src/views/kennisbank/KennisbankHome.vue"],
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": 2,
@@ -21,7 +21,7 @@
       "spec_ref": "specs.md#delta-2",
       "acceptance_criteria": ["Component renders article data with proper badges", "Click handling works", "Search query highlighting"],
       "files_likely_affected": ["src/components/kennisbank/ArticleListItem.vue"],
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": 3,
@@ -31,7 +31,7 @@
       "spec_ref": "specs.md#delta-3",
       "acceptance_criteria": ["Hierarchical categories render with counts", "Selection state works", "Expand/collapse for nested nodes"],
       "files_likely_affected": ["src/components/kennisbank/CategoryTree.vue", "src/components/kennisbank/CategoryTreeNode.vue"],
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": 4,
@@ -41,7 +41,7 @@
       "spec_ref": "specs.md#delta-4",
       "acceptance_criteria": ["Feedback submission works via store", "Summary shows aggregated data"],
       "files_likely_affected": ["src/components/kennisbank/ArticleFeedback.vue", "src/components/kennisbank/FeedbackSummary.vue"],
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": 5,
@@ -51,7 +51,7 @@
       "spec_ref": "specs.md#delta-7",
       "acceptance_criteria": ["Article loads from store", "Markdown renders with markdown-it", "Feedback works"],
       "files_likely_affected": ["src/views/kennisbank/ArticleDetail.vue"],
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": 6,
@@ -61,7 +61,7 @@
       "spec_ref": "specs.md#delta-8",
       "acceptance_criteria": ["Create/edit articles via store", "Preview renders with markdown-it", "Duplicate title warning"],
       "files_likely_affected": ["src/views/kennisbank/ArticleEditor.vue"],
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": 7,
@@ -71,7 +71,7 @@
       "spec_ref": "specs.md#delta-9",
       "acceptance_criteria": ["Full CRUD for categories via store", "Parent category selector"],
       "files_likely_affected": ["src/views/kennisbank/CategoryManager.vue"],
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": 8,
@@ -81,7 +81,7 @@
       "spec_ref": "specs.md#delta-10",
       "acceptance_criteria": ["phpunit --filter PublicKennisbankControllerTest passes with 0 errors"],
       "files_likely_affected": ["tests/Unit/Controller/PublicKennisbankControllerTest.php"],
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": 9,
@@ -91,7 +91,7 @@
       "spec_ref": "specs.md#delta-11",
       "acceptance_criteria": ["phpunit --filter KennisbankReviewJobTest passes with 0 errors"],
       "files_likely_affected": ["tests/Unit/BackgroundJob/KennisbankReviewJobTest.php"],
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": 10,
@@ -101,7 +101,7 @@
       "spec_ref": "specs.md#delta-11",
       "acceptance_criteria": ["5+ test methods", "All pass"],
       "files_likely_affected": ["tests/Unit/Service/KennisbankServiceTest.php"],
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": 11,
@@ -111,7 +111,7 @@
       "spec_ref": "specs.md#delta-12",
       "acceptance_criteria": ["3+ test methods", "All pass"],
       "files_likely_affected": ["tests/Unit/Controller/KennisbankControllerTest.php"],
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": 12,
@@ -121,7 +121,7 @@
       "spec_ref": "specs.md#quality",
       "acceptance_criteria": ["All quality checks pass"],
       "files_likely_affected": [],
-      "status": "todo"
+      "status": "done"
     }
   ]
 }
