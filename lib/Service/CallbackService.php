@@ -23,6 +23,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCP\IGroupManager;
 use OCP\IUserSession;
+use DateTime;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -48,10 +49,10 @@ class CallbackService
      * @var array<string, array<string>>
      */
     public const ALLOWED_TRANSITIONS = [
-        'open'            => ['in_behandeling'],
-        'in_behandeling'  => ['afgerond', 'verlopen'],
-        'afgerond'        => ['open'],
-        'verlopen'        => ['open'],
+        'open'           => ['in_behandeling'],
+        'in_behandeling' => ['afgerond', 'verlopen'],
+        'afgerond'       => ['open'],
+        'verlopen'       => ['open'],
     ];
 
     /**
@@ -89,15 +90,18 @@ class CallbackService
      *
      * @return array<string, mixed> The modified task data with the new attempt.
      */
-    public function addAttempt(array $taskData, string $result, string $notes = ''): array
+    public function addAttempt(array $taskData, string $result, string $notes=''): array
     {
         $attempts = $taskData['attempts'] ?? [];
 
-        $user = $this->userSession->getUser();
-        $agentUserId = $user !== null ? $user->getUID() : 'system';
+        $user        = $this->userSession->getUser();
+        $agentUserId = 'system';
+        if ($user !== null) {
+            $agentUserId = $user->getUID();
+        }
 
         $attempts[] = [
-            'timestamp'   => (new \DateTime())->format(\DateTime::ATOM),
+            'timestamp'   => (new DateTime())->format(DateTime::ATOM),
             'result'      => $result,
             'notes'       => $notes,
             'agentUserId' => $agentUserId,
@@ -119,7 +123,7 @@ class CallbackService
      */
     public function isAttemptThresholdReached(array $taskData): bool
     {
-        $attempts = $taskData['attempts'] ?? [];
+        $attempts          = $taskData['attempts'] ?? [];
         $unsuccessfulCount = 0;
 
         foreach ($attempts as $attempt) {
@@ -236,7 +240,7 @@ class CallbackService
     public function applyCompletion(array $taskData, string $resultText): array
     {
         $taskData['status']      = 'afgerond';
-        $taskData['completedAt'] = (new \DateTime())->format(\DateTime::ATOM);
+        $taskData['completedAt'] = (new DateTime())->format(DateTime::ATOM);
         $taskData['resultText']  = $resultText;
 
         return $taskData;
@@ -256,10 +260,12 @@ class CallbackService
         if ($assigneeType === 'user') {
             $taskData['assigneeUserId']  = $assignee;
             $taskData['assigneeGroupId'] = null;
-        } else {
-            $taskData['assigneeGroupId'] = $assignee;
-            $taskData['assigneeUserId']  = null;
+
+            return $taskData;
         }
+
+        $taskData['assigneeGroupId'] = $assignee;
+        $taskData['assigneeUserId']  = null;
 
         return $taskData;
     }//end applyReassignment()

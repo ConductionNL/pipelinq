@@ -87,7 +87,7 @@ class CallbackController extends Controller
 
         try {
             // Build task data stub — in production, fetch from OpenRegister.
-            $taskData = $this->getTaskStub($id);
+            $taskData = $this->getTaskStub(id: $id);
             if ($taskData === null) {
                 return new JSONResponse(
                     ['error' => $this->l10n->t('Task not found')],
@@ -95,21 +95,23 @@ class CallbackController extends Controller
                 );
             }
 
-            $taskData = $this->callbackService->addAttempt($taskData, $result, $notes);
+            $taskData     = $this->callbackService->addAttempt($taskData, $result, $notes);
             $suggestClose = $this->callbackService->isAttemptThresholdReached($taskData);
 
-            return new JSONResponse([
-                'task'         => $taskData,
-                'suggestClose' => $suggestClose,
-                'attemptCount' => count($taskData['attempts'] ?? []),
-            ]);
+            return new JSONResponse(
+                    [
+                        'task'         => $taskData,
+                        'suggestClose' => $suggestClose,
+                        'attemptCount' => count($taskData['attempts'] ?? []),
+                    ]
+                    );
         } catch (\Exception $e) {
             $this->logger->error('CallbackController::attempt failed', ['exception' => $e->getMessage()]);
             return new JSONResponse(
                 ['error' => $this->l10n->t('Failed to log callback attempt')],
                 Http::STATUS_INTERNAL_SERVER_ERROR
             );
-        }
+        }//end try
     }//end attempt()
 
     /**
@@ -122,7 +124,7 @@ class CallbackController extends Controller
     public function claim(string $id): JSONResponse
     {
         try {
-            $taskData = $this->getTaskStub($id);
+            $taskData = $this->getTaskStub(id: $id);
             if ($taskData === null) {
                 return new JSONResponse(
                     ['error' => $this->l10n->t('Task not found')],
@@ -147,7 +149,7 @@ class CallbackController extends Controller
                 ['error' => $this->l10n->t('Failed to claim task')],
                 Http::STATUS_INTERNAL_SERVER_ERROR
             );
-        }
+        }//end try
     }//end claim()
 
     /**
@@ -162,7 +164,7 @@ class CallbackController extends Controller
         $resultText = $this->request->getParam('resultText', '');
 
         try {
-            $taskData = $this->getTaskStub($id);
+            $taskData = $this->getTaskStub(id: $id);
             if ($taskData === null) {
                 return new JSONResponse(
                     ['error' => $this->l10n->t('Task not found')],
@@ -187,8 +189,12 @@ class CallbackController extends Controller
             // Notify the creating agent about completion.
             $createdBy = $taskData['createdBy'] ?? '';
             if (empty($createdBy) === false) {
-                $user = $this->userSession->getUser();
-                $author = $user !== null ? $user->getUID() : 'system';
+                $user   = $this->userSession->getUser();
+                $author = 'system';
+                if ($user !== null) {
+                    $author = $user->getUID();
+                }
+
                 $this->notificationService->notifyTaskCompleted(
                     $taskData['subject'] ?? '',
                     $resultText,
@@ -205,7 +211,7 @@ class CallbackController extends Controller
                 ['error' => $this->l10n->t('Failed to complete task')],
                 Http::STATUS_INTERNAL_SERVER_ERROR
             );
-        }
+        }//end try
     }//end complete()
 
     /**
@@ -228,7 +234,7 @@ class CallbackController extends Controller
         }
 
         try {
-            $taskData = $this->getTaskStub($id);
+            $taskData = $this->getTaskStub(id: $id);
             if ($taskData === null) {
                 return new JSONResponse(
                     ['error' => $this->l10n->t('Task not found')],
@@ -243,8 +249,12 @@ class CallbackController extends Controller
 
             // Notify the new assignee if it's a user.
             if ($assigneeType === 'user') {
-                $user = $this->userSession->getUser();
-                $author = $user !== null ? $user->getUID() : 'system';
+                $user   = $this->userSession->getUser();
+                $author = 'system';
+                if ($user !== null) {
+                    $author = $user->getUID();
+                }
+
                 $this->notificationService->notifyTaskReassigned(
                     $taskData['subject'] ?? '',
                     $assignee,
@@ -261,7 +271,7 @@ class CallbackController extends Controller
                 ['error' => $this->l10n->t('Failed to reassign task')],
                 Http::STATUS_INTERNAL_SERVER_ERROR
             );
-        }
+        }//end try
     }//end reassign()
 
     /**
@@ -288,15 +298,15 @@ class CallbackController extends Controller
         // GET /api/registers/{register}/schemas/{schema}/objects/{id}
         // For now, return a stub indicating the task exists.
         return [
-            'id'             => $id,
-            'status'         => 'open',
-            'type'           => 'terugbelverzoek',
-            'subject'        => '',
-            'attempts'       => [],
-            'assigneeUserId' => null,
+            'id'              => $id,
+            'status'          => 'open',
+            'type'            => 'terugbelverzoek',
+            'subject'         => '',
+            'attempts'        => [],
+            'assigneeUserId'  => null,
             'assigneeGroupId' => null,
-            'createdBy'      => '',
-            'deadline'       => '',
+            'createdBy'       => '',
+            'deadline'        => '',
         ];
     }//end getTaskStub()
 }//end class

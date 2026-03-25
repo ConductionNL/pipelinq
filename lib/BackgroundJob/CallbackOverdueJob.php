@@ -70,8 +70,8 @@ class CallbackOverdueJob extends TimedJob
         private NotificationService $notificationService,
         private LoggerInterface $logger,
     ) {
-        parent::__construct($time);
-        $this->setInterval(self::INTERVAL);
+        parent::__construct(time: $time);
+        $this->setInterval(interval: self::INTERVAL);
     }//end __construct()
 
     /**
@@ -99,7 +99,6 @@ class CallbackOverdueJob extends TimedJob
         // - deadline < NOW()
         // For each overdue task, it checks the notification cooldown and
         // sends a reminder via NotificationService.
-
         $this->logger->info('CallbackOverdueJob: completed overdue check cycle');
     }//end run()
 
@@ -112,7 +111,7 @@ class CallbackOverdueJob extends TimedJob
      */
     public function wasRecentlyNotified(string $taskId): bool
     {
-        $key = self::NOTIFIED_KEY_PREFIX . $taskId;
+        $key          = self::NOTIFIED_KEY_PREFIX.$taskId;
         $lastNotified = $this->appConfig->getValueString(Application::APP_ID, $key, '');
 
         if ($lastNotified === '') {
@@ -120,7 +119,7 @@ class CallbackOverdueJob extends TimedJob
         }
 
         $lastTime = (int) $lastNotified;
-        $now = time();
+        $now      = time();
 
         return ($now - $lastTime) < self::NOTIFICATION_COOLDOWN;
     }//end wasRecentlyNotified()
@@ -134,7 +133,7 @@ class CallbackOverdueJob extends TimedJob
      */
     public function markNotified(string $taskId): void
     {
-        $key = self::NOTIFIED_KEY_PREFIX . $taskId;
+        $key = self::NOTIFIED_KEY_PREFIX.$taskId;
         $this->appConfig->setValueString(Application::APP_ID, $key, (string) time());
     }//end markNotified()
 }//end class
