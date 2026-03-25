@@ -13,8 +13,8 @@
 - **Spec ref**: REQ-KL-010
 - **Files**: `lib/BackgroundJob/ComplaintSlaJob.php`
 - **Acceptance**: Job runs periodically, checks open complaints for SLA violations, logs overdue
-- [ ] Create `ComplaintSlaJob` extending `TimedJob`
-- [ ] Register in `appinfo/info.xml` background-jobs section
+- [x] Create `ComplaintSlaJob` extending `TimedJob`
+- [x] Register in `appinfo/info.xml` background-jobs section
 
 ## Section 2: Unit Tests
 
