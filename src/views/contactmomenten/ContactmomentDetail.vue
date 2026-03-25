@@ -130,8 +130,8 @@
 				<NcButton @click="showDeleteDialog = false">
 					{{ t('pipelinq', 'Cancel') }}
 				</NcButton>
-				<NcButton type="error" @click="confirmDelete">
-					{{ t('pipelinq', 'Delete') }}
+				<NcButton type="error" :disabled="deleting" @click="confirmDelete">
+					{{ deleting ? t('pipelinq', 'Deleting...') : t('pipelinq', 'Delete') }}
 				</NcButton>
 			</template>
 		</NcDialog>
@@ -139,8 +139,10 @@
 </template>
 
 <script>
+import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcDialog } from '@nextcloud/vue'
-import { showError } from '@nextcloud/dialogs'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import ContactmomentQuickLog from '../../components/ContactmomentQuickLog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
@@ -176,6 +178,7 @@ export default {
 		return {
 			editing: false,
 			showDeleteDialog: false,
+			deleting: false,
 			clientData: null,
 			requestData: null,
 		}
@@ -287,13 +290,25 @@ export default {
 		},
 
 		async confirmDelete() {
-			this.showDeleteDialog = false
-			const success = await this.objectStore.deleteObject('contactmoment', this.contactmomentId)
-			if (success) {
+			this.deleting = true
+			try {
+				await axios.delete(
+					generateUrl('/apps/pipelinq/api/contactmomenten/{id}', { id: this.contactmomentId }),
+				)
+				showSuccess(t('pipelinq', 'Contactmoment deleted'))
 				this.$router.push({ name: 'Contactmomenten' })
-			} else {
-				const error = this.objectStore.getError('contactmoment')
-				showError(error?.message || t('pipelinq', 'Failed to delete contactmoment.'))
+			} catch (error) {
+				const status = error?.response?.status
+				if (status === 403) {
+					showError(t('pipelinq', 'You do not have permission to delete this contactmoment'))
+				} else if (status === 404) {
+					showError(t('pipelinq', 'Contactmoment not found'))
+				} else {
+					showError(error?.response?.data?.error || t('pipelinq', 'Failed to delete contactmoment'))
+				}
+			} finally {
+				this.deleting = false
+				this.showDeleteDialog = false
 			}
 		},
 	},
