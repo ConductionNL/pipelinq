@@ -239,3 +239,47 @@ The system MUST add "Contactmomenten" as a top-level navigation item in the Pipe
 
 - **WHEN** there are unresolved contactmomenten (no outcome set) assigned to the current user today
 - **THEN** the navigation item MUST display a count badge with the number of unresolved items
+
+---
+
+### Requirement: ContactmomentService Backend
+
+The system MUST provide a `ContactmomentService` PHP service that handles permission-checked deletion of contactmomenten.
+
+**Feature tier**: MVP
+
+#### Scenario: Delete by creating agent
+
+- **WHEN** the agent who created a contactmoment requests deletion
+- **THEN** the service MUST delete the contactmoment from OpenRegister
+- AND return success
+
+#### Scenario: Delete by admin
+
+- **WHEN** an admin user requests deletion of any contactmoment
+- **THEN** the service MUST delete the contactmoment regardless of agent
+- AND return success
+
+#### Scenario: Delete by non-creator non-admin rejected
+
+- **WHEN** a user who is not the creating agent and not an admin requests deletion
+- **THEN** the service MUST throw an exception with HTTP 403
+- AND the contactmoment MUST NOT be deleted
+
+---
+
+### Requirement: ContactmomentController API
+
+The system MUST provide a `ContactmomentController` with a delete endpoint at `DELETE /api/contactmomenten/{id}`.
+
+**Feature tier**: MVP
+
+#### Scenario: Delete endpoint returns 200 on success
+
+- **WHEN** an authorized user calls `DELETE /api/contactmomenten/{id}`
+- **THEN** the controller MUST return HTTP 200 with `{ "success": true }`
+
+#### Scenario: Delete endpoint returns 403 on unauthorized
+
+- **WHEN** a non-authorized user calls `DELETE /api/contactmomenten/{id}`
+- **THEN** the controller MUST return HTTP 403 with error message
