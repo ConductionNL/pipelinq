@@ -39,5 +39,5 @@
 - **Spec ref**: REQ-KL-007
 - **Files**: `src/views/clients/ClientDetail.vue`
 - **Acceptance**: Client detail shows complaint history with links
-- [ ] Verify or add complaints section to client detail view
-- [ ] Add "Register complaint" button linking to complaint form with pre-linked client
+- [x] Verify or add complaints section to client detail view
+- [x] Add "Register complaint" button linking to complaint form with pre-linked client
