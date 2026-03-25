@@ -1,0 +1,110 @@
+{
+  "change": "contactmomenten",
+  "repo": "ConductionNL/pipelinq",
+  "tracking_issue": 166,
+  "parent_issue": 65,
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Create ContactmomentService with permission-checked delete",
+      "section": "Backend Service and Controller",
+      "github_issue": 141,
+      "spec_ref": "openspec/changes/contactmomenten/specs/contactmomenten/spec.md#ContactmomentService Backend",
+      "acceptance_criteria": [
+        "Delete by creating agent succeeds",
+        "Delete by admin succeeds",
+        "Delete by non-creator non-admin throws NotPermittedException"
+      ],
+      "files_likely_affected": ["lib/Service/ContactmomentService.php"],
+      "status": "todo"
+    },
+    {
+      "id": "1.2",
+      "title": "Create ContactmomentController with destroy action",
+      "section": "Backend Service and Controller",
+      "github_issue": 144,
+      "spec_ref": "openspec/changes/contactmomenten/specs/contactmomenten/spec.md#ContactmomentController API",
+      "acceptance_criteria": [
+        "DELETE /api/contactmomenten/{id} returns 200 on success",
+        "Returns 403 on unauthorized"
+      ],
+      "files_likely_affected": ["lib/Controller/ContactmomentController.php"],
+      "status": "todo"
+    },
+    {
+      "id": "1.3",
+      "title": "Add delete route to routes.php",
+      "section": "Backend Service and Controller",
+      "github_issue": 146,
+      "spec_ref": "openspec/changes/contactmomenten/specs/contactmomenten/spec.md#ContactmomentController API",
+      "acceptance_criteria": ["Route exists mapping to ContactmomentController#destroy"],
+      "files_likely_affected": ["appinfo/routes.php"],
+      "status": "todo"
+    },
+    {
+      "id": "1.4",
+      "title": "Create ContactmomentServiceTest",
+      "section": "Backend Service and Controller",
+      "github_issue": 148,
+      "acceptance_criteria": ["3+ test methods covering delete scenarios"],
+      "files_likely_affected": ["tests/Unit/Service/ContactmomentServiceTest.php"],
+      "status": "todo"
+    },
+    {
+      "id": "1.5",
+      "title": "Create ContactmomentControllerTest",
+      "section": "Backend Service and Controller",
+      "github_issue": 151,
+      "acceptance_criteria": ["3+ test methods covering destroy scenarios"],
+      "files_likely_affected": ["tests/Unit/Controller/ContactmomentControllerTest.php"],
+      "status": "todo"
+    },
+    {
+      "id": "2.1",
+      "title": "Fix router to use ContactmomentenList",
+      "section": "Fix Frontend Data Flow",
+      "github_issue": 152,
+      "spec_ref": "openspec/changes/contactmomenten/specs/contactmomenten/spec.md#Correct List View Routing",
+      "acceptance_criteria": ["Router imports ContactmomentenList for /contactmomenten"],
+      "files_likely_affected": ["src/router/index.js"],
+      "status": "todo"
+    },
+    {
+      "id": "2.2",
+      "title": "Wire ContactmomentForm save to object store",
+      "section": "Fix Frontend Data Flow",
+      "github_issue": 154,
+      "spec_ref": "openspec/changes/contactmomenten/specs/contactmomenten/spec.md#Form Persists to OpenRegister",
+      "acceptance_criteria": ["Form calls objectStore.saveObject on submit", "Error handling displays messages"],
+      "files_likely_affected": ["src/views/contactmomenten/ContactmomentForm.vue"],
+      "status": "todo"
+    },
+    {
+      "id": "2.3",
+      "title": "Wire ContactmomentDetail delete to backend API",
+      "section": "Fix Frontend Data Flow",
+      "github_issue": 156,
+      "acceptance_criteria": ["Delete calls DELETE /api/contactmomenten/{id}"],
+      "files_likely_affected": ["src/views/contactmomenten/ContactmomentDetail.vue"],
+      "status": "todo"
+    },
+    {
+      "id": "2.4",
+      "title": "Remove unused ContactmomentList.vue",
+      "section": "Fix Frontend Data Flow",
+      "github_issue": 157,
+      "acceptance_criteria": ["File deleted, no remaining imports"],
+      "files_likely_affected": ["src/views/contactmomenten/ContactmomentList.vue"],
+      "status": "todo"
+    },
+    {
+      "id": "3.1",
+      "title": "Quality checks and build verification",
+      "section": "Quality and Cleanup",
+      "github_issue": 159,
+      "acceptance_criteria": ["php -l passes", "npm run build succeeds"],
+      "files_likely_affected": [],
+      "status": "todo"
+    }
+  ]
+}

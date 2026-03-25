@@ -240,3 +240,46 @@ The admin settings MUST allow configuring SLA response times per complaint categ
 - GIVEN no SLA is configured for category "other"
 - WHEN a complaint with category "other" is created
 - THEN no `slaDeadline` MUST be set (no deadline tracking)
+
+---
+
+### REQ-KL-009: Backend SLA Deadline Service
+
+A PHP service MUST calculate SLA deadlines and provide SLA configuration helpers for backend use.
+
+#### Scenario: Calculate deadline from category config
+
+- GIVEN category "service" has 48 SLA hours configured
+- WHEN `calculateDeadline('service')` is called
+- THEN a DateTimeImmutable 48 hours from now MUST be returned
+
+#### Scenario: No deadline for unconfigured category
+
+- GIVEN category "other" has no SLA hours configured
+- WHEN `calculateDeadline('other')` is called
+- THEN null MUST be returned
+
+#### Scenario: Overdue detection
+
+- GIVEN an open complaint with slaDeadline in the past
+- WHEN `isOverdue()` is called
+- THEN true MUST be returned
+- AND for resolved/rejected complaints, false MUST be returned regardless of deadline
+
+---
+
+### REQ-KL-010: Background Job for SLA Monitoring
+
+A timed background job MUST periodically check for overdue complaints and log warnings.
+
+#### Scenario: Job runs when configured
+
+- GIVEN register and complaint_schema are configured
+- WHEN the ComplaintSlaJob runs
+- THEN it MUST log start and completion messages
+
+#### Scenario: Job skips when not configured
+
+- GIVEN register or complaint_schema is empty
+- WHEN the ComplaintSlaJob runs
+- THEN it MUST skip processing with a debug log message
