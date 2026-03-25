@@ -15,7 +15,7 @@ import ProductDetail from '../views/products/ProductDetail.vue'
 import ComplaintList from '../views/complaints/ComplaintList.vue'
 import ComplaintDetail from '../views/complaints/ComplaintDetail.vue'
 import PipelineBoard from '../views/pipeline/PipelineBoard.vue'
-import ContactmomentList from '../views/contactmomenten/ContactmomentList.vue'
+import ContactmomentenList from '../views/contactmomenten/ContactmomentenList.vue'
 import ContactmomentDetail from '../views/contactmomenten/ContactmomentDetail.vue'
 import ContactmomentForm from '../views/contactmomenten/ContactmomentForm.vue'
 import TaskList from '../views/tasks/TaskList.vue'
@@ -62,7 +62,7 @@ export default new Router({
 		{ path: '/contacts/:id', name: 'ContactDetail', component: ContactDetail, props: route => ({ contactId: route.params.id }) },
 		{ path: '/leads', name: 'Leads', component: LeadList },
 		{ path: '/leads/:id', name: 'LeadDetail', component: LeadDetail, props: route => ({ leadId: route.params.id }) },
-		{ path: '/contactmomenten', name: 'Contactmomenten', component: ContactmomentList },
+		{ path: '/contactmomenten', name: 'Contactmomenten', component: ContactmomentenList },
 		{ path: '/contactmomenten/new', name: 'ContactmomentNew', component: ContactmomentForm },
 		{ path: '/contactmomenten/:id', name: 'ContactmomentDetail', component: ContactmomentDetail, props: route => ({ contactmomentId: route.params.id }) },
 		{ path: '/tasks', name: 'Tasks', component: TaskList },
