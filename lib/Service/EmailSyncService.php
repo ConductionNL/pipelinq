@@ -135,7 +135,11 @@ class EmailSyncService
 
         $accounts = json_decode($value, true);
 
-        return is_array($accounts) ? $accounts : [];
+        if (is_array($accounts) === true) {
+            return $accounts;
+        }
+
+        return [];
     }//end getSyncAccounts()
 
     /**
@@ -148,18 +152,24 @@ class EmailSyncService
      */
     public function setSyncEnabled(string $userId, bool $enabled): void
     {
+        if ($enabled === true) {
+            $value = 'true';
+        } else {
+            $value = 'false';
+        }
+
         $this->config->setUserValue(
             $userId,
             'pipelinq',
             'email_sync_enabled',
-            $enabled ? 'true' : 'false',
+            $value,
         );
     }//end setSyncEnabled()
 
     /**
      * Set the mail accounts to sync for a user.
      *
-     * @param string    $userId   The user ID.
+     * @param string     $userId   The user ID.
      * @param array<int> $accounts Array of mail account IDs.
      *
      * @return void
@@ -190,7 +200,11 @@ class EmailSyncService
             '',
         );
 
-        return $value !== '' ? $value : null;
+        if ($value !== '') {
+            return $value;
+        }
+
+        return null;
     }//end getLastSyncTime()
 
     /**
@@ -235,22 +249,22 @@ class EmailSyncService
         string $linkedEntityType,
         string $linkedEntityId,
         string $direction,
-        ?string $threadId = null,
-        ?string $syncSource = null,
+        ?string $threadId=null,
+        ?string $syncSource=null,
     ): array {
         return [
-            'messageId' => $messageId,
-            'subject' => $subject,
-            'sender' => $sender,
-            'recipients' => $recipients,
-            'date' => $date,
-            'threadId' => $threadId,
+            'messageId'        => $messageId,
+            'subject'          => $subject,
+            'sender'           => $sender,
+            'recipients'       => $recipients,
+            'date'             => $date,
+            'threadId'         => $threadId,
             'linkedEntityType' => $linkedEntityType,
-            'linkedEntityId' => $linkedEntityId,
-            'direction' => $direction,
-            'syncSource' => $syncSource,
-            'excluded' => false,
-            'deleted' => false,
+            'linkedEntityId'   => $linkedEntityId,
+            'direction'        => $direction,
+            'syncSource'       => $syncSource,
+            'excluded'         => false,
+            'deleted'          => false,
         ];
     }//end buildEmailLinkData()
 }//end class

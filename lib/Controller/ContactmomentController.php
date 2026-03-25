@@ -39,10 +39,10 @@ class ContactmomentController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest              $request              The request.
-     * @param ContactmomentService  $contactmomentService The contactmoment service.
-     * @param IUserSession          $userSession          The user session.
-     * @param IL10N                 $l10n                 The localization service.
+     * @param IRequest             $request              The request.
+     * @param ContactmomentService $contactmomentService The contactmoment service.
+     * @param IUserSession         $userSession          The user session.
+     * @param IL10N                $l10n                 The localization service.
      */
     public function __construct(
         IRequest $request,
@@ -95,6 +95,6 @@ class ContactmomentController extends Controller
                 ['error' => $e->getMessage()],
                 500
             );
-        }
+        }//end try
     }//end destroy()
 }//end class
