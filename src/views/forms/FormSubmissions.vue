@@ -44,7 +44,9 @@
 					</td>
 					<td>{{ sub.contactId || '-' }}</td>
 					<td>{{ sub.leadId || '-' }}</td>
-					<td class="data-cell">{{ formatData(sub.data) }}</td>
+					<td class="data-cell">
+						{{ formatData(sub.data) }}
+					</td>
 				</tr>
 			</tbody>
 		</table>

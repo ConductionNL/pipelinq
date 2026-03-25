@@ -74,9 +74,15 @@
 		<NcDialog v-if="embedDialog" :name="t('pipelinq', 'Embed Code')" @closing="embedDialog = false">
 			<div class="embed-content">
 				<h4>{{ t('pipelinq', 'iframe') }}</h4>
-				<textarea readonly class="embed-code" :value="embedCode.iframe" @click="$event.target.select()" />
+				<textarea readonly
+					class="embed-code"
+					:value="embedCode.iframe"
+					@click="$event.target.select()" />
 				<h4>{{ t('pipelinq', 'JavaScript') }}</h4>
-				<textarea readonly class="embed-code" :value="embedCode.js" @click="$event.target.select()" />
+				<textarea readonly
+					class="embed-code"
+					:value="embedCode.js"
+					@click="$event.target.select()" />
 			</div>
 		</NcDialog>
 	</div>

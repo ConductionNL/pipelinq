@@ -41,8 +41,12 @@
 				<div class="form-col">
 					<label>{{ t('pipelinq', 'Visibility') }}</label>
 					<select v-model="form.visibility" class="form-select">
-						<option value="intern">{{ t('pipelinq', 'Internal (agents only)') }}</option>
-						<option value="openbaar">{{ t('pipelinq', 'Public (citizen-facing)') }}</option>
+						<option value="intern">
+							{{ t('pipelinq', 'Internal (agents only)') }}
+						</option>
+						<option value="openbaar">
+							{{ t('pipelinq', 'Public (citizen-facing)') }}
+						</option>
 					</select>
 				</div>
 				<div class="form-col">

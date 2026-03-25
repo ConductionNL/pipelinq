@@ -69,13 +69,11 @@ export const useKennisbankStore = defineStore('kennisbank', {
 		},
 		async fetchArticle(id) {
 			this.loading = true; this.error = null
-			try { const u = this._getApiUrl('kennisartikel', id); if (!u) return null; const d = await this._fetch(u); this.currentArticle = d; this._addToRecentlyViewed(id, d.title); return d }
-			catch (e) { this.error = e.message; return null } finally { this.loading = false }
+			try { const u = this._getApiUrl('kennisartikel', id); if (!u) return null; const d = await this._fetch(u); this.currentArticle = d; this._addToRecentlyViewed(id, d.title); return d } catch (e) { this.error = e.message; return null } finally { this.loading = false }
 		},
 		async createArticle(data) {
 			this.loading = true; this.error = null
-			try { const u = this._getApiUrl('kennisartikel'); if (!u) return null; return await this._fetch(u, { method: 'POST', body: JSON.stringify({ ...data, status: data.status || 'concept', version: 1, author: OC.currentUser, lastUpdatedBy: OC.currentUser }) }) }
-			catch (e) { this.error = e.message; return null } finally { this.loading = false }
+			try { const u = this._getApiUrl('kennisartikel'); if (!u) return null; return await this._fetch(u, { method: 'POST', body: JSON.stringify({ ...data, status: data.status || 'concept', version: 1, author: OC.currentUser, lastUpdatedBy: OC.currentUser }) }) } catch (e) { this.error = e.message; return null } finally { this.loading = false }
 		},
 		async updateArticle(id, data) {
 			this.loading = true; this.error = null

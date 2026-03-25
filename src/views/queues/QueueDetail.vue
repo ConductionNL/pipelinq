@@ -6,7 +6,7 @@
 			</NcButton>
 			<h2>{{ queue ? queue.title : t('pipelinq', 'Queue') }}</h2>
 			<div v-if="queue" class="queue-detail__actions">
-				<NcButton type="primary" @click="pickNext" :disabled="!nextItem">
+				<NcButton type="primary" :disabled="!nextItem" @click="pickNext">
 					{{ t('pipelinq', 'Pick next') }}
 				</NcButton>
 			</div>
@@ -58,7 +58,9 @@
 								{{ getPriorityLabel(item.priority) }}
 							</span>
 						</div>
-						<div class="queue-item__title">{{ item.title }}</div>
+						<div class="queue-item__title">
+							{{ item.title }}
+						</div>
 						<div class="queue-item__meta">
 							<span v-if="item.category" class="meta-tag">{{ item.category }}</span>
 							<span class="meta-waiting">{{ getWaitingTime(item.requestedAt || item.dateCreated) }}</span>

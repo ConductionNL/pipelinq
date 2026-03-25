@@ -15,7 +15,9 @@
 				</tr>
 			</tbody>
 		</table>
-		<p v-else class="empty">{{ t('pipelinq', 'No surveys yet. Create your first KTO survey.') }}</p>
+		<p v-else class="empty">
+			{{ t('pipelinq', 'No surveys yet. Create your first KTO survey.') }}
+		</p>
 	</div>
 </template>
 <script>

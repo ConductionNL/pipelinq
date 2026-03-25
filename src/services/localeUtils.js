@@ -28,7 +28,7 @@ export function getUserLocale() {
  * Format a numeric value as EUR currency using the user's locale.
  *
  * @param {number|string} value The numeric value to format
- * @param {string} [currency='EUR'] The currency code
+ * @param {string} [currency] The currency code
  * @return {string} Formatted currency string (e.g., "EUR 12.500,50" or "EUR 12,500.50")
  */
 export function formatCurrency(value, currency = 'EUR') {

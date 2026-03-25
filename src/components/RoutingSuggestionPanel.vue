@@ -75,13 +75,13 @@ export default {
 			atCapacityCount: 0,
 		}
 	},
-	mounted() {
-		this.loadSuggestions()
-	},
 	watch: {
 		category() {
 			this.loadSuggestions()
 		},
+	},
+	mounted() {
+		this.loadSuggestions()
 	},
 	methods: {
 		async loadSuggestions() {

@@ -15,8 +15,12 @@
 						</span>
 					</div>
 					<div class="skill-item__actions">
-						<NcButton @click="startEdit(skill)">{{ t('pipelinq', 'Edit') }}</NcButton>
-						<NcButton type="error" @click="deleteSkill(skill)">{{ t('pipelinq', 'Delete') }}</NcButton>
+						<NcButton @click="startEdit(skill)">
+							{{ t('pipelinq', 'Edit') }}
+						</NcButton>
+						<NcButton type="error" @click="deleteSkill(skill)">
+							{{ t('pipelinq', 'Delete') }}
+						</NcButton>
 					</div>
 				</div>
 
@@ -40,14 +44,20 @@
 						</label>
 					</div>
 					<div class="edit-actions">
-						<NcButton @click="cancelEdit">{{ t('pipelinq', 'Cancel') }}</NcButton>
-						<NcButton type="primary" @click="saveEdit">{{ t('pipelinq', 'Save') }}</NcButton>
+						<NcButton @click="cancelEdit">
+							{{ t('pipelinq', 'Cancel') }}
+						</NcButton>
+						<NcButton type="primary" @click="saveEdit">
+							{{ t('pipelinq', 'Save') }}
+						</NcButton>
 					</div>
 				</div>
 			</div>
 
 			<div class="skill-add">
-				<NcButton @click="addSkill">{{ t('pipelinq', '+ Add Skill') }}</NcButton>
+				<NcButton @click="addSkill">
+					{{ t('pipelinq', '+ Add Skill') }}
+				</NcButton>
 			</div>
 		</div>
 	</NcSettingsSection>

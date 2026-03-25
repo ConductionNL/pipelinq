@@ -9,7 +9,10 @@
 		<div v-else class="builder-form">
 			<div class="form-group">
 				<label>{{ t('pipelinq', 'Name') }}</label>
-				<input v-model="form.name" type="text" :placeholder="t('pipelinq', 'Automation name')" class="form-input">
+				<input v-model="form.name"
+					type="text"
+					:placeholder="t('pipelinq', 'Automation name')"
+					class="form-input">
 			</div>
 
 			<div class="form-group">

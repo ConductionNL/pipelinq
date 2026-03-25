@@ -3,11 +3,15 @@
 		<NcLoadingIcon v-if="loading" />
 		<template v-else-if="survey">
 			<h2>{{ survey.title }} <span class="badge">{{ survey.status }}</span></h2>
-			<p v-if="survey.description">{{ survey.description }}</p>
+			<p v-if="survey.description">
+				{{ survey.description }}
+			</p>
 			<div v-if="survey.status === 'active' && survey.token" class="link-box">
 				<strong>{{ t('pipelinq', 'Public link') }}:</strong>
 				<code>{{ publicUrl }}</code>
-				<NcButton @click="copyLink">{{ t('pipelinq', 'Copy') }}</NcButton>
+				<NcButton @click="copyLink">
+					{{ t('pipelinq', 'Copy') }}
+				</NcButton>
 			</div>
 			<div class="metrics">
 				<span>{{ t('pipelinq', 'Responses') }}: {{ store.responseCount }}</span>
@@ -15,11 +19,21 @@
 				<span v-if="store.satisfactionAverage !== null">{{ t('pipelinq', 'Rating') }}: {{ store.satisfactionAverage }}/5</span>
 			</div>
 			<h3>{{ t('pipelinq', 'Questions') }} ({{ (survey.questions || []).length }})</h3>
-			<ol><li v-for="q in survey.questions || []" :key="q.id">{{ q.text }} <em>({{ q.type }})</em></li></ol>
+			<ol>
+				<li v-for="q in survey.questions || []" :key="q.id">
+					{{ q.text }} <em>({{ q.type }})</em>
+				</li>
+			</ol>
 			<div class="actions">
-				<NcButton @click="$router.push({ name: 'SurveyAnalytics', params: { id: surveyId } })">{{ t('pipelinq', 'Analytics') }}</NcButton>
-				<NcButton @click="$router.push({ name: 'SurveyEdit', params: { id: surveyId } })">{{ t('pipelinq', 'Edit') }}</NcButton>
-				<NcButton type="error" @click="del">{{ t('pipelinq', 'Delete') }}</NcButton>
+				<NcButton @click="$router.push({ name: 'SurveyAnalytics', params: { id: surveyId } })">
+					{{ t('pipelinq', 'Analytics') }}
+				</NcButton>
+				<NcButton @click="$router.push({ name: 'SurveyEdit', params: { id: surveyId } })">
+					{{ t('pipelinq', 'Edit') }}
+				</NcButton>
+				<NcButton type="error" @click="del">
+					{{ t('pipelinq', 'Delete') }}
+				</NcButton>
 			</div>
 		</template>
 	</div>

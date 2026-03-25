@@ -30,7 +30,9 @@
 						v-for="agent in agents"
 						:key="agent.uid"
 						:class="{ 'agent-row--highlight': agent.isAboveAverage || agent.isBelowAverage }">
-						<td class="agent-name">{{ agent.displayName }}</td>
+						<td class="agent-name">
+							{{ agent.displayName }}
+						</td>
 						<td>{{ agent.contactsToday }}</td>
 						<td>{{ agent.avgHandlingTime }}</td>
 						<td>{{ agent.fcrRate }}%</td>

@@ -9,19 +9,25 @@
 		<div v-else class="builder-form">
 			<div class="form-group">
 				<label>{{ t('pipelinq', 'Form name') }} *</label>
-				<input v-model="form.name" type="text" class="form-input"
+				<input v-model="form.name"
+					type="text"
+					class="form-input"
 					:placeholder="t('pipelinq', 'Contact form')">
 			</div>
 
 			<div class="form-group">
 				<label>{{ t('pipelinq', 'Success message') }}</label>
-				<input v-model="form.successMessage" type="text" class="form-input"
+				<input v-model="form.successMessage"
+					type="text"
+					class="form-input"
 					:placeholder="t('pipelinq', 'Thank you for your submission.')">
 			</div>
 
 			<div class="form-group">
 				<label>{{ t('pipelinq', 'Notify user') }}</label>
-				<input v-model="form.notifyUser" type="text" class="form-input"
+				<input v-model="form.notifyUser"
+					type="text"
+					class="form-input"
 					:placeholder="t('pipelinq', 'Nextcloud username')">
 			</div>
 
@@ -36,9 +42,13 @@
 				<label>{{ t('pipelinq', 'Form Fields') }}</label>
 				<div v-for="(field, index) in form.fields" :key="index" class="field-card">
 					<div class="field-row">
-						<input v-model="field.name" type="text" :placeholder="t('pipelinq', 'Field name')"
+						<input v-model="field.name"
+							type="text"
+							:placeholder="t('pipelinq', 'Field name')"
 							class="field-input">
-						<input v-model="field.label" type="text" :placeholder="t('pipelinq', 'Label')"
+						<input v-model="field.label"
+							type="text"
+							:placeholder="t('pipelinq', 'Label')"
 							class="field-input">
 						<NcSelect v-model="field.type"
 							:options="fieldTypeOptions"
@@ -55,8 +65,10 @@
 						</NcButton>
 					</div>
 					<div class="field-details">
-						<input v-model="field.placeholder" type="text"
-							:placeholder="t('pipelinq', 'Placeholder text')" class="field-input">
+						<input v-model="field.placeholder"
+							type="text"
+							:placeholder="t('pipelinq', 'Placeholder text')"
+							class="field-input">
 						<div class="field-mapping">
 							<label>{{ t('pipelinq', 'Map to') }}:</label>
 							<NcSelect v-model="mappingFor[index]"
@@ -68,7 +80,8 @@
 					</div>
 					<div v-if="field.type === 'select'" class="field-options">
 						<label>{{ t('pipelinq', 'Options (comma-separated)') }}</label>
-						<input v-model="field.optionsText" type="text"
+						<input v-model="field.optionsText"
+							type="text"
 							:placeholder="t('pipelinq', 'Option 1, Option 2, Option 3')">
 					</div>
 				</div>

@@ -55,18 +55,32 @@
 				<div class="form-col">
 					<label>{{ t('pipelinq', 'Result') }}</label>
 					<select v-model="form.outcome" class="form-select">
-						<option value="">{{ t('pipelinq', 'Select result...') }}</option>
-						<option value="afgehandeld">{{ t('pipelinq', 'Resolved') }}</option>
-						<option value="doorverbonden">{{ t('pipelinq', 'Forwarded') }}</option>
-						<option value="terugbelverzoek">{{ t('pipelinq', 'Callback requested') }}</option>
-						<option value="vervolgactie">{{ t('pipelinq', 'Follow-up action') }}</option>
+						<option value="">
+							{{ t('pipelinq', 'Select result...') }}
+						</option>
+						<option value="afgehandeld">
+							{{ t('pipelinq', 'Resolved') }}
+						</option>
+						<option value="doorverbonden">
+							{{ t('pipelinq', 'Forwarded') }}
+						</option>
+						<option value="terugbelverzoek">
+							{{ t('pipelinq', 'Callback requested') }}
+						</option>
+						<option value="vervolgactie">
+							{{ t('pipelinq', 'Follow-up action') }}
+						</option>
 					</select>
 				</div>
 				<div class="form-col">
 					<label>{{ t('pipelinq', 'Initiator') }}</label>
 					<select v-model="channelMeta.initiatiefnemer" class="form-select">
-						<option value="klant">{{ t('pipelinq', 'Client') }}</option>
-						<option value="medewerker">{{ t('pipelinq', 'Agent') }}</option>
+						<option value="klant">
+							{{ t('pipelinq', 'Client') }}
+						</option>
+						<option value="medewerker">
+							{{ t('pipelinq', 'Agent') }}
+						</option>
 					</select>
 				</div>
 			</div>
@@ -77,8 +91,12 @@
 					<div class="form-col">
 						<label>{{ t('pipelinq', 'Direction') }}</label>
 						<select v-model="channelMeta.richting" class="form-select">
-							<option value="inkomend">{{ t('pipelinq', 'Incoming') }}</option>
-							<option value="uitgaand">{{ t('pipelinq', 'Outgoing') }}</option>
+							<option value="inkomend">
+								{{ t('pipelinq', 'Incoming') }}
+							</option>
+							<option value="uitgaand">
+								{{ t('pipelinq', 'Outgoing') }}
+							</option>
 						</select>
 					</div>
 					<div class="form-col">
@@ -117,9 +135,15 @@
 					<div class="form-col">
 						<label>{{ t('pipelinq', 'Platform') }}</label>
 						<select v-model="channelMeta.platform" class="form-select">
-							<option value="website">{{ t('pipelinq', 'Website') }}</option>
-							<option value="whatsapp">WhatsApp</option>
-							<option value="nextcloud_talk">Nextcloud Talk</option>
+							<option value="website">
+								{{ t('pipelinq', 'Website') }}
+							</option>
+							<option value="whatsapp">
+								WhatsApp
+							</option>
+							<option value="nextcloud_talk">
+								Nextcloud Talk
+							</option>
 						</select>
 					</div>
 					<div class="form-col">
@@ -133,9 +157,15 @@
 					<div class="form-col">
 						<label>{{ t('pipelinq', 'Platform') }}</label>
 						<select v-model="channelMeta.platform" class="form-select">
-							<option value="twitter">Twitter/X</option>
-							<option value="facebook">Facebook</option>
-							<option value="instagram">Instagram</option>
+							<option value="twitter">
+								Twitter/X
+							</option>
+							<option value="facebook">
+								Facebook
+							</option>
+							<option value="instagram">
+								Instagram
+							</option>
 						</select>
 					</div>
 					<div class="form-col">
@@ -149,8 +179,12 @@
 					<div class="form-col">
 						<label>{{ t('pipelinq', 'Direction') }}</label>
 						<select v-model="channelMeta.richting" class="form-select">
-							<option value="inkomend">{{ t('pipelinq', 'Incoming') }}</option>
-							<option value="uitgaand">{{ t('pipelinq', 'Outgoing') }}</option>
+							<option value="inkomend">
+								{{ t('pipelinq', 'Incoming') }}
+							</option>
+							<option value="uitgaand">
+								{{ t('pipelinq', 'Outgoing') }}
+							</option>
 						</select>
 					</div>
 					<div class="form-col">

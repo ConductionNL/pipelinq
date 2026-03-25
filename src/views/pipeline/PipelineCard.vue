@@ -52,6 +52,7 @@ import { NcSelect } from '@nextcloud/vue'
 import { getPriorityLabel, getPriorityColor, getStatusLabel } from '../../services/requestStatus.js'
 import { getDaysAge, isStale, getAgingClass, formatAge } from '../../services/pipelineUtils.js'
 import { useObjectStore } from '../../store/modules/object.js'
+// eslint-disable-next-line no-unused-vars -- used in template via Options API fallthrough
 import { formatNumber, formatDate as formatLocaleDate } from '../../services/localeUtils.js'
 
 // Module-level user cache shared across all PipelineCard instances

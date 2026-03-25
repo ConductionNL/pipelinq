@@ -88,10 +88,12 @@
 
 		<!-- Empty state -->
 		<div v-else class="empty-state">
-			<p>{{ searchQuery
-				? t('pipelinq', 'No clients found for "{query}"', { query: searchQuery })
-				: t('pipelinq', 'No clients found')
-			}}</p>
+			<p>
+				{{ searchQuery
+					? t('pipelinq', 'No clients found for "{query}"', { query: searchQuery })
+					: t('pipelinq', 'No clients found')
+				}}
+			</p>
 		</div>
 
 		<!-- Inline request/lead creation -->

@@ -1,15 +1,32 @@
 <template>
 	<div class="survey-form">
 		<h2>{{ surveyId ? t('pipelinq', 'Edit Survey') : t('pipelinq', 'New Survey') }}</h2>
-		<div class="field"><label>{{ t('pipelinq', 'Title') }} *</label><input v-model="form.title" type="text" required /></div>
-		<div class="field"><label>{{ t('pipelinq', 'Description') }}</label><textarea v-model="form.description" rows="3" /></div>
-		<div class="field"><label>{{ t('pipelinq', 'Status') }}</label>
-			<select v-model="form.status"><option value="draft">{{ t('pipelinq', 'Draft') }}</option><option value="active">{{ t('pipelinq', 'Active') }}</option><option value="closed">{{ t('pipelinq', 'Closed') }}</option></select>
+		<div class="field">
+			<label>{{ t('pipelinq', 'Title') }} *</label><input v-model="form.title" type="text" required>
+		</div>
+		<div class="field">
+			<label>{{ t('pipelinq', 'Description') }}</label><textarea v-model="form.description" rows="3" />
+		</div>
+		<div class="field">
+			<label>{{ t('pipelinq', 'Status') }}</label>
+			<select v-model="form.status">
+				<option value="draft">
+					{{ t('pipelinq', 'Draft') }}
+				</option><option value="active">
+					{{ t('pipelinq', 'Active') }}
+				</option><option value="closed">
+					{{ t('pipelinq', 'Closed') }}
+				</option>
+			</select>
 		</div>
 		<QuestionEditor v-model="form.questions" />
 		<div class="actions">
-			<NcButton @click="$router.back()">{{ t('pipelinq', 'Cancel') }}</NcButton>
-			<NcButton type="primary" :disabled="!form.title || saving" @click="save">{{ saving ? '...' : t('pipelinq', 'Save') }}</NcButton>
+			<NcButton @click="$router.back()">
+				{{ t('pipelinq', 'Cancel') }}
+			</NcButton>
+			<NcButton type="primary" :disabled="!form.title || saving" @click="save">
+				{{ saving ? '...' : t('pipelinq', 'Save') }}
+			</NcButton>
 		</div>
 	</div>
 </template>

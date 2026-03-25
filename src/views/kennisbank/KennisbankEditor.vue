@@ -1,14 +1,30 @@
 <template>
 	<div class="kennisbank-editor" style="padding:20px">
 		<div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
-			<NcButton type="tertiary" @click="goBack"><template #icon><ArrowLeft :size="20" /></template>{{ t('pipelinq', 'Back') }}</NcButton>
-			<h2 style="flex:1;margin:0">{{ isNew ? t('pipelinq', 'New Article') : t('pipelinq', 'Edit Article') }}</h2>
-			<NcButton @click="save('concept')" :disabled="saving">{{ t('pipelinq', 'Save Draft') }}</NcButton>
-			<NcButton type="primary" @click="save('gepubliceerd')" :disabled="saving || !form.title">{{ t('pipelinq', 'Publish') }}</NcButton>
+			<NcButton type="tertiary" @click="goBack">
+				<template #icon>
+					<ArrowLeft :size="20" />
+				</template>{{ t('pipelinq', 'Back') }}
+			</NcButton>
+			<h2 style="flex:1;margin:0">
+				{{ isNew ? t('pipelinq', 'New Article') : t('pipelinq', 'Edit Article') }}
+			</h2>
+			<NcButton :disabled="saving" @click="save('concept')">
+				{{ t('pipelinq', 'Save Draft') }}
+			</NcButton>
+			<NcButton type="primary" :disabled="saving || !form.title" @click="save('gepubliceerd')">
+				{{ t('pipelinq', 'Publish') }}
+			</NcButton>
 		</div>
-		<div style="margin-bottom:12px"><NcTextField :value.sync="form.title" :label="t('pipelinq', 'Title')" /></div>
-		<div style="margin-bottom:12px"><NcTextField :value.sync="form.summary" :label="t('pipelinq', 'Summary')" /></div>
-		<div style="margin-bottom:12px"><NcTextField :value.sync="tagsInput" :label="t('pipelinq', 'Tags (comma separated)')" /></div>
+		<div style="margin-bottom:12px">
+			<NcTextField :value.sync="form.title" :label="t('pipelinq', 'Title')" />
+		</div>
+		<div style="margin-bottom:12px">
+			<NcTextField :value.sync="form.summary" :label="t('pipelinq', 'Summary')" />
+		</div>
+		<div style="margin-bottom:12px">
+			<NcTextField :value.sync="tagsInput" :label="t('pipelinq', 'Tags (comma separated)')" />
+		</div>
 		<div style="display:grid;grid-template-columns:1fr 1fr;min-height:500px;border:1px solid var(--color-border);border-radius:var(--border-radius)">
 			<textarea v-model="form.body" style="padding:16px;border:none;border-right:1px solid var(--color-border);resize:none;font-family:monospace;font-size:14px;min-height:500px" :placeholder="t('pipelinq', 'Write Markdown...')" />
 			<div style="padding:16px;overflow-y:auto;line-height:1.6" v-html="preview" />

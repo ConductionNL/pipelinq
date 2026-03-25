@@ -40,7 +40,9 @@
 					</td>
 					<td>{{ log.triggerEntity || '-' }}</td>
 					<td>{{ (log.actionsExecuted || []).length }}</td>
-					<td class="error-cell">{{ log.error || '-' }}</td>
+					<td class="error-cell">
+						{{ log.error || '-' }}
+					</td>
 				</tr>
 			</tbody>
 		</table>
