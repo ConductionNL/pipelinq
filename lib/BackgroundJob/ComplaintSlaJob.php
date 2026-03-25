@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
+use Exception;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ComplaintSlaService;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -33,6 +34,8 @@ use Psr\Log\LoggerInterface;
  *
  * Runs every 15 minutes to check for complaints that have exceeded
  * their SLA deadline and logs warnings for each overdue complaint.
+ *
+ * @SuppressWarnings(PHPMD.UnusedFormalParameter)
  */
 class ComplaintSlaJob extends TimedJob
 {
@@ -40,10 +43,10 @@ class ComplaintSlaJob extends TimedJob
     /**
      * Constructor.
      *
-     * @param ITimeFactory        $time              The time factory.
+     * @param ITimeFactory        $time                The time factory.
      * @param ComplaintSlaService $complaintSlaService The complaint SLA service.
-     * @param IAppConfig          $appConfig         The app configuration.
-     * @param LoggerInterface     $logger            The logger.
+     * @param IAppConfig          $appConfig           The app configuration.
+     * @param LoggerInterface     $logger              The logger.
      */
     public function __construct(
         ITimeFactory $time,
@@ -65,7 +68,7 @@ class ComplaintSlaJob extends TimedJob
      * Checks configuration, then queries for open complaints
      * and logs warnings for any that are past their SLA deadline.
      *
-     * @param mixed $argument The job argument (unused).
+     * @param mixed $argument The job argument (unused, required by TimedJob).
      *
      * @return void
      */
@@ -104,7 +107,7 @@ class ComplaintSlaJob extends TimedJob
             $this->logger->info(
                 'ComplaintSlaJob: SLA deadline check completed',
             );
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->logger->error(
                 'ComplaintSlaJob: Error during SLA check',
                 ['exception' => $e->getMessage()],
