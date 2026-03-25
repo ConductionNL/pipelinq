@@ -57,8 +57,12 @@ export default {
 </script>
 <style scoped>
 .survey-form { padding: 20px; max-width: 800px; }
+
 .field { margin-bottom: 16px; }
+
 .field label { display: block; font-weight: 600; margin-bottom: 4px; }
+
 .field input, .field textarea, .field select { width: 100%; padding: 8px; border: 1px solid var(--color-border); border-radius: 4px; }
+
 .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
 </style>

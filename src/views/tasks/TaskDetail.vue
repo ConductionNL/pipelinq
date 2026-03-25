@@ -556,14 +556,21 @@ export default {
 }
 
 .type-terugbelverzoek { background: #dbeafe; color: #1d4ed8; }
+
 .type-opvolgtaak { background: #dcfce7; color: #15803d; }
+
 .type-informatievraag { background: #fef3c7; color: #92400e; }
+
 .status-open { background: #dbeafe; color: #1d4ed8; }
+
 .status-in_behandeling { background: #fef3c7; color: #92400e; }
+
 .status-afgerond { background: #dcfce7; color: #15803d; }
+
 .status-verlopen { background: #fee2e2; color: #991b1b; }
 
 .overdue-text { color: var(--color-error); }
+
 .overdue-badge {
 	display: inline-block;
 	padding: 1px 6px;
@@ -611,7 +618,9 @@ export default {
 }
 
 .result-niet_bereikbaar { color: var(--color-warning); font-weight: 600; }
+
 .result-hertoegewezen { color: #1d4ed8; font-weight: 600; }
+
 .result-heropend { color: var(--color-text-maxcontrast); font-weight: 600; }
 
 .attempt-notes {

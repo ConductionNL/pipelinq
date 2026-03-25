@@ -92,19 +92,34 @@ export default {
 
 <style scoped>
 .agent-performance { padding: 20px; max-width: 1000px; margin: 0 auto; }
+
 .agent-performance__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+
 .data-table { width: 100%; border-collapse: collapse; }
+
 .data-table th, .data-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--color-border); }
+
 .data-table th { font-weight: 600; font-size: 0.85em; color: var(--color-text-lighter); }
+
 .agent-row--highlight { background: var(--color-background-hover); }
+
 .agent-status { padding: 2px 8px; border-radius: var(--border-radius); font-size: 0.75em; }
+
 .agent-status--beschikbaar { background: var(--color-success); color: #fff; }
+
 .agent-status--in_gesprek { background: var(--color-warning); color: #000; }
+
 .agent-status--pauze { background: var(--color-background-dark); }
+
 .team-summary { margin-top: 24px; padding: 16px; border: 1px solid var(--color-border); border-radius: var(--border-radius-large); }
+
 .summary-grid { display: flex; gap: 32px; margin-top: 12px; }
+
 .summary-item { text-align: center; }
+
 .summary-value { display: block; font-size: 1.5em; font-weight: 700; }
+
 .summary-label { font-size: 0.85em; color: var(--color-text-lighter); }
+
 .empty-state { padding: 40px; text-align: center; color: var(--color-text-lighter); }
 </style>

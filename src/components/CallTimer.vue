@@ -78,6 +78,8 @@ export default {
 
 <style scoped>
 .call-timer { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: var(--border-radius-large); background: var(--color-background-dark); }
+
 .call-timer__display { font-family: monospace; font-size: 1.5em; font-weight: 700; min-width: 80px; text-align: center; }
+
 .call-timer__controls { display: flex; gap: 4px; }
 </style>

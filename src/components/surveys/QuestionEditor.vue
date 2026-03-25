@@ -59,10 +59,16 @@ export default {
 </script>
 <style scoped>
 .qe { display: flex; flex-direction: column; gap: 12px; margin: 12px 0; }
+
 .qcard { padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; }
+
 .qhdr { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+
 .qcard input[type=text], .qcard input:not([type]) { width: 100%; padding: 8px; border: 1px solid var(--color-border); border-radius: 4px; }
+
 .opts { margin-top: 8px; padding-left: 20px; }
+
 .opt-row { display: flex; gap: 4px; margin-bottom: 4px; }
+
 .opt-row input { flex: 1; padding: 6px; border: 1px solid var(--color-border); border-radius: 4px; }
 </style>

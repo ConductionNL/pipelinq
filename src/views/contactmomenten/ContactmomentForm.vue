@@ -348,17 +348,30 @@ export default {
 
 <style scoped>
 .contactmoment-form { padding: 20px; max-width: 800px; margin: 0 auto; }
+
 .contactmoment-form__header { margin-bottom: 20px; }
+
 .contactmoment-form__body { display: flex; flex-direction: column; gap: 16px; }
+
 .channel-selector { display: flex; gap: 4px; flex-wrap: wrap; }
+
 .channel-button { padding: 8px 16px; border: 2px solid var(--color-border); border-radius: var(--border-radius-large); background: var(--color-main-background); cursor: pointer; display: flex; align-items: center; gap: 6px; transition: border-color 0.2s; }
+
 .channel-button:hover { border-color: var(--color-primary-element); }
+
 .channel-button--active { border-color: var(--color-primary-element); background: var(--color-primary-element-light); font-weight: 600; }
+
 .channel-icon { font-size: 1.2em; }
+
 .form-row--split { display: flex; gap: 16px; }
+
 .form-col { flex: 1; }
+
 .form-col label, .form-row > label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.9em; }
+
 .form-select { width: 100%; padding: 8px; border: 1px solid var(--color-border); border-radius: var(--border-radius); background: var(--color-main-background); }
+
 .form-row--actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+
 .form-error { padding: 8px 12px; background: var(--color-error); color: white; border-radius: var(--border-radius); font-size: 13px; }
 </style>
