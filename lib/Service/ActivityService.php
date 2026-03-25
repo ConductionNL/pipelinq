@@ -202,6 +202,61 @@ class ActivityService
     }//end publishNoteAdded()
 
     /**
+     * Publish a deal won event.
+     *
+     * @param string  $title        The lead title.
+     * @param string  $value        The deal value.
+     * @param string  $objectId     The object ID.
+     * @param ?string $affectedUser The affected user or null.
+     *
+     * @return void
+     */
+    public function publishDealWon(
+        string $title,
+        string $value,
+        string $objectId,
+        ?string $affectedUser=null
+    ): void {
+        $this->publish(
+            subject: 'lead_won',
+            type: 'pipelinq_deals',
+            parameters: [
+                'title' => $title,
+                'value' => $value,
+            ],
+            objectType: 'lead',
+            objectId: $objectId,
+            affectedUser: $affectedUser
+        );
+    }//end publishDealWon()
+
+    /**
+     * Publish a deal lost event.
+     *
+     * @param string  $title        The lead title.
+     * @param string  $objectId     The object ID.
+     * @param ?string $affectedUser The affected user or null.
+     *
+     * @return void
+     */
+    public function publishDealLost(
+        string $title,
+        string $objectId,
+        ?string $affectedUser=null
+    ): void {
+        $this->publish(
+            subject: 'lead_lost',
+            type: 'pipelinq_deals',
+            parameters: [
+                'title' => $title,
+            ],
+            objectType: 'lead',
+            objectId: $objectId,
+            affectedUser: $affectedUser
+        );
+    }//end publishDealLost()
+
+    /**
      * Publish an activity event.
      *
      * @param string  $subject      The activity subject.

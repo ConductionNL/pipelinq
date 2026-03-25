@@ -37,10 +37,36 @@ class SettingsService
         'contact_schema',
         'lead_schema',
         'request_schema',
+        'complaint_schema',
         'pipeline_schema',
         'product_schema',
         'productCategory_schema',
         'leadProduct_schema',
+        'intakeForm_schema',
+        'intakeSubmission_schema',
+        'automation_schema',
+        'automationLog_schema',
+        'contactmoment_schema',
+        'task_schema',
+        'kennisartikel_schema',
+        'kenniscategorie_schema',
+        'kennisfeedback_schema',
+        'emailLink_schema',
+        'calendarLink_schema',
+        'relationship_schema',
+        'survey_schema',
+        'surveyResponse_schema',
+        'queue_schema',
+        'skill_schema',
+        'agentProfile_schema',
+        'kennisbank_review_interval',
+        'kennisbank_default_visibility',
+        'kennisbank_editor_group',
+        'complaint_sla_service',
+        'complaint_sla_product',
+        'complaint_sla_communication',
+        'complaint_sla_billing',
+        'complaint_sla_other',
     ];
 
     /**
@@ -61,6 +87,7 @@ class SettingsService
      * @param IConfig                $config              The user config service.
      * @param SettingsLoadService    $settingsLoadService The settings load service.
      * @param DefaultPipelineService $pipelineService     The default pipeline service.
+     * @param DefaultQueueService    $queueService        The default queue service.
      * @param LoggerInterface        $logger              The logger.
      */
     public function __construct(
@@ -68,6 +95,7 @@ class SettingsService
         private IConfig $config,
         private SettingsLoadService $settingsLoadService,
         private DefaultPipelineService $pipelineService,
+        private DefaultQueueService $queueService,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -132,6 +160,28 @@ class SettingsService
     {
         $this->pipelineService->createDefaultPipelines();
     }//end createDefaultPipelines()
+
+    /**
+     * Create default queues if none exist.
+     * Delegates to DefaultQueueService.
+     *
+     * @return void
+     */
+    public function createDefaultQueues(): void
+    {
+        $this->queueService->createDefaultQueues();
+    }//end createDefaultQueues()
+
+    /**
+     * Create default skills if none exist.
+     * Delegates to DefaultQueueService.
+     *
+     * @return void
+     */
+    public function createDefaultSkills(): void
+    {
+        $this->queueService->createDefaultSkills();
+    }//end createDefaultSkills()
 
     /**
      * Get user settings for the given user.

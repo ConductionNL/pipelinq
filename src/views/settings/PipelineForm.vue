@@ -284,6 +284,9 @@ export default {
 				if (stage.isWon && !stage.isClosed) {
 					errors.isWon = t('pipelinq', 'A Won stage must also be marked as Closed')
 				}
+				if (stage.probability != null && stage.probability !== '' && (Number(stage.probability) < 0 || Number(stage.probability) > 100)) {
+					errors.probability = t('pipelinq', 'Probability must be between 0 and 100')
+				}
 				return Object.keys(errors).length > 0 ? errors : null
 			})
 		},
@@ -603,7 +606,7 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
-.stage-color-field input[type="color"] {
+.stage-color-field input[type='color'] {
 	width: 32px;
 	height: 32px;
 	padding: 0;

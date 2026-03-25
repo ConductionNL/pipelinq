@@ -24,10 +24,12 @@ namespace OCA\Pipelinq\AppInfo;
 use OCA\OpenRegister\Event\DeepLinkRegistrationEvent;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\Pipelinq\Dashboard\ClientSearchWidget;
+use OCA\Pipelinq\Dashboard\CreateLeadWidget;
 use OCA\Pipelinq\Dashboard\DealsOverviewWidget;
+use OCA\Pipelinq\Dashboard\FindClientWidget;
 use OCA\Pipelinq\Dashboard\MyLeadsWidget;
 use OCA\Pipelinq\Dashboard\RecentActivitiesWidget;
+use OCA\Pipelinq\Dashboard\StartRequestWidget;
 use OCA\Pipelinq\Listener\DeepLinkRegistrationListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCP\AppFramework\App;
@@ -81,7 +83,9 @@ class Application extends App implements IBootstrap
         $context->registerDashboardWidget(DealsOverviewWidget::class);
         $context->registerDashboardWidget(MyLeadsWidget::class);
         $context->registerDashboardWidget(RecentActivitiesWidget::class);
-        $context->registerDashboardWidget(ClientSearchWidget::class);
+        $context->registerDashboardWidget(FindClientWidget::class);
+        $context->registerDashboardWidget(StartRequestWidget::class);
+        $context->registerDashboardWidget(CreateLeadWidget::class);
     }//end register()
 
     /**

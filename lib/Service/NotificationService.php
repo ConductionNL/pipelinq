@@ -40,9 +40,15 @@ class NotificationService
     private const SUBJECT_SETTING_MAP = [
         'lead_assigned'          => 'notify_assignments',
         'request_assigned'       => 'notify_assignments',
+        'task_assigned'          => 'notify_assignments',
+        'task_reassigned'        => 'notify_assignments',
         'lead_stage_changed'     => 'notify_stage_status',
         'request_status_changed' => 'notify_stage_status',
+        'task_completed'         => 'notify_stage_status',
+        'task_expired'           => 'notify_stage_status',
         'note_added'             => 'notify_notes',
+        'lead_won'               => 'notify_deals',
+        'lead_lost'              => 'notify_deals',
     ];
 
     /**
@@ -84,6 +90,8 @@ class NotificationService
         $subject = 'lead_assigned';
         if ($entityType === 'request') {
             $subject = 'request_assigned';
+        } else if ($entityType === 'task') {
+            $subject = 'task_assigned';
         }
 
         $this->send(
@@ -98,6 +106,104 @@ class NotificationService
             objectId: $objectId
         );
     }//end notifyAssignment()
+
+    /**
+     * Notify a user about a task completion.
+     *
+     * @param string $title      The task subject.
+     * @param string $resultText The completion result text.
+     * @param string $userId     The user to notify (typically the creator).
+     * @param string $objectId   The task object ID.
+     * @param string $author     The user who completed the task.
+     *
+     * @return void
+     */
+    public function notifyTaskCompleted(
+        string $title,
+        string $resultText,
+        string $userId,
+        string $objectId,
+        string $author
+    ): void {
+        if ($author === $userId) {
+            return;
+        }
+
+        $this->send(
+            subject: 'task_completed',
+            parameters: [
+                'title'      => $title,
+                'resultText' => $resultText,
+                'author'     => $author,
+            ],
+            userId: $userId,
+            objectType: 'task',
+            objectId: $objectId
+        );
+    }//end notifyTaskCompleted()
+
+    /**
+     * Notify a user about a task reassignment.
+     *
+     * @param string $title          The task subject.
+     * @param string $assigneeUserId The new assignee user ID.
+     * @param string $objectId       The task object ID.
+     * @param string $author         The user who reassigned.
+     * @param string $deadline       The task deadline.
+     *
+     * @return void
+     */
+    public function notifyTaskReassigned(
+        string $title,
+        string $assigneeUserId,
+        string $objectId,
+        string $author,
+        string $deadline=''
+    ): void {
+        if ($author === $assigneeUserId) {
+            return;
+        }
+
+        $this->send(
+            subject: 'task_reassigned',
+            parameters: [
+                'title'    => $title,
+                'author'   => $author,
+                'deadline' => $deadline,
+            ],
+            userId: $assigneeUserId,
+            objectType: 'task',
+            objectId: $objectId
+        );
+    }//end notifyTaskReassigned()
+
+    /**
+     * Notify users about a task expiry or approaching deadline.
+     *
+     * @param string $title    The task subject.
+     * @param string $userId   The user to notify.
+     * @param string $objectId The task object ID.
+     * @param string $deadline The task deadline.
+     *
+     * @return void
+     */
+    public function notifyTaskExpired(
+        string $title,
+        string $userId,
+        string $objectId,
+        string $deadline=''
+    ): void {
+        $this->send(
+            subject: 'task_expired',
+            parameters: [
+                'title'    => $title,
+                'deadline' => $deadline,
+            ],
+            userId: $userId,
+            objectType: 'task',
+            objectId: $objectId
+        );
+    }//end notifyTaskExpired()
 
     /**
      * Notify a user about a lead stage change.
@@ -203,6 +309,65 @@ class NotificationService
             objectId: $objectId
         );
     }//end notifyNoteAdded()
+
+    /**
+     * Notify a user about a deal being won.
+     *
+     * @param string $title          The lead title.
+     * @param string $value          The deal value.
+     * @param string $assigneeUserId The assignee user ID.
+     * @param string $objectId       The object ID.
+     * @param string $author         The author user ID.
+     *
+     * @return void
+     */
+    public function notifyDealWon(
+        string $title,
+        string $value,
+        string $assigneeUserId,
+        string $objectId,
+        string $author
+    ): void {
+        $this->send(
+            subject: 'lead_won',
+            parameters: [
+                'title'  => $title,
+                'value'  => $value,
+                'author' => $author,
+            ],
+            userId: $assigneeUserId,
+            objectType: 'lead',
+            objectId: $objectId
+        );
+    }//end notifyDealWon()
+
+    /**
+     * Notify a user about a deal being lost.
+     *
+     * @param string $title          The lead title.
+     * @param string $assigneeUserId The assignee user ID.
+     * @param string $objectId       The object ID.
+     * @param string $author         The author user ID.
+     *
+     * @return void
+     */
+    public function notifyDealLost(
+        string $title,
+        string $assigneeUserId,
+        string $objectId,
+        string $author
+    ): void {
+        $this->send(
+            subject: 'lead_lost',
+            parameters: [
+                'title'  => $title,
+                'author' => $author,
+            ],
+            userId: $assigneeUserId,
+            objectType: 'lead',
+            objectId: $objectId
+        );
+    }//end notifyDealLost()
 
     /**
      * Send a notification to a user.

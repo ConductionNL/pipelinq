@@ -1,0 +1,78 @@
+{
+  "change": "klachtenregistratie",
+  "repo": "ConductionNL/pipelinq",
+  "tracking_issue": 150,
+  "parent_issue": 64,
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Create ComplaintSlaService",
+      "spec_ref": "REQ-KL-009",
+      "github_issue": 158,
+      "status": "todo",
+      "acceptance_criteria": [
+        "GIVEN category with configured SLA WHEN calculateDeadline called THEN returns deadline",
+        "GIVEN unconfigured category WHEN calculateDeadline called THEN returns null",
+        "GIVEN complaint with past deadline WHEN isOverdue called THEN returns true"
+      ],
+      "files_likely_affected": [
+        "lib/Service/ComplaintSlaService.php"
+      ]
+    },
+    {
+      "id": "1.2",
+      "title": "Create ComplaintSlaJob background job",
+      "spec_ref": "REQ-KL-010",
+      "github_issue": 160,
+      "status": "todo",
+      "acceptance_criteria": [
+        "GIVEN open complaints with overdue SLA WHEN job runs THEN overdue complaints are logged",
+        "GIVEN no overdue complaints WHEN job runs THEN no warnings logged"
+      ],
+      "files_likely_affected": [
+        "lib/BackgroundJob/ComplaintSlaJob.php",
+        "appinfo/info.xml"
+      ]
+    },
+    {
+      "id": "2.1",
+      "title": "Unit tests for ComplaintSlaService",
+      "spec_ref": "REQ-KL-009",
+      "github_issue": 161,
+      "status": "todo",
+      "acceptance_criteria": [
+        "GIVEN test class WHEN phpunit runs THEN 3+ test methods pass"
+      ],
+      "files_likely_affected": [
+        "tests/Unit/Service/ComplaintSlaServiceTest.php"
+      ]
+    },
+    {
+      "id": "2.2",
+      "title": "Unit tests for ComplaintSlaJob",
+      "spec_ref": "REQ-KL-010",
+      "github_issue": 164,
+      "status": "todo",
+      "acceptance_criteria": [
+        "GIVEN test class WHEN phpunit runs THEN 2+ test methods pass"
+      ],
+      "files_likely_affected": [
+        "tests/Unit/BackgroundJob/ComplaintSlaJobTest.php"
+      ]
+    },
+    {
+      "id": "3.1",
+      "title": "Verify client detail complaints section",
+      "spec_ref": "REQ-KL-007",
+      "github_issue": 165,
+      "status": "todo",
+      "acceptance_criteria": [
+        "GIVEN client with complaints WHEN viewing client detail THEN complaints section visible",
+        "GIVEN client detail WHEN clicking Register complaint THEN form opens with pre-linked client"
+      ],
+      "files_likely_affected": [
+        "src/views/clients/ClientDetail.vue"
+      ]
+    }
+  ]
+}
