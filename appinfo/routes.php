@@ -69,6 +69,9 @@ return [
         ['name' => 'public_kennisbank#index', 'url' => '/api/public/kennisbank/articles', 'verb' => 'GET'],
         ['name' => 'public_kennisbank#show', 'url' => '/api/public/kennisbank/articles/{id}', 'verb' => 'GET'],
 
+        // Contactmomenten (permission-checked delete)
+        ['name' => 'contactmoment#destroy', 'url' => '/api/contactmomenten/{id}', 'verb' => 'DELETE'],
+
         // Prometheus metrics endpoint.
         ['name' => 'metrics#index', 'url' => '/api/metrics', 'verb' => 'GET'],
         // Health check endpoint.
