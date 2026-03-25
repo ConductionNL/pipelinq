@@ -18,33 +18,57 @@
 			<!-- KPI Cards -->
 			<div class="kpi-grid">
 				<div class="kpi-card">
-					<div class="kpi-card__value">{{ kpis.totalContacts }}</div>
-					<div class="kpi-card__label">{{ t('pipelinq', 'Contacts today') }}</div>
+					<div class="kpi-card__value">
+						{{ kpis.totalContacts }}
+					</div>
+					<div class="kpi-card__label">
+						{{ t('pipelinq', 'Contacts today') }}
+					</div>
 					<div v-if="kpis.totalContactsTrend" class="kpi-card__trend" :class="trendClass(kpis.totalContactsTrend)">
 						{{ kpis.totalContactsTrend > 0 ? '+' : '' }}{{ kpis.totalContactsTrend }}%
 					</div>
 				</div>
 
 				<div class="kpi-card" :class="{ 'kpi-card--warning': kpis.fcrRate < kpis.fcrTarget }">
-					<div class="kpi-card__value">{{ kpis.fcrRate }}%</div>
-					<div class="kpi-card__label">{{ t('pipelinq', 'First-call resolution') }}</div>
-					<div class="kpi-card__target">{{ t('pipelinq', 'Target') }}: {{ kpis.fcrTarget }}%</div>
+					<div class="kpi-card__value">
+						{{ kpis.fcrRate }}%
+					</div>
+					<div class="kpi-card__label">
+						{{ t('pipelinq', 'First-call resolution') }}
+					</div>
+					<div class="kpi-card__target">
+						{{ t('pipelinq', 'Target') }}: {{ kpis.fcrTarget }}%
+					</div>
 				</div>
 
 				<div class="kpi-card">
-					<div class="kpi-card__value">{{ kpis.avgHandlingTime }}</div>
-					<div class="kpi-card__label">{{ t('pipelinq', 'Avg handling time') }}</div>
+					<div class="kpi-card__value">
+						{{ kpis.avgHandlingTime }}
+					</div>
+					<div class="kpi-card__label">
+						{{ t('pipelinq', 'Avg handling time') }}
+					</div>
 				</div>
 
 				<div class="kpi-card" :class="slaStatusClass">
-					<div class="kpi-card__value">{{ kpis.slaCompliance }}%</div>
-					<div class="kpi-card__label">{{ t('pipelinq', 'SLA compliance') }}</div>
-					<div class="kpi-card__target">{{ t('pipelinq', 'Target') }}: {{ kpis.slaTarget }}%</div>
+					<div class="kpi-card__value">
+						{{ kpis.slaCompliance }}%
+					</div>
+					<div class="kpi-card__label">
+						{{ t('pipelinq', 'SLA compliance') }}
+					</div>
+					<div class="kpi-card__target">
+						{{ t('pipelinq', 'Target') }}: {{ kpis.slaTarget }}%
+					</div>
 				</div>
 
 				<div class="kpi-card">
-					<div class="kpi-card__value">{{ kpis.activeAgents }}</div>
-					<div class="kpi-card__label">{{ t('pipelinq', 'Active agents') }}</div>
+					<div class="kpi-card__value">
+						{{ kpis.activeAgents }}
+					</div>
+					<div class="kpi-card__label">
+						{{ t('pipelinq', 'Active agents') }}
+					</div>
 				</div>
 			</div>
 
@@ -59,13 +83,17 @@
 						v-for="channel in channelData"
 						:key="channel.name"
 						class="channel-bar">
-						<div class="channel-bar__label">{{ channel.name }}</div>
+						<div class="channel-bar__label">
+							{{ channel.name }}
+						</div>
 						<div class="channel-bar__track">
 							<div
 								class="channel-bar__fill"
 								:style="{ width: channel.percentage + '%', background: channel.color }" />
 						</div>
-						<div class="channel-bar__count">{{ channel.count }} ({{ channel.percentage }}%)</div>
+						<div class="channel-bar__count">
+							{{ channel.count }} ({{ channel.percentage }}%)
+						</div>
 					</div>
 				</div>
 			</div>

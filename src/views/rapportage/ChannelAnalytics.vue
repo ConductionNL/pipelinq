@@ -45,7 +45,9 @@
 							<td>{{ row.total }}</td>
 							<td>{{ row.avgTime }}</td>
 							<td>{{ row.fcrRate }}%</td>
-							<td :class="'sla--' + row.slaStatus">{{ row.slaCompliance }}%</td>
+							<td :class="'sla--' + row.slaStatus">
+								{{ row.slaCompliance }}%
+							</td>
 							<td :class="row.trend > 0 ? 'trend--up' : 'trend--down'">
 								{{ row.trend > 0 ? '+' : '' }}{{ row.trend }}%
 							</td>

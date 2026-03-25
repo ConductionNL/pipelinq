@@ -3,9 +3,15 @@
 		<NcLoadingIcon v-if="loading" />
 		<template v-else-if="survey">
 			<h2>{{ survey.title }} — {{ t('pipelinq', 'Analytics') }}</h2>
-			<div class="metrics"><span>{{ t('pipelinq', 'Responses') }}: {{ store.responseCount }}</span><span v-if="store.npsScore !== null">NPS: {{ store.npsScore }}</span><span v-if="store.satisfactionAverage !== null">{{ t('pipelinq', 'Avg Rating') }}: {{ store.satisfactionAverage }}/5</span></div>
-			<NcButton @click="exportCsv">{{ t('pipelinq', 'Export CSV') }}</NcButton>
-			<div v-for="q in survey.questions || []" :key="q.id" class="q-result"><h4>{{ q.text }} ({{ q.type }})</h4></div>
+			<div class="metrics">
+				<span>{{ t('pipelinq', 'Responses') }}: {{ store.responseCount }}</span><span v-if="store.npsScore !== null">NPS: {{ store.npsScore }}</span><span v-if="store.satisfactionAverage !== null">{{ t('pipelinq', 'Avg Rating') }}: {{ store.satisfactionAverage }}/5</span>
+			</div>
+			<NcButton @click="exportCsv">
+				{{ t('pipelinq', 'Export CSV') }}
+			</NcButton>
+			<div v-for="q in survey.questions || []" :key="q.id" class="q-result">
+				<h4>{{ q.text }} ({{ q.type }})</h4>
+			</div>
 		</template>
 	</div>
 </template>

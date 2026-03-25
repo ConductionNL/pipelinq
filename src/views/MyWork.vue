@@ -120,7 +120,7 @@ import {
 	getPriorityColor,
 } from '../services/requestStatus.js'
 import { isStale } from '../services/pipelineUtils.js'
-import { formatNumber, formatDateFull } from '../services/localeUtils.js'
+import { formatDateFull } from '../services/localeUtils.js'
 
 const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 }
 
