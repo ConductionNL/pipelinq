@@ -33,18 +33,6 @@ use Psr\Log\LoggerInterface;
  */
 class TaskExpiryJobTest extends TestCase
 {
-    /** @var ITimeFactory&MockObject */
-    private ITimeFactory $timeFactory;
-
-    /** @var IAppConfig&MockObject */
-    private IAppConfig $appConfig;
-
-    /** @var NotificationService&MockObject */
-    private NotificationService $notificationService;
-
-    /** @var LoggerInterface&MockObject */
-    private LoggerInterface $logger;
-
     /**
      * The time factory mock.
      *
