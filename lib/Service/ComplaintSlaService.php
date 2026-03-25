@@ -21,6 +21,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use DateTimeImmutable;
+use DateTimeInterface;
+use Exception;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -110,15 +113,15 @@ class ComplaintSlaService
      *
      * Returns null if no SLA is configured for the given category.
      *
-     * @param string                  $category The complaint category.
-     * @param \DateTimeInterface|null $from     The starting point (defaults to now).
+     * @param string                 $category The complaint category.
+     * @param DateTimeInterface|null $from     The starting point (defaults to now).
      *
-     * @return \DateTimeImmutable|null The deadline, or null if no SLA configured.
+     * @return DateTimeImmutable|null The deadline, or null if no SLA configured.
      */
     public function calculateDeadline(
         string $category,
-        ?\DateTimeInterface $from = null,
-    ): ?\DateTimeImmutable {
+        ?DateTimeInterface $from = null,
+    ): ?DateTimeImmutable {
         $hours = $this->getSlaHoursForCategory($category);
 
         if ($hours <= 0) {
@@ -126,8 +129,8 @@ class ComplaintSlaService
         }
 
         $start = $from !== null
-            ? \DateTimeImmutable::createFromInterface($from)
-            : new \DateTimeImmutable();
+            ? new DateTimeImmutable($from->format('Y-m-d\TH:i:sP'))
+            : new DateTimeImmutable();
 
         return $start->modify('+' . $hours . ' hours');
     }//end calculateDeadline()
@@ -141,14 +144,14 @@ class ComplaintSlaService
      * 2. Its status is open (new or in_progress)
      * 3. The current time is past the deadline
      *
-     * @param array<string, mixed>    $complaint The complaint data array.
-     * @param \DateTimeInterface|null $now       The current time (defaults to now).
+     * @param array<string, mixed>   $complaint The complaint data array.
+     * @param DateTimeInterface|null $now       The current time (defaults to now).
      *
      * @return bool True if the complaint is overdue.
      */
     public function isOverdue(
         array $complaint,
-        ?\DateTimeInterface $now = null,
+        ?DateTimeInterface $now = null,
     ): bool {
         $deadline = $complaint['slaDeadline'] ?? null;
         $status   = $complaint['status'] ?? 'new';
@@ -162,8 +165,8 @@ class ComplaintSlaService
         }
 
         try {
-            $deadlineDate = new \DateTimeImmutable($deadline);
-        } catch (\Exception $e) {
+            $deadlineDate = new DateTimeImmutable($deadline);
+        } catch (Exception $e) {
             $this->logger->warning(
                 'ComplaintSlaService: Invalid deadline format "{deadline}"',
                 [
@@ -175,8 +178,8 @@ class ComplaintSlaService
         }
 
         $currentTime = $now !== null
-            ? \DateTimeImmutable::createFromInterface($now)
-            : new \DateTimeImmutable();
+            ? new DateTimeImmutable($now->format('Y-m-d\TH:i:sP'))
+            : new DateTimeImmutable();
 
         return $currentTime > $deadlineDate;
     }//end isOverdue()
