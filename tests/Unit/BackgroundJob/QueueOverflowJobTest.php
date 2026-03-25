@@ -25,6 +25,8 @@ use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use ReflectionMethod;
+use RuntimeException;
 
 /**
  * Tests for QueueOverflowJob.
@@ -108,7 +110,7 @@ class QueueOverflowJobTest extends TestCase
             ->method('info');
 
         $job = $this->buildJob();
-        $ref = new \ReflectionMethod(objectOrMethod: $job, method: 'run');
+        $ref = new ReflectionMethod(objectOrMethod: $job, method: 'run');
         $ref->setAccessible(accessible: true);
         $ref->invoke(object: $job, args: null);
     }//end testJobMovesOverflowItems()
@@ -130,7 +132,7 @@ class QueueOverflowJobTest extends TestCase
             ->method('debug');
 
         $job = $this->buildJob();
-        $ref = new \ReflectionMethod(objectOrMethod: $job, method: 'run');
+        $ref = new ReflectionMethod(objectOrMethod: $job, method: 'run');
         $ref->setAccessible(accessible: true);
         $ref->invoke(object: $job, args: null);
     }//end testJobLogsDebugWhenNoOverflow()
@@ -145,14 +147,14 @@ class QueueOverflowJobTest extends TestCase
         $this->queueService
             ->expects($this->once())
             ->method('processOverflow')
-            ->willThrowException(new \RuntimeException('service error'));
+            ->willThrowException(new RuntimeException('service error'));
 
         $this->logger
             ->expects($this->atLeastOnce())
             ->method('error');
 
         $job = $this->buildJob();
-        $ref = new \ReflectionMethod(objectOrMethod: $job, method: 'run');
+        $ref = new ReflectionMethod(objectOrMethod: $job, method: 'run');
         $ref->setAccessible(accessible: true);
         $ref->invoke(object: $job, args: null);
     }//end testJobLogsErrorOnException()
