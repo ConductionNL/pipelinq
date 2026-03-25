@@ -59,7 +59,6 @@ class ComplaintSlaService
         'in_progress',
     ];
 
-
     /**
      * Constructor.
      *
@@ -71,7 +70,6 @@ class ComplaintSlaService
         private LoggerInterface $logger,
     ) {
     }//end __construct()
-
 
     /**
      * Get the configured SLA hours for a complaint category.
@@ -93,7 +91,7 @@ class ComplaintSlaService
             return 0;
         }
 
-        $key   = 'complaint_sla_' . $category;
+        $key   = 'complaint_sla_'.$category;
         $value = $this->appConfig->getValueString(
             Application::APP_ID,
             $key,
@@ -107,7 +105,6 @@ class ComplaintSlaService
         return (int) $value;
     }//end getSlaHoursForCategory()
 
-
     /**
      * Calculate the SLA deadline for a complaint based on its category.
      *
@@ -120,21 +117,22 @@ class ComplaintSlaService
      */
     public function calculateDeadline(
         string $category,
-        ?DateTimeInterface $from = null,
+        ?DateTimeInterface $from=null,
     ): ?DateTimeImmutable {
-        $hours = $this->getSlaHoursForCategory($category);
+        $hours = $this->getSlaHoursForCategory(category: $category);
 
         if ($hours <= 0) {
             return null;
         }
 
-        $start = $from !== null
-            ? new DateTimeImmutable($from->format('Y-m-d\TH:i:sP'))
-            : new DateTimeImmutable();
+        if ($from !== null) {
+            $start = new DateTimeImmutable($from->format('Y-m-d\TH:i:sP'));
+        } else {
+            $start = new DateTimeImmutable();
+        }
 
-        return $start->modify('+' . $hours . ' hours');
+        return $start->modify('+'.$hours.' hours');
     }//end calculateDeadline()
-
 
     /**
      * Check whether a complaint is overdue based on its SLA deadline.
@@ -151,7 +149,7 @@ class ComplaintSlaService
      */
     public function isOverdue(
         array $complaint,
-        ?DateTimeInterface $now = null,
+        ?DateTimeInterface $now=null,
     ): bool {
         $deadline = $complaint['slaDeadline'] ?? null;
         $status   = $complaint['status'] ?? 'new';
@@ -177,13 +175,14 @@ class ComplaintSlaService
             return false;
         }
 
-        $currentTime = $now !== null
-            ? new DateTimeImmutable($now->format('Y-m-d\TH:i:sP'))
-            : new DateTimeImmutable();
+        if ($now !== null) {
+            $currentTime = new DateTimeImmutable($now->format('Y-m-d\TH:i:sP'));
+        } else {
+            $currentTime = new DateTimeImmutable();
+        }
 
         return $currentTime > $deadlineDate;
     }//end isOverdue()
-
 
     /**
      * Check if a complaint status is open (non-terminal).

@@ -46,11 +46,11 @@ class EmailSyncJob extends TimedJob
         private EmailSyncService $emailSyncService,
         private LoggerInterface $logger,
     ) {
-        parent::__construct($time);
+        parent::__construct(time: $time);
 
         // Run every 5 minutes (300 seconds).
-        $this->setInterval(300);
-        $this->setTimeSensitivity(self::TIME_SENSITIVE);
+        $this->setInterval(interval: 300);
+        $this->setTimeSensitivity(sensitivity: self::TIME_SENSITIVE);
     }//end __construct()
 
     /**
@@ -76,8 +76,7 @@ class EmailSyncJob extends TimedJob
             // 1. Get all users with email sync enabled
             // 2. For each user, query their configured mail accounts
             // 3. Process new emails since last sync
-            // 4. Match and create EmailLink objects
-
+            // 4. Match and create EmailLink objects.
             $this->logger->info('EmailSyncJob: Email sync completed');
         } catch (\Exception $e) {
             $this->logger->error(

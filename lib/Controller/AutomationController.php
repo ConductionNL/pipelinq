@@ -48,7 +48,6 @@ class AutomationController extends Controller
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
 
-
     /**
      * Get available triggers and actions metadata.
      *
@@ -58,12 +57,13 @@ class AutomationController extends Controller
      */
     public function metadata(): JSONResponse
     {
-        return new JSONResponse([
-            'triggers' => $this->automationService->getValidTriggers(),
-            'actions'  => $this->automationService->getValidActions(),
-        ]);
+        return new JSONResponse(
+                [
+                    'triggers' => $this->automationService->getValidTriggers(),
+                    'actions'  => $this->automationService->getValidActions(),
+                ]
+                );
     }//end metadata()
-
 
     /**
      * Test an automation's conditions against sample entity data.
@@ -84,13 +84,15 @@ class AutomationController extends Controller
             entityData: $entityData
         );
 
-        return new JSONResponse([
-            'matches' => $matches,
-            'payload' => $this->automationService->buildWebhookPayload(
+        return new JSONResponse(
+                [
+                    'matches' => $matches,
+                    'payload' => $this->automationService->buildWebhookPayload(
                 automation: $automation,
                 trigger: $trigger,
                 entityData: $entityData
             ),
-        ]);
+                ]
+                );
     }//end test()
 }//end class

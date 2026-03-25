@@ -83,7 +83,7 @@ class ContactmomentService
             'register',
             ''
         );
-        $schema = $this->appConfig->getValueString(
+        $schema   = $this->appConfig->getValueString(
             Application::APP_ID,
             'contactmoment_schema',
             ''
@@ -126,7 +126,7 @@ class ContactmomentService
 
         if ($object === null) {
             throw new DoesNotExistException(
-                'Contactmoment not found: ' . $id
+                'Contactmoment not found: '.$id
             );
         }
 
