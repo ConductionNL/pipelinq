@@ -31,6 +31,7 @@ use Psr\Log\LoggerInterface;
  */
 class QueueOverflowJobTest extends TestCase
 {
+
     /**
      * The time factory mock.
      *
@@ -59,9 +60,9 @@ class QueueOverflowJobTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->timeFactory  = $this->createMock(ITimeFactory::class);
-        $this->queueService = $this->createMock(QueueService::class);
-        $this->logger       = $this->createMock(LoggerInterface::class);
+        $this->timeFactory  = $this->createMock(originalClassName: ITimeFactory::class);
+        $this->queueService = $this->createMock(originalClassName: QueueService::class);
+        $this->logger       = $this->createMock(originalClassName: LoggerInterface::class);
 
         $this->timeFactory->method('getTime')->willReturn(time());
     }//end setUp()
@@ -87,7 +88,7 @@ class QueueOverflowJobTest extends TestCase
      */
     public function testJobCanBeInstantiated(): void
     {
-        $this->assertInstanceOf(QueueOverflowJob::class, $this->buildJob());
+        $this->assertInstanceOf(expected: QueueOverflowJob::class, actual: $this->buildJob());
     }//end testJobCanBeInstantiated()
 
     /**
@@ -107,9 +108,9 @@ class QueueOverflowJobTest extends TestCase
             ->method('info');
 
         $job = $this->buildJob();
-        $ref = new \ReflectionMethod($job, 'run');
-        $ref->setAccessible(true);
-        $ref->invoke($job, null);
+        $ref = new \ReflectionMethod(objectOrMethod: $job, method: 'run');
+        $ref->setAccessible(accessible: true);
+        $ref->invoke(object: $job, args: null);
     }//end testJobMovesOverflowItems()
 
     /**
@@ -129,9 +130,9 @@ class QueueOverflowJobTest extends TestCase
             ->method('debug');
 
         $job = $this->buildJob();
-        $ref = new \ReflectionMethod($job, 'run');
-        $ref->setAccessible(true);
-        $ref->invoke($job, null);
+        $ref = new \ReflectionMethod(objectOrMethod: $job, method: 'run');
+        $ref->setAccessible(accessible: true);
+        $ref->invoke(object: $job, args: null);
     }//end testJobLogsDebugWhenNoOverflow()
 
     /**
@@ -151,8 +152,8 @@ class QueueOverflowJobTest extends TestCase
             ->method('error');
 
         $job = $this->buildJob();
-        $ref = new \ReflectionMethod($job, 'run');
-        $ref->setAccessible(true);
-        $ref->invoke($job, null);
+        $ref = new \ReflectionMethod(objectOrMethod: $job, method: 'run');
+        $ref->setAccessible(accessible: true);
+        $ref->invoke(object: $job, args: null);
     }//end testJobLogsErrorOnException()
 }//end class
