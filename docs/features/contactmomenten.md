@@ -1,62 +1,45 @@
 # Contactmomenten
 
-**Status:** Planned
+## Summary
 
-## Overview
-
-Core CRUD and lifecycle management for contactmoment records — structured logs of every interaction between an agent and a citizen or client (phone, email, counter, chat). Without this, Pipelinq cannot serve as the klantinteractie hub required by 54% of Dutch government tenders.
-
-Contactmomenten are distinct from the Contactmomenten Rapportage feature: this spec covers the core entity, views, and storage; reporting is covered separately in [contactmomenten-rapportage.md](contactmomenten-rapportage.md).
+Register every customer interaction (phone, email, chat, desk visit) as a structured contact moment. Provides complete contact history per person and organization.
 
 ## Standards
 
-- **GEMMA Callcentercomponent**: [gemmaonline.nl](https://gemmaonline.nl/index.php/GEMMA/id-9d127615-3b66-4d9e-9071-2a85f9cd44d8)
-- **VNG Klantinteracties**: `Contactmoment` object
-- **Schema.org**: `CommunicateAction`
-- **TEC CRM**: Section 3.1 (Creating New Cases / Service Requests)
+| Standard | Mapping |
+|----------|---------|
+| Schema.org | `CommunicateAction` |
+| VNG Klantinteracties | `Contactmoment`, `KlantContactmoment`, `ObjectContactmoment` |
 
-## Market Demand
+## Components
 
-- **54%** of Dutch klantinteractie government tenders require structured contactmoment registration
-- Backed by validated market intelligence across 39K+ tenders
+### Backend
+- `lib/Service/ContactmomentService.php` -- Permission-checked delete (creator or admin only)
+- `lib/Controller/ContactmomentController.php` -- REST API: `DELETE /api/contactmomenten/{id}`
+- Schema defined in `lib/Settings/pipelinq_register.json` (contactmoment object)
 
-## Key Capabilities
+### Frontend
+- `src/views/contactmomenten/ContactmomentenList.vue` -- List view with CnIndexPage, filtering, sorting
+- `src/views/contactmomenten/ContactmomentDetail.vue` -- Detail view with edit/delete
+- `src/views/contactmomenten/ContactmomentForm.vue` -- Standalone registration form with channel-specific fields
+- `src/components/ContactmomentQuickLog.vue` -- Reusable quick-log form for embedding in other views
 
-- Contactmoment entity with fields: timestamp, agent, client reference, channel, subject, summary, outcome, duration, linked request/case, channel-specific metadata
-- List view (`/contactmomenten`) with search, sort, filter by channel/agent/date range, pagination
-- Detail view: full record, linked client, linked request/case, channel metadata
-- Quick-log form: accessible from client detail, request detail, and the contactmomenten list; pre-fills context (client, request) when launched from those views
-- Client timeline integration: contactmomenten appear in the client detail activity timeline sorted chronologically with other activities
-- Pinia store (`contactmomentenStore`) querying OpenRegister API for CRUD
+### Data Model
 
-## Data Model
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| subject | string | Yes | Subject of the interaction |
+| channel | enum | Yes | telefoon, email, balie, chat, social, brief |
+| outcome | enum | No | afgehandeld, doorverbonden, terugbelverzoek, vervolgactie |
+| client | UUID | No | Reference to client |
+| request | UUID | No | Reference to request |
+| agent | string | Auto | Nextcloud user UID |
+| contactedAt | datetime | Auto | Timestamp of interaction |
+| duration | string | No | ISO 8601 duration |
+| channelMetadata | object | No | Channel-specific data |
+| notes | string | No | Internal notes |
 
-Fields aligned to VNG Klantinteracties `Contactmoment` and Schema.org `CommunicateAction`:
+## Change History
 
-| Field | Type | Description |
-|-------|------|-------------|
-| timestamp | datetime | When the interaction occurred |
-| agent | user ref | Nextcloud user who handled the interaction |
-| client | object ref | Linked client (person or organization) |
-| channel | enum | phone, email, counter, chat, web, other |
-| subject | string | Short subject/topic |
-| summary | text | Full interaction summary |
-| outcome | enum | resolved, follow-up, transferred, voicemail |
-| duration | integer | Duration in seconds |
-| linkedRequest | object ref | Optional linked request/verzoek |
-| linkedCase | string | Optional external case reference |
-
-## Impact
-
-- **Frontend**: New views (`src/views/contactmomenten/`), new store (`src/store/contactmomenten.js`), new route entries, navigation item
-- **Register schema**: `lib/Settings/pipelinq_register.json` gains Contactmoment object definition
-- **Existing views**: Client detail and request detail views get additional sections/tabs for linked contactmomenten
-- **Procest bridge**: Contactmomenten linked to requests carry over when a request is converted to a case in Procest
-
-## Specification
-
-Full specification: `openspec/changes/archive/2026-03-22-contactmomenten/specs/`
-
-Related changes:
-- Design: `openspec/changes/archive/2026-03-22-contactmomenten/design.md`
-- Tasks: `openspec/changes/archive/2026-03-22-contactmomenten/tasks.md`
+- **2026-03-25**: Completed backend service, fixed frontend data flow (feature/65/contactmomenten)
+- **2026-03-22**: Initial implementation of views, store, schema, navigation (archived)
