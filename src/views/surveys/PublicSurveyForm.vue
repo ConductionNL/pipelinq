@@ -98,19 +98,34 @@ export default {
 </script>
 <style scoped>
 .public-survey { max-width: 700px; margin: 0 auto; padding: 32px 20px; }
+
 .msg { text-align: center; padding: 40px; }
+
 .success h2 { color: var(--color-success); }
+
 .question { margin-bottom: 24px; }
+
 .question label { font-weight: 600; display: block; margin-bottom: 8px; }
+
 .req { color: var(--color-error); }
+
 .nps-row button { width: 36px; height: 36px; border: 2px solid var(--color-border); border-radius: 6px; background: white; cursor: pointer; margin: 2px; }
+
 .nps-row button.sel { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+
 .stars button { font-size: 28px; background: none; border: none; cursor: pointer; color: var(--color-border); }
+
 .stars button.filled { color: #f59e0b; }
+
 .opt { display: block; padding: 4px 0; cursor: pointer; }
+
 .yn { display: flex; gap: 20px; }
+
 .question textarea { width: 100%; padding: 8px; border: 1px solid var(--color-border); border-radius: 4px; }
+
 .error { color: var(--color-error); }
+
 .submit-btn { background: var(--color-primary); color: white; border: none; padding: 10px 24px; border-radius: 20px; font-size: 15px; cursor: pointer; font-weight: 600; }
+
 .submit-btn:disabled { opacity: 0.6; }
 </style>

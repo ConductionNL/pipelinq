@@ -174,27 +174,50 @@ export default {
 
 <style scoped>
 .rapportage-dashboard { padding: 20px; max-width: 1200px; margin: 0 auto; }
+
 .rapportage-dashboard__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+
 .rapportage-dashboard__actions { display: flex; gap: 12px; align-items: center; }
+
 .last-updated { font-size: 0.85em; color: var(--color-text-lighter); }
+
 .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+
 .kpi-card { border: 1px solid var(--color-border); border-radius: var(--border-radius-large); padding: 20px; text-align: center; }
+
 .kpi-card--success { border-color: var(--color-success); }
+
 .kpi-card--warning { border-color: var(--color-warning); }
+
 .kpi-card--danger { border-color: #e53e3e; }
+
 .kpi-card__value { font-size: 2em; font-weight: 700; }
+
 .kpi-card__label { font-size: 0.85em; color: var(--color-text-lighter); margin-top: 4px; }
+
 .kpi-card__target { font-size: 0.75em; color: var(--color-text-lighter); margin-top: 4px; }
+
 .kpi-card__trend { font-size: 0.85em; margin-top: 4px; }
+
 .trend--up { color: var(--color-success); }
+
 .trend--down { color: #e53e3e; }
+
 .channel-section { margin-bottom: 24px; }
+
 .channel-bars { display: flex; flex-direction: column; gap: 8px; }
+
 .channel-bar { display: flex; align-items: center; gap: 12px; }
+
 .channel-bar__label { width: 100px; font-weight: 600; font-size: 0.9em; }
+
 .channel-bar__track { flex: 1; height: 24px; background: var(--color-background-dark); border-radius: 12px; overflow: hidden; }
+
 .channel-bar__fill { height: 100%; border-radius: 12px; transition: width 0.3s; }
+
 .channel-bar__count { width: 120px; text-align: right; font-size: 0.85em; color: var(--color-text-lighter); }
+
 .empty-message { padding: 20px; text-align: center; color: var(--color-text-lighter); }
+
 .rapportage-links { display: flex; gap: 8px; }
 </style>

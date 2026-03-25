@@ -402,7 +402,9 @@ export default {
 }
 
 .status-badge--concept { background: var(--color-warning); color: #000; }
+
 .status-badge--gepubliceerd { background: var(--color-success); color: #fff; }
+
 .status-badge--gearchiveerd { background: var(--color-text-lighter); color: #fff; }
 
 .visibility-badge {
@@ -412,6 +414,7 @@ export default {
 }
 
 .visibility-badge--openbaar { background: var(--color-primary-element-light); }
+
 .visibility-badge--intern { background: var(--color-background-dark); }
 
 .kennisbank-home__empty {
@@ -420,14 +423,24 @@ export default {
 </style>
 <style scoped>
 .kennisbank-home { padding: 20px }
+
 .kennisbank-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px }
+
 .kennisbank-search { position: relative; margin-bottom: 16px }
+
 .autocomplete-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--color-main-background); border: 1px solid var(--color-border); border-radius: var(--border-radius); box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 100 }
+
 .autocomplete-item { display: flex; justify-content: space-between; padding: 8px 12px; cursor: pointer }
+
 .autocomplete-item:hover { background: var(--color-background-hover) }
+
 .autocomplete-category { color: var(--color-text-maxcontrast); font-size: 12px }
+
 .kennisbank-content { display: flex; gap: 20px }
+
 .kennisbank-sidebar { width: 250px; flex-shrink: 0 }
+
 .kennisbank-main { flex: 1; min-width: 0 }
+
 .article-list { display: flex; flex-direction: column; gap: 8px }
 </style>

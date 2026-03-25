@@ -38,6 +38,8 @@ export default {
 </script>
 <style scoped>
 .analytics { padding: 20px; max-width: 900px; }
+
 .metrics { display: flex; gap: 20px; margin: 16px 0; font-weight: 600; }
+
 .q-result { margin: 12px 0; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; }
 </style>

@@ -85,14 +85,24 @@ export default {
 </script>
 <style scoped>
 .kennisbank-detail { padding: 20px; max-width: 900px }
+
 .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600 }
+
 .badge--public { background: #dcfce7; color: #166534 }
+
 .badge--internal { background: var(--color-background-dark); color: var(--color-text-maxcontrast) }
+
 .badge--archived { background: #fef3c7; color: #92400e }
+
 .badge--draft { background: #dbeafe; color: #1e40af }
+
 .badge--review { background: #fee2e2; color: #991b1b }
+
 .detail-body { line-height: 1.6; font-size: 15px }
+
 .detail-body :deep(img) { max-width: 100% }
+
 .detail-body :deep(code) { background: var(--color-background-dark); padding: 2px 6px; border-radius: 4px }
+
 .detail-body :deep(pre) { background: var(--color-background-dark); padding: 12px; border-radius: var(--border-radius); overflow-x: auto }
 </style>

@@ -93,18 +93,32 @@ export default {
 
 <style scoped>
 .channel-analytics { padding: 20px; max-width: 1000px; margin: 0 auto; }
+
 .channel-analytics__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+
 .channel-analytics__controls { margin-bottom: 20px; }
+
 .granularity-buttons { display: flex; gap: 4px; }
+
 .data-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+
 .data-table th, .data-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--color-border); }
+
 .data-table th { font-weight: 600; font-size: 0.85em; color: var(--color-text-lighter); text-transform: uppercase; }
+
 .channel-name { display: flex; align-items: center; gap: 8px; }
+
 .channel-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+
 .sla--green { color: var(--color-success); }
+
 .sla--orange { color: var(--color-warning); }
+
 .sla--red { color: #e53e3e; }
+
 .trend--up { color: var(--color-success); }
+
 .trend--down { color: #e53e3e; }
+
 .empty-state { padding: 40px; text-align: center; color: var(--color-text-lighter); }
 </style>

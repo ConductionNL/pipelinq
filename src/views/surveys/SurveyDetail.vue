@@ -61,9 +61,14 @@ export default {
 </script>
 <style scoped>
 .survey-detail { padding: 20px; max-width: 900px; }
+
 .badge { font-size: 12px; padding: 2px 8px; border-radius: 10px; background: var(--color-background-dark); }
+
 .link-box { padding: 12px; background: var(--color-background-dark); border-radius: 8px; margin: 12px 0; display: flex; gap: 8px; align-items: center; }
+
 .link-box code { flex: 1; font-size: 12px; }
+
 .metrics { display: flex; gap: 20px; margin: 16px 0; font-weight: 600; }
+
 .actions { display: flex; gap: 8px; margin-top: 20px; }
 </style>

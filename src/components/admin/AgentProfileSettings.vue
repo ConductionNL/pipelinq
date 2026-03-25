@@ -225,8 +225,8 @@ export default {
 	font-size: 13px;
 }
 
-.edit-field input[type="text"],
-.edit-field input[type="number"] {
+.edit-field input[type='text'],
+.edit-field input[type='number'] {
 	padding: 6px 8px;
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);

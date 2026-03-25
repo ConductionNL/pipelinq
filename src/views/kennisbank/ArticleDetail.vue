@@ -278,7 +278,9 @@ export default {
 }
 
 .status-badge--concept { background: var(--color-warning); color: #000; }
+
 .status-badge--gepubliceerd { background: var(--color-success); color: #fff; }
+
 .status-badge--gearchiveerd { background: var(--color-text-lighter); color: #fff; }
 
 .visibility-badge {
@@ -288,5 +290,6 @@ export default {
 }
 
 .visibility-badge--openbaar { background: var(--color-primary-element-light); }
+
 .visibility-badge--intern { background: var(--color-background-dark); }
 </style>
