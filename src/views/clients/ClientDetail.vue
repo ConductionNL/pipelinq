@@ -204,6 +204,33 @@
 
 			<div v-if="contactmomenten.length === 0" class="section-empty">
 				<p>{{ t('pipelinq', 'Geen contactmomenten geregistreerd') }}</p>
+			</div>
+			<div v-else class="viewTableContainer">
+				<table class="viewTable">
+					<thead>
+						<tr>
+							<th>{{ t('pipelinq', 'Subject') }}</th>
+							<th>{{ t('pipelinq', 'Channel') }}</th>
+							<th>{{ t('pipelinq', 'Agent') }}</th>
+							<th>{{ t('pipelinq', 'Date') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="cm in contactmomenten"
+							:key="cm.id"
+							class="viewTableRow"
+							@click="$router.push({ name: 'ContactmomentDetail', params: { id: cm.id } })">
+							<td>{{ cm.subject || '-' }}</td>
+							<td>{{ cm.channel || '-' }}</td>
+							<td>{{ cm.agent || '-' }}</td>
+							<td>{{ formatDate(cm.contactedAt) }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</CnDetailCard>
+
 		<CnDetailCard :title="t('pipelinq', 'Complaints')">
 			<template #actions>
 				<NcButton @click="createComplaint">
@@ -218,9 +245,6 @@
 				<table class="viewTable">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Subject') }}</th>
-							<th>{{ t('pipelinq', 'Channel') }}</th>
-							<th>{{ t('pipelinq', 'Agent') }}</th>
 							<th>{{ t('pipelinq', 'Title') }}</th>
 							<th>{{ t('pipelinq', 'Status') }}</th>
 							<th>{{ t('pipelinq', 'Date') }}</th>
@@ -228,14 +252,6 @@
 					</thead>
 					<tbody>
 						<tr
-							v-for="cm in contactmomenten"
-							:key="cm.id"
-							class="viewTableRow"
-							@click="$router.push({ name: 'ContactmomentDetail', params: { id: cm.id } })">
-							<td>{{ cm.subject || '-' }}</td>
-							<td>{{ cm.channel || '-' }}</td>
-							<td>{{ cm.agent || '-' }}</td>
-							<td>{{ formatDate(cm.contactedAt) }}</td>
 							v-for="complaint in complaints"
 							:key="complaint.id"
 							class="viewTableRow"
@@ -473,11 +489,22 @@ export default {
 			} catch {
 				this.contactmomenten = []
 			}
+
+			try {
+				const allComplaints = await this.objectStore.fetchCollection('complaint', {
+					_limit: 50,
+					client: this.clientId,
+					_order: { _dateCreated: 'desc' },
+				})
+				this.complaints = allComplaints || []
+			} catch {
+				this.complaints = []
+			}
 		},
 		formatDate(dateStr) {
 			if (!dateStr) return '-'
 			try {
-				return new Date(dateStr).toLocaleString()
+				return new Date(dateStr).toLocaleDateString()
 			} catch {
 				return dateStr
 			}
@@ -494,14 +521,6 @@ export default {
 		},
 		createComplaint() {
 			this.$router.push({ name: 'ComplaintDetail', params: { id: 'new' }, query: { client: this.clientId } })
-		},
-		formatDate(dateStr) {
-			if (!dateStr) return '-'
-			try {
-				return new Date(dateStr).toLocaleDateString()
-			} catch {
-				return dateStr
-			}
 		},
 		isClosedLead(lead) {
 			return lead.status === 'won' || lead.status === 'lost'
