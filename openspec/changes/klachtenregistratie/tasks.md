@@ -22,9 +22,9 @@
 - **Spec ref**: REQ-KL-009
 - **Files**: `tests/Unit/Service/ComplaintSlaServiceTest.php`
 - **Acceptance**: 3+ test methods covering deadline calculation, missing config, overdue detection
-- [ ] Test `calculateDeadline()` with configured hours
-- [ ] Test `calculateDeadline()` returns null for unconfigured category
-- [ ] Test `isOverdue()` with past/future deadlines
+- [x] Test `calculateDeadline()` with configured hours
+- [x] Test `calculateDeadline()` returns null for unconfigured category
+- [x] Test `isOverdue()` with past/future deadlines
 
 ### Task 2.2: Unit tests for ComplaintSlaJob [MVP]
 - **Spec ref**: REQ-KL-010
