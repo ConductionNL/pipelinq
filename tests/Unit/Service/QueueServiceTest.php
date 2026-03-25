@@ -26,14 +26,17 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Tests for QueueService.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 class QueueServiceTest extends TestCase
 {
+
     /**
      * The app config mock.
      *
@@ -62,9 +65,9 @@ class QueueServiceTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->appConfig = $this->createMock(IAppConfig::class);
-        $this->container = $this->createMock(ContainerInterface::class);
-        $this->logger    = $this->createMock(LoggerInterface::class);
+        $this->appConfig = $this->createMock(originalClassName: IAppConfig::class);
+        $this->container = $this->createMock(originalClassName: ContainerInterface::class);
+        $this->logger    = $this->createMock(originalClassName: LoggerInterface::class);
     }//end setUp()
 
     /**
@@ -91,17 +94,19 @@ class QueueServiceTest extends TestCase
      * @return void
      */
     private function configureAppConfig(
-        string $register = 'reg-id',
-        string $requestSchema = 'req-schema-id',
-        string $queueSchema = 'queue-schema-id',
+        string $register='reg-id',
+        string $requestSchema='req-schema-id',
+        string $queueSchema='queue-schema-id',
     ): void {
         $this->appConfig
             ->method('getValueString')
-            ->willReturnMap([
-                [Application::APP_ID, 'register', '', $register],
-                [Application::APP_ID, 'request_schema', '', $requestSchema],
-                [Application::APP_ID, 'queue_schema', '', $queueSchema],
-            ]);
+            ->willReturnMap(
+                [
+                    [Application::APP_ID, 'register', '', $register],
+                    [Application::APP_ID, 'request_schema', '', $requestSchema],
+                    [Application::APP_ID, 'queue_schema', '', $queueSchema],
+                ]
+            );
     }//end configureAppConfig()
 
     /**
@@ -111,7 +116,7 @@ class QueueServiceTest extends TestCase
      */
     private function createObjectServiceMock(): MockObject
     {
-        $mock = $this->getMockBuilder(\stdClass::class)
+        $mock = $this->getMockBuilder(className: \stdClass::class)
             ->addMethods(['findAll', 'saveObject'])
             ->getMock();
 
@@ -129,16 +134,18 @@ class QueueServiceTest extends TestCase
     {
         $this->appConfig
             ->method('getValueString')
-            ->willReturnMap([
-                [Application::APP_ID, 'register', '', ''],
-                [Application::APP_ID, 'request_schema', '', ''],
-                [Application::APP_ID, 'queue_schema', '', ''],
-            ]);
+            ->willReturnMap(
+                [
+                    [Application::APP_ID, 'register', '', ''],
+                    [Application::APP_ID, 'request_schema', '', ''],
+                    [Application::APP_ID, 'queue_schema', '', ''],
+                ]
+            );
 
         $this->logger->expects($this->once())->method('warning');
 
-        $result = $this->buildService()->getQueueDepth('some-queue-id');
-        $this->assertSame(0, $result);
+        $result = $this->buildService()->getQueueDepth(queueId: 'some-queue-id');
+        $this->assertSame(expected: 0, actual: $result);
     }//end testGetQueueDepthReturnsZeroWhenNotConfigured()
 
     /**
@@ -151,14 +158,16 @@ class QueueServiceTest extends TestCase
         $this->configureAppConfig();
 
         $objectService = $this->createObjectServiceMock();
-        $objectService->method('findAll')->willReturn([
-            ['id' => 'item-1'],
-            ['id' => 'item-2'],
-            ['id' => 'item-3'],
-        ]);
+        $objectService->method('findAll')->willReturn(
+                [
+                    ['id' => 'item-1'],
+                    ['id' => 'item-2'],
+                    ['id' => 'item-3'],
+                ]
+                );
 
-        $result = $this->buildService()->getQueueDepth('queue-123');
-        $this->assertSame(3, $result);
+        $result = $this->buildService()->getQueueDepth(queueId: 'queue-123');
+        $this->assertSame(expected: 3, actual: $result);
     }//end testGetQueueDepthReturnsItemCount()
 
     /**
@@ -170,11 +179,11 @@ class QueueServiceTest extends TestCase
     {
         $this->configureAppConfig();
 
-        $this->container->method('get')->willThrowException(new \RuntimeException('service unavailable'));
+        $this->container->method('get')->willThrowException(new RuntimeException('service unavailable'));
         $this->logger->expects($this->once())->method('error');
 
-        $result = $this->buildService()->getQueueDepth('queue-123');
-        $this->assertSame(0, $result);
+        $result = $this->buildService()->getQueueDepth(queueId: 'queue-123');
+        $this->assertSame(expected: 0, actual: $result);
     }//end testGetQueueDepthReturnsZeroOnException()
 
     /**
@@ -186,8 +195,8 @@ class QueueServiceTest extends TestCase
     {
         $queue = ['id' => 'q1', 'maxCapacity' => null];
 
-        $result = $this->buildService()->isAtCapacity($queue, 100);
-        $this->assertFalse($result);
+        $result = $this->buildService()->isAtCapacity(queue: $queue, currentCount: 100);
+        $this->assertFalse(condition: $result);
     }//end testIsAtCapacityReturnsFalseWhenNoLimit()
 
     /**
@@ -199,8 +208,8 @@ class QueueServiceTest extends TestCase
     {
         $queue = ['id' => 'q1', 'maxCapacity' => 50];
 
-        $result = $this->buildService()->isAtCapacity($queue, 50);
-        $this->assertTrue($result);
+        $result = $this->buildService()->isAtCapacity(queue: $queue, currentCount: 50);
+        $this->assertTrue(condition: $result);
     }//end testIsAtCapacityReturnsTrueWhenAtLimit()
 
     /**
@@ -212,8 +221,8 @@ class QueueServiceTest extends TestCase
     {
         $queue = ['id' => 'q1', 'maxCapacity' => 50];
 
-        $result = $this->buildService()->isAtCapacity($queue, 55);
-        $this->assertTrue($result);
+        $result = $this->buildService()->isAtCapacity(queue: $queue, currentCount: 55);
+        $this->assertTrue(condition: $result);
     }//end testIsAtCapacityReturnsTrueWhenOverLimit()
 
     /**
@@ -225,8 +234,8 @@ class QueueServiceTest extends TestCase
     {
         $queue = ['id' => 'q1', 'maxCapacity' => 50];
 
-        $result = $this->buildService()->isAtCapacity($queue, 30);
-        $this->assertFalse($result);
+        $result = $this->buildService()->isAtCapacity(queue: $queue, currentCount: 30);
+        $this->assertFalse(condition: $result);
     }//end testIsAtCapacityReturnsFalseWhenUnderLimit()
 
     /**
@@ -243,16 +252,18 @@ class QueueServiceTest extends TestCase
             ->expects($this->once())
             ->method('saveObject')
             ->with(
-                $this->callback(function ($data) {
-                    return $data['id'] === 'request-123' && $data['queue'] === 'queue-456';
-                }),
+                $this->callback(
+                        callback: function ($data) {
+                            return $data['id'] === 'request-123' && $data['queue'] === 'queue-456';
+                        }
+                        ),
                 $this->anything(),
-                $this->equalTo('reg-id'),
-                $this->equalTo('req-schema-id'),
+                $this->equalTo(value: 'reg-id'),
+                $this->equalTo(value: 'req-schema-id'),
             );
 
-        $result = $this->buildService()->assignToQueue('request-123', 'queue-456');
-        $this->assertTrue($result);
+        $result = $this->buildService()->assignToQueue(requestId: 'request-123', queueId: 'queue-456');
+        $this->assertTrue(condition: $result);
     }//end testAssignToQueueUpdatesSaveObject()
 
     /**
@@ -269,16 +280,18 @@ class QueueServiceTest extends TestCase
             ->expects($this->once())
             ->method('saveObject')
             ->with(
-                $this->callback(function ($data) {
-                    return $data['id'] === 'request-123' && $data['queue'] === null;
-                }),
+                $this->callback(
+                        callback: function ($data) {
+                            return $data['id'] === 'request-123' && $data['queue'] === null;
+                        }
+                        ),
                 $this->anything(),
-                $this->equalTo('reg-id'),
-                $this->equalTo('req-schema-id'),
+                $this->equalTo(value: 'reg-id'),
+                $this->equalTo(value: 'req-schema-id'),
             );
 
-        $result = $this->buildService()->removeFromQueue('request-123');
-        $this->assertTrue($result);
+        $result = $this->buildService()->removeFromQueue(requestId: 'request-123');
+        $this->assertTrue(condition: $result);
     }//end testRemoveFromQueueClearsQueueField()
 
     /**
@@ -290,14 +303,16 @@ class QueueServiceTest extends TestCase
     {
         $this->appConfig
             ->method('getValueString')
-            ->willReturnMap([
-                [Application::APP_ID, 'register', '', ''],
-                [Application::APP_ID, 'request_schema', '', ''],
-                [Application::APP_ID, 'queue_schema', '', ''],
-            ]);
+            ->willReturnMap(
+                [
+                    [Application::APP_ID, 'register', '', ''],
+                    [Application::APP_ID, 'request_schema', '', ''],
+                    [Application::APP_ID, 'queue_schema', '', ''],
+                ]
+            );
 
-        $result = $this->buildService()->assignToQueue('req-1', 'queue-1');
-        $this->assertFalse($result);
+        $result = $this->buildService()->assignToQueue(requestId: 'req-1', queueId: 'queue-1');
+        $this->assertFalse(condition: $result);
     }//end testAssignToQueueReturnsFalseWhenNotConfigured()
 
     /**
@@ -309,11 +324,11 @@ class QueueServiceTest extends TestCase
     {
         $this->configureAppConfig();
 
-        $this->container->method('get')->willThrowException(new \RuntimeException('fail'));
+        $this->container->method('get')->willThrowException(new RuntimeException('fail'));
         $this->logger->expects($this->once())->method('error');
 
-        $result = $this->buildService()->assignToQueue('req-1', 'queue-1');
-        $this->assertFalse($result);
+        $result = $this->buildService()->assignToQueue(requestId: 'req-1', queueId: 'queue-1');
+        $this->assertFalse(condition: $result);
     }//end testAssignToQueueReturnsFalseOnException()
 
     /**
@@ -325,15 +340,17 @@ class QueueServiceTest extends TestCase
     {
         $this->appConfig
             ->method('getValueString')
-            ->willReturnMap([
-                [Application::APP_ID, 'register', '', ''],
-                [Application::APP_ID, 'request_schema', '', ''],
-                [Application::APP_ID, 'queue_schema', '', ''],
-            ]);
+            ->willReturnMap(
+                [
+                    [Application::APP_ID, 'register', '', ''],
+                    [Application::APP_ID, 'request_schema', '', ''],
+                    [Application::APP_ID, 'queue_schema', '', ''],
+                ]
+            );
 
         $this->logger->expects($this->once())->method('warning');
 
         $result = $this->buildService()->processOverflow();
-        $this->assertSame(0, $result);
+        $this->assertSame(expected: 0, actual: $result);
     }//end testProcessOverflowReturnsZeroWhenNotConfigured()
 }//end class

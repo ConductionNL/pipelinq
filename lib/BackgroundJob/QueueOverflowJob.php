@@ -52,8 +52,8 @@ class QueueOverflowJob extends TimedJob
         private QueueService $queueService,
         private LoggerInterface $logger,
     ) {
-        parent::__construct($time);
-        $this->setInterval(self::INTERVAL);
+        parent::__construct(time: $time);
+        $this->setInterval(interval: self::INTERVAL);
     }//end __construct()
 
     /**
@@ -65,6 +65,8 @@ class QueueOverflowJob extends TimedJob
      * @param mixed $argument The job argument (unused).
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     protected function run(mixed $argument): void
     {
@@ -75,7 +77,9 @@ class QueueOverflowJob extends TimedJob
 
             if ($moved > 0) {
                 $this->logger->info("QueueOverflowJob: Moved {$moved} items to overflow queues");
-            } else {
+            }
+
+            if ($moved === 0) {
                 $this->logger->debug('QueueOverflowJob: No overflow items to move');
             }
         } catch (\Exception $e) {

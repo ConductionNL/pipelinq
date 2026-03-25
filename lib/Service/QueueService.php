@@ -95,7 +95,7 @@ class QueueService
      *
      * @return bool True if the queue is at or over capacity.
      */
-    public function isAtCapacity(array $queue, ?int $currentCount = null): bool
+    public function isAtCapacity(array $queue, ?int $currentCount=null): bool
     {
         $maxCapacity = $queue['maxCapacity'] ?? null;
         if ($maxCapacity === null || $maxCapacity <= 0) {
@@ -104,7 +104,7 @@ class QueueService
 
         if ($currentCount === null) {
             $queueId      = $queue['id'] ?? '';
-            $currentCount = $this->getQueueDepth($queueId);
+            $currentCount = $this->getQueueDepth(queueId: $queueId);
         }
 
         return $currentCount >= (int) $maxCapacity;
@@ -120,7 +120,7 @@ class QueueService
      */
     public function assignToQueue(string $requestId, string $queueId): bool
     {
-        return $this->updateRequestQueueField($requestId, $queueId);
+        return $this->updateRequestQueueField(requestId: $requestId, queueId: $queueId);
     }//end assignToQueue()
 
     /**
@@ -132,7 +132,7 @@ class QueueService
      */
     public function removeFromQueue(string $requestId): bool
     {
-        return $this->updateRequestQueueField($requestId, null);
+        return $this->updateRequestQueueField(requestId: $requestId, queueId: null);
     }//end removeFromQueue()
 
     /**
@@ -168,7 +168,7 @@ class QueueService
             );
 
             foreach ($queues as $queue) {
-                $movedCount += $this->processQueueOverflow($queue);
+                $movedCount += $this->processQueueOverflow(queue: $queue);
             }
         } catch (\Exception $e) {
             $this->logger->error(
@@ -198,7 +198,7 @@ class QueueService
             return 0;
         }
 
-        $depth = $this->getQueueDepth($queueId);
+        $depth = $this->getQueueDepth(queueId: $queueId);
         if ($depth <= (int) $maxCapacity) {
             return 0;
         }
@@ -215,7 +215,7 @@ class QueueService
             "QueueService: Moving {$excess} excess items from '{$title}' to overflow queue"
         );
 
-        $moved = $this->moveExcessItems($queueId, $overflowQueue, $excess);
+        $moved = $this->moveExcessItems(fromQueueId: $queueId, toQueueId: $overflowQueue, count: $excess);
 
         $this->logger->info("QueueService: Moved {$moved} items from '{$title}' to overflow");
 
@@ -225,9 +225,9 @@ class QueueService
     /**
      * Move excess items from one queue to another.
      *
-     * @param string $fromQueueId   Source queue UUID.
-     * @param string $toQueueId     Target queue UUID.
-     * @param int    $count         Number of items to move.
+     * @param string $fromQueueId Source queue UUID.
+     * @param string $toQueueId   Target queue UUID.
+     * @param int    $count       Number of items to move.
      *
      * @return int Number of items actually moved.
      */
@@ -265,7 +265,7 @@ class QueueService
                     continue;
                 }
 
-                if ($this->assignToQueue($itemId, $toQueueId) === true) {
+                if ($this->assignToQueue(requestId: $itemId, queueId: $toQueueId) === true) {
                     $moved++;
                 }
             }
