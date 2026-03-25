@@ -85,6 +85,7 @@ Vrij en open source onder de AGPL-licentie.
     <background-jobs>
         <job>OCA\Pipelinq\BackgroundJob\KennisbankReviewJob</job>
         <job>OCA\Pipelinq\BackgroundJob\TaskExpiryJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\CallbackOverdueJob</job>
     </background-jobs>
 
     <navigations>
