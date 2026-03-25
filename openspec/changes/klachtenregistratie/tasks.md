@@ -30,8 +30,8 @@
 - **Spec ref**: REQ-KL-010
 - **Files**: `tests/Unit/BackgroundJob/ComplaintSlaJobTest.php`
 - **Acceptance**: 2+ test methods covering job execution and no-op when no overdue complaints
-- [ ] Test job runs without error
-- [ ] Test job logs overdue complaints
+- [x] Test job runs without error
+- [x] Test job logs overdue complaints
 
 ## Section 3: Client Detail Integration
 
