@@ -5,6 +5,9 @@
 /docusaurus/build/
 /docusaurus/.docusaurus/
 
+# Test/build artifacts
+.phpunit.cache
 .phpunit.cache/
+.phpunit.result.cache
 coverage/
 phpmetrics/
