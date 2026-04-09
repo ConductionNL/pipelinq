@@ -1,0 +1,7 @@
+name: add-product-and-prospect-widget
+status: archived
+created: 2026-03-15
+archived: 2026-03-15
+specs:
+  - specs/product-catalog/spec.md
+  - specs/prospect-discovery/spec.md

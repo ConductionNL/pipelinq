@@ -15,7 +15,7 @@
 			</span>
 			<span v-if="item.priority && item.priority !== 'normal'" class="priority-indicator" :class="'priority--' + item.priority" />
 			<span v-if="item.value" class="card-meta">
-				{{ Number(item.value).toLocaleString('nl-NL') }}
+				{{ formatNumber(item.value) }}
 			</span>
 			<span v-if="item.assignee" class="card-assignee">
 				{{ item.assignee }}
@@ -52,6 +52,8 @@ import { NcSelect } from '@nextcloud/vue'
 import { getPriorityLabel, getPriorityColor, getStatusLabel } from '../../services/requestStatus.js'
 import { getDaysAge, isStale, getAgingClass, formatAge } from '../../services/pipelineUtils.js'
 import { useObjectStore } from '../../store/modules/object.js'
+// eslint-disable-next-line no-unused-vars -- used in template via Options API fallthrough
+import { formatNumber, formatDate as formatLocaleDate } from '../../services/localeUtils.js'
 
 // Module-level user cache shared across all PipelineCard instances
 let usersCache = null
@@ -209,12 +211,7 @@ export default {
 		},
 
 		formatDate(dateStr) {
-			if (!dateStr) return ''
-			try {
-				return new Date(dateStr).toLocaleDateString('nl-NL', { month: 'short', day: 'numeric' })
-			} catch {
-				return dateStr
-			}
+			return formatLocaleDate(dateStr)
 		},
 	},
 }
