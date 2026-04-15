@@ -29,7 +29,7 @@
 				<router-view />
 			</NcAppContent>
 			<CnIndexSidebar
-				v-if="sidebarState.active"
+				v-if="sidebarState.active && !objectSidebarState.active"
 				:schema="sidebarState.schema"
 				:visible-columns="sidebarState.visibleColumns"
 				:search-value="sidebarState.searchValue"
@@ -40,6 +40,16 @@
 				@search="onSidebarSearch"
 				@columns-change="onSidebarColumnsChange"
 				@filter-change="onSidebarFilterChange" />
+			<CnObjectSidebar
+				v-if="objectSidebarState.active"
+				:object-type="objectSidebarState.objectType"
+				:object-id="objectSidebarState.objectId"
+				:title="objectSidebarState.title"
+				:subtitle="objectSidebarState.subtitle"
+				:register="objectSidebarState.register"
+				:schema="objectSidebarState.schema"
+				:hidden-tabs="objectSidebarState.hiddenTabs"
+				:open.sync="objectSidebarState.open" />
 			<PipelineSidebar
 				v-if="pipelineSidebarState.active && !sidebarState.active"
 				:pipeline="pipelineSidebarState.pipeline"
@@ -61,7 +71,7 @@
 <script>
 import Vue from 'vue'
 import { NcContent, NcAppContent, NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
-import { CnIndexSidebar } from '@conduction/nextcloud-vue'
+import { CnIndexSidebar, CnObjectSidebar } from '@conduction/nextcloud-vue'
 import { generateUrl, imagePath } from '@nextcloud/router'
 import MainMenu from './navigation/MainMenu.vue'
 import UserSettings from './views/settings/UserSettings.vue'
@@ -77,6 +87,7 @@ export default {
 		NcEmptyContent,
 		NcLoadingIcon,
 		CnIndexSidebar,
+		CnObjectSidebar,
 		MainMenu,
 		UserSettings,
 		PipelineSidebar,
@@ -85,6 +96,7 @@ export default {
 	provide() {
 		return {
 			sidebarState: this.sidebarState,
+			objectSidebarState: this.objectSidebarState,
 			pipelineSidebarState: this.pipelineSidebarState,
 		}
 	},
@@ -93,6 +105,17 @@ export default {
 		return {
 			storesReady: false,
 			showSettingsDialog: false,
+			objectSidebarState: Vue.observable({
+				active: false,
+				open: true,
+				objectType: '',
+				objectId: '',
+				title: '',
+				subtitle: '',
+				register: '',
+				schema: '',
+				hiddenTabs: [],
+			}),
 			sidebarState: Vue.observable({
 				active: false,
 				open: true,
