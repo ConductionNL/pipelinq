@@ -128,52 +128,45 @@
 		</CnDetailCard>
 
 		<CnDetailCard :title="t('pipelinq', 'Assignment')">
-			<NcSelect
-				v-if="!isConverted"
-				:value="assigneeOption"
-				:options="userOptions"
-				:clearable="true"
-				label="label"
-				:reduce="o => o.value"
-				:placeholder="t('pipelinq', 'Assign to user')"
-				:filterable="true"
-				@input="onAssigneeChange" />
-			<span v-else>{{ requestData.assignee || t('pipelinq', 'Unassigned') }}</span>
+			<template #header-actions>
+				<NcSelect
+					v-if="!isConverted"
+					:value="assigneeOption"
+					:options="userOptions"
+					:clearable="true"
+					label="label"
+					:reduce="o => o.value"
+					:placeholder="t('pipelinq', 'Assign to user')"
+					:filterable="true"
+					class="assignment-select"
+					@input="onAssigneeChange" />
+			</template>
+			<span v-if="isConverted">{{ requestData.assignee || t('pipelinq', 'Unassigned') }}</span>
 		</CnDetailCard>
 
 		<CnDetailCard :title="t('pipelinq', 'Queue')">
+			<template #header-actions>
+				<NcSelect
+					v-if="!isConverted"
+					:value="queueOption || null"
+					:options="queueOptions"
+					:clearable="true"
+					label="label"
+					:reduce="o => o.value"
+					:placeholder="queueData ? t('pipelinq', 'Change queue') : t('pipelinq', 'Assign to queue')"
+					:filterable="true"
+					class="queue-select"
+					@input="onQueueChange" />
+			</template>
+
 			<div v-if="queueData" class="queue-link">
 				<a href="#" @click.prevent="$router.push({ name: 'QueueDetail', params: { id: queueData.id } })">
 					{{ queueData.title }}
 				</a>
-				<NcSelect
-					v-if="!isConverted"
-					:value="queueOption"
-					:options="queueOptions"
-					:clearable="true"
-					label="label"
-					:reduce="o => o.value"
-					:placeholder="t('pipelinq', 'Change queue')"
-					:filterable="true"
-					class="queue-select"
-					@input="onQueueChange" />
 			</div>
-			<div v-else>
-				<NcSelect
-					v-if="!isConverted"
-					:value="null"
-					:options="queueOptions"
-					:clearable="true"
-					label="label"
-					:reduce="o => o.value"
-					:placeholder="t('pipelinq', 'Assign to queue')"
-					:filterable="true"
-					class="queue-select"
-					@input="onQueueChange" />
-				<p v-else class="section-empty">
-					{{ t('pipelinq', 'Not in a queue') }}
-				</p>
-			</div>
+			<p v-else-if="isConverted" class="section-empty">
+				{{ t('pipelinq', 'Not in a queue') }}
+			</p>
 		</CnDetailCard>
 
 		<!-- Routing Suggestions -->

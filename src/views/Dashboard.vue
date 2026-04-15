@@ -109,6 +109,16 @@
 			</template>
 
 			<!-- My Work widget -->
+			<!-- My Work widget actions -->
+			<template #widget-my-work-actions>
+				<NcButton
+					v-if="myWorkTotal > 5"
+					type="tertiary"
+					@click="$router.push({ name: 'MyWork' })">
+					{{ t('pipelinq', 'View all') }}
+				</NcButton>
+			</template>
+
 			<template #widget-my-work>
 				<div class="my-work-widget-content">
 					<div v-if="myWorkItems.length === 0" class="chart-empty">
@@ -130,15 +140,18 @@
 								{{ formatDate(item.dueDate) }}
 							</span>
 						</div>
-						<NcButton
-							v-if="myWorkTotal > 5"
-							type="tertiary"
-							class="view-all-link"
-							@click="$router.push({ name: 'MyWork' })">
-							{{ t('pipelinq', 'View all ({count})', { count: myWorkTotal }) }}
-						</NcButton>
 					</div>
 				</div>
+			</template>
+
+			<!-- Client Overview widget actions -->
+			<template #widget-client-overview-actions>
+				<NcButton
+					v-if="allClients.length > 5"
+					type="tertiary"
+					@click="$router.push({ name: 'ClientList' })">
+					{{ t('pipelinq', 'View all') }}
+				</NcButton>
 			</template>
 
 			<!-- Client Overview widget -->
@@ -156,13 +169,6 @@
 							<span class="client-name">{{ client.name || client.title || t('pipelinq', 'Unnamed') }}</span>
 							<span class="client-info">{{ [client.email, client.city].filter(Boolean).join(' · ') }}</span>
 						</div>
-						<NcButton
-							v-if="allClients.length > 5"
-							type="tertiary"
-							class="view-all-link"
-							@click="$router.push({ name: 'ClientList' })">
-							{{ t('pipelinq', 'View all clients ({count})', { count: allClients.length }) }}
-						</NcButton>
 					</div>
 				</div>
 			</template>

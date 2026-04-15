@@ -153,15 +153,18 @@
 		</CnDetailCard>
 
 		<CnDetailCard :title="t('pipelinq', 'Assignment')">
-			<NcSelect
-				:value="assigneeOption"
-				:options="userOptions"
-				:clearable="true"
-				label="label"
-				:reduce="o => o.value"
-				:placeholder="t('pipelinq', 'Assign to user')"
-				:filterable="true"
-				@input="onAssigneeChange" />
+			<template #header-actions>
+				<NcSelect
+					:value="assigneeOption"
+					:options="userOptions"
+					:clearable="true"
+					label="label"
+					:reduce="o => o.value"
+					:placeholder="t('pipelinq', 'Assign to user')"
+					:filterable="true"
+					class="assignment-select"
+					@input="onAssigneeChange" />
+			</template>
 		</CnDetailCard>
 
 		<!-- Audit Trail / Status History -->
