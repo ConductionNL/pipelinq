@@ -41,7 +41,7 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/callback-management/tasks.md#task-2.1
+ * @spec openspec/changes/callback-management/tasks.md#2.1
  */
 class CallbackController extends Controller
 {
@@ -75,7 +75,7 @@ class CallbackController extends Controller
      *
      * @return JSONResponse The response with updated task data.
      *
-     * @spec openspec/changes/callback-management/tasks.md#task-2.1
+     * @spec openspec/changes/callback-management/tasks.md#2.1
      */
     public function attempt(string $id): JSONResponse
     {
@@ -125,7 +125,7 @@ class CallbackController extends Controller
      *
      * @return JSONResponse The response with updated task data.
      *
-     * @spec openspec/changes/callback-management/tasks.md#task-2.1
+     * @spec openspec/changes/callback-management/tasks.md#2.1
      */
     public function claim(string $id): JSONResponse
     {
@@ -165,7 +165,7 @@ class CallbackController extends Controller
      *
      * @return JSONResponse The response with updated task data.
      *
-     * @spec openspec/changes/callback-management/tasks.md#task-2.1
+     * @spec openspec/changes/callback-management/tasks.md#2.1
      */
     public function complete(string $id): JSONResponse
     {
@@ -229,7 +229,7 @@ class CallbackController extends Controller
      *
      * @return JSONResponse The response with updated task data.
      *
-     * @spec openspec/changes/callback-management/tasks.md#task-2.1
+     * @spec openspec/changes/callback-management/tasks.md#2.1
      */
     public function reassign(string $id): JSONResponse
     {
