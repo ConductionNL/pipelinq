@@ -4,6 +4,8 @@
  * Priority sort comparator, capacity check, and routing suggestion logic.
  */
 
+import { translate as t } from '@nextcloud/l10n'
+
 /**
  * Priority ordering map (lower number = higher priority).
  */
@@ -57,11 +59,11 @@ export function getWaitingTime(dateStr) {
 
 	if (diffDays === 0) {
 		const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-		if (diffHours === 0) return 'just now'
-		return `waiting ${diffHours}h`
+		if (diffHours === 0) return t('pipelinq', 'just now')
+		return t('pipelinq', 'waiting {hours}h', { hours: diffHours })
 	}
-	if (diffDays === 1) return 'waiting 1 day'
-	return `waiting ${diffDays} days`
+	if (diffDays === 1) return t('pipelinq', 'waiting 1 day')
+	return t('pipelinq', 'waiting {days} days', { days: diffDays })
 }
 
 /**
