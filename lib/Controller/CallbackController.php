@@ -76,7 +76,7 @@ class CallbackController extends Controller
      * @return JSONResponse The response with updated task data.
      *
      * @NoAdminRequired
-     * @spec openspec/changes/callback-management/tasks.md#2.1
+     * @spec            openspec/changes/callback-management/tasks.md#2.1
      */
     public function attempt(string $id): JSONResponse
     {
@@ -127,7 +127,7 @@ class CallbackController extends Controller
      * @return JSONResponse The response with updated task data.
      *
      * @NoAdminRequired
-     * @spec openspec/changes/callback-management/tasks.md#2.1
+     * @spec            openspec/changes/callback-management/tasks.md#2.1
      */
     public function claim(string $id): JSONResponse
     {
@@ -168,7 +168,7 @@ class CallbackController extends Controller
      * @return JSONResponse The response with updated task data.
      *
      * @NoAdminRequired
-     * @spec openspec/changes/callback-management/tasks.md#2.1
+     * @spec            openspec/changes/callback-management/tasks.md#2.1
      */
     public function complete(string $id): JSONResponse
     {
@@ -233,7 +233,7 @@ class CallbackController extends Controller
      * @return JSONResponse The response with updated task data.
      *
      * @NoAdminRequired
-     * @spec openspec/changes/callback-management/tasks.md#2.1
+     * @spec            openspec/changes/callback-management/tasks.md#2.1
      */
     public function reassign(string $id): JSONResponse
     {
