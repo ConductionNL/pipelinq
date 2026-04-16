@@ -23,6 +23,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\IntakeFormService;
+use OCA\Pipelinq\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
@@ -39,12 +40,14 @@ class PublicFormController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest          $request           The request.
-     * @param IntakeFormService $intakeFormService The intake form service.
+     * @param IRequest          $request            The request.
+     * @param IntakeFormService $intakeFormService  The intake form service.
+     * @param SettingsService   $settingsService    The settings service.
      */
     public function __construct(
         IRequest $request,
         private IntakeFormService $intakeFormService,
+        private SettingsService $settingsService,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -143,7 +146,24 @@ class PublicFormController extends Controller
      */
     private function addCorsHeaders(JSONResponse $response): JSONResponse
     {
-        $response->addHeader('Access-Control-Allow-Origin', '*');
+        $settings = $this->settingsService->getSettings();
+        $corsOriginsConfig = $settings['form_cors_origins'] ?? '';
+
+        // If configured, use the allowlist; otherwise no wildcard CORS
+        if ($corsOriginsConfig !== '') {
+            $allowedOrigins = array_filter(
+                array_map('trim', explode(',', $corsOriginsConfig)),
+                function ($origin) {
+                    return $origin !== '';
+                }
+            );
+
+            $origin = $this->request->getHeader('Origin');
+            if ($origin !== null && in_array($origin, $allowedOrigins, true)) {
+                $response->addHeader('Access-Control-Allow-Origin', $origin);
+            }
+        }
+
         $response->addHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
         $response->addHeader('Access-Control-Allow-Headers', 'Content-Type');
         return $response;

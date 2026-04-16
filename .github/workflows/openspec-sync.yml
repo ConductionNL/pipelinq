@@ -8,7 +8,7 @@ on:
 
 jobs:
   sync:
-    uses: ConductionNL/.github/.github/workflows/openspec-sync.yml@feature/openspec-project-sync
+    uses: ConductionNL/.github/.github/workflows/openspec-sync.yml@ed13d49247738543a6cd0b6da4c404273c837566
     with:
       app-name: pipelinq
     secrets:
