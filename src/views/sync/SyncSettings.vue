@@ -24,7 +24,7 @@
 				:options="mailAccounts"
 				:placeholder="t('pipelinq', 'Select a mail account')"
 				:loading="loadingAccounts"
-				@update:modelValue="v => updateSetting('mail_account', v)" />
+				@input="v => updateSetting('mail_account', v)" />
 			<p class="setting-hint">
 				{{ t('pipelinq', 'Choose which mail account to sync emails from.') }}
 			</p>
@@ -49,7 +49,7 @@
 				:options="calendars"
 				:placeholder="t('pipelinq', 'Select a calendar')"
 				:loading="loadingCalendars"
-				@update:modelValue="v => updateSetting('default_calendar', v)" />
+				@input="v => updateSetting('default_calendar', v)" />
 			<p class="setting-hint">
 				{{ t('pipelinq', 'Choose which calendar to use for creating follow-up events.') }}
 			</p>

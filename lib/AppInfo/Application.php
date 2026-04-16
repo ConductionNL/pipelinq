@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\AppInfo;
 use OCA\OpenRegister\Event\DeepLinkRegistrationEvent;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\Pipelinq\BackgroundJob\EmailSyncJob;
 use OCA\Pipelinq\Listener\DeepLinkRegistrationListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCP\AppFramework\App;
@@ -70,6 +71,7 @@ class Application extends App implements IBootstrap
             event: ObjectUpdatedEvent::class,
             listener: ObjectEventListener::class
         );
+        $context->registerJob(EmailSyncJob::class);
     }//end register()
 
     /**

@@ -128,7 +128,8 @@ class EmailSyncService
     {
         // In a complete implementation, this would query the register for clients
         // with matching website/domain. For now, return null.
-        $this->logger->debug('Attempting to match domain to organization', ['domain' => $domain]);
+        $sanitizedDomain = \str_replace(["\r", "\n"], '', $domain);
+        $this->logger->debug('Attempting to match domain to organization', ['domain' => $sanitizedDomain]);
         return null;
     }//end matchDomainToOrganization()
 
@@ -156,6 +157,9 @@ class EmailSyncService
      */
     private function extractDomain(string $email): string
     {
+        if (\strpos($email, '@') === false) {
+            return '';
+        }
         $parts = \explode('@', $email);
         return $parts[1] ?? '';
     }//end extractDomain()
