@@ -1,5 +1,9 @@
 # Design: Admin Settings — Duplicate Prevention
 
+**Status:** pr-created  
+**Issue:** #182  
+**PR:** https://github.com/ConductionNL/pipelinq/pull/219
+
 ## Overview
 This implementation adds client-side duplicate prevention to the TagManager component, which is used for managing lead sources and request channels in the Pipelinq admin settings interface.
 
