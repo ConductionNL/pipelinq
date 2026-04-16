@@ -1,5 +1,8 @@
 <template>
 	<div class="complaint-form">
+		<!-- Heading -->
+		<h2>{{ isEdit ? t('pipelinq', 'Edit complaint') : t('pipelinq', 'New complaint') }}</h2>
+
 		<!-- Title -->
 		<div class="form-group">
 			<NcTextField
@@ -72,7 +75,7 @@
 				:clearable="true"
 				label="label"
 				:reduce="o => o.value"
-				:placeholder="t('pipelinq', 'Search client...')"
+				:placeholder="t('pipelinq', 'Search client')"
 				@input="onClientChange" />
 		</div>
 
