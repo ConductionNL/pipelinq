@@ -72,8 +72,8 @@ class CallbackOverdueJob extends TimedJob
         private NotificationService $notificationService,
         private LoggerInterface $logger,
     ) {
-        parent::__construct(time: $time);
-        $this->setInterval(interval: self::INTERVAL);
+        parent::__construct($time);
+        $this->setInterval(self::INTERVAL);
     }//end __construct()
 
     /**
