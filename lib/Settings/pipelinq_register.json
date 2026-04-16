@@ -1188,8 +1188,106 @@
           },
           "channelMetadata": {
             "type": "object",
-            "description": "Channel-specific metadata (e.g., call direction, email thread ID, counter location)",
-            "visible": false
+            "description": "Channel-specific metadata with per-channel sub-schemas. Structure depends on channel value.",
+            "visible": false,
+            "additionalProperties": false,
+            "maxProperties": 5,
+            "oneOf": [
+              {
+                "title": "Telefoon (Phone) metadata",
+                "properties": {
+                  "direction": {
+                    "type": "string",
+                    "enum": ["inbound", "outbound"],
+                    "maxLength": 10
+                  },
+                  "extension": {
+                    "type": "string",
+                    "maxLength": 50
+                  }
+                }
+              },
+              {
+                "title": "Email metadata",
+                "properties": {
+                  "threadId": {
+                    "type": "string",
+                    "maxLength": 255
+                  },
+                  "cc": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "maxItems": 10
+                  },
+                  "bcc": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "maxItems": 10
+                  }
+                }
+              },
+              {
+                "title": "Balie (Counter) metadata",
+                "properties": {
+                  "location": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "waitTime": {
+                    "type": "integer",
+                    "description": "Wait time in minutes",
+                    "minimum": 0,
+                    "maximum": 1440
+                  }
+                }
+              },
+              {
+                "title": "Chat metadata",
+                "properties": {
+                  "sessionId": {
+                    "type": "string",
+                    "maxLength": 255
+                  },
+                  "platform": {
+                    "type": "string",
+                    "maxLength": 50
+                  }
+                }
+              },
+              {
+                "title": "Social media metadata",
+                "properties": {
+                  "handle": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "platform": {
+                    "type": "string",
+                    "enum": ["facebook", "twitter", "linkedin"],
+                    "maxLength": 20
+                  }
+                }
+              },
+              {
+                "title": "Brief (Letter) metadata",
+                "properties": {
+                  "referenceNumber": {
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "sendDate": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            ]
           },
           "notes": {
             "type": "string",
