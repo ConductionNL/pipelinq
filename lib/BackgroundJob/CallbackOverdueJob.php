@@ -32,6 +32,8 @@ use Psr\Log\LoggerInterface;
  * Background job that detects overdue callback requests and sends reminder notifications.
  *
  * Runs every 15 minutes (900 seconds). Skips tasks already notified within 24 hours.
+ *
+ * @spec openspec/changes/callback-management/tasks.md#3.1
  */
 class CallbackOverdueJob extends TimedJob
 {
@@ -80,6 +82,8 @@ class CallbackOverdueJob extends TimedJob
      * @param mixed $argument The job argument (unused).
      *
      * @return void
+     *
+     * @spec openspec/changes/callback-management/tasks.md#3.1
      */
     protected function run(mixed $argument): void
     {
@@ -108,6 +112,8 @@ class CallbackOverdueJob extends TimedJob
      * @param string $taskId The task object ID.
      *
      * @return bool True if the task was recently notified.
+     *
+     * @spec openspec/changes/callback-management/tasks.md#3.1
      */
     public function wasRecentlyNotified(string $taskId): bool
     {
@@ -130,6 +136,8 @@ class CallbackOverdueJob extends TimedJob
      * @param string $taskId The task object ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/callback-management/tasks.md#3.1
      */
     public function markNotified(string $taskId): void
     {
