@@ -14,6 +14,7 @@ import ProductList from '../views/products/ProductList.vue'
 import ProductDetail from '../views/products/ProductDetail.vue'
 import ComplaintList from '../views/complaints/ComplaintList.vue'
 import ComplaintDetail from '../views/complaints/ComplaintDetail.vue'
+import ComplaintForm from '../views/complaints/ComplaintForm.vue'
 import PipelineBoard from '../views/pipeline/PipelineBoard.vue'
 import ContactmomentenList from '../views/contactmomenten/ContactmomentenList.vue'
 import ContactmomentDetail from '../views/contactmomenten/ContactmomentDetail.vue'
@@ -57,6 +58,7 @@ export default new Router({
 		{ path: '/requests', name: 'Requests', component: RequestList },
 		{ path: '/requests/:id', name: 'RequestDetail', component: RequestDetail, props: route => ({ requestId: route.params.id }) },
 		{ path: '/complaints', name: 'Complaints', component: ComplaintList },
+		{ path: '/complaints/new', name: 'ComplaintNew', component: ComplaintForm },
 		{ path: '/complaints/:id', name: 'ComplaintDetail', component: ComplaintDetail, props: route => ({ complaintId: route.params.id }) },
 		{ path: '/contacts', name: 'Contacts', component: ContactList },
 		{ path: '/contacts/:id', name: 'ContactDetail', component: ContactDetail, props: route => ({ contactId: route.params.id }) },
