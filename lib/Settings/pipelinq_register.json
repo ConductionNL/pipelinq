@@ -27,7 +27,9 @@
           "pipeline",
           "product",
           "productCategory",
-          "leadProduct"
+          "leadProduct",
+          "emailLink",
+          "calendarLink"
         ],
         "tablePrefix": "",
         "folder": "Open Registers/Pipelinq"
@@ -647,6 +649,171 @@
             "type": "string",
             "description": "Line item notes (e.g., annual license, setup fee)",
             "visible": false
+          }
+        }
+      },
+      "emailLink": {
+        "slug": "emailLink",
+        "title": "Email Link",
+        "icon": "Email",
+        "version": "1.0.0",
+        "summary": "Link between an email message and a CRM entity",
+        "description": "Represents a link between an email message and a CRM entity (client, contact, lead, or request). Tracks email metadata, sender/recipient information, and sync status.",
+        "required": [
+          "messageId",
+          "linkedEntityType",
+          "linkedEntityId"
+        ],
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "description": "Email message ID",
+            "minLength": 1
+          },
+          "subject": {
+            "type": "string",
+            "description": "Email subject line"
+          },
+          "sender": {
+            "type": "string",
+            "description": "Sender email address",
+            "format": "email"
+          },
+          "recipients": {
+            "type": "array",
+            "description": "Recipient addresses",
+            "items": {
+              "type": "string",
+              "format": "email"
+            }
+          },
+          "date": {
+            "type": "string",
+            "description": "Email date",
+            "format": "date-time"
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Email thread ID for grouping"
+          },
+          "linkedEntityType": {
+            "type": "string",
+            "description": "Type of the linked entity",
+            "enum": [
+              "client",
+              "contact",
+              "lead",
+              "request"
+            ],
+            "title": "Entity Type",
+            "facetable": true
+          },
+          "linkedEntityId": {
+            "type": "string",
+            "description": "UUID reference to the linked entity",
+            "format": "uuid"
+          },
+          "direction": {
+            "type": "string",
+            "description": "Direction of the email",
+            "enum": [
+              "inbound",
+              "outbound"
+            ],
+            "title": "Direction",
+            "facetable": true
+          },
+          "syncSource": {
+            "type": "string",
+            "description": "Mail account ID that synced this email"
+          },
+          "excluded": {
+            "type": "boolean",
+            "description": "Excluded from sync",
+            "default": false
+          },
+          "deleted": {
+            "type": "boolean",
+            "description": "Source email deleted",
+            "default": false
+          }
+        }
+      },
+      "calendarLink": {
+        "slug": "calendarLink",
+        "title": "Calendar Link",
+        "icon": "Calendar",
+        "version": "1.0.0",
+        "summary": "Link between a calendar event and a CRM entity",
+        "description": "Represents a link between a calendar event and a CRM entity (client, contact, lead, or request). Tracks event metadata and sync status.",
+        "required": [
+          "eventUid",
+          "linkedEntityType",
+          "linkedEntityId"
+        ],
+        "properties": {
+          "eventUid": {
+            "type": "string",
+            "description": "Calendar event UID",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string",
+            "description": "Event title"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "Event start",
+            "format": "date-time"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "Event end",
+            "format": "date-time"
+          },
+          "attendees": {
+            "type": "array",
+            "description": "Attendee email addresses",
+            "items": {
+              "type": "string",
+              "format": "email"
+            }
+          },
+          "linkedEntityType": {
+            "type": "string",
+            "description": "Type of the linked entity",
+            "enum": [
+              "client",
+              "contact",
+              "lead",
+              "request"
+            ],
+            "title": "Entity Type",
+            "facetable": true
+          },
+          "linkedEntityId": {
+            "type": "string",
+            "description": "UUID reference to the linked entity",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "description": "Event status",
+            "enum": [
+              "scheduled",
+              "completed",
+              "cancelled"
+            ],
+            "title": "Status",
+            "facetable": true
+          },
+          "createdFrom": {
+            "type": "string",
+            "description": "Source of calendar event creation",
+            "enum": [
+              "pipelinq",
+              "calendar"
+            ]
           }
         }
       }

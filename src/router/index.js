@@ -14,6 +14,7 @@ import ProductDetail from '../views/products/ProductDetail.vue'
 import PipelineBoard from '../views/pipeline/PipelineBoard.vue'
 import MyWork from '../views/MyWork.vue'
 import PipelineManager from '../views/settings/PipelineManager.vue'
+import SyncSettings from '../views/sync/SyncSettings.vue'
 
 Vue.use(Router)
 
@@ -34,6 +35,7 @@ export default new Router({
 		{ path: '/pipeline', name: 'Pipeline', component: PipelineBoard },
 		{ path: '/my-work', name: 'MyWork', component: MyWork },
 		{ path: '/pipelines', name: 'Pipelines', component: PipelineManager },
+		{ path: '/sync', name: 'SyncSettings', component: SyncSettings },
 		{ path: '*', redirect: '/' },
 	],
 })
