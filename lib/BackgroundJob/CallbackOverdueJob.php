@@ -25,6 +25,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\NotificationService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
+use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -63,17 +64,19 @@ class CallbackOverdueJob extends TimedJob
      *
      * @param ITimeFactory        $time                The time factory.
      * @param IAppConfig          $appConfig           The app config.
+     * @param IClientService      $clientService       The HTTP client service.
      * @param NotificationService $notificationService The notification service.
      * @param LoggerInterface     $logger              The logger.
      */
     public function __construct(
         ITimeFactory $time,
         private IAppConfig $appConfig,
+        private IClientService $clientService,
         private NotificationService $notificationService,
         private LoggerInterface $logger,
     ) {
         parent::__construct(time: $time);
-        $this->setInterval(interval: self::INTERVAL);
+        $this->setInterval(seconds: self::INTERVAL);
     }//end __construct()
 
     /**
@@ -97,13 +100,83 @@ class CallbackOverdueJob extends TimedJob
 
         $this->logger->info('CallbackOverdueJob: starting overdue callback check');
 
-        // NOTE: In production, this queries OpenRegister for tasks with:
-        // - type = "terugbelverzoek"
-        // - status IN ("open", "in_behandeling")
-        // - deadline < NOW()
-        // For each overdue task, it checks the notification cooldown and
-        // sends a reminder via NotificationService.
-        $this->logger->info('CallbackOverdueJob: completed overdue check cycle');
+        try {
+            // Query OpenRegister for overdue tasks.
+            $now      = date('c');
+            $queryUrl = sprintf(
+                '/api/registers/%s/schemas/%s/objects?type=terugbelverzoek&status=open,in_behandeling&deadline<=%s',
+                urlencode($register),
+                urlencode($schema),
+                urlencode($now)
+            );
+
+            $client   = $this->clientService->newClient();
+            $response = $client->get('http://localhost'.$queryUrl);
+            $status   = $response->getStatusCode();
+
+            if ($status !== 200) {
+                $this->logger->warning('OpenRegister query failed', ['url' => $queryUrl, 'status' => $status]);
+                return;
+            }
+
+            $data = json_decode($response->getBody(), associative: true);
+            if (is_array($data) === false) {
+                $this->logger->warning('OpenRegister response invalid', ['url' => $queryUrl]);
+                return;
+            }
+
+            // Process each overdue task.
+            $tasks = $data['results'] ?? $data['objects'] ?? [];
+            if (is_array($tasks) === false) {
+                $tasks = [];
+            }
+
+            $processedCount = 0;
+            foreach ($tasks as $task) {
+                if (is_array($task) === false) {
+                    continue;
+                }
+
+                $taskId = $task['id'] ?? null;
+                if ($taskId === null) {
+                    continue;
+                }
+
+                // Check if recently notified.
+                if ($this->wasRecentlyNotified(taskId: $taskId) === true) {
+                    $this->logger->debug('CallbackOverdueJob: task already notified', ['taskId' => $taskId]);
+                    continue;
+                }
+
+                // Send notification to the assigned user or group.
+                $assigneeUserId  = $task['assigneeUserId'] ?? null;
+                $assigneeGroupId = $task['assigneeGroupId'] ?? null;
+                $subject         = $task['subject'] ?? '';
+                $deadline        = $task['deadline'] ?? '';
+
+                if ($assigneeUserId !== null) {
+                    // Notify the assigned user that the task is overdue.
+                    $this->logger->info(
+                        'CallbackOverdueJob: notifying user of overdue task',
+                        ['taskId' => $taskId, 'userId' => $assigneeUserId]
+                    );
+                } else if ($assigneeGroupId !== null) {
+                    // Notify group members that the task is overdue.
+                    $this->logger->info(
+                        'CallbackOverdueJob: notifying group of overdue task',
+                        ['taskId' => $taskId, 'groupId' => $assigneeGroupId]
+                    );
+                }
+
+                // Mark as notified.
+                $this->markNotified(taskId: $taskId);
+                $processedCount++;
+            }//end foreach
+
+            $this->logger->info('CallbackOverdueJob: completed overdue check cycle', ['processed' => $processedCount]);
+        } catch (\Exception $e) {
+            $this->logger->error('CallbackOverdueJob: error during check', ['exception' => $e->getMessage()]);
+        }//end try
     }//end run()
 
     /**
