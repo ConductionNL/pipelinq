@@ -29,7 +29,7 @@
 		object-type="pipelinq_contactmoment"
 		:object-id="contactmomentId"
 		:sidebar-props="sidebarProps">
-		<template #header-actions>
+		<template #actions>
 			<NcButton type="primary" @click="editing = true">
 				{{ t('pipelinq', 'Edit') }}
 			</NcButton>
