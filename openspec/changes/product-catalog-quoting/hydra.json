@@ -1,0 +1,8 @@
+{
+  "spec_slug": "product-catalog-quoting",
+  "title": "Product Catalog Quoting",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [],
+  "issue": null
+}
