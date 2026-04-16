@@ -152,6 +152,15 @@ class CallbackService
      */
     public function validateClaim(array $taskData): array
     {
+        // Guard against claiming closed tasks.
+        $status = $taskData['status'] ?? null;
+        if (in_array($status, ['afgerond', 'verlopen'], true) === true) {
+            return [
+                'eligible' => false,
+                'reason'   => 'Task is closed and cannot be claimed',
+            ];
+        }
+
         $groupId = $taskData['assigneeGroupId'] ?? null;
 
         if (empty($groupId) === true) {
