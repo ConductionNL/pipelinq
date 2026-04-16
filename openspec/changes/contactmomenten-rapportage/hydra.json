@@ -1,0 +1,8 @@
+{
+  "spec_slug": "contactmomenten-rapportage",
+  "title": "Contactmomenten Rapportage",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [],
+  "issue": null
+}
