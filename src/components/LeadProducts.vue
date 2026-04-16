@@ -22,6 +22,7 @@
 							<th>{{ t('pipelinq', 'Qty') }}</th>
 							<th>{{ t('pipelinq', 'Unit Price') }}</th>
 							<th>{{ t('pipelinq', 'Discount') }}</th>
+							<th>{{ t('pipelinq', 'Notes') }}</th>
 							<th>{{ t('pipelinq', 'Total') }}</th>
 							<th />
 						</tr>
@@ -53,6 +54,14 @@
 									min="0"
 									step="0.01"
 									class="inline-input inline-input--discount"
+									@change="updateLineItem(item)">
+							</td>
+							<td>
+								<input
+									v-model="item.notes"
+									type="text"
+									placeholder=""
+									class="inline-input inline-input--notes"
 									@change="updateLineItem(item)">
 							</td>
 							<td class="total-cell">
@@ -197,7 +206,10 @@ export default {
 			return useObjectStore()
 		},
 		productOptions() {
-			return this.products.map(p => ({ id: p.id, name: p.name || p.id }))
+			return this.products.map(p => {
+				const label = p.sku ? `${p.name} (${p.sku})` : p.name || p.id
+				return { id: p.id, name: label }
+			})
 		},
 		grandTotal() {
 			return this.lineItems.reduce((sum, item) => sum + this.calculateTotal(item), 0)
@@ -379,6 +391,10 @@ export default {
 .inline-input--price,
 .inline-input--discount {
 	width: 90px;
+}
+
+.inline-input--notes {
+	width: 150px;
 }
 
 .total-cell {

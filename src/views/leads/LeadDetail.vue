@@ -183,6 +183,7 @@ export default {
 			clientData: null,
 			contactData: null,
 			pipelineData: null,
+			_prevProductTotal: null,
 		}
 	},
 	computed: {
@@ -228,6 +229,7 @@ export default {
 		if (!this.isNew) {
 			await this.objectStore.fetchObject('lead', this.leadId)
 			await this.fetchRelated()
+			await this.initializeProductTotal()
 		}
 	},
 	methods: {
@@ -248,6 +250,27 @@ export default {
 			if (this.leadData.pipeline) {
 				const pipeline = await this.objectStore.fetchObject('pipeline', this.leadData.pipeline)
 				this.pipelineData = pipeline || null
+			}
+		},
+		async initializeProductTotal() {
+			// Calculate the initial product total from line items for override detection
+			try {
+				const items = await this.objectStore.fetchCollection('leadProduct', {
+					_limit: 100,
+					lead: this.leadId,
+				})
+				if (items && items.length > 0) {
+					this._prevProductTotal = items.reduce((sum, item) => {
+						const qty = Number(item.quantity) || 0
+						const price = Number(item.unitPrice) || 0
+						const discount = Number(item.discount) || 0
+						return sum + (qty * price) * (1 - discount / 100)
+					}, 0)
+				} else {
+					this._prevProductTotal = 0
+				}
+			} catch {
+				this._prevProductTotal = 0
 			}
 		},
 		stageClass(stage) {
@@ -294,11 +317,26 @@ export default {
 		},
 		async onProductValueChanged(newTotal) {
 			// Auto-recalculate lead value from product line items (per spec).
-			// Only skip if the user has explicitly set a manual override.
+			// Detect manual override: compare current lead value to previous product total.
+			// If they match (or lead value is null), there's no override, so auto-sync.
+			// If they differ, the user set a manual override, so don't auto-sync.
+			const currentValue = Number(this.leadData.value) || null
 			const hasLineItems = newTotal > 0
+
 			if (hasLineItems) {
-				await this.syncLeadValue(newTotal)
+				// Determine if there's a manual override
+				const hasManualOverride = currentValue !== null && currentValue !== this._prevProductTotal
+
+				// Auto-sync only if no manual override exists
+				if (!hasManualOverride) {
+					await this.syncLeadValue(newTotal)
+				}
+			} else if (newTotal === 0) {
+				// If no line items, don't auto-sync (keep whatever value was set)
 			}
+
+			// Update the previous product total for next time
+			this._prevProductTotal = newTotal
 		},
 		async syncLeadValue(value) {
 			await this.objectStore.saveObject('lead', {
