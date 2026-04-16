@@ -26,6 +26,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -62,6 +63,13 @@ class ComplaintSlaJobTest extends TestCase
     private LoggerInterface $logger;
 
     /**
+     * The container mock.
+     *
+     * @var ContainerInterface&MockObject
+     */
+    private ContainerInterface $container;
+
+    /**
      * Set up the test fixtures.
      *
      * @return void
@@ -72,6 +80,7 @@ class ComplaintSlaJobTest extends TestCase
         $this->complaintSlaService = $this->createMock(ComplaintSlaService::class);
         $this->appConfig           = $this->createMock(IAppConfig::class);
         $this->logger              = $this->createMock(LoggerInterface::class);
+        $this->container           = $this->createMock(ContainerInterface::class);
 
         $this->timeFactory->method('getTime')->willReturn(time());
     }//end setUp()
@@ -88,6 +97,7 @@ class ComplaintSlaJobTest extends TestCase
             $this->complaintSlaService,
             $this->appConfig,
             $this->logger,
+            $this->container,
         );
     }//end buildJob()
 

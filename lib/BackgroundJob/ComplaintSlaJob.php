@@ -28,6 +28,7 @@ use OCA\Pipelinq\Service\ComplaintSlaService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -48,6 +49,7 @@ class ComplaintSlaJob extends TimedJob
      * @param ComplaintSlaService $complaintSlaService The complaint SLA service.
      * @param IAppConfig          $appConfig           The app configuration.
      * @param LoggerInterface     $logger              The logger.
+     * @param ContainerInterface  $container           The DI container for accessing OpenRegister services.
      *
      * @spec openspec/changes/klachtenregistratie/tasks.md#task-12
      */
@@ -56,6 +58,7 @@ class ComplaintSlaJob extends TimedJob
         private ComplaintSlaService $complaintSlaService,
         private IAppConfig $appConfig,
         private LoggerInterface $logger,
+        private ContainerInterface $container,
     ) {
         parent::__construct(time: $time);
 
@@ -99,13 +102,30 @@ class ComplaintSlaJob extends TimedJob
         $this->logger->info('ComplaintSlaJob: Starting SLA deadline check');
 
         try {
-            // In production, this would query OpenRegister for complaints
-            // with status in ['new', 'in_progress'] and check deadlines.
-            // The actual querying is handled at the OpenRegister level;
-            // this job serves as the monitoring and logging layer.
-            //
-            // Future enhancement: integrate with OpenRegister ObjectService
-            // to query complaints and send notifications for overdue items.
+            // Query OpenRegister for complaints with open statuses
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+            $result        = $objectService->findAll(
+                register: $register,
+                schema: $complaintSchema,
+                filters: ['status' => ['new', 'in_progress'], '_limit' => 500]
+            );
+            $complaints    = ($result['results'] ?? []);
+
+            // Check each complaint for SLA deadline overages
+            foreach ($complaints as $complaint) {
+                if ($this->complaintSlaService->isOverdue($complaint)) {
+                    $this->logger->warning(
+                        'ComplaintSlaJob: Complaint SLA deadline exceeded',
+                        [
+                            'complaintId' => ($complaint['id'] ?? ''),
+                            'title'       => ($complaint['title'] ?? ''),
+                            'slaDeadline' => ($complaint['slaDeadline'] ?? ''),
+                            'status'      => ($complaint['status'] ?? ''),
+                        ],
+                    );
+                }
+            }//end foreach
+
             $this->logger->info(
                 'ComplaintSlaJob: SLA deadline check completed',
             );
