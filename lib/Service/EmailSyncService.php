@@ -160,6 +160,7 @@ class EmailSyncService
         if (\strpos($email, '@') === false) {
             return '';
         }
+
         $parts = \explode('@', $email);
         return $parts[1] ?? '';
     }//end extractDomain()
