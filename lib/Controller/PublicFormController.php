@@ -153,15 +153,10 @@ class PublicFormController extends Controller
         $settings = $this->settingsService->getSettings();
         $corsOrigins = $settings['cors_origins'] ?? '';
 
-        // If no origins configured, use the current request origin (if any).
+        // If no origins configured, deny CORS by setting to 'null' (per OWASP A05:2021).
+        // Do not reflect the request Origin header, as that would allow any origin to submit.
         if ($corsOrigins === '') {
-            $origin = $this->request->getHeader('Origin');
-            if ($origin !== '') {
-                $corsOrigins = $origin;
-            } else {
-                // No origin provided and no config: allow current host only.
-                $corsOrigins = $this->request->getServerHost();
-            }
+            $corsOrigins = 'null';
         }
 
         $response->addHeader('Access-Control-Allow-Origin', $corsOrigins);
