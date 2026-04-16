@@ -119,7 +119,16 @@ export default {
 			return useObjectStore()
 		},
 		pipelines() {
-			return this.objectStore.collections.pipeline || []
+			const rawPipelines = this.objectStore.collections.pipeline || []
+			// Deduplicate pipelines by ID to prevent rendering duplicates
+			const seen = new Set()
+			return rawPipelines.filter(pipeline => {
+				if (seen.has(pipeline.id)) {
+					return false
+				}
+				seen.add(pipeline.id)
+				return true
+			})
 		},
 		loading() {
 			return this.objectStore.loading.pipeline || false
