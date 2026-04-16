@@ -15,6 +15,7 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ * @spec openspec/changes/klachtenregistratie/tasks.md#task-12
  */
 
 declare(strict_types=1);
@@ -36,6 +37,7 @@ use Psr\Log\LoggerInterface;
  * their SLA deadline and logs warnings for each overdue complaint.
  *
  * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+ * @spec                                          openspec/changes/klachtenregistratie/tasks.md#task-12
  */
 class ComplaintSlaJob extends TimedJob
 {
@@ -46,6 +48,8 @@ class ComplaintSlaJob extends TimedJob
      * @param ComplaintSlaService $complaintSlaService The complaint SLA service.
      * @param IAppConfig          $appConfig           The app configuration.
      * @param LoggerInterface     $logger              The logger.
+     *
+     * @spec openspec/changes/klachtenregistratie/tasks.md#task-12
      */
     public function __construct(
         ITimeFactory $time,
@@ -69,6 +73,7 @@ class ComplaintSlaJob extends TimedJob
      * @param mixed $argument The job argument (unused, required by TimedJob).
      *
      * @return void
+     * @spec   openspec/changes/klachtenregistratie/tasks.md#task-12
      */
     protected function run($argument): void
     {
