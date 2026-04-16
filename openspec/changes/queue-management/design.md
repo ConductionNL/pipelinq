@@ -1,5 +1,7 @@
 # Design: queue-management
 
+**Status**: pr-created
+
 ## Architecture Overview
 
 Queue management adds priority-ordered work queues to Pipelinq, enabling workload distribution across teams and agents. The implementation follows the thin-client pattern: queues, skills, and agent profiles are stored as OpenRegister objects; the frontend queries OpenRegister directly; backend services handle default data creation, overflow logic, and routing.
