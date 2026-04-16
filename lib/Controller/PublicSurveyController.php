@@ -178,6 +178,7 @@ class PublicSurveyController extends PublicShareController
      * @return JSONResponse Created response or error.
      *
      * @PublicPage
+     * @NoCSRFRequired
      * @BruteForceProtection(action=pipelinq_survey_submit)
      */
     public function submit(string $token): JSONResponse
