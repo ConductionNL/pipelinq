@@ -104,6 +104,9 @@ class CallbackOverdueJob extends TimedJob
         // For each overdue task, it checks the notification cooldown and
         // sends a reminder via NotificationService.
         $this->logger->info('CallbackOverdueJob: completed overdue check cycle');
+
+        // Clean up expired notification cooldown keys to prevent unbounded table growth.
+        $this->cleanupExpiredNotificationKeys();
     }//end run()
 
     /**
@@ -144,4 +147,36 @@ class CallbackOverdueJob extends TimedJob
         $key = self::NOTIFIED_KEY_PREFIX.$taskId;
         $this->appConfig->setValueString(Application::APP_ID, $key, (string) time());
     }//end markNotified()
+
+    /**
+     * Clean up expired notification cooldown keys to prevent unbounded table growth.
+     *
+     * Deletes any callback_notified_* keys older than the NOTIFICATION_COOLDOWN period.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/callback-management/tasks.md#3.1
+     */
+    private function cleanupExpiredNotificationKeys(): void
+    {
+        // Retrieve all app config values for this app.
+        $allValues = $this->appConfig->getValues(Application::APP_ID);
+
+        $now = time();
+
+        foreach ($allValues as $key => $value) {
+            // Only process notification cooldown keys.
+            if (strpos($key, self::NOTIFIED_KEY_PREFIX) !== 0) {
+                continue;
+            }
+
+            $lastNotifiedTime = (int) $value;
+            $age              = $now - $lastNotifiedTime;
+
+            // Delete keys that have exceeded the cooldown period.
+            if ($age >= self::NOTIFICATION_COOLDOWN) {
+                $this->appConfig->deleteKey(Application::APP_ID, $key);
+            }
+        }
+    }//end cleanupExpiredNotificationKeys()
 }//end class

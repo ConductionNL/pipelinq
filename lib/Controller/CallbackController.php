@@ -28,8 +28,10 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
+use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -53,6 +55,8 @@ class CallbackController extends Controller
      * @param NotificationService $notificationService The notification service.
      * @param IAppConfig          $appConfig           The app config.
      * @param IUserSession        $userSession         The user session.
+     * @param IGroupManager       $groupManager        The group manager.
+     * @param IUserManager        $userManager         The user manager.
      * @param IL10N               $l10n                The localization service.
      * @param LoggerInterface     $logger              The logger.
      */
@@ -62,6 +66,8 @@ class CallbackController extends Controller
         private NotificationService $notificationService,
         private IAppConfig $appConfig,
         private IUserSession $userSession,
+        private IGroupManager $groupManager,
+        private IUserManager $userManager,
         private IL10N $l10n,
         private LoggerInterface $logger,
     ) {
@@ -97,6 +103,15 @@ class CallbackController extends Controller
                 return new JSONResponse(
                     ['error' => $this->l10n->t('Task not found')],
                     Http::STATUS_NOT_FOUND
+                );
+            }
+
+            // Authorize user access to this task.
+            $authorization = $this->callbackService->authorizeTaskAccess($taskData);
+            if ($authorization['authorized'] === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t($authorization['reason'])],
+                    Http::STATUS_FORBIDDEN
                 );
             }
 
@@ -183,6 +198,15 @@ class CallbackController extends Controller
                 );
             }
 
+            // Authorize user access to this task.
+            $authorization = $this->callbackService->authorizeTaskAccess($taskData);
+            if ($authorization['authorized'] === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t($authorization['reason'])],
+                    Http::STATUS_FORBIDDEN
+                );
+            }
+
             $transition = $this->callbackService->validateStatusTransition(
                 $taskData['status'] ?? 'open',
                 'afgerond'
@@ -254,6 +278,34 @@ class CallbackController extends Controller
                     ['error' => $this->l10n->t('Task not found')],
                     Http::STATUS_NOT_FOUND
                 );
+            }
+
+            // Authorize user access to this task.
+            $authorization = $this->callbackService->authorizeTaskAccess($taskData);
+            if ($authorization['authorized'] === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t($authorization['reason'])],
+                    Http::STATUS_FORBIDDEN
+                );
+            }
+
+            // Validate that the assignee exists before proceeding.
+            if ($assigneeType === 'user') {
+                $userExists = $this->userManager->get($assignee) !== null;
+                if ($userExists === false) {
+                    return new JSONResponse(
+                        ['error' => $this->l10n->t('Assignee user does not exist')],
+                        Http::STATUS_UNPROCESSABLE_ENTITY
+                    );
+                }
+            } else {
+                $groupExists = $this->groupManager->get($assignee) !== null;
+                if ($groupExists === false) {
+                    return new JSONResponse(
+                        ['error' => $this->l10n->t('Assignee group does not exist')],
+                        Http::STATUS_UNPROCESSABLE_ENTITY
+                    );
+                }
             }
 
             $taskData = $this->callbackService->applyReassignment($taskData, $assignee, $assigneeType);

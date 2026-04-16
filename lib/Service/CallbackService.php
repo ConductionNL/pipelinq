@@ -285,4 +285,59 @@ class CallbackService
 
         return $taskData;
     }//end applyReassignment()
+
+    /**
+     * Authorize whether the current user can act on a task.
+     *
+     * Checks if the user is the assigned agent, member of the assigned group, or a Nextcloud admin.
+     *
+     * @param array<string, mixed> $taskData The task data array.
+     *
+     * @return array{authorized: bool, reason: string} Authorization result.
+     *
+     * @spec openspec/changes/callback-management/tasks.md#1.1
+     */
+    public function authorizeTaskAccess(array $taskData): array
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return [
+                'authorized' => false,
+                'reason'     => 'No authenticated user',
+            ];
+        }
+
+        $userId = $user->getUID();
+
+        // Admin users are always authorized.
+        if ($this->groupManager->isAdmin($userId) === true) {
+            return [
+                'authorized' => true,
+                'reason'     => '',
+            ];
+        }
+
+        // Check if user is the assigned agent.
+        $assignedUserId = $taskData['assigneeUserId'] ?? null;
+        if ($assignedUserId === $userId) {
+            return [
+                'authorized' => true,
+                'reason'     => '',
+            ];
+        }
+
+        // Check if user is member of the assigned group.
+        $assignedGroupId = $taskData['assigneeGroupId'] ?? null;
+        if (empty($assignedGroupId) === false && $this->groupManager->isInGroup($userId, $assignedGroupId) === true) {
+            return [
+                'authorized' => true,
+                'reason'     => '',
+            ];
+        }
+
+        return [
+            'authorized' => false,
+            'reason'     => 'User is not authorized to act on this task',
+        ];
+    }//end authorizeTaskAccess()
 }//end class
