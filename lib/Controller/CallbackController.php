@@ -40,6 +40,8 @@ use Psr\Log\LoggerInterface;
  * completing callbacks, and reassigning tasks.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ *
+ * @spec openspec/changes/callback-management/tasks.md#2.1
  */
 class CallbackController extends Controller
 {
@@ -72,6 +74,8 @@ class CallbackController extends Controller
      * @param string $id The task object ID.
      *
      * @return JSONResponse The response with updated task data.
+     *
+     * @spec openspec/changes/callback-management/tasks.md#2.1
      */
     public function attempt(string $id): JSONResponse
     {
@@ -120,6 +124,8 @@ class CallbackController extends Controller
      * @param string $id The task object ID.
      *
      * @return JSONResponse The response with updated task data.
+     *
+     * @spec openspec/changes/callback-management/tasks.md#2.1
      */
     public function claim(string $id): JSONResponse
     {
@@ -158,6 +164,8 @@ class CallbackController extends Controller
      * @param string $id The task object ID.
      *
      * @return JSONResponse The response with updated task data.
+     *
+     * @spec openspec/changes/callback-management/tasks.md#2.1
      */
     public function complete(string $id): JSONResponse
     {
@@ -220,6 +228,8 @@ class CallbackController extends Controller
      * @param string $id The task object ID.
      *
      * @return JSONResponse The response with updated task data.
+     *
+     * @spec openspec/changes/callback-management/tasks.md#2.1
      */
     public function reassign(string $id): JSONResponse
     {
