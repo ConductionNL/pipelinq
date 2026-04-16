@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/contactmomenten/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
@@ -111,6 +113,8 @@ class ContactmomentService
      *
      * @throws DoesNotExistException  If contactmoment not found.
      * @throws NotPermittedException  If user lacks permission.
+     *
+     * @spec openspec/changes/contactmomenten/tasks.md#task-1.1
      */
     public function delete(string $id, string $currentUserId): bool
     {
