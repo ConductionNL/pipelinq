@@ -410,6 +410,14 @@
         "{count} leads/requests are on this pipeline. They will be removed from the pipeline but not deleted.": "{count} leads/verzoeken staan op deze pipeline. Ze worden van de pipeline verwijderd maar niet gewist.",
         "{days}d ago": "{days}d geleden",
         "{hours}h ago": "{hours}u geleden",
-        "{minutes}m ago": "{minutes}m geleden"
+        "{minutes}m ago": "{minutes}m geleden",
+        "Contactmomenten": "Contactmomenten",
+        "Contact Moments": "Contactmomenten",
+        "New contact moment": "Nieuw contactmoment",
+        "Register Contact Moment": "Contactmoment registreren",
+        "Contact moment registered": "Contactmoment geregistreerd",
+        "Failed to register contact moment": "Het registreren van het contactmoment is mislukt",
+        "Search by subject": "Zoek op onderwerp",
+        "Registered contact moments": "Geregistreerde contactmomenten"
     }
 }
