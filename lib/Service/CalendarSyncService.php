@@ -47,8 +47,8 @@ class CalendarSyncService
      *
      * Creates a calendar event linked to a CRM entity (client, contact, lead, or request).
      *
-     * @param string            $entityType The type of entity (client, contact, lead, request)
-     * @param string            $entityId   The UUID of the entity
+     * @param string               $entityType The type of entity (client, contact, lead, request)
+     * @param string               $entityId   The UUID of the entity
      * @param array<string, mixed> $eventData  Event data including title, startDate, endDate, attendees
      *
      * @return array<string, mixed> The created event data
@@ -57,37 +57,40 @@ class CalendarSyncService
      */
     public function createFollowUpEvent(string $entityType, string $entityId, array $eventData): array
     {
-        // Validate entity type
+        // Validate entity type.
         $validTypes = ['client', 'contact', 'lead', 'request'];
-        if (!\in_array($entityType, $validTypes, true)) {
+        if (\in_array(needle: $entityType, haystack: $validTypes, strict: true) === false) {
             throw new \InvalidArgumentException("Invalid entity type: {$entityType}");
         }
 
-        // Validate required event data
-        if (empty($eventData['title'])) {
+        // Validate required event data.
+        if (empty($eventData['title']) === true) {
             throw new \InvalidArgumentException('Event title is required');
         }
 
-        // Generate event UID
+        // Generate event UID.
         $eventUid = \bin2hex(\random_bytes(16));
 
         $event = [
-            'eventUid' => $eventUid,
-            'title' => $eventData['title'],
-            'startDate' => $eventData['startDate'] ?? null,
-            'endDate' => $eventData['endDate'] ?? null,
-            'attendees' => $eventData['attendees'] ?? [],
+            'eventUid'         => $eventUid,
+            'title'            => $eventData['title'],
+            'startDate'        => $eventData['startDate'] ?? null,
+            'endDate'          => $eventData['endDate'] ?? null,
+            'attendees'        => $eventData['attendees'] ?? [],
             'linkedEntityType' => $entityType,
-            'linkedEntityId' => $entityId,
-            'status' => 'scheduled',
-            'createdFrom' => 'pipelinq',
+            'linkedEntityId'   => $entityId,
+            'status'           => 'scheduled',
+            'createdFrom'      => 'pipelinq',
         ];
 
-        $this->logger->info('Created follow-up event', [
-            'eventUid' => $eventUid,
-            'entityType' => $entityType,
-            'entityId' => $entityId,
-        ]);
+        $this->logger->info(
+                'Created follow-up event',
+                [
+                    'eventUid'   => $eventUid,
+                    'entityType' => $entityType,
+                    'entityId'   => $entityId,
+                ]
+                );
 
         return $event;
     }//end createFollowUpEvent()
@@ -106,9 +109,9 @@ class CalendarSyncService
         $matches = [];
 
         foreach ($attendeeEmails as $email) {
-            // Try to find entities matching this email address
-            // In a complete implementation, this would query the register
-            // for contacts and clients with matching email addresses
+            // Try to find entities matching this email address.
+            // In a complete implementation, this would query the register.
+            // for contacts and clients with matching email addresses.
             $this->logger->debug('Matching attendee email', ['email' => $email]);
         }
 

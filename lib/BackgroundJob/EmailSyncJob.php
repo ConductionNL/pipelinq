@@ -38,18 +38,18 @@ class EmailSyncJob extends TimedJob
     /**
      * Constructor.
      *
-     * @param ITimeFactory     $timeFactory       The time factory.
-     * @param EmailSyncService $emailSyncService  The email sync service.
-     * @param LoggerInterface  $logger            The logger.
+     * @param ITimeFactory     $timeFactory      The time factory.
+     * @param EmailSyncService $emailSyncService The email sync service.
+     * @param LoggerInterface  $logger           The logger.
      */
     public function __construct(
         ITimeFactory $timeFactory,
         private EmailSyncService $emailSyncService,
         private LoggerInterface $logger,
     ) {
-        parent::__construct($timeFactory);
-        // Run every 5 minutes
-        $this->setInterval(5 * 60);
+        parent::__construct(timeFactory: $timeFactory);
+        // Run every 5 minutes.
+        $this->setInterval(interval: 5 * 60);
     }//end __construct()
 
     /**
@@ -66,19 +66,21 @@ class EmailSyncJob extends TimedJob
         $this->logger->info('Starting email sync job');
 
         try {
-            // In a complete implementation, this would:
-            // 1. Fetch new emails from Nextcloud Mail
-            // 2. Extract sender and recipient addresses
-            // 3. Match them to CRM entities using EmailSyncService
-            // 4. Create emailLink records in the register
-            // 5. Log any errors or mismatches
-
+            // In a complete implementation, this would:.
+            // 1. Fetch new emails from Nextcloud Mail.
+            // 2. Extract sender and recipient addresses.
+            // 3. Match them to CRM entities using EmailSyncService.
+            // 4. Create emailLink records in the register.
+            // 5. Log any errors or mismatches.
             $this->logger->info('Email sync job completed');
         } catch (\Exception $e) {
-            $this->logger->error('Email sync job failed', [
-                'error' => $e->getMessage(),
-                'exception' => $e,
-            ]);
+            $this->logger->error(
+                    'Email sync job failed',
+                    [
+                        'error'     => $e->getMessage(),
+                        'exception' => $e,
+                    ]
+                    );
         }
     }//end run()
 }//end class
