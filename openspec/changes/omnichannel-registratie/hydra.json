@@ -1,0 +1,8 @@
+{
+  "spec_slug": "omnichannel-registratie",
+  "title": "Omnichannel Registratie",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [],
+  "issue": null
+}
