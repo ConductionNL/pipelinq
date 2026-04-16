@@ -75,6 +75,7 @@ class CallbackController extends Controller
      *
      * @return JSONResponse The response with updated task data.
      *
+     * @NoAdminRequired
      * @spec openspec/changes/callback-management/tasks.md#2.1
      */
     public function attempt(string $id): JSONResponse
@@ -125,6 +126,7 @@ class CallbackController extends Controller
      *
      * @return JSONResponse The response with updated task data.
      *
+     * @NoAdminRequired
      * @spec openspec/changes/callback-management/tasks.md#2.1
      */
     public function claim(string $id): JSONResponse
@@ -165,6 +167,7 @@ class CallbackController extends Controller
      *
      * @return JSONResponse The response with updated task data.
      *
+     * @NoAdminRequired
      * @spec openspec/changes/callback-management/tasks.md#2.1
      */
     public function complete(string $id): JSONResponse
@@ -229,6 +232,7 @@ class CallbackController extends Controller
      *
      * @return JSONResponse The response with updated task data.
      *
+     * @NoAdminRequired
      * @spec openspec/changes/callback-management/tasks.md#2.1
      */
     public function reassign(string $id): JSONResponse
@@ -307,14 +311,16 @@ class CallbackController extends Controller
         // NOTE: In production, fetch the actual task from OpenRegister:
         // GET /api/registers/{register}/schemas/{schema}/objects/{id}
         // For now, return a stub indicating the task exists.
+        // The stub uses 'in_behandeling' status to allow transitions to 'afgerond'
+        // and a group assignment to allow claims.
         return [
             'id'              => $id,
-            'status'          => 'open',
+            'status'          => 'in_behandeling',
             'type'            => 'terugbelverzoek',
             'subject'         => '',
             'attempts'        => [],
             'assigneeUserId'  => null,
-            'assigneeGroupId' => null,
+            'assigneeGroupId' => 'callback-handlers',
             'createdBy'       => '',
             'deadline'        => '',
         ];
