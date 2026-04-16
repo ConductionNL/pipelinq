@@ -183,7 +183,7 @@ export default {
 			clientData: null,
 			contactData: null,
 			pipelineData: null,
-			_prevProductTotal: null,
+			prevProductTotal: null,
 		}
 	},
 	computed: {
