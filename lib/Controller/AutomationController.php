@@ -30,6 +30,8 @@ use OCP\IRequest;
 
 /**
  * Controller for automation CRUD and metadata endpoints.
+ *
+ * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-3
  */
 class AutomationController extends Controller
 {
@@ -66,11 +68,201 @@ class AutomationController extends Controller
     }//end metadata()
 
     /**
+     * List all automations.
+     *
+     * @return JSONResponse The list of automations.
+     *
+     * @NoAdminRequired
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-3
+     */
+    public function index(): JSONResponse
+    {
+        try {
+            $automations = $this->automationService->listAutomations();
+            return new JSONResponse(['automations' => $automations]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to list automations')],
+                500
+            );
+        }
+    }//end index()
+
+    /**
+     * Get a single automation by ID.
+     *
+     * @param string $id The automation UUID.
+     *
+     * @return JSONResponse The automation details.
+     *
+     * @NoAdminRequired
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-3
+     */
+    public function show(string $id): JSONResponse
+    {
+        try {
+            $automation = $this->automationService->getAutomation($id);
+            if ($automation === null) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('Automation not found')],
+                    404
+                );
+            }
+
+            return new JSONResponse(['automation' => $automation]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to get automation')],
+                500
+            );
+        }
+    }//end show()
+
+    /**
+     * Create a new automation.
+     *
+     * @return JSONResponse The created automation.
+     *
+     * @NoAdminRequired
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-3
+     */
+    public function create(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+
+            if (empty($data['name'] ?? '') === true) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('Automation name is required')],
+                    400
+                );
+            }
+
+            if (empty($data['trigger'] ?? '') === true) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('Automation trigger is required')],
+                    400
+                );
+            }
+
+            // Ensure isActive defaults to true if not specified
+            if (!isset($data['isActive'])) {
+                $data['isActive'] = true;
+            }
+
+            $automation = $this->automationService->saveAutomation($data);
+            return new JSONResponse(['automation' => $automation], 201);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to create automation')],
+                500
+            );
+        }
+    }//end create()
+
+    /**
+     * Update an existing automation.
+     *
+     * @param string $id The automation UUID.
+     *
+     * @return JSONResponse The updated automation.
+     *
+     * @NoAdminRequired
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-3
+     */
+    public function update(string $id): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            $data['id'] = $id;
+
+            $automation = $this->automationService->saveAutomation($data);
+            return new JSONResponse(['automation' => $automation]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to update automation')],
+                500
+            );
+        }
+    }//end update()
+
+    /**
+     * Delete an automation.
+     *
+     * @param string $id The automation UUID.
+     *
+     * @return JSONResponse Success response.
+     *
+     * @NoAdminRequired
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-3
+     */
+    public function destroy(string $id): JSONResponse
+    {
+        try {
+            $this->automationService->deleteAutomation($id);
+            return new JSONResponse(['success' => true]);
+        } catch (\Exception $e) {
+            if ($e->getMessage() === 'Automation not found: '.$id) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('Automation not found')],
+                    404
+                );
+            }
+
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to delete automation')],
+                500
+            );
+        }
+    }//end destroy()
+
+    /**
+     * Get execution history for an automation.
+     *
+     * @param string $id The automation UUID.
+     *
+     * @return JSONResponse The execution history.
+     *
+     * @NoAdminRequired
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-3
+     */
+    public function history(string $id): JSONResponse
+    {
+        try {
+            // Verify automation exists
+            $automation = $this->automationService->getAutomation($id);
+            if ($automation === null) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('Automation not found')],
+                    404
+                );
+            }
+
+            // TODO: Implement history filtering from automationLog objects
+            // For now, return empty history as logs are stored as separate objects
+            return new JSONResponse(['history' => [], 'automationId' => $id]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to get execution history')],
+                500
+            );
+        }
+    }//end history()
+
+    /**
      * Test an automation's conditions against sample entity data.
      *
      * @return JSONResponse The test result.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-3
      */
     public function test(): JSONResponse
     {

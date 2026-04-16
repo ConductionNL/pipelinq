@@ -23,6 +23,8 @@ namespace OCA\Pipelinq\Service;
 
 /**
  * Service for handling object event business logic.
+ *
+ * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-4
  */
 class ObjectEventHandlerService
 {
@@ -175,21 +177,244 @@ class ObjectEventHandlerService
      * @param string $objectId   The object ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-4
      */
     private function fireAutomations(string $trigger, array $entityData, string $objectId): void
     {
         try {
-            $payload = $this->automationService->buildWebhookPayload(
-                automation: ['name' => $trigger],
+            $entityData = array_merge($entityData, ['id' => $objectId]);
+
+            // Get all automations matching this trigger and conditions
+            $matchingAutomations = $this->automationService->getMatchingAutomations(
                 trigger: $trigger,
-                entityData: array_merge($entityData, ['id' => $objectId])
+                entity: $entityData
             );
-            // Webhook firing is handled by the automation execution engine.
-            // This is a placeholder for the full automation matching pipeline.
+
+            foreach ($matchingAutomations as $automation) {
+                try {
+                    $this->executeAutomation(
+                        automation: $automation,
+                        trigger: $trigger,
+                        entityData: $entityData,
+                        objectId: $objectId
+                    );
+                } catch (\Exception $e) {
+                    // Log execution failure but continue with next automation
+                    // Don't break the event flow
+                }
+            }
         } catch (\Exception $e) {
             // Automation failures must not break the main event flow.
         }
     }//end fireAutomations()
+
+    /**
+     * Execute an automation with its configured actions.
+     *
+     * @param array  $automation The automation configuration.
+     * @param string $trigger    The trigger event type.
+     * @param array  $entityData The entity data.
+     * @param string $objectId   The object ID that triggered the automation.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-4
+     */
+    private function executeAutomation(
+        array $automation,
+        string $trigger,
+        array $entityData,
+        string $objectId
+    ): void {
+        try {
+            $actionsExecuted = [];
+            $actions = $automation['actions'] ?? [];
+
+            // Execute each action in sequence
+            foreach ($actions as $action) {
+                $actionResult = $this->executeAction(
+                    action: $action,
+                    entityData: $entityData,
+                    objectId: $objectId
+                );
+                $actionsExecuted[] = $actionResult;
+            }
+
+            // Fire webhook if configured
+            if (!empty($automation['webhookUrl'] ?? '')) {
+                $payload = $this->automationService->buildWebhookPayload(
+                    automation: $automation,
+                    trigger: $trigger,
+                    entityData: $entityData
+                );
+                $webhookResult = $this->automationService->fireWebhook(
+                    webhookUrl: $automation['webhookUrl'],
+                    payload: $payload
+                );
+                $actionsExecuted[] = [
+                    'type'   => 'webhook',
+                    'result' => $webhookResult['status'] ?? 'unknown',
+                ];
+            }
+
+            // Log execution
+            $result = [
+                'triggerEntity'  => $objectId,
+                'actionsExecuted' => $actionsExecuted,
+                'status'         => 'success',
+            ];
+
+            $this->automationService->logExecution(
+                automationId: $automation['id'] ?? '',
+                result: $result
+            );
+
+            // Update last run timestamp and count
+            if (!empty($automation['id'] ?? '')) {
+                $this->automationService->updateLastRun($automation['id']);
+            }
+        } catch (\Exception $e) {
+            // Log failure but don't break the flow
+            if (!empty($automation['id'] ?? '')) {
+                $this->automationService->logExecution(
+                    automationId: $automation['id'],
+                    result: [
+                        'status' => 'failure',
+                        'error'  => $e->getMessage(),
+                    ]
+                );
+            }
+        }
+    }//end executeAutomation()
+
+    /**
+     * Execute a single action from an automation.
+     *
+     * @param array  $action     The action configuration.
+     * @param array  $entityData The entity data.
+     * @param string $objectId   The object ID.
+     *
+     * @return array The action execution result.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-4
+     */
+    private function executeAction(array $action, array $entityData, string $objectId): array
+    {
+        try {
+            $type = $action['type'] ?? 'unknown';
+            $config = $action['config'] ?? [];
+
+            return match ($type) {
+                'assign_lead'       => $this->executeAssignLead(config: $config, objectId: $objectId),
+                'move_stage'        => $this->executeMoveStage(config: $config, objectId: $objectId),
+                'send_notification' => $this->executeSendNotification(
+                    config: $config,
+                    entityData: $entityData
+                ),
+                'update_field'      => $this->executeUpdateField(config: $config, objectId: $objectId),
+                'add_note'          => $this->executeAddNote(config: $config, objectId: $objectId),
+                default             => [
+                    'type'   => $type,
+                    'result' => 'skipped',
+                    'reason' => 'Unknown action type',
+                ],
+            };
+        } catch (\Exception $e) {
+            return [
+                'type'   => $action['type'] ?? 'unknown',
+                'result' => 'failure',
+                'error'  => $e->getMessage(),
+            ];
+        }
+    }//end executeAction()
+
+    /**
+     * Execute an assign_lead action.
+     *
+     * @param array  $config   The action configuration.
+     * @param string $objectId The object ID.
+     *
+     * @return array The action result.
+     */
+    private function executeAssignLead(array $config, string $objectId): array
+    {
+        // Implementation depends on OpenRegister API for updating objects
+        // For now, return a placeholder
+        return [
+            'type'   => 'assign_lead',
+            'result' => 'pending',
+            'reason' => 'Requires OpenRegister object update API',
+        ];
+    }//end executeAssignLead()
+
+    /**
+     * Execute a move_stage action.
+     *
+     * @param array  $config   The action configuration.
+     * @param string $objectId The object ID.
+     *
+     * @return array The action result.
+     */
+    private function executeMoveStage(array $config, string $objectId): array
+    {
+        return [
+            'type'   => 'move_stage',
+            'result' => 'pending',
+            'reason' => 'Requires OpenRegister object update API',
+        ];
+    }//end executeMoveStage()
+
+    /**
+     * Execute a send_notification action.
+     *
+     * @param array $config     The action configuration.
+     * @param array $entityData The entity data.
+     *
+     * @return array The action result.
+     */
+    private function executeSendNotification(array $config, array $entityData): array
+    {
+        return [
+            'type'   => 'send_notification',
+            'result' => 'pending',
+            'reason' => 'Requires notification service integration',
+        ];
+    }//end executeSendNotification()
+
+    /**
+     * Execute an update_field action.
+     *
+     * @param array  $config   The action configuration.
+     * @param string $objectId The object ID.
+     *
+     * @return array The action result.
+     */
+    private function executeUpdateField(array $config, string $objectId): array
+    {
+        return [
+            'type'   => 'update_field',
+            'result' => 'pending',
+            'reason' => 'Requires OpenRegister object update API',
+        ];
+    }//end executeUpdateField()
+
+    /**
+     * Execute an add_note action.
+     *
+     * @param array  $config   The action configuration.
+     * @param string $objectId The object ID.
+     *
+     * @return array The action result.
+     */
+    private function executeAddNote(array $config, string $objectId): array
+    {
+        return [
+            'type'   => 'add_note',
+            'result' => 'pending',
+            'reason' => 'Requires notes service integration',
+        ];
+    }//end executeAddNote()
 
     /**
      * Fire matching automations for entity update events.

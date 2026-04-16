@@ -21,13 +21,17 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\AppInfo\Application;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IAppConfig;
 use OCP\IUserSession;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * Service for CRM workflow automation management.
  *
+ * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class AutomationService
@@ -60,11 +64,13 @@ class AutomationService
     /**
      * Constructor.
      *
-     * @param IAppConfig      $appConfig   The app configuration.
-     * @param IUserSession    $userSession The user session.
-     * @param LoggerInterface $logger      The logger.
+     * @param ContainerInterface $container   The DI container.
+     * @param IAppConfig         $appConfig   The app configuration.
+     * @param IUserSession       $userSession The user session.
+     * @param LoggerInterface    $logger      The logger.
      */
     public function __construct(
+        private ContainerInterface $container,
         private IAppConfig $appConfig,
         private IUserSession $userSession,
         private LoggerInterface $logger,
@@ -251,4 +257,320 @@ class AutomationService
             ];
         }//end try
     }//end fireWebhook()
+
+    /**
+     * Get the OpenRegister ObjectService.
+     *
+     * @return \OCA\OpenRegister\Service\ObjectService The object service.
+     *
+     * @throws \RuntimeException If OpenRegister is not available.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2
+     */
+    private function getObjectService(): \OCA\OpenRegister\Service\ObjectService
+    {
+        try {
+            return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+        } catch (\Exception $e) {
+            throw new \RuntimeException('OpenRegister service is not available.');
+        }
+    }//end getObjectService()
+
+    /**
+     * Get the configured register and schema for automations.
+     *
+     * @return array{register: string, automation_schema: string, automationLog_schema: string} The config.
+     *
+     * @throws \RuntimeException If configuration is missing.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2
+     */
+    private function getConfig(): array
+    {
+        $register = $this->appConfig->getValueString(
+            Application::APP_ID,
+            'register',
+            ''
+        );
+        $automationSchema = $this->appConfig->getValueString(
+            Application::APP_ID,
+            'automation_schema',
+            ''
+        );
+        $automationLogSchema = $this->appConfig->getValueString(
+            Application::APP_ID,
+            'automationLog_schema',
+            ''
+        );
+
+        if ($register === '' || $automationSchema === '' || $automationLogSchema === '') {
+            throw new \RuntimeException('Automation register or schema not configured.');
+        }
+
+        return [
+            'register'             => $register,
+            'automation_schema'    => $automationSchema,
+            'automationLog_schema' => $automationLogSchema,
+        ];
+    }//end getConfig()
+
+    /**
+     * List all automations from OpenRegister.
+     *
+     * @return array The list of automation objects.
+     *
+     * @throws \RuntimeException If configuration is missing.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2
+     */
+    public function listAutomations(): array
+    {
+        try {
+            $objectService = $this->getObjectService();
+            $config = $this->getConfig();
+
+            $objects = $objectService
+                ->setRegister($config['register'])
+                ->setSchema($config['automation_schema'])
+                ->getObjectsAll();
+
+            return $objects ?? [];
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to list automations: '.$e->getMessage());
+            return [];
+        }
+    }//end listAutomations()
+
+    /**
+     * Get a single automation by ID.
+     *
+     * @param string $id The automation UUID.
+     *
+     * @return array|null The automation object or null if not found.
+     *
+     * @throws \RuntimeException If configuration is missing.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2
+     */
+    public function getAutomation(string $id): ?array
+    {
+        try {
+            $objectService = $this->getObjectService();
+            $config = $this->getConfig();
+
+            $object = $objectService->find(
+                id: $id,
+                register: $config['register'],
+                schema: $config['automation_schema']
+            );
+
+            if ($object === null) {
+                return null;
+            }
+
+            return $object->getObject();
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get automation: '.$e->getMessage());
+            throw new DoesNotExistException('Automation not found: '.$id);
+        }
+    }//end getAutomation()
+
+    /**
+     * Create or update an automation.
+     *
+     * @param array $data The automation data.
+     *
+     * @return array The saved automation object.
+     *
+     * @throws \RuntimeException If configuration is missing or save fails.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2
+     */
+    public function saveAutomation(array $data): array
+    {
+        try {
+            $objectService = $this->getObjectService();
+            $config = $this->getConfig();
+
+            $objectService
+                ->setRegister($config['register'])
+                ->setSchema($config['automation_schema']);
+
+            if (isset($data['id']) === true && $data['id'] !== '') {
+                // Update existing automation
+                $objectService->updateObject(
+                    id: $data['id'],
+                    data: $data
+                );
+                return $this->getAutomation($data['id']) ?? $data;
+            } else {
+                // Create new automation
+                $response = $objectService->createObject(data: $data);
+                if ($response !== null && is_array($response) === true) {
+                    return $response;
+                }
+
+                return $data;
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to save automation: '.$e->getMessage());
+            throw new \RuntimeException('Failed to save automation: '.$e->getMessage());
+        }
+    }//end saveAutomation()
+
+    /**
+     * Delete an automation.
+     *
+     * @param string $id The automation UUID.
+     *
+     * @return bool True if deleted successfully.
+     *
+     * @throws \RuntimeException If configuration is missing or delete fails.
+     * @throws DoesNotExistException If automation not found.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2
+     */
+    public function deleteAutomation(string $id): bool
+    {
+        try {
+            $objectService = $this->getObjectService();
+            $config = $this->getConfig();
+
+            // Verify automation exists
+            $automation = $this->getAutomation($id);
+            if ($automation === null) {
+                throw new DoesNotExistException('Automation not found: '.$id);
+            }
+
+            $objectService
+                ->setRegister($config['register'])
+                ->setSchema($config['automation_schema'])
+                ->deleteObject(uuid: $id);
+
+            $this->logger->info('Automation deleted', ['id' => $id]);
+            return true;
+        } catch (DoesNotExistException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to delete automation: '.$e->getMessage());
+            throw new \RuntimeException('Failed to delete automation: '.$e->getMessage());
+        }
+    }//end deleteAutomation()
+
+    /**
+     * Find all automations matching a trigger and conditions.
+     *
+     * @param string $trigger The trigger event type.
+     * @param array  $entity  The entity data to check conditions against.
+     *
+     * @return array List of matching automation objects.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-4
+     */
+    public function getMatchingAutomations(string $trigger, array $entity): array
+    {
+        try {
+            $automations = $this->listAutomations();
+            $matching = [];
+
+            foreach ($automations as $automation) {
+                $automationArray = $automation;
+                if (is_object($automation) === true) {
+                    $automationArray = method_exists($automation, 'getObject')
+                        ? $automation->getObject()
+                        : (array) $automation;
+                }
+
+                if ($this->matchesConditions(
+                    automation: $automationArray,
+                    trigger: $trigger,
+                    entityData: $entity
+                ) === true) {
+                    $matching[] = $automationArray;
+                }
+            }//end foreach
+
+            return $matching;
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get matching automations: '.$e->getMessage());
+            return [];
+        }
+    }//end getMatchingAutomations()
+
+    /**
+     * Log an automation execution.
+     *
+     * @param string $automationId The automation UUID.
+     * @param array  $result       The execution result with status and actions.
+     *
+     * @return array The log entry.
+     *
+     * @throws \RuntimeException If configuration is missing.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-4
+     */
+    public function logExecution(string $automationId, array $result): array
+    {
+        try {
+            $objectService = $this->getObjectService();
+            $config = $this->getConfig();
+
+            $logEntry = [
+                'automation'      => $automationId,
+                'triggeredAt'     => (new \DateTime())->format('c'),
+                'triggerEntity'   => $result['triggerEntity'] ?? '',
+                'actionsExecuted' => $result['actionsExecuted'] ?? [],
+                'status'          => $result['status'] ?? 'unknown',
+                'error'           => $result['error'] ?? null,
+            ];
+
+            $objectService
+                ->setRegister($config['register'])
+                ->setSchema($config['automationLog_schema']);
+
+            $response = $objectService->createObject(data: $logEntry);
+
+            $this->logger->info(
+                'Automation execution logged',
+                [
+                    'automation' => $automationId,
+                    'status'     => $logEntry['status'],
+                ]
+            );
+
+            return $response !== null && is_array($response) === true ? $response : $logEntry;
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to log automation execution: '.$e->getMessage());
+            // Don't throw — logging failure shouldn't break automation execution
+            return ['error' => $e->getMessage()];
+        }
+    }//end logExecution()
+
+    /**
+     * Update an automation's last run timestamp and increment run count.
+     *
+     * @param string $automationId The automation UUID.
+     *
+     * @return bool True if updated successfully.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-4
+     */
+    public function updateLastRun(string $automationId): bool
+    {
+        try {
+            $automation = $this->getAutomation($automationId);
+            if ($automation === null) {
+                return false;
+            }
+
+            $automation['lastRun'] = (new \DateTime())->format('c');
+            $automation['runCount'] = ($automation['runCount'] ?? 0) + 1;
+
+            $this->saveAutomation($automation);
+            return true;
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update last run: '.$e->getMessage());
+            return false;
+        }
+    }//end updateLastRun()
 }//end class
