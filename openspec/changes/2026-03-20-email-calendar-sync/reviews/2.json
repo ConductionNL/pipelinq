@@ -1,0 +1,24 @@
+{
+  "round": 2,
+  "timestamp": "2026-04-16T17:44:01.415730+00:00",
+  "pr": 222,
+  "commit": "eeb98ee",
+  "code_review": {
+    "pass": null,
+    "turns": 0,
+    "cost_usd": 0,
+    "cost_eur": 0,
+    "tokens": {
+      "input": 0,
+      "output": 0,
+      "cache_read": 0,
+      "cache_create": 0
+    },
+    "findings": []
+  },
+  "security_review": {
+    "pass": null,
+    "turns": 0,
+    "findings": []
+  }
+}
