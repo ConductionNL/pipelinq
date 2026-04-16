@@ -29,6 +29,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Tests for CallbackService.
+ *
+ * @spec openspec/changes/callback-management/tasks.md#task-4.1
  */
 class CallbackServiceTest extends TestCase
 {
