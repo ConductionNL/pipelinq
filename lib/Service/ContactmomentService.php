@@ -26,7 +26,6 @@ namespace OCA\Pipelinq\Service;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\NotPermittedException;
-use OCP\IAppConfig;
 use OCP\IGroupManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -43,13 +42,13 @@ class ContactmomentService
      * Constructor.
      *
      * @param ContainerInterface $container    The DI container.
-     * @param IAppConfig         $appConfig    The app config.
+     * @param SettingsService    $settingsService The settings service.
      * @param IGroupManager      $groupManager The group manager.
      * @param LoggerInterface    $logger       The logger.
      */
     public function __construct(
         private ContainerInterface $container,
-        private IAppConfig $appConfig,
+        private SettingsService $settingsService,
         private IGroupManager $groupManager,
         private LoggerInterface $logger,
     ) {
@@ -80,16 +79,9 @@ class ContactmomentService
      */
     public function getConfig(): array
     {
-        $register = $this->appConfig->getValueString(
-            Application::APP_ID,
-            'register',
-            ''
-        );
-        $schema   = $this->appConfig->getValueString(
-            Application::APP_ID,
-            'contactmoment_schema',
-            ''
-        );
+        $settings = $this->settingsService->getSettings();
+        $register = $settings['register'] ?? '';
+        $schema   = $settings['contactmoment_schema'] ?? '';
 
         if ($register === '' || $schema === '') {
             throw new \RuntimeException('Contactmoment register or schema not configured.');
