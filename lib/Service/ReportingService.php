@@ -29,6 +29,8 @@ use Psr\Log\LoggerInterface;
  *
  * Provides methods for calculating KPIs, SLA compliance, channel distribution,
  * and agent performance metrics from contactmoment data.
+ *
+ * @spec openspec/changes/2026-03-20-contactmomenten-rapportage/tasks.md#task-1.1
  */
 class ReportingService
 {
@@ -49,6 +51,8 @@ class ReportingService
      *
      * @param IAppConfig      $appConfig The app config.
      * @param LoggerInterface $logger    The logger.
+     *
+     * @spec openspec/changes/2026-03-20-contactmomenten-rapportage/tasks.md#task-1.1
      */
     public function __construct(
         private IAppConfig $appConfig,
@@ -63,6 +67,8 @@ class ReportingService
      * @param int $resolvedContacts Contacts resolved without backoffice routing.
      *
      * @return float FCR as a percentage (0-100).
+     *
+     * @spec openspec/changes/2026-03-20-contactmomenten-rapportage/tasks.md#task-1.1
      */
     public function calculateFcr(int $totalContacts, int $resolvedContacts): float
     {
@@ -81,6 +87,8 @@ class ReportingService
      * @param int    $withinSla     Contacts handled within SLA target.
      *
      * @return array{compliance: float, target: float, status: string} SLA data.
+     *
+     * @spec openspec/changes/2026-03-20-contactmomenten-rapportage/tasks.md#task-1.1
      */
     public function calculateSlaCompliance(
         string $channel,
@@ -114,6 +122,8 @@ class ReportingService
      * @param string $channel The channel type.
      *
      * @return float The target percentage.
+     *
+     * @spec openspec/changes/2026-03-20-contactmomenten-rapportage/tasks.md#task-1.1
      */
     public function getSlaTarget(string $channel): float
     {
@@ -131,6 +141,8 @@ class ReportingService
      * Get all SLA configuration.
      *
      * @return array<string, array<string, mixed>> SLA targets per channel.
+     *
+     * @spec openspec/changes/2026-03-20-contactmomenten-rapportage/tasks.md#task-1.1
      */
     public function getAllSlaTargets(): array
     {
@@ -159,6 +171,8 @@ class ReportingService
      * @param string $value   The target value.
      *
      * @return void
+     *
+     * @spec openspec/changes/2026-03-20-contactmomenten-rapportage/tasks.md#task-1.1
      */
     public function setSlaTarget(string $channel, string $metric, string $value): void
     {
@@ -175,6 +189,8 @@ class ReportingService
      * @param array<array<string>> $rows    The data rows.
      *
      * @return string The CSV content.
+     *
+     * @spec openspec/changes/2026-03-20-contactmomenten-rapportage/tasks.md#task-1.1
      */
     public function generateCsv(array $headers, array $rows): string
     {
@@ -200,6 +216,8 @@ class ReportingService
      * @param array<string> $durations ISO 8601 duration strings.
      *
      * @return string Formatted average duration (MM:SS).
+     *
+     * @spec openspec/changes/2026-03-20-contactmomenten-rapportage/tasks.md#task-1.1
      */
     public function calculateAverageHandlingTime(array $durations): string
     {

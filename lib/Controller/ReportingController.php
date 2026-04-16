@@ -31,6 +31,8 @@ use OCP\IRequest;
 
 /**
  * Controller for reporting endpoints and SLA configuration.
+ *
+ * @spec openspec/changes/2026-03-20-contactmomenten-rapportage/tasks.md#task-1.2
  */
 class ReportingController extends Controller
 {
@@ -40,6 +42,8 @@ class ReportingController extends Controller
      * @param IRequest         $request          The request.
      * @param ReportingService $reportingService The reporting service.
      * @param IL10N            $l10n             The localization service.
+     *
+     * @spec openspec/changes/2026-03-20-contactmomenten-rapportage/tasks.md#task-1.2
      */
     public function __construct(
         IRequest $request,
@@ -55,6 +59,7 @@ class ReportingController extends Controller
      * @return JSONResponse The SLA targets.
      *
      * @NoAdminRequired
+     * @spec openspec/changes/2026-03-20-contactmomenten-rapportage/tasks.md#task-1.2
      */
     public function getSla(): JSONResponse
     {
@@ -75,6 +80,7 @@ class ReportingController extends Controller
      * @return JSONResponse The updated SLA targets.
      *
      * @NoAdminRequired
+     * @spec openspec/changes/2026-03-20-contactmomenten-rapportage/tasks.md#task-1.2
      */
     public function updateSla(): JSONResponse
     {
@@ -122,6 +128,7 @@ class ReportingController extends Controller
      * @return DataDownloadResponse|JSONResponse The CSV download or error.
      *
      * @NoAdminRequired
+     * @spec openspec/changes/2026-03-20-contactmomenten-rapportage/tasks.md#task-1.2
      */
     public function exportCsv(): DataDownloadResponse|JSONResponse
     {
