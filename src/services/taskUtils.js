@@ -2,32 +2,40 @@
  * Task utility functions for Pipelinq callback management.
  */
 
+import { translate as t } from '@nextcloud/l10n'
+
 /**
- * Task type labels (Dutch).
+ * Task type labels.
  */
-export const TASK_TYPE_LABELS = {
-	terugbelverzoek: 'Terugbelverzoek',
-	opvolgtaak: 'Opvolgtaak',
-	informatievraag: 'Informatievraag',
+export function getTaskTypeLabels() {
+	return {
+		terugbelverzoek: t('pipelinq', 'Callback request'),
+		opvolgtaak: t('pipelinq', 'Follow-up task'),
+		informatievraag: t('pipelinq', 'Information request'),
+	}
 }
 
 /**
- * Task status labels (Dutch).
+ * Task status labels.
  */
-export const TASK_STATUS_LABELS = {
-	open: 'Open',
-	in_behandeling: 'In behandeling',
-	afgerond: 'Afgerond',
-	verlopen: 'Verlopen',
+export function getTaskStatusLabels() {
+	return {
+		open: t('pipelinq', 'Open'),
+		in_behandeling: t('pipelinq', 'In progress'),
+		afgerond: t('pipelinq', 'Completed'),
+		verlopen: t('pipelinq', 'Expired'),
+	}
 }
 
 /**
- * Task priority labels (Dutch).
+ * Task priority labels.
  */
-export const TASK_PRIORITY_LABELS = {
-	laag: 'Laag',
-	normaal: 'Normaal',
-	hoog: 'Hoog',
+export function getTaskPriorityLabels() {
+	return {
+		laag: t('pipelinq', 'Low'),
+		normaal: t('pipelinq', 'Normal'),
+		hoog: t('pipelinq', 'High'),
+	}
 }
 
 /**
@@ -46,7 +54,7 @@ export const TASK_PRIORITY_ORDER = {
  * @return {string} The label.
  */
 export function getTaskTypeLabel(type) {
-	return TASK_TYPE_LABELS[type] || type || '-'
+	return getTaskTypeLabels()[type] || type || '-'
 }
 
 /**
@@ -56,7 +64,7 @@ export function getTaskTypeLabel(type) {
  * @return {string} The label.
  */
 export function getTaskStatusLabel(status) {
-	return TASK_STATUS_LABELS[status] || status || '-'
+	return getTaskStatusLabels()[status] || status || '-'
 }
 
 /**
@@ -66,7 +74,7 @@ export function getTaskStatusLabel(status) {
  * @return {string} The label.
  */
 export function getTaskPriorityLabel(priority) {
-	return TASK_PRIORITY_LABELS[priority] || priority || '-'
+	return getTaskPriorityLabels()[priority] || priority || '-'
 }
 
 /**
