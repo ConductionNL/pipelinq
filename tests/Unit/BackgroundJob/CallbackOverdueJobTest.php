@@ -30,6 +30,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Tests for CallbackOverdueJob.
+ *
+ * @spec openspec/changes/callback-management/tasks.md#task-4.3
  */
 class CallbackOverdueJobTest extends TestCase
 {
