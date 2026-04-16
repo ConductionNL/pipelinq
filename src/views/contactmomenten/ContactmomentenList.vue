@@ -2,9 +2,14 @@
 	<div>
 		<div class="contactmomenten-header">
 			<h2>{{ t('pipelinq', 'Contact Moments') }}</h2>
-			<NcButton type="secondary" @click="exportCsv">
-				{{ t('pipelinq', 'Export CSV') }}
-			</NcButton>
+			<div class="header-actions">
+				<NcButton type="secondary" @click="navigateToNew">
+					{{ t('pipelinq', 'New contact moment') }}
+				</NcButton>
+				<NcButton type="secondary" @click="exportCsv">
+					{{ t('pipelinq', 'Export CSV') }}
+				</NcButton>
+			</div>
 		</div>
 
 		<div class="contactmomenten-search">
@@ -121,6 +126,10 @@ export default {
 			this.refresh()
 		},
 
+		navigateToNew() {
+			this.$router.push({ name: 'ContactmomentNew' })
+		},
+
 		exportCsv() {
 			const url = generateUrl('/apps/pipelinq/api/contactmomenten/export')
 			window.open(url, '_blank')
@@ -187,6 +196,11 @@ export default {
 
 .contactmomenten-header h2 {
 	margin: 0;
+}
+
+.header-actions {
+	display: flex;
+	gap: 10px;
 }
 
 .contactmomenten-search {
