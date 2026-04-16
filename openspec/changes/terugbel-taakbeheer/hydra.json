@@ -1,0 +1,8 @@
+{
+  "spec_slug": "terugbel-taakbeheer",
+  "title": "Terugbel Taakbeheer",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [],
+  "issue": null
+}
