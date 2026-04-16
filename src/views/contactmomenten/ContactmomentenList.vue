@@ -1,5 +1,12 @@
 <template>
 	<div>
+		<div class="contactmomenten-header">
+			<h2>{{ t('pipelinq', 'Contact Moments') }}</h2>
+			<NcButton type="secondary" @click="exportCsv">
+				{{ t('pipelinq', 'Export CSV') }}
+			</NcButton>
+		</div>
+
 		<CnIndexPage
 			:title="t('pipelinq', 'Contactmomenten')"
 			:description="t('pipelinq', 'Registered contact moments')"
@@ -51,8 +58,9 @@
 
 <script>
 import { inject } from 'vue'
-import { NcDialog } from '@nextcloud/vue'
+import { NcDialog, NcButton } from '@nextcloud/vue'
 import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
+import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from '../../store/modules/object.js'
 import ContactmomentQuickLog from '../../components/ContactmomentQuickLog.vue'
 import Phone from 'vue-material-design-icons/Phone.vue'
@@ -67,6 +75,7 @@ export default {
 	components: {
 		CnIndexPage,
 		NcDialog,
+		NcButton,
 		ContactmomentQuickLog,
 		Phone,
 		Email,
@@ -100,6 +109,11 @@ export default {
 		onQuickLogSaved() {
 			this.showQuickLog = false
 			this.refresh()
+		},
+
+		exportCsv() {
+			const url = generateUrl('/apps/pipelinq/api/contactmomenten/export')
+			window.open(url, '_blank')
 		},
 
 		getChannelIcon(channel) {
@@ -149,6 +163,17 @@ export default {
 </script>
 
 <style scoped>
+.contactmomenten-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 20px;
+}
+
+.contactmomenten-header h2 {
+	margin: 0;
+}
+
 .channel-badge {
 	display: inline-flex;
 	align-items: center;
