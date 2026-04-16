@@ -112,30 +112,30 @@ class ComplaintSlaJob extends TimedJob
         try {
             // Get the OpenRegister ObjectService and query for complaints.
             $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-            $result = $objectService->findAll(
+            $result        = $objectService->findAll(
                 register: $register,
                 schema: $complaintSchema,
                 filters: ['_limit' => 500],
             );
 
-            $complaints = ($result['results'] ?? []);
+            $complaints   = ($result['results'] ?? []);
             $overdueCount = 0;
 
             foreach ($complaints as $complaint) {
                 // Check if complaint is overdue using the SLA service.
                 // The service checks status internally (must be open).
-                if ($this->complaintSlaService->isOverdue(complaint: $complaint)) {
+                if ($this->complaintSlaService->isOverdue(complaint: $complaint) === true) {
                     $overdueCount++;
                     $complaintId = $complaint['id'] ?? 'unknown';
-                    $status = $complaint['status'] ?? 'unknown';
-                    $deadline = $complaint['slaDeadline'] ?? 'unknown';
+                    $status      = $complaint['status'] ?? 'unknown';
+                    $deadline    = $complaint['slaDeadline'] ?? 'unknown';
 
                     $this->logger->warning(
                         'ComplaintSlaJob: Overdue complaint detected',
                         [
                             'complaintId' => $complaintId,
-                            'status' => $status,
-                            'deadline' => $deadline,
+                            'status'      => $status,
+                            'deadline'    => $deadline,
                         ],
                     );
                 }
