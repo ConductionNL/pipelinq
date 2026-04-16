@@ -1,0 +1,8 @@
+{
+  "spec_slug": "notifications-activity",
+  "title": "Notifications Activity",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [],
+  "issue": null
+}
