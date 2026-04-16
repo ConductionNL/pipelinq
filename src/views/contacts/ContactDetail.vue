@@ -193,6 +193,23 @@ export default {
 		},
 		async confirmDelete() {
 			if (confirm(t('pipelinq', 'Are you sure you want to delete this contact?'))) {
+				// Cleanup notes associated with the contact before deletion.
+				// This is non-blocking: if it fails, we still delete the contact.
+				try {
+					await fetch(
+						`/apps/pipelinq/api/notes/pipelinq_contact/${this.contactId}`,
+						{
+							method: 'DELETE',
+							headers: {
+								requesttoken: OC.requestToken,
+								'OCS-APIREQUEST': 'true',
+							},
+						},
+					)
+				} catch {
+					// Note cleanup failure is non-blocking
+				}
+
 				const success = await this.objectStore.deleteObject('contact', this.contactId)
 				if (success) {
 					this.$router.push({ name: 'Contacts' })
