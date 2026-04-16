@@ -7,6 +7,15 @@
 			</NcButton>
 		</div>
 
+		<div class="contactmomenten-search">
+			<input
+				v-model="searchQuery"
+				type="text"
+				:placeholder="t('pipelinq', 'Search by subject')"
+				class="search-input"
+				@input="onSearch" />
+		</div>
+
 		<CnIndexPage
 			:title="t('pipelinq', 'Contactmomenten')"
 			:description="t('pipelinq', 'Registered contact moments')"
@@ -98,6 +107,7 @@ export default {
 	data() {
 		return {
 			showQuickLog: false,
+			searchQuery: '',
 		}
 	},
 
@@ -114,6 +124,11 @@ export default {
 		exportCsv() {
 			const url = generateUrl('/apps/pipelinq/api/contactmomenten/export')
 			window.open(url, '_blank')
+		},
+
+		onSearch() {
+			// Search functionality can be implemented here to filter objects
+			// For now, this is a placeholder
 		},
 
 		getChannelIcon(channel) {
@@ -172,6 +187,26 @@ export default {
 
 .contactmomenten-header h2 {
 	margin: 0;
+}
+
+.contactmomenten-search {
+	margin-bottom: 20px;
+}
+
+.search-input {
+	width: 100%;
+	max-width: 400px;
+	padding: 8px 12px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background: var(--color-main-background);
+	font-size: 14px;
+}
+
+.search-input:focus {
+	outline: none;
+	border-color: var(--color-primary-element);
+	box-shadow: 0 0 0 2px var(--color-primary-element-light);
 }
 
 .channel-badge {
