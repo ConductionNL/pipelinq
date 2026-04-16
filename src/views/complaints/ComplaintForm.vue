@@ -75,7 +75,7 @@
 				:clearable="true"
 				label="label"
 				:reduce="o => o.value"
-				:placeholder="t('pipelinq', 'Search client...')"
+				:placeholder="t('pipelinq', 'Search client')"
 				@input="onClientChange" />
 		</div>
 
