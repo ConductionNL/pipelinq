@@ -23,6 +23,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\IntakeFormService;
+use OCA\Pipelinq\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
@@ -39,12 +40,14 @@ class PublicFormController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest          $request           The request.
-     * @param IntakeFormService $intakeFormService The intake form service.
+     * @param IRequest          $request            The request.
+     * @param IntakeFormService $intakeFormService  The intake form service.
+     * @param SettingsService   $settingsService    The settings service.
      */
     public function __construct(
         IRequest $request,
         private IntakeFormService $intakeFormService,
+        private SettingsService $settingsService,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -137,13 +140,31 @@ class PublicFormController extends Controller
     /**
      * Add CORS headers to allow cross-origin form embedding.
      *
+     * Reads allowed origins from app settings (comma-separated list).
+     * If no origins are configured, defaults to allowing only the current request origin
+     * to prevent unauthorized embedding.
+     *
      * @param JSONResponse $response The response to add headers to.
      *
      * @return JSONResponse The response with CORS headers.
      */
     private function addCorsHeaders(JSONResponse $response): JSONResponse
     {
-        $response->addHeader('Access-Control-Allow-Origin', '*');
+        $settings = $this->settingsService->getSettings();
+        $corsOrigins = $settings['cors_origins'] ?? '';
+
+        // If no origins configured, use the current request origin (if any).
+        if ($corsOrigins === '') {
+            $origin = $this->request->getHeader('Origin');
+            if ($origin !== '') {
+                $corsOrigins = $origin;
+            } else {
+                // No origin provided and no config: allow current host only.
+                $corsOrigins = $this->request->getServerHost();
+            }
+        }
+
+        $response->addHeader('Access-Control-Allow-Origin', $corsOrigins);
         $response->addHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
         $response->addHeader('Access-Control-Allow-Headers', 'Content-Type');
         return $response;
