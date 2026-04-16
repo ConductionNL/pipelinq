@@ -1,7 +1,33 @@
 <template>
-	<div>
+	<div class="contactmomenten-container">
+		<!-- Header with title, search, and export -->
+		<div class="contactmomenten-header">
+			<div class="header-left">
+				<h2>{{ t('pipelinq', 'Contact Moments') }}</h2>
+				<input
+					v-model="searchQuery"
+					type="text"
+					class="search-input"
+					:placeholder="t('pipelinq', 'Search by subject')"
+					@keyup="onSearch" />
+			</div>
+			<div class="header-actions">
+				<NcButton
+					type="secondary"
+					@click="exportCSV">
+					{{ t('pipelinq', 'Export CSV') }}
+				</NcButton>
+				<NcButton
+					type="primary"
+					@click="showQuickLog = true">
+					{{ t('pipelinq', 'New contact moment') }}
+				</NcButton>
+			</div>
+		</div>
+
+		<!-- Content with reduced title display -->
 		<CnIndexPage
-			:title="t('pipelinq', 'Contactmomenten')"
+			:title="t('pipelinq', '')"
 			:description="t('pipelinq', 'Registered contact moments')"
 			:schema="schema"
 			:objects="objects"
@@ -38,7 +64,7 @@
 		<!-- Quick-log dialog -->
 		<NcDialog
 			v-if="showQuickLog"
-			:name="t('pipelinq', 'New contactmoment')"
+			:name="t('pipelinq', 'New contact moment')"
 			size="normal"
 			@closing="showQuickLog = false">
 			<ContactmomentQuickLog
@@ -51,7 +77,7 @@
 
 <script>
 import { inject } from 'vue'
-import { NcDialog } from '@nextcloud/vue'
+import { NcDialog, NcButton } from '@nextcloud/vue'
 import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import ContactmomentQuickLog from '../../components/ContactmomentQuickLog.vue'
@@ -61,12 +87,14 @@ import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
 import Chat from 'vue-material-design-icons/Chat.vue'
 import ShareVariant from 'vue-material-design-icons/ShareVariant.vue'
 import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
+import Download from 'vue-material-design-icons/Download.vue'
 
 export default {
 	name: 'ContactmomentenList',
 	components: {
 		CnIndexPage,
 		NcDialog,
+		NcButton,
 		ContactmomentQuickLog,
 		Phone,
 		Email,
@@ -74,6 +102,7 @@ export default {
 		Chat,
 		ShareVariant,
 		EmailOutline,
+		Download,
 	},
 
 	setup() {
@@ -89,6 +118,7 @@ export default {
 	data() {
 		return {
 			showQuickLog: false,
+			searchQuery: '',
 		}
 	},
 
@@ -144,11 +174,105 @@ export default {
 				return dateStr
 			}
 		},
+
+		exportCSV() {
+			if (!this.objects || this.objects.length === 0) {
+				alert(t('pipelinq', 'No contact moments to export'))
+				return
+			}
+
+			const headers = ['Subject', 'Channel', 'Agent', 'Date', 'Outcome']
+			const rows = this.objects.map(obj => [
+				obj.subject || '-',
+				this.getChannelLabel(obj.channel) || '-',
+				obj.agent || '-',
+				this.formatDate(obj.contactedAt) || '-',
+				this.getOutcomeLabel(obj.outcome) || '-',
+			])
+
+			const csv = [
+				headers.join(','),
+				...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+			].join('\n')
+
+			const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+			const link = document.createElement('a')
+			const url = URL.createObjectURL(blob)
+			link.setAttribute('href', url)
+			link.setAttribute('download', `contactmomenten-${new Date().toISOString().split('T')[0]}.csv`)
+			link.style.visibility = 'hidden'
+			document.body.appendChild(link)
+			link.click()
+			document.body.removeChild(link)
+		},
+
+		onSearch() {
+			// Search is handled by CnIndexPage search functionality
+			// This method can be extended for custom search logic if needed
+		},
 	},
 }
 </script>
 
 <style scoped>
+.contactmomenten-container {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.contactmomenten-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 16px 20px;
+	border-bottom: 1px solid var(--color-border);
+	background: var(--color-main-background);
+	gap: 16px;
+}
+
+.header-left {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.header-left h2 {
+	margin: 0;
+	padding: 0;
+	font-size: 24px;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.header-actions {
+	display: flex;
+	gap: 8px;
+	white-space: nowrap;
+}
+
+.search-input {
+	width: 100%;
+	max-width: 300px;
+	padding: 8px 12px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	font-size: 13px;
+}
+
+.search-input::placeholder {
+	color: var(--color-text-maxcontrast);
+}
+
+.search-input:focus {
+	outline: none;
+	border-color: var(--color-primary-element);
+	box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
 .channel-badge {
 	display: inline-flex;
 	align-items: center;
