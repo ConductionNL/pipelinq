@@ -25,9 +25,11 @@ namespace OCA\Pipelinq\BackgroundJob;
 use Exception;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ComplaintSlaService;
+use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -47,6 +49,8 @@ class ComplaintSlaJob extends TimedJob
      * @param ITimeFactory        $time                The time factory.
      * @param ComplaintSlaService $complaintSlaService The complaint SLA service.
      * @param IAppConfig          $appConfig           The app configuration.
+     * @param IAppManager         $appManager          The app manager.
+     * @param ContainerInterface  $container           The DI container.
      * @param LoggerInterface     $logger              The logger.
      *
      * @spec openspec/changes/klachtenregistratie/tasks.md#task-12
@@ -55,6 +59,8 @@ class ComplaintSlaJob extends TimedJob
         ITimeFactory $time,
         private ComplaintSlaService $complaintSlaService,
         private IAppConfig $appConfig,
+        private IAppManager $appManager,
+        private ContainerInterface $container,
         private LoggerInterface $logger,
     ) {
         parent::__construct(time: $time);
@@ -77,6 +83,11 @@ class ComplaintSlaJob extends TimedJob
      */
     protected function run($argument): void
     {
+        // Check if OpenRegister is installed.
+        if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
+            return;
+        }
+
         $register = $this->appConfig->getValueString(
             Application::APP_ID,
             'register',
@@ -99,15 +110,40 @@ class ComplaintSlaJob extends TimedJob
         $this->logger->info('ComplaintSlaJob: Starting SLA deadline check');
 
         try {
-            // In production, this would query OpenRegister for complaints
-            // with status in ['new', 'in_progress'] and check deadlines.
-            // The actual querying is handled at the OpenRegister level;
-            // this job serves as the monitoring and logging layer.
-            //
-            // Future enhancement: integrate with OpenRegister ObjectService
-            // to query complaints and send notifications for overdue items.
+            // Get the OpenRegister ObjectService and query for complaints.
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+            $result = $objectService->findAll(
+                register: $register,
+                schema: $complaintSchema,
+                filters: ['_limit' => 500],
+            );
+
+            $complaints = ($result['results'] ?? []);
+            $overdueCount = 0;
+
+            foreach ($complaints as $complaint) {
+                // Check if complaint is overdue using the SLA service.
+                // The service checks status internally (must be open).
+                if ($this->complaintSlaService->isOverdue(complaint: $complaint)) {
+                    $overdueCount++;
+                    $complaintId = $complaint['id'] ?? 'unknown';
+                    $status = $complaint['status'] ?? 'unknown';
+                    $deadline = $complaint['slaDeadline'] ?? 'unknown';
+
+                    $this->logger->warning(
+                        'ComplaintSlaJob: Overdue complaint detected',
+                        [
+                            'complaintId' => $complaintId,
+                            'status' => $status,
+                            'deadline' => $deadline,
+                        ],
+                    );
+                }
+            }//end foreach
+
             $this->logger->info(
                 'ComplaintSlaJob: SLA deadline check completed',
+                ['overdueCount' => $overdueCount],
             );
         } catch (Exception $e) {
             $this->logger->error(
