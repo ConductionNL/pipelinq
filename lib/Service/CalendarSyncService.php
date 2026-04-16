@@ -112,7 +112,8 @@ class CalendarSyncService
             // Try to find entities matching this email address.
             // In a complete implementation, this would query the register.
             // for contacts and clients with matching email addresses.
-            $this->logger->debug('Matching attendee email', ['email' => $email]);
+            $sanitizedEmail = \str_replace(["\r", "\n"], '', $email);
+            $this->logger->debug('Matching attendee email', ['email' => $sanitizedEmail]);
         }
 
         return $matches;
