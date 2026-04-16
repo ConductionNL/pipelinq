@@ -1,0 +1,8 @@
+{
+  "spec_slug": "my-work",
+  "title": "My Work",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [],
+  "issue": null
+}
