@@ -9,7 +9,7 @@
 			:unavailable-label="t('pipelinq', 'Widget not available')"
 			@layout-change="onLayoutChange">
 			<!-- Header actions: quick action buttons -->
-			<template #header-actions>
+			<template #actions>
 				<NcButton type="primary" @click="showLeadDialog = true">
 					<template #icon>
 						<Plus :size="20" />

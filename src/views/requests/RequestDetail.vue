@@ -29,7 +29,7 @@
 		object-type="pipelinq_request"
 		:object-id="requestId"
 		:sidebar-props="sidebarProps">
-		<template #header-actions>
+		<template #actions>
 			<NcButton v-if="!isConverted" type="primary" @click="editing = true">
 				{{ t('pipelinq', 'Edit') }}
 			</NcButton>
@@ -128,7 +128,7 @@
 		</CnDetailCard>
 
 		<CnDetailCard :title="t('pipelinq', 'Assignment')">
-			<template #header-actions>
+			<template #actions>
 				<NcSelect
 					v-if="!isConverted"
 					:value="assigneeOption"
@@ -145,7 +145,7 @@
 		</CnDetailCard>
 
 		<CnDetailCard :title="t('pipelinq', 'Queue')">
-			<template #header-actions>
+			<template #actions>
 				<NcSelect
 					v-if="!isConverted"
 					:value="queueOption || null"

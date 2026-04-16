@@ -29,7 +29,7 @@
 		object-type="pipelinq_complaint"
 		:object-id="complaintId"
 		:sidebar-props="sidebarProps">
-		<template #header-actions>
+		<template #actions>
 			<NcButton v-if="!isTerminal" type="primary" @click="editing = true">
 				{{ t('pipelinq', 'Edit') }}
 			</NcButton>
@@ -153,7 +153,7 @@
 		</CnDetailCard>
 
 		<CnDetailCard :title="t('pipelinq', 'Assignment')">
-			<template #header-actions>
+			<template #actions>
 				<NcSelect
 					:value="assigneeOption"
 					:options="userOptions"
