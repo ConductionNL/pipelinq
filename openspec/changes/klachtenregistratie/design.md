@@ -14,18 +14,18 @@
 #### ComplaintSlaService
 - **Location**: `lib/Service/ComplaintSlaService.php`
 - **Purpose**: Calculate SLA deadlines, retrieve SLA config per category
-- **Dependencies**: `IAppConfig` for reading SLA hours settings
+- **Dependencies**: `IAppConfig`, `LoggerInterface`
 - **Methods**:
-  - `calculateDeadline(string $category): ?\DateTimeInterface` — returns deadline based on category SLA config
+  - `calculateDeadline(string $category, ?DateTimeInterface $from=null): ?DateTimeImmutable` — returns deadline based on category SLA config (defaults to current time if $from is null)
   - `getSlaHoursForCategory(string $category): int` — reads `complaint_sla_{category}` from app config
-  - `isOverdue(array $complaint): bool` — checks if complaint is past SLA deadline
+  - `isOverdue(array $complaint, ?DateTimeInterface $now=null): bool` — checks if complaint is past SLA deadline (defaults to current time if $now is null)
 
 #### ComplaintSlaJob
 - **Location**: `lib/BackgroundJob/ComplaintSlaJob.php`
 - **Purpose**: Periodic check for overdue complaints, logs warnings
 - **Type**: `TimedJob` (runs every 15 minutes)
-- **Dependencies**: `ComplaintSlaService`, `LoggerInterface`
-- **Behavior**: Queries open complaints, checks each against SLA deadline, logs overdue ones
+- **Dependencies**: `ComplaintSlaService`, `IAppConfig`, `LoggerInterface`, `ContainerInterface`
+- **Behavior**: Queries open complaints by status (new, in_progress), checks each against SLA deadline, logs overdue ones
 
 ### Frontend (Already Implemented)
 - `src/views/complaints/ComplaintList.vue` — List with filters, SLA indicators

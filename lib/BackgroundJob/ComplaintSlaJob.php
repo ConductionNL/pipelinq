@@ -102,23 +102,27 @@ class ComplaintSlaJob extends TimedJob
         $this->logger->info('ComplaintSlaJob: Starting SLA deadline check');
 
         try {
-            // Query OpenRegister for complaints with open statuses
+            // Query OpenRegister for complaints with open statuses.
             $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-            $result        = $objectService->findAll(
-                register: $register,
-                schema: $complaintSchema,
-                filters: ['status' => ['new', 'in_progress'], '_limit' => 500]
-            );
-            $complaints    = ($result['results'] ?? []);
+            $complaints    = [];
 
-            // Check each complaint for SLA deadline overages
+            // Query each open status separately to align with ObjectService filter pattern.
+            foreach (['new', 'in_progress'] as $status) {
+                $result     = $objectService->findAll(
+                    register: $register,
+                    schema: $complaintSchema,
+                    filters: ['status' => $status, '_limit' => 500]
+                );
+                $complaints = array_merge($complaints, ($result['results'] ?? []));
+            }//end foreach
+
+            // Check each complaint for SLA deadline overages.
             foreach ($complaints as $complaint) {
-                if ($this->complaintSlaService->isOverdue($complaint)) {
+                if ($this->complaintSlaService->isOverdue($complaint) === true) {
                     $this->logger->warning(
                         'ComplaintSlaJob: Complaint SLA deadline exceeded',
                         [
                             'complaintId' => ($complaint['id'] ?? ''),
-                            'title'       => ($complaint['title'] ?? ''),
                             'slaDeadline' => ($complaint['slaDeadline'] ?? ''),
                             'status'      => ($complaint['status'] ?? ''),
                         ],
