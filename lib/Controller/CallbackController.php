@@ -27,9 +27,12 @@ use OCA\Pipelinq\Service\NotificationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
+use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -53,6 +56,9 @@ class CallbackController extends Controller
      * @param NotificationService $notificationService The notification service.
      * @param IAppConfig          $appConfig           The app config.
      * @param IUserSession        $userSession         The user session.
+     * @param IUserManager        $userManager         The user manager.
+     * @param IGroupManager       $groupManager        The group manager.
+     * @param IClientService      $clientService       The HTTP client service.
      * @param IL10N               $l10n                The localization service.
      * @param LoggerInterface     $logger              The logger.
      */
@@ -62,6 +68,9 @@ class CallbackController extends Controller
         private NotificationService $notificationService,
         private IAppConfig $appConfig,
         private IUserSession $userSession,
+        private IUserManager $userManager,
+        private IGroupManager $groupManager,
+        private IClientService $clientService,
         private IL10N $l10n,
         private LoggerInterface $logger,
     ) {
@@ -75,7 +84,8 @@ class CallbackController extends Controller
      *
      * @return JSONResponse The response with updated task data.
      *
-     * @spec openspec/changes/callback-management/tasks.md#2.1
+     * @NoAdminRequired
+     * @spec            openspec/changes/callback-management/tasks.md#2.1
      */
     public function attempt(string $id): JSONResponse
     {
@@ -90,8 +100,8 @@ class CallbackController extends Controller
         }
 
         try {
-            // Build task data stub — in production, fetch from OpenRegister.
-            $taskData = $this->getTaskStub(id: $id);
+            // Fetch task data from OpenRegister.
+            $taskData = $this->getTaskData(id: $id);
             if ($taskData === null) {
                 return new JSONResponse(
                     ['error' => $this->l10n->t('Task not found')],
@@ -99,7 +109,16 @@ class CallbackController extends Controller
                 );
             }
 
-            $taskData     = $this->callbackService->addAttempt($taskData, $result, $notes);
+            // Check authorization: user must be the assignee or an admin.
+            $auth = $this->authorizeTaskAccess(taskData: $taskData);
+            if ($auth['authorized'] === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t($auth['reason'])],
+                    Http::STATUS_FORBIDDEN
+                );
+            }
+
+            $taskData     = $this->callbackService->addAttempt(taskData: $taskData, result: $result, notes: $notes);
             $suggestClose = $this->callbackService->isAttemptThresholdReached($taskData);
 
             return new JSONResponse(
@@ -125,12 +144,13 @@ class CallbackController extends Controller
      *
      * @return JSONResponse The response with updated task data.
      *
-     * @spec openspec/changes/callback-management/tasks.md#2.1
+     * @NoAdminRequired
+     * @spec            openspec/changes/callback-management/tasks.md#2.1
      */
     public function claim(string $id): JSONResponse
     {
         try {
-            $taskData = $this->getTaskStub(id: $id);
+            $taskData = $this->getTaskData(id: $id);
             if ($taskData === null) {
                 return new JSONResponse(
                     ['error' => $this->l10n->t('Task not found')],
@@ -165,14 +185,15 @@ class CallbackController extends Controller
      *
      * @return JSONResponse The response with updated task data.
      *
-     * @spec openspec/changes/callback-management/tasks.md#2.1
+     * @NoAdminRequired
+     * @spec            openspec/changes/callback-management/tasks.md#2.1
      */
     public function complete(string $id): JSONResponse
     {
         $resultText = $this->request->getParam('resultText', '');
 
         try {
-            $taskData = $this->getTaskStub(id: $id);
+            $taskData = $this->getTaskData(id: $id);
             if ($taskData === null) {
                 return new JSONResponse(
                     ['error' => $this->l10n->t('Task not found')],
@@ -180,9 +201,18 @@ class CallbackController extends Controller
                 );
             }
 
+            // Check authorization: user must be the assignee or an admin.
+            $auth = $this->authorizeTaskAccess(taskData: $taskData);
+            if ($auth['authorized'] === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t($auth['reason'])],
+                    Http::STATUS_FORBIDDEN
+                );
+            }
+
             $transition = $this->callbackService->validateStatusTransition(
-                $taskData['status'] ?? 'open',
-                'afgerond'
+                currentStatus: $taskData['status'] ?? 'open',
+                targetStatus: 'afgerond'
             );
 
             if ($transition['valid'] === false) {
@@ -229,7 +259,8 @@ class CallbackController extends Controller
      *
      * @return JSONResponse The response with updated task data.
      *
-     * @spec openspec/changes/callback-management/tasks.md#2.1
+     * @NoAdminRequired
+     * @spec            openspec/changes/callback-management/tasks.md#2.1
      */
     public function reassign(string $id): JSONResponse
     {
@@ -244,7 +275,24 @@ class CallbackController extends Controller
         }
 
         try {
-            $taskData = $this->getTaskStub(id: $id);
+            // Validate that the assignee exists in Nextcloud.
+            if ($assigneeType === 'user') {
+                if ($this->userManager->get($assignee) === null) {
+                    return new JSONResponse(
+                        ['error' => $this->l10n->t('Assignee user not found')],
+                        Http::STATUS_UNPROCESSABLE_ENTITY
+                    );
+                }
+            } else if ($assigneeType === 'group') {
+                if ($this->groupManager->get($assignee) === null) {
+                    return new JSONResponse(
+                        ['error' => $this->l10n->t('Assignee group not found')],
+                        Http::STATUS_UNPROCESSABLE_ENTITY
+                    );
+                }
+            }
+
+            $taskData = $this->getTaskData(id: $id);
             if ($taskData === null) {
                 return new JSONResponse(
                     ['error' => $this->l10n->t('Task not found')],
@@ -252,10 +300,27 @@ class CallbackController extends Controller
                 );
             }
 
-            $taskData = $this->callbackService->applyReassignment($taskData, $assignee, $assigneeType);
+            // Check authorization: user must be the assignee or an admin.
+            $auth = $this->authorizeTaskAccess(taskData: $taskData);
+            if ($auth['authorized'] === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t($auth['reason'])],
+                    Http::STATUS_FORBIDDEN
+                );
+            }
+
+            $taskData = $this->callbackService->applyReassignment(
+                taskData: $taskData,
+                assignee: $assignee,
+                assigneeType: $assigneeType
+            );
 
             // Log the reassignment as an attempt entry.
-            $taskData = $this->callbackService->addAttempt($taskData, 'hertoegewezen', '');
+            $taskData = $this->callbackService->addAttempt(
+                taskData: $taskData,
+                result: 'hertoegewezen',
+                notes: ''
+            );
 
             // Notify the new assignee if it's a user.
             if ($assigneeType === 'user') {
@@ -285,16 +350,13 @@ class CallbackController extends Controller
     }//end reassign()
 
     /**
-     * Get a task data stub by ID.
-     *
-     * In production, this queries OpenRegister. For now, returns a minimal
-     * structure that the frontend can use.
+     * Fetch task data from OpenRegister by ID.
      *
      * @param string $id The task object ID.
      *
      * @return array<string, mixed>|null Task data or null if not found.
      */
-    private function getTaskStub(string $id): ?array
+    private function getTaskData(string $id): ?array
     {
         $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
         $schema   = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
@@ -304,19 +366,87 @@ class CallbackController extends Controller
             return null;
         }
 
-        // NOTE: In production, fetch the actual task from OpenRegister:
-        // GET /api/registers/{register}/schemas/{schema}/objects/{id}
-        // For now, return a stub indicating the task exists.
+        try {
+            $url = sprintf(
+                '/api/registers/%s/schemas/%s/objects/%s',
+                urlencode($register),
+                urlencode($schema),
+                urlencode($id)
+            );
+
+            $client   = $this->clientService->newClient();
+            $response = $client->get('http://localhost'.$url);
+            $status   = $response->getStatusCode();
+
+            if ($status !== 200) {
+                $this->logger->warning('OpenRegister query failed', ['url' => $url, 'status' => $status]);
+                return null;
+            }
+
+            $data = json_decode($response->getBody(), associative: true);
+            if (is_array($data) === false) {
+                $this->logger->warning('OpenRegister response invalid', ['url' => $url]);
+                return null;
+            }
+
+            return $data;
+        } catch (\Exception $e) {
+            $this->logger->error('CallbackController: OpenRegister fetch error', ['exception' => $e->getMessage()]);
+            return null;
+        }//end try
+    }//end getTaskData()
+
+    /**
+     * Authorize task access for the current user.
+     *
+     * Checks if the user is either the task assignee, a member of the assigned group,
+     * or a Nextcloud admin.
+     *
+     * @param array<string, mixed> $taskData The task data array.
+     *
+     * @return array{authorized: bool, reason: string} Authorization result.
+     */
+    private function authorizeTaskAccess(array $taskData): array
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return [
+                'authorized' => false,
+                'reason'     => 'No authenticated user',
+            ];
+        }
+
+        $userId = $user->getUID();
+
+        // Admins always have access.
+        if ($this->groupManager->isAdmin($userId) === true) {
+            return [
+                'authorized' => true,
+                'reason'     => '',
+            ];
+        }
+
+        // Check if user is the assigned user.
+        $assigneeUserId = $taskData['assigneeUserId'] ?? null;
+        if ($assigneeUserId === $userId) {
+            return [
+                'authorized' => true,
+                'reason'     => '',
+            ];
+        }
+
+        // Check if user is in the assigned group.
+        $assigneeGroupId = $taskData['assigneeGroupId'] ?? null;
+        if ($assigneeGroupId !== null && $this->groupManager->isInGroup($userId, $assigneeGroupId) === true) {
+            return [
+                'authorized' => true,
+                'reason'     => '',
+            ];
+        }
+
         return [
-            'id'              => $id,
-            'status'          => 'open',
-            'type'            => 'terugbelverzoek',
-            'subject'         => '',
-            'attempts'        => [],
-            'assigneeUserId'  => null,
-            'assigneeGroupId' => null,
-            'createdBy'       => '',
-            'deadline'        => '',
+            'authorized' => false,
+            'reason'     => 'User is not authorized to access this task',
         ];
-    }//end getTaskStub()
+    }//end authorizeTaskAccess()
 }//end class
