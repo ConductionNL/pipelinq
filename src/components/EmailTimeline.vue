@@ -114,7 +114,7 @@ export default {
 			this.loading = true
 			try {
 				const response = await fetch(
-					`/apps/pipelinq/api/sync/emails?entityType=${this.entityType}&entityId=${this.entityId}`,
+					`/apps/pipelinq/api/sync/emails?entityType=${encodeURIComponent(this.entityType)}&entityId=${encodeURIComponent(this.entityId)}`,
 					{
 						headers: {
 							'Content-Type': 'application/json',
@@ -150,7 +150,7 @@ export default {
 		},
 		async excludeEmail(messageId) {
 			try {
-				await fetch(`/apps/pipelinq/api/sync/emails/${messageId}`, {
+				await fetch(`/apps/pipelinq/api/sync/emails/${encodeURIComponent(messageId)}`, {
 					method: 'PATCH',
 					headers: {
 						'Content-Type': 'application/json',
@@ -169,7 +169,7 @@ export default {
 		},
 		async includeEmail(messageId) {
 			try {
-				await fetch(`/apps/pipelinq/api/sync/emails/${messageId}`, {
+				await fetch(`/apps/pipelinq/api/sync/emails/${encodeURIComponent(messageId)}`, {
 					method: 'PATCH',
 					headers: {
 						'Content-Type': 'application/json',
