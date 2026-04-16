@@ -135,7 +135,12 @@ export default {
 		},
 	},
 	async mounted() {
-		await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
+		try {
+			await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
+		} catch (error) {
+			console.error('Failed to fetch pipelines:', error)
+			// Error is handled gracefully by the empty state UI
+		}
 	},
 	methods: {
 		schemaLabel(pipeline) {
