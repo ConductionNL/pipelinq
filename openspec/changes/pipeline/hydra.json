@@ -1,0 +1,8 @@
+{
+  "spec_slug": "pipeline",
+  "title": "Pipeline",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [],
+  "issue": null
+}
