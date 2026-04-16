@@ -85,6 +85,7 @@ class CallbackController extends Controller
      * @return JSONResponse The response with updated task data.
      *
      * @NoAdminRequired
+     * @NoCSRFRequired
      * @spec            openspec/changes/callback-management/tasks.md#2.1
      */
     public function attempt(string $id): JSONResponse
@@ -145,6 +146,7 @@ class CallbackController extends Controller
      * @return JSONResponse The response with updated task data.
      *
      * @NoAdminRequired
+     * @NoCSRFRequired
      * @spec            openspec/changes/callback-management/tasks.md#2.1
      */
     public function claim(string $id): JSONResponse
@@ -186,11 +188,20 @@ class CallbackController extends Controller
      * @return JSONResponse The response with updated task data.
      *
      * @NoAdminRequired
+     * @NoCSRFRequired
      * @spec            openspec/changes/callback-management/tasks.md#2.1
      */
     public function complete(string $id): JSONResponse
     {
         $resultText = $this->request->getParam('resultText', '');
+
+        // Validate resultText is required per spec.
+        if (empty($resultText) === true) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Result text is required')],
+                Http::STATUS_BAD_REQUEST
+            );
+        }
 
         try {
             $taskData = $this->getTaskData(id: $id);
@@ -260,6 +271,7 @@ class CallbackController extends Controller
      * @return JSONResponse The response with updated task data.
      *
      * @NoAdminRequired
+     * @NoCSRFRequired
      * @spec            openspec/changes/callback-management/tasks.md#2.1
      */
     public function reassign(string $id): JSONResponse
