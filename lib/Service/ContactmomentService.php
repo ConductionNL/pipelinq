@@ -41,10 +41,10 @@ class ContactmomentService
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container    The DI container.
+     * @param ContainerInterface $container       The DI container.
      * @param SettingsService    $settingsService The settings service.
-     * @param IGroupManager      $groupManager The group manager.
-     * @param LoggerInterface    $logger       The logger.
+     * @param IGroupManager      $groupManager    The group manager.
+     * @param LoggerInterface    $logger          The logger.
      */
     public function __construct(
         private ContainerInterface $container,
