@@ -1,3 +1,8 @@
+<!-- ⚠️ EXTENSION NOTICE (auto-inserted by fix_extension_artifacts.py)
+     Parent capability: notifications-activity (Notifications Activity)
+     This spec extends the existing `notifications-activity` capability. Do NOT define new entities or build new CRUD — reuse what `notifications-activity` already provides. Your job is to add configuration, seed data, or workflow templates on top of that capability.
+-->
+
 # Tasks: activity-timeline
 
 ## 0. Deduplication Check
