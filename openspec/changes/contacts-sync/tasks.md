@@ -1,3 +1,8 @@
+<!-- ⚠️ EXTENSION NOTICE (auto-inserted by fix_extension_artifacts.py)
+     Parent capability: client-management (Client Management)
+     This spec extends the existing `client-management` capability. Do NOT define new entities or build new CRUD — reuse what `client-management` already provides. Your job is to add configuration, seed data, or workflow templates on top of that capability.
+-->
+
 # Tasks: contacts-sync
 
 ## 0. Deduplication Check
