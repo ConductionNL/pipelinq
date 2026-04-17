@@ -1,3 +1,8 @@
+<!-- ⚠️ EXTENSION NOTICE (auto-inserted by fix_extension_artifacts.py)
+     Parent capability: omnichannel-registratie (Omnichannel Registratie)
+     This spec extends the existing `omnichannel-registratie` capability. Do NOT define new entities or build new CRUD — reuse what `omnichannel-registratie` already provides. Your job is to add configuration, seed data, or workflow templates on top of that capability.
+-->
+
 ## 1. Backend Service and Controller [MVP]
 
 - [x] 1.1 Create `lib/Service/ContactmomentService.php` with `delete(string $id, string $currentUserId)` method: fetch contactmoment from OpenRegister via SchemaMapService, check agent matches or user is admin via IGroupManager, delete or throw NotPermittedException
