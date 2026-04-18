@@ -22,7 +22,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use Exception;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ComplaintSlaService;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -133,7 +132,7 @@ class ComplaintSlaJob extends TimedJob
             $this->logger->info(
                 'ComplaintSlaJob: SLA deadline check completed',
             );
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             $this->logger->error(
                 'ComplaintSlaJob: Error during SLA check',
                 ['exception' => $e->getMessage()],

@@ -34,6 +34,7 @@ use Psr\Log\LoggerInterface;
  */
 class ComplaintSlaJobTest extends TestCase
 {
+
     /**
      * The time factory mock.
      *
@@ -79,8 +80,8 @@ class ComplaintSlaJobTest extends TestCase
         $this->timeFactory         = $this->createMock(ITimeFactory::class);
         $this->complaintSlaService = $this->createMock(ComplaintSlaService::class);
         $this->appConfig           = $this->createMock(IAppConfig::class);
-        $this->logger              = $this->createMock(LoggerInterface::class);
-        $this->container           = $this->createMock(ContainerInterface::class);
+        $this->logger    = $this->createMock(LoggerInterface::class);
+        $this->container = $this->createMock(ContainerInterface::class);
 
         $this->timeFactory->method('getTime')->willReturn(time());
     }//end setUp()
@@ -122,10 +123,12 @@ class ComplaintSlaJobTest extends TestCase
     {
         $this->appConfig
             ->method('getValueString')
-            ->willReturnMap([
-                [Application::APP_ID, 'register', '', ''],
-                [Application::APP_ID, 'complaint_schema', '', ''],
-            ]);
+            ->willReturnMap(
+                    [
+                        [Application::APP_ID, 'register', '', ''],
+                        [Application::APP_ID, 'complaint_schema', '', ''],
+                    ]
+                    );
 
         $this->logger
             ->expects($this->once())
@@ -148,10 +151,12 @@ class ComplaintSlaJobTest extends TestCase
     {
         $this->appConfig
             ->method('getValueString')
-            ->willReturnMap([
-                [Application::APP_ID, 'register', '', 'some-register-id'],
-                [Application::APP_ID, 'complaint_schema', '', ''],
-            ]);
+            ->willReturnMap(
+                    [
+                        [Application::APP_ID, 'register', '', 'some-register-id'],
+                        [Application::APP_ID, 'complaint_schema', '', ''],
+                    ]
+                    );
 
         $this->logger
             ->expects($this->once())
@@ -174,18 +179,22 @@ class ComplaintSlaJobTest extends TestCase
     {
         $this->appConfig
             ->method('getValueString')
-            ->willReturnMap([
-                [Application::APP_ID, 'register', '', 'register-uuid'],
-                [Application::APP_ID, 'complaint_schema', '', 'schema-uuid'],
-            ]);
+            ->willReturnMap(
+                    [
+                        [Application::APP_ID, 'register', '', 'register-uuid'],
+                        [Application::APP_ID, 'complaint_schema', '', 'schema-uuid'],
+                    ]
+                    );
 
         $this->logger
             ->expects($this->exactly(2))
             ->method('info')
-            ->with($this->logicalOr(
+            ->with(
+                    $this->logicalOr(
                 $this->stringContains('Starting'),
                 $this->stringContains('completed'),
-            ));
+            )
+                    );
 
         $job = $this->buildJob();
 
