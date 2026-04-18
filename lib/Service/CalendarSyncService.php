@@ -33,11 +33,9 @@ class CalendarSyncService
     /**
      * Constructor.
      *
-     * @param EmailSyncService $emailSyncService The email sync service.
-     * @param LoggerInterface  $logger           The logger.
+     * @param LoggerInterface $logger The logger.
      */
     public function __construct(
-        private EmailSyncService $emailSyncService,
         private LoggerInterface $logger,
     ) {
     }//end __construct()

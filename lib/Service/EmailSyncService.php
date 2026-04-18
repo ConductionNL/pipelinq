@@ -99,11 +99,11 @@ class EmailSyncService
             if ($this->isPublicDomain(domain: $recipientDomain) === false) {
                 $organizationMatch = $this->matchDomainToOrganization(domain: $recipientDomain);
                 if ($organizationMatch !== null) {
-                    $alreadyMatched = $this->entityInMatches(
+                    $notYetMatched = $this->entityInMatches(
                         entity: $organizationMatch,
                         matches: $matches
                     ) === false;
-                    if ($alreadyMatched === true) {
+                    if ($notYetMatched === true) {
                         $matches[] = $organizationMatch;
                     }
                 }

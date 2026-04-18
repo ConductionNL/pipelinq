@@ -266,7 +266,7 @@ export default {
 	top: 0;
 	width: 40px;
 	height: 40px;
-	background: white;
+	background: var(--color-main-background);
 	border: 2px solid var(--color-primary);
 	border-radius: 50%;
 	display: flex;
