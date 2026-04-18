@@ -59,6 +59,7 @@ return [
         ['name' => 'kennisbank#submitFeedback', 'url' => '/api/kennisbank/feedback', 'verb' => 'POST'],
         // Rapportage / reporting
         ['name' => 'reporting#getDashboard', 'url' => '/api/rapportage/kpi-dashboard', 'verb' => 'GET'],
+        ['name' => 'reporting#getChannelAnalytics', 'url' => '/api/rapportage/channels', 'verb' => 'GET'],
         ['name' => 'reporting#getSla', 'url' => '/api/rapportage/sla', 'verb' => 'GET'],
         ['name' => 'reporting#updateSla', 'url' => '/api/rapportage/sla', 'verb' => 'PUT'],
         ['name' => 'reporting#exportCsv', 'url' => '/api/rapportage/export', 'verb' => 'GET'],

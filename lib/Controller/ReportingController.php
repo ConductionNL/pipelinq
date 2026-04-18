@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\ChannelAnalyticsService;
 use OCA\Pipelinq\Service\KpiDashboardService;
 use OCA\Pipelinq\Service\ReportingService;
 use OCP\AppFramework\Controller;
@@ -38,15 +39,17 @@ class ReportingController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest            $request             The request.
-     * @param ReportingService    $reportingService    The reporting service.
-     * @param KpiDashboardService $kpiDashboardService The KPI dashboard service.
-     * @param IL10N               $l10n                The localization service.
+     * @param IRequest                $request                 The request.
+     * @param ReportingService        $reportingService        The reporting service.
+     * @param KpiDashboardService     $kpiDashboardService     The KPI dashboard service.
+     * @param ChannelAnalyticsService $channelAnalyticsService The channel analytics service.
+     * @param IL10N                   $l10n                    The localization service.
      */
     public function __construct(
         IRequest $request,
         private ReportingService $reportingService,
         private KpiDashboardService $kpiDashboardService,
+        private ChannelAnalyticsService $channelAnalyticsService,
         private IL10N $l10n,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
@@ -75,6 +78,45 @@ class ReportingController extends Controller
             );
         }
     }//end getDashboard()
+
+    /**
+     * Get channel analytics with configurable granularity.
+     *
+     * Returns detailed metrics per contact channel including volume, handling time,
+     * FCR rate, and SLA compliance with comparison against previous period.
+     *
+     * @return JSONResponse The channel analytics data.
+     *
+     * @NoAdminRequired
+     */
+    public function getChannelAnalytics(): JSONResponse
+    {
+        try {
+            $startDate   = $this->request->getParam('startDate', '');
+            $endDate     = $this->request->getParam('endDate', '');
+            $granularity = $this->request->getParam('granularity', 'daily');
+
+            // Use sensible defaults if dates not provided
+            if ($startDate === '' || $endDate === '') {
+                $today     = new \DateTime();
+                $endDate   = $today->format('Y-m-d\TH:i:s\Z');
+                $startDate = $today->modify('-30 days')->format('Y-m-d\TH:i:s\Z');
+            }
+
+            $analytics = $this->channelAnalyticsService->getChannelAnalytics(
+                startDate: $startDate,
+                endDate: $endDate,
+                granularity: $granularity,
+            );
+
+            return new JSONResponse($analytics);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to load channel analytics')],
+                500,
+            );
+        }//end try
+    }//end getChannelAnalytics()
 
     /**
      * Get SLA configuration.
