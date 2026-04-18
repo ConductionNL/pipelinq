@@ -63,19 +63,20 @@ class PublicFormController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @CORS
+     *
+     * @spec openspec/changes/2026-03-20-public-intake-forms/tasks.md#task-3
      */
     public function show(string $id): JSONResponse
     {
-        // Form data would be fetched from OpenRegister in production.
-        // This endpoint returns the public-facing form definition.
-        $response = new JSONResponse(
-                [
-                    'id'             => $id,
-                    'fields'         => [],
-                    'successMessage' => '',
-                    'isActive'       => true,
-                ]
-                );
+        try {
+            $form = $this->intakeFormService->getPublicFormDefinition(formId: $id);
+            $response = new JSONResponse($form);
+        } catch (\Exception $e) {
+            $response = new JSONResponse(
+                ['error' => 'Form not found'],
+                404
+            );
+        }
 
         return $this->addCorsHeaders(response: $response);
     }//end show()
@@ -94,6 +95,8 @@ class PublicFormController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @CORS
+     *
+     * @spec openspec/changes/2026-03-20-public-intake-forms/tasks.md#task-3
      */
     public function submit(string $id): JSONResponse
     {
@@ -116,20 +119,42 @@ class PublicFormController extends Controller
             return $this->addCorsHeaders(response: $response);
         }
 
-        // In production, this would:
-        // 1. Fetch form config from OpenRegister.
-        // 2. Validate submission against form fields.
-        // 3. Map fields to contact/lead properties.
-        // 4. Deduplicate contact by email.
-        // 5. Create contact and lead.
-        // 6. Record submission.
-        // 7. Notify configured user.
-        $response = new JSONResponse(
-                [
-                    'success' => true,
-                    'message' => 'Thank you for your submission.',
-                ]
+        try {
+            // Fetch form config from OpenRegister.
+            $formData = $this->intakeFormService->getFormData(formId: $id);
+
+            if ($formData === null) {
+                $response = new JSONResponse(
+                    ['success' => false, 'message' => 'Form not found.'],
+                    404
                 );
+                return $this->addCorsHeaders(response: $response);
+            }
+
+            // Check if form is active.
+            if (($formData['isActive'] ?? false) === false) {
+                $response = new JSONResponse(
+                    ['success' => false, 'message' => 'This form is not accepting submissions.'],
+                    400
+                );
+                return $this->addCorsHeaders(response: $response);
+            }
+
+            // Process the submission.
+            $result = $this->intakeFormService->processSubmission(
+                formData: $formData,
+                submission: $submission,
+                ip: $ip
+            );
+
+            $statusCode = $result['success'] === true ? 200 : 400;
+            $response = new JSONResponse($result, $statusCode);
+        } catch (\Exception $e) {
+            $response = new JSONResponse(
+                ['success' => false, 'message' => 'An error occurred while processing your submission.'],
+                500
+            );
+        }
 
         return $this->addCorsHeaders(response: $response);
     }//end submit()

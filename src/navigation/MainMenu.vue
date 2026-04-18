@@ -94,6 +94,13 @@
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
+				:name="t('pipelinq', 'Intake Forms')"
+				:to="{ name: 'Forms' }">
+				<template #icon>
+					<FormTextboxPassword :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
 				:name="t('pipelinq', 'My Work')"
 				:to="{ name: 'MyWork' }">
 				<template #icon>

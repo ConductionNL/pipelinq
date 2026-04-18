@@ -8,7 +8,7 @@
 
 		<div v-else class="builder-form">
 			<div class="form-group">
-				<label>{{ t('pipelinq', 'Form name') }} *</label>
+				<label>{{ $t('pipelinq', 'Form name') }} *</label>
 				<input v-model="form.name"
 					type="text"
 					class="form-input"
@@ -16,7 +16,7 @@
 			</div>
 
 			<div class="form-group">
-				<label>{{ t('pipelinq', 'Success message') }}</label>
+				<label>{{ $t('pipelinq', 'Success message') }}</label>
 				<input v-model="form.successMessage"
 					type="text"
 					class="form-input"
@@ -24,7 +24,7 @@
 			</div>
 
 			<div class="form-group">
-				<label>{{ t('pipelinq', 'Notify user') }}</label>
+				<label>{{ $t('pipelinq', 'Notify user') }}</label>
 				<input v-model="form.notifyUser"
 					type="text"
 					class="form-input"
@@ -33,13 +33,13 @@
 
 			<div class="form-group">
 				<NcCheckboxRadioSwitch :checked.sync="form.isActive" type="switch">
-					{{ t('pipelinq', 'Active') }}
+					{{ $t('pipelinq', 'Active') }}
 				</NcCheckboxRadioSwitch>
 			</div>
 
 			<!-- Fields -->
 			<div class="form-group">
-				<label>{{ t('pipelinq', 'Form Fields') }}</label>
+				<label>{{ $t('pipelinq', 'Form Fields') }}</label>
 				<div v-for="(field, index) in form.fields" :key="index" class="field-card">
 					<div class="field-row">
 						<input v-model="field.name"
@@ -56,7 +56,7 @@
 							:reduce="opt => opt.value"
 							class="field-type" />
 						<NcCheckboxRadioSwitch :checked.sync="field.required" type="switch">
-							{{ t('pipelinq', 'Required') }}
+							{{ $t('pipelinq', 'Required') }}
 						</NcCheckboxRadioSwitch>
 						<NcButton type="tertiary" @click="removeField(index)">
 							<template #icon>
@@ -70,7 +70,7 @@
 							:placeholder="t('pipelinq', 'Placeholder text')"
 							class="field-input">
 						<div class="field-mapping">
-							<label>{{ t('pipelinq', 'Map to') }}:</label>
+							<label>{{ $t('pipelinq', 'Map to') }}:</label>
 							<NcSelect v-model="mappingFor[index]"
 								:options="mappingOptions"
 								label="label"
@@ -79,7 +79,7 @@
 						</div>
 					</div>
 					<div v-if="field.type === 'select'" class="field-options">
-						<label>{{ t('pipelinq', 'Options (comma-separated)') }}</label>
+						<label>{{ $t('pipelinq', 'Options (comma-separated)') }}</label>
 						<input v-model="field.optionsText"
 							type="text"
 							:placeholder="t('pipelinq', 'Option 1, Option 2, Option 3')">
@@ -89,16 +89,16 @@
 					<template #icon>
 						<Plus :size="20" />
 					</template>
-					{{ t('pipelinq', 'Add field') }}
+					{{ $t('pipelinq', 'Add field') }}
 				</NcButton>
 			</div>
 
 			<div class="form-actions">
 				<NcButton type="primary" :disabled="!form.name" @click="save">
-					{{ t('pipelinq', 'Save form') }}
+					{{ $t('pipelinq', 'Save form') }}
 				</NcButton>
 				<NcButton type="secondary" @click="$router.push({ name: 'Forms' })">
-					{{ t('pipelinq', 'Cancel') }}
+					{{ $t('pipelinq', 'Cancel') }}
 				</NcButton>
 			</div>
 		</div>
@@ -147,24 +147,24 @@ export default {
 		},
 		fieldTypeOptions() {
 			return [
-				{ value: 'text', label: this.t('pipelinq', 'Text') },
-				{ value: 'textarea', label: this.t('pipelinq', 'Textarea') },
-				{ value: 'email', label: this.t('pipelinq', 'Email') },
-				{ value: 'phone', label: this.t('pipelinq', 'Phone') },
-				{ value: 'select', label: this.t('pipelinq', 'Dropdown') },
-				{ value: 'checkbox', label: this.t('pipelinq', 'Checkbox') },
-				{ value: 'file', label: this.t('pipelinq', 'File upload') },
-				{ value: 'hidden', label: this.t('pipelinq', 'Hidden') },
+				{ value: 'text', label: this.$t('pipelinq', 'Text') },
+				{ value: 'textarea', label: this.$t('pipelinq', 'Textarea') },
+				{ value: 'email', label: this.$t('pipelinq', 'Email') },
+				{ value: 'phone', label: this.$t('pipelinq', 'Phone') },
+				{ value: 'select', label: this.$t('pipelinq', 'Dropdown') },
+				{ value: 'checkbox', label: this.$t('pipelinq', 'Checkbox') },
+				{ value: 'file', label: this.$t('pipelinq', 'File upload') },
+				{ value: 'hidden', label: this.$t('pipelinq', 'Hidden') },
 			]
 		},
 		mappingOptions() {
 			return [
-				{ value: 'contact.name', label: this.t('pipelinq', 'Contact: Name') },
-				{ value: 'contact.email', label: this.t('pipelinq', 'Contact: Email') },
-				{ value: 'contact.phone', label: this.t('pipelinq', 'Contact: Phone') },
-				{ value: 'lead.title', label: this.t('pipelinq', 'Lead: Title') },
-				{ value: 'lead.notes', label: this.t('pipelinq', 'Lead: Notes') },
-				{ value: 'lead.source', label: this.t('pipelinq', 'Lead: Source') },
+				{ value: 'contact.name', label: this.$t('pipelinq', 'Contact: Name') },
+				{ value: 'contact.email', label: this.$t('pipelinq', 'Contact: Email') },
+				{ value: 'contact.phone', label: this.$t('pipelinq', 'Contact: Phone') },
+				{ value: 'lead.title', label: this.$t('pipelinq', 'Lead: Title') },
+				{ value: 'lead.notes', label: this.$t('pipelinq', 'Lead: Notes') },
+				{ value: 'lead.source', label: this.$t('pipelinq', 'Lead: Source') },
 			]
 		},
 	},
