@@ -171,7 +171,7 @@ class CallbackOverdueJob extends TimedJob
             }
 
             $lastNotifiedTime = (int) $value;
-            $age              = $now - $lastNotifiedTime;
+            $age = $now - $lastNotifiedTime;
 
             // Delete keys that have exceeded the cooldown period.
             if ($age >= self::NOTIFICATION_COOLDOWN) {
