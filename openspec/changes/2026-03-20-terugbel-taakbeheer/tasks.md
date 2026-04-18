@@ -16,7 +16,8 @@
 ## 4. Navigation and Routing
 - [x] 4.1 Add task routes to `src/router/index.js`
 - [x] 4.2 Add Tasks entry to `src/navigation/MainMenu.vue`
+- [x] 4.3 Extend MyWork.vue to include tasks
 
 ## 5. Verification
-- [ ] 5.1 Run `npm run build` and verify no errors
-- [ ] 5.2 Manual testing via browser
+- [x] 5.1 Run `npm run build` and verify no errors
+- [x] 5.2 Manual testing via browser
