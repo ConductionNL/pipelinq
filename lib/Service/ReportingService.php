@@ -199,12 +199,12 @@ class ReportingService
 
         foreach ($rows as $row) {
             $output .= implode(
-                    ';',
-                    array_map(
-                static fn($v) => '"'.str_replace('"', '""', (string) $v).'"',
-                $row,
-            )
-                    )."\n";
+                ';',
+                array_map(
+                    static fn($v) => '"'.str_replace('"', '""', (string) $v).'"',
+                    $row,
+                )
+            )."\n";
         }
 
         return $output;

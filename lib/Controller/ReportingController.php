@@ -109,11 +109,11 @@ class ReportingController extends Controller
             }
 
             return new JSONResponse(
-                    [
-                        'success' => true,
-                        'targets' => $this->reportingService->getAllSlaTargets(),
-                    ]
-                    );
+                [
+                    'success' => true,
+                    'targets' => $this->reportingService->getAllSlaTargets(),
+                ]
+            );
         } catch (\Exception $e) {
             return new JSONResponse(
                 ['error' => $this->l10n->t('Failed to update SLA configuration')],
