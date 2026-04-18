@@ -1,16 +1,17 @@
 {
   "phase": "build",
-  "timestamp": "2026-04-16T11:28:13.992044+00:00",
-  "pr": 211,
-  "commit": "bff1ccf",
-  "turns": 44,
-  "cost_usd": 0.26925774999999996,
+  "timestamp": "2026-04-18T16:36:48.697233+00:00",
+  "pr": 262,
+  "commit": "86f5b17",
+  "turns": 66,
+  "cost_usd": 0.4917,
   "tokens": {
-    "input": 371,
-    "output": 8992,
-    "cache_read": 1740030,
-    "cache_create": 39939
+    "input": 394,
+    "output": 13885,
+    "cache_read": 2814561,
+    "cache_create": 112374
   },
   "model": "claude-haiku-4-5-20251001",
-  "maxed_out": false
+  "maxed_out": false,
+  "cost_eur": 0.4524
 }
