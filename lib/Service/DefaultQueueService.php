@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/queue-management/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
@@ -116,6 +118,8 @@ class DefaultQueueService
      * Create default queues if none exist.
      *
      * @return void
+     *
+     * @spec openspec/changes/queue-management/tasks.md#task-1.1
      */
     public function createDefaultQueues(): void
     {
@@ -173,6 +177,8 @@ class DefaultQueueService
      * Create default skills if none exist.
      *
      * @return void
+     *
+     * @spec openspec/changes/queue-management/tasks.md#task-1.1
      */
     public function createDefaultSkills(): void
     {

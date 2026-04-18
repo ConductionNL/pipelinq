@@ -13,6 +13,8 @@
  * @version GIT: <git-id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/queue-management/tasks.md#task-2.1
  */
 
 declare(strict_types=1);
