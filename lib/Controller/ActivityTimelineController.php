@@ -40,9 +40,9 @@ class ActivityTimelineController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest               $request The request.
+     * @param IRequest                $request The request.
      * @param ActivityTimelineService $service The activity timeline service.
-     * @param LoggerInterface        $logger  The logger.
+     * @param LoggerInterface         $logger  The logger.
      */
     public function __construct(
         IRequest $request,
@@ -77,17 +77,20 @@ class ActivityTimelineController extends Controller
         try {
             // Collect query parameters
             $params = [
-                'from'    => $this->request->getParam('from'),
-                'to'      => $this->request->getParam('to'),
-                'types'   => $this->request->getParam('types', []),
-                '_page'   => $this->request->getParam('_page', 1),
-                '_limit'  => $this->request->getParam('_limit', 20),
+                'from'   => $this->request->getParam('from'),
+                'to'     => $this->request->getParam('to'),
+                'types'  => $this->request->getParam('types', []),
+                '_page'  => $this->request->getParam('_page', 1),
+                '_limit' => $this->request->getParam('_limit', 20),
             ];
 
             // Clean up empty values
-            $params = array_filter($params, function ($value) {
-                return $value !== null && $value !== '';
-            });
+            $params = array_filter(
+                    $params,
+                    function ($value) {
+                        return $value !== null && $value !== '';
+                    }
+                    );
 
             $timeline = $this->service->getTimeline($entityType, $entityId, $params);
 
@@ -102,7 +105,7 @@ class ActivityTimelineController extends Controller
                 ['message' => 'Failed to load timeline'],
                 500
             );
-        }
+        }//end try
     }//end getTimeline()
 
     /**
@@ -160,11 +163,11 @@ class ActivityTimelineController extends Controller
      */
     public function createWorklog(): JSONResponse
     {
-        $entityType = $this->request->getParam('entityType', '');
-        $entityId   = $this->request->getParam('entityId', '');
-        $duration   = $this->request->getParam('duration', '');
+        $entityType  = $this->request->getParam('entityType', '');
+        $entityId    = $this->request->getParam('entityId', '');
+        $duration    = $this->request->getParam('duration', '');
         $description = $this->request->getParam('description', '');
-        $date       = $this->request->getParam('date', '');
+        $date        = $this->request->getParam('date', '');
 
         // Validate required fields
         if ($entityType === '' || $entityId === '' || $duration === '') {
@@ -194,6 +197,6 @@ class ActivityTimelineController extends Controller
                 ['message' => 'Failed to create worklog'],
                 500
             );
-        }
+        }//end try
     }//end createWorklog()
 }//end class

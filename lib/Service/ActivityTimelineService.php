@@ -40,10 +40,10 @@ class ActivityTimelineService
     /**
      * Constructor.
      *
-     * @param IAppConfig         $appConfig The app config.
+     * @param IAppConfig         $appConfig   The app config.
      * @param IUserSession       $userSession The user session.
-     * @param ContainerInterface $container The container.
-     * @param LoggerInterface    $logger The logger.
+     * @param ContainerInterface $container   The container.
+     * @param LoggerInterface    $logger      The logger.
      */
     public function __construct(
         private IAppConfig $appConfig,
@@ -69,11 +69,11 @@ class ActivityTimelineService
         $objectService = $this->getObjectService();
         $register      = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 
-        $items           = [];
-        $queryParams     = $this->resolveEntityQueryParams($entityType, $entityId);
-        $allowedTypes    = $params['types'] ?? [];
-        $fromDate        = $params['from'] ?? null;
-        $toDate          = $params['to'] ?? null;
+        $items        = [];
+        $queryParams  = $this->resolveEntityQueryParams($entityType, $entityId);
+        $allowedTypes = $params['types'] ?? [];
+        $fromDate     = $params['from'] ?? null;
+        $toDate       = $params['to'] ?? null;
 
         // Query each applicable schema
         foreach ($queryParams as $schemaType => $filterParams) {
@@ -89,7 +89,8 @@ class ActivityTimelineService
                 $findParams = array_merge(
                     $filterParams,
                     [
-                        '_limit'  => 999, // Get all to filter ourselves
+                        '_limit'  => 999,
+                // Get all to filter ourselves
                         '_offset' => 0,
                     ]
                 );
@@ -111,6 +112,7 @@ class ActivityTimelineService
                         if ($fromDate !== null && $normalizedItem['date'] < $fromDate) {
                             continue;
                         }
+
                         if ($toDate !== null && $normalizedItem['date'] > $toDate) {
                             continue;
                         }
@@ -121,8 +123,8 @@ class ActivityTimelineService
                         }
 
                         $items[] = $normalizedItem;
-                    }
-                }
+                    }//end foreach
+                }//end if
             } catch (\Exception $e) {
                 $this->logger->error(
                     'Failed to query timeline for schema type',
@@ -132,18 +134,22 @@ class ActivityTimelineService
                         'exception'  => $e->getMessage(),
                     ]
                 );
-            }
-        }
+            }//end try
+        }//end foreach
 
         // Sort by date descending (newest first)
-        usort($items, function ($a, $b) {
-            return strcmp($b['date'], $a['date']);
-        });
+        usort(
+                $items,
+                function ($a, $b) {
+                    return strcmp($b['date'], $a['date']);
+                }
+                );
 
         // Pagination
-        $page   = (int) ($params['_page'] ?? 1);
-        $limit  = (int) ($params['_limit'] ?? 20);
-        $limit  = min($limit, 100); // Cap at 100
+        $page  = (int) ($params['_page'] ?? 1);
+        $limit = (int) ($params['_limit'] ?? 20);
+        $limit = min($limit, 100);
+        // Cap at 100
         $total  = count($items);
         $pages  = (int) ceil($total / $limit);
         $offset = ($page - 1) * $limit;
@@ -191,15 +197,15 @@ class ActivityTimelineService
         $isWorklog = ($object['channel'] ?? '') === 'worklog';
 
         return [
-            'type'       => $isWorklog ? 'worklog' : 'contactmoment',
-            'id'         => $object['id'] ?? $object['uuid'] ?? '',
-            'title'      => $object['subject'] ?? '',
+            'type'        => $isWorklog ? 'worklog' : 'contactmoment',
+            'id'          => $object['id'] ?? $object['uuid'] ?? '',
+            'title'       => $object['subject'] ?? '',
             'description' => $object['summary'] ?? '',
-            'date'       => $object['contactedAt'] ?? '',
-            'user'       => $object['agent'] ?? '',
-            'entityType' => $object['client'] ? 'client' : ($object['request'] ? 'request' : ''),
-            'entityId'   => $object['client'] ?? $object['request'] ?? '',
-            'metadata'   => [
+            'date'        => $object['contactedAt'] ?? '',
+            'user'        => $object['agent'] ?? '',
+            'entityType'  => $object['client'] ? 'client' : ($object['request'] ? 'request' : ''),
+            'entityId'    => $object['client'] ?? $object['request'] ?? '',
+            'metadata'    => [
                 'channel'  => $object['channel'] ?? '',
                 'duration' => $object['duration'] ?? '',
                 'outcome'  => $object['outcome'] ?? '',
@@ -217,15 +223,15 @@ class ActivityTimelineService
     private function normalizeTask(array $object): array
     {
         return [
-            'type'       => 'task',
-            'id'         => $object['id'] ?? $object['uuid'] ?? '',
-            'title'      => $object['subject'] ?? '',
+            'type'        => 'task',
+            'id'          => $object['id'] ?? $object['uuid'] ?? '',
+            'title'       => $object['subject'] ?? '',
             'description' => $object['description'] ?? '',
-            'date'       => $object['deadline'] ?? $object['createdAt'] ?? '',
-            'user'       => $object['assigneeUserId'] ?? '',
-            'entityType' => $object['clientId'] ? 'client' : ($object['requestId'] ? 'request' : ''),
-            'entityId'   => $object['clientId'] ?? $object['requestId'] ?? '',
-            'metadata'   => [
+            'date'        => $object['deadline'] ?? $object['createdAt'] ?? '',
+            'user'        => $object['assigneeUserId'] ?? '',
+            'entityType'  => $object['clientId'] ? 'client' : ($object['requestId'] ? 'request' : ''),
+            'entityId'    => $object['clientId'] ?? $object['requestId'] ?? '',
+            'metadata'    => [
                 'status'   => $object['status'] ?? '',
                 'priority' => $object['priority'] ?? '',
             ],
@@ -242,15 +248,15 @@ class ActivityTimelineService
     private function normalizeEmailLink(array $object): array
     {
         return [
-            'type'       => 'email',
-            'id'         => $object['id'] ?? $object['uuid'] ?? '',
-            'title'      => $object['subject'] ?? '',
+            'type'        => 'email',
+            'id'          => $object['id'] ?? $object['uuid'] ?? '',
+            'title'       => $object['subject'] ?? '',
             'description' => $object['sender'] ?? '',
-            'date'       => $object['date'] ?? '',
-            'user'       => null,
-            'entityType' => $object['linkedEntityType'] ?? '',
-            'entityId'   => $object['linkedEntityId'] ?? '',
-            'metadata'   => [
+            'date'        => $object['date'] ?? '',
+            'user'        => null,
+            'entityType'  => $object['linkedEntityType'] ?? '',
+            'entityId'    => $object['linkedEntityId'] ?? '',
+            'metadata'    => [
                 'messageId' => $object['messageId'] ?? '',
                 'threadId'  => $object['threadId'] ?? '',
             ],
@@ -267,15 +273,15 @@ class ActivityTimelineService
     private function normalizeCalendarLink(array $object): array
     {
         return [
-            'type'       => 'calendar',
-            'id'         => $object['id'] ?? $object['uuid'] ?? '',
-            'title'      => $object['title'] ?? '',
+            'type'        => 'calendar',
+            'id'          => $object['id'] ?? $object['uuid'] ?? '',
+            'title'       => $object['title'] ?? '',
             'description' => $object['notes'] ?? '',
-            'date'       => $object['startDate'] ?? '',
-            'user'       => null,
-            'entityType' => $object['linkedEntityType'] ?? '',
-            'entityId'   => $object['linkedEntityId'] ?? '',
-            'metadata'   => [
+            'date'        => $object['startDate'] ?? '',
+            'user'        => null,
+            'entityType'  => $object['linkedEntityType'] ?? '',
+            'entityId'    => $object['linkedEntityId'] ?? '',
+            'metadata'    => [
                 'eventUid'  => $object['eventUid'] ?? '',
                 'endDate'   => $object['endDate'] ?? '',
                 'attendees' => $object['attendees'] ?? [],
@@ -314,15 +320,15 @@ class ActivityTimelineService
                 break;
 
             case 'lead':
-                $params['emailLink']     = ['linkedEntityType' => 'lead', 'linkedEntityId' => $entityId];
-                $params['calendarLink']  = ['linkedEntityType' => 'lead', 'linkedEntityId' => $entityId];
+                $params['emailLink']    = ['linkedEntityType' => 'lead', 'linkedEntityId' => $entityId];
+                $params['calendarLink'] = ['linkedEntityType' => 'lead', 'linkedEntityId' => $entityId];
                 break;
 
             case 'contact':
-                $params['emailLink']     = ['linkedEntityType' => 'contact', 'linkedEntityId' => $entityId];
-                $params['calendarLink']  = ['linkedEntityType' => 'contact', 'linkedEntityId' => $entityId];
+                $params['emailLink']    = ['linkedEntityType' => 'contact', 'linkedEntityId' => $entityId];
+                $params['calendarLink'] = ['linkedEntityType' => 'contact', 'linkedEntityId' => $entityId];
                 break;
-        }
+        }//end switch
 
         return $params;
     }//end resolveEntityQueryParams()
@@ -348,22 +354,22 @@ class ActivityTimelineService
             throw new \Exception('OpenRegister not configured');
         }
 
-        $user = $this->userSession->getUser();
+        $user  = $this->userSession->getUser();
         $agent = $user ? $user->getUID() : 'system';
 
         // Build contactmoment object
         $contactmoment = [
-            'channel'    => 'worklog',
-            'summary'    => $data['description'] ?? '',
-            'duration'   => $data['duration'] ?? '',
+            'channel'     => 'worklog',
+            'summary'     => $data['description'] ?? '',
+            'duration'    => $data['duration'] ?? '',
             'contactedAt' => $data['date'] ?? date('c'),
-            'agent'      => $agent,
+            'agent'       => $agent,
         ];
 
         // Set client or request reference based on entityType
         if ($entityType === 'client') {
             $contactmoment['client'] = $entityId;
-        } elseif ($entityType === 'request') {
+        } else if ($entityType === 'request') {
             $contactmoment['request'] = $entityId;
         }
 
@@ -406,13 +412,13 @@ class ActivityTimelineService
         $filterParams = ['channel' => 'worklog'];
         if ($entityType === 'client') {
             $filterParams['client'] = $entityId;
-        } elseif ($entityType === 'request') {
+        } else if ($entityType === 'request') {
             $filterParams['request'] = $entityId;
         }
 
-        $page   = (int) ($params['_page'] ?? 1);
-        $limit  = (int) ($params['_limit'] ?? 20);
-        $limit  = min($limit, 100);
+        $page  = (int) ($params['_page'] ?? 1);
+        $limit = (int) ($params['_limit'] ?? 20);
+        $limit = min($limit, 100);
 
         try {
             $results = $objectService->findObjects(
@@ -427,11 +433,11 @@ class ActivityTimelineService
                 )
             );
 
-            $items          = [];
+            $items = [];
             $totalDurationSeconds = 0;
 
             foreach ($results as $result) {
-                $result = (array) $result;
+                $result  = (array) $result;
                 $items[] = [
                     'id'          => $result['id'] ?? $result['uuid'] ?? '',
                     'duration'    => $result['duration'] ?? '',
@@ -480,7 +486,7 @@ class ActivityTimelineService
                 'pages'         => 0,
                 'totalDuration' => 'PT0S',
             ];
-        }
+        }//end try
     }//end getWorklog()
 
     /**
@@ -513,18 +519,20 @@ class ActivityTimelineService
      */
     private function secondsToIsoDuration(int $seconds): string
     {
-        $hours   = (int) floor($seconds / 3600);
+        $hours     = (int) floor($seconds / 3600);
         $remaining = $seconds % 3600;
-        $minutes = (int) floor($remaining / 60);
-        $secs    = $remaining % 60;
+        $minutes   = (int) floor($remaining / 60);
+        $secs      = $remaining % 60;
 
         $duration = 'PT';
         if ($hours > 0) {
             $duration .= $hours.'H';
         }
+
         if ($minutes > 0) {
             $duration .= $minutes.'M';
         }
+
         if ($secs > 0) {
             $duration .= $secs.'S';
         }
