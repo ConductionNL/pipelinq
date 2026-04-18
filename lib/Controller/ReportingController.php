@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\KpiDashboardService;
 use OCA\Pipelinq\Service\ReportingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -37,17 +38,43 @@ class ReportingController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest         $request          The request.
-     * @param ReportingService $reportingService The reporting service.
-     * @param IL10N            $l10n             The localization service.
+     * @param IRequest            $request             The request.
+     * @param ReportingService    $reportingService    The reporting service.
+     * @param KpiDashboardService $kpiDashboardService The KPI dashboard service.
+     * @param IL10N               $l10n                The localization service.
      */
     public function __construct(
         IRequest $request,
         private ReportingService $reportingService,
+        private KpiDashboardService $kpiDashboardService,
         private IL10N $l10n,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
+
+    /**
+     * Get KPI dashboard metrics.
+     *
+     * Returns real-time KPI dashboard data including total contacts, channel
+     * distribution, average handling time, queue metrics, active agents count,
+     * FCR rate, and SLA compliance status.
+     *
+     * @return JSONResponse The KPI dashboard data.
+     *
+     * @NoAdminRequired
+     */
+    public function getDashboard(): JSONResponse
+    {
+        try {
+            $dashboard = $this->kpiDashboardService->getDashboard();
+            return new JSONResponse($dashboard);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to load KPI dashboard')],
+                500,
+            );
+        }
+    }//end getDashboard()
 
     /**
      * Get SLA configuration.
