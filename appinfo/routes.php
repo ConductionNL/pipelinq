@@ -61,6 +61,18 @@ return [
         ['name' => 'reporting#getSla', 'url' => '/api/rapportage/sla', 'verb' => 'GET'],
         ['name' => 'reporting#updateSla', 'url' => '/api/rapportage/sla', 'verb' => 'PUT'],
         ['name' => 'reporting#exportCsv', 'url' => '/api/rapportage/export', 'verb' => 'GET'],
+        // KPI Dashboard
+        ['name' => 'reporting#kpiDaily', 'url' => '/api/rapportage/kpi/daily', 'verb' => 'GET'],
+        // Channel Analytics
+        ['name' => 'reporting#channelAnalytics', 'url' => '/api/rapportage/channels/analytics', 'verb' => 'GET'],
+        // Queue Statistics
+        ['name' => 'reporting#queueStatistics', 'url' => '/api/rapportage/queue/statistics', 'verb' => 'GET'],
+        // Agent Metrics
+        ['name' => 'reporting#agentMetrics', 'url' => '/api/rapportage/agents/metrics', 'verb' => 'GET'],
+        // Trend Reporting
+        ['name' => 'reporting#trends', 'url' => '/api/rapportage/trends', 'verb' => 'GET'],
+        // WOO Reporting
+        ['name' => 'reporting#wooReport', 'url' => '/api/rapportage/woo', 'verb' => 'GET'],
         // Public survey endpoints (unauthenticated)
         ['name' => 'public_survey#show', 'url' => '/public/survey/{token}', 'verb' => 'GET'],
         ['name' => 'public_survey#submit', 'url' => '/public/survey/{token}/respond', 'verb' => 'POST'],
