@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/callback-management/tasks.md#task-2.1
  */
 
 declare(strict_types=1);
@@ -72,6 +74,8 @@ class CallbackController extends Controller
      * @param string $id The task object ID.
      *
      * @return JSONResponse The response with updated task data.
+     *
+     * @spec openspec/changes/callback-management/tasks.md#task-2.1
      */
     public function attempt(string $id): JSONResponse
     {
@@ -99,12 +103,12 @@ class CallbackController extends Controller
             $suggestClose = $this->callbackService->isAttemptThresholdReached($taskData);
 
             return new JSONResponse(
-                    [
-                        'task'         => $taskData,
-                        'suggestClose' => $suggestClose,
-                        'attemptCount' => count($taskData['attempts'] ?? []),
-                    ]
-                    );
+                [
+                    'task'         => $taskData,
+                    'suggestClose' => $suggestClose,
+                    'attemptCount' => count($taskData['attempts'] ?? []),
+                ]
+            );
         } catch (\Exception $e) {
             $this->logger->error('CallbackController::attempt failed', ['exception' => $e->getMessage()]);
             return new JSONResponse(
@@ -120,6 +124,8 @@ class CallbackController extends Controller
      * @param string $id The task object ID.
      *
      * @return JSONResponse The response with updated task data.
+     *
+     * @spec openspec/changes/callback-management/tasks.md#task-2.1
      */
     public function claim(string $id): JSONResponse
     {
@@ -158,6 +164,8 @@ class CallbackController extends Controller
      * @param string $id The task object ID.
      *
      * @return JSONResponse The response with updated task data.
+     *
+     * @spec openspec/changes/callback-management/tasks.md#task-2.1
      */
     public function complete(string $id): JSONResponse
     {
@@ -220,6 +228,8 @@ class CallbackController extends Controller
      * @param string $id The task object ID.
      *
      * @return JSONResponse The response with updated task data.
+     *
+     * @spec openspec/changes/callback-management/tasks.md#task-2.1
      */
     public function reassign(string $id): JSONResponse
     {

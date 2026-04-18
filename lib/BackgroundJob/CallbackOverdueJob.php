@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/callback-management/tasks.md#task-3.1
  */
 
 declare(strict_types=1);
@@ -80,6 +82,8 @@ class CallbackOverdueJob extends TimedJob
      * @param mixed $argument The job argument (unused).
      *
      * @return void
+     *
+     * @spec openspec/changes/callback-management/tasks.md#task-3.1
      */
     protected function run(mixed $argument): void
     {
@@ -108,6 +112,8 @@ class CallbackOverdueJob extends TimedJob
      * @param string $taskId The task object ID.
      *
      * @return bool True if the task was recently notified.
+     *
+     * @spec openspec/changes/callback-management/tasks.md#task-3.1
      */
     public function wasRecentlyNotified(string $taskId): bool
     {
@@ -130,6 +136,8 @@ class CallbackOverdueJob extends TimedJob
      * @param string $taskId The task object ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/callback-management/tasks.md#task-3.1
      */
     public function markNotified(string $taskId): void
     {
