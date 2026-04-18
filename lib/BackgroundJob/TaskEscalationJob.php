@@ -69,9 +69,9 @@ class TaskEscalationJob extends TimedJob
      * Checks all open and in_behandeling tasks for deadline proximity
      * and expiry. Uses OpenRegister API to query and update tasks.
      *
-     * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.2
-     *
      * @param mixed $argument The job argument (unused).
+     *
+     * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.2
      *
      * @return void
      */

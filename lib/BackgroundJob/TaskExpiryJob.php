@@ -81,9 +81,9 @@ class TaskExpiryJob extends TimedJob
      *
      * Queries OpenRegister for overdue tasks, expires them, and sends escalation notifications.
      *
-     * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.2
-     *
      * @param mixed $argument The job argument (unused).
+     *
+     * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.2
      *
      * @return void
      */

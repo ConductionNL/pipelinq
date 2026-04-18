@@ -122,10 +122,10 @@ class TaskService
      * Skips weekends. For example, a 24-hour deadline created Friday at 16:00
      * results in Monday at 16:00.
      *
-     * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.1
-     *
      * @param string $createdAt     ISO 8601 creation timestamp.
      * @param int    $businessHours Number of business hours to add.
+     *
+     * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.1
      *
      * @return string ISO 8601 deadline datetime string.
      */
@@ -153,9 +153,9 @@ class TaskService
     /**
      * Validate task data.
      *
-     * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.1
-     *
      * @param array<string, mixed> $data The task data to validate.
+     *
+     * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.1
      *
      * @return array{valid: bool, errors: array<string>} Validation result.
      */
@@ -192,14 +192,14 @@ class TaskService
     /**
      * Check if a deadline is approaching (within threshold hours).
      *
-     * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.1
-     *
      * @param string $deadline       ISO 8601 deadline datetime.
      * @param int    $thresholdHours Hours before deadline to trigger escalation.
      *
+     * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.1
+     *
      * @return bool True if the deadline is within the threshold.
      */
-    public function isDeadlineApproaching(string $deadline, int $thresholdHours = 4): bool
+    public function isDeadlineApproaching(string $deadline, int $thresholdHours=4): bool
     {
         $deadlineDate = new \DateTime($deadline);
         $now          = new \DateTime();
@@ -212,9 +212,9 @@ class TaskService
     /**
      * Check if a deadline has passed.
      *
-     * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.1
-     *
      * @param string $deadline ISO 8601 deadline datetime.
+     *
+     * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.1
      *
      * @return bool True if the deadline has passed.
      */
