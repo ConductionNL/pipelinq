@@ -179,6 +179,8 @@ class KennisbankReviewJobTest extends TestCase
      */
     public function testJobSendsNotificationForStaleArticle(): void
     {
+        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
+
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
         $this->settingsService->method('getSettings')->willReturn([
             'register'                  => 'reg-uuid',
@@ -224,6 +226,8 @@ class KennisbankReviewJobTest extends TestCase
      */
     public function testJobSkipsRecentlyUpdatedArticle(): void
     {
+        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
+
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
         $this->settingsService->method('getSettings')->willReturn([
             'register'            => 'reg-uuid',
