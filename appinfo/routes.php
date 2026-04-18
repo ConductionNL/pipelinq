@@ -61,6 +61,28 @@ return [
         ['name' => 'reporting#getSla', 'url' => '/api/rapportage/sla', 'verb' => 'GET'],
         ['name' => 'reporting#updateSla', 'url' => '/api/rapportage/sla', 'verb' => 'PUT'],
         ['name' => 'reporting#exportCsv', 'url' => '/api/rapportage/export', 'verb' => 'GET'],
+
+        // KPI dashboard
+        ['name' => 'reporting#getKpiSummary', 'url' => '/api/rapportage/dashboard/kpi-summary', 'verb' => 'GET'],
+        ['name' => 'reporting#getKpiTrend', 'url' => '/api/rapportage/dashboard/trends', 'verb' => 'GET'],
+
+        // Channel analytics
+        ['name' => 'reporting#getChannelDistribution', 'url' => '/api/rapportage/analytics/channel-distribution', 'verb' => 'GET'],
+        ['name' => 'reporting#getChannelComparison', 'url' => '/api/rapportage/analytics/channel-comparison', 'verb' => 'GET'],
+
+        // Queue monitoring
+        ['name' => 'reporting#getQueueStats', 'url' => '/api/rapportage/queue/statistics', 'verb' => 'GET'],
+
+        // Agent performance
+        ['name' => 'reporting#getAgentStats', 'url' => '/api/rapportage/agents/{agentId}/statistics', 'verb' => 'GET'],
+        ['name' => 'reporting#getTeamOverview', 'url' => '/api/rapportage/agents/team-overview', 'verb' => 'GET'],
+
+        // Trend reporting
+        ['name' => 'reporting#getMonthlyTrend', 'url' => '/api/rapportage/trends/monthly', 'verb' => 'GET'],
+        ['name' => 'reporting#getPeakHours', 'url' => '/api/rapportage/trends/peak-hours', 'verb' => 'GET'],
+
+        // WOO reporting
+        ['name' => 'reporting#getWooReport', 'url' => '/api/rapportage/woo/report', 'verb' => 'GET'],
         // Public survey endpoints (unauthenticated)
         ['name' => 'public_survey#show', 'url' => '/public/survey/{token}', 'verb' => 'GET'],
         ['name' => 'public_survey#submit', 'url' => '/public/survey/{token}/respond', 'verb' => 'POST'],

@@ -31,6 +31,8 @@ use OCP\IRequest;
 
 /**
  * Controller for reporting endpoints and SLA configuration.
+ *
+ * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-2
  */
 class ReportingController extends Controller
 {
@@ -158,4 +160,243 @@ class ReportingController extends Controller
             );
         }//end try
     }//end exportCsv()
+
+    /**
+     * Get daily KPI summary.
+     *
+     * @return JSONResponse Daily KPI data.
+     *
+     * @NoAdminRequired
+     */
+    public function getKpiSummary(): JSONResponse
+    {
+        try {
+            $summary = $this->reportingService->getDailyKpiSummary();
+            return new JSONResponse(['kpis' => $summary]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to load KPI summary')],
+                500,
+            );
+        }
+    }//end getKpiSummary()
+
+    /**
+     * Get KPI trend for a specific channel and metric.
+     *
+     * @return JSONResponse Trend data.
+     *
+     * @NoAdminRequired
+     */
+    public function getKpiTrend(): JSONResponse
+    {
+        try {
+            $channel = $this->request->getParam('channel', 'telefoon');
+            $metric  = $this->request->getParam('metric', 'fcr');
+            $days    = (int) $this->request->getParam('days', 7);
+
+            $trend = $this->reportingService->getKpiTrend($channel, $metric, $days);
+            return new JSONResponse(['trend' => $trend]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to load KPI trend')],
+                500,
+            );
+        }
+    }//end getKpiTrend()
+
+    /**
+     * Get channel distribution analytics.
+     *
+     * @return JSONResponse Channel distribution data.
+     *
+     * @NoAdminRequired
+     */
+    public function getChannelDistribution(): JSONResponse
+    {
+        try {
+            $dateFrom    = $this->request->getParam('dateFrom', '');
+            $dateTo      = $this->request->getParam('dateTo', '');
+            $granularity = $this->request->getParam('granularity', 'day');
+
+            if ($dateFrom === '' || $dateTo === '') {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('Date range is required')],
+                    400,
+                );
+            }
+
+            $distribution = $this->reportingService->getChannelDistribution(
+                $dateFrom,
+                $dateTo,
+                $granularity,
+            );
+            return new JSONResponse(['distribution' => $distribution]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to load channel distribution')],
+                500,
+            );
+        }
+    }//end getChannelDistribution()
+
+    /**
+     * Get channel comparison vs previous month.
+     *
+     * @return JSONResponse Channel comparison data.
+     *
+     * @NoAdminRequired
+     */
+    public function getChannelComparison(): JSONResponse
+    {
+        try {
+            $monthYear = $this->request->getParam('monthYear', '');
+
+            if ($monthYear === '') {
+                $monthYear = date('Y-m');
+            }
+
+            $comparison = $this->reportingService->getChannelComparison($monthYear);
+            return new JSONResponse(['comparison' => $comparison]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to load channel comparison')],
+                500,
+            );
+        }
+    }//end getChannelComparison()
+
+    /**
+     * Get real-time queue statistics.
+     *
+     * @return JSONResponse Queue statistics.
+     *
+     * @NoAdminRequired
+     */
+    public function getQueueStats(): JSONResponse
+    {
+        try {
+            $stats = $this->reportingService->getQueueStatistics();
+            return new JSONResponse(['queueStats' => $stats]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to load queue statistics')],
+                500,
+            );
+        }
+    }//end getQueueStats()
+
+    /**
+     * Get agent statistics.
+     *
+     * @param string $agentId Agent ID.
+     *
+     * @return JSONResponse Agent statistics.
+     *
+     * @NoAdminRequired
+     */
+    public function getAgentStats(string $agentId): JSONResponse
+    {
+        try {
+            $stats = $this->reportingService->getAgentStatistics($agentId);
+            return new JSONResponse(['agentStats' => $stats]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to load agent statistics')],
+                500,
+            );
+        }
+    }//end getAgentStats()
+
+    /**
+     * Get team overview.
+     *
+     * @return JSONResponse Team overview.
+     *
+     * @NoAdminRequired
+     */
+    public function getTeamOverview(): JSONResponse
+    {
+        try {
+            $overview = $this->reportingService->getTeamOverview();
+            return new JSONResponse(['teamOverview' => $overview]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to load team overview')],
+                500,
+            );
+        }
+    }//end getTeamOverview()
+
+    /**
+     * Get monthly trend report.
+     *
+     * @return JSONResponse Trend report.
+     *
+     * @NoAdminRequired
+     */
+    public function getMonthlyTrend(): JSONResponse
+    {
+        try {
+            $months = (int) $this->request->getParam('months', 6);
+            $report = $this->reportingService->getMonthlyTrendReport($months);
+            return new JSONResponse(['trendReport' => $report]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to load trend report')],
+                500,
+            );
+        }
+    }//end getMonthlyTrend()
+
+    /**
+     * Get peak hours heatmap.
+     *
+     * @return JSONResponse Heatmap data.
+     *
+     * @NoAdminRequired
+     */
+    public function getPeakHours(): JSONResponse
+    {
+        try {
+            $weeks   = (int) $this->request->getParam('weeks', 4);
+            $heatmap = $this->reportingService->getPeakHoursHeatmap($weeks);
+            return new JSONResponse(['heatmap' => $heatmap]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to load peak hours heatmap')],
+                500,
+            );
+        }
+    }//end getPeakHours()
+
+    /**
+     * Generate WOO-compliant anonymized report.
+     *
+     * @return JSONResponse WOO report data.
+     *
+     * @NoAdminRequired
+     */
+    public function getWooReport(): JSONResponse
+    {
+        try {
+            $dateFrom = $this->request->getParam('dateFrom', '');
+            $dateTo   = $this->request->getParam('dateTo', '');
+
+            if ($dateFrom === '' || $dateTo === '') {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('Date range is required')],
+                    400,
+                );
+            }
+
+            $report = $this->reportingService->generateWooReport($dateFrom, $dateTo);
+            return new JSONResponse(['wooReport' => $report]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to generate WOO report')],
+                500,
+            );
+        }
+    }//end getWooReport()
 }//end class
