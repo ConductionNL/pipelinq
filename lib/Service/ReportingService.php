@@ -229,7 +229,7 @@ class ReportingService
         foreach ($durations as $duration) {
             try {
                 $interval      = new \DateInterval($duration);
-                $totalSeconds += ($interval->i * 60) + $interval->s;
+                $totalSeconds += ($interval->h * 3600) + ($interval->i * 60) + $interval->s;
             } catch (\Exception $e) {
                 // Skip invalid durations.
                 continue;

@@ -32,6 +32,7 @@ use PHPUnit\Framework\TestCase;
  */
 class ReportingControllerTest extends TestCase
 {
+
     /**
      * The controller under test.
      *
@@ -60,9 +61,10 @@ class ReportingControllerTest extends TestCase
      */
     protected function setUp(): void
     {
-        $request              = $this->createMock(IRequest::class);
+        $request = $this->createMock(IRequest::class);
+        $request->method('getParam')->willReturn([]);
         $this->reportingService = $this->createMock(ReportingService::class);
-        $this->l10n             = $this->createMock(IL10N::class);
+        $this->l10n = $this->createMock(IL10N::class);
         $this->l10n->method('t')->willReturnArgument(0);
 
         $this->controller = new ReportingController(

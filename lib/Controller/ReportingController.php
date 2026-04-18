@@ -59,7 +59,7 @@ class ReportingController extends Controller
      * @return JSONResponse The SLA targets.
      *
      * @NoAdminRequired
-     * @spec openspec/changes/2026-03-20-contactmomenten-rapportage/tasks.md#task-1.2
+     * @spec            openspec/changes/2026-03-20-contactmomenten-rapportage/tasks.md#task-1.2
      */
     public function getSla(): JSONResponse
     {
@@ -80,7 +80,7 @@ class ReportingController extends Controller
      * @return JSONResponse The updated SLA targets.
      *
      * @NoAdminRequired
-     * @spec openspec/changes/2026-03-20-contactmomenten-rapportage/tasks.md#task-1.2
+     * @spec            openspec/changes/2026-03-20-contactmomenten-rapportage/tasks.md#task-1.2
      */
     public function updateSla(): JSONResponse
     {
@@ -128,7 +128,7 @@ class ReportingController extends Controller
      * @return DataDownloadResponse|JSONResponse The CSV download or error.
      *
      * @NoAdminRequired
-     * @spec openspec/changes/2026-03-20-contactmomenten-rapportage/tasks.md#task-1.2
+     * @spec            openspec/changes/2026-03-20-contactmomenten-rapportage/tasks.md#task-1.2
      */
     public function exportCsv(): DataDownloadResponse|JSONResponse
     {
