@@ -15,4 +15,4 @@
 - [x] 3.2 Add Contact Moments entry to `src/navigation/MainMenu.vue`
 
 ## 4. Verification
-- [ ] 4.1 Run `npm run build` and verify no errors
+- [x] 4.1 Run `npm run build` and verify no errors

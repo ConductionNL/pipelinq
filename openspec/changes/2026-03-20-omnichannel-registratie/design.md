@@ -1,5 +1,7 @@
 # Design: omnichannel-registratie
 
+**Status:** pr-created
+
 ## Architecture
 
 ### Data Model (OpenRegister Schema)
