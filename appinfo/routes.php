@@ -72,17 +72,31 @@ return [
 
         // Queue monitoring
         ['name' => 'reporting#getQueueStats', 'url' => '/api/rapportage/queue/statistics', 'verb' => 'GET'],
+        ['name' => 'reporting#getHistoricalWaitTimes', 'url' => '/api/rapportage/queue/historical', 'verb' => 'GET'],
+        ['name' => 'reporting#getWaitTimeSlaAlert', 'url' => '/api/rapportage/queue/sla-alert', 'verb' => 'GET'],
 
         // Agent performance
         ['name' => 'reporting#getAgentStats', 'url' => '/api/rapportage/agents/{agentId}/statistics', 'verb' => 'GET'],
         ['name' => 'reporting#getTeamOverview', 'url' => '/api/rapportage/agents/team-overview', 'verb' => 'GET'],
+        ['name' => 'reporting#getAgentWorkload', 'url' => '/api/rapportage/agents/workload-distribution', 'verb' => 'GET'],
+        ['name' => 'reporting#getAgentTrend', 'url' => '/api/rapportage/agents/{agentId}/trends', 'verb' => 'GET'],
 
         // Trend reporting
         ['name' => 'reporting#getMonthlyTrend', 'url' => '/api/rapportage/trends/monthly', 'verb' => 'GET'],
         ['name' => 'reporting#getPeakHours', 'url' => '/api/rapportage/trends/peak-hours', 'verb' => 'GET'],
+        ['name' => 'reporting#getSubjectTrends', 'url' => '/api/rapportage/trends/subjects', 'verb' => 'GET'],
 
         // WOO reporting
         ['name' => 'reporting#getWooReport', 'url' => '/api/rapportage/woo/report', 'verb' => 'GET'],
+        ['name' => 'reporting#getAnnualStatistics', 'url' => '/api/rapportage/woo/annual-statistics', 'verb' => 'GET'],
+        ['name' => 'reporting#getBenchmarkComparison', 'url' => '/api/rapportage/woo/benchmark-comparison', 'verb' => 'GET'],
+
+        // BI data extraction
+        ['name' => 'reporting#getContactmomentsData', 'url' => '/api/rapportage/data/contactmomenten', 'verb' => 'GET'],
+        ['name' => 'reporting#getKpiAggregates', 'url' => '/api/rapportage/data/kpi-aggregates', 'verb' => 'GET'],
+
+        // Subject analytics
+        ['name' => 'reporting#getSubjectAnalytics', 'url' => '/api/rapportage/analytics/subjects', 'verb' => 'GET'],
         // Public survey endpoints (unauthenticated)
         ['name' => 'public_survey#show', 'url' => '/public/survey/{token}', 'verb' => 'GET'],
         ['name' => 'public_survey#submit', 'url' => '/public/survey/{token}/respond', 'verb' => 'POST'],

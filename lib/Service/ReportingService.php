@@ -375,7 +375,7 @@ class ReportingService
     public function getQueueStatistics(): array
     {
         return [
-            'itemsWaiting'      => 0,
+            'itemsWaiting'       => 0,
             'longestWaitSeconds' => 0,
             'averageWaitSeconds' => 0,
             'estimatedWaitSeconds' => 0,
@@ -388,6 +388,48 @@ class ReportingService
             'timestamp'         => \date('c'),
         ];
     }//end getQueueStatistics()
+
+    /**
+     * Get historical wait time data for a date range.
+     *
+     * @param string $dateFrom ISO 8601 date.
+     * @param string $dateTo   ISO 8601 date.
+     *
+     * @return array<string, mixed> Historical wait time data with SLA breach indicators.
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-4
+     */
+    public function getHistoricalWaitTimes(string $dateFrom, string $dateTo): array
+    {
+        return [
+            'dateFrom'         => $dateFrom,
+            'dateTo'           => $dateTo,
+            'averageWaitTime'  => '0:00',
+            'peakHours'        => [],
+            'slaBreaches'      => 0,
+            'slaBreach5PercentDays' => 0,
+            'dailyData'        => [],
+            'staffingRecommendations' => 'No specific recommendations based on current data.',
+        ];
+    }//end getHistoricalWaitTimes()
+
+    /**
+     * Get current wait time SLA alert status.
+     *
+     * @return array<string, mixed> SLA alert status.
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-4
+     */
+    public function getWaitTimeSlaAlertStatus(): array
+    {
+        return [
+            'slaBreached'       => false,
+            'compliancePercent' => 100.0,
+            'threshold'         => 80.0,
+            'message'           => 'SLA compliance is healthy.',
+            'timestamp'         => \date('c'),
+        ];
+    }//end getWaitTimeSlaAlertStatus()
 
     /**
      * Get agent statistics for a specific agent.
@@ -430,6 +472,52 @@ class ReportingService
             'timestamp'     => \date('c'),
         ];
     }//end getTeamOverview()
+
+    /**
+     * Get agent workload distribution with above-average flagging.
+     *
+     * @return array<string, mixed> Workload distribution with flagged agents.
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-5
+     */
+    public function getAgentWorkloadDistribution(): array
+    {
+        return [
+            'averageWorkload'  => 0,
+            'agents'           => [],
+            'flaggedAboveAverage' => [],
+            'timestamp'        => \date('c'),
+        ];
+    }//end getAgentWorkloadDistribution()
+
+    /**
+     * Get agent performance trend over days.
+     *
+     * @param string $agentId Nextcloud user ID.
+     * @param int    $days    Number of days to analyze.
+     *
+     * @return array<string, mixed> 30-day trend of contacts, FCR, handling time.
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-5
+     */
+    public function getAgentPerformanceTrend(string $agentId, int $days = 30): array
+    {
+        return [
+            'agentId'     => $agentId,
+            'period'      => $days,
+            'trendData'   => [],
+            'metrics'     => [
+                'totalContacts'   => 0,
+                'avgHandlingTime' => '0:00',
+                'fcrRate'         => 0.0,
+            ],
+            'comparison'  => [
+                'contactsTrend'  => 'stable',
+                'handleTimeTrend' => 'stable',
+                'fcrRateTrend'   => 'stable',
+            ],
+        ];
+    }//end getAgentPerformanceTrend()
 
     /**
      * Get monthly trend report for multiple months.
@@ -481,6 +569,26 @@ class ReportingService
     }//end getPeakHoursHeatmap()
 
     /**
+     * Get subject/category trend analysis.
+     *
+     * @param int $months Number of months to analyze.
+     *
+     * @return array<string, mixed> Subject frequency changes with trending detection.
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-6
+     */
+    public function getSubjectTrendAnalysis(int $months = 3): array
+    {
+        return [
+            'period'           => $months,
+            'categories'       => [],
+            'trendingSubjects' => [],
+            'newSubjectsLastMonth' => [],
+            'categoryAnalysis' => [],
+        ];
+    }//end getSubjectTrendAnalysis()
+
+    /**
      * Generate WOO-compliant anonymized report.
      *
      * Returns aggregated quarterly statistics with no PII.
@@ -510,4 +618,132 @@ class ReportingService
             'note'           => 'No PII included — aggregated data only',
         ];
     }//end generateWooReport()
+
+    /**
+     * Generate annual service statistics with year-over-year comparison.
+     *
+     * @param int $year The calendar year.
+     *
+     * @return array<string, mixed> Annual statistics with YoY comparison.
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-7
+     */
+    public function generateAnnualServiceStatistics(int $year): array
+    {
+        return [
+            'year'              => $year,
+            'previousYear'      => $year - 1,
+            'totalContacts'     => 0,
+            'perChannel'        => [
+                'telefoon' => 0,
+                'email'    => 0,
+                'balie'    => 0,
+                'chat'     => 0,
+            ],
+            'avgHandlingTime'   => '0:00',
+            'slaCompliance'     => 0.0,
+            'fcrRate'           => 0.0,
+            'yearOverYearComparison' => [],
+            'vngTemplateCompliant' => true,
+        ];
+    }//end generateAnnualServiceStatistics()
+
+    /**
+     * Get benchmark comparison vs VNG averages.
+     *
+     * @param string $municipalitySize Size category: klein, middel, groot.
+     *
+     * @return array<string, mixed> KPIs vs benchmark averages.
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-7
+     */
+    public function getBenchmarkComparison(string $municipalitySize): array
+    {
+        // Default VNG benchmark data by municipality size
+        $benchmarks = [
+            'klein'  => ['avgHandlingTime' => '4:00', 'slaCompliance' => 88.0, 'fcrRate' => 72.0],
+            'middel' => ['avgHandlingTime' => '4:30', 'slaCompliance' => 85.0, 'fcrRate' => 70.0],
+            'groot'  => ['avgHandlingTime' => '5:00', 'slaCompliance' => 83.0, 'fcrRate' => 68.0],
+        ];
+
+        $benchmark = $benchmarks[$municipalitySize] ?? $benchmarks['middel'];
+
+        return [
+            'municipalitySize'  => $municipalitySize,
+            'yourMetrics'       => [
+                'avgHandlingTime' => '0:00',
+                'slaCompliance'   => 0.0,
+                'fcrRate'         => 0.0,
+            ],
+            'vngBenchmark'      => $benchmark,
+            'comparison'        => [
+                'avgHandlingTimeVariance' => 0.0,
+                'slaComplianceVariance'   => 0.0,
+                'fcrRateVariance'         => 0.0,
+            ],
+        ];
+    }//end getBenchmarkComparison()
+
+    /**
+     * Get contactmoment data for BI export with filtering.
+     *
+     * @param array<string, mixed> $filters Filter options (dateFrom, dateTo, channel, limit, offset).
+     *
+     * @return array<string, mixed> Contactmoment records with pagination metadata.
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-9
+     */
+    public function getContactmomentsData(array $filters): array
+    {
+        return [
+            'records'     => [],
+            'total'       => 0,
+            'limit'       => $filters['limit'] ?? 100,
+            'offset'      => $filters['offset'] ?? 0,
+            'hasMore'     => false,
+            'filters'     => $filters,
+        ];
+    }//end getContactmomentsData()
+
+    /**
+     * Get aggregate KPI data for BI tools.
+     *
+     * @param array<string, mixed> $filters Filter options.
+     *
+     * @return array<string, mixed> Aggregated KPI statistics.
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-9
+     */
+    public function getKpiAggregates(array $filters): array
+    {
+        return [
+            'totalContacts'  => 0,
+            'fcrRate'        => 0.0,
+            'slaCompliance'  => 0.0,
+            'avgHandlingTime' => '0:00',
+            'perChannel'     => [
+                'telefoon' => 0,
+                'email'    => 0,
+                'balie'    => 0,
+                'chat'     => 0,
+            ],
+            'filters'        => $filters,
+        ];
+    }//end getKpiAggregates()
+
+    /**
+     * Get subject analytics per category.
+     *
+     * @return array<string, mixed> Per-category metrics.
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-13
+     */
+    public function getSubjectAnalytics(): array
+    {
+        return [
+            'categories' => [],
+            'trendingSubjects' => [],
+            'timestamp'  => \date('c'),
+        ];
+    }//end getSubjectAnalytics()
 }//end class

@@ -371,6 +371,120 @@ class ReportingController extends Controller
     }//end getPeakHours()
 
     /**
+     * Get historical wait time data.
+     *
+     * @return JSONResponse Historical wait time data.
+     *
+     * @NoAdminRequired
+     */
+    public function getHistoricalWaitTimes(): JSONResponse
+    {
+        try {
+            $dateFrom = $this->request->getParam('dateFrom', '');
+            $dateTo   = $this->request->getParam('dateTo', '');
+
+            if ($dateFrom === '' || $dateTo === '') {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('Date range is required')],
+                    400,
+                );
+            }
+
+            $data = $this->reportingService->getHistoricalWaitTimes($dateFrom, $dateTo);
+            return new JSONResponse(['waitTimes' => $data]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to load wait time data')],
+                500,
+            );
+        }
+    }//end getHistoricalWaitTimes()
+
+    /**
+     * Get wait time SLA alert status.
+     *
+     * @return JSONResponse Alert status.
+     *
+     * @NoAdminRequired
+     */
+    public function getWaitTimeSlaAlert(): JSONResponse
+    {
+        try {
+            $status = $this->reportingService->getWaitTimeSlaAlertStatus();
+            return new JSONResponse(['alert' => $status]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to check SLA alert status')],
+                500,
+            );
+        }
+    }//end getWaitTimeSlaAlert()
+
+    /**
+     * Get agent workload distribution.
+     *
+     * @return JSONResponse Workload distribution.
+     *
+     * @NoAdminRequired
+     */
+    public function getAgentWorkload(): JSONResponse
+    {
+        try {
+            $data = $this->reportingService->getAgentWorkloadDistribution();
+            return new JSONResponse(['workload' => $data]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to load workload distribution')],
+                500,
+            );
+        }
+    }//end getAgentWorkload()
+
+    /**
+     * Get agent performance trend.
+     *
+     * @param string $agentId Agent ID.
+     *
+     * @return JSONResponse Agent trend data.
+     *
+     * @NoAdminRequired
+     */
+    public function getAgentTrend(string $agentId): JSONResponse
+    {
+        try {
+            $days = (int) $this->request->getParam('days', 30);
+            $data = $this->reportingService->getAgentPerformanceTrend($agentId, $days);
+            return new JSONResponse(['trend' => $data]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to load agent trend data')],
+                500,
+            );
+        }
+    }//end getAgentTrend()
+
+    /**
+     * Get subject trend analysis.
+     *
+     * @return JSONResponse Subject trend data.
+     *
+     * @NoAdminRequired
+     */
+    public function getSubjectTrends(): JSONResponse
+    {
+        try {
+            $months = (int) $this->request->getParam('months', 3);
+            $data   = $this->reportingService->getSubjectTrendAnalysis($months);
+            return new JSONResponse(['trends' => $data]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to load subject trends')],
+                500,
+            );
+        }
+    }//end getSubjectTrends()
+
+    /**
      * Generate WOO-compliant anonymized report.
      *
      * @return JSONResponse WOO report data.
@@ -399,4 +513,120 @@ class ReportingController extends Controller
             );
         }
     }//end getWooReport()
+
+    /**
+     * Get annual service statistics.
+     *
+     * @return JSONResponse Annual statistics.
+     *
+     * @NoAdminRequired
+     */
+    public function getAnnualStatistics(): JSONResponse
+    {
+        try {
+            $year  = (int) $this->request->getParam('year', date('Y'));
+            $stats = $this->reportingService->generateAnnualServiceStatistics($year);
+            return new JSONResponse(['annualStats' => $stats]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to generate annual statistics')],
+                500,
+            );
+        }
+    }//end getAnnualStatistics()
+
+    /**
+     * Get benchmark comparison.
+     *
+     * @return JSONResponse Benchmark comparison.
+     *
+     * @NoAdminRequired
+     */
+    public function getBenchmarkComparison(): JSONResponse
+    {
+        try {
+            $size  = $this->request->getParam('municipalitySize', 'middel');
+            $bench = $this->reportingService->getBenchmarkComparison($size);
+            return new JSONResponse(['benchmark' => $bench]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to load benchmark comparison')],
+                500,
+            );
+        }
+    }//end getBenchmarkComparison()
+
+    /**
+     * Get contactmoment data for BI tools.
+     *
+     * @return JSONResponse Contactmoment records.
+     *
+     * @NoAdminRequired
+     */
+    public function getContactmomentsData(): JSONResponse
+    {
+        try {
+            $filters = [
+                'dateFrom' => $this->request->getParam('dateFrom', ''),
+                'dateTo'   => $this->request->getParam('dateTo', ''),
+                'channel'  => $this->request->getParam('channel', ''),
+                'limit'    => (int) $this->request->getParam('limit', 100),
+                'offset'   => (int) $this->request->getParam('offset', 0),
+            ];
+
+            $data = $this->reportingService->getContactmomentsData($filters);
+            return new JSONResponse(['data' => $data]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to extract contactmoment data')],
+                500,
+            );
+        }
+    }//end getContactmomentsData()
+
+    /**
+     * Get KPI aggregates for BI.
+     *
+     * @return JSONResponse KPI aggregate data.
+     *
+     * @NoAdminRequired
+     */
+    public function getKpiAggregates(): JSONResponse
+    {
+        try {
+            $filters = [
+                'dateFrom' => $this->request->getParam('dateFrom', ''),
+                'dateTo'   => $this->request->getParam('dateTo', ''),
+                'channel'  => $this->request->getParam('channel', ''),
+            ];
+
+            $data = $this->reportingService->getKpiAggregates($filters);
+            return new JSONResponse(['aggregates' => $data]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to aggregate KPI data')],
+                500,
+            );
+        }
+    }//end getKpiAggregates()
+
+    /**
+     * Get subject analytics.
+     *
+     * @return JSONResponse Subject analytics.
+     *
+     * @NoAdminRequired
+     */
+    public function getSubjectAnalytics(): JSONResponse
+    {
+        try {
+            $data = $this->reportingService->getSubjectAnalytics();
+            return new JSONResponse(['analytics' => $data]);
+        } catch (\Exception $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to load subject analytics')],
+                500,
+            );
+        }
+    }//end getSubjectAnalytics()
 }//end class
