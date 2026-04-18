@@ -72,6 +72,8 @@ class CallbackController extends Controller
      * @param string $id The task object ID.
      *
      * @return JSONResponse The response with updated task data.
+     *
+     * @NoAdminRequired
      */
     public function attempt(string $id): JSONResponse
     {
@@ -120,6 +122,8 @@ class CallbackController extends Controller
      * @param string $id The task object ID.
      *
      * @return JSONResponse The response with updated task data.
+     *
+     * @NoAdminRequired
      */
     public function claim(string $id): JSONResponse
     {
@@ -158,6 +162,8 @@ class CallbackController extends Controller
      * @param string $id The task object ID.
      *
      * @return JSONResponse The response with updated task data.
+     *
+     * @NoAdminRequired
      */
     public function complete(string $id): JSONResponse
     {
@@ -220,6 +226,8 @@ class CallbackController extends Controller
      * @param string $id The task object ID.
      *
      * @return JSONResponse The response with updated task data.
+     *
+     * @NoAdminRequired
      */
     public function reassign(string $id): JSONResponse
     {
