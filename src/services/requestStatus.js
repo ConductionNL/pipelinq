@@ -33,6 +33,9 @@ const PRIORITY_LABELS = {
 	normal: t('pipelinq', 'Normal'),
 	high: t('pipelinq', 'High'),
 	urgent: t('pipelinq', 'Urgent'),
+	laag: t('pipelinq', 'Low'),
+	normaal: t('pipelinq', 'Normal'),
+	hoog: t('pipelinq', 'High'),
 }
 
 const PRIORITY_COLORS = {
@@ -40,6 +43,9 @@ const PRIORITY_COLORS = {
 	normal: 'var(--color-text-maxcontrast)',
 	high: '#e9a400',
 	urgent: '#e9322d',
+	laag: '#999',
+	normaal: 'var(--color-text-maxcontrast)',
+	hoog: '#e9a400',
 }
 
 const VALID_PRIORITIES = ['low', 'normal', 'high', 'urgent']

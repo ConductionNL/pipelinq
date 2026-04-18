@@ -28,6 +28,8 @@ use Psr\Log\LoggerInterface;
  * Service for task and callback request operations.
  *
  * Handles deadline calculation, task validation, and business hours logic.
+ *
+ * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.1
  */
 class TaskService
 {
@@ -94,6 +96,8 @@ class TaskService
     /**
      * Calculate the default deadline (next business day at 17:00).
      *
+     * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.1
+     *
      * @return string ISO 8601 datetime string.
      */
     public function getDefaultDeadline(): string
@@ -117,6 +121,8 @@ class TaskService
      *
      * Skips weekends. For example, a 24-hour deadline created Friday at 16:00
      * results in Monday at 16:00.
+     *
+     * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.1
      *
      * @param string $createdAt     ISO 8601 creation timestamp.
      * @param int    $businessHours Number of business hours to add.
@@ -146,6 +152,8 @@ class TaskService
 
     /**
      * Validate task data.
+     *
+     * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.1
      *
      * @param array<string, mixed> $data The task data to validate.
      *
@@ -184,12 +192,14 @@ class TaskService
     /**
      * Check if a deadline is approaching (within threshold hours).
      *
+     * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.1
+     *
      * @param string $deadline       ISO 8601 deadline datetime.
      * @param int    $thresholdHours Hours before deadline to trigger escalation.
      *
      * @return bool True if the deadline is within the threshold.
      */
-    public function isDeadlineApproaching(string $deadline, int $thresholdHours=4): bool
+    public function isDeadlineApproaching(string $deadline, int $thresholdHours = 4): bool
     {
         $deadlineDate = new \DateTime($deadline);
         $now          = new \DateTime();
@@ -201,6 +211,8 @@ class TaskService
 
     /**
      * Check if a deadline has passed.
+     *
+     * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.1
      *
      * @param string $deadline ISO 8601 deadline datetime.
      *

@@ -32,6 +32,8 @@ use Psr\Log\LoggerInterface;
  * Runs every 15 minutes to check for:
  * 1. Tasks approaching their deadline (escalation notification)
  * 2. Tasks past their deadline (status change to "verlopen")
+ *
+ * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.2
  */
 class TaskEscalationJob extends TimedJob
 {
@@ -66,6 +68,8 @@ class TaskEscalationJob extends TimedJob
      *
      * Checks all open and in_behandeling tasks for deadline proximity
      * and expiry. Uses OpenRegister API to query and update tasks.
+     *
+     * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.2
      *
      * @param mixed $argument The job argument (unused).
      *

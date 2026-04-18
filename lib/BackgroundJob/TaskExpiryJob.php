@@ -32,6 +32,8 @@ use Psr\Log\LoggerInterface;
  * Background job that expires overdue tasks and sends deadline escalation notifications.
  *
  * Runs every 15 minutes (900 seconds).
+ *
+ * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.2
  */
 class TaskExpiryJob extends TimedJob
 {
@@ -78,6 +80,8 @@ class TaskExpiryJob extends TimedJob
      * Run the task expiry job.
      *
      * Queries OpenRegister for overdue tasks, expires them, and sends escalation notifications.
+     *
+     * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2.2
      *
      * @param mixed $argument The job argument (unused).
      *
