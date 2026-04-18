@@ -18,5 +18,8 @@
 - [x] 4.2 Add Tasks entry to `src/navigation/MainMenu.vue`
 
 ## 5. Verification
-- [ ] 5.1 Run `npm run build` and verify no errors
+- [x] 5.1 Run `npm run build` and verify no errors
 - [ ] 5.2 Manual testing via browser
+
+## 6. My Work Integration
+- [x] 6.1 Extend MyWork.vue to include tasks alongside leads and requests
