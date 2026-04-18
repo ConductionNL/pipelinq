@@ -1,1 +1,1 @@
-<template><div /></template><script>export default { name: 'CategoryManager' }</script>
+<script>export default { name: 'CategoryManager' }</script>

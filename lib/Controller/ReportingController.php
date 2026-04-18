@@ -92,6 +92,7 @@ class ReportingController extends Controller
                 if (is_array($metrics) === false) {
                     continue;
                 }
+
                 foreach ($metrics as $metric => $value) {
                     $this->reportingService->setSlaTarget(
                         channel: $channel,
@@ -101,16 +102,18 @@ class ReportingController extends Controller
                 }
             }
 
-            return new JSONResponse([
-                'success' => true,
-                'targets' => $this->reportingService->getAllSlaTargets(),
-            ]);
+            return new JSONResponse(
+                    [
+                        'success' => true,
+                        'targets' => $this->reportingService->getAllSlaTargets(),
+                    ]
+                    );
         } catch (\Exception $e) {
             return new JSONResponse(
                 ['error' => $this->l10n->t('Failed to update SLA configuration')],
                 500,
             );
-        }
+        }//end try
     }//end updateSla()
 
     /**
@@ -133,7 +136,7 @@ class ReportingController extends Controller
                 $this->l10n->t('Duration'),
             ];
 
-            // In production, data would be fetched from OpenRegister based on filters
+            // In production, data would be fetched from OpenRegister based on filters.
             $rows = [];
 
             $csv = $this->reportingService->generateCsv(
@@ -141,7 +144,7 @@ class ReportingController extends Controller
                 rows: $rows,
             );
 
-            $filename = 'contactmomenten-rapport-' . date('Y-m-d') . '.csv';
+            $filename = 'contactmomenten-rapport-'.date('Y-m-d').'.csv';
 
             return new DataDownloadResponse(
                 $csv,
@@ -153,6 +156,6 @@ class ReportingController extends Controller
                 ['error' => $this->l10n->t('Failed to generate export')],
                 500,
             );
-        }
+        }//end try
     }//end exportCsv()
 }//end class

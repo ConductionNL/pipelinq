@@ -69,6 +69,15 @@ return [
         ['name' => 'public_kennisbank#index', 'url' => '/api/public/kennisbank/articles', 'verb' => 'GET'],
         ['name' => 'public_kennisbank#show', 'url' => '/api/public/kennisbank/articles/{id}', 'verb' => 'GET'],
 
+        // Contactmomenten (permission-checked delete)
+        ['name' => 'contactmoment#destroy', 'url' => '/api/contactmomenten/{id}', 'verb' => 'DELETE'],
+
+        // Callback management endpoints
+        ['name' => 'callback#attempt', 'url' => '/api/callbacks/{id}/attempts', 'verb' => 'POST'],
+        ['name' => 'callback#claim', 'url' => '/api/callbacks/{id}/claim', 'verb' => 'POST'],
+        ['name' => 'callback#complete', 'url' => '/api/callbacks/{id}/complete', 'verb' => 'POST'],
+        ['name' => 'callback#reassign', 'url' => '/api/callbacks/{id}/reassign', 'verb' => 'POST'],
+
         // Prometheus metrics endpoint.
         ['name' => 'metrics#index', 'url' => '/api/metrics', 'verb' => 'GET'],
         // Health check endpoint.

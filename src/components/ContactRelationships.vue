@@ -629,7 +629,7 @@ export default {
 }
 
 .form-group textarea,
-.form-group input[type="date"] {
+.form-group input[type='date'] {
 	width: 100%;
 	padding: 8px;
 	border: 1px solid var(--color-border);

@@ -168,6 +168,8 @@ class MetricsFormatterTest extends TestCase
 
         $this->assertTrue($found, 'Special characters should be escaped in Prometheus labels');
     }//end testLabelSanitization()
+
+    /**
      * Test that formatAppInfo returns the correct Prometheus lines.
      *
      * @return void
@@ -262,10 +264,6 @@ class MetricsFormatterTest extends TestCase
      */
     public function testFormatGaugeReturnsCorrectLines(): void
     {
-        $lines = $this->formatter->formatGauge(name: 'pipelinq_contacts_total', help: 'Total contacts', value: 42);
-
-        $this->assertSame(
-            ['# HELP pipelinq_contacts_total Total contacts', '# TYPE pipelinq_contacts_total gauge', 'pipelinq_contacts_total 42', ''],
         $lines = $this->formatter->formatGauge(
             name: 'pipelinq_contacts_total',
             help: 'Total contacts',
@@ -284,20 +282,7 @@ class MetricsFormatterTest extends TestCase
     }//end testFormatGaugeReturnsCorrectLines()
 
     /**
-     * Test that formatRequestCounts formats request status counts.
-     *
-     * @return void
-     */
-    public function testFormatRequestCountsFormatsStatusCounts(): void
-    {
-        $lines = $this->formatter->formatRequestCounts(requestCounts: [['status' => 'open', 'cnt' => '10']]);
-
-        $this->assertContains('pipelinq_service_requests_total{status="open"} 10', $lines);
-    }//end testFormatRequestCountsFormatsStatusCounts()
-
-    /**
      * Test that special characters in labels are sanitized.
-     * Test that labels with special characters are sanitized.
      *
      * @return void
      */
@@ -308,10 +293,14 @@ class MetricsFormatterTest extends TestCase
 
         $this->assertStringContainsString('\\"', $dataLine);
     }//end testSanitizesSpecialCharsInLabels()
-        $rows  = [['status' => 'open', 'cnt' => '10']];
-        $lines = $this->formatter->formatRequestCounts(requestCounts: $rows);
 
-        $this->assertContains('pipelinq_service_requests_total{status="open"} 10', $lines);
+    /**
+     * Test that formatRequestCounts formats request status counts.
+     *
+     * @return void
+     */
+    public function testFormatRequestCountsFormatsStatusCounts(): void
+    {
         $rows = [
             ['status' => 'open', 'cnt' => '10'],
             ['status' => 'closed', 'cnt' => '7'],
@@ -336,21 +325,4 @@ class MetricsFormatterTest extends TestCase
 
         $this->assertStringContainsString('\\"', $dataLine);
     }//end testFormatLeadCountsSanitizesSpecialChars()
-    public function testFormatLeadCountsSanitizesSpecialCharsInLabels(): void
-    {
-        $rows     = [['status' => 'test"value', 'pipeline' => "line\nbreak", 'cnt' => '1']];
-        $lines    = $this->formatter->formatLeadCounts(leadCounts: $rows);
-        $dataLine = array_values(array_filter($lines, fn($l) => str_starts_with($l, 'pipelinq_leads_total{')))[0] ?? '';
-
-        $rows = [
-            ['status' => 'test"value', 'pipeline' => "line\nbreak", 'cnt' => '1'],
-        ];
-
-        $lines = $this->formatter->formatLeadCounts(leadCounts: $rows);
-
-        // Double-quotes and newlines must be escaped in label values.
-        $dataLine = array_values(array_filter($lines, fn($l) => str_starts_with($l, 'pipelinq_leads_total{')))[0] ?? '';
-        $this->assertStringNotContainsString('"test"value"', $dataLine);
-        $this->assertStringContainsString('\\"', $dataLine);
-    }//end testFormatLeadCountsSanitizesSpecialCharsInLabels()
 }//end class

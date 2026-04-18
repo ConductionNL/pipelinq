@@ -63,7 +63,7 @@ class PublicSurveyController extends PublicShareController
         private readonly SettingsService $settingsService,
         private readonly LoggerInterface $logger,
     ) {
-        parent::__construct(Application::APP_ID, $request, $session);
+        parent::__construct(appName: Application::APP_ID, request: $request, session: $session);
     }//end __construct()
 
     /**
@@ -131,21 +131,35 @@ class PublicSurveyController extends PublicShareController
     public function show(string $token): JSONResponse
     {
         try {
-            $survey = $this->findSurveyByToken($token);
+            $survey = $this->findSurveyByToken(token: $token);
             if ($survey === null) {
-                $resp = new JSONResponse(['error' => 'Survey not found'], Http::STATUS_NOT_FOUND);
+                $resp = new JSONResponse(
+                    ['error' => 'Survey not found'],
+                    Http::STATUS_NOT_FOUND,
+                );
                 $resp->throttle();
                 return $resp;
             }
 
-            $data = is_array($survey) ? $survey : (array) $survey;
+            if (is_array($survey) === true) {
+                $data = $survey;
+            } else {
+                $data = (array) $survey;
+            }
+
             if (($data['status'] ?? 'draft') !== 'active') {
-                return new JSONResponse(['error' => 'This survey is no longer accepting responses'], Http::STATUS_GONE);
+                return new JSONResponse(
+                    ['error' => 'This survey is no longer accepting responses'],
+                    Http::STATUS_GONE,
+                );
             }
 
             $until = $data['activeUntil'] ?? null;
             if ($until !== null && $until !== '' && strtotime($until) < time()) {
-                return new JSONResponse(['error' => 'This survey is no longer accepting responses'], Http::STATUS_GONE);
+                return new JSONResponse(
+                    ['error' => 'This survey is no longer accepting responses'],
+                    Http::STATUS_GONE,
+                );
             }
 
             unset($data['createdBy'], $data['linkedEntityId']);
@@ -169,16 +183,27 @@ class PublicSurveyController extends PublicShareController
     public function submit(string $token): JSONResponse
     {
         try {
-            $survey = $this->findSurveyByToken($token);
+            $survey = $this->findSurveyByToken(token: $token);
             if ($survey === null) {
-                $resp = new JSONResponse(['error' => 'Survey not found'], Http::STATUS_NOT_FOUND);
+                $resp = new JSONResponse(
+                    ['error' => 'Survey not found'],
+                    Http::STATUS_NOT_FOUND,
+                );
                 $resp->throttle();
                 return $resp;
             }
 
-            $data = is_array($survey) ? $survey : (array) $survey;
+            if (is_array($survey) === true) {
+                $data = $survey;
+            } else {
+                $data = (array) $survey;
+            }
+
             if (($data['status'] ?? 'draft') !== 'active') {
-                return new JSONResponse(['error' => 'This survey is no longer accepting responses'], Http::STATUS_GONE);
+                return new JSONResponse(
+                    ['error' => 'This survey is no longer accepting responses'],
+                    Http::STATUS_GONE,
+                );
             }
 
             $body    = $this->request->getParams();
@@ -204,8 +229,15 @@ class PublicSurveyController extends PublicShareController
                 'ipHash'       => hash('sha256', $this->request->getRemoteAddress()),
             ];
 
-            $created = $this->getObjectService()->saveObject($registerId, $responseSchemaId, $responseData);
-            return new JSONResponse(['message' => 'Thank you for your feedback!', 'id' => $created->getUuid()], Http::STATUS_CREATED);
+            $created = $this->getObjectService()->saveObject(
+                $registerId,
+                $responseSchemaId,
+                $responseData,
+            );
+            return new JSONResponse(
+                ['message' => 'Thank you for your feedback!', 'id' => $created->getUuid()],
+                Http::STATUS_CREATED,
+            );
         } catch (\Exception $e) {
             $this->logger->error('Failed to submit survey response', ['exception' => $e->getMessage()]);
             return new JSONResponse(['error' => 'Failed to submit response'], Http::STATUS_INTERNAL_SERVER_ERROR);
@@ -228,12 +260,20 @@ class PublicSurveyController extends PublicShareController
             return null;
         }
 
-        $results = $this->getObjectService()->getObjects($regId, $schemaId, ['token' => $token, '_limit' => 1]);
+        $results = $this->getObjectService()->getObjects(
+            $regId,
+            $schemaId,
+            ['token' => $token, '_limit' => 1],
+        );
         $items   = $results['results'] ?? $results ?? [];
         if (empty($items) === true) {
             return null;
         }
 
-        return is_array($items) ? $items[0] : $items;
+        if (is_array($items) === true) {
+            return $items[0];
+        }
+
+        return $items;
     }//end findSurveyByToken()
 }//end class

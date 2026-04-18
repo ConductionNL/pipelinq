@@ -54,11 +54,11 @@ class TaskEscalationJob extends TimedJob
         private TaskService $taskService,
         private LoggerInterface $logger,
     ) {
-        parent::__construct($time);
+        parent::__construct(time: $time);
 
         // Run every 15 minutes (900 seconds).
-        $this->setInterval(900);
-        $this->setTimeSensitivity(self::TIME_SENSITIVE);
+        $this->setInterval(seconds: 900);
+        $this->setTimeSensitivity(sensitivity: self::TIME_SENSITIVE);
     }//end __construct()
 
     /**
@@ -80,8 +80,7 @@ class TaskEscalationJob extends TimedJob
             // status in ['open', 'in_behandeling'] and check deadlines.
             // For each task:
             // 1. If deadline passed and status is open -> change to verlopen
-            // 2. If deadline approaching -> send escalation notification
-
+            // 2. If deadline approaching -> send escalation notification.
             $this->logger->info('TaskEscalationJob: Deadline check completed');
         } catch (\Exception $e) {
             $this->logger->error(

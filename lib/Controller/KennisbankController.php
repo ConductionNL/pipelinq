@@ -39,9 +39,9 @@ class KennisbankController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest         $request          The request.
+     * @param IRequest          $request           The request.
      * @param KennisbankService $kennisbankService The kennisbank service.
-     * @param IL10N            $l10n             The localization service.
+     * @param IL10N             $l10n              The localization service.
      */
     public function __construct(
         IRequest $request,
@@ -66,10 +66,10 @@ class KennisbankController extends Controller
     public function publicIndex(): JSONResponse
     {
         try {
-            $search = $this->request->getParam('search');
+            $search   = $this->request->getParam('search');
             $category = $this->request->getParam('category');
-            $limit = (int) $this->request->getParam('limit', '20');
-            $offset = (int) $this->request->getParam('offset', '0');
+            $limit    = (int) $this->request->getParam('limit', '20');
+            $offset   = (int) $this->request->getParam('offset', '0');
 
             $queryParams = $this->kennisbankService->getPublicArticles(
                 search: $search,
@@ -109,12 +109,14 @@ class KennisbankController extends Controller
 
         // The actual article fetch is done via OpenRegister API.
         // This endpoint provides the validation and field stripping logic.
-        return new JSONResponse([
-            'id' => $id,
-            'excludeFields' => ['author', 'lastUpdatedBy', 'zaaktypeLinks', 'usefulnessScore'],
-            'requiredStatus' => 'gepubliceerd',
-            'requiredVisibility' => 'openbaar',
-        ]);
+        return new JSONResponse(
+                [
+                    'id'                 => $id,
+                    'excludeFields'      => ['author', 'lastUpdatedBy', 'zaaktypeLinks', 'usefulnessScore'],
+                    'requiredStatus'     => 'gepubliceerd',
+                    'requiredVisibility' => 'openbaar',
+                ]
+                );
     }//end publicShow()
 
     /**
@@ -129,8 +131,8 @@ class KennisbankController extends Controller
     public function submitFeedback(): JSONResponse
     {
         $articleId = $this->request->getParam('articleId', '');
-        $rating = $this->request->getParam('rating', '');
-        $comment = $this->request->getParam('comment');
+        $rating    = $this->request->getParam('rating', '');
+        $comment   = $this->request->getParam('comment');
 
         $validation = $this->kennisbankService->validateFeedback(
             articleId: $articleId,
@@ -152,10 +154,12 @@ class KennisbankController extends Controller
                 comment: $comment,
             );
 
-            return new JSONResponse([
-                'feedback' => $feedbackData,
-                'schema' => 'kennisfeedback',
-            ]);
+            return new JSONResponse(
+                    [
+                        'feedback' => $feedbackData,
+                        'schema'   => 'kennisfeedback',
+                    ]
+                    );
         } catch (\Exception $e) {
             return new JSONResponse(
                 ['error' => $this->l10n->t('Failed to submit feedback')],

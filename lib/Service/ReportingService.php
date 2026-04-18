@@ -39,9 +39,9 @@ class ReportingService
      */
     private const DEFAULT_SLA_TARGETS = [
         'telefoon' => ['wait_seconds' => 30, 'target_percent' => 90, 'handle_minutes' => 5],
-        'email' => ['response_hours' => 8, 'target_percent' => 90, 'resolution_hours' => 24],
-        'balie' => ['wait_minutes' => 5, 'target_percent' => 90, 'handle_minutes' => 10],
-        'chat' => ['response_seconds' => 30, 'target_percent' => 90, 'handle_minutes' => 10],
+        'email'    => ['response_hours' => 8, 'target_percent' => 90, 'resolution_hours' => 24],
+        'balie'    => ['wait_minutes' => 5, 'target_percent' => 90, 'handle_minutes' => 10],
+        'chat'     => ['response_seconds' => 30, 'target_percent' => 90, 'handle_minutes' => 10],
     ];
 
     /**
@@ -76,9 +76,9 @@ class ReportingService
     /**
      * Calculate SLA compliance for a channel.
      *
-     * @param string $channel        The channel type.
-     * @param int    $totalContacts  Total contacts for the channel.
-     * @param int    $withinSla      Contacts handled within SLA target.
+     * @param string $channel       The channel type.
+     * @param int    $totalContacts Total contacts for the channel.
+     * @param int    $withinSla     Contacts handled within SLA target.
      *
      * @return array{compliance: float, target: float, status: string} SLA data.
      */
@@ -87,22 +87,24 @@ class ReportingService
         int $totalContacts,
         int $withinSla,
     ): array {
-        $target = $this->getSlaTarget($channel);
-        $compliance = $totalContacts > 0
-            ? round(($withinSla / $totalContacts) * 100, 1)
-            : 0.0;
+        $target = $this->getSlaTarget(channel: $channel);
+        if ($totalContacts > 0) {
+            $compliance = round(($withinSla / $totalContacts) * 100, 1);
+        } else {
+            $compliance = 0.0;
+        }
 
         $status = 'green';
         if ($compliance < $target - 5) {
             $status = 'red';
-        } elseif ($compliance < $target) {
+        } else if ($compliance < $target) {
             $status = 'orange';
         }
 
         return [
             'compliance' => $compliance,
-            'target' => $target,
-            'status' => $status,
+            'target'     => $target,
+            'status'     => $status,
         ];
     }//end calculateSlaCompliance()
 
@@ -115,7 +117,7 @@ class ReportingService
      */
     public function getSlaTarget(string $channel): float
     {
-        $key = 'sla_' . $channel . '_target_percent';
+        $key     = 'sla_'.$channel.'_target_percent';
         $default = self::DEFAULT_SLA_TARGETS[$channel]['target_percent'] ?? 90;
 
         return (float) $this->appConfig->getValueString(
@@ -137,7 +139,7 @@ class ReportingService
         foreach (self::DEFAULT_SLA_TARGETS as $channel => $defaults) {
             $targets[$channel] = [];
             foreach ($defaults as $metric => $default) {
-                $key = 'sla_' . $channel . '_' . $metric;
+                $key = 'sla_'.$channel.'_'.$metric;
                 $targets[$channel][$metric] = $this->appConfig->getValueString(
                     'pipelinq',
                     $key,
@@ -160,7 +162,7 @@ class ReportingService
      */
     public function setSlaTarget(string $channel, string $metric, string $value): void
     {
-        $key = 'sla_' . $channel . '_' . $metric;
+        $key = 'sla_'.$channel.'_'.$metric;
         $this->appConfig->setValueString('pipelinq', $key, $value);
     }//end setSlaTarget()
 
@@ -176,14 +178,17 @@ class ReportingService
      */
     public function generateCsv(array $headers, array $rows): string
     {
-        $bom = "\xEF\xBB\xBF";
-        $output = $bom . implode(';', $headers) . "\n";
+        $bom    = "\xEF\xBB\xBF";
+        $output = $bom.implode(';', $headers)."\n";
 
         foreach ($rows as $row) {
-            $output .= implode(';', array_map(
-                static fn($v) => '"' . str_replace('"', '""', (string) $v) . '"',
+            $output .= implode(
+                    ';',
+                    array_map(
+                static fn($v) => '"'.str_replace('"', '""', (string) $v).'"',
                 $row,
-            )) . "\n";
+            )
+                    )."\n";
         }
 
         return $output;
@@ -205,7 +210,7 @@ class ReportingService
         $totalSeconds = 0;
         foreach ($durations as $duration) {
             try {
-                $interval = new \DateInterval($duration);
+                $interval      = new \DateInterval($duration);
                 $totalSeconds += ($interval->i * 60) + $interval->s;
             } catch (\Exception $e) {
                 // Skip invalid durations.
@@ -214,9 +219,9 @@ class ReportingService
         }
 
         $avgSeconds = (int) ($totalSeconds / count($durations));
-        $minutes = (int) ($avgSeconds / 60);
-        $seconds = $avgSeconds % 60;
+        $minutes    = (int) ($avgSeconds / 60);
+        $seconds    = $avgSeconds % 60;
 
-        return $minutes . ':' . str_pad((string) $seconds, 2, '0', STR_PAD_LEFT);
+        return $minutes.':'.str_pad((string) $seconds, 2, '0', STR_PAD_LEFT);
     }//end calculateAverageHandlingTime()
 }//end class
