@@ -22,11 +22,15 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCP\IAppConfig;
+use OCP\IUserManager;
+use OCP\Notification\IManager;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * Service for public intake form processing, spam protection, and entity creation.
  *
+ * @spec                                           openspec/changes/2026-03-20-public-intake-forms/tasks.md#task-2-1
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class IntakeFormService
@@ -44,11 +48,17 @@ class IntakeFormService
     /**
      * Constructor.
      *
-     * @param IAppConfig      $appConfig The app configuration.
-     * @param LoggerInterface $logger    The logger.
+     * @param IAppConfig         $appConfig   The app configuration.
+     * @param ContainerInterface $container   The DI container.
+     * @param IUserManager       $userManager The user manager.
+     * @param IManager           $notifier    The notification manager.
+     * @param LoggerInterface    $logger      The logger.
      */
     public function __construct(
         private IAppConfig $appConfig,
+        private ContainerInterface $container,
+        private IUserManager $userManager,
+        private IManager $notifier,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -249,4 +259,260 @@ class IntakeFormService
 
         return implode("\n", $rows);
     }//end exportCsv()
+
+    /**
+     * Process a form submission: validate, create/match contact, create lead, record submission.
+     *
+     * @param array  $form       The form configuration.
+     * @param array  $submission The submitted data.
+     * @param string $ip         The submitter's IP address.
+     *
+     * @return array Result with 'success' boolean, 'message', and optional 'contactId', 'leadId'.
+     * @spec   openspec/changes/2026-03-20-public-intake-forms/tasks.md#task-2-1
+     */
+    public function processSubmission(array $form, array $submission, string $ip): array
+    {
+        try {
+            // Validate submission.
+            $validation = $this->validateSubmission(
+                form: $form,
+                submission: $submission
+            );
+            if ($validation['valid'] === false) {
+                return [
+                    'success' => false,
+                    'message' => 'Validation failed: '.implode(', ', $validation['errors']),
+                ];
+            }
+
+            // Get ObjectService for entity creation.
+            $objectService = $this->getObjectService();
+            $config        = $this->appConfig->getValueString('pipelinq', 'register', '');
+
+            // Map fields to contact and lead.
+            $fieldMappings = $form['fieldMappings'] ?? [];
+            $contactData   = $this->mapToEntity(
+                fieldMappings: $fieldMappings,
+                submission: $submission,
+                entityType: 'contact'
+            );
+            $leadData      = $this->mapToEntity(
+                fieldMappings: $fieldMappings,
+                submission: $submission,
+                entityType: 'lead'
+            );
+
+            // Extract email for contact deduplication.
+            $email = $submission[array_search('email', array_column($form['fields'] ?? [], 'name'))] ?? null;
+            if ($email === false) {
+                $email = null;
+            }
+
+            // Deduplicate or create contact.
+            $contactId = null;
+            if (empty($email) === false) {
+                $existingContact = $this->deduplicateContact(
+                    email: $email,
+                    objectService: $objectService,
+                    config: $config
+                );
+                if ($existingContact !== null) {
+                    $contactId = $existingContact['id'] ?? $existingContact['uuid'] ?? null;
+                }
+            }
+
+            if (empty($contactId) === true && empty($contactData) === false) {
+                $newContact = $objectService->saveObject(
+                    $contactData,
+                    [],
+                    $config,
+                    'contact',
+                    null,
+                    _rbac: false,
+                    _multitenancy: false
+                );
+                $contactId  = $newContact['id'] ?? $newContact['uuid'] ?? null;
+            }
+
+            // Create lead.
+            $leadId = null;
+            if (empty($leadData) === false) {
+                if (empty($contactId) === false) {
+                    $leadData['contact'] = $contactId;
+                }
+
+                // Add form configuration to lead.
+                if (empty($form['targetPipeline']) === false) {
+                    $leadData['pipeline'] = $form['targetPipeline'];
+                }
+
+                if (empty($form['targetStage']) === false) {
+                    $leadData['stage'] = $form['targetStage'];
+                }
+
+                if (empty($form['title']) === false) {
+                    $leadData['title'] = $form['title'];
+                }
+
+                $newLead = $objectService->saveObject(
+                    $leadData,
+                    [],
+                    $config,
+                    'lead',
+                    null,
+                    _rbac: false,
+                    _multitenancy: false
+                );
+                $leadId  = $newLead['id'] ?? $newLead['uuid'] ?? null;
+            }//end if
+
+            // Record submission.
+            $submissionRecord = [
+                'form'        => $form['id'] ?? $form['uuid'] ?? '',
+                'submittedAt' => date('c'),
+                'data'        => $submission,
+                'contactId'   => $contactId,
+                'leadId'      => $leadId,
+                'ip'          => $ip,
+                'status'      => 'processed',
+            ];
+
+            $savedSubmission = $objectService->saveObject(
+                $submissionRecord,
+                [],
+                $config,
+                'intakeSubmission',
+                null,
+                _rbac: false,
+                _multitenancy: false
+            );
+
+            // Increment submit count on form.
+            if (empty($form['id'] ?? $form['uuid'] ?? null) === false) {
+                $formId       = $form['id'] ?? $form['uuid'];
+                $currentCount = $form['submitCount'] ?? 0;
+                $form['submitCount'] = $currentCount + 1;
+
+                $objectService->saveObject(
+                    $form,
+                    [],
+                    $config,
+                    'intakeForm',
+                    $formId,
+                    _rbac: false,
+                    _multitenancy: false
+                );
+            }
+
+            // Notify configured user.
+            if (empty($form['notifyUser']) === false) {
+                $this->notifySubmission(
+                    userId: $form['notifyUser'],
+                    form: $form,
+                    contactId: $contactId,
+                    leadId: $leadId
+                );
+            }
+
+            return [
+                'success'   => true,
+                'message'   => $form['successMessage'] ?? 'Thank you for your submission.',
+                'contactId' => $contactId,
+                'leadId'    => $leadId,
+            ];
+        } catch (\Exception $e) {
+            $this->logger->error('Intake form submission error: '.$e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'An error occurred while processing your submission. Please try again.',
+            ];
+        }//end try
+    }//end processSubmission()
+
+    /**
+     * Deduplicate a contact by email.
+     *
+     * @param string $email         The email address.
+     * @param mixed  $objectService The ObjectService.
+     * @param string $config        The register name.
+     *
+     * @return array|null The contact object or null if not found.
+     */
+    private function deduplicateContact(string $email, mixed $objectService, string $config): ?array
+    {
+        try {
+            $result = $objectService->findAll(
+                register: $config,
+                schema: 'contact',
+                filters: ['email' => $email, '_limit' => 1],
+            );
+
+            $contacts = $result['results'] ?? [];
+            if (empty($contacts) === false) {
+                return $contacts[0];
+            }
+
+            return null;
+        } catch (\Exception $e) {
+            $this->logger->error('Contact deduplication error: '.$e->getMessage());
+            return null;
+        }
+    }//end deduplicateContact()
+
+    /**
+     * Notify a user of a new form submission.
+     *
+     * @param string      $userId    The Nextcloud user ID.
+     * @param array       $form      The form.
+     * @param string|null $contactId The created contact ID.
+     * @param string|null $leadId    The created lead ID.
+     *
+     * @return void
+     */
+    private function notifySubmission(string $userId, array $form, ?string $contactId, ?string $leadId): void
+    {
+        try {
+            $user = $this->userManager->get($userId);
+            if ($user === null) {
+                return;
+            }
+
+            // Create notification.
+            $notification = $this->notifier->createNotification();
+            $notification
+                ->setApp('pipelinq')
+                ->setUser($userId)
+                ->setDateTime(new \DateTime())
+                ->setObject('form', $form['id'] ?? $form['uuid'] ?? '')
+                ->setSubject(
+                    'form_submission',
+                    [
+                        'form'       => $form['name'] ?? 'Unknown',
+                        'contact_id' => $contactId,
+                        'lead_id'    => $leadId,
+                    ]
+                )
+                ->setMessage(
+                    'form_submission_message',
+                    [
+                        'form' => $form['name'] ?? 'Unknown',
+                    ]
+                );
+
+            $this->notifier->notify($notification);
+        } catch (\Exception $e) {
+            $msg = 'Failed to notify user '.$userId.' of form submission: '.$e->getMessage();
+            $this->logger->warning($msg);
+        }//end try
+    }//end notifySubmission()
+
+    /**
+     * Get the OpenRegister ObjectService.
+     *
+     * @return mixed The ObjectService.
+     */
+    private function getObjectService(): mixed
+    {
+        return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+    }//end getObjectService()
 }//end class

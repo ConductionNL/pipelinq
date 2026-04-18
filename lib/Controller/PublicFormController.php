@@ -23,28 +23,42 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\IntakeFormService;
+use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
+use OCP\IAppConfig;
 use OCP\IRequest;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Public controller for intake form rendering and submission.
  *
  * All endpoints are public (no authentication required) and include
  * CORS headers for cross-origin embedding.
+ *
+ * @spec openspec/changes/2026-03-20-public-intake-forms/tasks.md#task-3-1
  */
 class PublicFormController extends Controller
 {
     /**
      * Constructor.
      *
-     * @param IRequest          $request           The request.
-     * @param IntakeFormService $intakeFormService The intake form service.
+     * @param IRequest           $request           The request.
+     * @param IntakeFormService  $intakeFormService The intake form service.
+     * @param ContainerInterface $container         The DI container.
+     * @param IAppConfig         $appConfig         The app config.
+     * @param IAppManager        $appManager        The app manager.
+     * @param LoggerInterface    $logger            The logger.
      */
     public function __construct(
         IRequest $request,
         private IntakeFormService $intakeFormService,
+        private ContainerInterface $container,
+        private IAppConfig $appConfig,
+        private IAppManager $appManager,
+        private LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -63,21 +77,49 @@ class PublicFormController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @CORS
+     * @spec            openspec/changes/2026-03-20-public-intake-forms/tasks.md#task-3-1
      */
     public function show(string $id): JSONResponse
     {
-        // Form data would be fetched from OpenRegister in production.
-        // This endpoint returns the public-facing form definition.
-        $response = new JSONResponse(
-                [
-                    'id'             => $id,
-                    'fields'         => [],
-                    'successMessage' => '',
-                    'isActive'       => true,
-                ]
-                );
+        try {
+            // Get ObjectService for form retrieval.
+            $objectService = $this->getObjectService();
+            $config        = $this->appConfig->getValueString('pipelinq', 'register', '');
 
-        return $this->addCorsHeaders(response: $response);
+            // Fetch the form.
+            $form = $objectService->findOne(
+                register: $config,
+                schema: 'intakeForm',
+                id: $id,
+            );
+
+            if ($form === null || ($form['isActive'] ?? false) === false) {
+                $response = new JSONResponse(
+                    ['error' => 'Form not found or inactive'],
+                    404
+                );
+                return $this->addCorsHeaders(response: $response);
+            }
+
+            // Return only public fields.
+            $publicForm = [
+                'id'             => $form['id'] ?? $form['uuid'] ?? $id,
+                'name'           => $form['name'] ?? '',
+                'fields'         => $form['fields'] ?? [],
+                'successMessage' => $form['successMessage'] ?? 'Thank you for your submission.',
+                'isActive'       => $form['isActive'] ?? true,
+            ];
+
+            $response = new JSONResponse($publicForm);
+            return $this->addCorsHeaders(response: $response);
+        } catch (\Exception $e) {
+            $this->logger->error('Public form show error: '.$e->getMessage());
+            $response = new JSONResponse(
+                ['error' => 'Failed to fetch form'],
+                500
+            );
+            return $this->addCorsHeaders(response: $response);
+        }//end try
     }//end show()
 
     /**
@@ -94,44 +136,74 @@ class PublicFormController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @CORS
+     * @spec            openspec/changes/2026-03-20-public-intake-forms/tasks.md#task-3-1
      */
     public function submit(string $id): JSONResponse
     {
-        $submission = $this->request->getParams();
-        $ip         = $this->request->getRemoteAddress();
+        try {
+            $submission = $this->request->getParams();
+            $ip         = $this->request->getRemoteAddress();
 
-        // Check honeypot.
-        if ($this->intakeFormService->isSpam(submission: $submission) === true) {
-            // Silently accept but discard (don't reveal spam detection).
-            $response = new JSONResponse(['success' => true, 'message' => 'Thank you for your submission.']);
+            // Check honeypot.
+            if ($this->intakeFormService->isSpam(submission: $submission) === true) {
+                // Silently accept but discard (don't reveal spam detection).
+                $response = new JSONResponse(
+                    ['success' => true, 'message' => 'Thank you for your submission.']
+                );
+                return $this->addCorsHeaders(response: $response);
+            }
+
+            // Check rate limiting.
+            if ($this->intakeFormService->isRateLimited(ip: $ip, formId: $id) === true) {
+                $response = new JSONResponse(
+                    ['success' => false, 'message' => 'Too many submissions. Please try again later.'],
+                    429
+                );
+                return $this->addCorsHeaders(response: $response);
+            }
+
+            // Fetch form config from OpenRegister.
+            $objectService = $this->getObjectService();
+            $config        = $this->appConfig->getValueString('pipelinq', 'register', '');
+
+            $form = $objectService->findOne(
+                register: $config,
+                schema: 'intakeForm',
+                id: $id,
+            );
+
+            if ($form === null || ($form['isActive'] ?? false) === false) {
+                $response = new JSONResponse(
+                    ['success' => false, 'message' => 'Form not found or inactive.'],
+                    404
+                );
+                return $this->addCorsHeaders(response: $response);
+            }
+
+            // Process the submission.
+            $result = $this->intakeFormService->processSubmission(
+                form: $form,
+                submission: $submission,
+                ip: $ip
+            );
+
+            if ($result['success'] === true) {
+                $statusCode = 200;
+            } else {
+                $statusCode = 400;
+            }
+
+            $response = new JSONResponse($result, $statusCode);
+
             return $this->addCorsHeaders(response: $response);
-        }
-
-        // Check rate limiting.
-        if ($this->intakeFormService->isRateLimited(ip: $ip, formId: $id) === true) {
+        } catch (\Exception $e) {
+            $this->logger->error('Public form submission error: '.$e->getMessage());
             $response = new JSONResponse(
-                ['success' => false, 'message' => 'Too many submissions. Please try again later.'],
-                429
+                ['success' => false, 'message' => 'An error occurred while processing your submission.'],
+                500
             );
             return $this->addCorsHeaders(response: $response);
-        }
-
-        // In production, this would:
-        // 1. Fetch form config from OpenRegister.
-        // 2. Validate submission against form fields.
-        // 3. Map fields to contact/lead properties.
-        // 4. Deduplicate contact by email.
-        // 5. Create contact and lead.
-        // 6. Record submission.
-        // 7. Notify configured user.
-        $response = new JSONResponse(
-                [
-                    'success' => true,
-                    'message' => 'Thank you for your submission.',
-                ]
-                );
-
-        return $this->addCorsHeaders(response: $response);
+        }//end try
     }//end submit()
 
     /**
@@ -148,4 +220,20 @@ class PublicFormController extends Controller
         $response->addHeader('Access-Control-Allow-Headers', 'Content-Type');
         return $response;
     }//end addCorsHeaders()
+
+    /**
+     * Get the OpenRegister ObjectService.
+     *
+     * @return mixed The ObjectService.
+     *
+     * @throws \RuntimeException If not available.
+     */
+    private function getObjectService(): mixed
+    {
+        if ($this->appManager->isEnabledForUser('openregister') === true) {
+            return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+        }
+
+        throw new \RuntimeException('OpenRegister service is not available.');
+    }//end getObjectService()
 }//end class
