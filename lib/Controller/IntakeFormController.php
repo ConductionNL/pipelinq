@@ -31,6 +31,8 @@ use OCP\IURLGenerator;
 
 /**
  * Controller for managing intake forms (embed code, submissions, export).
+ *
+ * @spec openspec/changes/2026-03-20-public-intake-forms/tasks.md#task-3.2
  */
 class IntakeFormController extends Controller
 {
@@ -57,17 +59,19 @@ class IntakeFormController extends Controller
      * @return JSONResponse The embed code (iframe and JS snippet).
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/2026-03-20-public-intake-forms/tasks.md#task-3.2
      */
     public function embed(string $id): JSONResponse
     {
         $baseUrl = $this->urlGenerator->getAbsoluteURL('/');
 
         return new JSONResponse(
-                [
-                    'iframe' => $this->intakeFormService->generateIframeEmbed(formId: $id, baseUrl: $baseUrl),
-                    'js'     => $this->intakeFormService->generateJsEmbed(formId: $id, baseUrl: $baseUrl),
-                ]
-                );
+            [
+                'iframe' => $this->intakeFormService->generateIframeEmbed(formId: $id, baseUrl: $baseUrl),
+                'js'     => $this->intakeFormService->generateJsEmbed(formId: $id, baseUrl: $baseUrl),
+            ]
+        );
     }//end embed()
 
     /**
@@ -78,6 +82,8 @@ class IntakeFormController extends Controller
      * @return DataDownloadResponse The CSV download response.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/2026-03-20-public-intake-forms/tasks.md#task-3.2
      */
     public function export(string $id): DataDownloadResponse
     {

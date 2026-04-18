@@ -33,6 +33,8 @@ use OCP\IRequest;
  *
  * All endpoints are public (no authentication required) and include
  * CORS headers for cross-origin embedding.
+ *
+ * @spec openspec/changes/2026-03-20-public-intake-forms/tasks.md#task-3.1
  */
 class PublicFormController extends Controller
 {
@@ -63,19 +65,21 @@ class PublicFormController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @CORS
+     *
+     * @spec openspec/changes/2026-03-20-public-intake-forms/tasks.md#task-3.1
      */
     public function show(string $id): JSONResponse
     {
         // Form data would be fetched from OpenRegister in production.
         // This endpoint returns the public-facing form definition.
         $response = new JSONResponse(
-                [
-                    'id'             => $id,
-                    'fields'         => [],
-                    'successMessage' => '',
-                    'isActive'       => true,
-                ]
-                );
+            [
+                'id'             => $id,
+                'fields'         => [],
+                'successMessage' => '',
+                'isActive'       => true,
+            ]
+        );
 
         return $this->addCorsHeaders(response: $response);
     }//end show()
@@ -94,6 +98,8 @@ class PublicFormController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @CORS
+     *
+     * @spec openspec/changes/2026-03-20-public-intake-forms/tasks.md#task-3.1
      */
     public function submit(string $id): JSONResponse
     {
@@ -125,11 +131,11 @@ class PublicFormController extends Controller
         // 6. Record submission.
         // 7. Notify configured user.
         $response = new JSONResponse(
-                [
-                    'success' => true,
-                    'message' => 'Thank you for your submission.',
-                ]
-                );
+            [
+                'success' => true,
+                'message' => 'Thank you for your submission.',
+            ]
+        );
 
         return $this->addCorsHeaders(response: $response);
     }//end submit()
