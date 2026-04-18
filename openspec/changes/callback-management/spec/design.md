@@ -1,5 +1,7 @@
 # Design: callback-management
 
+**Status**: pr-created
+
 ## Context
 
 Pipelinq already has a `task` schema and `TaskService` for basic task/callback management (deadline calculation, validation, business hours). The existing `TaskEscalationJob` and `TaskExpiryJob` background jobs provide scaffolding for deadline monitoring but lack full implementation. The `NotificationService` already supports task-related notifications (assignment, completion, reassignment, expiry).
