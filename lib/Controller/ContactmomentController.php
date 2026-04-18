@@ -92,7 +92,7 @@ class ContactmomentController extends Controller
             );
         } catch (\Exception $e) {
             return new JSONResponse(
-                ['error' => $e->getMessage()],
+                ['error' => $this->l10n->t('Failed to delete contactmoment')],
                 500
             );
         }//end try
