@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/2026-03-20-terugbel-taakbeheer/tasks.md#task-2
  */
 
 declare(strict_types=1);
