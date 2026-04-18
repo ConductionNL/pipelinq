@@ -9,7 +9,7 @@
 
 ## Task 2: Implement KPI Dashboard API endpoint
 - **Spec ref**: specs/contactmomenten-rapportage/spec.md#requirement-1
-- **Status**: [ ]
+- **Status**: [x]
 - **Description**: Create `/api/reporting/kpi-dashboard` endpoint returning daily KPI metrics
 - **Acceptance criteria**:
   - Returns total contacts, contacts per channel, avg handling time, queue length, active agents
@@ -21,7 +21,7 @@
 
 ## Task 3: Implement Channel Analytics API
 - **Spec ref**: specs/contactmomenten-rapportage/spec.md#requirement-2
-- **Status**: [ ]
+- **Status**: [x]
 - **Description**: Create endpoints for channel-based analytics with configurable time granularity
 - **Acceptance criteria**:
   - `GET /api/reporting/channels` with daily/weekly/monthly filters
