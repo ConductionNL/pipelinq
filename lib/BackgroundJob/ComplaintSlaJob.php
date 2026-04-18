@@ -36,6 +36,8 @@ use Psr\Log\LoggerInterface;
  * their SLA deadline and logs warnings for each overdue complaint.
  *
  * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+ *
+ * @spec openspec/changes/klachtenregistratie/tasks.md#task-1-2
  */
 class ComplaintSlaJob extends TimedJob
 {
@@ -69,6 +71,8 @@ class ComplaintSlaJob extends TimedJob
      * @param mixed $argument The job argument (unused, required by TimedJob).
      *
      * @return void
+     *
+     * @spec openspec/changes/klachtenregistratie/tasks.md#task-1-2
      */
     protected function run($argument): void
     {
