@@ -123,6 +123,11 @@
 			<LeadContactRoles :lead-id="leadId" />
 		</CnDetailCard>
 
+		<!-- Activity -->
+		<CnDetailCard :title="t('pipelinq', 'Activity')">
+			<ActivityTimeline :entity-type="'lead'" :entity-id="leadId" />
+		</CnDetailCard>
+
 		<!-- Products -->
 		<CnDetailCard :title="t('pipelinq', 'Products')">
 			<LeadProducts
@@ -157,6 +162,7 @@ import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import LeadForm from './LeadForm.vue'
 import LeadProducts from '../../components/LeadProducts.vue'
 import LeadContactRoles from '../../components/LeadContactRoles.vue'
+import ActivityTimeline from '../../components/ActivityTimeline.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -169,6 +175,7 @@ export default {
 		LeadForm,
 		LeadProducts,
 		LeadContactRoles,
+		ActivityTimeline,
 	},
 	props: {
 		leadId: {
