@@ -1,22 +1,64 @@
 <template>
 	<div class="public-survey">
 		<NcLoadingIcon v-if="loading" />
-		<div v-else-if="error" class="msg">{{ error }}</div>
-		<div v-else-if="submitted" class="msg success"><h2>{{ t('pipelinq', 'Thank you for your feedback!') }}</h2></div>
+		<div v-else-if="error" class="msg">
+			{{ error }}
+		</div>
+		<div v-else-if="submitted" class="msg success">
+			<h2>{{ t('pipelinq', 'Thank you for your feedback!') }}</h2>
+		</div>
 		<template v-else-if="survey">
 			<h1>{{ survey.title }}</h1>
-			<p v-if="survey.description">{{ survey.description }}</p>
+			<p v-if="survey.description">
+				{{ survey.description }}
+			</p>
 			<form @submit.prevent="submit">
 				<div v-for="q in survey.questions || []" :key="q.id" class="question">
 					<label>{{ q.text }} <span v-if="q.required !== false" class="req">*</span></label>
-					<div v-if="q.type === 'nps'" class="nps-row"><button v-for="n in 11" :key="n" type="button" :class="{ sel: answers[q.id] === (n-1) }" @click="$set(answers, q.id, n-1)">{{ n-1 }}</button></div>
-					<div v-else-if="q.type === 'rating'" class="stars"><button v-for="n in 5" :key="n" type="button" :class="{ filled: n <= (answers[q.id] || 0) }" @click="$set(answers, q.id, n)">&#9733;</button></div>
-					<div v-else-if="q.type === 'multiple_choice'"><label v-for="o in q.options || []" :key="o" class="opt"><input type="radio" :name="'q'+q.id" :value="o" @change="$set(answers, q.id, o)" /> {{ o }}</label></div>
-					<div v-else-if="q.type === 'yes_no'" class="yn"><label><input type="radio" :name="'q'+q.id" value="yes" @change="$set(answers, q.id, 'yes')" /> {{ t('pipelinq', 'Yes') }}</label><label><input type="radio" :name="'q'+q.id" value="no" @change="$set(answers, q.id, 'no')" /> {{ t('pipelinq', 'No') }}</label></div>
-					<textarea v-else :placeholder="t('pipelinq', 'Your answer...')" rows="3" @input="$set(answers, q.id, $event.target.value)" />
+					<div v-if="q.type === 'nps'" class="nps-row">
+						<button v-for="n in 11"
+							:key="n"
+							type="button"
+							:class="{ sel: answers[q.id] === (n-1) }"
+							@click="$set(answers, q.id, n-1)">
+							{{ n-1 }}
+						</button>
+					</div>
+					<div v-else-if="q.type === 'rating'" class="stars">
+						<button v-for="n in 5"
+							:key="n"
+							type="button"
+							:class="{ filled: n <= (answers[q.id] || 0) }"
+							@click="$set(answers, q.id, n)">
+							&#9733;
+						</button>
+					</div>
+					<div v-else-if="q.type === 'multiple_choice'">
+						<label v-for="o in q.options || []" :key="o" class="opt"><input type="radio"
+							:name="'q'+q.id"
+							:value="o"
+							@change="$set(answers, q.id, o)"> {{ o }}</label>
+					</div>
+					<div v-else-if="q.type === 'yes_no'" class="yn">
+						<label><input type="radio"
+							:name="'q'+q.id"
+							value="yes"
+							@change="$set(answers, q.id, 'yes')"> {{ t('pipelinq', 'Yes') }}</label><label><input type="radio"
+								:name="'q'+q.id"
+								value="no"
+								@change="$set(answers, q.id, 'no')"> {{ t('pipelinq', 'No') }}</label>
+					</div>
+					<textarea v-else
+						:placeholder="t('pipelinq', 'Your answer...')"
+						rows="3"
+						@input="$set(answers, q.id, $event.target.value)" />
 				</div>
-				<p v-if="err" class="error">{{ err }}</p>
-				<button type="submit" class="submit-btn" :disabled="submitting">{{ t('pipelinq', 'Submit') }}</button>
+				<p v-if="err" class="error">
+					{{ err }}
+				</p>
+				<button type="submit" class="submit-btn" :disabled="submitting">
+					{{ t('pipelinq', 'Submit') }}
+				</button>
 			</form>
 		</template>
 	</div>
@@ -56,19 +98,34 @@ export default {
 </script>
 <style scoped>
 .public-survey { max-width: 700px; margin: 0 auto; padding: 32px 20px; }
+
 .msg { text-align: center; padding: 40px; }
+
 .success h2 { color: var(--color-success); }
+
 .question { margin-bottom: 24px; }
+
 .question label { font-weight: 600; display: block; margin-bottom: 8px; }
+
 .req { color: var(--color-error); }
+
 .nps-row button { width: 36px; height: 36px; border: 2px solid var(--color-border); border-radius: 6px; background: white; cursor: pointer; margin: 2px; }
+
 .nps-row button.sel { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+
 .stars button { font-size: 28px; background: none; border: none; cursor: pointer; color: var(--color-border); }
+
 .stars button.filled { color: #f59e0b; }
+
 .opt { display: block; padding: 4px 0; cursor: pointer; }
+
 .yn { display: flex; gap: 20px; }
+
 .question textarea { width: 100%; padding: 8px; border: 1px solid var(--color-border); border-radius: 4px; }
+
 .error { color: var(--color-error); }
+
 .submit-btn { background: var(--color-primary); color: white; border: none; padding: 10px 24px; border-radius: 20px; font-size: 15px; cursor: pointer; font-weight: 600; }
+
 .submit-btn:disabled { opacity: 0.6; }
 </style>

@@ -39,7 +39,6 @@ use Psr\Log\LoggerInterface;
  */
 class ComplaintSlaJob extends TimedJob
 {
-
     /**
      * Constructor.
      *
@@ -54,13 +53,12 @@ class ComplaintSlaJob extends TimedJob
         private IAppConfig $appConfig,
         private LoggerInterface $logger,
     ) {
-        parent::__construct($time);
+        parent::__construct(time: $time);
 
         // Run every 15 minutes (900 seconds).
-        $this->setInterval(900);
-        $this->setTimeSensitivity(self::TIME_SENSITIVE);
+        $this->setInterval(seconds: 900);
+        $this->setTimeSensitivity(sensitivity: self::TIME_SENSITIVE);
     }//end __construct()
-
 
     /**
      * Execute the background job.
@@ -103,7 +101,6 @@ class ComplaintSlaJob extends TimedJob
             //
             // Future enhancement: integrate with OpenRegister ObjectService
             // to query complaints and send notifications for overdue items.
-
             $this->logger->info(
                 'ComplaintSlaJob: SLA deadline check completed',
             );

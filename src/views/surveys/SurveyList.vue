@@ -15,7 +15,9 @@
 				</tr>
 			</tbody>
 		</table>
-		<p v-else class="empty">{{ t('pipelinq', 'No surveys yet. Create your first KTO survey.') }}</p>
+		<p v-else class="empty">
+			{{ t('pipelinq', 'No surveys yet. Create your first KTO survey.') }}
+		</p>
 	</div>
 </template>
 <script>
@@ -30,9 +32,14 @@ export default {
 </script>
 <style scoped>
 .survey-list { padding: 20px; }
+
 .survey-list__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+
 .survey-table { width: 100%; border-collapse: collapse; }
+
 .survey-table th, .survey-table td { padding: 10px 12px; border-bottom: 1px solid var(--color-border); text-align: left; }
+
 .survey-table tr:hover { background: var(--color-background-hover); cursor: pointer; }
+
 .empty { text-align: center; padding: 40px; color: var(--color-text-maxcontrast); }
 </style>

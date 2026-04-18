@@ -1,15 +1,32 @@
 <template>
 	<div class="survey-form">
 		<h2>{{ surveyId ? t('pipelinq', 'Edit Survey') : t('pipelinq', 'New Survey') }}</h2>
-		<div class="field"><label>{{ t('pipelinq', 'Title') }} *</label><input v-model="form.title" type="text" required /></div>
-		<div class="field"><label>{{ t('pipelinq', 'Description') }}</label><textarea v-model="form.description" rows="3" /></div>
-		<div class="field"><label>{{ t('pipelinq', 'Status') }}</label>
-			<select v-model="form.status"><option value="draft">{{ t('pipelinq', 'Draft') }}</option><option value="active">{{ t('pipelinq', 'Active') }}</option><option value="closed">{{ t('pipelinq', 'Closed') }}</option></select>
+		<div class="field">
+			<label>{{ t('pipelinq', 'Title') }} *</label><input v-model="form.title" type="text" required>
+		</div>
+		<div class="field">
+			<label>{{ t('pipelinq', 'Description') }}</label><textarea v-model="form.description" rows="3" />
+		</div>
+		<div class="field">
+			<label>{{ t('pipelinq', 'Status') }}</label>
+			<select v-model="form.status">
+				<option value="draft">
+					{{ t('pipelinq', 'Draft') }}
+				</option><option value="active">
+					{{ t('pipelinq', 'Active') }}
+				</option><option value="closed">
+					{{ t('pipelinq', 'Closed') }}
+				</option>
+			</select>
 		</div>
 		<QuestionEditor v-model="form.questions" />
 		<div class="actions">
-			<NcButton @click="$router.back()">{{ t('pipelinq', 'Cancel') }}</NcButton>
-			<NcButton type="primary" :disabled="!form.title || saving" @click="save">{{ saving ? '...' : t('pipelinq', 'Save') }}</NcButton>
+			<NcButton @click="$router.back()">
+				{{ t('pipelinq', 'Cancel') }}
+			</NcButton>
+			<NcButton type="primary" :disabled="!form.title || saving" @click="save">
+				{{ saving ? '...' : t('pipelinq', 'Save') }}
+			</NcButton>
 		</div>
 	</div>
 </template>
@@ -40,8 +57,12 @@ export default {
 </script>
 <style scoped>
 .survey-form { padding: 20px; max-width: 800px; }
+
 .field { margin-bottom: 16px; }
+
 .field label { display: block; font-weight: 600; margin-bottom: 4px; }
+
 .field input, .field textarea, .field select { width: 100%; padding: 8px; border: 1px solid var(--color-border); border-radius: 4px; }
+
 .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
 </style>

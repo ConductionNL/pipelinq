@@ -17,8 +17,12 @@
 						</span>
 					</div>
 					<div class="queue-item__actions">
-						<NcButton @click="startEdit(queue)">{{ t('pipelinq', 'Edit') }}</NcButton>
-						<NcButton type="error" @click="deleteQueue(queue)">{{ t('pipelinq', 'Delete') }}</NcButton>
+						<NcButton @click="startEdit(queue)">
+							{{ t('pipelinq', 'Edit') }}
+						</NcButton>
+						<NcButton type="error" @click="deleteQueue(queue)">
+							{{ t('pipelinq', 'Delete') }}
+						</NcButton>
 					</div>
 				</div>
 
@@ -52,14 +56,20 @@
 						<input v-model="editForm.agentsInput" type="text">
 					</div>
 					<div class="edit-actions">
-						<NcButton @click="cancelEdit">{{ t('pipelinq', 'Cancel') }}</NcButton>
-						<NcButton type="primary" @click="saveEdit">{{ t('pipelinq', 'Save') }}</NcButton>
+						<NcButton @click="cancelEdit">
+							{{ t('pipelinq', 'Cancel') }}
+						</NcButton>
+						<NcButton type="primary" @click="saveEdit">
+							{{ t('pipelinq', 'Save') }}
+						</NcButton>
 					</div>
 				</div>
 			</div>
 
 			<div class="queue-add">
-				<NcButton @click="addQueue">{{ t('pipelinq', '+ Add Queue') }}</NcButton>
+				<NcButton @click="addQueue">
+					{{ t('pipelinq', '+ Add Queue') }}
+				</NcButton>
 			</div>
 		</div>
 	</NcSettingsSection>

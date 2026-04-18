@@ -212,7 +212,7 @@ import PipelineCard from './PipelineCard.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { getPriorityLabel, getPriorityColor } from '../../services/requestStatus.js'
 import { getDaysAge, isStale, getAgingClass, formatAge } from '../../services/pipelineUtils.js'
-import { formatNumber, formatDate } from '../../services/localeUtils.js'
+import { formatDate } from '../../services/localeUtils.js'
 
 export default {
 	name: 'PipelineBoard',
