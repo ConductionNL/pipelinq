@@ -418,6 +418,7 @@
         "Contact moment registered": "Contactmoment geregistreerd",
         "Failed to register contact moment": "Het registreren van het contactmoment is mislukt",
         "Search by subject": "Zoek op onderwerp",
-        "Registered contact moments": "Geregistreerde contactmomenten"
+        "Registered contact moments": "Geregistreerde contactmomenten",
+        "Export CSV": "CSV exporteren"
     }
 }
