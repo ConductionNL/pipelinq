@@ -1,12 +1,12 @@
 <template>
 	<div class="form-manager">
 		<div class="form-header">
-			<h2>{{ t('pipelinq', 'Intake Forms') }}</h2>
+			<h2>{{ $t('pipelinq', 'Intake Forms') }}</h2>
 			<NcButton type="primary" @click="$router.push({ name: 'FormNew' })">
 				<template #icon>
 					<Plus :size="20" />
 				</template>
-				{{ t('pipelinq', 'New form') }}
+				{{ $t('pipelinq', 'New form') }}
 			</NcButton>
 		</div>
 
@@ -21,7 +21,7 @@
 			</template>
 			<template #action>
 				<NcButton type="primary" @click="$router.push({ name: 'FormNew' })">
-					{{ t('pipelinq', 'Create first form') }}
+					{{ $t('pipelinq', 'Create first form') }}
 				</NcButton>
 			</template>
 		</NcEmptyContent>
@@ -29,10 +29,10 @@
 		<table v-else class="form-table">
 			<thead>
 				<tr>
-					<th>{{ t('pipelinq', 'Name') }}</th>
-					<th>{{ t('pipelinq', 'Status') }}</th>
-					<th>{{ t('pipelinq', 'Submissions') }}</th>
-					<th>{{ t('pipelinq', 'Actions') }}</th>
+					<th>{{ $t('pipelinq', 'Name') }}</th>
+					<th>{{ $t('pipelinq', 'Status') }}</th>
+					<th>{{ $t('pipelinq', 'Submissions') }}</th>
+					<th>{{ $t('pipelinq', 'Actions') }}</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -73,12 +73,12 @@
 		<!-- Embed code dialog -->
 		<NcDialog v-if="embedDialog" :name="t('pipelinq', 'Embed Code')" @closing="embedDialog = false">
 			<div class="embed-content">
-				<h4>{{ t('pipelinq', 'iframe') }}</h4>
+				<h4>{{ $t('pipelinq', 'iframe') }}</h4>
 				<textarea readonly
 					class="embed-code"
 					:value="embedCode.iframe"
 					@click="$event.target.select()" />
-				<h4>{{ t('pipelinq', 'JavaScript') }}</h4>
+				<h4>{{ $t('pipelinq', 'JavaScript') }}</h4>
 				<textarea readonly
 					class="embed-code"
 					:value="embedCode.js"
@@ -146,7 +146,8 @@ export default {
 			}
 		},
 		async confirmDelete(form) {
-			if (confirm(this.t('pipelinq', 'Delete form "{name}"?', { name: form.name }))) {
+			const msg = this.t('pipelinq', 'Delete form "{name}"?', { name: form.name })
+			if (confirm(msg)) {
 				const objectStore = useObjectStore()
 				await objectStore.deleteObject('intakeForm', form.id)
 				this.fetchForms()

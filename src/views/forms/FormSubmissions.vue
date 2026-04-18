@@ -6,12 +6,12 @@
 					<ArrowLeft :size="20" />
 				</template>
 			</NcButton>
-			<h2>{{ t('pipelinq', 'Submissions') }}</h2>
+			<h2>{{ $t('pipelinq', 'Submissions') }}</h2>
 			<NcButton type="secondary" @click="exportCsv">
 				<template #icon>
 					<Download :size="20" />
 				</template>
-				{{ t('pipelinq', 'Export CSV') }}
+				{{ $t('pipelinq', 'Export CSV') }}
 			</NcButton>
 		</div>
 
@@ -29,11 +29,11 @@
 		<table v-else class="submissions-table">
 			<thead>
 				<tr>
-					<th>{{ t('pipelinq', 'Submitted') }}</th>
-					<th>{{ t('pipelinq', 'Status') }}</th>
-					<th>{{ t('pipelinq', 'Contact') }}</th>
-					<th>{{ t('pipelinq', 'Lead') }}</th>
-					<th>{{ t('pipelinq', 'Data') }}</th>
+					<th>{{ $t('pipelinq', 'Submitted') }}</th>
+					<th>{{ $t('pipelinq', 'Status') }}</th>
+					<th>{{ $t('pipelinq', 'Contact') }}</th>
+					<th>{{ $t('pipelinq', 'Lead') }}</th>
+					<th>{{ $t('pipelinq', 'Data') }}</th>
 				</tr>
 			</thead>
 			<tbody>

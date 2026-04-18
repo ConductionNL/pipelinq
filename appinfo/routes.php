@@ -49,6 +49,7 @@ return [
 
         // Intake form management (authenticated)
         ['name' => 'intake_form#embed', 'url' => '/api/forms/{id}/embed', 'verb' => 'GET'],
+        ['name' => 'intake_form#submissions', 'url' => '/api/forms/{id}/submissions', 'verb' => 'GET'],
         ['name' => 'intake_form#export', 'url' => '/api/forms/{id}/submissions/export', 'verb' => 'GET'],
         // Automations
         ['name' => 'automation#metadata', 'url' => '/api/automations/metadata', 'verb' => 'GET'],
