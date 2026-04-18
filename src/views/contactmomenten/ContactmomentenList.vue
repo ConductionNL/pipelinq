@@ -87,7 +87,6 @@ import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
 import Chat from 'vue-material-design-icons/Chat.vue'
 import ShareVariant from 'vue-material-design-icons/ShareVariant.vue'
 import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
-import Download from 'vue-material-design-icons/Download.vue'
 
 export default {
 	name: 'ContactmomentenList',
@@ -102,7 +101,6 @@ export default {
 		Chat,
 		ShareVariant,
 		EmailOutline,
-		Download,
 	},
 
 	setup() {

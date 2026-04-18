@@ -4,8 +4,6 @@
         "+ Add Category": "+ Add Category",
         "+ Add Channel": "+ Add Channel",
         "+ Add Source": "+ Add Source",
-        ". They will retain their value, but it will no longer be available for new items.": "{count} items currently use \\",
-        "?": "Are you sure you want to remove \\",
         "A Won stage must also be marked as Closed": "A Won stage must also be marked as Closed",
         "Add": "Add",
         "Add Product": "Add Product",
