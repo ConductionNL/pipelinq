@@ -22,10 +22,14 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCP\IAppConfig;
+use OCP\IAppManager;
+use OCP\IServerContainer;
 use Psr\Log\LoggerInterface;
 
 /**
  * Service for public intake form processing, spam protection, and entity creation.
+ *
+ * @spec openspec/changes/2026-03-20-public-intake-forms/tasks.md#task-2
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
@@ -46,10 +50,14 @@ class IntakeFormService
      *
      * @param IAppConfig      $appConfig The app configuration.
      * @param LoggerInterface $logger    The logger.
+     * @param IAppManager     $appManager The app manager.
+     * @param IServerContainer $container The server container.
      */
     public function __construct(
         private IAppConfig $appConfig,
         private LoggerInterface $logger,
+        private IAppManager $appManager,
+        private IServerContainer $container,
     ) {
     }//end __construct()
 
@@ -249,4 +257,148 @@ class IntakeFormService
 
         return implode("\n", $rows);
     }//end exportCsv()
+
+    /**
+     * Deduplicate contact by email address.
+     *
+     * @param string $email The email address to search for.
+     *
+     * @return array|null The matched contact if found, null otherwise.
+     */
+    public function deduplicateContact(string $email): ?array
+    {
+        try {
+            $objectService = $this->getObjectService();
+            if ($objectService === null) {
+                return null;
+            }
+
+            $result = $objectService->findObjects(
+                register: 'pipelinq',
+                schema: 'contact',
+                params: ['email' => $email]
+            );
+
+            if (isset($result['results']) && !empty($result['results'])) {
+                return $result['results'][0];
+            }
+
+            return null;
+        } catch (\Exception $e) {
+            $this->logger->error('Error deduplicating contact: '.$e->getMessage());
+            return null;
+        }//end try
+    }//end deduplicateContact()
+
+    /**
+     * Process an intake form submission: validate, create contact/lead, record submission.
+     *
+     * @param array  $form       The form configuration from OpenRegister.
+     * @param array  $submission The submitted form data.
+     * @param string $ip         The submitter's IP address.
+     *
+     * @return array The processing result with 'success', 'message', 'contactId', 'leadId'.
+     */
+    public function processSubmission(array $form, array $submission, string $ip): array
+    {
+        // Validate submission
+        $validation = $this->validateSubmission($form, $submission);
+        if (!$validation['valid']) {
+            return [
+                'success' => false,
+                'message' => implode('; ', $validation['errors']),
+            ];
+        }
+
+        try {
+            $objectService = $this->getObjectService();
+            if ($objectService === null) {
+                return ['success' => false, 'message' => 'Service unavailable'];
+            }
+
+            // Map to contact entity
+            $contactData = $this->mapToEntity($form['fieldMappings'] ?? [], $submission, 'contact');
+            $contactId = null;
+
+            // Deduplicate contact by email
+            $email = $contactData['email'] ?? null;
+            if ($email) {
+                $existing = $this->deduplicateContact($email);
+                if ($existing) {
+                    $contactId = $existing['id'] ?? $existing['uuid'] ?? null;
+                }
+            }
+
+            // Create contact if needed
+            if (!$contactId) {
+                $contactData['name'] = $contactData['name'] ?? $submission['name'] ?? 'Contact';
+                $contactResult = $objectService->saveObject('pipelinq', 'contact', $contactData);
+                $contactId = $contactResult['id'] ?? $contactResult['uuid'] ?? null;
+            }
+
+            // Map to lead entity
+            $leadData = $this->mapToEntity($form['fieldMappings'] ?? [], $submission, 'lead');
+            $leadData['title'] = $leadData['title'] ?? $submission['subject'] ?? 'New Lead';
+            $leadData['contact'] = $contactId;
+            $leadData['pipeline'] = $form['targetPipeline'] ?? null;
+            $leadData['stage'] = $form['targetStage'] ?? 'new';
+            $leadData['source'] = 'intake_form';
+
+            // Create lead
+            $leadResult = $objectService->saveObject('pipelinq', 'lead', $leadData);
+            $leadId = $leadResult['id'] ?? $leadResult['uuid'] ?? null;
+
+            // Record submission
+            $submissionRecord = [
+                'form' => $form['id'] ?? $form['uuid'] ?? null,
+                'submittedAt' => date('c'),
+                'data' => $submission,
+                'contactId' => $contactId,
+                'leadId' => $leadId,
+                'ip' => $ip,
+                'status' => 'processed',
+            ];
+            $objectService->saveObject('pipelinq', 'intakeSubmission', $submissionRecord);
+
+            // Increment submission count
+            $formData = $form;
+            $formData['submitCount'] = ($form['submitCount'] ?? 0) + 1;
+            $objectService->saveObject('pipelinq', 'intakeForm', $formData);
+
+            // Notify user if configured
+            $notifyUser = $form['notifyUser'] ?? null;
+            if ($notifyUser) {
+                $this->logger->info('Form submission received from '.$email.' - contact: '.$contactId.' - lead: '.$leadId);
+            }
+
+            return [
+                'success' => true,
+                'message' => $form['successMessage'] ?? 'Thank you for your submission.',
+                'contactId' => $contactId,
+                'leadId' => $leadId,
+            ];
+        } catch (\Exception $e) {
+            $this->logger->error('Error processing form submission: '.$e->getMessage());
+            return ['success' => false, 'message' => 'Error processing submission'];
+        }//end try
+    }//end processSubmission()
+
+    /**
+     * Get the ObjectService from the container.
+     *
+     * @return \OCA\OpenRegister\Service\ObjectService|null The ObjectService if available.
+     */
+    private function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
+    {
+        if (in_array('openregister', $this->appManager->getInstalledApps(), true)) {
+            try {
+                return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+            } catch (\Exception $e) {
+                $this->logger->error('Failed to get ObjectService: '.$e->getMessage());
+                return null;
+            }
+        }
+
+        return null;
+    }//end getObjectService()
 }//end class
