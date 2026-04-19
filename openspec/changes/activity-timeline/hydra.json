@@ -4,5 +4,81 @@
   "app": "pipelinq",
   "repo": "https://github.com/ConductionNL/pipelinq",
   "depends_on": [],
-  "issue": null
+  "issue": null,
+  "schema_version": 2,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "code-review:queued",
+      "started_at": "2026-04-19T12:30:40Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "pre-review-quality",
+          "persona": "orchestrator",
+          "container": "hydra-quality-runner",
+          "started_at": "2026-04-19T12:30:40Z",
+          "ended_at": "2026-04-19T12:30:40Z",
+          "exit_code": 1,
+          "checks_run": [
+            "php -l",
+            "composer check:strict (phpcs)",
+            "composer check:strict (phpmd)",
+            "composer check:strict (psalm)",
+            "composer check:strict (phpstan)",
+            "composer audit"
+          ],
+          "checks_skipped": [
+            "phpmetrics",
+            "spdx-headers",
+            "publiccode",
+            "forbidden-patterns",
+            "npm run lint (eslint)",
+            "npm run lint (stylelint)",
+            "npm audit",
+            "stub-scan",
+            "gitleaks",
+            "trivy",
+            "composer test:unit (phpunit)",
+            "newman"
+          ],
+          "gates": {
+            "php-lint": "pass",
+            "phpcs": "fail",
+            "phpmd": "pass",
+            "psalm": "pass",
+            "phpstan": "pass",
+            "phpmetrics": "skip",
+            "composer-audit": "pass",
+            "spdx-headers": "skip",
+            "publiccode": "skip",
+            "forbidden-patterns": "skip",
+            "eslint": "skip",
+            "stylelint": "skip",
+            "npm-audit": "skip",
+            "stub-scan": "skip",
+            "gitleaks": "skip",
+            "trivy": "skip",
+            "phpunit": "skip",
+            "newman": "skip"
+          },
+          "findings": [
+            {
+              "id": "prq-phpcs",
+              "severity": "WARNING",
+              "gate": "phpcs",
+              "rule": "composer check:strict (phpcs) failing",
+              "status": "open",
+              "note": "...\nThe repository at \"/server/apps/app\" does not have the correct ownership and git refuses to use it:\n\nfatal: detected dubious ownership in repository at '/server/apps/app'\nTo add an exception for this directory, call:\n\ngit config --global --add safe.directory /server/apps/app\n\nComposer could not detect the root package (conductionnl/pipelinq) version, defaulting to '1.0.0'. See https://getcomposer.org/root-version\n..............\u001b[31mE\u001b[0m..............................\u001b[31mE\u001b[0m.............. 60 / 94 (64%)\n..................................                           94 / 94 (100%)\n\n\n\n\u001b[1mFILE: lib/Controller/ActivityTimelineController.php\u001b[0m\n--------------------------------------------------------------------------------\n\u001b[1mFOUND 5 ERRORS AFFECTING 5 LINES\u001b[0m\n-------------------------",
+              "autofixable": true
+            }
+          ],
+          "verdict": "fail"
+        }
+      ]
+    }
+  ]
 }
