@@ -1,4 +1,5 @@
 <?php
+// SPDX-License-Identifier: EUPL-1.2
 
 /**
  * Pipelinq PublicFormController.
@@ -69,7 +70,7 @@ class PublicFormController extends Controller
     public function show(string $id): JSONResponse
     {
         try {
-            $form = $this->intakeFormService->getPublicFormDefinition(formId: $id);
+            $form     = $this->intakeFormService->getPublicFormDefinition(formId: $id);
             $response = new JSONResponse($form);
         } catch (\Exception $e) {
             $response = new JSONResponse(
@@ -147,14 +148,19 @@ class PublicFormController extends Controller
                 ip: $ip
             );
 
-            $statusCode = $result['success'] === true ? 200 : 400;
+            if ($result['success'] === true) {
+                $statusCode = 200;
+            } else {
+                $statusCode = 400;
+            }
+
             $response = new JSONResponse($result, $statusCode);
         } catch (\Exception $e) {
             $response = new JSONResponse(
                 ['success' => false, 'message' => 'An error occurred while processing your submission.'],
                 500
             );
-        }
+        }//end try
 
         return $this->addCorsHeaders(response: $response);
     }//end submit()

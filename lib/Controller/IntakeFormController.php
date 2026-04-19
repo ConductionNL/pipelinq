@@ -1,4 +1,5 @@
 <?php
+// SPDX-License-Identifier: EUPL-1.2
 
 /**
  * Pipelinq IntakeFormController.
@@ -81,9 +82,9 @@ class IntakeFormController extends Controller
 
         return new JSONResponse(
             [
-                    'iframe' => $this->intakeFormService->generateIframeEmbed(formId: $id, baseUrl: $baseUrl),
-                    'js'     => $this->intakeFormService->generateJsEmbed(formId: $id, baseUrl: $baseUrl),
-                ]
+                'iframe' => $this->intakeFormService->generateIframeEmbed(formId: $id, baseUrl: $baseUrl),
+                'js'     => $this->intakeFormService->generateJsEmbed(formId: $id, baseUrl: $baseUrl),
+            ]
         );
     }//end embed()
 
@@ -123,7 +124,7 @@ class IntakeFormController extends Controller
                 ['error' => 'Failed to fetch submissions'],
                 500
             );
-        }
+        }//end try
     }//end submissions()
 
     /**
@@ -173,7 +174,7 @@ class IntakeFormController extends Controller
                 filename: 'error.txt',
                 contentType: 'text/plain'
             );
-        }
+        }//end try
     }//end export()
 
     /**
@@ -231,7 +232,7 @@ class IntakeFormController extends Controller
                 context: ['formId' => $id, 'error' => $e->getMessage()]
             );
             throw $e;
-        }
+        }//end try
     }//end getSubmissionsForForm()
 
     /**
