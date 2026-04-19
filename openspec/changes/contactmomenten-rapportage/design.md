@@ -1,7 +1,7 @@
 # Design: contactmomenten-rapportage
 
 **Status**: pr-created
-**PR**: https://github.com/ConductionNL/pipelinq/pull/282
+**PR**: https://github.com/ConductionNL/pipelinq/pull/288
 
 ## Architecture Overview
 
