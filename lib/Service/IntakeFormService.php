@@ -463,7 +463,7 @@ class IntakeFormService
         } catch (\Exception $e) {
             $this->logger->warning(
                 message: 'Failed to deduplicate contact by email',
-                context: ['email' => $email, 'error' => $e->getMessage()]
+                context: ['error' => $e->getMessage()]
             );
             return null;
         }
