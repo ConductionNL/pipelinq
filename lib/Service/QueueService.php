@@ -71,15 +71,13 @@ class QueueService
             $objectService = $this->getObjectService();
             $results       = $objectService->findAll(
                 [
-                    'filters' => [
-                        'register' => $registerId,
-                        'schema'   => $schemaId,
-                        'queue'    => $queueId,
-                    ],
-                    'limit'   => 1,
-                ],
-                _rbac: false,
-                _multitenancy: false
+                    'register'       => $registerId,
+                    'schema'         => $schemaId,
+                    'queue'          => $queueId,
+                    '_limit'         => 1,
+                    '_rbac'          => false,
+                    '_multitenancy'  => false,
+                ]
             );
 
             return count($results);
@@ -170,14 +168,12 @@ class QueueService
 
             $queues = $objectService->findAll(
                 [
-                    'filters' => [
-                        'register' => $registerId,
-                        'schema'   => $queueSchemaId,
-                    ],
-                    'limit'   => 200,
-                ],
-                _rbac: false,
-                _multitenancy: false
+                    'register'       => $registerId,
+                    'schema'         => $queueSchemaId,
+                    '_limit'         => 200,
+                    '_rbac'          => false,
+                    '_multitenancy'  => false,
+                ]
             );
 
             foreach ($queues as $queue) {
@@ -260,16 +256,14 @@ class QueueService
 
             $items = $objectService->findAll(
                 [
-                    'filters' => [
-                        'register' => $registerId,
-                        'schema'   => $schemaId,
-                        'queue'    => $fromQueueId,
-                    ],
-                    'limit'   => $count,
-                    'order'   => ['dateCreated' => 'DESC'],
-                ],
-                _rbac: false,
-                _multitenancy: false
+                    'register'       => $registerId,
+                    'schema'         => $schemaId,
+                    'queue'          => $fromQueueId,
+                    '_limit'         => $count,
+                    '_order'         => ['dateCreated' => 'DESC'],
+                    '_rbac'          => false,
+                    '_multitenancy'  => false,
+                ]
             );
 
             foreach ($items as $item) {

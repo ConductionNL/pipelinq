@@ -138,14 +138,12 @@ class DefaultQueueService
 
             $existing = $objectService->findAll(
                 [
-                    'filters' => [
-                        'register' => $registerId,
-                        'schema'   => $queueSchemaId,
-                    ],
-                    'limit'   => 1,
-                ],
-                _rbac: false,
-                _multitenancy: false
+                    'register'       => $registerId,
+                    'schema'         => $queueSchemaId,
+                    '_limit'         => 1,
+                    '_rbac'          => false,
+                    '_multitenancy'  => false,
+                ]
             );
 
             if (empty($existing) === false) {
@@ -197,14 +195,12 @@ class DefaultQueueService
 
             $existing = $objectService->findAll(
                 [
-                    'filters' => [
-                        'register' => $registerId,
-                        'schema'   => $skillSchemaId,
-                    ],
-                    'limit'   => 1,
-                ],
-                _rbac: false,
-                _multitenancy: false
+                    'register'       => $registerId,
+                    'schema'         => $skillSchemaId,
+                    '_limit'         => 1,
+                    '_rbac'          => false,
+                    '_multitenancy'  => false,
+                ]
             );
 
             if (empty($existing) === false) {
