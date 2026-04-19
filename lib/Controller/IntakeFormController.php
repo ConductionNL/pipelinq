@@ -24,11 +24,13 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\IntakeFormService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IURLGenerator;
+use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -46,6 +48,7 @@ class IntakeFormController extends Controller
      * @param ContainerInterface $container         The DI container.
      * @param IAppConfig         $appConfig         The app configuration.
      * @param LoggerInterface    $logger            The logger.
+     * @param IUserSession       $userSession       The user session.
      *
      * @spec openspec/changes/2026-03-20-public-intake-forms/tasks.md#task-3
      */
@@ -56,6 +59,7 @@ class IntakeFormController extends Controller
         private ContainerInterface $container,
         private IAppConfig $appConfig,
         private LoggerInterface $logger,
+        private IUserSession $userSession,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -97,6 +101,17 @@ class IntakeFormController extends Controller
     public function submissions(string $id): JSONResponse
     {
         try {
+            // Get form data to check ownership.
+            $form = $this->intakeFormService->getFormData(formId: $id);
+            if ($form === null) {
+                return new JSONResponse(['error' => 'Form not found'], 404);
+            }
+
+            // Check if the current user owns the form.
+            if ($this->isFormOwner(form: $form) === false) {
+                return new JSONResponse(['error' => 'Unauthorized'], Http::STATUS_FORBIDDEN);
+            }
+
             $submissions = $this->getSubmissionsForForm(formId: $id);
             return new JSONResponse(['results' => $submissions]);
         } catch (\Exception $e) {
@@ -122,11 +137,20 @@ class IntakeFormController extends Controller
      *
      * @spec openspec/changes/2026-03-20-public-intake-forms/tasks.md#task-3
      */
-    public function export(string $id): DataDownloadResponse
+    public function export(string $id): DataDownloadResponse | JSONResponse
     {
         try {
-            // Get form and submissions from OpenRegister.
+            // Get form and check ownership before exporting.
             $form = $this->intakeFormService->getFormData(formId: $id);
+            if ($form === null) {
+                return new JSONResponse(['error' => 'Form not found'], 404);
+            }
+
+            // Check if the current user owns the form.
+            if ($this->isFormOwner(form: $form) === false) {
+                return new JSONResponse(['error' => 'Unauthorized'], Http::STATUS_FORBIDDEN);
+            }
+
             $submissions = $this->getSubmissionsForForm(formId: $id);
 
             $csv = $this->intakeFormService->exportCsv(
@@ -145,12 +169,30 @@ class IntakeFormController extends Controller
                 context: ['formId' => $id, 'error' => $e->getMessage()]
             );
             return new DataDownloadResponse(
-                data: 'Error: ' . $e->getMessage(),
+                data: 'An error occurred while exporting submissions. Please try again later.',
                 filename: 'error.txt',
                 contentType: 'text/plain'
             );
         }
     }//end export()
+
+    /**
+     * Check if the current user is authorized to access a form's submissions.
+     *
+     * @param array $form The form data from OpenRegister.
+     *
+     * @return bool True if authorized, false otherwise.
+     */
+    private function isFormOwner(array $form): bool
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return false;
+        }
+
+        // Check if the current user created the form (createdBy field set by OpenRegister).
+        return ($form['createdBy'] ?? '') === $user->getUID();
+    }//end isFormOwner()
 
     /**
      * Get all submissions for a form from OpenRegister.
