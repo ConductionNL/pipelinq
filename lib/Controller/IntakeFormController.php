@@ -29,6 +29,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IURLGenerator;
+use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -45,6 +46,7 @@ class IntakeFormController extends Controller
      * @param IURLGenerator      $urlGenerator      The URL generator.
      * @param ContainerInterface $container         The DI container.
      * @param IAppConfig         $appConfig         The app configuration.
+     * @param IUserSession       $userSession       The user session.
      * @param LoggerInterface    $logger            The logger.
      *
      * @spec openspec/changes/2026-03-20-public-intake-forms/tasks.md#task-3
@@ -55,6 +57,7 @@ class IntakeFormController extends Controller
         private IURLGenerator $urlGenerator,
         private ContainerInterface $container,
         private IAppConfig $appConfig,
+        private IUserSession $userSession,
         private LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
@@ -77,9 +80,9 @@ class IntakeFormController extends Controller
 
         return new JSONResponse(
             [
-                    'iframe' => $this->intakeFormService->generateIframeEmbed(formId: $id, baseUrl: $baseUrl),
-                    'js'     => $this->intakeFormService->generateJsEmbed(formId: $id, baseUrl: $baseUrl),
-                ]
+                'iframe' => $this->intakeFormService->generateIframeEmbed(formId: $id, baseUrl: $baseUrl),
+                'js'     => $this->intakeFormService->generateJsEmbed(formId: $id, baseUrl: $baseUrl),
+            ]
         );
     }//end embed()
 
@@ -96,6 +99,11 @@ class IntakeFormController extends Controller
      */
     public function submissions(string $id): JSONResponse
     {
+        $authResponse = $this->authorizeFormAccess(id: $id);
+        if ($authResponse !== null) {
+            return $authResponse;
+        }
+
         try {
             $submissions = $this->getSubmissionsForForm(formId: $id);
             return new JSONResponse(['results' => $submissions]);
@@ -124,9 +132,22 @@ class IntakeFormController extends Controller
      */
     public function export(string $id): DataDownloadResponse
     {
+        $authResponse = $this->authorizeFormAccess(id: $id);
+        if ($authResponse !== null) {
+            $statusCode = $authResponse->getStatus();
+            $data       = $authResponse->getData();
+            if (is_array($data)) {
+                return new DataDownloadResponse(
+                    data: json_encode($data),
+                    filename: 'error.json',
+                    contentType: 'application/json'
+                );
+            }
+        }
+
         try {
             // Get form and submissions from OpenRegister.
-            $form = $this->intakeFormService->getFormData(formId: $id);
+            $form        = $this->intakeFormService->getFormData(formId: $id);
             $submissions = $this->getSubmissionsForForm(formId: $id);
 
             $csv = $this->intakeFormService->exportCsv(
@@ -136,7 +157,7 @@ class IntakeFormController extends Controller
 
             return new DataDownloadResponse(
                 data: $csv,
-                filename: 'submissions-' . $id . '.csv',
+                filename: 'submissions-'.$id.'.csv',
                 contentType: 'text/csv'
             );
         } catch (\Exception $e) {
@@ -145,11 +166,11 @@ class IntakeFormController extends Controller
                 context: ['formId' => $id, 'error' => $e->getMessage()]
             );
             return new DataDownloadResponse(
-                data: 'Error: ' . $e->getMessage(),
+                data: 'Failed to export submissions.',
                 filename: 'error.txt',
                 contentType: 'text/plain'
             );
-        }
+        }//end try
     }//end export()
 
     /**
@@ -189,8 +210,63 @@ class IntakeFormController extends Controller
                 context: ['formId' => $id, 'error' => $e->getMessage()]
             );
             throw $e;
-        }
+        }//end try
     }//end getSubmissionsForForm()
+
+    /**
+     * Authorize form access for the current user.
+     *
+     * @param string $id The form ID.
+     *
+     * @return JSONResponse|null Returns a JSONResponse with 403 status if unauthorized, null if authorized.
+     *
+     * @spec openspec/changes/2026-03-20-public-intake-forms/tasks.md#task-3
+     */
+    private function authorizeFormAccess(string $id): ?JSONResponse
+    {
+        try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    ['error' => 'Unauthorized'],
+                    403
+                );
+            }
+
+            $form = $this->intakeFormService->getFormData(formId: $id);
+            if ($form === null) {
+                return new JSONResponse(
+                    ['error' => 'Form not found'],
+                    404
+                );
+            }
+
+            $notifyUser    = $form['notifyUser'] ?? '';
+            $currentUserId = $user->getUID();
+
+            if ($notifyUser !== $currentUserId) {
+                $this->logger->warning(
+                    message: 'Unauthorized form access attempt',
+                    context: ['formId' => $id, 'userId' => $currentUserId]
+                );
+                return new JSONResponse(
+                    ['error' => 'Forbidden'],
+                    403
+                );
+            }
+
+            return null;
+        } catch (\Exception $e) {
+            $this->logger->error(
+                message: 'Authorization check failed',
+                context: ['formId' => $id, 'error' => $e->getMessage()]
+            );
+            return new JSONResponse(
+                ['error' => 'Failed to authorize access'],
+                500
+            );
+        }//end try
+    }//end authorizeFormAccess()
 
     /**
      * Get the OpenRegister ObjectService.
