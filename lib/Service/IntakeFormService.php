@@ -1,4 +1,5 @@
 <?php
+// SPDX-License-Identifier: EUPL-1.2
 
 /**
  * Pipelinq IntakeFormService.
