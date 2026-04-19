@@ -459,24 +459,24 @@ The frontend MUST interact with OpenRegister's REST API directly for all CRUD op
 
 #### Scenario: Read a single object
 
-- GIVEN an existing client with UUID "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+- GIVEN an existing client with UUID "00000000-0000-0000-0000-000000000000"
 - WHEN the frontend navigates to the client detail view
-- THEN it MUST call `GET /index.php/apps/openregister/api/objects/pipelinq/client/f47ac10b-58cc-4372-a567-0e02b2c3d479`
+- THEN it MUST call `GET /index.php/apps/openregister/api/objects/pipelinq/client/00000000-0000-0000-0000-000000000000`
 - AND the response MUST contain the full client object with all properties
 
 #### Scenario: Update an object
 
-- GIVEN an existing client with UUID "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+- GIVEN an existing client with UUID "00000000-0000-0000-0000-000000000000"
 - WHEN the user updates the email to "info@rivierenland.nl"
-- THEN the frontend MUST call `PUT /index.php/apps/openregister/api/objects/pipelinq/client/f47ac10b-58cc-4372-a567-0e02b2c3d479`
+- THEN the frontend MUST call `PUT /index.php/apps/openregister/api/objects/pipelinq/client/00000000-0000-0000-0000-000000000000`
 - AND the request body MUST contain the updated client object
 - AND the response MUST return the updated object
 
 #### Scenario: Delete an object
 
-- GIVEN an existing client with UUID "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+- GIVEN an existing client with UUID "00000000-0000-0000-0000-000000000000"
 - WHEN the user confirms deletion
-- THEN the frontend MUST call `DELETE /index.php/apps/openregister/api/objects/pipelinq/client/f47ac10b-58cc-4372-a567-0e02b2c3d479`
+- THEN the frontend MUST call `DELETE /index.php/apps/openregister/api/objects/pipelinq/client/00000000-0000-0000-0000-000000000000`
 - AND the response MUST indicate successful deletion
 - AND subsequent GET requests for this UUID MUST return 404
 
@@ -746,7 +746,7 @@ Entities in Pipelinq reference each other via UUID fields stored on the OpenRegi
 
 #### Scenario: Lead references a client
 
-- GIVEN a lead object with `client: "f47ac10b-58cc-4372-a567-0e02b2c3d479"`
+- GIVEN a lead object with `client: "00000000-0000-0000-0000-000000000000"`
 - WHEN the frontend displays the lead detail view
 - THEN it MUST resolve the client UUID to fetch and display the client name
 - AND clicking the client name MUST navigate to the client detail view

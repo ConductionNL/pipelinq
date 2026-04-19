@@ -1,9 +1,0 @@
-- Auth: Nextcloud built-in ONLY. NO custom login, sessions, tokens, password storage.
-- Admin check: `IGroupManager::isAdmin()` on BACKEND. Frontend-only checks = vulnerability.
-- Multi-tenant isolation: enforce at API/service level, not UI only.
-- NO PII in logs, error responses, or debug output.
-- Audit trails: use `$user->getUID()` — NEVER `$user->getDisplayName()` (mutable, spoofable).
-- Identity: always derive from `IUserSession` on backend — NEVER trust frontend-sent user IDs or display names.
-- File uploads: validate type + size before storage.
-- API responses: NO stack traces, SQL, or internal paths.
-- Test collections: NEVER commit default credentials — use env variable placeholders.

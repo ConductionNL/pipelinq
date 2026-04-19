@@ -1,7 +1,0 @@
-- Licence: EUPL-1.2 (European Union Public Licence). SPDX header on every source file.
-- `appinfo/info.xml`: MUST use `<licence>agpl</licence>` — Nextcloud app store does not recognise EUPL.
-- This is intentional dual-tagging, NOT a conflict. Do NOT change info.xml to eupl. Do NOT flag as review finding.
-- PHP: `// SPDX-License-Identifier: EUPL-1.2` after `<?php` opening tag.
-- Vue: `<!-- SPDX-License-Identifier: EUPL-1.2 -->` as first line.
-- JS: `// SPDX-License-Identifier: EUPL-1.2` as first line.
-- File header block: `@licence EUPL-1.2`, `@copyright {year} Conduction B.V.`, `@link https://conduction.nl`
