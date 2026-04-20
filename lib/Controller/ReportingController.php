@@ -214,6 +214,15 @@ class ReportingController extends Controller
                 );
             }
 
+            $currentUser = $this->userSession->getUser();
+            if ($currentUser === null) {
+                return new JSONResponse(['message' => 'Operation failed'], 401);
+            }
+
+            if ($agentId !== $currentUser->getUID() && $this->groupManager->isAdmin($currentUser->getUID()) === false) {
+                return new JSONResponse(['message' => 'Operation failed'], 403);
+            }
+
             $metrics = $this->reportingService->getAgentMetrics($agentId, $startDate, $endDate);
 
             return new JSONResponse(
