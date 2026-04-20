@@ -83,34 +83,37 @@ class ReportingService
     /**
      * Get contact moments for a date range.
      *
-     * @param string  $startDate Optional start date (YYYY-MM-DD).
-     * @param string  $endDate   Optional end date (YYYY-MM-DD).
-     * @param string  $channel   Optional channel filter.
-     * @param string  $agentId   Optional agent filter.
+     * @param string $startDate Optional start date (YYYY-MM-DD).
+     * @param string $endDate   Optional end date (YYYY-MM-DD).
+     * @param string $channel   Optional channel filter.
+     * @param string $agentId   Optional agent filter.
      *
      * @return array<mixed> Array of contact moment objects.
      *
      * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-2
      */
     public function getContactMoments(
-        string $startDate = '',
-        string $endDate = '',
-        string $channel = '',
-        string $agentId = '',
+        string $startDate='',
+        string $endDate='',
+        string $channel='',
+        string $agentId='',
     ): array {
         try {
             $objectService = $this->getObjectService();
-            $params = [];
+            $params        = [];
 
             if ($startDate !== '') {
                 $params['contactedAt_gte'] = $startDate.'T00:00:00Z';
             }
+
             if ($endDate !== '') {
                 $params['contactedAt_lte'] = $endDate.'T23:59:59Z';
             }
+
             if ($channel !== '') {
                 $params['channel'] = $channel;
             }
+
             if ($agentId !== '') {
                 $params['agent'] = $agentId;
             }
@@ -132,7 +135,7 @@ class ReportingService
         } catch (\Exception $e) {
             $this->logger->error('Failed to fetch contact moments', ['error' => $e->getMessage()]);
             return [];
-        }
+        }//end try
     }//end getContactMoments()
 
     /**
@@ -145,7 +148,7 @@ class ReportingService
      *
      * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-2
      */
-    public function getTotalContacts(string $date, string $channel = ''): int
+    public function getTotalContacts(string $date, string $channel=''): int
     {
         $moments = $this->getContactMoments(
             startDate: $date,
@@ -169,13 +172,14 @@ class ReportingService
     public function getContactsByChannel(string $startDate, string $endDate): array
     {
         $moments = $this->getContactMoments(startDate: $startDate, endDate: $endDate);
-        $counts = [];
+        $counts  = [];
 
         foreach ($moments as $moment) {
             if (!is_array($moment)) {
                 continue;
             }
-            $channel = $moment['channel'] ?? 'unknown';
+
+            $channel          = $moment['channel'] ?? 'unknown';
             $counts[$channel] = ($counts[$channel] ?? 0) + 1;
         }
 
@@ -196,7 +200,7 @@ class ReportingService
     public function getAverageHandlingTime(
         string $startDate,
         string $endDate,
-        string $channel = '',
+        string $channel='',
     ): string {
         $moments = $this->getContactMoments(
             startDate: $startDate,
@@ -229,12 +233,13 @@ class ReportingService
         $moments = $this->getContactMoments(startDate: $startDate, endDate: $endDate);
 
         $totalContacts = count($moments);
-        $resolved = 0;
+        $resolved      = 0;
 
         foreach ($moments as $moment) {
             if (!is_array($moment)) {
                 continue;
             }
+
             // Check if outcome indicates resolution (no routing to backoffice)
             $outcome = $moment['outcome'] ?? '';
             if (strpos($outcome, 'resolved') !== false || strpos($outcome, 'afgehandeld') !== false) {
@@ -351,6 +356,15 @@ class ReportingService
      */
     public function setSlaTarget(string $channel, string $metric, string $value): void
     {
+        // Validate channel and metric against allowlist
+        if (!isset(self::DEFAULT_SLA_TARGETS[$channel])) {
+            return;
+        }
+
+        if (!isset(self::DEFAULT_SLA_TARGETS[$channel][$metric])) {
+            return;
+        }
+
         $key = 'sla_'.$channel.'_'.$metric;
         $this->appConfig->setValueString('pipelinq', $key, $value);
     }//end setSlaTarget()
@@ -364,17 +378,24 @@ class ReportingService
      * @param array<array<string>> $rows    The data rows.
      *
      * @return string The CSV content.
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-8
      */
     public function generateCsv(array $headers, array $rows): string
     {
-        $bom    = "\xEF\xBB\xBF";
-        $output = $bom.implode(';', $headers)."\n";
+        $bom = "\xEF\xBB\xBF";
+        // Quote headers to prevent corruption from semicolons and formula injection
+        $quotedHeaders = array_map(
+            fn($h) => $this->escapeCSVField((string) $h),
+            $headers,
+        );
+        $output        = $bom.implode(';', $quotedHeaders)."\n";
 
         foreach ($rows as $row) {
             $output .= implode(
                     ';',
                     array_map(
-                static fn($v) => '"'.str_replace('"', '""', (string) $v).'"',
+                fn($v) => $this->escapeCSVField((string) $v),
                 $row,
             )
                     )."\n";
@@ -382,6 +403,24 @@ class ReportingService
 
         return $output;
     }//end generateCsv()
+
+    /**
+     * Escape a CSV field to prevent formula injection and handle special chars.
+     *
+     * @param string $field The field value.
+     *
+     * @return string The escaped field.
+     */
+    private function escapeCSVField(string $field): string
+    {
+        // Prevent formula injection by prefixing formula characters with apostrophe
+        if (in_array(mb_substr($field, 0, 1), ['=', '+', '-', '@'], true)) {
+            $field = "'".$field;
+        }
+
+        // Quote and escape existing quotes
+        return '"'.str_replace('"', '""', $field).'"';
+    }//end escapeCSVField()
 
     /**
      * Get agent performance metrics.
@@ -403,16 +442,18 @@ class ReportingService
         );
 
         $totalContacts = count($moments);
-        $durations = [];
-        $resolved = 0;
+        $durations     = [];
+        $resolved      = 0;
 
         foreach ($moments as $moment) {
             if (!is_array($moment)) {
                 continue;
             }
+
             if (isset($moment['duration']) && $moment['duration'] !== '') {
                 $durations[] = $moment['duration'];
             }
+
             $outcome = $moment['outcome'] ?? '';
             if (strpos($outcome, 'resolved') !== false || strpos($outcome, 'afgehandeld') !== false) {
                 $resolved++;
@@ -420,18 +461,18 @@ class ReportingService
         }
 
         // Calculate contacts per hour
-        $start = new \DateTime($startDate);
-        $end = new \DateTime($endDate);
-        $end = $end->modify('+1 day');
+        $start    = new \DateTime($startDate);
+        $end      = new \DateTime($endDate);
+        $end      = $end->modify('+1 day');
         $interval = $start->diff($end);
-        $hours = ($interval->days * 24) + $interval->h + ($interval->i / 60);
+        $hours    = ($interval->days * 24) + $interval->h + ($interval->i / 60);
         $contactsPerHour = $hours > 0 ? round($totalContacts / $hours, 2) : 0;
 
         return [
-            'contacts'           => $totalContacts,
-            'avgHandlingTime'    => $this->calculateAverageHandlingTime($durations),
-            'fcr'                => $this->calculateFcr($totalContacts, $resolved),
-            'contactsPerHour'    => $contactsPerHour,
+            'contacts'        => $totalContacts,
+            'avgHandlingTime' => $this->calculateAverageHandlingTime($durations),
+            'fcr'             => $this->calculateFcr($totalContacts, $resolved),
+            'contactsPerHour' => $contactsPerHour,
         ];
     }//end getAgentMetrics()
 
@@ -463,26 +504,26 @@ class ReportingService
      *
      * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-7
      */
-    public function getMonthlyTrends(int $months = 6): array
+    public function getMonthlyTrends(int $months=6): array
     {
         $trends = [];
-        $now = new \DateTime();
+        $now    = new \DateTime();
 
         for ($i = $months - 1; $i >= 0; $i--) {
             $start = (new \DateTime())->modify("-$i months")->format('Y-m-01');
-            $end = (new \DateTime())->modify("-$i months")->format('Y-m-t');
+            $end   = (new \DateTime())->modify("-$i months")->format('Y-m-t');
 
-            $contacts = $this->getTotalContacts($start);
+            $contacts  = $this->getTotalContacts($start);
             $byChannel = $this->getContactsByChannel($start, $end);
-            $avgTime = $this->getAverageHandlingTime($start, $end);
-            $fcr = $this->getFcrRate($start, $end);
+            $avgTime   = $this->getAverageHandlingTime($start, $end);
+            $fcr       = $this->getFcrRate($start, $end);
 
             $trends[] = [
-                'month'       => (new \DateTime($start))->format('Y-m'),
-                'total'       => $contacts,
-                'byChannel'   => $byChannel,
-                'avgTime'     => $avgTime,
-                'fcr'         => $fcr,
+                'month'     => (new \DateTime($start))->format('Y-m'),
+                'total'     => $contacts,
+                'byChannel' => $byChannel,
+                'avgTime'   => $avgTime,
+                'fcr'       => $fcr,
             ];
         }
 
@@ -494,11 +535,11 @@ class ReportingService
      *
      * @param int $weeks Number of weeks to analyze (default 4).
      *
-     * @return array<string, array<int, int>> Heatmap: day-of-week and hour.
+     * @return array<int, array<int, int>> Heatmap: day-of-week and hour.
      *
      * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-7
      */
-    public function getPeakHoursHeatmap(int $weeks = 4): array
+    public function getPeakHoursHeatmap(int $weeks=4): array
     {
         $heatmap = [];
 
@@ -510,7 +551,7 @@ class ReportingService
         }
 
         $start = (new \DateTime())->modify("-$weeks weeks")->format('Y-m-d');
-        $end = date('Y-m-d');
+        $end   = date('Y-m-d');
 
         $moments = $this->getContactMoments(startDate: $start, endDate: $end);
 
@@ -518,9 +559,11 @@ class ReportingService
             if (!is_array($moment) || !isset($moment['contactedAt'])) {
                 continue;
             }
+
             try {
-                $dt = new \DateTime($moment['contactedAt']);
-                $dow = (int) $dt->format('w'); // 0=Sunday, 1=Monday
+                $dt  = new \DateTime($moment['contactedAt']);
+                $dow = (int) $dt->format('w');
+                // 0=Sunday, 1=Monday
                 $hour = (int) $dt->format('H');
                 $heatmap[$dow][$hour]++;
             } catch (\Exception $e) {
@@ -540,22 +583,23 @@ class ReportingService
      *
      * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-7
      */
-    public function getSubjectTrends(int $months = 3): array
+    public function getSubjectTrends(int $months=3): array
     {
         $trends = [];
 
         for ($i = $months - 1; $i >= 0; $i--) {
-            $start = (new \DateTime())->modify("-$i months")->format('Y-m-01');
-            $end = (new \DateTime())->modify("-$i months")->format('Y-m-t');
+            $start    = (new \DateTime())->modify("-$i months")->format('Y-m-01');
+            $end      = (new \DateTime())->modify("-$i months")->format('Y-m-t');
             $monthKey = (new \DateTime($start))->format('Y-m');
 
-            $moments = $this->getContactMoments(startDate: $start, endDate: $end);
+            $moments           = $this->getContactMoments(startDate: $start, endDate: $end);
             $trends[$monthKey] = [];
 
             foreach ($moments as $moment) {
                 if (!is_array($moment)) {
                     continue;
                 }
+
                 $subject = $moment['subject'] ?? 'Overig';
                 $trends[$monthKey][$subject] = ($trends[$monthKey][$subject] ?? 0) + 1;
             }
@@ -579,15 +623,16 @@ class ReportingService
         $moments = $this->getContactMoments(startDate: $startDate, endDate: $endDate);
 
         $totalContacts = count($moments);
-        $byChannel = [];
-        $avgWaitTimes = [];
+        $byChannel     = [];
+        $avgWaitTimes  = [];
         $slaCompliance = [];
-        $fcrRate = 0;
+        $fcrRate       = 0;
 
         foreach ($moments as $moment) {
             if (!is_array($moment)) {
                 continue;
             }
+
             $channel = $moment['channel'] ?? 'unknown';
             $byChannel[$channel] = ($byChannel[$channel] ?? 0) + 1;
 
@@ -604,7 +649,8 @@ class ReportingService
         // Calculate SLA compliance per channel
         foreach (array_keys($byChannel) as $channel) {
             $channelTotal = $byChannel[$channel];
-            $withinSla = (int) ($channelTotal * 0.84); // Placeholder calculation
+            $withinSla    = (int) ($channelTotal * 0.84);
+            // Placeholder calculation
             $slaCompliance[$channel] = $this->calculateSlaCompliance(
                 channel: $channel,
                 totalContacts: $channelTotal,
@@ -613,12 +659,12 @@ class ReportingService
         }
 
         return [
-            'period'       => $startDate.' tot '.$endDate,
+            'period'        => $startDate.' tot '.$endDate,
             'totalContacts' => $totalContacts,
-            'byChannel'    => $byChannel,
-            'fcr'          => $fcrRate,
+            'byChannel'     => $byChannel,
+            'fcr'           => $fcrRate,
             'slaCompliance' => $slaCompliance,
-            'avgWaitTimes' => $avgWaitTimes,
+            'avgWaitTimes'  => $avgWaitTimes,
         ];
     }//end generateWooReport()
 
@@ -628,6 +674,8 @@ class ReportingService
      * @param array<string> $durations ISO 8601 duration strings.
      *
      * @return string Formatted average duration (MM:SS).
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-2
      */
     public function calculateAverageHandlingTime(array $durations): string
     {
@@ -639,7 +687,7 @@ class ReportingService
         foreach ($durations as $duration) {
             try {
                 $interval      = new \DateInterval($duration);
-                $totalSeconds += ($interval->i * 60) + $interval->s;
+                $totalSeconds += ($interval->h * 3600) + ($interval->i * 60) + $interval->s;
             } catch (\Exception $e) {
                 // Skip invalid durations.
                 continue;

@@ -60,41 +60,44 @@ class ReportingController extends Controller
      * @return JSONResponse Daily KPI data.
      *
      * @NoAdminRequired
-     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-3
+     * @spec            openspec/changes/contactmomenten-rapportage/tasks.md#task-3
      */
     public function kpiDaily(): JSONResponse
     {
         try {
-            $today = date('Y-m-d');
+            $today    = date('Y-m-d');
             $lastWeek = date('Y-m-d', strtotime('-7 days'));
 
-            $totalToday = $this->reportingService->getTotalContacts($today);
+            $totalToday    = $this->reportingService->getTotalContacts($today);
             $totalLastWeek = $this->reportingService->getTotalContacts($lastWeek);
 
             $byChannel = $this->reportingService->getContactsByChannel($today, $today);
-            $avgTime = $this->reportingService->getAverageHandlingTime($today, $today);
-            $fcr = $this->reportingService->getFcrRate($today, $today);
-            $queue = $this->reportingService->getQueueStatistics();
+            $avgTime   = $this->reportingService->getAverageHandlingTime($today, $today);
+            $fcr       = $this->reportingService->getFcrRate($today, $today);
+            $queue     = $this->reportingService->getQueueStatistics();
 
             $trend = (($totalToday - $totalLastWeek) / max($totalLastWeek, 1)) * 100;
 
-            return new JSONResponse([
-                'totalContacts'    => $totalToday,
-                'byChannel'        => $byChannel,
-                'avgHandlingTime'  => $avgTime,
-                'fcrRate'          => $fcr,
-                'queueLength'      => $queue['waiting'],
-                'activeAgents'     => 0, // Would need agent availability tracking
-                'trend'            => round($trend, 1),
-                'trendDirection'   => $trend >= 0 ? 'up' : 'down',
-                'lastUpdated'      => date('c'),
-            ]);
+            return new JSONResponse(
+                    [
+                        'totalContacts'   => $totalToday,
+                        'byChannel'       => $byChannel,
+                        'avgHandlingTime' => $avgTime,
+                        'fcrRate'         => $fcr,
+                        'queueLength'     => $queue['waiting'],
+                        'activeAgents'    => 0,
+            // Would need agent availability tracking
+                        'trend'           => round($trend, 1),
+                        'trendDirection'  => $trend >= 0 ? 'up' : 'down',
+                        'lastUpdated'     => date('c'),
+                    ]
+                    );
         } catch (\Exception $e) {
             return new JSONResponse(
                 ['error' => $this->l10n->t('Failed to load daily KPI')],
                 500,
             );
-        }
+        }//end try
     }//end kpiDaily()
 
     /**
@@ -103,22 +106,22 @@ class ReportingController extends Controller
      * @return JSONResponse Channel analytics data.
      *
      * @NoAdminRequired
-     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-4
+     * @spec            openspec/changes/contactmomenten-rapportage/tasks.md#task-4
      */
     public function channelAnalytics(): JSONResponse
     {
         try {
-            $startDate = $this->request->getParam('startDate', date('Y-m-d', strtotime('-30 days')));
-            $endDate = $this->request->getParam('endDate', date('Y-m-d'));
+            $startDate   = $this->request->getParam('startDate', date('Y-m-d', strtotime('-30 days')));
+            $endDate     = $this->request->getParam('endDate', date('Y-m-d'));
             $granularity = $this->request->getParam('granularity', 'daily');
 
-            $channels = $this->reportingService->getContactsByChannel($startDate, $endDate);
+            $channels   = $this->reportingService->getContactsByChannel($startDate, $endDate);
             $comparison = [];
 
             foreach (array_keys($channels) as $channel) {
                 $avgTime = $this->reportingService->getAverageHandlingTime($startDate, $endDate, $channel);
-                $fcr = $this->reportingService->getFcrRate($startDate, $endDate);
-                $sla = $this->reportingService->calculateSlaCompliance($channel, $channels[$channel], (int) ($channels[$channel] * 0.84));
+                $fcr     = $this->reportingService->getFcrRate($startDate, $endDate);
+                $sla     = $this->reportingService->calculateSlaCompliance($channel, $channels[$channel], (int) ($channels[$channel] * 0.84));
 
                 $comparison[$channel] = [
                     'totalContacts'   => $channels[$channel],
@@ -128,18 +131,20 @@ class ReportingController extends Controller
                 ];
             }
 
-            return new JSONResponse([
-                'period'         => $startDate.' to '.$endDate,
-                'granularity'    => $granularity,
-                'distribution'   => $channels,
-                'comparison'     => $comparison,
-            ]);
+            return new JSONResponse(
+                    [
+                        'period'       => $startDate.' to '.$endDate,
+                        'granularity'  => $granularity,
+                        'distribution' => $channels,
+                        'comparison'   => $comparison,
+                    ]
+                    );
         } catch (\Exception $e) {
             return new JSONResponse(
                 ['error' => $this->l10n->t('Failed to load channel analytics')],
                 500,
             );
-        }
+        }//end try
     }//end channelAnalytics()
 
     /**
@@ -148,17 +153,19 @@ class ReportingController extends Controller
      * @return JSONResponse Queue data.
      *
      * @NoAdminRequired
-     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-5
+     * @spec            openspec/changes/contactmomenten-rapportage/tasks.md#task-5
      */
     public function queueStatistics(): JSONResponse
     {
         try {
             $stats = $this->reportingService->getQueueStatistics();
 
-            return new JSONResponse([
-                'realTime' => $stats,
-                'lastUpdated' => date('c'),
-            ]);
+            return new JSONResponse(
+                    [
+                        'realTime'    => $stats,
+                        'lastUpdated' => date('c'),
+                    ]
+                    );
         } catch (\Exception $e) {
             return new JSONResponse(
                 ['error' => $this->l10n->t('Failed to load queue statistics')],
@@ -173,14 +180,14 @@ class ReportingController extends Controller
      * @return JSONResponse Agent metrics data.
      *
      * @NoAdminRequired
-     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-6
+     * @spec            openspec/changes/contactmomenten-rapportage/tasks.md#task-6
      */
     public function agentMetrics(): JSONResponse
     {
         try {
-            $agentId = $this->request->getParam('agentId', '');
+            $agentId   = $this->request->getParam('agentId', '');
             $startDate = $this->request->getParam('startDate', date('Y-m-d'));
-            $endDate = $this->request->getParam('endDate', date('Y-m-d'));
+            $endDate   = $this->request->getParam('endDate', date('Y-m-d'));
 
             if ($agentId === '') {
                 return new JSONResponse(
@@ -191,17 +198,19 @@ class ReportingController extends Controller
 
             $metrics = $this->reportingService->getAgentMetrics($agentId, $startDate, $endDate);
 
-            return new JSONResponse([
-                'agentId'  => $agentId,
-                'period'   => $startDate.' to '.$endDate,
-                'metrics'  => $metrics,
-            ]);
+            return new JSONResponse(
+                    [
+                        'agentId' => $agentId,
+                        'period'  => $startDate.' to '.$endDate,
+                        'metrics' => $metrics,
+                    ]
+                    );
         } catch (\Exception $e) {
             return new JSONResponse(
                 ['error' => $this->l10n->t('Failed to load agent metrics')],
                 500,
             );
-        }
+        }//end try
     }//end agentMetrics()
 
     /**
@@ -210,12 +219,12 @@ class ReportingController extends Controller
      * @return JSONResponse Trend data.
      *
      * @NoAdminRequired
-     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-7
+     * @spec            openspec/changes/contactmomenten-rapportage/tasks.md#task-7
      */
     public function trends(): JSONResponse
     {
         try {
-            $type = $this->request->getParam('type', 'monthly');
+            $type   = $this->request->getParam('type', 'monthly');
             $months = (int) $this->request->getParam('months', 6);
 
             if ($type === 'monthly') {
@@ -231,16 +240,18 @@ class ReportingController extends Controller
                 );
             }
 
-            return new JSONResponse([
-                'type'  => $type,
-                'data'  => $trends,
-            ]);
+            return new JSONResponse(
+                    [
+                        'type' => $type,
+                        'data' => $trends,
+                    ]
+                    );
         } catch (\Exception $e) {
             return new JSONResponse(
                 ['error' => $this->l10n->t('Failed to load trends')],
                 500,
             );
-        }
+        }//end try
     }//end trends()
 
     /**
@@ -248,7 +259,7 @@ class ReportingController extends Controller
      *
      * @return JSONResponse The SLA targets.
      *
-     * @NoAdminRequired
+     * @RequireAdmin
      */
     public function getSla(): JSONResponse
     {
@@ -268,7 +279,7 @@ class ReportingController extends Controller
      *
      * @return JSONResponse The updated SLA targets.
      *
-     * @NoAdminRequired
+     * @RequireAdmin
      */
     public function updateSla(): JSONResponse
     {
@@ -359,21 +370,23 @@ class ReportingController extends Controller
      * @return JSONResponse Anonymized statistics (no PII).
      *
      * @NoAdminRequired
-     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-10
+     * @spec            openspec/changes/contactmomenten-rapportage/tasks.md#task-10
      */
     public function wooReport(): JSONResponse
     {
         try {
             $startDate = $this->request->getParam('startDate', date('Y-m-d', strtotime('-3 months')));
-            $endDate = $this->request->getParam('endDate', date('Y-m-d'));
-            $type = $this->request->getParam('type', 'quarterly');
+            $endDate   = $this->request->getParam('endDate', date('Y-m-d'));
+            $type      = $this->request->getParam('type', 'quarterly');
 
             $report = $this->reportingService->generateWooReport($startDate, $endDate);
 
-            return new JSONResponse([
-                'type'   => $type,
-                'report' => $report,
-            ]);
+            return new JSONResponse(
+                    [
+                        'type'   => $type,
+                        'report' => $report,
+                    ]
+                    );
         } catch (\Exception $e) {
             return new JSONResponse(
                 ['error' => $this->l10n->t('Failed to generate WOO report')],
