@@ -1221,6 +1221,68 @@
           "findings": [],
           "decisions": [],
           "verdict": "pass"
+        },
+        {
+          "stage": "pre-review-quality",
+          "persona": "orchestrator",
+          "container": "hydra-quality-runner",
+          "started_at": "2026-04-20T20:12:57Z",
+          "ended_at": "2026-04-20T20:12:57Z",
+          "exit_code": 1,
+          "checks_run": [
+            "composer check:strict (phpstan)",
+            "phpmetrics",
+            "composer audit",
+            "spdx-headers",
+            "forbidden-patterns",
+            "npm run lint (eslint)",
+            "npm run lint (stylelint)",
+            "npm audit",
+            "stub-scan",
+            "composer test:unit (phpunit)"
+          ],
+          "checks_skipped": [
+            "php -l",
+            "composer check:strict (phpcs)",
+            "composer check:strict (phpmd)",
+            "composer check:strict (psalm)",
+            "publiccode",
+            "gitleaks",
+            "trivy",
+            "newman"
+          ],
+          "gates": {
+            "php-lint": "skip",
+            "phpcs": "skip",
+            "phpmd": "skip",
+            "psalm": "skip",
+            "phpstan": "pass",
+            "phpmetrics": "pass",
+            "composer-audit": "pass",
+            "spdx-headers": "pass",
+            "publiccode": "skip",
+            "forbidden-patterns": "pass",
+            "eslint": "pass",
+            "stylelint": "pass",
+            "npm-audit": "pass",
+            "stub-scan": "fail",
+            "gitleaks": "skip",
+            "trivy": "skip",
+            "phpunit": "pass",
+            "newman": "skip"
+          },
+          "findings": [
+            {
+              "id": "prq-stub-scan",
+              "severity": "CRITICAL",
+              "gate": "stub-scan",
+              "rule": "stub-scan failing",
+              "status": "open",
+              "note": "stub-scan gate failed \u2014 see pipeline log",
+              "autofixable": false
+            }
+          ],
+          "verdict": "fail"
         }
       ]
     }
