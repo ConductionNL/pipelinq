@@ -2589,6 +2589,86 @@
           "findings": [],
           "decisions": [],
           "verdict": "pass"
+        },
+        {
+          "stage": "pre-review-quality",
+          "persona": "orchestrator",
+          "container": "hydra-quality-runner",
+          "started_at": "2026-04-20T19:32:33Z",
+          "ended_at": "2026-04-20T19:32:33Z",
+          "exit_code": 1,
+          "checks_run": [
+            "php -l",
+            "composer check:strict (phpcs)",
+            "composer check:strict (phpmd)",
+            "composer check:strict (psalm)",
+            "composer check:strict (phpstan)",
+            "phpmetrics",
+            "composer audit",
+            "spdx-headers",
+            "forbidden-patterns",
+            "npm run lint (eslint)",
+            "npm run lint (stylelint)",
+            "npm audit",
+            "stub-scan",
+            "composer test:unit (phpunit)"
+          ],
+          "checks_skipped": [
+            "publiccode",
+            "gitleaks",
+            "trivy",
+            "newman"
+          ],
+          "gates": {
+            "php-lint": "pass",
+            "phpcs": "fail",
+            "phpmd": "pass",
+            "psalm": "pass",
+            "phpstan": "pass",
+            "phpmetrics": "pass",
+            "composer-audit": "pass",
+            "spdx-headers": "pass",
+            "publiccode": "skip",
+            "forbidden-patterns": "pass",
+            "eslint": "fail",
+            "stylelint": "pass",
+            "npm-audit": "pass",
+            "stub-scan": "pass",
+            "gitleaks": "skip",
+            "trivy": "skip",
+            "phpunit": "fail",
+            "newman": "skip"
+          },
+          "findings": [
+            {
+              "id": "prq-phpcs",
+              "severity": "WARNING",
+              "gate": "phpcs",
+              "rule": "composer check:strict (phpcs) failing",
+              "status": "open",
+              "note": "...\nThe repository at \"/server/apps/app\" does not have the correct ownership and git refuses to use it:\n\nfatal: detected dubious ownership in repository at '/server/apps/app'\nTo add an exception for this directory, call:\n\ngit config --global --add safe.directory /server/apps/app\n\nComposer could not detect the root package (conductionnl/pipelinq) version, defaulting to '1.0.0'. See https://getcomposer.org/root-version\n\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m.\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[",
+              "autofixable": true
+            },
+            {
+              "id": "prq-eslint",
+              "severity": "WARNING",
+              "gate": "eslint",
+              "rule": "npm run lint (eslint) failing",
+              "status": "open",
+              "note": "...\n\n> pipelinq@0.1.0 lint\n> eslint src\n\n\n/server/apps/app/src/components/ContactmomentQuickLog.vue\n  222:12  warning  The property or function OC.currentUser was deprecated in Nextcloud 19.0.0  @nextcloud/no-deprecations\n\n/server/apps/app/src/components/ReportingDashboard.vue\n  84:0  error  Parsing error: Unexpected reserved word 'interface'. (10:0)\n\n/server/apps/app/src/services/complaintStatus.js\n   67:1  warning  Missing JSDoc @param \"currentStatus\" description  jsdoc/require-param-description\n   89:1  warning  Missing JSDoc @param \"status\" description         jsdoc/require-param-description\n   99:1  warning  Missing JSDoc @param \"targetStatus\" description   jsdoc/require-param-description\n  109:1  warning  Missing JSDoc @param \"status\" description         jsdoc/require-param-descripti",
+              "autofixable": true
+            },
+            {
+              "id": "prq-phpunit",
+              "severity": "CRITICAL",
+              "gate": "phpunit",
+              "rule": "composer test:unit (phpunit) failing",
+              "status": "open",
+              "note": "phpunit gate failed \u2014 see pipeline log",
+              "autofixable": false
+            }
+          ],
+          "verdict": "fail"
         }
       ]
     }
