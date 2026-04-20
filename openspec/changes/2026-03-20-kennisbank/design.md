@@ -1,3 +1,7 @@
+---
+status: draft
+---
+
 # Design: kennisbank
 
 ## Architecture
