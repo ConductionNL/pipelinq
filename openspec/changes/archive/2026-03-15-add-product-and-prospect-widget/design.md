@@ -183,7 +183,7 @@ Save ICP configuration (admin only).
   "legalForms": ["BV"],
   "excludeInactive": true,
   "keywords": ["software"],
-  "kvkApiKey": "abc123-my-api-key",
+  "kvkApiKey": "YOUR_KVK_API_KEY_HERE",
   "openCorporatesEnabled": false
 }
 ```
