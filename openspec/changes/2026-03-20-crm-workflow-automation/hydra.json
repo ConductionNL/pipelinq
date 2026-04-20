@@ -118,6 +118,16 @@
           "verdict": "fail"
         }
       ]
+    },
+    {
+      "cycle": 4,
+      "trigger": "build:queued",
+      "started_at": "2026-04-20T16:51:57Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [],
+      "stages": []
     }
   ]
 }
