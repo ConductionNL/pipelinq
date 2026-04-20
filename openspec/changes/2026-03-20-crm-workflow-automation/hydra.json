@@ -197,9 +197,9 @@
       "cycle": 6,
       "trigger": "build:queued",
       "started_at": "2026-04-20T17:17:40Z",
-      "ended_at": "2026-04-20T17:28:34Z",
-      "outcome": "needs-input",
-      "outcome_reason": "builder output failed post-build deterministic checks",
+      "ended_at": "2026-04-20T18:12:19Z",
+      "outcome": "aborted",
+      "outcome_reason": "rebuild:queued \u2014 human wiped prior cycle",
       "pattern_tags": [],
       "stages": [
         {
