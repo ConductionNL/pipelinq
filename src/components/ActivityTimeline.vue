@@ -78,7 +78,7 @@
 		<NcDialog
 			v-if="error"
 			:title="t('pipelinq', 'Error')"
-			:show.sync="!!error"
+			:show="true"
 			@close="error = null">
 			{{ error }}
 		</NcDialog>
@@ -90,6 +90,7 @@ import axios from '@nextcloud/axios'
 import { NcLoadingIcon, NcButton, NcDialog } from '@nextcloud/vue'
 import { CnEmptyState, CnIcon } from '@conduction/nextcloud-vue'
 import { generateUrl } from '@nextcloud/router'
+import { translate as t } from '@nextcloud/l10n'
 
 export default {
 	name: 'ActivityTimeline',
@@ -148,7 +149,7 @@ export default {
 
 				const response = await axios.get(
 					generateUrl('/apps/pipelinq/api/timeline'),
-					{ params }
+					{ params },
 				)
 
 				if (this.currentPage === 1) {
