@@ -1,5 +1,7 @@
 # Design: omnichannel-registratie
 
+**Status:** pr-created
+
 ## Architecture
 
 ### Data Model (OpenRegister Schema)
@@ -22,13 +24,13 @@ New `contactmoment` schema:
 ### Frontend
 
 #### Routes
-- `/contactmomenten` — ContactmomentList
+- `/contactmomenten` — ContactmomentenList
 - `/contactmomenten/new` — ContactmomentForm
 - `/contactmomenten/:id` — ContactmomentDetail
 
 #### Views
 
-**ContactmomentList.vue** — Filterable list with channel icons, search, CSV export
+**ContactmomentenList.vue** — Filterable list with channel icons, search, CSV export
 **ContactmomentForm.vue** — Adaptive form based on channel selection, call timer
 **ContactmomentDetail.vue** — Full detail view with linked entities
 
@@ -42,7 +44,7 @@ Add "Contact Moments" entry to MainMenu.vue.
 ## Files Changed
 
 ### New Files
-- `src/views/contactmomenten/ContactmomentList.vue`
+- `src/views/contactmomenten/ContactmomentenList.vue`
 - `src/views/contactmomenten/ContactmomentForm.vue`
 - `src/views/contactmomenten/ContactmomentDetail.vue`
 - `src/components/CallTimer.vue`
