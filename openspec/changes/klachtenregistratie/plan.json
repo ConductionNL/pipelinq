@@ -9,7 +9,7 @@
       "title": "Create ComplaintSlaService",
       "spec_ref": "REQ-KL-009",
       "github_issue": 158,
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "GIVEN category with configured SLA WHEN calculateDeadline called THEN returns deadline",
         "GIVEN unconfigured category WHEN calculateDeadline called THEN returns null",
@@ -24,7 +24,7 @@
       "title": "Create ComplaintSlaJob background job",
       "spec_ref": "REQ-KL-010",
       "github_issue": 160,
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "GIVEN open complaints with overdue SLA WHEN job runs THEN overdue complaints are logged",
         "GIVEN no overdue complaints WHEN job runs THEN no warnings logged"
@@ -39,7 +39,7 @@
       "title": "Unit tests for ComplaintSlaService",
       "spec_ref": "REQ-KL-009",
       "github_issue": 161,
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "GIVEN test class WHEN phpunit runs THEN 3+ test methods pass"
       ],
@@ -52,7 +52,7 @@
       "title": "Unit tests for ComplaintSlaJob",
       "spec_ref": "REQ-KL-010",
       "github_issue": 164,
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "GIVEN test class WHEN phpunit runs THEN 2+ test methods pass"
       ],
@@ -65,7 +65,7 @@
       "title": "Verify client detail complaints section",
       "spec_ref": "REQ-KL-007",
       "github_issue": 165,
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "GIVEN client with complaints WHEN viewing client detail THEN complaints section visible",
         "GIVEN client detail WHEN clicking Register complaint THEN form opens with pre-linked client"

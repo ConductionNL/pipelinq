@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/klachtenregistratie/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
@@ -33,6 +35,8 @@ use Psr\Log\LoggerInterface;
  *
  * Reads per-category SLA hours from app config and provides helpers
  * for calculating deadlines and checking overdue status.
+ *
+ * @spec openspec/changes/klachtenregistratie/tasks.md#task-1.1
  */
 class ComplaintSlaService
 {
@@ -80,6 +84,8 @@ class ComplaintSlaService
      * @param string $category The complaint category.
      *
      * @return int The SLA hours, or 0 if not configured.
+     *
+     * @spec openspec/changes/klachtenregistratie/tasks.md#task-1.1
      */
     public function getSlaHoursForCategory(string $category): int
     {
@@ -114,6 +120,8 @@ class ComplaintSlaService
      * @param DateTimeInterface|null $from     The starting point (defaults to now).
      *
      * @return DateTimeImmutable|null The deadline, or null if no SLA configured.
+     *
+     * @spec openspec/changes/klachtenregistratie/tasks.md#task-1.1
      */
     public function calculateDeadline(
         string $category,
@@ -151,6 +159,8 @@ class ComplaintSlaService
      * @param DateTimeInterface|null $now       The current time (defaults to now).
      *
      * @return bool True if the complaint is overdue.
+     *
+     * @spec openspec/changes/klachtenregistratie/tasks.md#task-1.1
      */
     public function isOverdue(
         array $complaint,
@@ -195,6 +205,8 @@ class ComplaintSlaService
      * @param string $status The complaint status.
      *
      * @return bool True if the status is open.
+     *
+     * @spec openspec/changes/klachtenregistratie/tasks.md#task-1.1
      */
     public function isOpenStatus(string $status): bool
     {

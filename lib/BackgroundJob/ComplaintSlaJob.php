@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/klachtenregistratie/tasks.md#task-1.2
  */
 
 declare(strict_types=1);
@@ -36,6 +38,8 @@ use Psr\Log\LoggerInterface;
  * their SLA deadline and logs warnings for each overdue complaint.
  *
  * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+ *
+ * @spec openspec/changes/klachtenregistratie/tasks.md#task-1.2
  */
 class ComplaintSlaJob extends TimedJob
 {

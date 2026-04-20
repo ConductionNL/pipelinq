@@ -1,0 +1,950 @@
+{
+  "spec_slug": "klachtenregistratie",
+  "app": "pipelinq",
+  "repo": "ConductionNL/pipelinq",
+  "issue": 231,
+  "depends_on": [],
+  "schema_version": 2,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-04-16T21:59:59Z",
+      "ended_at": null,
+      "outcome": "aborted",
+      "outcome_reason": "no terminal label seen in timeline",
+      "pattern_tags": [
+        "reviewer-skipped-full-suite"
+      ],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-16T21:59:59Z",
+          "ended_at": "2026-04-16T22:00:00Z",
+          "turns_used": 66,
+          "turns_budget": 200,
+          "cost_usd": 0.479,
+          "checks_run": [
+            "composer check:strict"
+          ],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass"
+        },
+        {
+          "stage": "pre-review-quality",
+          "persona": "orchestrator",
+          "container": "hydra-quality-runner",
+          "started_at": "2026-04-16T21:59:59Z",
+          "ended_at": "2026-04-16T22:00:00Z",
+          "exit_code": 0,
+          "checks_run": [
+            "phpstan",
+            "phpmetrics",
+            "composer-audit",
+            "spdx-headers",
+            "forbidden-patterns",
+            "eslint",
+            "stylelint",
+            "npm-audit",
+            "phpunit"
+          ],
+          "checks_skipped": [
+            "php-lint",
+            "phpcs",
+            "phpmd",
+            "psalm",
+            "publiccode",
+            "gitleaks",
+            "trivy",
+            "newman"
+          ],
+          "gates": {
+            "phpstan": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpmetrics": {
+              "pass": true,
+              "failures": 0
+            },
+            "composer-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "spdx-headers": {
+              "pass": true,
+              "failures": 0
+            },
+            "forbidden-patterns": {
+              "pass": true,
+              "failures": 0
+            },
+            "eslint": {
+              "pass": true,
+              "failures": 0
+            },
+            "stylelint": {
+              "pass": true,
+              "failures": 0
+            },
+            "npm-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpunit": {
+              "pass": true,
+              "failures": 0
+            }
+          },
+          "findings": [],
+          "verdict": "pass"
+        },
+        {
+          "stage": "code-review",
+          "persona": "Juan Claude van Damme",
+          "model": "sonnet",
+          "container": "hydra-reviewer",
+          "started_at": "2026-04-16T22:14:00Z",
+          "ended_at": "2026-04-16T22:14:01Z",
+          "turns_used": 13,
+          "turns_budget": 40,
+          "cost_usd": 0.2172,
+          "checks_run": [
+            "phpmd"
+          ],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [],
+          "verdict": "none"
+        },
+        {
+          "stage": "security-review",
+          "persona": "Clyde Barcode",
+          "model": "sonnet",
+          "container": "hydra-security",
+          "started_at": "2026-04-16T22:15:51Z",
+          "ended_at": "2026-04-16T22:15:52Z",
+          "turns_used": 13,
+          "turns_budget": 40,
+          "cost_usd": 0.2268,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [],
+          "verdict": "none"
+        }
+      ]
+    },
+    {
+      "cycle": 2,
+      "trigger": "build:queued",
+      "started_at": "2026-04-16T22:18:49Z",
+      "ended_at": null,
+      "outcome": "aborted",
+      "outcome_reason": "no terminal label seen in timeline",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "fix",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-16T22:18:49Z",
+          "ended_at": "2026-04-16T22:18:50Z",
+          "turns_used": 42,
+          "turns_budget": 200,
+          "cost_usd": 0.3094,
+          "checks_run": [
+            "composer check:strict"
+          ],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "cycle": 3,
+      "trigger": "build:queued",
+      "started_at": "2026-04-16T22:18:50Z",
+      "ended_at": null,
+      "outcome": "aborted",
+      "outcome_reason": "no terminal label seen in timeline",
+      "pattern_tags": [
+        "reviewer-skipped-full-suite"
+      ],
+      "stages": [
+        {
+          "stage": "fix",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-16T22:18:50Z",
+          "ended_at": "2026-04-16T22:18:51Z",
+          "turns_used": 54,
+          "turns_budget": 200,
+          "cost_usd": 0.4408,
+          "checks_run": [
+            "composer check:strict"
+          ],
+          "checks_skipped": [],
+          "findings": [
+            {
+              "id": "b-builder-fix-0",
+              "severity": "WARNING",
+              "gate": null,
+              "rule": "builder output flagged failure language",
+              "status": "open",
+              "note": "Excellent! I have successfully fixed all CRITICAL and WARNING findings from the code review on PR #252. Here's a summary of the work completed:\n\n## Fixes Applied\n\n### CRITICAL: ComplaintSlaJob.run() is a non-functional stub\n**Status: FIXED \u2705**\n\nThe background job now has a fully implemented SLA monitoring capability:\n- Injects `IAppManager` and `ContainerInterface` for OpenRegister integration\n- Checks if the openregister app is installed before proceeding\n- Queries OpenRegister for complaints v",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "fail"
+        },
+        {
+          "stage": "code-review",
+          "persona": "Juan Claude van Damme",
+          "model": "sonnet",
+          "container": "hydra-reviewer",
+          "started_at": "2026-04-16T22:22:19Z",
+          "ended_at": "2026-04-16T22:22:20Z",
+          "turns_used": 16,
+          "turns_budget": 40,
+          "cost_usd": 0.2592,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [],
+          "verdict": "none"
+        },
+        {
+          "stage": "code-review",
+          "persona": "Juan Claude van Damme",
+          "model": "sonnet",
+          "container": "hydra-reviewer",
+          "started_at": "2026-04-16T22:22:20Z",
+          "ended_at": "2026-04-16T22:22:21Z",
+          "turns_used": 16,
+          "turns_budget": 40,
+          "cost_usd": 0.2781,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [],
+          "verdict": "none"
+        },
+        {
+          "stage": "security-review",
+          "persona": "Clyde Barcode",
+          "model": "sonnet",
+          "container": "hydra-security",
+          "started_at": "2026-04-16T22:22:44Z",
+          "ended_at": "2026-04-16T22:22:45Z",
+          "turns_used": 19,
+          "turns_budget": 40,
+          "cost_usd": 0.3107,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [],
+          "verdict": "none"
+        },
+        {
+          "stage": "code-review",
+          "persona": "Juan Claude van Damme",
+          "model": "sonnet",
+          "container": "hydra-reviewer",
+          "started_at": "2026-04-16T22:23:55Z",
+          "ended_at": "2026-04-16T22:23:56Z",
+          "turns_used": 2,
+          "turns_budget": 40,
+          "cost_usd": 0.3554,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [],
+          "verdict": "none"
+        },
+        {
+          "stage": "code-review",
+          "persona": "Juan Claude van Damme",
+          "model": "sonnet",
+          "container": "hydra-reviewer",
+          "started_at": "2026-04-16T22:26:08Z",
+          "ended_at": "2026-04-16T22:26:09Z",
+          "turns_used": 24,
+          "turns_budget": 40,
+          "cost_usd": 0.3469,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [],
+          "verdict": "none"
+        },
+        {
+          "stage": "security-review",
+          "persona": "Clyde Barcode",
+          "model": "sonnet",
+          "container": "hydra-security",
+          "started_at": "2026-04-16T22:26:16Z",
+          "ended_at": "2026-04-16T22:26:17Z",
+          "turns_used": 14,
+          "turns_budget": 40,
+          "cost_usd": 0.2417,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [],
+          "verdict": "none"
+        }
+      ]
+    },
+    {
+      "cycle": 4,
+      "trigger": "build:queued",
+      "started_at": "2026-04-16T22:30:38Z",
+      "ended_at": null,
+      "outcome": "aborted",
+      "outcome_reason": "no terminal label seen in timeline",
+      "pattern_tags": [
+        "reviewer-skipped-full-suite"
+      ],
+      "stages": [
+        {
+          "stage": "fix",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-16T22:30:38Z",
+          "ended_at": "2026-04-16T22:30:39Z",
+          "turns_used": 60,
+          "turns_budget": 200,
+          "cost_usd": 0.3949,
+          "checks_run": [
+            "composer check:strict"
+          ],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass"
+        },
+        {
+          "stage": "code-review",
+          "persona": "Juan Claude van Damme",
+          "model": "sonnet",
+          "container": "hydra-reviewer",
+          "started_at": "2026-04-16T22:36:57Z",
+          "ended_at": "2026-04-16T22:36:58Z",
+          "turns_used": 3,
+          "turns_budget": 40,
+          "cost_usd": 0.0649,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [],
+          "verdict": "none"
+        },
+        {
+          "stage": "code-review",
+          "persona": "Juan Claude van Damme",
+          "model": "sonnet",
+          "container": "hydra-reviewer",
+          "started_at": "2026-04-16T22:36:58Z",
+          "ended_at": "2026-04-16T22:36:59Z",
+          "turns_used": 3,
+          "turns_budget": 40,
+          "cost_usd": 0.0639,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [],
+          "verdict": "none"
+        },
+        {
+          "stage": "security-review",
+          "persona": "Clyde Barcode",
+          "model": "sonnet",
+          "container": "hydra-security",
+          "started_at": "2026-04-16T22:37:09Z",
+          "ended_at": "2026-04-16T22:37:10Z",
+          "turns_used": 1,
+          "turns_budget": 40,
+          "cost_usd": 0.0,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [],
+          "verdict": "none"
+        },
+        {
+          "stage": "security-review",
+          "persona": "Clyde Barcode",
+          "model": "sonnet",
+          "container": "hydra-security",
+          "started_at": "2026-04-16T22:37:10Z",
+          "ended_at": "2026-04-16T22:37:11Z",
+          "turns_used": 1,
+          "turns_budget": 40,
+          "cost_usd": 0.0,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [],
+          "verdict": "none"
+        },
+        {
+          "stage": "security-review",
+          "persona": "Clyde Barcode",
+          "model": "sonnet",
+          "container": "hydra-security",
+          "started_at": "2026-04-16T22:37:11Z",
+          "ended_at": "2026-04-16T22:37:12Z",
+          "turns_used": 1,
+          "turns_budget": 40,
+          "cost_usd": 0.0,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [],
+          "verdict": "none"
+        },
+        {
+          "stage": "code-review",
+          "persona": "Juan Claude van Damme",
+          "model": "sonnet",
+          "container": "hydra-reviewer",
+          "started_at": "2026-04-18T07:37:47Z",
+          "ended_at": "2026-04-18T07:37:48Z",
+          "turns_used": 19,
+          "turns_budget": 40,
+          "cost_usd": 0.3859,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [
+            {
+              "id": "F-01",
+              "severity": "CRITICAL",
+              "gate": null,
+              "file": "tests/Unit/BackgroundJob/ComplaintSlaJobTest.php",
+              "line": 148,
+              "rule": null,
+              "status": "open",
+              "note": "When register/schema are configured the job calls container->get() which returns null (mock default), then null->findAll() throws \\Error. The catch(Exception) block does not catch \\Error, so the test errors out instead of passing. Fix: configure the container mock to return an ObjectService mock that returns ['results' => []].",
+              "autofixable": false
+            },
+            {
+              "id": "F-02",
+              "severity": "WARNING",
+              "gate": null,
+              "file": "lib/BackgroundJob/ComplaintSlaJob.php",
+              "line": 135,
+              "rule": null,
+              "status": "open",
+              "note": "Only \\Exception is caught. PHP \\Error subclasses (TypeError, etc.) and PSR-11 container exceptions that extend \\Throwable but not \\Exception will propagate uncaught from a background job. Widen to catch (\\Throwable $e) for safe background-job error handling.",
+              "autofixable": false
+            },
+            {
+              "id": "F-03",
+              "severity": "SUGGESTION",
+              "gate": null,
+              "file": "lib/BackgroundJob/ComplaintSlaJob.php",
+              "line": 114,
+              "rule": null,
+              "status": "open",
+              "note": "If more than 500 open complaints exist per status, overdue ones beyond the limit are never evaluated. No pagination loop and no warning log when truncation occurs. Paginate until result count < 500, or log a warning when exactly 500 results are returned.",
+              "autofixable": false
+            }
+          ],
+          "verdict": "fail"
+        },
+        {
+          "stage": "security-review",
+          "persona": "Clyde Barcode",
+          "model": "sonnet",
+          "container": "hydra-security",
+          "started_at": "2026-04-18T07:37:58Z",
+          "ended_at": "2026-04-18T07:37:59Z",
+          "turns_used": 19,
+          "turns_budget": 40,
+          "cost_usd": 0.3748,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [
+            {
+              "id": "SEC-01",
+              "severity": "WARNING",
+              "gate": "OWASP A04:2021",
+              "file": "src/views/complaints/ComplaintForm.vue",
+              "line": 238,
+              "rule": "OWASP A04:2021",
+              "status": "open",
+              "note": "The slaDeadline value is computed in the browser and included verbatim in the form submission. Any authenticated user can intercept the request and submit an arbitrary slaDeadline, bypassing SLA enforcement by ComplaintSlaJob. Fix: calculate the deadline server-side in the backend controller or ComplaintSlaService::calculateDeadline() and remove slaDeadline from the frontend payload.",
+              "autofixable": false
+            },
+            {
+              "id": "SEC-02",
+              "severity": "SUGGESTION",
+              "gate": "OWASP A05:2021",
+              "file": "lib/BackgroundJob/ComplaintSlaJob.php",
+              "line": 114,
+              "rule": "OWASP A05:2021",
+              "status": "open",
+              "note": "_limit => 500 per status means overdue complaints beyond the 500-record cut-off are silently skipped with no log warning. Fix: implement cursor/offset pagination or log a warning when the result count equals the limit.",
+              "autofixable": false
+            }
+          ],
+          "verdict": "fail"
+        },
+        {
+          "stage": "code-review",
+          "persona": "Juan Claude van Damme",
+          "model": "sonnet",
+          "container": "hydra-reviewer",
+          "started_at": "2026-04-18T10:12:13Z",
+          "ended_at": "2026-04-18T10:12:14Z",
+          "turns_used": 41,
+          "turns_budget": 40,
+          "cost_usd": 1.4766,
+          "checks_run": [
+            "phpcs",
+            "phpunit"
+          ],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [],
+          "verdict": "none"
+        },
+        {
+          "stage": "security-review",
+          "persona": "Clyde Barcode",
+          "model": "sonnet",
+          "container": "hydra-security",
+          "started_at": "2026-04-18T10:22:03Z",
+          "ended_at": "2026-04-18T10:22:04Z",
+          "turns_used": 25,
+          "turns_budget": 40,
+          "cost_usd": 0.4595,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [],
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "cycle": 5,
+      "trigger": "build:queued",
+      "started_at": "2026-04-18T10:25:31Z",
+      "ended_at": null,
+      "outcome": "aborted",
+      "outcome_reason": "no terminal label seen in timeline",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "quality-recheck",
+          "persona": "orchestrator",
+          "container": "hydra-quality-runner",
+          "started_at": "2026-04-18T10:25:31Z",
+          "ended_at": "2026-04-18T10:25:32Z",
+          "exit_code": 1,
+          "checks_run": [
+            "php-lint",
+            "phpcs",
+            "phpmd",
+            "psalm",
+            "phpstan",
+            "phpmetrics",
+            "composer-audit",
+            "spdx-headers",
+            "forbidden-patterns",
+            "eslint",
+            "stylelint",
+            "npm-audit",
+            "phpunit"
+          ],
+          "checks_skipped": [
+            "publiccode",
+            "gitleaks",
+            "trivy",
+            "newman"
+          ],
+          "gates": {
+            "php-lint": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpcs": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpmd": {
+              "pass": true,
+              "failures": 0
+            },
+            "psalm": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpstan": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpmetrics": {
+              "pass": true,
+              "failures": 0
+            },
+            "composer-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "spdx-headers": {
+              "pass": true,
+              "failures": 0
+            },
+            "forbidden-patterns": {
+              "pass": true,
+              "failures": 0
+            },
+            "eslint": {
+              "pass": true,
+              "failures": 0
+            },
+            "stylelint": {
+              "pass": true,
+              "failures": 0
+            },
+            "npm-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpunit": {
+              "pass": false,
+              "failures": 1
+            }
+          },
+          "findings": [
+            {
+              "id": "qr-quality-recheck-phpunit",
+              "severity": "CRITICAL",
+              "gate": "phpunit",
+              "rule": "phpunit gate failing",
+              "status": "open",
+              "note": "phpunit reported status=fail in quality-recheck.json",
+              "autofixable": false
+            }
+          ],
+          "verdict": "fail"
+        }
+      ]
+    },
+    {
+      "cycle": 6,
+      "trigger": "build:queued",
+      "started_at": "2026-04-18T19:14:58Z",
+      "ended_at": null,
+      "outcome": "aborted",
+      "outcome_reason": "no terminal label seen in timeline",
+      "pattern_tags": [
+        "reviewer-skipped-full-suite"
+      ],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-18T19:14:58Z",
+          "ended_at": "2026-04-18T19:14:59Z",
+          "turns_used": 86,
+          "turns_budget": 200,
+          "cost_usd": 0.6214,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [
+            {
+              "id": "b-builder-build-0",
+              "severity": "WARNING",
+              "gate": null,
+              "rule": "builder output flagged failure language",
+              "status": "open",
+              "note": "Excellent! \u2705 I've successfully completed the **klachtenregistratie** (complaint registration) OpenSpec change for Pipelinq.\n\n## Summary\n\n### Implementation Status: Complete \u2705\n\nAll tasks from the specification have been implemented and verified:\n\n**Backend Services:**\n- \u2705 **ComplaintSlaService** \u2014 Calculates SLA deadlines from configurable category-specific hours, checks overdue status\n- \u2705 **ComplaintSlaJob** \u2014 Background job runs every 15 minutes to monitor and log overdue complaints  \n- \u2705 Both ",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "fail"
+        },
+        {
+          "stage": "pre-review-quality",
+          "persona": "orchestrator",
+          "container": "hydra-quality-runner",
+          "started_at": "2026-04-18T19:14:58Z",
+          "ended_at": "2026-04-18T19:14:59Z",
+          "exit_code": 0,
+          "checks_run": [
+            "phpstan",
+            "phpmetrics",
+            "composer-audit",
+            "spdx-headers",
+            "forbidden-patterns",
+            "eslint",
+            "stylelint",
+            "npm-audit",
+            "phpunit"
+          ],
+          "checks_skipped": [
+            "php-lint",
+            "phpcs",
+            "phpmd",
+            "psalm",
+            "publiccode",
+            "gitleaks",
+            "trivy",
+            "newman"
+          ],
+          "gates": {
+            "phpstan": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpmetrics": {
+              "pass": true,
+              "failures": 0
+            },
+            "composer-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "spdx-headers": {
+              "pass": true,
+              "failures": 0
+            },
+            "forbidden-patterns": {
+              "pass": true,
+              "failures": 0
+            },
+            "eslint": {
+              "pass": true,
+              "failures": 0
+            },
+            "stylelint": {
+              "pass": true,
+              "failures": 0
+            },
+            "npm-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpunit": {
+              "pass": true,
+              "failures": 0
+            }
+          },
+          "findings": [],
+          "verdict": "pass"
+        },
+        {
+          "stage": "code-review",
+          "persona": "Juan Claude van Damme",
+          "model": "sonnet",
+          "container": "hydra-reviewer",
+          "started_at": "2026-04-18T19:26:48Z",
+          "ended_at": "2026-04-18T19:26:49Z",
+          "turns_used": 41,
+          "turns_budget": 40,
+          "cost_usd": 0.815,
+          "checks_run": [
+            "composer check:strict",
+            "phpcs",
+            "eslint"
+          ],
+          "checks_skipped": [
+            "hydra-gates"
+          ],
+          "findings": [],
+          "verdict": "none"
+        },
+        {
+          "stage": "security-review",
+          "persona": "Clyde Barcode",
+          "model": "sonnet",
+          "container": "hydra-security",
+          "started_at": "2026-04-18T19:36:53Z",
+          "ended_at": "2026-04-18T19:36:54Z",
+          "turns_used": 20,
+          "turns_budget": 40,
+          "cost_usd": 0.4193,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [
+            {
+              "id": "SEC-01",
+              "severity": "SUGGESTION",
+              "gate": "OWASP A04:2021",
+              "file": "src/views/complaints/ComplaintForm.vue",
+              "line": 241,
+              "rule": "OWASP A04:2021",
+              "status": "open",
+              "note": "slaDeadline is computed in the browser and submitted directly to OpenRegister API; authenticated users can supply arbitrary deadlines. Fix requires a server-side controller invoking ComplaintSlaService::calculateDeadline() on create \u2014 architectural change, out of bounded fix scope.",
+              "autofixable": false
+            }
+          ],
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "cycle": 7,
+      "trigger": "build:queued",
+      "started_at": "2026-04-18T19:40:19Z",
+      "ended_at": "2026-04-20T20:25:02Z",
+      "outcome": "aborted",
+      "outcome_reason": "rebuild:queued \u2014 human wiped prior cycle",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "quality-recheck",
+          "persona": "orchestrator",
+          "container": "hydra-quality-runner",
+          "started_at": "2026-04-18T19:40:19Z",
+          "ended_at": "2026-04-18T19:40:20Z",
+          "exit_code": 1,
+          "checks_run": [
+            "php-lint",
+            "phpcs",
+            "phpmd",
+            "psalm",
+            "phpstan",
+            "phpmetrics",
+            "composer-audit",
+            "spdx-headers",
+            "forbidden-patterns",
+            "eslint",
+            "stylelint",
+            "npm-audit",
+            "phpunit"
+          ],
+          "checks_skipped": [
+            "publiccode",
+            "gitleaks",
+            "trivy",
+            "newman"
+          ],
+          "gates": {
+            "php-lint": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpcs": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpmd": {
+              "pass": true,
+              "failures": 0
+            },
+            "psalm": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpstan": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpmetrics": {
+              "pass": true,
+              "failures": 0
+            },
+            "composer-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "spdx-headers": {
+              "pass": true,
+              "failures": 0
+            },
+            "forbidden-patterns": {
+              "pass": true,
+              "failures": 0
+            },
+            "eslint": {
+              "pass": true,
+              "failures": 0
+            },
+            "stylelint": {
+              "pass": true,
+              "failures": 0
+            },
+            "npm-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpunit": {
+              "pass": false,
+              "failures": 1
+            }
+          },
+          "findings": [
+            {
+              "id": "qr-quality-recheck-phpunit",
+              "severity": "CRITICAL",
+              "gate": "phpunit",
+              "rule": "phpunit gate failing",
+              "status": "open",
+              "note": "phpunit reported status=fail in quality-recheck.json",
+              "autofixable": false
+            }
+          ],
+          "verdict": "fail"
+        }
+      ]
+    }
+  ]
+}
