@@ -106,7 +106,7 @@ class ProspectController extends Controller
             return new JSONResponse(data: $result, statusCode: 201);
         } catch (\Exception $e) {
             return new JSONResponse(
-                data: ['error' => $e->getMessage()],
+                data: ['error' => 'An internal error occurred'],
                 statusCode: 500
             );
         }//end try
