@@ -1,5 +1,26 @@
 <template>
 	<div>
+		<div class="contactmomenten-header">
+			<h2>{{ t('pipelinq', 'Contact Moments') }}</h2>
+			<div class="header-actions">
+				<NcButton type="secondary" @click="navigateToNew">
+					{{ t('pipelinq', 'New contact moment') }}
+				</NcButton>
+				<NcButton type="secondary" @click="exportCsv">
+					{{ t('pipelinq', 'Export CSV') }}
+				</NcButton>
+			</div>
+		</div>
+
+		<div class="contactmomenten-search">
+			<input
+				v-model="searchQuery"
+				type="text"
+				:placeholder="t('pipelinq', 'Search by subject')"
+				class="search-input"
+				@input="onSearch" />
+		</div>
+
 		<CnIndexPage
 			:title="t('pipelinq', 'Contactmomenten')"
 			:description="t('pipelinq', 'Registered contact moments')"
@@ -51,8 +72,9 @@
 
 <script>
 import { inject } from 'vue'
-import { NcDialog } from '@nextcloud/vue'
+import { NcDialog, NcButton } from '@nextcloud/vue'
 import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
+import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from '../../store/modules/object.js'
 import ContactmomentQuickLog from '../../components/ContactmomentQuickLog.vue'
 import Phone from 'vue-material-design-icons/Phone.vue'
@@ -67,6 +89,7 @@ export default {
 	components: {
 		CnIndexPage,
 		NcDialog,
+		NcButton,
 		ContactmomentQuickLog,
 		Phone,
 		Email,
@@ -89,6 +112,7 @@ export default {
 	data() {
 		return {
 			showQuickLog: false,
+			searchQuery: '',
 		}
 	},
 
@@ -100,6 +124,20 @@ export default {
 		onQuickLogSaved() {
 			this.showQuickLog = false
 			this.refresh()
+		},
+
+		navigateToNew() {
+			this.$router.push({ name: 'ContactmomentNew' })
+		},
+
+		exportCsv() {
+			const url = generateUrl('/apps/pipelinq/api/contactmomenten/export')
+			window.open(url, '_blank')
+		},
+
+		onSearch() {
+			// Search functionality can be implemented here to filter objects
+			// For now, this is a placeholder
 		},
 
 		getChannelIcon(channel) {
@@ -149,6 +187,42 @@ export default {
 </script>
 
 <style scoped>
+.contactmomenten-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 20px;
+}
+
+.contactmomenten-header h2 {
+	margin: 0;
+}
+
+.header-actions {
+	display: flex;
+	gap: 10px;
+}
+
+.contactmomenten-search {
+	margin-bottom: 20px;
+}
+
+.search-input {
+	width: 100%;
+	max-width: 400px;
+	padding: 8px 12px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background: var(--color-main-background);
+	font-size: 14px;
+}
+
+.search-input:focus {
+	outline: none;
+	border-color: var(--color-primary-element);
+	box-shadow: 0 0 0 2px var(--color-primary-element-light);
+}
+
 .channel-badge {
 	display: inline-flex;
 	align-items: center;

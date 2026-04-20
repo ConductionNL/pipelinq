@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/contactmomenten/tasks.md#task-1.2
  */
 
 declare(strict_types=1);
@@ -30,9 +32,12 @@ use OCP\Files\NotPermittedException;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
 
 /**
  * Controller for contactmoment API operations.
+ *
+ * @spec openspec/changes/contactmomenten/tasks.md#task-1.2
  */
 class ContactmomentController extends Controller
 {
@@ -43,12 +48,14 @@ class ContactmomentController extends Controller
      * @param ContactmomentService $contactmomentService The contactmoment service.
      * @param IUserSession         $userSession          The user session.
      * @param IL10N                $l10n                 The localization service.
+     * @param LoggerInterface      $logger               The logger.
      */
     public function __construct(
         IRequest $request,
         private ContactmomentService $contactmomentService,
         private IUserSession $userSession,
         private IL10N $l10n,
+        private LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -63,6 +70,8 @@ class ContactmomentController extends Controller
      * @return JSONResponse The response.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/contactmomenten/tasks.md#task-1.2
      */
     public function destroy(string $id): JSONResponse
     {
@@ -91,8 +100,9 @@ class ContactmomentController extends Controller
                 403
             );
         } catch (\Exception $e) {
+            $this->logger->error('Unexpected error deleting contactmoment', ['exception' => $e]);
             return new JSONResponse(
-                ['error' => $e->getMessage()],
+                ['error' => $this->l10n->t('An internal error occurred')],
                 500
             );
         }//end try

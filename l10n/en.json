@@ -410,6 +410,14 @@
         "{count} leads/requests are on this pipeline. They will be removed from the pipeline but not deleted.": "{count} leads/requests are on this pipeline. They will be removed from the pipeline but not deleted.",
         "{days}d ago": "{days}d ago",
         "{hours}h ago": "{hours}h ago",
-        "{minutes}m ago": "{minutes}m ago"
+        "{minutes}m ago": "{minutes}m ago",
+        "Contactmomenten": "Contact Moments",
+        "Contact Moments": "Contact Moments",
+        "New contact moment": "New contact moment",
+        "Register Contact Moment": "Register Contact Moment",
+        "Contact moment registered": "Contact moment registered",
+        "Failed to register contact moment": "Failed to register contact moment",
+        "Search by subject": "Search by subject",
+        "Registered contact moments": "Registered contact moments"
     }
 }

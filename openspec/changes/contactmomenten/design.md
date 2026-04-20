@@ -112,3 +112,7 @@ Example seed contactmomenten for development:
 | `src/views/contactmomenten/ContactmomentList.vue` | Delete | Replaced by ContactmomentenList |
 | `tests/Unit/Service/ContactmomentServiceTest.php` | Create | Unit tests |
 | `tests/Unit/Controller/ContactmomentControllerTest.php` | Create | Unit tests |
+
+## Status
+
+status: pr-created

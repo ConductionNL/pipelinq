@@ -34,6 +34,7 @@ use PHPUnit\Framework\TestCase;
  */
 class ContactmomentControllerTest extends TestCase
 {
+
     /**
      * The controller under test.
      *
@@ -62,10 +63,10 @@ class ContactmomentControllerTest extends TestCase
      */
     protected function setUp(): void
     {
-        $request                    = $this->createMock(IRequest::class);
+        $request = $this->createMock(IRequest::class);
         $this->contactmomentService = $this->createMock(ContactmomentService::class);
         $this->userSession          = $this->createMock(IUserSession::class);
-        $l10n                       = $this->createMock(IL10N::class);
+        $l10n = $this->createMock(IL10N::class);
         $l10n->method('t')->willReturnArgument(0);
 
         $this->controller = new ContactmomentController(

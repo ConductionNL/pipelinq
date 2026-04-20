@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/contactmomenten/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
@@ -24,7 +26,6 @@ namespace OCA\Pipelinq\Service;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\NotPermittedException;
-use OCP\IAppConfig;
 use OCP\IGroupManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -34,20 +35,22 @@ use Psr\Log\LoggerInterface;
  *
  * Handles permission-checked deletion: only the creating agent or a Nextcloud admin
  * may delete a contactmoment.
+ *
+ * @spec openspec/changes/contactmomenten/tasks.md#task-1.1
  */
 class ContactmomentService
 {
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container    The DI container.
-     * @param IAppConfig         $appConfig    The app config.
-     * @param IGroupManager      $groupManager The group manager.
-     * @param LoggerInterface    $logger       The logger.
+     * @param ContainerInterface $container       The DI container.
+     * @param SettingsService    $settingsService The settings service.
+     * @param IGroupManager      $groupManager    The group manager.
+     * @param LoggerInterface    $logger          The logger.
      */
     public function __construct(
         private ContainerInterface $container,
-        private IAppConfig $appConfig,
+        private SettingsService $settingsService,
         private IGroupManager $groupManager,
         private LoggerInterface $logger,
     ) {
@@ -59,6 +62,8 @@ class ContactmomentService
      * @return \OCA\OpenRegister\Service\ObjectService The object service.
      *
      * @throws \RuntimeException If OpenRegister is not available.
+     *
+     * @spec openspec/changes/contactmomenten/tasks.md#task-1.1
      */
     public function getObjectService(): \OCA\OpenRegister\Service\ObjectService
     {
@@ -75,19 +80,14 @@ class ContactmomentService
      * @return array{register: string, schema: string} The register and schema IDs.
      *
      * @throws \RuntimeException If configuration is missing.
+     *
+     * @spec openspec/changes/contactmomenten/tasks.md#task-1.1
      */
     public function getConfig(): array
     {
-        $register = $this->appConfig->getValueString(
-            Application::APP_ID,
-            'register',
-            ''
-        );
-        $schema   = $this->appConfig->getValueString(
-            Application::APP_ID,
-            'contactmoment_schema',
-            ''
-        );
+        $settings = $this->settingsService->getSettings();
+        $register = $settings['register'] ?? '';
+        $schema   = $settings['contactmoment_schema'] ?? '';
 
         if ($register === '' || $schema === '') {
             throw new \RuntimeException('Contactmoment register or schema not configured.');
@@ -111,6 +111,8 @@ class ContactmomentService
      *
      * @throws DoesNotExistException  If contactmoment not found.
      * @throws NotPermittedException  If user lacks permission.
+     *
+     * @spec openspec/changes/contactmomenten/tasks.md#task-1.1
      */
     public function delete(string $id, string $currentUserId): bool
     {
