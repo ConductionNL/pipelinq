@@ -133,9 +133,9 @@
       "cycle": 3,
       "trigger": "build:queued",
       "started_at": "2026-04-20T20:12:49Z",
-      "ended_at": null,
-      "outcome": "in-flight",
-      "outcome_reason": null,
+      "ended_at": "2026-04-20T20:50:21Z",
+      "outcome": "needs-input",
+      "outcome_reason": "deterministic checks failed after reviewer fixes",
       "pattern_tags": [
         "browser-test-nc-setup-failed",
         "recheck-caught-new-findings"
