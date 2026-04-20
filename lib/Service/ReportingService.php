@@ -257,6 +257,8 @@ class ReportingService
      * @param int $resolvedContacts Contacts resolved without backoffice routing.
      *
      * @return float FCR as a percentage (0-100).
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-2
      */
     public function calculateFcr(int $totalContacts, int $resolvedContacts): float
     {
@@ -275,6 +277,8 @@ class ReportingService
      * @param int    $withinSla     Contacts handled within SLA target.
      *
      * @return array{compliance: float, target: float, status: string} SLA data.
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-2
      */
     public function calculateSlaCompliance(
         string $channel,
@@ -308,6 +312,8 @@ class ReportingService
      * @param string $channel The channel type.
      *
      * @return float The target percentage.
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-9
      */
     public function getSlaTarget(string $channel): float
     {
@@ -325,6 +331,8 @@ class ReportingService
      * Get all SLA configuration.
      *
      * @return array<string, array<string, mixed>> SLA targets per channel.
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-9
      */
     public function getAllSlaTargets(): array
     {
@@ -353,6 +361,8 @@ class ReportingService
      * @param string $value   The target value.
      *
      * @return void
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-9
      */
     public function setSlaTarget(string $channel, string $metric, string $value): void
     {
