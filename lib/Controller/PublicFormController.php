@@ -33,6 +33,8 @@ use OCP\IRequest;
  *
  * All endpoints are public (no authentication required) and include
  * CORS headers for cross-origin embedding.
+ *
+ * @spec openspec/changes/public-intake-forms/tasks.md#task-3.1
  */
 class PublicFormController extends Controller
 {
@@ -63,6 +65,7 @@ class PublicFormController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @CORS
+     * @spec            openspec/changes/public-intake-forms/tasks.md#task-3.1
      */
     public function show(string $id): JSONResponse
     {
@@ -94,6 +97,7 @@ class PublicFormController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @CORS
+     * @spec            openspec/changes/public-intake-forms/tasks.md#task-3.1
      */
     public function submit(string $id): JSONResponse
     {

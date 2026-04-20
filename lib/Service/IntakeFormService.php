@@ -28,6 +28,8 @@ use Psr\Log\LoggerInterface;
  * Service for public intake form processing, spam protection, and entity creation.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ *
+ * @spec openspec/changes/public-intake-forms/tasks.md#task-2.1
  */
 class IntakeFormService
 {
@@ -60,6 +62,8 @@ class IntakeFormService
      * @param array $submission The submitted data.
      *
      * @return array Validation result with 'valid' boolean and 'errors' array.
+     *
+     * @spec openspec/changes/public-intake-forms/tasks.md#task-2.1
      */
     public function validateSubmission(array $form, array $submission): array
     {
@@ -98,6 +102,8 @@ class IntakeFormService
      * @param array $submission The submitted data.
      *
      * @return bool True if the submission is detected as spam.
+     *
+     * @spec openspec/changes/public-intake-forms/tasks.md#task-2.1
      */
     public function isSpam(array $submission): bool
     {
@@ -114,6 +120,8 @@ class IntakeFormService
      * @param string $formId The form ID.
      *
      * @return bool True if the rate limit is exceeded.
+     *
+     * @spec openspec/changes/public-intake-forms/tasks.md#task-2.1
      */
     public function isRateLimited(string $ip, string $formId): bool
     {
@@ -145,6 +153,8 @@ class IntakeFormService
      * @param string $entityType    The target entity type ('contact' or 'lead').
      *
      * @return array Mapped entity data.
+     *
+     * @spec openspec/changes/public-intake-forms/tasks.md#task-2.1
      */
     public function mapToEntity(array $fieldMappings, array $submission, string $entityType): array
     {
@@ -178,6 +188,8 @@ class IntakeFormService
      * @param string $baseUrl The Nextcloud base URL.
      *
      * @return string The iframe HTML snippet.
+     *
+     * @spec openspec/changes/public-intake-forms/tasks.md#task-2.1
      */
     public function generateIframeEmbed(string $formId, string $baseUrl): string
     {
@@ -193,6 +205,8 @@ class IntakeFormService
      * @param string $baseUrl The Nextcloud base URL.
      *
      * @return string The JavaScript embed snippet.
+     *
+     * @spec openspec/changes/public-intake-forms/tasks.md#task-2.1
      */
     public function generateJsEmbed(string $formId, string $baseUrl): string
     {
@@ -220,6 +234,8 @@ class IntakeFormService
      * @param array $fields      Form field definitions for column headers.
      *
      * @return string CSV content.
+     *
+     * @spec openspec/changes/public-intake-forms/tasks.md#task-2.1
      */
     public function exportCsv(array $submissions, array $fields): string
     {
