@@ -1,0 +1,133 @@
+{
+  "spec_slug": "queue-management",
+  "app": "pipelinq",
+  "repo": "ConductionNL/pipelinq",
+  "issue": 211,
+  "depends_on": [],
+  "schema_version": 2,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-04-16T10:22:38Z",
+      "ended_at": null,
+      "outcome": "aborted",
+      "outcome_reason": "no terminal label seen in timeline",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-16T10:22:38Z",
+          "ended_at": "2026-04-16T10:22:39Z",
+          "turns_used": 201,
+          "turns_budget": 200,
+          "cost_usd": 8.8357,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "none"
+        }
+      ]
+    },
+    {
+      "cycle": 2,
+      "trigger": "build:queued",
+      "started_at": "2026-04-16T11:24:26Z",
+      "ended_at": null,
+      "outcome": "aborted",
+      "outcome_reason": "no terminal label seen in timeline",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-16T11:24:26Z",
+          "ended_at": "2026-04-16T11:24:27Z",
+          "turns_used": 44,
+          "turns_budget": 200,
+          "cost_usd": 0.2693,
+          "checks_run": [
+            "composer check:strict"
+          ],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass"
+        },
+        {
+          "stage": "pre-review-quality",
+          "persona": "orchestrator",
+          "container": "hydra-quality-runner",
+          "started_at": "2026-04-16T11:24:26Z",
+          "ended_at": "2026-04-16T11:24:27Z",
+          "exit_code": 1,
+          "checks_run": [
+            "phpstan",
+            "composer-audit",
+            "spdx-headers",
+            "eslint",
+            "npm-audit",
+            "phpunit"
+          ],
+          "checks_skipped": [
+            "php-lint",
+            "phpcs",
+            "phpmd",
+            "psalm",
+            "phpmetrics",
+            "publiccode",
+            "forbidden-patterns",
+            "stylelint",
+            "gitleaks",
+            "trivy",
+            "newman"
+          ],
+          "gates": {
+            "phpstan": {
+              "pass": true,
+              "failures": 0
+            },
+            "composer-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "spdx-headers": {
+              "pass": true,
+              "failures": 0
+            },
+            "eslint": {
+              "pass": true,
+              "failures": 0
+            },
+            "npm-audit": {
+              "pass": false,
+              "failures": 1
+            },
+            "phpunit": {
+              "pass": true,
+              "failures": 0
+            }
+          },
+          "findings": [
+            {
+              "id": "qr-pre-review-quality-npm-audit",
+              "severity": "WARNING",
+              "gate": "npm-audit",
+              "rule": "npm-audit gate failing",
+              "status": "open",
+              "note": "npm-audit reported status=fail in quality-report.json",
+              "autofixable": false
+            }
+          ],
+          "verdict": "fail"
+        }
+      ]
+    }
+  ]
+}
