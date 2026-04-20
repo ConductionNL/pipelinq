@@ -31,6 +31,8 @@ use Psr\Log\LoggerInterface;
  *
  * Handles public article queries, feedback submission, and score recalculation.
  * Articles are stored as OpenRegister objects with the kennisartikel schema.
+ *
+ * @spec openspec/changes/2026-03-20-kennisbank/tasks.md#task-2.1
  */
 class KennisbankService
 {

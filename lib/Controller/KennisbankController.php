@@ -35,6 +35,8 @@ use OCP\IRequest;
  *
  * Provides public (unauthenticated) endpoints for citizen-facing article access
  * and authenticated endpoints for agent feedback submission.
+ *
+ * @spec openspec/changes/2026-03-20-kennisbank/tasks.md#task-2.2
  */
 class KennisbankController extends Controller
 {
