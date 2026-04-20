@@ -38,7 +38,7 @@
 						{{ email.subject }}
 					</div>
 
-					<div class="email-recipients" v-if="email.recipients && email.recipients.length > 0">
+					<div v-if="email.recipients && email.recipients.length > 0" class="email-recipients">
 						<span class="label">{{ t('pipelinq', 'To:') }}</span>
 						<span>{{ email.recipients.join(', ') }}</span>
 					</div>
@@ -66,6 +66,7 @@
 </template>
 
 <script>
+import axios from '@nextcloud/axios'
 import { NcLoadingIcon, NcButton } from '@nextcloud/vue'
 import Mail from 'vue-material-design-icons/Mail.vue'
 
@@ -101,32 +102,25 @@ export default {
 			})
 		},
 	},
-	mounted() {
-		this.fetchEmails()
-	},
 	watch: {
 		entityId() {
 			this.fetchEmails()
 		},
 	},
+	mounted() {
+		this.fetchEmails()
+	},
 	methods: {
 		async fetchEmails() {
 			this.loading = true
 			try {
-				const response = await fetch(
-					`/apps/pipelinq/api/sync/emails?entityType=${encodeURIComponent(this.entityType)}&entityId=${encodeURIComponent(this.entityId)}`,
-					{
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-					}
-				)
-				if (response.ok === true) {
-					const data = await response.json()
-					this.emails = data.emails || []
-				}
+				const { data } = await axios.get('/apps/pipelinq/api/sync/emails', {
+					params: {
+						entityType: this.entityType,
+						entityId: this.entityId,
+					},
+				})
+				this.emails = data.emails || []
 			} catch (error) {
 				console.error('Failed to fetch emails', error)
 			} finally {
@@ -150,14 +144,8 @@ export default {
 		},
 		async excludeEmail(messageId) {
 			try {
-				await fetch(`/apps/pipelinq/api/sync/emails/${encodeURIComponent(messageId)}`, {
-					method: 'PATCH',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
-					},
-					body: JSON.stringify({ excluded: true }),
+				await axios.patch(`/apps/pipelinq/api/sync/emails/${encodeURIComponent(messageId)}`, {
+					excluded: true,
 				})
 				const emailIndex = this.emails.findIndex(e => e.messageId === messageId)
 				if (emailIndex >= 0) {
@@ -169,14 +157,8 @@ export default {
 		},
 		async includeEmail(messageId) {
 			try {
-				await fetch(`/apps/pipelinq/api/sync/emails/${encodeURIComponent(messageId)}`, {
-					method: 'PATCH',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
-					},
-					body: JSON.stringify({ excluded: false }),
+				await axios.patch(`/apps/pipelinq/api/sync/emails/${encodeURIComponent(messageId)}`, {
+					excluded: false,
 				})
 				const emailIndex = this.emails.findIndex(e => e.messageId === messageId)
 				if (emailIndex >= 0) {

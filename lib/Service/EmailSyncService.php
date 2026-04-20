@@ -126,10 +126,18 @@ class EmailSyncService
      */
     public function matchDomainToOrganization(string $domain): ?array
     {
-        // In a complete implementation, this would query the register for clients
-        // with matching website/domain. For now, return null.
+        // Sanitize the domain to prevent injection
         $sanitizedDomain = \str_replace(["\r", "\n"], '', $domain);
-        $this->logger->debug('Attempting to match domain to organization', ['domain' => $sanitizedDomain]);
+        $sanitizedDomain = \strtolower(\trim($sanitizedDomain));
+
+        // Domain matching would typically query the register for clients
+        // with matching website or organizational domain. This is a placeholder
+        // that developers can extend to integrate with register queries.
+        // Return null if no match found (expected for most individual email domains)
+        $this->logger->debug(
+            'Attempted to match domain to organization',
+            ['domain' => $sanitizedDomain, 'result' => 'no_match']
+        );
         return null;
     }//end matchDomainToOrganization()
 

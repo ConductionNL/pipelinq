@@ -1,8 +1,6 @@
 # Design: email-calendar-sync
 
-## Status
-
-pr-created
+status: pr-created
 
 ## Architecture
 

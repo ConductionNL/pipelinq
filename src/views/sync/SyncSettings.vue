@@ -72,6 +72,7 @@
 </template>
 
 <script>
+import axios from '@nextcloud/axios'
 import { NcCheckboxRadioSwitch, NcSelect } from '@nextcloud/vue'
 
 export default {
@@ -110,17 +111,8 @@ export default {
 	methods: {
 		async fetchSettings() {
 			try {
-				const response = await fetch('/apps/pipelinq/api/sync/settings', {
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
-					},
-				})
-				if (response.ok === true) {
-					const data = await response.json()
-					this.syncSettings = { ...this.syncSettings, ...data }
-				}
+				const { data } = await axios.get('/apps/pipelinq/api/sync/settings')
+				this.syncSettings = { ...this.syncSettings, ...data }
 			} catch (error) {
 				console.error('Failed to fetch sync settings', error)
 			}
@@ -157,21 +149,10 @@ export default {
 			this.syncSettings[key] = value
 
 			try {
-				const response = await fetch('/apps/pipelinq/api/sync/settings', {
-					method: 'PUT',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
-					},
-					body: JSON.stringify({ [key]: value }),
+				const { data } = await axios.put('/apps/pipelinq/api/sync/settings', {
+					[key]: value,
 				})
-				if (response.ok === true) {
-					const data = await response.json()
-					this.syncSettings = { ...this.syncSettings, ...data }
-				} else {
-					this.syncSettings[key] = oldValue
-				}
+				this.syncSettings = { ...this.syncSettings, ...data }
 			} catch (error) {
 				console.error('Failed to update setting', error)
 				this.syncSettings[key] = oldValue

@@ -96,6 +96,9 @@ class CalendarSyncService
     /**
      * Match calendar event attendees to CRM entities.
      *
+     * Attempts to find CRM entities (contacts, clients) matching the event attendees.
+     * In a complete implementation, would query the register for matching email addresses.
+     *
      * @param array<string> $attendeeEmails Email addresses of event attendees
      *
      * @return array<array> Array of matched entities
@@ -107,11 +110,21 @@ class CalendarSyncService
         $matches = [];
 
         foreach ($attendeeEmails as $email) {
-            // Try to find entities matching this email address.
-            // In a complete implementation, this would query the register.
-            // for contacts and clients with matching email addresses.
+            // Sanitize email address to prevent injection attacks
             $sanitizedEmail = \str_replace(["\r", "\n"], '', $email);
-            $this->logger->debug('Matching attendee email', ['email' => $sanitizedEmail]);
+            $sanitizedEmail = \strtolower(\trim($sanitizedEmail));
+
+            // Email matching would typically:
+            // 1. Query the register for contacts/clients with matching email
+            // 2. Check both primary and secondary email fields
+            // 3. Return entity type and ID if found
+
+            // This is a placeholder for actual register integration.
+            // Developers should extend this method to implement register queries.
+            $this->logger->debug(
+                'Attempted to match attendee email to CRM entity',
+                ['email' => $sanitizedEmail, 'result' => 'no_match']
+            );
         }
 
         return $matches;
