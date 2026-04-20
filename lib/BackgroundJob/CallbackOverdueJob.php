@@ -34,6 +34,8 @@ use Psr\Log\LoggerInterface;
  * Background job that detects overdue callback requests and sends reminder notifications.
  *
  * Runs every 15 minutes (900 seconds). Skips tasks already notified within 24 hours.
+ *
+ * @spec openspec/changes/callback-management/tasks.md#task-3.1
  */
 class CallbackOverdueJob extends TimedJob
 {

@@ -33,6 +33,8 @@ use Psr\Log\LoggerInterface;
  *
  * Handles attempt logging, claim validation, status transitions,
  * and attempt threshold checks for terugbelverzoeken.
+ *
+ * @spec openspec/changes/callback-management/tasks.md#task-1.1
  */
 class CallbackService
 {
