@@ -1,8 +1,5 @@
 <?php
 
-// SPDX-FileCopyrightText: 2024 Conduction B.V. <info@conduction.nl>
-// SPDX-License-Identifier: EUPL-1.2
-
 /**
  * Pipelinq ReportingService.
  *
@@ -11,7 +8,7 @@
  * @category Service
  * @package  OCA\Pipelinq\Service
  *
- * @author    Conduction <info@conduction.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -175,7 +172,7 @@ class ReportingService
         $counts  = [];
 
         foreach ($moments as $moment) {
-            if (!is_array($moment)) {
+            if (is_array($moment) === false) {
                 continue;
             }
 
@@ -210,12 +207,12 @@ class ReportingService
 
         $durations = [];
         foreach ($moments as $moment) {
-            if (is_array($moment) && isset($moment['duration']) && $moment['duration'] !== '') {
+            if (is_array($moment) === true && isset($moment['duration']) === true && $moment['duration'] !== '') {
                 $durations[] = $moment['duration'];
             }
         }
 
-        return $this->calculateAverageHandlingTime($durations);
+        return $this->calculateAverageHandlingTime(durations: $durations);
     }//end getAverageHandlingTime()
 
     /**
@@ -236,11 +233,11 @@ class ReportingService
         $resolved      = 0;
 
         foreach ($moments as $moment) {
-            if (!is_array($moment)) {
+            if (is_array($moment) === false) {
                 continue;
             }
 
-            // Check if outcome indicates resolution (no routing to backoffice)
+            // Check if outcome indicates resolution (no routing to backoffice).
             $outcome = $moment['outcome'] ?? '';
             if (strpos($outcome, 'resolved') !== false || strpos($outcome, 'afgehandeld') !== false) {
                 $resolved++;
@@ -368,12 +365,12 @@ class ReportingService
      */
     public function setSlaTarget(string $channel, string $metric, string $value): void
     {
-        // Validate channel and metric against DEFAULT_SLA_TARGETS allowlist
-        if (!isset(self::DEFAULT_SLA_TARGETS[$channel])) {
+        // Validate channel and metric against DEFAULT_SLA_TARGETS allowlist.
+        if (isset(self::DEFAULT_SLA_TARGETS[$channel]) === false) {
             throw new \InvalidArgumentException('Channel "'.$channel.'" is not allowed.');
         }
 
-        if (!isset(self::DEFAULT_SLA_TARGETS[$channel][$metric])) {
+        if (isset(self::DEFAULT_SLA_TARGETS[$channel][$metric]) === false) {
             throw new \InvalidArgumentException('Metric "'.$metric.'" is not allowed for channel "'.$channel.'".');
         }
 
@@ -396,9 +393,9 @@ class ReportingService
     public function generateCsv(array $headers, array $rows): string
     {
         $bom = "\xEF\xBB\xBF";
-        // Quote headers to prevent corruption from semicolons and formula injection
+        // Quote headers to prevent corruption from semicolons and formula injection.
         $quotedHeaders = array_map(
-            fn($h) => $this->escapeCSVField((string) $h),
+            fn($h) => $this->escapeCSVField(field: (string) $h),
             $headers,
         );
         $output        = $bom.implode(';', $quotedHeaders)."\n";
@@ -407,7 +404,7 @@ class ReportingService
             $output .= implode(
                     ';',
                     array_map(
-                fn($v) => $this->escapeCSVField((string) $v),
+                fn($v) => $this->escapeCSVField(field: (string) $v),
                 $row,
             )
                     )."\n";
@@ -425,12 +422,12 @@ class ReportingService
      */
     private function escapeCSVField(string $field): string
     {
-        // Prevent formula injection by prefixing formula characters with apostrophe
-        if (in_array(mb_substr($field, 0, 1), ['=', '+', '-', '@'], true)) {
+        // Prevent formula injection by prefixing formula characters with apostrophe.
+        if (in_array(mb_substr($field, 0, 1), ['=', '+', '-', '@'], true) === true) {
             $field = "'".$field;
         }
 
-        // Quote and escape existing quotes
+        // Quote and escape existing quotes.
         return '"'.str_replace('"', '""', $field).'"';
     }//end escapeCSVField()
 
@@ -458,11 +455,11 @@ class ReportingService
         $resolved      = 0;
 
         foreach ($moments as $moment) {
-            if (!is_array($moment)) {
+            if (is_array($moment) === false) {
                 continue;
             }
 
-            if (isset($moment['duration']) && $moment['duration'] !== '') {
+            if (isset($moment['duration']) === true && $moment['duration'] !== '') {
                 $durations[] = $moment['duration'];
             }
 
@@ -472,18 +469,22 @@ class ReportingService
             }
         }
 
-        // Calculate contacts per hour
+        // Calculate contacts per hour.
         $start    = new \DateTime($startDate);
         $end      = new \DateTime($endDate);
         $end      = $end->modify('+1 day');
         $interval = $start->diff($end);
         $hours    = ($interval->days * 24) + $interval->h + ($interval->i / 60);
-        $contactsPerHour = $hours > 0 ? round($totalContacts / $hours, 2) : 0;
+        if ($hours > 0) {
+            $contactsPerHour = round($totalContacts / $hours, 2);
+        } else {
+            $contactsPerHour = 0;
+        }
 
         return [
             'contacts'        => $totalContacts,
-            'avgHandlingTime' => $this->calculateAverageHandlingTime($durations),
-            'fcr'             => $this->calculateFcr($totalContacts, $resolved),
+            'avgHandlingTime' => $this->calculateAverageHandlingTime(durations: $durations),
+            'fcr'             => $this->calculateFcr(totalContacts: $totalContacts, resolvedContacts: $resolved),
             'contactsPerHour' => $contactsPerHour,
         ];
     }//end getAgentMetrics()
@@ -497,8 +498,8 @@ class ReportingService
      */
     public function getQueueStatistics(): array
     {
-        // This would integrate with a queue management system
-        // For now, return placeholder structure
+        // This would integrate with a queue management system.
+        // For now, return placeholder structure.
         return [
             'waiting'       => 0,
             'longestWait'   => 0,
@@ -519,16 +520,15 @@ class ReportingService
     public function getMonthlyTrends(int $months=6): array
     {
         $trends = [];
-        $now    = new \DateTime();
 
         for ($i = $months - 1; $i >= 0; $i--) {
             $start = (new \DateTime())->modify("-$i months")->format('Y-m-01');
             $end   = (new \DateTime())->modify("-$i months")->format('Y-m-t');
 
-            $contacts  = $this->getTotalContacts($start);
-            $byChannel = $this->getContactsByChannel($start, $end);
-            $avgTime   = $this->getAverageHandlingTime($start, $end);
-            $fcr       = $this->getFcrRate($start, $end);
+            $contacts  = $this->getTotalContacts(date: $start);
+            $byChannel = $this->getContactsByChannel(startDate: $start, endDate: $end);
+            $avgTime   = $this->getAverageHandlingTime(startDate: $start, endDate: $end);
+            $fcr       = $this->getFcrRate(startDate: $start, endDate: $end);
 
             $trends[] = [
                 'month'     => (new \DateTime($start))->format('Y-m'),
@@ -555,10 +555,10 @@ class ReportingService
     {
         $heatmap = [];
 
-        for ($d = 0; $d < 7; $d++) {
-            $heatmap[$d] = [];
-            for ($h = 0; $h < 24; $h++) {
-                $heatmap[$d][$h] = 0;
+        for ($dayOfWeek = 0; $dayOfWeek < 7; $dayOfWeek++) {
+            $heatmap[$dayOfWeek] = [];
+            for ($hour = 0; $hour < 24; $hour++) {
+                $heatmap[$dayOfWeek][$hour] = 0;
             }
         }
 
@@ -568,16 +568,16 @@ class ReportingService
         $moments = $this->getContactMoments(startDate: $start, endDate: $end);
 
         foreach ($moments as $moment) {
-            if (!is_array($moment) || !isset($moment['contactedAt'])) {
+            if (is_array($moment) === false || isset($moment['contactedAt']) === false) {
                 continue;
             }
 
             try {
-                $dt  = new \DateTime($moment['contactedAt']);
-                $dow = (int) $dt->format('w');
-                // 0=Sunday, 1=Monday
-                $hour = (int) $dt->format('H');
-                $heatmap[$dow][$hour]++;
+                $dateTime  = new \DateTime($moment['contactedAt']);
+                $dayOfWeek = (int) $dateTime->format('w');
+                // 0=Sunday, 1=Monday.
+                $hour = (int) $dateTime->format('H');
+                $heatmap[$dayOfWeek][$hour]++;
             } catch (\Exception $e) {
                 continue;
             }
@@ -608,7 +608,7 @@ class ReportingService
             $trends[$monthKey] = [];
 
             foreach ($moments as $moment) {
-                if (!is_array($moment)) {
+                if (is_array($moment) === false) {
                     continue;
                 }
 
@@ -641,7 +641,7 @@ class ReportingService
         $fcrRate       = 0;
 
         foreach ($moments as $moment) {
-            if (!is_array($moment)) {
+            if (is_array($moment) === false) {
                 continue;
             }
 
@@ -658,11 +658,11 @@ class ReportingService
             $fcrRate = round(($fcrRate / $totalContacts) * 100, 1);
         }
 
-        // Calculate SLA compliance per channel
+        // Calculate SLA compliance per channel.
         foreach (array_keys($byChannel) as $channel) {
             $channelTotal = $byChannel[$channel];
             $withinSla    = (int) ($channelTotal * 0.84);
-            // Placeholder calculation
+            // Placeholder calculation.
             $slaCompliance[$channel] = $this->calculateSlaCompliance(
                 channel: $channel,
                 totalContacts: $channelTotal,
@@ -712,7 +712,9 @@ class ReportingService
         $seconds    = $avgSeconds % 60;
 
         if ($hours > 0) {
-            return $hours.':'.str_pad((string) $minutes, 2, '0', STR_PAD_LEFT).':'.str_pad((string) $seconds, 2, '0', STR_PAD_LEFT);
+            $minutesPadded = str_pad((string) $minutes, 2, '0', STR_PAD_LEFT);
+            $secondsPadded = str_pad((string) $seconds, 2, '0', STR_PAD_LEFT);
+            return $hours.':'.$minutesPadded.':'.$secondsPadded;
         }
 
         return $minutes.':'.str_pad((string) $seconds, 2, '0', STR_PAD_LEFT);
