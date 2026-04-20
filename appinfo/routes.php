@@ -57,7 +57,10 @@ return [
         ['name' => 'kennisbank#publicIndex', 'url' => '/api/kennisbank/public', 'verb' => 'GET'],
         ['name' => 'kennisbank#publicShow', 'url' => '/api/kennisbank/public/{id}', 'verb' => 'GET'],
         ['name' => 'kennisbank#submitFeedback', 'url' => '/api/kennisbank/feedback', 'verb' => 'POST'],
-        // Rapportage / reporting
+        // Rapportage / reporting (spec-required endpoints)
+        ['name' => 'reporting#getKpis', 'url' => '/api/rapportage/kpis', 'verb' => 'GET'],
+        ['name' => 'reporting#getChannels', 'url' => '/api/rapportage/channels', 'verb' => 'GET'],
+        ['name' => 'reporting#getAgents', 'url' => '/api/rapportage/agents', 'verb' => 'GET'],
         ['name' => 'reporting#getSla', 'url' => '/api/rapportage/sla', 'verb' => 'GET'],
         ['name' => 'reporting#updateSla', 'url' => '/api/rapportage/sla', 'verb' => 'PUT'],
         ['name' => 'reporting#exportCsv', 'url' => '/api/rapportage/export', 'verb' => 'GET'],
