@@ -26,6 +26,8 @@ Pairs naturally with [Procest](https://apps.nextcloud.com/apps/procest) — hand
 **Requires:** [OpenRegister](https://apps.nextcloud.com/apps/openregister) (install from the [Nextcloud App Store](https://apps.nextcloud.com/apps/openregister)).
 
 Free and open source under the AGPL license.
+
+**Support:** For support, contact support@conduction.nl. For a Service Level Agreement (SLA), contact sales@conduction.nl.
     ]]></description>
     <description lang="nl"><![CDATA[Pipelinq is een lichtgewicht CRM voor Nextcloud. Beheer klanten, volg leads door visuele pipelines, handel binnenkomende verzoeken af en houd een complete historie bij van elke interactie — allemaal zonder je Nextcloud-werkplek te verlaten.
 
@@ -47,8 +49,10 @@ Sluit naadloos aan op [Procest](https://apps.nextcloud.com/apps/procest) — dra
 **Vereist:** [OpenRegister](https://apps.nextcloud.com/apps/openregister) (installeer via de [Nextcloud App Store](https://apps.nextcloud.com/apps/openregister)).
 
 Vrij en open source onder de AGPL-licentie.
+
+**Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.1.15</version>
+    <version>0.1.16</version>
     <licence>agpl</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Pipelinq</namespace>
@@ -78,6 +82,14 @@ Vrij en open source onder de AGPL-licentie.
         </post-migration>
     </repair-steps>
 
+    <background-jobs>
+        <job>OCA\Pipelinq\BackgroundJob\KennisbankReviewJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\TaskExpiryJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\QueueOverflowJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\ComplaintSlaJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\CallbackOverdueJob</job>
+    </background-jobs>
+
     <navigations>
         <navigation>
             <id>pipelinq</id>
@@ -100,6 +112,7 @@ Vrij en open source onder de AGPL-licentie.
             <setting>OCA\Pipelinq\Activity\Setting\AssignmentSetting</setting>
             <setting>OCA\Pipelinq\Activity\Setting\StageStatusSetting</setting>
             <setting>OCA\Pipelinq\Activity\Setting\NoteSetting</setting>
+            <setting>OCA\Pipelinq\Activity\Setting\DealSetting</setting>
         </settings>
         <filters>
             <filter>OCA\Pipelinq\Activity\Filter</filter>

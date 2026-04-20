@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 return [
     'routes' => [
-        ['name' => 'dashboard#page', 'url' => '/', 'verb' => 'GET'],
         ['name' => 'settings#index', 'url' => '/api/settings', 'verb' => 'GET'],
         ['name' => 'settings#create', 'url' => '/api/settings', 'verb' => 'POST'],
         ['name' => 'settings#reimport', 'url' => '/api/settings/reimport', 'verb' => 'POST'],
@@ -43,5 +42,48 @@ return [
         // Prospect settings (admin only)
         ['name' => 'prospect_settings#index', 'url' => '/api/prospects/settings', 'verb' => 'GET'],
         ['name' => 'prospect_settings#update', 'url' => '/api/prospects/settings', 'verb' => 'PUT'],
+
+        // Public intake forms (no auth)
+        ['name' => 'public_form#show', 'url' => '/api/public/forms/{id}', 'verb' => 'GET'],
+        ['name' => 'public_form#submit', 'url' => '/api/public/forms/{id}/submit', 'verb' => 'POST'],
+
+        // Intake form management (authenticated)
+        ['name' => 'intake_form#embed', 'url' => '/api/forms/{id}/embed', 'verb' => 'GET'],
+        ['name' => 'intake_form#export', 'url' => '/api/forms/{id}/submissions/export', 'verb' => 'GET'],
+        // Automations
+        ['name' => 'automation#metadata', 'url' => '/api/automations/metadata', 'verb' => 'GET'],
+        ['name' => 'automation#test', 'url' => '/api/automations/test', 'verb' => 'POST'],
+        // Kennisbank public API
+        ['name' => 'kennisbank#publicIndex', 'url' => '/api/kennisbank/public', 'verb' => 'GET'],
+        ['name' => 'kennisbank#publicShow', 'url' => '/api/kennisbank/public/{id}', 'verb' => 'GET'],
+        ['name' => 'kennisbank#submitFeedback', 'url' => '/api/kennisbank/feedback', 'verb' => 'POST'],
+        // Rapportage / reporting
+        ['name' => 'reporting#getSla', 'url' => '/api/rapportage/sla', 'verb' => 'GET'],
+        ['name' => 'reporting#updateSla', 'url' => '/api/rapportage/sla', 'verb' => 'PUT'],
+        ['name' => 'reporting#exportCsv', 'url' => '/api/rapportage/export', 'verb' => 'GET'],
+        // Public survey endpoints (unauthenticated)
+        ['name' => 'public_survey#show', 'url' => '/public/survey/{token}', 'verb' => 'GET'],
+        ['name' => 'public_survey#submit', 'url' => '/public/survey/{token}/respond', 'verb' => 'POST'],
+
+        // Public kennisbank API (unauthenticated)
+        ['name' => 'public_kennisbank#index', 'url' => '/api/public/kennisbank/articles', 'verb' => 'GET'],
+        ['name' => 'public_kennisbank#show', 'url' => '/api/public/kennisbank/articles/{id}', 'verb' => 'GET'],
+
+        // Contactmomenten (permission-checked delete)
+        ['name' => 'contactmoment#destroy', 'url' => '/api/contactmomenten/{id}', 'verb' => 'DELETE'],
+
+        // Callback management endpoints
+        ['name' => 'callback#attempt', 'url' => '/api/callbacks/{id}/attempts', 'verb' => 'POST'],
+        ['name' => 'callback#claim', 'url' => '/api/callbacks/{id}/claim', 'verb' => 'POST'],
+        ['name' => 'callback#complete', 'url' => '/api/callbacks/{id}/complete', 'verb' => 'POST'],
+        ['name' => 'callback#reassign', 'url' => '/api/callbacks/{id}/reassign', 'verb' => 'POST'],
+
+        // Prometheus metrics endpoint.
+        ['name' => 'metrics#index', 'url' => '/api/metrics', 'verb' => 'GET'],
+        // Health check endpoint.
+        ['name' => 'health#index', 'url' => '/api/health', 'verb' => 'GET'],
+
+        // SPA catch-all — serves the Vue app for any frontend route (history mode)
+        ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
 ];

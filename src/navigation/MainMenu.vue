@@ -3,7 +3,8 @@
 		<template #list>
 			<NcAppNavigationItem
 				:name="t('pipelinq', 'Dashboard')"
-				:to="{ name: 'Dashboard' }">
+				:to="{ name: 'Dashboard' }"
+				:exact="true">
 				<template #icon>
 					<ViewDashboard :size="20" />
 				</template>
@@ -37,6 +38,27 @@
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
+				:name="t('pipelinq', 'Tasks')"
+				:to="{ name: 'Tasks' }">
+				<template #icon>
+					<ClipboardCheck :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
+				:name="t('pipelinq', 'Contactmomenten')"
+				:to="{ name: 'Contactmomenten' }">
+				<template #icon>
+					<PhoneMessage :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
+				:name="t('pipelinq', 'Complaints')"
+				:to="{ name: 'Complaints' }">
+				<template #icon>
+					<AlertCircleOutline :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
 				:name="t('pipelinq', 'Products')"
 				:to="{ name: 'Products' }">
 				<template #icon>
@@ -51,6 +73,27 @@
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
+				:name="t('pipelinq', 'Surveys')"
+				:to="{ name: 'Surveys' }">
+				<template #icon>
+					<EmoticonHappyOutline :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
+				:name="t('pipelinq', 'Queues')"
+				:to="{ name: 'Queues' }">
+				<template #icon>
+					<InboxMultiple :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
+				:name="t('pipelinq', 'Kennisbank')"
+				:to="{ name: 'Kennisbank' }">
+				<template #icon>
+					<BookOpenPageVariant :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
 				:name="t('pipelinq', 'My Work')"
 				:to="{ name: 'MyWork' }">
 				<template #icon>
@@ -58,8 +101,15 @@
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
+				:name="t('pipelinq', 'Reporting')"
+				:to="{ name: 'Rapportage' }">
+				<template #icon>
+					<ChartBar :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
 				:name="t('pipelinq', 'Documentation')"
-				@click="openLink('https://pipelinq.app', '_blank')">
+				@click="openLink('https://conduction.gitbook.io/pipelinq-nextcloud', '_blank')">
 				<template #icon>
 					<BookOpenVariantOutline :size="20" />
 				</template>
@@ -72,6 +122,20 @@
 					:to="{ name: 'Pipelines' }">
 					<template #icon>
 						<Pipe :size="20" />
+					</template>
+				</NcAppNavigationItem>
+				<NcAppNavigationItem
+					:name="t('pipelinq', 'Forms')"
+					:to="{ name: 'Forms' }">
+					<template #icon>
+						<FormTextboxPassword :size="20" />
+					</template>
+				</NcAppNavigationItem>
+				<NcAppNavigationItem
+					:name="t('pipelinq', 'Automations')"
+					:to="{ name: 'Automations' }">
+					<template #icon>
+						<RobotOutline :size="20" />
 					</template>
 				</NcAppNavigationItem>
 				<NcAppNavigationItem
@@ -95,9 +159,18 @@ import FileDocument from 'vue-material-design-icons/FileDocument.vue'
 import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
 import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
 import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
+import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
+import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
+import ChartBar from 'vue-material-design-icons/ChartBar.vue'
+import EmoticonHappyOutline from 'vue-material-design-icons/EmoticonHappyOutline.vue'
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
+import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
+import FormTextboxPassword from 'vue-material-design-icons/FormTextboxPassword.vue'
+import RobotOutline from 'vue-material-design-icons/RobotOutline.vue'
+import InboxMultiple from 'vue-material-design-icons/InboxMultiple.vue'
+import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
 
 export default {
@@ -113,9 +186,18 @@ export default {
 		TrendingUp,
 		ViewColumn,
 		AccountCheck,
+		BookOpenPageVariant,
 		BookOpenVariantOutline,
 		PackageVariant,
+		EmoticonHappyOutline,
+		ClipboardCheck,
+		ChartBar,
+		InboxMultiple,
+		PhoneMessage,
+		AlertCircleOutline,
 		Cog,
+		FormTextboxPassword,
+		RobotOutline,
 		Pipe,
 	},
 	methods: {

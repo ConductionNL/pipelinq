@@ -22,6 +22,7 @@
 <script>
 import { inject } from 'vue'
 import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
+import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'ProductList',
@@ -31,7 +32,8 @@ export default {
 
 	setup() {
 		const sidebarState = inject('sidebarState', null)
-		return useListView('product', { sidebarState })
+		const objectStore = useObjectStore()
+		return useListView('product', { sidebarState, objectStore })
 	},
 
 	methods: {

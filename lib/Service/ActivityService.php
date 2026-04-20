@@ -8,7 +8,7 @@
  * @category Service
  * @package  OCA\Pipelinq\Service
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -61,10 +61,9 @@ class ActivityService
         string $objectId,
         ?string $affectedUser=null
     ): void {
+        $type = 'lead_created';
         if ($entityType === 'request') {
             $type = 'request_created';
-        } else {
-            $type = 'lead_created';
         }
 
         $this->publish(
@@ -96,10 +95,9 @@ class ActivityService
         string $newAssignee,
         string $objectId
     ): void {
+        $type = 'lead_assigned';
         if ($entityType === 'request') {
             $type = 'request_assigned';
-        } else {
-            $type = 'lead_assigned';
         }
 
         $this->publish(
@@ -204,6 +202,61 @@ class ActivityService
     }//end publishNoteAdded()
 
     /**
+     * Publish a deal won event.
+     *
+     * @param string  $title        The lead title.
+     * @param string  $value        The deal value.
+     * @param string  $objectId     The object ID.
+     * @param ?string $affectedUser The affected user or null.
+     *
+     * @return void
+     */
+    public function publishDealWon(
+        string $title,
+        string $value,
+        string $objectId,
+        ?string $affectedUser=null
+    ): void {
+        $this->publish(
+            subject: 'lead_won',
+            type: 'pipelinq_deals',
+            parameters: [
+                'title' => $title,
+                'value' => $value,
+            ],
+            objectType: 'lead',
+            objectId: $objectId,
+            affectedUser: $affectedUser
+        );
+    }//end publishDealWon()
+
+    /**
+     * Publish a deal lost event.
+     *
+     * @param string  $title        The lead title.
+     * @param string  $objectId     The object ID.
+     * @param ?string $affectedUser The affected user or null.
+     *
+     * @return void
+     */
+    public function publishDealLost(
+        string $title,
+        string $objectId,
+        ?string $affectedUser=null
+    ): void {
+        $this->publish(
+            subject: 'lead_lost',
+            type: 'pipelinq_deals',
+            parameters: [
+                'title' => $title,
+            ],
+            objectType: 'lead',
+            objectId: $objectId,
+            affectedUser: $affectedUser
+        );
+    }//end publishDealLost()
+
+    /**
      * Publish an activity event.
      *
      * @param string  $subject      The activity subject.
@@ -225,10 +278,9 @@ class ActivityService
     ): void {
         try {
             $currentUser = $this->userSession->getUser();
+            $author      = '';
             if ($currentUser !== null) {
                 $author = $currentUser->getUID();
-            } else {
-                $author = '';
             }
 
             $event = $this->activityManager->generateEvent();

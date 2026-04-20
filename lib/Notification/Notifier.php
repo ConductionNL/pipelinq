@@ -8,7 +8,7 @@
  * @category Notification
  * @package  OCA\Pipelinq\Notification
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -110,6 +110,8 @@ class Notifier implements INotifier
      * @return void
      *
      * @throws UnknownNotificationException If the subject is not recognized.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) — switch handles all notification types
      */
     private function applyNotificationSubject(INotification $notification, object $l, array $params): void
     {
@@ -142,6 +144,46 @@ class Notifier implements INotifier
                 );
                 break;
 
+            case 'task_assigned':
+                $this->applySimpleSubject(
+                    notification: $notification,
+                    l: $l,
+                    parsedKey: 'Task assigned: %s',
+                    richKey: 'Task assigned: {title}',
+                    title: $title,
+                    richParams: $richParams
+                );
+                break;
+
+            case 'task_completed':
+                $resultText = $params['resultText'] ?? '';
+                $notification->setParsedSubject($l->t('Task completed: %1$s — %2$s', [$title, $resultText]));
+                $notification->setRichSubject(
+                        subject: $l->t('Task completed: {title}'),
+                        parameters: $richParams
+                        );
+                break;
+
+            case 'task_reassigned':
+                $this->applySimpleSubject(
+                    notification: $notification,
+                    l: $l,
+                    parsedKey: 'Task reassigned to you: %s',
+                    richKey: 'Task reassigned to you: {title}',
+                    title: $title,
+                    richParams: $richParams
+                );
+                break;
+
+            case 'task_expired':
+                $deadline = $params['deadline'] ?? '';
+                $notification->setParsedSubject($l->t('Task expired: %1$s (deadline: %2$s)', [$title, $deadline]));
+                $notification->setRichSubject(
+                        subject: $l->t('Task expired: {title}'),
+                        parameters: $richParams
+                        );
+                break;
+
             case 'lead_stage_changed':
                 $stage = $params['stage'] ?? '';
                 $notification->setParsedSubject($l->t('Lead %1$s moved to %2$s', [$title, $stage]));
@@ -167,6 +209,26 @@ class Notifier implements INotifier
                         subject: $l->t('New note on %1$s: {title}', [$entityType]),
                         parameters: $richParams
                         );
+                break;
+
+            case 'lead_won':
+                $value = $params['value'] ?? '';
+                $notification->setParsedSubject($l->t('Deal won: %1$s (EUR %2$s)', [$title, $value]));
+                $notification->setRichSubject(
+                        subject: $l->t('Deal won: {title} (EUR %1$s)', [$value]),
+                        parameters: $richParams
+                        );
+                break;
+
+            case 'lead_lost':
+                $this->applySimpleSubject(
+                    notification: $notification,
+                    l: $l,
+                    parsedKey: 'Deal lost: %s',
+                    richKey: 'Deal lost: {title}',
+                    title: $title,
+                    richParams: $richParams
+                );
                 break;
 
             default:

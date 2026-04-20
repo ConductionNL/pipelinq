@@ -1,0 +1,71 @@
+{
+  "change": "queue-management",
+  "repo": "ConductionNL/pipelinq",
+  "tracking_issue": 138,
+  "parent_issue": 69,
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Create QueueService for backend queue operations",
+      "spec_ref": "specs/queue-management/spec.md#queue-entity-crud",
+      "github_issue": 139,
+      "status": "done",
+      "files_likely_affected": ["lib/Service/QueueService.php"],
+      "acceptance_criteria": [
+        "getQueueDepth returns item count",
+        "isAtCapacity returns true when at limit",
+        "assignToQueue updates request queue field",
+        "removeFromQueue clears request queue field"
+      ]
+    },
+    {
+      "id": "1.2",
+      "title": "Create QueueOverflowJob background job",
+      "spec_ref": "specs/queue-management/spec.md#queue-item-membership",
+      "github_issue": 140,
+      "status": "done",
+      "files_likely_affected": ["lib/BackgroundJob/QueueOverflowJob.php"],
+      "acceptance_criteria": [
+        "Excess items moved to overflow queue",
+        "No action without overflow queue",
+        "No action when within capacity"
+      ]
+    },
+    {
+      "id": "1.3",
+      "title": "Register QueueOverflowJob in info.xml",
+      "spec_ref": "design.md#backend",
+      "github_issue": 142,
+      "status": "done",
+      "files_likely_affected": ["appinfo/info.xml"],
+      "acceptance_criteria": ["QueueOverflowJob listed in background-jobs"]
+    },
+    {
+      "id": "2.1",
+      "title": "Unit tests for QueueService",
+      "spec_ref": "specs/queue-management/spec.md#queue-entity-crud",
+      "github_issue": 145,
+      "status": "done",
+      "files_likely_affected": ["tests/Unit/Service/QueueServiceTest.php"],
+      "acceptance_criteria": ["At least 5 test methods pass"]
+    },
+    {
+      "id": "2.2",
+      "title": "Unit tests for QueueOverflowJob",
+      "spec_ref": "specs/queue-management/spec.md#queue-item-membership",
+      "github_issue": 147,
+      "status": "done",
+      "files_likely_affected": ["tests/Unit/BackgroundJob/QueueOverflowJobTest.php"],
+      "acceptance_criteria": ["At least 3 test methods pass"]
+    },
+    {
+      "id": "3.1",
+      "title": "Verify all quality checks pass",
+      "spec_ref": "design.md",
+      "github_issue": 149,
+      "status": "done",
+      "files_likely_affected": [],
+      "acceptance_criteria": ["composer check:strict passes", "php -l passes on all new files"]
+    }
+  ]
+}

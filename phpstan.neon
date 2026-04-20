@@ -4,8 +4,6 @@ parameters:
         - lib
     bootstrapFiles:
         - vendor/autoload.php
-    excludePaths:
-        - vendor
     scanDirectories:
         - vendor/nextcloud/ocp
     reportUnmatchedIgnoredErrors: false
@@ -14,3 +12,12 @@ parameters:
         - '#Call to an undefined method OC::#'
         - '#Class OC not found#'
         - '#Access to static property \$server on an unknown class OC#'
+        # OpenRegister cross-app dependency (optional, loaded at runtime)
+        - '#OCA\\OpenRegister\\#'
+        # Framework-DI injected dependencies held for future handlers / subclasses.
+        # Promoted constructor properties appear "never read" until consumed by
+        # planned methods — removing them breaks DI wiring in app.php / Application.
+        - '#is never read, only written\.$#'
+        # Scheduling/threshold constants kept as documented defaults; some are
+        # currently only referenced in comments and configuration migrations.
+        - '#Constant OCA\\Pipelinq\\BackgroundJob\\.*(ESCALATION_THRESHOLD_HOURS|ESCALATION_THRESHOLD|IN_PROGRESS_GRACE) is unused\.$#'

@@ -29,6 +29,8 @@ use OCP\EventDispatcher\IEventListener;
 
 /**
  * Listener for OpenRegister object create/update events.
+ *
+ * @implements IEventListener<Event>
  */
 class ObjectEventListener implements IEventListener
 {

@@ -8,7 +8,7 @@
  * @category Controller
  * @package  OCA\Pipelinq\Controller
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -25,6 +25,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ProspectDiscoveryService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 
 /**
@@ -37,10 +38,12 @@ class ProspectController extends Controller
      *
      * @param IRequest                 $request          The request.
      * @param ProspectDiscoveryService $discoveryService The discovery service.
+     * @param IL10N                    $l10n             The localization service.
      */
     public function __construct(
         IRequest $request,
         private ProspectDiscoveryService $discoveryService,
+        private IL10N $l10n,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -68,7 +71,7 @@ class ProspectController extends Controller
             return new JSONResponse(
                 data: [
                     'error'   => 'api_unavailable',
-                    'message' => 'Prospect discovery service is currently unavailable.',
+                    'message' => $this->l10n->t('Prospect discovery service is currently unavailable.'),
                 ],
                 statusCode: 503
             );
@@ -88,7 +91,7 @@ class ProspectController extends Controller
 
         if (isset($data['tradeName']) === false || $data['tradeName'] === '') {
             return new JSONResponse(
-                data: ['error' => 'Trade name is required'],
+                data: ['error' => $this->l10n->t('Trade name is required')],
                 statusCode: 400
             );
         }

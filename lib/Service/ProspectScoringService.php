@@ -8,7 +8,7 @@
  * @category Service
  * @package  OCA\Pipelinq\Service
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -77,10 +77,11 @@ class ProspectScoringService
         );
 
         // Active registration (10 points).
-        if (($prospect['isActive'] ?? false) === true) {
+        $isActive = ($prospect['isActive'] ?? false) === true;
+
+        $breakdown['activeMatch'] = 0;
+        if ($isActive === true) {
             $breakdown['activeMatch'] = 10;
-        } else {
-            $breakdown['activeMatch'] = 0;
         }
 
         $prospect['fitScore']     = array_sum(array: $breakdown);

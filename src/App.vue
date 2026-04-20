@@ -1,6 +1,29 @@
 <template>
 	<NcContent app-name="pipelinq">
-		<template v-if="storesReady">
+		<!-- OpenRegister not installed: show empty state -->
+		<NcAppContent v-if="storesReady && !hasOpenRegisters" class="open-register-missing">
+			<NcEmptyContent
+				:name="t('pipelinq', 'OpenRegister is required')"
+				:description="t('pipelinq', 'Pipelinq needs the OpenRegister app to store and manage data. Please install OpenRegister from the app store to get started.')">
+				<template #icon>
+					<img :src="appIcon" class="open-register-icon">
+				</template>
+				<template #action>
+					<NcButton
+						v-if="isAdmin"
+						type="primary"
+						:href="appStoreUrl">
+						{{ t('pipelinq', 'Install OpenRegister') }}
+					</NcButton>
+					<p v-else class="open-register-admin-hint">
+						{{ t('pipelinq', 'Ask your administrator to install the OpenRegister app.') }}
+					</p>
+				</template>
+			</NcEmptyContent>
+		</NcAppContent>
+
+		<!-- App loaded normally -->
+		<template v-else-if="storesReady && hasOpenRegisters">
 			<MainMenu @open-settings="showSettingsDialog = true" />
 			<NcAppContent>
 				<router-view />
@@ -25,6 +48,8 @@
 				@save="onPipelineSidebarSave" />
 			<UserSettings :open.sync="showSettingsDialog" />
 		</template>
+
+		<!-- Loading -->
 		<NcAppContent v-else>
 			<div style="display: flex; justify-content: center; align-items: center; height: 100%;">
 				<NcLoadingIcon :size="64" />
@@ -35,18 +60,21 @@
 
 <script>
 import Vue from 'vue'
-import { NcContent, NcAppContent, NcLoadingIcon } from '@nextcloud/vue'
+import { NcContent, NcAppContent, NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import { CnIndexSidebar } from '@conduction/nextcloud-vue'
+import { generateUrl, imagePath } from '@nextcloud/router'
 import MainMenu from './navigation/MainMenu.vue'
 import UserSettings from './views/settings/UserSettings.vue'
 import PipelineSidebar from './views/pipeline/PipelineSidebar.vue'
-import { initializeStores } from './store/store.js'
+import { initializeStores, useSettingsStore } from './store/store.js'
 
 export default {
 	name: 'App',
 	components: {
 		NcContent,
 		NcAppContent,
+		NcButton,
+		NcEmptyContent,
 		NcLoadingIcon,
 		CnIndexSidebar,
 		MainMenu,
@@ -86,6 +114,23 @@ export default {
 		}
 	},
 
+	computed: {
+		hasOpenRegisters() {
+			const settingsStore = useSettingsStore()
+			return settingsStore.hasOpenRegisters
+		},
+		isAdmin() {
+			const settingsStore = useSettingsStore()
+			return settingsStore.getIsAdmin
+		},
+		appIcon() {
+			return imagePath('pipelinq', 'app-dark.svg')
+		},
+		appStoreUrl() {
+			return generateUrl('/settings/apps/integration/openregister')
+		},
+	},
+
 	async created() {
 		await initializeStores()
 		this.storesReady = true
@@ -117,3 +162,16 @@ export default {
 	},
 }
 </script>
+
+<style scoped>
+.open-register-icon {
+	width: 64px;
+	height: 64px;
+	filter: var(--background-invert-if-dark);
+}
+
+.open-register-admin-hint {
+	color: var(--color-text-maxcontrast);
+	text-align: center;
+}
+</style>

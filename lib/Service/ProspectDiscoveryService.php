@@ -8,7 +8,7 @@
  * @category Service
  * @package  OCA\Pipelinq\Service
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -68,6 +68,10 @@ class ProspectDiscoveryService
      * @param bool $refresh Whether to bypass cache.
      *
      * @return array The discovery results.
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)  — $refresh is a simple cache bypass toggle
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) — orchestration method with multiple sources
+     * @SuppressWarnings(PHPMD.NPathComplexity)      — orchestration method with multiple sources
      */
     public function discover(bool $refresh=false): array
     {
@@ -329,7 +333,7 @@ class ProspectDiscoveryService
     private function setInCache(string $key, array $data): void
     {
         if (function_exists(function: 'apcu_store') === true) {
-            apcu_store(key: $key, value: $data, ttl: self::CACHE_TTL);
+            apcu_store($key, $data, self::CACHE_TTL);
         }
     }//end setInCache()
 }//end class

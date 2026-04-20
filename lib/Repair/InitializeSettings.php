@@ -8,7 +8,7 @@
  * @category Repair
  * @package  OCA\Pipelinq\Repair
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -88,7 +88,7 @@ class InitializeSettings implements IRepairStep
      */
     public function run(IOutput $output): void
     {
-        $output->startProgress(4);
+        $output->startProgress(5);
 
         if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
             $output->warning('OpenRegister app is not installed -- skipping configuration import');
@@ -146,6 +146,23 @@ class InitializeSettings implements IRepairStep
         } catch (\Exception $e) {
             $output->warning('Failed to create default tags: '.$e->getMessage());
             $this->logger->error('Pipelinq default tag creation failed', ['exception' => $e->getMessage()]);
+        }
+
+        $output->advance(1);
+
+        // Create default queues and skills if none exist.
+        $output->info('Checking default queues and skills...');
+        try {
+            $settingsService = $this->container->get(SettingsService::class);
+            $settingsService->createDefaultQueues();
+            $settingsService->createDefaultSkills();
+            $output->info('Default queues and skills checked/created');
+        } catch (\Exception $e) {
+            $output->warning('Failed to create default queues/skills: '.$e->getMessage());
+            $this->logger->error(
+                'Pipelinq default queue/skill creation failed',
+                ['exception' => $e->getMessage()]
+            );
         }
 
         $output->advance(1);

@@ -1,12 +1,12 @@
 <?php
 
 /**
- * Bootstrap file for PHPUnit unit tests.
+ * Bootstrap file for PHPUnit tests.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -23,26 +23,26 @@ define('PHPUNIT_RUN', 1);
 // Include Composer's autoloader.
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Register OCP/NCU classes from nextcloud/ocp package.
-// nextcloud/ocp has no autoload section in its composer.json, so we register it manually.
-spl_autoload_register(function (string $class): void {
-    $prefixMap = [
-        'OCP\\' => __DIR__ . '/../vendor/nextcloud/ocp/OCP/',
-        'NCU\\' => __DIR__ . '/../vendor/nextcloud/ocp/NCU/',
-    ];
+// Bootstrap Nextcloud if not already done.
+if (!defined('OC_CONSOLE')) {
+    // Try to include the main Nextcloud bootstrap.
+    if (file_exists(__DIR__ . '/../../../lib/base.php')) {
+        require_once __DIR__ . '/../../../lib/base.php';
+    }
 
-    foreach ($prefixMap as $prefix => $dir) {
-        if (strncmp($class, $prefix, strlen($prefix)) !== 0) {
-            continue;
-        }
+    // Load Test\TestCase and other NC test classes (NC convention).
+    if (file_exists(__DIR__ . '/../../../tests/autoload.php')) {
+        require_once __DIR__ . '/../../../tests/autoload.php';
+    }
 
-        $relative = str_replace(search: '\\', replace: '/', subject: substr($class, strlen($prefix)));
-        $file     = $dir . $relative . '.php';
-        if (file_exists($file) === true) {
-            require_once $file;
-        }
+    // Load all enabled apps if Nextcloud is available.
+    if (class_exists('OC_App')) {
+        \OC_App::loadApps();
 
-        break;
-    }//end foreach
+        // Load our specific app.
+        \OC_App::loadApp('pipelinq');
 
-});
+        // Clear hooks for testing.
+        OC_Hook::clear();
+    }
+}

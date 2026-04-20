@@ -41,10 +41,28 @@ class SettingsLoadService
         'contact',
         'lead',
         'request',
+        'complaint',
         'pipeline',
         'product',
         'productCategory',
         'leadProduct',
+        'intakeForm',
+        'intakeSubmission',
+        'automation',
+        'automationLog',
+        'contactmoment',
+        'task',
+        'kennisartikel',
+        'kenniscategorie',
+        'kennisfeedback',
+        'emailLink',
+        'calendarLink',
+        'relationship',
+        'survey',
+        'surveyResponse',
+        'queue',
+        'skill',
+        'agentProfile',
     ];
 
     /**
@@ -71,6 +89,8 @@ class SettingsLoadService
      * @param bool $force Whether to force re-import.
      *
      * @return array The import result.
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) — $force is a simple re-import toggle
      */
     public function loadSettings(bool $force=false): array
     {

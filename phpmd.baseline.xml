@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<phpmd-baseline>
+  <violation rule="PHPMD\Rule\UnusedFormalParameter" file="lib/BackgroundJob/CallbackOverdueJob.php"/>
+  <violation rule="PHPMD\Rule\UnusedFormalParameter" file="lib/BackgroundJob/EmailSyncJob.php"/>
+  <violation rule="PHPMD\Rule\UnusedFormalParameter" file="lib/BackgroundJob/KennisbankReviewJob.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/BackgroundJob/KennisbankReviewJob.php"/>
+  <violation rule="PHPMD\Rule\UnusedFormalParameter" file="lib/BackgroundJob/TaskEscalationJob.php"/>
+  <violation rule="PHPMD\Rule\UnusedFormalParameter" file="lib/BackgroundJob/TaskExpiryJob.php"/>
+  <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Controller/PublicFormController.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Controller/PublicKennisbankController.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Controller/PublicSurveyController.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Controller/PublicSurveyController.php"/>
+  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Notification/Notifier.php" method="applyNotificationSubject"/>
+  <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Service/AutomationService.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/AutomationService.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Service/CalendarSyncService.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/ComplaintSlaService.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Service/ContactmomentService.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/EmailSyncService.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Service/EmailSyncService.php"/>
+  <violation rule="PHPMD\Rule\Design\LongParameterList" file="lib/Service/EmailSyncService.php" method="buildEmailLinkData"/>
+  <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Service/IntakeFormService.php"/>
+  <violation rule="PHPMD\Rule\UnusedFormalParameter" file="lib/Service/KennisbankService.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/KennisbankService.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="lib/Service/NotificationService.php"/>
+  <violation rule="PHPMD\Rule\UnusedLocalVariable" file="lib/Service/ObjectEventHandlerService.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/ReportingService.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Service/ReportingService.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Service/TaskService.php"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/TaskService.php" method="validateTask"/>
+  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/TaskService.php" method="validateTask"/>
+</phpmd-baseline>
