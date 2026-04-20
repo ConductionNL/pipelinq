@@ -35,6 +35,8 @@ use Psr\Log\LoggerInterface;
  *
  * Handles permission-checked deletion: only the creating agent or a Nextcloud admin
  * may delete a contactmoment.
+ *
+ * @spec openspec/changes/contactmomenten/tasks.md#task-1.1
  */
 class ContactmomentService
 {
@@ -60,6 +62,8 @@ class ContactmomentService
      * @return \OCA\OpenRegister\Service\ObjectService The object service.
      *
      * @throws \RuntimeException If OpenRegister is not available.
+     *
+     * @spec openspec/changes/contactmomenten/tasks.md#task-1.1
      */
     public function getObjectService(): \OCA\OpenRegister\Service\ObjectService
     {
@@ -76,6 +80,8 @@ class ContactmomentService
      * @return array{register: string, schema: string} The register and schema IDs.
      *
      * @throws \RuntimeException If configuration is missing.
+     *
+     * @spec openspec/changes/contactmomenten/tasks.md#task-1.1
      */
     public function getConfig(): array
     {

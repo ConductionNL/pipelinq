@@ -36,6 +36,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Controller for contactmoment API operations.
+ *
+ * @spec openspec/changes/contactmomenten/tasks.md#task-1.2
  */
 class ContactmomentController extends Controller
 {
