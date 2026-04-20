@@ -313,7 +313,7 @@ class ObjectEventHandlerService
                     entityData: $entityData
                 ),
                 'update_field'      => $this->executeUpdateField(config: $config, objectId: $objectId),
-                'add_note'          => $this->executeAddNote(config: $config, objectId: $objectId),
+                'add_note'          => $this->executeAddNote(config: $config),
                 default             => [
                     'type'   => $type,
                     'result' => 'skipped',
@@ -402,12 +402,11 @@ class ObjectEventHandlerService
     /**
      * Execute an add_note action.
      *
-     * @param array  $config   The action configuration.
-     * @param string $objectId The object ID.
+     * @param array $config The action configuration.
      *
      * @return array The action result.
      */
-    private function executeAddNote(array $config, string $objectId): array
+    private function executeAddNote(array $config): array
     {
         return [
             'type'   => 'add_note',

@@ -141,7 +141,7 @@ class AutomationService
             }
 
             // Fire webhook if configured and no critical errors.
-            if (($result['status'] ?? '') !== 'failure'
+            if ($result['status'] !== 'failure'
                 && !empty($automation['webhookUrl'] ?? '')
             ) {
                 $webhookResult = $this->fireWebhook(

@@ -56,6 +56,8 @@ class AutomationController extends Controller
      * @return JSONResponse The automation metadata.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-3.1
      */
     public function metadata(): JSONResponse
     {
@@ -148,8 +150,8 @@ class AutomationController extends Controller
                 );
             }
 
-            // Ensure isActive defaults to true if not specified
-            if (!isset($data['isActive'])) {
+            // Ensure isActive defaults to true if not specified.
+            if (isset($data['isActive']) === false) {
                 $data['isActive'] = true;
             }
 
@@ -160,7 +162,7 @@ class AutomationController extends Controller
                 ['error' => $this->l10n->t('Failed to create automation')],
                 500
             );
-        }
+        }//end try
     }//end create()
 
     /**
@@ -177,8 +179,8 @@ class AutomationController extends Controller
     public function update(string $id): JSONResponse
     {
         try {
-            $data = $this->request->getParams();
-            $data['id'] = $id;
+            $data           = $this->request->getParams();
+            $data['id']     = $id;
 
             $automation = $this->automationService->saveAutomation($data);
             return new JSONResponse(['automation' => $automation]);
@@ -235,7 +237,7 @@ class AutomationController extends Controller
     public function history(string $id): JSONResponse
     {
         try {
-            // Verify automation exists
+            // Verify automation exists.
             $automation = $this->automationService->getAutomation($id);
             if ($automation === null) {
                 return new JSONResponse(
@@ -244,8 +246,8 @@ class AutomationController extends Controller
                 );
             }
 
-            // TODO: Implement history filtering from automationLog objects
-            // For now, return empty history as logs are stored as separate objects
+            // TODO: Implement history filtering from automationLog objects.
+            // For now, return empty history as logs are stored as separate objects.
             return new JSONResponse(['history' => [], 'automationId' => $id]);
         } catch (\Exception $e) {
             return new JSONResponse(
