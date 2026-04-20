@@ -51,6 +51,11 @@ return [
         ['name' => 'intake_form#embed', 'url' => '/api/forms/{id}/embed', 'verb' => 'GET'],
         ['name' => 'intake_form#export', 'url' => '/api/forms/{id}/submissions/export', 'verb' => 'GET'],
         // Automations
+        ['name' => 'automation#index', 'url' => '/api/automations', 'verb' => 'GET'],
+        ['name' => 'automation#create', 'url' => '/api/automations', 'verb' => 'POST'],
+        ['name' => 'automation#show', 'url' => '/api/automations/{id}', 'verb' => 'GET'],
+        ['name' => 'automation#update', 'url' => '/api/automations/{id}', 'verb' => 'PUT'],
+        ['name' => 'automation#destroy', 'url' => '/api/automations/{id}', 'verb' => 'DELETE'],
         ['name' => 'automation#history', 'url' => '/api/automations/{id}/history', 'verb' => 'GET'],
         ['name' => 'automation#metadata', 'url' => '/api/automations/metadata', 'verb' => 'GET'],
         ['name' => 'automation#test', 'url' => '/api/automations/test', 'verb' => 'POST'],
