@@ -17,4 +17,4 @@
 - [x] 4.2 Add Rapportage entry to `src/navigation/MainMenu.vue`
 
 ## 5. Verification
-- [ ] 5.1 Run `npm run build` and verify no errors
+- [x] 5.1 Run `npm run build` and verify no errors
