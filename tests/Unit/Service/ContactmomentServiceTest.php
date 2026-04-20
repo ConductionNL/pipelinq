@@ -33,6 +33,7 @@ use Psr\Log\LoggerInterface;
  */
 class ContactmomentServiceTest extends TestCase
 {
+
     /**
      * The service under test.
      *
@@ -95,10 +96,12 @@ class ContactmomentServiceTest extends TestCase
      */
     public function testGetConfigReturnsSettings(): void
     {
-        $this->appConfig->method('getValueString')->willReturnMap([
-            ['pipelinq', 'register', '', 'reg-123'],
-            ['pipelinq', 'contactmoment_schema', '', 'schema-456'],
-        ]);
+        $this->appConfig->method('getValueString')->willReturnMap(
+                [
+                    ['pipelinq', 'register', '', 'reg-123'],
+                    ['pipelinq', 'contactmoment_schema', '', 'schema-456'],
+                ]
+                );
 
         $config = $this->service->getConfig();
 
