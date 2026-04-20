@@ -40,7 +40,7 @@ class ObjectEventHandlerService
         private ObjectUpdateDiffService $diffService,
         private AutomationService $automationService,
     ) {
-    }//end __construct()
+    }
 
     /**
      * Handle a newly created object.
@@ -68,11 +68,11 @@ class ObjectEventHandlerService
 
         // Fire matching automations for entity creation events.
         $this->fireAutomations(
-            trigger: $entityType.'_created',
+            trigger: $entityType . '_created',
             entityData: $data,
             objectId: $objectId
         );
-    }//end handleCreated()
+    }
 
     /**
      * Handle an updated object.
@@ -133,7 +133,7 @@ class ObjectEventHandlerService
             oldData: $oldData,
             objectId: $objectId
         );
-    }//end handleUpdated()
+    }
 
     /**
      * Check if the entity type is relevant for event handling.
@@ -149,7 +149,7 @@ class ObjectEventHandlerService
         }
 
         return in_array($entityType, ['lead', 'request', 'contact'], true);
-    }//end isRelevantEntityType()
+    }
 
     /**
      * Extract old data from an old object entity.
@@ -165,7 +165,7 @@ class ObjectEventHandlerService
         }
 
         return [];
-    }//end extractOldData()
+    }
 
     /**
      * Fire matching automations for entity creation.
@@ -206,7 +206,7 @@ class ObjectEventHandlerService
         } catch (\Exception $e) {
             // Automation failures must not break the main event flow.
         }
-    }//end fireAutomations()
+    }
 
     /**
      * Fire matching automations for entity update events.
@@ -227,7 +227,7 @@ class ObjectEventHandlerService
         $triggers = [];
 
         if (($newData['assignee'] ?? '') !== ($oldData['assignee'] ?? '')) {
-            $triggers[] = $entityType.'_assigned';
+            $triggers[] = $entityType . '_assigned';
         }
 
         if ($entityType === 'lead') {
@@ -240,7 +240,8 @@ class ObjectEventHandlerService
             }
         }
 
-        if ($entityType === 'request'
+        if (
+            $entityType === 'request'
             && ($newData['status'] ?? '') !== ($oldData['status'] ?? '')
         ) {
             $triggers[] = 'request_status_changed';
@@ -253,5 +254,5 @@ class ObjectEventHandlerService
                 objectId: $objectId
             );
         }
-    }//end fireUpdateAutomations()
-}//end class
+    }
+}

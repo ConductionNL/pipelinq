@@ -85,7 +85,7 @@ class AutomationService
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
     ) {
-    }//end __construct()
+    }
 
     /**
      * Attempts to retrieve the OpenRegister service from the container.
@@ -108,7 +108,7 @@ class AutomationService
         }
 
         throw new RuntimeException('OpenRegister service is not available.');
-    }//end getObjectService()
+    }
 
     /**
      * Get the list of valid trigger types.
@@ -120,7 +120,7 @@ class AutomationService
     public function getValidTriggers(): array
     {
         return self::VALID_TRIGGERS;
-    }//end getValidTriggers()
+    }
 
     /**
      * Get the list of valid action types.
@@ -130,7 +130,7 @@ class AutomationService
     public function getValidActions(): array
     {
         return self::VALID_ACTIONS;
-    }//end getValidActions()
+    }
 
     /**
      * Check if an automation matches a given trigger event and entity data.
@@ -157,7 +157,7 @@ class AutomationService
         }
 
         return $this->evaluateConditions(conditions: $conditions, entityData: $entityData);
-    }//end matchesConditions()
+    }
 
     /**
      * Evaluate trigger conditions against entity data.
@@ -199,10 +199,10 @@ class AutomationService
             if ((string) $actual !== (string) $expected) {
                 return false;
             }
-        }//end foreach
+        }
 
         return true;
-    }//end evaluateConditions()
+    }
 
     /**
      * Evaluate a comparison operator.
@@ -224,7 +224,7 @@ class AutomationService
             'neq'   => $actual != $value,
             default => false,
         };
-    }//end evaluateOperator()
+    }
 
     /**
      * Build a webhook payload for an automation trigger.
@@ -245,7 +245,7 @@ class AutomationService
             'timestamp'      => (new \DateTime())->format('c'),
             'actions'        => $automation['actions'] ?? [],
         ];
-    }//end buildWebhookPayload()
+    }
 
     /**
      * Execute a webhook action by sending entity data to the configured URL.
@@ -287,13 +287,13 @@ class AutomationService
                 'response' => $response,
             ];
         } catch (\Exception $e) {
-            $this->logger->error('Automation webhook failed: '.$e->getMessage());
+            $this->logger->error('Automation webhook failed: ' . $e->getMessage());
             return [
                 'status' => 'failure',
                 'error'  => $e->getMessage(),
             ];
-        }//end try
-    }//end fireWebhook()
+        }
+    }
 
     /**
      * List all automations from OpenRegister.
@@ -314,10 +314,10 @@ class AutomationService
             );
             return $result;
         } catch (\Exception $e) {
-            $this->logger->error('Failed to list automations: '.$e->getMessage());
+            $this->logger->error('Failed to list automations: ' . $e->getMessage());
             return [];
         }
-    }//end listAutomations()
+    }
 
     /**
      * Get a single automation by ID.
@@ -337,10 +337,10 @@ class AutomationService
                 id: $id
             );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get automation: '.$e->getMessage());
+            $this->logger->error('Failed to get automation: ' . $e->getMessage());
             return null;
         }
-    }//end getAutomation()
+    }
 
     /**
      * Save an automation (create or update).
@@ -360,10 +360,10 @@ class AutomationService
                 object: $data
             );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to save automation: '.$e->getMessage());
+            $this->logger->error('Failed to save automation: ' . $e->getMessage());
             return null;
         }
-    }//end saveAutomation()
+    }
 
     /**
      * Delete an automation by ID.
@@ -384,10 +384,10 @@ class AutomationService
             );
             return true;
         } catch (\Exception $e) {
-            $this->logger->error('Failed to delete automation: '.$e->getMessage());
+            $this->logger->error('Failed to delete automation: ' . $e->getMessage());
             return false;
         }
-    }//end deleteAutomation()
+    }
 
     /**
      * Find automations matching a trigger and entity.
@@ -412,10 +412,10 @@ class AutomationService
 
             return $matching;
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get matching automations: '.$e->getMessage());
+            $this->logger->error('Failed to get matching automations: ' . $e->getMessage());
             return [];
         }
-    }//end getMatchingAutomations()
+    }
 
     /**
      * Execute an automation's actions.
@@ -441,7 +441,7 @@ class AutomationService
                 $actionResult = match ($actionType) {
                     'webhook' => $this->executeWebhookAction(config: $config, entityData: $entityData),
                     'send_notification' => $this->executeNotificationAction(config: $config, entityData: $entityData),
-                    default => ['status' => 'skipped', 'reason' => 'Unknown action type: '.$actionType],
+                    default => ['status' => 'skipped', 'reason' => 'Unknown action type: ' . $actionType],
                 };
 
                 $actionResults[] = [
@@ -459,13 +459,13 @@ class AutomationService
             $status = 'success';
             $results = ['status' => $status, 'actionsExecuted' => $actionResults];
         } catch (\Exception $e) {
-            $this->logger->error('Automation execution failed: '.$e->getMessage());
+            $this->logger->error('Automation execution failed: ' . $e->getMessage());
             $status = 'failure';
             $results = ['status' => $status, 'error' => $e->getMessage(), 'actionsExecuted' => $actionResults];
         }
 
         return $results;
-    }//end executeAutomation()
+    }
 
     /**
      * Execute a webhook action.
@@ -490,7 +490,7 @@ class AutomationService
             entityData: $entityData
         );
         return $this->fireWebhook(webhookUrl: $webhookUrl, payload: $payload);
-    }//end executeWebhookAction()
+    }
 
     /**
      * Execute a notification action.
@@ -507,7 +507,7 @@ class AutomationService
         // Placeholder for notification execution
         // In a complete implementation, this would send notifications to users or external systems
         return ['status' => 'success'];
-    }//end executeNotificationAction()
+    }
 
     /**
      * Log automation execution.
@@ -537,10 +537,10 @@ class AutomationService
                 object: $logEntry
             );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to log automation execution: '.$e->getMessage());
+            $this->logger->error('Failed to log automation execution: ' . $e->getMessage());
             return null;
         }
-    }//end logExecution()
+    }
 
     /**
      * Get execution history for an automation.
@@ -563,8 +563,8 @@ class AutomationService
                 params: $params
             );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get execution history: '.$e->getMessage());
+            $this->logger->error('Failed to get execution history: ' . $e->getMessage());
             return [];
         }
-    }//end getExecutionHistory()
-}//end class
+    }
+}

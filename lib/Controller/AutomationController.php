@@ -50,7 +50,7 @@ class AutomationController extends Controller
         private IL10N $l10n,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
-    }//end __construct()
+    }
 
     /**
      * Get available triggers and actions metadata.
@@ -62,12 +62,12 @@ class AutomationController extends Controller
     public function metadata(): JSONResponse
     {
         return new JSONResponse(
-                [
+            [
                     'triggers' => $this->automationService->getValidTriggers(),
                     'actions'  => $this->automationService->getValidActions(),
                 ]
-                );
-    }//end metadata()
+        );
+    }
 
     /**
      * List all automations.
@@ -91,7 +91,7 @@ class AutomationController extends Controller
         );
 
         return new JSONResponse(['success' => true, 'data' => $automations]);
-    }//end index()
+    }
 
     /**
      * Get a single automation.
@@ -112,7 +112,7 @@ class AutomationController extends Controller
         }
 
         return new JSONResponse(['success' => true, 'data' => $automation]);
-    }//end show()
+    }
 
     /**
      * Create a new automation.
@@ -133,7 +133,7 @@ class AutomationController extends Controller
         }
 
         return new JSONResponse(['success' => true, 'data' => $automation], 201);
-    }//end create()
+    }
 
     /**
      * Update an automation.
@@ -162,7 +162,7 @@ class AutomationController extends Controller
         }
 
         return new JSONResponse(['success' => true, 'data' => $updated]);
-    }//end update()
+    }
 
     /**
      * Delete an automation.
@@ -183,7 +183,7 @@ class AutomationController extends Controller
         }
 
         return new JSONResponse(['success' => true]);
-    }//end destroy()
+    }
 
     /**
      * Get execution history for an automation.
@@ -210,7 +210,7 @@ class AutomationController extends Controller
         );
 
         return new JSONResponse(['success' => true, 'data' => $history]);
-    }//end history()
+    }
 
     /**
      * Test an automation's conditions against sample entity data.
@@ -234,14 +234,14 @@ class AutomationController extends Controller
         );
 
         return new JSONResponse(
-                [
+            [
                     'matches' => $matches,
                     'payload' => $this->automationService->buildWebhookPayload(
-                automation: $automation,
-                trigger: $trigger,
-                entityData: $entityData
-            ),
+                        automation: $automation,
+                        trigger: $trigger,
+                        entityData: $entityData
+                    ),
                 ]
-                );
-    }//end test()
-}//end class
+        );
+    }
+}
