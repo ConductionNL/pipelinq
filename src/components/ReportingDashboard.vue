@@ -72,7 +72,7 @@
 	</div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import axios from '@nextcloud/axios'
@@ -81,23 +81,11 @@ import { generateUrl } from '@nextcloud/router'
 
 const { t } = useI18n()
 
-interface KpiData {
-	totalContacts: number
-	byChannel: Record<string, number>
-	avgHandlingTime: string
-	fcrRate: number
-	queueLength: number
-	activeAgents: number
-	trend: number
-	trendDirection: 'up' | 'down'
-	lastUpdated: string
-}
-
 const loading = ref(false)
-const error = ref<string | null>(null)
-const kpiData = ref<KpiData | null>(null)
-const lastUpdated = ref<string | null>(null)
-const refreshInterval = ref<NodeJS.Timeout | null>(null)
+const error = ref(null)
+const kpiData = ref(null)
+const lastUpdated = ref(null)
+const refreshInterval = ref(null)
 
 /**
  * Fetch KPI data from the API.

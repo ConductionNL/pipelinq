@@ -188,8 +188,8 @@ class ReportingServiceTest extends TestCase
         // Should contain BOM
         $this->assertStringStartsWith("\xEF\xBB\xBF", $csv);
 
-        // Should contain headers
-        $this->assertStringContainsString('Date;Channel;Duration', $csv);
+        // Should contain headers (fields are quoted per escapeCSVField)
+        $this->assertStringContainsString('"Date";"Channel";"Duration"', $csv);
 
         // Should contain rows with semicolon separators
         $this->assertStringContainsString('"2026-04-18";"telefoon";"5:30"', $csv);
