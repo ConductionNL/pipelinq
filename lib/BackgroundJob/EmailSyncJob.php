@@ -66,21 +66,27 @@ class EmailSyncJob extends TimedJob
         $this->logger->info('Starting email sync job');
 
         try {
-            // In a complete implementation, this would:.
+            // The background job runs every 5 minutes to check for new emails
+            // and link them to relevant CRM entities.
+            //
+            // In a complete implementation, this would:
             // 1. Fetch new emails from Nextcloud Mail.
             // 2. Extract sender and recipient addresses.
             // 3. Match them to CRM entities using EmailSyncService.
             // 4. Create emailLink records in the register.
             // 5. Log any errors or mismatches.
-            $this->logger->info('Email sync job completed');
+            //
+            // Current state: foundation implementation with service scaffolding.
+            // See EmailSyncService for matching logic and tasks.md#task-2.3 for acceptance criteria.
+            $this->logger->info('Email sync job: foundation implementation in progress');
         } catch (\Exception $e) {
             $this->logger->error(
-                    'Email sync job failed',
-                    [
-                        'error'     => $e->getMessage(),
-                        'exception' => $e,
-                    ]
-                    );
+                'Email sync job failed',
+                [
+                    'error' => $e->getMessage(),
+                    'exception' => $e,
+                ]
+            );
         }
     }//end run()
 }//end class
