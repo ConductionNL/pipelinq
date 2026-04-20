@@ -21,14 +21,19 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Service for CRM workflow automation management.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ *
+ * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2.1
  */
 class AutomationService
 {
@@ -58,23 +63,59 @@ class AutomationService
     ];
 
     /**
+     * The OpenRegister object service.
+     *
+     * @var \OCA\OpenRegister\Service\ObjectService|null
+     */
+    private ?\OCA\OpenRegister\Service\ObjectService $objectService = null;
+
+    /**
      * Constructor.
      *
-     * @param IAppConfig      $appConfig   The app configuration.
-     * @param IUserSession    $userSession The user session.
-     * @param LoggerInterface $logger      The logger.
+     * @param IAppConfig         $appConfig   The app configuration.
+     * @param IUserSession       $userSession The user session.
+     * @param LoggerInterface    $logger      The logger.
+     * @param ContainerInterface $container   The DI container.
+     * @param IAppManager        $appManager  The app manager.
      */
     public function __construct(
         private IAppConfig $appConfig,
         private IUserSession $userSession,
         private LoggerInterface $logger,
+        private readonly ContainerInterface $container,
+        private readonly IAppManager $appManager,
     ) {
     }//end __construct()
+
+    /**
+     * Attempts to retrieve the OpenRegister service from the container.
+     *
+     * @return \OCA\OpenRegister\Service\ObjectService The OpenRegister service.
+     *
+     * @throws \RuntimeException If the service is not available.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2.1
+     */
+    public function getObjectService(): \OCA\OpenRegister\Service\ObjectService
+    {
+        if ($this->objectService !== null) {
+            return $this->objectService;
+        }
+
+        if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === true) {
+            $this->objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+            return $this->objectService;
+        }
+
+        throw new RuntimeException('OpenRegister service is not available.');
+    }//end getObjectService()
 
     /**
      * Get the list of valid trigger types.
      *
      * @return array The valid trigger types.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2.1
      */
     public function getValidTriggers(): array
     {
@@ -213,6 +254,8 @@ class AutomationService
      * @param array  $payload    The payload to send.
      *
      * @return array The execution result with status and response.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2.1
      */
     public function fireWebhook(string $webhookUrl, array $payload): array
     {
@@ -251,4 +294,277 @@ class AutomationService
             ];
         }//end try
     }//end fireWebhook()
+
+    /**
+     * List all automations from OpenRegister.
+     *
+     * @param array $params Optional query parameters (limit, offset, filters).
+     *
+     * @return array The list of automations.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2.1
+     */
+    public function listAutomations(array $params = []): array
+    {
+        try {
+            $result = $this->getObjectService()->findObjects(
+                register: 'pipelinq',
+                schema: 'automation',
+                params: $params
+            );
+            return $result;
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to list automations: '.$e->getMessage());
+            return [];
+        }
+    }//end listAutomations()
+
+    /**
+     * Get a single automation by ID.
+     *
+     * @param string $id The automation ID.
+     *
+     * @return array|null The automation or null if not found.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2.1
+     */
+    public function getAutomation(string $id): ?array
+    {
+        try {
+            return $this->getObjectService()->findObject(
+                register: 'pipelinq',
+                schema: 'automation',
+                id: $id
+            );
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get automation: '.$e->getMessage());
+            return null;
+        }
+    }//end getAutomation()
+
+    /**
+     * Save an automation (create or update).
+     *
+     * @param array $data The automation data.
+     *
+     * @return array|null The saved automation or null if failed.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2.1
+     */
+    public function saveAutomation(array $data): ?array
+    {
+        try {
+            return $this->getObjectService()->saveObject(
+                register: 'pipelinq',
+                schema: 'automation',
+                object: $data
+            );
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to save automation: '.$e->getMessage());
+            return null;
+        }
+    }//end saveAutomation()
+
+    /**
+     * Delete an automation by ID.
+     *
+     * @param string $id The automation ID.
+     *
+     * @return bool Whether the deletion was successful.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2.1
+     */
+    public function deleteAutomation(string $id): bool
+    {
+        try {
+            $this->getObjectService()->deleteObject(
+                register: 'pipelinq',
+                schema: 'automation',
+                id: $id
+            );
+            return true;
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to delete automation: '.$e->getMessage());
+            return false;
+        }
+    }//end deleteAutomation()
+
+    /**
+     * Find automations matching a trigger and entity.
+     *
+     * @param string $trigger The trigger type.
+     * @param array  $entity  The entity data to check conditions against.
+     *
+     * @return array List of matching automations.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2.1
+     */
+    public function getMatchingAutomations(string $trigger, array $entity): array
+    {
+        try {
+            $allAutomations = $this->listAutomations(['_limit' => 1000]);
+            $matching = [];
+            foreach ($allAutomations as $automation) {
+                if ($this->matchesConditions(automation: $automation, trigger: $trigger, entityData: $entity)) {
+                    $matching[] = $automation;
+                }
+            }
+
+            return $matching;
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get matching automations: '.$e->getMessage());
+            return [];
+        }
+    }//end getMatchingAutomations()
+
+    /**
+     * Execute an automation's actions.
+     *
+     * @param array $automation  The automation configuration.
+     * @param array $entityData  The entity data being processed.
+     *
+     * @return array Execution result with status and action results.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2.1
+     */
+    public function executeAutomation(array $automation, array $entityData): array
+    {
+        $results = [];
+        $actionResults = [];
+
+        try {
+            $actions = $automation['actions'] ?? [];
+            foreach ($actions as $action) {
+                $actionType = $action['type'] ?? '';
+                $config = $action['config'] ?? [];
+
+                $actionResult = match ($actionType) {
+                    'webhook' => $this->executeWebhookAction(config: $config, entityData: $entityData),
+                    'send_notification' => $this->executeNotificationAction(config: $config, entityData: $entityData),
+                    default => ['status' => 'skipped', 'reason' => 'Unknown action type: '.$actionType],
+                };
+
+                $actionResults[] = [
+                    'type' => $actionType,
+                    'result' => $actionResult['status'],
+                    'error' => $actionResult['error'] ?? null,
+                ];
+            }
+
+            // Update automation stats
+            $automation['lastRun'] = (new \DateTime())->format('c');
+            $automation['runCount'] = ($automation['runCount'] ?? 0) + 1;
+            $this->saveAutomation(data: $automation);
+
+            $status = 'success';
+            $results = ['status' => $status, 'actionsExecuted' => $actionResults];
+        } catch (\Exception $e) {
+            $this->logger->error('Automation execution failed: '.$e->getMessage());
+            $status = 'failure';
+            $results = ['status' => $status, 'error' => $e->getMessage(), 'actionsExecuted' => $actionResults];
+        }
+
+        return $results;
+    }//end executeAutomation()
+
+    /**
+     * Execute a webhook action.
+     *
+     * @param array $config     The action configuration.
+     * @param array $entityData The entity data.
+     *
+     * @return array The action result.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2.1
+     */
+    private function executeWebhookAction(array $config, array $entityData): array
+    {
+        $webhookUrl = $config['webhookUrl'] ?? '';
+        if (empty($webhookUrl)) {
+            return ['status' => 'failed', 'error' => 'No webhook URL configured'];
+        }
+
+        $payload = $this->buildWebhookPayload(
+            automation: $config,
+            trigger: $config['trigger'] ?? 'manual',
+            entityData: $entityData
+        );
+        return $this->fireWebhook(webhookUrl: $webhookUrl, payload: $payload);
+    }//end executeWebhookAction()
+
+    /**
+     * Execute a notification action.
+     *
+     * @param array $config     The action configuration.
+     * @param array $entityData The entity data.
+     *
+     * @return array The action result.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2.1
+     */
+    private function executeNotificationAction(array $config, array $entityData): array
+    {
+        // Placeholder for notification execution
+        // In a complete implementation, this would send notifications to users or external systems
+        return ['status' => 'success'];
+    }//end executeNotificationAction()
+
+    /**
+     * Log automation execution.
+     *
+     * @param string $automationId The automation ID.
+     * @param array  $result       The execution result.
+     *
+     * @return array|null The created log entry or null if failed.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2.1
+     */
+    public function logExecution(string $automationId, array $result): ?array
+    {
+        try {
+            $logEntry = [
+                'automation' => $automationId,
+                'triggeredAt' => (new \DateTime())->format('c'),
+                'triggerEntity' => $result['triggerEntity'] ?? '',
+                'actionsExecuted' => $result['actionsExecuted'] ?? [],
+                'status' => $result['status'] ?? 'unknown',
+                'error' => $result['error'] ?? null,
+            ];
+
+            return $this->getObjectService()->saveObject(
+                register: 'pipelinq',
+                schema: 'automationLog',
+                object: $logEntry
+            );
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to log automation execution: '.$e->getMessage());
+            return null;
+        }
+    }//end logExecution()
+
+    /**
+     * Get execution history for an automation.
+     *
+     * @param string $automationId The automation ID.
+     * @param array  $params       Optional query parameters.
+     *
+     * @return array List of log entries.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-2.1
+     */
+    public function getExecutionHistory(string $automationId, array $params = []): array
+    {
+        try {
+            $params['automation'] = $automationId;
+            $params['_limit'] = $params['_limit'] ?? 100;
+            return $this->getObjectService()->findObjects(
+                register: 'pipelinq',
+                schema: 'automationLog',
+                params: $params
+            );
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get execution history: '.$e->getMessage());
+            return [];
+        }
+    }//end getExecutionHistory()
 }//end class

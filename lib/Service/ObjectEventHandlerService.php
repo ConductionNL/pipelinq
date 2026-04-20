@@ -175,17 +175,34 @@ class ObjectEventHandlerService
      * @param string $objectId   The object ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-4.1
      */
     private function fireAutomations(string $trigger, array $entityData, string $objectId): void
     {
         try {
-            $payload = $this->automationService->buildWebhookPayload(
-                automation: ['name' => $trigger],
+            $fullEntityData = array_merge($entityData, ['id' => $objectId]);
+
+            // Get all automations matching this trigger and conditions
+            $matchingAutomations = $this->automationService->getMatchingAutomations(
                 trigger: $trigger,
-                entityData: array_merge($entityData, ['id' => $objectId])
+                entity: $fullEntityData
             );
-            // Webhook firing is handled by the automation execution engine.
-            // This is a placeholder for the full automation matching pipeline.
+
+            // Execute each matching automation
+            foreach ($matchingAutomations as $automation) {
+                $executionResult = $this->automationService->executeAutomation(
+                    automation: $automation,
+                    entityData: $fullEntityData
+                );
+
+                // Log the execution
+                $executionResult['triggerEntity'] = $objectId;
+                $this->automationService->logExecution(
+                    automationId: $automation['id'],
+                    result: $executionResult
+                );
+            }
         } catch (\Exception $e) {
             // Automation failures must not break the main event flow.
         }
