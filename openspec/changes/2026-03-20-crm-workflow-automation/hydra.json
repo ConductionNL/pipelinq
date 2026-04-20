@@ -1,0 +1,49 @@
+{
+  "spec_slug": "2026-03-20-crm-workflow-automation",
+  "app": "pipelinq",
+  "repo": "ConductionNL/pipelinq",
+  "issue": 189,
+  "depends_on": [],
+  "schema_version": 2,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-04-16T11:36:15Z",
+      "ended_at": null,
+      "outcome": "aborted",
+      "outcome_reason": "no terminal label seen in timeline",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-16T11:36:15Z",
+          "ended_at": "2026-04-16T11:36:16Z",
+          "turns_used": 95,
+          "turns_budget": 200,
+          "cost_usd": 1.0037,
+          "checks_run": [
+            "composer check:strict"
+          ],
+          "checks_skipped": [],
+          "findings": [
+            {
+              "id": "b-builder-build-0",
+              "severity": "WARNING",
+              "gate": null,
+              "rule": "builder output flagged failure language",
+              "status": "open",
+              "note": "## Implementation Complete \u2713\n\nI have successfully implemented the OpenSpec change '2026-03-20-crm-workflow-automation' for the Pipelinq CRM. Here's a summary of what was accomplished:\n\n### **Deliverables**\n\n#### 1. Backend Implementation\n- **AutomationService** (`lib/Service/AutomationService.php`)\n  - CRUD methods for automation management via OpenRegister\n  - Trigger matching with condition evaluation (operators: gt, gte, lt, lte, eq, neq)\n  - Webhook payload building and firing\n  - Execution ",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "fail"
+        }
+      ]
+    }
+  ]
+}
