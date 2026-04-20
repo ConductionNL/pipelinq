@@ -23,7 +23,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\EmailSyncService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -38,13 +37,11 @@ class EmailSyncJob extends TimedJob
     /**
      * Constructor.
      *
-     * @param ITimeFactory     $timeFactory      The time factory.
-     * @param EmailSyncService $emailSyncService The email sync service.
-     * @param LoggerInterface  $logger           The logger.
+     * @param ITimeFactory    $timeFactory The time factory.
+     * @param LoggerInterface $logger      The logger.
      */
     public function __construct(
         ITimeFactory $timeFactory,
-        private EmailSyncService $emailSyncService,
         private LoggerInterface $logger,
     ) {
         parent::__construct(timeFactory: $timeFactory);
@@ -74,16 +71,14 @@ class EmailSyncJob extends TimedJob
         try {
             // Email sync workflow:
             // 1. Fetch new emails from Nextcloud Mail accounts
-            // This requires integration with OCP\Mail\IMailer or similar
+            // This requires integration with OCP\Mail\IMailer or similar.
             $emailCount = 0;
 
             // 2. For each email, extract metadata
             // 3. Use EmailSyncService to match to entities
             // 4. Create emailLink records in register
-
             // This implementation is a placeholder that developers should extend
             // with actual Mail app integration and register queries.
-
             if ($emailCount === 0) {
                 $this->logger->debug('No new emails found to sync');
             } else {
@@ -100,6 +95,6 @@ class EmailSyncJob extends TimedJob
                     'exception' => $e,
                 ]
             );
-        }
+        }//end try
     }//end run()
 }//end class

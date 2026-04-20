@@ -110,7 +110,7 @@ class CalendarSyncService
         $matches = [];
 
         foreach ($attendeeEmails as $email) {
-            // Sanitize email address to prevent injection attacks
+            // Sanitize email address to prevent injection attacks.
             $sanitizedEmail = \str_replace(["\r", "\n"], '', $email);
             $sanitizedEmail = \strtolower(\trim($sanitizedEmail));
 
@@ -118,7 +118,6 @@ class CalendarSyncService
             // 1. Query the register for contacts/clients with matching email
             // 2. Check both primary and secondary email fields
             // 3. Return entity type and ID if found
-
             // This is a placeholder for actual register integration.
             // Developers should extend this method to implement register queries.
             $this->logger->debug(
