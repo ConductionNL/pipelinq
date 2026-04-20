@@ -20,9 +20,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Service\ContactmomentService;
+use OCA\Pipelinq\Service\SettingsService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\NotPermittedException;
-use OCP\IAppConfig;
 use OCP\IGroupManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -49,11 +49,11 @@ class ContactmomentServiceTest extends TestCase
     private ContainerInterface $container;
 
     /**
-     * Mock app config.
+     * Mock settings service.
      *
-     * @var IAppConfig
+     * @var SettingsService
      */
-    private IAppConfig $appConfig;
+    private SettingsService $settingsService;
 
     /**
      * Mock group manager.
@@ -76,14 +76,14 @@ class ContactmomentServiceTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->container    = $this->createMock(ContainerInterface::class);
-        $this->appConfig    = $this->createMock(IAppConfig::class);
-        $this->groupManager = $this->createMock(IGroupManager::class);
-        $this->logger       = $this->createMock(LoggerInterface::class);
+        $this->container       = $this->createMock(ContainerInterface::class);
+        $this->settingsService = $this->createMock(SettingsService::class);
+        $this->groupManager    = $this->createMock(IGroupManager::class);
+        $this->logger          = $this->createMock(LoggerInterface::class);
 
         $this->service = new ContactmomentService(
             $this->container,
-            $this->appConfig,
+            $this->settingsService,
             $this->groupManager,
             $this->logger,
         );
@@ -96,12 +96,12 @@ class ContactmomentServiceTest extends TestCase
      */
     public function testGetConfigReturnsSettings(): void
     {
-        $this->appConfig->method('getValueString')->willReturnMap(
-                [
-                    ['pipelinq', 'register', '', 'reg-123'],
-                    ['pipelinq', 'contactmoment_schema', '', 'schema-456'],
-                ]
-                );
+        $this->settingsService->method('getSettings')->willReturn(
+            [
+                'register'             => 'reg-123',
+                'contactmoment_schema' => 'schema-456',
+            ]
+        );
 
         $config = $this->service->getConfig();
 
@@ -116,7 +116,7 @@ class ContactmomentServiceTest extends TestCase
      */
     public function testGetConfigThrowsWhenMissing(): void
     {
-        $this->appConfig->method('getValueString')->willReturn('');
+        $this->settingsService->method('getSettings')->willReturn(['register' => '', 'contactmoment_schema' => '']);
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Contactmoment register or schema not configured.');

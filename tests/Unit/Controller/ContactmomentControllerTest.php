@@ -28,6 +28,7 @@ use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 /**
  * Tests for ContactmomentController.
@@ -66,14 +67,16 @@ class ContactmomentControllerTest extends TestCase
         $request = $this->createMock(IRequest::class);
         $this->contactmomentService = $this->createMock(ContactmomentService::class);
         $this->userSession          = $this->createMock(IUserSession::class);
-        $l10n = $this->createMock(IL10N::class);
+        $l10n   = $this->createMock(IL10N::class);
         $l10n->method('t')->willReturnArgument(0);
+        $logger = $this->createMock(LoggerInterface::class);
 
         $this->controller = new ContactmomentController(
             $request,
             $this->contactmomentService,
             $this->userSession,
             $l10n,
+            $logger,
         );
     }//end setUp()
 
