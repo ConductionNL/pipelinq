@@ -1,0 +1,715 @@
+{
+  "spec_slug": "2026-03-20-public-intake-forms",
+  "app": "pipelinq",
+  "repo": "ConductionNL/pipelinq",
+  "issue": 261,
+  "depends_on": [],
+  "schema_version": 2,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-04-18T16:30:04Z",
+      "ended_at": null,
+      "outcome": "aborted",
+      "outcome_reason": "no terminal label seen in timeline",
+      "pattern_tags": [
+        "reviewer-skipped-full-suite"
+      ],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-18T16:30:04Z",
+          "ended_at": "2026-04-18T16:30:05Z",
+          "turns_used": 78,
+          "turns_budget": 200,
+          "cost_usd": 0.9087,
+          "checks_run": [
+            "composer check:strict"
+          ],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass"
+        },
+        {
+          "stage": "pre-review-quality",
+          "persona": "orchestrator",
+          "container": "hydra-quality-runner",
+          "started_at": "2026-04-18T16:30:04Z",
+          "ended_at": "2026-04-18T16:30:05Z",
+          "exit_code": 0,
+          "checks_run": [
+            "phpstan",
+            "phpmetrics",
+            "composer-audit",
+            "spdx-headers",
+            "forbidden-patterns",
+            "eslint",
+            "stylelint",
+            "npm-audit",
+            "phpunit"
+          ],
+          "checks_skipped": [
+            "php-lint",
+            "phpcs",
+            "phpmd",
+            "psalm",
+            "publiccode",
+            "gitleaks",
+            "trivy",
+            "newman"
+          ],
+          "gates": {
+            "phpstan": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpmetrics": {
+              "pass": true,
+              "failures": 0
+            },
+            "composer-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "spdx-headers": {
+              "pass": true,
+              "failures": 0
+            },
+            "forbidden-patterns": {
+              "pass": true,
+              "failures": 0
+            },
+            "eslint": {
+              "pass": true,
+              "failures": 0
+            },
+            "stylelint": {
+              "pass": true,
+              "failures": 0
+            },
+            "npm-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpunit": {
+              "pass": true,
+              "failures": 0
+            }
+          },
+          "findings": [],
+          "verdict": "pass"
+        },
+        {
+          "stage": "code-review",
+          "persona": "Juan Claude van Damme",
+          "model": "sonnet",
+          "container": "hydra-reviewer",
+          "started_at": "2026-04-18T16:38:04Z",
+          "ended_at": "2026-04-18T16:38:05Z",
+          "turns_used": 41,
+          "turns_budget": 40,
+          "cost_usd": 0.9727,
+          "checks_run": [
+            "phpunit",
+            "composer check:strict",
+            "phpcs"
+          ],
+          "checks_skipped": [
+            "hydra-gates"
+          ],
+          "findings": [],
+          "verdict": "none"
+        },
+        {
+          "stage": "security-review",
+          "persona": "Clyde Barcode",
+          "model": "sonnet",
+          "container": "hydra-security",
+          "started_at": "2026-04-18T16:43:19Z",
+          "ended_at": "2026-04-18T16:43:20Z",
+          "turns_used": 37,
+          "turns_budget": 40,
+          "cost_usd": 1.3118,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [
+            {
+              "id": "SEC-01",
+              "severity": "WARNING",
+              "gate": "CWE-1236 / OWASP A03:2021",
+              "file": "lib/Service/IntakeFormService.php",
+              "line": 255,
+              "rule": "CWE-1236 / OWASP A03:2021",
+              "status": "open",
+              "note": "Fix is mechanical (preg_replace to prefix =,+,-,@ with single quote) but could not be applied in-container: all repository files are root-owned (644) and no sudo is available. Must be applied by a developer before merge.",
+              "autofixable": false
+            },
+            {
+              "id": "SEC-02",
+              "severity": "WARNING",
+              "gate": "CWE-639 / OWASP A01:2021",
+              "file": "lib/Controller/IntakeFormController.php",
+              "line": 93,
+              "rule": "CWE-639 / OWASP A01:2021",
+              "status": "open",
+              "note": "index() and export() verify form existence but not caller access rights. Any authenticated Nextcloud user can read or export submissions for any form UUID. Requires an ownership/ACL layer on the form object \u2014 architectural fix.",
+              "autofixable": false
+            },
+            {
+              "id": "SEC-03",
+              "severity": "SUGGESTION",
+              "gate": "OWASP A09:2021 / GDPR Art. 5(1)(e)",
+              "file": "lib/Service/IntakeFormService.php",
+              "line": 371,
+              "rule": "OWASP A09:2021 / GDPR Art. 5(1)(e)",
+              "status": "open",
+              "note": "Review against data-minimisation obligations; replace with a non-PII identifier or remove from log message.",
+              "autofixable": false
+            },
+            {
+              "id": "SEC-04",
+              "severity": "SUGGESTION",
+              "gate": "OWASP A05:2021",
+              "file": "lib/Service/IntakeFormService.php",
+              "line": 130,
+              "rule": "OWASP A05:2021",
+              "status": "open",
+              "note": "No warning emitted when APCu is absent; public submit endpoint then accepts unlimited submissions. Add a logger warning or APCu system-check gate.",
+              "autofixable": false
+            }
+          ],
+          "verdict": "fail"
+        }
+      ]
+    },
+    {
+      "cycle": 2,
+      "trigger": "build:queued",
+      "started_at": "2026-04-18T19:33:09Z",
+      "ended_at": null,
+      "outcome": "aborted",
+      "outcome_reason": "no terminal label seen in timeline",
+      "pattern_tags": [
+        "reviewer-skipped-full-suite"
+      ],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-18T19:33:09Z",
+          "ended_at": "2026-04-18T19:33:10Z",
+          "turns_used": 86,
+          "turns_budget": 200,
+          "cost_usd": 0.9818,
+          "checks_run": [
+            "composer check:strict"
+          ],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass"
+        },
+        {
+          "stage": "pre-review-quality",
+          "persona": "orchestrator",
+          "container": "hydra-quality-runner",
+          "started_at": "2026-04-18T19:33:09Z",
+          "ended_at": "2026-04-18T19:33:10Z",
+          "exit_code": 0,
+          "checks_run": [
+            "phpstan",
+            "phpmetrics",
+            "composer-audit",
+            "spdx-headers",
+            "forbidden-patterns",
+            "eslint",
+            "stylelint",
+            "npm-audit",
+            "phpunit"
+          ],
+          "checks_skipped": [
+            "php-lint",
+            "phpcs",
+            "phpmd",
+            "psalm",
+            "publiccode",
+            "gitleaks",
+            "trivy",
+            "newman"
+          ],
+          "gates": {
+            "phpstan": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpmetrics": {
+              "pass": true,
+              "failures": 0
+            },
+            "composer-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "spdx-headers": {
+              "pass": true,
+              "failures": 0
+            },
+            "forbidden-patterns": {
+              "pass": true,
+              "failures": 0
+            },
+            "eslint": {
+              "pass": true,
+              "failures": 0
+            },
+            "stylelint": {
+              "pass": true,
+              "failures": 0
+            },
+            "npm-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpunit": {
+              "pass": true,
+              "failures": 0
+            }
+          },
+          "findings": [],
+          "verdict": "pass"
+        },
+        {
+          "stage": "code-review",
+          "persona": "Juan Claude van Damme",
+          "model": "sonnet",
+          "container": "hydra-reviewer",
+          "started_at": "2026-04-18T19:47:04Z",
+          "ended_at": "2026-04-18T19:47:05Z",
+          "turns_used": 41,
+          "turns_budget": 40,
+          "cost_usd": 0.6795,
+          "checks_run": [
+            "phpunit",
+            "composer check:strict",
+            "phpcs"
+          ],
+          "checks_skipped": [
+            "hydra-gates"
+          ],
+          "findings": [],
+          "verdict": "none"
+        },
+        {
+          "stage": "security-review",
+          "persona": "Clyde Barcode",
+          "model": "sonnet",
+          "container": "hydra-security",
+          "started_at": "2026-04-18T20:02:00Z",
+          "ended_at": "2026-04-18T20:02:01Z",
+          "turns_used": 43,
+          "turns_budget": 40,
+          "cost_usd": 0.8619,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [
+            {
+              "id": "SEC-01",
+              "severity": "WARNING",
+              "gate": "ADR-005",
+              "file": "lib/Service/IntakeFormService.php",
+              "line": 465,
+              "rule": "ADR-005",
+              "status": "open",
+              "note": "Email is PII under GDPR. Remove 'email' => $email from the warning log context. Fix: context: ['error' => $e->getMessage()]. Unfixed: container files are root-owned, no write access.",
+              "autofixable": false
+            },
+            {
+              "id": "SEC-02",
+              "severity": "WARNING",
+              "gate": "ADR-005",
+              "file": "lib/Controller/IntakeFormController.php",
+              "line": 148,
+              "rule": "ADR-005",
+              "status": "open",
+              "note": "$e->getMessage() written to DataDownloadResponse body can leak internal paths or library details. Replace with static string 'An error occurred during export.'. Unfixed: container files are root-owned, no write access.",
+              "autofixable": false
+            },
+            {
+              "id": "SEC-03",
+              "severity": "WARNING",
+              "gate": "ADR-002",
+              "file": "lib/Controller/PublicFormController.php",
+              "line": 171,
+              "rule": "ADR-002",
+              "status": "open",
+              "note": "All public form endpoints return ACAO: *. Intentional for embedding but violates ADR-002 'CORS properly scoped'. Needs per-form or global allowed-origins config. Architectural change required.",
+              "autofixable": false
+            },
+            {
+              "id": "SEC-04",
+              "severity": "WARNING",
+              "gate": "OWASP A01:2021",
+              "file": "lib/Controller/IntakeFormController.php",
+              "line": 97,
+              "rule": "OWASP A01:2021",
+              "status": "open",
+              "note": "Any authenticated Nextcloud user can enumerate submissions for any form ID. No check that requesting user owns or is authorised for the form. Needs form ownership guard \u2014 verify form owner matches authenticated user. Architectural change required.",
+              "autofixable": false
+            }
+          ],
+          "verdict": "fail"
+        }
+      ]
+    },
+    {
+      "cycle": 3,
+      "trigger": "build:queued",
+      "started_at": "2026-04-18T20:07:35Z",
+      "ended_at": null,
+      "outcome": "aborted",
+      "outcome_reason": "no terminal label seen in timeline",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "quality-recheck",
+          "persona": "orchestrator",
+          "container": "hydra-quality-runner",
+          "started_at": "2026-04-18T20:07:35Z",
+          "ended_at": "2026-04-18T20:07:36Z",
+          "exit_code": 1,
+          "checks_run": [
+            "php-lint",
+            "phpcs",
+            "phpmd",
+            "psalm",
+            "phpstan",
+            "phpmetrics",
+            "composer-audit",
+            "spdx-headers",
+            "forbidden-patterns",
+            "eslint",
+            "stylelint",
+            "npm-audit",
+            "phpunit"
+          ],
+          "checks_skipped": [
+            "publiccode",
+            "gitleaks",
+            "trivy",
+            "newman"
+          ],
+          "gates": {
+            "php-lint": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpcs": {
+              "pass": false,
+              "failures": 1
+            },
+            "phpmd": {
+              "pass": true,
+              "failures": 0
+            },
+            "psalm": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpstan": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpmetrics": {
+              "pass": true,
+              "failures": 0
+            },
+            "composer-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "spdx-headers": {
+              "pass": true,
+              "failures": 0
+            },
+            "forbidden-patterns": {
+              "pass": true,
+              "failures": 0
+            },
+            "eslint": {
+              "pass": true,
+              "failures": 0
+            },
+            "stylelint": {
+              "pass": true,
+              "failures": 0
+            },
+            "npm-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpunit": {
+              "pass": false,
+              "failures": 1
+            }
+          },
+          "findings": [
+            {
+              "id": "qr-quality-recheck-phpcs",
+              "severity": "CRITICAL",
+              "gate": "phpcs",
+              "rule": "phpcs gate failing",
+              "status": "open",
+              "note": "phpcs reported status=fail in quality-recheck.json",
+              "autofixable": true
+            },
+            {
+              "id": "qr-quality-recheck-phpunit",
+              "severity": "CRITICAL",
+              "gate": "phpunit",
+              "rule": "phpunit gate failing",
+              "status": "open",
+              "note": "phpunit reported status=fail in quality-recheck.json",
+              "autofixable": false
+            }
+          ],
+          "verdict": "fail"
+        }
+      ]
+    },
+    {
+      "cycle": 4,
+      "trigger": "build:queued",
+      "started_at": "2026-04-19T17:44:38Z",
+      "ended_at": null,
+      "outcome": "aborted",
+      "outcome_reason": "no terminal label seen in timeline",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "fix",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-19T17:44:38Z",
+          "ended_at": "2026-04-19T17:44:39Z",
+          "turns_used": 75,
+          "turns_budget": 200,
+          "cost_usd": 0.5477,
+          "checks_run": [
+            "composer check:strict"
+          ],
+          "checks_skipped": [],
+          "findings": [
+            {
+              "id": "b-builder-fix-0",
+              "severity": "WARNING",
+              "gate": null,
+              "rule": "builder output flagged failure language",
+              "status": "open",
+              "note": "## Summary\n\n**Fix Retry Complete** \u2014 All security review findings on PR #279 have been addressed.\n\n### Findings Fixed:\n\n1. **PII Logging (ADR-005)** \u2014 Removed email address from log context in `IntakeFormService.php:466`\n\n2. **Exception Message Leakage (ADR-005)** \u2014 Replaced exception message in export error response with generic message in `IntakeFormController.php:148`\n\n3. **Wildcard CORS** \u2014 No action required; explicitly approved by reviewer as acceptable for v1\n\n4. **Missing Form Ownership ",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "fail"
+        }
+      ]
+    },
+    {
+      "cycle": 5,
+      "trigger": "build:queued",
+      "started_at": "2026-04-19T17:44:39Z",
+      "ended_at": null,
+      "outcome": "aborted",
+      "outcome_reason": "no terminal label seen in timeline",
+      "pattern_tags": [
+        "reviewer-skipped-full-suite"
+      ],
+      "stages": [
+        {
+          "stage": "fix",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-19T17:44:39Z",
+          "ended_at": "2026-04-19T17:44:40Z",
+          "turns_used": 69,
+          "turns_budget": 200,
+          "cost_usd": 0.5957,
+          "checks_run": [
+            "composer check:strict"
+          ],
+          "checks_skipped": [],
+          "findings": [
+            {
+              "id": "b-builder-fix-0",
+              "severity": "WARNING",
+              "gate": null,
+              "rule": "builder output flagged failure language",
+              "status": "open",
+              "note": "Perfect! Let me verify the changes are all correct by reviewing what the security review found:\n\n\u2705 **All findings addressed:**\n\n1. **Finding 1** (lib/Service/IntakeFormService.php:465) \u2014 PII logging\n   - \u2713 Removed `'email' => $email` from log context\n   - \u2713 Now only logs error, not sensitive data\n\n2. **Finding 2** (lib/Controller/IntakeFormController.php:148) \u2014 Error message leak  \n   - \u2713 Replaced `'Error: ' . $e->getMessage()` with generic message\n   - \u2713 No stack trace or exception details expo",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "fail"
+        },
+        {
+          "stage": "code-review",
+          "persona": "Juan Claude van Damme",
+          "model": "sonnet",
+          "container": "hydra-reviewer",
+          "started_at": "2026-04-19T17:50:02Z",
+          "ended_at": "2026-04-19T17:50:03Z",
+          "turns_used": 61,
+          "turns_budget": 40,
+          "cost_usd": 1.5912,
+          "checks_run": [
+            "phpcs",
+            "composer check:strict"
+          ],
+          "checks_skipped": [
+            "hydra-gates"
+          ],
+          "findings": [],
+          "verdict": "none"
+        },
+        {
+          "stage": "security-review",
+          "persona": "Clyde Barcode",
+          "model": "sonnet",
+          "container": "hydra-security",
+          "started_at": "2026-04-19T18:04:36Z",
+          "ended_at": "2026-04-19T18:04:37Z",
+          "turns_used": 48,
+          "turns_budget": 40,
+          "cost_usd": 1.0196,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [
+            {
+              "id": "SEC-01",
+              "severity": "WARNING",
+              "gate": "OWASP A01:2021",
+              "file": "lib/Controller/IntakeFormController.php",
+              "line": 79,
+              "rule": "OWASP A01:2021",
+              "status": "open",
+              "note": "unfixed: write permission denied in container. Any authenticated Nextcloud user can retrieve embed code for any form ID. Fix: add getFormData() + isFormOwner() check identical to submissions() and export() pattern.",
+              "autofixable": false
+            },
+            {
+              "id": "SEC-02",
+              "severity": "WARNING",
+              "gate": "OWASP A04:2021",
+              "file": "lib/Service/IntakeFormService.php",
+              "line": 131,
+              "rule": "OWASP A04:2021",
+              "status": "open",
+              "note": "unfixed: architectural gap \u2014 requires IMemcache or DB fallback. At minimum add logger warning when APCu is missing so operators are informed.",
+              "autofixable": false
+            },
+            {
+              "id": "SEC-03",
+              "severity": "WARNING",
+              "gate": "CVE-2026-26278 / GHSA-fj3w-jwp8-x2g3 / GHSA-8gc5-j5rx-235r / GHSA-jp2q-39xq-3w4g",
+              "file": "package-lock.json",
+              "line": 0,
+              "rule": "CVE-2026-26278 / GHSA-fj3w-jwp8-x2g3 / GHSA-8gc5-j5rx-235r / GHSA-jp2q-39xq-3w4g",
+              "status": "open",
+              "note": "unfixed: pre-existing in webdav \u2192 fast-xml-parser transitive dep; not introduced by this PR. Run `npm audit fix` to resolve.",
+              "autofixable": false
+            },
+            {
+              "id": "SEC-04",
+              "severity": "WARNING",
+              "gate": "GHSA-3ppc-4f35-3m26 / GHSA-7r86-cg39-jmmj / GHSA-23c5-xmqv-rm74",
+              "file": "package-lock.json",
+              "line": 0,
+              "rule": "GHSA-3ppc-4f35-3m26 / GHSA-7r86-cg39-jmmj / GHSA-23c5-xmqv-rm74",
+              "status": "open",
+              "note": "unfixed: pre-existing in webdav \u2192 minimatch transitive dep; not introduced by this PR. Run `npm audit fix` to resolve.",
+              "autofixable": false
+            },
+            {
+              "id": "SEC-05",
+              "severity": "SUGGESTION",
+              "gate": "OWASP A05:2021",
+              "file": "lib/Controller/PublicFormController.php",
+              "line": 166,
+              "rule": "OWASP A05:2021",
+              "status": "open",
+              "note": "unfixed: architectural trade-off for embeddable forms. Since endpoint is @PublicPage (no auth), credential theft is not possible. Recommend adding optional allowedOrigins field to form schema.",
+              "autofixable": false
+            },
+            {
+              "id": "SEC-06",
+              "severity": "SUGGESTION",
+              "gate": "OWASP A02:2021 / GDPR Art. 5",
+              "file": "lib/Service/IntakeFormService.php",
+              "line": 567,
+              "rule": "OWASP A02:2021 / GDPR Art. 5",
+              "status": "open",
+              "note": "unfixed: requires product decision on data minimization. Recommend hashing IP before storage or excluding it from persisted record.",
+              "autofixable": false
+            },
+            {
+              "id": "SEC-07",
+              "severity": "SUGGESTION",
+              "gate": "CWE-200",
+              "file": "lib/Service/IntakeFormService.php",
+              "line": 432,
+              "rule": "CWE-200",
+              "status": "open",
+              "note": "unfixed: design decision. Consider returning only success/status/message to minimize internal structure exposure.",
+              "autofixable": false
+            }
+          ],
+          "verdict": "fail"
+        }
+      ]
+    },
+    {
+      "cycle": 6,
+      "trigger": "build:queued",
+      "started_at": "2026-04-19T18:12:40Z",
+      "ended_at": null,
+      "outcome": "aborted",
+      "outcome_reason": "no terminal label seen in timeline",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "applier",
+          "persona": "Axel Pli\u00e9r",
+          "model": "sonnet",
+          "container": "hydra-applier",
+          "started_at": "2026-04-19T18:12:40Z",
+          "ended_at": "2026-04-19T18:12:41Z",
+          "turns_used": 10,
+          "turns_budget": 20,
+          "cost_usd": 0.334,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [],
+          "verdict": "fail"
+        }
+      ]
+    }
+  ]
+}
