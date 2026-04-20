@@ -226,6 +226,77 @@
             }
           ],
           "verdict": "fail"
+        },
+        {
+          "stage": "quality-recheck",
+          "persona": "orchestrator",
+          "container": "hydra-quality-runner",
+          "started_at": "2026-04-20T20:50:11Z",
+          "ended_at": "2026-04-20T20:50:11Z",
+          "exit_code": 1,
+          "checks_run": [
+            "php -l",
+            "composer check:strict (phpcs)",
+            "composer check:strict (phpmd)",
+            "composer check:strict (psalm)",
+            "composer check:strict (phpstan)",
+            "phpmetrics",
+            "composer audit",
+            "spdx-headers",
+            "forbidden-patterns",
+            "npm run lint (eslint)",
+            "npm run lint (stylelint)",
+            "npm audit",
+            "stub-scan",
+            "composer test:unit (phpunit)"
+          ],
+          "checks_skipped": [
+            "publiccode",
+            "gitleaks",
+            "trivy",
+            "newman"
+          ],
+          "gates": {
+            "php-lint": "pass",
+            "phpcs": "fail",
+            "phpmd": "pass",
+            "psalm": "pass",
+            "phpstan": "pass",
+            "phpmetrics": "pass",
+            "composer-audit": "pass",
+            "spdx-headers": "pass",
+            "publiccode": "skip",
+            "forbidden-patterns": "pass",
+            "eslint": "pass",
+            "stylelint": "pass",
+            "npm-audit": "pass",
+            "stub-scan": "pass",
+            "gitleaks": "skip",
+            "trivy": "skip",
+            "phpunit": "fail",
+            "newman": "skip"
+          },
+          "findings": [
+            {
+              "id": "qrc-phpcs",
+              "severity": "WARNING",
+              "gate": "phpcs",
+              "rule": "composer check:strict (phpcs) failing",
+              "status": "open",
+              "note": "...\nThe repository at \"/server/apps/repo\" does not have the correct ownership and git refuses to use it:\n\nfatal: detected dubious ownership in repository at '/server/apps/repo'\nTo add an exception for this directory, call:\n\ngit config --global --add safe.directory /server/apps/repo\n\nComposer could not detect the root package (conductionnl/pipelinq) version, defaulting to '1.0.0'. See https://getcomposer.org/root-version\n\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m.\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m.\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33",
+              "autofixable": true
+            },
+            {
+              "id": "qrc-phpunit",
+              "severity": "CRITICAL",
+              "gate": "phpunit",
+              "rule": "composer test:unit (phpunit) failing",
+              "status": "open",
+              "note": "phpunit gate failed \u2014 see pipeline log",
+              "autofixable": false
+            }
+          ],
+          "verdict": "fail"
         }
       ]
     }
