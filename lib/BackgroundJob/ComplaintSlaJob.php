@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/klachtenregistratie/tasks.md#task-1.2
  */
 
 declare(strict_types=1);
@@ -37,7 +39,7 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.UnusedFormalParameter)
  *
- * @spec openspec/changes/klachtenregistratie/tasks.md#task-1-2
+ * @spec openspec/changes/klachtenregistratie/tasks.md#task-1.2
  */
 class ComplaintSlaJob extends TimedJob
 {
@@ -71,8 +73,6 @@ class ComplaintSlaJob extends TimedJob
      * @param mixed $argument The job argument (unused, required by TimedJob).
      *
      * @return void
-     *
-     * @spec openspec/changes/klachtenregistratie/tasks.md#task-1-2
      */
     protected function run($argument): void
     {
