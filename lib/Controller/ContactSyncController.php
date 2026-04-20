@@ -68,7 +68,7 @@ class ContactSyncController extends Controller
         } catch (\Exception $e) {
             return new JSONResponse(
                     [
-                        'error' => $e->getMessage(),
+                        'error' => 'An internal error occurred',
                     ],
                     500
                     );
@@ -109,7 +109,7 @@ class ContactSyncController extends Controller
         } catch (\Exception $e) {
             return new JSONResponse(
                     [
-                        'error' => $e->getMessage(),
+                        'error' => 'An internal error occurred',
                     ],
                     500
                     );
@@ -150,7 +150,7 @@ class ContactSyncController extends Controller
         } catch (\Exception $e) {
             return new JSONResponse(
                     [
-                        'error' => $e->getMessage(),
+                        'error' => 'An internal error occurred',
                     ],
                     500
                     );
