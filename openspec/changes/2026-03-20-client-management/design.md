@@ -1,6 +1,6 @@
 # Design: client-management enhancements
 
-**Status**: pr-created
+**Status:** pr-created
 
 ## Architecture Overview
 
