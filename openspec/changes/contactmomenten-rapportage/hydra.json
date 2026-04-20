@@ -2546,6 +2546,16 @@
           "verdict": "pass"
         }
       ]
+    },
+    {
+      "cycle": 22,
+      "trigger": "build:queued",
+      "started_at": "2026-04-20T18:41:36Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [],
+      "stages": []
     }
   ]
 }
