@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/2026-03-20-kennisbank/tasks.md#task-2.2
  */
 
 declare(strict_types=1);
@@ -62,6 +64,8 @@ class KennisbankController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     *
+     * @spec openspec/changes/2026-03-20-kennisbank/tasks.md#task-2.2
      */
     public function publicIndex(): JSONResponse
     {
@@ -97,6 +101,8 @@ class KennisbankController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     *
+     * @spec openspec/changes/2026-03-20-kennisbank/tasks.md#task-2.2
      */
     public function publicShow(string $id): JSONResponse
     {
@@ -127,6 +133,8 @@ class KennisbankController extends Controller
      * @return JSONResponse The response containing the feedback data.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/2026-03-20-kennisbank/tasks.md#task-2.2
      */
     public function submitFeedback(): JSONResponse
     {
