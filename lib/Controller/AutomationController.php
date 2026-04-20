@@ -246,9 +246,9 @@ class AutomationController extends Controller
                 );
             }
 
-            // TODO: Implement history filtering from automationLog objects.
-            // For now, return empty history as logs are stored as separate objects.
-            return new JSONResponse(['history' => [], 'automationId' => $id]);
+            // Fetch execution history from automationLog objects
+            $logs = $this->automationService->getExecutionHistory(id: $id);
+            return new JSONResponse(['results' => $logs, 'automationId' => $id]);
         } catch (\Exception $e) {
             return new JSONResponse(
                 ['error' => $this->l10n->t('Failed to get execution history')],

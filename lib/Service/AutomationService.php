@@ -841,4 +841,30 @@ class AutomationService
             return false;
         }
     }//end updateLastRun()
+
+    /**
+     * Get execution history for an automation.
+     *
+     * @param string $id The automation ID.
+     *
+     * @return array The list of execution logs.
+     *
+     * @spec openspec/changes/2026-03-20-crm-workflow-automation/tasks.md#task-3.1
+     */
+    public function getExecutionHistory(string $id): array
+    {
+        try {
+            $objectService = $this->getObjectService();
+            $result        = $objectService->findObjects(
+                register: 'pipelinq',
+                schema: 'automationLog',
+                params: ['automation' => $id]
+            );
+
+            return $result['results'] ?? [];
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to fetch execution history: '.$e->getMessage());
+            return [];
+        }
+    }//end getExecutionHistory()
 }//end class
