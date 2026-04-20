@@ -205,4 +205,10 @@
         <type>error</type>
     </rule>
 
+    <!-- Custom rule: warn when a class or public method is missing the @spec PHPDoc tag (ADR-003). -->
+    <!-- Emitted as warnings (not errors) so CI surfaces the gap but doesn't block merges. -->
+    <rule ref="./phpcs-custom-sniffs/CustomSniffs/Sniffs/Commenting/SpecTagSniff.php">
+        <type>warning</type>
+    </rule>
+
 </ruleset>
