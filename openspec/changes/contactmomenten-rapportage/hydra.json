@@ -2492,7 +2492,7 @@
       "cycle": 21,
       "trigger": "build:queued",
       "started_at": "2026-04-20T17:17:16Z",
-      "ended_at": "2026-04-20T17:26:22Z",
+      "ended_at": "2026-04-20T17:28:09Z",
       "outcome": "needs-input",
       "outcome_reason": "builder output failed post-build deterministic checks",
       "pattern_tags": [],
