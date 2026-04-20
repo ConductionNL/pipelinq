@@ -1,0 +1,22 @@
+{
+  "ran": true,
+  "pass": false,
+  "blocking": [
+    {
+      "file": "lib/Controller/IntakeFormController.php",
+      "severity": "warning",
+      "note": ""
+    },
+    {
+      "file": "lib/Service/IntakeFormService.php, lib/Controller/IntakeFormController.php, lib/Controller/PublicFormController.php",
+      "severity": "warning",
+      "note": ""
+    }
+  ],
+  "turns": 10,
+  "cost_usd": 0.334,
+  "cost_eur": 0.3073,
+  "pr": 279,
+  "commit": "2caa505",
+  "timestamp": "2026-04-19T18:15:29.930996+00:00"
+}
