@@ -51,6 +51,7 @@ return [
         ['name' => 'intake_form#embed', 'url' => '/api/forms/{id}/embed', 'verb' => 'GET'],
         ['name' => 'intake_form#export', 'url' => '/api/forms/{id}/submissions/export', 'verb' => 'GET'],
         // Automations
+        ['name' => 'automation#history', 'url' => '/api/automations/{id}/history', 'verb' => 'GET'],
         ['name' => 'automation#metadata', 'url' => '/api/automations/metadata', 'verb' => 'GET'],
         ['name' => 'automation#test', 'url' => '/api/automations/test', 'verb' => 'POST'],
         // Kennisbank public API
