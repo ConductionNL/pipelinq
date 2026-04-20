@@ -62,6 +62,16 @@ class ProspectDiscoveryServiceTest extends TestCase
         $logger          = $this->createMock(LoggerInterface::class);
 
         $settings->method('getConfigValue')->willReturn('');
+        // createLeadFromProspect calls getObjectStoreConfig() which needs
+        // register + client_schema + lead_schema set, otherwise the method
+        // returns early with ['error' => ...]. Stub a minimal valid config
+        // so the happy-path tests can exercise the leadData/clientData
+        // construction.
+        $settings->method('getSettings')->willReturn([
+            'register'      => 'pipelinq',
+            'client_schema' => 'client',
+            'lead_schema'   => 'lead',
+        ]);
 
         $this->service = new ProspectDiscoveryService(
             $this->icpConfig,
