@@ -2344,7 +2344,7 @@
       "cycle": 17,
       "trigger": "build:queued",
       "started_at": "2026-04-20T16:44:50Z",
-      "ended_at": "2026-04-20T16:44:58Z",
+      "ended_at": "2026-04-20T16:45:02Z",
       "outcome": "needs-input",
       "outcome_reason": "builder container exited non-zero",
       "pattern_tags": [],
