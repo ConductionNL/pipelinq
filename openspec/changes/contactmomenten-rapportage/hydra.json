@@ -2512,6 +2512,22 @@
           "findings": [],
           "decisions": [],
           "verdict": "pass"
+        },
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-20T17:10:31Z",
+          "ended_at": "2026-04-20T17:17:23Z",
+          "exit_code": 0,
+          "turns_used": 224,
+          "turns_budget": 40,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass"
         }
       ]
     }
