@@ -10,9 +10,9 @@
       "cycle": 1,
       "trigger": "build:queued",
       "started_at": "2026-04-16T11:36:15Z",
-      "ended_at": null,
+      "ended_at": "2026-04-20T16:45:01Z",
       "outcome": "aborted",
-      "outcome_reason": "no terminal label seen in timeline",
+      "outcome_reason": "rebuild:queued \u2014 human wiped prior cycle",
       "pattern_tags": [],
       "stages": [
         {
