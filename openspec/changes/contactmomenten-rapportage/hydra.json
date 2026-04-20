@@ -2455,9 +2455,9 @@
       "cycle": 20,
       "trigger": "build:queued",
       "started_at": "2026-04-20T17:02:11Z",
-      "ended_at": null,
-      "outcome": "in-flight",
-      "outcome_reason": null,
+      "ended_at": "2026-04-20T17:02:17Z",
+      "outcome": "needs-input",
+      "outcome_reason": "builder container exited non-zero",
       "pattern_tags": [],
       "stages": [
         {
