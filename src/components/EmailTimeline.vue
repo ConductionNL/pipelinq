@@ -150,7 +150,7 @@ export default {
 		},
 		async excludeEmail(messageId) {
 			try {
-				await fetch(`/apps/pipelinq/api/sync/emails/${encodeURIComponent(messageId)}`, {
+				const response = await fetch(`/apps/pipelinq/api/sync/emails/${encodeURIComponent(messageId)}`, {
 					method: 'PATCH',
 					headers: {
 						'Content-Type': 'application/json',
@@ -159,6 +159,9 @@ export default {
 					},
 					body: JSON.stringify({ excluded: true }),
 				})
+				if (response.ok !== true) {
+					return
+				}
 				const emailIndex = this.emails.findIndex(e => e.messageId === messageId)
 				if (emailIndex >= 0) {
 					this.emails[emailIndex].excluded = true
@@ -169,7 +172,7 @@ export default {
 		},
 		async includeEmail(messageId) {
 			try {
-				await fetch(`/apps/pipelinq/api/sync/emails/${encodeURIComponent(messageId)}`, {
+				const response = await fetch(`/apps/pipelinq/api/sync/emails/${encodeURIComponent(messageId)}`, {
 					method: 'PATCH',
 					headers: {
 						'Content-Type': 'application/json',
@@ -178,6 +181,9 @@ export default {
 					},
 					body: JSON.stringify({ excluded: false }),
 				})
+				if (response.ok !== true) {
+					return
+				}
 				const emailIndex = this.emails.findIndex(e => e.messageId === messageId)
 				if (emailIndex >= 0) {
 					this.emails[emailIndex].excluded = false

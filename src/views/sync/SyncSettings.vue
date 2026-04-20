@@ -128,12 +128,28 @@ export default {
 		async fetchMailAccounts() {
 			this.loadingAccounts = true
 			try {
-				// In a real implementation, this would fetch from the Mail app
-				this.mailAccounts = [
-					{ label: 'Default Account', value: 'default' },
-				]
+				// Fetch mail accounts from Nextcloud Mail app API
+				const response = await fetch('/apps/mail/api/v0/accounts', {
+					headers: {
+						'Content-Type': 'application/json',
+						requesttoken: OC.requestToken,
+						'OCS-APIREQUEST': 'true',
+					},
+				})
+				if (response.ok === true) {
+					const data = await response.json()
+					this.mailAccounts = (data.accounts || []).map(account => ({
+						label: account.name || account.emailAddress,
+						value: account.id.toString(),
+					}))
+				} else {
+					// Fallback if Mail app API is not available
+					this.mailAccounts = []
+				}
 			} catch (error) {
 				console.error('Failed to fetch mail accounts', error)
+				// Silently fail — the sync feature can still work without a pre-selected account
+				this.mailAccounts = []
 			} finally {
 				this.loadingAccounts = false
 			}
@@ -141,12 +157,41 @@ export default {
 		async fetchCalendars() {
 			this.loadingCalendars = true
 			try {
-				// In a real implementation, this would fetch from the Calendar app
-				this.calendars = [
-					{ label: 'Personal', value: 'personal' },
-				]
+				// Fetch calendars from Nextcloud DAV API
+				const response = await fetch('/remote.php/dav/calendars/', {
+					headers: {
+						'Content-Type': 'application/json',
+						requesttoken: OC.requestToken,
+						'OCS-APIREQUEST': 'true',
+					},
+				})
+				if (response.ok === true) {
+					const text = await response.text()
+					// Parse DAV response (PROPFIND returns XML)
+					// For now, use a simpler approach: fetch from OCS endpoint
+					const ocsResponse = await fetch('/ocs/v2.php/apps/calendar/api/v1/calendars?format=json', {
+						headers: {
+							'Content-Type': 'application/json',
+							requesttoken: OC.requestToken,
+							'OCS-APIREQUEST': 'true',
+						},
+					})
+					if (ocsResponse.ok === true) {
+						const ocsData = await ocsResponse.json()
+						this.calendars = (ocsData.ocs?.data?.calendars || []).map(cal => ({
+							label: cal.displayName || cal.uri,
+							value: cal.id.toString(),
+						}))
+					} else {
+						this.calendars = []
+					}
+				} else {
+					this.calendars = []
+				}
 			} catch (error) {
 				console.error('Failed to fetch calendars', error)
+				// Silently fail — the sync feature can still work without a pre-selected calendar
+				this.calendars = []
 			} finally {
 				this.loadingCalendars = false
 			}

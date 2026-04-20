@@ -78,6 +78,12 @@ return [
         ['name' => 'callback#complete', 'url' => '/api/callbacks/{id}/complete', 'verb' => 'POST'],
         ['name' => 'callback#reassign', 'url' => '/api/callbacks/{id}/reassign', 'verb' => 'POST'],
 
+        // Email and calendar sync
+        ['name' => 'sync#getSettings', 'url' => '/api/sync/settings', 'verb' => 'GET'],
+        ['name' => 'sync#updateSettings', 'url' => '/api/sync/settings', 'verb' => 'PUT'],
+        ['name' => 'sync#getEmailLinks', 'url' => '/api/sync/emails', 'verb' => 'GET'],
+        ['name' => 'sync#updateEmailLink', 'url' => '/api/sync/emails/{messageId}', 'verb' => 'PATCH'],
+
         // Prometheus metrics endpoint.
         ['name' => 'metrics#index', 'url' => '/api/metrics', 'verb' => 'GET'],
         // Health check endpoint.
