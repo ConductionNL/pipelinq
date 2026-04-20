@@ -66,7 +66,7 @@ class ActivityTimelineController extends Controller
         $entityType = $this->request->getParam('entityType', '');
         $entityId   = $this->request->getParam('entityId', '');
 
-        // Validate required parameters
+        // Validate required parameters.
         if ($entityType === '' || $entityId === '') {
             return new JSONResponse(
                 ['message' => 'Missing required parameters'],
@@ -75,7 +75,7 @@ class ActivityTimelineController extends Controller
         }
 
         try {
-            // Collect query parameters
+            // Collect query parameters.
             $params = [
                 'from'   => $this->request->getParam('from'),
                 'to'     => $this->request->getParam('to'),
@@ -84,15 +84,15 @@ class ActivityTimelineController extends Controller
                 '_limit' => $this->request->getParam('_limit', 20),
             ];
 
-            // Clean up empty values
+            // Clean up empty values.
             $params = array_filter(
-                    $params,
-                    function ($value) {
-                        return $value !== null && $value !== '';
-                    }
-                    );
+                $params,
+                function ($value) {
+                    return $value !== null && $value !== '';
+                }
+            );
 
-            $timeline = $this->service->getTimeline($entityType, $entityId, $params);
+            $timeline = $this->service->getTimeline(entityType: $entityType, entityId: $entityId, params: $params);
 
             return new JSONResponse($timeline);
         } catch (\Throwable $e) {
@@ -122,7 +122,7 @@ class ActivityTimelineController extends Controller
         $entityType = $this->request->getParam('entityType', '');
         $entityId   = $this->request->getParam('entityId', '');
 
-        // Validate required parameters
+        // Validate required parameters.
         if ($entityType === '' || $entityId === '') {
             return new JSONResponse(
                 ['message' => 'Missing required parameters'],
@@ -136,7 +136,7 @@ class ActivityTimelineController extends Controller
                 '_limit' => $this->request->getParam('_limit', 20),
             ];
 
-            $worklog = $this->service->getWorklog($entityType, $entityId, $params);
+            $worklog = $this->service->getWorklog(entityType: $entityType, entityId: $entityId, params: $params);
 
             return new JSONResponse($worklog);
         } catch (\Throwable $e) {
@@ -149,7 +149,7 @@ class ActivityTimelineController extends Controller
                 ['message' => 'Failed to load worklog'],
                 500
             );
-        }
+        }//end try
     }//end getWorklog()
 
     /**
@@ -169,7 +169,7 @@ class ActivityTimelineController extends Controller
         $description = $this->request->getParam('description', '');
         $date        = $this->request->getParam('date', '');
 
-        // Validate required fields
+        // Validate required fields.
         if ($entityType === '' || $entityId === '' || $duration === '') {
             return new JSONResponse(
                 ['message' => 'Missing required fields'],
@@ -184,7 +184,7 @@ class ActivityTimelineController extends Controller
                 'date'        => $date,
             ];
 
-            $worklog = $this->service->createWorklog($entityType, $entityId, $data);
+            $worklog = $this->service->createWorklog(entityType: $entityType, entityId: $entityId, data: $data);
 
             return new JSONResponse($worklog, 201);
         } catch (\Throwable $e) {
