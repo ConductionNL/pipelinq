@@ -370,6 +370,36 @@ class NotificationService
     }//end notifyDealLost()
 
     /**
+     * Send a generic notification to a user.
+     *
+     * Wrapper around the internal send() method for custom notification
+     * subjects that do not have a dedicated notifyXxx() helper.
+     *
+     * @param string $userId     The target user ID.
+     * @param string $subject    The notification subject.
+     * @param array  $parameters The notification parameters.
+     * @param string $objectType The object type (optional).
+     * @param string $objectId   The object ID (optional).
+     *
+     * @return void
+     */
+    public function sendNotification(
+        string $userId,
+        string $subject,
+        array $parameters,
+        string $objectType='',
+        string $objectId=''
+    ): void {
+        $this->send(
+            subject: $subject,
+            parameters: $parameters,
+            userId: $userId,
+            objectType: $objectType,
+            objectId: $objectId
+        );
+    }//end sendNotification()
+
+    /**
      * Send a notification to a user.
      *
      * @param string $subject    The notification subject.
