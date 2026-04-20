@@ -31,6 +31,8 @@ use OCP\IURLGenerator;
 
 /**
  * Controller for managing intake forms (embed code, submissions, export).
+ *
+ * @spec openspec/changes/public-intake-forms/tasks.md#task-3.2
  */
 class IntakeFormController extends Controller
 {
@@ -57,6 +59,7 @@ class IntakeFormController extends Controller
      * @return JSONResponse The embed code (iframe and JS snippet).
      *
      * @NoAdminRequired
+     * @spec            openspec/changes/public-intake-forms/tasks.md#task-3.2
      */
     public function embed(string $id): JSONResponse
     {
@@ -78,6 +81,7 @@ class IntakeFormController extends Controller
      * @return DataDownloadResponse The CSV download response.
      *
      * @NoAdminRequired
+     * @spec            openspec/changes/public-intake-forms/tasks.md#task-3.2
      */
     public function export(string $id): DataDownloadResponse
     {
