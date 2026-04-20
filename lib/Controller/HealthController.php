@@ -109,7 +109,7 @@ class HealthController extends Controller
             return 'ok';
         } catch (\Exception $e) {
             $this->logger->error('[HealthController] Database check failed', ['error' => $e->getMessage()]);
-            return 'failed: '.$e->getMessage();
+            return 'failed';
         }
     }//end checkDatabase()
 
@@ -131,7 +131,7 @@ class HealthController extends Controller
 
             return 'ok';
         } catch (\Exception $e) {
-            return 'failed: '.$e->getMessage();
+            return 'failed';
         }
     }//end checkFilesystem()
 
