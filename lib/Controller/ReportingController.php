@@ -412,6 +412,14 @@ class ReportingController extends Controller
      */
     public function getSla(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null || $this->groupManager->isAdmin($user->getUID()) === false) {
+            return new JSONResponse(
+                ['message' => 'Operation failed'],
+                403,
+            );
+        }
+
         try {
             $targets = $this->reportingService->getAllSlaTargets();
             return new JSONResponse(['targets' => $targets]);

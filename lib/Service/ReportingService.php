@@ -362,17 +362,19 @@ class ReportingService
      *
      * @return void
      *
+     * @throws \InvalidArgumentException If channel or metric are not in the allowlist.
+     *
      * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-9
      */
     public function setSlaTarget(string $channel, string $metric, string $value): void
     {
-        // Validate channel and metric against allowlist
+        // Validate channel and metric against DEFAULT_SLA_TARGETS allowlist
         if (!isset(self::DEFAULT_SLA_TARGETS[$channel])) {
-            return;
+            throw new \InvalidArgumentException('Channel "'.$channel.'" is not allowed.');
         }
 
         if (!isset(self::DEFAULT_SLA_TARGETS[$channel][$metric])) {
-            return;
+            throw new \InvalidArgumentException('Metric "'.$metric.'" is not allowed for channel "'.$channel.'".');
         }
 
         $key = 'sla_'.$channel.'_'.$metric;
@@ -683,7 +685,7 @@ class ReportingService
      *
      * @param array<string> $durations ISO 8601 duration strings.
      *
-     * @return string Formatted average duration (MM:SS).
+     * @return string Formatted average duration (HH:MM:SS or MM:SS).
      *
      * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-2
      */
@@ -705,8 +707,13 @@ class ReportingService
         }
 
         $avgSeconds = (int) ($totalSeconds / count($durations));
-        $minutes    = (int) ($avgSeconds / 60);
+        $hours      = (int) ($avgSeconds / 3600);
+        $minutes    = (int) (($avgSeconds % 3600) / 60);
         $seconds    = $avgSeconds % 60;
+
+        if ($hours > 0) {
+            return $hours.':'.str_pad((string) $minutes, 2, '0', STR_PAD_LEFT).':'.str_pad((string) $seconds, 2, '0', STR_PAD_LEFT);
+        }
 
         return $minutes.':'.str_pad((string) $seconds, 2, '0', STR_PAD_LEFT);
     }//end calculateAverageHandlingTime()
