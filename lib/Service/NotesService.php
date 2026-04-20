@@ -8,7 +8,7 @@
  * @category Service
  * @package  OCA\Pipelinq\Service
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -24,7 +24,6 @@ namespace OCA\Pipelinq\Service;
 use OCP\Comments\ICommentsManager;
 use OCP\IUserManager;
 use OCP\IUserSession;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -45,13 +44,11 @@ class NotesService
      * @param ICommentsManager $commentsManager The comments manager.
      * @param IUserSession     $userSession     The user session.
      * @param IUserManager     $userManager     The user manager.
-     * @param LoggerInterface  $logger          The logger.
      */
     public function __construct(
         private ICommentsManager $commentsManager,
         private IUserSession $userSession,
         private IUserManager $userManager,
-        private LoggerInterface $logger,
     ) {
     }//end __construct()
 

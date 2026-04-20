@@ -8,7 +8,7 @@
  * @category Activity
  * @package  OCA\Pipelinq\Activity
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -90,7 +90,9 @@ class Filter implements IFilter
      *
      * @param array $types The available types.
      *
-     * @return array The filtered types.
+     * @return array<array-key, string> The filtered types.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) — $types required by IFilter interface
      */
     public function filterTypes(array $types): array
     {
@@ -100,7 +102,7 @@ class Filter implements IFilter
     /**
      * Get the allowed apps for this filter.
      *
-     * @return array The allowed app IDs.
+     * @return array<array-key, string> The allowed app IDs.
      */
     public function allowedApps(): array
     {

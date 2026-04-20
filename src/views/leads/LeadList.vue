@@ -31,6 +31,8 @@
 <script>
 import { inject } from 'vue'
 import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
+import { useObjectStore } from '../../store/modules/object.js'
+import { formatCurrency } from '../../services/localeUtils.js'
 
 export default {
 	name: 'LeadList',
@@ -40,7 +42,8 @@ export default {
 
 	setup() {
 		const sidebarState = inject('sidebarState', null)
-		return useListView('lead', { sidebarState })
+		const objectStore = useObjectStore()
+		return useListView('lead', { sidebarState, objectStore })
 	},
 
 	methods: {
@@ -52,7 +55,7 @@ export default {
 		},
 		formatValue(value) {
 			if (value === null || value === undefined) return '-'
-			return 'EUR ' + Number(value).toLocaleString('nl-NL')
+			return formatCurrency(value)
 		},
 	},
 }

@@ -1,7 +1,7 @@
 <template>
-	<div class="lead-detail">
+	<div v-if="editing || isNew">
 		<div class="lead-detail__header">
-			<NcButton @click="$router.push({ name: 'Leads' })">
+			<NcButton @click="onFormCancel">
 				{{ t('pipelinq', 'Back to list') }}
 			</NcButton>
 			<h2 v-if="isNew">
@@ -11,130 +11,126 @@
 				{{ leadData.title || t('pipelinq', 'Lead') }}
 			</h2>
 		</div>
-
-		<NcLoadingIcon v-if="loading" />
-
-		<!-- Edit / Create mode -->
 		<LeadForm
-			v-else-if="editing || isNew"
 			:lead="isNew ? null : leadData"
 			@save="onFormSave"
 			@cancel="onFormCancel" />
+	</div>
 
-		<!-- View mode -->
-		<div v-else class="lead-detail__content">
-			<div class="lead-detail__actions">
-				<NcButton type="primary" @click="editing = true">
-					{{ t('pipelinq', 'Edit') }}
-				</NcButton>
-				<NcButton type="error" @click="showDeleteDialog = true">
-					{{ t('pipelinq', 'Delete') }}
-				</NcButton>
-			</div>
+	<CnDetailPage
+		v-else
+		:title="leadData.title || t('pipelinq', 'Lead')"
+		:subtitle="t('pipelinq', 'Lead')"
+		:back-route="{ name: 'Leads' }"
+		:back-label="t('pipelinq', 'Back to list')"
+		:loading="loading"
+		:sidebar="!isNew && !loading"
+		object-type="pipelinq_lead"
+		:object-id="leadId"
+		:sidebar-props="sidebarProps">
+		<template #header-actions>
+			<NcButton type="primary" @click="editing = true">
+				{{ t('pipelinq', 'Edit') }}
+			</NcButton>
+			<NcButton type="error" @click="showDeleteDialog = true">
+				{{ t('pipelinq', 'Delete') }}
+			</NcButton>
+		</template>
 
-			<div class="lead-detail__layout">
-				<!-- Left column: info -->
-				<div class="lead-detail__info">
-					<div class="info-grid">
-						<div class="info-field">
-							<label>{{ t('pipelinq', 'Value') }}</label>
-							<span>{{ formatValue(leadData.value) }}</span>
-						</div>
-						<div class="info-field">
-							<label>{{ t('pipelinq', 'Probability') }}</label>
-							<span>{{ leadData.probability != null ? leadData.probability + '%' : '-' }}</span>
-						</div>
-						<div class="info-field">
-							<label>{{ t('pipelinq', 'Source') }}</label>
-							<span>{{ leadData.source || '-' }}</span>
-						</div>
-						<div class="info-field">
-							<label>{{ t('pipelinq', 'Priority') }}</label>
-							<span :class="priorityClass">{{ leadData.priority || '-' }}</span>
-						</div>
-						<div class="info-field">
-							<label>{{ t('pipelinq', 'Expected Close') }}</label>
-							<span>{{ leadData.expectedCloseDate || '-' }}</span>
-						</div>
-						<div class="info-field">
-							<label>{{ t('pipelinq', 'Category') }}</label>
-							<span>{{ leadData.category || '-' }}</span>
-						</div>
-					</div>
-
-					<div v-if="leadData.description" class="info-field info-field--full">
-						<label>{{ t('pipelinq', 'Description') }}</label>
-						<p>{{ leadData.description }}</p>
-					</div>
-
-					<!-- Client link -->
-					<div class="lead-detail__section">
-						<h3>{{ t('pipelinq', 'Client') }}</h3>
-						<div v-if="clientData" class="client-link">
-							<a href="#" @click.prevent="$router.push({ name: 'ClientDetail', params: { id: clientData.id } })">
-								{{ clientData.name }}
-							</a>
-							<span v-if="clientData.email" class="client-meta">{{ clientData.email }}</span>
-						</div>
-						<p v-else-if="leadData.client" class="section-empty orphaned-ref">
-							{{ t('pipelinq', '[Deleted client]') }}
-						</p>
-						<p v-else class="section-empty">
-							{{ t('pipelinq', 'No client linked') }}
-						</p>
-					</div>
-
-					<!-- Contact display -->
-					<div v-if="contactData" class="lead-detail__section">
-						<h3>{{ t('pipelinq', 'Contact') }}</h3>
-						<div class="contact-info">
-							<strong>{{ contactData.name }}</strong>
-							<span v-if="contactData.role" class="contact-meta">{{ contactData.role }}</span>
-							<span v-if="contactData.email" class="contact-meta">{{ contactData.email }}</span>
-						</div>
-					</div>
-					<div v-else-if="leadData.contact" class="lead-detail__section">
-						<h3>{{ t('pipelinq', 'Contact') }}</h3>
-						<p class="section-empty orphaned-ref">
-							{{ t('pipelinq', '[Deleted contact]') }}
-						</p>
-					</div>
+		<!-- Core Info -->
+		<CnDetailCard :title="t('pipelinq', 'Core Info')">
+			<div class="info-grid">
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Value') }}</label>
+					<span>{{ formatValue(leadData.value) }}</span>
 				</div>
-
-				<!-- Right column: pipeline progress -->
-				<div v-if="pipelineData" class="lead-detail__pipeline">
-					<h3>{{ t('pipelinq', 'Pipeline') }}</h3>
-					<p class="pipeline-name">
-						{{ pipelineData.title }}
-					</p>
-
-					<div class="pipeline-progress">
-						<div
-							v-for="stage in sortedStages"
-							:key="stage.name"
-							class="pipeline-stage"
-							:class="stageClass(stage)">
-							<span class="stage-indicator" />
-							<span class="stage-name">{{ stage.name }}</span>
-						</div>
-					</div>
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Probability') }}</label>
+					<span>{{ leadData.probability != null ? leadData.probability + '%' : '-' }}</span>
+				</div>
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Source') }}</label>
+					<span>{{ leadData.source || '-' }}</span>
+				</div>
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Priority') }}</label>
+					<span :class="priorityClass">{{ leadData.priority || '-' }}</span>
+				</div>
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Expected Close') }}</label>
+					<span>{{ leadData.expectedCloseDate || '-' }}</span>
+				</div>
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Category') }}</label>
+					<span>{{ leadData.category || '-' }}</span>
 				</div>
 			</div>
-		</div>
 
-		<!-- Products section -->
-		<LeadProducts
-			v-if="!isNew && !loading && !editing"
-			:lead-id="leadId"
-			:lead-value="Number(leadData.value) || null"
-			@value-changed="onProductValueChanged"
-			@sync-value="syncLeadValue" />
+			<div v-if="leadData.description" class="info-field info-field--full">
+				<label>{{ t('pipelinq', 'Description') }}</label>
+				<p>{{ leadData.description }}</p>
+			</div>
+		</CnDetailCard>
 
-		<!-- Notes section -->
-		<EntityNotes
-			v-if="!isNew && !loading && !editing"
-			object-type="pipelinq_lead"
-			:object-id="leadId" />
+		<!-- Client -->
+		<CnDetailCard :title="t('pipelinq', 'Client')">
+			<div v-if="clientData" class="client-link">
+				<a href="#" @click.prevent="$router.push({ name: 'ClientDetail', params: { id: clientData.id } })">
+					{{ clientData.name }}
+				</a>
+				<span v-if="clientData.email" class="client-meta">{{ clientData.email }}</span>
+			</div>
+			<p v-else-if="leadData.client" class="section-empty orphaned-ref">
+				{{ t('pipelinq', '[Deleted client]') }}
+			</p>
+			<p v-else class="section-empty">
+				{{ t('pipelinq', 'No client linked') }}
+			</p>
+		</CnDetailCard>
+
+		<!-- Contact -->
+		<CnDetailCard v-if="contactData || leadData.contact" :title="t('pipelinq', 'Contact')">
+			<div v-if="contactData" class="contact-info">
+				<strong>{{ contactData.name }}</strong>
+				<span v-if="contactData.role" class="contact-meta">{{ contactData.role }}</span>
+				<span v-if="contactData.email" class="contact-meta">{{ contactData.email }}</span>
+			</div>
+			<p v-else class="section-empty orphaned-ref">
+				{{ t('pipelinq', '[Deleted contact]') }}
+			</p>
+		</CnDetailCard>
+
+		<!-- Pipeline -->
+		<CnDetailCard v-if="pipelineData" :title="t('pipelinq', 'Pipeline')">
+			<p class="pipeline-name">
+				{{ pipelineData.title }}
+			</p>
+
+			<div class="pipeline-progress">
+				<div
+					v-for="stage in sortedStages"
+					:key="stage.name"
+					class="pipeline-stage"
+					:class="stageClass(stage)">
+					<span class="stage-indicator" />
+					<span class="stage-name">{{ stage.name }}</span>
+				</div>
+			</div>
+		</CnDetailCard>
+
+		<!-- Contact Roles -->
+		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Contact Roles')">
+			<LeadContactRoles :lead-id="leadId" />
+		</CnDetailCard>
+
+		<!-- Products -->
+		<CnDetailCard :title="t('pipelinq', 'Products')">
+			<LeadProducts
+				:lead-id="leadId"
+				:lead-value="Number(leadData.value) || null"
+				@value-changed="onProductValueChanged"
+				@sync-value="syncLeadValue" />
+		</CnDetailCard>
 
 		<!-- Delete dialog -->
 		<NcDialog
@@ -151,15 +147,16 @@
 				</NcButton>
 			</template>
 		</NcDialog>
-	</div>
+	</CnDetailPage>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon } from '@nextcloud/vue'
+import { NcButton, NcDialog } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
+import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import LeadForm from './LeadForm.vue'
-import EntityNotes from '../../components/EntityNotes.vue'
 import LeadProducts from '../../components/LeadProducts.vue'
+import LeadContactRoles from '../../components/LeadContactRoles.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -167,10 +164,11 @@ export default {
 	components: {
 		NcButton,
 		NcDialog,
-		NcLoadingIcon,
+		CnDetailPage,
+		CnDetailCard,
 		LeadForm,
-		EntityNotes,
 		LeadProducts,
+		LeadContactRoles,
 	},
 	props: {
 		leadId: {
@@ -215,6 +213,15 @@ export default {
 			if (p === 'urgent') return 'priority-urgent'
 			if (p === 'high') return 'priority-high'
 			return ''
+		},
+		sidebarProps() {
+			const config = this.objectStore.objectTypeRegistry.lead || {}
+			return {
+				title: t('pipelinq', 'Lead'),
+				register: config.register || '',
+				schema: config.schema || '',
+				hiddenTabs: ['tasks'],
+			}
 		},
 	},
 	async mounted() {
@@ -277,7 +284,6 @@ export default {
 		},
 		async confirmDelete() {
 			this.showDeleteDialog = false
-			this.cleanupNotes('pipelinq_lead', this.leadId)
 			const success = await this.objectStore.deleteObject('lead', this.leadId)
 			if (success) {
 				this.$router.push({ name: 'Leads' })
@@ -287,8 +293,10 @@ export default {
 			}
 		},
 		async onProductValueChanged(newTotal) {
-			// Auto-update lead value if no manual value was set or if it matches previous auto-calc
-			if (!this.leadData.value || Number(this.leadData.value) === 0) {
+			// Auto-recalculate lead value from product line items (per spec).
+			// Only skip if the user has explicitly set a manual override.
+			const hasLineItems = newTotal > 0
+			if (hasLineItems) {
 				await this.syncLeadValue(newTotal)
 			}
 		},
@@ -299,52 +307,17 @@ export default {
 			})
 			await this.objectStore.fetchObject('lead', this.leadId)
 		},
-		async cleanupNotes(objectType, objectId) {
-			try {
-				await fetch(`/apps/pipelinq/api/notes/${objectType}/${objectId}`, {
-					method: 'DELETE',
-					headers: { requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' },
-				})
-			} catch {
-				// Cleanup failure is non-blocking
-			}
-		},
 	},
 }
 </script>
 
 <style scoped>
-.lead-detail {
-	padding: 20px;
-	max-width: 900px;
-}
-
 .lead-detail__header {
 	display: flex;
 	align-items: center;
 	gap: 16px;
 	margin-bottom: 20px;
-}
-
-.lead-detail__actions {
-	display: flex;
-	gap: 12px;
-	margin-bottom: 20px;
-}
-
-.lead-detail__layout {
-	display: flex;
-	gap: 32px;
-}
-
-.lead-detail__info {
-	flex: 1;
-	min-width: 0;
-}
-
-.lead-detail__pipeline {
-	width: 240px;
-	flex-shrink: 0;
+	padding: 20px 20px 0;
 }
 
 .info-grid {
@@ -385,16 +358,6 @@ export default {
 }
 
 /* Client / Contact links */
-.lead-detail__section {
-	margin-top: 24px;
-	border-top: 1px solid var(--color-border);
-	padding-top: 16px;
-}
-
-.lead-detail__section h3 {
-	margin: 0 0 8px;
-}
-
 .client-link a {
 	font-weight: bold;
 	color: var(--color-primary);

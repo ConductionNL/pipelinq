@@ -107,6 +107,8 @@ class NoteEventService
      * @param string $objectId   The object ID.
      *
      * @return ?array The entity data with title and assignee, or null on failure.
+     *
+     * @psalm-suppress UnusedParam $objectId is used in URL interpolation
      */
     private function fetchEntityData(string $entityType, string $objectId): ?array
     {
@@ -153,16 +155,14 @@ class NoteEventService
         $assignee    = $entityData['assignee'] ?? '';
 
         $currentUser = $this->userSession->getUser();
+        $author      = '';
         if ($currentUser !== null) {
             $author = $currentUser->getUID();
-        } else {
-            $author = '';
         }
 
+        $assigneeOrNull = null;
         if ($assignee !== '') {
             $assigneeOrNull = $assignee;
-        } else {
-            $assigneeOrNull = null;
         }
 
         $this->activityService->publishNoteAdded(

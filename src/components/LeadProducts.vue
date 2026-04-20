@@ -156,6 +156,7 @@
 import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import { useObjectStore } from '../store/modules/object.js'
+import { formatCurrency as formatLocaleCurrency } from '../services/localeUtils.js'
 
 export default {
 	name: 'LeadProducts',
@@ -238,7 +239,7 @@ export default {
 			const qty = Number(item.quantity) || 0
 			const price = Number(item.unitPrice) || 0
 			const discount = Number(item.discount) || 0
-			return (qty * price) - discount
+			return (qty * price) * (1 - discount / 100)
 		},
 		onProductSelect(productId) {
 			const product = this.products.find(p => p.id === productId)
@@ -306,7 +307,7 @@ export default {
 		},
 		formatCurrency(value) {
 			if (value === null || value === undefined) return '-'
-			return 'EUR ' + Number(value).toLocaleString('nl-NL', { minimumFractionDigits: 2 })
+			return formatLocaleCurrency(value)
 		},
 	},
 }

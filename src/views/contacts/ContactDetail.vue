@@ -1,7 +1,7 @@
 <template>
-	<div class="contact-detail">
+	<div v-if="editing || isNew">
 		<div class="contact-detail__header">
-			<NcButton @click="$router.push({ name: 'Contacts' })">
+			<NcButton @click="onFormCancel">
 				{{ t('pipelinq', 'Back to list') }}
 			</NcButton>
 			<h2 v-if="isNew">
@@ -11,28 +11,34 @@
 				{{ contactData.name || t('pipelinq', 'Contact') }}
 			</h2>
 		</div>
-
-		<NcLoadingIcon v-if="loading" />
-
-		<!-- Edit / Create mode -->
 		<ContactForm
-			v-else-if="editing || isNew"
 			:contact="contactData"
 			:pre-selected-client="preSelectedClient"
 			@save="onFormSave"
 			@cancel="onFormCancel" />
+	</div>
 
-		<!-- View mode -->
-		<div v-else class="contact-detail__info">
-			<div class="contact-detail__actions">
-				<NcButton type="primary" @click="editing = true">
-					{{ t('pipelinq', 'Edit') }}
-				</NcButton>
-				<NcButton type="error" @click="confirmDelete">
-					{{ t('pipelinq', 'Delete') }}
-				</NcButton>
-			</div>
+	<CnDetailPage
+		v-else
+		:title="contactData.name || t('pipelinq', 'Contact')"
+		:subtitle="t('pipelinq', 'Contact')"
+		:back-route="{ name: 'Contacts' }"
+		:back-label="t('pipelinq', 'Back to list')"
+		:loading="loading"
+		:sidebar="!isNew && !loading"
+		object-type="pipelinq_contact"
+		:object-id="contactId"
+		:sidebar-props="sidebarProps">
+		<template #header-actions>
+			<NcButton type="primary" @click="editing = true">
+				{{ t('pipelinq', 'Edit') }}
+			</NcButton>
+			<NcButton type="error" @click="confirmDelete">
+				{{ t('pipelinq', 'Delete') }}
+			</NcButton>
+		</template>
 
+		<CnDetailCard :title="t('pipelinq', 'Contact Information')">
 			<div v-if="contactData.contactsUid" class="sync-badge">
 				{{ t('pipelinq', 'Synced with Contacts') }}
 			</div>
@@ -61,30 +67,34 @@
 					<span v-else>-</span>
 				</div>
 			</div>
-		</div>
+		</CnDetailCard>
 
-		<!-- Notes section -->
-		<EntityNotes
-			v-if="!isNew && !loading && !editing"
-			object-type="pipelinq_contact"
-			:object-id="contactId" />
-	</div>
+		<!-- Relationships -->
+		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Relationships')">
+			<ContactRelationships
+				:entity-id="contactId"
+				entity-type="contact"
+				:entity-name="contactData.name || ''" />
+		</CnDetailCard>
+	</CnDetailPage>
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { NcButton } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
+import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import ContactForm from './ContactForm.vue'
-import EntityNotes from '../../components/EntityNotes.vue'
+import ContactRelationships from '../../components/ContactRelationships.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'ContactDetail',
 	components: {
 		NcButton,
-		NcLoadingIcon,
+		CnDetailPage,
+		CnDetailCard,
 		ContactForm,
-		EntityNotes,
+		ContactRelationships,
 	},
 	props: {
 		contactId: {
@@ -114,6 +124,15 @@ export default {
 		contactData() {
 			if (this.isNew) return {}
 			return this.objectStore.getObject('contact', this.contactId) || {}
+		},
+		sidebarProps() {
+			const config = this.objectStore.objectTypeRegistry.contact || {}
+			return {
+				title: t('pipelinq', 'Contact'),
+				register: config.register || '',
+				schema: config.schema || '',
+				hiddenTabs: ['tasks'],
+			}
 		},
 	},
 	async mounted() {
@@ -174,7 +193,6 @@ export default {
 		},
 		async confirmDelete() {
 			if (confirm(t('pipelinq', 'Are you sure you want to delete this contact?'))) {
-				this.cleanupNotes('pipelinq_contact', this.contactId)
 				const success = await this.objectStore.deleteObject('contact', this.contactId)
 				if (success) {
 					this.$router.push({ name: 'Contacts' })
@@ -184,37 +202,17 @@ export default {
 				}
 			}
 		},
-		async cleanupNotes(objectType, objectId) {
-			try {
-				await fetch(`/apps/pipelinq/api/notes/${objectType}/${objectId}`, {
-					method: 'DELETE',
-					headers: { requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' },
-				})
-			} catch {
-				// Cleanup failure is non-blocking
-			}
-		},
 	},
 }
 </script>
 
 <style scoped>
-.contact-detail {
-	padding: 20px;
-	max-width: 800px;
-}
-
 .contact-detail__header {
 	display: flex;
 	align-items: center;
 	gap: 16px;
 	margin-bottom: 20px;
-}
-
-.contact-detail__actions {
-	display: flex;
-	gap: 12px;
-	margin-bottom: 20px;
+	padding: 20px 20px 0;
 }
 
 .info-grid {

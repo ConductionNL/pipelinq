@@ -25,6 +25,19 @@
 					{{ reimporting ? t('pipelinq', 'Importing...') : t('pipelinq', 'Re-import configuration') }}
 				</NcButton>
 			</template>
+			<template #footer>
+				<div class="cn-support-info">
+					<h4>{{ t('pipelinq', 'Support') }}</h4>
+					<p>
+						{{ t('pipelinq', 'For support, contact us at') }}
+						<a href="mailto:support@conduction.nl">support@conduction.nl</a>
+					</p>
+					<p>
+						{{ t('pipelinq', 'For a Service Level Agreement (SLA), contact') }}
+						<a href="mailto:sales@conduction.nl">sales@conduction.nl</a>
+					</p>
+				</div>
+			</template>
 		</CnVersionInfoCard>
 
 		<!-- Register & Schema Mapping -->
@@ -42,6 +55,15 @@
 
 		<!-- Product Categories -->
 		<ProductCategoryManager v-if="isConfigured" />
+
+		<!-- Queue Management -->
+		<QueueSettings v-if="isConfigured" />
+
+		<!-- Skill Management -->
+		<SkillSettings v-if="isConfigured" />
+
+		<!-- Agent Profile Management -->
+		<AgentProfileSettings v-if="isConfigured" />
 
 		<!-- Lead Sources -->
 		<TagManager v-if="isConfigured"
@@ -91,6 +113,9 @@ import PipelineManager from './PipelineManager.vue'
 import ProductCategoryManager from './ProductCategoryManager.vue'
 import ProspectSettings from './ProspectSettings.vue'
 import TagManager from './TagManager.vue'
+import QueueSettings from '../../components/admin/QueueSettings.vue'
+import SkillSettings from '../../components/admin/SkillSettings.vue'
+import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
 
 export default {
 	name: 'Settings',
@@ -106,6 +131,9 @@ export default {
 		ProductCategoryManager,
 		ProspectSettings,
 		TagManager,
+		QueueSettings,
+		SkillSettings,
+		AgentProfileSettings,
 	},
 	data() {
 		return {
@@ -159,6 +187,10 @@ export default {
 					{ slug: 'product', label: t('pipelinq', 'Product'), description: t('pipelinq', 'Products and services') },
 					{ slug: 'productCategory', label: t('pipelinq', 'Product Category'), description: t('pipelinq', 'Product categories') },
 					{ slug: 'leadProduct', label: t('pipelinq', 'Lead Product'), description: t('pipelinq', 'Product line items on leads') },
+					{ slug: 'relationship', label: t('pipelinq', 'Relationship'), description: t('pipelinq', 'Typed relationships between contacts and clients') },
+					{ slug: 'queue', label: t('pipelinq', 'Queue'), description: t('pipelinq', 'Work queues for routing') },
+					{ slug: 'skill', label: t('pipelinq', 'Skill'), description: t('pipelinq', 'Skills for agent routing') },
+					{ slug: 'agentProfile', label: t('pipelinq', 'Agent Profile'), description: t('pipelinq', 'Agent skill profiles') },
 				],
 			}]
 		},

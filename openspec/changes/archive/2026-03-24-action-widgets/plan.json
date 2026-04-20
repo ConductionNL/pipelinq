@@ -1,0 +1,197 @@
+{
+  "change": "action-widgets",
+  "issue": 83,
+  "repo": "ConductionNL/pipelinq",
+  "branch": "feature/83/action-widgets",
+  "created": "2026-03-24",
+  "status": "done",
+  "tracking_issue": 85,
+  "tasks": [
+    {
+      "id": "T-AW-001",
+      "title": "Create ClientAutocomplete.vue shared component",
+      "status": "done",
+      "section": "Shared Infrastructure",
+      "spec_ref": "specs/spec.md#shared-infrastructure",
+      "acceptance_criteria": [
+        "GIVEN a user types in the autocomplete WHEN 2+ characters entered THEN clients are searched via OpenRegister API",
+        "GIVEN search results are returned WHEN user selects a client THEN the selected client object is emitted"
+      ],
+      "files_likely_affected": [
+        "src/components/widgets/ClientAutocomplete.vue"
+      ],
+      "github_issue": 86
+    },
+    {
+      "id": "T-AW-002",
+      "title": "Update webpack.config.js with new entry points",
+      "status": "done",
+      "section": "Shared Infrastructure",
+      "spec_ref": "specs/spec.md#shared-infrastructure",
+      "acceptance_criteria": [
+        "GIVEN webpack config WHEN built THEN 3 new entries exist (startRequestWidget, createLeadWidget, findClientWidget)",
+        "GIVEN webpack config WHEN inspected THEN clientSearchWidget entry is removed"
+      ],
+      "files_likely_affected": [
+        "webpack.config.js"
+      ],
+      "github_issue": 87
+    },
+    {
+      "id": "T-AW-003",
+      "title": "Update Application.php widget registrations",
+      "status": "done",
+      "section": "Shared Infrastructure",
+      "spec_ref": "specs/spec.md#shared-infrastructure",
+      "acceptance_criteria": [
+        "GIVEN Application.php WHEN loaded THEN ClientSearchWidget is removed",
+        "GIVEN Application.php WHEN loaded THEN StartRequestWidget, CreateLeadWidget, FindClientWidget are registered"
+      ],
+      "files_likely_affected": [
+        "lib/AppInfo/Application.php"
+      ],
+      "github_issue": 88
+    },
+    {
+      "id": "T-AW-010",
+      "title": "Create StartRequestWidget.php",
+      "status": "done",
+      "section": "Start Request Widget",
+      "spec_ref": "specs/spec.md#start-request-widget",
+      "acceptance_criteria": [
+        "GIVEN the PHP class WHEN inspected THEN it implements IWidget",
+        "GIVEN the widget WHEN registered THEN ID is pipelinq_start_request_widget with order 14",
+        "GIVEN the widget WHEN loaded THEN it loads startRequestWidget script"
+      ],
+      "files_likely_affected": [
+        "lib/Dashboard/StartRequestWidget.php"
+      ],
+      "github_issue": 89
+    },
+    {
+      "id": "T-AW-011",
+      "title": "Create StartRequestWidget.vue",
+      "status": "done",
+      "section": "Start Request Widget",
+      "spec_ref": "specs/spec.md#start-request-widget",
+      "acceptance_criteria": [
+        "GIVEN the widget form WHEN rendered THEN fields for title, client, category, priority, channel are shown",
+        "GIVEN title is empty WHEN submit clicked THEN form submission is blocked",
+        "GIVEN valid form WHEN submitted THEN request is created via API with status new",
+        "GIVEN successful creation WHEN response received THEN success message with link is shown"
+      ],
+      "files_likely_affected": [
+        "src/views/widgets/StartRequestWidget.vue"
+      ],
+      "github_issue": 90
+    },
+    {
+      "id": "T-AW-012",
+      "title": "Create startRequestWidget.js entry point",
+      "status": "done",
+      "section": "Start Request Widget",
+      "spec_ref": "specs/spec.md#start-request-widget",
+      "acceptance_criteria": [
+        "GIVEN the entry point WHEN loaded THEN it registers pipelinq_start_request_widget with OCA.Dashboard"
+      ],
+      "files_likely_affected": [
+        "src/startRequestWidget.js"
+      ],
+      "github_issue": 91
+    },
+    {
+      "id": "T-AW-020",
+      "title": "Create CreateLeadWidget.php",
+      "status": "done",
+      "section": "Create Lead Widget",
+      "spec_ref": "specs/spec.md#create-lead-widget",
+      "acceptance_criteria": [
+        "GIVEN the PHP class WHEN inspected THEN it implements IWidget",
+        "GIVEN the widget WHEN registered THEN ID is pipelinq_create_lead_widget with order 15",
+        "GIVEN the widget WHEN loaded THEN it loads createLeadWidget script"
+      ],
+      "files_likely_affected": [
+        "lib/Dashboard/CreateLeadWidget.php"
+      ],
+      "github_issue": 92
+    },
+    {
+      "id": "T-AW-021",
+      "title": "Create CreateLeadWidget.vue",
+      "status": "done",
+      "section": "Create Lead Widget",
+      "spec_ref": "specs/spec.md#create-lead-widget",
+      "acceptance_criteria": [
+        "GIVEN the widget form WHEN rendered THEN fields for title, client, pipeline, value, source are shown",
+        "GIVEN title is empty WHEN submit clicked THEN form submission is blocked",
+        "GIVEN valid form WHEN submitted THEN lead is created with first stage of selected pipeline",
+        "GIVEN the form WHEN Enter is pressed THEN quick-add mode submits the form"
+      ],
+      "files_likely_affected": [
+        "src/views/widgets/CreateLeadWidget.vue"
+      ],
+      "github_issue": 93
+    },
+    {
+      "id": "T-AW-022",
+      "title": "Create createLeadWidget.js entry point",
+      "status": "done",
+      "section": "Create Lead Widget",
+      "spec_ref": "specs/spec.md#create-lead-widget",
+      "acceptance_criteria": [
+        "GIVEN the entry point WHEN loaded THEN it registers pipelinq_create_lead_widget with OCA.Dashboard"
+      ],
+      "files_likely_affected": [
+        "src/createLeadWidget.js"
+      ],
+      "github_issue": 94
+    },
+    {
+      "id": "T-AW-030",
+      "title": "Create FindClientWidget.php",
+      "status": "done",
+      "section": "Find Client Widget",
+      "spec_ref": "specs/spec.md#find-client-widget",
+      "acceptance_criteria": [
+        "GIVEN the PHP class WHEN inspected THEN it implements IWidget",
+        "GIVEN the widget WHEN registered THEN ID is pipelinq_find_client_widget with order 13",
+        "GIVEN the widget WHEN loaded THEN it loads findClientWidget script"
+      ],
+      "files_likely_affected": [
+        "lib/Dashboard/FindClientWidget.php"
+      ],
+      "github_issue": 95
+    },
+    {
+      "id": "T-AW-031",
+      "title": "Create FindClientWidget.vue",
+      "status": "done",
+      "section": "Find Client Widget",
+      "spec_ref": "specs/spec.md#find-client-widget",
+      "acceptance_criteria": [
+        "GIVEN the widget WHEN rendered THEN search input with live filtering is shown",
+        "GIVEN a client in results WHEN action buttons shown THEN view, create request, create lead, copy email are available",
+        "GIVEN new client button WHEN clicked THEN mini-form for creating a client is shown",
+        "GIVEN client results WHEN displayed THEN type icons differentiate client types"
+      ],
+      "files_likely_affected": [
+        "src/views/widgets/FindClientWidget.vue"
+      ],
+      "github_issue": 96
+    },
+    {
+      "id": "T-AW-032",
+      "title": "Create findClientWidget.js entry point",
+      "status": "done",
+      "section": "Find Client Widget",
+      "spec_ref": "specs/spec.md#find-client-widget",
+      "acceptance_criteria": [
+        "GIVEN the entry point WHEN loaded THEN it registers pipelinq_find_client_widget with OCA.Dashboard"
+      ],
+      "files_likely_affected": [
+        "src/findClientWidget.js"
+      ],
+      "github_issue": 97
+    }
+  ]
+}

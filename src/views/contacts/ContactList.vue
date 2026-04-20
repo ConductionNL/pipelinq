@@ -38,7 +38,8 @@ export default {
 
 	setup() {
 		const sidebarState = inject('sidebarState', null)
-		return useListView('contact', { sidebarState })
+		const objectStore = useObjectStore()
+		return useListView('contact', { sidebarState, objectStore })
 	},
 
 	data() {
