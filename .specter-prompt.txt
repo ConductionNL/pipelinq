@@ -4,19 +4,19 @@ You are running HEADLESS. Do NOT use AskUserQuestion, interactive prompts, or sk
 Write files directly using the Write tool.
 
 ## Inputs
-- Change: activity-timeline (title: Activity Timeline)
-- Context brief: openspec/changes/activity-timeline/context-brief.md
+- Change: contacts-sync (title: Contacts Sync)
+- Context brief: openspec/changes/contacts-sync/context-brief.md
 - Data model ADR: openspec/architecture/adr-000-data-model.md
 
 ## Step 1: Read context
 Read these files COMPLETELY before writing anything:
-- openspec/changes/activity-timeline/context-brief.md (features, stories, stakeholders, journeys)
+- openspec/changes/contacts-sync/context-brief.md (features, stories, stakeholders, journeys)
 - openspec/architecture/adr-000-data-model.md (entity definitions)
 - All files in openspec/architecture/ (app ADRs)
 - All files in .claude/openspec/architecture/ (company ADRs, if present)
 
 ## Step 2: Get artifact templates
-Run: `openspec instructions proposal --change activity-timeline --json`
+Run: `openspec instructions proposal --change contacts-sync --json`
 This returns the template and rules for the proposal artifact.
 Then do the same for: design, specs, tasks (in that order).
 
@@ -35,8 +35,8 @@ For each artifact (proposal → design → specs → tasks):
 ## Step 4: Commit
 After all 4 artifacts are written:
 ```bash
-git add openspec/changes/activity-timeline/
-git commit -m 'feat: Add OpenSpec change activity-timeline from Specter'
+git add openspec/changes/contacts-sync/
+git commit -m 'feat: Add OpenSpec change contacts-sync from Specter'
 ```
 Do NOT push — the caller handles pushing.
 Do NOT create branches — stay on the current branch.
