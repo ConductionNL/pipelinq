@@ -1,6 +1,6 @@
 # Design: callback-management
 
-**Status:** pr-created
+**Status**: pr-created
 
 ## Context
 

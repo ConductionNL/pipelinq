@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/callback-management/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
@@ -31,6 +33,8 @@ use Psr\Log\LoggerInterface;
  *
  * Handles attempt logging, claim validation, status transitions,
  * and attempt threshold checks for terugbelverzoeken.
+ *
+ * @spec openspec/changes/callback-management/tasks.md#task-1.1
  */
 class CallbackService
 {
@@ -89,6 +93,8 @@ class CallbackService
      * @param string               $notes    Optional attempt notes.
      *
      * @return array<string, mixed> The modified task data with the new attempt.
+     *
+     * @spec openspec/changes/callback-management/tasks.md#task-1.1
      */
     public function addAttempt(array $taskData, string $result, string $notes=''): array
     {
@@ -120,6 +126,8 @@ class CallbackService
      * @param array<string, mixed> $taskData The task data array.
      *
      * @return bool True if the threshold has been reached.
+     *
+     * @spec openspec/changes/callback-management/tasks.md#task-1.1
      */
     public function isAttemptThresholdReached(array $taskData): bool
     {
@@ -141,6 +149,8 @@ class CallbackService
      * @param array<string, mixed> $taskData The task data array.
      *
      * @return array{eligible: bool, reason: string} Validation result.
+     *
+     * @spec openspec/changes/callback-management/tasks.md#task-1.1
      */
     public function validateClaim(array $taskData): array
     {
@@ -190,6 +200,8 @@ class CallbackService
      * @param string $targetStatus  The target task status.
      *
      * @return array{valid: bool, reason: string} Validation result.
+     *
+     * @spec openspec/changes/callback-management/tasks.md#task-1.1
      */
     public function validateStatusTransition(string $currentStatus, string $targetStatus): array
     {
@@ -214,6 +226,8 @@ class CallbackService
      * @param array<string, mixed> $taskData The task data array.
      *
      * @return array<string, mixed> The modified task data.
+     *
+     * @spec openspec/changes/callback-management/tasks.md#task-1.1
      */
     public function applyClaim(array $taskData): array
     {
@@ -236,6 +250,8 @@ class CallbackService
      * @param string               $resultText The completion result text.
      *
      * @return array<string, mixed> The modified task data.
+     *
+     * @spec openspec/changes/callback-management/tasks.md#task-1.1
      */
     public function applyCompletion(array $taskData, string $resultText): array
     {
@@ -254,6 +270,8 @@ class CallbackService
      * @param string               $assigneeType The assignee type (user or group).
      *
      * @return array<string, mixed> The modified task data.
+     *
+     * @spec openspec/changes/callback-management/tasks.md#task-1.1
      */
     public function applyReassignment(array $taskData, string $assignee, string $assigneeType): array
     {

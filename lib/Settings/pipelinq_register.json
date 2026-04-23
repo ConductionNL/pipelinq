@@ -1330,6 +1330,10 @@
                 },
                 "notes": {
                   "type": "string"
+                },
+                "agentUserId": {
+                  "type": "string",
+                  "description": "Nextcloud user UID of the agent who recorded this attempt"
                 }
               }
             },
