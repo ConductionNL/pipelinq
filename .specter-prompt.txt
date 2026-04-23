@@ -4,19 +4,19 @@ You are running HEADLESS. Do NOT use AskUserQuestion, interactive prompts, or sk
 Write files directly using the Write tool.
 
 ## Inputs
-- Change: skill-routing (title: Skill-Based Routing Specification)
-- Context brief: openspec/changes/skill-routing/context-brief.md
+- Change: task-background-jobs (title: Task Background Jobs)
+- Context brief: openspec/changes/task-background-jobs/context-brief.md
 - Data model ADR: openspec/architecture/adr-000-data-model.md
 
 ## Step 1: Read context
 Read these files COMPLETELY before writing anything:
-- openspec/changes/skill-routing/context-brief.md (features, stories, stakeholders, journeys)
+- openspec/changes/task-background-jobs/context-brief.md (features, stories, stakeholders, journeys)
 - openspec/architecture/adr-000-data-model.md (entity definitions)
 - All files in openspec/architecture/ (repo-specific ADRs — the ONLY ADRs that live in the app repo)
 - Company-wide ADRs: NOT in this repo — read from hydra/openspec/architecture/ (pre-loaded in the spec-writer container at /home/claude/.claude/openspec/architecture/)
 
 ## Step 2: Get artifact templates
-Run: `openspec instructions proposal --change skill-routing --json`
+Run: `openspec instructions proposal --change task-background-jobs --json`
 This returns the template and rules for the proposal artifact.
 Then do the same for: design, specs, tasks (in that order).
 
@@ -35,8 +35,8 @@ For each artifact (proposal → design → specs → tasks):
 ## Step 4: Commit
 After all 4 artifacts are written:
 ```bash
-git add openspec/changes/skill-routing/
-git commit -m 'feat: Add OpenSpec change skill-routing from Specter'
+git add openspec/changes/task-background-jobs/
+git commit -m 'feat: Add OpenSpec change task-background-jobs from Specter'
 ```
 Do NOT push — the caller handles pushing.
 Do NOT create branches — stay on the current branch.
