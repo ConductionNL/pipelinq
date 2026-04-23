@@ -195,6 +195,10 @@
 				:entity-name="clientData.name || ''" />
 		</CnDetailCard>
 
+		<CnDetailCard :title="t('pipelinq', 'Activity')">
+			<ActivityTimeline :entity-type="'client'" :entity-id="clientId" />
+		</CnDetailCard>
+
 		<CnDetailCard :title="t('pipelinq', 'Contactmomenten')">
 			<template #actions>
 				<NcButton @click="showContactmomentQuickLog = true">
@@ -322,6 +326,7 @@ import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import ClientForm from './ClientForm.vue'
 import ContactRelationships from '../../components/ContactRelationships.vue'
 import ContactmomentQuickLog from '../../components/ContactmomentQuickLog.vue'
+import ActivityTimeline from '../../components/ActivityTimeline.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -334,6 +339,7 @@ export default {
 		ClientForm,
 		ContactRelationships,
 		ContactmomentQuickLog,
+		ActivityTimeline,
 	},
 	props: {
 		clientId: {

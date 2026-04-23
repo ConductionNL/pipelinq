@@ -78,6 +78,11 @@ return [
         ['name' => 'callback#complete', 'url' => '/api/callbacks/{id}/complete', 'verb' => 'POST'],
         ['name' => 'callback#reassign', 'url' => '/api/callbacks/{id}/reassign', 'verb' => 'POST'],
 
+        // Activity timeline endpoints
+        ['name' => 'activity_timeline#getTimeline', 'url' => '/api/timeline', 'verb' => 'GET'],
+        ['name' => 'activity_timeline#getWorklog', 'url' => '/api/worklog', 'verb' => 'GET'],
+        ['name' => 'activity_timeline#createWorklog', 'url' => '/api/worklog', 'verb' => 'POST'],
+
         // Prometheus metrics endpoint.
         ['name' => 'metrics#index', 'url' => '/api/metrics', 'verb' => 'GET'],
         // Health check endpoint.
