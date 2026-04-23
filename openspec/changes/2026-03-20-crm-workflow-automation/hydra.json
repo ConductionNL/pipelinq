@@ -1,0 +1,363 @@
+{
+  "spec_slug": "2026-03-20-crm-workflow-automation",
+  "app": "pipelinq",
+  "repo": "ConductionNL/pipelinq",
+  "issue": 189,
+  "depends_on": [],
+  "schema_version": 2,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-04-16T11:36:15Z",
+      "ended_at": "2026-04-20T16:45:01Z",
+      "outcome": "aborted",
+      "outcome_reason": "rebuild:queued \u2014 human wiped prior cycle",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-16T11:36:15Z",
+          "ended_at": "2026-04-16T11:36:16Z",
+          "turns_used": 95,
+          "turns_budget": 200,
+          "cost_usd": 1.0037,
+          "checks_run": [
+            "composer check:strict"
+          ],
+          "checks_skipped": [],
+          "findings": [
+            {
+              "id": "b-builder-build-0",
+              "severity": "WARNING",
+              "gate": null,
+              "rule": "builder output flagged failure language",
+              "status": "open",
+              "note": "## Implementation Complete \u2713\n\nI have successfully implemented the OpenSpec change '2026-03-20-crm-workflow-automation' for the Pipelinq CRM. Here's a summary of what was accomplished:\n\n### **Deliverables**\n\n#### 1. Backend Implementation\n- **AutomationService** (`lib/Service/AutomationService.php`)\n  - CRUD methods for automation management via OpenRegister\n  - Trigger matching with condition evaluation (operators: gt, gte, lt, lte, eq, neq)\n  - Webhook payload building and firing\n  - Execution ",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "fail"
+        }
+      ]
+    },
+    {
+      "cycle": 2,
+      "trigger": "build:queued",
+      "started_at": "2026-04-20T16:45:29Z",
+      "ended_at": "2026-04-20T16:45:35Z",
+      "outcome": "needs-input",
+      "outcome_reason": "builder container exited non-zero",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-20T16:45:26Z",
+          "ended_at": "2026-04-20T16:45:26Z",
+          "exit_code": 1,
+          "turns_used": 0,
+          "turns_budget": 40,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [
+            {
+              "id": "build-failed",
+              "severity": "CRITICAL",
+              "gate": "builder",
+              "rule": "builder container exited non-zero",
+              "status": "open",
+              "note": "Builder container failed to complete. See logs/pipeline-*/builder-build.jsonl for detail.",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "fail"
+        }
+      ]
+    },
+    {
+      "cycle": 3,
+      "trigger": "build:queued",
+      "started_at": "2026-04-20T16:45:54Z",
+      "ended_at": "2026-04-20T16:46:01Z",
+      "outcome": "needs-input",
+      "outcome_reason": "builder container exited non-zero",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-20T16:45:52Z",
+          "ended_at": "2026-04-20T16:45:52Z",
+          "exit_code": 1,
+          "turns_used": 0,
+          "turns_budget": 40,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [
+            {
+              "id": "build-failed",
+              "severity": "CRITICAL",
+              "gate": "builder",
+              "rule": "builder container exited non-zero",
+              "status": "open",
+              "note": "Builder container failed to complete. See logs/pipeline-*/builder-build.jsonl for detail.",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "fail"
+        }
+      ]
+    },
+    {
+      "cycle": 4,
+      "trigger": "build:queued",
+      "started_at": "2026-04-20T16:51:57Z",
+      "ended_at": "2026-04-20T16:52:04Z",
+      "outcome": "needs-input",
+      "outcome_reason": "builder container exited non-zero",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-20T16:51:56Z",
+          "ended_at": "2026-04-20T16:51:56Z",
+          "exit_code": 1,
+          "turns_used": 0,
+          "turns_budget": 40,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [
+            {
+              "id": "build-failed",
+              "severity": "CRITICAL",
+              "gate": "builder",
+              "rule": "builder container exited non-zero",
+              "status": "open",
+              "note": "Builder container failed to complete. See logs/pipeline-*/builder-build.jsonl for detail.",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "fail"
+        }
+      ]
+    },
+    {
+      "cycle": 5,
+      "trigger": "build:queued",
+      "started_at": "2026-04-20T17:02:30Z",
+      "ended_at": "2026-04-20T17:11:10Z",
+      "outcome": "aborted",
+      "outcome_reason": "rebuild:queued \u2014 human wiped prior cycle",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-20T17:02:28Z",
+          "ended_at": "2026-04-20T17:02:28Z",
+          "exit_code": 1,
+          "turns_used": 0,
+          "turns_budget": 40,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [
+            {
+              "id": "build-failed",
+              "severity": "CRITICAL",
+              "gate": "builder",
+              "rule": "builder container exited non-zero",
+              "status": "open",
+              "note": "Builder container failed to complete. See logs/pipeline-*/builder-build.jsonl for detail.",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "fail"
+        }
+      ]
+    },
+    {
+      "cycle": 6,
+      "trigger": "build:queued",
+      "started_at": "2026-04-20T17:17:40Z",
+      "ended_at": "2026-04-20T18:19:49Z",
+      "outcome": "aborted",
+      "outcome_reason": "rebuild:queued \u2014 human wiped prior cycle",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-20T17:11:33Z",
+          "ended_at": "2026-04-20T17:17:38Z",
+          "exit_code": 0,
+          "turns_used": 184,
+          "turns_budget": 40,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass"
+        },
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-20T17:11:37Z",
+          "ended_at": "2026-04-20T17:19:58Z",
+          "exit_code": 0,
+          "turns_used": 227,
+          "turns_budget": 40,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "cycle": 7,
+      "trigger": "build:queued",
+      "started_at": "2026-04-20T18:28:05Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-20T18:20:16Z",
+          "ended_at": "2026-04-20T18:28:03Z",
+          "exit_code": 0,
+          "turns_used": 199,
+          "turns_budget": 40,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass"
+        },
+        {
+          "stage": "fix",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-20T19:29:14Z",
+          "ended_at": "2026-04-20T19:32:29Z",
+          "exit_code": 0,
+          "turns_used": 144,
+          "turns_budget": 40,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass"
+        },
+        {
+          "stage": "pre-review-quality",
+          "persona": "orchestrator",
+          "container": "hydra-quality-runner",
+          "started_at": "2026-04-20T19:40:03Z",
+          "ended_at": "2026-04-20T19:40:03Z",
+          "exit_code": 1,
+          "checks_run": [
+            "composer check:strict (phpcs)",
+            "composer check:strict (phpmd)",
+            "composer check:strict (psalm)",
+            "composer check:strict (phpstan)",
+            "phpmetrics",
+            "composer audit",
+            "spdx-headers",
+            "forbidden-patterns",
+            "npm run lint (eslint)",
+            "npm run lint (stylelint)",
+            "npm audit",
+            "stub-scan",
+            "composer test:unit (phpunit)"
+          ],
+          "checks_skipped": [
+            "php -l",
+            "publiccode",
+            "gitleaks",
+            "trivy",
+            "newman"
+          ],
+          "gates": {
+            "php-lint": "skip",
+            "phpcs": "fail",
+            "phpmd": "pass",
+            "psalm": "pass",
+            "phpstan": "pass",
+            "phpmetrics": "pass",
+            "composer-audit": "pass",
+            "spdx-headers": "pass",
+            "publiccode": "skip",
+            "forbidden-patterns": "pass",
+            "eslint": "pass",
+            "stylelint": "pass",
+            "npm-audit": "pass",
+            "stub-scan": "fail",
+            "gitleaks": "skip",
+            "trivy": "skip",
+            "phpunit": "fail",
+            "newman": "skip"
+          },
+          "findings": [
+            {
+              "id": "prq-phpcs",
+              "severity": "WARNING",
+              "gate": "phpcs",
+              "rule": "composer check:strict (phpcs) failing",
+              "status": "open",
+              "note": "...\nThe repository at \"/server/apps/app\" does not have the correct ownership and git refuses to use it:\n\nfatal: detected dubious ownership in repository at '/server/apps/app'\nTo add an exception for this directory, call:\n\ngit config --global --add safe.directory /server/apps/app\n\nComposer could not detect the root package (conductionnl/pipelinq) version, defaulting to '1.0.0'. See https://getcomposer.org/root-version\n\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[32mE\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0",
+              "autofixable": true
+            },
+            {
+              "id": "prq-stub-scan",
+              "severity": "CRITICAL",
+              "gate": "stub-scan",
+              "rule": "stub-scan failing",
+              "status": "open",
+              "note": "stub-scan gate failed \u2014 see pipeline log",
+              "autofixable": false
+            },
+            {
+              "id": "prq-phpunit",
+              "severity": "CRITICAL",
+              "gate": "phpunit",
+              "rule": "composer test:unit (phpunit) failing",
+              "status": "open",
+              "note": "phpunit gate failed \u2014 see pipeline log",
+              "autofixable": false
+            }
+          ],
+          "verdict": "fail"
+        }
+      ]
+    }
+  ]
+}

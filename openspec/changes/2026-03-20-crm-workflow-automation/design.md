@@ -1,5 +1,7 @@
 # Design: crm-workflow-automation
 
+**Status:** pr-created (https://github.com/ConductionNL/pipelinq/pull/296)
+
 ## Architecture
 
 ### Data Model
