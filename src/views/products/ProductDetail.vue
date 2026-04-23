@@ -28,7 +28,7 @@
 		object-type="pipelinq_product"
 		:object-id="productId"
 		:sidebar-props="sidebarProps">
-		<template #header-actions>
+		<template #actions>
 			<NcButton type="primary" @click="editing = true">
 				{{ t('pipelinq', 'Edit') }}
 			</NcButton>

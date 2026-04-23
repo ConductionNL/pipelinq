@@ -30,7 +30,7 @@
 		object-type="pipelinq_task"
 		:object-id="taskId"
 		:sidebar-props="sidebarProps">
-		<template #header-actions>
+		<template #actions>
 			<NcButton type="primary" @click="editing = true">
 				{{ t('pipelinq', 'Edit') }}
 			</NcButton>
