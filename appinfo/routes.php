@@ -57,10 +57,25 @@ return [
         ['name' => 'kennisbank#publicIndex', 'url' => '/api/kennisbank/public', 'verb' => 'GET'],
         ['name' => 'kennisbank#publicShow', 'url' => '/api/kennisbank/public/{id}', 'verb' => 'GET'],
         ['name' => 'kennisbank#submitFeedback', 'url' => '/api/kennisbank/feedback', 'verb' => 'POST'],
-        // Rapportage / reporting
+        // Rapportage / reporting (spec-required endpoints)
+        ['name' => 'reporting#getKpis', 'url' => '/api/rapportage/kpis', 'verb' => 'GET'],
+        ['name' => 'reporting#getChannels', 'url' => '/api/rapportage/channels', 'verb' => 'GET'],
+        ['name' => 'reporting#getAgents', 'url' => '/api/rapportage/agents', 'verb' => 'GET'],
         ['name' => 'reporting#getSla', 'url' => '/api/rapportage/sla', 'verb' => 'GET'],
         ['name' => 'reporting#updateSla', 'url' => '/api/rapportage/sla', 'verb' => 'PUT'],
         ['name' => 'reporting#exportCsv', 'url' => '/api/rapportage/export', 'verb' => 'GET'],
+        // KPI Dashboard
+        ['name' => 'reporting#kpiDaily', 'url' => '/api/rapportage/kpi/daily', 'verb' => 'GET'],
+        // Channel Analytics
+        ['name' => 'reporting#channelAnalytics', 'url' => '/api/rapportage/channels/analytics', 'verb' => 'GET'],
+        // Queue Statistics
+        ['name' => 'reporting#queueStatistics', 'url' => '/api/rapportage/queue/statistics', 'verb' => 'GET'],
+        // Agent Metrics
+        ['name' => 'reporting#agentMetrics', 'url' => '/api/rapportage/agents/metrics', 'verb' => 'GET'],
+        // Trend Reporting
+        ['name' => 'reporting#trends', 'url' => '/api/rapportage/trends', 'verb' => 'GET'],
+        // WOO Reporting
+        ['name' => 'reporting#wooReport', 'url' => '/api/rapportage/woo', 'verb' => 'GET'],
         // Public survey endpoints (unauthenticated)
         ['name' => 'public_survey#show', 'url' => '/public/survey/{token}', 'verb' => 'GET'],
         ['name' => 'public_survey#submit', 'url' => '/public/survey/{token}/respond', 'verb' => 'POST'],
