@@ -12,6 +12,8 @@
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
+ * @spec openspec/changes/queue-management/tasks.md#task-1.1
+ *
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
@@ -28,6 +30,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for creating default queues and skills.
+ *
+ * @spec openspec/changes/queue-management/tasks.md#task-1.1
  */
 class DefaultQueueService
 {
@@ -116,6 +120,8 @@ class DefaultQueueService
      * Create default queues if none exist.
      *
      * @return void
+     *
+     * @spec openspec/changes/queue-management/tasks.md#task-1.1
      */
     public function createDefaultQueues(): void
     {
@@ -173,6 +179,8 @@ class DefaultQueueService
      * Create default skills if none exist.
      *
      * @return void
+     *
+     * @spec openspec/changes/queue-management/tasks.md#task-1.1
      */
     public function createDefaultSkills(): void
     {

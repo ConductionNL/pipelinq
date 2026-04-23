@@ -12,6 +12,8 @@
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
+ * @spec openspec/changes/queue-management/tasks.md#task-1.2
+ *
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
@@ -30,6 +32,8 @@ use Psr\Log\LoggerInterface;
  * Timed background job that checks queue capacities and moves overflow items.
  *
  * Runs every 5 minutes (300 seconds).
+ *
+ * @spec openspec/changes/queue-management/tasks.md#task-1.2
  */
 class QueueOverflowJob extends TimedJob
 {
@@ -65,6 +69,8 @@ class QueueOverflowJob extends TimedJob
      * @param mixed $argument The job argument (unused).
      *
      * @return void
+     *
+     * @spec openspec/changes/queue-management/tasks.md#task-1.2
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
