@@ -6,5 +6,5 @@
   "depends_on": [
     "queue-management"
   ],
-  "issue": null
+  "issue": "https://github.com/ConductionNL/pipelinq/issues/311"
 }
