@@ -119,14 +119,28 @@ export default {
 			return useObjectStore()
 		},
 		pipelines() {
-			return this.objectStore.collections.pipeline || []
+			const rawPipelines = this.objectStore.collections.pipeline || []
+			// Deduplicate pipelines by ID to prevent rendering duplicates
+			const seen = new Set()
+			return rawPipelines.filter(pipeline => {
+				if (seen.has(pipeline.id)) {
+					return false
+				}
+				seen.add(pipeline.id)
+				return true
+			})
 		},
 		loading() {
 			return this.objectStore.loading.pipeline || false
 		},
 	},
 	async mounted() {
-		await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
+		try {
+			await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
+		} catch (error) {
+			console.error('Failed to fetch pipelines:', error)
+			// Error is handled gracefully by the empty state UI
+		}
 	},
 	methods: {
 		schemaLabel(pipeline) {

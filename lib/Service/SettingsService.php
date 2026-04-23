@@ -67,6 +67,7 @@ class SettingsService
         'complaint_sla_communication',
         'complaint_sla_billing',
         'complaint_sla_other',
+        'cors_origins',
     ];
 
     /**

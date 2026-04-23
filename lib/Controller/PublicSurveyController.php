@@ -89,11 +89,26 @@ class PublicSurveyController extends PublicShareController
     /**
      * Whether the share token is valid.
      *
-     * @return bool Always true (validated in methods).
+     * Validates the token by checking if it exists in the survey schema.
+     * This gates access at the framework level, rather than deferring to individual methods.
+     *
+     * @return bool True if token is valid, false otherwise.
      */
     public function isValidToken(): bool
     {
-        return true;
+        try {
+            $token = $this->getToken();
+            if ($token === null || $token === '') {
+                return false;
+            }
+
+            $survey = $this->findSurveyByToken(token: $token);
+            return $survey !== null;
+        } catch (\Exception $e) {
+            // If we can't validate (e.g., OpenRegister not available), deny access.
+            $this->logger->warning('Token validation failed', ['exception' => $e->getMessage()]);
+            return false;
+        }
     }//end isValidToken()
 
     /**
@@ -178,6 +193,7 @@ class PublicSurveyController extends PublicShareController
      * @return JSONResponse Created response or error.
      *
      * @PublicPage
+     * @NoCSRFRequired
      * @BruteForceProtection(action=pipelinq_survey_submit)
      */
     public function submit(string $token): JSONResponse
@@ -212,6 +228,19 @@ class PublicSurveyController extends PublicShareController
                 return new JSONResponse(['error' => 'Answers are required'], Http::STATUS_BAD_REQUEST);
             }
 
+            // Validate answers against survey's declared questions (whitelist expected keys).
+            $questions = $data['questions'] ?? [];
+            $validQuestionIds = array_map(static fn($q) => $q['id'] ?? null, $questions);
+            $validQuestionIds = array_filter($validQuestionIds);
+            foreach (array_keys($answers) as $qId) {
+                if (in_array($qId, $validQuestionIds, true) === false) {
+                    return new JSONResponse(
+                        ['error' => "Invalid question ID: $qId"],
+                        Http::STATUS_BAD_REQUEST,
+                    );
+                }
+            }
+
             $settings         = $this->settingsService->getSettings();
             $registerId       = $settings['register'] ?? '';
             $responseSchemaId = $settings['surveyResponse_schema'] ?? '';
@@ -219,15 +248,20 @@ class PublicSurveyController extends PublicShareController
                 return new JSONResponse(['error' => 'Survey system is not configured'], Http::STATUS_SERVICE_UNAVAILABLE);
             }
 
+            // Only accept 'answers' from request; entityType and entityId are set server-side from survey config.
             $responseData = [
-                'surveyId'     => $data['id'] ?? '',
-                'answers'      => $answers,
-                'respondentId' => $body['respondentId'] ?? null,
-                'entityType'   => $body['entityType'] ?? null,
-                'entityId'     => $body['entityId'] ?? null,
-                'completedAt'  => (new \DateTime())->format('c'),
-                'ipHash'       => hash('sha256', $this->request->getRemoteAddress()),
+                'surveyId'    => $data['id'] ?? '',
+                'answers'     => $answers,
+                'completedAt' => (new \DateTime())->format('c'),
+                'ipHash'      => hash('sha256', $this->request->getRemoteAddress()),
             ];
+            // If survey is linked to an entity, add those server-side (not from request).
+            $entityType = $data['entityType'] ?? null;
+            $entityId = $data['entityId'] ?? null;
+            if ($entityType !== null && $entityId !== null) {
+                $responseData['entityType'] = $entityType;
+                $responseData['entityId'] = $entityId;
+            }
 
             $created = $this->getObjectService()->saveObject(
                 $registerId,

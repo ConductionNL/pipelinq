@@ -2,7 +2,7 @@
 
 ## 1. Client Summary Statistics
 
-- [ ] 1.1 Add summary statistics card to `ClientDetail.vue`
+- [x] 1.1 Add summary statistics card to `ClientDetail.vue`
   - **spec_ref**: `specs/client-management/spec.md#Client Detail View`
   - **files**: `pipelinq/src/views/clients/ClientDetail.vue`
   - **acceptance_criteria**:
@@ -12,7 +12,7 @@
 
 ## 2. Contact Sync Enhancements
 
-- [ ] 2.1 Add write-back sync on contact save in `ContactDetail.vue`
+- [x] 2.1 Add write-back sync on contact save in `ContactDetail.vue`
   - **spec_ref**: `specs/contacts-sync/spec.md#Sync Trigger Behavior`
   - **files**: `pipelinq/src/views/contacts/ContactDetail.vue`
   - **acceptance_criteria**:
@@ -20,7 +20,7 @@
     - THEN the system MUST POST to `/api/contacts-sync/write-back` with `objectType=contact`
     - AND sync failure MUST NOT block the save operation
 
-- [ ] 2.2 Add sync status badge to `ContactDetail.vue`
+- [x] 2.2 Add sync status badge to `ContactDetail.vue`
   - **spec_ref**: `specs/contacts-sync/spec.md#Sync Status Indicator`
   - **files**: `pipelinq/src/views/contacts/ContactDetail.vue`
   - **acceptance_criteria**:
@@ -30,7 +30,7 @@
 
 ## 3. Dynamic @type Mapping
 
-- [ ] 3.1 Set `@type` based on client type in `ClientForm.vue`
+- [x] 3.1 Set `@type` based on client type in `ClientForm.vue`
   - **spec_ref**: `specs/client-management/spec.md#Client Creation`
   - **files**: `pipelinq/src/views/clients/ClientForm.vue`
   - **acceptance_criteria**:

@@ -1,5 +1,7 @@
 # Design: client-management enhancements
 
+**Status:** pr-created
+
 ## Architecture Overview
 
 All changes are frontend-only. Data operations use the existing generic object store (`useObjectStore`) which calls OpenRegister's API. Contact sync uses the existing `/api/contacts-sync/write-back` endpoint.

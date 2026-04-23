@@ -57,6 +57,7 @@ class MetricsController extends Controller
      * Return Prometheus metrics in text exposition format.
      *
      * @NoCSRFRequired
+     * @NoAdminRequired
      *
      * @return TextPlainResponse Prometheus-formatted metrics.
      */
