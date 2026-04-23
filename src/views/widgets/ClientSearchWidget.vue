@@ -4,13 +4,32 @@
 		:item-menu="itemMenu"
 		@show="onShow">
 		<template #default>
-			<div class="client-search-input">
+			<div class="client-search-filters">
 				<input
 					v-model="searchQuery"
 					type="text"
 					:placeholder="t('pipelinq', 'Search clients...')"
-					class="client-search-field"
-					@input="onSearch">
+					class="client-search-field">
+				<div class="client-filter-row">
+					<select v-model="filterType" class="client-filter-select">
+						<option value="">{{ t('pipelinq', 'All types') }}</option>
+						<option value="person">{{ t('pipelinq', 'Person') }}</option>
+						<option value="organization">{{ t('pipelinq', 'Organization') }}</option>
+					</select>
+					<input
+						v-model="filterAddress"
+						type="text"
+						:placeholder="t('pipelinq', 'Filter by address...')"
+						class="client-filter-field">
+				</div>
+				<div class="client-filter-row">
+					<select v-model="filterIndustry" class="client-filter-select">
+						<option value="">{{ t('pipelinq', 'All industries') }}</option>
+						<option v-for="industry in industries" :key="industry" :value="industry">
+							{{ industry }}
+						</option>
+					</select>
+				</div>
 			</div>
 		</template>
 		<template #empty-content>
@@ -46,6 +65,9 @@ export default {
 			loading: false,
 			clients: [],
 			searchQuery: '',
+			filterType: '',
+			filterAddress: '',
+			filterIndustry: '',
 			itemMenu: {
 				show: {
 					text: t('pipelinq', 'View client'),
@@ -56,25 +78,53 @@ export default {
 	},
 	computed: {
 		emptyTitle() {
-			if (this.searchQuery) {
-				return t('pipelinq', 'No clients found for "{query}"', { query: this.searchQuery })
+			if (this.searchQuery || this.filterType || this.filterAddress || this.filterIndustry) {
+				return t('pipelinq', 'No clients match your filters')
 			}
 			return t('pipelinq', 'No clients found')
+		},
+		industries() {
+			const set = new Set()
+			for (const client of this.clients) {
+				if (client.industry) set.add(client.industry)
+			}
+			return [...set].sort()
 		},
 		allItems() {
 			return this.clients.map((client) => ({
 				id: client.id,
 				mainText: client.name || client.title || t('pipelinq', 'Unnamed client'),
-				subText: [client.email, client.phone, client.city].filter(Boolean).join(' · '),
+				subText: [client.type, client.address, client.industry].filter(Boolean).join(' · '),
+				_type: client.type || '',
+				_address: client.address || '',
+				_industry: client.industry || '',
 			}))
 		},
 		filteredItems() {
-			if (!this.searchQuery) return this.allItems
-			const query = this.searchQuery.toLowerCase()
-			return this.allItems.filter((item) => {
-				return item.mainText.toLowerCase().includes(query)
-					|| item.subText.toLowerCase().includes(query)
-			})
+			let items = this.allItems
+
+			if (this.filterType) {
+				items = items.filter((item) => item._type === this.filterType)
+			}
+
+			if (this.filterAddress) {
+				const addr = this.filterAddress.toLowerCase()
+				items = items.filter((item) => item._address.toLowerCase().includes(addr))
+			}
+
+			if (this.filterIndustry) {
+				items = items.filter((item) => item._industry === this.filterIndustry)
+			}
+
+			if (this.searchQuery) {
+				const query = this.searchQuery.toLowerCase()
+				items = items.filter((item) => {
+					return item.mainText.toLowerCase().includes(query)
+						|| item.subText.toLowerCase().includes(query)
+				})
+			}
+
+			return items
 		},
 	},
 	async mounted() {
@@ -83,9 +133,6 @@ export default {
 	methods: {
 		onShow(item) {
 			window.location.href = '/index.php/apps/pipelinq/clients/' + item.id
-		},
-		onSearch() {
-			// Filtering is done reactively via computed property
 		},
 		async fetchData() {
 			this.loading = true
@@ -132,11 +179,16 @@ export default {
 </script>
 
 <style scoped>
-.client-search-input {
+.client-search-filters {
 	padding: 8px 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
 }
 
-.client-search-field {
+.client-search-field,
+.client-filter-field,
+.client-filter-select {
 	width: 100%;
 	padding: 8px 12px;
 	border: 1px solid var(--color-border);
@@ -145,8 +197,20 @@ export default {
 	font-size: 14px;
 }
 
-.client-search-field:focus {
+.client-search-field:focus,
+.client-filter-field:focus,
+.client-filter-select:focus {
 	border-color: var(--color-primary-element);
 	outline: none;
+}
+
+.client-filter-row {
+	display: flex;
+	gap: 6px;
+}
+
+.client-filter-row > * {
+	flex: 1;
+	min-width: 0;
 }
 </style>
