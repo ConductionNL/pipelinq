@@ -5,7 +5,7 @@
 			<div class="my-work__title-row">
 				<h2>{{ t('pipelinq', 'My Work') }}</h2>
 				<span v-if="totalCount > 0" class="my-work__counts">
-					{{ t('pipelinq', 'Leads') }} ({{ leadCount }}) · {{ t('pipelinq', 'Requests') }} ({{ requestCount }}) — {{ totalCount }} {{ t('pipelinq', 'items total') }}
+					{{ t('pipelinq', 'Leads') }} ({{ leadCount }}) · {{ t('pipelinq', 'Requests') }} ({{ requestCount }}) · {{ t('pipelinq', 'Tasks') }} ({{ taskCount }}) — {{ totalCount }} {{ t('pipelinq', 'items total') }}
 				</span>
 			</div>
 			<div class="my-work__controls">
@@ -24,6 +24,11 @@
 						:type="filter === 'request' ? 'primary' : 'secondary'"
 						@click="filter = 'request'">
 						{{ t('pipelinq', 'Requests') }}
+					</NcButton>
+					<NcButton
+						:type="filter === 'task' ? 'primary' : 'secondary'"
+						@click="filter = 'task'">
+						{{ t('pipelinq', 'Tasks') }}
 					</NcButton>
 				</div>
 				<label class="show-completed-toggle">
@@ -68,7 +73,7 @@
 						@keydown.enter="openItem(item)">
 						<div class="work-card__top">
 							<span class="entity-badge" :class="'badge--' + item.entityType">
-								{{ item.entityType === 'lead' ? 'LEAD' : 'REQ' }}
+								{{ item.entityType === 'lead' ? 'LEAD' : item.entityType === 'request' ? 'REQ' : 'TASK' }}
 							</span>
 							<span
 								v-if="item.priority && item.priority !== 'normal'"
@@ -158,6 +163,7 @@ export default {
 			showCompleted: false,
 			myLeads: [],
 			myRequests: [],
+			myTasks: [],
 			pipelines: [],
 		}
 	},
@@ -249,6 +255,33 @@ export default {
 				})
 			}
 
+			for (const t of this.myTasks) {
+				const isClosed = ['afgerond', 'verlopen'].includes(t.status)
+				if (!this.showCompleted && isClosed) continue
+
+				const due = t.deadline ? new Date(t.deadline) : null
+				const isOverdue = !isClosed && due ? due < now : false
+				const isDueToday = !isClosed && due ? (due >= now && due < new Date(now.getTime() + 24 * 60 * 60 * 1000)) : false
+
+				items.push({
+					id: t.id,
+					entityType: 'task',
+					title: t.subject || '-',
+					stageOrStatus: t.status || '-',
+					pipelineName: '',
+					priority: t.priority || 'normaal',
+					value: null,
+					dueDate: t.deadline,
+					isOverdue,
+					isDueToday,
+					overdueDays: isOverdue ? daysBetween(due, now) : 0,
+					isClosed,
+					isStale: false,
+					_dueMs: due ? due.getTime() : Infinity,
+					_group: this.computeGroup(due, now, weekEnd, isClosed),
+				})
+			}
+
 			return items
 		},
 
@@ -262,6 +295,9 @@ export default {
 		},
 		requestCount() {
 			return this.filteredItems.filter(i => i.entityType === 'request').length
+		},
+		taskCount() {
+			return this.filteredItems.filter(i => i.entityType === 'task').length
 		},
 		totalCount() {
 			return this.filteredItems.length
@@ -308,6 +344,7 @@ export default {
 		emptyMessage() {
 			if (this.filter === 'lead') return t('pipelinq', 'No leads assigned to you')
 			if (this.filter === 'request') return t('pipelinq', 'No requests assigned to you')
+			if (this.filter === 'task') return t('pipelinq', 'No tasks assigned to you')
 			return t('pipelinq', 'No items assigned to you')
 		},
 	},
@@ -344,6 +381,12 @@ export default {
 					promises.push(
 						this.fetchRaw('request', { assignee: this.currentUser, _limit: 200 })
 							.then(items => { this.myRequests = items }),
+					)
+				}
+				if (config.task && this.currentUser) {
+					promises.push(
+						this.fetchRaw('task', { assigneeUserId: this.currentUser, _limit: 200 })
+							.then(items => { this.myTasks = items }),
 					)
 				}
 				if (config.pipeline) {
@@ -400,6 +443,8 @@ export default {
 		openItem(item) {
 			if (item.entityType === 'lead') {
 				this.$router.push({ name: 'LeadDetail', params: { id: item.id } })
+			} else if (item.entityType === 'task') {
+				this.$router.push({ name: 'TaskDetail', params: { id: item.id } })
 			} else {
 				this.$router.push({ name: 'RequestDetail', params: { id: item.id } })
 			}
@@ -567,6 +612,12 @@ export default {
 	background: #ffedd5;
 	color: #c2410c;
 	border: 1px solid #fdba74;
+}
+
+.badge--task {
+	background: #e0e7ff;
+	color: #3730a3;
+	border: 1px solid #a5b4fc;
 }
 
 .priority-badge {
