@@ -1,0 +1,806 @@
+{
+  "spec_slug": "queue-management",
+  "app": "pipelinq",
+  "repo": "ConductionNL/pipelinq",
+  "issue": 262,
+  "depends_on": [],
+  "schema_version": 2,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-04-18T16:32:29Z",
+      "ended_at": null,
+      "outcome": "aborted",
+      "outcome_reason": "no terminal label seen in timeline",
+      "pattern_tags": [
+        "reviewer-skipped-full-suite"
+      ],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-18T16:32:29Z",
+          "ended_at": "2026-04-18T16:32:30Z",
+          "turns_used": 66,
+          "turns_budget": 200,
+          "cost_usd": 0.4917,
+          "checks_run": [
+            "composer check:strict"
+          ],
+          "checks_skipped": [],
+          "findings": [
+            {
+              "id": "b-builder-build-0",
+              "severity": "WARNING",
+              "gate": null,
+              "rule": "builder output flagged failure language",
+              "status": "open",
+              "note": "Excellent! The queue-management OpenSpec change has been successfully implemented. Here's a summary of what was completed:\n\n## Implementation Summary\n\n### \u2705 Completed Tasks\n\n**Group 1: Backend Queue Service**\n- Task 1.1: `QueueService.php` - Full implementation with 5 public methods (getQueueDepth, isAtCapacity, assignToQueue, removeFromQueue, processOverflow)\n- Task 1.2: `QueueOverflowJob.php` - Background job for queue overflow management (runs every 5 minutes)\n- Task 1.3: QueueOverflowJob reg",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "fail"
+        },
+        {
+          "stage": "pre-review-quality",
+          "persona": "orchestrator",
+          "container": "hydra-quality-runner",
+          "started_at": "2026-04-18T16:32:29Z",
+          "ended_at": "2026-04-18T16:32:30Z",
+          "exit_code": 0,
+          "checks_run": [
+            "phpstan",
+            "phpmetrics",
+            "composer-audit",
+            "spdx-headers",
+            "forbidden-patterns",
+            "eslint",
+            "stylelint",
+            "npm-audit",
+            "phpunit"
+          ],
+          "checks_skipped": [
+            "php-lint",
+            "phpcs",
+            "phpmd",
+            "psalm",
+            "publiccode",
+            "gitleaks",
+            "trivy",
+            "newman"
+          ],
+          "gates": {
+            "phpstan": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpmetrics": {
+              "pass": true,
+              "failures": 0
+            },
+            "composer-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "spdx-headers": {
+              "pass": true,
+              "failures": 0
+            },
+            "forbidden-patterns": {
+              "pass": true,
+              "failures": 0
+            },
+            "eslint": {
+              "pass": true,
+              "failures": 0
+            },
+            "stylelint": {
+              "pass": true,
+              "failures": 0
+            },
+            "npm-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpunit": {
+              "pass": true,
+              "failures": 0
+            }
+          },
+          "findings": [],
+          "verdict": "pass"
+        },
+        {
+          "stage": "code-review",
+          "persona": "Juan Claude van Damme",
+          "model": "sonnet",
+          "container": "hydra-reviewer",
+          "started_at": "2026-04-18T16:37:55Z",
+          "ended_at": "2026-04-18T16:37:56Z",
+          "turns_used": 43,
+          "turns_budget": 40,
+          "cost_usd": 0.6204,
+          "checks_run": [
+            "phpcs",
+            "psalm",
+            "phpstan"
+          ],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [
+            {
+              "id": "co-fix-00",
+              "severity": "WARNING",
+              "gate": "PHPStan-InvalidNamedArgument / Psalm-InvalidNamedArgument",
+              "file": "lib/BackgroundJob/QueueOverflowJob.php",
+              "line": 57,
+              "rule": "PHPStan-InvalidNamedArgument / Psalm-InvalidNamedArgument",
+              "status": "fixed_in_stage",
+              "note": "Corrected named parameter from `interval:` to `seconds:` in call to OCP\\BackgroundJob\\TimedJob::setInterval(). The method signature uses $seconds, not $interval \u2014 the wrong name caused PHPStan to report two errors (unknown param + missing required param) and Psalm to report one error.",
+              "autofixable": true
+            }
+          ],
+          "verdict": "pass"
+        },
+        {
+          "stage": "security-review",
+          "persona": "Clyde Barcode",
+          "model": "sonnet",
+          "container": "hydra-security",
+          "started_at": "2026-04-18T16:41:51Z",
+          "ended_at": "2026-04-18T16:41:52Z",
+          "turns_used": 13,
+          "turns_budget": 40,
+          "cost_usd": 0.2342,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [],
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "cycle": 2,
+      "trigger": "build:queued",
+      "started_at": "2026-04-18T16:47:03Z",
+      "ended_at": null,
+      "outcome": "aborted",
+      "outcome_reason": "no terminal label seen in timeline",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "quality-recheck",
+          "persona": "orchestrator",
+          "container": "hydra-quality-runner",
+          "started_at": "2026-04-18T16:47:03Z",
+          "ended_at": "2026-04-18T16:47:04Z",
+          "exit_code": 1,
+          "checks_run": [
+            "php-lint",
+            "phpcs",
+            "phpmd",
+            "psalm",
+            "phpstan",
+            "phpmetrics",
+            "composer-audit",
+            "spdx-headers",
+            "forbidden-patterns",
+            "eslint",
+            "stylelint",
+            "npm-audit",
+            "phpunit"
+          ],
+          "checks_skipped": [
+            "publiccode",
+            "gitleaks",
+            "trivy",
+            "newman"
+          ],
+          "gates": {
+            "php-lint": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpcs": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpmd": {
+              "pass": true,
+              "failures": 0
+            },
+            "psalm": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpstan": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpmetrics": {
+              "pass": true,
+              "failures": 0
+            },
+            "composer-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "spdx-headers": {
+              "pass": true,
+              "failures": 0
+            },
+            "forbidden-patterns": {
+              "pass": true,
+              "failures": 0
+            },
+            "eslint": {
+              "pass": true,
+              "failures": 0
+            },
+            "stylelint": {
+              "pass": true,
+              "failures": 0
+            },
+            "npm-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpunit": {
+              "pass": false,
+              "failures": 1
+            }
+          },
+          "findings": [
+            {
+              "id": "qr-quality-recheck-phpunit",
+              "severity": "CRITICAL",
+              "gate": "phpunit",
+              "rule": "phpunit gate failing",
+              "status": "open",
+              "note": "phpunit reported status=fail in quality-recheck.json",
+              "autofixable": false
+            }
+          ],
+          "verdict": "fail"
+        }
+      ]
+    },
+    {
+      "cycle": 3,
+      "trigger": "build:queued",
+      "started_at": "2026-04-18T19:47:43Z",
+      "ended_at": null,
+      "outcome": "aborted",
+      "outcome_reason": "no terminal label seen in timeline",
+      "pattern_tags": [
+        "reviewer-skipped-full-suite"
+      ],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-18T19:47:43Z",
+          "ended_at": "2026-04-18T19:47:44Z",
+          "turns_used": 59,
+          "turns_budget": 200,
+          "cost_usd": 0.5209,
+          "checks_run": [
+            "composer check:strict"
+          ],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass"
+        },
+        {
+          "stage": "pre-review-quality",
+          "persona": "orchestrator",
+          "container": "hydra-quality-runner",
+          "started_at": "2026-04-18T19:47:43Z",
+          "ended_at": "2026-04-18T19:47:44Z",
+          "exit_code": 0,
+          "checks_run": [
+            "phpstan",
+            "phpmetrics",
+            "composer-audit",
+            "spdx-headers",
+            "forbidden-patterns",
+            "eslint",
+            "stylelint",
+            "npm-audit",
+            "phpunit"
+          ],
+          "checks_skipped": [
+            "php-lint",
+            "phpcs",
+            "phpmd",
+            "psalm",
+            "publiccode",
+            "gitleaks",
+            "trivy",
+            "newman"
+          ],
+          "gates": {
+            "phpstan": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpmetrics": {
+              "pass": true,
+              "failures": 0
+            },
+            "composer-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "spdx-headers": {
+              "pass": true,
+              "failures": 0
+            },
+            "forbidden-patterns": {
+              "pass": true,
+              "failures": 0
+            },
+            "eslint": {
+              "pass": true,
+              "failures": 0
+            },
+            "stylelint": {
+              "pass": true,
+              "failures": 0
+            },
+            "npm-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpunit": {
+              "pass": true,
+              "failures": 0
+            }
+          },
+          "findings": [],
+          "verdict": "pass"
+        },
+        {
+          "stage": "code-review",
+          "persona": "Juan Claude van Damme",
+          "model": "sonnet",
+          "container": "hydra-reviewer",
+          "started_at": "2026-04-18T19:56:53Z",
+          "ended_at": "2026-04-18T19:56:54Z",
+          "turns_used": 41,
+          "turns_budget": 40,
+          "cost_usd": 0.7574,
+          "checks_run": [
+            "composer check:strict",
+            "phpcs",
+            "psalm",
+            "phpstan",
+            "eslint"
+          ],
+          "checks_skipped": [
+            "hydra-gates"
+          ],
+          "findings": [
+            {
+              "id": "co-fix-00",
+              "severity": "WARNING",
+              "gate": "PHPStan \u2014 OCP\\BackgroundJob\\TimedJob::setInterval()",
+              "file": "lib/BackgroundJob/QueueOverflowJob.php",
+              "line": 59,
+              "rule": "PHPStan \u2014 OCP\\BackgroundJob\\TimedJob::setInterval()",
+              "status": "fixed_in_stage",
+              "note": "Corrected named-arg from interval: to seconds: to match TimedJob::setInterval() parameter name. Resolved 'Unknown parameter $interval' and 'Missing parameter $seconds' (2 PHPStan errors).",
+              "autofixable": true
+            }
+          ],
+          "verdict": "pass"
+        },
+        {
+          "stage": "security-review",
+          "persona": "Clyde Barcode",
+          "model": "sonnet",
+          "container": "hydra-security",
+          "started_at": "2026-04-18T20:03:23Z",
+          "ended_at": "2026-04-18T20:03:24Z",
+          "turns_used": 20,
+          "turns_budget": 40,
+          "cost_usd": 0.313,
+          "checks_run": [],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [],
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "cycle": 4,
+      "trigger": "build:queued",
+      "started_at": "2026-04-18T20:06:15Z",
+      "ended_at": null,
+      "outcome": "aborted",
+      "outcome_reason": "no terminal label seen in timeline",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "quality-recheck",
+          "persona": "orchestrator",
+          "container": "hydra-quality-runner",
+          "started_at": "2026-04-18T20:06:15Z",
+          "ended_at": "2026-04-18T20:06:16Z",
+          "exit_code": 1,
+          "checks_run": [
+            "php-lint",
+            "phpcs",
+            "phpmd",
+            "psalm",
+            "phpstan",
+            "phpmetrics",
+            "composer-audit",
+            "spdx-headers",
+            "forbidden-patterns",
+            "eslint",
+            "stylelint",
+            "npm-audit",
+            "phpunit"
+          ],
+          "checks_skipped": [
+            "publiccode",
+            "gitleaks",
+            "trivy",
+            "newman"
+          ],
+          "gates": {
+            "php-lint": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpcs": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpmd": {
+              "pass": true,
+              "failures": 0
+            },
+            "psalm": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpstan": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpmetrics": {
+              "pass": true,
+              "failures": 0
+            },
+            "composer-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "spdx-headers": {
+              "pass": true,
+              "failures": 0
+            },
+            "forbidden-patterns": {
+              "pass": true,
+              "failures": 0
+            },
+            "eslint": {
+              "pass": true,
+              "failures": 0
+            },
+            "stylelint": {
+              "pass": true,
+              "failures": 0
+            },
+            "npm-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpunit": {
+              "pass": false,
+              "failures": 1
+            }
+          },
+          "findings": [
+            {
+              "id": "qr-quality-recheck-phpunit",
+              "severity": "CRITICAL",
+              "gate": "phpunit",
+              "rule": "phpunit gate failing",
+              "status": "open",
+              "note": "phpunit reported status=fail in quality-recheck.json",
+              "autofixable": false
+            }
+          ],
+          "verdict": "fail"
+        }
+      ]
+    },
+    {
+      "cycle": 5,
+      "trigger": "build:queued",
+      "started_at": "2026-04-19T17:45:01Z",
+      "ended_at": "2026-04-20T20:51:12Z",
+      "outcome": "aborted",
+      "outcome_reason": "rebuild:queued \u2014 human wiped prior cycle",
+      "pattern_tags": [
+        "reviewer-skipped-full-suite"
+      ],
+      "stages": [
+        {
+          "stage": "fix",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-19T17:45:01Z",
+          "ended_at": "2026-04-19T17:45:02Z",
+          "turns_used": 51,
+          "turns_budget": 200,
+          "cost_usd": 0.3802,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [
+            {
+              "id": "b-builder-fix-0",
+              "severity": "WARNING",
+              "gate": null,
+              "rule": "builder output flagged failure language",
+              "status": "open",
+              "note": "## FIX Mode Summary\n\nI've successfully addressed the critical issue blocking the queue-management PR #280 by fixing **ObjectService API mismatches** in the production code.\n\n### What Was Fixed\n\n**Core Issue**: QueueService and DefaultQueueService were calling `ObjectService::findAll()` with an incorrect API signature, causing silent 500 errors trapped by try/catch blocks. This was the root cause of why tests in QueueOverflowJobTest and DefaultQueueServiceTest were marked as skipped (see issue #2",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "fail"
+        },
+        {
+          "stage": "code-review",
+          "persona": "Juan Claude van Damme",
+          "model": "sonnet",
+          "container": "hydra-reviewer",
+          "started_at": "2026-04-19T17:49:51Z",
+          "ended_at": "2026-04-19T17:49:52Z",
+          "turns_used": 46,
+          "turns_budget": 40,
+          "cost_usd": 0.7639,
+          "checks_run": [
+            "phpcs",
+            "phpunit",
+            "phpmd",
+            "psalm",
+            "phpstan"
+          ],
+          "checks_skipped": [
+            "hydra-gates",
+            "composer check:strict"
+          ],
+          "findings": [
+            {
+              "id": "co-fix-00",
+              "severity": "WARNING",
+              "gate": "PHPCS array double-arrow alignment",
+              "file": "lib/Service/QueueService.php",
+              "line": 74,
+              "rule": "PHPCS array double-arrow alignment",
+              "status": "fixed_in_stage",
+              "note": "Fixed 18 array fat-arrow alignment violations across 3 findAll() call-sites (lines 71\u201379, 168\u2013174, 256\u2013264) via phpcbf auto-fix; re-verified clean with phpcs",
+              "autofixable": true
+            },
+            {
+              "id": "F-01",
+              "severity": "SUGGESTION",
+              "gate": "ADR-014 / spdx-headers gate",
+              "file": "lib/BackgroundJob/QueueOverflowJob.php",
+              "line": 1,
+              "rule": "ADR-014 / spdx-headers gate",
+              "status": "open",
+              "note": "Inherited from base \u2014 all 92 lib/*.php files lack this header; systemic debt not introduced by this PR",
+              "autofixable": false
+            },
+            {
+              "id": "F-02",
+              "severity": "SUGGESTION",
+              "gate": null,
+              "file": null,
+              "line": null,
+              "rule": null,
+              "status": "open",
+              "note": "Environment lacks OCP\\IAppConfig Nextcloud framework interface; all 16 test methods fail with UnknownTypeException. Pre-run also skipped this gate. Not a code regression.",
+              "autofixable": false
+            }
+          ],
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "cycle": 6,
+      "trigger": "build:queued",
+      "started_at": "2026-04-20T20:57:57Z",
+      "ended_at": "2026-04-20T21:34:08Z",
+      "outcome": "needs-input",
+      "outcome_reason": "deterministic checks failed after reviewer fixes",
+      "pattern_tags": [
+        "browser-test-nc-setup-failed",
+        "recheck-caught-new-findings"
+      ],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-20T20:51:52Z",
+          "ended_at": "2026-04-20T20:57:55Z",
+          "exit_code": 0,
+          "turns_used": 181,
+          "turns_budget": 40,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass"
+        },
+        {
+          "stage": "pre-review-quality",
+          "persona": "orchestrator",
+          "container": "hydra-quality-runner",
+          "started_at": "2026-04-20T21:17:28Z",
+          "ended_at": "2026-04-20T21:17:28Z",
+          "exit_code": 1,
+          "checks_run": [
+            "php -l",
+            "composer check:strict (phpcs)",
+            "composer check:strict (phpmd)",
+            "composer check:strict (psalm)",
+            "composer check:strict (phpstan)",
+            "phpmetrics",
+            "composer audit",
+            "spdx-headers",
+            "forbidden-patterns",
+            "npm run lint (eslint)",
+            "npm run lint (stylelint)",
+            "npm audit",
+            "stub-scan",
+            "composer test:unit (phpunit)"
+          ],
+          "checks_skipped": [
+            "publiccode",
+            "gitleaks",
+            "trivy",
+            "newman"
+          ],
+          "gates": {
+            "php-lint": "pass",
+            "phpcs": "fail",
+            "phpmd": "pass",
+            "psalm": "pass",
+            "phpstan": "pass",
+            "phpmetrics": "pass",
+            "composer-audit": "pass",
+            "spdx-headers": "pass",
+            "publiccode": "skip",
+            "forbidden-patterns": "pass",
+            "eslint": "pass",
+            "stylelint": "pass",
+            "npm-audit": "pass",
+            "stub-scan": "pass",
+            "gitleaks": "skip",
+            "trivy": "skip",
+            "phpunit": "fail",
+            "newman": "skip"
+          },
+          "findings": [
+            {
+              "id": "prq-phpcs",
+              "severity": "WARNING",
+              "gate": "phpcs",
+              "rule": "composer check:strict (phpcs) failing",
+              "status": "open",
+              "note": "...\nThe repository at \"/server/apps/app\" does not have the correct ownership and git refuses to use it:\n\nfatal: detected dubious ownership in repository at '/server/apps/app'\nTo add an exception for this directory, call:\n\ngit config --global --add safe.directory /server/apps/app\n\nComposer could not detect the root package (conductionnl/pipelinq) version, defaulting to '1.0.0'. See https://getcomposer.org/root-version\n\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[32mE\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0",
+              "autofixable": true
+            },
+            {
+              "id": "prq-phpunit",
+              "severity": "CRITICAL",
+              "gate": "phpunit",
+              "rule": "composer test:unit (phpunit) failing",
+              "status": "open",
+              "note": "phpunit gate failed \u2014 see pipeline log",
+              "autofixable": false
+            }
+          ],
+          "verdict": "fail"
+        },
+        {
+          "stage": "quality-recheck",
+          "persona": "orchestrator",
+          "container": "hydra-quality-runner",
+          "started_at": "2026-04-20T21:33:59Z",
+          "ended_at": "2026-04-20T21:33:59Z",
+          "exit_code": 1,
+          "checks_run": [
+            "php -l",
+            "composer check:strict (phpcs)",
+            "composer check:strict (phpmd)",
+            "composer check:strict (psalm)",
+            "composer check:strict (phpstan)",
+            "phpmetrics",
+            "composer audit",
+            "spdx-headers",
+            "forbidden-patterns",
+            "npm run lint (eslint)",
+            "npm run lint (stylelint)",
+            "npm audit",
+            "stub-scan",
+            "composer test:unit (phpunit)"
+          ],
+          "checks_skipped": [
+            "publiccode",
+            "gitleaks",
+            "trivy",
+            "newman"
+          ],
+          "gates": {
+            "php-lint": "pass",
+            "phpcs": "fail",
+            "phpmd": "pass",
+            "psalm": "pass",
+            "phpstan": "pass",
+            "phpmetrics": "pass",
+            "composer-audit": "pass",
+            "spdx-headers": "pass",
+            "publiccode": "skip",
+            "forbidden-patterns": "pass",
+            "eslint": "pass",
+            "stylelint": "pass",
+            "npm-audit": "pass",
+            "stub-scan": "pass",
+            "gitleaks": "skip",
+            "trivy": "skip",
+            "phpunit": "fail",
+            "newman": "skip"
+          },
+          "findings": [
+            {
+              "id": "qrc-phpcs",
+              "severity": "WARNING",
+              "gate": "phpcs",
+              "rule": "composer check:strict (phpcs) failing",
+              "status": "open",
+              "note": "...\nThe repository at \"/server/apps/repo\" does not have the correct ownership and git refuses to use it:\n\nfatal: detected dubious ownership in repository at '/server/apps/repo'\nTo add an exception for this directory, call:\n\ngit config --global --add safe.directory /server/apps/repo\n\nComposer could not detect the root package (conductionnl/pipelinq) version, defaulting to '1.0.0'. See https://getcomposer.org/root-version\n\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[32mE\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW\u001b[0m\u001b[33mW",
+              "autofixable": true
+            },
+            {
+              "id": "qrc-phpunit",
+              "severity": "CRITICAL",
+              "gate": "phpunit",
+              "rule": "composer test:unit (phpunit) failing",
+              "status": "open",
+              "note": "phpunit gate failed \u2014 see pipeline log",
+              "autofixable": false
+            }
+          ],
+          "verdict": "fail"
+        }
+      ]
+    }
+  ]
+}

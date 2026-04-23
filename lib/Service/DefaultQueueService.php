@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/queue-management/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
@@ -116,6 +118,8 @@ class DefaultQueueService
      * Create default queues if none exist.
      *
      * @return void
+     *
+     * @spec openspec/changes/queue-management/tasks.md#task-1.1
      */
     public function createDefaultQueues(): void
     {
@@ -134,14 +138,12 @@ class DefaultQueueService
 
             $existing = $objectService->findAll(
                 [
-                    'filters' => [
-                        'register' => $registerId,
-                        'schema'   => $queueSchemaId,
-                    ],
-                    'limit'   => 1,
-                ],
-                _rbac: false,
-                _multitenancy: false
+                    'register'       => $registerId,
+                    'schema'         => $queueSchemaId,
+                    '_limit'         => 1,
+                    '_rbac'          => false,
+                    '_multitenancy'  => false,
+                ]
             );
 
             if (empty($existing) === false) {
@@ -173,6 +175,8 @@ class DefaultQueueService
      * Create default skills if none exist.
      *
      * @return void
+     *
+     * @spec openspec/changes/queue-management/tasks.md#task-1.1
      */
     public function createDefaultSkills(): void
     {
@@ -191,14 +195,12 @@ class DefaultQueueService
 
             $existing = $objectService->findAll(
                 [
-                    'filters' => [
-                        'register' => $registerId,
-                        'schema'   => $skillSchemaId,
-                    ],
-                    'limit'   => 1,
-                ],
-                _rbac: false,
-                _multitenancy: false
+                    'register'       => $registerId,
+                    'schema'         => $skillSchemaId,
+                    '_limit'         => 1,
+                    '_rbac'          => false,
+                    '_multitenancy'  => false,
+                ]
             );
 
             if (empty($existing) === false) {

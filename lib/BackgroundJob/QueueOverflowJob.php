@@ -15,6 +15,9 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/queue-management/tasks.md#task-1.2
+ * @spec openspec/changes/queue-management/tasks.md#task-1.3
  */
 
 declare(strict_types=1);
@@ -67,6 +70,8 @@ class QueueOverflowJob extends TimedJob
      * @return void
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     *
+     * @spec openspec/changes/queue-management/tasks.md#task-1.2
      */
     protected function run(mixed $argument): void
     {
