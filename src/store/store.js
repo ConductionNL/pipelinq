@@ -32,6 +32,51 @@ export async function initializeStores() {
 		if (config.register && config.leadProduct_schema) {
 			objectStore.registerObjectType('leadProduct', config.leadProduct_schema, config.register)
 		}
+		if (config.register && config.intakeForm_schema) {
+			objectStore.registerObjectType('intakeForm', config.intakeForm_schema, config.register)
+		}
+		if (config.register && config.intakeSubmission_schema) {
+			objectStore.registerObjectType('intakeSubmission', config.intakeSubmission_schema, config.register)
+		}
+		if (config.register && config.automation_schema) {
+			objectStore.registerObjectType('automation', config.automation_schema, config.register)
+		}
+		if (config.register && config.automationLog_schema) {
+			objectStore.registerObjectType('automationLog', config.automationLog_schema, config.register)
+		}
+		if (config.register && config.relationship_schema) {
+			objectStore.registerObjectType('relationship', config.relationship_schema, config.register)
+		}
+		if (config.register && config.queue_schema) {
+			objectStore.registerObjectType('queue', config.queue_schema, config.register)
+		}
+		if (config.register && config.skill_schema) {
+			objectStore.registerObjectType('skill', config.skill_schema, config.register)
+		}
+		if (config.register && config.agentProfile_schema) {
+			objectStore.registerObjectType('agentProfile', config.agentProfile_schema, config.register)
+		}
+		if (config.register && config.kennisartikel_schema) {
+			objectStore.registerObjectType('kennisartikel', config.kennisartikel_schema, config.register)
+		}
+		if (config.register && config.kenniscategorie_schema) {
+			objectStore.registerObjectType('kenniscategorie', config.kenniscategorie_schema, config.register)
+		}
+		if (config.register && config.kennisfeedback_schema) {
+			objectStore.registerObjectType('kennisfeedback', config.kennisfeedback_schema, config.register)
+		}
+		if (config.register && config.contactmoment_schema) {
+			objectStore.registerObjectType('contactmoment', config.contactmoment_schema, config.register)
+		}
+		if (config.register && config.survey_schema) {
+			objectStore.registerObjectType('survey', config.survey_schema, config.register)
+		}
+		if (config.register && config.surveyResponse_schema) {
+			objectStore.registerObjectType('surveyResponse', config.surveyResponse_schema, config.register)
+		}
+		if (config.register && config.complaint_schema) {
+			objectStore.registerObjectType('complaint', config.complaint_schema, config.register)
+		}
 	}
 
 	return { settingsStore, objectStore }

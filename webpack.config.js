@@ -35,9 +35,17 @@ webpackConfig.entry = {
 		import: path.join(__dirname, 'src', 'recentActivitiesWidget.js'),
 		filename: appId + '-recentActivitiesWidget.js',
 	},
-	clientSearchWidget: {
-		import: path.join(__dirname, 'src', 'clientSearchWidget.js'),
-		filename: appId + '-clientSearchWidget.js',
+	findClientWidget: {
+		import: path.join(__dirname, 'src', 'findClientWidget.js'),
+		filename: appId + '-findClientWidget.js',
+	},
+	startRequestWidget: {
+		import: path.join(__dirname, 'src', 'startRequestWidget.js'),
+		filename: appId + '-startRequestWidget.js',
+	},
+	createLeadWidget: {
+		import: path.join(__dirname, 'src', 'createLeadWidget.js'),
+		filename: appId + '-createLeadWidget.js',
 	},
 }
 

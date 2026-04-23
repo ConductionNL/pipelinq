@@ -118,6 +118,7 @@ import { showError } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import ProductForm from './ProductForm.vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import { formatCurrency as formatLocaleCurrency } from '../../services/localeUtils.js'
 
 export default {
 	name: 'ProductDetail',
@@ -157,6 +158,7 @@ export default {
 		sidebarProps() {
 			const config = this.objectStore.objectTypeRegistry.product || {}
 			return {
+				title: t('pipelinq', 'Product'),
 				register: config.register || '',
 				schema: config.schema || '',
 				hiddenTabs: ['tasks'],
@@ -229,7 +231,7 @@ export default {
 		},
 		formatCurrency(value) {
 			if (!value && value !== 0) return '-'
-			return 'EUR ' + Number(value).toLocaleString('nl-NL', { minimumFractionDigits: 2 })
+			return formatLocaleCurrency(value)
 		},
 	},
 }

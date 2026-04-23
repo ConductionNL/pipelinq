@@ -8,7 +8,7 @@
  * @category Listener
  * @package  OCA\Pipelinq\Listener
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -52,28 +52,28 @@ class DeepLinkRegistrationListener implements IEventListener
             appId: 'pipelinq',
             registerSlug: 'pipelinq',
             schemaSlug: 'client',
-            urlTemplate: '/apps/pipelinq/#/clients/{uuid}'
+            urlTemplate: '/apps/pipelinq/clients/{uuid}'
         );
 
         $event->register(
             appId: 'pipelinq',
             registerSlug: 'pipelinq',
             schemaSlug: 'lead',
-            urlTemplate: '/apps/pipelinq/#/leads/{uuid}'
+            urlTemplate: '/apps/pipelinq/leads/{uuid}'
         );
 
         $event->register(
             appId: 'pipelinq',
             registerSlug: 'pipelinq',
             schemaSlug: 'request',
-            urlTemplate: '/apps/pipelinq/#/requests/{uuid}'
+            urlTemplate: '/apps/pipelinq/requests/{uuid}'
         );
 
         $event->register(
             appId: 'pipelinq',
             registerSlug: 'pipelinq',
             schemaSlug: 'contact',
-            urlTemplate: '/apps/pipelinq/#/contacts/{uuid}'
+            urlTemplate: '/apps/pipelinq/contacts/{uuid}'
         );
     }//end handle()
 }//end class

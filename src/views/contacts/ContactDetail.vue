@@ -68,6 +68,14 @@
 				</div>
 			</div>
 		</CnDetailCard>
+
+		<!-- Relationships -->
+		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Relationships')">
+			<ContactRelationships
+				:entity-id="contactId"
+				entity-type="contact"
+				:entity-name="contactData.name || ''" />
+		</CnDetailCard>
 	</CnDetailPage>
 </template>
 
@@ -76,6 +84,7 @@ import { NcButton } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import ContactForm from './ContactForm.vue'
+import ContactRelationships from '../../components/ContactRelationships.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -85,6 +94,7 @@ export default {
 		CnDetailPage,
 		CnDetailCard,
 		ContactForm,
+		ContactRelationships,
 	},
 	props: {
 		contactId: {
@@ -118,6 +128,7 @@ export default {
 		sidebarProps() {
 			const config = this.objectStore.objectTypeRegistry.contact || {}
 			return {
+				title: t('pipelinq', 'Contact'),
 				register: config.register || '',
 				schema: config.schema || '',
 				hiddenTabs: ['tasks'],
