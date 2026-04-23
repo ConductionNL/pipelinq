@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/2026-03-20-kennisbank/tasks.md#task-2.1
  */
 
 declare(strict_types=1);
@@ -29,6 +31,8 @@ use Psr\Log\LoggerInterface;
  *
  * Handles public article queries, feedback submission, and score recalculation.
  * Articles are stored as OpenRegister objects with the kennisartikel schema.
+ *
+ * @spec openspec/changes/2026-03-20-kennisbank/tasks.md#task-2.1
  */
 class KennisbankService
 {
@@ -68,6 +72,8 @@ class KennisbankService
      * @param int         $offset   Offset for pagination.
      *
      * @return array<string, mixed> Filter parameters used by the controller to query articles.
+     *
+     * @spec openspec/changes/2026-03-20-kennisbank/tasks.md#task-2.1
      */
     public function getPublicArticles(
         ?string $search=null,
@@ -102,6 +108,8 @@ class KennisbankService
      * @param array<string, mixed> $article The article data.
      *
      * @return array<string, mixed> The article with internal fields removed.
+     *
+     * @spec openspec/changes/2026-03-20-kennisbank/tasks.md#task-2.1
      */
     public function stripInternalFields(array $article): array
     {
@@ -120,6 +128,8 @@ class KennisbankService
      * @param string|null $comment   Optional improvement suggestion.
      *
      * @return array{valid: bool, errors: array<string>} Validation result.
+     *
+     * @spec openspec/changes/2026-03-20-kennisbank/tasks.md#task-2.1
      */
     public function validateFeedback(
         string $articleId,
@@ -155,6 +165,8 @@ class KennisbankService
      * @param string|null $comment   Optional improvement suggestion.
      *
      * @return array<string, mixed> The feedback object data.
+     *
+     * @spec openspec/changes/2026-03-20-kennisbank/tasks.md#task-2.1
      */
     public function buildFeedbackData(
         string $articleId,
@@ -190,6 +202,8 @@ class KennisbankService
      * @param int $negativeCount Number of "niet_nuttig" ratings.
      *
      * @return float The usefulness score as a percentage (0-100).
+     *
+     * @spec openspec/changes/2026-03-20-kennisbank/tasks.md#task-2.1
      */
     public function calculateUsefulnessScore(
         int $positiveCount,

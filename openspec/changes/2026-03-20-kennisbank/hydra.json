@@ -1,0 +1,184 @@
+{
+  "spec_slug": "2026-03-20-kennisbank",
+  "app": "pipelinq",
+  "repo": "ConductionNL/pipelinq",
+  "issue": 194,
+  "depends_on": [],
+  "schema_version": 2,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-04-16T11:39:11Z",
+      "ended_at": null,
+      "outcome": "aborted",
+      "outcome_reason": "no terminal label seen in timeline",
+      "pattern_tags": [
+        "container-crashed-mid-stage"
+      ],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-16T11:39:11Z",
+          "ended_at": "2026-04-16T11:39:12Z",
+          "turns_used": 0,
+          "turns_budget": 200,
+          "cost_usd": 0.0,
+          "checks_run": [
+            "composer check:strict"
+          ],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "none"
+        }
+      ]
+    },
+    {
+      "cycle": 2,
+      "trigger": "build:queued",
+      "started_at": "2026-04-16T12:02:28Z",
+      "ended_at": "2026-04-20T19:42:40Z",
+      "outcome": "aborted",
+      "outcome_reason": "rebuild:queued \u2014 human wiped prior cycle",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-16T12:02:28Z",
+          "ended_at": "2026-04-16T12:02:29Z",
+          "turns_used": 50,
+          "turns_budget": 200,
+          "cost_usd": 0.3521,
+          "checks_run": [
+            "composer check:strict"
+          ],
+          "checks_skipped": [],
+          "findings": [
+            {
+              "id": "b-builder-build-0",
+              "severity": "WARNING",
+              "gate": null,
+              "rule": "builder output flagged failure language",
+              "status": "open",
+              "note": "## \u2705 Implementation Complete\n\nI have successfully implemented the OpenSpec change **2026-03-20-kennisbank** on the pipelinq repository. Here's what was accomplished:\n\n### Summary\n\n**Draft PR Created:** [#223](https://github.com/ConductionNL/pipelinq/pull/223) \u2014 Closes #194\n\nThe kennisbank (knowledge base) feature has been verified and is ready for review. It provides KCC agents with article search, management, and feedback capabilities, plus a public API for citizen self-service.\n\n### Implementa",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "fail"
+        },
+        {
+          "stage": "pre-review-quality",
+          "persona": "orchestrator",
+          "container": "hydra-quality-runner",
+          "started_at": "2026-04-16T12:02:28Z",
+          "ended_at": "2026-04-16T12:02:29Z",
+          "exit_code": 1,
+          "checks_run": [
+            "phpstan",
+            "phpmetrics",
+            "composer-audit",
+            "spdx-headers",
+            "forbidden-patterns",
+            "stylelint",
+            "npm-audit",
+            "phpunit"
+          ],
+          "checks_skipped": [
+            "php-lint",
+            "phpcs",
+            "phpmd",
+            "psalm",
+            "publiccode",
+            "eslint",
+            "gitleaks",
+            "trivy",
+            "newman"
+          ],
+          "gates": {
+            "phpstan": {
+              "pass": true,
+              "failures": 0
+            },
+            "phpmetrics": {
+              "pass": true,
+              "failures": 0
+            },
+            "composer-audit": {
+              "pass": true,
+              "failures": 0
+            },
+            "spdx-headers": {
+              "pass": true,
+              "failures": 0
+            },
+            "forbidden-patterns": {
+              "pass": true,
+              "failures": 0
+            },
+            "stylelint": {
+              "pass": true,
+              "failures": 0
+            },
+            "npm-audit": {
+              "pass": false,
+              "failures": 1
+            },
+            "phpunit": {
+              "pass": true,
+              "failures": 0
+            }
+          },
+          "findings": [
+            {
+              "id": "qr-pre-review-quality-npm-audit",
+              "severity": "WARNING",
+              "gate": "npm-audit",
+              "rule": "npm-audit gate failing",
+              "status": "open",
+              "note": "npm-audit reported status=fail in quality-report.json",
+              "autofixable": false
+            }
+          ],
+          "verdict": "fail"
+        }
+      ]
+    },
+    {
+      "cycle": 3,
+      "trigger": "build:queued",
+      "started_at": "2026-04-20T19:52:13Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [
+        "browser-test-nc-setup-failed"
+      ],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "haiku",
+          "container": "hydra-builder",
+          "started_at": "2026-04-20T19:43:10Z",
+          "ended_at": "2026-04-20T19:52:11Z",
+          "exit_code": 0,
+          "turns_used": 143,
+          "turns_budget": 40,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass"
+        }
+      ]
+    }
+  ]
+}

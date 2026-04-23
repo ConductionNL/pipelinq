@@ -21,11 +21,11 @@
   "dependencies": {
     "@conduction/nextcloud-vue": "^0.1.0-beta.3",
     "@nextcloud/axios": "^2.5.0",
-    "@nextcloud/dialogs": "^3.2.0",
+    "@nextcloud/dialogs": "^4.0.0",
     "@nextcloud/initial-state": "^2.2.0",
     "@nextcloud/l10n": "^2.0.1",
     "@nextcloud/router": "^2.0.1",
-    "@nextcloud/vue": "^8.16.0",
+    "@nextcloud/vue": "^9.6.0",
     "gridstack": "^10.3.1",
     "markdown-it": "^14.1.1",
     "pinia": "^2.1.7",
@@ -42,7 +42,7 @@
     "@nextcloud/browserslist-config": "^3.0.1",
     "@nextcloud/eslint-config": "^8.4.1",
     "@nextcloud/stylelint-config": "^2.4.0",
-    "@nextcloud/webpack-vue-config": "^6.0.1",
+    "@nextcloud/webpack-vue-config": "^7.0.0",
     "css-loader": "~7.1.1",
     "eslint": "^8.56.0",
     "eslint-import-resolver-alias": "^1.1.2",
@@ -52,5 +52,11 @@
     "vue-template-compiler": "^2.7.16",
     "webpack": "^5.94.0",
     "webpack-cli": "^6.0.1"
+  },
+  "overrides": {
+    "axios": ">=1.7.7",
+    "dompurify": ">=3.4.0",
+    "bn.js": ">=4.12.3 <5.0.0 || >=5.2.3",
+    "brace-expansion": ">=1.1.13 <2.0.0 || >=2.0.3"
   }
 }
