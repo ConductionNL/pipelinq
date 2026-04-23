@@ -4,5 +4,5 @@
   "app": "pipelinq",
   "repo": "https://github.com/ConductionNL/pipelinq",
   "depends_on": [],
-  "issue": null
+  "issue": "https://github.com/ConductionNL/pipelinq/issues/312"
 }
