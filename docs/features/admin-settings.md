@@ -8,7 +8,7 @@ The admin settings page provides a Nextcloud admin panel for configuring Pipelin
 
 ## Screenshot
 
-![admin-settings](../screenshots/admin-settings.png)
+![admin-settings](/screenshots/admin-settings.png)
 
 ## Specification
 

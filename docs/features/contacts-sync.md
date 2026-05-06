@@ -8,7 +8,7 @@ Sync Pipelinq clients and contacts with Nextcloud Contacts via IManager to elimi
 
 ## Screenshot
 
-![contacts-sync](../screenshots/contacts.png)
+![contacts-sync](/screenshots/contacts.png)
 
 ## Specification
 
