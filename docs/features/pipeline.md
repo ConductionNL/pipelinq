@@ -8,7 +8,7 @@ Pipelines provide configurable kanban-style boards where leads and requests flow
 
 ## Screenshot
 
-![pipeline](../screenshots/pipeline.png)
+![pipeline](/screenshots/pipeline.png)
 
 ## Specification
 
