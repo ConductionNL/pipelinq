@@ -1,5 +1,5 @@
 <template>
-	<div class="client-form">
+	<div class="client-form" data-testid="client-form">
 		<div class="form-group">
 			<label for="client-name">{{ t('pipelinq', 'Name') }} *</label>
 			<NcTextField
@@ -8,6 +8,7 @@
 				:error="!!errors.name"
 				:helper-text="errors.name"
 				:maxlength="255"
+				data-testid="client-name-input"
 				@update:value="v => { form.name = v; validateField('name') }" />
 		</div>
 
@@ -19,6 +20,7 @@
 					input-id="client-type"
 					:options="typeOptions"
 					:placeholder="t('pipelinq', 'Select type')"
+					data-testid="client-type-select"
 					@input="validateField('type')" />
 				<p v-if="errors.type" class="field-error">
 					{{ errors.type }}
@@ -32,6 +34,7 @@
 					:error="!!errors.email"
 					:helper-text="errors.email"
 					type="email"
+					data-testid="client-email-input"
 					@update:value="v => { form.email = v; validateField('email') }" />
 			</div>
 		</div>
@@ -44,6 +47,7 @@
 					:value="form.phone"
 					:error="!!errors.phone"
 					:helper-text="errors.phone"
+					data-testid="client-phone-input"
 					@update:value="v => { form.phone = v; validateField('phone') }" />
 			</div>
 			<div class="form-group">
@@ -53,6 +57,7 @@
 					:value="form.website"
 					:error="!!errors.website"
 					:helper-text="errors.website"
+					data-testid="client-website-input"
 					@update:value="v => { form.website = v; validateField('website') }" />
 			</div>
 		</div>
@@ -62,19 +67,20 @@
 			<NcTextField
 				id="client-address"
 				:value="form.address"
+				data-testid="client-address-input"
 				@update:value="v => form.address = v" />
 		</div>
 
 		<div class="form-group">
 			<label for="client-notes">{{ t('pipelinq', 'Notes') }}</label>
-			<textarea id="client-notes" v-model="form.notes" rows="3" />
+			<textarea id="client-notes" v-model="form.notes" rows="3" data-testid="client-notes-input" />
 		</div>
 
 		<div class="client-form__actions">
-			<NcButton type="primary" :disabled="!isValid" @click="onSave">
+			<NcButton type="primary" :disabled="!isValid" data-testid="client-form-save" @click="onSave">
 				{{ t('pipelinq', 'Save') }}
 			</NcButton>
-			<NcButton @click="$emit('cancel')">
+			<NcButton data-testid="client-form-cancel" @click="$emit('cancel')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 		</div>
