@@ -8,7 +8,7 @@ Model bidirectional typed relationships between contacts (parent/child, partner,
 
 ## Screenshot
 
-![contact-relationship-mapping](../screenshots/contacts.png)
+![contact-relationship-mapping](/screenshots/contacts.png)
 
 ## Specification
 

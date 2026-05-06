@@ -4,7 +4,7 @@
 const config = {
   title: 'Pipelinq',
   tagline: 'CRM and pipeline management for Nextcloud',
-  url: 'https://pipelinq.app',
+  url: 'https://pipelinq.conduction.nl',
   baseUrl: '/',
 
   // GitHub pages deployment config
@@ -14,13 +14,29 @@ const config = {
 
   onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
+  onBrokenAnchors: 'warn',
 
   i18n: {
+    // Dutch locale dropped — `i18n/nl/` carries only stale translation
+    // strings (no actual translated markdown), and stale doc IDs trigger
+    // SSR `Cannot read properties of undefined (reading 'id')` errors
+    // (see ADR-030). Re-add `'nl'` to `locales` once the Dutch
+    // translation pass has been completed or the metadata audited.
     defaultLocale: 'en',
-    locales: ['en', 'nl'],
+    locales: ['en'],
     localeConfigs: {
       en: { label: 'English' },
-      nl: { label: 'Nederlands' },
+    },
+  },
+
+  markdown: {
+    mermaid: true,
+    // Tutorial pages reference screenshots populated by
+    // `tests/e2e/docs-screenshots.spec.ts`. The Playwright capture run
+    // is separate from the docs build, so the build must succeed even
+    // when a fresh checkout doesn't have every PNG yet (ADR-030).
+    hooks: {
+      onBrokenMarkdownImages: 'warn',
     },
   },
 
@@ -103,9 +119,6 @@ const config = {
         theme: { light: 'default', dark: 'dark' },
       },
     }),
-  markdown: {
-    mermaid: true,
-  },
   themes: ['@docusaurus/theme-mermaid'],
 };
 
