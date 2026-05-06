@@ -8,7 +8,7 @@ The product catalog allows Pipelinq users to manage the products and services th
 
 ## Screenshot
 
-![product-catalog](../screenshots/product-catalog.png)
+![product-catalog](/screenshots/product-catalog.png)
 
 ## Specification
 
