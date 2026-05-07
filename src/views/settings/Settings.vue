@@ -4,7 +4,7 @@
 		<NcSettingsSection
 			:name="t('pipelinq', 'Pipelinq Settings')"
 			:description="t('pipelinq', 'Configure your Pipelinq installation')"
-			doc-url="https://pipelinq.app" />
+			doc-url="https://pipelinq.conduction.nl/docs/intro" />
 
 		<!-- Version Information -->
 		<CnVersionInfoCard
