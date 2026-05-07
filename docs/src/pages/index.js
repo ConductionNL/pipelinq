@@ -279,6 +279,7 @@ export default function Home() {
     >
       <main className="marketing-page">
         <DetailHero
+          background="cobalt"
           appId="pipelinq"
           status={{ label: 'Beta', color: 'var(--c-orange-knvb)' }}
           version="v0.7"
