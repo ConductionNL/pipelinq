@@ -22,7 +22,16 @@
 import DashboardView from './views/Dashboard.vue'
 import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
 import MyWorkView from './views/MyWork.vue'
-import PublicSurveyFormView from './views/surveys/PublicSurveyForm.vue'
+
+// --- Submit-handler escape hatch (manifest-form-page-type: PublicSurvey). ---
+// `type: "form"` in the manifest dispatches submits via either an HTTP
+// `submitEndpoint` or a registered handler. PublicSurvey needs the
+// handler path because the submit URL embeds the route's `:token` param
+// AND the body shape (`{ answers: [...], entityType, entityId }`) is
+// pipelinq-specific. The handler keeps that wiring out of the lib while
+// the field-rendering surface (rating, comment) stays declarative in
+// `src/manifest.json`.
+import { generateUrl } from '@nextcloud/router'
 
 // --- Bespoke create wizards (lib gap: multi-step actions). ---
 import ContactmomentForm from './views/contactmomenten/ContactmomentForm.vue'
@@ -61,12 +70,57 @@ import AgentPerformanceView from './views/rapportage/AgentPerformance.vue'
 import PipelineManagerView from './views/settings/PipelineManager.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
 
+/**
+ * submitPublicSurvey — handler for the manifest-driven PublicSurvey
+ * `type: "form"` route. Resolves the survey's `:token` from the
+ * route, queries the URL for `entity` / `id` params (set by the
+ * source app embedding the survey), and POSTs the formData to
+ * `/apps/pipelinq/public/survey/{token}/respond`.
+ *
+ * Throws on non-2xx so CnFormPage's submit pipeline catches it,
+ * surfaces the error in the form, and emits `@error`.
+ *
+ * @param {object} formData {rating, comment} from the manifest fields[]
+ * @param {object} $route Vue Router route — exposes params.token
+ * @return {Promise<void>}
+ */
+async function submitPublicSurvey(formData, $route /* , $router */) {
+	const token = $route?.params?.token
+	if (!token) {
+		throw new Error('Missing survey token in route')
+	}
+	const params = new URLSearchParams(window.location.search)
+	const body = {
+		answers: Object.entries(formData).map(([key, value]) => ({
+			questionId: key,
+			value: value === null || value === undefined ? '' : String(value),
+		})),
+		entityType: params.get('entity'),
+		entityId: params.get('id'),
+	}
+	const response = await fetch(generateUrl('/apps/pipelinq/public/survey/' + token + '/respond'), {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(body),
+	})
+	if (!response.ok) {
+		let message = 'Failed to submit'
+		try {
+			const data = await response.json()
+			message = data.error || message
+		} catch (_e) { /* ignore parse errors */ }
+		throw new Error(message)
+	}
+}
+
 export default {
 	// Genuine exceptions
 	DashboardView,
 	PipelineBoardView,
 	MyWorkView,
-	PublicSurveyFormView,
+
+	// Submit-handler escape hatch (manifest-form-page-type)
+	submitPublicSurvey,
 
 	// Bespoke create wizards
 	ContactmomentForm,
