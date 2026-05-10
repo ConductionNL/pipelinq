@@ -1,0 +1,465 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest.schema.json",
+	"version": "1.0.0",
+	"dependencies": ["openregister"],
+	"menu": [
+		{ "id": "Dashboard", "label": "Dashboard", "icon": "icon-category-dashboard", "route": "Dashboard", "order": 10 },
+		{ "id": "Clients", "label": "Clients", "icon": "icon-group", "route": "Clients", "order": 20 },
+		{ "id": "Contacts", "label": "Contacts", "icon": "icon-user", "route": "Contacts", "order": 30 },
+		{ "id": "Leads", "label": "Leads", "icon": "icon-checkmark", "route": "Leads", "order": 40 },
+		{ "id": "Requests", "label": "Requests", "icon": "icon-file", "route": "Requests", "order": 50 },
+		{ "id": "Tasks", "label": "Tasks", "icon": "icon-checkmark", "route": "Tasks", "order": 60 },
+		{ "id": "Contactmomenten", "label": "Contactmomenten", "icon": "icon-comment", "route": "Contactmomenten", "order": 70 },
+		{ "id": "Complaints", "label": "Complaints", "icon": "icon-error", "route": "Complaints", "order": 80 },
+		{ "id": "Products", "label": "Products", "icon": "icon-files", "route": "Products", "order": 90 },
+		{ "id": "Pipeline", "label": "Pipeline", "icon": "icon-category-organization", "route": "Pipeline", "order": 100 },
+		{ "id": "Surveys", "label": "Surveys", "icon": "icon-comment", "route": "Surveys", "order": 110 },
+		{ "id": "Queues", "label": "Queues", "icon": "icon-files", "route": "Queues", "order": 120 },
+		{ "id": "Kennisbank", "label": "Kennisbank", "icon": "icon-info", "route": "Kennisbank", "order": 130 },
+		{ "id": "MyWork", "label": "My Work", "icon": "icon-user", "route": "MyWork", "order": 140 },
+		{ "id": "Rapportage", "label": "Reporting", "icon": "icon-category-monitoring", "route": "Rapportage", "order": 150 },
+		{ "id": "Documentation", "label": "Documentation", "icon": "icon-info", "href": "https://conduction.gitbook.io/pipelinq-nextcloud", "order": 160 },
+		{ "id": "Pipelines", "label": "Pipelines", "icon": "icon-category-organization", "route": "Pipelines", "section": "settings", "order": 200 },
+		{ "id": "Forms", "label": "Forms", "icon": "icon-file", "route": "Forms", "section": "settings", "order": 210 },
+		{ "id": "Automations", "label": "Automations", "icon": "icon-play", "route": "Automations", "section": "settings", "order": 220 }
+	],
+	"pages": [
+		{
+			"id": "Dashboard",
+			"route": "/",
+			"type": "custom",
+			"title": "Dashboard",
+			"component": "DashboardView"
+		},
+		{
+			"id": "Clients",
+			"route": "/clients",
+			"type": "index",
+			"title": "Clients",
+			"config": {
+				"register": "pipelinq",
+				"schema": "client",
+				"columns": ["name", "type", "industry", "email", "phone"],
+				"sidebar": { "enabled": true, "showMetadata": true }
+			}
+		},
+		{
+			"id": "ClientDetail",
+			"route": "/clients/:id",
+			"type": "detail",
+			"title": "Client",
+			"config": {
+				"register": "pipelinq",
+				"schema": "client",
+				"sidebarTabs": [
+					{ "id": "overview", "label": "Overview", "icon": "icon-info", "widgets": [{ "type": "data" }, { "type": "metadata" }], "order": 10 },
+					{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [{ "type": "audit-trail" }], "order": 90 }
+				]
+			}
+		},
+		{
+			"id": "Requests",
+			"route": "/requests",
+			"type": "index",
+			"title": "Requests",
+			"config": {
+				"register": "pipelinq",
+				"schema": "request",
+				"columns": ["title", "status", "priority", "channel", "requestedAt"],
+				"sidebar": { "enabled": true, "showMetadata": true }
+			}
+		},
+		{
+			"id": "RequestDetail",
+			"route": "/requests/:id",
+			"type": "detail",
+			"title": "Request",
+			"config": {
+				"register": "pipelinq",
+				"schema": "request",
+				"sidebarTabs": [
+					{ "id": "overview", "label": "Overview", "icon": "icon-info", "widgets": [{ "type": "data" }, { "type": "metadata" }], "order": 10 },
+					{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [{ "type": "audit-trail" }], "order": 90 }
+				]
+			}
+		},
+		{
+			"id": "Complaints",
+			"route": "/complaints",
+			"type": "index",
+			"title": "Complaints",
+			"config": {
+				"register": "pipelinq",
+				"schema": "complaint",
+				"columns": ["title", "status", "priority", "category", "channel", "_dateCreated"],
+				"sidebar": { "enabled": true, "showMetadata": true }
+			}
+		},
+		{
+			"id": "ComplaintDetail",
+			"route": "/complaints/:id",
+			"type": "detail",
+			"title": "Complaint",
+			"config": {
+				"register": "pipelinq",
+				"schema": "complaint",
+				"sidebarTabs": [
+					{ "id": "overview", "label": "Overview", "icon": "icon-info", "widgets": [{ "type": "data" }, { "type": "metadata" }], "order": 10 },
+					{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [{ "type": "audit-trail" }], "order": 90 }
+				]
+			}
+		},
+		{
+			"id": "Contacts",
+			"route": "/contacts",
+			"type": "index",
+			"title": "Contacts",
+			"config": {
+				"register": "pipelinq",
+				"schema": "contact",
+				"columns": ["name", "email", "phone", "role"],
+				"sidebar": { "enabled": true, "showMetadata": true }
+			}
+		},
+		{
+			"id": "ContactDetail",
+			"route": "/contacts/:id",
+			"type": "detail",
+			"title": "Contact",
+			"config": {
+				"register": "pipelinq",
+				"schema": "contact",
+				"sidebarTabs": [
+					{ "id": "overview", "label": "Overview", "icon": "icon-info", "widgets": [{ "type": "data" }, { "type": "metadata" }], "order": 10 },
+					{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [{ "type": "audit-trail" }], "order": 90 }
+				]
+			}
+		},
+		{
+			"id": "Leads",
+			"route": "/leads",
+			"type": "index",
+			"title": "Leads",
+			"config": {
+				"register": "pipelinq",
+				"schema": "lead",
+				"columns": ["title", "stage", "status", "priority", "value", "expectedCloseDate"],
+				"sidebar": { "enabled": true, "showMetadata": true }
+			}
+		},
+		{
+			"id": "LeadDetail",
+			"route": "/leads/:id",
+			"type": "detail",
+			"title": "Lead",
+			"config": {
+				"register": "pipelinq",
+				"schema": "lead",
+				"sidebarTabs": [
+					{ "id": "overview", "label": "Overview", "icon": "icon-info", "widgets": [{ "type": "data" }, { "type": "metadata" }], "order": 10 },
+					{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [{ "type": "audit-trail" }], "order": 90 }
+				]
+			}
+		},
+		{
+			"id": "Contactmomenten",
+			"route": "/contactmomenten",
+			"type": "index",
+			"title": "Contactmomenten",
+			"config": {
+				"register": "pipelinq",
+				"schema": "contactmoment",
+				"columns": ["channel", "subject", "client", "agent", "occurredAt"],
+				"sidebar": { "enabled": true, "showMetadata": true }
+			}
+		},
+		{
+			"id": "ContactmomentNew",
+			"route": "/contactmomenten/new",
+			"type": "custom",
+			"title": "New contactmoment",
+			"component": "ContactmomentForm"
+		},
+		{
+			"id": "ContactmomentDetail",
+			"route": "/contactmomenten/:id",
+			"type": "detail",
+			"title": "Contactmoment",
+			"config": {
+				"register": "pipelinq",
+				"schema": "contactmoment",
+				"sidebarTabs": [
+					{ "id": "overview", "label": "Overview", "icon": "icon-info", "widgets": [{ "type": "data" }, { "type": "metadata" }], "order": 10 },
+					{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [{ "type": "audit-trail" }], "order": 90 }
+				]
+			}
+		},
+		{
+			"id": "Tasks",
+			"route": "/tasks",
+			"type": "index",
+			"title": "Tasks",
+			"config": {
+				"register": "pipelinq",
+				"schema": "task",
+				"columns": ["title", "type", "status", "priority", "assignee", "dueDate"],
+				"sidebar": { "enabled": true, "showMetadata": true }
+			}
+		},
+		{
+			"id": "TaskNew",
+			"route": "/tasks/new",
+			"type": "custom",
+			"title": "New task",
+			"component": "TaskForm"
+		},
+		{
+			"id": "TaskDetail",
+			"route": "/tasks/:id",
+			"type": "detail",
+			"title": "Task",
+			"config": {
+				"register": "pipelinq",
+				"schema": "task",
+				"sidebarTabs": [
+					{ "id": "overview", "label": "Overview", "icon": "icon-info", "widgets": [{ "type": "data" }, { "type": "metadata" }], "order": 10 },
+					{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [{ "type": "audit-trail" }], "order": 90 }
+				]
+			}
+		},
+		{
+			"id": "Products",
+			"route": "/products",
+			"type": "index",
+			"title": "Products",
+			"config": {
+				"register": "pipelinq",
+				"schema": "product",
+				"columns": ["name", "category", "type", "status", "price"],
+				"sidebar": { "enabled": true, "showMetadata": true }
+			}
+		},
+		{
+			"id": "ProductDetail",
+			"route": "/products/:id",
+			"type": "detail",
+			"title": "Product",
+			"config": {
+				"register": "pipelinq",
+				"schema": "product",
+				"sidebarTabs": [
+					{ "id": "overview", "label": "Overview", "icon": "icon-info", "widgets": [{ "type": "data" }, { "type": "metadata" }], "order": 10 },
+					{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [{ "type": "audit-trail" }], "order": 90 }
+				]
+			}
+		},
+		{
+			"id": "Pipeline",
+			"route": "/pipeline",
+			"type": "custom",
+			"title": "Pipeline",
+			"component": "PipelineBoardView"
+		},
+		{
+			"id": "Queues",
+			"route": "/queues",
+			"type": "custom",
+			"title": "Queues",
+			"component": "QueueListView"
+		},
+		{
+			"id": "QueueDetail",
+			"route": "/queues/:id",
+			"type": "custom",
+			"title": "Queue",
+			"component": "QueueDetailView"
+		},
+		{
+			"id": "Kennisbank",
+			"route": "/kennisbank",
+			"type": "custom",
+			"title": "Kennisbank",
+			"component": "KennisbankHomeView"
+		},
+		{
+			"id": "KennisbankNew",
+			"route": "/kennisbank/articles/new",
+			"type": "custom",
+			"title": "New article",
+			"component": "ArticleEditorView"
+		},
+		{
+			"id": "KennisbankDetail",
+			"route": "/kennisbank/articles/:id",
+			"type": "custom",
+			"title": "Article",
+			"component": "ArticleDetailView"
+		},
+		{
+			"id": "KennisbankEdit",
+			"route": "/kennisbank/articles/:id/edit",
+			"type": "custom",
+			"title": "Edit article",
+			"component": "ArticleEditorView"
+		},
+		{
+			"id": "KennisbankCategories",
+			"route": "/kennisbank/categories",
+			"type": "custom",
+			"title": "Categories",
+			"component": "CategoryManagerView"
+		},
+		{
+			"id": "Surveys",
+			"route": "/surveys",
+			"type": "index",
+			"title": "Surveys",
+			"config": {
+				"register": "pipelinq",
+				"schema": "survey",
+				"columns": ["title", "status", "responseCount", "_dateCreated"],
+				"sidebar": { "enabled": true, "showMetadata": true }
+			}
+		},
+		{
+			"id": "SurveyCreate",
+			"route": "/surveys/new",
+			"type": "custom",
+			"title": "New survey",
+			"component": "SurveyFormView"
+		},
+		{
+			"id": "SurveyDetail",
+			"route": "/surveys/:id",
+			"type": "detail",
+			"title": "Survey",
+			"config": {
+				"register": "pipelinq",
+				"schema": "survey",
+				"sidebarTabs": [
+					{ "id": "overview", "label": "Overview", "icon": "icon-info", "widgets": [{ "type": "data" }, { "type": "metadata" }], "order": 10 },
+					{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [{ "type": "audit-trail" }], "order": 90 }
+				]
+			}
+		},
+		{
+			"id": "SurveyEdit",
+			"route": "/surveys/:id/edit",
+			"type": "custom",
+			"title": "Edit survey",
+			"component": "SurveyFormView"
+		},
+		{
+			"id": "SurveyAnalytics",
+			"route": "/surveys/:id/analytics",
+			"type": "custom",
+			"title": "Survey analytics",
+			"component": "SurveyAnalyticsView"
+		},
+		{
+			"id": "PublicSurvey",
+			"route": "/public/survey/:token",
+			"type": "custom",
+			"title": "Survey",
+			"component": "PublicSurveyFormView"
+		},
+		{
+			"id": "MyWork",
+			"route": "/my-work",
+			"type": "custom",
+			"title": "My Work",
+			"component": "MyWorkView"
+		},
+		{
+			"id": "SyncSettings",
+			"route": "/sync-settings",
+			"type": "custom",
+			"title": "Sync settings",
+			"component": "SyncSettingsView"
+		},
+		{
+			"id": "Rapportage",
+			"route": "/rapportage",
+			"type": "custom",
+			"title": "Reporting",
+			"component": "RapportageDashboardView"
+		},
+		{
+			"id": "ChannelAnalytics",
+			"route": "/rapportage/channels",
+			"type": "custom",
+			"title": "Channel analytics",
+			"component": "ChannelAnalyticsView"
+		},
+		{
+			"id": "AgentPerformance",
+			"route": "/rapportage/agents",
+			"type": "custom",
+			"title": "Agent performance",
+			"component": "AgentPerformanceView"
+		},
+		{
+			"id": "Pipelines",
+			"route": "/pipelines",
+			"type": "custom",
+			"title": "Pipelines",
+			"component": "PipelineManagerView"
+		},
+		{
+			"id": "Forms",
+			"route": "/forms",
+			"type": "custom",
+			"title": "Forms",
+			"component": "FormManagerView"
+		},
+		{
+			"id": "FormNew",
+			"route": "/forms/new",
+			"type": "custom",
+			"title": "New form",
+			"component": "FormBuilderView"
+		},
+		{
+			"id": "FormDetail",
+			"route": "/forms/:id",
+			"type": "custom",
+			"title": "Form",
+			"component": "FormBuilderView"
+		},
+		{
+			"id": "FormSubmissions",
+			"route": "/forms/:id/submissions",
+			"type": "custom",
+			"title": "Form submissions",
+			"component": "FormSubmissionsView"
+		},
+		{
+			"id": "Automations",
+			"route": "/automations",
+			"type": "custom",
+			"title": "Automations",
+			"component": "AutomationListView"
+		},
+		{
+			"id": "AutomationNew",
+			"route": "/automations/new",
+			"type": "custom",
+			"title": "New automation",
+			"component": "AutomationBuilderView"
+		},
+		{
+			"id": "AutomationDetail",
+			"route": "/automations/:id",
+			"type": "custom",
+			"title": "Automation",
+			"component": "AutomationBuilderView"
+		},
+		{
+			"id": "AutomationHistory",
+			"route": "/automations/:id/history",
+			"type": "custom",
+			"title": "Automation history",
+			"component": "AutomationHistoryView"
+		}
+	]
+}
