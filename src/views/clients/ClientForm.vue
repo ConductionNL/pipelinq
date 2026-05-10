@@ -73,11 +73,17 @@
 
 		<div class="form-group">
 			<label for="client-notes">{{ t('pipelinq', 'Notes') }}</label>
-			<textarea id="client-notes" v-model="form.notes" rows="3" data-testid="client-notes-input" />
+			<textarea id="client-notes"
+				v-model="form.notes"
+				rows="3"
+				data-testid="client-notes-input" />
 		</div>
 
 		<div class="client-form__actions">
-			<NcButton type="primary" :disabled="!isValid" data-testid="client-form-save" @click="onSave">
+			<NcButton type="primary"
+				:disabled="!isValid"
+				data-testid="client-form-save"
+				@click="onSave">
 				{{ t('pipelinq', 'Save') }}
 			</NcButton>
 			<NcButton data-testid="client-form-cancel" @click="$emit('cancel')">
