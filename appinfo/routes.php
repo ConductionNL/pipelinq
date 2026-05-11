@@ -96,6 +96,9 @@ return [
         ['name' => 'activity_timeline#getWorklog',   'url' => '/api/worklog',  'verb' => 'GET'],
         ['name' => 'activity_timeline#createWorklog','url' => '/api/worklog',  'verb' => 'POST'],
 
+        // Skill-based routing suggestions — must precede SPA catch-all.
+        ['name' => 'routing#getSuggestions', 'url' => '/api/routing/suggestions', 'verb' => 'GET'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
