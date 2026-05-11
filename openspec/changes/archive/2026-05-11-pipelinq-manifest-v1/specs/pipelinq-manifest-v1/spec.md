@@ -43,13 +43,12 @@ MUST be runnable from the repo with `node tests/validate-manifest.js`.
 
 ### Requirement: REQ-PMV1-2 Schema-backed list views MUST be `type: "index"`
 
-The 9 schema-backed list pages — `Clients`, `Contacts`, `Leads`,
-`Requests`, `Tasks`, `Contactmomenten`, `Complaints`, `Products`,
-`Surveys` — MUST declare `type: "index"` in `src/manifest.json`. Each
-entry MUST declare `config.register: "pipelinq"`, `config.schema:
-<slug>`, and `config.columns: string[]`. Each entry MUST NOT include
-a `component` field (renderer dispatches on `type`, not on the
-custom-component registry).
+Schema-backed list pages MUST declare `type: "index"` in `src/manifest.json`. The 9
+covered pages are `Clients`, `Contacts`, `Leads`, `Requests`, `Tasks`,
+`Contactmomenten`, `Complaints`, `Products`, and `Surveys`. Each entry MUST declare
+`config.register: "pipelinq"`, `config.schema: <slug>`, and `config.columns: string[]`.
+Each entry MUST NOT include a `component` field (renderer dispatches on `type`, not on
+the custom-component registry).
 
 #### Scenario: Clients index validates and dispatches
 - GIVEN `src/manifest.json` page entry for `Clients` with `type: "index"`, `config: { register: "pipelinq", schema: "client", columns: [...] }`
@@ -63,13 +62,12 @@ custom-component registry).
 
 ### Requirement: REQ-PMV1-3 Schema-backed detail views MUST be `type: "detail"` with `sidebarTabs`
 
-The 9 schema-backed detail pages — `ClientDetail`, `ContactDetail`,
-`LeadDetail`, `RequestDetail`, `TaskDetail`, `ContactmomentDetail`,
-`ComplaintDetail`, `ProductDetail`, `SurveyDetail` — MUST declare
-`type: "detail"` with `config.register: "pipelinq"` and `config.schema:
-<slug>`. Each entry SHOULD declare `config.sidebarTabs: SidebarTab[]`
-with at minimum an `overview` tab (data + metadata widgets) and an
-`audit` tab (audit-trail widget).
+Schema-backed detail pages MUST declare `type: "detail"` with `config.register:
+"pipelinq"` and `config.schema: <slug>`. The 9 covered pages are `ClientDetail`,
+`ContactDetail`, `LeadDetail`, `RequestDetail`, `TaskDetail`, `ContactmomentDetail`,
+`ComplaintDetail`, `ProductDetail`, and `SurveyDetail`. Each entry SHOULD declare
+`config.sidebarTabs: SidebarTab[]` with at minimum an `overview` tab (data + metadata
+widgets) and an `audit` tab (audit-trail widget).
 
 #### Scenario: ClientDetail dispatches via detail with sidebarTabs
 - GIVEN `pages[]` contains `{ id: "ClientDetail", route: "/clients/:id", type: "detail", title: "Client", config: { register: "pipelinq", schema: "client", sidebarTabs: [...] } }`
