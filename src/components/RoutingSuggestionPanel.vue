@@ -1,8 +1,11 @@
+<!-- SPDX-License-Identifier: EUPL-1.2 -->
 <template>
-	<div class="routing-panel">
+	<div class="routing-panel" role="region" :aria-label="t('pipelinq', 'Suggested agents')">
 		<div class="routing-panel__header">
 			<h4>{{ t('pipelinq', 'Suggested agents') }}</h4>
-			<NcButton v-if="!loading" :aria-label="t('pipelinq', 'Refresh')" @click="loadSuggestions">
+			<NcButton v-if="!loading"
+				:aria-label="t('pipelinq', 'Refresh')"
+				@click="loadSuggestions">
 				<template #icon>
 					<Refresh :size="16" />
 				</template>
@@ -11,6 +14,10 @@
 
 		<NcLoadingIcon v-if="loading" :size="24" />
 
+		<div v-else-if="errorMessage" class="routing-panel__error" role="alert">
+			{{ errorMessage }}
+		</div>
+
 		<div v-else-if="suggestions.length === 0" class="routing-panel__empty">
 			<p>{{ t('pipelinq', 'No agents with matching skills') }}</p>
 		</div>
@@ -18,64 +25,74 @@
 		<div v-else class="routing-panel__list">
 			<div
 				v-for="suggestion in suggestions"
-				:key="suggestion.profile.userId"
+				:key="suggestion.userId"
 				class="agent-suggestion">
 				<div class="agent-suggestion__info">
-					<span class="agent-name">{{ suggestion.profile.userId }}</span>
-					<span class="agent-workload">
-						{{ suggestion.workload }}/{{ suggestion.profile.maxConcurrent || 10 }}
+					<span class="agent-name">{{ suggestion.displayName || suggestion.userId }}</span>
+					<span class="agent-workload" :title="workloadTitle(suggestion)">
+						<span aria-hidden="true">{{ workloadIcon(suggestion) }}</span>
+						{{ suggestion.workload }}/{{ suggestion.maxConcurrent || 10 }}
 						{{ t('pipelinq', 'items') }}
 					</span>
-					<div v-if="suggestion.matchingSkills.length" class="agent-skills">
-						<span
-							v-for="skill in suggestion.matchingSkills"
-							:key="skill.id"
-							class="skill-tag">
-							{{ skill.title }}
-						</span>
+					<div v-if="suggestion.matchedSkill" class="agent-skills">
+						<span class="skill-tag">{{ suggestion.matchedSkill }}</span>
 					</div>
 				</div>
-				<NcButton @click="$emit('assign', suggestion.profile.userId)">
+				<NcButton
+					:aria-label="t('pipelinq', 'Assign to {name}', { name: suggestion.displayName || suggestion.userId })"
+					@click="assign(suggestion)">
 					{{ t('pipelinq', 'Assign') }}
 				</NcButton>
 			</div>
 		</div>
 
 		<div v-if="atCapacityCount > 0" class="routing-panel__note">
-			{{ t('pipelinq', '{count} matching agent(s) at capacity', { count: atCapacityCount }) }}
+			{{ atCapacityCount }} {{ t('pipelinq', 'matching agent(s) at capacity') }}
 		</div>
 	</div>
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcDialog, NcLoadingIcon } from '@nextcloud/vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
-import { useSkillsStore } from '../store/modules/skills.js'
-import { useAgentProfilesStore } from '../store/modules/agentProfiles.js'
-import { findMatchingAgents, sortByWorkload, filterByCapacity } from '../services/queueUtils.js'
 
 export default {
 	name: 'RoutingSuggestionPanel',
 	components: {
 		NcButton,
+		NcDialog,
 		NcLoadingIcon,
 		Refresh,
 	},
 	props: {
+		requestId: {
+			type: String,
+			required: true,
+		},
 		category: {
 			type: String,
-			default: null,
+			default: '',
+		},
+		entityType: {
+			type: String,
+			default: 'request',
 		},
 	},
-	emits: ['assign'],
+	emits: ['assigned'],
 	data() {
 		return {
 			loading: false,
 			suggestions: [],
 			atCapacityCount: 0,
+			errorMessage: '',
 		}
 	},
 	watch: {
+		requestId() {
+			this.loadSuggestions()
+		},
 		category() {
 			this.loadSuggestions()
 		},
@@ -88,44 +105,50 @@ export default {
 			this.loading = true
 			this.suggestions = []
 			this.atCapacityCount = 0
+			this.errorMessage = ''
 
 			try {
-				const skillsStore = useSkillsStore()
-				const profilesStore = useAgentProfilesStore()
-
-				await Promise.all([
-					skillsStore.fetchSkills(),
-					profilesStore.fetchProfiles(),
-				])
-
-				const matchingProfiles = findMatchingAgents(
-					this.category,
-					skillsStore.skills,
-					profilesStore.profiles,
-				)
-
-				// Calculate workload for each matching agent
-				const agentsWithWorkload = await Promise.all(
-					matchingProfiles.map(async (profile) => {
-						const workload = await profilesStore.getWorkload(profile.userId)
-						const matchingSkills = this.getMatchingSkills(profile, skillsStore.skills)
-						return { profile, workload, matchingSkills }
-					}),
-				)
-
-				const { available, atCapacity } = filterByCapacity(agentsWithWorkload)
-				this.suggestions = sortByWorkload(available)
-				this.atCapacityCount = atCapacity
+				const url = generateUrl('/apps/pipelinq/api/routing/suggestions')
+				const response = await axios.get(url, {
+					params: {
+						entityType: this.entityType,
+						entityId: this.requestId,
+					},
+				})
+				const data = response.data || {}
+				this.suggestions = Array.isArray(data.suggestions) ? data.suggestions : []
+				this.atCapacityCount = Number(data.atCapacity || 0)
 			} catch (error) {
 				console.error('Error loading routing suggestions:', error)
+				this.errorMessage = this.t('pipelinq', 'Failed to load suggestions')
 			} finally {
 				this.loading = false
 			}
 		},
 
-		getMatchingSkills(profile, allSkills) {
-			if (!profile.skills) return []
-			return allSkills.filter(s => profile.skills.includes(s.id))
+		async assign(suggestion) {
+			try {
+				this.$emit('assigned', suggestion.userId)
+			} catch (error) {
+				console.error('Error assigning agent:', error)
+				this.errorMessage = this.t('pipelinq', 'Failed to load suggestions')
+			}
+		},
+
+		workloadIcon(suggestion) {
+			// Non-colour indicator for WCAG AA compliance.
+			const max = suggestion.maxConcurrent || 10
+			const ratio = (suggestion.workload || 0) / max
+			if (ratio >= 0.8) return '!!'
+			if (ratio >= 0.5) return '!'
+			return '='
+		},
+
+		workloadTitle(suggestion) {
+			return this.t('pipelinq', '{n} of {max} items', {
+				n: suggestion.workload || 0,
+				max: suggestion.maxConcurrent || 10,
+			})
 		},
 	},
 }
@@ -152,10 +175,15 @@ export default {
 	font-weight: 700;
 }
 
-.routing-panel__empty {
+.routing-panel__empty,
+.routing-panel__error {
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
 	padding: 8px 0;
+}
+
+.routing-panel__error {
+	color: var(--color-error);
 }
 
 .routing-panel__list {

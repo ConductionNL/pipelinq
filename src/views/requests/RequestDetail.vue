@@ -179,8 +179,10 @@
 		<!-- Routing Suggestions -->
 		<CnDetailCard v-if="showRoutingSuggestions" :title="t('pipelinq', 'Routing')">
 			<RoutingSuggestionPanel
+				:request-id="requestData.id"
 				:category="requestData.category"
-				@assign="onRoutingAssign" />
+				entity-type="request"
+				@assigned="onRoutingAssign" />
 		</CnDetailCard>
 
 		<CnDetailCard :title="t('pipelinq', 'Pipeline')">
