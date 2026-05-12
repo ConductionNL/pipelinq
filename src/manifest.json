@@ -409,9 +409,14 @@
 		{
 			"id": "Forms",
 			"route": "/forms",
-			"type": "custom",
+			"type": "index",
 			"title": "Forms",
-			"component": "FormManagerView"
+			"config": {
+				"register": "pipelinq",
+				"schema": "intakeForm",
+				"columns": ["name", "isActive", "submitCount", "targetPipeline"],
+				"sidebar": { "enabled": true, "showMetadata": true }
+			}
 		},
 		{
 			"id": "FormNew",
@@ -437,9 +442,14 @@
 		{
 			"id": "Automations",
 			"route": "/automations",
-			"type": "custom",
+			"type": "index",
 			"title": "Automations",
-			"component": "AutomationListView"
+			"config": {
+				"register": "pipelinq",
+				"schema": "automation",
+				"columns": ["name", "trigger", "isActive", "lastRun", "runCount"],
+				"sidebar": { "enabled": true, "showMetadata": true }
+			}
 		},
 		{
 			"id": "AutomationNew",

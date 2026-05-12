@@ -42,13 +42,13 @@ import CategoryManagerView from './views/kennisbank/CategoryManager.vue'
 import SurveyFormView from './views/surveys/SurveyForm.vue'
 import SurveyAnalyticsView from './views/surveys/SurveyAnalytics.vue'
 
-// --- Forms (lib gap: no `form-builder` page type). ---
-import FormManagerView from './views/forms/FormManager.vue'
+// --- Forms (lib gap: no `form-builder` page type for the visual builder;
+//     the `Forms` list page is now a declarative `type:"index"` on intakeForm). ---
 import FormBuilderView from './views/forms/FormBuilder.vue'
 import FormSubmissionsView from './views/forms/FormSubmissions.vue'
 
-// --- Automations (lib gap: no `automation-graph` page type). ---
-import AutomationListView from './views/automations/AutomationList.vue'
+// --- Automations (lib gap: no `automation-graph` page type for the visual
+//     builder; the `Automations` list page is now a declarative `type:"index"`). ---
 import AutomationBuilderView from './views/automations/AutomationBuilder.vue'
 import AutomationHistoryView from './views/automations/AutomationHistory.vue'
 
@@ -91,13 +91,11 @@ export default {
 	SurveyFormView,
 	SurveyAnalyticsView,
 
-	// Forms
-	FormManagerView,
+	// Forms (list page is declarative type:index; builder/submissions stay custom)
 	FormBuilderView,
 	FormSubmissionsView,
 
-	// Automations
-	AutomationListView,
+	// Automations (list page is declarative type:index; builder/history stay custom)
 	AutomationBuilderView,
 	AutomationHistoryView,
 
