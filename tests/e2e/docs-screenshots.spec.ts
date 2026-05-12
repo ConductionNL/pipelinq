@@ -111,6 +111,55 @@ test.describe('docs: user track', () => {
 		// Setup: trigger a duplicate by attempting to create a clone
 		await shoot(page, 'user', '08-warning.png')
 	})
+
+	test('U9 client-360-view — REPLACE WITH ACTUAL FLOW', async ({ page }) => {
+		// docs/tutorials/user/09-client-360-view.md
+		// Step 1: open the client's detail page (the 360° / klantbeeld view)
+		// await page.locator('[data-testid="client-row"]').first().click()
+		await shoot(page, 'user', '09-klantbeeld.png')
+
+		// Step 3: scan the panels (contacts, pipeline, requests, timeline, callbacks)
+		// await page.locator('[data-testid="client-panels"]').scrollIntoViewIfNeeded()
+		// await shoot(page, 'user', '09-panels.png')
+	})
+
+	test('U10 callbacks — REPLACE WITH ACTUAL FLOW', async ({ page }) => {
+		// docs/tutorials/user/10-callbacks.md
+		// Step 2: on the client detail page, click "+ Schedule callback"
+		// await page.locator('[data-testid="schedule-callback"]').click()
+		await shoot(page, 'user', '10-schedule.png')
+
+		// Step 3: set when / who / note
+		// await shoot(page, 'user', '10-form.png')
+
+		// Step 5: work it off the My Work queue, mark done
+		// await page.goto('/apps/pipelinq/#/my-work')
+		// await shoot(page, 'user', '10-work.png')
+	})
+
+	test('U11 register-complaint — REPLACE WITH ACTUAL FLOW', async ({ page }) => {
+		// docs/tutorials/user/11-register-complaint.md
+		// Step 2: choose "Register complaint" (My Work "+ New request" type=complaint, or "+ Add" menu)
+		// await page.locator('[data-testid="register-complaint"]').click()
+		await shoot(page, 'user', '11-intake.png')
+
+		// Step 3: fill the complaint form
+		// await shoot(page, 'user', '11-form.png')
+
+		// Step 4: submit and route to a handler
+		// await shoot(page, 'user', '11-route.png')
+	})
+
+	test('U12 dashboard — REPLACE WITH ACTUAL FLOW', async ({ page }) => {
+		// docs/tutorials/user/12-dashboard.md
+		// Step 1: open Pipelinq (dashboard is the default landing page)
+		// await page.goto('/apps/pipelinq/#/dashboard')
+		await shoot(page, 'user', '12-dashboard.png')
+
+		// Step 2: read the headline widgets (pipeline, requests, callbacks today, recent activity)
+		// await page.locator('[data-testid="dashboard-widgets"]').scrollIntoViewIfNeeded()
+		// await shoot(page, 'user', '12-widgets.png')
+	})
 })
 
 // ---------------------------------------------------------------------------
@@ -139,5 +188,45 @@ test.describe('docs: admin track', () => {
 		// docs/tutorials/admin/03-permissions.md
 		// TODO: scroll to Permissions / Roles section, role-add modal
 		await shoot(page, 'admin', '03-permissions.png')
+	})
+
+	test('A4 configure-automation — REPLACE WITH ACTUAL FLOW', async ({ page }) => {
+		// docs/tutorials/admin/04-configure-automation.md
+		// Step 1: open Pipelinq admin settings
+		await shoot(page, 'admin', '04-admin-settings.png')
+
+		// Step 3: define handling states per request type
+		// await page.locator('[data-testid="workflow-states"]').scrollIntoViewIfNeeded()
+		// await shoot(page, 'admin', '04-states.png')
+
+		// Step 4: add an automation rule (trigger / condition / action)
+		// await page.locator('[data-testid="add-automation-rule"]').click()
+		// await shoot(page, 'admin', '04-rule.png')
+	})
+
+	test('A5 configure-sync — REPLACE WITH ACTUAL FLOW', async ({ page }) => {
+		// docs/tutorials/admin/05-configure-sync.md
+		// Step 1: open Pipelinq admin settings
+		await shoot(page, 'admin', '05-admin-settings.png')
+
+		// Step 3: choose eligible address books
+		// await page.locator('[data-testid="address-book-picker"]').scrollIntoViewIfNeeded()
+		// await shoot(page, 'admin', '05-address-books.png')
+
+		// Step 4: enable calendar sync for callbacks
+		// await shoot(page, 'admin', '05-calendar.png')
+	})
+
+	test('A6 admin-settings — REPLACE WITH ACTUAL FLOW', async ({ page }) => {
+		// docs/tutorials/admin/06-admin-settings.md
+		// Step 1: open Pipelinq admin settings
+		await shoot(page, 'admin', '06-overview.png')
+
+		// Step 2: check the OpenRegister wiring (register / schema selectors)
+		// await page.locator('[data-testid="register-settings"]').scrollIntoViewIfNeeded()
+		// await shoot(page, 'admin', '06-register.png')
+
+		// Step 3: review the global options
+		// await shoot(page, 'admin', '06-options.png')
 	})
 })
