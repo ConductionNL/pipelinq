@@ -43,8 +43,6 @@ use Psr\Log\LoggerInterface;
  */
 class ActivityTimelineController extends Controller
 {
-
-
     /**
      * Constructor.
      *
@@ -59,7 +57,6 @@ class ActivityTimelineController extends Controller
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
-
 
     /**
      * Return the merged activity timeline for an entity.
@@ -113,7 +110,6 @@ class ActivityTimelineController extends Controller
         }
     }//end getTimeline()
 
-
     /**
      * Return worklog entries (contactmomenten with channel=worklog) for an entity.
      *
@@ -159,7 +155,6 @@ class ActivityTimelineController extends Controller
             );
         }
     }//end getWorklog()
-
 
     /**
      * Create a worklog entry for an entity.

@@ -86,11 +86,16 @@ class RoutingService
     public function getSuggestedAgents(string $entityType, string $entityId): array
     {
         $registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        $schemaKey  = $entityType === 'lead' ? 'lead_schema' : 'request_schema';
-        $schemaId   = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+
+        $schemaKey = 'request_schema';
+        if ($entityType === 'lead') {
+            $schemaKey = 'lead_schema';
+        }
+
+        $schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
 
         if ($registerId === '' || $schemaId === '') {
-            $this->logger->warning('RoutingService: register or schema not configured for ' . $entityType);
+            $this->logger->warning('RoutingService: register or schema not configured for '.$entityType);
             return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
         }
 
@@ -126,13 +131,13 @@ class RoutingService
             return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
         }
 
-        $available    = $this->filterByAvailability(profiles: $candidates);
+        $available = $this->filterByAvailability(profiles: $candidates);
         [$inCapacity, $atCapacityCount] = $this->filterByCapacity(profiles: $available);
 
         $suggestions = [];
         foreach ($inCapacity as $profile) {
-            $userId   = (string) ($profile['userId'] ?? '');
-            $workload = $this->getAgentWorkload(userId: $userId);
+            $userId        = (string) ($profile['userId'] ?? '');
+            $workload      = $this->getAgentWorkload(userId: $userId);
             $suggestions[] = [
                 'userId'        => $userId,
                 'displayName'   => (string) ($profile['displayName'] ?? $userId),
@@ -205,8 +210,8 @@ class RoutingService
                     'RoutingService: failed to count open requests',
                     ['exception' => $e->getMessage(), 'userId' => $userId]
                 );
-            }
-        }
+            }//end try
+        }//end if
 
         // Open leads (status=open).
         if ($leadSchemaId !== '') {
@@ -231,8 +236,8 @@ class RoutingService
                     'RoutingService: failed to count open leads',
                     ['exception' => $e->getMessage(), 'userId' => $userId]
                 );
-            }
-        }
+            }//end try
+        }//end if
 
         return $count;
     }//end getAgentWorkload()
@@ -255,9 +260,9 @@ class RoutingService
             return [];
         }
 
-        $registerId             = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        $skillSchemaId          = $this->appConfig->getValueString(Application::APP_ID, 'skill_schema', '');
-        $agentProfileSchemaId   = $this->appConfig->getValueString(Application::APP_ID, 'agentProfile_schema', '');
+        $registerId           = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $skillSchemaId        = $this->appConfig->getValueString(Application::APP_ID, 'skill_schema', '');
+        $agentProfileSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'agentProfile_schema', '');
 
         if ($registerId === '' || $skillSchemaId === '' || $agentProfileSchemaId === '') {
             return [];
@@ -345,7 +350,7 @@ class RoutingService
             $firstMatchedSkill            = $matchingSkillsById[$intersection[0]];
             $profile['matchedSkill']      = (string) ($firstMatchedSkill['title'] ?? '');
             $profile['matchedCategories'] = $firstMatchedSkill['categories'] ?? [];
-            $matched[]                    = $profile;
+            $matched[] = $profile;
         }
 
         return $matched;
@@ -362,10 +367,12 @@ class RoutingService
      */
     public function filterByAvailability(array $profiles): array
     {
-        return array_values(array_filter(
+        return array_values(
+                array_filter(
             $profiles,
             static fn(array $p): bool => ($p['isAvailable'] ?? true) !== false
-        ));
+        )
+                );
     }//end filterByAvailability()
 
     /**

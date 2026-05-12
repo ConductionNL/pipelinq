@@ -60,7 +60,6 @@ class ActivityTimelineService
      */
     private const PER_SCHEMA_CEILING = 500;
 
-
     /**
      * Constructor.
      *
@@ -76,7 +75,6 @@ class ActivityTimelineService
         private LoggerInterface $logger,
     ) {
     }//end __construct()
-
 
     /**
      * Get the OpenRegister ObjectService.
@@ -94,7 +92,6 @@ class ActivityTimelineService
         }
     }//end getObjectService()
 
-
     /**
      * Read the configured register and schema IDs.
      *
@@ -103,21 +100,20 @@ class ActivityTimelineService
     private function getConfig(): array
     {
         return [
-            'register'           => $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
-            'contactmoment'      => $this->appConfig->getValueString(Application::APP_ID, 'contactmoment_schema', ''),
-            'task'               => $this->appConfig->getValueString(Application::APP_ID, 'task_schema', ''),
-            'emailLink'          => $this->appConfig->getValueString(Application::APP_ID, 'emailLink_schema', ''),
-            'calendarLink'       => $this->appConfig->getValueString(Application::APP_ID, 'calendarLink_schema', ''),
+            'register'      => $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
+            'contactmoment' => $this->appConfig->getValueString(Application::APP_ID, 'contactmoment_schema', ''),
+            'task'          => $this->appConfig->getValueString(Application::APP_ID, 'task_schema', ''),
+            'emailLink'     => $this->appConfig->getValueString(Application::APP_ID, 'emailLink_schema', ''),
+            'calendarLink'  => $this->appConfig->getValueString(Application::APP_ID, 'calendarLink_schema', ''),
         ];
     }//end getConfig()
-
 
     /**
      * Build the merged, sorted, paginated activity timeline for an entity.
      *
-     * @param string               $entityType The entity type (client|request|lead|contact).
-     * @param string               $entityId   The entity UUID.
-     * @param array<string,mixed>  $params     Request parameters: from, to, types[], _page, _limit.
+     * @param string              $entityType The entity type (client|request|lead|contact).
+     * @param string              $entityId   The entity UUID.
+     * @param array<string,mixed> $params     Request parameters: from, to, types[], _page, _limit.
      *
      * @return array{items: array<int,array<string,mixed>>, total: int, page: int, pages: int}
      */
@@ -133,24 +129,32 @@ class ActivityTimelineService
             $limit = self::MAX_LIMIT;
         }
 
-        $typesFilter = $this->normaliseTypes($params['types'] ?? null);
-        $from        = isset($params['from']) && $params['from'] !== '' ? (string) $params['from'] : null;
-        $to          = isset($params['to']) && $params['to'] !== '' ? (string) $params['to'] : null;
+        $typesFilter = $this->normaliseTypes(rawTypes: ($params['types'] ?? null));
 
-        $perSchemaFilters = $this->resolveEntityQueryParams($entityType, $entityId);
+        $from = null;
+        if (isset($params['from']) === true && $params['from'] !== '') {
+            $from = (string) $params['from'];
+        }
+
+        $to = null;
+        if (isset($params['to']) === true && $params['to'] !== '') {
+            $to = (string) $params['to'];
+        }
+
+        $perSchemaFilters = $this->resolveEntityQueryParams(entityType: $entityType, entityId: $entityId);
         $config           = $this->getConfig();
         $registerId       = $config['register'];
 
         // If no register is configured, return an empty timeline (do not raise).
         if ($registerId === '') {
-            return $this->emptyResult($page);
+            return $this->emptyResult(page: $page);
         }
 
         $merged = [];
 
         foreach ($perSchemaFilters as $sourceType => $sourceFilter) {
             // Skip filtered-out types (only if the user explicitly limited types).
-            if ($typesFilter !== null && in_array($this->sourceToActivityType($sourceType), $typesFilter, true) === false) {
+            if ($typesFilter !== null && in_array($this->sourceToActivityType(sourceType: $sourceType), $typesFilter, true) === false) {
                 continue;
             }
 
@@ -166,7 +170,12 @@ class ActivityTimelineService
             );
 
             foreach ($objects as $object) {
-                $normalized = $this->normalizeActivity($sourceType, $object, $entityType, $entityId);
+                $normalized = $this->normalizeActivity(
+                    sourceType: $sourceType,
+                    object: $object,
+                    entityType: $entityType,
+                    entityId: $entityId
+                );
                 if ($normalized === null) {
                     continue;
                 }
@@ -190,7 +199,12 @@ class ActivityTimelineService
         );
 
         $total = count($merged);
-        $pages = $total === 0 ? 1 : (int) ceil($total / $limit);
+
+        $pages = 1;
+        if ($total !== 0) {
+            $pages = (int) ceil($total / $limit);
+        }
+
         $start = (($page - 1) * $limit);
         $page  = min($page, $pages);
 
@@ -207,7 +221,6 @@ class ActivityTimelineService
             'pages' => $pages,
         ];
     }//end getTimeline()
-
 
     /**
      * Map an internal source-type (matching schema config key) onto the public activity type label.
@@ -226,7 +239,6 @@ class ActivityTimelineService
             default         => $sourceType,
         };
     }//end sourceToActivityType()
-
 
     /**
      * Normalise the user-supplied types parameter into a list of accepted activity types,
@@ -262,13 +274,12 @@ class ActivityTimelineService
         return array_values(array_unique($result));
     }//end normaliseTypes()
 
-
     /**
      * Query a single OpenRegister schema using a set of equality filters.
      *
-     * @param string               $registerId The register ID.
-     * @param string               $schemaId   The schema ID.
-     * @param array<string,mixed>  $filters    Field equality filters.
+     * @param string              $registerId The register ID.
+     * @param string              $schemaId   The schema ID.
+     * @param array<string,mixed> $filters    Field equality filters.
      *
      * @return array<int,array<string,mixed>> The raw object arrays.
      */
@@ -290,7 +301,7 @@ class ActivityTimelineService
 
             $results = $objectService->findAll($params, _rbac: false, _multitenancy: false);
 
-            return $this->normaliseResultset($results);
+            return $this->normaliseResultset(results: $results);
         } catch (\Throwable $e) {
             $this->logger->error(
                 'ActivityTimelineService: failed to query schema',
@@ -300,9 +311,8 @@ class ActivityTimelineService
                 ]
             );
             return [];
-        }
+        }//end try
     }//end querySchema()
-
 
     /**
      * Normalise an OpenRegister findAll result into an array of plain arrays.
@@ -340,11 +350,10 @@ class ActivityTimelineService
             if (is_object($item) === true) {
                 $output[] = (array) $item;
             }
-        }
+        }//end foreach
 
         return $output;
     }//end normaliseResultset()
-
 
     /**
      * Apply optional date range filtering to a normalised item.
@@ -380,8 +389,12 @@ class ActivityTimelineService
 
         if ($to !== null) {
             // To-date is inclusive: treat as end-of-day if it's a bare date.
-            $toString = strlen($to) === 10 ? ($to.'T23:59:59') : $to;
-            $toTs     = strtotime($toString);
+            $toString = $to;
+            if (strlen($to) === 10) {
+                $toString = $to.'T23:59:59';
+            }
+
+            $toTs = strtotime($toString);
             if ($toTs !== false && $itemTs > $toTs) {
                 return false;
             }
@@ -389,7 +402,6 @@ class ActivityTimelineService
 
         return true;
     }//end withinDateRange()
-
 
     /**
      * Build per-schema filter arrays for an entity-type/id pair.
@@ -423,17 +435,16 @@ class ActivityTimelineService
                 'calendarLink' => ['linkedEntityType' => 'contact', 'linkedEntityId' => $entityId],
             ],
             default => [],
-        };
+        };//end match
     }//end resolveEntityQueryParams()
-
 
     /**
      * Normalise a raw object array into the unified activity item shape.
      *
-     * @param string               $sourceType The internal source-type key (contactmoment|task|emailLink|calendarLink).
-     * @param array<string,mixed>  $object     The raw object array from OpenRegister.
-     * @param string               $entityType The originating entityType for back-reference.
-     * @param string               $entityId   The originating entityId for back-reference.
+     * @param string              $sourceType The internal source-type key (contactmoment|task|emailLink|calendarLink).
+     * @param array<string,mixed> $object     The raw object array from OpenRegister.
+     * @param string              $entityType The originating entityType for back-reference.
+     * @param string              $entityId   The originating entityId for back-reference.
      *
      * @return array<string,mixed>|null The normalised item, or null if it should be skipped.
      */
@@ -444,20 +455,23 @@ class ActivityTimelineService
         switch ($sourceType) {
             case 'contactmoment':
                 $channel = (string) ($object['channel'] ?? '');
-                $type    = $channel === 'worklog' ? 'worklog' : 'contactmoment';
+                $type    = 'contactmoment';
+                if ($channel === 'worklog') {
+                    $type = 'worklog';
+                }
                 return [
                     'type'        => $type,
                     'id'          => $id,
                     'title'       => (string) ($object['subject'] ?? $object['summary'] ?? ''),
                     'description' => (string) ($object['summary'] ?? ''),
-                    'date'        => $this->stringOrNull($object['contactedAt'] ?? null),
-                    'user'        => $this->stringOrNull($object['agent'] ?? null),
+                    'date'        => $this->stringOrNull(value: ($object['contactedAt'] ?? null)),
+                    'user'        => $this->stringOrNull(value: ($object['agent'] ?? null)),
                     'entityType'  => $entityType,
                     'entityId'    => $entityId,
                     'metadata'    => [
                         'channel'  => $channel,
-                        'duration' => $this->stringOrNull($object['duration'] ?? null),
-                        'outcome'  => $this->stringOrNull($object['outcome'] ?? null),
+                        'duration' => $this->stringOrNull(value: ($object['duration'] ?? null)),
+                        'outcome'  => $this->stringOrNull(value: ($object['outcome'] ?? null)),
                     ],
                 ];
 
@@ -467,13 +481,13 @@ class ActivityTimelineService
                     'id'          => $id,
                     'title'       => (string) ($object['subject'] ?? $object['title'] ?? ''),
                     'description' => (string) ($object['description'] ?? ''),
-                    'date'        => $this->stringOrNull($object['deadline'] ?? $object['createdAt'] ?? null),
-                    'user'        => $this->stringOrNull($object['assigneeUserId'] ?? null),
+                    'date'        => $this->stringOrNull(value: ($object['deadline'] ?? $object['createdAt'] ?? null)),
+                    'user'        => $this->stringOrNull(value: ($object['assigneeUserId'] ?? null)),
                     'entityType'  => $entityType,
                     'entityId'    => $entityId,
                     'metadata'    => [
-                        'status'   => $this->stringOrNull($object['status'] ?? null),
-                        'priority' => $this->stringOrNull($object['priority'] ?? null),
+                        'status'   => $this->stringOrNull(value: ($object['status'] ?? null)),
+                        'priority' => $this->stringOrNull(value: ($object['priority'] ?? null)),
                     ],
                 ];
 
@@ -483,13 +497,13 @@ class ActivityTimelineService
                     'id'          => $id,
                     'title'       => (string) ($object['subject'] ?? ''),
                     'description' => (string) ($object['sender'] ?? ''),
-                    'date'        => $this->stringOrNull($object['date'] ?? null),
+                    'date'        => $this->stringOrNull(value: ($object['date'] ?? null)),
                     'user'        => null,
                     'entityType'  => $entityType,
                     'entityId'    => $entityId,
                     'metadata'    => [
-                        'direction' => $this->stringOrNull($object['direction'] ?? null),
-                        'messageId' => $this->stringOrNull($object['messageId'] ?? null),
+                        'direction' => $this->stringOrNull(value: ($object['direction'] ?? null)),
+                        'messageId' => $this->stringOrNull(value: ($object['messageId'] ?? null)),
                     ],
                 ];
 
@@ -499,13 +513,13 @@ class ActivityTimelineService
                     'id'          => $id,
                     'title'       => (string) ($object['title'] ?? $object['subject'] ?? ''),
                     'description' => (string) ($object['notes'] ?? $object['description'] ?? ''),
-                    'date'        => $this->stringOrNull($object['startDate'] ?? null),
+                    'date'        => $this->stringOrNull(value: ($object['startDate'] ?? null)),
                     'user'        => null,
                     'entityType'  => $entityType,
                     'entityId'    => $entityId,
                     'metadata'    => [
-                        'endDate'  => $this->stringOrNull($object['endDate'] ?? null),
-                        'location' => $this->stringOrNull($object['location'] ?? null),
+                        'endDate'  => $this->stringOrNull(value: ($object['endDate'] ?? null)),
+                        'location' => $this->stringOrNull(value: ($object['location'] ?? null)),
                     ],
                 ];
 
@@ -514,16 +528,15 @@ class ActivityTimelineService
         }//end switch
     }//end normalizeActivity()
 
-
     /**
      * Create a worklog entry as a contactmoment with channel='worklog'.
      *
      * The acting agent is derived from the current IUserSession and MUST NOT be
      * supplied via request payload.
      *
-     * @param string               $entityType The entity type (client|request).
-     * @param string               $entityId   The entity UUID.
-     * @param array<string,mixed>  $data       The worklog data (duration, description, date).
+     * @param string              $entityType The entity type (client|request).
+     * @param string              $entityId   The entity UUID.
+     * @param array<string,mixed> $data       The worklog data (duration, description, date).
      *
      * @return array<string,mixed> The normalised created worklog item.
      *
@@ -536,11 +549,16 @@ class ActivityTimelineService
             throw new \RuntimeException('Contactmoment register or schema not configured.');
         }
 
-        $user      = $this->userSession->getUser();
-        $agentUid  = $user === null ? '' : (string) $user->getUID();
-        $duration  = $this->stringOrNull($data['duration'] ?? null);
-        $summary   = $this->stringOrNull($data['description'] ?? null);
-        $date      = $this->stringOrNull($data['date'] ?? null) ?? (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM);
+        $user = $this->userSession->getUser();
+
+        $agentUid = '';
+        if ($user !== null) {
+            $agentUid = (string) $user->getUID();
+        }
+
+        $duration = $this->stringOrNull(value: ($data['duration'] ?? null));
+        $summary  = $this->stringOrNull(value: ($data['description'] ?? null));
+        $date     = $this->stringOrNull(value: ($data['date'] ?? null)) ?? (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM);
 
         $payload = [
             'channel'     => 'worklog',
@@ -552,7 +570,7 @@ class ActivityTimelineService
 
         if ($entityType === 'client') {
             $payload['client'] = $entityId;
-        } elseif ($entityType === 'request') {
+        } else if ($entityType === 'request') {
             $payload['request'] = $entityId;
         }
 
@@ -568,20 +586,24 @@ class ActivityTimelineService
             _multitenancy: false
         );
 
-        $savedArray = $this->extractObjectArray($saved);
-        $normalized = $this->normalizeActivity('contactmoment', $savedArray, $entityType, $entityId);
+        $savedArray = $this->extractObjectArray(saved: $saved);
+        $normalized = $this->normalizeActivity(
+            sourceType: 'contactmoment',
+            object: $savedArray,
+            entityType: $entityType,
+            entityId: $entityId
+        );
 
         return $normalized ?? [];
     }//end createWorklog()
-
 
     /**
      * Return paginated worklog entries (contactmomenten where channel='worklog')
      * for an entity, including a summed `totalDuration` field.
      *
-     * @param string               $entityType The entity type (client|request).
-     * @param string               $entityId   The entity UUID.
-     * @param array<string,mixed>  $params     Request parameters: _page, _limit.
+     * @param string              $entityType The entity type (client|request).
+     * @param string              $entityId   The entity UUID.
+     * @param array<string,mixed> $params     Request parameters: _page, _limit.
      *
      * @return array{items: array<int,array<string,mixed>>, total: int, page: int, pages: int, totalDuration: string}
      */
@@ -611,7 +633,7 @@ class ActivityTimelineService
         $filters = ['channel' => 'worklog'];
         if ($entityType === 'client') {
             $filters['client'] = $entityId;
-        } elseif ($entityType === 'request') {
+        } else if ($entityType === 'request') {
             $filters['request'] = $entityId;
         }
 
@@ -621,17 +643,22 @@ class ActivityTimelineService
             filters: $filters
         );
 
-        $items = [];
+        $items        = [];
         $totalSeconds = 0;
         foreach ($rawObjects as $object) {
-            $normalised = $this->normalizeActivity('contactmoment', $object, $entityType, $entityId);
+            $normalised = $this->normalizeActivity(
+                sourceType: 'contactmoment',
+                object: $object,
+                entityType: $entityType,
+                entityId: $entityId
+            );
             if ($normalised === null) {
                 continue;
             }
 
             $items[]       = $normalised;
             $duration      = (string) ($normalised['metadata']['duration'] ?? '');
-            $totalSeconds += $this->isoDurationToSeconds($duration);
+            $totalSeconds += $this->isoDurationToSeconds(duration: $duration);
         }
 
         usort(
@@ -642,7 +669,12 @@ class ActivityTimelineService
         );
 
         $total = count($items);
-        $pages = $total === 0 ? 1 : (int) ceil($total / $limit);
+
+        $pages = 1;
+        if ($total !== 0) {
+            $pages = (int) ceil($total / $limit);
+        }
+
         $page  = min($page, $pages);
         $start = (($page - 1) * $limit);
         if ($start < 0) {
@@ -654,10 +686,9 @@ class ActivityTimelineService
             'total'         => $total,
             'page'          => $page,
             'pages'         => $pages,
-            'totalDuration' => $this->secondsToIsoDuration($totalSeconds),
+            'totalDuration' => $this->secondsToIsoDuration(seconds: $totalSeconds),
         ];
     }//end getWorklog()
-
 
     /**
      * Extract a plain array from an OpenRegister saveObject return value.
@@ -690,7 +721,6 @@ class ActivityTimelineService
         return [];
     }//end extractObjectArray()
 
-
     /**
      * Parse an ISO 8601 duration string to seconds.
      *
@@ -713,12 +743,11 @@ class ActivityTimelineService
             return 0;
         }
 
-        $seconds = (((($interval->y * 365) + ($interval->m * 30) + $interval->d) * 24) + $interval->h) * 3600;
+        $seconds  = (((($interval->y * 365) + ($interval->m * 30) + $interval->d) * 24) + $interval->h) * 3600;
         $seconds += ($interval->i * 60);
         $seconds += $interval->s;
         return $seconds;
     }//end isoDurationToSeconds()
-
 
     /**
      * Format a total number of seconds as a compact ISO 8601 duration.
@@ -753,7 +782,6 @@ class ActivityTimelineService
         return $output;
     }//end secondsToIsoDuration()
 
-
     /**
      * Coerce a value to a string, or return null when empty/null.
      *
@@ -767,14 +795,17 @@ class ActivityTimelineService
             return null;
         }
 
-        $stringValue = is_scalar($value) ? (string) $value : '';
+        $stringValue = '';
+        if (is_scalar($value) === true) {
+            $stringValue = (string) $value;
+        }
+
         if ($stringValue === '') {
             return null;
         }
 
         return $stringValue;
     }//end stringOrNull()
-
 
     /**
      * Build an empty timeline result.
