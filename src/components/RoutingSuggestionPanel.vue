@@ -55,14 +55,13 @@
 <script>
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcDialog, NcLoadingIcon } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 
 export default {
 	name: 'RoutingSuggestionPanel',
 	components: {
 		NcButton,
-		NcDialog,
 		NcLoadingIcon,
 		Refresh,
 	},
