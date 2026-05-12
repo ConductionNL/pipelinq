@@ -359,9 +359,18 @@
 		{
 			"id": "PublicSurvey",
 			"route": "/public/survey/:token",
-			"type": "custom",
+			"type": "form",
 			"title": "Survey",
-			"component": "PublicSurveyFormView"
+			"config": {
+				"fields": [
+					{ "key": "rating", "label": "Overall rating (1-10)", "type": "number" },
+					{ "key": "comment", "label": "Comments", "type": "string", "widget": "textarea", "help": "Tell us what worked and what didn't" }
+				],
+				"submitHandler": "submitPublicSurvey",
+				"mode": "public",
+				"submitLabel": "Submit",
+				"successMessage": "Thanks for your feedback!"
+			}
 		},
 		{
 			"id": "MyWork",
