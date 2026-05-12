@@ -21,7 +21,8 @@
 		{ "id": "Documentation", "label": "Documentation", "icon": "icon-info", "href": "https://conduction.gitbook.io/pipelinq-nextcloud", "order": 160 },
 		{ "id": "Pipelines", "label": "Pipelines", "icon": "icon-category-organization", "route": "Pipelines", "section": "settings", "order": 200 },
 		{ "id": "Forms", "label": "Forms", "icon": "icon-file", "route": "Forms", "section": "settings", "order": 210 },
-		{ "id": "Automations", "label": "Automations", "icon": "icon-play", "route": "Automations", "section": "settings", "order": 220 }
+		{ "id": "Automations", "label": "Automations", "icon": "icon-play", "route": "Automations", "section": "settings", "order": 220 },
+		{ "id": "FeaturesRoadmapMenu", "label": "Features & roadmap", "icon": "icon-toggle", "route": "FeaturesRoadmap", "section": "settings", "order": 230 }
 	],
 	"pages": [
 		{
@@ -460,6 +461,13 @@
 			"type": "custom",
 			"title": "Automation history",
 			"component": "AutomationHistoryView"
+		},
+		{
+			"id": "FeaturesRoadmap",
+			"route": "/features-roadmap",
+			"type": "custom",
+			"title": "Features & roadmap",
+			"component": "FeaturesRoadmap"
 		}
 	]
 }
