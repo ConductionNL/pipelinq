@@ -179,8 +179,10 @@
 		<!-- Routing Suggestions -->
 		<CnDetailCard v-if="showRoutingSuggestions" :title="t('pipelinq', 'Routing')">
 			<RoutingSuggestionPanel
+				:request-id="requestData.id"
 				:category="requestData.category"
-				@assign="onRoutingAssign" />
+				entity-type="request"
+				@assigned="onRoutingAssign" />
 		</CnDetailCard>
 
 		<CnDetailCard :title="t('pipelinq', 'Pipeline')">
@@ -248,6 +250,11 @@
 			</div>
 		</CnDetailCard>
 
+		<!-- Activity timeline -->
+		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Activity')">
+			<ActivityTimeline :entity-type="'request'" :entity-id="requestId" />
+		</CnDetailCard>
+
 		<!-- Contactmoment quick-log dialog -->
 		<NcDialog
 			v-if="showContactmomentQuickLog"
@@ -287,6 +294,7 @@ import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import RequestForm from './RequestForm.vue'
 import RoutingSuggestionPanel from '../../components/RoutingSuggestionPanel.vue'
 import ContactmomentQuickLog from '../../components/ContactmomentQuickLog.vue'
+import ActivityTimeline from '../../components/ActivityTimeline.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useQueuesStore } from '../../store/modules/queues.js'
 import {
@@ -308,6 +316,7 @@ export default {
 		RequestForm,
 		RoutingSuggestionPanel,
 		ContactmomentQuickLog,
+		ActivityTimeline,
 	},
 	props: {
 		requestId: {

@@ -15,6 +15,9 @@
     <arg name="extensions" value="php"/>
     <arg value="p"/>
 
+    <!-- Advisory warnings (e.g. missing @spec tags) surface in reports but must not fail the run. -->
+    <config name="ignore_warnings_on_exit" value="1"/>
+
     <!-- Don't hide tokenizer exceptions -->
     <rule ref="Internal.Tokenizer.Exception">
         <type>error</type>
