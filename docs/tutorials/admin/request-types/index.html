@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.9.2">
 <title data-rh="true">Configure request types | Pipelinq</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://pipelinq.conduction.nl/docs/tutorials/admin/request-types/"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Configure request types | Pipelinq"><meta data-rh="true" name="description" content="Define the request categories your team triages from My Work — info, quote, support, complaint, etc."><meta data-rh="true" property="og:description" content="Define the request categories your team triages from My Work — info, quote, support, complaint, etc."><link data-rh="true" rel="icon" href="/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://pipelinq.conduction.nl/docs/tutorials/admin/request-types/"><link data-rh="true" rel="alternate" href="https://pipelinq.conduction.nl/docs/tutorials/admin/request-types/" hreflang="en"><link data-rh="true" rel="alternate" href="https://pipelinq.conduction.nl/docs/tutorials/admin/request-types/" hreflang="x-default"><link data-rh="true" rel="stylesheet" href="/lib/canal-footer.css"><link data-rh="true" rel="stylesheet" href="/lib/kade-cyclist.css"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Tutorials","item":"https://pipelinq.conduction.nl/docs/category/tutorials"},{"@type":"ListItem","position":2,"name":"Admin guide","item":"https://pipelinq.conduction.nl/docs/category/admin-guide"},{"@type":"ListItem","position":3,"name":"Configure request types","item":"https://pipelinq.conduction.nl/docs/tutorials/admin/request-types"}]}</script><link rel="stylesheet" href="/assets/css/styles.f618d03c.css">
-<script src="/assets/js/runtime~main.7540b311.js" defer="defer"></script>
-<script src="/assets/js/main.93703e37.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.b98a154a.js" defer="defer"></script>
+<script src="/assets/js/main.d278f533.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg style="display: none;"><defs>
@@ -23,9 +23,9 @@
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-open-pipelinq-admin-settings">1. Open Pipelinq admin settings<a href="#1-open-pipelinq-admin-settings" class="hash-link" aria-label="Direct link to 1. Open Pipelinq admin settings" title="Direct link to 1. Open Pipelinq admin settings" translate="no">​</a></h3>
 <p>Settings menu → <strong>Administration settings</strong> → <strong>Pipelinq</strong>.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="2-go-to-request-types">2. Go to <strong>Request types</strong><a href="#2-go-to-request-types" class="hash-link" aria-label="Direct link to 2-go-to-request-types" title="Direct link to 2-go-to-request-types" translate="no">​</a></h3>
-<p><img decoding="async" loading="lazy" src="/screenshots/tutorials/admin/02-request-types.png" alt="Request types section" class="img_ev3q"></p>
+<p><img decoding="async" loading="lazy" alt="Request types section" src="/assets/images/02-request-types-6088b144e0060d122082c97030a787bc.png" width="1280" height="800" class="img_ev3q"></p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="3-add-a-new-type">3. Add a new type<a href="#3-add-a-new-type" class="hash-link" aria-label="Direct link to 3. Add a new type" title="Direct link to 3. Add a new type" translate="no">​</a></h3>
-<p><code>{{TODO: form fields — label, internal ID, default initial-stage / queue, default assignee}}</code></p>
+<p>Click <strong>+ Add Item</strong> in the <em>Request types</em> section. The dialog asks for <strong>Label</strong> (visible name, e.g. <em>Support call</em>), <strong>Internal ID</strong> (the slug used in filters and rule conditions — auto-derived from the label, editable), <strong>Default queue</strong> (the Pipelinq queue new requests of this type land in), and <strong>Default assignee</strong> (a Nextcloud user or <em>Auto-assign by queue rules</em>).</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="4-set-the-conversion-behaviour">4. Set the conversion behaviour<a href="#4-set-the-conversion-behaviour" class="hash-link" aria-label="Direct link to 4. Set the conversion behaviour" title="Direct link to 4. Set the conversion behaviour" translate="no">​</a></h3>
 <p>For each type, decide:</p>
 <ul>
@@ -33,7 +33,7 @@
 <li class="">What pipeline + stage does it default to?</li>
 </ul>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="5-save">5. Save<a href="#5-save" class="hash-link" aria-label="Direct link to 5. Save" title="Direct link to 5. Save" translate="no">​</a></h3>
-<p><code>{{TODO: where users see the change — the request-create form&#x27;s type picker}}</code></p>
+<p>Click <strong>Save</strong> on the dialog. The new type is immediately available in the <em>Type</em> dropdown of the request-create form (Requests → <strong>+ Add Item</strong>, or the dashboard&#x27;s <strong>New Request</strong> button) and appears as a filter chip on the My Work queue and the Requests list.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="verification">Verification<a href="#verification" class="hash-link" aria-label="Direct link to Verification" title="Direct link to Verification" translate="no">​</a></h2>
 <ul>
 <li class="">Open the request-create form as a regular user — your new type appears in the picker.</li>
