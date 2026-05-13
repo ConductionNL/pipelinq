@@ -5,9 +5,9 @@
  *
  * Built on @conduction/docusaurus-preset for brand defaults (tokens,
  * theme swizzles for Navbar / Footer, four-locale i18n scaffolding,
- * KvK / BTW copyright). Site-specific overrides — locale (en only),
+ * KvK / BTW copyright). Site-specific overrides (locale, en only),
  * sidebar path, mermaid theme, custom prism themes, pipelinq-only
- * navbar items — are passed through createConfig() opts.
+ * navbar items are passed through createConfig() opts.
  */
 
 const { createConfig, baseFooterLinks } = require('@conduction/docusaurus-preset');
@@ -27,25 +27,24 @@ const config = createConfig({
   organizationName: 'ConductionNL',
   projectName: 'pipelinq',
 
-  /* English-only for now. Dutch was dropped on the previous config
-     because i18n/nl/ carries stale translation strings without
-     translated markdown and broke Dutch SSR (see ADR-030). Re-enable
-     by adding 'nl' back once the Dutch translation pass has been
-     completed or the metadata audited for stale references. The
-     brand preset's default i18n block (nl/en/de/fr) is replaced
-     wholesale here. */
+  /* English + Dutch. The stale i18n/nl/ metadata files that previously
+     broke Dutch SSR (ADR-030) have been removed. The brand preset's
+     default i18n block (nl/en/de/fr) is replaced wholesale here.
+     If Dutch SSR fails at build time, revert locales to ['en'] and
+     file a follow-up issue referencing #354. */
   i18n: {
     defaultLocale: 'en',
-    locales: ['en'],
+    locales: ['en', 'nl'],
     localeConfigs: {
       en: { label: 'English' },
+      nl: { label: 'Nederlands' },
     },
   },
 
   /* The pipelinq docs source lives at the repo root of `docs/` rather
      than under a `docs/` subfolder, so we override the preset's default
      `presets:` block to point `docs.path` at './' and disable the blog
-     plugin. customCss carries pipelinq-specific CSS only — brand tokens
+     plugin. customCss carries pipelinq-specific CSS only; brand tokens
      and the theme swizzles are auto-loaded by the brand theme entry in
      `themes:` below. */
   presets: [
@@ -72,6 +71,20 @@ const config = createConfig({
         },
       },
     ],
+    /* Redocusaurus preset renders the OpenAPI spec at /api.
+       The placeholder shim at static/oas/pipelinq.json will be
+       replaced with the real spec when the API is documented. */
+    [
+      'redocusaurus',
+      {
+        specs: [
+          {
+            spec: 'static/oas/pipelinq.json',
+            route: '/api',
+          },
+        ],
+      },
+    ],
   ],
 
   themes: [BRAND_THEME, '@docusaurus/theme-mermaid'],
@@ -79,7 +92,7 @@ const config = createConfig({
   /* Brand navbar provides locale dropdown + GitHub by default; we
      replace items[] with pipelinq's own (Documentation sidebar link,
      pipelinq GitHub link). Object.assign in createConfig is shallow,
-     so items: replaces wholesale — re-include the locale dropdown
+     so items: replaces wholesale; re-include the locale dropdown
      and add the pipelinq GitHub repo link explicitly. */
   navbar: {
     items: [
@@ -88,6 +101,11 @@ const config = createConfig({
         sidebarId: 'tutorialSidebar',
         position: 'left',
         label: 'Documentation',
+      },
+      {
+        to: '/api',
+        label: 'API Documentation',
+        position: 'left',
       },
       {
         href: 'https://github.com/ConductionNL/pipelinq',
@@ -129,7 +147,7 @@ const config = createConfig({
 /* createConfig doesn't pass-through arbitrary top-level fields; assign
    markdown + onBrokenAnchors directly so they make it into the final
    Docusaurus config. trailingSlash is left at the preset's default
-   (true) so /docs/intro/ resolves cleanly under GH Pages — the prior
+   (true) so /docs/intro/ resolves cleanly under GH Pages; the prior
    `false` override 404'd /-suffix URLs that visitors typed by hand. */
 config.onBrokenAnchors = 'warn';
 config.markdown = {
@@ -138,7 +156,7 @@ config.markdown = {
      `tests/e2e/docs-screenshots.spec.ts`. The Playwright capture run
      is separate from the docs build, so the build needs to succeed
      even when a fresh checkout doesn't have every PNG yet. Warn
-     instead of failing — the absence is visible at preview time and
+     instead of failing; the absence is visible at preview time and
      the capture spec brings everything back on demand. */
   hooks: {
     onBrokenMarkdownImages: 'warn',
