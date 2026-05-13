@@ -281,8 +281,7 @@ export default function Home() {
         <DetailHero
           background="cobalt"
           appId="pipelinq"
-          status={{ label: 'Beta', color: 'var(--c-orange-knvb)' }}
-          version="v0.7"
+          {/* status + version dropped — preset 2.10+ auto-derives from appinfo/info.xml */}
           locales="NL · EN"
           title="Pipelinq"
           tagline={TAGLINE}
