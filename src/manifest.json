@@ -415,6 +415,9 @@
 				"register": "pipelinq",
 				"schema": "intakeForm",
 				"columns": ["name", "isActive", "submitCount", "targetPipeline"],
+				"actions": [
+					{ "id": "submissions", "label": "View submissions", "icon": "format-list-bulleted", "handler": "navigate", "route": "FormSubmissions" }
+				],
 				"sidebar": { "enabled": true, "showMetadata": true }
 			}
 		},
@@ -435,9 +438,20 @@
 		{
 			"id": "FormSubmissions",
 			"route": "/forms/:id/submissions",
-			"type": "custom",
+			"type": "index",
 			"title": "Form submissions",
-			"component": "FormSubmissionsView"
+			"config": {
+				"register": "pipelinq",
+				"schema": "intakeSubmission",
+				"filter": { "form": "@route.id" },
+				"sortKey": "submittedAt",
+				"sortOrder": "desc",
+				"columns": ["submittedAt", "status", "contactId", "leadId"],
+				"emptyText": "No submissions yet",
+				"showAdd": false,
+				"showFormDialog": false,
+				"sidebar": { "enabled": true, "showMetadata": true }
+			}
 		},
 		{
 			"id": "Automations",
@@ -448,6 +462,9 @@
 				"register": "pipelinq",
 				"schema": "automation",
 				"columns": ["name", "trigger", "isActive", "lastRun", "runCount"],
+				"actions": [
+					{ "id": "history", "label": "View history", "icon": "history", "handler": "navigate", "route": "AutomationHistory" }
+				],
 				"sidebar": { "enabled": true, "showMetadata": true }
 			}
 		},
@@ -468,9 +485,26 @@
 		{
 			"id": "AutomationHistory",
 			"route": "/automations/:id/history",
-			"type": "custom",
+			"type": "index",
 			"title": "Automation history",
-			"component": "AutomationHistoryView"
+			"config": {
+				"register": "pipelinq",
+				"schema": "automationLog",
+				"filter": { "automation": "@route.id" },
+				"sortKey": "triggeredAt",
+				"sortOrder": "desc",
+				"columns": ["triggeredAt", "status", "triggerEntity", "actionsExecuted", "error"],
+				"emptyText": "This automation has not been triggered yet.",
+				"selectable": false,
+				"showAdd": false,
+				"showFormDialog": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"showMassImport": false,
+				"showMassCopy": false,
+				"showMassDelete": false
+			}
 		},
 		{
 			"id": "FeaturesRoadmap",
