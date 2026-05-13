@@ -43,14 +43,16 @@ import SurveyFormView from './views/surveys/SurveyForm.vue'
 import SurveyAnalyticsView from './views/surveys/SurveyAnalytics.vue'
 
 // --- Forms (lib gap: no `form-builder` page type for the visual builder;
-//     the `Forms` list page is now a declarative `type:"index"` on intakeForm). ---
+//     the `Forms` list page is a declarative `type:"index"` on intakeForm,
+//     and `Forms › Submissions` is a declarative `type:"index"` on
+//     intakeSubmission with `config.filter: { form: "@route.id" }`). ---
 import FormBuilderView from './views/forms/FormBuilder.vue'
-import FormSubmissionsView from './views/forms/FormSubmissions.vue'
 
 // --- Automations (lib gap: no `automation-graph` page type for the visual
-//     builder; the `Automations` list page is now a declarative `type:"index"`). ---
+//     builder; the `Automations` list page is a declarative `type:"index"`,
+//     and `Automations › History` is a declarative `type:"index"` on
+//     automationLog with `config.filter: { automation: "@route.id" }`). ---
 import AutomationBuilderView from './views/automations/AutomationBuilder.vue'
-import AutomationHistoryView from './views/automations/AutomationHistory.vue'
 
 // --- Reporting dashboards (lib gap: chart widgets not yet registered). ---
 import RapportageDashboardView from './views/rapportage/RapportageDashboard.vue'
@@ -91,13 +93,11 @@ export default {
 	SurveyFormView,
 	SurveyAnalyticsView,
 
-	// Forms (list page is declarative type:index; builder/submissions stay custom)
+	// Forms (list + submissions are declarative type:index; visual builder stays custom)
 	FormBuilderView,
-	FormSubmissionsView,
 
-	// Automations (list page is declarative type:index; builder/history stay custom)
+	// Automations (list + history are declarative type:index; visual builder stays custom)
 	AutomationBuilderView,
-	AutomationHistoryView,
 
 	// Reporting
 	RapportageDashboardView,
