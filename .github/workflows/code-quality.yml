@@ -13,6 +13,12 @@ jobs:
     with:
       app-name: pipelinq
       enable-sbom: true
+      enable-phpunit: true
+      enable-newman: true
+      newman-collection-path: "tests/newman"
+      # Re-run the repair steps so the OpenRegister registers/schemas the
+      # API endpoints depend on are provisioned before Newman hits them.
+      newman-seed-command: 'php occ app:disable pipelinq && php occ app:enable pipelinq'
       enable-playwright: true
       enable-playwright-coverage: true
       playwright-coverage-threshold: 75
