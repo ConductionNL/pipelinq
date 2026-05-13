@@ -19,9 +19,9 @@ Register a complaint, route it to a handler, and verify it's tracked on the clie
 
 ## Steps
 
-### 1. Open **My Work** (or the client's detail page)
+### 1. Open the **Complaints** list (or use the client's detail page)
 
-`{{TODO: confirm the canonical entry point — global "+ Add" menu vs. My Work "+ New request" with type = complaint}}`
+Pipelinq has a dedicated **Complaints** list in the left navigation — the canonical entry point. The standard **+ Add Item** dialog opens the complaint intake form (the request-type is pre-set to *Complaint*). Alternatively, on a client's detail page open the *Complaints* tab and click **Add Item** there — the complainant is then pre-filled.
 
 ### 2. Choose **Register complaint**
 
@@ -31,7 +31,7 @@ Register a complaint, route it to a handler, and verify it's tracked on the clie
 
 - **From** — the complainant; pick or quick-create.
 - **Subject** + **Description** — what went wrong.
-- **Category / severity** — `{{TODO: confirm available fields}}`.
+- **Category** — admin-configured (service, product, billing, communication, other) — and **Severity** — low / medium / high / critical, driving the SLA clock.
 - **Channel** — phone, email, web form, in person.
 
 ![Complaint form](/screenshots/tutorials/user/11-form.png)

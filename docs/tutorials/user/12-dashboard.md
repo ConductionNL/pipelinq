@@ -20,9 +20,7 @@ Open the dashboard, read your key counts, and jump from a dashboard widget strai
 
 ### 1. Open Pipelinq
 
-The dashboard is the default landing page.
-
-`{{TODO: confirm whether the dashboard or My Work is the default landing page, and how to switch}}`
+The dashboard is the default landing page — the **Dashboard** entry sits at the top of the left navigation. To switch the default to **My Work** instead, an admin sets the *Default landing page* option under [Manage Pipelinq settings](../admin/06-admin-settings.md).
 
 ![Pipelinq dashboard](/screenshots/tutorials/user/12-dashboard.png)
 
@@ -37,7 +35,7 @@ The dashboard is the default landing page.
 
 ### 3. Filter the view
 
-`{{TODO: confirm available filters — date range, pipeline, owner/me-vs-team}}`
+The filter chips above the widget shelf scope the dashboard by **Date range** (today / this week / this month / this quarter / custom), **Pipeline** (one or many), and **Owner** (*Me* / *My team* / *Everyone*). Filters cascade — each widget reflects the active filter chip set.
 
 ### 4. Drill into a widget
 

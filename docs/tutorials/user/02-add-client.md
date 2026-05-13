@@ -18,9 +18,9 @@ Create a new client record — person or organisation — and verify it lands in
 
 ## Steps
 
-### 1. Click **+ Add client** from the Clients view
+### 1. Click **+ Add Item** from the Clients view
 
-`{{TODO: confirm the exact label — could be "+ New client" or "Add"}}`
+The create button is labelled **Add Item** — the standard *@conduction/nextcloud-vue* list action that's used across every Pipelinq list view (Clients, Contacts, Leads, Requests, …).
 
 ![Add client button](/screenshots/tutorials/user/02-add-client-button.png)
 
@@ -32,7 +32,7 @@ The form fields differ — persons get first/last name, organisations get a sing
 
 ### 3. Fill the contact details
 
-`{{TODO: list the fields, mark required vs optional}}`
+The minimum required fields are **Name** (or *First name* + *Last name* for a person) and **Type**. Optional fields include **Email**, **Phone**, **Address** (street, postcode, city, country), and free-form **Notes**. Organisations carry extra optional fields — **KvK number**, **VAT number**, **Website**, **Industry**.
 
 ![Form filled](/screenshots/tutorials/user/02-form-filled.png)
 

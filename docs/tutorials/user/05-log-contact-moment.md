@@ -20,15 +20,15 @@ Log a contact moment on a client and verify it lands on the client's timeline.
 
 ### 1. Open the client's detail page
 
-### 2. Click **+ Log contact moment**
+### 2. Click **+ Add Item** on the *Contactmomenten* tab
 
-`{{TODO: confirm exact button label}}`
+The client detail page's sidebar has a **Contactmomenten** tab; the create button on that tab is the standard **Add Item** action.
 
 ![Add contact moment](/screenshots/tutorials/user/05-add-button.png)
 
 ### 3. Pick the type
 
-`{{TODO: list types — call, email, visit, video call, etc.}}`
+The shipped types are **Call (inbound)**, **Call (outbound)**, **Email**, **Meeting**, **Visit**, **Video call**, **Chat**, **Note**. Admins add or retire types per channel under **Administration settings → Pipelinq → Request Channels**.
 
 ### 4. Fill in the details
 
