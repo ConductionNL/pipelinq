@@ -107,9 +107,10 @@ replaced with `x-openregister-notifications` triggers keyed on lifecycle transit
 
 ### Requirement: Lead-management computed fields use calculation annotation
 
-The `lead-management` spec's qualification score (line 1024 open question), staleness
-(line 505), aging (line 519), and lead-value (line 924) SHALL be declared as
-`x-openregister-calculations` annotations on the lead schema.
+Lead-management computed fields SHALL be declared as `x-openregister-calculations`
+annotations on the lead schema. This covers the `lead-management` spec's qualification
+score (line 1024 open question), staleness (line 505), aging (line 519), and lead-value
+(line 924).
 
 #### Scenario: Qualification score is a backend calculation
 
