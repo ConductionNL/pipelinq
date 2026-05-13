@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.9.2">
 <title data-rh="true">Resolve a duplicate-detection warning | Pipelinq</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://pipelinq.conduction.nl/docs/tutorials/user/resolve-duplicate/"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Resolve a duplicate-detection warning | Pipelinq"><meta data-rh="true" name="description" content="Pipelinq flags likely duplicate clients. Decide whether to merge, keep both, or override."><meta data-rh="true" property="og:description" content="Pipelinq flags likely duplicate clients. Decide whether to merge, keep both, or override."><link data-rh="true" rel="icon" href="/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://pipelinq.conduction.nl/docs/tutorials/user/resolve-duplicate/"><link data-rh="true" rel="alternate" href="https://pipelinq.conduction.nl/docs/tutorials/user/resolve-duplicate/" hreflang="en"><link data-rh="true" rel="alternate" href="https://pipelinq.conduction.nl/docs/tutorials/user/resolve-duplicate/" hreflang="x-default"><link data-rh="true" rel="stylesheet" href="/lib/canal-footer.css"><link data-rh="true" rel="stylesheet" href="/lib/kade-cyclist.css"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Tutorials","item":"https://pipelinq.conduction.nl/docs/category/tutorials"},{"@type":"ListItem","position":2,"name":"User guide","item":"https://pipelinq.conduction.nl/docs/category/user-guide"},{"@type":"ListItem","position":3,"name":"Resolve a duplicate-detection warning","item":"https://pipelinq.conduction.nl/docs/tutorials/user/resolve-duplicate"}]}</script><link rel="stylesheet" href="/assets/css/styles.f618d03c.css">
-<script src="/assets/js/runtime~main.7540b311.js" defer="defer"></script>
-<script src="/assets/js/main.93703e37.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.b98a154a.js" defer="defer"></script>
+<script src="/assets/js/main.d278f533.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg style="display: none;"><defs>
@@ -22,16 +22,16 @@
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="steps">Steps<a href="#steps" class="hash-link" aria-label="Direct link to Steps" title="Direct link to Steps" translate="no">​</a></h2>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-read-the-warning-details">1. Read the warning details<a href="#1-read-the-warning-details" class="hash-link" aria-label="Direct link to 1. Read the warning details" title="Direct link to 1. Read the warning details" translate="no">​</a></h3>
 <p>The banner lists which existing client matches and on which fields (name, email, phone).</p>
-<p><img decoding="async" loading="lazy" src="/screenshots/tutorials/user/08-warning.png" alt="Duplicate warning" class="img_ev3q"></p>
+<p><img decoding="async" loading="lazy" alt="Duplicate warning" src="/assets/images/08-warning-60412a95c9f66e8c3c7f0beeb6901519.png" width="1280" height="800" class="img_ev3q"></p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="2-pick-an-action">2. Pick an action<a href="#2-pick-an-action" class="hash-link" aria-label="Direct link to 2. Pick an action" title="Direct link to 2. Pick an action" translate="no">​</a></h3>
 <ul>
 <li class=""><strong>Merge</strong> — combines the duplicate into the existing client. All linked leads, requests, contact moments move over. Destructive on the duplicate.</li>
 <li class=""><strong>Keep both</strong> — overrides the warning. Both records persist; the warning is suppressed for this pair.</li>
 <li class=""><strong>Cancel</strong> — discard the new record entirely.</li>
 </ul>
-<p><img decoding="async" loading="lazy" src="/screenshots/tutorials/user/08-actions.png" alt="Action picker" class="img_ev3q"></p>
+<p><img decoding="async" loading="lazy" alt="Action picker" src="/assets/images/08-actions-9c24856b8086b9e8d5d985b2151e6a49.png" width="1280" height="800" class="img_ev3q"></p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="3-confirm">3. Confirm<a href="#3-confirm" class="hash-link" aria-label="Direct link to 3. Confirm" title="Direct link to 3. Confirm" translate="no">​</a></h3>
-<p><code>{{TODO: confirmation dialog details, especially for merge — irreversible}}</code></p>
+<p>Merge opens a second dialog listing exactly what will move — linked leads, requests, contact moments, callbacks, tasks — and which client survives as the canonical record. Read the list, then click <strong>Confirm merge</strong>. The operation is logged in OpenRegister&#x27;s audit trail; the duplicate&#x27;s record is soft-deleted (recoverable from the OpenRegister admin if needed) but the merge itself cannot be undone in one click.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="verification">Verification<a href="#verification" class="hash-link" aria-label="Direct link to Verification" title="Direct link to Verification" translate="no">​</a></h2>
 <ul>
 <li class=""><strong>Merged</strong>: only one client remains; its history shows the merge event.</li>
