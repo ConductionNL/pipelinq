@@ -21,7 +21,7 @@ Klanttevredenheidsonderzoek (KTO) survey management and Net Promoter Score (NPS)
 - Link surveys to specific interaction channels, request types, or time periods
 
 ### Public Response Collection
-- Public survey response endpoint (unauthenticated) — citizens respond without login
+- Public survey response endpoint (unauthenticated): citizens respond without login
 - Unique survey links per contactmoment or request
 - Rate limiting and duplicate submission prevention
 

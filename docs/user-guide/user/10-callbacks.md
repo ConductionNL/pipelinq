@@ -22,17 +22,17 @@ Schedule a callback on a client, then pick it up from your queue and mark it don
 
 ### 2. Open the **Tasks** tab on the client's sidebar and click **+ Add Item**
 
-Callbacks are a *Task* with type *Callback (terugbelafspraak)* — they live on the Tasks sidebar tab (not on the timeline). The **Add Item** dialog has a *Type* picker; pick *Callback* to get the callback-specific fields.
+Callbacks are a *Task* with type *Callback (terugbelafspraak)*. They live on the Tasks sidebar tab (not on the timeline). The **Add Item** dialog has a *Type* picker; pick *Callback* to get the callback-specific fields.
 
-![Schedule callback](/screenshots/tutorials/user/10-schedule.png)
+![Schedule callback](/screenshots/user-guide/user/10-schedule.png)
 
 ### 3. Set when and who
 
-- **When** — date and time to call back.
-- **Assignee** — defaults to you; reassign to a colleague if needed.
-- **Note** — what the call is about.
+- **When**: date and time to call back.
+- **Assignee**: defaults to you; reassign to a colleague if needed.
+- **Note**: what the call is about.
 
-![Callback form](/screenshots/tutorials/user/10-form.png)
+![Callback form](/screenshots/user-guide/user/10-form.png)
 
 ### 4. Save
 
@@ -40,9 +40,9 @@ The callback appears on the client's 360° view and in the assignee's My Work qu
 
 ### 5. Work it off your queue
 
-When the callback is due, open **My Work**, find it in the callbacks/tasks tab, make the call, then mark it **Done** — optionally logging a contact moment in the same step.
+When the callback is due, open **My Work**, find it in the callbacks/tasks tab, make the call, then mark it **Done**, optionally logging a contact moment in the same step.
 
-![Working a callback](/screenshots/tutorials/user/10-work.png)
+![Working a callback](/screenshots/user-guide/user/10-work.png)
 
 ## Verification
 
@@ -54,11 +54,11 @@ When the callback is due, open **My Work**, find it in the callbacks/tasks tab, 
 
 | Symptom | Fix |
 |---|---|
-| Callback doesn't appear in My Work | Check the assignee — if you reassigned it, it's in *their* queue, not yours. |
-| No reminder fired | Notifications for callbacks must be enabled — see [Notifications & activity feature reference](../../features/notifications-activity.md). |
+| Callback doesn't appear in My Work | Check the assignee. If you reassigned it, it's in *their* queue, not yours. |
+| No reminder fired | Notifications for callbacks must be enabled. See [Notifications & activity feature reference](../../Features/notifications-activity.md). |
 
 ## Reference
 
-- [Callback management feature reference](../../features/callback-management.md)
-- [Terugbel- en taakbeheer feature reference](../../features/terugbel-taakbeheer.md)
-- [My Work queue reference](../../features/my-work.md)
+- [Callback management feature reference](../../Features/callback-management.md)
+- [Terugbel- en taakbeheer feature reference](../../Features/terugbel-taakbeheer.md)
+- [My Work queue reference](../../Features/my-work.md)

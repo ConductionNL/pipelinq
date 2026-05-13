@@ -1,4 +1,4 @@
-# Pipelinq — Overheidsfunctionaliteiten
+# Pipelinq: Overheidsfunctionaliteiten
 
 > Functiepagina voor Nederlandse overheidsorganisaties.
 > Gebruik deze checklist om te toetsen aan uw Programma van Eisen.
@@ -170,7 +170,7 @@
 
 | Functionaliteit | Beschrijving |
 |-----------------|-------------|
-| Contacten | Nextcloud Contacts sync — geen dubbele invoer |
+| Contacten | Nextcloud Contacts sync, geen dubbele invoer |
 | Bestanden | Klantdossiers via Nextcloud Files |
 | Agenda | Opvolgafspraken in Nextcloud Calendar |
 | Chat per klant | Nextcloud Talk room per klant/verzoek |
@@ -191,4 +191,4 @@
 | **NL Design System** | Overheidshuisstijl via design tokens |
 | **Data-hergebruik** | Klantdata herbruikbaar door Procest, OpenCatalogi, etc. |
 | **Soeverein** | Geen SaaS-vendor lock-in, volledig on-premise |
-| **Lichtgewicht** | Geen apart CRM-systeem — draait als Nextcloud-app |
+| **Lichtgewicht** | Geen apart CRM-systeem, draait als Nextcloud-app |

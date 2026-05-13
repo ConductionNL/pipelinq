@@ -21,7 +21,7 @@ Move an existing lead from one stage to another, optionally updating its value o
 
 ### 1. Open the **Pipeline** view
 
-![Pipeline view](/screenshots/tutorials/user/04-pipeline-view.png)
+![Pipeline view](/screenshots/user-guide/user/04-pipeline-view.png)
 
 ### 2. Find the lead card you want to move
 
@@ -29,17 +29,17 @@ The filter chips above the columns let you narrow by **Assignee**, **Pipeline**,
 
 ### 3. Drag the card to the target stage
 
-![Mid-drag](/screenshots/tutorials/user/04-mid-drag.png)
+![Mid-drag](/screenshots/user-guide/user/04-mid-drag.png)
 
 The drop highlights the target column. Release to commit. The lead's stage, close probability, and last-modified timestamp update immediately.
 
-![Dropped](/screenshots/tutorials/user/04-dropped.png)
+![Dropped](/screenshots/user-guide/user/04-dropped.png)
 
 ### 4. Edit value or probability inline (optional)
 
 Click the value or probability on the card to edit without leaving the board.
 
-![Inline edit](/screenshots/tutorials/user/04-inline-edit.png)
+![Inline edit](/screenshots/user-guide/user/04-inline-edit.png)
 
 ## Verification
 
@@ -51,9 +51,9 @@ Click the value or probability on the card to edit without leaving the board.
 
 | Symptom | Fix |
 |---|---|
-| Card snaps back after drop | Stage transition rejected by a workflow rule — check the lead's history for the error. |
-| Card not visible on the board | Filtered out — clear filters or check your assignee filter. |
+| Card snaps back after drop | Stage transition rejected by a workflow rule. Check the lead's history for the error. |
+| Card not visible on the board | Filtered out. Clear filters or check your assignee filter. |
 
 ## Reference
 
-- [Pipeline feature reference](../../features/pipeline.md)
+- [Pipeline feature reference](../../Features/pipeline.md)

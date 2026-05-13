@@ -6,6 +6,6 @@
   "link": {
     "type": "generated-index",
     "title": "Admin guide",
-    "description": "Org-wide Pipelinq administration — pipeline stages, request types, and user / group permissions."
+    "description": "Org-wide Pipelinq administration: pipeline stages, request types, and user / group permissions."
   }
 }

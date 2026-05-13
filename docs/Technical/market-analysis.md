@@ -1,10 +1,10 @@
-# Pipelinq — Feature Analysis & Product Strategy
+# Pipelinq: Feature Analysis & Product Strategy
 
 ## Executive Summary
 
 There is **no production-ready native Nextcloud CRM**. The market has SaaS CRMs with data sovereignty issues (Salesforce, HubSpot), standalone self-hosted CRMs with integration burden (SuiteCRM, EspoCRM, Twenty), and Dutch government API specifications without usable frontends (OpenKlant). Pipelinq fills all three gaps by being sovereign, integrated, and government-ready.
 
-**Key insight**: CRM is fundamentally about communication, documents, scheduling, and contact management — all things Nextcloud already does. A Nextcloud-native CRM orchestrates these capabilities rather than rebuilding them.
+**Key insight**: CRM is fundamentally about communication, documents, scheduling, and contact management. All things Nextcloud already does. A Nextcloud-native CRM orchestrates these capabilities rather than rebuilding them.
 
 ## 1. Competitive Landscape
 
@@ -241,15 +241,15 @@ There is **no production-ready native Nextcloud CRM**. The market has SaaS CRMs 
 
 ### Positioning Statement
 
-**Pipelinq is the CRM that lives where your team already works.** Built natively into Nextcloud, it turns your existing collaboration platform into a client relationship system — with contacts, calendar, files, and chat already connected.
+**Pipelinq is the CRM that lives where your team already works.** Built natively into Nextcloud, it turns your existing collaboration platform into a client relationship system, with contacts, calendar, files, and chat already connected.
 
 ### Differentiation Strategy
 
 Three pillars:
 
-1. **Platform leverage** — Every Nextcloud feature (AI, workflows, federation) automatically benefits Pipelinq
-2. **Government-first** — VNG standard alignment, NL Design System, GDPR-by-architecture, Common Ground
-3. **Data platform** — OpenRegister makes CRM data reusable across apps, not locked in a silo
+1. **Platform leverage**: Every Nextcloud feature (AI, workflows, federation) automatically benefits Pipelinq
+2. **Government-first**: VNG standard alignment, NL Design System, GDPR-by-architecture, Common Ground
+3. **Data platform**: OpenRegister makes CRM data reusable across apps, not locked in a silo
 
 ### Risks
 

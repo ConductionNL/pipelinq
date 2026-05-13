@@ -1,8 +1,8 @@
-# Pipelinq — Architecture & Data Model
+# Pipelinq: Architecture & Data Model
 
 ## 1. Overview
 
-Pipelinq is a CRM (Client Relationship Management) app for Nextcloud, built as a thin client on OpenRegister. It manages clients (persons and organizations), contact persons, leads (sales opportunities), and requests (service intake — the pre-state of a case). Both leads and requests can flow through configurable pipelines with kanban-style boards.
+Pipelinq is a CRM (Client Relationship Management) app for Nextcloud, built as a thin client on OpenRegister. It manages clients (persons and organizations), contact persons, leads (sales opportunities), and requests (service intake, the pre-state of a case). Both leads and requests can flow through configurable pipelines with kanban-style boards.
 
 ### Architecture Pattern
 
@@ -41,13 +41,13 @@ Before defining our data model, we evaluated multiple standards across three cat
 
 | Standard | Type | Coverage | Maturity | Relevance |
 |----------|------|----------|----------|-----------|
-| **VNG Klantinteracties API** | Dutch gov | Partij, Klantcontact, Betrokkene, InterneTaak, DigitaalAdres | Pre-1.0 (half-product) | **HIGH** — exact domain match |
-| **VNG Verzoeken API** | Dutch gov | Verzoek, KlantVerzoek, VerzoekProduct | Part of ZGW family | **HIGH** — models pre-case intake |
-| **Schema.org** | International | Person, Organization, ContactPoint, Demand, Role, ItemList | Very mature | **HIGH** — primary vocabulary |
-| **vCard / jCard (RFC 6350/7095)** | International | Contact data fields | Very mature | **MEDIUM** — field reference for contacts |
-| **OASIS CIQ v3.0** | International | Names, addresses, party relationships | Mature (XML-based) | **LOW** — dated format |
-| **Industry CRM consensus** | Industry | Account, Contact, Lead/Deal, Pipeline, Stage | De facto standard | **HIGH** — proven patterns |
-| **W3C Organization Ontology** | International | Organizational structure, membership, roles | W3C Recommendation | **LOW** — too abstract |
+| **VNG Klantinteracties API** | Dutch gov | Partij, Klantcontact, Betrokkene, InterneTaak, DigitaalAdres | Pre-1.0 (half-product) | **HIGH**: exact domain match |
+| **VNG Verzoeken API** | Dutch gov | Verzoek, KlantVerzoek, VerzoekProduct | Part of ZGW family | **HIGH**: models pre-case intake |
+| **Schema.org** | International | Person, Organization, ContactPoint, Demand, Role, ItemList | Very mature | **HIGH**: primary vocabulary |
+| **vCard / jCard (RFC 6350/7095)** | International | Contact data fields | Very mature | **MEDIUM**: field reference for contacts |
+| **OASIS CIQ v3.0** | International | Names, addresses, party relationships | Mature (XML-based) | **LOW**: dated format |
+| **Industry CRM consensus** | Industry | Account, Contact, Lead/Deal, Pipeline, Stage | De facto standard | **HIGH**: proven patterns |
+| **W3C Organization Ontology** | International | Organizational structure, membership, roles | W3C Recommendation | **LOW**: too abstract |
 
 ### 2.2 Design Principle: International First
 
@@ -109,9 +109,9 @@ A client can be either a person or an organization.
 | `email` | string | `schema:email` | `EMAIL` | DigitaalAdres | No |
 | `telephone` | string | `schema:telephone` | `TEL` | DigitaalAdres | No |
 | `address` | object | `schema:address` | `ADR` | bezoekadres | No |
-| `taxID` | string | `schema:taxID` | — | partijIdentificator | No (orgs) |
+| `taxID` | string | `schema:taxID` | n/a | partijIdentificator | No (orgs) |
 | `website` | string | `schema:url` | `URL` | DigitaalAdres | No |
-| `notes` | string | `schema:description` | `NOTE` | — | No |
+| `notes` | string | `schema:description` | `NOTE` | n/a | No |
 
 #### Contact (Contactpersoon)
 
@@ -133,37 +133,37 @@ A contact person linked to a client organization.
 | `telephone` | string | `schema:telephone` | `TEL` | DigitaalAdres | No |
 | `role` | string | `schema:roleName` | `ROLE` | Betrokkene.rol | No |
 | `client` | reference | `schema:worksFor` | `RELATED` | Betrokkene → Partij | Yes |
-| `jobTitle` | string | `schema:jobTitle` | `TITLE` | — | No |
+| `jobTitle` | string | `schema:jobTitle` | `TITLE` | n/a | No |
 
 #### Lead
 
-A lead represents a sales opportunity — from first contact through to won or lost. Leads flow through configurable pipeline stages. Unlike Salesforce's Lead→Opportunity split, we use a unified entity (proven by HubSpot and Twenty) where pipeline stages encode qualification level.
+A lead represents a sales opportunity, from first contact through to won or lost. Leads flow through configurable pipeline stages. Unlike Salesforce's Lead→Opportunity split, we use a unified entity (proven by HubSpot and Twenty) where pipeline stages encode qualification level.
 
 | Aspect | Decision | Rationale |
 |--------|----------|-----------|
-| **Schema.org type** | `schema:Demand` | "Announcement to seek a certain type of goods or services" — matches lead concept |
+| **Schema.org type** | `schema:Demand` | "Announcement to seek a certain type of goods or services": matches lead concept |
 | **Industry pattern** | Unified Lead (no Opportunity split) | HubSpot/Twenty prove single entity works; stages encode qualification |
-| **Pipeline** | Stage stored on entity (`lead.stage`) | Industry consensus (Salesforce, HubSpot, EspoCRM) — simpler queries, atomic updates |
+| **Pipeline** | Stage stored on entity (`lead.stage`) | Industry consensus (Salesforce, HubSpot, EspoCRM): simpler queries, atomic updates |
 
 **Core properties**:
 
 | Property | Type | Schema.org | Required | Default |
 |----------|------|------------|----------|---------|
-| `title` | string | `schema:name` | Yes | — |
-| `description` | string | `schema:description` | No | — |
-| `client` | reference | `schema:customer` | No | — |
-| `contact` | reference | `schema:buyer` | No | — |
-| `source` | enum | — | No | — |
-| `value` | number | `schema:price` | No | — |
+| `title` | string | `schema:name` | Yes | n/a |
+| `description` | string | `schema:description` | No | n/a |
+| `client` | reference | `schema:customer` | No | n/a |
+| `contact` | reference | `schema:buyer` | No | n/a |
+| `source` | enum | n/a | No | n/a |
+| `value` | number | `schema:price` | No | n/a |
 | `currency` | string (ISO 4217) | `schema:priceCurrency` | No | EUR |
-| `probability` | integer (0–100) | — | No | — |
-| `expectedCloseDate` | date | `schema:validThrough` | No | — |
-| `pipeline` | reference | — | No | — |
-| `stage` | reference | — | No | — |
-| `stageOrder` | integer | — | No | 0 |
-| `assignedTo` | string (user UID) | `schema:agent` | No | — |
-| `priority` | enum: low, normal, high, urgent | — | No | normal |
-| `category` | string | `schema:category` | No | — |
+| `probability` | integer (0–100) | n/a | No | n/a |
+| `expectedCloseDate` | date | `schema:validThrough` | No | n/a |
+| `pipeline` | reference | n/a | No | n/a |
+| `stage` | reference | n/a | No | n/a |
+| `stageOrder` | integer | n/a | No | 0 |
+| `assignedTo` | string (user UID) | `schema:agent` | No | n/a |
+| `priority` | enum: low, normal, high, urgent | n/a | No | normal |
+| `category` | string | `schema:category` | No | n/a |
 
 **Lead source values** (industry consensus from Salesforce/EspoCRM):
 
@@ -185,10 +185,10 @@ A request is a service intake/inquiry before something becomes a case. This is t
 
 | Aspect | Decision | Rationale |
 |--------|----------|-----------|
-| **Schema.org type** | `schema:Demand` | "Announcement to seek a certain type of goods or services" — closest match |
+| **Schema.org type** | `schema:Demand` | "Announcement to seek a certain type of goods or services": closest match |
 | **VNG mapping** | `Verzoek` from Verzoeken API | Dutch API compatibility |
 | **Lifecycle** | new → in_progress → completed / rejected / converted | International, maps to VNG lifecycle |
-| **Pipeline** | Optional — requests can be placed on a pipeline | Enables mixed kanban boards with leads and requests |
+| **Pipeline** | Optional; requests can be placed on a pipeline | Enables mixed kanban boards with leads and requests |
 | **Case link** | Request can convert to a Procest case | Standard request-to-case flow |
 
 **Core properties**:
@@ -199,34 +199,34 @@ A request is a service intake/inquiry before something becomes a case. This is t
 | `description` | string | `schema:description` | Verzoek.tekst | No |
 | `client` | reference | `schema:customer` | KlantVerzoek → Klant | No |
 | `status` | enum | `schema:actionStatus` | Verzoek.status | Yes (default: new) |
-| `priority` | enum: low, normal, high, urgent | — | — | No (default: normal) |
+| `priority` | enum: low, normal, high, urgent | n/a | n/a | No (default: normal) |
 | `category` | string | `schema:category` | VerzoekProduct | No |
 | `requestedAt` | datetime | `schema:dateCreated` | registratiedatum | Auto |
-| `channel` | string | `schema:availableChannel` | — | No |
-| `pipeline` | reference | — | — | No |
-| `stage` | reference | — | — | No |
-| `stageOrder` | integer | — | — | No (default: 0) |
-| `assignedTo` | string (user UID) | `schema:agent` | — | No |
+| `channel` | string | `schema:availableChannel` | n/a | No |
+| `pipeline` | reference | n/a | n/a | No |
+| `stage` | reference | n/a | n/a | No |
+| `stageOrder` | integer | n/a | n/a | No (default: 0) |
+| `assignedTo` | string (user UID) | `schema:agent` | n/a | No |
 
 #### Pipeline
 
-A pipeline is a configurable kanban board with ordered stages. Multiple entity types (leads and requests) can appear as cards on the same pipeline — the frontend merges them for a combined view.
+A pipeline is a configurable kanban board with ordered stages. Multiple entity types (leads and requests) can appear as cards on the same pipeline; the frontend merges them for a combined view.
 
 | Aspect | Decision | Rationale |
 |--------|----------|-----------|
 | **Schema.org type** | `schema:ItemList` | Ordered list of items (stages) |
 | **Industry pattern** | Trello Board / HubSpot Pipeline / Deck Board | Three-level: Pipeline → Stages → Cards |
-| **Polymorphic cards** | Shared Pipeline/Stage entities, referenced from both Lead and Request | No junction table — frontend merges two API calls. Industry-standard pattern. |
+| **Polymorphic cards** | Shared Pipeline/Stage entities, referenced from both Lead and Request | No junction table. Frontend merges two API calls. Industry-standard pattern. |
 
 **Core properties**:
 
 | Property | Type | Schema.org | Required | Default |
 |----------|------|------------|----------|---------|
-| `title` | string | `schema:name` | Yes | — |
-| `description` | string | `schema:description` | No | — |
-| `entityTypes` | string[] | — | Yes | ["lead"] |
-| `isDefault` | boolean | — | No | false |
-| `color` | string (hex) | — | No | — |
+| `title` | string | `schema:name` | Yes | n/a |
+| `description` | string | `schema:description` | No | n/a |
+| `entityTypes` | string[] | n/a | Yes | ["lead"] |
+| `isDefault` | boolean | n/a | No | false |
+| `color` | string (hex) | n/a | No | n/a |
 
 #### Stage
 
@@ -242,14 +242,14 @@ A stage is a column within a pipeline. Stages have an explicit order and optiona
 
 | Property | Type | Schema.org | Required | Default |
 |----------|------|------------|----------|---------|
-| `title` | string | `schema:name` | Yes | — |
-| `description` | string | `schema:description` | No | — |
-| `pipeline` | reference | `schema:inDefinedTermSet` | Yes | — |
+| `title` | string | `schema:name` | Yes | n/a |
+| `description` | string | `schema:description` | No | n/a |
+| `pipeline` | reference | `schema:inDefinedTermSet` | Yes | n/a |
 | `order` | integer | `schema:position` | Yes | 0 |
-| `color` | string (hex) | — | No | — |
-| `probability` | integer (0–100) | — | No | — |
-| `isClosed` | boolean | — | No | false |
-| `isWon` | boolean | — | No | false |
+| `color` | string (hex) | n/a | No | n/a |
+| `probability` | integer (0–100) | n/a | No | n/a |
+| `isClosed` | boolean | n/a | No | false |
+| `isWon` | boolean | n/a | No | false |
 
 **Default Sales Pipeline** (created during app initialization):
 
@@ -267,11 +267,11 @@ A stage is a column within a pipeline. Stages have an explicit order and optiona
 
 | Order | Stage | Probability | isClosed | isWon |
 |-------|-------|-------------|----------|-------|
-| 0 | New | — | false | false |
-| 1 | In Progress | — | false | false |
-| 2 | Completed | — | true | true |
-| 3 | Rejected | — | true | false |
-| 4 | Converted to Case | — | true | false |
+| 0 | New | n/a | false | false |
+| 1 | In Progress | n/a | false | false |
+| 2 | Completed | n/a | true | true |
+| 3 | Rejected | n/a | true | false |
+| 4 | Converted to Case | n/a | true | false |
 
 ### 3.3 Status Values
 
@@ -287,7 +287,7 @@ A stage is a column within a pipeline. Stages have an explicit order and optiona
 
 ### 3.4 My Work (Werkvoorraad)
 
-A cross-entity workload view showing all items assigned to the current user. No new entity is needed — this is a frontend aggregation pattern.
+A cross-entity workload view showing all items assigned to the current user. No new entity is needed; this is a frontend aggregation pattern.
 
 **How it works**:
 - Query leads with `assignedTo == currentUser` and open stages
@@ -301,7 +301,7 @@ A cross-entity workload view showing all items assigned to the current user. No 
 |-------|------|---------|-------------|
 | `assignedTo` / `assignee` | Yes | Yes | Yes |
 | `priority` | Yes | Yes | Yes |
-| `dueDate` / `expectedCloseDate` | Yes | — | Yes |
+| `dueDate` / `expectedCloseDate` | Yes | n/a | Yes |
 | `status` / `stage` | Yes | Yes | Yes |
 | Entity type label | "Lead" | "Request" | "Task" |
 
@@ -409,12 +409,12 @@ $conversation = $broker->createConversation('Client: Acme Corp', [$userId]);
 Schemas MUST be defined in `lib/Settings/pipelinq_register.json` using OpenAPI 3.0.0 format (not inline PHP), following the pattern used by opencatalogi and softwarecatalog.
 
 **Schemas**:
-- `client` — Person or organization (schema:Person / schema:Organization)
-- `contact` — Contact person linked to client (schema:Person + worksFor)
-- `lead` — Sales opportunity (schema:Demand)
-- `request` — Service intake/inquiry (schema:Demand)
-- `pipeline` — Kanban board configuration (schema:ItemList)
-- `stage` — Pipeline column (schema:DefinedTerm)
+- `client`: Person or organization (schema:Person / schema:Organization)
+- `contact`: Contact person linked to client (schema:Person + worksFor)
+- `lead`: Sales opportunity (schema:Demand)
+- `request`: Service intake/inquiry (schema:Demand)
+- `pipeline`: Kanban board configuration (schema:ItemList)
+- `stage`: Pipeline column (schema:DefinedTerm)
 
 The configuration is imported via `ConfigurationService::importFromApp()` in the repair step.
 
@@ -422,43 +422,43 @@ The configuration is imported via `ConfigurationService::importFromApp()` in the
 
 The following questions need further investigation as the app matures:
 
-1. **VNG Klantinteracties stability** — The API is pre-1.0 and deprioritized. Should we track its evolution or diverge? Current decision: align conceptually, don't depend on API stability.
+1. **VNG Klantinteracties stability**: The API is pre-1.0 and deprioritized. Should we track its evolution or diverge? Current decision: align conceptually, don't depend on API stability.
 
-2. **DigitaalAdres as separate entity** — VNG models digital addresses (email, phone) as separate objects linked to a Partij. Should Pipelinq follow this pattern or keep contact fields inline on Client/Contact? Current decision: inline for simplicity, refactor if interoperability requires it.
+2. **DigitaalAdres as separate entity**: VNG models digital addresses (email, phone) as separate objects linked to a Partij. Should Pipelinq follow this pattern or keep contact fields inline on Client/Contact? Current decision: inline for simplicity, refactor if interoperability requires it.
 
-3. ~~**Pipeline/stages for requests**~~ — **RESOLVED**: Configurable pipelines with stages are now a core feature. Both leads and requests can flow through pipelines. Stages are stored directly on entities (industry consensus).
+3. ~~**Pipeline/stages for requests**~~ **RESOLVED**: Configurable pipelines with stages are now a core feature. Both leads and requests can flow through pipelines. Stages are stored directly on entities (industry consensus).
 
-4. **BSN/KVK integration** — VNG Partij supports `partijIdentificator` for BSN (citizens) and KVK numbers (organizations). When should Pipelinq support government ID lookups?
+4. **BSN/KVK integration**: VNG Partij supports `partijIdentificator` for BSN (citizens) and KVK numbers (organizations). When should Pipelinq support government ID lookups?
 
-5. **Multi-channel support** — VNG Klantinteracties models omnichannel interactions (mail, phone, web, counter). Should Pipelinq track which channel a request came from? Current decision: `channel` field on Request, configurable values in admin settings.
+5. **Multi-channel support**: VNG Klantinteracties models omnichannel interactions (mail, phone, web, counter). Should Pipelinq track which channel a request came from? Current decision: `channel` field on Request, configurable values in admin settings.
 
-6. **Lead-to-order flow** — Leads can be won, but order/product/finance management is out of scope for now. When should Pipelinq support post-sale workflows?
+6. **Lead-to-order flow**: Leads can be won, but order/product/finance management is out of scope for now. When should Pipelinq support post-sale workflows?
 
 ## 6. References
 
 ### Primary Standards (International)
-- [Schema.org](https://schema.org/) — Linked data vocabulary (primary data model)
-- [RFC 6350 — vCard](https://www.rfc-editor.org/rfc/rfc6350.html) — Contact data field reference
-- [W3C Organization Ontology](https://www.w3.org/TR/vocab-org/) — Organizational relationships
+- [Schema.org](https://schema.org/): Linked data vocabulary (primary data model)
+- [RFC 6350 vCard](https://www.rfc-editor.org/rfc/rfc6350.html): Contact data field reference
+- [W3C Organization Ontology](https://www.w3.org/TR/vocab-org/): Organizational relationships
 
 ### Schema.org Types Used
-- [schema:Person](https://schema.org/Person) — Individual client or contact
-- [schema:Organization](https://schema.org/Organization) — Organization client
-- [schema:ContactPoint](https://schema.org/ContactPoint) — Contact channel
-- [schema:Demand](https://schema.org/Demand) — Lead and Request
-- [schema:Role](https://schema.org/Role) — Relationship qualification
-- [schema:ItemList](https://schema.org/ItemList) — Pipeline (ordered list)
-- [schema:DefinedTerm](https://schema.org/DefinedTerm) — Stage (controlled vocabulary term)
-- [schema:customer](https://schema.org/customer) — Customer property
-- [schema:agent](https://schema.org/agent) — Assigned user
+- [schema:Person](https://schema.org/Person): Individual client or contact
+- [schema:Organization](https://schema.org/Organization): Organization client
+- [schema:ContactPoint](https://schema.org/ContactPoint): Contact channel
+- [schema:Demand](https://schema.org/Demand): Lead and Request
+- [schema:Role](https://schema.org/Role): Relationship qualification
+- [schema:ItemList](https://schema.org/ItemList): Pipeline (ordered list)
+- [schema:DefinedTerm](https://schema.org/DefinedTerm): Stage (controlled vocabulary term)
+- [schema:customer](https://schema.org/customer): Customer property
+- [schema:agent](https://schema.org/agent): Assigned user
 
 ### Dutch Standards (API Mapping Layer)
-- [VNG Klantinteracties API](https://vng-realisatie.github.io/klantinteracties/) — Dutch government customer interaction standard
-- [VNG Verzoeken API](https://vng-realisatie.github.io/gemma-zaken/standaard/verzoeken/index) — Dutch government request/intake standard
-- [GEMMA Online](https://www.gemmaonline.nl/) — Dutch municipal architecture
+- [VNG Klantinteracties API](https://vng-realisatie.github.io/klantinteracties/): Dutch government customer interaction standard
+- [VNG Verzoeken API](https://vng-realisatie.github.io/gemma-zaken/standaard/verzoeken/index): Dutch government request/intake standard
+- [GEMMA Online](https://www.gemmaonline.nl/): Dutch municipal architecture
 
 ### Industry References
 - [Salesforce Data Model](https://developer.salesforce.com/docs/atlas.en-us.object_reference.meta/object_reference/data_model.htm)
-- [HubSpot CRM API](https://developers.hubspot.com/docs/guides/crm/understanding-the-crm) — Pipeline/stage model reference
-- [EspoCRM Entity Definitions](https://github.com/espocrm/espocrm/tree/master/application/Espo/Modules/Crm/Resources/metadata/entityDefs) — Lead/Opportunity model reference
-- [Nextcloud Deck API](https://github.com/nextcloud/deck/blob/main/docs/API.md) — Board/Stack/Card pattern reference
+- [HubSpot CRM API](https://developers.hubspot.com/docs/guides/crm/understanding-the-crm): Pipeline/stage model reference
+- [EspoCRM Entity Definitions](https://github.com/espocrm/espocrm/tree/master/application/Espo/Modules/Crm/Resources/metadata/entityDefs): Lead/Opportunity model reference
+- [Nextcloud Deck API](https://github.com/nextcloud/deck/blob/main/docs/API.md): Board/Stack/Card pattern reference

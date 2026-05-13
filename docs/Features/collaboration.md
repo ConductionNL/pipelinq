@@ -22,7 +22,7 @@ Internal notes/comments on all Pipelinq entities (clients, contacts, leads, requ
 
 When an entity is deleted, all associated comments are cleaned up via a DELETE call to the notes API. This prevents orphaned comments from accumulating.
 
-### Planned (V1) — Notifications
+### Planned (V1): Notifications
 
 Real-time notifications for CRM events, integrated with Nextcloud's notification system:
 
@@ -31,7 +31,7 @@ Real-time notifications for CRM events, integrated with Nextcloud's notification
 - Per-category notification preferences (users choose what to receive)
 - Notification rendering with CRM-specific formatting
 
-### Planned (V1) — Activity Stream
+### Planned (V1): Activity Stream
 
 Team-visible activity timeline publishing CRM events to Nextcloud's activity stream:
 

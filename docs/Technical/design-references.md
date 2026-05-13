@@ -1,4 +1,4 @@
-# Pipelinq — Design References & Dashboard Wireframes
+# Pipelinq: Design References & Dashboard Wireframes
 
 ## 1. Design Inspiration Sources
 
@@ -16,7 +16,7 @@
 |--------|-------------|--------------|
 | HubSpot Pipeline Board | hubspot.com/knowledge/deal-boards | Customizable kanban with deal cards, drag-and-drop between stages |
 | EspoCRM Kanban | espocrm.com | Open-source kanban with color-coded cards and stage columns |
-| Nextcloud Deck | apps.nextcloud.com/apps/deck | Board/Stack/Card — familiar Nextcloud kanban UX |
+| Nextcloud Deck | apps.nextcloud.com/apps/deck | Board/Stack/Card: familiar Nextcloud kanban UX |
 | Trello | trello.com | Gold standard kanban: minimal cards, smooth drag-and-drop |
 | Behance "CRM Pipeline UI" | Search Behance | Modern list + kanban toggle views |
 | Dribbble "kanban board CRM" | Search Dribbble | Deal cards with avatars, amounts, probability badges |
@@ -162,7 +162,7 @@ Features not currently in FEATURES.md but commonly present in CRM dashboards and
 │ ││NewLead ││ │          │ ││GovDeal ││ │          │ │          │  │
 │ ││€2,500  ││ │          │ ││€15,000 ││ │          │ │          │  │
 │ ││📅 Mar 20││ │          │ ││📅 Apr 1 ││ │          │ │          │  │
-│ ││👤 —    ││ │          │ ││👤 Jan  ││ │          │ │          │  │
+│ ││👤 -    ││ │          │ ││👤 Jan  ││ │          │ │          │  │
 │ │└────────┘│ │          │ │└────────┘│ │          │ │          │  │
 │ │          │ │          │ │┌────────┐│ │          │ │          │  │
 │ │          │ │          │ ││ REQ    ││ │          │ │          │  │
@@ -205,16 +205,16 @@ Features not currently in FEATURES.md but commonly present in CRM dashboards and
 │ │   │ Type │ Title       │ Stage    │ Value    │ Due    │Assigned│ │
 │ ├───┼──────┼─────────────┼──────────┼──────────┼────────┼────────┤ │
 │ │ ⚡│ LEAD │ Acme Corp   │ New      │ €5,000   │ Mar 5  │ Jan    │ │
-│ │🔴│ REQ  │ IT Help #42 │ New      │ —        │ Feb 28 │ Jan    │ │
-│ │   │ LEAD │ NewLead     │ New      │ €2,500   │ Mar 20 │ —      │ │
+│ │🔴│ REQ  │ IT Help #42 │ New      │ -        │ Feb 28 │ Jan    │ │
+│ │   │ LEAD │ NewLead     │ New      │ €2,500   │ Mar 20 │ -      │ │
 │ │   │ LEAD │ TechCo      │ Contacted│ €14,000  │ Mar 12 │ Maria  │ │
 │ │   │ LEAD │ SmallBiz    │ Contacted│ €10,000  │ Mar 15 │ Jan    │ │
 │ │   │ LEAD │ Gemeente ABC│ Qualified│ €20,000  │ Mar 1  │ Jan    │ │
 │ │   │ LEAD │ WebDev proj │ Qualified│ €18,000  │ Mar 10 │ Maria  │ │
 │ │   │ LEAD │ GovDeal     │ Qualified│ €15,000  │ Apr 1  │ Jan    │ │
-│ │   │ REQ  │ Maint #38   │ Qualified│ —        │ —      │ —      │ │
+│ │   │ REQ  │ Maint #38   │ Qualified│ -        │ -      │ -      │ │
 │ │ ⚡│ LEAD │ BigDeal BV  │ Proposal │ €25,200  │ Mar 20 │ Pieter │ │
-│ │ ⚡│ REQ  │ Consult #55 │ Proposal │ —        │ Mar 1  │ Pieter │ │
+│ │ ⚡│ REQ  │ Consult #55 │ Proposal │ -        │ Mar 1  │ Pieter │ │
 │ │   │ LEAD │ FinalCo     │ Negotiat.│ €15,500  │ Mar 8  │ Maria  │ │
 │ └───┴──────┴─────────────┴──────────┴──────────┴────────┴────────┘ │
 │                                                                     │
@@ -264,7 +264,7 @@ Features not currently in FEATURES.md but commonly present in CRM dashboards and
 │  │ Feb 18 · Note added                                          │  │
 │  │           "Had a great call with Petra. They need consulting │  │
 │  │            for their digital transformation project."        │  │
-│  │           — Jan de Vries                                     │  │
+│  │           by Jan de Vries                                    │  │
 │  │                                                              │  │
 │  │ Feb 15 · Stage changed to "Contacted"                        │  │
 │  │           by Jan de Vries                                    │  │
@@ -396,7 +396,7 @@ Features not currently in FEATURES.md but commonly present in CRM dashboards and
 │  │                                                              │  │
 │  │ Feb 22 · Lead "Acme Corp deal" moved to Qualified            │  │
 │  │ Feb 20 · Request #42 created                                 │  │
-│  │ Feb 18 · Note: "Great meeting with Petra..." — Jan           │  │
+│  │ Feb 18 · Note: "Great meeting with Petra..." by Jan          │  │
 │  │ Feb 10 · Lead "Acme Corp deal" created                       │  │
 │  │ Jan 15 · Client created                                      │  │
 │  │                                                              │  │

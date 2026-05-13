@@ -1,4 +1,4 @@
-# Pipelinq — Feature Overview
+# Pipelinq: Feature Overview
 
 Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klant Contact Centrum) and commercial sales teams. It is built as a thin client on top of OpenRegister, providing UI/UX while OpenRegister handles all data persistence.
 
@@ -14,10 +14,10 @@ Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klan
 | GEMMA Klantfeedbackcomponent | [gemmaonline.nl](https://gemmaonline.nl/index.php/GEMMA/id-e06df156-e4b8-4ae5-a913-868bdf6eb0fb) | Planned |
 | GEMMA Sociale mediacomponent | [gemmaonline.nl](https://gemmaonline.nl/index.php/GEMMA/id-d477e1d3-bf92-4b6f-b08d-78348dd0360f) | Planned |
 | GEMMA Mediamonitor- en webcarecomponent | [gemmaonline.nl](https://gemmaonline.nl/index.php/GEMMA/id-dcdd3ea0-730b-445e-90f6-17eb664dd1df) | Planned |
-| TEC CRM — Sales Force Automation (1) | Sections 1.1–1.12 | Partial |
-| TEC CRM — Customer Service and Support (3) | Sections 3.1–3.6 | Partial |
-| TEC CRM — Analytics and Reporting (4) | Sections 4.1–4.3 | Partial |
-| TEC CRM — Extended CRM (5) | Sections 5.1–5.4 | Partial |
+| TEC CRM: Sales Force Automation (1) | Sections 1.1–1.12 | Partial |
+| TEC CRM: Customer Service and Support (3) | Sections 3.1–3.6 | Partial |
+| TEC CRM: Analytics and Reporting (4) | Sections 4.1–4.3 | Partial |
+| TEC CRM: Extended CRM (5) | Sections 5.1–5.4 | Partial |
 | VNG Klantinteracties API | [vng-realisatie.github.io](https://vng-realisatie.github.io/klantinteracties/) | Partial |
 | Schema.org + vCard RFC 6350 | International data model | Implemented |
 
@@ -39,10 +39,10 @@ Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klan
 | Product & Service Catalog | Product/service catalogue with pricing for linking to leads | Implemented | TEC 1.8; Schema.org Product | [product-service-catalog.md](product-service-catalog.md) |
 | Lead–Product Link | Line items linking leads to products/services with quantity and value | Implemented | TEC 1.8 | [lead-product-link.md](lead-product-link.md) |
 | Prospect Discovery | ICP-based prospect search using KVK/NHR data for lead generation | Implemented | TEC 1.3 | [prospect-discovery.md](prospect-discovery.md) |
-| OpenRegister Integration | Foundational integration: all data stored as register objects in OpenRegister | Implemented | — | [openregister-integration.md](openregister-integration.md) |
-| Register i18n | Multilingual register/schema labels (Dutch + English) | Implemented | — | [register-i18n.md](register-i18n.md) |
-| Admin Settings | Nextcloud admin panel for pipeline, schema, and app configuration | Implemented | — | [admin-settings.md](admin-settings.md) |
-| Prometheus Metrics | Metrics endpoint for observability and monitoring | Implemented | — | [prometheus-metrics.md](prometheus-metrics.md) |
+| OpenRegister Integration | Foundational integration: all data stored as register objects in OpenRegister | Implemented | n/a | [openregister-integration.md](openregister-integration.md) |
+| Register i18n | Multilingual register/schema labels (Dutch + English) | Implemented | n/a | [register-i18n.md](register-i18n.md) |
+| Admin Settings | Nextcloud admin panel for pipeline, schema, and app configuration | Implemented | n/a | [admin-settings.md](admin-settings.md) |
+| Prometheus Metrics | Metrics endpoint for observability and monitoring | Implemented | n/a | [prometheus-metrics.md](prometheus-metrics.md) |
 | Contact Relationship Mapping | Relationships between contacts and organizations beyond direct client link | Partially Implemented | GEMMA CRM; Schema.org | [contact-relationship-mapping.md](contact-relationship-mapping.md) |
 | Omnichannel Registration | Channel-aware interaction registration (phone, email, counter, chat) | Partially Implemented | GEMMA Callcenter; VNG Klantinteracties | [omnichannel-registratie.md](omnichannel-registratie.md) |
 | Pipeline Insights | Stage revenue summaries, stale lead detection, aging indicators | Planned | TEC 4.1, 4.2 | [pipeline-insights.md](pipeline-insights.md) |
@@ -62,7 +62,7 @@ Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klan
 
 ## Feature Groups
 
-### Core CRM (MVP — Implemented)
+### Core CRM (MVP, Implemented)
 
 The foundational sales and relationship management layer. These features are live in the `development` branch.
 

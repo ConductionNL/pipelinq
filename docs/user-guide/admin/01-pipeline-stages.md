@@ -22,17 +22,17 @@ Add, reorder, or rename stages on an existing pipeline; tune the default close p
 
 Settings menu → **Administration settings** → **Pipelinq**.
 
-![Admin settings](/screenshots/tutorials/admin/01-admin-settings.png)
+![Admin settings](/screenshots/user-guide/admin/01-admin-settings.png)
 
 ### 2. Pick a pipeline
 
-Scroll to the **Pipelines** section on the admin page. Each pipeline is a card with its name, slug, and stage count. Click the pipeline card to open its editor — or click **+ Add pipeline** to create a new one (name + slug + initial stage list).
+Scroll to the **Pipelines** section on the admin page. Each pipeline is a card with its name, slug, and stage count. Click the pipeline card to open its editor, or click **+ Add pipeline** to create a new one (name + slug + initial stage list).
 
 ### 3. Add or rename stages
 
-The stages editor lists stages in column order with a drag handle on the left of each row. Drag a stage by its handle to reorder. **+ Add stage** at the bottom of the list adds an empty row — name is required and must be unique within the pipeline; the slug is auto-derived but editable. To rename, click the name field inline and type the new value.
+The stages editor lists stages in column order with a drag handle on the left of each row. Drag a stage by its handle to reorder. **+ Add stage** at the bottom of the list adds an empty row: name is required and must be unique within the pipeline; the slug is auto-derived but editable. To rename, click the name field inline and type the new value.
 
-![Stages editor](/screenshots/tutorials/admin/01-stages-editor.png)
+![Stages editor](/screenshots/user-guide/admin/01-stages-editor.png)
 
 ### 4. Set default close probabilities per stage
 
@@ -44,7 +44,7 @@ The pipeline view immediately reflects the new stage list.
 
 ## Verification
 
-- Open the pipeline view as a regular user — your stages appear in the column order you set.
+- Open the pipeline view as a regular user. Your stages appear in the column order you set.
 - The forecast at the top recalculates using the new probabilities.
 
 ## Common issues
@@ -56,5 +56,5 @@ The pipeline view immediately reflects the new stage list.
 
 ## Reference
 
-- [Pipeline feature reference](../../features/pipeline.md)
-- [Admin settings feature reference](../../features/admin-settings.md)
+- [Pipeline feature reference](../../Features/pipeline.md)
+- [Admin settings feature reference](../../Features/admin-settings.md)

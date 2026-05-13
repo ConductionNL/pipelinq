@@ -1,4 +1,4 @@
-# Pipelinq — Developer Guide
+# Pipelinq: Developer Guide
 
 ## Branching Strategy
 

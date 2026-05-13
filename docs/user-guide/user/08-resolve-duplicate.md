@@ -10,7 +10,7 @@ Pipelinq watches for two clients with similar names or matching emails and surfa
 
 ## Goal
 
-Triage a duplicate warning — merge if it's the same client, keep both if not.
+Triage a duplicate warning: merge if it's the same client, keep both if not.
 
 ## Prerequisites
 
@@ -22,19 +22,19 @@ Triage a duplicate warning — merge if it's the same client, keep both if not.
 
 The banner lists which existing client matches and on which fields (name, email, phone).
 
-![Duplicate warning](/screenshots/tutorials/user/08-warning.png)
+![Duplicate warning](/screenshots/user-guide/user/08-warning.png)
 
 ### 2. Pick an action
 
-- **Merge** — combines the duplicate into the existing client. All linked leads, requests, contact moments move over. Destructive on the duplicate.
-- **Keep both** — overrides the warning. Both records persist; the warning is suppressed for this pair.
-- **Cancel** — discard the new record entirely.
+- **Merge**: combines the duplicate into the existing client. All linked leads, requests, contact moments move over. Destructive on the duplicate.
+- **Keep both**: overrides the warning. Both records persist; the warning is suppressed for this pair.
+- **Cancel**: discard the new record entirely.
 
-![Action picker](/screenshots/tutorials/user/08-actions.png)
+![Action picker](/screenshots/user-guide/user/08-actions.png)
 
 ### 3. Confirm
 
-Merge opens a second dialog listing exactly what will move — linked leads, requests, contact moments, callbacks, tasks — and which client survives as the canonical record. Read the list, then click **Confirm merge**. The operation is logged in OpenRegister's audit trail; the duplicate's record is soft-deleted (recoverable from the OpenRegister admin if needed) but the merge itself cannot be undone in one click.
+Merge opens a second dialog listing exactly what will move (linked leads, requests, contact moments, callbacks, tasks) and which client survives as the canonical record. Read the list, then click **Confirm merge**. The operation is logged in OpenRegister's audit trail; the duplicate's record is soft-deleted (recoverable from the OpenRegister admin if needed) but the merge itself cannot be undone in one click.
 
 ## Verification
 
@@ -46,10 +46,10 @@ Merge opens a second dialog listing exactly what will move — linked leads, req
 
 | Symptom | Fix |
 |---|---|
-| Merge button is disabled | You don't have edit-permission on the existing client — ask its assignee. |
-| Warning re-appears after kept-both | A different field matched on a later edit — re-trigger keep-both. |
+| Merge button is disabled | You don't have edit-permission on the existing client. Ask its assignee. |
+| Warning re-appears after kept-both | A different field matched on a later edit. Re-trigger keep-both. |
 
 ## Reference
 
-- [Duplicate detection reference](../../features/duplicate-detection.md)
-- [Clients feature reference](../../features/clients.md)
+- [Duplicate detection reference](../../Features/duplicate-detection.md)
+- [Clients feature reference](../../Features/clients.md)

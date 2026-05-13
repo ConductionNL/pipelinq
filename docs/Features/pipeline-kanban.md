@@ -39,7 +39,7 @@ Users can switch between kanban (visual board) and list (data-dense table) views
 
 ### Quick Actions on Cards (MVP)
 
-Common actions available directly on pipeline cards without opening the detail view — move to next/previous stage, assign to user.
+Common actions available directly on pipeline cards without opening the detail view: move to next/previous stage, assign to user.
 
 ### Pipeline Selection on Entity (MVP)
 
@@ -49,7 +49,7 @@ When creating or editing a lead/request, users can select which pipeline and sta
 
 Pipeline management is accessible from the Nextcloud admin settings page with full CRUD and stage management.
 
-### Planned (V1) — Pipeline Insights
+### Planned (V1): Pipeline Insights
 
 Temporal and financial context overlays for pipeline views:
 
@@ -58,7 +58,7 @@ Temporal and financial context overlays for pipeline views:
 - **Aging Indicator**: Shows days in current stage on each lead card
 - **Overdue Item Highlighting**: Red indicators for items past their due/expected close date
 
-### Planned (V1) — Analytics
+### Planned (V1): Analytics
 
 - Stage probability mapping (auto-populates lead probability from stage config)
 - Pipeline analytics (conversion rates, stage duration)

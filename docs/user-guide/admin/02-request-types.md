@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: Configure request types
-description: Define the request categories your team triages from My Work — info, quote, support, complaint, etc.
+description: "Define the request categories your team triages from My Work: info, quote, support, complaint, etc."
 ---
 
 # Configure request types
@@ -24,11 +24,11 @@ Settings menu → **Administration settings** → **Pipelinq**.
 
 ### 2. Go to **Request types**
 
-![Request types section](/screenshots/tutorials/admin/02-request-types.png)
+![Request types section](/screenshots/user-guide/admin/02-request-types.png)
 
 ### 3. Add a new type
 
-Click **+ Add Item** in the *Request types* section. The dialog asks for **Label** (visible name, e.g. *Support call*), **Internal ID** (the slug used in filters and rule conditions — auto-derived from the label, editable), **Default queue** (the Pipelinq queue new requests of this type land in), and **Default assignee** (a Nextcloud user or *Auto-assign by queue rules*).
+Click **+ Add Item** in the *Request types* section. The dialog asks for **Label** (visible name, e.g. *Support call*), **Internal ID** (the slug used in filters and rule conditions, auto-derived from the label, editable), **Default queue** (the Pipelinq queue new requests of this type land in), and **Default assignee** (a Nextcloud user or *Auto-assign by queue rules*).
 
 ### 4. Set the conversion behaviour
 
@@ -42,16 +42,16 @@ Click **Save** on the dialog. The new type is immediately available in the *Type
 
 ## Verification
 
-- Open the request-create form as a regular user — your new type appears in the picker.
+- Open the request-create form as a regular user. Your new type appears in the picker.
 - The My Work queue shows a filter chip per active request type.
 
 ## Common issues
 
 | Symptom | Fix |
 |---|---|
-| Type doesn't appear in the picker | Reload the page once — the picker reads from a cached list. |
+| Type doesn't appear in the picker | Reload the page once. The picker reads from a cached list. |
 | Existing requests with a retired type | Retired types stay valid on existing records; only new requests can't pick them. |
 
 ## Reference
 
-- [Requests feature reference](../../features/requests.md)
+- [Requests feature reference](../../Features/requests.md)

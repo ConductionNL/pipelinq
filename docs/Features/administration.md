@@ -38,19 +38,19 @@ All configuration is stored in Nextcloud's IAppConfig and survives app updates a
 
 ### OpenRegister Integration (MVP)
 
-Pipelinq owns no database tables — all data is stored as OpenRegister objects in the `pipelinq` register with 11 schemas:
+Pipelinq owns no database tables. All data is stored as OpenRegister objects in the `pipelinq` register with 11 schemas:
 
-- `client` — Person or organization
-- `contact` — Contact person linked to a client
-- `lead` — Sales opportunity
-- `request` — Service/intake request
-- `pipeline` — Configurable workflow board with stages
-- `product` — Product or service catalog item
-- `productCategory` — Product category hierarchy
-- `leadProduct` — Product line items on leads
-- `queue` — Priority work queue for routing
-- `skill` — Skill/expertise definition for routing
-- `agentProfile` — Agent skill profile and routing configuration
+- `client`: Person or organization
+- `contact`: Contact person linked to a client
+- `lead`: Sales opportunity
+- `request`: Service/intake request
+- `pipeline`: Configurable workflow board with stages
+- `product`: Product or service catalog item
+- `productCategory`: Product category hierarchy
+- `leadProduct`: Product line items on leads
+- `queue`: Priority work queue for routing
+- `skill`: Skill/expertise definition for routing
+- `agentProfile`: Agent skill profile and routing configuration
 
 ### Auto-Configuration on Install (MVP)
 

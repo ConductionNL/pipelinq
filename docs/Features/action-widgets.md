@@ -29,11 +29,11 @@ Provides an inline form for creating service requests (verzoeken) directly from 
 
 | Field | Type | Required | Default |
 |-------|------|----------|---------|
-| Title | Text input | Yes | — |
-| Client | Autocomplete | No | — |
-| Category | Text input | No | — |
+| Title | Text input | Yes | n/a |
+| Client | Autocomplete | No | n/a |
+| Category | Text input | No | n/a |
 | Priority | Dropdown | No | normal |
-| Channel | Dropdown | No | — |
+| Channel | Dropdown | No | n/a |
 
 ### Behavior
 
@@ -52,11 +52,11 @@ Provides an inline form for creating sales leads with pipeline assignment.
 
 | Field | Type | Required | Default |
 |-------|------|----------|---------|
-| Title | Text input | Yes | — |
-| Client | Autocomplete | No | — |
-| Pipeline | Dropdown | No | — |
-| Value | Number input | No | — |
-| Source | Text input | No | — |
+| Title | Text input | Yes | n/a |
+| Client | Autocomplete | No | n/a |
+| Pipeline | Dropdown | No | n/a |
+| Value | Number input | No | n/a |
+| Source | Text input | No | n/a |
 
 ### Behavior
 

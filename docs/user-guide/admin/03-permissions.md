@@ -27,28 +27,28 @@ Settings menu → **Administration settings** → **Pipelinq**.
 
 Permissions are managed via the **Agent Profiles** section on the admin page. Each agent profile maps a Nextcloud group onto a role + scope; users inherit the most-permissive profile they qualify for across all their groups.
 
-![Permissions section](/screenshots/tutorials/admin/03-permissions.png)
+![Permissions section](/screenshots/user-guide/admin/03-permissions.png)
 
 ### 3. Add a role mapping
 
 For each role:
 
-- **Group** — the Nextcloud group ID.
-- **Role** — `viewer` / `editor` / `manager` / `admin` (verify exact role names against the actual UI).
-- **Scope** — own / team / all-org.
+- **Group**: the Nextcloud group ID.
+- **Role**: `viewer` / `editor` / `manager` / `admin` (verify exact role names against the actual UI).
+- **Scope**: own / team / all-org.
 
 Role matrix:
 
 | Role | Read | Create | Edit | Delete | Admin settings |
 |---|---|---|---|---|---|
-| viewer | own scope | — | — | — | — |
-| editor | own scope | clients, leads, requests, contact moments, callbacks | own records | — | — |
-| manager | team scope | everything editor can | team's records | own records | — |
+| viewer | own scope | n/a | n/a | n/a | n/a |
+| editor | own scope | clients, leads, requests, contact moments, callbacks | own records | n/a | n/a |
+| manager | team scope | everything editor can | team's records | own records | n/a |
 | admin | all-org | everything | everything | everything | yes |
 
 Scope semantics: *own* = records you created or are assigned to, *team* = records belonging to anyone in your queue, *all-org* = every record in the register.
 
-![Add role mapping](/screenshots/tutorials/admin/03-add-mapping.png)
+![Add role mapping](/screenshots/user-guide/admin/03-add-mapping.png)
 
 ### 4. Save and verify
 
@@ -66,9 +66,9 @@ Log in as a member of the assigned group and confirm:
 
 | Symptom | Fix |
 |---|---|
-| Member doesn't get the new permission | Reload — permissions are cached on initial state. |
+| Member doesn't get the new permission | Reload n/a permissions are cached on initial state. |
 | Conflicting roles across multiple groups | The most-permissive role wins. There's no priority order. |
 
 ## Reference
 
-- [Permissions feature reference](../../features/permissions.md)
+- [Permissions feature reference](../../Features/permissions.md)

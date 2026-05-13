@@ -28,7 +28,7 @@ Records how the lead was acquired (e.g., website, referral, phone, campaign) for
 
 ### Lead Priority (MVP)
 
-Four-level priority system (low, normal, high, urgent) with visual indicators — urgent shows in error color, high in warning color.
+Four-level priority system (low, normal, high, urgent) with visual indicators: urgent shows in error color, high in warning color.
 
 ### Lead Assignment (MVP)
 
