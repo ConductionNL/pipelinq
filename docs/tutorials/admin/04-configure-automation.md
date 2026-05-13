@@ -24,19 +24,23 @@ Settings menu → **Administration settings** → **Pipelinq**.
 
 ![Admin settings](/screenshots/tutorials/admin/04-admin-settings.png)
 
-### 2. Open the **Workflows & automation** section
+### 2. Open the **Queues** + **Skills** sections (workflow), plus the in-app **Automations** route (rules)
 
-`{{TODO: confirm section name and whether request types and workflows are separate panels}}`
+Request workflows are spread across two surfaces. The **Queues** section on the admin page defines the queues a request can sit in (entry queue, escalation queue, closed queue); the **Skills** section maps the skills required to handle each queue. Automation rules live in the in-app **Automations** view (Pipelinq nav → *Automations*) — admins build them there, not on the settings page.
 
 ### 3. Define handling states per request type
 
-`{{TODO: add-state flow, ordering, which state is the "open" entry state, which are "closed"}}`
+Each request type carries an ordered list of states. The state list is stored as the *lifecycle* on the request schema (see [Configure request types](./02-request-types.md) → *Lifecycle* section). The first state is the *entry* state — every newly-created request lands there. States marked **Closed** terminate the workflow; states marked **Escalated** auto-route to the configured escalation queue. To add a state, expand the request type's *Lifecycle* row and click **+ Add state**; drag the state by its handle to reorder.
 
 ![Workflow states](/screenshots/tutorials/admin/04-states.png)
 
 ### 4. Add automation rules
 
-`{{TODO: rule builder — trigger (on create / on state change), condition, action (assign, notify, escalate)}}`
+Open the in-app **Automations** view (left navigation under *configuration*). Click **+ Add Item** to create a rule. The rule builder has three sections — **Trigger**, **Condition**, **Action**.
+
+- **Trigger**: *On create* (request just registered), *On state change* (a transition fires), *On timer* (SLA clock crosses a threshold).
+- **Condition** (optional): field-match groups joined with AND / OR — e.g. *type = complaint AND severity = critical*. Leave empty for "always".
+- **Action**: *Assign to user / queue*, *Notify (in-app, email, or n8n webhook)*, *Escalate to queue*, *Transition to state*, *Create task*. Stack multiple actions on one rule — they run in order.
 
 ![Automation rule](/screenshots/tutorials/admin/04-rule.png)
 

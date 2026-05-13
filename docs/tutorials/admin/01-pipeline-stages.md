@@ -26,11 +26,11 @@ Settings menu → **Administration settings** → **Pipelinq**.
 
 ### 2. Pick a pipeline
 
-`{{TODO: pipeline picker UI}}`
+Scroll to the **Pipelines** section on the admin page. Each pipeline is a card with its name, slug, and stage count. Click the pipeline card to open its editor — or click **+ Add pipeline** to create a new one (name + slug + initial stage list).
 
 ### 3. Add or rename stages
 
-`{{TODO: drag-to-reorder behaviour, add-stage flow, name validation}}`
+The stages editor lists stages in column order with a drag handle on the left of each row. Drag a stage by its handle to reorder. **+ Add stage** at the bottom of the list adds an empty row — name is required and must be unique within the pipeline; the slug is auto-derived but editable. To rename, click the name field inline and type the new value.
 
 ![Stages editor](/screenshots/tutorials/admin/01-stages-editor.png)
 

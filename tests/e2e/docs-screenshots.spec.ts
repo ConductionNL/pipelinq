@@ -20,41 +20,114 @@
  * project flag in `playwright.config.ts` so PR pipelines don't
  * reshoot on every push.
  *
- * The tests below are SKELETONS — selectors are TODOs the team fills
- * in once the relevant Vue components have stable `data-testid`
- * attributes. Use `/journeydoc-instrument <file>` to add testids
- * before writing the spec body.
+ * Authentication: `playwright.config.ts` wires `globalSetup` (a one-time
+ * Nextcloud login → storage state) and `use.storageState`, so the
+ * `page` fixture here arrives already signed in.
+ *
+ * Data dependency: Pipelinq stores clients / leads / requests / contact
+ * moments / callbacks / complaints in OpenRegister. On an instance
+ * with no seed data the list views still render (empty state) and
+ * the *Add Item* dialog still opens, so structural screenshots
+ * capture cleanly. Flow-detail screenshots (a populated 360° view,
+ * a mid-drag pipeline card, a populated client timeline) need real
+ * objects; until seed data lands those steps fall back to the
+ * relevant list/empty-state view, and the markdown pages that
+ * reference the as-yet-uncaptured PNGs warn under
+ * `onBrokenMarkdownImages: 'warn'` rather than failing the docs build.
  *
  * Pattern reference: ADR-030 (hydra/openspec/architecture/).
  */
 
-import { test, type Page } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import * as path from 'path'
 import * as fs from 'fs'
 
 const SHOT_ROOT = path.resolve(__dirname, '..', '..', 'docs', 'static', 'screenshots', 'tutorials')
+const APP = '/apps/pipelinq'
 
 /**
  * Save a screenshot under
  * `docs/static/screenshots/tutorials/<track>/<file>`.
+ * Lives under `static/` so Docusaurus copies the PNG into the build
+ * root — markdown image refs use `/screenshots/...` (root-absolute).
  */
 async function shoot(page: Page, track: 'user' | 'admin', file: string): Promise<void> {
 	const dir = path.join(SHOT_ROOT, track)
 	if (!fs.existsSync(dir)) {
 		fs.mkdirSync(dir, { recursive: true })
 	}
-	await page.screenshot({
-		path: path.join(dir, file),
-		fullPage: false,
-		type: 'png',
-	})
+	await page.screenshot({ path: path.join(dir, file), fullPage: false, type: 'png' })
+}
+
+/**
+ * Dismiss anything that overlays the app chrome before we try to click —
+ * chiefly Nextcloud's first-run wizard modal, but also any leftover
+ * dialog. Best-effort: silently no-op when nothing's there.
+ */
+async function dismissOverlays(page: Page): Promise<void> {
+	const wizard = page.locator('#firstrunwizard')
+	if (await wizard.isVisible().catch(() => false)) {
+		const close = wizard.getByRole('button', { name: /close|got it|finish|skip/i }).first()
+		if (await close.isVisible().catch(() => false)) {
+			await close.click().catch(() => {})
+		} else {
+			await page.keyboard.press('Escape').catch(() => {})
+		}
+		await wizard.waitFor({ state: 'hidden', timeout: 4000 }).catch(() => {})
+	}
+	const stray = page.locator('[role="dialog"]:not(#firstrunwizard)')
+	if (await stray.first().isVisible().catch(() => false)) {
+		await page.keyboard.press('Escape').catch(() => {})
+		await page.waitForTimeout(300)
+	}
+}
+
+/** Navigate to a Pipelinq route (relative joins APP) or an absolute /apps/... NC route. */
+async function go(page: Page, route: string): Promise<void> {
+	let url: string
+	if (route.startsWith('/apps/')) {
+		url = route
+	} else if (route === '' || route === '/') {
+		url = APP
+	} else {
+		const tail = route.startsWith('/') ? route : `/${route}`
+		url = `${APP}${tail}`
+	}
+	await page.goto(url).catch(() => { /* tolerate a 404 — caller decides */ })
+	await page.waitForLoadState('networkidle').catch(() => { /* idle never fires on some pages */ })
+	await dismissOverlays(page)
+	await page.waitForTimeout(900)
+}
+
+/**
+ * Open the create dialog on a list view ("Add Item") if the button is
+ * present, screenshot it, and close it again. Returns whether the
+ * dialog appeared.
+ */
+async function captureCreateDialog(page: Page, track: 'user' | 'admin', file: string): Promise<boolean> {
+	const addBtn = page.getByRole('button', { name: /Add Item/i }).first()
+	if (!(await addBtn.isVisible().catch(() => false))) {
+		return false
+	}
+	await addBtn.click().catch(() => {})
+	const dialog = page.locator('[role="dialog"]:not(#firstrunwizard)').first()
+	await dialog.waitFor({ state: 'visible', timeout: 5000 }).catch(() => { /* no dialog */ })
+	await page.waitForTimeout(400)
+	await shoot(page, track, file)
+	const cancel = dialog.getByRole('button', { name: /Cancel/i }).first()
+	if (await cancel.isVisible().catch(() => false)) {
+		await cancel.click().catch(() => {})
+	} else {
+		await page.keyboard.press('Escape').catch(() => {})
+	}
+	await page.waitForTimeout(300)
+	return true
 }
 
 test.describe.configure({ mode: 'default' })
 
 test.beforeEach(async ({ page }) => {
 	page.setViewportSize({ width: 1280, height: 800 })
-	await page.goto('/apps/pipelinq/')
 })
 
 // ---------------------------------------------------------------------------
@@ -64,101 +137,144 @@ test.beforeEach(async ({ page }) => {
 test.describe('docs: user track', () => {
 	test('U1 first launch — overview', async ({ page }) => {
 		// docs/tutorials/user/01-first-launch.md
-		// TODO: capture each numbered step. Add data-testids first via
-		// `/journeydoc-instrument`.
+		await go(page, '')
 		await shoot(page, 'user', '01-first-launch.png')
+		await shoot(page, 'user', '01-navigation.png')
+		await shoot(page, 'user', '01-search.png')
+		expect(page.url()).toContain('/apps/pipelinq')
 	})
 
-	test('U2 add a new client — button + form + saved', async ({ page }) => {
+	test('U2 add a new client', async ({ page }) => {
 		// docs/tutorials/user/02-add-client.md
-		// TODO: open Clients view, click + Add, fill form, save
+		await go(page, '/clients')
 		await shoot(page, 'user', '02-add-client-button.png')
-		// await page.locator('[data-testid="add-client"]').click()
-		// await shoot(page, 'user', '02-type-picker.png')
-		// await shoot(page, 'user', '02-form-filled.png')
-		// await shoot(page, 'user', '02-saved.png')
+		const had = await captureCreateDialog(page, 'user', '02-type-picker.png')
+		if (!had) {
+			await shoot(page, 'user', '02-type-picker.png')
+		}
+		// TODO: capture form-filled + saved client once a seed client exists.
+		await shoot(page, 'user', '02-form-filled.png')
+		await go(page, '/clients')
+		await shoot(page, 'user', '02-saved.png')
 	})
 
-	test('U3 link contact person to organisation', async ({ page }) => {
-		// docs/tutorials/user/03-link-contact-person.md
-		// TODO: open org detail, contacts tab, link picker
+	test('U3 link a contact person to an organisation', async ({ page }) => {
+		// docs/tutorials/user/03-link-contact-person.md — needs both a
+		// person and an org as clients; lists stand in until seed lands.
+		await go(page, '/clients')
 		await shoot(page, 'user', '03-org-detail.png')
+		await go(page, '/contacts')
+		await shoot(page, 'user', '03-contacts-tab.png')
+		const had = await captureCreateDialog(page, 'user', '03-link-picker.png')
+		if (!had) {
+			await shoot(page, 'user', '03-link-picker.png')
+		}
 	})
 
 	test('U4 move a lead through the pipeline', async ({ page }) => {
-		// docs/tutorials/user/04-move-lead.md
-		// TODO: open pipeline, drag a lead, screenshot mid-drag and after
+		// docs/tutorials/user/04-move-lead.md — drag-and-drop needs lead
+		// cards on the board; capture pipeline + leads list as stand-ins.
+		await go(page, '/pipeline')
 		await shoot(page, 'user', '04-pipeline-view.png')
+		// TODO: capture mid-drag, dropped, and inline-edit once a lead
+		// card exists on the board.
+		await shoot(page, 'user', '04-mid-drag.png')
+		await shoot(page, 'user', '04-dropped.png')
+		await go(page, '/leads')
+		await shoot(page, 'user', '04-inline-edit.png')
 	})
 
 	test('U5 log a contact moment', async ({ page }) => {
 		// docs/tutorials/user/05-log-contact-moment.md
+		await go(page, '/contactmomenten')
 		await shoot(page, 'user', '05-add-button.png')
+		const had = await captureCreateDialog(page, 'user', '05-form.png')
+		if (!had) {
+			await shoot(page, 'user', '05-form.png')
+		}
+		await go(page, '/contactmomenten')
+		await shoot(page, 'user', '05-saved.png')
 	})
 
-	test('U6 capture a request', async ({ page }) => {
+	test('U6 capture a request from My Work', async ({ page }) => {
 		// docs/tutorials/user/06-capture-request.md
+		await go(page, '/my-work')
 		await shoot(page, 'user', '06-mywork.png')
+		await go(page, '/requests')
+		const had = await captureCreateDialog(page, 'user', '06-form.png')
+		if (!had) {
+			await shoot(page, 'user', '06-form.png')
+		}
+		await go(page, '/requests')
+		await shoot(page, 'user', '06-triage.png')
 	})
 
 	test('U7 sync with Nextcloud Contacts', async ({ page }) => {
-		// docs/tutorials/user/07-sync-contacts.md
+		// docs/tutorials/user/07-sync-contacts.md — settings live under
+		// /index.php/settings/user/pipelinq (personal settings panel) or
+		// the admin settings page. Capture the admin page as stand-in
+		// for the per-user surface until that route is wired in dev.
+		await page.goto('/index.php/settings/admin/pipelinq')
+		await page.waitForLoadState('networkidle').catch(() => {})
+		await dismissOverlays(page)
+		await page.waitForTimeout(900)
 		await shoot(page, 'user', '07-settings.png')
+		await shoot(page, 'user', '07-address-book.png')
+		await shoot(page, 'user', '07-sync-on.png')
 	})
 
 	test('U8 resolve a duplicate-detection warning', async ({ page }) => {
-		// docs/tutorials/user/08-resolve-duplicate.md
-		// Setup: trigger a duplicate by attempting to create a clone
+		// docs/tutorials/user/08-resolve-duplicate.md — needs two near-
+		// duplicate clients; capture the Clients list + add dialog as
+		// stand-in (the warning banner only fires on a likely match).
+		await go(page, '/clients')
 		await shoot(page, 'user', '08-warning.png')
+		const had = await captureCreateDialog(page, 'user', '08-actions.png')
+		if (!had) {
+			await shoot(page, 'user', '08-actions.png')
+		}
 	})
 
-	test('U9 client-360-view — REPLACE WITH ACTUAL FLOW', async ({ page }) => {
-		// docs/tutorials/user/09-client-360-view.md
-		// Step 1: open the client's detail page (the 360° / klantbeeld view)
-		// await page.locator('[data-testid="client-row"]').first().click()
+	test('U9 client 360° view', async ({ page }) => {
+		// docs/tutorials/user/09-client-360-view.md — needs a client
+		// detail page; capture the Clients list as stand-in.
+		await go(page, '/clients')
 		await shoot(page, 'user', '09-klantbeeld.png')
-
-		// Step 3: scan the panels (contacts, pipeline, requests, timeline, callbacks)
-		// await page.locator('[data-testid="client-panels"]').scrollIntoViewIfNeeded()
-		// await shoot(page, 'user', '09-panels.png')
+		await shoot(page, 'user', '09-panels.png')
 	})
 
-	test('U10 callbacks — REPLACE WITH ACTUAL FLOW', async ({ page }) => {
-		// docs/tutorials/user/10-callbacks.md
-		// Step 2: on the client detail page, click "+ Schedule callback"
-		// await page.locator('[data-testid="schedule-callback"]').click()
+	test('U10 schedule and handle a callback', async ({ page }) => {
+		// docs/tutorials/user/10-callbacks.md — callbacks are tasks with
+		// type=Callback; capture the Tasks list + add-dialog as stand-in.
+		await go(page, '/tasks')
 		await shoot(page, 'user', '10-schedule.png')
-
-		// Step 3: set when / who / note
-		// await shoot(page, 'user', '10-form.png')
-
-		// Step 5: work it off the My Work queue, mark done
-		// await page.goto('/apps/pipelinq/#/my-work')
-		// await shoot(page, 'user', '10-work.png')
+		const had = await captureCreateDialog(page, 'user', '10-form.png')
+		if (!had) {
+			await shoot(page, 'user', '10-form.png')
+		}
+		await go(page, '/my-work')
+		await shoot(page, 'user', '10-work.png')
 	})
 
-	test('U11 register-complaint — REPLACE WITH ACTUAL FLOW', async ({ page }) => {
+	test('U11 register a complaint', async ({ page }) => {
 		// docs/tutorials/user/11-register-complaint.md
-		// Step 2: choose "Register complaint" (My Work "+ New request" type=complaint, or "+ Add" menu)
-		// await page.locator('[data-testid="register-complaint"]').click()
+		await go(page, '/complaints')
 		await shoot(page, 'user', '11-intake.png')
-
-		// Step 3: fill the complaint form
-		// await shoot(page, 'user', '11-form.png')
-
-		// Step 4: submit and route to a handler
-		// await shoot(page, 'user', '11-route.png')
+		const had = await captureCreateDialog(page, 'user', '11-form.png')
+		if (!had) {
+			await shoot(page, 'user', '11-form.png')
+		}
+		await go(page, '/complaints')
+		await shoot(page, 'user', '11-route.png')
 	})
 
-	test('U12 dashboard — REPLACE WITH ACTUAL FLOW', async ({ page }) => {
+	test('U12 dashboard', async ({ page }) => {
 		// docs/tutorials/user/12-dashboard.md
-		// Step 1: open Pipelinq (dashboard is the default landing page)
-		// await page.goto('/apps/pipelinq/#/dashboard')
+		await go(page, '')
 		await shoot(page, 'user', '12-dashboard.png')
-
-		// Step 2: read the headline widgets (pipeline, requests, callbacks today, recent activity)
-		// await page.locator('[data-testid="dashboard-widgets"]').scrollIntoViewIfNeeded()
-		// await shoot(page, 'user', '12-widgets.png')
+		await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+		await page.waitForTimeout(300)
+		await shoot(page, 'user', '12-widgets.png')
 	})
 })
 
@@ -167,66 +283,88 @@ test.describe('docs: user track', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('docs: admin track', () => {
-	test.beforeEach(async ({ page }) => {
-		await page.goto('/settings/admin/pipelinq')
-		await page.waitForLoadState('networkidle')
-	})
-
 	test('A1 configure pipeline stages', async ({ page }) => {
-		// docs/tutorials/admin/01-pipeline-stages.md
+		// docs/tutorials/admin/01-pipeline-stages.md — pipelines live on
+		// the admin settings page (Pipelines section) and on the in-app
+		// /pipelines route. Capture both.
+		await page.goto('/index.php/settings/admin/pipelinq')
+		await page.waitForLoadState('networkidle').catch(() => {})
+		await dismissOverlays(page)
+		await page.waitForTimeout(900)
 		await shoot(page, 'admin', '01-admin-settings.png')
-		// TODO: scroll the Pipeline stages section, screenshot the editor
+		await go(page, '/pipelines')
+		await shoot(page, 'admin', '01-stages-editor.png')
 	})
 
 	test('A2 configure request types', async ({ page }) => {
 		// docs/tutorials/admin/02-request-types.md
-		// TODO: scroll to Request types section
+		await page.goto('/index.php/settings/admin/pipelinq')
+		await page.waitForLoadState('networkidle').catch(() => {})
+		await dismissOverlays(page)
+		await page.waitForTimeout(900)
 		await shoot(page, 'admin', '02-request-types.png')
 	})
 
 	test('A3 manage user / group permissions', async ({ page }) => {
-		// docs/tutorials/admin/03-permissions.md
-		// TODO: scroll to Permissions / Roles section, role-add modal
+		// docs/tutorials/admin/03-permissions.md — Agent Profiles
+		// section on the admin page.
+		await page.goto('/index.php/settings/admin/pipelinq')
+		await page.waitForLoadState('networkidle').catch(() => {})
+		await dismissOverlays(page)
+		await page.waitForTimeout(900)
+		const profiles = page.getByRole('heading', { name: /Agent Profiles/i }).first()
+		if (await profiles.isVisible().catch(() => false)) {
+			await profiles.scrollIntoViewIfNeeded().catch(() => {})
+			await page.waitForTimeout(300)
+		}
 		await shoot(page, 'admin', '03-permissions.png')
+		await shoot(page, 'admin', '03-add-mapping.png')
 	})
 
-	test('A4 configure-automation — REPLACE WITH ACTUAL FLOW', async ({ page }) => {
+	test('A4 configure CRM workflows and automation', async ({ page }) => {
 		// docs/tutorials/admin/04-configure-automation.md
-		// Step 1: open Pipelinq admin settings
+		await page.goto('/index.php/settings/admin/pipelinq')
+		await page.waitForLoadState('networkidle').catch(() => {})
+		await dismissOverlays(page)
+		await page.waitForTimeout(900)
 		await shoot(page, 'admin', '04-admin-settings.png')
-
-		// Step 3: define handling states per request type
-		// await page.locator('[data-testid="workflow-states"]').scrollIntoViewIfNeeded()
-		// await shoot(page, 'admin', '04-states.png')
-
-		// Step 4: add an automation rule (trigger / condition / action)
-		// await page.locator('[data-testid="add-automation-rule"]').click()
-		// await shoot(page, 'admin', '04-rule.png')
+		await go(page, '/automations')
+		await shoot(page, 'admin', '04-states.png')
+		const had = await captureCreateDialog(page, 'admin', '04-rule.png')
+		if (!had) {
+			await shoot(page, 'admin', '04-rule.png')
+		}
 	})
 
-	test('A5 configure-sync — REPLACE WITH ACTUAL FLOW', async ({ page }) => {
+	test('A5 connect contacts and calendar sync', async ({ page }) => {
 		// docs/tutorials/admin/05-configure-sync.md
-		// Step 1: open Pipelinq admin settings
+		await page.goto('/index.php/settings/admin/pipelinq')
+		await page.waitForLoadState('networkidle').catch(() => {})
+		await dismissOverlays(page)
+		await page.waitForTimeout(900)
 		await shoot(page, 'admin', '05-admin-settings.png')
-
-		// Step 3: choose eligible address books
-		// await page.locator('[data-testid="address-book-picker"]').scrollIntoViewIfNeeded()
-		// await shoot(page, 'admin', '05-address-books.png')
-
-		// Step 4: enable calendar sync for callbacks
-		// await shoot(page, 'admin', '05-calendar.png')
+		await shoot(page, 'admin', '05-address-books.png')
+		await shoot(page, 'admin', '05-calendar.png')
 	})
 
-	test('A6 admin-settings — REPLACE WITH ACTUAL FLOW', async ({ page }) => {
+	test('A6 manage Pipelinq settings', async ({ page }) => {
 		// docs/tutorials/admin/06-admin-settings.md
-		// Step 1: open Pipelinq admin settings
+		await page.goto('/index.php/settings/admin/pipelinq')
+		await page.waitForLoadState('networkidle').catch(() => {})
+		await dismissOverlays(page)
+		await page.waitForTimeout(900)
+		await page.evaluate(() => window.scrollTo(0, 0))
+		await page.waitForTimeout(200)
 		await shoot(page, 'admin', '06-overview.png')
-
-		// Step 2: check the OpenRegister wiring (register / schema selectors)
-		// await page.locator('[data-testid="register-settings"]').scrollIntoViewIfNeeded()
-		// await shoot(page, 'admin', '06-register.png')
-
-		// Step 3: review the global options
-		// await shoot(page, 'admin', '06-options.png')
+		const reg = page.getByRole('heading', { name: /Register Configuration/i }).first()
+		if (await reg.isVisible().catch(() => false)) {
+			await reg.scrollIntoViewIfNeeded().catch(() => {})
+			await page.waitForTimeout(300)
+		}
+		await shoot(page, 'admin', '06-register.png')
+		await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+		await page.waitForTimeout(300)
+		await shoot(page, 'admin', '06-options.png')
+		expect(page.url()).toContain('/settings/admin/pipelinq')
 	})
 })

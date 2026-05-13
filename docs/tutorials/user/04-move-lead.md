@@ -25,7 +25,7 @@ Move an existing lead from one stage to another, optionally updating its value o
 
 ### 2. Find the lead card you want to move
 
-`{{TODO: filter / search behaviour, sort order}}`
+The filter chips above the columns let you narrow by **Assignee**, **Pipeline**, **Source**, or **Tag**. The search field at the top right matches lead titles. Columns sort newest-first by default; click the column header to flip the sort, or use the **Actions → Sort by** menu for value or close-date ordering.
 
 ### 3. Drag the card to the target stage
 
