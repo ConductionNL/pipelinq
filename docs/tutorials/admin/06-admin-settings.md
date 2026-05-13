@@ -27,13 +27,13 @@ Settings menu → **Administration settings** → **Pipelinq**.
 
 ### 2. Check the OpenRegister wiring
 
-`{{TODO: confirm where the register / schema selectors are and what the sensible defaults are}}`
+The **Register Configuration** section is the second block on the page. The *Register* dropdown picks which OpenRegister register backs Pipelinq — the sensible default is the auto-imported *Pipelinq* register, created by the first-run *Re-import configuration* action. Below the register dropdown, individual schema dropdowns map each data type (*Client*, *Contact*, *Lead*, *Request*, *Pipeline*, *Stage*, *Contactmoment*, *Task*, *Complaint*, *Product*) onto its schema. Schemas auto-fill from the chosen register; only override when running a non-standard register layout.
 
 ![Register settings](/screenshots/tutorials/admin/06-register.png)
 
 ### 3. Review global options
 
-`{{TODO: list the global toggles — default landing page (dashboard vs. My Work), retention, notification defaults, metrics/Prometheus toggle}}`
+The **Pipelinq Settings** section at the top of the page holds the global toggles — **Default landing page** (*Dashboard* vs. *My Work*), **Default pipeline** (which pipeline new leads land on), **Notification defaults** (in-app on / off, email on / off — users can override per-account), **Activity retention** (how long the activity timeline keeps closed records, default *forever*), and the integration toggles (*Contacts sync*, *Calendar sync*, *Email integration*, *n8n webhooks*, *Metrics/Prometheus endpoint*).
 
 ![Global options](/screenshots/tutorials/admin/06-options.png)
 

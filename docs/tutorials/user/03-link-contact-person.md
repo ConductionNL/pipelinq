@@ -25,9 +25,9 @@ From Clients → Organisations, click the org row.
 
 ![Organisation detail](/screenshots/tutorials/user/03-org-detail.png)
 
-### 2. Open the **Contact persons** tab
+### 2. Open the **Contacts** tab on the organisation's sidebar
 
-`{{TODO: confirm tab label}}`
+The detail view's right-hand sidebar carries one tab per linked record type — *Contacts*, *Leads*, *Requests*, *Contactmomenten*, *Tasks*, *History*. Pick **Contacts**.
 
 ![Contact persons tab](/screenshots/tutorials/user/03-contacts-tab.png)
 
@@ -37,7 +37,7 @@ The link picker opens.
 
 ### 4. Pick the person + role
 
-`{{TODO: list the available roles — sales manager, project lead, etc. — and any custom-role configuration}}`
+Roles ship with sensible defaults — *Contact*, *Sales manager*, *Account manager*, *Project lead*, *Technical contact*, *Billing contact*, *Decision maker*. An admin can add custom roles per organisation type from **Administration settings → Pipelinq**.
 
 ![Link picker](/screenshots/tutorials/user/03-link-picker.png)
 

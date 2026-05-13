@@ -22,13 +22,13 @@ Open a client's 360° view and locate their open leads, recent contact moments, 
 
 From the Clients list, or by searching the client's name in the top search bar.
 
-`{{TODO: confirm whether the 360° view is the default detail page or a separate tab}}`
+The 360° view IS the default detail page — opening any client row lands you here. The sidebar tabs on the right are the per-record-type drill-downs (*Contacts*, *Leads*, *Requests*, *Contactmomenten*, *Tasks*, *History*); the page header + summary panels are the 360° view itself.
 
 ![Client 360° view](/screenshots/tutorials/user/09-klantbeeld.png)
 
 ### 2. Review the summary header
 
-`{{TODO: list what the header shows — name, type, owner, status, open-work counts}}`
+The header shows the client **Name** with **Type** (person / organisation) and **Status** badges, the **Owner** (account manager) avatar with a quick-reassign menu, and a row of open-work counts — *Open leads*, *Open requests*, *Pending callbacks*, *Open complaints* — each clickable as a filtered jump-link.
 
 ### 3. Scan the panels
 

@@ -25,19 +25,19 @@ Settings menu → **Administration settings** → **Pipelinq**.
 
 ![Admin settings](/screenshots/tutorials/admin/05-admin-settings.png)
 
-### 2. Open the **Contacts & calendar sync** section
+### 2. Scroll to **Pipelinq Settings** → *Sync integrations*
 
-`{{TODO: confirm section name}}`
+The integration toggles live on the **Pipelinq Settings** section at the top of the admin page (above the *Register Configuration* block). The two toggles you need are *Enable Contacts sync* and *Enable Calendar sync*.
 
 ### 3. Choose eligible address books
 
-`{{TODO: address-book picker — system books vs. user books, which direction sync runs, dedupe behaviour}}`
+The address-book picker lists every address book on the Nextcloud instance — *system address books* (org-wide, available to all users) appear in the top group, *user address books* (per-account) in the bottom group. Sync is bidirectional by default: a contact created in Nextcloud Contacts appears in Pipelinq, and a client created in Pipelinq appears in the configured address book. Dedupe is by email-first then name-similarity; matching contacts are merged rather than duplicated. To opt out a book, leave it unchecked.
 
 ![Address book selection](/screenshots/tutorials/admin/05-address-books.png)
 
 ### 4. Enable calendar sync for callbacks
 
-`{{TODO: pick the calendar callbacks land in; whether it's per-user or one shared calendar}}`
+Pick the target calendar from the *Callback calendar* dropdown. You have two patterns — **Per-user**: each callback lands in the assignee's personal *Pipelinq callbacks* calendar (auto-created on first sync), which keeps personal calendars uncluttered for non-assignees. **Shared**: every callback lands in one org-wide calendar (pick an existing system calendar). The default is per-user; switch to shared when the org runs a centralised KCC where every agent sees every callback.
 
 ![Calendar sync](/screenshots/tutorials/admin/05-calendar.png)
 

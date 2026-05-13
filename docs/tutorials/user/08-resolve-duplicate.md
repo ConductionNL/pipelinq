@@ -34,7 +34,7 @@ The banner lists which existing client matches and on which fields (name, email,
 
 ### 3. Confirm
 
-`{{TODO: confirmation dialog details, especially for merge — irreversible}}`
+Merge opens a second dialog listing exactly what will move — linked leads, requests, contact moments, callbacks, tasks — and which client survives as the canonical record. Read the list, then click **Confirm merge**. The operation is logged in OpenRegister's audit trail; the duplicate's record is soft-deleted (recoverable from the OpenRegister admin if needed) but the merge itself cannot be undone in one click.
 
 ## Verification
 

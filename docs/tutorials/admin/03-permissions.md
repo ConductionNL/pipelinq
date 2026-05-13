@@ -23,9 +23,9 @@ Map a Nextcloud group to a Pipelinq role and verify the right capabilities are g
 
 Settings menu → **Administration settings** → **Pipelinq**.
 
-### 2. Go to **Permissions** (or **Roles**)
+### 2. Go to **Agent Profiles**
 
-`{{TODO: confirm section label}}`
+Permissions are managed via the **Agent Profiles** section on the admin page. Each agent profile maps a Nextcloud group onto a role + scope; users inherit the most-permissive profile they qualify for across all their groups.
 
 ![Permissions section](/screenshots/tutorials/admin/03-permissions.png)
 
@@ -37,7 +37,16 @@ For each role:
 - **Role** — `viewer` / `editor` / `manager` / `admin` (verify exact role names against the actual UI).
 - **Scope** — own / team / all-org.
 
-`{{TODO: full role matrix and what each role can do}}`
+Role matrix:
+
+| Role | Read | Create | Edit | Delete | Admin settings |
+|---|---|---|---|---|---|
+| viewer | own scope | — | — | — | — |
+| editor | own scope | clients, leads, requests, contact moments, callbacks | own records | — | — |
+| manager | team scope | everything editor can | team's records | own records | — |
+| admin | all-org | everything | everything | everything | yes |
+
+Scope semantics: *own* = records you created or are assigned to, *team* = records belonging to anyone in your queue, *all-org* = every record in the register.
 
 ![Add role mapping](/screenshots/tutorials/admin/03-add-mapping.png)
 

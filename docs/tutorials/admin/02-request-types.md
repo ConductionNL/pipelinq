@@ -28,7 +28,7 @@ Settings menu → **Administration settings** → **Pipelinq**.
 
 ### 3. Add a new type
 
-`{{TODO: form fields — label, internal ID, default initial-stage / queue, default assignee}}`
+Click **+ Add Item** in the *Request types* section. The dialog asks for **Label** (visible name, e.g. *Support call*), **Internal ID** (the slug used in filters and rule conditions — auto-derived from the label, editable), **Default queue** (the Pipelinq queue new requests of this type land in), and **Default assignee** (a Nextcloud user or *Auto-assign by queue rules*).
 
 ### 4. Set the conversion behaviour
 
@@ -38,7 +38,7 @@ For each type, decide:
 
 ### 5. Save
 
-`{{TODO: where users see the change — the request-create form's type picker}}`
+Click **Save** on the dialog. The new type is immediately available in the *Type* dropdown of the request-create form (Requests → **+ Add Item**, or the dashboard's **New Request** button) and appears as a filter chip on the My Work queue and the Requests list.
 
 ## Verification
 

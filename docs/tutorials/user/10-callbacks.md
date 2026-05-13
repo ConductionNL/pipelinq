@@ -20,9 +20,9 @@ Schedule a callback on a client, then pick it up from your queue and mark it don
 
 ### 1. Open the client's detail page
 
-### 2. Click **+ Schedule callback**
+### 2. Open the **Tasks** tab on the client's sidebar and click **+ Add Item**
 
-`{{TODO: confirm exact button label and whether it lives on the timeline or a Tasks tab}}`
+Callbacks are a *Task* with type *Callback (terugbelafspraak)* — they live on the Tasks sidebar tab (not on the timeline). The **Add Item** dialog has a *Type* picker; pick *Callback* to get the callback-specific fields.
 
 ![Schedule callback](/screenshots/tutorials/user/10-schedule.png)
 

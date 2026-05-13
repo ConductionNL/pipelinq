@@ -27,11 +27,15 @@ Or visit `/apps/pipelinq/` directly. The workspace renders with the **My Work** 
 
 ### 2. Scan the navigation
 
-`{{TODO: identify the primary nav items — clients, pipeline, requests, contact moments, settings — and add a screenshot of each landing page}}`
+The left navigation falls into two groups. The top group is your day-to-day work — **Dashboard**, **Clients**, **Contacts**, **Leads**, **Requests**, **Tasks**, **Contactmomenten**, **Complaints**, **Products**, **Pipeline**, **Surveys**, **Queues**, **Kennisbank**, **My Work**, **Reporting**. Below the divider sits the configuration group — **Pipelines**, **Forms**, **Automations**, and **Features & roadmap**.
+
+![Pipelinq navigation](/screenshots/tutorials/user/01-navigation.png)
 
 ### 3. Open the global search
 
-`{{TODO: where the search bar lives, what it searches across}}`
+The unified-search icon in the Nextcloud top bar (magnifying glass) searches across clients, leads, requests, and contact moments — Pipelinq registers each as a search provider so a single query surfaces matches from every record type.
+
+![Global search](/screenshots/tutorials/user/01-search.png)
 
 ## Verification
 
@@ -43,7 +47,8 @@ Or visit `/apps/pipelinq/` directly. The workspace renders with the **My Work** 
 | Symptom | Fix |
 |---|---|
 | Pipelinq isn't in the app launcher | Ask an admin to enable the app at **Settings → Apps**. |
-| `{{TODO: another likely first-run issue}}` | `{{TODO: fix}}` |
+| The dashboard widgets all read *No items found* | Expected on a fresh install — they fill in as you add clients, leads, and requests. |
+| Lists load but the *Add Item* dialog has no form fields | The Pipelinq register has not been imported — see [Manage Pipelinq settings](../admin/06-admin-settings.md). |
 
 ## Reference
 

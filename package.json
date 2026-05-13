@@ -13,7 +13,10 @@
 		"lint": "eslint src",
 		"lint-fix": "npm run lint -- --fix",
 		"stylelint": "stylelint src/**/*.vue src/**/*.scss src/**/*.css",
-		"stylelint-fix": "stylelint src/**/*.vue src/**/*.scss src/**/*.css --fix"
+		"stylelint-fix": "stylelint src/**/*.vue src/**/*.scss src/**/*.css --fix",
+		"test:e2e": "playwright test",
+		"test:e2e:docs": "playwright test --project docs-capture",
+		"test:e2e:install": "playwright install chromium"
 	},
 	"browserslist": [
 		"extends @nextcloud/browserslist-config"
@@ -53,6 +56,7 @@
 		"@nextcloud/eslint-plugin": "^2.2.1",
 		"@nextcloud/stylelint-config": "^2.4.0",
 		"@nextcloud/webpack-vue-config": "^6.0.1",
+		"@playwright/test": "^1.49.0",
 		"@vue/eslint-config-typescript": "^13.0.0",
 		"ajv": "^8.20.0",
 		"ajv-formats": "^3.0.1",

@@ -24,9 +24,9 @@ The default landing page after first login. The Requests tab is one of the queue
 
 ![My Work — Requests](/screenshots/tutorials/user/06-mywork.png)
 
-### 2. Click **+ New request**
+### 2. Click **New Request** on the dashboard (or **+ Add Item** in the **Requests** list)
 
-`{{TODO: confirm button label and entry point — could also be a global "+ Add" menu}}`
+The Pipelinq dashboard has a quick-action row with **New Lead**, **New Request**, **New Client** buttons. Either entry point opens the request create dialog; the list-view route is **Requests → + Add Item**.
 
 ### 3. Fill the request form
 

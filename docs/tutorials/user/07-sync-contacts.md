@@ -19,9 +19,9 @@ Configure the contacts sync once, verify two-way propagation works.
 
 ## Steps
 
-### 1. Open Pipelinq settings
+### 1. Open Personal settings → Pipelinq
 
-`{{TODO: settings entry point — probably in a top-right menu or per-user settings panel}}`
+Top-right avatar menu → **Personal settings** → in the *Personal* sidebar pick **Pipelinq**. (The sync is per-user — every user picks their own address book; admins can also enforce a default under **Administration settings → Pipelinq**.)
 
 ![Settings](/screenshots/tutorials/user/07-settings.png)
 
@@ -29,7 +29,7 @@ Configure the contacts sync once, verify two-way propagation works.
 
 ### 3. Pick the address book
 
-`{{TODO: address-book picker behaviour, multiple-selection, default}}`
+The picker lists every Nextcloud address book your account can read — your *Contacts* personal book plus any shared/system books. Multi-select is supported (sync runs in parallel per book). The default is *no sync* until you save.
 
 ![Address book picker](/screenshots/tutorials/user/07-address-book.png)
 
