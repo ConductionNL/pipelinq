@@ -35,9 +35,17 @@ webpackConfig.entry = {
 		import: path.join(__dirname, 'src', 'recentActivitiesWidget.js'),
 		filename: appId + '-recentActivitiesWidget.js',
 	},
-	clientSearchWidget: {
-		import: path.join(__dirname, 'src', 'clientSearchWidget.js'),
-		filename: appId + '-clientSearchWidget.js',
+	findClientWidget: {
+		import: path.join(__dirname, 'src', 'findClientWidget.js'),
+		filename: appId + '-findClientWidget.js',
+	},
+	startRequestWidget: {
+		import: path.join(__dirname, 'src', 'startRequestWidget.js'),
+		filename: appId + '-startRequestWidget.js',
+	},
+	createLeadWidget: {
+		import: path.join(__dirname, 'src', 'createLeadWidget.js'),
+		filename: appId + '-createLeadWidget.js',
 	},
 }
 
@@ -69,5 +77,52 @@ webpackConfig.plugins = [
 // Force all shared packages to resolve from pipelinq's own node_modules,
 // preventing the nextcloud-vue submodule's nested deps (Vue 3) from leaking in.
 webpackConfig.resolve.alias['@nextcloud/dialogs'] = path.resolve(__dirname, 'node_modules/@nextcloud/dialogs')
+
+// Bypass @nextcloud/axios's `exports` field which only declares the `import`
+// condition. @nextcloud/vue's CJS bundle still uses require('@nextcloud/axios')
+// and webpack 5's CommonJS resolver fails the exports check with:
+//   "." is not exported under the conditions ["require","module","webpack",...]
+// Aliasing the bare specifier directly at the dist entry sidesteps the
+// exports field gate. Use the $-suffixed exact-match form so subpath imports
+// (e.g. @nextcloud/axios/dist/foo) keep their normal resolution. Mirrors
+// decidesk's `ed34703c`.
+webpackConfig.resolve.alias['@nextcloud/axios$'] = path.resolve(__dirname, 'node_modules/@nextcloud/axios/dist/index.cjs')
+
+// Share Vue + @nextcloud/vue + pinia + icons + @conduction/nextcloud-vue
+// across every entry-point so each widget bundle no longer inlines its own
+// ~5 MB framework copy. Stable filenames (no contenthash in the JS name)
+// mean each widget's `Util::addScript` PHP call can reference the chunk
+// directly without a manifest. The vendor chunk is loaded once and cached
+// across every widget/page in the app.
+webpackConfig.optimization = {
+	...(webpackConfig.optimization || {}),
+	splitChunks: {
+		...(webpackConfig.optimization?.splitChunks || {}),
+		chunks: 'all',
+		cacheGroups: {
+			default: false,
+			defaultVendors: false,
+			ncVue: {
+				name: appId + '-shared-nc-vue',
+				// Matches both node_modules entries AND the monorepo-dev alias
+				// `../nextcloud-vue/src/...` which webpack resolves outside
+				// node_modules when @conduction/nextcloud-vue is aliased to it.
+				test: /[\\/]node_modules[\\/](@nextcloud[\\/]vue|@conduction[\\/]nextcloud-vue)[\\/]|[\\/]nextcloud-vue[\\/]src[\\/]/,
+				priority: 30,
+				reuseExistingChunk: true,
+				enforce: true,
+				filename: appId + '-shared-nc-vue.js',
+			},
+			vendor: {
+				name: appId + '-shared-vendor',
+				test: /[\\/]node_modules[\\/](vue|pinia|vue-material-design-icons|@vueuse|core-js)[\\/]/,
+				priority: 20,
+				reuseExistingChunk: true,
+				enforce: true,
+				filename: appId + '-shared-vendor.js',
+			},
+		},
+	},
+}
 
 module.exports = webpackConfig

@@ -70,6 +70,29 @@
 			</div>
 		</CnDetailCard>
 
+		<CnDetailCard :title="t('pipelinq', 'Summary')">
+			<div class="summary-grid">
+				<div class="summary-item">
+					<span class="summary-value">{{ openLeadsCount }}</span>
+					<span class="summary-label">{{ t('pipelinq', 'Open leads') }}</span>
+					<span class="summary-sub">{{ formatCurrency(openLeadsValue) }}</span>
+				</div>
+				<div class="summary-item">
+					<span class="summary-value">{{ wonLeadsCount }}</span>
+					<span class="summary-label">{{ t('pipelinq', 'Won leads') }}</span>
+					<span class="summary-sub">{{ formatCurrency(wonLeadsValue) }}</span>
+				</div>
+				<div class="summary-item">
+					<span class="summary-value">{{ openRequestsCount }}</span>
+					<span class="summary-label">{{ t('pipelinq', 'Open requests') }}</span>
+				</div>
+				<div class="summary-item">
+					<span class="summary-value summary-value--total">{{ formatCurrency(totalValue) }}</span>
+					<span class="summary-label">{{ t('pipelinq', 'Total value') }}</span>
+				</div>
+			</div>
+		</CnDetailCard>
+
 		<CnDetailCard :title="t('pipelinq', 'Contacts')">
 			<template #actions>
 				<NcButton @click="addContact">
@@ -164,6 +187,101 @@
 			</div>
 		</CnDetailCard>
 
+		<!-- Relationships -->
+		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Relationships')">
+			<ContactRelationships
+				:entity-id="clientId"
+				entity-type="client"
+				:entity-name="clientData.name || ''" />
+		</CnDetailCard>
+
+		<CnDetailCard :title="t('pipelinq', 'Contactmomenten')">
+			<template #actions>
+				<NcButton @click="showContactmomentQuickLog = true">
+					{{ t('pipelinq', 'Log contactmoment') }}
+				</NcButton>
+			</template>
+
+			<div v-if="contactmomenten.length === 0" class="section-empty">
+				<p>{{ t('pipelinq', 'Geen contactmomenten geregistreerd') }}</p>
+			</div>
+			<div v-else class="viewTableContainer">
+				<table class="viewTable">
+					<thead>
+						<tr>
+							<th>{{ t('pipelinq', 'Subject') }}</th>
+							<th>{{ t('pipelinq', 'Channel') }}</th>
+							<th>{{ t('pipelinq', 'Agent') }}</th>
+							<th>{{ t('pipelinq', 'Date') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="cm in contactmomenten"
+							:key="cm.id"
+							class="viewTableRow"
+							@click="$router.push({ name: 'ContactmomentDetail', params: { id: cm.id } })">
+							<td>{{ cm.subject || '-' }}</td>
+							<td>{{ cm.channel || '-' }}</td>
+							<td>{{ cm.agent || '-' }}</td>
+							<td>{{ formatDate(cm.contactedAt) }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</CnDetailCard>
+
+		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Activity')">
+			<ActivityTimeline :entity-type="'client'" :entity-id="clientId" />
+		</CnDetailCard>
+
+		<CnDetailCard :title="t('pipelinq', 'Complaints')">
+			<template #actions>
+				<NcButton @click="createComplaint">
+					{{ t('pipelinq', 'Add complaint') }}
+				</NcButton>
+			</template>
+
+			<div v-if="complaints.length === 0" class="section-empty">
+				<p>{{ t('pipelinq', 'No complaints found') }}</p>
+			</div>
+			<div v-else class="viewTableContainer">
+				<table class="viewTable">
+					<thead>
+						<tr>
+							<th>{{ t('pipelinq', 'Title') }}</th>
+							<th>{{ t('pipelinq', 'Status') }}</th>
+							<th>{{ t('pipelinq', 'Date') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="complaint in complaints"
+							:key="complaint.id"
+							class="viewTableRow"
+							@click="$router.push({ name: 'ComplaintDetail', params: { id: complaint.id } })">
+							<td>{{ complaint.title || '-' }}</td>
+							<td>{{ complaint.status || '-' }}</td>
+							<td>{{ formatDate(complaint._dateCreated || complaint.dateCreated) }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</CnDetailCard>
+
+		<!-- Contactmoment quick-log dialog -->
+		<NcDialog
+			v-if="showContactmomentQuickLog"
+			:name="t('pipelinq', 'Log contactmoment')"
+			size="normal"
+			@closing="showContactmomentQuickLog = false">
+			<ContactmomentQuickLog
+				:client-id="clientId"
+				:inline="true"
+				@saved="onContactmomentSaved"
+				@cancel="showContactmomentQuickLog = false" />
+		</NcDialog>
+
 		<!-- Delete warning dialog -->
 		<NcDialog
 			v-if="showDelete"
@@ -172,10 +290,10 @@
 			<p>
 				{{ t('pipelinq', 'Are you sure you want to delete "{name}"?', { name: clientData.name }) }}
 			</p>
-			<p v-if="contacts.length || leads.length || requests.length" class="delete-warning">
+			<p v-if="contacts.length || leads.length || requests.length || complaints.length" class="delete-warning">
 				{{ t('pipelinq', 'This client has linked entities:') }}
 			</p>
-			<ul v-if="contacts.length || leads.length || requests.length" class="delete-warning-list">
+			<ul v-if="contacts.length || leads.length || requests.length || complaints.length" class="delete-warning-list">
 				<li v-if="contacts.length">
 					{{ n('pipelinq', '%n contact', '%n contacts', contacts.length) }}
 				</li>
@@ -184,6 +302,9 @@
 				</li>
 				<li v-if="requests.length">
 					{{ n('pipelinq', '%n request', '%n requests', requests.length) }}
+				</li>
+				<li v-if="complaints.length">
+					{{ n('pipelinq', '%n complaint', '%n complaints', complaints.length) }}
 				</li>
 			</ul>
 			<template #actions>
@@ -203,6 +324,9 @@ import { NcButton, NcDialog } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import ClientForm from './ClientForm.vue'
+import ContactRelationships from '../../components/ContactRelationships.vue'
+import ContactmomentQuickLog from '../../components/ContactmomentQuickLog.vue'
+import ActivityTimeline from '../../components/ActivityTimeline.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -213,6 +337,9 @@ export default {
 		CnDetailPage,
 		CnDetailCard,
 		ClientForm,
+		ContactRelationships,
+		ContactmomentQuickLog,
+		ActivityTimeline,
 	},
 	props: {
 		clientId: {
@@ -226,7 +353,10 @@ export default {
 			requests: [],
 			contacts: [],
 			leads: [],
+			contactmomenten: [],
+			complaints: [],
 			showDelete: false,
+			showContactmomentQuickLog: false,
 		}
 	},
 	computed: {
@@ -246,10 +376,33 @@ export default {
 		sidebarProps() {
 			const config = this.objectStore.objectTypeRegistry.client || {}
 			return {
+				title: t('pipelinq', 'Client'),
 				register: config.register || '',
 				schema: config.schema || '',
 				hiddenTabs: ['tasks'],
 			}
+		},
+		openLeadsCount() {
+			return this.leads.filter(l => !this.isClosedLead(l)).length
+		},
+		openLeadsValue() {
+			return this.leads
+				.filter(l => !this.isClosedLead(l))
+				.reduce((sum, l) => sum + (parseFloat(l.value) || 0), 0)
+		},
+		wonLeadsCount() {
+			return this.leads.filter(l => l.status === 'won').length
+		},
+		wonLeadsValue() {
+			return this.leads
+				.filter(l => l.status === 'won')
+				.reduce((sum, l) => sum + (parseFloat(l.value) || 0), 0)
+		},
+		openRequestsCount() {
+			return this.requests.filter(r => r.status === 'new' || r.status === 'in_progress').length
+		},
+		totalValue() {
+			return this.openLeadsValue + this.wonLeadsValue
 		},
 	},
 	async mounted() {
@@ -331,12 +484,56 @@ export default {
 			} catch {
 				this.leads = []
 			}
+
+			try {
+				const allContactmomenten = await this.objectStore.fetchCollection('contactmoment', {
+					_limit: 50,
+					client: this.clientId,
+					_order: { contactedAt: 'desc' },
+				})
+				this.contactmomenten = allContactmomenten || []
+			} catch {
+				this.contactmomenten = []
+			}
+
+			try {
+				const allComplaints = await this.objectStore.fetchCollection('complaint', {
+					_limit: 50,
+					client: this.clientId,
+					_order: { _dateCreated: 'desc' },
+				})
+				this.complaints = allComplaints || []
+			} catch {
+				this.complaints = []
+			}
+		},
+		formatDate(dateStr) {
+			if (!dateStr) return '-'
+			try {
+				return new Date(dateStr).toLocaleDateString()
+			} catch {
+				return dateStr
+			}
+		},
+		async onContactmomentSaved() {
+			this.showContactmomentQuickLog = false
+			await this.fetchRelated()
 		},
 		createRequest() {
 			this.$router.push({ name: 'RequestDetail', params: { id: 'new' }, query: { client: this.clientId } })
 		},
 		addContact() {
 			this.$router.push({ name: 'ContactDetail', params: { id: 'new' }, query: { client: this.clientId } })
+		},
+		createComplaint() {
+			this.$router.push({ name: 'ComplaintDetail', params: { id: 'new' }, query: { client: this.clientId } })
+		},
+		isClosedLead(lead) {
+			return lead.status === 'won' || lead.status === 'lost'
+		},
+		formatCurrency(value) {
+			if (value === 0 || value == null) return 'EUR 0'
+			return 'EUR ' + new Intl.NumberFormat('nl-NL').format(value)
 		},
 	},
 }
@@ -441,5 +638,42 @@ export default {
 	font-size: 12px;
 	font-weight: 600;
 	margin-bottom: 16px;
+}
+
+.summary-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 16px;
+}
+
+.summary-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 12px;
+	border-radius: var(--border-radius-large);
+	background: var(--color-background-dark);
+}
+
+.summary-value {
+	font-size: 24px;
+	font-weight: bold;
+	color: var(--color-main-text);
+}
+
+.summary-value--total {
+	color: var(--color-primary);
+}
+
+.summary-label {
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
+	margin-top: 4px;
+}
+
+.summary-sub {
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+	margin-top: 2px;
 }
 </style>

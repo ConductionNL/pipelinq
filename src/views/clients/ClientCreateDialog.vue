@@ -1,9 +1,9 @@
 <template>
-	<div class="create-overlay" @click.self="$emit('close')">
+	<div class="create-overlay" data-testid="client-create-dialog" @click.self="$emit('close')">
 		<div class="create-dialog">
 			<div class="create-dialog__header">
 				<h3>{{ t('pipelinq', 'New Client') }}</h3>
-				<NcButton type="tertiary" @click="$emit('close')">
+				<NcButton type="tertiary" data-testid="client-create-close" @click="$emit('close')">
 					✕
 				</NcButton>
 			</div>

@@ -1,3 +1,7 @@
+---
+status: implemented
+---
+
 # Client Management Specification
 
 ## Purpose
@@ -459,7 +463,7 @@ The system MUST support linking requests to clients. A request's `client` proper
 
 ### Requirement: Nextcloud Contacts Sync
 
-The system SHOULD sync client data with Nextcloud's built-in Contacts app via `OCP\Contacts\IManager`. This avoids duplicate contact entry and leverages Nextcloud's native CardDAV infrastructure.
+The system MUST sync client data with Nextcloud's built-in Contacts app via `OCP\Contacts\IManager`. This avoids duplicate contact entry and leverages Nextcloud's native CardDAV infrastructure.
 
 **Feature tier**: MVP
 
@@ -491,7 +495,7 @@ The system SHOULD sync client data with Nextcloud's built-in Contacts app via `O
 
 ### Requirement: Duplicate Detection
 
-The system SHOULD detect potential duplicate clients based on name and email matching.
+The system MUST detect potential duplicate clients based on name and email matching.
 
 **Feature tier**: V1
 
@@ -521,7 +525,7 @@ The system SHOULD detect potential duplicate clients based on name and email mat
 
 ### Requirement: Client Import
 
-The system SHOULD support importing clients from CSV and vCard files.
+The system MUST support importing clients from CSV and vCard files.
 
 **Feature tier**: V1
 
@@ -553,7 +557,7 @@ The system SHOULD support importing clients from CSV and vCard files.
 
 ### Requirement: Client Export
 
-The system SHOULD support exporting clients to CSV and vCard formats.
+The system MUST support exporting clients to CSV and vCard formats.
 
 **Feature tier**: V1
 
@@ -581,32 +585,685 @@ The system SHOULD support exporting clients to CSV and vCard formats.
 
 ---
 
+## Requirements
+
+---
+
+### Requirement: KVK Integration for Dutch Businesses
+
+The system MUST support looking up Dutch organizations via the KVK (Kamer van Koophandel) Handelsregister API to auto-populate client data and ensure accurate business registration details. The KVK API integration already exists in `KvkApiClient` and `KvkResultMapper` for prospect discovery; this requirement extends it to client creation and enrichment.
+
+**Feature tier**: V1
+
+#### Scenario: Auto-complete organization from KVK number
+
+- GIVEN a user creating a new organization client
+- WHEN they enter KVK number "12345678" in the KVK field
+- THEN the system MUST query the KVK Handelsregister API (`api.kvk.nl/api/v1/zoeken`)
+- AND if the company is found, the system MUST auto-populate: name (eersteHandelsnaam), address (bezoekadres), and legal form (rechtsvorm)
+- AND the user MUST be able to review and modify the auto-populated data before saving
+- AND the KVK number MUST be stored on the client object in a `kvkNumber` field
+
+#### Scenario: Search KVK by company name
+
+- GIVEN a user creating a new organization client
+- WHEN they enter "Conduction" in the company name field and click a "Search KVK" action
+- THEN the system MUST search the KVK API by company name
+- AND display matching results with KVK number, trade name, address, and legal form
+- AND the user MUST be able to select a result to auto-populate the client fields
+
+#### Scenario: Validate KVK number format
+
+- GIVEN a user entering a KVK number on a client
+- WHEN they enter "1234" (fewer than 8 digits) or "ABCDEFGH" (non-numeric)
+- THEN the system MUST reject the input with a validation error
+- AND the error message MUST indicate that a KVK number must be exactly 8 digits
+
+#### Scenario: Store KVK metadata on client
+
+- GIVEN a client "Acme B.V." created from a KVK lookup with KVK number "12345678", SBI code "6201", legal form "Besloten Vennootschap", and registration date "2015-03-01"
+- WHEN the client is saved
+- THEN the system MUST store the KVK number, SBI code(s), legal form, and registration date as structured fields on the client object
+- AND these fields MUST be visible in the client detail view under a "Chamber of Commerce" section
+- AND the system SHOULD display a "Verified via KVK" badge when the KVK number is present
+
+#### Scenario: Detect duplicate client by KVK number
+
+- GIVEN an existing client "Acme B.V." with KVK number "12345678"
+- WHEN a user attempts to create a new client with the same KVK number "12345678"
+- THEN the system MUST display a warning that a client with this KVK number already exists
+- AND the warning MUST link to the existing client
+- AND the system MUST NOT allow two clients with the same KVK number unless the user explicitly overrides
+
+#### Scenario: KVK API unavailable
+
+- GIVEN the KVK API key is not configured or the API returns an error
+- WHEN the user attempts to search KVK
+- THEN the system MUST display a user-friendly error message
+- AND the user MUST still be able to create the client manually without KVK data
+- AND no partial or corrupted data MUST be stored
+
+---
+
+### Requirement: BSN Handling Compliance
+
+The system MUST handle BSN (Burgerservicenummer) data in compliance with Dutch privacy law (Wet algemene bepalingen burgerservicenummer). BSN is a sensitive personal identifier that may only be processed when there is a legal basis, and MUST be stored and transmitted with appropriate safeguards.
+
+**Feature tier**: Enterprise
+
+#### Scenario: BSN field restricted to authorized users
+
+- GIVEN a person client "Jan de Vries" with a BSN stored
+- WHEN a user without the "bsn_access" permission views the client detail
+- THEN the BSN field MUST NOT be visible at all (not masked, fully hidden)
+- AND when a user with "bsn_access" permission views the client detail
+- THEN the BSN MUST be displayed masked as "****-**-123" (last 3 digits visible)
+- AND an explicit "Show BSN" action MUST be required to reveal the full number
+
+#### Scenario: BSN validation (elfproef)
+
+- GIVEN a user entering a BSN on a person client
+- WHEN they enter "123456789"
+- THEN the system MUST validate using the 11-proof (elfproef) algorithm: (9*d1 + 8*d2 + 7*d3 + 6*d4 + 5*d5 + 4*d6 + 3*d7 + 2*d8 - 1*d9) mod 11 == 0
+- AND the result MUST be non-zero before modulo (to exclude "000000000")
+- AND if validation fails, the system MUST reject with "Invalid BSN"
+
+#### Scenario: BSN access logging
+
+- GIVEN a user with "bsn_access" permission views or reveals a BSN
+- WHEN the BSN is accessed
+- THEN the system MUST log the access in the audit trail with: user identity, timestamp, client ID, and access type (view/reveal/modify)
+- AND the BSN access log MUST be available for compliance auditing
+
+#### Scenario: BSN not stored for organization clients
+
+- GIVEN a user editing an organization client "Gemeente Utrecht"
+- WHEN the client form is displayed
+- THEN the BSN field MUST NOT be visible or available
+- AND the BSN field MUST only be available on person-type clients
+
+#### Scenario: BSN excluded from standard exports
+
+- GIVEN 20 person clients, 5 of which have BSN stored
+- WHEN the user exports clients as CSV
+- THEN the BSN column MUST NOT be included in the export by default
+- AND a separate "Export with BSN" option MUST be available only to users with "bsn_access" permission
+- AND any export containing BSN data MUST be logged in the audit trail
+
+---
+
+### Requirement: Client Deduplication and Merge
+
+The system MUST support merging duplicate client records into a single consolidated record, transferring all linked entities (contact persons, leads, requests) and preserving the full audit history.
+
+**Feature tier**: V1
+
+#### Scenario: Identify merge candidates
+
+- GIVEN existing clients "Gemeente Utrecht" (ID: abc-111, with 3 leads) and "Gem. Utrecht" (ID: abc-222, with 1 lead and 2 contacts)
+- WHEN the user selects both clients in the list view and clicks "Merge"
+- THEN the system MUST display a merge preview showing:
+  - Both client records side-by-side with all fields
+  - A field-by-field selector allowing the user to choose which value to keep for each property
+  - A summary of linked entities that will be transferred: 4 leads, 2 contacts
+  - The target (surviving) client record
+
+#### Scenario: Execute client merge
+
+- GIVEN the user has configured a merge of "Gem. Utrecht" into "Gemeente Utrecht"
+- WHEN the user confirms the merge
+- THEN the system MUST update the surviving client "Gemeente Utrecht" with the selected field values
+- AND the system MUST re-link all contact persons from "Gem. Utrecht" to "Gemeente Utrecht" (update `client` UUID reference)
+- AND the system MUST re-link all leads from "Gem. Utrecht" to "Gemeente Utrecht"
+- AND the system MUST re-link all requests from "Gem. Utrecht" to "Gemeente Utrecht"
+- AND the system MUST delete the source client "Gem. Utrecht"
+- AND the audit trail MUST record the merge operation with both client IDs and the user who performed it
+
+#### Scenario: Merge preserves Nextcloud contact link
+
+- GIVEN client A has a `contactsUid` linking to a Nextcloud vCard and client B does not
+- WHEN client B is merged into client A
+- THEN the surviving client A MUST retain its `contactsUid` link
+- AND if both clients had `contactsUid` links, the surviving client MUST keep its own link and the system SHOULD log that the duplicate link was discarded
+
+#### Scenario: Merge from duplicate detection
+
+- GIVEN the duplicate detection system has flagged "Acme B.V." and "ACME BV" as potential duplicates
+- WHEN the user clicks "Merge" on the duplicate warning
+- THEN the system MUST open the merge preview with both clients pre-selected
+- AND the user MUST be able to proceed through the standard merge flow
+
+#### Scenario: Cancel a merge
+
+- GIVEN the user has opened the merge preview for two clients
+- WHEN the user clicks "Cancel"
+- THEN no changes MUST be made to either client
+- AND no linked entities MUST be modified
+
+---
+
+### Requirement: Client Hierarchy (Parent/Child Organizations)
+
+The system MUST support hierarchical organization structures where a client organization can have a parent organization and child organizations. This enables representing corporate groups, holding companies, and franchise networks.
+
+**Feature tier**: V1
+
+#### Scenario: Set a parent organization
+
+- GIVEN an organization client "Acme Netherlands B.V."
+- AND an organization client "Acme Corporation" (the global holding company)
+- WHEN the user sets the parent of "Acme Netherlands B.V." to "Acme Corporation"
+- THEN the system MUST store a `parentOrganization` UUID reference on "Acme Netherlands B.V."
+- AND the detail view of "Acme Netherlands B.V." MUST display "Acme Corporation" as the parent with a clickable link
+- AND the detail view of "Acme Corporation" MUST display "Acme Netherlands B.V." in a "Subsidiaries" section
+
+#### Scenario: View organization hierarchy tree
+
+- GIVEN "Acme Corporation" has children "Acme Netherlands B.V." and "Acme Germany GmbH"
+- AND "Acme Netherlands B.V." has child "Acme Utrecht Office"
+- WHEN the user views the "Acme Corporation" detail page
+- THEN the system MUST display the full hierarchy as a tree:
+  - Acme Corporation
+    - Acme Netherlands B.V.
+      - Acme Utrecht Office
+    - Acme Germany GmbH
+- AND each node in the tree MUST be clickable to navigate to that client's detail view
+
+#### Scenario: Aggregate hierarchy statistics
+
+- GIVEN a parent organization "Acme Corporation" with 2 subsidiaries
+- AND the subsidiaries collectively have 5 open leads (total EUR 120,000) and 3 requests
+- WHEN the user views "Acme Corporation" detail
+- THEN the summary statistics panel SHOULD display both:
+  - Direct statistics (leads/requests linked directly to "Acme Corporation")
+  - Consolidated statistics (including all subsidiaries' leads/requests)
+- AND the consolidated values MUST be clearly labeled as "Including subsidiaries"
+
+#### Scenario: Prevent circular parent references
+
+- GIVEN "Acme Netherlands B.V." has parent "Acme Corporation"
+- WHEN the user tries to set the parent of "Acme Corporation" to "Acme Netherlands B.V."
+- THEN the system MUST reject the change with a validation error
+- AND the error message MUST indicate that circular parent references are not allowed
+
+#### Scenario: Person client cannot have parent organization
+
+- GIVEN a person client "Jan de Vries"
+- WHEN the user attempts to set a parent organization on the person client
+- THEN the `parentOrganization` field MUST NOT be available on person-type clients
+- AND only organization-type clients MUST support parent/child relationships
+
+---
+
+### Requirement: Client Segmentation and Tagging
+
+The system MUST support tagging and categorizing clients for segmentation purposes. Tags enable grouping clients for targeted actions, filtering, and reporting.
+
+**Feature tier**: V1
+
+#### Scenario: Add tags to a client
+
+- GIVEN a client "Gemeente Utrecht"
+- WHEN the user adds tags "overheid", "provincie-utrecht", and "bestaande-klant"
+- THEN the system MUST store the tags as an array property on the client object
+- AND the tags MUST be displayed on the client detail view as visual chips/badges
+- AND the tags MUST be visible in the client list view
+
+#### Scenario: Filter clients by tag
+
+- GIVEN 20 clients, 8 of which have the tag "overheid"
+- WHEN the user filters the client list by tag "overheid"
+- THEN only the 8 tagged clients MUST be displayed
+- AND the filter MUST support multiple tag selection (AND logic: clients must have all selected tags)
+
+#### Scenario: Manage tag vocabulary
+
+- GIVEN a user with admin access
+- WHEN they navigate to CRM settings
+- THEN the system SHOULD display a tag management section
+- AND the user SHOULD be able to add new tags, rename existing tags, and delete unused tags
+- AND deleting a tag MUST remove it from all clients that have it
+
+#### Scenario: Tag auto-complete on client form
+
+- GIVEN existing tags "overheid", "onderwijs", "zorg", "bedrijfsleven"
+- WHEN the user adds a tag to a client and types "over"
+- THEN the system MUST suggest "overheid" as an auto-complete option
+- AND the user MUST be able to select from existing tags or create a new one
+
+#### Scenario: Industry classification
+
+- GIVEN the client schema already has an `industry` field (facetable)
+- WHEN the user creates or updates a client
+- THEN the system MUST provide a curated list of industry values based on SBI sector codes
+- AND the industry field MUST be selectable from a dropdown with common Dutch industry sectors: "ICT", "Overheid", "Zorg", "Onderwijs", "Bouw", "Financiele dienstverlening", "Detailhandel", "Transport en logistiek"
+- AND custom industry values SHOULD be allowed
+
+---
+
+### Requirement: Client Health Scoring
+
+The system SHOULD calculate and display a client health score based on relationship activity metrics. The health score helps sales teams prioritize follow-ups and identify at-risk client relationships.
+
+**Feature tier**: Enterprise
+
+#### Scenario: Calculate health score based on activity
+
+- GIVEN a client "Acme B.V." with the following activity in the last 90 days:
+  - 3 leads in active pipeline stages
+  - 2 requests opened and resolved
+  - 5 audit trail entries (field updates, notes)
+  - Last interaction: 5 days ago
+- WHEN the system calculates the health score
+- THEN the score MUST be a value from 0-100
+- AND the score MUST factor in: recency of last interaction (40% weight), number of active leads (25% weight), request resolution rate (20% weight), and overall activity frequency (15% weight)
+- AND the score MUST be displayed on the client detail view as a color-coded indicator (green >= 70, yellow 40-69, red < 40)
+
+#### Scenario: Health score displayed in client list
+
+- GIVEN 20 clients with calculated health scores
+- WHEN the user views the client list
+- THEN the system SHOULD display a health score indicator (color dot or bar) for each client
+- AND the user MUST be able to sort clients by health score (ascending/descending)
+- AND the user MUST be able to filter clients by health range (e.g., "At Risk" = score < 40)
+
+#### Scenario: Health score recalculation
+
+- GIVEN a client "Acme B.V." with health score 75 (green)
+- AND no interaction has occurred for 60 days
+- WHEN the health score is recalculated (daily cron or on-demand)
+- THEN the score MUST decrease to reflect the inactivity period
+- AND the new score MUST be below 40 (red) after 60+ days of inactivity
+- AND the score change MUST be logged in the audit trail
+
+#### Scenario: Health score ignored for new clients
+
+- GIVEN a client "NewCo B.V." created 3 days ago with 1 lead created
+- WHEN the system calculates the health score
+- THEN the system SHOULD display "New" instead of a numeric score for clients less than 30 days old
+- AND the system MUST NOT penalize new clients for lack of historical activity
+
+---
+
+### Requirement: Client Lifecycle Analytics
+
+The system SHOULD provide analytics about the client lifecycle, including acquisition rates, retention metrics, and revenue trends per client.
+
+**Feature tier**: Enterprise
+
+#### Scenario: Client acquisition over time
+
+- GIVEN 50 clients created between January and June
+- WHEN the user views the client lifecycle analytics dashboard
+- THEN the system MUST display a chart showing new clients per month
+- AND the chart MUST support drill-down to see which clients were created in each period
+
+#### Scenario: Client revenue contribution
+
+- GIVEN a client "Acme B.V." with leads: 3 won (EUR 42,000), 2 open (EUR 25,000), 1 lost (EUR 10,000)
+- WHEN the user views the client's revenue analytics on the detail page
+- THEN the system MUST display:
+  - Total won revenue: EUR 42,000
+  - Pipeline value (open leads): EUR 25,000
+  - Lost revenue: EUR 10,000
+  - Win rate: 60% (3 won out of 5 closed: 3 won + 1 lost, noting 2 still open)
+- AND the system SHOULD show a revenue trend chart over time (monthly won revenue)
+
+#### Scenario: Client retention status
+
+- GIVEN clients with the following patterns:
+  - "Active Client A": has leads or requests in the last 90 days
+  - "Dormant Client B": last activity was 180 days ago, no open leads or requests
+  - "Churned Client C": last activity was 365+ days ago
+- WHEN the user views the client analytics dashboard
+- THEN the system MUST categorize clients as: Active (activity in last 90 days), Dormant (90-365 days), Churned (365+ days)
+- AND display counts and percentages for each category
+- AND the user MUST be able to filter the client list by lifecycle status
+
+---
+
+### Requirement: GDPR Data Subject Rights
+
+The system MUST support GDPR (AVG) data subject rights for person-type clients in compliance with EU General Data Protection Regulation. Organization clients are not data subjects under GDPR.
+
+**Feature tier**: V1
+
+#### Scenario: Right to access (inzageverzoek)
+
+- GIVEN a person client "Jan de Vries" with all CRM data (personal details, linked leads, requests, activity timeline, notes)
+- WHEN an authorized user processes a data access request for "Jan de Vries"
+- THEN the system MUST generate a complete data export containing:
+  - All client properties (name, email, phone, address, notes)
+  - All linked contact person records
+  - All linked lead records (title, value, stage, dates)
+  - All linked request records (title, status, dates)
+  - Audit trail entries for this client
+- AND the export MUST be in a machine-readable format (JSON or CSV)
+- AND the export MUST be downloadable as a single file
+
+#### Scenario: Right to erasure (verwijderverzoek)
+
+- GIVEN a person client "Jan de Vries" with 2 linked leads and 1 request
+- WHEN an authorized user processes a data erasure request
+- THEN the system MUST display a preview of all data that will be erased
+- AND upon confirmation, the system MUST:
+  - Delete the client object
+  - Delete all linked contact person records
+  - Anonymize references in linked leads (replace client name with "Geanonimiseerd")
+  - Anonymize references in linked requests
+  - Remove the linked Nextcloud contact if `contactsUid` is set
+- AND the system MUST log the erasure action with a reference number and timestamp
+- AND the erasure MUST NOT be reversible
+
+#### Scenario: Right to rectification (rectificatieverzoek)
+
+- GIVEN a person client "Jan de Vries" with email "wrong@email.nl"
+- WHEN an authorized user processes a rectification request to update the email to "jan@correct.nl"
+- THEN the system MUST update the email field
+- AND the audit trail MUST record the rectification with the reason "GDPR rectification request"
+- AND if a Nextcloud contact is linked, the correction MUST propagate to the vCard
+
+#### Scenario: Data processing register entry
+
+- GIVEN the system processes personal data for person-type clients
+- WHEN an administrator views the GDPR compliance settings
+- THEN the system MUST provide a data processing register documenting:
+  - Categories of personal data processed (name, email, phone, address, BSN if applicable)
+  - Purpose of processing (client relationship management)
+  - Legal basis (legitimate interest or contract)
+  - Retention period policy
+  - Technical and organizational security measures
+
+---
+
+### Requirement: Multi-Tenancy Client Isolation
+
+The system MUST ensure that client data is isolated per Nextcloud instance and, within shared Nextcloud instances, per authorized group or user scope. This prevents unauthorized cross-tenant data access.
+
+**Feature tier**: Enterprise
+
+#### Scenario: Client data scoped to OpenRegister instance
+
+- GIVEN two Nextcloud users "sales_user_a" and "sales_user_b" both using Pipelinq
+- WHEN "sales_user_a" creates a client "Acme B.V."
+- THEN the client MUST be stored in the shared Pipelinq register
+- AND "sales_user_b" MUST also be able to see and access "Acme B.V."
+- AND the client data MUST NOT be accessible from other Nextcloud instances
+
+#### Scenario: Team-based client visibility
+
+- GIVEN team "Sales Amsterdam" and team "Sales Rotterdam" are configured
+- AND client "Acme Amsterdam B.V." is assigned to team "Sales Amsterdam"
+- WHEN a user from team "Sales Rotterdam" views the client list
+- THEN the system SHOULD filter based on team assignment according to Nextcloud group permissions
+- AND administrators MUST always see all clients regardless of team assignment
+
+#### Scenario: API access respects authentication scope
+
+- GIVEN a client "Acme B.V." exists in the Pipelinq register
+- WHEN an unauthenticated API request attempts to fetch the client
+- THEN the request MUST be rejected with HTTP 401
+- AND when an authenticated user from a different app attempts to access the client via OpenRegister API
+- THEN the access MUST be governed by OpenRegister's permission model
+
+---
+
+### Requirement: Client Import from CSV with Column Mapping
+
+The system MUST provide a guided CSV import workflow with column mapping, preview, validation feedback, and duplicate handling.
+
+**Feature tier**: V1
+
+#### Scenario: Upload and preview CSV
+
+- GIVEN a user with CRM access
+- WHEN they upload a CSV file "clients_export_2025.csv" with 100 rows
+- THEN the system MUST display a preview showing the first 5 rows of the file
+- AND the system MUST detect the delimiter (comma, semicolon, or tab) automatically
+- AND the system MUST detect the character encoding (UTF-8, ISO-8859-1)
+
+#### Scenario: Map CSV columns to client fields
+
+- GIVEN a CSV with headers: "Bedrijfsnaam", "E-mail", "Telefoon", "Postcode", "Type"
+- WHEN the mapping step is displayed
+- THEN the system MUST auto-suggest mappings based on header names: "Bedrijfsnaam" -> name, "E-mail" -> email, "Telefoon" -> phone, "Postcode" -> address, "Type" -> type
+- AND the user MUST be able to override any mapping
+- AND the user MUST be able to skip columns that should not be imported
+- AND required fields (name, type) MUST be mapped before import can proceed
+
+#### Scenario: Handle duplicate detection during import
+
+- GIVEN a CSV with 100 rows and 5 rows match existing clients by name or email
+- WHEN the user runs the import
+- THEN the system MUST identify the 5 duplicates and present options: "Skip", "Update existing", or "Create anyway"
+- AND the user MUST be able to choose a default action for all duplicates or handle each individually
+- AND the import summary MUST show: 95 created, 5 duplicates (with chosen action)
+
+#### Scenario: Import progress and error handling
+
+- GIVEN a CSV with 500 rows, 12 of which have validation errors
+- WHEN the import is running
+- THEN the system MUST display a progress indicator showing rows processed
+- AND upon completion, the system MUST display: 488 created, 12 failed
+- AND each failure MUST show the row number, the offending value, and the validation error
+- AND the user MUST be able to download a CSV of failed rows for correction and re-import
+
+---
+
+### Requirement: Client Export with Format Options
+
+The system MUST support exporting clients in multiple formats with configurable field selection.
+
+**Feature tier**: V1
+
+#### Scenario: Export with field selection
+
+- GIVEN 50 clients in the system
+- WHEN the user clicks "Export" and selects fields: name, type, email, phone, industry
+- THEN the exported file MUST contain only the selected fields
+- AND fields not selected (address, website, notes, contactsUid) MUST be excluded
+
+#### Scenario: Export as Excel (XLSX)
+
+- GIVEN 50 clients in the system
+- WHEN the user chooses "Export as Excel"
+- THEN the system MUST generate a valid XLSX file
+- AND the file MUST include a header row with field names
+- AND the file MUST be downloadable with a filename pattern: "pipelinq-clients-YYYY-MM-DD.xlsx"
+
+#### Scenario: Bulk export as vCard
+
+- GIVEN the user has filtered the client list to 15 person clients
+- WHEN the user clicks "Export as vCard"
+- THEN the system MUST generate a single .vcf file containing all 15 contacts
+- AND each vCard entry MUST comply with RFC 6350
+- AND the file MUST include: FN, EMAIL, TEL, ADR, ORG (if organization type), and URL (if website is set)
+
+---
+
+### Requirement: Client Timeline (All Interactions)
+
+The system MUST provide a unified interaction timeline on the client detail view that aggregates all CRM activity types into a single chronological feed.
+
+**Feature tier**: V1
+
+#### Scenario: Timeline aggregates all entity types
+
+- GIVEN a client "Acme B.V." with the following history:
+  - Mar 1: Client created by user "admin"
+  - Mar 5: Contact person "Jan Jansen" added
+  - Mar 10: Lead "Website Redesign" created (EUR 15,000)
+  - Mar 12: Lead "Website Redesign" moved to stage "Qualified"
+  - Mar 15: Request "Support Ticket #101" created
+  - Mar 16: Contactmoment "Telefonische vraag over factuur" registered by agent "kcc1" via channel "telefoon"
+  - Mar 18: Note "Followed up by phone" added by user "sales1"
+  - Mar 19: Contactmoment "E-mail bevestiging afspraak" registered by agent "kcc2" via channel "email"
+  - Mar 20: Request "Support Ticket #101" resolved
+  - Mar 25: Lead "Website Redesign" won
+- WHEN the user views the client detail timeline
+- THEN the system MUST display all 10 events in reverse chronological order
+- AND each event MUST show: date, event type icon, description, and actor (user who performed the action)
+- AND contactmoment events MUST show: subject, channel icon, and agent name
+- AND events MUST be visually distinguished by type (create, update, stage change, note, resolution, contactmoment)
+
+#### Scenario: Timeline supports filtering by event type
+
+- GIVEN a client with 50 timeline events of various types
+- WHEN the user filters the timeline by "Leads only"
+- THEN only lead-related events MUST be displayed
+- AND filter options MUST include: All, Leads, Requests, Contacts, Notes, Contactmomenten, Field changes
+
+#### Scenario: Timeline pagination
+
+- GIVEN a client with 200 timeline events
+- WHEN the user views the timeline
+- THEN the system MUST display the most recent 20 events initially
+- AND a "Load more" button MUST load the next 20 events
+- AND the system MUST indicate the total number of events
+
+#### Scenario: Timeline shows linked entity details
+
+- GIVEN a timeline event "Lead 'Website Redesign' moved to Qualified"
+- WHEN the user clicks on the lead name in the timeline
+- THEN the system MUST navigate to the lead detail view
+- AND the same click-through behavior MUST apply to requests, contacts, contactmomenten, and other referenced entities
+
+#### Scenario: Contactmoment quick-log from timeline
+
+- GIVEN a user is viewing a client's timeline
+- WHEN the user clicks "Log contactmoment" above the timeline
+- THEN the quick-log form MUST open with the client pre-filled
+- AND after submission, the timeline MUST refresh to include the new contactmoment
+
+---
+
+### Requirement: Client Custom Fields
+
+The system MUST support adding custom fields to the client schema to accommodate organization-specific data requirements without code changes. Custom fields are stored as additional properties on the OpenRegister client object.
+
+**Feature tier**: V1
+
+#### Scenario: Admin creates a custom text field
+
+- GIVEN an administrator in the Pipelinq settings
+- WHEN they add a custom field with label "Contract Number", type "text", and maxLength 50
+- THEN the system MUST add the field to the client schema in OpenRegister
+- AND the field MUST appear in the client create/edit form
+- AND the field MUST appear in the client detail view
+- AND the field MUST be included in CSV exports
+
+#### Scenario: Admin creates a custom dropdown field
+
+- GIVEN an administrator in the Pipelinq settings
+- WHEN they add a custom field with label "Account Tier", type "enum", and options ["Bronze", "Silver", "Gold", "Platinum"]
+- THEN the system MUST render the field as a dropdown in the client form
+- AND the field MUST be filterable in the client list view (facetable)
+- AND the field MUST be sortable
+
+#### Scenario: Admin creates a custom date field
+
+- GIVEN an administrator in the Pipelinq settings
+- WHEN they add a custom field with label "Contract Expiry", type "date"
+- THEN the system MUST render the field with a date picker in the client form
+- AND the system SHOULD support creating notifications/reminders based on this date (e.g., 30 days before expiry)
+
+#### Scenario: Custom field visible in imports
+
+- GIVEN a custom field "Contract Number" exists on the client schema
+- WHEN the user imports clients from CSV
+- THEN the column mapping step MUST include "Contract Number" as an available target field
+- AND imported values MUST be validated against the custom field's constraints
+
+#### Scenario: Delete a custom field
+
+- GIVEN a custom field "Legacy ID" exists on 30 clients
+- WHEN the administrator deletes the custom field
+- THEN the system MUST warn that data in this field will be lost for 30 clients
+- AND upon confirmation, the field definition MUST be removed from the schema
+- AND existing data in that field MUST be deleted from all client objects
+
+---
+
+### Requirement: Client Prospect Conversion
+
+The system MUST support converting KVK prospect discovery results directly into client records, linking the prospect origin data (KVK number, SBI codes, legal form) to the newly created client. The `ProspectDiscoveryService` and `ProspectController` already support this flow partially; this requirement formalizes the full conversion path.
+
+**Feature tier**: V1
+
+#### Scenario: Convert prospect to client
+
+- GIVEN the prospect discovery results include "TechStart B.V." with KVK number "87654321", SBI code "6201", address "Oudegracht 50, 3511 AR Utrecht", and legal form "Besloten Vennootschap"
+- WHEN the user clicks "Create Client" on the prospect card
+- THEN the system MUST create an organization client with:
+  - name: "TechStart B.V."
+  - type: "organization"
+  - kvkNumber: "87654321"
+  - industry: mapped from SBI code "6201" ("IT-dienstverlening")
+  - address: "Oudegracht 50, 3511 AR Utrecht"
+  - notes: "KVK: 87654321 | Legal form: Besloten Vennootschap | Source: KVK prospect discovery"
+- AND the system MUST navigate to the new client's detail view
+- AND the prospect MUST be removed from the discovery results
+
+#### Scenario: Convert prospect to client with lead
+
+- GIVEN a prospect "TechStart B.V." from the discovery results
+- WHEN the user clicks "Create Client + Lead"
+- THEN the system MUST create both a client and a linked lead
+- AND the lead MUST reference the new client via its `client` UUID
+- AND the lead MUST have source set to "prospect_discovery"
+
+#### Scenario: Prospect already exists as client
+
+- GIVEN a prospect "Acme B.V." with KVK number "12345678"
+- AND an existing client "Acme B.V." with the same KVK number
+- WHEN the prospect discovery results are displayed
+- THEN "Acme B.V." MUST be flagged as "Already a client"
+- AND the "Create Client" button MUST be replaced with "View Client"
+- AND the system MUST link to the existing client detail view
+
+---
+
 ### Current Implementation Status
 
-**Substantially implemented.** Core CRUD, list view, detail view, contact persons, and Nextcloud Contacts sync are all in place. V1 features (duplicate detection, import/export) are NOT implemented.
+**Substantially implemented.** Core CRUD, list view, detail view, contact persons, and Nextcloud Contacts sync are all in place. V1 features (duplicate detection, import/export) are NOT implemented. KVK API integration exists for prospect discovery but is not integrated into the client creation form.
 
 Implemented:
 - **Data model**: `lib/Settings/pipelinq_register.json` defines the `client` schema with properties: `name` (required), `type` (required, enum: person/organization), `email`, `phone`, `address`, `website`, `industry`, `notes`, `contactsUid`. Also defines the `contact` schema with: `name` (required), `email`, `phone`, `role`, `client` (UUID reference), `contactsUid`.
 - **Client CRUD**: `src/store/modules/object.js` provides generic `saveObject()`, `deleteObject()`, `fetchObject()`, `fetchCollection()` via OpenRegister API. No dedicated client controller -- all CRUD goes through OpenRegister's object API directly.
-- **Client List View**: `src/views/clients/ClientList.vue` -- displays client list with search, sort, and filter using OpenRegister's built-in query capabilities. Uses the `CnListPage` component.
+- **Client List View**: `src/views/clients/ClientList.vue` -- displays client list with search, sort, and filter using OpenRegister's built-in query capabilities. Uses the `CnIndexPage` component.
 - **Client Detail View**: `src/views/clients/ClientDetail.vue` -- displays client info (type, email, phone, website, address, notes), linked contacts table, linked leads table, linked requests table. Shows a "Synced with Contacts" badge when `contactsUid` is set. Uses `CnDetailPage` with sidebar (audit log). Has edit/delete actions with delete confirmation dialog that warns about linked entities.
-- **Client Form**: `src/views/clients/ClientForm.vue` -- create/edit form for clients.
+- **Client Form**: `src/views/clients/ClientForm.vue` -- create/edit form for clients with inline validation (name required, type required, email/phone/website format validation via regex).
 - **Client Create Dialog**: `src/views/clients/ClientCreateDialog.vue` -- quick-create dialog used from the dashboard.
 - **Contact Person CRUD**: `src/views/contacts/ContactDetail.vue`, `ContactForm.vue`, `ContactList.vue` -- full CRUD for contact persons with client linking.
 - **Client-to-Lead relationship**: LeadDetail shows linked client, ClientDetail shows linked leads (fetched via `client` filter on lead collection).
 - **Client-to-Request relationship**: Same pattern as leads -- RequestDetail links to client, ClientDetail shows requests.
-- **Nextcloud Contacts sync**: See contacts-sync spec for details. `ContactSyncService`, `ContactVcardService`, `ContactImportService` handle bidirectional sync.
+- **Nextcloud Contacts sync**: `ContactSyncService`, `ContactVcardService`, `ContactImportService`, `ContactVcardPropertyBuilder`, `ContactVcardWriterService`, `ContactLinkedUidsService`, `ContactDataBuilder` handle bidirectional sync, search, and import from Nextcloud address books. UI component: `ContactImportDialog.vue`.
+- **KVK API integration (prospect discovery only)**: `KvkApiClient` queries `api.kvk.nl/api/v1/zoeken`, `KvkResultMapper` maps results to prospect format, `ProspectDiscoveryService` orchestrates search/scoring/caching, `ProspectController` exposes API endpoints. Not yet integrated into client creation form.
 - **Routing**: `/clients` (list), `/clients/:id` (detail), `/clients/new` (create), `/contacts` (list), `/contacts/:id` (detail).
 
 NOT implemented:
 - **Summary statistics** on client detail (open leads count/value, won leads count/value, open requests count, total value, last activity, client since) -- the detail view shows raw lists but no aggregated stats panel.
 - **Activity timeline** on client detail -- the sidebar provides OpenRegister audit log but no unified CRM timeline.
-- **Validation rules**: Email format, telephone format, website URL, name max length validation -- these are defined in the JSON schema (`format: email`, `format: uri`, `maxLength: 255`) but client-side inline validation may be missing.
+- **Validation rules**: Email format, telephone format, website URL, name max length validation -- these ARE implemented in `ClientForm.vue` with regex validation (EMAIL_REGEX, PHONE_REGEX, URL_REGEX) and maxlength. Inline errors and disabled save button are present.
 - **Duplicate detection** (V1) -- not implemented.
-- **Client import from CSV/vCard** (V1) -- not implemented.
+- **Client import from CSV/vCard** (V1) -- not implemented (Nextcloud Contact import exists but not CSV/vCard file upload).
 - **Client export to CSV/vCard** (V1) -- not implemented.
 - **`@type` mapping** -- the spec requires `@type` set to `schema:Person` or `schema:Organization` based on client type. The schema defaults to `schema:Person` but dynamic switching based on `type` field is not implemented.
 - **Audit trail for field changes** -- relies on OpenRegister's built-in audit log, not a CRM-level audit trail.
+- **KVK integration in client form** (ADDED) -- KVK API exists for prospect discovery but is not available in the client create/edit form.
+- **BSN handling** (ADDED, Enterprise) -- not implemented, no BSN field on schema.
+- **Client deduplication/merge** (ADDED) -- not implemented.
+- **Client hierarchy** (ADDED) -- no `parentOrganization` field on schema.
+- **Client segmentation/tagging** (ADDED) -- no tags field on schema; `industry` field exists but no tag system.
+- **Client health scoring** (ADDED, Enterprise) -- not implemented.
+- **Client lifecycle analytics** (ADDED, Enterprise) -- not implemented.
+- **GDPR data subject rights** (ADDED) -- not implemented.
+- **Multi-tenancy client isolation** (ADDED, Enterprise) -- relies on OpenRegister's existing permission model; no team-based scoping.
+- **CSV column mapping import** (ADDED) -- not implemented.
+- **Export with format options** (ADDED) -- not implemented.
+- **Client timeline** (ADDED) -- not implemented beyond OpenRegister audit sidebar.
+- **Custom fields** (ADDED) -- not implemented; requires OpenRegister schema extension support.
+- **Prospect conversion** (ADDED) -- partially implemented in `ProspectDiscoveryService.createLeadFromProspect()` but only returns data, does not create objects.
 
 ### Standards & References
 - Schema.org `Person`, `Organization`, `ContactPoint` -- mapped in the register JSON schema
@@ -614,11 +1271,19 @@ NOT implemented:
 - VNG Klantinteracties `Partij`, `Betrokkene`, `DigitaalAdres` -- mentioned in spec but no explicit mapping layer implemented
 - WCAG AA -- Nextcloud Vue components provide baseline accessibility
 - OpenRegister object API for all CRUD operations
+- KVK Handelsregister API (`api.kvk.nl/api/v1`) -- used by `KvkApiClient` for prospect discovery
+- BSN elfproef (11-proof) validation -- Dutch Wet ABB (Algemene bepalingen burgerservicenummer)
+- GDPR / AVG -- EU General Data Protection Regulation for data subject rights
+- SBI codes (Standaard Bedrijfsindeling) -- Dutch industry classification standard used by KVK
 
 ### Specificity Assessment
 - The spec is comprehensive and well-structured for MVP implementation. Scenarios are detailed and testable.
 - **Implementable as-is** for all MVP requirements. V1 features need additional design work.
-- **Gap**: The spec references `taxID` field but the actual schema uses `industry` instead -- the data model does not include `taxID` or `KVK number`.
+- **Gap**: The spec references `taxID` field but the actual schema uses `industry` instead -- the data model does not include `taxID` or `KVK number`. The ADDED KVK Integration requirement addresses this gap.
 - **Gap**: The spec mentions `schema:worksFor` for contact-to-client linking but the actual schema uses a simple `client` UUID reference field.
-- **Open question**: Should validation happen at the OpenRegister schema level (JSON Schema validation) or in the Pipelinq application layer? Currently there is no Pipelinq-specific validation controller.
-- **Open question**: How should the contact person list (cross-client) be navigated? The current implementation has a dedicated `/contacts` route, but the spec does not discuss whether this is a top-level navigation item.
+- **Gap**: No `parentOrganization` field exists on the schema for hierarchy support. The ADDED Client Hierarchy requirement defines this.
+- **Gap**: No `tags` array field exists on the schema. The ADDED Client Segmentation requirement defines this.
+- **Addressed**: Client-side validation IS implemented in `ClientForm.vue` with regex validation, inline errors, and disabled save button -- corrected from original assessment.
+- **Open question**: Should validation happen at the OpenRegister schema level (JSON Schema validation) or in the Pipelinq application layer? Currently both: JSON Schema defines formats, `ClientForm.vue` implements client-side regex validation.
+- **Open question**: How should the contact person list (cross-client) be navigated? The current implementation has a dedicated `/contacts` route, but the spec does not discuss whether this is a top-level navigation item. Implementation shows it IS a top-level nav item via `MainMenu.vue`.
+- **Open question**: Should BSN handling be a separate spec given its legal complexity? Currently included here as an Enterprise-tier requirement but may warrant its own spec with deeper compliance scenarios.

@@ -4,7 +4,7 @@
 		<NcSettingsSection
 			:name="t('pipelinq', 'Pipelinq Settings')"
 			:description="t('pipelinq', 'Configure your Pipelinq installation')"
-			doc-url="https://pipelinq.app" />
+			doc-url="https://pipelinq.conduction.nl/docs/intro" />
 
 		<!-- Version Information -->
 		<CnVersionInfoCard
@@ -56,6 +56,15 @@
 		<!-- Product Categories -->
 		<ProductCategoryManager v-if="isConfigured" />
 
+		<!-- Queue Management -->
+		<QueueSettings v-if="isConfigured" />
+
+		<!-- Skill Management -->
+		<SkillSettings v-if="isConfigured" />
+
+		<!-- Agent Profile Management -->
+		<AgentProfileSettings v-if="isConfigured" />
+
 		<!-- Lead Sources -->
 		<TagManager v-if="isConfigured"
 			:title="t('pipelinq', 'Lead Sources')"
@@ -104,6 +113,9 @@ import PipelineManager from './PipelineManager.vue'
 import ProductCategoryManager from './ProductCategoryManager.vue'
 import ProspectSettings from './ProspectSettings.vue'
 import TagManager from './TagManager.vue'
+import QueueSettings from '../../components/admin/QueueSettings.vue'
+import SkillSettings from '../../components/admin/SkillSettings.vue'
+import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
 
 export default {
 	name: 'Settings',
@@ -119,6 +131,9 @@ export default {
 		ProductCategoryManager,
 		ProspectSettings,
 		TagManager,
+		QueueSettings,
+		SkillSettings,
+		AgentProfileSettings,
 	},
 	data() {
 		return {
@@ -172,6 +187,10 @@ export default {
 					{ slug: 'product', label: t('pipelinq', 'Product'), description: t('pipelinq', 'Products and services') },
 					{ slug: 'productCategory', label: t('pipelinq', 'Product Category'), description: t('pipelinq', 'Product categories') },
 					{ slug: 'leadProduct', label: t('pipelinq', 'Lead Product'), description: t('pipelinq', 'Product line items on leads') },
+					{ slug: 'relationship', label: t('pipelinq', 'Relationship'), description: t('pipelinq', 'Typed relationships between contacts and clients') },
+					{ slug: 'queue', label: t('pipelinq', 'Queue'), description: t('pipelinq', 'Work queues for routing') },
+					{ slug: 'skill', label: t('pipelinq', 'Skill'), description: t('pipelinq', 'Skills for agent routing') },
+					{ slug: 'agentProfile', label: t('pipelinq', 'Agent Profile'), description: t('pipelinq', 'Agent skill profiles') },
 				],
 			}]
 		},

@@ -118,6 +118,11 @@
 			</div>
 		</CnDetailCard>
 
+		<!-- Contact Roles -->
+		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Contact Roles')">
+			<LeadContactRoles :lead-id="leadId" />
+		</CnDetailCard>
+
 		<!-- Products -->
 		<CnDetailCard :title="t('pipelinq', 'Products')">
 			<LeadProducts
@@ -125,6 +130,11 @@
 				:lead-value="Number(leadData.value) || null"
 				@value-changed="onProductValueChanged"
 				@sync-value="syncLeadValue" />
+		</CnDetailCard>
+
+		<!-- Activity timeline -->
+		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Activity')">
+			<ActivityTimeline :entity-type="'lead'" :entity-id="leadId" />
 		</CnDetailCard>
 
 		<!-- Delete dialog -->
@@ -151,6 +161,8 @@ import { showError } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import LeadForm from './LeadForm.vue'
 import LeadProducts from '../../components/LeadProducts.vue'
+import LeadContactRoles from '../../components/LeadContactRoles.vue'
+import ActivityTimeline from '../../components/ActivityTimeline.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -162,6 +174,8 @@ export default {
 		CnDetailCard,
 		LeadForm,
 		LeadProducts,
+		LeadContactRoles,
+		ActivityTimeline,
 	},
 	props: {
 		leadId: {
@@ -210,6 +224,7 @@ export default {
 		sidebarProps() {
 			const config = this.objectStore.objectTypeRegistry.lead || {}
 			return {
+				title: t('pipelinq', 'Lead'),
 				register: config.register || '',
 				schema: config.schema || '',
 				hiddenTabs: ['tasks'],
@@ -285,8 +300,10 @@ export default {
 			}
 		},
 		async onProductValueChanged(newTotal) {
-			// Auto-update lead value if no manual value was set or if it matches previous auto-calc
-			if (!this.leadData.value || Number(this.leadData.value) === 0) {
+			// Auto-recalculate lead value from product line items (per spec).
+			// Only skip if the user has explicitly set a manual override.
+			const hasLineItems = newTotal > 0
+			if (hasLineItems) {
 				await this.syncLeadValue(newTotal)
 			}
 		},
