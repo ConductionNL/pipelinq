@@ -1,0 +1,27 @@
+# PipelinQ
+
+> Pipelinq is an open-source CRM and pipeline-management app for the Nextcloud workspace.
+
+Pipelinq is an open-source CRM and pipeline-management app for the Nextcloud workspace. It runs a kanban deal-flow with configurable stages, per-team filters via Nextcloud groups, and KPI cards on top. Customers, contacts, and deals are typed OpenRegister schemas with citation-stable IDs and a per-record audit trail. Quotes are generated through DocuDesk templates, and OpenConnector links to accounting systems such as Exact, Twinfield, and AFAS. Released under EUPL-1.2 and maintained by Conduction since 2019.
+
+## Docs
+
+- [Tutorials](https://pipelinq.conduction.nl/tutorials): step-by-step walkthroughs.
+- [Features](https://pipelinq.conduction.nl/Features): what the app does, organised by capability.
+- [Use cases](https://pipelinq.conduction.nl/UseCases): real customer scenarios.
+- [Integrations](https://pipelinq.conduction.nl/Integrations): which external systems the app talks to.
+- [Technical](https://pipelinq.conduction.nl/Technical): architecture, data model, security posture.
+- [User guide](https://pipelinq.conduction.nl/user-guide): end-user documentation.
+- [API](https://pipelinq.conduction.nl/api): OpenAPI reference.
+
+## Optional
+
+- [Install](https://pipelinq.conduction.nl/installation): install from the Nextcloud app store.
+- [Source](https://pipelinq.conduction.nl): repository and issue tracker.
+- [App page](https://www.conduction.nl/apps/pipelinq): product positioning on conduction.nl.
+
+## Contact
+
+- Email: info@conduction.nl
+- GitHub: https://github.com/ConductionNL/pipelinq
+- Conduction B.V. · KvK 76741850 · Lauriergracht 14h, Amsterdam, Netherlands
