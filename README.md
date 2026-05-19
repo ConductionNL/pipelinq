@@ -12,12 +12,14 @@
   <a href="https://github.com/ConductionNL/pipelinq/releases"><img src="https://img.shields.io/github/v/release/ConductionNL/pipelinq" alt="Latest release"></a>
   <a href="https://github.com/ConductionNL/pipelinq/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="License"></a>
   <a href="https://github.com/ConductionNL/pipelinq/actions"><img src="https://img.shields.io/github/actions/workflow/status/ConductionNL/pipelinq/code-quality.yml?label=quality" alt="Code quality"></a>
-  <a href="https://pipelinq.app"><img src="https://img.shields.io/badge/docs-pipelinq.app-green" alt="Documentation"></a>
+  <a href="https://pipelinq.conduction.nl"><img src="https://img.shields.io/badge/docs-pipelinq.conduction.nl-green" alt="Documentation"></a>
 </p>
 
 ---
 
 Pipelinq brings CRM capabilities natively into Nextcloud. Track clients and organizations, manage leads through visual kanban pipelines, capture service requests before they become formal cases, and log every interaction — without leaving your Nextcloud workspace.
+
+📚 **[Step-by-step tutorials](https://pipelinq.conduction.nl/docs/category/tutorials)** — user + admin walkthroughs with screenshots, kept in sync with the live UI via the [journeydoc](https://github.com/ConductionNL/hydra/blob/development/openspec/architecture/adr-030-journeydoc-pattern.md) capture spec defined in hydra.
 
 It pairs naturally with [Procest](https://github.com/ConductionNL/procest) to form a complete intake-to-resolution workflow: Pipelinq handles the customer-facing side, Procest handles the internal case processing.
 
