@@ -274,7 +274,7 @@ const WIDGETS = [
 export default function Home() {
   return (
     <Layout
-      title="Pipelinq"
+      title="Pipelinq, CRM and sales registers for Nextcloud"
       description="CRM on your Nextcloud. Customers, prospects, deals, quotes as typed registers. No separate sales database, no second login."
     >
       <main className="marketing-page">
