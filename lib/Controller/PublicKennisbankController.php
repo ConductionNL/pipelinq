@@ -3,7 +3,7 @@
 /**
  * Pipelinq PublicKennisbankController.
  *
- * Controller for public (no-auth) knowledge base article access.
+ * Controller for the public (no-auth) kennisbank article listing and detail.
  *
  * @category Controller
  * @package  OCA\Pipelinq\Controller
@@ -31,7 +31,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Public controller for knowledge base article listing and detail views.
+ * Public controller for kennisbank article listing and detail.
  */
 class PublicKennisbankController extends Controller
 {
@@ -55,7 +55,7 @@ class PublicKennisbankController extends Controller
     }//end __construct()
 
     /**
-     * List published public knowledge base articles.
+     * List published public kennisbank articles.
      *
      * @return JSONResponse The list of articles.
      *
@@ -81,14 +81,15 @@ class PublicKennisbankController extends Controller
             $result   = $objectService->findAll(
                 register: $config['register'],
                 schema: $config['kennisartikel_schema'],
-                filters: $filters
+                filters: $filters,
             );
             $articles = array_map(
                 callback: [$this, 'stripInternalFields'],
-                array: ($result['results'] ?? [])
+                array: ($result['results'] ?? []),
             );
+            $total    = ($result['total'] ?? count(value: $articles));
             return new JSONResponse(
-                data: ['results' => $articles, 'total' => ($result['total'] ?? count(value: $articles))]
+                data: ['results' => $articles, 'total' => $total],
             );
         } catch (\Exception $e) {
             $this->logger->error('Public kennisbank error: '.$e->getMessage());
@@ -97,11 +98,11 @@ class PublicKennisbankController extends Controller
     }//end index()
 
     /**
-     * Show a single published public knowledge base article.
+     * Show a single published kennisbank article.
      *
      * @param string $id The article ID.
      *
-     * @return JSONResponse The article data.
+     * @return JSONResponse The article data or error.
      *
      * @PublicPage
      * @NoCSRFRequired
@@ -116,14 +117,15 @@ class PublicKennisbankController extends Controller
                 return new JSONResponse(data: ['error' => 'Not configured'], statusCode: 404);
             }
 
-            $article    = $objectService->findOne(
+            $article = $objectService->findOne(
                 register: $config['register'],
                 schema: $config['kennisartikel_schema'],
-                id: $id
+                id: $id,
             );
-            $status     = ($article['status'] ?? '');
-            $visibility = ($article['visibility'] ?? '');
-            if ($article === null || $status !== 'gepubliceerd' || $visibility !== 'openbaar') {
+            if ($article === null
+                || ($article['status'] ?? '') !== 'gepubliceerd'
+                || ($article['visibility'] ?? '') !== 'openbaar'
+            ) {
                 return new JSONResponse(data: ['error' => 'Article not found'], statusCode: 404);
             }
 
@@ -135,11 +137,11 @@ class PublicKennisbankController extends Controller
     }//end show()
 
     /**
-     * Strip internal fields from an article for public display.
+     * Strip internal fields from an article before public exposure.
      *
      * @param array $article The article data.
      *
-     * @return array The article with internal fields removed.
+     * @return array The sanitized article.
      */
     private function stripInternalFields(array $article): array
     {
@@ -152,7 +154,7 @@ class PublicKennisbankController extends Controller
      *
      * @return object The object service.
      *
-     * @throws \RuntimeException If OpenRegister is not available.
+     * @throws \RuntimeException If not available.
      */
     private function getObjectService(): object
     {

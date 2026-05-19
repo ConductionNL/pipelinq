@@ -152,9 +152,10 @@ class EmailSyncService
      */
     public function setSyncEnabled(string $userId, bool $enabled): void
     {
-        $value = 'false';
         if ($enabled === true) {
             $value = 'true';
+        } else {
+            $value = 'false';
         }
 
         $this->config->setUserValue(

@@ -30,7 +30,10 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Background job that checks for knowledge base articles needing review.
+ * Timed background job for knowledge base article review reminders.
+ *
+ * Runs daily to check for articles that have not been updated
+ * within the configured review interval and sends review notifications.
  */
 class KennisbankReviewJob extends TimedJob
 {
@@ -60,7 +63,9 @@ class KennisbankReviewJob extends TimedJob
     }//end __construct()
 
     /**
-     * Run the kennisbank review job.
+     * Execute the review check job.
+     *
+     * Queries published articles and sends review reminders for stale ones.
      *
      * @param mixed $argument The job argument (unused).
      *
@@ -100,21 +105,17 @@ class KennisbankReviewJob extends TimedJob
                         continue;
                     }
 
-                    $articleTitle = ($article['title'] ?? 'Untitled');
-                    $articleId    = ($article['id'] ?? '');
                     $this->notificationService->sendNotification(
                         userId: $author,
                         subject: 'kennisbank_review_needed',
                         parameters: [
-                            'articleTitle' => $articleTitle,
-                            'articleId'    => $articleId,
+                            'articleTitle' => ($article['title'] ?? 'Untitled'),
+                            'articleId'    => ($article['id'] ?? ''),
                             'daysSince'    => $intervalDays,
                         ]
                     );
-                    $this->logger->info(
-                        'Kennisbank review reminder sent for article: '.($article['title'] ?? 'unknown')
-                    );
-                }//end if
+                    $this->logger->info('Kennisbank review reminder sent for article: '.($article['title'] ?? 'unknown'));
+                }
             }//end foreach
         } catch (\Exception $e) {
             $this->logger->error('KennisbankReviewJob error: '.$e->getMessage());

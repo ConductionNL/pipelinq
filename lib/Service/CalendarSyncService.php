@@ -116,12 +116,11 @@ class CalendarSyncService
         if ($description !== '' || $entityUrl !== '') {
             $desc = $description;
             if ($entityUrl !== '') {
-                $prefix = '';
                 if ($desc !== '') {
-                    $prefix = '\n\n';
+                    $desc .= '\n\n';
                 }
 
-                $desc .= $prefix.'Pipelinq: '.$entityUrl;
+                $desc .= 'Pipelinq: '.$entityUrl;
             }
 
             $vcal .= "DESCRIPTION:{$desc}\r\n";

@@ -67,7 +67,7 @@ class KennisbankService
      * @param int         $limit    Maximum results to return.
      * @param int         $offset   Offset for pagination.
      *
-     * @return array{articles: array<mixed>, total: int} Articles and total count.
+     * @return array<string, mixed> Filter parameters used by the controller to query articles.
      */
     public function getPublicArticles(
         ?string $search=null,
@@ -163,15 +163,16 @@ class KennisbankService
     ): array {
         $user = $this->userSession->getUser();
 
-        $agent = '';
         if ($user !== null) {
-            $agent = $user->getUID();
+            $agentId = $user->getUID();
+        } else {
+            $agentId = '';
         }
 
         $data = [
             'article' => $articleId,
             'rating'  => $rating,
-            'agent'   => $agent,
+            'agent'   => $agentId,
             'status'  => 'nieuw',
         ];
 

@@ -117,12 +117,12 @@ class PublicFormController extends Controller
         }
 
         // In production, this would:
-        // 1. Fetch form config from OpenRegister
-        // 2. Validate submission against form fields
-        // 3. Map fields to contact/lead properties
-        // 4. Deduplicate contact by email
-        // 5. Create contact and lead
-        // 6. Record submission
+        // 1. Fetch form config from OpenRegister.
+        // 2. Validate submission against form fields.
+        // 3. Map fields to contact/lead properties.
+        // 4. Deduplicate contact by email.
+        // 5. Create contact and lead.
+        // 6. Record submission.
         // 7. Notify configured user.
         $response = new JSONResponse(
                 [

@@ -181,9 +181,9 @@ class IntakeFormService
      */
     public function generateIframeEmbed(string $formId, string $baseUrl): string
     {
-        $url     = rtrim($baseUrl, '/').'/index.php/apps/pipelinq/api/public/forms/'.$formId;
-        $safeUrl = htmlspecialchars($url);
-        return "<iframe src=\"{$safeUrl}\" width=\"100%\" height=\"500\" frameborder=\"0\" style=\"border:none;\"></iframe>";
+        $url = rtrim($baseUrl, '/').'/index.php/apps/pipelinq/api/public/forms/'.$formId;
+        $src = htmlspecialchars($url);
+        return '<iframe src="'.$src.'" width="100%" height="500" frameborder="0" style="border:none;"></iframe>';
     }//end generateIframeEmbed()
 
     /**
@@ -196,21 +196,21 @@ class IntakeFormService
      */
     public function generateJsEmbed(string $formId, string $baseUrl): string
     {
-        $url     = rtrim($baseUrl, '/').'/index.php/apps/pipelinq/api/public/forms/'.$formId;
-        $safeId  = htmlspecialchars($formId);
-        $divId   = "pipelinq-form-{$safeId}";
-        $lines   = [];
-        $lines[] = "<div id=\"{$divId}\"></div>";
-        $lines[] = '<script>';
-        $lines[] = '(function(){';
-        $lines[] = "  var c=document.getElementById('{$divId}');";
-        $lines[] = "  var f=document.createElement('iframe');";
-        $lines[] = "  f.src='{$url}';";
-        $lines[] = "  f.style.cssText='width:100%;height:500px;border:none;';";
-        $lines[] = '  c.appendChild(f);';
-        $lines[] = '})();';
-        $lines[] = '</script>';
-        return implode("\n", $lines);
+        $url    = rtrim($baseUrl, '/').'/index.php/apps/pipelinq/api/public/forms/'.$formId;
+        $safeId = htmlspecialchars($formId);
+
+        $js  = '<div id="pipelinq-form-'.$safeId.'"></div>'."\n";
+        $js .= "<script>\n";
+        $js .= "(function(){\n";
+        $js .= "  var c=document.getElementById('pipelinq-form-".$safeId."');\n";
+        $js .= "  var f=document.createElement('iframe');\n";
+        $js .= "  f.src='".$url."';\n";
+        $js .= "  f.style.cssText='width:100%;height:500px;border:none;';\n";
+        $js .= "  c.appendChild(f);\n";
+        $js .= "})();\n";
+        $js .= '</script>';
+
+        return $js;
     }//end generateJsEmbed()
 
     /**

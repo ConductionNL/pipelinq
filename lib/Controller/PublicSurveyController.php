@@ -6,7 +6,7 @@
  * @category Controller
  * @package  OCA\Pipelinq\Controller
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -133,7 +133,10 @@ class PublicSurveyController extends PublicShareController
         try {
             $survey = $this->findSurveyByToken(token: $token);
             if ($survey === null) {
-                $resp = new JSONResponse(['error' => 'Survey not found'], Http::STATUS_NOT_FOUND);
+                $resp = new JSONResponse(
+                    ['error' => 'Survey not found'],
+                    Http::STATUS_NOT_FOUND,
+                );
                 $resp->throttle();
                 return $resp;
             }
@@ -145,12 +148,18 @@ class PublicSurveyController extends PublicShareController
             }
 
             if (($data['status'] ?? 'draft') !== 'active') {
-                return new JSONResponse(['error' => 'This survey is no longer accepting responses'], Http::STATUS_GONE);
+                return new JSONResponse(
+                    ['error' => 'This survey is no longer accepting responses'],
+                    Http::STATUS_GONE,
+                );
             }
 
             $until = $data['activeUntil'] ?? null;
             if ($until !== null && $until !== '' && strtotime($until) < time()) {
-                return new JSONResponse(['error' => 'This survey is no longer accepting responses'], Http::STATUS_GONE);
+                return new JSONResponse(
+                    ['error' => 'This survey is no longer accepting responses'],
+                    Http::STATUS_GONE,
+                );
             }
 
             unset($data['createdBy'], $data['linkedEntityId']);
@@ -176,7 +185,10 @@ class PublicSurveyController extends PublicShareController
         try {
             $survey = $this->findSurveyByToken(token: $token);
             if ($survey === null) {
-                $resp = new JSONResponse(['error' => 'Survey not found'], Http::STATUS_NOT_FOUND);
+                $resp = new JSONResponse(
+                    ['error' => 'Survey not found'],
+                    Http::STATUS_NOT_FOUND,
+                );
                 $resp->throttle();
                 return $resp;
             }
@@ -188,7 +200,10 @@ class PublicSurveyController extends PublicShareController
             }
 
             if (($data['status'] ?? 'draft') !== 'active') {
-                return new JSONResponse(['error' => 'This survey is no longer accepting responses'], Http::STATUS_GONE);
+                return new JSONResponse(
+                    ['error' => 'This survey is no longer accepting responses'],
+                    Http::STATUS_GONE,
+                );
             }
 
             $body    = $this->request->getParams();
@@ -214,10 +229,14 @@ class PublicSurveyController extends PublicShareController
                 'ipHash'       => hash('sha256', $this->request->getRemoteAddress()),
             ];
 
-            $created = $this->getObjectService()->saveObject($registerId, $responseSchemaId, $responseData);
+            $created = $this->getObjectService()->saveObject(
+                $registerId,
+                $responseSchemaId,
+                $responseData,
+            );
             return new JSONResponse(
                 ['message' => 'Thank you for your feedback!', 'id' => $created->getUuid()],
-                Http::STATUS_CREATED
+                Http::STATUS_CREATED,
             );
         } catch (\Exception $e) {
             $this->logger->error('Failed to submit survey response', ['exception' => $e->getMessage()]);
@@ -241,7 +260,11 @@ class PublicSurveyController extends PublicShareController
             return null;
         }
 
-        $results = $this->getObjectService()->getObjects($regId, $schemaId, ['token' => $token, '_limit' => 1]);
+        $results = $this->getObjectService()->getObjects(
+            $regId,
+            $schemaId,
+            ['token' => $token, '_limit' => 1],
+        );
         $items   = $results['results'] ?? $results ?? [];
         if (empty($items) === true) {
             return null;

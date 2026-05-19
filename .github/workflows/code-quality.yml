@@ -13,6 +13,14 @@ jobs:
     with:
       app-name: pipelinq
       enable-sbom: true
+      enable-phpunit: true
+      # Newman: tests/newman/pipelinq-api.postman_collection.json doesn't pass
+      # against a freshly-installed NC yet — the CRM endpoints need the
+      # OpenRegister registers/schemas seeded (the disable/enable repair cycle
+      # alone isn't enough). Re-enable once the collection has a working seed
+      # path. PHPUnit (the unit suite) runs and is green.
+      enable-newman: false
+      newman-collection-path: "tests/newman"
       enable-playwright: true
       enable-playwright-coverage: true
       playwright-coverage-threshold: 75

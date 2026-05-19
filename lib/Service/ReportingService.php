@@ -87,10 +87,11 @@ class ReportingService
         int $totalContacts,
         int $withinSla,
     ): array {
-        $target     = $this->getSlaTarget(channel: $channel);
-        $compliance = 0.0;
+        $target = $this->getSlaTarget(channel: $channel);
         if ($totalContacts > 0) {
             $compliance = round(($withinSla / $totalContacts) * 100, 1);
+        } else {
+            $compliance = 0.0;
         }
 
         $status = 'green';

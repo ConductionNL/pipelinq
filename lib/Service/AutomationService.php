@@ -232,9 +232,10 @@ class AutomationService
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
 
-            $status = 'failure';
             if ($httpCode >= 200 && $httpCode < 300) {
                 $status = 'success';
+            } else {
+                $status = 'failure';
             }
 
             return [
