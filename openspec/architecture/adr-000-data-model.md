@@ -1,5 +1,18 @@
 # Data Model — Pipelinq
 
+> **Note:** despite the `adr-000-` filename, this is **not** an ADR — it's
+> the per-app entity catalogue. The OR-contract paragraphs below are a
+> reminder of the platform's authoritative ADRs (hydra
+> [ADR-001 Data layer](../../../hydra/openspec/architecture/adr-001-data-layer.md)
+> and
+> [ADR-022 Apps consume OR abstractions](../../../hydra/openspec/architecture/adr-022-apps-consume-or-abstractions.md)),
+> not duplicates or override decisions. Any architecture decision
+> specific to pipelinq belongs in a properly-numbered file
+> (`adr-001-international-first-dutch-mapping.md` is a real example;
+> further per-app ADRs follow the same pattern). Filename rename to
+> `data-model.md` (no `adr-` prefix) is queued — see pipelinq's
+> adoption change.
+
 **App:** Pipelinq — CRM and customer interaction
 **Platform:** OpenRegister (register/schema/object pattern)
 **Entities:** 26
