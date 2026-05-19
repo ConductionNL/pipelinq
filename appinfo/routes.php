@@ -69,10 +69,35 @@ return [
         ['name' => 'public_kennisbank#index', 'url' => '/api/public/kennisbank/articles', 'verb' => 'GET'],
         ['name' => 'public_kennisbank#show', 'url' => '/api/public/kennisbank/articles/{id}', 'verb' => 'GET'],
 
+        // Contactmomenten (permission-checked delete)
+        ['name' => 'contactmoment#destroy', 'url' => '/api/contactmomenten/{id}', 'verb' => 'DELETE'],
+
+        // Callback management endpoints
+        ['name' => 'callback#attempt', 'url' => '/api/callbacks/{id}/attempts', 'verb' => 'POST'],
+        ['name' => 'callback#claim', 'url' => '/api/callbacks/{id}/claim', 'verb' => 'POST'],
+        ['name' => 'callback#complete', 'url' => '/api/callbacks/{id}/complete', 'verb' => 'POST'],
+        ['name' => 'callback#reassign', 'url' => '/api/callbacks/{id}/reassign', 'verb' => 'POST'],
+
         // Prometheus metrics endpoint.
         ['name' => 'metrics#index', 'url' => '/api/metrics', 'verb' => 'GET'],
         // Health check endpoint.
         ['name' => 'health#index', 'url' => '/api/health', 'verb' => 'GET'],
+
+        // Schedules API — pending MUST appear before {id} so the slug does not catch "pending".
+        ['name' => 'schedules#index',   'url' => '/api/schedules',         'verb' => 'GET'],
+        ['name' => 'schedules#create',  'url' => '/api/schedules',         'verb' => 'POST'],
+        ['name' => 'schedules#pending', 'url' => '/api/schedules/pending', 'verb' => 'GET'],
+        ['name' => 'schedules#show',    'url' => '/api/schedules/{id}',    'verb' => 'GET'],
+        ['name' => 'schedules#update',  'url' => '/api/schedules/{id}',    'verb' => 'PUT'],
+        ['name' => 'schedules#destroy', 'url' => '/api/schedules/{id}',    'verb' => 'DELETE'],
+
+        // Activity timeline and worklog endpoints.
+        ['name' => 'activity_timeline#getTimeline',  'url' => '/api/timeline', 'verb' => 'GET'],
+        ['name' => 'activity_timeline#getWorklog',   'url' => '/api/worklog',  'verb' => 'GET'],
+        ['name' => 'activity_timeline#createWorklog','url' => '/api/worklog',  'verb' => 'POST'],
+
+        // Skill-based routing suggestions — must precede SPA catch-all.
+        ['name' => 'routing#getSuggestions', 'url' => '/api/routing/suggestions', 'verb' => 'GET'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],

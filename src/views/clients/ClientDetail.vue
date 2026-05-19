@@ -93,89 +93,98 @@
 			</div>
 		</CnDetailCard>
 
-		<CnDetailCard :title="t('pipelinq', 'Contacts')" :flush="contacts.length > 0">
-			<template #header-actions>
-				<NcButton type="tertiary" @click="addContact">
+		<CnDetailCard :title="t('pipelinq', 'Contacts')">
+			<template #actions>
+				<NcButton @click="addContact">
 					{{ t('pipelinq', 'Add contact') }}
 				</NcButton>
 			</template>
 
-			<NcEmptyContent v-if="contacts.length === 0"
-				:description="t('pipelinq', 'No contacts found')" />
-			<table v-else class="viewTable">
-				<thead>
-					<tr>
-						<th>{{ t('pipelinq', 'Name') }}</th>
-						<th>{{ t('pipelinq', 'Role') }}</th>
-						<th>{{ t('pipelinq', 'Email') }}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr
-						v-for="contact in contacts"
-						:key="contact.id"
-						class="viewTableRow"
-						@click="$router.push({ name: 'ContactDetail', params: { id: contact.id } })">
-						<td>{{ contact.name || '-' }}</td>
-						<td>{{ contact.role || '-' }}</td>
-						<td>{{ contact.email || '-' }}</td>
-					</tr>
-				</tbody>
-			</table>
+			<div v-if="contacts.length === 0" class="section-empty">
+				<p>{{ t('pipelinq', 'No contacts found') }}</p>
+			</div>
+			<div v-else class="viewTableContainer">
+				<table class="viewTable">
+					<thead>
+						<tr>
+							<th>{{ t('pipelinq', 'Name') }}</th>
+							<th>{{ t('pipelinq', 'Role') }}</th>
+							<th>{{ t('pipelinq', 'Email') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="contact in contacts"
+							:key="contact.id"
+							class="viewTableRow"
+							@click="$router.push({ name: 'ContactDetail', params: { id: contact.id } })">
+							<td>{{ contact.name || '-' }}</td>
+							<td>{{ contact.role || '-' }}</td>
+							<td>{{ contact.email || '-' }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		</CnDetailCard>
 
-		<CnDetailCard :title="t('pipelinq', 'Leads')" :flush="leads.length > 0">
-			<NcEmptyContent v-if="leads.length === 0"
-				:description="t('pipelinq', 'No leads found')" />
-			<table v-else class="viewTable">
-				<thead>
-					<tr>
-						<th>{{ t('pipelinq', 'Title') }}</th>
-						<th>{{ t('pipelinq', 'Stage') }}</th>
-						<th>{{ t('pipelinq', 'Value') }}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr
-						v-for="lead in leads"
-						:key="lead.id"
-						class="viewTableRow"
-						@click="$router.push({ name: 'LeadDetail', params: { id: lead.id } })">
-						<td>{{ lead.title || '-' }}</td>
-						<td>{{ lead.stage || '-' }}</td>
-						<td>{{ lead.value || '-' }}</td>
-					</tr>
-				</tbody>
-			</table>
+		<CnDetailCard :title="t('pipelinq', 'Leads')">
+			<div v-if="leads.length === 0" class="section-empty">
+				<p>{{ t('pipelinq', 'No leads found') }}</p>
+			</div>
+			<div v-else class="viewTableContainer">
+				<table class="viewTable">
+					<thead>
+						<tr>
+							<th>{{ t('pipelinq', 'Title') }}</th>
+							<th>{{ t('pipelinq', 'Stage') }}</th>
+							<th>{{ t('pipelinq', 'Value') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="lead in leads"
+							:key="lead.id"
+							class="viewTableRow"
+							@click="$router.push({ name: 'LeadDetail', params: { id: lead.id } })">
+							<td>{{ lead.title || '-' }}</td>
+							<td>{{ lead.stage || '-' }}</td>
+							<td>{{ lead.value || '-' }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		</CnDetailCard>
 
-		<CnDetailCard :title="t('pipelinq', 'Requests')" :flush="requests.length > 0">
-			<template #header-actions>
-				<NcButton type="tertiary" @click="createRequest">
+		<CnDetailCard :title="t('pipelinq', 'Requests')">
+			<template #actions>
+				<NcButton @click="createRequest">
 					{{ t('pipelinq', 'New request') }}
 				</NcButton>
 			</template>
 
-			<NcEmptyContent v-if="requests.length === 0"
-				:description="t('pipelinq', 'No requests found')" />
-			<table v-else class="viewTable">
-				<thead>
-					<tr>
-						<th>{{ t('pipelinq', 'Title') }}</th>
-						<th>{{ t('pipelinq', 'Status') }}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr
-						v-for="request in requests"
-						:key="request.id"
-						class="viewTableRow"
-						@click="$router.push({ name: 'RequestDetail', params: { id: request.id } })">
-						<td>{{ request.title || '-' }}</td>
-						<td>{{ request.status || '-' }}</td>
-					</tr>
-				</tbody>
-			</table>
+			<div v-if="requests.length === 0" class="section-empty">
+				<p>{{ t('pipelinq', 'No requests found') }}</p>
+			</div>
+			<div v-else class="viewTableContainer">
+				<table class="viewTable">
+					<thead>
+						<tr>
+							<th>{{ t('pipelinq', 'Title') }}</th>
+							<th>{{ t('pipelinq', 'Status') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="request in requests"
+							:key="request.id"
+							class="viewTableRow"
+							@click="$router.push({ name: 'RequestDetail', params: { id: request.id } })">
+							<td>{{ request.title || '-' }}</td>
+							<td>{{ request.status || '-' }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		</CnDetailCard>
 
 		<!-- Relationships -->
@@ -186,76 +195,78 @@
 				:entity-name="clientData.name || ''" />
 		</CnDetailCard>
 
-		<CnDetailCard :title="t('pipelinq', 'Contactmomenten')" :flush="contactmomenten.length > 0">
-			<template #header-actions>
-				<NcButton type="tertiary" @click="showContactmomentQuickLog = true">
+		<CnDetailCard :title="t('pipelinq', 'Contactmomenten')">
+			<template #actions>
+				<NcButton @click="showContactmomentQuickLog = true">
 					{{ t('pipelinq', 'Log contactmoment') }}
 				</NcButton>
 			</template>
 
-			<NcEmptyContent v-if="contactmomenten.length === 0"
-				:description="t('pipelinq', 'Geen contactmomenten geregistreerd')">
-				<template #icon>
-					<PhoneLog :size="20" />
-				</template>
-			</NcEmptyContent>
-			<table v-else class="viewTable">
-				<thead>
-					<tr>
-						<th>{{ t('pipelinq', 'Subject') }}</th>
-						<th>{{ t('pipelinq', 'Channel') }}</th>
-						<th>{{ t('pipelinq', 'Agent') }}</th>
-						<th>{{ t('pipelinq', 'Date') }}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr
-						v-for="cm in contactmomenten"
-						:key="cm.id"
-						class="viewTableRow"
-						@click="$router.push({ name: 'ContactmomentDetail', params: { id: cm.id } })">
-						<td>{{ cm.subject || '-' }}</td>
-						<td>{{ cm.channel || '-' }}</td>
-						<td>{{ cm.agent || '-' }}</td>
-						<td>{{ formatDate(cm.contactedAt) }}</td>
-					</tr>
-				</tbody>
-			</table>
+			<div v-if="contactmomenten.length === 0" class="section-empty">
+				<p>{{ t('pipelinq', 'Geen contactmomenten geregistreerd') }}</p>
+			</div>
+			<div v-else class="viewTableContainer">
+				<table class="viewTable">
+					<thead>
+						<tr>
+							<th>{{ t('pipelinq', 'Subject') }}</th>
+							<th>{{ t('pipelinq', 'Channel') }}</th>
+							<th>{{ t('pipelinq', 'Agent') }}</th>
+							<th>{{ t('pipelinq', 'Date') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="cm in contactmomenten"
+							:key="cm.id"
+							class="viewTableRow"
+							@click="$router.push({ name: 'ContactmomentDetail', params: { id: cm.id } })">
+							<td>{{ cm.subject || '-' }}</td>
+							<td>{{ cm.channel || '-' }}</td>
+							<td>{{ cm.agent || '-' }}</td>
+							<td>{{ formatDate(cm.contactedAt) }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		</CnDetailCard>
 
-		<CnDetailCard :title="t('pipelinq', 'Complaints')" :flush="complaints.length > 0">
-			<template #header-actions>
-				<NcButton type="tertiary" @click="createComplaint">
+		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Activity')">
+			<ActivityTimeline :entity-type="'client'" :entity-id="clientId" />
+		</CnDetailCard>
+
+		<CnDetailCard :title="t('pipelinq', 'Complaints')">
+			<template #actions>
+				<NcButton @click="createComplaint">
 					{{ t('pipelinq', 'Add complaint') }}
 				</NcButton>
 			</template>
 
-			<NcEmptyContent v-if="complaints.length === 0"
-				:description="t('pipelinq', 'No complaints found')">
-				<template #icon>
-					<AlertCircleOutline :size="20" />
-				</template>
-			</NcEmptyContent>
-			<table v-else class="viewTable">
-				<thead>
-					<tr>
-						<th>{{ t('pipelinq', 'Title') }}</th>
-						<th>{{ t('pipelinq', 'Status') }}</th>
-						<th>{{ t('pipelinq', 'Date') }}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr
-						v-for="complaint in complaints"
-						:key="complaint.id"
-						class="viewTableRow"
-						@click="$router.push({ name: 'ComplaintDetail', params: { id: complaint.id } })">
-						<td>{{ complaint.title || '-' }}</td>
-						<td>{{ complaint.status || '-' }}</td>
-						<td>{{ formatDate(complaint._dateCreated || complaint.dateCreated) }}</td>
-					</tr>
-				</tbody>
-			</table>
+			<div v-if="complaints.length === 0" class="section-empty">
+				<p>{{ t('pipelinq', 'No complaints found') }}</p>
+			</div>
+			<div v-else class="viewTableContainer">
+				<table class="viewTable">
+					<thead>
+						<tr>
+							<th>{{ t('pipelinq', 'Title') }}</th>
+							<th>{{ t('pipelinq', 'Status') }}</th>
+							<th>{{ t('pipelinq', 'Date') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="complaint in complaints"
+							:key="complaint.id"
+							class="viewTableRow"
+							@click="$router.push({ name: 'ComplaintDetail', params: { id: complaint.id } })">
+							<td>{{ complaint.title || '-' }}</td>
+							<td>{{ complaint.status || '-' }}</td>
+							<td>{{ formatDate(complaint._dateCreated || complaint.dateCreated) }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		</CnDetailCard>
 
 		<!-- Contactmoment quick-log dialog -->
@@ -309,14 +320,13 @@
 </template>
 
 <script>
-import { NcButton, NcDialog, NcEmptyContent } from '@nextcloud/vue'
+import { NcButton, NcDialog } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import ClientForm from './ClientForm.vue'
 import ContactRelationships from '../../components/ContactRelationships.vue'
 import ContactmomentQuickLog from '../../components/ContactmomentQuickLog.vue'
-import PhoneLog from 'vue-material-design-icons/PhoneLog.vue'
-import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
+import ActivityTimeline from '../../components/ActivityTimeline.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -324,14 +334,12 @@ export default {
 	components: {
 		NcButton,
 		NcDialog,
-		NcEmptyContent,
 		CnDetailPage,
 		CnDetailCard,
 		ClientForm,
 		ContactRelationships,
 		ContactmomentQuickLog,
-		PhoneLog,
-		AlertCircleOutline,
+		ActivityTimeline,
 	},
 	props: {
 		clientId: {
@@ -368,7 +376,7 @@ export default {
 		sidebarProps() {
 			const config = this.objectStore.objectTypeRegistry.client || {}
 			return {
-				subtitle: t('pipelinq', 'Client'),
+				title: t('pipelinq', 'Client'),
 				register: config.register || '',
 				schema: config.schema || '',
 				hiddenTabs: ['tasks'],
@@ -487,6 +495,25 @@ export default {
 			} catch {
 				this.contactmomenten = []
 			}
+
+			try {
+				const allComplaints = await this.objectStore.fetchCollection('complaint', {
+					_limit: 50,
+					client: this.clientId,
+					_order: { _dateCreated: 'desc' },
+				})
+				this.complaints = allComplaints || []
+			} catch {
+				this.complaints = []
+			}
+		},
+		formatDate(dateStr) {
+			if (!dateStr) return '-'
+			try {
+				return new Date(dateStr).toLocaleDateString()
+			} catch {
+				return dateStr
+			}
 		},
 		async onContactmomentSaved() {
 			this.showContactmomentQuickLog = false
@@ -500,14 +527,6 @@ export default {
 		},
 		createComplaint() {
 			this.$router.push({ name: 'ComplaintDetail', params: { id: 'new' }, query: { client: this.clientId } })
-		},
-		formatDate(dateStr) {
-			if (!dateStr) return '-'
-			try {
-				return new Date(dateStr).toLocaleDateString()
-			} catch {
-				return dateStr
-			}
 		},
 		isClosedLead(lead) {
 			return lead.status === 'won' || lead.status === 'lost'
@@ -556,6 +575,14 @@ export default {
 	margin-top: 16px;
 }
 
+.viewTableContainer {
+	background: var(--color-main-background);
+	border-radius: var(--border-radius);
+	overflow: hidden;
+	box-shadow: 0 2px 4px var(--color-box-shadow);
+	border: 1px solid var(--color-border);
+}
+
 .viewTable {
 	width: 100%;
 	border-collapse: collapse;
@@ -583,6 +610,12 @@ export default {
 
 .viewTableRow:hover {
 	background: var(--color-background-hover);
+}
+
+.section-empty {
+	text-align: center;
+	color: var(--color-text-maxcontrast);
+	padding: 20px;
 }
 
 .delete-warning {

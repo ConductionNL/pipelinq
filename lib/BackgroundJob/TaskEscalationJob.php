@@ -79,7 +79,7 @@ class TaskEscalationJob extends TimedJob
             // In production, this would query OpenRegister for tasks with
             // status in ['open', 'in_behandeling'] and check deadlines.
             // For each task:
-            // 1. If deadline passed and status is open -> change to verlopen.
+            // 1. If deadline passed and status is open -> change to verlopen
             // 2. If deadline approaching -> send escalation notification.
             $this->logger->info('TaskEscalationJob: Deadline check completed');
         } catch (\Exception $e) {
