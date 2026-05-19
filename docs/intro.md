@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+description: Get started with Pipelinq, the CRM that lives in Nextcloud. Customers, deals, and quotes as typed OpenRegister records with native integration.
 ---
 
 # Pipelinq
