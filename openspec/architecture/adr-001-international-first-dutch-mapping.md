@@ -23,7 +23,7 @@ Industry CRM standards (schema.org, vCard, iCalendar) are well-documented, widel
 
 - Spec authors MUST use schema.org/vCard property names in requirements (e.g., `fn` not `naam`, `email` not `emailadres`).
 - Design documents for Dutch API features MUST include a mapping table (schema.org property → Dutch API field).
-- This extends company-wide ADR-006 (Schema Standards) with Pipelinq-specific vocabulary choices.
+- This extends company-wide ADR-011 (Schema Standards) with Pipelinq-specific vocabulary choices.
 
 ## Exceptions
 
