@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: Installation
-description: Install and configure Pipelinq on your Nextcloud instance.
+description: Install Pipelinq on Nextcloud 29+ from the app store. OpenRegister prerequisite and admin-side configuration walkthrough included.
 ---
 
 # Installation
