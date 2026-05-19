@@ -105,6 +105,11 @@ class MyLeadsWidget implements IWidget
      */
     public function load(): void
     {
+        // Shared vendor chunks emitted by webpack splitChunks. Util::addScript
+        // dedupes by (app, file), so the order across widgets settles on:
+        // vendor → nc-vue → widget JS, which is the dependency order.
+        Util::addScript(Application::APP_ID, Application::APP_ID.'-shared-vendor');
+        Util::addScript(Application::APP_ID, Application::APP_ID.'-shared-nc-vue');
         Util::addScript(Application::APP_ID, Application::APP_ID.'-myLeadsWidget');
         Util::addStyle(Application::APP_ID, 'dashboardWidgets');
 

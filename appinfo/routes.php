@@ -83,6 +83,22 @@ return [
         // Health check endpoint.
         ['name' => 'health#index', 'url' => '/api/health', 'verb' => 'GET'],
 
+        // Schedules API — pending MUST appear before {id} so the slug does not catch "pending".
+        ['name' => 'schedules#index',   'url' => '/api/schedules',         'verb' => 'GET'],
+        ['name' => 'schedules#create',  'url' => '/api/schedules',         'verb' => 'POST'],
+        ['name' => 'schedules#pending', 'url' => '/api/schedules/pending', 'verb' => 'GET'],
+        ['name' => 'schedules#show',    'url' => '/api/schedules/{id}',    'verb' => 'GET'],
+        ['name' => 'schedules#update',  'url' => '/api/schedules/{id}',    'verb' => 'PUT'],
+        ['name' => 'schedules#destroy', 'url' => '/api/schedules/{id}',    'verb' => 'DELETE'],
+
+        // Activity timeline and worklog endpoints.
+        ['name' => 'activity_timeline#getTimeline',  'url' => '/api/timeline', 'verb' => 'GET'],
+        ['name' => 'activity_timeline#getWorklog',   'url' => '/api/worklog',  'verb' => 'GET'],
+        ['name' => 'activity_timeline#createWorklog','url' => '/api/worklog',  'verb' => 'POST'],
+
+        // Skill-based routing suggestions — must precede SPA catch-all.
+        ['name' => 'routing#getSuggestions', 'url' => '/api/routing/suggestions', 'verb' => 'GET'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],

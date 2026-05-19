@@ -25,9 +25,24 @@ export default defineConfig({
 	},
 
 	projects: [
+		// Default regression project. Excludes the docs capture spec so
+		// PR pipelines don't reshoot screenshots on every push.
 		{
 			name: 'chromium',
+			testIgnore: ['**/docs-screenshots.spec.ts'],
 			use: { ...devices['Desktop Chrome'] },
+		},
+		// Documentation capture project (ADR-030 / journeydoc). Opt-in:
+		//   npx playwright test --project docs-capture
+		// Output lands in `docs/static/screenshots/tutorials/{user,admin}/`.
+		{
+			name: 'docs-capture',
+			testMatch: /docs-screenshots\.spec\.ts$/,
+			use: {
+				...devices['Desktop Chrome'],
+				viewport: { width: 1280, height: 800 },
+			},
+			timeout: 90_000,
 		},
 	],
 })

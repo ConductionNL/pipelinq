@@ -10,4 +10,4 @@ jobs:
   deploy:
     uses: ConductionNL/.github/.github/workflows/documentation.yml@main
     with:
-      cname: pipelinq.app
+      cname: pipelinq.conduction.nl
