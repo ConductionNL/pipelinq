@@ -1,28 +1,154 @@
 {
-	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest.schema.json",
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
 	"version": "1.0.0",
-	"dependencies": ["openregister"],
+	"dependencies": [
+		"openregister"
+	],
 	"menu": [
-		{ "id": "Dashboard", "label": "Dashboard", "icon": "icon-category-dashboard", "route": "Dashboard", "order": 10 },
-		{ "id": "Clients", "label": "Clients", "icon": "icon-group", "route": "Clients", "order": 20 },
-		{ "id": "Contacts", "label": "Contacts", "icon": "icon-user", "route": "Contacts", "order": 30 },
-		{ "id": "Leads", "label": "Leads", "icon": "icon-checkmark", "route": "Leads", "order": 40 },
-		{ "id": "Requests", "label": "Requests", "icon": "icon-file", "route": "Requests", "order": 50 },
-		{ "id": "Tasks", "label": "Tasks", "icon": "icon-checkmark", "route": "Tasks", "order": 60 },
-		{ "id": "Contactmomenten", "label": "Contactmomenten", "icon": "icon-comment", "route": "Contactmomenten", "order": 70 },
-		{ "id": "Complaints", "label": "Complaints", "icon": "icon-error", "route": "Complaints", "order": 80 },
-		{ "id": "Products", "label": "Products", "icon": "icon-files", "route": "Products", "order": 90 },
-		{ "id": "Pipeline", "label": "Pipeline", "icon": "icon-category-organization", "route": "Pipeline", "order": 100 },
-		{ "id": "Surveys", "label": "Surveys", "icon": "icon-comment", "route": "Surveys", "order": 110 },
-		{ "id": "Queues", "label": "Queues", "icon": "icon-files", "route": "Queues", "order": 120 },
-		{ "id": "Kennisbank", "label": "Kennisbank", "icon": "icon-info", "route": "Kennisbank", "order": 130 },
-		{ "id": "MyWork", "label": "My Work", "icon": "icon-user", "route": "MyWork", "order": 140 },
-		{ "id": "Rapportage", "label": "Reporting", "icon": "icon-category-monitoring", "route": "Rapportage", "order": 150 },
-		{ "id": "Documentation", "label": "Documentation", "icon": "icon-info", "href": "https://conduction.gitbook.io/pipelinq-nextcloud", "order": 160 },
-		{ "id": "Pipelines", "label": "Pipelines", "icon": "icon-category-organization", "route": "Pipelines", "section": "settings", "order": 200 },
-		{ "id": "Forms", "label": "Forms", "icon": "icon-file", "route": "Forms", "section": "settings", "order": 210 },
-		{ "id": "Automations", "label": "Automations", "icon": "icon-play", "route": "Automations", "section": "settings", "order": 220 },
-		{ "id": "FeaturesRoadmapMenu", "label": "Features & roadmap", "icon": "icon-toggle", "route": "FeaturesRoadmap", "section": "settings", "order": 230 }
+		{
+			"id": "Dashboard",
+			"label": "Dashboard",
+			"icon": "icon-category-dashboard",
+			"route": "Dashboard",
+			"order": 10
+		},
+		{
+			"id": "Clients",
+			"label": "Clients",
+			"icon": "icon-group",
+			"route": "Clients",
+			"order": 20
+		},
+		{
+			"id": "Contacts",
+			"label": "Contacts",
+			"icon": "icon-user",
+			"route": "Contacts",
+			"order": 30
+		},
+		{
+			"id": "Leads",
+			"label": "Leads",
+			"icon": "icon-checkmark",
+			"route": "Leads",
+			"order": 40
+		},
+		{
+			"id": "Requests",
+			"label": "Requests",
+			"icon": "icon-file",
+			"route": "Requests",
+			"order": 50
+		},
+		{
+			"id": "Tasks",
+			"label": "Tasks",
+			"icon": "icon-checkmark",
+			"route": "Tasks",
+			"order": 60
+		},
+		{
+			"id": "Contactmomenten",
+			"label": "Contactmomenten",
+			"icon": "icon-comment",
+			"route": "Contactmomenten",
+			"order": 70
+		},
+		{
+			"id": "Complaints",
+			"label": "Complaints",
+			"icon": "icon-error",
+			"route": "Complaints",
+			"order": 80
+		},
+		{
+			"id": "Products",
+			"label": "Products",
+			"icon": "icon-files",
+			"route": "Products",
+			"order": 90
+		},
+		{
+			"id": "Pipeline",
+			"label": "Pipeline",
+			"icon": "icon-category-organization",
+			"route": "Pipeline",
+			"order": 100
+		},
+		{
+			"id": "Surveys",
+			"label": "Surveys",
+			"icon": "icon-comment",
+			"route": "Surveys",
+			"order": 110
+		},
+		{
+			"id": "Queues",
+			"label": "Queues",
+			"icon": "icon-files",
+			"route": "Queues",
+			"order": 120
+		},
+		{
+			"id": "Kennisbank",
+			"label": "Kennisbank",
+			"icon": "icon-info",
+			"route": "Kennisbank",
+			"order": 130
+		},
+		{
+			"id": "MyWork",
+			"label": "My Work",
+			"icon": "icon-user",
+			"route": "MyWork",
+			"order": 140
+		},
+		{
+			"id": "Rapportage",
+			"label": "Reporting",
+			"icon": "icon-category-monitoring",
+			"route": "Rapportage",
+			"order": 150
+		},
+		{
+			"id": "Documentation",
+			"label": "Documentation",
+			"icon": "icon-info",
+			"href": "https://conduction.gitbook.io/pipelinq-nextcloud",
+			"order": 160
+		},
+		{
+			"id": "Pipelines",
+			"label": "Pipelines",
+			"icon": "icon-category-organization",
+			"route": "Pipelines",
+			"section": "settings",
+			"order": 200
+		},
+		{
+			"id": "Forms",
+			"label": "Forms",
+			"icon": "icon-file",
+			"route": "Forms",
+			"section": "settings",
+			"order": 210
+		},
+		{
+			"id": "Automations",
+			"label": "Automations",
+			"icon": "icon-play",
+			"route": "Automations",
+			"section": "settings",
+			"order": 220
+		},
+		{
+			"id": "FeaturesRoadmapMenu",
+			"label": "Features & roadmap",
+			"icon": "icon-toggle",
+			"route": "FeaturesRoadmap",
+			"section": "settings",
+			"order": 230
+		}
 	],
 	"pages": [
 		{
@@ -30,7 +156,8 @@
 			"route": "/",
 			"type": "custom",
 			"title": "Dashboard",
-			"component": "DashboardView"
+			"component": "DashboardView",
+			"_note": "Bespoke multi-widget dashboard with gridstack layout; lib gap: no declarative dashboard page type with grid-aware widget placement."
 		},
 		{
 			"id": "Clients",
@@ -40,8 +167,17 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "client",
-				"columns": ["name", "type", "industry", "email", "phone"],
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"columns": [
+					"name",
+					"type",
+					"industry",
+					"email",
+					"phone"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
 			}
 		},
 		{
@@ -51,12 +187,37 @@
 			"title": "Client",
 			"config": {
 				"register": "pipelinq",
-				"schema": "client",
-				"sidebarTabs": [
-					{ "id": "overview", "label": "Overview", "icon": "icon-info", "widgets": [{ "type": "data" }, { "type": "metadata" }], "order": 10 },
-					{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [{ "type": "audit-trail" }], "order": 90 }
-				]
-			}
+				"schema": "client"
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "metadata",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 1,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 2,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
 		},
 		{
 			"id": "Requests",
@@ -66,8 +227,17 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "request",
-				"columns": ["title", "status", "priority", "channel", "requestedAt"],
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"columns": [
+					"title",
+					"status",
+					"priority",
+					"channel",
+					"requestedAt"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
 			}
 		},
 		{
@@ -77,12 +247,37 @@
 			"title": "Request",
 			"config": {
 				"register": "pipelinq",
-				"schema": "request",
-				"sidebarTabs": [
-					{ "id": "overview", "label": "Overview", "icon": "icon-info", "widgets": [{ "type": "data" }, { "type": "metadata" }], "order": 10 },
-					{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [{ "type": "audit-trail" }], "order": 90 }
-				]
-			}
+				"schema": "request"
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "metadata",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 1,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 2,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
 		},
 		{
 			"id": "Complaints",
@@ -92,8 +287,18 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "complaint",
-				"columns": ["title", "status", "priority", "category", "channel", "_dateCreated"],
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"columns": [
+					"title",
+					"status",
+					"priority",
+					"category",
+					"channel",
+					"_dateCreated"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
 			}
 		},
 		{
@@ -103,12 +308,37 @@
 			"title": "Complaint",
 			"config": {
 				"register": "pipelinq",
-				"schema": "complaint",
-				"sidebarTabs": [
-					{ "id": "overview", "label": "Overview", "icon": "icon-info", "widgets": [{ "type": "data" }, { "type": "metadata" }], "order": 10 },
-					{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [{ "type": "audit-trail" }], "order": 90 }
-				]
-			}
+				"schema": "complaint"
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "metadata",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 1,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 2,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
 		},
 		{
 			"id": "Contacts",
@@ -118,8 +348,16 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "contact",
-				"columns": ["name", "email", "phone", "role"],
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"columns": [
+					"name",
+					"email",
+					"phone",
+					"role"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
 			}
 		},
 		{
@@ -129,12 +367,37 @@
 			"title": "Contact",
 			"config": {
 				"register": "pipelinq",
-				"schema": "contact",
-				"sidebarTabs": [
-					{ "id": "overview", "label": "Overview", "icon": "icon-info", "widgets": [{ "type": "data" }, { "type": "metadata" }], "order": 10 },
-					{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [{ "type": "audit-trail" }], "order": 90 }
-				]
-			}
+				"schema": "contact"
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "metadata",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 1,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 2,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
 		},
 		{
 			"id": "Leads",
@@ -144,8 +407,18 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "lead",
-				"columns": ["title", "stage", "status", "priority", "value", "expectedCloseDate"],
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"columns": [
+					"title",
+					"stage",
+					"status",
+					"priority",
+					"value",
+					"expectedCloseDate"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
 			}
 		},
 		{
@@ -155,12 +428,37 @@
 			"title": "Lead",
 			"config": {
 				"register": "pipelinq",
-				"schema": "lead",
-				"sidebarTabs": [
-					{ "id": "overview", "label": "Overview", "icon": "icon-info", "widgets": [{ "type": "data" }, { "type": "metadata" }], "order": 10 },
-					{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [{ "type": "audit-trail" }], "order": 90 }
-				]
-			}
+				"schema": "lead"
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "metadata",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 1,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 2,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
 		},
 		{
 			"id": "Contactmomenten",
@@ -170,8 +468,17 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "contactmoment",
-				"columns": ["channel", "subject", "client", "agent", "occurredAt"],
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"columns": [
+					"channel",
+					"subject",
+					"client",
+					"agent",
+					"occurredAt"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
 			}
 		},
 		{
@@ -179,7 +486,8 @@
 			"route": "/contactmomenten/new",
 			"type": "custom",
 			"title": "New contactmoment",
-			"component": "ContactmomentForm"
+			"component": "ContactmomentForm",
+			"_note": "Bespoke create wizard with client/contact resolution; lib gap: no multi-step create flow in declarative index type."
 		},
 		{
 			"id": "ContactmomentDetail",
@@ -188,12 +496,37 @@
 			"title": "Contactmoment",
 			"config": {
 				"register": "pipelinq",
-				"schema": "contactmoment",
-				"sidebarTabs": [
-					{ "id": "overview", "label": "Overview", "icon": "icon-info", "widgets": [{ "type": "data" }, { "type": "metadata" }], "order": 10 },
-					{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [{ "type": "audit-trail" }], "order": 90 }
-				]
-			}
+				"schema": "contactmoment"
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "metadata",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 1,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 2,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
 		},
 		{
 			"id": "Tasks",
@@ -203,8 +536,18 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "task",
-				"columns": ["title", "type", "status", "priority", "assignee", "dueDate"],
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"columns": [
+					"title",
+					"type",
+					"status",
+					"priority",
+					"assignee",
+					"dueDate"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
 			}
 		},
 		{
@@ -212,7 +555,8 @@
 			"route": "/tasks/new",
 			"type": "custom",
 			"title": "New task",
-			"component": "TaskForm"
+			"component": "TaskForm",
+			"_note": "Bespoke create wizard with assignee lookup and recurrence controls; lib gap: no multi-step create flow."
 		},
 		{
 			"id": "TaskDetail",
@@ -221,12 +565,37 @@
 			"title": "Task",
 			"config": {
 				"register": "pipelinq",
-				"schema": "task",
-				"sidebarTabs": [
-					{ "id": "overview", "label": "Overview", "icon": "icon-info", "widgets": [{ "type": "data" }, { "type": "metadata" }], "order": 10 },
-					{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [{ "type": "audit-trail" }], "order": 90 }
-				]
-			}
+				"schema": "task"
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "metadata",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 1,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 2,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
 		},
 		{
 			"id": "Products",
@@ -236,8 +605,17 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "product",
-				"columns": ["name", "category", "type", "status", "price"],
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"columns": [
+					"name",
+					"category",
+					"type",
+					"status",
+					"price"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
 			}
 		},
 		{
@@ -247,68 +625,101 @@
 			"title": "Product",
 			"config": {
 				"register": "pipelinq",
-				"schema": "product",
-				"sidebarTabs": [
-					{ "id": "overview", "label": "Overview", "icon": "icon-info", "widgets": [{ "type": "data" }, { "type": "metadata" }], "order": 10 },
-					{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [{ "type": "audit-trail" }], "order": 90 }
-				]
-			}
+				"schema": "product"
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "metadata",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 1,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 2,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
 		},
 		{
 			"id": "Pipeline",
 			"route": "/pipeline",
 			"type": "custom",
 			"title": "Pipeline",
-			"component": "PipelineBoardView"
+			"component": "PipelineBoardView",
+			"_note": "Kanban board with drag-and-drop lane management; lib gap: no kanban/board page type."
 		},
 		{
 			"id": "Queues",
 			"route": "/queues",
 			"type": "custom",
 			"title": "Queues",
-			"component": "QueueListView"
+			"component": "QueueListView",
+			"_note": "Bespoke routing-rule editor list with priority ordering; lib gap: no routing-rules list widget."
 		},
 		{
 			"id": "QueueDetail",
 			"route": "/queues/:id",
 			"type": "custom",
 			"title": "Queue",
-			"component": "QueueDetailView"
+			"component": "QueueDetailView",
+			"_note": "Bespoke routing-rule condition + action builder; lib gap: no routing-rules detail widget."
 		},
 		{
 			"id": "Kennisbank",
 			"route": "/kennisbank",
 			"type": "custom",
 			"title": "Kennisbank",
-			"component": "KennisbankHomeView"
+			"component": "KennisbankHomeView",
+			"_note": "Wiki home with article listing + category filter; lib gap: no wiki/knowledge-base page type."
 		},
 		{
 			"id": "KennisbankNew",
 			"route": "/kennisbank/articles/new",
 			"type": "custom",
 			"title": "New article",
-			"component": "ArticleEditorView"
+			"component": "ArticleEditorView",
+			"_note": "Markdown article editor with category picker; lib gap: no rich-text editor page type."
 		},
 		{
 			"id": "KennisbankDetail",
 			"route": "/kennisbank/articles/:id",
 			"type": "custom",
 			"title": "Article",
-			"component": "ArticleDetailView"
+			"component": "ArticleDetailView",
+			"_note": "Rendered markdown article view with related-articles panel; lib gap: no wiki article detail type."
 		},
 		{
 			"id": "KennisbankEdit",
 			"route": "/kennisbank/articles/:id/edit",
 			"type": "custom",
 			"title": "Edit article",
-			"component": "ArticleEditorView"
+			"component": "ArticleEditorView",
+			"_note": "Markdown article editor (edit path); lib gap: no rich-text editor page type."
 		},
 		{
 			"id": "KennisbankCategories",
 			"route": "/kennisbank/categories",
 			"type": "custom",
 			"title": "Categories",
-			"component": "CategoryManagerView"
+			"component": "CategoryManagerView",
+			"_note": "Drag-and-drop category tree manager; lib gap: no taxonomy/tree-manager page type."
 		},
 		{
 			"id": "Surveys",
@@ -318,8 +729,16 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "survey",
-				"columns": ["title", "status", "responseCount", "_dateCreated"],
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"columns": [
+					"title",
+					"status",
+					"responseCount",
+					"_dateCreated"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
 			}
 		},
 		{
@@ -327,7 +746,8 @@
 			"route": "/surveys/new",
 			"type": "custom",
 			"title": "New survey",
-			"component": "SurveyFormView"
+			"component": "SurveyFormView",
+			"_note": "Survey builder with dynamic question types; lib gap: no form-builder page type."
 		},
 		{
 			"id": "SurveyDetail",
@@ -336,75 +756,109 @@
 			"title": "Survey",
 			"config": {
 				"register": "pipelinq",
-				"schema": "survey",
-				"sidebarTabs": [
-					{ "id": "overview", "label": "Overview", "icon": "icon-info", "widgets": [{ "type": "data" }, { "type": "metadata" }], "order": 10 },
-					{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [{ "type": "audit-trail" }], "order": 90 }
-				]
-			}
+				"schema": "survey"
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "metadata",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 1,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 2,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
 		},
 		{
 			"id": "SurveyEdit",
 			"route": "/surveys/:id/edit",
 			"type": "custom",
 			"title": "Edit survey",
-			"component": "SurveyFormView"
+			"component": "SurveyFormView",
+			"_note": "Survey builder (edit path); lib gap: no form-builder page type."
 		},
 		{
 			"id": "SurveyAnalytics",
 			"route": "/surveys/:id/analytics",
 			"type": "custom",
 			"title": "Survey analytics",
-			"component": "SurveyAnalyticsView"
+			"component": "SurveyAnalyticsView",
+			"_note": "Chart-driven survey response analytics with apexcharts; lib gap: no chart-widget page type."
 		},
 		{
 			"id": "PublicSurvey",
 			"route": "/public/survey/:token",
 			"type": "custom",
 			"title": "Survey",
-			"component": "PublicSurveyFormView"
+			"component": "PublicSurveyFormView",
+			"_note": "Anonymous-public survey response form (no auth required); genuine exception — no typed-page analogue for tokenised public routes."
 		},
 		{
 			"id": "MyWork",
 			"route": "/my-work",
 			"type": "custom",
 			"title": "My Work",
-			"component": "MyWorkView"
+			"component": "MyWorkView",
+			"_note": "Personalised work surface mixing tasks + leads + requests for the current user; genuine exception — no single-entity typed page captures multi-entity user dashboard."
 		},
 		{
 			"id": "SyncSettings",
 			"route": "/sync-settings",
 			"type": "custom",
 			"title": "Sync settings",
-			"component": "SyncSettingsView"
+			"component": "SyncSettingsView",
+			"_note": "External integration sync configuration panel; lib gap: no settings rich-section type for complex integration config."
 		},
 		{
 			"id": "Rapportage",
 			"route": "/rapportage",
 			"type": "custom",
 			"title": "Reporting",
-			"component": "RapportageDashboardView"
+			"component": "RapportageDashboardView",
+			"_note": "KPI reporting dashboard with apexcharts; lib gap: no chart-widget page type."
 		},
 		{
 			"id": "ChannelAnalytics",
 			"route": "/rapportage/channels",
 			"type": "custom",
 			"title": "Channel analytics",
-			"component": "ChannelAnalyticsView"
+			"component": "ChannelAnalyticsView",
+			"_note": "Channel breakdown analytics with apexcharts; lib gap: no chart-widget page type."
 		},
 		{
 			"id": "AgentPerformance",
 			"route": "/rapportage/agents",
 			"type": "custom",
 			"title": "Agent performance",
-			"component": "AgentPerformanceView"
+			"component": "AgentPerformanceView",
+			"_note": "Per-agent performance charts with apexcharts; lib gap: no chart-widget page type."
 		},
 		{
 			"id": "Pipelines",
 			"route": "/pipelines",
 			"type": "custom",
 			"title": "Pipelines",
-			"component": "PipelineManagerView"
+			"component": "PipelineManagerView",
+			"_note": "Pipeline stage + transition manager with drag-and-drop reordering; lib gap: no pipeline-designer page type."
 		},
 		{
 			"id": "Forms",
@@ -414,11 +868,26 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "intakeForm",
-				"columns": ["name", "isActive", "submitCount", "targetPipeline"],
-				"actions": [
-					{ "id": "submissions", "label": "View submissions", "icon": "format-list-bulleted", "handler": "navigate", "route": "FormSubmissions" }
+				"columns": [
+					"name",
+					"isActive",
+					"submitCount",
+					"targetPipeline"
 				],
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"actions": [
+					{
+						"id": "submissions",
+						"label": "View submissions",
+						"icon": "format-list-bulleted",
+						"handler": "navigate",
+						"route": "FormSubmissions",
+						"type": "handler"
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
 			}
 		},
 		{
@@ -426,14 +895,16 @@
 			"route": "/forms/new",
 			"type": "custom",
 			"title": "New form",
-			"component": "FormBuilderView"
+			"component": "FormBuilderView",
+			"_note": "Visual form builder with drag-and-drop field palette; lib gap: no form-builder page type."
 		},
 		{
 			"id": "FormDetail",
 			"route": "/forms/:id",
 			"type": "custom",
 			"title": "Form",
-			"component": "FormBuilderView"
+			"component": "FormBuilderView",
+			"_note": "Visual form builder (edit path); lib gap: no form-builder page type."
 		},
 		{
 			"id": "FormSubmissions",
@@ -443,14 +914,24 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "intakeSubmission",
-				"filter": { "form": "@route.id" },
+				"filter": {
+					"form": "@route.id"
+				},
 				"sortKey": "submittedAt",
 				"sortOrder": "desc",
-				"columns": ["submittedAt", "status", "contactId", "leadId"],
+				"columns": [
+					"submittedAt",
+					"status",
+					"contactId",
+					"leadId"
+				],
 				"emptyText": "No submissions yet",
 				"showAdd": false,
 				"showFormDialog": false,
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
 			}
 		},
 		{
@@ -461,11 +942,27 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "automation",
-				"columns": ["name", "trigger", "isActive", "lastRun", "runCount"],
-				"actions": [
-					{ "id": "history", "label": "View history", "icon": "history", "handler": "navigate", "route": "AutomationHistory" }
+				"columns": [
+					"name",
+					"trigger",
+					"isActive",
+					"lastRun",
+					"runCount"
 				],
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"actions": [
+					{
+						"id": "history",
+						"label": "View history",
+						"icon": "history",
+						"handler": "navigate",
+						"route": "AutomationHistory",
+						"type": "handler"
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
 			}
 		},
 		{
@@ -473,14 +970,16 @@
 			"route": "/automations/new",
 			"type": "custom",
 			"title": "New automation",
-			"component": "AutomationBuilderView"
+			"component": "AutomationBuilderView",
+			"_note": "Visual automation graph editor (trigger + actions); lib gap: no automation-graph page type."
 		},
 		{
 			"id": "AutomationDetail",
 			"route": "/automations/:id",
 			"type": "custom",
 			"title": "Automation",
-			"component": "AutomationBuilderView"
+			"component": "AutomationBuilderView",
+			"_note": "Visual automation graph editor (edit path); lib gap: no automation-graph page type."
 		},
 		{
 			"id": "AutomationHistory",
@@ -490,10 +989,18 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "automationLog",
-				"filter": { "automation": "@route.id" },
+				"filter": {
+					"automation": "@route.id"
+				},
 				"sortKey": "triggeredAt",
 				"sortOrder": "desc",
-				"columns": ["triggeredAt", "status", "triggerEntity", "actionsExecuted", "error"],
+				"columns": [
+					"triggeredAt",
+					"status",
+					"triggerEntity",
+					"actionsExecuted",
+					"error"
+				],
 				"emptyText": "This automation has not been triggered yet.",
 				"selectable": false,
 				"showAdd": false,
@@ -511,7 +1018,8 @@
 			"route": "/features-roadmap",
 			"type": "custom",
 			"title": "Features & roadmap",
-			"component": "FeaturesRoadmap"
+			"component": "FeaturesRoadmap",
+			"_note": "Thin wrapper around the lib's CnFeaturesAndRoadmapView; in-product roadmap surface powered by OpenRegister's GitHub-issue proxy (ConductionNL/hydra#251)."
 		}
 	]
 }
