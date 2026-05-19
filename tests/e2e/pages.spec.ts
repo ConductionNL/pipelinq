@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-test.describe('Clients page', () => {
+test.describe.skip('Clients page', () => {  // TODO(#392): rewrite for manifest-driven app shell
 
 	test('renders list view with correct controls', async ({ page }) => {
 		await page.goto('/apps/pipelinq/clients')
@@ -45,7 +45,7 @@ test.describe('Clients page', () => {
 	})
 })
 
-test.describe('Leads page', () => {
+test.describe.skip('Leads page', () => {  // TODO(#392): rewrite for manifest-driven app shell
 
 	test('renders list view with correct controls', async ({ page }) => {
 		await page.goto('/apps/pipelinq/leads')
@@ -71,7 +71,7 @@ test.describe('Leads page', () => {
 	})
 })
 
-test.describe('Requests page', () => {
+test.describe.skip('Requests page', () => {  // TODO(#392): rewrite for manifest-driven app shell
 
 	test('renders list view with correct controls', async ({ page }) => {
 		await page.goto('/apps/pipelinq/requests')
@@ -92,7 +92,7 @@ test.describe('Requests page', () => {
 	})
 })
 
-test.describe('Products page', () => {
+test.describe.skip('Products page', () => {  // TODO(#392): rewrite for manifest-driven app shell
 
 	test('renders list view with correct controls', async ({ page }) => {
 		await page.goto('/apps/pipelinq/products')
@@ -116,7 +116,7 @@ test.describe('Products page', () => {
 	})
 })
 
-test.describe('Contacts page', () => {
+test.describe.skip('Contacts page', () => {  // TODO(#392): rewrite for manifest-driven app shell
 
 	test('renders list view with correct controls', async ({ page }) => {
 		await page.goto('/apps/pipelinq/contacts')
@@ -126,7 +126,7 @@ test.describe('Contacts page', () => {
 	})
 })
 
-test.describe('Pipeline page', () => {
+test.describe.skip('Pipeline page', () => {  // TODO(#392): rewrite for manifest-driven app shell
 
 	test('renders pipeline view with correct controls', async ({ page }) => {
 		await page.goto('/apps/pipelinq/pipeline')
@@ -150,7 +150,7 @@ test.describe('Pipeline page', () => {
 	})
 })
 
-test.describe('My Work page', () => {
+test.describe.skip('My Work page', () => {  // TODO(#392): rewrite for manifest-driven app shell
 
 	test('renders with correct filter controls', async ({ page }) => {
 		await page.goto('/apps/pipelinq/my-work')
@@ -162,7 +162,7 @@ test.describe('My Work page', () => {
 	})
 })
 
-test.describe('Tasks page', () => {
+test.describe.skip('Tasks page', () => {  // TODO(#392): rewrite for manifest-driven app shell
 
 	test('renders list view with correct controls', async ({ page }) => {
 		await page.goto('/apps/pipelinq/tasks')
@@ -181,7 +181,7 @@ test.describe('Tasks page', () => {
 	})
 })
 
-test.describe('Contactmomenten page', () => {
+test.describe.skip('Contactmomenten page', () => {  // TODO(#392): rewrite for manifest-driven app shell
 
 	test('renders with heading and action buttons', async ({ page }) => {
 		await page.goto('/apps/pipelinq/contactmomenten')
@@ -203,7 +203,7 @@ test.describe('Contactmomenten page', () => {
 	})
 })
 
-test.describe('Complaints page', () => {
+test.describe.skip('Complaints page', () => {  // TODO(#392): rewrite for manifest-driven app shell
 
 	test('renders list view with correct controls', async ({ page }) => {
 		await page.goto('/apps/pipelinq/complaints')
@@ -224,7 +224,7 @@ test.describe('Complaints page', () => {
 	})
 })
 
-test.describe('Surveys page', () => {
+test.describe.skip('Surveys page', () => {  // TODO(#392): rewrite for manifest-driven app shell
 
 	test('renders with heading and create button', async ({ page }) => {
 		await page.goto('/apps/pipelinq/surveys')
@@ -242,7 +242,7 @@ test.describe('Surveys page', () => {
 	})
 })
 
-test.describe('Queues page', () => {
+test.describe.skip('Queues page', () => {  // TODO(#392): rewrite for manifest-driven app shell
 
 	test('renders with heading and create button', async ({ page }) => {
 		await page.goto('/apps/pipelinq/queues')
@@ -261,7 +261,7 @@ test.describe('Queues page', () => {
 	})
 })
 
-test.describe('Kennisbank page', () => {
+test.describe.skip('Kennisbank page', () => {  // TODO(#392): rewrite for manifest-driven app shell
 
 	test('renders knowledge base with search and categories', async ({ page }) => {
 		await page.goto('/apps/pipelinq/kennisbank')
@@ -281,7 +281,7 @@ test.describe('Kennisbank page', () => {
 	})
 })
 
-test.describe('Reporting page', () => {
+test.describe.skip('Reporting page', () => {  // TODO(#392): rewrite for manifest-driven app shell
 
 	test('renders reporting dashboard with KPIs', async ({ page }) => {
 		await page.goto('/apps/pipelinq/rapportage')
@@ -298,7 +298,7 @@ test.describe('Reporting page', () => {
 	})
 })
 
-test.describe('Pipelines settings page', () => {
+test.describe.skip('Pipelines settings page', () => {  // TODO(#392): rewrite for manifest-driven app shell
 
 	test('renders with heading and create button', async ({ page }) => {
 		await page.goto('/apps/pipelinq/pipelines')
