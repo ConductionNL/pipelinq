@@ -51,15 +51,17 @@ import CategoryManagerView from './views/kennisbank/CategoryManager.vue'
 import SurveyFormView from './views/surveys/SurveyForm.vue'
 import SurveyAnalyticsView from './views/surveys/SurveyAnalytics.vue'
 
-// --- Forms (lib gap: no `form-builder` page type). ---
-import FormManagerView from './views/forms/FormManager.vue'
+// --- Forms (lib gap: no `form-builder` page type for the visual builder;
+//     the `Forms` list page is a declarative `type:"index"` on intakeForm,
+//     and `Forms › Submissions` is a declarative `type:"index"` on
+//     intakeSubmission with `config.filter: { form: "@route.id" }`). ---
 import FormBuilderView from './views/forms/FormBuilder.vue'
-import FormSubmissionsView from './views/forms/FormSubmissions.vue'
 
-// --- Automations (lib gap: no `automation-graph` page type). ---
-import AutomationListView from './views/automations/AutomationList.vue'
+// --- Automations (lib gap: no `automation-graph` page type for the visual
+//     builder; the `Automations` list page is a declarative `type:"index"`,
+//     and `Automations › History` is a declarative `type:"index"` on
+//     automationLog with `config.filter: { automation: "@route.id" }`). ---
 import AutomationBuilderView from './views/automations/AutomationBuilder.vue'
-import AutomationHistoryView from './views/automations/AutomationHistory.vue'
 
 // --- Reporting dashboards (lib gap: chart widgets not yet registered). ---
 import RapportageDashboardView from './views/rapportage/RapportageDashboard.vue'
@@ -69,6 +71,11 @@ import AgentPerformanceView from './views/rapportage/AgentPerformance.vue'
 // --- Admin managers (lib gap: type=settings rich sections need extra widgets). ---
 import PipelineManagerView from './views/settings/PipelineManager.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
+
+// --- Features & Roadmap page — thin wrapper around the lib's
+//     CnFeaturesAndRoadmapView (in-product roadmap surface powered by
+//     OpenRegister's github-issue-proxy). See ConductionNL/hydra#251. ---
+import FeaturesRoadmapView from './views/FeaturesRoadmap.vue'
 
 /**
  * submitPublicSurvey — handler for the manifest-driven PublicSurvey
@@ -140,15 +147,11 @@ export default {
 	SurveyFormView,
 	SurveyAnalyticsView,
 
-	// Forms
-	FormManagerView,
+	// Forms (list + submissions are declarative type:index; visual builder stays custom)
 	FormBuilderView,
-	FormSubmissionsView,
 
-	// Automations
-	AutomationListView,
+	// Automations (list + history are declarative type:index; visual builder stays custom)
 	AutomationBuilderView,
-	AutomationHistoryView,
 
 	// Reporting
 	RapportageDashboardView,
@@ -158,4 +161,7 @@ export default {
 	// Admin managers
 	PipelineManagerView,
 	SyncSettingsView,
+
+	// Features & Roadmap page (lib's CnFeaturesAndRoadmapView)
+	FeaturesRoadmap: FeaturesRoadmapView,
 }

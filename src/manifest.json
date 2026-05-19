@@ -21,7 +21,8 @@
 		{ "id": "Documentation", "label": "Documentation", "icon": "icon-info", "href": "https://conduction.gitbook.io/pipelinq-nextcloud", "order": 160 },
 		{ "id": "Pipelines", "label": "Pipelines", "icon": "icon-category-organization", "route": "Pipelines", "section": "settings", "order": 200 },
 		{ "id": "Forms", "label": "Forms", "icon": "icon-file", "route": "Forms", "section": "settings", "order": 210 },
-		{ "id": "Automations", "label": "Automations", "icon": "icon-play", "route": "Automations", "section": "settings", "order": 220 }
+		{ "id": "Automations", "label": "Automations", "icon": "icon-play", "route": "Automations", "section": "settings", "order": 220 },
+		{ "id": "FeaturesRoadmapMenu", "label": "Features & roadmap", "icon": "icon-toggle", "route": "FeaturesRoadmap", "section": "settings", "order": 230 }
 	],
 	"pages": [
 		{
@@ -417,9 +418,17 @@
 		{
 			"id": "Forms",
 			"route": "/forms",
-			"type": "custom",
+			"type": "index",
 			"title": "Forms",
-			"component": "FormManagerView"
+			"config": {
+				"register": "pipelinq",
+				"schema": "intakeForm",
+				"columns": ["name", "isActive", "submitCount", "targetPipeline"],
+				"actions": [
+					{ "id": "submissions", "label": "View submissions", "icon": "format-list-bulleted", "handler": "navigate", "route": "FormSubmissions" }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true }
+			}
 		},
 		{
 			"id": "FormNew",
@@ -438,16 +447,35 @@
 		{
 			"id": "FormSubmissions",
 			"route": "/forms/:id/submissions",
-			"type": "custom",
+			"type": "index",
 			"title": "Form submissions",
-			"component": "FormSubmissionsView"
+			"config": {
+				"register": "pipelinq",
+				"schema": "intakeSubmission",
+				"filter": { "form": "@route.id" },
+				"sortKey": "submittedAt",
+				"sortOrder": "desc",
+				"columns": ["submittedAt", "status", "contactId", "leadId"],
+				"emptyText": "No submissions yet",
+				"showAdd": false,
+				"showFormDialog": false,
+				"sidebar": { "enabled": true, "showMetadata": true }
+			}
 		},
 		{
 			"id": "Automations",
 			"route": "/automations",
-			"type": "custom",
+			"type": "index",
 			"title": "Automations",
-			"component": "AutomationListView"
+			"config": {
+				"register": "pipelinq",
+				"schema": "automation",
+				"columns": ["name", "trigger", "isActive", "lastRun", "runCount"],
+				"actions": [
+					{ "id": "history", "label": "View history", "icon": "history", "handler": "navigate", "route": "AutomationHistory" }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true }
+			}
 		},
 		{
 			"id": "AutomationNew",
@@ -466,9 +494,33 @@
 		{
 			"id": "AutomationHistory",
 			"route": "/automations/:id/history",
-			"type": "custom",
+			"type": "index",
 			"title": "Automation history",
-			"component": "AutomationHistoryView"
+			"config": {
+				"register": "pipelinq",
+				"schema": "automationLog",
+				"filter": { "automation": "@route.id" },
+				"sortKey": "triggeredAt",
+				"sortOrder": "desc",
+				"columns": ["triggeredAt", "status", "triggerEntity", "actionsExecuted", "error"],
+				"emptyText": "This automation has not been triggered yet.",
+				"selectable": false,
+				"showAdd": false,
+				"showFormDialog": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"showMassImport": false,
+				"showMassCopy": false,
+				"showMassDelete": false
+			}
+		},
+		{
+			"id": "FeaturesRoadmap",
+			"route": "/features-roadmap",
+			"type": "custom",
+			"title": "Features & roadmap",
+			"component": "FeaturesRoadmap"
 		}
 	]
 }

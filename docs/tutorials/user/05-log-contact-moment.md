@@ -6,7 +6,7 @@ description: Record a call, email, visit, or other interaction so the client's h
 
 # Log an interaction
 
-A **contact moment** is one entry in a client's interaction history. Calls, emails, visits, demos — anything worth remembering.
+A **contact moment** is one entry in a client's interaction history. Calls, emails, visits, demos: anything worth remembering.
 
 ## Goal
 
@@ -20,30 +20,30 @@ Log a contact moment on a client and verify it lands on the client's timeline.
 
 ### 1. Open the client's detail page
 
-### 2. Click **+ Log contact moment**
+### 2. Click **+ Add Item** on the *Contactmomenten* tab
 
-`{{TODO: confirm exact button label}}`
+The client detail page's sidebar has a **Contactmomenten** tab; the create button on that tab is the standard **Add Item** action.
 
-![Add contact moment](/screenshots/tutorials/user/05-add-button.png)
+![Add contact moment](/screenshots/user-guide/user/05-add-button.png)
 
 ### 3. Pick the type
 
-`{{TODO: list types — call, email, visit, video call, etc.}}`
+The shipped types are **Call (inbound)**, **Call (outbound)**, **Email**, **Meeting**, **Visit**, **Video call**, **Chat**, **Note**. Admins add or retire types per channel under **Administration settings → Pipelinq → Request Channels**.
 
 ### 4. Fill in the details
 
-- **Date** — defaults to now.
-- **Subject** — short summary.
-- **Notes** — free-form body.
-- **Linked lead / request** — optional; surfaces the moment on those records too.
+- **Date**: defaults to now.
+- **Subject**: short summary.
+- **Notes**: free-form body.
+- **Linked lead / request**: optional; surfaces the moment on those records too.
 
-![Form](/screenshots/tutorials/user/05-form.png)
+![Form](/screenshots/user-guide/user/05-form.png)
 
 ### 5. Save
 
 The moment appears at the top of the client's timeline.
 
-![Saved](/screenshots/tutorials/user/05-saved.png)
+![Saved](/screenshots/user-guide/user/05-saved.png)
 
 ## Verification
 
@@ -55,9 +55,9 @@ The moment appears at the top of the client's timeline.
 
 | Symptom | Fix |
 |---|---|
-| Type list is empty | Admin hasn't configured contact-moment types yet — see [admin guide](../admin/02-request-types.md). |
-| Moment doesn't show on linked lead | Reload the lead — the timeline cache refreshes only on next view. |
+| Type list is empty | Admin hasn't configured contact-moment types yet. See [admin guide](../admin/02-request-types.md). |
+| Moment doesn't show on linked lead | Reload the lead. The timeline cache refreshes only on next view. |
 
 ## Reference
 
-- [Contact moments feature reference](../../features/contact-moments.md)
+- [Contact moments feature reference](../../Features/contact-moments.md)
