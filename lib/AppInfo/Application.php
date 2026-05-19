@@ -8,7 +8,7 @@
  * @category AppInfo
  * @package  OCA\Pipelinq\AppInfo
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -32,6 +32,7 @@ use OCA\Pipelinq\Dashboard\RecentActivitiesWidget;
 use OCA\Pipelinq\Dashboard\StartRequestWidget;
 use OCA\Pipelinq\Listener\DeepLinkRegistrationListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
+use OCA\Pipelinq\Mcp\PipelinqToolProvider;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -86,6 +87,16 @@ class Application extends App implements IBootstrap
         $context->registerDashboardWidget(FindClientWidget::class);
         $context->registerDashboardWidget(StartRequestWidget::class);
         $context->registerDashboardWidget(CreateLeadWidget::class);
+
+        // Register PipelinqToolProvider as the MCP tool provider for the AI Chat Companion.
+        // The alias key 'OCA\OpenRegister\Mcp\IMcpToolProvider::pipelinq' is the format
+        // that OR's McpToolsService enumerates to discover per-app providers (design D3).
+        // The interface ships in openregister PR #1466 (ai-chat-companion-orchestrator);
+        // until then this app implements the tests/Stubs/Mcp/IMcpToolProvider.php stub.
+        $context->registerServiceAlias(
+            'OCA\\OpenRegister\\Mcp\\IMcpToolProvider::pipelinq',
+            PipelinqToolProvider::class
+        );
     }//end register()
 
     /**

@@ -17,18 +17,42 @@ We want to unify these into a **single priority-scheduled container pool** so th
 
 ### Container types (priority order)
 
-| Priority | Type | Source | Container image | Model |
-|----------|------|--------|-----------------|-------|
-| 1 | **bugfix** | Hydra: fix iteration after review failure | `hydra-builder` | sonnet |
-| 2 | **code-review** | Hydra: PR code review | `hydra-reviewer` | sonnet |
-| 3 | **security-review** | Hydra: PR security review | `hydra-security` | sonnet |
-| 4 | **build** | Hydra: initial spec build | `hydra-builder` | sonnet |
-| 5 | **audit** | Hydra: codebase audit | `hydra-builder` | sonnet |
-| 6 | **spec-generation** | Specter: push_spec_pipeline | `specter-llm-worker` | sonnet |
-| 7 | **schema-synthesis** | Specter: generate/dedup schemas | `specter-llm-worker` | haiku |
-| 8 | **classification** | Specter: classify/redistribute features | `specter-llm-worker` | haiku |
-| 9 | **translation** | Specter: translate requirements | `specter-llm-worker` | haiku |
-| 10 | **discovery** | Specter: research, feature extraction | `specter-llm-worker` | haiku |
+| Priority | Type | Source | Container image | Model | Fallback |
+|----------|------|--------|-----------------|-------|----------|
+| 1 | **code-review** | Hydra: PR code review + in-container fixes | `hydra-reviewer` | sonnet | opus |
+| 2 | **security-review** | Hydra: PR security review + in-container fixes | `hydra-security` | sonnet | opus |
+| 3 | **applier** | Hydra: binary go/no-go gate (no fix authority) | `hydra-applier` | sonnet | opus |
+| 4 | **build** | Hydra: initial spec build | `hydra-builder` | haiku | — |
+| 5 | **audit** | Hydra: codebase audit | `hydra-builder` | sonnet | opus |
+| 6 | **spec-generation** | Specter: push_spec_pipeline | `specter-llm-worker` | sonnet | haiku |
+| 7 | **schema-synthesis** | Specter: generate/dedup schemas | `specter-llm-worker` | haiku | — |
+| 8 | **classification** | Specter: classify/redistribute features | `specter-llm-worker` | haiku | — |
+| 9 | **translation** | Specter: translate requirements | `specter-llm-worker` | haiku | — |
+| 10 | **discovery** | Specter: research, feature extraction | `specter-llm-worker` | haiku | — |
+
+**No-loop policy (openspec/changes/no-loop-review-pipeline):** Reviewers own fix
+authority. The Applier is a read-only final gate that emits a binary pass/fail
+verdict — it never modifies files. Every post-review outcome is terminal:
+merge (on `applier:pass` or reviews passed with zero fixes) or `needs-input`
+(on `applier:fail`, reviewer `agent-maxed-out`, or post-review deterministic
+check failure). There is no fix-iteration loop and no `bugfix` container.
+
+### Model strategy
+
+**Principle:** Use the cheapest model that can do the job. Reserve expensive models for judgment work.
+
+| Work type | Model | Rationale |
+|-----------|-------|-----------|
+| Build (implementation) | **Haiku** | Clear instructions (tasks.md, design.md). Pattern-following, not judgment. Faster and cheaper — 5 parallel Haiku builds burn far less quota than Sonnet. |
+| Fix-quality / fix-browser (pre-review) | **Haiku** | "Fix this PHPCS error" or "fix this browser test failure" — explicit, targeted corrections triggered by deterministic check output during the build phase. |
+| Code review (+ in-container fix authority) | **Sonnet → Opus** | Judgment + bounded fixes. Sonnet is the primary; falls back to Opus when Sonnet quota exhausted. Budget: 40 turns (up from 20) to cover review + self-verified fixes. |
+| Security review (+ in-container fix authority in PR mode) | **Sonnet → Opus** | Critical: injection vectors, auth bypasses, secret leaks. Same fallback logic. Budget: 40 turns in PR mode, 120 in full-audit mode (audit mode has no fix authority). |
+| Applier (Axel Pliér) | **Sonnet → Opus** | Final binary go/no-go. No fix tools. Reads hydra.json + PR state + ADRs, emits `{pass, blocking[]}`. Budget: 20 turns. |
+| Audit | **Sonnet → Opus** | Full codebase analysis — needs depth. |
+
+**Quota optimization:** Claude Max plans have separate "Sonnet only" and "all models" weekly limits. By defaulting builders to Haiku, the Sonnet quota is reserved for reviews only (~20 turns each, 2 per PR). When Sonnet runs out, reviews fall back to the **deeper** model (Opus), not the shallower one — because reviews are the last line of defense before human approval.
+
+**Overrides:** Set `HYDRA_BUILDER_MODEL`, `HYDRA_REVIEWER_MODEL`, or `HYDRA_REVIEWER_FALLBACK_MODEL` env vars to change defaults.
 
 ### Architecture
 
@@ -96,8 +120,9 @@ CREATE TABLE container_queue (
 |-------|------|---------|
 | `conduction/nextcloud-test:stable31` | 1.5GB | Prebuild NC server + PostgreSQL + OpenRegister (cloned) |
 | `hydra-builder:latest` | 1.9GB | Code implementation: NC test env + Claude CLI + PHP + skills |
-| `hydra-reviewer:latest` | 1.3GB | Code review: Claude CLI + review skills |
-| `hydra-security:latest` | 1.9GB | Security review: Claude CLI + Semgrep + security skills |
+| `hydra-reviewer:latest` | 1.3GB | Code review + bounded in-container fix authority (Juan Claude van Damme) |
+| `hydra-security:latest` | 1.9GB | Security review + bounded in-container fix authority (Clyde Barcode) |
+| `hydra-applier:latest` | 1.0GB | Binary go/no-go gate; no Write/Edit tools (Axel Pliér) |
 | `specter-spec-writer:latest` | ~800MB | Spec generation: Claude CLI + openspec CLI + skills (no PHP) |
 | `specter-llm-worker:latest` | ~500MB | Intelligence pipeline: Claude CLI + DB access |
 
@@ -122,6 +147,25 @@ CREATE TABLE container_queue (
 - Specs with met deps push to development directly (doc-only merge guard)
 - Issues created with `yolo` label → Hydra auto-builds, reviews, merges, closes issue
 
+### Container capability profiles
+
+Each container persona runs with a different Linux capability set determined by the trust we extend to it. This is load-bearing for runtime behaviour — a container's `/workspace` is ONLY writable by the claude user if the build or the entrypoint arranges it, and the two code paths diverge based on cap profile.
+
+| Persona | Caps added | Claude user | Workspace setup |
+|---------|-----------|-------------|-----------------|
+| Builder | SETUID, SETGID, DAC_OVERRIDE, CHOWN, FOWNER | Dropped via `gosu` at run time | Entrypoint chowns at start, relies on DAC_OVERRIDE |
+| Reviewer | SETUID, SETGID, DAC_OVERRIDE, CHOWN, FOWNER | Same as builder | Same — entrypoint chown |
+| Security | SETUID, SETGID, DAC_OVERRIDE, CHOWN, FOWNER | Same | Same |
+| **Applier** | **None** (minimum-cap — read-only judge) | **Runs as `claude:claude` via `docker --user`** (no gosu drop possible — can't setuid without SETUID) | **Must be pre-chowned at IMAGE BUILD TIME** — no runtime chown possible |
+
+**The applier's minimum-cap profile has a hard consequence:** its Dockerfile MUST contain
+```dockerfile
+RUN mkdir -p /workspace && chown claude:claude /workspace && chmod 0775 /workspace
+```
+before the `WORKDIR /workspace` directive. Otherwise the non-root claude user cannot write files into its own workdir, `hydra_prefetch_pr_context` silently fails every redirect, Claude runs 0 turns, and the orchestrator records `pass=null, turns=0 → applier:fail`. Observed on decidesk#44 2026-04-23 06:01 UTC — looked like a harness bug, real cause was one missing `chown` line in the Dockerfile.
+
+This is **the rule for any future minimum-cap persona**: if you drop DAC_OVERRIDE + SETUID for security reasons, the Dockerfile owns workspace ownership — the entrypoint cannot.
+
 ## Consequences
 
 - All LLM calls go through containers — no direct `claude -p` from host scripts
@@ -131,3 +175,4 @@ CREATE TABLE container_queue (
 - Container images are the unit of deployment — version, test, rollback independently
 - ADR-000 convention: every repo's data model is at `openspec/architecture/adr-000-data-model.md`
 - `context-brief.md` in each change directory carries intelligence data through the full pipeline
+- Minimum-cap containers (applier) require Dockerfile-time workspace chown; higher-cap containers can chown at runtime. This split is permanent — don't ship a new minimum-cap persona without pre-chowning.

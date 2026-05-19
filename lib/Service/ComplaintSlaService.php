@@ -131,7 +131,12 @@ class ComplaintSlaService
             $start = new DateTimeImmutable();
         }
 
-        return $start->modify('+'.$hours.' hours');
+        $deadline = $start->modify('+'.$hours.' hours');
+        if ($deadline === false) {
+            return null;
+        }
+
+        return $deadline;
     }//end calculateDeadline()
 
     /**
