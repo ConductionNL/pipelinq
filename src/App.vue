@@ -18,6 +18,7 @@
 	<CnAppRoot
 		:manifest="manifest"
 		:custom-components="customComponents"
+		:registry="registry"
 		:page-types="pageTypes"
 		app-id="pipelinq"
 		:translate="translateForApp"
@@ -105,6 +106,17 @@ export default {
 		 *   - `pages[].config.sections[].component` (settings rich sections)
 		 */
 		customComponents: {
+			type: Object,
+			default: () => ({}),
+		},
+		/**
+		 * V2 component registry — maps string keys from `manifest.pages[].component`
+		 * to `{ kind, component }` entries. Passed through to CnAppRoot for v2
+		 * renderer resolution. The v2 renderer emits a one-shot deprecation
+		 * warning when both `registry` and `customComponents` are present and the
+		 * manifest declares `$schema` as the v2 URL.
+		 */
+		registry: {
 			type: Object,
 			default: () => ({}),
 		},
