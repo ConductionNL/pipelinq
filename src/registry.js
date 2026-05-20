@@ -63,7 +63,6 @@ import PipelineManagerView from './views/settings/PipelineManager.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
 
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
-import FeaturesRoadmapView from './views/FeaturesRoadmap.vue'
 
 /**
  * V2 component registry.
@@ -198,13 +197,6 @@ const registry = {
 		kind: 'page',
 		component: SyncSettingsView,
 		_note: 'External integration sync configuration panel; lib gap: no settings rich-section type for complex integration config.',
-	},
-
-	// --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
-	FeaturesRoadmap: {
-		kind: 'page',
-		component: FeaturesRoadmapView,
-		_note: 'Thin wrapper around the lib\'s CnFeaturesAndRoadmapView; in-product roadmap surface powered by OpenRegister\'s GitHub-issue proxy.',
 	},
 }
 
