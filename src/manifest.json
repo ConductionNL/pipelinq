@@ -504,32 +504,13 @@
 		{
 			"id": "ContactmomentNew",
 			"route": "/contactmomenten/new",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "New contactmoment",
+			"component": "CnWizardDialog",
 			"config": {
-				"widgets": [
-					{
-						"id": "ContactmomentFormWidget",
-						"title": "New contactmoment",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "ContactmomentFormWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
-					}
-				]
-			},
-			"slots": {
-				"widget-ContactmomentFormWidget": "ContactmomentForm"
-			},
-			"_note": "Bespoke create wizard with client/contact resolution; lib gap: no multi-step create flow in declarative index type."
+				"register": "pipelinq",
+				"schema": "contactmoment"
+			}
 		},
 		{
 			"id": "ContactmomentDetail",
@@ -595,32 +576,13 @@
 		{
 			"id": "TaskNew",
 			"route": "/tasks/new",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "New task",
+			"component": "CnWizardDialog",
 			"config": {
-				"widgets": [
-					{
-						"id": "TaskFormWidget",
-						"title": "New task",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "TaskFormWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
-					}
-				]
-			},
-			"slots": {
-				"widget-TaskFormWidget": "TaskForm"
-			},
-			"_note": "Bespoke create wizard with assignee lookup and recurrence controls; lib gap: no multi-step create flow."
+				"register": "pipelinq",
+				"schema": "task"
+			}
 		},
 		{
 			"id": "TaskDetail",
@@ -724,32 +686,10 @@
 		{
 			"id": "Pipeline",
 			"route": "/pipeline",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "Pipeline",
-			"config": {
-				"widgets": [
-					{
-						"id": "PipelineBoardViewWidget",
-						"title": "Pipeline",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "PipelineBoardViewWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
-					}
-				]
-			},
-			"slots": {
-				"widget-PipelineBoardViewWidget": "PipelineBoardView"
-			},
-			"_note": "Kanban board with drag-and-drop lane management; lib gap: no kanban/board page type."
+			"component": "PipelineBoardView",
+			"_note": "Bespoke kanban board with drag-drop column reorder + per-card status transitions. No lib analogue."
 		},
 		{
 			"id": "Queues",
@@ -793,147 +733,99 @@
 			"config": {
 				"widgets": [
 					{
-						"id": "KennisbankHomeViewWidget",
-						"title": "Kennisbank",
-						"type": "custom"
+						"id": "kennisbankCategories",
+						"title": "Categories",
+						"type": "CnTreeView"
+					},
+					{
+						"id": "kennisbankArticles",
+						"title": "Articles",
+						"type": "CnIndexPage"
 					}
 				],
 				"layout": [
 					{
-						"id": 1,
-						"widgetId": "KennisbankHomeViewWidget",
+						"id": "kennisbankCategories",
+						"widgetId": "kennisbankCategories",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
+						"gridWidth": 3,
+						"gridHeight": 12
+					},
+					{
+						"id": "kennisbankArticles",
+						"widgetId": "kennisbankArticles",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 9,
+						"gridHeight": 12
 					}
 				]
-			},
-			"slots": {
-				"widget-KennisbankHomeViewWidget": "KennisbankHomeView"
-			},
-			"_note": "Wiki home with article listing + category filter; lib gap: no wiki/knowledge-base page type."
+			}
 		},
 		{
 			"id": "KennisbankNew",
 			"route": "/kennisbank/articles/new",
-			"type": "dashboard",
+			"type": "form",
 			"title": "New article",
 			"config": {
-				"widgets": [
+				"register": "pipelinq",
+				"schema": "article",
+				"mode": "create",
+				"submitEndpoint": "/index.php/apps/openregister/api/objects/pipelinq/article",
+				"submitMethod": "POST",
+				"fieldWidgets": [
 					{
-						"id": "ArticleEditorViewWidget",
-						"title": "New article",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "ArticleEditorViewWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
+						"field": "body",
+						"component": "CnMarkdownEditor"
 					}
 				]
-			},
-			"slots": {
-				"widget-ArticleEditorViewWidget": "ArticleEditorView"
-			},
-			"_note": "Markdown article editor with category picker; lib gap: no rich-text editor page type."
+			}
 		},
 		{
 			"id": "KennisbankDetail",
 			"route": "/kennisbank/articles/:id",
-			"type": "dashboard",
+			"type": "wiki",
 			"title": "Article",
 			"config": {
-				"widgets": [
-					{
-						"id": "ArticleDetailViewWidget",
-						"title": "Article",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "ArticleDetailViewWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
-					}
-				]
-			},
-			"slots": {
-				"widget-ArticleDetailViewWidget": "ArticleDetailView"
-			},
-			"_note": "Rendered markdown article view with related-articles panel; lib gap: no wiki article detail type."
+				"register": "pipelinq",
+				"schema": "article",
+				"titleField": "title",
+				"contentField": "body",
+				"categoryField": "category"
+			}
 		},
 		{
 			"id": "KennisbankEdit",
 			"route": "/kennisbank/articles/:id/edit",
-			"type": "dashboard",
+			"type": "form",
 			"title": "Edit article",
 			"config": {
-				"widgets": [
+				"register": "pipelinq",
+				"schema": "article",
+				"mode": "edit",
+				"submitEndpoint": "/index.php/apps/openregister/api/objects/pipelinq/article/:id",
+				"submitMethod": "PUT",
+				"fieldWidgets": [
 					{
-						"id": "ArticleEditorViewWidget",
-						"title": "Edit article",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "ArticleEditorViewWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
+						"field": "body",
+						"component": "CnMarkdownEditor"
 					}
 				]
-			},
-			"slots": {
-				"widget-ArticleEditorViewWidget": "ArticleEditorView"
-			},
-			"_note": "Markdown article editor (edit path); lib gap: no rich-text editor page type."
+			}
 		},
 		{
 			"id": "KennisbankCategories",
 			"route": "/kennisbank/categories",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "Categories",
+			"component": "CnTreeView",
 			"config": {
-				"widgets": [
-					{
-						"id": "CategoryManagerViewWidget",
-						"title": "Categories",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "CategoryManagerViewWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
-					}
-				]
-			},
-			"slots": {
-				"widget-CategoryManagerViewWidget": "CategoryManagerView"
-			},
-			"_note": "Drag-and-drop category tree manager; lib gap: no taxonomy/tree-manager page type."
+				"register": "pipelinq",
+				"schema": "articleCategory",
+				"parentField": "parent",
+				"editable": true
+			}
 		},
 		{
 			"id": "Surveys",
@@ -958,32 +850,13 @@
 		{
 			"id": "SurveyCreate",
 			"route": "/surveys/new",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "New survey",
+			"component": "CnFormBuilder",
 			"config": {
-				"widgets": [
-					{
-						"id": "SurveyFormViewWidget",
-						"title": "New survey",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "SurveyFormViewWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
-					}
-				]
-			},
-			"slots": {
-				"widget-SurveyFormViewWidget": "SurveyFormView"
-			},
-			"_note": "Survey builder with dynamic question types; lib gap: no form-builder page type."
+				"register": "pipelinq",
+				"schema": "survey"
+			}
 		},
 		{
 			"id": "SurveyDetail",
@@ -1027,32 +900,13 @@
 		{
 			"id": "SurveyEdit",
 			"route": "/surveys/:id/edit",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "Edit survey",
+			"component": "CnFormBuilder",
 			"config": {
-				"widgets": [
-					{
-						"id": "SurveyFormViewWidget",
-						"title": "Edit survey",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "SurveyFormViewWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
-					}
-				]
-			},
-			"slots": {
-				"widget-SurveyFormViewWidget": "SurveyFormView"
-			},
-			"_note": "Survey builder (edit path); lib gap: no form-builder page type."
+				"register": "pipelinq",
+				"schema": "survey"
+			}
 		},
 		{
 			"id": "SurveyAnalyticsView",
@@ -1085,32 +939,16 @@
 		{
 			"id": "PublicSurvey",
 			"route": "/public/survey/:token",
-			"type": "dashboard",
+			"type": "form",
 			"title": "Survey",
 			"config": {
-				"widgets": [
-					{
-						"id": "PublicSurveyFormViewWidget",
-						"title": "Survey",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "PublicSurveyFormViewWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
-					}
-				]
-			},
-			"slots": {
-				"widget-PublicSurveyFormViewWidget": "PublicSurveyFormView"
-			},
-			"_note": "Anonymous-public survey response form (no auth required); genuine exception — no typed-page analogue for tokenised public routes."
+				"register": "pipelinq",
+				"schema": "surveyResponse",
+				"mode": "public",
+				"token": "@route.token",
+				"submitEndpoint": "/index.php/apps/pipelinq/api/public/surveys/:token/responses",
+				"submitMethod": "POST"
+			}
 		},
 		{
 			"id": "MyWork",
