@@ -158,10 +158,21 @@
 			"title": "Dashboard",
 			"config": {
 				"widgets": [
-					{ "id": "dashboardMain", "title": "Dashboard", "type": "custom" }
+					{
+						"id": "dashboardMain",
+						"title": "Dashboard",
+						"type": "custom"
+					}
 				],
 				"layout": [
-					{ "id": 1, "widgetId": "dashboardMain", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 12 }
+					{
+						"id": 1,
+						"widgetId": "dashboardMain",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 12
+					}
 				]
 			},
 			"slots": {
@@ -682,8 +693,16 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "queue",
-				"columns": ["title", "description", "isActive", "sortOrder"],
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"columns": [
+					"title",
+					"description",
+					"isActive",
+					"sortOrder"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
 			}
 		},
 		{
@@ -694,7 +713,10 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "queue",
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
 			}
 		},
 		{
@@ -819,10 +841,21 @@
 			"title": "Survey analytics",
 			"config": {
 				"widgets": [
-					{ "id": "surveyAnalytics", "title": "Survey analytics", "type": "custom" }
+					{
+						"id": "surveyAnalytics",
+						"title": "Survey analytics",
+						"type": "custom"
+					}
 				],
 				"layout": [
-					{ "id": 1, "widgetId": "surveyAnalytics", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 12 }
+					{
+						"id": 1,
+						"widgetId": "surveyAnalytics",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 12
+					}
 				]
 			},
 			"slots": {
@@ -835,7 +868,7 @@
 			"type": "custom",
 			"title": "Survey",
 			"component": "PublicSurveyFormView",
-			"_note": "Anonymous-public survey response form (no auth required); genuine exception — no typed-page analogue for tokenised public routes."
+			"_note": "Anonymous-public survey response form (no auth required); genuine exception \u2014 no typed-page analogue for tokenised public routes."
 		},
 		{
 			"id": "MyWork",
@@ -844,10 +877,21 @@
 			"title": "My Work",
 			"config": {
 				"widgets": [
-					{ "id": "myWorkBoard", "title": "My Work", "type": "custom" }
+					{
+						"id": "myWorkBoard",
+						"title": "My Work",
+						"type": "custom"
+					}
 				],
 				"layout": [
-					{ "id": 1, "widgetId": "myWorkBoard", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 12 }
+					{
+						"id": 1,
+						"widgetId": "myWorkBoard",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 12
+					}
 				]
 			},
 			"slots": {
@@ -861,7 +905,11 @@
 			"title": "Sync settings",
 			"config": {
 				"sections": [
-					{ "id": "sync", "title": "Integrations", "component": "SyncSettingsView" }
+					{
+						"id": "sync",
+						"title": "Integrations",
+						"component": "SyncSettingsView"
+					}
 				]
 			},
 			"slots": {
@@ -875,10 +923,21 @@
 			"title": "Reporting",
 			"config": {
 				"widgets": [
-					{ "id": "rapportageKpis", "title": "Reporting", "type": "custom" }
+					{
+						"id": "rapportageKpis",
+						"title": "Reporting",
+						"type": "custom"
+					}
 				],
 				"layout": [
-					{ "id": 1, "widgetId": "rapportageKpis", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 12 }
+					{
+						"id": 1,
+						"widgetId": "rapportageKpis",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 12
+					}
 				]
 			},
 			"slots": {
@@ -892,10 +951,21 @@
 			"title": "Channel analytics",
 			"config": {
 				"widgets": [
-					{ "id": "channelAnalytics", "title": "Channel analytics", "type": "custom" }
+					{
+						"id": "channelAnalytics",
+						"title": "Channel analytics",
+						"type": "custom"
+					}
 				],
 				"layout": [
-					{ "id": 1, "widgetId": "channelAnalytics", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 12 }
+					{
+						"id": 1,
+						"widgetId": "channelAnalytics",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 12
+					}
 				]
 			},
 			"slots": {
@@ -909,10 +979,21 @@
 			"title": "Agent performance",
 			"config": {
 				"widgets": [
-					{ "id": "agentPerformance", "title": "Agent performance", "type": "custom" }
+					{
+						"id": "agentPerformance",
+						"title": "Agent performance",
+						"type": "custom"
+					}
 				],
 				"layout": [
-					{ "id": 1, "widgetId": "agentPerformance", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 12 }
+					{
+						"id": 1,
+						"widgetId": "agentPerformance",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 12
+					}
 				]
 			},
 			"slots": {
@@ -927,8 +1008,16 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "pipeline",
-				"columns": ["title", "description", "isDefault", "_dateCreated"],
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"columns": [
+					"title",
+					"description",
+					"isDefault",
+					"_dateCreated"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
 			}
 		},
 		{
@@ -969,7 +1058,9 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "intakeForm",
-				"sidebar": { "enabled": false }
+				"sidebar": {
+					"enabled": false
+				}
 			},
 			"slots": {
 				"default": "FormBuilderView"
@@ -983,7 +1074,10 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "intakeForm",
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
 			},
 			"slots": {
 				"default": "FormBuilderView"
@@ -1056,7 +1150,9 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "automation",
-				"sidebar": { "enabled": false }
+				"sidebar": {
+					"enabled": false
+				}
 			},
 			"slots": {
 				"default": "AutomationBuilderView"
@@ -1070,7 +1166,10 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "automation",
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
 			},
 			"slots": {
 				"default": "AutomationBuilderView"
@@ -1111,10 +1210,8 @@
 		{
 			"id": "FeaturesRoadmap",
 			"route": "/features-roadmap",
-			"type": "custom",
-			"title": "Features & roadmap",
-			"component": "FeaturesRoadmap",
-			"_note": "Thin wrapper around the lib's CnFeaturesAndRoadmapView; in-product roadmap surface powered by OpenRegister's GitHub-issue proxy (ConductionNL/hydra#251)."
+			"type": "roadmap",
+			"title": "Features & roadmap"
 		}
 	]
 }
