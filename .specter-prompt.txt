@@ -4,19 +4,19 @@ You are running HEADLESS. Do NOT use AskUserQuestion, interactive prompts, or sk
 Write files directly using the Write tool.
 
 ## Inputs
-- Change: 2026-03-20-register-i18n (title: Proposal: Locale-Aware Formatting)
-- Context brief: openspec/changes/2026-03-20-register-i18n/context-brief.md
+- Change: project-task-hierarchy (title: Project-Task Hierarchy (4-level WBS))
+- Context brief: openspec/changes/project-task-hierarchy/context-brief.md
 - Data model ADR: openspec/architecture/adr-000-data-model.md
 
 ## Step 1: Read context
 Read these files COMPLETELY before writing anything:
-- openspec/changes/2026-03-20-register-i18n/context-brief.md (features, stories, stakeholders, journeys)
+- openspec/changes/project-task-hierarchy/context-brief.md (features, stories, stakeholders, journeys)
 - openspec/architecture/adr-000-data-model.md (entity definitions)
 - All files in openspec/architecture/ (app ADRs)
 - All files in .claude/openspec/architecture/ (company ADRs, if present)
 
 ## Step 2: Get artifact templates
-Run: `openspec instructions proposal --change 2026-03-20-register-i18n --json`
+Run: `openspec instructions proposal --change project-task-hierarchy --json`
 This returns the template and rules for the proposal artifact.
 Then do the same for: design, specs, tasks (in that order).
 
@@ -35,8 +35,8 @@ For each artifact (proposal → design → specs → tasks):
 ## Step 4: Commit
 After all 4 artifacts are written:
 ```bash
-git add openspec/changes/2026-03-20-register-i18n/
-git commit -m 'feat: Add OpenSpec change 2026-03-20-register-i18n from Specter'
+git add openspec/changes/project-task-hierarchy/
+git commit -m 'feat: Add OpenSpec change project-task-hierarchy from Specter'
 ```
 Do NOT push — the caller handles pushing.
 Do NOT create branches — stay on the current branch.
