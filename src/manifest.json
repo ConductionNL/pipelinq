@@ -506,8 +506,11 @@
 			"route": "/contactmomenten/new",
 			"type": "custom",
 			"title": "New contactmoment",
-			"component": "ContactmomentForm",
-			"_note": "Bespoke create wizard — channel-selector buttons + CallTimer don't fit declarative type:\"form\" fields[]. Lib gap: multi-step form actions."
+			"component": "CnWizardDialog",
+			"config": {
+				"register": "pipelinq",
+				"schema": "contactmoment"
+			}
 		},
 		{
 			"id": "ContactmomentDetail",
@@ -575,8 +578,11 @@
 			"route": "/tasks/new",
 			"type": "custom",
 			"title": "New task",
-			"component": "TaskForm",
-			"_note": "Bespoke create wizard — multi-step layout + dynamic channel-driven fields don't fit type:\"form\". Lib gap: multi-step form actions."
+			"component": "CnWizardDialog",
+			"config": {
+				"register": "pipelinq",
+				"schema": "task"
+			}
 		},
 		{
 			"id": "TaskDetail",
@@ -722,42 +728,104 @@
 		{
 			"id": "Kennisbank",
 			"route": "/kennisbank",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Kennisbank",
-			"component": "KennisbankHomeView",
-			"_note": "Knowledge-base landing page (article browser + category tree + search). Could be a type:\"dashboard\" widget composition once tree-widget lands."
+			"config": {
+				"widgets": [
+					{
+						"id": "kennisbankCategories",
+						"title": "Categories",
+						"type": "CnTreeView"
+					},
+					{
+						"id": "kennisbankArticles",
+						"title": "Articles",
+						"type": "CnIndexPage"
+					}
+				],
+				"layout": [
+					{
+						"id": "kennisbankCategories",
+						"widgetId": "kennisbankCategories",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 12
+					},
+					{
+						"id": "kennisbankArticles",
+						"widgetId": "kennisbankArticles",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 9,
+						"gridHeight": 12
+					}
+				]
+			}
 		},
 		{
 			"id": "KennisbankNew",
 			"route": "/kennisbank/articles/new",
-			"type": "custom",
+			"type": "form",
 			"title": "New article",
-			"component": "ArticleEditorView",
-			"_note": "Rich-text article editor (TipTap-based). Lib gap: no markdown/wysiwyg widget yet."
+			"config": {
+				"register": "pipelinq",
+				"schema": "article",
+				"mode": "create",
+				"submitEndpoint": "/index.php/apps/openregister/api/objects/pipelinq/article",
+				"submitMethod": "POST",
+				"fieldWidgets": [
+					{
+						"field": "body",
+						"component": "CnMarkdownEditor"
+					}
+				]
+			}
 		},
 		{
 			"id": "KennisbankDetail",
 			"route": "/kennisbank/articles/:id",
-			"type": "custom",
+			"type": "wiki",
 			"title": "Article",
-			"component": "ArticleDetailView",
-			"_note": "Article reader with rendered markdown + sidebar metadata. Could be type:\"wiki\" once that page-type stabilises across the fleet."
+			"config": {
+				"register": "pipelinq",
+				"schema": "article",
+				"titleField": "title",
+				"contentField": "body",
+				"categoryField": "category"
+			}
 		},
 		{
 			"id": "KennisbankEdit",
 			"route": "/kennisbank/articles/:id/edit",
-			"type": "custom",
+			"type": "form",
 			"title": "Edit article",
-			"component": "ArticleEditorView",
-			"_note": "Rich-text article editor (TipTap-based). Lib gap: no markdown/wysiwyg widget yet."
+			"config": {
+				"register": "pipelinq",
+				"schema": "article",
+				"mode": "edit",
+				"submitEndpoint": "/index.php/apps/openregister/api/objects/pipelinq/article/:id",
+				"submitMethod": "PUT",
+				"fieldWidgets": [
+					{
+						"field": "body",
+						"component": "CnMarkdownEditor"
+					}
+				]
+			}
 		},
 		{
 			"id": "KennisbankCategories",
 			"route": "/kennisbank/categories",
 			"type": "custom",
 			"title": "Categories",
-			"component": "CategoryManagerView",
-			"_note": "Hierarchical category tree with drag-drop reorder + nested CRUD. Lib gap: tree widget."
+			"component": "CnTreeView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "articleCategory",
+				"parentField": "parent",
+				"editable": true
+			}
 		},
 		{
 			"id": "Surveys",
@@ -784,8 +852,11 @@
 			"route": "/surveys/new",
 			"type": "custom",
 			"title": "New survey",
-			"component": "SurveyFormView",
-			"_note": "Visual survey builder (drag-drop question blocks). Lib gap: form-builder page type."
+			"component": "CnFormBuilder",
+			"config": {
+				"register": "pipelinq",
+				"schema": "survey"
+			}
 		},
 		{
 			"id": "SurveyDetail",
@@ -831,8 +902,11 @@
 			"route": "/surveys/:id/edit",
 			"type": "custom",
 			"title": "Edit survey",
-			"component": "SurveyFormView",
-			"_note": "Visual survey builder (drag-drop question blocks). Lib gap: form-builder page type."
+			"component": "CnFormBuilder",
+			"config": {
+				"register": "pipelinq",
+				"schema": "survey"
+			}
 		},
 		{
 			"id": "SurveyAnalyticsView",
@@ -865,10 +939,16 @@
 		{
 			"id": "PublicSurvey",
 			"route": "/public/survey/:token",
-			"type": "custom",
+			"type": "form",
 			"title": "Survey",
-			"component": "PublicSurveyFormView",
-			"_note": "Public survey response page (unauthenticated, token-scoped). Lib gap: type:\"form\" with mode:\"public\" + token route binding."
+			"config": {
+				"register": "pipelinq",
+				"schema": "surveyResponse",
+				"mode": "public",
+				"token": "@route.token",
+				"submitEndpoint": "/index.php/apps/pipelinq/api/public/surveys/:token/responses",
+				"submitMethod": "POST"
+			}
 		},
 		{
 			"id": "MyWork",
