@@ -504,32 +504,10 @@
 		{
 			"id": "ContactmomentNew",
 			"route": "/contactmomenten/new",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "New contactmoment",
-			"config": {
-				"widgets": [
-					{
-						"id": "ContactmomentFormWidget",
-						"title": "New contactmoment",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "ContactmomentFormWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
-					}
-				]
-			},
-			"slots": {
-				"widget-ContactmomentFormWidget": "ContactmomentForm"
-			},
-			"_note": "Bespoke create wizard with client/contact resolution; lib gap: no multi-step create flow in declarative index type."
+			"component": "ContactmomentForm",
+			"_note": "Bespoke create wizard — channel-selector buttons + CallTimer don't fit declarative type:\"form\" fields[]. Lib gap: multi-step form actions."
 		},
 		{
 			"id": "ContactmomentDetail",
@@ -595,32 +573,10 @@
 		{
 			"id": "TaskNew",
 			"route": "/tasks/new",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "New task",
-			"config": {
-				"widgets": [
-					{
-						"id": "TaskFormWidget",
-						"title": "New task",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "TaskFormWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
-					}
-				]
-			},
-			"slots": {
-				"widget-TaskFormWidget": "TaskForm"
-			},
-			"_note": "Bespoke create wizard with assignee lookup and recurrence controls; lib gap: no multi-step create flow."
+			"component": "TaskForm",
+			"_note": "Bespoke create wizard — multi-step layout + dynamic channel-driven fields don't fit type:\"form\". Lib gap: multi-step form actions."
 		},
 		{
 			"id": "TaskDetail",
@@ -724,32 +680,10 @@
 		{
 			"id": "Pipeline",
 			"route": "/pipeline",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "Pipeline",
-			"config": {
-				"widgets": [
-					{
-						"id": "PipelineBoardViewWidget",
-						"title": "Pipeline",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "PipelineBoardViewWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
-					}
-				]
-			},
-			"slots": {
-				"widget-PipelineBoardViewWidget": "PipelineBoardView"
-			},
-			"_note": "Kanban board with drag-and-drop lane management; lib gap: no kanban/board page type."
+			"component": "PipelineBoardView",
+			"_note": "Bespoke kanban board with drag-drop column reorder + per-card status transitions. No lib analogue."
 		},
 		{
 			"id": "Queues",
@@ -788,152 +722,42 @@
 		{
 			"id": "Kennisbank",
 			"route": "/kennisbank",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "Kennisbank",
-			"config": {
-				"widgets": [
-					{
-						"id": "KennisbankHomeViewWidget",
-						"title": "Kennisbank",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "KennisbankHomeViewWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
-					}
-				]
-			},
-			"slots": {
-				"widget-KennisbankHomeViewWidget": "KennisbankHomeView"
-			},
-			"_note": "Wiki home with article listing + category filter; lib gap: no wiki/knowledge-base page type."
+			"component": "KennisbankHomeView",
+			"_note": "Knowledge-base landing page (article browser + category tree + search). Could be a type:\"dashboard\" widget composition once tree-widget lands."
 		},
 		{
 			"id": "KennisbankNew",
 			"route": "/kennisbank/articles/new",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "New article",
-			"config": {
-				"widgets": [
-					{
-						"id": "ArticleEditorViewWidget",
-						"title": "New article",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "ArticleEditorViewWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
-					}
-				]
-			},
-			"slots": {
-				"widget-ArticleEditorViewWidget": "ArticleEditorView"
-			},
-			"_note": "Markdown article editor with category picker; lib gap: no rich-text editor page type."
+			"component": "ArticleEditorView",
+			"_note": "Rich-text article editor (TipTap-based). Lib gap: no markdown/wysiwyg widget yet."
 		},
 		{
 			"id": "KennisbankDetail",
 			"route": "/kennisbank/articles/:id",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "Article",
-			"config": {
-				"widgets": [
-					{
-						"id": "ArticleDetailViewWidget",
-						"title": "Article",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "ArticleDetailViewWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
-					}
-				]
-			},
-			"slots": {
-				"widget-ArticleDetailViewWidget": "ArticleDetailView"
-			},
-			"_note": "Rendered markdown article view with related-articles panel; lib gap: no wiki article detail type."
+			"component": "ArticleDetailView",
+			"_note": "Article reader with rendered markdown + sidebar metadata. Could be type:\"wiki\" once that page-type stabilises across the fleet."
 		},
 		{
 			"id": "KennisbankEdit",
 			"route": "/kennisbank/articles/:id/edit",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "Edit article",
-			"config": {
-				"widgets": [
-					{
-						"id": "ArticleEditorViewWidget",
-						"title": "Edit article",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "ArticleEditorViewWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
-					}
-				]
-			},
-			"slots": {
-				"widget-ArticleEditorViewWidget": "ArticleEditorView"
-			},
-			"_note": "Markdown article editor (edit path); lib gap: no rich-text editor page type."
+			"component": "ArticleEditorView",
+			"_note": "Rich-text article editor (TipTap-based). Lib gap: no markdown/wysiwyg widget yet."
 		},
 		{
 			"id": "KennisbankCategories",
 			"route": "/kennisbank/categories",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "Categories",
-			"config": {
-				"widgets": [
-					{
-						"id": "CategoryManagerViewWidget",
-						"title": "Categories",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "CategoryManagerViewWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
-					}
-				]
-			},
-			"slots": {
-				"widget-CategoryManagerViewWidget": "CategoryManagerView"
-			},
-			"_note": "Drag-and-drop category tree manager; lib gap: no taxonomy/tree-manager page type."
+			"component": "CategoryManagerView",
+			"_note": "Hierarchical category tree with drag-drop reorder + nested CRUD. Lib gap: tree widget."
 		},
 		{
 			"id": "Surveys",
@@ -958,32 +782,10 @@
 		{
 			"id": "SurveyCreate",
 			"route": "/surveys/new",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "New survey",
-			"config": {
-				"widgets": [
-					{
-						"id": "SurveyFormViewWidget",
-						"title": "New survey",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "SurveyFormViewWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
-					}
-				]
-			},
-			"slots": {
-				"widget-SurveyFormViewWidget": "SurveyFormView"
-			},
-			"_note": "Survey builder with dynamic question types; lib gap: no form-builder page type."
+			"component": "SurveyFormView",
+			"_note": "Visual survey builder (drag-drop question blocks). Lib gap: form-builder page type."
 		},
 		{
 			"id": "SurveyDetail",
@@ -1027,32 +829,10 @@
 		{
 			"id": "SurveyEdit",
 			"route": "/surveys/:id/edit",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "Edit survey",
-			"config": {
-				"widgets": [
-					{
-						"id": "SurveyFormViewWidget",
-						"title": "Edit survey",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "SurveyFormViewWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
-					}
-				]
-			},
-			"slots": {
-				"widget-SurveyFormViewWidget": "SurveyFormView"
-			},
-			"_note": "Survey builder (edit path); lib gap: no form-builder page type."
+			"component": "SurveyFormView",
+			"_note": "Visual survey builder (drag-drop question blocks). Lib gap: form-builder page type."
 		},
 		{
 			"id": "SurveyAnalyticsView",
@@ -1085,32 +865,10 @@
 		{
 			"id": "PublicSurvey",
 			"route": "/public/survey/:token",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "Survey",
-			"config": {
-				"widgets": [
-					{
-						"id": "PublicSurveyFormViewWidget",
-						"title": "Survey",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": 1,
-						"widgetId": "PublicSurveyFormViewWidget",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12,
-						"showTitle": false
-					}
-				]
-			},
-			"slots": {
-				"widget-PublicSurveyFormViewWidget": "PublicSurveyFormView"
-			},
-			"_note": "Anonymous-public survey response form (no auth required); genuine exception — no typed-page analogue for tokenised public routes."
+			"component": "PublicSurveyFormView",
+			"_note": "Public survey response page (unauthenticated, token-scoped). Lib gap: type:\"form\" with mode:\"public\" + token route binding."
 		},
 		{
 			"id": "MyWork",
