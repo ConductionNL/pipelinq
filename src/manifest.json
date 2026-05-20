@@ -154,10 +154,19 @@
 		{
 			"id": "Dashboard",
 			"route": "/",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Dashboard",
-			"component": "DashboardView",
-			"_note": "Bespoke multi-widget dashboard with gridstack layout; lib gap: no declarative dashboard page type with grid-aware widget placement."
+			"config": {
+				"widgets": [
+					{ "id": "dashboardMain", "title": "Dashboard", "type": "custom" }
+				],
+				"layout": [
+					{ "id": 1, "widgetId": "dashboardMain", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 12 }
+				]
+			},
+			"slots": {
+				"widget-dashboardMain": "DashboardView"
+			}
 		},
 		{
 			"id": "Clients",
@@ -668,18 +677,25 @@
 		{
 			"id": "Queues",
 			"route": "/queues",
-			"type": "custom",
+			"type": "index",
 			"title": "Queues",
-			"component": "QueueListView",
-			"_note": "Bespoke routing-rule editor list with priority ordering; lib gap: no routing-rules list widget."
+			"config": {
+				"register": "pipelinq",
+				"schema": "queue",
+				"columns": ["title", "description", "isActive", "sortOrder"],
+				"sidebar": { "enabled": true, "showMetadata": true }
+			}
 		},
 		{
 			"id": "QueueDetail",
 			"route": "/queues/:id",
-			"type": "custom",
+			"type": "detail",
 			"title": "Queue",
-			"component": "QueueDetailView",
-			"_note": "Bespoke routing-rule condition + action builder; lib gap: no routing-rules detail widget."
+			"config": {
+				"register": "pipelinq",
+				"schema": "queue",
+				"sidebar": { "enabled": true, "showMetadata": true }
+			}
 		},
 		{
 			"id": "Kennisbank",
@@ -797,12 +813,21 @@
 			"_note": "Survey builder (edit path); lib gap: no form-builder page type."
 		},
 		{
-			"id": "SurveyAnalytics",
+			"id": "SurveyAnalyticsView",
 			"route": "/surveys/:id/analytics",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Survey analytics",
-			"component": "SurveyAnalyticsView",
-			"_note": "Chart-driven survey response analytics with apexcharts; lib gap: no chart-widget page type."
+			"config": {
+				"widgets": [
+					{ "id": "surveyAnalytics", "title": "Survey analytics", "type": "custom" }
+				],
+				"layout": [
+					{ "id": 1, "widgetId": "surveyAnalytics", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 12 }
+				]
+			},
+			"slots": {
+				"widget-surveyAnalytics": "SurveyAnalyticsView"
+			}
 		},
 		{
 			"id": "PublicSurvey",
@@ -815,50 +840,96 @@
 		{
 			"id": "MyWork",
 			"route": "/my-work",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "My Work",
-			"component": "MyWorkView",
-			"_note": "Personalised work surface mixing tasks + leads + requests for the current user; genuine exception — no single-entity typed page captures multi-entity user dashboard."
+			"config": {
+				"widgets": [
+					{ "id": "myWorkBoard", "title": "My Work", "type": "custom" }
+				],
+				"layout": [
+					{ "id": 1, "widgetId": "myWorkBoard", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 12 }
+				]
+			},
+			"slots": {
+				"widget-myWorkBoard": "MyWorkView"
+			}
 		},
 		{
 			"id": "SyncSettings",
 			"route": "/sync-settings",
-			"type": "custom",
+			"type": "settings",
 			"title": "Sync settings",
-			"component": "SyncSettingsView",
-			"_note": "External integration sync configuration panel; lib gap: no settings rich-section type for complex integration config."
+			"config": {
+				"sections": [
+					{ "id": "sync", "title": "Integrations", "component": "SyncSettingsView" }
+				]
+			},
+			"slots": {
+				"section-sync": "SyncSettingsView"
+			}
 		},
 		{
 			"id": "Rapportage",
 			"route": "/rapportage",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Reporting",
-			"component": "RapportageDashboardView",
-			"_note": "KPI reporting dashboard with apexcharts; lib gap: no chart-widget page type."
+			"config": {
+				"widgets": [
+					{ "id": "rapportageKpis", "title": "Reporting", "type": "custom" }
+				],
+				"layout": [
+					{ "id": 1, "widgetId": "rapportageKpis", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 12 }
+				]
+			},
+			"slots": {
+				"widget-rapportageKpis": "RapportageDashboardView"
+			}
 		},
 		{
-			"id": "ChannelAnalytics",
+			"id": "ChannelAnalyticsView",
 			"route": "/rapportage/channels",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Channel analytics",
-			"component": "ChannelAnalyticsView",
-			"_note": "Channel breakdown analytics with apexcharts; lib gap: no chart-widget page type."
+			"config": {
+				"widgets": [
+					{ "id": "channelAnalytics", "title": "Channel analytics", "type": "custom" }
+				],
+				"layout": [
+					{ "id": 1, "widgetId": "channelAnalytics", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 12 }
+				]
+			},
+			"slots": {
+				"widget-channelAnalytics": "ChannelAnalyticsView"
+			}
 		},
 		{
-			"id": "AgentPerformance",
+			"id": "AgentPerformanceView",
 			"route": "/rapportage/agents",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Agent performance",
-			"component": "AgentPerformanceView",
-			"_note": "Per-agent performance charts with apexcharts; lib gap: no chart-widget page type."
+			"config": {
+				"widgets": [
+					{ "id": "agentPerformance", "title": "Agent performance", "type": "custom" }
+				],
+				"layout": [
+					{ "id": 1, "widgetId": "agentPerformance", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 12 }
+				]
+			},
+			"slots": {
+				"widget-agentPerformance": "AgentPerformanceView"
+			}
 		},
 		{
 			"id": "Pipelines",
 			"route": "/pipelines",
-			"type": "custom",
+			"type": "index",
 			"title": "Pipelines",
-			"component": "PipelineManagerView",
-			"_note": "Pipeline stage + transition manager with drag-and-drop reordering; lib gap: no pipeline-designer page type."
+			"config": {
+				"register": "pipelinq",
+				"schema": "pipeline",
+				"columns": ["title", "description", "isDefault", "_dateCreated"],
+				"sidebar": { "enabled": true, "showMetadata": true }
+			}
 		},
 		{
 			"id": "Forms",
@@ -893,18 +964,30 @@
 		{
 			"id": "FormNew",
 			"route": "/forms/new",
-			"type": "custom",
+			"type": "detail",
 			"title": "New form",
-			"component": "FormBuilderView",
-			"_note": "Visual form builder with drag-and-drop field palette; lib gap: no form-builder page type."
+			"config": {
+				"register": "pipelinq",
+				"schema": "intakeForm",
+				"sidebar": { "enabled": false }
+			},
+			"slots": {
+				"default": "FormBuilderView"
+			}
 		},
 		{
 			"id": "FormDetail",
 			"route": "/forms/:id",
-			"type": "custom",
+			"type": "detail",
 			"title": "Form",
-			"component": "FormBuilderView",
-			"_note": "Visual form builder (edit path); lib gap: no form-builder page type."
+			"config": {
+				"register": "pipelinq",
+				"schema": "intakeForm",
+				"sidebar": { "enabled": true, "showMetadata": true }
+			},
+			"slots": {
+				"default": "FormBuilderView"
+			}
 		},
 		{
 			"id": "FormSubmissions",
@@ -968,18 +1051,30 @@
 		{
 			"id": "AutomationNew",
 			"route": "/automations/new",
-			"type": "custom",
+			"type": "detail",
 			"title": "New automation",
-			"component": "AutomationBuilderView",
-			"_note": "Visual automation graph editor (trigger + actions); lib gap: no automation-graph page type."
+			"config": {
+				"register": "pipelinq",
+				"schema": "automation",
+				"sidebar": { "enabled": false }
+			},
+			"slots": {
+				"default": "AutomationBuilderView"
+			}
 		},
 		{
 			"id": "AutomationDetail",
 			"route": "/automations/:id",
-			"type": "custom",
+			"type": "detail",
 			"title": "Automation",
-			"component": "AutomationBuilderView",
-			"_note": "Visual automation graph editor (edit path); lib gap: no automation-graph page type."
+			"config": {
+				"register": "pipelinq",
+				"schema": "automation",
+				"sidebar": { "enabled": true, "showMetadata": true }
+			},
+			"slots": {
+				"default": "AutomationBuilderView"
+			}
 		},
 		{
 			"id": "AutomationHistory",
