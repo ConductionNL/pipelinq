@@ -12,11 +12,12 @@ The client management spec identifies several MVP gaps that remain unimplemented
 
 Implement the missing MVP features:
 - Add a summary statistics card to `ClientDetail.vue` showing aggregated lead/request counts and values
-- Add write-back sync to `ContactDetail.vue` on save (same pattern as ClientDetail)
+- Add write-back sync to `ContactDetail.vue` on save (same pattern as `ClientDetail.vue`)
 - Add sync status badge to `ContactDetail.vue`
 - Set `@type` dynamically in `ClientForm.vue` based on selected type
 
 ### Out of Scope
+
 - Duplicate detection (V1)
 - Import/export CSV/vCard (V1)
 - KVK integration in client form (V1)
@@ -28,6 +29,8 @@ Implement the missing MVP features:
 
 ## Impact
 
-- **Files modified**: 2-3 Vue files
+- **Files modified**: 2–3 Vue files (`ClientDetail.vue`, `ContactDetail.vue`, `ClientForm.vue`)
 - **New files**: 0
-- **Risk**: Low -- enhancing existing frontend components with additional sections
+- **Schema changes**: None — all changes are frontend-only
+- **Risk**: Low — enhancing existing components with additional sections and reusing the established `syncToContacts()` pattern
+- **Feature tier**: MVP — all four gaps are listed as MVP requirements in `specs/client-management/spec.md` and `specs/contacts-sync/spec.md`
