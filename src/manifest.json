@@ -207,8 +207,49 @@
 			"title": "Client",
 			"config": {
 				"register": "pipelinq",
-				"schema": "client"
-			}
+				"schema": "client",
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"order": 1
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"order": 2
+					}
+				]
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "metadata",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 1,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 2,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
 		},
 		{
 			"id": "Requests",
@@ -238,8 +279,49 @@
 			"title": "Request",
 			"config": {
 				"register": "pipelinq",
-				"schema": "request"
-			}
+				"schema": "request",
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"order": 1
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"order": 2
+					}
+				]
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "metadata",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 1,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 2,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
 		},
 		{
 			"id": "Complaints",
@@ -270,8 +352,49 @@
 			"title": "Complaint",
 			"config": {
 				"register": "pipelinq",
-				"schema": "complaint"
-			}
+				"schema": "complaint",
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"order": 1
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"order": 2
+					}
+				]
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "metadata",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 1,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 2,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
 		},
 		{
 			"id": "Contacts",
@@ -300,8 +423,49 @@
 			"title": "Contact",
 			"config": {
 				"register": "pipelinq",
-				"schema": "contact"
-			}
+				"schema": "contact",
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"order": 1
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"order": 2
+					}
+				]
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "metadata",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 1,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 2,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
 		},
 		{
 			"id": "Leads",
@@ -332,8 +496,49 @@
 			"title": "Lead",
 			"config": {
 				"register": "pipelinq",
-				"schema": "lead"
-			}
+				"schema": "lead",
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"order": 1
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"order": 2
+					}
+				]
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "metadata",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 1,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 2,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
 		},
 		{
 			"id": "Contactmomenten",
@@ -374,8 +579,49 @@
 			"title": "Contactmoment",
 			"config": {
 				"register": "pipelinq",
-				"schema": "contactmoment"
-			}
+				"schema": "contactmoment",
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"order": 1
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"order": 2
+					}
+				]
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "metadata",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 1,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 2,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
 		},
 		{
 			"id": "Tasks",
@@ -417,8 +663,49 @@
 			"title": "Task",
 			"config": {
 				"register": "pipelinq",
-				"schema": "task"
-			}
+				"schema": "task",
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"order": 1
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"order": 2
+					}
+				]
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "metadata",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 1,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 2,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
 		},
 		{
 			"id": "Products",
@@ -448,15 +735,57 @@
 			"title": "Product",
 			"config": {
 				"register": "pipelinq",
-				"schema": "product"
-			}
+				"schema": "product",
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"order": 1
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"order": 2
+					}
+				]
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "metadata",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 1,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 2,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
 		},
 		{
 			"id": "Pipeline",
 			"route": "/pipeline",
 			"type": "custom",
 			"title": "Pipeline",
-			"component": "PipelineBoardView"
+			"component": "PipelineBoardView",
+			"_note": "Bespoke kanban board with drag-drop column reorder + per-card status transitions. No lib analogue."
 		},
 		{
 			"id": "Queues",
@@ -543,8 +872,8 @@
 				"submitMethod": "POST",
 				"fieldWidgets": [
 					{
-						"field": "body",
-						"component": "CnMarkdownEditor"
+						"component": "CnMarkdownEditor",
+						"id": "body"
 					}
 				]
 			}
@@ -575,8 +904,8 @@
 				"submitMethod": "PUT",
 				"fieldWidgets": [
 					{
-						"field": "body",
-						"component": "CnMarkdownEditor"
+						"component": "CnMarkdownEditor",
+						"id": "body"
 					}
 				]
 			}
@@ -632,8 +961,49 @@
 			"title": "Survey",
 			"config": {
 				"register": "pipelinq",
-				"schema": "survey"
-			}
+				"schema": "survey",
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"order": 1
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"order": 2
+					}
+				]
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "metadata",
+					"slot": "sidebar",
+					"tabGroup": "overview",
+					"gridX": 0,
+					"gridY": 1,
+					"gridWidth": 1,
+					"gridHeight": 1
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 2,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
 		},
 		{
 			"id": "SurveyEdit",
