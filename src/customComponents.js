@@ -22,24 +22,15 @@
 import DashboardView from './views/Dashboard.vue'
 import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
 import MyWorkView from './views/MyWork.vue'
-import PublicSurveyFormView from './views/surveys/PublicSurveyForm.vue'
-
-// --- Bespoke create wizards (lib gap: multi-step actions). ---
-import ContactmomentForm from './views/contactmomenten/ContactmomentForm.vue'
-import TaskForm from './views/tasks/TaskForm.vue'
 
 // --- Queues — bespoke routing-rule editor (lib gap: routing-rules widget). ---
 import QueueListView from './views/queues/QueueList.vue'
 import QueueDetailView from './views/queues/QueueDetail.vue'
 
-// --- Kennisbank wiki (lib gap: no `wiki` page type). ---
-import KennisbankHomeView from './views/kennisbank/KennisbankHome.vue'
+// --- Kennisbank wiki article detail (lib gap: no `wiki` page type). ---
 import ArticleDetailView from './views/kennisbank/ArticleDetail.vue'
-import ArticleEditorView from './views/kennisbank/ArticleEditor.vue'
-import CategoryManagerView from './views/kennisbank/CategoryManager.vue'
 
-// --- Surveys builder/analytics (lib gap: no `form-builder` page type). ---
-import SurveyFormView from './views/surveys/SurveyForm.vue'
+// --- Surveys analytics (lib gap: no chart-widget page type). ---
 import SurveyAnalyticsView from './views/surveys/SurveyAnalytics.vue'
 
 // --- Forms (lib gap: no `form-builder` page type for the visual builder;
@@ -72,24 +63,15 @@ export default {
 	DashboardView,
 	PipelineBoardView,
 	MyWorkView,
-	PublicSurveyFormView,
-
-	// Bespoke create wizards
-	ContactmomentForm,
-	TaskForm,
 
 	// Queues
 	QueueListView,
 	QueueDetailView,
 
 	// Kennisbank
-	KennisbankHomeView,
 	ArticleDetailView,
-	ArticleEditorView,
-	CategoryManagerView,
 
 	// Surveys
-	SurveyFormView,
 	SurveyAnalyticsView,
 
 	// Forms (list + submissions are declarative type:index; visual builder stays custom)
