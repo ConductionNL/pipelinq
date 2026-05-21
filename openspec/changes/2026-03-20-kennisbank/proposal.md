@@ -1,41 +1,66 @@
 # Proposal: kennisbank
 
-## Problem
+## Summary
 
-Pipelinq has no knowledge base functionality. KCC agents handling citizen phone calls cannot search for articles, procedures, or FAQs to answer questions quickly. This hurts first-call resolution rates (74%+ FCR targets appear in 51/52 tenders). There is no article management, no categorization, no search, and no feedback system.
+Add a knowledge base module to Pipelinq so KCC agents can instantly look up articles, procedures, and FAQs during citizen phone calls. First-call resolution (FCR) is the single most cited KPI in Dutch government tenders — 74%+ FCR targets appear in 51 of 52 analysed tenders — and the absence of a searchable knowledge base is the primary structural barrier to hitting that target. This change adds article authoring, hierarchical categories, full-text search, agent feedback, and a public article API for citizen self-service.
 
-## Solution
+## Demand Evidence
 
-Implement a knowledge base module within Pipelinq that enables:
-1. **Article CRUD** with rich text (Markdown), versioning via OpenRegister audit trail, and publish/archive lifecycle
-2. **Hierarchical categories** stored as OpenRegister objects for browsable navigation
-3. **Full-text search** via OpenRegister `_search` parameter with autocomplete
-4. **Agent feedback** (thumbs up/down + improvement suggestions) stored as separate objects
-5. **Public vs internal** article visibility with a public API endpoint
-6. **Navigation integration** as a dedicated section in Pipelinq sidebar
+### Cluster: Kennisbank / First-call resolution (51 tenders, 74%+ FCR target cited in each)
 
-### Approach
+1. **"KCC medewerkers moeten tijdens een telefonisch contact direct kunnen zoeken in een kennisbank met procedures, FAQ's en werkinstructies."**
+   - Requirement type: Functional — KCC werkplek
+   - Context: Municipalities contracting an omnichannel KCC platform consistently require agents to access a built-in knowledge base without switching applications.
 
-- Add `kennisartikel`, `kenniscategorie`, and `kennisfeedback` schemas to the pipelinq register
-- Create Vue views: `KennisbankHome`, `ArticleList`, `ArticleDetail`, `ArticleEditor`
-- Create backend: `KennisbankController` for public article API, feedback endpoints
-- Integrate with existing `NotificationService` for lifecycle notifications
-- Use Markdown rendering via `marked` library for article display
+2. **"Het systeem ondersteunt een kennisbank waarmee medewerkers snel antwoord kunnen vinden op vragen van burgers. Eerste-lijn oplossingspercentage dient minimaal 74% te zijn."**
+   - Requirement type: KPI / SLA — first-call resolution
+   - Context: 74% FCR target is a contractual obligation in 51/52 tenders reviewed; agent-facing knowledge access is the primary enabler.
+
+3. **"Kennisartikelen moeten gepubliceerd kunnen worden voor burgers via de gemeentelijke website (zelfbediening), conform SDG vereisten."**
+   - Requirement type: Public self-service
+   - Context: Public-facing article API enables integration with municipal websites and reduces inbound call volume — second-order FCR improvement.
+
+4. **"Feedback van medewerkers op kennisartikelen wordt bijgehouden zodat verouderde of onjuiste content gesignaleerd en verbeterd kan worden."**
+   - Requirement type: Knowledge quality management
+   - Context: KCS (Knowledge-Centered Service) methodology requirement; continual improvement of article quality directly impacts FCR rates.
 
 ## Scope
 
-- Article CRUD with Markdown body, status lifecycle (concept/gepubliceerd/gearchiveerd)
-- Category management (hierarchical, up to 3 levels)
-- Full-text search with autocomplete and snippet highlighting
-- Agent feedback (thumbs up/down, improvement suggestions)
-- Public vs internal visibility
-- Kennisbank navigation route and sidebar entry
-- Article detail view with feedback buttons
+### In scope
+- Article CRUD with Markdown body, status lifecycle (concept / gepubliceerd / gearchiveerd)
+- Hierarchical category management (up to 3 levels, slug-based navigation)
+- Full-text search with autocomplete and snippet highlighting via OpenRegister `_search`
+- Agent feedback: thumbs up/down (nuttig / niet nuttig) with optional improvement comment
+- Aggregate usefulness score recalculated on each feedback submission
+- Public vs internal article visibility (`intern` / `openbaar`)
+- Public API endpoint (`GET /api/kennisbank/public`) filtered by `status=gepubliceerd` AND `visibility=openbaar`
+- Kennisbank navigation route and sidebar entry in `MainMenu.vue`
+- Article detail view with rendered Markdown, category breadcrumb, tags, and feedback buttons
 
-## Out of scope
-
+### Out of scope
 - AI-assisted search (Enterprise)
 - Article analytics dashboard (Enterprise)
 - Multi-language article versions (V2)
 - Review workflow with scheduled reminders (V2)
 - Zaaktype linking UI in Procest (cross-app, separate PR)
+
+## Acceptance Criteria
+
+1. **GIVEN** a KCC agent receives a citizen phone call about a permit procedure, **WHEN** they type three or more characters in the kennisbank search bar, **THEN** matching article titles and snippets appear as autocomplete suggestions within 1 second.
+
+2. **GIVEN** a knowledge manager publishes an article with `visibility=openbaar`, **WHEN** the public API endpoint `GET /api/kennisbank/public` is called without authentication, **THEN** the article appears in results; internal fields (author UID, zaaktype links) are stripped from the response.
+
+3. **GIVEN** a KCC agent reads an article and finds it helpful, **WHEN** they click "Nuttig", **THEN** a feedback object is created, the article's `usefulnessScore` is recalculated, and the button is marked as selected without a page reload.
+
+4. **GIVEN** an article has status `concept`, **WHEN** a manager clicks "Publiceren", **THEN** the article status changes to `gepubliceerd`, `publishedAt` is set to the current timestamp, and the article becomes visible in the kennisbank home view.
+
+5. **GIVEN** at least two levels of categories exist (e.g., "Burgerzaken" → "Paspoort en ID"), **WHEN** an agent browses the category tree in `KennisbankHome.vue`, **THEN** the hierarchy is displayed in a collapsible tree with article counts per category.
+
+6. **GIVEN** a kennisartikel is saved with `visibility=intern`, **WHEN** the public API `GET /api/kennisbank/public` is called, **THEN** the article does NOT appear in results regardless of its status.
+
+## Dependencies
+
+- **OpenRegister** — provides register/schema/object CRUD, full-text search (`_search`), and audit trail for versioning
+- **client-management** (completed) — clients and contacts linked to contact moments that may reference knowledge articles
+- **queue-management** (completed) — agents already use Pipelinq; kennisbank is a new sidebar section in the same app shell
+- **NotificationService** — lifecycle notifications on article publish/archive events
