@@ -22,11 +22,6 @@
 // --- Genuine exceptions: no abstract manifest analogue. ---
 import DashboardView from './views/Dashboard.vue'
 import MyWorkView from './views/MyWork.vue'
-import PublicSurveyFormView from './views/surveys/PublicSurveyForm.vue'
-
-// --- Bespoke create wizards (lib gap: no multi-step create flow). ---
-import ContactmomentForm from './views/contactmomenten/ContactmomentForm.vue'
-import TaskForm from './views/tasks/TaskForm.vue'
 
 // --- Kanban board (lib gap: no kanban/board page type). ---
 import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
@@ -35,14 +30,10 @@ import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
 import QueueListView from './views/queues/QueueList.vue'
 import QueueDetailView from './views/queues/QueueDetail.vue'
 
-// --- Kennisbank wiki (lib gap: no wiki page type). ---
-import KennisbankHomeView from './views/kennisbank/KennisbankHome.vue'
+// --- Kennisbank wiki article detail (lib gap: no wiki article detail type). ---
 import ArticleDetailView from './views/kennisbank/ArticleDetail.vue'
-import ArticleEditorView from './views/kennisbank/ArticleEditor.vue'
-import CategoryManagerView from './views/kennisbank/CategoryManager.vue'
 
-// --- Surveys builder/analytics (lib gap: no form-builder / chart page type). ---
-import SurveyFormView from './views/surveys/SurveyForm.vue'
+// --- Surveys analytics (lib gap: no chart-widget page type). ---
 import SurveyAnalyticsView from './views/surveys/SurveyAnalytics.vue'
 
 // --- Forms visual builder (lib gap: no form-builder page type;
@@ -85,23 +76,6 @@ const registry = {
 		component: MyWorkView,
 		_note: 'Personalised work surface mixing tasks + leads + requests for the current user; no single-entity typed page captures multi-entity user dashboard.',
 	},
-	PublicSurveyFormView: {
-		kind: 'page',
-		component: PublicSurveyFormView,
-		_note: 'Anonymous-public survey response form (no auth required); genuine exception — no typed-page analogue for tokenised public routes.',
-	},
-
-	// --- Bespoke create wizards. ---
-	ContactmomentForm: {
-		kind: 'page',
-		component: ContactmomentForm,
-		_note: 'Bespoke create wizard with client/contact resolution; lib gap: no multi-step create flow in declarative index type.',
-	},
-	TaskForm: {
-		kind: 'page',
-		component: TaskForm,
-		_note: 'Bespoke create wizard with assignee lookup and recurrence controls; lib gap: no multi-step create flow.',
-	},
 
 	// --- Kanban board. ---
 	PipelineBoardView: {
@@ -123,33 +97,13 @@ const registry = {
 	},
 
 	// --- Kennisbank wiki. ---
-	KennisbankHomeView: {
-		kind: 'page',
-		component: KennisbankHomeView,
-		_note: 'Wiki home with article listing + category filter; lib gap: no wiki/knowledge-base page type.',
-	},
 	ArticleDetailView: {
 		kind: 'page',
 		component: ArticleDetailView,
 		_note: 'Rendered markdown article view with related-articles panel; lib gap: no wiki article detail type.',
 	},
-	ArticleEditorView: {
-		kind: 'page',
-		component: ArticleEditorView,
-		_note: 'Markdown article editor; lib gap: no rich-text editor page type.',
-	},
-	CategoryManagerView: {
-		kind: 'page',
-		component: CategoryManagerView,
-		_note: 'Drag-and-drop category tree manager; lib gap: no taxonomy/tree-manager page type.',
-	},
 
 	// --- Surveys. ---
-	SurveyFormView: {
-		kind: 'page',
-		component: SurveyFormView,
-		_note: 'Survey builder with dynamic question types; lib gap: no form-builder page type.',
-	},
 	SurveyAnalyticsView: {
 		kind: 'page',
 		component: SurveyAnalyticsView,
