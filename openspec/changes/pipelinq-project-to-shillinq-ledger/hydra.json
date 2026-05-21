@@ -1,0 +1,5 @@
+{
+  "change": "pipelinq-project-to-shillinq-ledger",
+  "title": "Cross-app: Project → shillinq Project Ledger",
+  "artifacts": ["proposal.md", "design.md", "specs.md", "tasks.md"]
+}
