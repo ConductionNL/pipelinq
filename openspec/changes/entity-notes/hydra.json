@@ -1,0 +1,8 @@
+{
+  "spec_slug": "entity-notes",
+  "title": "Entity Notes",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [],
+  "issue": null
+}
