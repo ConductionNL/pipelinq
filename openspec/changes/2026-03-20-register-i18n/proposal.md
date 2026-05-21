@@ -2,48 +2,40 @@
 
 ## Problem
 
-Currency and date formatting across all Vue components is hardcoded to the `nl-NL` locale via direct `toLocaleString('nl-NL', ...)` calls. This means every user — regardless of their Nextcloud language and region setting — sees amounts formatted as Dutch euros (e.g. `€ 12.500,00`) and dates in Dutch order.
+Currency and date formatting across all Vue components is hardcoded to the `nl-NL` locale via `toLocaleString('nl-NL')`. This violates the requirement that display formatting follow the user's actual Nextcloud locale preference. A user running Nextcloud with an English or French locale sees Dutch-formatted numbers and dates regardless of their configuration.
 
-This violates ADR-007's requirement to respect user locale via Nextcloud core, and produces incorrect output for non-Dutch Nextcloud instances that host Pipelinq.
-
-Affected components include: `Dashboard.vue`, `LeadList.vue`, `LeadDetail.vue`, `MyWork.vue`, `PipelineBoard.vue`, `PipelineCard.vue`, widget files (`ProductRevenue.vue`, `LeadProducts.vue`), and any other file that calls `toLocaleString('nl-NL')` directly.
+Additionally, the formatting logic is duplicated across many components, making future corrections or currency changes require edits in eight or more places.
 
 ## Solution
 
-Create a single shared utility module `src/services/localeUtils.js` that:
+Create a shared `src/services/localeUtils.js` utility module that:
+- Detects the user's Nextcloud locale via the existing `OC.getLocale()` API
+- Falls back gracefully to `nl-NL` if the locale is unavailable
+- Exports named helpers: `getUserLocale()`, `formatCurrency()`, `formatDate()`, and `formatRelativeTime()`
 
-1. Reads the active Nextcloud locale via `OC.getLocale()` with a safe fallback to `nl-NL`.
-2. Exports `formatCurrency(value, currency)` — formats monetary values using `Intl.NumberFormat` with the user's locale and currency symbol.
-3. Exports `formatDate(dateStr, options)` — formats ISO date strings using `Intl.DateTimeFormat` with the user's locale.
-4. Exports `formatRelativeTime(dateStr)` — returns locale-aware relative time strings (e.g. "5 minuten geleden" in Dutch, "5 minutes ago" in English).
-
-Update all affected components to import and use these shared helpers instead of their own hardcoded `toLocaleString('nl-NL')` calls.
+Update all affected Vue components to import from this shared module instead of duplicating `toLocaleString('nl-NL')` calls inline.
 
 ## Scope
 
-- `src/services/localeUtils.js` — new shared formatting utility module
-- `src/views/Dashboard.vue` — replace hardcoded locale calls with `formatCurrency` and `formatDate`
-- `src/views/leads/LeadList.vue` — replace hardcoded locale calls with `formatCurrency`
-- `src/views/leads/LeadDetail.vue` — replace hardcoded locale calls with `formatCurrency`
-- `src/views/MyWork.vue` — replace hardcoded locale calls with `formatCurrency` and `formatDate`
-- `src/views/pipeline/PipelineBoard.vue` — replace hardcoded locale calls with shared helpers
-- `src/views/pipeline/PipelineCard.vue` — replace hardcoded locale calls with shared helpers
-- `src/views/widgets/ProductRevenue.vue` — replace hardcoded locale calls with `formatCurrency`
-- `src/views/widgets/LeadProducts.vue` — replace hardcoded locale calls with `formatCurrency`
-- Any additional widget files containing `toLocaleString('nl-NL')`
+- `src/services/localeUtils.js` — new shared formatting utility (new file)
+- `src/views/dashboard/Dashboard.vue` — replace hardcoded locale in currency and date formatting
+- `src/views/leads/LeadList.vue` — replace hardcoded locale in currency formatting
+- `src/views/leads/LeadDetail.vue` — replace hardcoded locale in currency formatting
+- `src/views/mywork/MyWork.vue` — replace hardcoded locale in currency and date formatting
+- `src/views/pipeline/PipelineBoard.vue` — replace hardcoded locale in stage value formatting
+- `src/components/PipelineCard.vue` — replace hardcoded locale in value formatting
+- `src/components/LeadProducts.vue` — replace hardcoded locale in line-item currency formatting
+- `src/views/dashboard/ProductRevenue.vue` — replace hardcoded locale in revenue formatting
+- Widget files referencing `toLocaleString` — replace with shared helpers
 
-## Out of scope
+## Out of Scope
 
-- Backend locale changes (PHP controllers return raw values; formatting is always a frontend concern)
-- Adding new locale files or translation keys (no new UI strings are introduced)
-- Locale-aware sorting of list data
-- Number formatting for non-monetary values (e.g. percentage, integer counts)
+- Timezone detection or conversion (separate concern)
+- Number formatting for non-currency values
+- Backend translation changes (`l10n/` files are unaffected)
+- New OpenRegister entities or schema changes
+- Multi-currency support (EUR is the only currency in scope)
 
-## Success Criteria
+## Decision Rationale
 
-- All formatted currency and date values follow the active Nextcloud user locale
-- Dutch users (`nl-NL`) see no visual change — output is identical to before
-- English locale users see amounts formatted as `€12,500.00` (English number format) instead of `€ 12.500,00`
-- No component duplicates the `toLocaleString('nl-NL')` pattern after this change
-- `src/services/localeUtils.js` is the single source of truth for all locale-aware formatting
-- `OC.getLocale()` unavailability (e.g. in tests) falls back gracefully to `nl-NL`
+Using `OC.getLocale()` requires no new backend endpoints and no PHP changes. The Nextcloud platform already exposes the user's locale to the frontend via the `OC` global, making this a pure client-side fix. A single shared module ensures the fallback logic and format options are tested and maintained in one place.
