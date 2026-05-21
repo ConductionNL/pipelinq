@@ -29,11 +29,16 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use DateInterval;
+use DateTimeImmutable;
+use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
+use Throwable;
 
 /**
  * Aggregates CRM activity data from multiple OpenRegister schemas.
@@ -87,8 +92,8 @@ class ActivityTimelineService
     {
         try {
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-        } catch (\Throwable $e) {
-            throw new \RuntimeException('OpenRegister service is not available.');
+        } catch (Throwable $e) {
+            throw new RuntimeException('OpenRegister service is not available.');
         }
     }//end getObjectService()
 
@@ -546,7 +551,7 @@ class ActivityTimelineService
     {
         $config = $this->getConfig();
         if ($config['register'] === '' || $config['contactmoment'] === '') {
-            throw new \RuntimeException('Contactmoment register or schema not configured.');
+            throw new RuntimeException('Contactmoment register or schema not configured.');
         }
 
         $user = $this->userSession->getUser();
@@ -558,7 +563,7 @@ class ActivityTimelineService
 
         $duration = $this->stringOrNull(value: ($data['duration'] ?? null));
         $summary  = $this->stringOrNull(value: ($data['description'] ?? null));
-        $date     = $this->stringOrNull(value: ($data['date'] ?? null)) ?? (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM);
+        $date     = $this->stringOrNull(value: ($data['date'] ?? null)) ?? (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 
         $payload = [
             'channel'     => 'worklog',
@@ -738,8 +743,8 @@ class ActivityTimelineService
         }
 
         try {
-            $interval = new \DateInterval($duration);
-        } catch (\Throwable $e) {
+            $interval = new DateInterval($duration);
+        } catch (Throwable $e) {
             return 0;
         }
 

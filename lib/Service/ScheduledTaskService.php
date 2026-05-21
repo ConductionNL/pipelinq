@@ -29,6 +29,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use DateTimeImmutable;
+use DateTimeInterface;
+use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\IAppConfig;
@@ -36,6 +39,8 @@ use OCP\IGroupManager;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
+use Throwable;
 
 /**
  * Service for the Schedules API.
@@ -142,11 +147,11 @@ class ScheduledTaskService
         }
 
         if (isset($params['to']) === true && $params['to'] !== '') {
-            if (isset($filters['deadline']) === true && is_array($filters['deadline']) === true) {
-                $filters['deadline']['<='] = $params['to'];
-            } else {
-                $filters['deadline'] = ['<=' => $params['to']];
+            if (isset($filters['deadline']) === false || is_array($filters['deadline']) === false) {
+                $filters['deadline'] = [];
             }
+
+            $filters['deadline']['<='] = $params['to'];
         }
 
         try {
@@ -160,7 +165,7 @@ class ScheduledTaskService
                 _rbac: false,
                 _multitenancy: false
             );
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger->error(
                 'ScheduledTaskService: findAll failed',
                 ['exception' => $e]
@@ -186,7 +191,7 @@ class ScheduledTaskService
      *
      * @return array<string, mixed> The task object.
      *
-     * @throws \RuntimeException If the task is not found.
+     * @throws RuntimeException If the task is not found.
      *
      * @spec openspec/changes/task-background-jobs/tasks.md#task-1
      */
@@ -194,7 +199,7 @@ class ScheduledTaskService
     {
         [$registerId, $schemaId] = $this->getRegisterAndSchema();
         if ($registerId === '' || $schemaId === '') {
-            throw new \RuntimeException('Task not found');
+            throw new RuntimeException('Task not found');
         }
 
         try {
@@ -205,16 +210,16 @@ class ScheduledTaskService
                 _rbac: false,
                 _multitenancy: false
             );
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger->error(
                 'ScheduledTaskService: findObject failed',
                 ['exception' => $e, 'id' => $id]
             );
-            throw new \RuntimeException('Task not found');
+            throw new RuntimeException('Task not found');
         }
 
         if ($object === null) {
-            throw new \RuntimeException('Task not found');
+            throw new RuntimeException('Task not found');
         }
 
         return $this->normalizeToArray(object: $object);
@@ -231,7 +236,7 @@ class ScheduledTaskService
      *
      * @return array<string, mixed> The saved task object.
      *
-     * @throws \InvalidArgumentException On validation failure.
+     * @throws InvalidArgumentException On validation failure.
      *
      * @spec openspec/changes/task-background-jobs/tasks.md#task-1
      */
@@ -240,27 +245,26 @@ class ScheduledTaskService
         if (isset($data['type']) === false
             || in_array($data['type'], self::VALID_TYPES, true) === false
         ) {
-            throw new \InvalidArgumentException('Invalid input');
+            throw new InvalidArgumentException('Invalid input');
         }
 
         if (isset($data['subject']) === false || trim((string) $data['subject']) === '') {
-            throw new \InvalidArgumentException('Invalid input');
+            throw new InvalidArgumentException('Invalid input');
         }
 
         if (isset($data['deadline']) === false || trim((string) $data['deadline']) === '') {
-            throw new \InvalidArgumentException('Invalid input');
+            throw new InvalidArgumentException('Invalid input');
         }
 
         [$registerId, $schemaId] = $this->getRegisterAndSchema();
         if ($registerId === '' || $schemaId === '') {
-            throw new \RuntimeException('Register or task schema not configured');
+            throw new RuntimeException('Register or task schema not configured');
         }
 
         $user = $this->userSession->getUser();
+        $data['createdBy'] = 'system';
         if ($user !== null) {
             $data['createdBy'] = $user->getUID();
-        } else {
-            $data['createdBy'] = 'system';
         }
 
         if (isset($data['status']) === false || $data['status'] === '') {
@@ -360,7 +364,7 @@ class ScheduledTaskService
             return [];
         }
 
-        $now    = new \DateTimeImmutable('now');
+        $now    = new DateTimeImmutable('now');
         $cutoff = $now->modify(sprintf('+%d minutes', $windowMinutes));
 
         try {
@@ -371,8 +375,8 @@ class ScheduledTaskService
                         'schema'   => $schemaId,
                         'status'   => 'open',
                         'deadline' => [
-                            '>=' => $now->format(\DateTimeInterface::ATOM),
-                            '<=' => $cutoff->format(\DateTimeInterface::ATOM),
+                            '>=' => $now->format(DateTimeInterface::ATOM),
+                            '<=' => $cutoff->format(DateTimeInterface::ATOM),
                         ],
                     ],
                     'limit'   => 100,
@@ -381,7 +385,7 @@ class ScheduledTaskService
                 _rbac: false,
                 _multitenancy: false
             );
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger->error(
                 'ScheduledTaskService: getPendingTasks failed',
                 ['exception' => $e]
@@ -413,7 +417,7 @@ class ScheduledTaskService
     public function processScheduledTasks(): void
     {
         $candidates = $this->getPendingTasks(windowMinutes: self::EXPIRY_THRESHOLD_MINUTES);
-        $now        = new \DateTimeImmutable('now');
+        $now        = new DateTimeImmutable('now');
         $expiryCut  = $now->modify('-4 hours');
 
         [$registerId, $schemaId] = $this->getRegisterAndSchema();
@@ -437,8 +441,8 @@ class ScheduledTaskService
             }
 
             try {
-                $deadline = new \DateTimeImmutable((string) $deadlineRaw);
-            } catch (\Throwable $e) {
+                $deadline = new DateTimeImmutable((string) $deadlineRaw);
+            } catch (Throwable $e) {
                 continue;
             }
 
@@ -452,7 +456,7 @@ class ScheduledTaskService
                 $attempts = [];
             }
 
-            $timestamp = $now->format(\DateTimeInterface::ATOM);
+            $timestamp = $now->format(DateTimeInterface::ATOM);
 
             if ($deadline < $expiryCut) {
                 $task['status'] = 'verlopen';
@@ -460,7 +464,9 @@ class ScheduledTaskService
                     'timestamp' => $timestamp,
                     'result'    => 'expired',
                 ];
-            } else {
+            }
+
+            if ($deadline >= $expiryCut) {
                 $task['status'] = 'in_behandeling';
                 $attempts[]     = [
                     'timestamp' => $timestamp,
@@ -477,7 +483,7 @@ class ScheduledTaskService
                             objectId: (string) ($task['id'] ?? ''),
                             author: 'system'
                         );
-                    } catch (\Throwable $e) {
+                    } catch (Throwable $e) {
                         $this->logger->error(
                             'ScheduledTaskService: notification dispatch failed',
                             ['exception' => $e]
@@ -498,7 +504,7 @@ class ScheduledTaskService
                     _rbac: false,
                     _multitenancy: false
                 );
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->logger->error(
                     'ScheduledTaskService: task update failed',
                     ['exception' => $e, 'id' => $task['id'] ?? null]
