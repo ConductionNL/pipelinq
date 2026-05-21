@@ -1,5 +1,8 @@
 {
-  "change": "pipelinq-project-to-shillinq-ledger",
-  "title": "Cross-app: Project → shillinq Project Ledger",
-  "artifacts": ["proposal.md", "design.md", "specs.md", "tasks.md"]
+  "spec_slug": "pipelinq-project-to-shillinq-ledger",
+  "title": "Cross-app: Project \u2192 shillinq Project Ledger",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [],
+  "issue": null
 }
