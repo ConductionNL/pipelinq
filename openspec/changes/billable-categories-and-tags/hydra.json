@@ -6,5 +6,5 @@
   "depends_on": [
     "time-entry-core"
   ],
-  "issue": "https://github.com/ConductionNL/pipelinq/issues/424"
+  "issue": null
 }
