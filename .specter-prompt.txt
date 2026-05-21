@@ -4,19 +4,19 @@ You are running HEADLESS. Do NOT use AskUserQuestion, interactive prompts, or sk
 Write files directly using the Write tool.
 
 ## Inputs
-- Change: pipelinq-expense-to-shillinq-ap (title: Cross-app: Expense → shillinq AP)
-- Context brief: openspec/changes/pipelinq-expense-to-shillinq-ap/context-brief.md
+- Change: pipelinq-project-to-shillinq-ledger (title: Cross-app: Project → shillinq Project Ledger)
+- Context brief: openspec/changes/pipelinq-project-to-shillinq-ledger/context-brief.md
 - Data model ADR: openspec/architecture/adr-000-data-model.md
 
 ## Step 1: Read context
 Read these files COMPLETELY before writing anything:
-- openspec/changes/pipelinq-expense-to-shillinq-ap/context-brief.md (features, stories, stakeholders, journeys)
+- openspec/changes/pipelinq-project-to-shillinq-ledger/context-brief.md (features, stories, stakeholders, journeys)
 - openspec/architecture/adr-000-data-model.md (entity definitions)
 - All files in openspec/architecture/ (app ADRs)
 - All files in .claude/openspec/architecture/ (company ADRs, if present)
 
 ## Step 2: Get artifact templates
-Run: `openspec instructions proposal --change pipelinq-expense-to-shillinq-ap --json`
+Run: `openspec instructions proposal --change pipelinq-project-to-shillinq-ledger --json`
 This returns the template and rules for the proposal artifact.
 Then do the same for: design, specs, tasks (in that order).
 
@@ -35,8 +35,8 @@ For each artifact (proposal → design → specs → tasks):
 ## Step 4: Commit
 After all 4 artifacts are written:
 ```bash
-git add openspec/changes/pipelinq-expense-to-shillinq-ap/
-git commit -m 'feat: Add OpenSpec change pipelinq-expense-to-shillinq-ap from Specter'
+git add openspec/changes/pipelinq-project-to-shillinq-ledger/
+git commit -m 'feat: Add OpenSpec change pipelinq-project-to-shillinq-ledger from Specter'
 ```
 Do NOT push — the caller handles pushing.
 Do NOT create branches — stay on the current branch.
