@@ -3,6 +3,20 @@ status: draft
 ---
 # ZGW API (Zaakgericht Werken) REST bridge
 
+## Placement & Information Architecture
+
+**Placement type:** `SETTING+DETAIL_TAB` (compound — implement all of the following):
+
+- **`SETTING`** — Setting under the app's Beheer/Admin/Configuration surface. Lives in the existing settings UI; no top-level menu entry.
+- **`DETAIL_TAB`** — Tab on the detail view of an existing object. NOT a standalone page — appears inside the parent record's detail surface (e.g. an extra tab on the existing detail header).
+
+**Lives at:** Beheer → Integraties + Contactmoment/Klacht-detail "Zaak" tab
+
+**Rationale:** Zaaksysteem bridge.  
+_Source: /tmp/ia-pipelinq.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 Where the StUF-ZKN/BG adapter covers the legacy SOAP estate, the ZGW API bridge is pipelinq's first-class integration into the modern Dutch zaakgericht-werken stack: a set of OAuth2-secured REST APIs published by VNG Realisatie that every nieuw zaaksysteem (OpenZaak, RxMission, Decos JOIN ZGW-edition, Roxit Squit20/20 ZGW, Open Zaak SaaS bij Dimpact, ...) implements. The bridge speaks the five canonical ZGW component APIs — Zaken (ZRC), Documenten (DRC), Besluiten (BRC), Catalogi (ZTC) and Autorisaties (AC) — plus the Notificaties Routerings Component (NRC) for event-driven updates. It coexists with the StUF adapter so that a single pipelinq install can serve a fleet of gemeenten: each gemeente is bound to either ZGW or StUF for a given domain, and the bridge is the preferred path whenever both are available. This spec defines the JWT minting, the resource-by-resource client behaviour, the NRC abonnement lifecycle, the ZTC consumption pattern, and the explicit coexistence rules that prevent double-registration when a gemeente runs both stacks during a migration.
