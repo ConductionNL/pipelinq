@@ -9,6 +9,17 @@ depends_on:
 
 # BI Export and Data Warehouse Sink
 
+## Placement & Information Architecture
+
+**Placement type:** `SETTING` — Setting under the app's Beheer/Admin/Configuration surface. Lives in the existing settings UI; no top-level menu entry.
+
+**Lives at:** Beheer → Data export
+
+**Rationale:** Sink config; no end-user UI.  
+_Source: /tmp/ia-pipelinq.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 Pipelinq is operational software — it runs the day-to-day sales and contact-centre workflow. But every serious organisation eventually wants to ask questions pipelinq's UI cannot answer: "what is the cohort retention curve of customers we acquired in Q3 2024 by lead source?", "join sales pipeline to support ticket volume to forecast at-risk renewals", "feed deal data into our pricing-optimisation model in Snowflake". For all of these, the operational database is the wrong place — long-running analytical queries kill OLTP performance, and the joins span systems pipelinq doesn't own.
