@@ -9,6 +9,17 @@ depends_on: [pipelinq-base, client-management, skill-routing, email-calendar-syn
 
 # Appointment Booking
 
+## Placement & Information Architecture
+
+**Placement type:** `SUB_PAGE` — Sub-page beneath a top-level menu entry. Renders as a page inside the parent surface (usually reachable via a router child route or a tab on the parent index page).
+
+**Lives at:** Klantcontact → Afspraken
+
+**Rationale:** Booking calendar lives in KCC.  
+_Source: /tmp/ia-pipelinq.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 Appointment Booking turns pipelinq from a CRM that records past interactions into a system that schedules future ones. It exists because the entire long tail of MKB service businesses — hairdressers, garages, physiotherapists, consultants, tax advisors, beauty salons, dog groomers, repair shops, municipal-window appointments — runs on either pen-and-paper calendars, Google Calendar with manual entries, or third-party SaaS (Calendly, Setmore, Acuity, Salonized) that doesn't talk to their CRM. The pain is doubled-booked staff, no-shows costing 8-15% of revenue, customers calling during business hours just to ask for a slot, and zero connection between "Mrs. Janssen booked a haircut" and "Mrs. Janssen's customer record."
