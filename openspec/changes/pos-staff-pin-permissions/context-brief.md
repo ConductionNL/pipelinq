@@ -4,6 +4,20 @@ status: draft
 
 # POS Staff PIN + Role Permissions
 
+## Placement & Information Architecture
+
+**Placement type:** `SETTING+WIDGET` (compound — implement all of the following):
+
+- **`SETTING`** — Setting under the app's Beheer/Admin/Configuration surface. Lives in the existing settings UI; no top-level menu entry.
+- **`WIDGET`** — Widget shown on a dashboard or another page. Has no dedicated page of its own; renders inside an existing surface as a tile/panel/card.
+
+**Lives at:** Beheer → Kassa + Kassascherm PIN-overlay
+
+**Rationale:** Staff-config + auth-overlay.  
+_Source: /tmp/ia-pipelinq.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 PIN login per staffer; permission matrix (void, discount %, refund, no-sale).
