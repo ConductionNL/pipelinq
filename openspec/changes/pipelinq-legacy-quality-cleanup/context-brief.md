@@ -1,5 +1,16 @@
 # Pipelinq Legacy Quality Cleanup
 
+## Placement & Information Architecture
+
+**Placement type:** `INFRA` — Cross-cutting infrastructure with no end-user surface (or only an internal/admin one). No menu item; backend wiring only.
+
+**Lives at:** —
+
+**Rationale:** Tech debt; no UI.  
+_Source: /tmp/ia-pipelinq.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Why
 
 The OR-abstraction audit (2026-05-03, stream 3 + the quality-gates
