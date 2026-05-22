@@ -1,1534 +1,769 @@
-# Context Brief: Kcc Werkplek
+---
+status: draft
+---
 
-**App:** Pipelinq — CRM and customer interaction
-**Spec:** kcc-werkplek
-**Platform:** Nextcloud + OpenRegister
+# KCC Werkplek Specification
 
-## Features (3 total, sorted by market demand)
+## Placement & Information Architecture
 
-### Omnichannel Customer Communication Management
-**demand: 925** (308 tender mentions) | Category: other
+**Placement type:** `SUB_PAGE` — Sub-page beneath a top-level menu entry. Renders as a page inside the parent surface (usually reachable via a router child route or a tab on the parent index page).
 
-### Customer Communication
-**demand: 2** | Category: other
+**Lives at:** Klantcontact → Werkplek
 
-### more than just sales pipelines
-**demand: 1** | Category: other
+**Rationale:** Canonical agent cockpit.  
+_Source: /tmp/ia-pipelinq.md_
 
-## User Stories
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
 
-(No user stories linked to this spec. Generate from the features above.)
+## Purpose
 
-## Customer Journeys
+The KCC werkplek (frontoffice workspace) is the unified agent screen for KCC (Klant Contact Centrum) employees. It combines citizen/business identification, open case visibility, contact moment registration, and backoffice routing into a single interface. This is the most demanded capability in Dutch government CRM tenders: **100% of 52 klantinteractie-tenders** require an integrated KCC workspace.
 
-(No journeys linked. Infer from stakeholders and features above.)
+**Standards**: VNG Klantinteracties (`Contactmoment`, `Klant`, `Medewerker`), Haal Centraal BRP API, KVK API, ZGW Zaken API
+**Feature tier**: MVP (core), V1 (extended), Enterprise (advanced)
+**Tender frequency**: 52/52 (100%)
 
-## Stakeholders
+## Data Model
 
-(No stakeholders linked. Infer from the features and user stories above.)
+The KCC werkplek is a composite view that orchestrates data from multiple sources:
+- **Klant** (client): OpenRegister object in the `pipelinq` register using the `client` schema
+- **Contactmoment**: OpenRegister object in the `pipelinq` register using the `contactmoment` schema
+- **Zaak** (case): Retrieved via ZGW Zaken API or OpenRegister procest objects
+- **BRP/KVK enrichment**: Retrieved via OpenConnector sources for person/business lookup
+- **Kennisartikel**: OpenRegister object in the `pipelinq` register using the `kennisartikel` schema (see kennisbank spec)
+- **Taak/Terugbelverzoek**: OpenRegister object for backoffice routing and callback requests
 
-## Other App Entities (do NOT redefine)
+## ADDED Requirements
 
-agentProfile, automation, automationLog, calendarLink, client, complaint, contact, contactmoment, emailLink, intakeForm, intakeSubmission, kennisartikel, kenniscategorie, kennisfeedback, lead, leadProduct, pipeline, product, productCategory, queue, relationship, request, skill, survey, surveyResponse, task
+---
 
-## Company-Wide Architecture Rules (17 ADRs)
+### Requirement: Agent Dashboard Landing
 
-These rules are MANDATORY for all Conduction apps.
+The system MUST provide a dedicated KCC agent landing screen that shows an overview of the agent's current queue, recent contacts, and quick-action buttons.
 
-### ADR-001-data-layer
-- ALL domain data → OpenRegister objects. NO custom Entity/Mapper for domain data.
-- App config → `IAppConfig`. NOT OpenRegister.
-- Cross-entity references: OpenRegister relations (register+schema+objectId). NO foreign keys.
-  MUST NOT store foreign keys or embed full objects.
+**Feature tier**: MVP
 
-### Schema standards
+#### Scenario: Agent opens KCC werkplek
 
-- Schemas: PascalCase, schema.org vocabulary, explicit types + required flags + description field.
-- MUST NOT invent custom property names when a schema.org equivalent exists.
-- Contact schemas MUST align with vCard properties (fn, email, tel, adr).
-- Dutch government fields SHOULD use a mapping layer translating between international standards
-  and Dutch specs — do not hardcode Dutch field names as primary.
-- Schema changes that remove or rename properties are BREAKING. Adding optional properties is non-breaking.
+- GIVEN a KCC agent with appropriate role permissions
+- WHEN they navigate to the KCC werkplek
+- THEN the system MUST display a dashboard with: active queue count, recent contactmomenten (last 10), quick-action buttons for "Nieuw contact" and "Zoek klant"
+- AND the dashboard MUST show the agent's personal statistics for today (number of contacts handled, average handling time)
 
-### Register templates
+#### Scenario: Queue overview displays waiting contacts
 
-- Location: `lib/Settings/{app}_register.json` (OpenAPI 3.0 + `x-openregister` extensions).
-- Three template categories:
-  - **App configuration** — define data models (schemas/registers/views/mappings).
-    Mark with `x-openregister.type: "application"`.
-  - **Mock data** — fictional but realistic seed data for dev/test.
-    Mark with `x-openregister.type: "mock"`.
-  - **Government standards** — aligned to Dutch API specs (BAG, BRP, KVK, DSO).
-- Import mechanism: `ConfigurationService::importFromApp(appId, data, version, force)` →
-  `ImportHandler::importFromApp()`. Called from repair step or `SettingsLoadService`.
-- Idempotency: re-importing with `force: false` MUST NOT create duplicates. Match by slug
-  using `ObjectService::searchObjects` with `_rbac: false` and `_multitenancy: false`.
-  Use `version_compare` for skip logic.
-
-### Seed data
-
-Apps that store data in OpenRegister are empty on first install. An empty app cannot be
-meaningfully tested — there are no objects to view, search, filter, or interact with.
-This blocks both automated browser testing and manual QA. The Loadable Register Template
-pattern (see Register templates above) already supports seed data via `components.objects[]`
-with the `@self` envelope.
-
-**Requirements:**
-
-- Every app using OpenRegister MUST include 3-5 realistic objects per schema in
-  `lib/Settings/{app}_register.json`.
-- Use `@self` envelope: `{ "@self": { "register": ..., "schema": ..., "slug": ... }, ...properties }`.
-  Register/schema MUST match keys; slug is unique human-readable identifier for matching.
-- Use general organisation data (municipality, consultancy, travel agency, non-profit) —
-  NOT context-specific. Varied, realistic field values.
-- Mock data quality: real Dutch street names, valid postcodes (`[1-9][0-9]{3}[A-Z]{2}`),
-  correct municipality/KVK codes, BSNs that pass 11-proef. Fictional but distinguishable from real.
-- Cross-register consistency: BRP→BAG, KVK→BAG, DSO→BAG references must be valid.
-- Loaded on install alongside schemas via same `importFromApp()` pipeline.
-- MUST be idempotent — re-importing skips existing objects matched by slug.
-
-**In OpenSpec artifacts:**
-
-- **In design.md**: MUST include a Seed Data section when change introduces/modifies schemas —
-  define seed objects per schema with concrete field values and related items (files, notes, tasks, contacts).
-- **In tasks.md**: MUST include a seed data generation task when change introduces/modifies schemas.
-
-**Exceptions** (no seed data required):
-
-- **nldesign** — has no OpenRegister schemas.
-- **ExApp sidecar wrappers** (openklant, opentalk, openzaak, valtimo, n8n-nextcloud) — proxy
-  external services and do not use OpenRegister.
-- **nextcloud-vue** — shared library, no seed data applicable.
-- Changes that only modify frontend components or non-schema backend logic (e.g., settings,
-  permissions) do not require seed data.
-
-**Limitations:** OpenRegister's `ImportHandler` currently supports only flat seed objects.
-Related items (files, notes, tasks, contacts) linked through the relation system are tracked
-on the product roadmap. Until then, seed data is limited to object properties defined in schemas.
-
-### Deduplication check
-
-- Before proposing new capability: search `openspec/specs/` and `openregister/lib/Service/` for overlap
-  with ObjectService, RegisterService, SchemaService, ConfigurationService, and shared Vue components.
-- If similar capability exists: MUST reference it and explain why new code is needed rather than extending.
-- Proposals duplicating existing functionality without justification MUST be rejected.
-- **In design.md**: MUST include a "Reuse Analysis" section listing existing OpenRegister services leveraged.
-- **In tasks.md**: MUST include a "Deduplication Check" task verifying no overlap — document findings
-  even if "no overlap found".
-
-### Schema migrations
-
-- Breaking schema changes → new migration in repair step. NEVER modify existing migrations.
-
-### OpenRegister + @conduction/nextcloud-vue — DO NOT REBUILD
-
-The platform provides 258+ backend methods and 69+ frontend components. Apps ONLY build
-custom logic for domain-specific business rules. Everything below is provided for FREE.
-
-**CRUD & Data Management** (use ObjectService + CnIndexPage + CnDetailPage):
-- Single & bulk create, read, update, delete — `ObjectService.saveObject()`, `deleteObject()`
-- List with pagination, sorting, filtering — `ObjectService.findAll()` + `CnDataTable`
-- Schema-driven forms — `CnFormDialog` (auto-generates from schema) or `CnAdvancedFormDialog`
-- Detail views — `CnDetailPage` with `CnDetailGrid`, `CnDetailCard` sections
-- Record merging/deduplication — `ObjectService.mergeObjects()`
-- Object locking — `ObjectService.lockObject()` / `unlockObject()`
-
-**Import & Export** (use ImportService/ExportService + CnMassImportDialog/CnMassExportDialog):
-- CSV, Excel, JSON import with intelligent field mapping — `ImportService`
-- CSV, Excel, JSON export with column selection — `ExportService`
-- Bulk import with validation and progress — `CnMassImportDialog`
-- Filtered export with format picker — `CnMassExportDialog`
-- NO custom import dialogs, parsers, upload handlers, or export controllers
-
-**Search & Discovery** (use IndexService + CnFilterBar + CnFacetSidebar):
-- Full-text search with field weighting — `IndexService`
-- Faceted navigation with counts — `FacetBuilder` + `CnFacetSidebar`
-- Semantic search with embeddings — `VectorizationService`
-- Hybrid search (keyword + semantic) — automatic
-- Search analytics — `SearchTrailService` (popular terms, activity)
-- NO custom search endpoints, query builders, or search pages
-
-**File Management** (use FileService + CnObjectSidebar):
-- Upload (single/multipart), download, share links — `FileService`
-- File tagging, public/private toggle — `FileService`
-- Bulk download as ZIP — `createObjectFilesZip()`
-- Text extraction from PDFs/Office docs — `TextExtractionService`
-- File tab in object sidebar — `CnObjectSidebar` → `CnFilesTab`
-- NO custom file upload components, file controllers, or download handlers
-
-**Audit & Compliance** (use AuditTrailService + CnObjectSidebar):
-- Full change tracking with before/after snapshots — automatic
-- Audit trail tab — `CnObjectSidebar` → `CnAuditTrailTab`
-- GDPR data subject access requests — `inzageverzoek()`, `verwerkingsregister()`
-- Audit export and analytics — `AuditTrailController`
-- NO custom audit logging, change tracking, or compliance controllers
-
-**Dashboard & Analytics** (use CnDashboardPage + CnChartWidget + CnStatsBlock):
-- Drag-drop widget dashboard — `CnDashboardPage` with GridStack
-- KPI cards — `CnKpiGrid`, `CnStatsBlock`, `CnStatsPanel`
-- Charts (line/bar/pie/donut) — `CnChartWidget` (ApexCharts)
-- Data tables as widgets — `CnTableWidget`
-- Editable data grids — `CnObjectDataWidget`
-- NO custom dashboard layouts, chart components, or KPI cards
-
-**Forms & Dialogs** (use CnFormDialog + schema-driven generation):
-- Auto-generated create/edit forms — `CnFormDialog` reads schema → generates fields
-- JSON/metadata editing — `CnAdvancedFormDialog` with Properties/Data/Metadata tabs
-- Schema editor — `CnSchemaFormDialog`
-- Delete/Copy/Mass operations — `CnDeleteDialog`, `CnCopyDialog`, `CnMassDeleteDialog`
-- NO custom form components, validation logic, or dialog wrappers
-
-**Navigation & Pagination** (use CnPagination + CnActionsBar + useListView):
-- Pagination control with size selector — `CnPagination`
-- Action bar (add, search, toggle views) — `CnActionsBar`
-- List state management — `useListView` composable (handles search, filter, sort, page)
-- Detail state management — `useDetailView` composable
-- NO custom pagination logic, debounced search, or list state management
-
-**Authorization & RBAC** (use AuthorizationService + PropertyRbacHandler):
-- Role-based access control — `AuthorizationService`
-- Field-level permissions — `PropertyRbacHandler`
-- Object-level restrictions — `PermissionHandler`
-- Authorization audit — `AuthorizationAuditService`
-- NO custom permission checks, role systems, or access control middleware
-
-**Webhooks & Events** (use WebhookService):
-- Create, test, retry webhooks — `WebhookService`
-- CloudEvents format — automatic
-- Event subscriptions — selective per schema/action
-- NO custom webhook controllers or event dispatchers
-
-**Notifications & Activity** (use NotificationService + ActivityService):
-- Nextcloud notifications — `NotificationService`
-- Activity feed — `ActivityService`
-- Calendar events — `CalendarEventService`
-- Deck/Kanban cards — `DeckCardService`
-
-**Store & State** (use createObjectStore + plugins):
-- Object stores — `createObjectStore(name)` generates Pinia CRUD store
-- Store plugins: `auditTrails`, `files`, `lifecycle`, `relations`, `search`, `selection`
-- Column/field/filter generation from schema — `columnsFromSchema()`, `fieldsFromSchema()`
-- NO custom Pinia stores for CRUD, Vuex, or manual API call management
-
-**Chat & AI** (use ChatService):
-- Multi-turn conversation — `ChatService`
-- RAG-based knowledge retrieval — `ContextRetrievalHandler`
-- LLM response generation — `ResponseGenerationHandler`
-
-**Data Retention & Archival** (use ArchivalService):
-- Legal hold — `LegalHoldService`
-- Destruction schedules — `DestructionService`
-- Retention policies — `RetentionService`
-
-**Semantic & Hybrid Search** (use SolrController + SettingsController):
-- Semantic search via vector embeddings — `SettingsController.semanticSearch()`
-- Hybrid search (keyword + semantic combined) — `SolrController.hybridSearch()`
-- Vector embedding generation — `VectorizationService`
-- NO custom search algorithms — configure via OpenRegister settings
-
-**GraphQL API** (use GraphQLController):
-- Query objects across schemas via GraphQL — `GraphQLController.execute()`
-- Alternative to REST for complex cross-entity queries
-
-**Organization / Multi-Tenancy** (use OrganisationController):
-- Organization CRUD — `OrganisationController`
-- Tenant-scoped data isolation — automatic via `TenantLifecycleService`
-- NO custom multi-tenancy logic
-
-**Task & Workflow Management** (use TasksController + WorkflowEngineController):
-- Task creation and tracking — `TasksController`
-- Workflow orchestration — `WorkflowEngineRegistry`
-- Scheduled workflows — `ScheduledWorkflowController`
-- NO custom task/workflow systems
-
-**Text Extraction** (use FileTextController):
-- Extract text from PDFs and Office docs — `TextExtractionService`
-- Entity recognition (PII detection) — `EntityRecognitionHandler`
-- Content anonymization — automatic
-
-**Timeline & Stages** (use CnTimelineStages):
-- Workflow progression visualization — `CnTimelineStages` component
-- Stage tracking with status colors
-
-### What apps SHOULD build (custom business logic only):
-- External API integrations (SAP, Peppol, TenderNed, etc.)
-- PDF/document generation with business-specific templates
-- Workflow triggers and business rules specific to the domain
-- Notification dispatch with app-specific event types
-- Custom settings pages with app-specific configuration
-- Background jobs for domain-specific processing
-
-### ADR-002-api
-- URL pattern: `/index.php/apps/{app}/api/{resource}` — lowercase plural, hyphens.
-- Methods: GET=read, POST=create, PUT=update, DELETE=remove. No custom methods.
-- Pagination: support `_page` + `_limit`. Response includes `total`, `page`, `pages`.
-- Errors: appropriate HTTP status + `message` field. NO stack traces in responses.
-- Auth: Nextcloud built-in only. NO custom login/session/token flows.
-- Public endpoints: annotate `#[PublicPage]` + `#[NoCSRFRequired]`. Register CORS OPTIONS route.
-
-### ADR-003-backend
-- **Controller → Service → Mapper** (strict 3-layer). Controllers NEVER call mappers directly.
-- Controllers: thin (<10 lines/method). Routing + validation + response only.
-- Services: ALL business logic. Stateless — no instance state between requests.
-- Mappers: DB CRUD only. No business logic.
-- DI: constructor injection with `private readonly`. NO `\OC::$server` or static locators.
-- Entity setters: POSITIONAL args only. `$e->setName('val')` — NEVER `$e->setName(name: 'val')`.
-  (`__call` passes `['name' => val]` but `setter()` uses `$args[0]`.)
-- Routes: `appinfo/routes.php`. Specific routes BEFORE wildcard `{slug}` routes.
-- Config: `IAppConfig` with sensitive flag for secrets. NEVER read DB directly.
-- Lifecycle: schema init via repair steps (`IRepairStep`), background via job queue, events via dispatcher.
-- **Spec traceability**: every class and public method MUST have `@spec` PHPDoc tag(s) linking to
-  the OpenSpec change that caused it: `@spec openspec/changes/{name}/tasks.md#task-N`.
-  Multiple `@spec` tags allowed (code touched by multiple changes). File-level `@spec` in header docblock.
-  This enables: code → docblock → spec traceability alongside code → git blame → commit → issue → spec.
-
-### ADR-004-frontend
-- **Vue 2 + Pinia + @nextcloud/vue + @conduction/nextcloud-vue**. NO Vuex. Options API only.
-- State: Pinia stores in `src/store/modules/`. Use `createObjectStore` for OpenRegister CRUD.
-- API calls: `axios` from `@nextcloud/axios` — auto-attaches CSRF token. NEVER raw `fetch()` for mutations.
-  Loading state with `try/finally`.
-- Translations: ALL user-visible strings via `t(appName, 'text')`. NO hardcoded strings.
-  Translation keys MUST be English — Dutch translations go in `l10n/nl.json`.
-- CSS: ONLY Nextcloud CSS variables (`var(--color-primary-element)`, etc.). NO hardcoded colors.
-  NEVER reference `--nldesign-*` directly — nldesign app handles theming.
-- Router: history mode, base `generateUrl('/apps/{app}/')`. Requires matching PHP routes in `routes.php`.
-  Deep link URL templates MUST match the router mode — use path format (`/apps/{app}/entities/{uuid}`),
-  NOT hash format (`/apps/{app}/#/entities/{uuid}`).
-- OpenRegister dependency: settings returns `openRegisters` (bool) + `isAdmin`.
-  Show empty state if OR missing. NEVER use `OC.isAdmin` — get from backend.
-- NEVER `window.confirm()` or `window.alert()` — use `NcDialog` or `CnFormDialog` (WCAG, theming).
-- NEVER read app state from DOM (`document.getElementById`, `dataset`) — use backend API or store.
-- EVERY `await store.action()` call MUST be wrapped in `try/catch` with user-facing error feedback.
-- NEVER import from `@nextcloud/vue` directly — use `@conduction/nextcloud-vue` which re-exports all
-  NC components plus Conduction components. This ensures consistent theming and component versions.
-- EVERY component used in `<template>` MUST be imported AND registered in `components: {}`.
-  Vue 2 silently renders unknown elements — missing imports cause invisible runtime failures.
-
-### NL Design System
-
-- ALL UI components MUST use CSS custom properties from NL Design System tokens.
-- MUST support theme switching via nldesign app's token sets.
-- MUST meet WCAG AA compliance: keyboard-navigable, associated labels, color is not the sole
-  method of conveying information.
-- SHOULD work on 320px–1920px viewports; critical functionality MUST work at 768px (tablet).
-- Exceptions: PDF generation (docudesk), admin-only screens (simpler styling allowed).
-
-### @conduction/nextcloud-vue — ALWAYS check before building custom
-
-**Pages & Layout:**
-  `CnIndexPage` (schema-driven list+CRUD) | `CnDetailPage` (detail+sidebar) |
-  `CnPageHeader` (title+icon) | `CnActionsBar` (add+search+toggle)
-
-**Data Display:**
-  `CnDataTable` (sortable+paginated) | `CnCardGrid` + `CnObjectCard` (card views) |
-  `CnDetailGrid` (label-value pairs) | `CnFilterBar` (search+filters) |
-  `CnFacetSidebar` (faceted filters) | `CnPagination` | `CnCellRenderer` (type-aware)
-
-**Forms & Dialogs:**
-  `CnFormDialog` (schema-driven create/edit) | `CnAdvancedFormDialog` (properties+JSON+metadata) |
-  `CnSchemaFormDialog` (JSON Schema editor) | `CnTabbedFormDialog` (tabbed form framework) |
-  `CnDeleteDialog` | `CnCopyDialog`
-
-**Mass Actions:**
-  `CnMassDeleteDialog` | `CnMassCopyDialog` | `CnMassExportDialog` (CSV/JSON/XML) |
-  `CnMassImportDialog` (upload+summary) | `CnMassActionBar` (floating selection bar)
-
-**Dashboard & Widgets:**
-  `CnDashboardPage` (GridStack drag-drop layout) | `CnDashboardGrid` (layout engine) |
-  `CnWidgetWrapper` (widget shell) | `CnWidgetRenderer` (NC Dashboard API v1/v2) |
-  `CnChartWidget` (ApexCharts: area/line/bar/pie/donut/radial) |
-  `CnTableWidget` (data table widget) | `CnTileWidget` (quick-access tile) |
-  `CnInfoWidget` (label-value grid) | `CnKpiGrid` (responsive KPI layout) |
-  `CnStatsBlock` (metric card) | `CnStatsPanel` (stats sections) | `CnProgressBar` |
-  `CnObjectDataWidget` (schema-driven editable data grid, inline edit + save via objectStore) |
-  `CnObjectMetadataWidget` (read-only object metadata display)
-
-**UI Elements:**
-  `CnStatusBadge` | `CnEmptyState` | `CnIcon` (MDI) | `CnCard` | `CnDetailCard` |
-  `CnRowActions` | `CnTimelineStages` (workflow progression) |
-  `CnUserActionMenu` (user context menu) | `CnJsonViewer` (CodeMirror)
-
-**Detail Sidebar:**
-  `CnObjectSidebar` (Files/Notes/Tags/Tasks/Audit tabs) | `CnIndexSidebar` |
-  `CnNotesCard` (inline notes) | `CnTasksCard` (inline tasks)
-
-**Settings:**
-  `CnSettingsSection` + `CnVersionInfoCard` (MUST be first on admin pages) |
-  `CnSettingsCard` | `CnConfigurationCard` | `CnRegisterMapping`
-  User settings: `NcAppSettingsDialog` (NOT `NcDialog`)
-
-**Composables:**
-  `useListView` (search/filter/sort/pagination) | `useDetailView` (load/edit/delete) |
-  `useSubResource` (related items) | `useDashboardView` (widgets/layout/edit)
-
-**Store Plugins:**
-  `auditTrailsPlugin` | `relationsPlugin` | `filesPlugin` | `lifecyclePlugin` |
-  `selectionPlugin` | `searchPlugin` | `registerMappingPlugin`
-
-**Utilities:**
-  `columnsFromSchema()` | `filtersFromSchema()` | `fieldsFromSchema()` |
-  `formatValue()` | `buildHeaders()` | `buildQueryString()`
-
-### Page Construction Patterns (follow these recipes)
-
-**App.vue:** `NcContent` → 3 states: loading (`NcLoadingIcon`), no-OpenRegister (`NcEmptyContent`),
-  ready (`MainMenu` + `NcAppContent` + `router-view` + optional `CnIndexSidebar`).
-  Inject `sidebarState` for child components. `created()` calls `initializeStores()`.
-
-**MainMenu:** `NcAppNavigation` with `NcAppNavigationItem` per route (icon + name + `:to`).
-  Footer: `NcAppNavigationSettings` (gear foldout) with admin/config nav items.
-  Settings item emits `@click="$emit('open-settings')"` — opens `NcAppSettingsDialog` modal.
-  Do NOT route to `/settings` — in-app settings is a modal overlay, not a page.
-
-**Dashboard:** `CnDashboardPage` with `CnStatsBlock` KPIs (4 cards: open/overdue/value/completed),
-  status distribution chart, "My Work" list (grouped: overdue → due this week → rest).
-  Fetch all collections in parallel via `Promise.all`. Widget templates via `#widget-{id}` slots.
-
-**Index page:** `CnIndexPage` with `useListView(entityType, { sidebarState, objectStore })`.
-  Inject sidebarState. Row click → `$router.push({ name: 'EntityDetail', params: { id } })`.
-  Add button → new entity detail with id='new'.
-
-**Detail page:** Two modes — edit (form component) / view (`CnDetailPage` + `CnDetailCard` sections).
-  Header actions: Edit + Delete buttons. Related entities in table inside `CnDetailCard`.
-  Props: `entityId` from route. `isNew = entityId === 'new'`. Sidebar via `CnObjectSidebar`.
-  **Relations:** Every entity referenced in the spec MUST have a `CnDetailCard` section.
-  Use `fetchUsed` for reverse lookups (find objects that reference THIS entity) and
-  `fetchUses` for forward lookups (find objects THIS entity references).
-  If the spec lists a "linked X section", it MUST be implemented — not deferred or stubbed.
-
-**Settings — two surfaces, never a route:**
-  *Admin settings* (`/settings/admin/{appid}`): `AdminRoot.vue` rendered by `settings.js` entry point,
-  registered via `AdminSettings.php`. Layout: `CnVersionInfoCard` (FIRST) → `CnRegisterMapping` →
-  `CnSettingsSection` per feature. Load via `GET /api/settings`, save via `POST /api/settings`.
-  *In-app settings*: `UserSettings.vue` wrapping `NcAppSettingsDialog` — opened as a modal from the
-  gear menu (`@open-settings` event on MainMenu), handled in `App.vue` with `:open` / `@update:open`.
-  Do NOT create a `/settings` route. Do NOT create a standalone `SettingsView.vue` page component.
-
-**Router:** Flat routes (no nesting), all named, props via arrow function for params.
-  Routes: `/` (Dashboard), `/{entities}` (list), `/{entities}/:id` (detail).
-  No `/settings` route — settings is a modal (see Settings section above).
-
-**Store init:** `initializeStores()` in `store/store.js` — fetches settings, then calls
-  `objectStore.registerObjectType(name, schemaSlug, registerSlug)` for each entity.
-  Object store uses `createObjectStore` with plugins (files, auditTrails, relations).
-  Settings store: Pinia `defineStore` with `fetchSettings()` and `saveSettings()`.
-
-### ADR-005-security
-- Auth: Nextcloud built-in ONLY. NO custom login, sessions, tokens, password storage.
-- Admin check: `IGroupManager::isAdmin()` on BACKEND. Frontend-only checks = vulnerability.
-- Multi-tenant isolation: enforce at API/service level, not UI only.
-- NO PII in logs, error responses, or debug output.
-- Audit trails: use `$user->getUID()` — NEVER `$user->getDisplayName()` (mutable, spoofable).
-- Identity: always derive from `IUserSession` on backend — NEVER trust frontend-sent user IDs or display names.
-- File uploads: validate type + size before storage.
-- API responses: NO stack traces, SQL, or internal paths.
-- Test collections: NEVER commit default credentials — use env variable placeholders.
-
-### ADR-006-metrics
-- Every app: `GET /api/metrics` (Prometheus text, admin auth) + `GET /api/health` (JSON, public).
-- Metric names: `{app}_` prefix. MUST include `{app}_health_status` and `{app}_info`.
-- Health check MUST verify OpenRegister connectivity (for apps that depend on it).
-
-### ADR-007-i18n
-# ADR-007: Internationalization (i18n)
-
-## Status
-Accepted
-
-## Context
-All Conduction Nextcloud apps serve Dutch government users but must support multiple languages. We need a consistent approach to internationalization across all apps.
-
-## Decision
-
-### Primary Language: English
-- **English (en) is the source/primary language** for all code and translation keys.
-- All `t()` keys and `$this->l10n->t()` strings MUST be written in English.
-- `l10n/en.json` is the identity-mapped source file (key == value).
-- Hardcoded Dutch strings in code MUST be converted to English keys with Dutch translations in `nl.json`.
-
-### Required Languages
-- Minimum: English (en) + Dutch (nl) translations.
-- `l10n/en.json` and `l10n/nl.json` MUST exist in every app with a UI.
-- Both files MUST contain exactly the same keys, with zero gaps.
-
-### Frontend Translation
-- JS: `t(appName, 'key')` for singular, `n(appName, 'singular', 'plural', count)` for plurals.
-- `Vue.mixin({ methods: { t, n } })` for Options API components.
-- `<script setup>` components MUST import `t` directly from `@nextcloud/l10n` (mixin does not apply).
-
-### Backend Translation
-- PHP: `$this->l10n->t('key')` for user-facing messages in JSONResponse.
-- Controllers returning user-facing messages MUST inject `OCP\IL10N`.
-- Log messages, internal exceptions, and database values are NOT translated.
-
-### API and Data
-- API field names: always English (language-neutral data layer).
-- Date/number formatting: respect user locale via Nextcloud core.
-- Each app with OpenRegister: define `register-i18n` spec listing translatable fields.
-
-## Consequences
-- All apps maintain two translation files that must stay in sync.
-- Dutch strings used as translation keys (e.g., `t('app', 'Besluiten')`) are a violation — the English equivalent must be the key.
-- New features must include both `en.json` and `nl.json` entries before merging.
-
-### ADR-008-testing
-- Every new PHP service/controller → PHPUnit tests in `tests/Unit/` (≥3 methods).
-- Every new Vue component → test file (if test framework exists).
-- Every new API endpoint → Newman/Postman collection in `tests/integration/`.
-- Every spec scenario → browser test (GIVEN/WHEN/THEN verified via Playwright).
-- All tests MUST pass in `composer check:strict`.
-- Integration tests MUST cover error paths (403, 401, 400) — not just happy path (200).
-- Test collections: use env variable placeholders for credentials — NEVER hardcode defaults.
-
-### Smoke testing (before opening PR)
-
-After implementing, verify your code actually works — quality gates catch lint/types, not logic:
-
-1. Call each new API endpoint with `curl` — verify response shape and status code
-2. Test at least one error path per endpoint (missing param, wrong auth, invalid input)
-3. If the spec says a feature is deferred, verify it is NOT registered/enabled
-4. If tasks.md marks a task `[x]`, verify it is fully implemented — not a stub or TODO
-
-### Task completeness verification
-
-Before marking a task `[x]` in tasks.md or opening a PR:
-- Re-read every task in tasks.md
-- For each `[x]` task, verify the implementation exists AND works — not a placeholder
-- Stub components, empty relation sections, and TODO comments are NOT complete
-- If a task cannot be completed, leave it `[ ]` and explain in the PR description
-
-### ADR-009-docs
-- Every user-facing feature → docs in `docs/` with screenshots from running app.
-- English primary, Dutch recommended. Update docs when behavior changes.
-
-### ADR-010-nl-design
-- ALL UI: CSS custom properties from NL Design System tokens. NO hardcoded colors, fonts, spacing.
-- Theme switching: support `nldesign` app's token sets (Rijkshuisstijl, Utrecht, municipality-specific).
-- Components: `@nextcloud/vue` primary. Custom components styled via NL Design tokens only.
-- Scoped styles: ALL `<style>` blocks MUST use `scoped` attribute.
-- WCAG AA mandatory: keyboard-navigable, labelled forms, color not sole conveyor, alt text on images.
-- Responsive: work from 320px to 1920px. Critical features accessible at 768px.
-- Specs: reference token names ("primary action color") NOT hex values. Include a11y verification in ACs.
-- Exception: PDF generation (docudesk) may use fixed dimensions. Admin screens MAY simplify but MUST meet WCAG AA.
-
-### ADR-011-schema-standards
-- schema.org types/properties as primary vocabulary (`schema:Person`, `schema:Organization`, `schema:Event`).
-- Contact schemas: align with vCard properties (`fn`, `email`, `tel`, `adr`).
-- Dutch government fields: mapping layer translating between international standards and Dutch APIs (VNG, ZGW).
-- NO custom property names when schema.org equivalent exists.
-- Relations: OpenRegister relation mechanism (register + schema + objectId). NO foreign keys or embedded objects.
-- Versioning: removing/renaming properties = BREAKING → migration via repair step. Adding optional = non-breaking.
-- Specs MUST define data models using schema.org vocabulary; design docs MUST include schema definitions with types, required flags, relations.
-- Exception: app-specific workflow states (pipeline stages, process statuses) MAY use custom vocabularies.
-
-### ADR-012-deduplication
-- Before proposing new capability: search OpenRegister specs + services for overlap. Reference + justify if similar exists.
-- Design docs MUST include "Reuse Analysis" listing which OpenRegister services are leveraged.
-- If logic could benefit other apps → propose adding to OpenRegister core, not app-specific.
-- Tasks MUST include "Deduplication Check" verifying no overlap with:
-  ObjectService, RegisterService, SchemaService, ConfigurationService, shared specs, @conduction/nextcloud-vue.
-- Document findings even if "no overlap found".
-- Exception: OpenRegister checks internal duplication only. nldesign checks token sets. nextcloud-vue checks own components.
-
-### ADR-013-container-pool
-# ADR-013: Unified Container Pool
-
-**Status:** accepted
-**Date:** 2026-04-12
-
-## Context
-
-Specter (intelligence/research) and Hydra (build/review/merge) both run LLM workloads in Docker containers. Today they operate independently: Hydra spins up builder/reviewer/security containers on demand, Specter has a separate `run_llm_containers.sh` wrapper. Both compete for the same Claude Max rate limits.
-
-We want to unify these into a **single priority-scheduled container pool** so that:
-- Critical work (bugfixes, reviews) preempts lower-priority work (discovery, research)
-- A fixed number of containers (e.g. 10) run continuously, pulling from a shared queue
-- Token rotation and rate limit recovery happen at the pool level, not per-script
-- Adding a new workload type (audit, spec generation, test) is just a new queue entry
-
-## Decision
-
-### Container types (priority order)
-
-| Priority | Type | Source | Container image | Model |
-|----------|------|--------|-----------------|-------|
-| 1 | **bugfix** | Hydra: fix iteration after review failure | `hydra-builder` | sonnet |
-| 2 | **code-review** | Hydra: PR code review | `hydra-reviewer` | sonnet |
-| 3 | **security-review** | Hydra: PR security review | `hydra-security` | sonnet |
-| 4 | **build** | Hydra: initial spec build | `hydra-builder` | sonnet |
-| 5 | **audit** | Hydra: codebase audit | `hydra-builder` | sonnet |
-| 6 | **spec-generation** | Specter: push_spec_pipeline | `specter-llm-worker` | sonnet |
-| 7 | **schema-synthesis** | Specter: generate/dedup schemas | `specter-llm-worker` | haiku |
-| 8 | **classification** | Specter: classify/redistribute features | `specter-llm-worker` | haiku |
-| 9 | **translation** | Specter: translate requirements | `specter-llm-worker` | haiku |
-| 10 | **discovery** | Specter: research, feature extraction | `specter-llm-worker` | haiku |
-
-### Architecture
-
-```
-┌─────────────────────────────────────────────────────┐
-│  Scheduler (cron or daemon)                         │
-│                                                     │
-│  reads: queue table (postgres)                      │
-│  writes: container assignments, status updates      │
-│                                                     │
-│  ┌──────────────────────────────────────────┐       │
-│  │ Pool: 10 container slots                 │       │
-│  │                                          │       │
-│  │  slot-1: [bugfix]     ← highest prio     │       │
-│  │  slot-2: [code-review]                   │       │
-│  │  slot-3: [build]                         │       │
-│  │  slot-4: [build]                         │       │
-│  │  slot-5: [classify]                      │       │
-│  │  slot-6: [classify]                      │       │
-│  │  slot-7: [translate]                     │       │
-│  │  slot-8: [discovery]                     │       │
-│  │  slot-9: [idle]       ← waiting for work │       │
-│  │  slot-10: [idle]                         │       │
-│  └──────────────────────────────────────────┘       │
-│                                                     │
-│  Token rotation: credentials.json (work → private)  │
-│  Rate limit: pool-level tracking per account        │
-│  Preemption: low-prio containers stopped when       │
-│              high-prio work arrives and pool is full │
-└─────────────────────────────────────────────────────┘
-```
-
-### Queue table (future)
-
-```sql
-CREATE TABLE container_queue (
-    id SERIAL PRIMARY KEY,
-    type VARCHAR(50) NOT NULL,        -- bugfix, code-review, build, classify, etc.
-    priority INTEGER NOT NULL,         -- 1=highest
-    payload JSONB NOT NULL,            -- script args, spec slug, issue URL, etc.
-    status VARCHAR(20) DEFAULT 'pending', -- pending, running, completed, failed
-    container_id VARCHAR(100),         -- docker container name when running
-    token_account VARCHAR(50),         -- which OAuth account is assigned
-    created_at TIMESTAMP DEFAULT NOW(),
-    started_at TIMESTAMP,
-    completed_at TIMESTAMP,
-    exit_code INTEGER,
-    error_message TEXT
-);
-```
-
-### Phased rollout
-
-**Phase 1 (now):** All LLM calls containerized. Specter scripts run via `run_llm_containers.sh`. Hydra containers use `run_container_with_fallback`. Both read from `credentials.json`. No shared queue yet — each system schedules its own containers.
-
-**Phase 2:** Shared queue table. A single scheduler script replaces both `cron-hydra.sh` dispatch and `run_llm_containers.sh`. Pool size configurable. Priority enforcement by not starting low-prio work when high-prio is queued.
-
-**Phase 3:** Preemption. Running low-priority containers can be stopped (gracefully, with checkpoint) when high-priority work arrives and all slots are occupied. Container images support checkpoint/resume via DB state.
-
-### Current state (Phase 1)
-
-**Container images:**
-
-| Image | Size | Purpose |
-|-------|------|---------|
-| `conduction/nextcloud-test:stable31` | 1.5GB | Prebuild NC server + PostgreSQL + OpenRegister (cloned) |
-| `hydra-builder:latest` | 1.9GB | Code implementation: NC test env + Claude CLI + PHP + skills |
-| `hydra-reviewer:latest` | 1.3GB | Code review: Claude CLI + review skills |
-| `hydra-security:latest` | 1.9GB | Security review: Claude CLI + Semgrep + security skills |
-| `specter-spec-writer:latest` | ~800MB | Spec generation: Claude CLI + openspec CLI + skills (no PHP) |
-| `specter-llm-worker:latest` | ~500MB | Intelligence pipeline: Claude CLI + DB access |
-
-**Credential separation:**
-- **Specter:** `concurrentie-analyse/secrets/credentials.json` (work + private tokens)
-- **Hydra:** `hydra/secrets/credentials.json` (work token only)
-
-**Token detection:**
-- Container mode: uses exit code (0 = success, non-zero checks output for rate limit)
-- Local mode: checks output text for "rate limit" / "auth failed" strings
-
-**NC test environment:**
-- Prebuild image with PostgreSQL (matches production, not SQLite)
-- Builder `COPY --from=conduction/nextcloud-test` at build time
-- Entrypoint starts PG + enables OpenRegister at runtime
-- Each container gets its own isolated NC+PG instance
-
-**Spec generation flow:**
-- `push_spec_pipeline.py` prepares repos in parallel, generates in `specter-spec-writer` containers
-- Each spec gets its own container + clone (compartmentalized)
-- Dependency tiers control ordering: Phase 1 → Phase 2 → Phase 3 → Phase 4
-- Specs with met deps push to development directly (doc-only merge guard)
-- Issues created with `yolo` label → Hydra auto-builds, reviews, merges, closes issue
-
-## Consequences
-
-- All LLM calls go through containers — no direct `claude -p` from host scripts
-- Token management is centralized per system (Specter has private fallback, Hydra doesn't)
-- Container exit code determines token rotation (not mid-session JSONL text)
-- Prebuild NC image eliminates 30-60s clone overhead per builder container
-- Container images are the unit of deployment — version, test, rollback independently
-- ADR-000 convention: every repo's data model is at `openspec/architecture/adr-000-data-model.md`
-- `context-brief.md` in each change directory carries intelligence data through the full pipeline
-
-### ADR-014-licensing
-- Licence: EUPL-1.2 (European Union Public Licence). SPDX header on every source file.
-- `appinfo/info.xml`: MUST use `<licence>agpl</licence>` — Nextcloud app store does not recognise EUPL.
-- This is intentional dual-tagging, NOT a conflict. Do NOT change info.xml to eupl. Do NOT flag as review finding.
-- PHP: `// SPDX-License-Identifier: EUPL-1.2` after `<?php` opening tag.
-- Vue: `<!-- SPDX-License-Identifier: EUPL-1.2 -->` as first line.
-- JS: `// SPDX-License-Identifier: EUPL-1.2` as first line.
-- File header block: `@licence EUPL-1.2`, `@copyright {year} Conduction B.V.`, `@link https://conduction.nl`
-
-### ADR-015-common-patterns
-- Common Conduction patterns. These apply to ALL apps. Every item below was found 3+ times
-  across multiple code reviews. Get these right during implementation — not after review.
-- When fixing any pattern violation, ALWAYS generalize: grep for the same issue across ALL
-  files and fix every instance in one pass. Fixing one file while leaving the same issue in
-  nine others guarantees another review round.
-
-### OpenRegister ObjectService API
-- `findObject($register, $schema, $id)` — 3 positional args, register first
-- `findObjects($register, $schema, $params)` — 3 positional args, $params is filter array
-- `saveObject($register, $schema, $object)` — 3 positional args, $object is array
-- NEVER `getObject($id)` or `saveObject($data)` — those 1-arg signatures do not exist
-- When unsure, check the OpenRegister source or existing app code
-
-### Store registration (Vue/Pinia)
-- Register each entity type ONCE in `src/store/store.js` via `createObjectStore`
-- NEVER register in both `OBJECT_TYPES` and `ENTITY_STORES` — pick one pattern
-- Type names: kebab-case (`action-item`), NOT camelCase (`actionItem`)
-- Use platform `createObjectStore` — do NOT build custom stores (hand-rolled object.js)
-
-### Authorization enforcement
-- ALL mutation endpoints MUST have `IGroupManager::isAdmin()` check on backend
-- Settings endpoints: `#[AuthorizedAdminSetting]` or `@RequireAdmin` annotation
-- NEVER rely on frontend-only auth — always enforce on backend
-- User identity: derive from `IUserSession` — NEVER trust frontend-sent user IDs
-- Null dependency checks: throw 503, do NOT silently return empty response
-
-### Error responses
-- NEVER return `$e->getMessage()` to API — use static, generic error messages
-- Pattern: `catch (\Throwable $e) { return new JSONResponse(['message' => 'Operation failed'], 500); }`
-- Log the real error: `$this->logger->error('Context', ['exception' => $e]);`
-- Frontend: EVERY `await store.action()` MUST be in `try/catch` with user feedback
-
-### API calls & CSRF
-- Use `axios` from `@nextcloud/axios` for ALL API calls — it auto-attaches the CSRF token
-- NEVER use raw `fetch()` for mutations — missing requesttoken causes silent 403 failures
-- Pattern: `import axios from '@nextcloud/axios'` + `const { data } = await axios.post(url, payload)`
-
-### Vue component imports
-- NEVER import from `@nextcloud/vue` directly — use `@conduction/nextcloud-vue` which re-exports everything
-- EVERY component used in `<template>` MUST be imported AND listed in `components: {}`
-- Vue 2 silently renders unknown elements — a missing import = invisible runtime failure
-- Pre-commit check: for every `<NcFoo>` or `<CnFoo>` in template, verify the import exists
-
-### SPDX headers (see also ADR-014)
-- EVERY new file needs an SPDX header — apply to ALL new files in one pass
-- PHP: `// SPDX-License-Identifier: EUPL-1.2` after `<?php`
-- Vue: `<!-- SPDX-License-Identifier: EUPL-1.2 -->` as first line
-- JS: `// SPDX-License-Identifier: EUPL-1.2` as first line
-
-### Dependency management
-- When importing from a package, verify it exists in `package.json` before committing
-- `@nextcloud/auth` for `getRequestToken()` — add to dependencies if missing
-- Run `npm ci && npm run lint` to catch `n/no-extraneous-import` BEFORE pushing
-
-### Translations (i18n)
-- ALL user-visible strings: `this.t('appid', 'text')` in Vue, `$this->l->t('text')` in PHP
-- NEVER hardcode Dutch or English strings in templates, CSV headers, or notifications
-- NEVER bare `t()` in Vue — always `this.t()` (Options API)
-
-### Data patterns
-- Relations: verify `fetchUsed` vs `fetchUses` direction — wrong direction = empty cards
-- Lifecycle: use the service's `transitionLifecycle()` — NEVER `saveObject()` directly for status
-- Pagination: `_limit: 999` silently undercounts — use proper pagination or document the cap
-
-### Nextcloud UI patterns
-- NEVER `window.confirm()` or `window.alert()` — use `NcDialog` or `CnFormDialog`
-- NEVER read app state from DOM (`document.getElementById`, `dataset`) — use backend API
-- Audit trails: use `$user->getUID()` — NEVER `$user->getDisplayName()` (mutable, spoofable)
-- Deferred features: if spec says "defer to phase N", do NOT register/enable them in info.xml or anywhere else
-- Router: history mode with `generateUrl` base (see ADR-004). Deep link URLs must use path format, NOT hash format.
-- Relations: `fetchUsed` = reverse lookup (who references me), `fetchUses` = forward lookup (what do I reference)
-- Detail views: every spec-required "linked X section" MUST have a `CnDetailCard` — never stub or omit
-
-### Pre-commit verification (run before EVERY commit)
-
-Before committing, verify your code against these patterns:
-
-1. **SPDX headers**: `grep -rL 'SPDX-License-Identifier' src/ lib/ --include='*.php' --include='*.vue' --include='*.js'`
-   → Add headers to EVERY file missing one — all of them, not just one.
-2. **ObjectService calls**: `grep -rn 'findObject\|saveObject\|findObjects' lib/ --include='*.php'`
-   → Verify every call has 3 positional args: `($register, $schema, $idOrParams)`
-3. **Error responses**: `grep -rn 'getMessage()' lib/Controller/ --include='*.php'`
-   → Replace any `$e->getMessage()` in JSONResponse with a static error string
-4. **Auth checks**: For every POST/PUT/DELETE controller method, verify `IGroupManager::isAdmin()` is called
-5. **Store registration**: `grep -rn 'registerObjectType\|OBJECT_TYPES\|ENTITY_STORES' src/`
-   → Verify each entity registered exactly once, kebab-case names
-6. **Dependencies**: `npm run lint` — catches missing package.json entries
-7. **Translations**: `grep -rn "'" src/ --include='*.vue' | grep -v "this\.t\|import\|//\|console"` — scan for hardcoded strings
-8. **try/catch**: `grep -rn 'await.*Store\.' src/ --include='*.vue'` — verify every store call is wrapped
-9. **No raw fetch**: `grep -rn 'fetch(' src/ --include='*.vue' --include='*.js'` — must use `@nextcloud/axios`, not raw fetch (CSRF)
-10. **Import source**: `grep -rn "from '@nextcloud/vue'" src/` — must be zero matches. Use `@conduction/nextcloud-vue` instead.
-11. **Component imports**: for every `<NcFoo>` or `<CnFoo>` in templates, verify the component is imported AND in `components: {}`
-12. **Type slug consistency**: verify every entity type string across ALL files (store, search, routes, views) uses the same kebab-case slug — `grep -rn "agendaItem\|governanceBody\|actionItem" src/` should return zero matches
-13. **Translation keys**: `grep -rn "t('.*'," src/ --include='*.vue' --include='*.js'` — verify ALL t() keys are English, not Dutch. Dutch translations go in `l10n/nl.json`.
-14. **Route consistency**: verify every entity type referenced in search, navigation, or links has a matching named route in `src/router/`
-15. **Task completeness**: re-read tasks.md — every `[x]` task must be fully implemented, not a stub
-
-If ANY check fails, fix ALL instances (not just the first one) before committing.
-
-### ADR-017-component-composition
-# ADR-017: Component Composition Rules
-
-## Status
-Accepted
-
-## Date
-2026-04-14
-
-## Context
-
-Conduction apps share a Vue component library (`@conduction/nextcloud-vue`) that provides self-contained, higher-level components like `CnObjectDataWidget`, `CnStatsPanel`, `CnDetailPage`, and `CnTimelineStages`. These components internally render their own card wrappers (`CnDetailCard`), headers, and layout containers.
-
-Developers have been wrapping these self-contained components inside additional layout containers (e.g. `CnDetailCard` wrapping `CnObjectDataWidget`), producing a "card-in-card" visual artifact where headers and borders are doubled. This was found across Procest, Pipelinq, and earlier OpenCatalogi iterations.
-
-The same principle applies to `CnDetailPage` which renders its own `NcAppContent` wrapper — apps must not add another `NcAppContent` around it.
-
-## Decision
-
-### Self-contained components render their own container
-
-The following components are **self-contained** and MUST NOT be wrapped in `CnDetailCard`, `NcAppContent`, or other layout containers:
-
-| Component | Renders its own | Use directly inside |
-|---|---|---|
-| `CnObjectDataWidget` | `CnDetailCard` | `CnDetailPage` slot, `<div>`, or grid cell |
-| `CnObjectMetadataWidget` | `CnDetailCard` | `CnDetailPage` slot, `<div>`, or grid cell |
-| `CnStatsPanel` | Sections with headers | `CnDetailPage` slot or `<div>` |
-| `CnDetailPage` | `NcAppContent`-level layout | Directly in `<router-view>` |
-| `CnDashboardPage` | `NcAppContent`-level layout | Directly in `<router-view>` |
-| `CnIndexPage` | `NcAppContent`-level layout | Directly in `<router-view>` |
-| `CnTimelineStages` | Standalone timeline | Inside `CnDetailCard` or any container (no own card) |
-
-### How to identify self-contained components
-
-A component is self-contained if its template root is a card, panel, or page-level wrapper. Check the component source: if it starts with `<CnDetailCard>`, `<div class="cn-*-card">`, or similar, it manages its own container.
-
-### Correct patterns
-
-```vue
-<!-- CORRECT: CnObjectDataWidget renders its own card -->
-<CnObjectDataWidget
-  :schema="schema"
-  :object-data="data"
-  title="Case Information" />
-
-<!-- CORRECT: CnTimelineStages is NOT self-contained, wrap it -->
-<CnDetailCard :title="t('app', 'Status')">
-  <CnTimelineStages :stages="stages" :current-stage="current" />
-</CnDetailCard>
+- GIVEN 5 incoming contacts are waiting in the queue
+- WHEN the agent views the KCC werkplek dashboard
+- THEN the system MUST display the queue with caller/contact identification (if available), wait time per contact, and channel (telefoon/balie/chat)
+- AND contacts MUST be ordered by wait time descending (longest waiting first)
+
+---
+
+### Requirement: Citizen/Business Identification
+
+The system MUST allow agents to quickly identify a citizen or business during a contact, using BSN (via BRP) or KVK-nummer lookups.
+
+**Feature tier**: MVP
+
+#### Scenario: Identify citizen by BSN
+
+- GIVEN an agent handling an incoming phone call
+- WHEN the agent enters BSN "123456789" in the identification panel
+- THEN the system MUST query the BRP source via OpenConnector
+- AND display the citizen's name, address, date of birth, and registered municipality
+- AND automatically search for an existing Pipelinq client matching this BSN
+
+#### Scenario: Identify business by KVK number
+
+- GIVEN an agent handling an incoming contact from a business
+- WHEN the agent enters KVK number "12345678" in the identification panel
+- THEN the system MUST query the KVK source via OpenConnector
+- AND display the business name, address, legal form, and authorized signatories
+- AND automatically search for an existing Pipelinq client matching this KVK number
+
+#### Scenario: Search by name or phone number
+
+- GIVEN an agent who does not have a BSN or KVK number
+- WHEN the agent searches by name "Jansen" or phone number "+31 6 12345678"
+- THEN the system MUST search existing Pipelinq clients by name and telephone
+- AND display matching results ranked by relevance
+- AND allow the agent to select a match or create a new client
+
+#### Scenario: No matching client found
+
+- GIVEN an agent has identified a citizen via BRP with BSN "987654321"
+- WHEN no existing Pipelinq client is linked to this BSN
+- THEN the system MUST offer a "Nieuwe klant aanmaken" action
+- AND pre-populate the new client form with data from the BRP response (name, address)
+
+---
+
+### Requirement: Open Cases View
+
+The system MUST display all open zaken (cases) for the identified citizen/business directly in the KCC werkplek, so the agent can see context without switching applications.
+
+**Feature tier**: MVP
+
+#### Scenario: Display open cases for identified citizen
+
+- GIVEN a citizen "Jan de Vries" has been identified with 3 open zaken
+- WHEN the agent views the client context panel
+- THEN the system MUST display all 3 open zaken with: zaaktype, status, start date, and assigned handler
+- AND each zaak MUST be clickable to view details
+
+#### Scenario: Display case details inline
+
+- GIVEN an agent viewing the open cases for a citizen
+- WHEN the agent clicks on zaak "Omgevingsvergunning #2024-001"
+- THEN the system MUST display case details in a side panel: zaaktype, status history, documents, and assigned handler
+- AND the agent MUST NOT be navigated away from the KCC werkplek
+
+#### Scenario: No open cases
+
+- GIVEN a citizen "Maria Garcia" has been identified but has no open zaken
+- WHEN the agent views the client context panel
+- THEN the system MUST display "Geen openstaande zaken" with an option to create a new zaak
+
+---
+
+### Requirement: Contact Moment Registration
+
+The system MUST allow agents to register a contactmoment during or immediately after a citizen interaction, capturing channel, subject, and outcome.
+
+**Feature tier**: MVP
+
+#### Scenario: Register a phone contact
+
+- GIVEN an agent has identified citizen "Jan de Vries" during a phone call
+- WHEN the agent fills in the contactmoment form with kanaal "telefoon", onderwerp "Vraag over vergunning", and toelichting "Burger belt over status bouwvergunning Keizersgracht 100"
+- THEN the system MUST create an OpenRegister contactmoment object linked to the client
+- AND the contactmoment MUST record the agent identity, timestamp, channel, and duration
+- AND the contactmoment MUST appear in the client's interaction history
+
+#### Scenario: Link contact to existing case
+
+- GIVEN an agent is registering a contactmoment for citizen "Jan de Vries" who has open zaak "Bouwvergunning #2024-001"
+- WHEN the agent selects the zaak in the "Koppel aan zaak" field
+- THEN the contactmoment MUST store a reference to the zaak UUID
+- AND the contactmoment MUST appear in both the client history and the zaak history
+
+#### Scenario: Register contact without identification
+
+- GIVEN a caller who refuses to identify themselves
+- WHEN the agent registers the contactmoment with kanaal "telefoon" and onderwerp "Anonieme melding overlast"
+- THEN the system MUST allow creating a contactmoment without a linked client
+- AND the contactmoment MUST still record agent, timestamp, channel, and content
+
+---
+
+### Requirement: Backoffice Routing
+
+The system MUST allow agents to route a contact to a backoffice department or specialist when the question cannot be resolved at the frontoffice.
+
+**Feature tier**: MVP
+
+#### Scenario: Route to backoffice department
+
+- GIVEN an agent handling a complex question about "bestemmingsplan wijziging"
+- WHEN the agent clicks "Doorsturen naar backoffice" and selects department "Ruimtelijke Ordening"
+- THEN the system MUST create a task/terugbelverzoek assigned to the selected department
+- AND the task MUST include the contactmoment summary, client reference, and priority
+- AND the agent MUST receive confirmation that the routing was successful
+
+#### Scenario: Route to specific colleague
+
+- GIVEN an agent handling a follow-up question that was previously handled by colleague "Petra Bakker"
+- WHEN the agent routes to "Petra Bakker" specifically
+- THEN the system MUST create a task assigned to that specific user
+- AND Petra Bakker MUST receive a notification about the new task
+
+---
+
+### Requirement: Contact Timer
+
+The system MUST display a running timer during active contacts, helping agents track handling time for SLA and reporting purposes.
+
+**Feature tier**: V1
+
+#### Scenario: Timer starts on contact initiation
+
+- GIVEN an agent starts a new contact in the KCC werkplek
+- WHEN the "Nieuw contact" action is triggered
+- THEN a visible timer MUST start counting from 00:00
+- AND the timer MUST be prominently displayed in the werkplek header
+
+#### Scenario: Timer color coding for SLA
+
+- GIVEN an agent is handling a phone contact with a 5-minute SLA target
+- WHEN the timer reaches 4:00 (80% of SLA)
+- THEN the timer MUST change to an orange/warning color
+- AND when the timer exceeds 5:00, it MUST change to red
+- AND the SLA target MUST be configurable per channel type
+
+#### Scenario: Timer stops and records duration
+
+- GIVEN an agent has been handling a contact for 3 minutes 42 seconds
+- WHEN the agent completes the contactmoment registration and clicks "Afronden"
+- THEN the timer MUST stop
+- AND the duration (3:42) MUST be stored on the contactmoment object
+- AND the duration MUST be available for reporting
+
+---
+
+### Requirement: Quick Actions
+
+The system MUST provide quick-action buttons for common KCC operations to minimize clicks and handling time.
+
+**Feature tier**: V1
+
+#### Scenario: Quick action to create a new case
+
+- GIVEN an agent has identified a citizen and determined a new zaak is needed
+- WHEN the agent clicks the "Nieuwe zaak" quick action
+- THEN a zaak creation form MUST open pre-populated with the client reference
+- AND the agent MUST be able to select a zaaktype from a categorized list
+
+#### Scenario: Quick action to send status update
+
+- GIVEN a citizen calls about the status of zaak "Paspoort aanvraag #2024-050"
+- WHEN the agent clicks "Status mededelen" on the zaak
+- THEN the system MUST display the current status in a citizen-friendly format
+- AND the agent MUST be able to mark the contactmoment as "Status informatieverzoek - afgehandeld"
+
+---
+
+## ADDED Requirements
+
+---
+
+### Requirement: Workspace Layout and Navigation
+
+The KCC werkplek MUST present a structured multi-panel layout that allows agents to identify a client, view context, and register a contact simultaneously without leaving the workspace.
+
+**Feature tier**: MVP
+
+#### Scenario: Three-panel workspace layout
+
+- GIVEN an agent opens the KCC werkplek and begins a new contact
+- WHEN the workspace is fully loaded
+- THEN the system MUST display three panels: an identification/search panel (left), a client context panel with klantbeeld-360 (center), and an active contact registration panel (right)
+- AND each panel MUST be independently scrollable so the agent can browse case history while completing the contact form
+- AND the layout MUST be responsive, collapsing to a tabbed view on screens narrower than 1280px
+
+#### Scenario: Panel resizing for focus
+
+- GIVEN an agent is reviewing a lengthy case history in the center panel
+- WHEN the agent drags the panel divider to expand the center panel
+- THEN the system MUST resize panels proportionally while maintaining a minimum width of 300px per panel
+- AND panel size preferences MUST persist across sessions via Nextcloud user preferences
+
+#### Scenario: Keyboard navigation between panels
+
+- GIVEN an agent is working in the identification panel
+- WHEN the agent presses Tab or a configurable keyboard shortcut (e.g., Ctrl+1/2/3)
+- THEN focus MUST move to the corresponding panel
+- AND all interactive elements within each panel MUST be reachable via keyboard (WCAG AA)
+
+---
+
+### Requirement: 360-degree Klantbeeld Integration
+
+The KCC werkplek MUST embed the klantbeeld-360 view (see klantbeeld-360 spec) in the center panel, showing all interactions, cases, documents, and notes for the identified client in a unified timeline.
+
+**Feature tier**: MVP
+**Cross-reference**: `klantbeeld-360/spec.md`
+
+#### Scenario: Klantbeeld loads automatically after identification
+
+- GIVEN an agent has identified citizen "Suzanne Moulin" via BSN 999993653
+- WHEN the identification is confirmed and a matching Pipelinq client exists
+- THEN the center panel MUST automatically load the klantbeeld-360 for this client
+- AND the klantbeeld MUST show: contact history (most recent first), open zaken, linked documents, and internal notes
+- AND loading MUST complete within 2 seconds to maintain agent flow
+
+#### Scenario: Klantbeeld shows interaction timeline
+
+- GIVEN the klantbeeld is loaded for a client with 15 previous contactmomenten and 4 zaken
+- WHEN the agent scrolls the timeline
+- THEN the system MUST display all interactions in reverse chronological order, mixing contactmomenten and zaak status changes
+- AND each entry MUST show: date/time, channel icon, handling agent, subject, and outcome
+- AND the agent MUST be able to filter the timeline by channel type (telefoon/email/balie) or by date range
+
+#### Scenario: Klantbeeld for new (unknown) client
+
+- GIVEN the agent has created a new client during this contact (no prior history)
+- WHEN the klantbeeld panel loads
+- THEN the system MUST display "Eerste contact" with an empty timeline
+- AND the current contact being registered MUST appear as the first entry in the timeline
+
+---
+
+### Requirement: Quick Search Across All Entities
+
+The system MUST provide a universal search bar in the werkplek header that searches across clients, contactmomenten, zaken, and kennisartikelen simultaneously.
+
+**Feature tier**: MVP
+
+#### Scenario: Search by client name returns unified results
+
+- GIVEN an agent types "Jansen" in the universal search bar
+- WHEN the search is submitted (after 300ms debounce)
+- THEN the system MUST return results grouped by entity type: Klanten, Zaken, Contactmomenten, Kennisartikelen
+- AND each result group MUST show a maximum of 5 items with a "Toon alle X resultaten" link
+- AND client results MUST show name, client type (persoon/organisatie), and most recent contact date
+
+#### Scenario: Search by zaak number
+
+- GIVEN an agent types "2024-001" in the universal search bar
+- WHEN the search is submitted
+- THEN the system MUST prioritize zaak results matching the zaak identification number
+- AND clicking a zaak result MUST load the linked client's klantbeeld and highlight the zaak in the context panel
+
+#### Scenario: Search by phone number with normalization
+
+- GIVEN an agent types "0612345678" in the universal search bar
+- WHEN the search is submitted
+- THEN the system MUST normalize the phone number (to "+31 6 12345678" format) before searching
+- AND match against client telephone numbers, contact person telephone numbers, and contactmoment metadata
+
+---
+
+### Requirement: Call Logging Workflow
+
+The system MUST support a structured call logging workflow that guides agents through intake, handling, and wrap-up phases of a phone contact.
+
+**Feature tier**: MVP
+
+#### Scenario: Intake phase captures initial information
+
+- GIVEN an agent clicks "Nieuw telefoongesprek" to start a phone contact
+- WHEN the contact registration panel opens
+- THEN the system MUST start the contact timer, set channel to "telefoon" and direction to "inkomend"
+- AND the identification panel MUST gain focus so the agent can immediately search for the caller
+- AND the system MUST auto-generate a contact reference number (e.g., "CM-2024-00042")
+
+#### Scenario: Handling phase allows notes and actions
+
+- GIVEN an agent has identified the caller and is in the handling phase
+- WHEN the agent types notes in the "Toelichting" field
+- THEN the system MUST auto-save the draft every 10 seconds to prevent data loss
+- AND the agent MUST be able to add structured tags (e.g., "status-vraag", "klacht", "informatievraag") from a predefined tag list
+- AND the agent MUST be able to open the kennisbank in a side panel without losing the current contact form state
+
+#### Scenario: Wrap-up phase completes the contact
+
+- GIVEN an agent has finished speaking with the caller
+- WHEN the agent clicks "Afronden gesprek"
+- THEN the system MUST display a wrap-up form with: onderwerp (required), resultaat dropdown (afgehandeld/doorverwezen/terugbelverzoek/niet bereikbaar), toelichting (required if resultaat is "doorverwezen" or "terugbelverzoek")
+- AND the system MUST stop the timer and record the total duration
+- AND after submission, the werkplek MUST reset to the ready state for the next contact
+
+---
+
+### Requirement: Email Contact Registration
+
+The system MUST allow agents to register email-based contacts, linking them to Nextcloud Mail messages where possible.
+
+**Feature tier**: V1
+**Cross-reference**: `omnichannel-registratie/spec.md`
+
+#### Scenario: Register email from Nextcloud Mail link
+
+- GIVEN an agent has received a citizen email in Nextcloud Mail about zaak "Paspoort aanvraag"
+- WHEN the agent clicks "Registreer als contactmoment" from the KCC werkplek and pastes the mail message ID or selects from recent emails
+- THEN the system MUST create a contactmoment with kanaal "email", auto-fill the subject from the email subject line, and store the email thread ID as metadata
+- AND the system MUST link the email as a reference on the contactmoment object
+
+#### Scenario: Email contact with attachment handling
+
+- GIVEN a citizen has sent an email with 2 PDF attachments (identity document, proof of address)
+- WHEN the agent registers this email as a contactmoment
+- THEN the system MUST offer to save the attachments to the client's Nextcloud Files folder
+- AND if the agent selects a linked zaak, the attachments MUST also be registerable as zaak documents
+
+---
+
+### Requirement: Walk-in (Balie) Registration
+
+The system MUST support registering walk-in contacts at a physical service counter, including queue ticket tracking.
+
+**Feature tier**: V1
+**Cross-reference**: `omnichannel-registratie/spec.md`
+
+#### Scenario: Register walk-in contact with queue number
+
+- GIVEN a citizen arrives at the service counter with queue ticket "B042" at location "Stadhuis Centrum"
+- WHEN the agent selects channel "Balie" and enters the queue ticket number
+- THEN the system MUST create a contactmoment with kanaal "balie" and metadata containing location and queue number
+- AND the timer MUST start from the moment the agent begins the interaction (not from when the citizen took the ticket)
+
+#### Scenario: Walk-in identification via ID document
+
+- GIVEN a citizen at the counter presents a physical identity document
+- WHEN the agent manually enters the BSN from the document into the identification panel
+- THEN the system MUST perform the same BRP lookup as for phone contacts
+- AND the system MUST log that identification was performed via "fysiek identiteitsdocument" in the contactmoment metadata
+
+---
+
+### Requirement: Channel Switching During Contact
+
+The system MUST allow agents to switch or escalate a contact from one channel to another (e.g., phone to email, phone to in-person appointment) while maintaining a single contactmoment record.
+
+**Feature tier**: V1
+
+#### Scenario: Phone contact results in email follow-up
+
+- GIVEN an agent is handling a phone contact with citizen "Jan de Vries" about a document request
+- WHEN the agent determines that documents need to be sent via email
+- THEN the agent MUST be able to add a secondary channel "email" to the contactmoment
+- AND the contactmoment MUST record both channels with timestamps: "telefoon: 14:00-14:05, email: 14:06"
+- AND the contactmoment summary MUST indicate the channel transition
+
+#### Scenario: Phone contact escalated to balie appointment
+
+- GIVEN an agent cannot resolve a question by phone and the citizen needs to visit in person
+- WHEN the agent clicks "Plan balieafspraak"
+- THEN the system MUST open an appointment creation form (integrated with Nextcloud Calendar) pre-populated with the client reference and contact subject
+- AND the original contactmoment MUST record the outcome as "Doorverwezen naar balie" with a link to the created appointment
+
+---
+
+### Requirement: Knowledge Base Integration in Workspace
+
+The system MUST integrate the kennisbank (see kennisbank spec) directly into the KCC werkplek so agents can search for answers without leaving the workspace.
+
+**Feature tier**: V1
+**Cross-reference**: `kennisbank/spec.md`
+
+#### Scenario: Context-aware knowledge base search
+
+- GIVEN an agent is handling a contact about "paspoort verlengen" and has filled in onderwerp "Paspoort"
+- WHEN the agent clicks the kennisbank icon or presses a keyboard shortcut (e.g., Ctrl+K)
+- THEN a knowledge base search panel MUST open within the werkplek (overlay or side panel)
+- AND the search field MUST be pre-populated with the current onderwerp text
+- AND results MUST be ranked by relevance, showing article title, excerpt, and last-updated date
+
+#### Scenario: Insert FAQ answer into contact notes
+
+- GIVEN the agent has found knowledge article "Paspoort aanvragen - procedure en kosten"
+- WHEN the agent clicks "Gebruik antwoord" on the article
+- THEN the system MUST insert the article's summary text into the contactmoment toelichting field
+- AND the system MUST add a reference to the article on the contactmoment (for tracking which articles are used most)
+- AND the agent MUST be able to edit the inserted text before completing the contact
+
+#### Scenario: No relevant article found
+
+- GIVEN an agent searches the kennisbank for "vluchtelingenopvang procedure" and no matching articles exist
+- WHEN zero results are returned
+- THEN the system MUST display "Geen artikelen gevonden" with a "Suggestie indienen" button
+- AND clicking "Suggestie indienen" MUST create a kennisbank suggestion tagged with the search query and linked contactmoment
+
+---
+
+### Requirement: Escalation to Backoffice with SLA Tracking
+
+The system MUST support escalation workflows that transfer contacts to backoffice with defined SLA targets and status tracking visible to the originating KCC agent.
+
+**Feature tier**: V1
+
+#### Scenario: Escalation with priority and SLA assignment
+
+- GIVEN an agent determines a contact requires specialist handling and selects "Escaleren"
+- WHEN the agent fills in the escalation form with department "Juridische Zaken", priority "Hoog", and reason "Burger dreigt met bezwaarschrift"
+- THEN the system MUST create an escalation task with an SLA deadline based on the priority (Hoog = 4 uur, Normaal = 24 uur, Laag = 72 uur)
+- AND the task MUST include the full contactmoment content, client reference, and any linked zaken
+- AND the originating agent MUST receive a Nextcloud notification when the escalation is picked up by backoffice
+
+#### Scenario: View escalation status from werkplek
+
+- GIVEN an agent previously escalated a contact for "Jan de Vries" to Juridische Zaken 2 hours ago
+- WHEN the agent opens the KCC werkplek and searches for "Jan de Vries"
+- THEN the klantbeeld MUST show the escalation with current status (Nieuw/In behandeling/Afgerond), assigned backoffice handler, and remaining SLA time
+- AND if the SLA deadline is within 1 hour, the escalation MUST be highlighted with a warning indicator
+
+#### Scenario: Citizen calls back about escalated issue
+
+- GIVEN citizen "Jan de Vries" calls back asking about the escalated issue
+- WHEN the agent identifies the citizen and sees the open escalation in the klantbeeld
+- THEN the system MUST display the escalation details including any backoffice notes added since escalation
+- AND the agent MUST be able to register a new contactmoment linked to the same escalation
+- AND the new contactmoment MUST have a tag "Terugkoppeling escalatie"
+
+---
+
+### Requirement: SLA Timer Display
+
+The system MUST display SLA-related timers and deadlines for active contacts, open tasks, and pending escalations to help agents prioritize their work.
+
+**Feature tier**: V1
+
+#### Scenario: Active contact SLA timer in header
+
+- GIVEN an agent is handling a phone contact with a configured SLA of 5 minutes
+- WHEN the contact has been active for 3 minutes
+- THEN the werkplek header MUST display: elapsed time "03:00", SLA target "05:00", and a progress bar at 60% (green)
+- AND the progress bar MUST turn orange at 80% (04:00) and red at 100% (05:00)
+
+#### Scenario: Pending task SLA countdown
+
+- GIVEN the agent's task queue contains 3 terugbelverzoeken with different deadlines
+- WHEN the agent views the task queue widget on the dashboard
+- THEN each task MUST show a countdown to its SLA deadline (e.g., "nog 2u 15m")
+- AND tasks MUST be sorted by SLA urgency (nearest deadline first)
+- AND overdue tasks MUST be visually highlighted in red with "Verlopen" label
+
+---
+
+### Requirement: Call Wrap-up Form
+
+The system MUST provide a structured wrap-up form at the end of each contact that captures outcome, follow-up actions, and quality data.
+
+**Feature tier**: V1
+
+#### Scenario: Mandatory wrap-up fields
+
+- GIVEN an agent clicks "Afronden" to complete a phone contact
+- WHEN the wrap-up form is displayed
+- THEN the system MUST require: resultaat (afgehandeld/doorverwezen/terugbelverzoek/escalatie), onderwerp category (from taxonomy), and a brief summary
+- AND optional fields MUST include: follow-up date, linked zaak, internal notes, and client satisfaction score (1-5 if surveyed)
+- AND the form MUST NOT allow submission without the required fields
+
+#### Scenario: Quick wrap-up for simple status inquiries
+
+- GIVEN an agent has handled a simple status inquiry lasting under 2 minutes
+- WHEN the agent clicks "Snel afronden"
+- THEN the system MUST offer a simplified one-click wrap-up with preset: resultaat "Afgehandeld", category "Status informatieverzoek"
+- AND the agent MUST be able to override these defaults if needed
+
+#### Scenario: Wrap-up triggers follow-up task creation
+
+- GIVEN an agent selects resultaat "Terugbelverzoek" in the wrap-up form
+- WHEN the agent fills in follow-up date "morgen 10:00" and target "Afdeling Burgerzaken"
+- THEN the system MUST automatically create a terugbelverzoek task linked to the contactmoment and client
+- AND the task MUST appear in the target department's task queue with the specified deadline
+- AND the originating agent MUST receive a notification when the callback is completed
+
+---
+
+### Requirement: Agent Performance Metrics
+
+The system MUST provide real-time and historical performance metrics for individual agents and the KCC team as a whole.
+
+**Feature tier**: V1
+**Tender frequency**: 51/52 (98%) require contactmoment reporting
+
+#### Scenario: Agent personal dashboard statistics
+
+- GIVEN agent "Lisa van Dam" has handled 23 contacts today across phone (18), email (3), and balie (2)
+- WHEN she views her personal statistics panel on the KCC werkplek
+- THEN the system MUST display: total contacts today (23), breakdown by channel, average handling time, first-call resolution rate (% of contacts with resultaat "Afgehandeld"), and comparison to her 30-day average
+
+#### Scenario: Team overview for supervisor
+
+- GIVEN a KCC supervisor with the "kcc-supervisor" role
+- WHEN they open the team performance view
+- THEN the system MUST display a dashboard with: agents currently online, contacts waiting in queue, average wait time, contacts handled today (per agent), current SLA compliance percentage
+- AND the supervisor MUST be able to drill down into individual agent statistics
+
+#### Scenario: Historical reporting export
+
+- GIVEN a KCC manager wants to report on last month's performance
+- WHEN they access the reporting view and select date range "1 feb 2025 - 28 feb 2025"
+- THEN the system MUST generate a report with: total contacts per channel, average handling time per channel, first-call resolution rate, escalation rate, busiest hours/days, and top 10 contact subjects
+- AND the report MUST be exportable as CSV and PDF
+
+---
+
+### Requirement: Queue Management
+
+The system MUST provide queue management capabilities for distributing incoming contacts across available KCC agents.
+
+**Feature tier**: V1
+
+#### Scenario: View current queue status
+
+- GIVEN 8 contacts are waiting in the queue and 5 agents are online
+- WHEN any agent views the queue management panel
+- THEN the system MUST display: total items in queue (8), average wait time, longest waiting contact, and available agent count
+- AND queue items MUST show: channel, wait time, client name (if identified), and subject (if known)
+
+#### Scenario: Agent picks up next contact from queue
+
+- GIVEN an agent has finished their previous contact and is ready for the next
+- WHEN the agent clicks "Volgende contact" or the queue auto-assigns
+- THEN the system MUST assign the longest-waiting contact to this agent
+- AND the werkplek MUST automatically open the contact with the timer started and identification panel focused
+- AND the queue item MUST be removed from other agents' queue views in real time
+
+#### Scenario: Priority queue for returning citizens
+
+- GIVEN a citizen "Jan de Vries" calls back within 30 minutes of a previous contact that was not resolved
+- WHEN the system detects the phone number matches a recent unresolved contactmoment
+- THEN the queue MUST flag this contact as "Terugkerende beller" with elevated priority
+- AND the system SHOULD attempt to route to the same agent who handled the previous contact
+
+---
+
+### Requirement: Multi-language Support for Citizen Interaction
+
+The system MUST support agents serving citizens in multiple languages, with the workspace UI in Dutch (primary) and English, and tools to assist with non-Dutch-speaking citizens.
+
+**Feature tier**: Enterprise
+
+#### Scenario: Workspace language switching
+
+- GIVEN an agent's Nextcloud account is configured with locale "nl"
+- WHEN the agent opens the KCC werkplek
+- THEN the workspace MUST render in Dutch (all labels, buttons, system messages)
+- AND the agent MUST be able to switch the workspace language to English via a language selector
+- AND all user-entered content (contactmoment notes, subject) MUST remain in the language the agent typed
+
+#### Scenario: Multi-language contact registration
+
+- GIVEN an agent is helping an English-speaking citizen
+- WHEN the agent registers the contactmoment
+- THEN the agent MUST be able to tag the contact with language "Engels"
+- AND the language tag MUST be stored on the contactmoment for reporting on non-Dutch contacts
+- AND the kennisbank search MUST prioritize articles in the tagged language if available
+
+#### Scenario: Language statistics in reporting
+
+- GIVEN the KCC has served citizens in 4 languages this month (Nederlands, Engels, Arabisch, Turks)
+- WHEN a supervisor views the reporting dashboard
+- THEN the system MUST show contact volume per language
+- AND the report MUST highlight languages without kennisbank coverage so content gaps can be addressed
+
+---
+
+### Requirement: Contextual Contact History
+
+The system MUST display the full contact history for the current client inline within the workspace, enabling agents to reference previous interactions without opening separate screens.
+
+**Feature tier**: MVP
+
+#### Scenario: Recent contact summary on identification
+
+- GIVEN an agent identifies citizen "Suzanne Moulin" who had 3 contacts in the last 7 days
+- WHEN the client is loaded in the workspace
+- THEN the system MUST immediately show a "Recente contacten" banner with the 3 most recent contacts: date, channel, subject, and handling agent
+- AND the agent MUST be able to expand any contact to see the full toelichting and outcome
+
+#### Scenario: Filter contact history by subject or channel
+
+- GIVEN a client "Jan de Vries" has 50+ contactmomenten over the past year
+- WHEN the agent wants to find previous contacts about "bouwvergunning"
+- THEN the agent MUST be able to filter the contact history by keyword, channel, date range, or handling agent
+- AND filtered results MUST highlight the matching terms within the contact summaries
+
+#### Scenario: Contact history shows linked documents and tasks
+
+- GIVEN a previous contactmoment for this client resulted in a terugbelverzoek and a document upload
+- WHEN the agent expands that contactmoment in the history
+- THEN the system MUST show the linked terugbelverzoek with its current status (Nieuw/In behandeling/Afgerond)
+- AND the system MUST show the linked document with a click-to-open link (opening in Nextcloud Files)
+
+---
+
+### Requirement: Agent Availability and Status
+
+The system MUST allow agents to set their availability status, which affects queue assignment and team visibility.
+
+**Feature tier**: V1
+
+#### Scenario: Agent sets status to available
+
+- GIVEN an agent has logged into the KCC werkplek
+- WHEN the agent sets their status to "Beschikbaar"
+- THEN the system MUST include this agent in the queue assignment rotation
+- AND the agent's status MUST be visible to supervisors in the team overview
+- AND the status change MUST be logged for workforce management reporting
+
+#### Scenario: Agent sets status to wrap-up
+
+- GIVEN an agent has just finished a complex contact and needs administrative time
+- WHEN the agent sets their status to "Nawerk"
+- THEN the system MUST exclude this agent from new queue assignments for a configurable duration (default: 3 minutes)
+- AND the nawerk timer MUST be visible in the werkplek header
+- AND after the nawerk period expires, status MUST automatically revert to "Beschikbaar" (with agent override option)
+
+#### Scenario: Agent goes on break
+
+- GIVEN an agent selects status "Pauze"
+- WHEN the status changes
+- THEN the system MUST exclude the agent from queue assignment
+- AND if the agent has any pending unfinished contacts, the system MUST warn "U heeft nog een open contact" before allowing the status change
+- AND break duration MUST be tracked for workforce reporting
+
+---
+
+### Current Implementation Status
+
+**NOT implemented.** No KCC werkplek (agent workspace) exists in the codebase.
+
+- No dedicated KCC agent landing screen or route.
+- No `contactmoment` schema in `lib/Settings/pipelinq_register.json` -- the register does not include this entity.
+- No citizen/business identification UI (BSN/KVK lookup).
+- No BRP or KVK API integration for identity verification (though `lib/Service/KvkApiClient.php` exists for prospect discovery, it is not used for KCC identification).
+- No open cases/zaken view integrated into the workspace.
+- No contact moment registration form.
+- No backoffice routing mechanism.
+- No contact timer component.
+- No quick-action buttons for KCC operations.
+- No queue management or display.
+- The existing `request` entity with `channel` property provides basic intake channel tracking, but is not the same as a VNG `Contactmoment`.
+- The existing client search functionality (`ClientSearchWidget`) could serve as a foundation for citizen identification, but lacks BSN/KVK lookup.
+
+**Mock Registers (dependency):** This spec depends on mock BRP and KVK registers being available in OpenRegister for development and testing. These registers are available as JSON files that can be loaded on demand from `openregister/lib/Settings/`. Production deployments should connect to the actual Haal Centraal BRP API and KVK Handelsregister API via OpenConnector.
+
+### Using Mock Register Data
+
+This spec depends on the **BRP** and **KVK** mock registers for citizen/business identification.
+
+**Loading the registers:**
+```bash
+# Load BRP register (35 persons, register slug: "brp", schema: "ingeschreven-persoon")
+docker exec -u www-data nextcloud php occ openregister:load-register /var/www/html/custom_apps/openregister/lib/Settings/brp_register.json
+
+# Load KVK register (16 businesses + 14 branches, register slug: "kvk", schemas: "maatschappelijke-activiteit", "vestiging")
+docker exec -u www-data nextcloud php occ openregister:load-register /var/www/html/custom_apps/openregister/lib/Settings/kvk_register.json
 ```
 
-### Anti-patterns
+**Test data for this spec's use cases:**
+- **Citizen identification by BSN**: BSN `999993653` (Suzanne Moulin) -- test BSN lookup in identification panel, verify name/address/municipality display
+- **Citizen identification by BSN**: BSN `999992570` (Albert Vogel, man with partner and child) -- test person with partner info
+- **Business identification by KVK**: KVK `69599084` (Test EMZ Dagobert, Amsterdam) -- test KVK lookup, verify business name/address/legal form display
+- **Business identification by KVK**: KVK `68727720` (Test NV Katrien, Veendam) -- test NV legal form display
+- **No match scenario**: BSN `000000000` -- test "no matching client" flow, verify "Nieuwe klant aanmaken" pre-population
 
-```vue
-<!-- WRONG: Double card wrapping -->
-<CnDetailCard :title="t('app', 'Case Information')">
-  <CnObjectDataWidget :schema="schema" :object-data="data" />
-</CnDetailCard>
+**Querying mock data:**
+```bash
+# Identify citizen by BSN
+curl "http://localhost:8080/index.php/apps/openregister/api/objects/{brp_register_id}/{person_schema_id}?_search=999993653" -u admin:admin
 
-<!-- WRONG: Double page wrapping -->
-<NcAppContent>
-  <CnDetailPage :title="title">...</CnDetailPage>
-</NcAppContent>
+# Identify business by KVK number
+curl "http://localhost:8080/index.php/apps/openregister/api/objects/{kvk_register_id}/{business_schema_id}?_search=69599084" -u admin:admin
 ```
 
-### External sidebar pattern
-
-Components like `CnDetailPage` that support sidebars communicate with a parent-provided `objectSidebarState` via Vue's `provide`/`inject`. The sidebar component (`CnObjectSidebar`) MUST be rendered at the `NcContent` level in `App.vue`, NOT inside `NcAppContent`:
-
-```vue
-<!-- App.vue -->
-<NcContent app-name="myapp">
-  <MainMenu />
-  <NcAppContent>
-    <router-view />
-  </NcAppContent>
-  <CnObjectSidebar v-if="objectSidebarState.active" ... />
-</NcContent>
-```
-
-## Consequences
-
-- Developers must check if a shared component is self-contained before wrapping it
-- The component library documents which components are self-contained in their JSDoc headers
-- Code reviews should flag card-in-card nesting as a pattern violation
-- Existing violations should be fixed when encountered (per ADR-015 pre-existing issues rule)
-
-### ADR-018-widget-header-actions
-# ADR-018: Widget Header Actions Pattern
-
-## Status
-Accepted
-
-## Date
-2026-04-14
-
-## Context
-
-Card and widget components across Conduction apps need action controls (buttons, dropdowns, selects) for user interactions like changing status, adding items, or toggling views. Developers have been placing these controls inline with card content, taking up vertical space and creating inconsistent layouts.
-
-Nextcloud's own UI pattern places actions in the title bar (top-right) of panels and sidebars. Our shared component library should enforce this same pattern so all card/widget components have a consistent location for actions.
-
-## Decision
-
-### All card/widget components MUST support a `header-actions` slot
-
-Every component that renders a title bar or header MUST provide a `header-actions` slot positioned in the **top-right of the header**, inline with the title. This is the standard location for action controls.
-
-### Standard slot name: `header-actions`
-
-All components use the slot name `header-actions` for consistency. Components that previously used `actions` retain it for backwards compatibility but `header-actions` is the canonical name.
-
-### Component support status
-
-All card/widget components in `@conduction/nextcloud-vue` now support `header-actions`:
-
-| Component | Slot name | Notes |
-|---|---|---|
-| `CnDetailCard` | `header-actions` | Primary card component |
-| `CnWidgetWrapper` | `header-actions` | Dashboard widget container |
-| `CnObjectDataWidget` | `header-actions` | Passes through to CnDetailCard |
-| `CnObjectMetadataWidget` | `header-actions` | Passes through to CnDetailCard |
-| `CnStatsPanel` | `header-actions` | Added in this ADR |
-| `CnSettingsCard` | `header-actions` | Added in this ADR |
-| `CnConfigurationCard` | `header-actions` + `actions` (legacy) | `header-actions` added alongside existing `actions` |
-| `CnVersionInfoCard` | `header-actions` + `actions` (legacy) | `header-actions` added alongside existing `actions` |
-
-### What goes in header-actions
-
-- Status change dropdowns / selects
-- Add/create buttons
-- Toggle switches (e.g. edit mode)
-- Refresh buttons
-- Filter controls specific to this widget
-
-### What does NOT go in header-actions
-
-- Save/cancel for the entire page (those belong in `CnDetailPage` `#header-actions`)
-- Bulk action toolbars (those belong in `CnMassActionBar`)
-- Form inputs that are part of the data being edited
-
-### Usage pattern
-
-```vue
-<CnDetailCard :title="t('app', 'Status')">
-  <template #header-actions>
-    <NcSelect
-      v-model="selectedStatus"
-      :options="statusOptions"
-      :placeholder="t('app', 'Change status...')" />
-  </template>
-
-  <!-- Card content -->
-  <CnTimelineStages :stages="stages" :current-stage="current" />
-</CnDetailCard>
-```
-
-### New components
-
-When creating new card or widget components, the `header-actions` slot MUST be included from the start. The standard template pattern:
-
-```vue
-<div class="cn-my-widget__header">
-  <h4 class="cn-my-widget__title">{{ title }}</h4>
-  <div v-if="$slots['header-actions']" class="cn-my-widget__header-actions">
-    <slot name="header-actions" />
-  </div>
-</div>
-```
-
-With CSS:
-```css
-.cn-my-widget__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.cn-my-widget__header-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-}
-```
-
-## Consequences
-
-- All existing card components now support `header-actions`
-- New components must include this slot from creation
-- Existing apps should migrate inline actions to `header-actions` when touching those files
-- Code reviews should flag action controls placed in card content as a pattern violation
-- The `actions` slot name in CnConfigurationCard and CnVersionInfoCard is deprecated but retained for backwards compatibility
-
-## App-Specific ADRs (2)
-
-These ADRs are specific to Pipelinq.
-
-### 000-data-model: ADR-000: Data Model — pipelinq
-# Data Model — Pipelinq
-
-**App:** Pipelinq — CRM and customer interaction
-**Platform:** OpenRegister (register/schema/object pattern)
-**Entities:** 26
-
-OpenRegister built-in fields available on ALL entities (do NOT redefine):
-id, uuid, uri, version, createdAt, updatedAt, owner, organization,
-register, schema, relations, files, auditTrail, notes, tasks, tags, status, locked.
-
-OpenRegister built-in capabilities (do NOT rebuild):
-CRUD REST API, CSV/JSON/XML import+export, full-text search, filtering,
-pagination, audit trails, file attachments, relation management, locking.
-
----
-
-## agentProfile
-**Purpose:** Links a Nextcloud user to their assigned skills and routing configuration. Used for skill-based routing suggestions and workload management.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| userId | string | Yes | Nextcloud user UID |
-| skills | array | No | UUID references to assigned Skill objects |
-| maxConcurrent | integer | No | Maximum number of concurrent open items for this agent |
-| isAvailable | boolean | No | Whether this agent is available for routing suggestions |
-
----
-
-## automation
-**Purpose:** Represents a trigger-action automation for CRM events. When the trigger fires and conditions match, the configured actions execute in sequence. Optionally fires an n8n webhook.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| name | string | Yes | Automation name |
-| trigger | string | Yes | The CRM event that activates this automation |
-| triggerConditions | object | No | Filter conditions for the trigger (e.g., stage, pipeline, value threshold) |
-| actions | array | No | Ordered list of actions to execute when triggered |
-| isActive | boolean | No | Whether the automation is enabled |
-| lastRun | string | No | ISO timestamp of last execution |
-| runCount | integer | No | Total number of times this automation has executed |
-| webhookUrl | string | No | n8n webhook URL for external workflow execution |
-| n8nWorkflowId | string | No | Reference to the n8n workflow ID |
-
----
-
-## automationLog
-**Purpose:** Records each execution of an automation including trigger details, actions executed, and outcome.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| automation | string | Yes | UUID reference to the automation that executed |
-| triggeredAt | string | Yes | When the automation was triggered |
-| triggerEntity | string | No | UUID of the entity that triggered the automation |
-| actionsExecuted | array | No | List of actions executed and their results |
-| status | string | Yes | Execution outcome |
-| error | string | No | Error message if execution failed |
-
----
-
-## calendarLink
-**Purpose:** Stores metadata for calendar events synced with Nextcloud Calendar and linked to Pipelinq entities.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| eventUid | string | Yes | Calendar event UID |
-| title | string | No | Event title |
-| startDate | string | No | Event start date and time |
-| endDate | string | No | Event end date and time |
-| attendees | array | No | Attendee email addresses |
-| linkedEntityType | string | Yes | Type of linked CRM entity |
-| linkedEntityId | string | Yes | UUID of the linked CRM entity |
-| status | string | No | Event status |
-| createdFrom | string | No | Where the event was created |
-| notes | string | No | Post-event notes |
-
----
-
-## client
-**Purpose:** Represents a client entity — either a natural person or an organization. Mapped to Schema.org Person/Organization and vCard (RFC 6350) field conventions. Clients are the primary relationship entity in Pipelinq.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| name | string | Yes | Full name of the person or organization (schema:name / vCard FN) |
-| type | string | Yes | Entity type — person or organization (maps to schema:Person or schema:Organization) |
-| email | string | No | Primary email address (schema:email / vCard EMAIL) |
-| phone | string | No | Primary phone number (schema:telephone / vCard TEL) |
-| address | string | No | Postal address (schema:address) |
-| website | string | No | Website URL (schema:url) |
-| industry | string | No | Industry or sector (schema:industry) |
-| notes | string | No | Free-text notes about the client (schema:description) |
-| contactsUid | string | No | Nextcloud Contacts UID linking this client to a vCard in the user's addressbook |
-
----
-
-## complaint
-**Purpose:** Represents a customer complaint linked to a client and optionally a contact person. Tracks status lifecycle, priority, category, SLA deadline, and resolution. Mapped to Schema.org ComplainAction.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| title | string | Yes | Complaint title or subject |
-| description | string | No | Detailed description of the complaint |
-| category | string | Yes | Complaint category for classification |
-| priority | string | No | Complaint priority level |
-| status | string | No | Current status in the complaint lifecycle |
-| channel | string | No | Channel through which the complaint was received |
-| client | string | No | UUID reference to the associated client |
-| contact | string | No | UUID reference to the associated contact person |
-| assignedTo | string | No | Nextcloud user UID of the assigned handler |
-| slaDeadline | string | No | SLA deadline for complaint resolution, calculated from category config |
-| resolvedAt | string | No | Date and time the complaint was resolved or rejected |
-| resolution | string | No | Explanation of how the complaint was resolved or why it was rejected |
-
----
-
-## contact
-**Purpose:** Represents a contact person associated with a client organization. Properties align with vCard (RFC 6350) field conventions.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| name | string | Yes | Full name of the contact person (vCard FN) |
-| email | string | No | Email address (vCard EMAIL) |
-| phone | string | No | Phone number (vCard TEL) |
-| role | string | No | Job title or role within the organization (vCard ROLE) |
-| client | string | No | UUID reference to the parent client object |
-| contactsUid | string | No | Nextcloud Contacts UID linking this contact to a vCard in the user's addressbook |
-
----
-
-## contactmoment
-**Purpose:** Represents a single interaction with a client across any channel (phone, email, counter, chat, social media, letter). Mapped to Schema.org CommunicateAction and VNG Klantinteracties Contactmoment.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| subject | string | Yes | Subject of the contact moment (schema:about / Contactmoment.onderwerp) |
-| summary | string | No | Summary or notes of the interaction (schema:description / Contactmoment.tekst) |
-| channel | string | Yes | Communication channel used (schema:instrument / Contactmoment.kanaal) |
-| outcome | string | No | Result of the interaction (schema:result / Contactmoment.resultaat) |
-| client | string | No | UUID reference to the associated client (schema:recipient / KlantContactmoment) |
-| request | string | No | UUID reference to the associated request (schema:object / ObjectContactmoment) |
-| agent | string | No | Nextcloud user UID of the agent who handled the interaction (schema:agent / Contactmoment.medewerker) |
-| contactedAt | string | No | Date and time of the interaction (schema:startTime / Contactmoment.registratiedatum) |
-| duration | string | No | Duration of the interaction in ISO 8601 format (schema:duration / Contactmoment.gespreksduur) |
-| channelMetadata | object | No | Channel-specific metadata (e.g., call direction, email thread ID, counter location) |
-| notes | string | No | Additional internal notes (schema:text / Contactmoment.notitie) |
-
----
-
-## emailLink
-**Purpose:** Stores metadata for emails synced from Nextcloud Mail and linked to Pipelinq entities. Full email body is accessed on-demand from Nextcloud Mail.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| messageId | string | Yes | Email message ID from Nextcloud Mail |
-| subject | string | No | Email subject line |
-| sender | string | No | Sender email address |
-| recipients | array | No | Recipient email addresses |
-| date | string | No | Email date |
-| threadId | string | No | Email thread ID for conversation grouping |
-| linkedEntityType | string | Yes | Type of linked CRM entity |
-| linkedEntityId | string | Yes | UUID of the linked CRM entity |
-| direction | string | No | Email direction |
-| syncSource | string | No | Nextcloud Mail account ID |
-| excluded | boolean | No | Whether this email is excluded from future sync |
-| deleted | boolean | No | Whether the source email has been deleted |
-
----
-
-## intakeForm
-**Purpose:** Defines a customizable web form that can be embedded on external websites. Submissions create contacts and leads in Pipelinq.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| name | string | Yes | Form name |
-| fields | array | No | Ordered list of form field definitions |
-| fieldMappings | object | No | Maps form field names to contact/lead properties |
-| targetPipeline | string | No | UUID of the pipeline where new leads are placed |
-| targetStage | string | No | Initial pipeline stage for new leads |
-| notifyUser | string | No | Nextcloud user ID to notify on new submissions |
-| isActive | boolean | No | Whether the form accepts submissions |
-| submitCount | integer | No | Total number of submissions received |
-| successMessage | string | No | Message shown after successful submission |
-
----
-
-## intakeSubmission
-**Purpose:** Records each submission with submitted data, created entities, and processing status.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| form | string | Yes | UUID reference to the intake form |
-| submittedAt | string | Yes | When the submission was received |
-| data | object | No | Submitted form data (key-value pairs) |
-| contactId | string | No | UUID of created or matched contact |
-| leadId | string | No | UUID of created lead |
-| ip | string | No | Submitter IP address (for rate limiting audit) |
-| status | string | Yes | Processing status |
-
----
-
-## kennisartikel
-**Purpose:** Represents a knowledge base article with rich text content, categorization, versioning, and visibility controls. Mapped to Schema.org Article. Used by KCC agents for first-call resolution and optionally published for citizen self-service.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| title | string | Yes | Article title (schema:headline) |
-| body | string | Yes | Article content in Markdown format (schema:articleBody) |
-| summary | string | No | Short summary for search result snippets (schema:abstract) |
-| status | string | Yes | Article lifecycle status |
-| visibility | string | Yes | Access level — intern (agents only) or openbaar (public) |
-| categories | array | No | UUID references to kenniscategorie objects |
-| tags | array | No | Searchable tags for article discovery |
-| zaaktypeLinks | array | No | References to zaaktypen for context-aware suggestions |
-| author | string | Yes | Nextcloud user UID of the article author |
-| lastUpdatedBy | string | No | Nextcloud user UID of the last editor |
-| version | integer | No | Article version number, incremented on each edit |
-| publishedAt | string | No | Publication timestamp |
-| archivedAt | string | No | Archive timestamp |
-| usefulnessScore | number | No | Aggregate usefulness rating score (percentage of positive ratings) |
-
----
-
-## kenniscategorie
-**Purpose:** Represents a category in the knowledge base taxonomy. Supports up to 3 levels of hierarchy via parent references.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| name | string | Yes | Category name |
-| slug | string | No | URL-friendly name for the category |
-| parent | string | No | UUID reference to parent category for hierarchy |
-| description | string | No | Category description |
-| order | integer | No | Display order within the same parent level |
-| icon | string | No | Icon identifier for the category |
-
----
-
-## kennisfeedback
-**Purpose:** Represents an agent's rating and optional improvement suggestion for a knowledge article. Supports KCS methodology for continuous knowledge improvement.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| article | string | Yes | UUID reference to the rated kennisartikel |
-| rating | string | Yes | Usefulness rating |
-| comment | string | No | Improvement suggestion text |
-| agent | string | Yes | Nextcloud user UID of the rating agent |
-| status | string | No | Feedback processing status |
-| createdAt | string | No | Date and time the feedback was submitted |
-
----
-
-## lead
-**Purpose:** Represents a sales lead — a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| title | string | Yes | Lead title / opportunity name (schema:name) |
-| client | string | No | UUID reference to the associated client |
-| contact | string | No | UUID reference to the associated contact person |
-| source | string | No | Origin of the lead (e.g., website, referral, cold-call, advertisement, event) |
-| value | number | No | Estimated deal value in euros (schema:price) |
-| probability | integer | No | Estimated win probability as percentage (0-100) |
-| expectedCloseDate | string | No | Expected close date for the opportunity |
-| assignee | string | No | Nextcloud user UID of the assigned sales representative |
-| priority | string | No | Lead priority level |
-| pipeline | string | No | UUID reference to the pipeline this lead is tracked in |
-| stage | string | No | Current pipeline stage name |
-| stageOrder | integer | No | Numeric position of the current stage in the pipeline |
-| notes | string | No | Free-text notes about the lead |
-| status | string | No | Lifecycle status of the lead |
-
----
-
-## leadProduct
-**Purpose:** Represents a product line item on a lead — an instance of a product with deal-specific quantity, pricing, and discount. The total is computed as quantity * unitPrice * (1 - discount/100). Mapped to Schema.org Offer.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| lead | string | Yes | UUID reference to the parent Lead |
-| product | string | Yes | UUID reference to the Product |
-| quantity | number | Yes | Number of units |
-| unitPrice | number | Yes | Price per unit (pre-populated from Product.unitPrice, can be overridden) |
-| discount | number | No | Discount percentage (0-100) |
-| total | number | No | Computed total: quantity * unitPrice * (1 - discount/100) |
-| notes | string | No | Line item notes (e.g., annual license, setup fee) |
-
----
-
-## pipeline
-**Purpose:** Represents a pipeline — an ordered list of stages through which entities progress. Backed by an OpenRegister View that defines which schemas appear on the board. Each schema can have its own property-to-stage mapping and totals configuration. Mapped to Schema.org ItemList.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| title | string | Yes | Pipeline name (e.g., 'Sales Pipeline', 'Service Pipeline') |
-| description | string | No | Description of the pipeline's purpose |
-| viewId | string | No | UUID reference to the OpenRegister View defining which schemas this pipeline displays |
-| propertyMappings | array | No | Per-schema configuration for column placement and totals aggregation |
-| totalsLabel | string | No | Display label for column totals (e.g., 'EUR', 'Hours') |
-| stages | array | Yes | Ordered list of pipeline stages (schema:ItemListElement) |
-| isDefault | boolean | No | Whether this is the default pipeline for its entity type |
-
----
-
-## product
-**Purpose:** Represents a product or service in the CRM catalog. Linked to leads via LeadProduct line items for accurate pipeline valuation. Mapped to Schema.org Product.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| name | string | Yes | Product or service name (schema:name) |
-| description | string | No | Detailed product description (schema:description) |
-| sku | string | No | Stock keeping unit or product code (schema:sku) |
-| unitPrice | number | Yes | Default selling price per unit in EUR (schema:price) |
-| cost | number | No | Cost to the organization per unit (for margin calculation) |
-| category | string | No | UUID reference to a ProductCategory object |
-| type | string | Yes | Whether this is a physical product or a service |
-| status | string | No | Whether the product is available for sale |
-| unit | string | No | Unit of measure (e.g., each, hour, license, month) |
-| taxRate | number | No | Tax percentage (0-100). Default: 21 (Dutch BTW) |
-| image | string | No | URL to product image |
-
----
-
-## productCategory
-**Purpose:** Represents a product category for hierarchical grouping. Categories can have parent categories for tree structures. Mapped to Schema.org DefinedTermSet.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| name | string | Yes | Category name (schema:name) |
-| description | string | No | Category description |
-| parent | string | No | UUID reference to parent category (for hierarchy) |
-| order | integer | No | Display order within the same parent level |
-
----
-
-## queue
-**Purpose:** Represents a named queue for organizing requests with priority-based ordering. Used for workload distribution and skill-based routing in KCC/service desk scenarios. Mapped to Schema.org ItemList.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| title | string | Yes | Queue name (e.g., 'Algemene Zaken', 'Vergunningen') |
-| description | string | No | Description of the queue's purpose |
-| categories | array | No | Category tags for routing (matched against request categories and agent skills) |
-| isActive | boolean | No | Whether the queue is active and accepting items |
-| maxCapacity | integer | No | Maximum number of items allowed in the queue (null = unlimited) |
-| sortOrder | integer | No | Display order of the queue in the list |
-| assignedAgents | array | No | Nextcloud user UIDs of agents assigned to work this queue |
-
----
-
-## relationship
-**Purpose:** Represents a relationship between two entities (contacts and/or clients) with a typed, bidirectional link. Inverse relationships are auto-created. Mapped to Schema.org Person.knows.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| fromContact | string | Yes | UUID reference to the source contact or client |
-| toContact | string | Yes | UUID reference to the target contact or client |
-| fromType | string | No | Entity type of source: contact or client |
-| toType | string | No | Entity type of target: contact or client |
-| type | string | Yes | Relationship type identifier (e.g., partner, ouder, werkgever) |
-| inverseType | string | Yes | The inverse relationship type identifier |
-| category | string | No | Category grouping for the relationship type (Familie, Professioneel, Organisatie, CRM Rol) |
-| notes | string | No | Optional free text context for this relationship |
-| startDate | string | No | Date when the relationship started |
-| endDate | string | No | Date when the relationship ended (null = active) |
-| strength | string | No | Relationship strength: strong, medium, weak |
-
----
-
-## request
-**Purpose:** Represents a client service request that may be converted to a case in Procest. Tracks status lifecycle, priority, assignment, and optional pipeline placement.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| title | string | Yes | Request title |
-| description | string | No | Detailed description of the request |
-| client | string | No | UUID reference to the associated client |
-| contact | string | No | UUID reference to the associated contact person |
-| status | string | No | Current status in the request lifecycle |
-| priority | string | No | Request priority level |
-| assignee | string | No | Nextcloud user UID of the assigned handler |
-| requestedAt | string | No | Date and time the request was submitted |
-| category | string | No | Request category for classification |
-| pipeline | string | No | UUID reference to the pipeline this request is tracked in |
-| stage | string | No | Current pipeline stage name |
-| stageOrder | integer | No | Numeric position of the current stage in the pipeline |
-| channel | string | No | Intake channel for the request (e.g., phone, email, website) |
-| queue | string | No | UUID reference to the queue this request is assigned to |
-| caseReference | string | No | UUID reference to the converted Procest case |
-
----
-
-## skill
-**Purpose:** Represents a defined skill or area of expertise that can be assigned to agents. Skills are matched against request categories for routing suggestions. Mapped to Schema.org DefinedTerm.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| title | string | Yes | Skill name (e.g., 'Vergunningen', 'WMO / Zorg') |
-| description | string | No | Description of the skill |
-| categories | array | No | Category tags this skill covers (matched against request categories) |
-| isActive | boolean | No | Whether this skill is active for routing |
-
----
-
-## survey
-**Purpose:** Represents a KTO (klanttevredenheidsonderzoek) survey with configurable questions, public access token, and entity linking. Mapped to Schema.org Survey.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| title | string | Yes | Survey title (schema:name) |
-| description | string | No | Survey description shown to respondents (schema:description) |
-| questions | array | Yes | Ordered list of survey questions |
-| status | string | No | Survey lifecycle status |
-| token | string | No | Unique public access token (UUID) for the survey response URL |
-| linkedEntityType | string | No | Entity type this survey is linked to |
-| linkedEntityId | string | No | UUID of the specific entity this survey is linked to |
-| activeFrom | string | No | Start date for accepting responses |
-| activeUntil | string | No | End date for accepting responses |
-| createdBy | string | No | Nextcloud user UID of the survey creator |
-| createdAt | string | No | Date and time the survey was created |
-| updatedAt | string | No | Date and time the survey was last updated |
-
----
-
-## surveyResponse
-**Purpose:** Represents a single completed survey response with answers to survey questions. Linked to the parent survey via surveyId. Mapped to Schema.org CompletedSurvey.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| surveyId | string | Yes | UUID reference to the parent survey |
-| answers | array | Yes | List of question answers |
-| respondentId | string | No | Optional respondent identifier for deduplication |
-| entityType | string | No | Entity type that triggered this survey response |
-| entityId | string | No | UUID of the entity that triggered this response |
-| completedAt | string | No | Date and time the response was submitted |
-| ipHash | string | No | SHA-256 hash of respondent IP address for abuse detection |
-
----
-
-## task
-**Purpose:** Represents an internal task — a callback request (terugbelverzoek), follow-up task (opvolgtaak), or information request (informatievraag) assigned to a user or department. Maps to VNG InterneTaak and Schema.org Action.
-**Primary spec:** from-register
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| type | string | Yes | Task type — terugbelverzoek (callback), opvolgtaak (follow-up), or informatievraag (information request) |
-| subject | string | Yes | Task subject line (VNG gevraagdeHandeling / schema:name) |
-| description | string | No | Detailed task description (VNG toelichting / schema:description) |
-| status | string | No | Task lifecycle status (VNG status) |
-| priority | string | No | Task priority level |
-| deadline | string | No | Task deadline date and time |
-| assigneeUserId | string | No | Nextcloud user UID of the assigned handler (VNG toegewezenAanMedewerker) |
-| assigneeGroupId | string | No | Nextcloud group ID for team/department assignment |
-| clientId | string | No | UUID reference to the associated client |
-| requestId | string | No | UUID reference to the associated request |
-| contactMomentSummary | string | No | Summary text from the originating contact moment |
-| callbackPhoneNumber | string | No | Override phone number for callback (may differ from client's primary phone) |
-| preferredTimeSlot | string | No | Citizen's preferred callback time window (e.g., 'Dinsdag 14:00 - 16:00') |
-| createdBy | string | No | Nextcloud user UID of the agent who created this task |
-| completedAt | string | No | Timestamp when the task was completed |
-| resultText | string | No | Completion summary text |
-| attempts | array | No | Callback attempt log — each entry has timestamp, result, and notes |
-
----
-
-
-### adr-001-international-first-dutch-mapping: ADR-001: International First, Dutch API Mapping Layer
-# ADR-001: International First, Dutch API Mapping Layer
-
-**Status:** accepted
-**Scope:** pipelinq
-**Applies to:** specs, design
-**Last updated:** 2026-03-19
-
-## Context
-
-Pipelinq is a CRM built on Nextcloud that serves Dutch government organizations but is also positioned as an open-source international CRM. Dutch government APIs (VNG Klantinteracties, Verzoeken) define specific data models, but these are local standards that would limit international adoption if used as the primary data model.
-
-Industry CRM standards (schema.org, vCard, iCalendar) are well-documented, widely understood, and enable integration with global tools. The Dutch government API specifications can be served as a mapping layer on top of international standards.
-
-## Decision
-
-- Contact data MUST be stored using schema.org (`schema:Person`, `schema:Organization`) and vCard properties (`fn`, `email`, `tel`, `adr`) as the primary vocabulary.
-- Pipeline and deal data MUST align with schema.org types where applicable (`schema:Offer`, `schema:Action`).
-- Dutch government API endpoints (Klantinteracties, Verzoeken) MUST be implemented as a **separate mapping layer** that translates between internal schema.org models and the Dutch API specification.
-- The mapping layer MUST NOT pollute the core data model — Dutch-specific fields are derived/computed, not stored.
-- Specs MUST describe data models in international terms first, with a separate section for Dutch API mapping where applicable.
-
-## Consequences
-
-- Spec authors MUST use schema.org/vCard property names in requirements (e.g., `fn` not `naam`, `email` not `emailadres`).
-- Design documents for Dutch API features MUST include a mapping table (schema.org property → Dutch API field).
-- This extends company-wide ADR-006 (Schema Standards) with Pipelinq-specific vocabulary choices.
-
-## Exceptions
-
-- BSN (Burgerservicenummer) is a Dutch-specific identifier with no international equivalent and MAY be stored as a custom property.
-- Dutch government process types (zaaktypen) that have no international equivalent MAY use VNG terminology directly.
-
-
-## App Architecture ADRs from Repo (1 files)
-
-These ADR files live in pipelinq/openspec/architecture/.
-
-### ADR-001-international-first-dutch-mapping
-# ADR-001: International First, Dutch API Mapping Layer
-
-**Status:** accepted
-**Scope:** pipelinq
-**Applies to:** specs, design
-**Last updated:** 2026-03-19
-
-## Context
-
-Pipelinq is a CRM built on Nextcloud that serves Dutch government organizations but is also positioned as an open-source international CRM. Dutch government APIs (VNG Klantinteracties, Verzoeken) define specific data models, but these are local standards that would limit international adoption if used as the primary data model.
-
-Industry CRM standards (schema.org, vCard, iCalendar) are well-documented, widely understood, and enable integration with global tools. The Dutch government API specifications can be served as a mapping layer on top of international standards.
-
-## Decision
-
-- Contact data MUST be stored using schema.org (`schema:Person`, `schema:Organization`) and vCard properties (`fn`, `email`, `tel`, `adr`) as the primary vocabulary.
-- Pipeline and deal data MUST align with schema.org types where applicable (`schema:Offer`, `schema:Action`).
-- Dutch government API endpoints (Klantinteracties, Verzoeken) MUST be implemented as a **separate mapping layer** that translates between internal schema.org models and the Dutch API specification.
-- The mapping layer MUST NOT pollute the core data model — Dutch-specific fields are derived/computed, not stored.
-- Specs MUST describe data models in international terms first, with a separate section for Dutch API mapping where applicable.
-
-## Consequences
-
-- Spec authors MUST use schema.org/vCard property names in requirements (e.g., `fn` not `naam`, `email` not `emailadres`).
-- Design documents for Dutch API features MUST include a mapping table (schema.org property → Dutch API field).
-- This extends company-wide ADR-006 (Schema Standards) with Pipelinq-specific vocabulary choices.
-
-## Exceptions
-
-- BSN (Burgerservicenummer) is a Dutch-specific identifier with no international equivalent and MAY be stored as a custom property.
-- Dutch government process types (zaaktypen) that have no international equivalent MAY use VNG terminology directly.
+### Standards & References
+- VNG Klantinteracties API -- defines `Contactmoment`, `Klant`, `Medewerker`, `Organisatorische eenheid` entities
+- Haal Centraal BRP Personen Bevragen API v2 -- for BSN-based citizen lookup (requires DigiD/PKI certificate)
+- KVK API (Basisregistratie Handelsregister) -- for KVK number-based business lookup
+- ZGW Zaken API (Zaak-Documentservices) -- for retrieving open cases per citizen/business
+- Common Ground -- architectural principles for cross-system data access
+- AVG/GDPR -- doelbinding requirements for accessing personal data
+- WCAG AA -- accessibility for government-facing interfaces
+- NEN-ISO 18295 -- Customer contact centres service requirements
+
+### Specificity Assessment
+- The spec is comprehensive and well-structured, covering the full KCC agent workflow.
+- **NOT implementable as-is** due to significant external dependencies:
+- **Missing**: No specification of how BRP/KVK sources are configured in OpenConnector. This requires OpenConnector source definitions and likely API keys/certificates.
+- **Missing**: No specification of the `contactmoment` schema (entity definition, properties, required fields). This needs to be added to `pipelinq_register.json`.
+- **Missing**: No specification of how ZGW Zaken API is called -- is it via OpenConnector, direct HTTP, or via the Procest app?
+- **Missing**: No specification of queue management -- does Pipelinq manage the phone queue, or integrate with a telephony system (e.g., Asterisk, Microsoft Teams)?
+- **Missing**: No specification of user roles/permissions for KCC agents vs regular CRM users.
+- **Missing**: No specification of the "departments" list for backoffice routing -- where are departments configured?
+- **Open question**: Should the KCC werkplek be a separate Nextcloud app or a module within Pipelinq?
+- **Open question**: How does the KCC werkplek relate to the existing client/request management? Should contactmomenten be a separate entity or an extension of requests?
+- **Significant dependency**: BRP API access requires government certificates and agreements -- not available in development environments.
