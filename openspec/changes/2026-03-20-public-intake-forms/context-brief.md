@@ -1,5 +1,16 @@
 # Proposal: public-intake-forms
 
+## Placement & Information Architecture
+
+**Placement type:** `SUB_PAGE` — Sub-page beneath a top-level menu entry. Renders as a page inside the parent surface (usually reachable via a router child route or a tab on the parent index page).
+
+**Lives at:** Klachten & Verzoeken → Verzoeken
+
+**Rationale:** Intake feeds request-management.  
+_Source: /tmp/ia-pipelinq.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Problem
 
 Pipelinq has no way to capture leads from external websites. There are no public form endpoints, no form builder, no embed code generation, and no spam protection. Organizations cannot create web-to-lead intake forms that feed into the CRM pipeline.
