@@ -9,6 +9,17 @@ depends_on:
 
 # Forecast Roll-Up and Categories
 
+## Placement & Information Architecture
+
+**Placement type:** `SUB_PAGE` — Sub-page beneath a top-level menu entry. Renders as a page inside the parent surface (usually reachable via a router child route or a tab on the parent index page).
+
+**Lives at:** Pipeline → Forecast
+
+**Rationale:** Forecast view + category config.  
+_Source: /tmp/ia-pipelinq.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 Sales leadership cannot run a business on a raw pipeline number — every deal in the funnel is not equally likely to close, and a single $5M deal in early-stage discovery is worth less than five $1M deals in contract review. The standard fix, in every serious CRM since Siebel, is the **forecast category**: each opportunity is tagged as `commit` (the rep will stake their quarter on it), `best_case` (likely with luck), `pipeline` (real but uncertain), `closed_won`, or `closed_lost`. These categories let a sales manager produce a credible weekly number — "commit + 60% of best_case" — and let a VP of sales roll that number up the org tree (rep → team → division → company) for board reporting.
