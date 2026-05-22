@@ -10,6 +10,20 @@ depends_on:
 
 # CTI Screen-Pop and Click-to-Dial Adapter
 
+## Placement & Information Architecture
+
+**Placement type:** `SETTING+WIDGET` (compound — implement all of the following):
+
+- **`SETTING`** — Setting under the app's Beheer/Admin/Configuration surface. Lives in the existing settings UI; no top-level menu entry.
+- **`WIDGET`** — Widget shown on a dashboard or another page. Has no dedicated page of its own; renders inside an existing surface as a tile/panel/card.
+
+**Lives at:** Beheer → Integraties + Klantcontact werkplek
+
+**Rationale:** Adapter config; screen-pop overlay on werkplek.  
+_Source: /tmp/ia-pipelinq.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 Every contact-centre and inside-sales operation worth its salt has had Computer Telephony Integration (CTI) for thirty years: when a customer's call hits the agent's headset, the CRM screen automatically jumps to that customer's record (the "screen-pop"), and when the agent needs to call out, one click in the CRM dials the number — no manual keypad entry, no copy-paste, no fat-fingered wrong numbers. Without CTI, an agent burns 8-15 seconds per call on identification and dialling; at 80 calls a day, that's 20 minutes of pure waste per agent per day, and worse, every customer endures the "can you confirm your customer number" ritual before anything useful happens.
