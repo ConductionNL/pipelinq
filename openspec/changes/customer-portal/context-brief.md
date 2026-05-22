@@ -3,6 +3,20 @@ status: draft
 ---
 # Customer Portal
 
+## Placement & Information Architecture
+
+**Placement type:** `INFRA+SETTING` (compound — implement all of the following):
+
+- **`INFRA`** — Cross-cutting infrastructure with no end-user surface (or only an internal/admin one). No menu item; backend wiring only.
+- **`SETTING`** — Setting under the app's Beheer/Admin/Configuration surface. Lives in the existing settings UI; no top-level menu entry.
+
+**Lives at:** Beheer → Integraties
+
+**Rationale:** External-facing portal; admin enables it, end-users hit a separate URL.  
+_Source: /tmp/ia-pipelinq.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 Today, when a customer of a Pipelinq tenant wants to know "wat is de status van mijn order?", "wanneer komt de monteur?", "stuur me die factuur van vorige maand opnieuw", "ik wil een nieuwe storing melden", they email or call. The MKB-medewerker reads the email, opens Pipelinq, looks up the customer, copy-pastes the status into a reply, attaches the PDF from somewhere, and sends it back. Multiply by 50 customers a day and you have a junior employee whose job is essentially "human REST API". When that employee is sick, the customer's request waits.
