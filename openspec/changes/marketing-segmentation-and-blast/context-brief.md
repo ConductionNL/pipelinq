@@ -9,6 +9,17 @@ depends_on: [pipelinq-base, client-management, contacts-sync, email-calendar-syn
 
 # Marketing Segmentation and Blast
 
+## Placement & Information Architecture
+
+**Placement type:** `SETTING` — Setting under the app's Beheer/Admin/Configuration surface. Lives in the existing settings UI; no top-level menu entry.
+
+**Lives at:** Beheer → Marketing
+
+**Rationale:** Rules-engine + n8n trigger.  
+_Source: /tmp/ia-pipelinq.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 Marketing Segmentation and Blast brings pipelinq from "single-customer outreach" (a sales rep emailing one lead at a time) to "campaign-grade marketing" (the marketing manager sending a quarterly newsletter to 8,000 customers segmented by industry, deal size, and last-engagement date). It exists because today every pipelinq customer who grows past ~200 contacts has to bolt on Mailchimp, ActiveCampaign, or Brevo, and immediately pays the export-import-tax: contact lists are re-synced nightly, unsubscribe events take 24 hours to propagate back, segment definitions drift between the CRM and the marketing tool, and revenue attribution from a blast back to a closed deal is impossible.
