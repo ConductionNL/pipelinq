@@ -3,6 +3,20 @@ status: draft
 ---
 # StUF ZKN + BG adapter for zaaksysteem integration
 
+## Placement & Information Architecture
+
+**Placement type:** `SETTING+DETAIL_TAB` (compound — implement all of the following):
+
+- **`SETTING`** — Setting under the app's Beheer/Admin/Configuration surface. Lives in the existing settings UI; no top-level menu entry.
+- **`DETAIL_TAB`** — Tab on the detail view of an existing object. NOT a standalone page — appears inside the parent record's detail surface (e.g. an extra tab on the existing detail header).
+
+**Lives at:** Beheer → Integraties + Contactmoment/Klacht-detail "Zaak" tab
+
+**Rationale:** Adapter config + zaak-link tab.  
+_Source: /tmp/ia-pipelinq.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 Pipelinq is positioned as the modern KCC (Klantcontactcentrum) and request-management application for Dutch municipalities, replacing or augmenting legacy "midoffice" front-ends. The overwhelming majority of Dutch gemeenten still run a zaaksysteem (case management system) that exposes its integration layer over StUF — the Standaard Uitwisselings Formaat — specifically StUF-ZKN 0310 for cases and StUF-BG 0310 for persons. Without a StUF adapter, pipelinq cannot register a citizen request as a zaak in the back-office, cannot synchronise contact persons against the BRP-derived persoonsgegevens already held in the zaaksysteem, and cannot deliver documents that the zaakbehandelaar will see in their existing workflow. This spec defines the SOAP-over-HTTP envelope handling, the kennisgeving (notification) and vraag/antwoord (synchronous query) message patterns, the four core ZKN service operations (creeerZaak, actualiseerZaak, genereerZaakIdentificatie, vrijeBerichten), the base64 document binding, and the per-call audit log that the gemeente's CISO will require for traceability. The adapter is the bridge that makes pipelinq usable in any of the ~250 municipalities that have not yet migrated to the modern ZGW REST APIs.
