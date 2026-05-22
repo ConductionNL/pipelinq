@@ -4,6 +4,20 @@ status: draft
 
 # master-data-management
 
+## Placement & Information Architecture
+
+**Placement type:** `INFRA+SETTING` (compound — implement all of the following):
+
+- **`INFRA`** — Cross-cutting infrastructure with no end-user surface (or only an internal/admin one). No menu item; backend wiring only.
+- **`SETTING`** — Setting under the app's Beheer/Admin/Configuration surface. Lives in the existing settings UI; no top-level menu entry.
+
+**Lives at:** Beheer → Registers
+
+**Rationale:** MDM rules; cross-cutting, exposed under Registers.  
+_Source: /tmp/ia-pipelinq.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 Lever **Master Data Management (MDM)** als kern-capability binnen Pipelinq voor het beheren van cross-app master data — Contact, Account, Product, Vendor — als één **gouden record** (golden record) per entiteit, met **per-attribuut herkomst- en vertrouwens-tracking** per bronsysteem, krachtige **deduplicatie- en merge-tooling**, en gecontroleerde **downstream synchronisatie** naar afnemende applicaties (Shillinq, Decidesk, Procest, Scholiq, OpenCatalogi). MDM is een infrastructurele laag die in elk volwassen MKB+-IT-landschap noodzakelijk wordt zodra meer dan twee transactiesystemen overlappende master data raken: zonder MDM ontstaat onvermijdelijk de "klant Jansen die 4 keer in CRM, 2 keer in boekhouding, 3 keer in offerte-systeem en 1 keer in product-catalogus staat, elk met een licht andere naam, ander adres, ander BTW-nummer", met als gevolg dubbele facturatie, niet-aansluitende reconciliaties, AVG-overtredingen (recht op verwijdering kan niet betrouwbaar worden uitgevoerd), en gemiste cross-sell.
