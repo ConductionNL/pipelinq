@@ -202,3 +202,14 @@ _(none — all decisions resolved above or explicitly deferred to follow-up issu
 - [ ] 12.1 Stage all docs changes: `git add docs/`
 - [ ] 12.2 Restore openspec/schemas/conduction symlink if disturbed: `git checkout HEAD -- openspec/schemas/conduction`
 - [ ] 12.3 Commit: `docs: align with canonical product-pages structure`
+
+## Placement & Information Architecture
+
+**Placement type:** `INFRA` — Cross-cutting infrastructure with no end-user surface (or only an internal/admin one). No menu item; backend wiring only.
+
+**Lives at:** —
+
+**Rationale:** Docs-site convention; no app UI.  
+_Source: /tmp/ia-pipelinq.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
