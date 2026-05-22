@@ -9,6 +9,17 @@ depends_on: [contactmomenten, avg-verzoeken-workflow, bsn-validatie-en-brp-looku
 
 # Burgerportaal MijnOverheid Bridge
 
+## Placement & Information Architecture
+
+**Placement type:** `SETTING` — Setting under the app's Beheer/Admin/Configuration surface. Lives in the existing settings UI; no top-level menu entry.
+
+**Lives at:** Beheer → Integraties
+
+**Rationale:** Adapter config; intake-feed shows under Klachten & Verzoeken → Verzoeken.  
+_Source: /tmp/ia-pipelinq.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 Burgerportaal MijnOverheid Bridge gives Dutch government tenants (gemeenten, provincies, waterschappen, uitvoerders) a clean path from a pipelinq contactmoment to the citizen's MijnOverheid Berichtenbox — the central, government-wide digital mailbox every Dutch citizen with DigiD has. It exists because today, when a gemeente registers a contactmoment in pipelinq ("burger reported a broken streetlight," "burger filed an AVG-inzageverzoek," "burger asked about WOZ-beschikking"), the status updates and replies travel by email or letter, not via the channel the burger actually wants to use and that the government has mandated since the Wet Modernisering Elektronisch Bestuurlijk Verkeer (2023).
