@@ -3,6 +3,20 @@ status: draft
 ---
 # AVG-verzoeken (Article 15/16/17/18/20 GDPR) workflow
 
+## Placement & Information Architecture
+
+**Placement type:** `SUB_PAGE+DETAIL_TAB` (compound — implement all of the following):
+
+- **`SUB_PAGE`** — Sub-page beneath a top-level menu entry. Renders as a page inside the parent surface (usually reachable via a router child route or a tab on the parent index page).
+- **`DETAIL_TAB`** — Tab on the detail view of an existing object. NOT a standalone page — appears inside the parent record's detail surface (e.g. an extra tab on the existing detail header).
+
+**Lives at:** Klachten & Verzoeken → AVG + Contacten-detail
+
+**Rationale:** Government workflow + per-person tab.  
+_Source: /tmp/ia-pipelinq.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 Onder de Algemene Verordening Gegevensbescherming (AVG / GDPR) heeft elke burger een set onvervreemdbare rechten ten aanzien van zijn persoonsgegevens. De vijf operationele rechten — inzage (art. 15), rectificatie (art. 16), wissing / vergetelheid (art. 17), beperking van verwerking (art. 18) en dataportabiliteit (art. 20) — moeten door verwerkingsverantwoordelijken (gemeenten, ZBO's, ministeries, waterschappen, uitvoeringsorganisaties) binnen wettelijke termijnen worden afgehandeld. De wet schrijft voor: binnen 1 maand een gemotiveerd antwoord, met mogelijke verlenging van 2 maanden bij complexiteit (art. 12 lid 3 AVG).
