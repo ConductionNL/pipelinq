@@ -1,133 +1,101 @@
-# Proposal: appointment-booking
+# Proposal: Appointment Booking
 
 ## Summary
 
-Transform Pipelinq from a CRM that records past interactions into a system that schedules future ones. Implement a complete booking surface for MKB service businesses (hairdressers, garages, physiotherapists, consultants, beauty salons, dog groomers, repair shops, municipal offices) replacing pen-and-paper calendars, Google Calendar + spreadsheets, and third-party SaaS (Calendly, Setmore, Acuity, Salonized).
+Turn Pipelinq from a CRM that records past interactions into a system that schedules future ones. Implement a complete booking surface: per-resource availability calendars, customer-facing self-booking via a public portal, multi-step services with skill-based routing, bi-directional calendar sync so staff calendars are the source of truth for blocked time, confirmation + reminder + reschedule + cancellation flows over email and SMS, no-show tracking with optional fees, a walk-in queue for businesses that mix appointments with first-come-first-served service, and full audit trails for regulatory compliance (AVG, NL Boekhoudplicht, PSD2).
 
-The system delivers: per-resource availability scheduling, customer-facing self-booking portal, multi-step services, skill-based resource routing, bi-directional calendar sync, confirmation + reminder flows, reschedule/cancellation with audit trail, no-show tracking, walk-in queues, and optional deposit + no-show fee logic.
-
-## Demand Evidence
-
-### Feature: Appointment Booking System (demand: 3)
-
-Market intelligence confirms strong demand across small and medium business sectors for integrated appointment booking that directly connects to customer records. The long tail of MKB service businesses (estimated 45K+ in Netherlands alone) currently splits functionality between separate systems: CRM (Pipelinq), calendar (Google/Outlook), and booking (Calendly/Setmore/Salonized). Integration pain points identified:
-- 8-15% revenue loss from no-shows due to poor visibility
-- Double-booked staff when calendar and booking system drift
-- Customer call volume during business hours just to request appointment slots
-- Zero connection between "Mrs. Janssen booked a haircut" and "Mrs. Janssen's customer record"
-
-Three independent market signals confirm this:
-- 45K+ MKB service businesses in NL sector (haircare, repair, wellness, professional services)
-- Feature explicitly requested in 9 procurement requirements for Pipelinq adoption
-- Competitors' feature adoption rate: 24/26 (92%) include appointment scheduling
+Based on market intelligence: **MKB service businesses** (hairdressers, garages, physiotherapists, consultants, tax advisors, beauty salons, dog groomers, repair shops, municipal-window appointments) are the entire long tail of Nextcloud's customer base. They run on pen-and-paper calendars, Google Calendar with manual entries, or third-party SaaS like Calendly and Setmore that doesn't talk to their CRM. Doubled-booked staff and no-shows costing 8-15% of revenue are the primary pain points.
 
 ## Problem
 
-Pipelinq has no appointment or resource scheduling capability. As a result:
+MKB service businesses urgently need better scheduling. Current tools fail because:
 
-- Service businesses continue using pen-and-paper calendars, Google Calendar with manual entries, or disconnected SaaS booking systems (Calendly, Setmore)
-- When a booking is made outside Pipelinq, the customer's CRM record shows no upcoming appointment — only past interactions
-- Staff working hours and resource availability have no place in the CRM — calendar conflicts and double-bookings are detected only when they happen
-- Multi-step services (a 90-minute "cut + color" requiring one stylist for 45 minutes, a gap, then 15 more minutes) cannot be scheduled — stylists must do manual fit-testing
-- No-shows costing 8-15% of revenue go untracked; there is no list of "customers who always cancel" for retention campaigns
-- Customers call during business hours just to ask "what times are available next Tuesday?"
-- Resources with specific skills (a stylist with "color-certified" badge, a mechanic with "BMW-certified") cannot be reserved based on service requirements
-- Staff calendar (Outlook, Google Calendar) is never synchronized — if a staff member marks "lunch" in Outlook, a customer can still book that slot in Pipelinq
-- Cancellation policies (charge for last-minute cancellations) cannot be enforced
-- Walk-in queues (barbershops, urgent-care) have no digital representation
-
-This gap blocks the entire service-business segment from using Pipelinq as their primary operational system.
+- **No CRM integration**: Appointment data lives in Calendly or Google Calendar, disconnected from customer records. When "Mrs. Janssen booked a haircut" the booking never appears in the CRM; when she reschedules, the CRM record stays stale.
+- **No real-time availability**: Staff calendars (Outlook, Google Calendar, iCloud) contain blocked time (lunch, meetings, vacation) that isn't visible to the booking system. The portal shows free slots that collide with lunch breaks, forcing manual cancellations.
+- **No compliance tracking**: Dutch regulations (AVG for customer data, NL Boekhoudplicht for 7-year retention, PSD2 for payment authentication, WCAG 2.1 AA for accessibility) are met through painful manual workarounds or not at all.
+- **No confirmation workflows**: Customers book but don't show up (8-15% no-show rate costs revenue). Manual reminder calls are needed. Rescheduling requires email back-and-forth.
+- **No skill-based routing**: "A color treatment needs a certified stylist" is invisible to the booking system; it shows any stylist as available even if they lack the skill.
+- **No walk-in support**: Barbershops, urgent-repair shops, and front-office teams mix scheduled appointments with walk-ins. Today's tools support only one or the other.
 
 ## Solution
 
-Implement a complete appointment booking and resource scheduling system reusing existing OpenRegister infrastructure (`Service`, `Resource`, `Booking`, `WalkInTicket`, `AvailabilityCache` entities already sketched in ADR-000; Customer reused from client-management).
+Implement appointment booking as a new Pipelinq module using existing OpenRegister and email-calendar-sync infrastructure:
 
-**Core components:**
+1. **Service** — a bookable offering with duration, skills required, pricing, deposit policy, cancellation policy, multi-step sub-steps.
+2. **Resource** — staff member, room, or equipment with working hours, vacation dates, skills, and optional calendar sync link so their Outlook/Google Calendar blocks are fetched automatically.
+3. **Booking** — a scheduled appointment linked to a Customer, Service, and Resource assignments, with status lifecycle (pending-deposit → confirmed → completed/no-show/cancelled) and audit trail for every state change.
+4. **WalkInTicket** — a queue entry for unscheduled arrivals, separately tracked so barbershops can mix both model.
+5. **AvailabilityCache** — per-resource per-day free blocks (regenerated on Resource or Booking change) for fast slot queries.
+6. **Customer-facing portal** — a public website at `/book/{service-slug}` where customers pick date + time and self-book without logging in. Integrates skill-routing to never show unqualified resources.
+7. **Bi-directional calendar sync** — via email-calendar-sync: staff's Google/Outlook calendar blocks are ingested every 5 minutes, bookings push back to staff calendars so they see booked appointments.
+8. **Confirmation + reminder flows** — email-calendar-sync dispatches confirmation on booking creation, reminder 24 hours before, SMS optional. Signed deep-links allow reschedule/cancel without logging in.
+9. **No-show tracking and fees** — staff marks booking as no-show; system increments customer lifetime no-show count; optional deposit or fee is charged via openconnector (Mollie/Stripe).
+10. **Reschedule audit trail** — original booking transitions to `rescheduled`, new booking created with `previousBookingId` reference, audit trail preserved.
 
-1. **Backend services**: Availability query engine intersecting resource skills (via skill-routing), working hours, existing bookings, and calendar sync blocks (via email-calendar-sync). Deposit payment flow via openconnector (Mollie/Stripe). Confirmation + reminder emails via email-calendar-sync. No-show fee charging via openconnector.
-
-2. **Public booking portal** (`/book/:service-slug`): Per-service resource selector, date/time picker showing 15-minute slots, customer info form, deposit payment (if required), confirmation. Embedded widget version for business websites.
-
-3. **Staff/operator dashboard**: Calendar view of all bookings per resource, walk-in queue management, manual no-show marking, reschedule/cancellation UI, customer contact history via pipelinq-base timeline.
-
-4. **Bi-directional calendar sync**: Pull staff's Outlook/Google/iCloud calendar into availability blocks (vacation, lunch, meetings mark time as unavailable). Push bookings back to staff calendar as events. Implemented via email-calendar-sync app.
-
-5. **Skill-based routing**: Query skill-routing service for which resources can perform which services (a "color treatment" requires "color-certified" stylist). Booking engine never offers a slot requiring a resource without the skill.
-
-6. **Multi-step services**: Define a service as a sequence of steps, each with duration, skill requirement, resource type, and optional gap-allowed. Engine schedules each step and ensures correct resources assigned.
-
-7. **Walk-in queue**: Per-service queue mixing scheduled appointments and first-come-first-served walk-ins. Operator can see estimated wait time and assign queue items to the first available resource.
+Routing is delegated to skill-routing: `"Color treatment"` service requires skill `"color-certified"`. The booking engine queries skill-routing, filters resources, intersects with availability, and presents only bookable slots to the customer.
 
 ## Scope
 
 ### In scope
 
-- Service definitions (name, duration, required skills, required resource types, multi-step, price, deposit, no-show fee, cancellation policy, bookable-online flag)
-- Resource definitions (staff, room, equipment; skills, working hours per weekday, vacations, calendar sync link, userId for staff)
-- Booking entity: scheduling, status lifecycle, deposit/no-show fee tracking, audit trail (previousBookingId for reschedules, source field for portal/widget/phone/walk-in/import)
-- Public portal at `https://tenant.pipelinq.nl/book/:service-slug` with customer self-service booking
-- Embedded booking widget for business websites (iframe)
-- Availability query engine: per-service, per-date, 15-minute slot resolution, skill-matching via skill-routing, calendar-sync blocks, existing bookings
-- Bi-directional calendar sync: pull blocks (vacation, meetings) from staff's Outlook/Google/iCloud; push bookings as events (via email-calendar-sync)
-- Confirmation email immediately on booking (with `.ics` attachment), reminder email 24 hours before
-- Reschedule flow: signed link in emails, creates new Booking with `previousBookingId` chain, old Booking marked `rescheduled`
-- Cancellation flow: signed link in emails, enforce cancellation policy (free-until-N-hours-before | always-charge | no-charge), charge via openconnector if policy requires
-- No-show tracking: mark Booking as `no-show`, increment Customer lifetime counter, optionally charge fee via openconnector (if payment method on file from deposit)
-- Walk-in queue: WalkInTicket entity, operator can add walk-in, system estimates ready time based on resource gaps, operator assigns to resource
-- AvailabilityCache: per-resource per-day cache of free 15-minute blocks, invalidated on Resource or Booking change
-- Customer integration: Customer record gains `bookingCount`, `noShowCount`, `lifetime_booking_value` fields (reused from client-management; this spec only populates them)
-- Compliance: AVG/GDPR retention (7 years for tax), right-to-be-forgotten pseudonymization of Booking history
+- Service and Resource entity creation and management (admin UI)
+- Customer self-booking via public `/book/{serviceSlug}` portal with 15-minute-aligned slot picker
+- Multi-step services with per-step skill requirements and gaps (e.g., 45m color + 30m gap + 15m cut)
+- Skill-based routing via skill-routing queries (never show unqualified resources)
+- Per-resource availability computed from working hours, vacations, existing Bookings, and calendar-synced blocks (lunch, meetings)
+- AvailabilityCache (per-resource per-day free blocks) for sub-second slot queries
+- Booking status lifecycle: pending-deposit → confirmed → completed/no-show/cancelled-by-customer/cancelled-by-business/rescheduled
+- Confirmation email on booking creation (or on deposit payment if deposit required); includes `.ics` attachment for customer calendar
+- Reminder email + optional SMS 24 hours before (via email-calendar-sync and openconnector)
+- Reschedule + cancellation via signed email links (no login required)
+- Cancellation policy enforcement (free-until-N-hours-before, always-charge, no-charge) with optional payment charges
+- Deposit-required bookings: slot held for 15 minutes pending payment, status transitions to `confirmed` on PSD2-compliant payment
+- No-show tracking: staff marks booking as no-show, customer's lifetime no-show count increments, optional fee charged via openconnector
+- Walk-in queue (WalkInTicket) for unscheduled arrivals; queue rebalances as appointments complete
+- Bi-directional calendar sync: staff's blocked time (vacation, lunch, meetings) synced from Google/Outlook every 5 minutes; bookings pushed to staff calendars
+- Customer timeline view in CRM (Booking appears on customer record)
+- Full audit trail for regulatory compliance (AVG right-to-be-forgotten, NL Boekhoudplicht 7-year retention)
 
 ### Out of scope
 
-- Healthcare-adjacent bookings (physiotherapy, psychology, GP) requiring NEN-7510 + WGBO audit trails — defer to `healthcare-booking-extension` feature
-- Email compose/send from within Pipelinq (requires Mail app plugin V2)
-- SMS sending (integrated via openconnector's SMS partner, but dispatch logic deferred to V2 reminder enhancements)
-- Bulk SMS reminders (handled per-Booking in V1; batch optimization in V2)
-- Admin dashboard for booking analytics (booking counts, no-show rates, slot utilization by resource) — V2
-- Advanced analytics (customer lifetime value, repeat-booking patterns, peak-hour recommendations) — V3
-- Waitlist / backlog for fully-booked services — V2
-- Custom booking form fields per service — V2
-- Recurring bookings / subscriptions — V3
-- Revenue integration / invoicing — deferred to shillinq (accounting app)
+- Mobile booking app (web portal only in V1)
+- Email compose/send from within Pipelinq (email-calendar-sync handles dispatch)
+- Payment gateway abstraction beyond openconnector (Mollie/Stripe/Adyen delegated to openconnector)
+- Healthcare-adjacent restrictions (NEN-7510, WGBO) — deferred to healthcare-booking-extension
+- Bulk import of existing customer appointments (V2)
+- Customer login / account history (portal is anonymous; booking confirmation/reschedule via email only)
+- Waitlist / overbooked handling (V2)
+- Resource availability by time-of-day rules (e.g., "Dr. A only sees patients 9-12") — working hours only
+- SMS reminders if openconnector SMS not configured (fallback to email-only)
 
 ## Acceptance Criteria
 
-1. **GIVEN** a Service "Haircut" with `bookableOnline: true` and a Resource "Alex" (stylist) with `workingHours: [09:00-17:00, Mon-Fri]` and no bookings, **WHEN** a customer visits `/book/haircut`, **THEN** the portal displays a calendar picker for next Tuesday and shows 15-minute aligned slots (09:00, 09:15, 09:30, …, 16:45) where all slots are available because Alex has no conflicting bookings.
+1. **GIVEN** a Service with `bookableOnline: true`, `durationMinutes: 30`, `requiredSkills: ["barber"]`, and three eligible Resources (barbers with that skill) with availability next Tuesday, **WHEN** a customer visits `/book/haircut`, picks Tuesday 14:00, and submits their name+email+phone, **THEN** a Booking is created with `status: "confirmed"`, a confirmation email is sent within 1 minute, and the slot is no longer available for other bookings.
 
-2. **GIVEN** a multi-step Service "Color + Cut" with steps `[{45m, color-certified}, {30m gap, allowGap: true}, {15m, any-stylist}]` and a stylist "Maya" with "color-certified" skill, **WHEN** a customer books for 10:00, **THEN** a Booking is created with resourceAssignments `[{Maya, 10:00-10:45}, {Maya-or-any, 11:15-11:30}]`, the gap 10:45-11:15 is NOT reserved, and the AvailabilityCache for Maya removes both blocks.
+2. **GIVEN** a Service with multi-step `[{45m, color-certified}, {30m, gap, allowGap: true}, {15m, any-stylist}]` and a customer books for 10:00, **THEN** the Booking has resourceAssignments `[{stylist-A, 10:00-10:45}, {stylist-A-or-B, 11:15-11:30}]`, the 10:45-11:15 gap is unblocked, and AvailabilityCache shows both blocks removed from that stylist's day.
 
-3. **GIVEN** a Service requires "color-certified" skill and three stylists exist (two with skill, one without), **WHEN** availability is computed, **THEN** the booking engine queries skill-routing and only shows slots assignable to the two certified stylists.
+3. **GIVEN** a Resource with `calendarSyncId` linked to Outlook and a staff member adds "lunch 12:00-13:00" directly in Outlook, **WHEN** the sync job runs, **THEN** within 5 minutes AvailabilityCache is invalidated for that day and no customer can book 12:00-13:00 on that Resource.
 
-4. **GIVEN** a staff Resource with `calendarSyncId` linked to Outlook and a blocking event "lunch" 12:00-13:00 already in Outlook, **WHEN** email-calendar-sync pulls events, **THEN** AvailabilityCache is invalidated and customers can no longer book 12:00-13:00 for that resource.
+4. **GIVEN** a confirmed Booking for next Tuesday 14:00, **WHEN** the Booking is created, **THEN** a confirmation email is sent (subject "Your appointment is confirmed: Haircut, Tuesday 14:00") with an `.ics` attachment and signed reschedule/cancel links; 24 hours before, a reminder email + SMS is sent.
 
-5. **GIVEN** a confirmed Booking for Tuesday 14:00, **WHEN** the booking is created, **THEN** a confirmation email is sent immediately with subject "Your appointment is confirmed", and 24 hours before start a reminder email is sent with a reschedule link.
+5. **GIVEN** a customer receives a reschedule link in an email and clicks it, **WHEN** they pick Thursday 10:00, **THEN** the original Booking status transitions to `rescheduled`, a new Booking is created for Thursday with `previousBookingId` pointing at the original, and the original time slot is freed.
 
-6. **GIVEN** a customer reschedules a Tuesday 14:00 Booking to Thursday 10:00 via the reminder email link, **WHEN** the reschedule completes, **THEN** the original Booking is marked `rescheduled` with `previousBookingId` on the new Booking, the Tuesday slot is freed, and the staff's Outlook calendar event is moved (not duplicated).
+6. **GIVEN** a Booking with `noShowFee: 25.00` and start time 30 minutes in the past, **WHEN** staff marks it as no-show in the dashboard, **THEN** status transitions to `no-show`, customer's lifetime no-show count increments, and a 25 EUR charge is queued via openconnector.
 
-7. **GIVEN** a Service with `cancellationPolicy: "free-until-24-hours-before"` and a confirmed Booking starting in 18 hours, **WHEN** the customer cancels via the signed email link, **THEN** the cancellation form shows the policy, full price is charged via openconnector on confirmation, the slot is freed, and the Booking is marked `cancelled-by-customer`.
+7. **GIVEN** a Service with `requiresDeposit: true` and `depositAmount: 20.00`, **WHEN** a customer completes the booking form, **THEN** the Booking is created with `status: "pending-deposit"`, a payment session is initiated via openconnector, the slot is held for 15 minutes, and on payment success `status` transitions to `confirmed`.
 
-8. **GIVEN** a Booking marked no-show by the operator, **WHEN** the marking is saved, **THEN** the Customer record's `noShowCount` increments, and if a payment method is on file from a prior deposit, a no-show fee is charged via openconnector.
+8. **GIVEN** a barbershop with 2 barbers and 5 appointments this afternoon, **WHEN** a walk-in arrives and a WalkInTicket is created, **THEN** the system computes the earliest 30-min gap in both barbers' schedules and assigns the walk-in with `estimatedReadyAt` calculated.
 
-9. **GIVEN** a barbershop with 2 staff and 3 afternoon appointments, **WHEN** a walk-in arrives for "Haircut" (30 min), **THEN** a WalkInTicket is created, the system computes available slots in staff gaps, assigns an estimated ready time, and the ticket appears in the operator queue.
+9. **GIVEN** a Service with `cancellationPolicy: "free-until-24-hours-before"` and a Booking starting in 18 hours, **WHEN** the customer cancels via the signed link, **THEN** the system shows the policy (will charge if cancelled), the customer confirms, `status` transitions to `cancelled-by-customer`, and the full price is charged via openconnector.
 
-10. **GIVEN** a Service with `requiresDeposit: true` and `depositAmount: 20.00`, **WHEN** a customer books, **THEN** the Booking is created with `status: pending-deposit`, a payment session is initiated via openconnector, the slot is held for 15 minutes; on payment success `status` becomes `confirmed`, on failure the Booking is cancelled and the slot released.
+10. **GIVEN** the Customer record for a booked client, **WHEN** an agent views the detail page, **THEN** a Bookings section shows all past and future appointments with status, service name, resource name, and time.
 
 ## Dependencies
 
-- **client-management** (completed) — Customer entity and detail view
-- **skill-routing** — Resource skill matching queries
-- **email-calendar-sync** — Confirmation/reminder email delivery, bi-directional calendar sync, blocking event pull
-- **openconnector** — Payment processing (Mollie/Stripe/Adyen), SMS dispatch for reminders
-- **pipelinq-base** — Customer detail timeline showing linked Bookings
-- **website-lead-widget** — Optional pre-fill of booking portal from widget form
-- **marketing-segmentation-and-blast** — Customer segment queryability (no-show count, last-booking-date)
-- **OpenRegister** — Service, Resource, Booking, WalkInTicket, AvailabilityCache schemas must be registered
-
-## Standards
-
-- **AVG / GDPR** — Customer contact data lawful basis is contract; retention 7 years (NL Boekhoudplicht); right-to-be-forgotten pseudonymizes Booking history
-- **PSD2 / SCA** — Deposit and no-show fee charges via openconnector to PSD2-compliant providers (Mollie, Stripe)
-- **iCalendar (RFC 5545)** — Confirmation emails include `.ics` attachment; calendar sync uses provider APIs (not raw iCal scraping)
-- **WCAG 2.1 AA** — Public portal passes axe-core, keyboard-navigable, screen-reader-friendly (Dutch + English)
-- **NEN-7510 (deferred)** — Healthcare bookings (physio, psych) defer to `healthcare-booking-extension`
+- **client-management** (completed) — Customer entity must exist for booking records to link to; lifetime metrics (booking count, no-show count, lifetime value) stored on Customer
+- **skill-routing** (assumed available) — Source of truth for which Resources can perform which Services; booking engine queries skill-routing for eligible resource lists
+- **email-calendar-sync** (completed) — Confirmation, reminder, and reschedule email dispatch; bi-directional calendar sync of staff calendars; SMS reminders
+- **openconnector** (assumed available) — Payment processing (Mollie, Stripe, Adyen) for deposits and no-show fees; SMS dispatch (Twilio, MessageBird)
+- **pipelinq-base** (completed) — Nextcloud user auth, CRM dashboard, customer timeline
+- **OpenRegister** — CRUD, audit trails, relations, file attachments for Service, Resource, Booking, WalkInTicket entities
+- **Nextcloud OCP interfaces** — `IUserManager`, `IUserSession`, `IAppConfig`, `ICacheFactory` (for AvailabilityCache), calendar sync via email-calendar-sync
