@@ -154,30 +154,9 @@
 		{
 			"id": "Dashboard",
 			"route": "/",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "Dashboard",
-			"config": {
-				"widgets": [
-					{
-						"id": "dashboardMain",
-						"title": "Dashboard",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": "1",
-						"widgetId": "dashboardMain",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12
-					}
-				]
-			},
-			"slots": {
-				"widget-dashboardMain": "DashboardView"
-			}
+			"component": "DashboardView"
 		},
 		{
 			"id": "Clients",
@@ -656,30 +635,9 @@
 		{
 			"id": "SurveyAnalyticsView",
 			"route": "/surveys/:id/analytics",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "Survey analytics",
-			"config": {
-				"widgets": [
-					{
-						"id": "surveyAnalytics",
-						"title": "Survey analytics",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": "1",
-						"widgetId": "surveyAnalytics",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12
-					}
-				]
-			},
-			"slots": {
-				"widget-surveyAnalytics": "SurveyAnalyticsView"
-			}
+			"component": "SurveyAnalyticsView"
 		},
 		{
 			"id": "PublicSurvey",
@@ -698,30 +656,9 @@
 		{
 			"id": "MyWork",
 			"route": "/my-work",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "My Work",
-			"config": {
-				"widgets": [
-					{
-						"id": "myWorkBoard",
-						"title": "My Work",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": "1",
-						"widgetId": "myWorkBoard",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12
-					}
-				]
-			},
-			"slots": {
-				"widget-myWorkBoard": "MyWorkView"
-			}
+			"component": "MyWorkView"
 		},
 		{
 			"id": "SyncSettings",
@@ -744,86 +681,23 @@
 		{
 			"id": "Rapportage",
 			"route": "/rapportage",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "Reporting",
-			"config": {
-				"widgets": [
-					{
-						"id": "rapportageKpis",
-						"title": "Reporting",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": "1",
-						"widgetId": "rapportageKpis",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12
-					}
-				]
-			},
-			"slots": {
-				"widget-rapportageKpis": "RapportageDashboardView"
-			}
+			"component": "RapportageDashboardView"
 		},
 		{
 			"id": "ChannelAnalyticsView",
 			"route": "/rapportage/channels",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "Channel analytics",
-			"config": {
-				"widgets": [
-					{
-						"id": "channelAnalytics",
-						"title": "Channel analytics",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": "1",
-						"widgetId": "channelAnalytics",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12
-					}
-				]
-			},
-			"slots": {
-				"widget-channelAnalytics": "ChannelAnalyticsView"
-			}
+			"component": "ChannelAnalyticsView"
 		},
 		{
 			"id": "AgentPerformanceView",
 			"route": "/rapportage/agents",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "Agent performance",
-			"config": {
-				"widgets": [
-					{
-						"id": "agentPerformance",
-						"title": "Agent performance",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": "1",
-						"widgetId": "agentPerformance",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12
-					}
-				]
-			},
-			"slots": {
-				"widget-agentPerformance": "AgentPerformanceView"
-			}
+			"component": "AgentPerformanceView"
 		},
 		{
 			"id": "Pipelines",
