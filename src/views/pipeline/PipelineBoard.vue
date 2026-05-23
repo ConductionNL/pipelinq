@@ -10,6 +10,7 @@
 					label="label"
 					:reduce="o => o.value"
 					:placeholder="t('pipelinq', 'Select pipeline')"
+					:input-label="t('pipelinq', 'Select pipeline')"
 					class="pipeline-selector"
 					@input="onPipelineChange" />
 				<NcSelect
@@ -17,6 +18,7 @@
 					v-model="showFilter"
 					:options="showFilterOptions"
 					:clearable="false"
+					:input-label="t('pipelinq', 'Filter by type')"
 					class="show-filter" />
 				<NcTextField
 					:value="searchQuery"
@@ -210,6 +212,7 @@ import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue
 import Cog from 'vue-material-design-icons/Cog.vue'
 import PipelineCard from './PipelineCard.vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import { useSettingsStore } from '../../store/modules/settings.js'
 import { getPriorityLabel, getPriorityColor } from '../../services/requestStatus.js'
 import { getDaysAge, isStale, getAgingClass, formatAge } from '../../services/pipelineUtils.js'
 import { formatDate } from '../../services/localeUtils.js'
@@ -245,6 +248,9 @@ export default {
 	computed: {
 		objectStore() {
 			return useObjectStore()
+		},
+		settingsStore() {
+			return useSettingsStore()
 		},
 		pipelines() {
 			return this.objectStore.collections.pipeline || []
@@ -361,6 +367,16 @@ export default {
 		}
 
 		this.loading = true
+
+		// Defensive: this page is `type: "custom"` in the manifest, so the v2
+		// renderer's auto-registration (which fires for type:"index" / "detail")
+		// does NOT run. initializeStores() is fire-and-forget in main.js, so
+		// when /pipeline is the landing route we can race ahead of the global
+		// registration and fetchCollection('pipeline') throws "type not
+		// registered". Ensure the types we use are registered before fetching.
+		// (See issue #530.)
+		await this.ensureObjectTypes(['pipeline', 'lead', 'request'])
+
 		await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
 
 		// Auto-select first pipeline
@@ -381,6 +397,38 @@ export default {
 	methods: {
 		getPriorityLabel,
 		getPriorityColor,
+
+		/**
+		 * Ensure each of the given object-type slugs is registered on the
+		 * shared object store. Resolves the missing UUIDs from settingsStore
+		 * (fetching the config on demand if it hasn't loaded yet) and calls
+		 * registerObjectType for any slug that isn't already in the registry.
+		 *
+		 * Needed because this page is `type: "custom"` in the manifest, so
+		 * the v2 renderer doesn't auto-register types for us, and the
+		 * `initializeStores()` call in main.js is fire-and-forget — it can
+		 * still be in flight when /pipeline is the landing route.
+		 *
+		 * @param {string[]} slugs Object-type slugs to register (e.g. 'pipeline').
+		 */
+		async ensureObjectTypes(slugs) {
+			const registry = this.objectStore.objectTypeRegistry || {}
+			const missing = slugs.filter(s => !registry[s])
+			if (missing.length === 0) return
+
+			let config = this.settingsStore.getConfig
+			if (!config) {
+				config = await this.settingsStore.fetchSettings()
+			}
+			if (!config || !config.register) return
+
+			for (const slug of missing) {
+				const schemaId = config[slug + '_schema']
+				if (schemaId) {
+					this.objectStore.registerObjectType(slug, schemaId, config.register)
+				}
+			}
+		},
 
 		syncSidebarState(pipeline) {
 			if (this.pipelineSidebarState) {
