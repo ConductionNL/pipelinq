@@ -69,7 +69,7 @@ const registry = {
 	DashboardView: {
 		kind: 'page',
 		component: DashboardView,
-		_note: 'Bespoke multi-widget dashboard rendered via a plain CSS grid (no inner CnDashboardPage to avoid double Dashboard heading; see #536). Lib gap: no declarative dashboard page type with grid-aware widget placement — migration to manifest config.widgets[] is the future state.',
+		_note: 'Bespoke multi-widget dashboard with gridstack layout; lib gap: no declarative dashboard page type with grid-aware widget placement.',
 	},
 	MyWorkView: {
 		kind: 'page',
