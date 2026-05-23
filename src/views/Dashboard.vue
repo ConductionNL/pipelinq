@@ -1,50 +1,44 @@
 <template>
-	<div class="dashboard-root">
-		<!-- Header actions: quick action buttons (no heading — manifest supplies the page title) -->
-		<div class="dashboard-actions">
-			<NcButton type="primary" @click="showLeadDialog = true">
-				<template #icon>
-					<Plus :size="20" />
-				</template>
-				{{ t('pipelinq', 'New Lead') }}
-			</NcButton>
-			<NcButton @click="showRequestDialog = true">
-				<template #icon>
-					<Plus :size="20" />
-				</template>
-				{{ t('pipelinq', 'New Request') }}
-			</NcButton>
-			<NcButton @click="showClientDialog = true">
-				<template #icon>
-					<Plus :size="20" />
-				</template>
-				{{ t('pipelinq', 'New Client') }}
-			</NcButton>
-			<NcButton :disabled="loading"
-				:aria-label="t('pipelinq', 'Refresh dashboard')"
-				@click="fetchAll">
-				<template #icon>
-					<Refresh :size="20" :class="{ 'icon-spinning': loading }" />
-				</template>
-			</NcButton>
-		</div>
-
-		<!-- Loading state -->
-		<NcEmptyContent v-if="loading && !hasData" :title="t('pipelinq', 'Loading dashboard…')">
-			<template #icon>
-				<NcLoadingIcon :size="64" />
+	<div>
+		<CnDashboardPage
+			:title="t('pipelinq', 'Dashboard')"
+			:widgets="widgetDefs"
+			:layout="dashboardLayout"
+			:loading="loading && !hasData"
+			:empty-label="t('pipelinq', 'No widgets configured')"
+			:unavailable-label="t('pipelinq', 'Widget not available')"
+			@layout-change="onLayoutChange">
+			<!-- Header actions: quick action buttons -->
+			<template #header-actions>
+				<NcButton type="primary" @click="showLeadDialog = true">
+					<template #icon>
+						<Plus :size="20" />
+					</template>
+					{{ t('pipelinq', 'New Lead') }}
+				</NcButton>
+				<NcButton @click="showRequestDialog = true">
+					<template #icon>
+						<Plus :size="20" />
+					</template>
+					{{ t('pipelinq', 'New Request') }}
+				</NcButton>
+				<NcButton @click="showClientDialog = true">
+					<template #icon>
+						<Plus :size="20" />
+					</template>
+					{{ t('pipelinq', 'New Client') }}
+				</NcButton>
+				<NcButton :disabled="loading"
+					:aria-label="t('pipelinq', 'Refresh dashboard')"
+					@click="fetchAll">
+					<template #icon>
+						<Refresh :size="20" :class="{ 'icon-spinning': loading }" />
+					</template>
+				</NcButton>
 			</template>
-		</NcEmptyContent>
 
-		<!-- Empty welcome state (no data + not loading + no error) -->
-		<div v-else-if="isEmpty" class="welcome-message">
-			<p>{{ t('pipelinq', 'Welcome to Pipelinq! Get started by creating your first client, lead, or request using the buttons above.') }}</p>
-		</div>
-
-		<!-- Widget grid -->
-		<div v-else class="dashboard-grid">
-			<!-- Row 1: 4 KPI tiles -->
-			<section class="dashboard-cell dashboard-cell--kpi">
+			<!-- Open Leads count widget -->
+			<template #widget-count-open-leads>
 				<CnStatsBlock
 					:title="t('pipelinq', 'Open Leads')"
 					:count="kpi.openLeads"
@@ -53,9 +47,10 @@
 					variant="primary"
 					horizontal
 					:route="{ name: 'Leads', query: { status: 'open' } }" />
-			</section>
+			</template>
 
-			<section class="dashboard-cell dashboard-cell--kpi">
+			<!-- Open Requests count widget -->
+			<template #widget-count-open-requests>
 				<CnStatsBlock
 					:title="t('pipelinq', 'Open Requests')"
 					:count="kpi.openRequests"
@@ -64,9 +59,10 @@
 					variant="primary"
 					horizontal
 					:route="{ name: 'Requests', query: { status: 'open' } }" />
-			</section>
+			</template>
 
-			<section class="dashboard-cell dashboard-cell--kpi">
+			<!-- Pipeline Value count widget -->
+			<template #widget-count-pipeline-value>
 				<CnStatsBlock
 					:title="t('pipelinq', 'Pipeline Value')"
 					:count="kpi.pipelineValue"
@@ -75,9 +71,10 @@
 					variant="success"
 					horizontal
 					:route="{ name: 'Pipeline' }" />
-			</section>
+			</template>
 
-			<section class="dashboard-cell dashboard-cell--kpi">
+			<!-- Overdue count widget -->
+			<template #widget-count-overdue>
 				<CnStatsBlock
 					:title="t('pipelinq', 'Overdue')"
 					:count="kpi.overdueItems"
@@ -86,13 +83,10 @@
 					:variant="kpi.overdueItems > 0 ? 'error' : 'default'"
 					horizontal
 					:route="{ name: 'Leads', query: { overdue: 'true' } }" />
-			</section>
+			</template>
 
-			<!-- Row 2: Requests by Status (left) + Complaints (right) -->
-			<section class="dashboard-cell dashboard-cell--half">
-				<h3 class="dashboard-cell__title">
-					{{ t('pipelinq', 'Requests by Status') }}
-				</h3>
+			<!-- Deals by Stage widget -->
+			<template #widget-deals-by-stage>
 				<div class="status-widget-content">
 					<div v-if="allRequests.length === 0" class="chart-empty">
 						{{ t('pipelinq', 'No requests yet') }}
@@ -112,22 +106,10 @@
 						</div>
 					</div>
 				</div>
-			</section>
+			</template>
 
-			<section class="dashboard-cell dashboard-cell--half">
-				<h3 class="dashboard-cell__title">
-					{{ t('pipelinq', 'Complaints') }}
-				</h3>
-				<ComplaintsOverviewWidget
-					:complaints="allComplaints"
-					:loading="loading" />
-			</section>
-
-			<!-- Row 3: My Work (left) + Client Overview (right) -->
-			<section class="dashboard-cell dashboard-cell--half">
-				<h3 class="dashboard-cell__title">
-					{{ t('pipelinq', 'My Work') }}
-				</h3>
+			<!-- My Work widget -->
+			<template #widget-my-work>
 				<div class="my-work-widget-content">
 					<div v-if="myWorkItems.length === 0" class="chart-empty">
 						{{ t('pipelinq', 'No items assigned to you') }}
@@ -157,12 +139,10 @@
 						</NcButton>
 					</div>
 				</div>
-			</section>
+			</template>
 
-			<section class="dashboard-cell dashboard-cell--half">
-				<h3 class="dashboard-cell__title">
-					{{ t('pipelinq', 'Client Overview') }}
-				</h3>
+			<!-- Client Overview widget -->
+			<template #widget-client-overview>
 				<div class="client-overview-content">
 					<div v-if="allClients.length === 0" class="chart-empty">
 						{{ t('pipelinq', 'No clients yet') }}
@@ -185,8 +165,22 @@
 						</NcButton>
 					</div>
 				</div>
-			</section>
-		</div>
+			</template>
+
+			<!-- Complaints Overview widget -->
+			<template #widget-complaints-overview>
+				<ComplaintsOverviewWidget
+					:complaints="allComplaints"
+					:loading="loading" />
+			</template>
+
+			<!-- Empty state override with welcome message -->
+			<template #empty>
+				<div v-if="isEmpty" class="welcome-message">
+					<p>{{ t('pipelinq', 'Welcome to Pipelinq! Get started by creating your first client, lead, or request using the buttons above.') }}</p>
+				</div>
+			</template>
+		</CnDashboardPage>
 
 		<!-- Error display -->
 		<div v-if="error" class="dashboard-error">
@@ -215,8 +209,8 @@
 </template>
 
 <script>
-import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
-import { CnStatsBlock } from '@conduction/nextcloud-vue'
+import { NcButton } from '@nextcloud/vue'
+import { CnDashboardPage, CnStatsBlock } from '@conduction/nextcloud-vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
@@ -236,12 +230,27 @@ import { formatCurrency, formatDate } from '../services/localeUtils.js'
 
 const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 }
 
+/**
+ * Default dashboard layout — 4 count tiles across the top row (3 cols each),
+ * then deals-by-stage and my-work share the second row,
+ * client-overview spans full width on third row.
+ */
+const DEFAULT_LAYOUT = [
+	{ id: 1, widgetId: 'count-open-leads', gridX: 0, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
+	{ id: 2, widgetId: 'count-open-requests', gridX: 3, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
+	{ id: 3, widgetId: 'count-pipeline-value', gridX: 6, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
+	{ id: 4, widgetId: 'count-overdue', gridX: 9, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
+	{ id: 5, widgetId: 'deals-by-stage', gridX: 0, gridY: 2, gridWidth: 6, gridHeight: 4 },
+	{ id: 6, widgetId: 'complaints-overview', gridX: 6, gridY: 2, gridWidth: 6, gridHeight: 4 },
+	{ id: 7, widgetId: 'my-work', gridX: 0, gridY: 6, gridWidth: 6, gridHeight: 4 },
+	{ id: 8, widgetId: 'client-overview', gridX: 6, gridY: 6, gridWidth: 6, gridHeight: 3 },
+]
+
 export default {
 	name: 'Dashboard',
 	components: {
 		NcButton,
-		NcEmptyContent,
-		NcLoadingIcon,
+		CnDashboardPage,
 		CnStatsBlock,
 		Plus,
 		Refresh,
@@ -270,6 +279,7 @@ export default {
 			allClients: [],
 			myLeads: [],
 			myRequests: [],
+			dashboardLayout: [...DEFAULT_LAYOUT],
 		}
 	},
 	computed: {
@@ -283,6 +293,19 @@ export default {
 			return this.allLeads.length > 0
 				|| this.allRequests.length > 0
 				|| this.allClients.length > 0
+		},
+
+		widgetDefs() {
+			return [
+				{ id: 'count-open-leads', title: t('pipelinq', 'Open Leads'), type: 'custom' },
+				{ id: 'count-open-requests', title: t('pipelinq', 'Open Requests'), type: 'custom' },
+				{ id: 'count-pipeline-value', title: t('pipelinq', 'Pipeline Value'), type: 'custom' },
+				{ id: 'count-overdue', title: t('pipelinq', 'Overdue'), type: 'custom' },
+				{ id: 'deals-by-stage', title: t('pipelinq', 'Requests by Status'), type: 'custom' },
+				{ id: 'complaints-overview', title: t('pipelinq', 'Complaints'), type: 'custom' },
+				{ id: 'my-work', title: t('pipelinq', 'My Work'), type: 'custom' },
+				{ id: 'client-overview', title: t('pipelinq', 'Client Overview'), type: 'custom' },
+			]
 		},
 
 		// --- KPI computations ---
@@ -518,6 +541,10 @@ export default {
 			return data.results || data || []
 		},
 
+		onLayoutChange(newLayout) {
+			this.dashboardLayout = newLayout
+		},
+
 		formatCurrency(value) {
 			return formatCurrency(value)
 		},
@@ -553,81 +580,9 @@ export default {
 </script>
 
 <style scoped>
-.dashboard-root {
-	padding: 16px 20px 24px;
-	display: flex;
-	flex-direction: column;
-	gap: 16px;
-}
-
-.dashboard-actions {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 8px;
-	align-items: center;
-}
-
-/* Plain CSS-grid replacement for CnDashboardPage's gridstack layout.
- * 4 KPI tiles on row 1; three rows of two half-width widgets below.
- * Collapses gracefully on narrow viewports.
- */
-.dashboard-grid {
-	display: grid;
-	grid-template-columns: repeat(4, 1fr);
-	gap: 16px;
-}
-
-.dashboard-cell {
-	background: var(--color-main-background);
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-large, 8px);
-	padding: 12px;
-	min-height: 0;
-	display: flex;
-	flex-direction: column;
-}
-
-.dashboard-cell--kpi {
-	grid-column: span 1;
-	padding: 0;
-	border: none;
-	background: transparent;
-}
-
-.dashboard-cell--half {
-	grid-column: span 2;
-	min-height: 280px;
-}
-
-.dashboard-cell__title {
-	margin: 0 0 12px;
-	font-size: 14px;
-	font-weight: 600;
-	color: var(--color-text-maxcontrast);
-}
-
-@media (max-width: 1100px) {
-	.dashboard-grid {
-		grid-template-columns: repeat(2, 1fr);
-	}
-	.dashboard-cell--kpi,
-	.dashboard-cell--half {
-		grid-column: span 2;
-	}
-}
-
-@media (max-width: 600px) {
-	.dashboard-grid {
-		grid-template-columns: 1fr;
-	}
-	.dashboard-cell--kpi,
-	.dashboard-cell--half {
-		grid-column: span 1;
-	}
-}
-
 /* Status chart widget */
 .status-widget-content {
+	padding: 12px;
 	height: 100%;
 }
 
@@ -682,6 +637,7 @@ export default {
 
 /* My Work widget */
 .my-work-widget-content {
+	padding: 4px 0;
 	height: 100%;
 	overflow: auto;
 }
@@ -763,6 +719,7 @@ export default {
 
 /* Client overview widget */
 .client-overview-content {
+	padding: 4px 0;
 	height: 100%;
 	overflow: auto;
 }
