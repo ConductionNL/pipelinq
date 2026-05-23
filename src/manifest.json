@@ -154,9 +154,41 @@
 		{
 			"id": "Dashboard",
 			"route": "/",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Dashboard",
-			"component": "DashboardView"
+			"actionsComponent": "DashboardHeaderActions",
+			"config": {
+				"widgets": [
+					{ "id": "open-leads",         "type": "custom", "title": "Open Leads" },
+					{ "id": "open-requests",      "type": "custom", "title": "Open Requests" },
+					{ "id": "pipeline-value",     "type": "custom", "title": "Pipeline Value" },
+					{ "id": "overdue",            "type": "custom", "title": "Overdue" },
+					{ "id": "requests-by-status", "type": "custom", "title": "Requests by Status" },
+					{ "id": "complaints",         "type": "custom", "title": "Complaints" },
+					{ "id": "my-work",            "type": "custom", "title": "My Work" },
+					{ "id": "client-overview",    "type": "custom", "title": "Client Overview" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "open-leads",         "gridX": 0, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": "2", "widgetId": "open-requests",      "gridX": 3, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": "3", "widgetId": "pipeline-value",     "gridX": 6, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": "4", "widgetId": "overdue",            "gridX": 9, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": "5", "widgetId": "requests-by-status", "gridX": 0, "gridY": 2, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "6", "widgetId": "complaints",         "gridX": 6, "gridY": 2, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "7", "widgetId": "my-work",            "gridX": 0, "gridY": 6, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "8", "widgetId": "client-overview",    "gridX": 6, "gridY": 6, "gridWidth": 6, "gridHeight": 4 }
+				]
+			},
+			"slots": {
+				"widget-open-leads": "OpenLeadsKpiWidget",
+				"widget-open-requests": "OpenRequestsKpiWidget",
+				"widget-pipeline-value": "PipelineValueKpiWidget",
+				"widget-overdue": "OverdueKpiWidget",
+				"widget-requests-by-status": "RequestsByStatusWidget",
+				"widget-complaints": "ComplaintsWidget",
+				"widget-my-work": "MyWorkWidget",
+				"widget-client-overview": "ClientOverviewWidget"
+			}
 		},
 		{
 			"id": "Clients",
