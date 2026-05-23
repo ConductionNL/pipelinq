@@ -1202,7 +1202,7 @@
         "slug": "task",
         "title": "Task",
         "icon": "ClipboardCheck",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "summary": "A callback request or follow-up task (terugbelverzoek / opvolgtaak / informatievraag)",
         "description": "Represents an internal task — a callback request (terugbelverzoek), follow-up task (opvolgtaak), or information request (informatievraag) assigned to a user or department. Maps to VNG InterneTaak and Schema.org Action.",
         "@type": "schema:Action",
