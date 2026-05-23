@@ -207,7 +207,8 @@
 			"title": "Client",
 			"config": {
 				"register": "pipelinq",
-				"schema": "client"
+				"schema": "client",
+				"sidebar": true
 			}
 		},
 		{
@@ -238,7 +239,8 @@
 			"title": "Request",
 			"config": {
 				"register": "pipelinq",
-				"schema": "request"
+				"schema": "request",
+				"sidebar": true
 			}
 		},
 		{
@@ -270,7 +272,8 @@
 			"title": "Complaint",
 			"config": {
 				"register": "pipelinq",
-				"schema": "complaint"
+				"schema": "complaint",
+				"sidebar": true
 			}
 		},
 		{
@@ -300,7 +303,8 @@
 			"title": "Contact",
 			"config": {
 				"register": "pipelinq",
-				"schema": "contact"
+				"schema": "contact",
+				"sidebar": true
 			}
 		},
 		{
@@ -332,7 +336,8 @@
 			"title": "Lead",
 			"config": {
 				"register": "pipelinq",
-				"schema": "lead"
+				"schema": "lead",
+				"sidebar": true
 			}
 		},
 		{
@@ -374,7 +379,8 @@
 			"title": "Contactmoment",
 			"config": {
 				"register": "pipelinq",
-				"schema": "contactmoment"
+				"schema": "contactmoment",
+				"sidebar": true
 			}
 		},
 		{
@@ -417,7 +423,8 @@
 			"title": "Task",
 			"config": {
 				"register": "pipelinq",
-				"schema": "task"
+				"schema": "task",
+				"sidebar": true
 			}
 		},
 		{
@@ -448,7 +455,8 @@
 			"title": "Product",
 			"config": {
 				"register": "pipelinq",
-				"schema": "product"
+				"schema": "product",
+				"sidebar": true
 			}
 		},
 		{
@@ -456,7 +464,8 @@
 			"route": "/pipeline",
 			"type": "custom",
 			"title": "Pipeline",
-			"component": "PipelineBoardView"
+			"component": "PipelineBoardView",
+			"_note": "Bespoke kanban board with drag-drop column reorder + per-card status transitions. No lib analogue."
 		},
 		{
 			"id": "Queues",
@@ -486,10 +495,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "queue",
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true
-				}
+				"sidebar": true
 			}
 		},
 		{
@@ -543,8 +549,8 @@
 				"submitMethod": "POST",
 				"fieldWidgets": [
 					{
-						"field": "body",
-						"component": "CnMarkdownEditor"
+						"component": "CnMarkdownEditor",
+						"id": "body"
 					}
 				]
 			}
@@ -575,8 +581,8 @@
 				"submitMethod": "PUT",
 				"fieldWidgets": [
 					{
-						"field": "body",
-						"component": "CnMarkdownEditor"
+						"component": "CnMarkdownEditor",
+						"id": "body"
 					}
 				]
 			}
@@ -632,7 +638,8 @@
 			"title": "Survey",
 			"config": {
 				"register": "pipelinq",
-				"schema": "survey"
+				"schema": "survey",
+				"sidebar": true
 			}
 		},
 		{
@@ -875,9 +882,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "intakeForm",
-				"sidebar": {
-					"enabled": false
-				}
+				"sidebar": true
 			},
 			"slots": {
 				"default": "FormBuilderView"
@@ -891,10 +896,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "intakeForm",
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true
-				}
+				"sidebar": true
 			},
 			"slots": {
 				"default": "FormBuilderView"
@@ -966,9 +968,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "automation",
-				"sidebar": {
-					"enabled": false
-				}
+				"sidebar": true
 			},
 			"slots": {
 				"default": "AutomationBuilderView"
@@ -982,10 +982,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "automation",
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true
-				}
+				"sidebar": true
 			},
 			"slots": {
 				"default": "AutomationBuilderView"
