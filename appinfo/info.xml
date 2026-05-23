@@ -72,8 +72,8 @@ Vrij en open source onder de AGPL-licentie.
     <screenshot>https://raw.githubusercontent.com/ConductionNL/pipelinq/main/img/app-store.svg</screenshot>
 
     <dependencies>
-        <nextcloud min-version="28" max-version="33"/>
-        <php min-version="8.1"/>
+        <nextcloud min-version="28" max-version="34"/>
+        <php min-version="8.3"/>
     </dependencies>
 
     <repair-steps>
