@@ -20,6 +20,8 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/changes/activity-timeline/tasks.md#task-2
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-11
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-12
  */
 
 declare(strict_types=1);
@@ -67,6 +69,8 @@ class ActivityTimelineController extends Controller
      * @return JSONResponse The merged timeline or an error response.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-11
      */
     public function getTimeline(): JSONResponse
     {
@@ -116,6 +120,8 @@ class ActivityTimelineController extends Controller
      * @return JSONResponse The paginated worklog or an error response.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-12
      */
     public function getWorklog(): JSONResponse
     {
@@ -162,6 +168,8 @@ class ActivityTimelineController extends Controller
      * @return JSONResponse The created worklog or an error response.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-12
      */
     public function createWorklog(): JSONResponse
     {

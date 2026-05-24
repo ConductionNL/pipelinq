@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-1
  */
 
 declare(strict_types=1);
@@ -48,6 +50,8 @@ class AdminSettings implements ISettings
      * Get the admin settings form.
      *
      * @return TemplateResponse The settings form template.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-1
      */
     public function getForm(): TemplateResponse
     {

@@ -15,6 +15,9 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-23
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-24
  */
 
 declare(strict_types=1);
@@ -188,6 +191,8 @@ class TaskService
      * @param int    $thresholdHours Hours before deadline to trigger escalation.
      *
      * @return bool True if the deadline is within the threshold.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-24
      */
     public function isDeadlineApproaching(string $deadline, int $thresholdHours=4): bool
     {
@@ -205,6 +210,8 @@ class TaskService
      * @param string $deadline ISO 8601 deadline datetime.
      *
      * @return bool True if the deadline has passed.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-23
      */
     public function isDeadlinePassed(string $deadline): bool
     {

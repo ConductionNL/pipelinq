@@ -15,6 +15,9 @@
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-54
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-56
  */
 
 declare(strict_types=1);
@@ -45,6 +48,8 @@ class MetricsRepository
      * Get lead counts grouped by status and pipeline.
      *
      * @return array<array{status: string, pipeline: string, cnt: string}> Grouped counts.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-54
      */
     public function getLeadCounts(): array
     {
@@ -78,6 +83,8 @@ class MetricsRepository
      * Get lead value totals grouped by pipeline.
      *
      * @return array<array{pipeline: string, total_value: string}> Pipeline values.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-56
      */
     public function getLeadValueByPipeline(): array
     {
@@ -114,6 +121,8 @@ class MetricsRepository
      * @param string $pattern SQL LIKE pattern for schema title.
      *
      * @return int Object count.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-54
      */
     public function countObjectsBySchemaPattern(string $pattern): int
     {
@@ -142,6 +151,8 @@ class MetricsRepository
      * Get service request counts grouped by status.
      *
      * @return array<array{status: string, cnt: string}> Grouped counts.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-54
      */
     public function getRequestCounts(): array
     {
