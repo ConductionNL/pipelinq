@@ -239,7 +239,7 @@ class ActivityTimelineService
      *
      * @return string The public activity type label.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-activity-timeline/tasks.md#task-2
+     * @spec openspec/changes/archive/retrofit-2026-05-24-activity-timeline/tasks.md#task-2
      */
     private function sourceToActivityType(string $sourceType): string
     {
@@ -260,7 +260,7 @@ class ActivityTimelineService
      *
      * @return array<int,string>|null A list of activity types, or null if no filter applied.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-activity-timeline/tasks.md#task-1
+     * @spec openspec/changes/archive/retrofit-2026-05-24-activity-timeline/tasks.md#task-1
      */
     private function normaliseTypes(mixed $rawTypes): ?array
     {
@@ -297,7 +297,7 @@ class ActivityTimelineService
      *
      * @return array<int,array<string,mixed>> The raw object arrays.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-activity-timeline/tasks.md#task-3
+     * @spec openspec/changes/archive/retrofit-2026-05-24-activity-timeline/tasks.md#task-3
      */
     private function querySchema(string $registerId, string $schemaId, array $filters): array
     {
@@ -337,7 +337,7 @@ class ActivityTimelineService
      *
      * @return array<int,array<string,mixed>> A list of plain object arrays.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-activity-timeline/tasks.md#task-3
+     * @spec openspec/changes/archive/retrofit-2026-05-24-activity-timeline/tasks.md#task-3
      */
     private function normaliseResultset(mixed $results): array
     {
@@ -382,7 +382,7 @@ class ActivityTimelineService
      *
      * @return bool True if the date falls inside the requested range.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-activity-timeline/tasks.md#task-4
+     * @spec openspec/changes/archive/retrofit-2026-05-24-activity-timeline/tasks.md#task-4
      */
     private function withinDateRange(?string $date, ?string $from, ?string $to): bool
     {
@@ -725,7 +725,7 @@ class ActivityTimelineService
      *
      * @return array<string,mixed> The flat object array.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-activity-timeline/tasks.md#task-3
+     * @spec openspec/changes/archive/retrofit-2026-05-24-activity-timeline/tasks.md#task-3
      */
     private function extractObjectArray(mixed $saved): array
     {
@@ -761,7 +761,7 @@ class ActivityTimelineService
      *
      * @return int Total seconds.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-activity-timeline/tasks.md#task-5
+     * @spec openspec/changes/archive/retrofit-2026-05-24-activity-timeline/tasks.md#task-5
      */
     private function isoDurationToSeconds(string $duration): int
     {
@@ -788,7 +788,7 @@ class ActivityTimelineService
      *
      * @return string The ISO 8601 duration.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-activity-timeline/tasks.md#task-5
+     * @spec openspec/changes/archive/retrofit-2026-05-24-activity-timeline/tasks.md#task-5
      */
     private function secondsToIsoDuration(int $seconds): string
     {
