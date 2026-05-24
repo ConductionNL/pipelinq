@@ -12,7 +12,7 @@ Add complaint registration and tracking to Pipelinq, enabling KCC agents and CRM
 
 ## Requirements
 
-### REQ-KL-001: Complaint Schema in Register
+### Requirement: Complaint Schema in Register
 
 The system MUST define a `complaint` schema in the Pipelinq register configuration with all required fields for complaint registration.
 
@@ -43,7 +43,7 @@ The system MUST define a `complaint` schema in the Pipelinq register configurati
 
 ---
 
-### REQ-KL-002: Complaint Registration Form
+### Requirement: Complaint Registration Form
 
 The system MUST provide a complaint form for creating and editing complaints with validation.
 
@@ -77,7 +77,7 @@ The system MUST provide a complaint form for creating and editing complaints wit
 
 ---
 
-### REQ-KL-003: Complaint List View
+### Requirement: Complaint List View
 
 The complaint list MUST support search, filtering by status/category/priority, sorting, and pagination.
 
@@ -129,7 +129,7 @@ The complaint list MUST support search, filtering by status/category/priority, s
 
 ---
 
-### REQ-KL-004: Complaint Detail View
+### Requirement: Complaint Detail View
 
 The complaint detail view MUST show all complaint information, linked entities, status timeline, and resolution fields.
 
@@ -171,7 +171,7 @@ The complaint detail view MUST show all complaint information, linked entities, 
 
 ---
 
-### REQ-KL-005: Complaint Audit Trail
+### Requirement: Complaint Audit Trail
 
 The system MUST maintain a full audit trail of all complaint status changes visible on the complaint detail.
 
@@ -194,7 +194,7 @@ The system MUST maintain a full audit trail of all complaint status changes visi
 
 ---
 
-### REQ-KL-006: Complaint Dashboard Widget
+### Requirement: Complaint Dashboard Widget
 
 The dashboard MUST include a complaints widget showing key metrics.
 
@@ -210,7 +210,7 @@ The dashboard MUST include a complaints widget showing key metrics.
 
 ---
 
-### REQ-KL-007: Complaints on Client Detail
+### Requirement: Complaints on Client Detail
 
 Complaints linked to a client MUST be visible on the client detail view.
 
@@ -225,7 +225,7 @@ Complaints linked to a client MUST be visible on the client detail view.
 
 ---
 
-### REQ-KL-008: SLA Configuration
+### Requirement: SLA Configuration
 
 The admin settings MUST allow configuring SLA response times per complaint category.
 
@@ -243,7 +243,7 @@ The admin settings MUST allow configuring SLA response times per complaint categ
 
 ---
 
-### REQ-KL-009: Backend SLA Deadline Service
+### Requirement: Backend SLA Deadline Service
 
 A PHP service MUST calculate SLA deadlines and provide SLA configuration helpers for backend use.
 
@@ -268,7 +268,7 @@ A PHP service MUST calculate SLA deadlines and provide SLA configuration helpers
 
 ---
 
-### REQ-KL-010: Background Job for SLA Monitoring
+### Requirement: Background Job for SLA Monitoring
 
 A timed background job MUST periodically check for overdue complaints and log warnings.
 
