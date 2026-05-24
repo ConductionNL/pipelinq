@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-2
  */
 
 declare(strict_types=1);
@@ -85,6 +87,8 @@ class InitializeSettings implements IRepairStep
      * @param IOutput $output The output interface.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-2
      */
     public function run(IOutput $output): void
     {

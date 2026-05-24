@@ -23,6 +23,9 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/changes/activity-timeline/tasks.md#task-1
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-12
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-13
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-14
  */
 
 declare(strict_types=1);
@@ -121,6 +124,8 @@ class ActivityTimelineService
      * @param array<string,mixed> $params     Request parameters: from, to, types[], _page, _limit.
      *
      * @return array{items: array<int,array<string,mixed>>, total: int, page: int, pages: int}
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-13
      */
     public function getTimeline(string $entityType, string $entityId, array $params): array
     {
@@ -415,6 +420,8 @@ class ActivityTimelineService
      * @param string $entityId   The entity UUID.
      *
      * @return array<string,array<string,mixed>> Map of source-type => filter array.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-13
      */
     public function resolveEntityQueryParams(string $entityType, string $entityId): array
     {
@@ -452,6 +459,8 @@ class ActivityTimelineService
      * @param string              $entityId   The originating entityId for back-reference.
      *
      * @return array<string,mixed>|null The normalised item, or null if it should be skipped.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-14
      */
     public function normalizeActivity(string $sourceType, array $object, string $entityType, string $entityId): ?array
     {
@@ -546,6 +555,8 @@ class ActivityTimelineService
      * @return array<string,mixed> The normalised created worklog item.
      *
      * @throws \RuntimeException If configuration or services are missing.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-12
      */
     public function createWorklog(string $entityType, string $entityId, array $data): array
     {
@@ -611,6 +622,8 @@ class ActivityTimelineService
      * @param array<string,mixed> $params     Request parameters: _page, _limit.
      *
      * @return array{items: array<int,array<string,mixed>>, total: int, page: int, pages: int, totalDuration: string}
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-12
      */
     public function getWorklog(string $entityType, string $entityId, array $params): array
     {

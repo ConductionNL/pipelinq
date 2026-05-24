@@ -15,6 +15,9 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-6
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-7
  */
 
 declare(strict_types=1);
@@ -116,6 +119,8 @@ class DefaultQueueService
      * Create default queues if none exist.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-7
      */
     public function createDefaultQueues(): void
     {
@@ -173,6 +178,8 @@ class DefaultQueueService
      * Create default skills if none exist.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-6
      */
     public function createDefaultSkills(): void
     {

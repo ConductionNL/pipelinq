@@ -15,6 +15,9 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-43
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-44
  */
 
 declare(strict_types=1);
@@ -57,6 +60,8 @@ class IntakeFormController extends Controller
      * @return JSONResponse The embed code (iframe and JS snippet).
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-43
      */
     public function embed(string $id): JSONResponse
     {
@@ -78,6 +83,8 @@ class IntakeFormController extends Controller
      * @return DataDownloadResponse The CSV download response.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-44
      */
     public function export(string $id): DataDownloadResponse
     {

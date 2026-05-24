@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-4
  */
 
 declare(strict_types=1);
@@ -51,6 +53,8 @@ class DefaultPipelineService
      * Create default pipelines if none exist.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-4
      */
     public function createDefaultPipelines(): void
     {
