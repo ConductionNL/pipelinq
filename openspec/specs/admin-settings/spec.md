@@ -14,7 +14,7 @@ The admin settings page provides a Nextcloud admin panel for configuring Pipelin
 
 ## Requirements
 
-### REQ-AS-010: Nextcloud Admin Panel Registration [MVP]
+### Requirement: Nextcloud Admin Panel Registration [MVP]
 
 The system MUST register a settings page in the Nextcloud admin panel under "Administration". Only users with Nextcloud admin privileges MUST be able to access this page.
 
@@ -43,7 +43,7 @@ The system MUST register a settings page in the Nextcloud admin panel under "Adm
 
 ---
 
-### REQ-AS-012: Register Status Display [MVP]
+### Requirement: Register Status Display [MVP]
 
 The admin settings page MUST display the current register configuration status so administrators can verify the OpenRegister integration is working.
 
@@ -67,7 +67,7 @@ The admin settings page MUST display the current register configuration status s
 
 ---
 
-### REQ-AS-015: Re-import Configuration Action [MVP]
+### Requirement: Re-import Configuration Action [MVP]
 
 The admin settings page MUST provide a button to re-run the register configuration import, allowing administrators to recover from failed imports or apply updated schemas.
 
@@ -88,7 +88,7 @@ The admin settings page MUST provide a button to re-run the register configurati
 
 ---
 
-### REQ-AS-020: Pipeline Management [MVP]
+### Requirement: Pipeline Management [MVP]
 
 The admin settings MUST provide full CRUD operations for pipelines. Pipelines are stored as OpenRegister objects with schema `pipeline`.
 
@@ -139,7 +139,7 @@ The admin settings MUST provide full CRUD operations for pipelines. Pipelines ar
 
 ---
 
-### REQ-AS-030: Stage Management [MVP]
+### Requirement: Stage Management [MVP]
 
 The admin settings MUST provide CRUD operations for stages within each pipeline. Stages are stored as OpenRegister objects with schema `stage`.
 
@@ -207,7 +207,7 @@ The admin settings MUST provide CRUD operations for stages within each pipeline.
 
 ---
 
-### REQ-AS-040: Default Pipeline Selection [MVP]
+### Requirement: Default Pipeline Selection [MVP]
 
 The admin settings MUST allow selecting one pipeline as the default. The default pipeline is used when creating new leads or requests that are not explicitly assigned to a pipeline.
 
@@ -242,7 +242,7 @@ The admin settings MUST allow selecting one pipeline as the default. The default
 
 ---
 
-### REQ-AS-050: Lead Source Configuration [V1]
+### Requirement: Lead Source Configuration [V1]
 
 The admin settings SHOULD allow customizing the list of available lead source values. Lead sources are displayed as a dropdown when creating or editing leads.
 
@@ -289,7 +289,7 @@ The admin settings SHOULD allow customizing the list of available lead source va
 
 ---
 
-### REQ-AS-060: Request Channel Configuration [V1]
+### Requirement: Request Channel Configuration [V1]
 
 The admin settings SHOULD allow customizing the list of available request channel values. Channels are displayed as a dropdown when creating or editing requests.
 
@@ -329,7 +329,7 @@ The admin settings SHOULD allow customizing the list of available request channe
 
 ---
 
-### REQ-AS-070: Default Pipelines on Installation [MVP]
+### Requirement: Default Pipelines on Installation [MVP]
 
 When Pipelinq is installed for the first time, the system MUST create default pipelines and stages via the repair step / configuration import.
 
@@ -370,7 +370,7 @@ When Pipelinq is installed for the first time, the system MUST create default pi
 
 ---
 
-### REQ-AS-080: Settings Persistence [MVP]
+### Requirement: Settings Persistence [MVP]
 
 All admin settings MUST be persisted and survive app updates and server restarts.
 
@@ -392,7 +392,7 @@ All admin settings MUST be persisted and survive app updates and server restarts
 
 ---
 
-### REQ-AS-090: Queue Management Section [Enterprise]
+### Requirement: Queue Management Section [Enterprise]
 
 The admin settings page SHALL include a "Queues" section for managing queues. Admins can create, edit, and delete queues, configure categories, set capacity limits, and assign agents to queues.
 
@@ -423,7 +423,7 @@ The admin settings page SHALL include a "Queues" section for managing queues. Ad
 
 ---
 
-### REQ-AS-100: Skill Management Section [Enterprise]
+### Requirement: Skill Management Section [Enterprise]
 
 The admin settings page SHALL include a "Skills" section for managing skill definitions and agent skill profiles.
 
@@ -550,7 +550,7 @@ The admin settings page provides a Nextcloud admin panel for configuring Pipelin
 
 ## Requirements
 
-### REQ-AS-010: Nextcloud Admin Panel Registration [MVP]
+### Requirement: Nextcloud Admin Panel Registration [MVP]
 
 The system MUST register a settings page in the Nextcloud admin panel under "Administration". Only users with Nextcloud admin privileges MUST be able to access this page. The implementation uses `OCP\Settings\ISettings` (`AdminSettings.php`) and `OCP\Settings\IIconSection` (`SettingsSection.php`) to register the "Pipelinq" section with priority 10.
 
