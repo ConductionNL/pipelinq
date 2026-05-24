@@ -15,6 +15,9 @@
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-53
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-54
  */
 
 declare(strict_types=1);
@@ -59,6 +62,8 @@ class MetricsController extends Controller
      * @NoCSRFRequired
      *
      * @return TextPlainResponse Prometheus-formatted metrics.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-53
      */
     public function index(): TextPlainResponse
     {
@@ -73,6 +78,8 @@ class MetricsController extends Controller
      * Collect all metrics and format as Prometheus text.
      *
      * @return string Prometheus exposition format text.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-54
      */
     private function collectMetrics(): string
     {

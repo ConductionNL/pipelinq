@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-19
  */
 
 declare(strict_types=1);
@@ -48,6 +50,8 @@ class ProviderSubjectHandler
      * @param array  $params The subject parameters.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-19
      */
     public function applySubjectText(IEvent $event, object $l, array $params): void
     {
