@@ -1,14 +1,12 @@
 {
   "schema_version": 2,
-  "spec_slug": "email-calendar-sync",
-  "title": "Email Calendar Sync",
+  "spec_slug": "public-intake-forms",
   "app": "pipelinq",
   "repo": "https://github.com/ConductionNL/pipelinq",
   "depends_on": [
-    "integration-calendar",
-    "integration-email"
+    "integration-forms"
   ],
-  "issue": null,
+  "issue": "",
   "pipeline": {},
   "cycles": []
 }
