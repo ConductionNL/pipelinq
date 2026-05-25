@@ -1,40 +1,78 @@
-# Proposal: time-entry-core (timer, manual, weekly grid)
+# Proposal: time-entry-core (consume the time-tracker leaf)
 
-## Problem
+## Why
 
-Pipelinq has no time tracking functionality. 22 out of 26 analysed competitors offer time entry in at least one mode (timer, manual, or weekly grid). Without time entry, professional services organisations and knowledge workers using Pipelinq cannot log billable hours against clients and leads, making downstream invoicing and project profitability analysis impossible.
+Pipelinq needs time capture against clients, leads, projects and requests so
+that downstream billing (shillinq) and profitability analysis are possible.
+The original draft of this change proposed a bespoke time-tracking subsystem
+inside Pipelinq: a `timeEntry` schema, a `TimerController`, a `TimeEntryService`
+and five Vue views (`TimerWidget`, `TimeEntryList`, `ManualEntryDialog`,
+`WeeklyGrid`, `TimeEntryDetail`).
 
-Specific gaps:
-1. No start/stop timer for active work sessions
-2. No manual entry for past hours
-3. No weekly timesheet grid for multi-day overview
-4. No per-entry comment or edit window
+Per **hydra ADR-022** (apps consume OpenRegister abstractions over local
+duplication) this is now a leaf-consumption change. OpenRegister ships the
+**time-tracker leaf** (`openregister/openspec/changes/integration-time-tracker/`)
+which provides hour capture as a reusable integration: `TimeEntryService` +
+`TimeController` + `TimeProvider` + `CnTimeTab` (quick-log form, entries grouped
+by user/date, total hours) + `CnTimeCard` widget on all four surfaces. The leaf
+is gated on the NC `timemanager` app and stores entries in an OR link table
+(`time entries linked to object/user`).
 
-## Solution
+Building a parallel timer/schema/service in Pipelinq is exactly the
+"parallel mechanism" ADR-022 forbids: it would duplicate the leaf's data model,
+drift from its audit/RBAC, and never inherit future capabilities. Pipelinq
+therefore **consumes** the time-tracker leaf for capture and keeps only the
+pipelinq-specific glue: declaring which entities a time entry attaches to.
 
-Implement the Time Entry Core module — a foundational time tracking subsystem within Pipelinq that adds:
+The decision recorded by the user: **time-tracker leaf for capture, shillinq
+for billing.** Approval + invoicing are explicitly out of scope for this change
+and for the leaf (see `time-approval-workflow`, which hands that scope to
+shillinq).
 
-1. **Start/stop timer** — One-click timer visible from any page via a persistent header widget; automatically records start and end timestamps and computes duration
-2. **Manual entry** — Form-based entry dialog for logging past hours with date, duration, description, and optional client/lead link
-3. **Weekly timesheet grid** — Spreadsheet-style view showing all entries across a selected week, grouped by day; inline duration editing; weekly totals per row
-4. **Edit window** — Full edit dialog for any existing entry (change date, duration, description, comment, billable flag, client/lead link)
-5. **Comment per entry** — Free-text comment field separate from description, displayed in list and grid views
+## What Changes
 
-### Out of scope
+### Consume the time-tracker leaf (no bespoke time subsystem)
 
-- Idle detection and Pomodoro timer (Enterprise)
-- Desktop auto-tracker (background window tracking) (Enterprise)
-- Kiosk / shift-clock PIN mode (Enterprise)
-- 6-minute billing increment rounding (V2)
-- Bulk paste / mass import of entries (V2)
-- Mobile native app (V2)
-- Labour-law break compliance rules (V2)
-- Entry approval workflow with manager review (V2)
+1. **Remove the bespoke time subsystem from scope** — no `timeEntry` schema, no
+   `TimerController`, no `TimeEntryService`, no bespoke timer/grid/list/detail
+   Vue views. The leaf owns capture, the entry data model, the timer state, the
+   weekly grouping and the totals.
+2. **Add `time-tracker` to `linkedTypes`** on the Pipelinq schemas that should
+   support hour capture (`client`, `lead`, `request`, and any project/deal
+   schema). This is the pipelinq-specific glue: it declares *which entities* a
+   time entry attaches to. The leaf's tab + widget then auto-appear on those
+   objects.
+3. **Place the leaf widget + tab via the app manifest (ADR-024).** The leaf's
+   `CnTimeCard` widget is added to the relevant detail pages' sidebar tabs
+   (`pages[].sidebar`/`sidebarProps.tabs[]` with the time-tracker tab) and,
+   where useful, to the dashboard (`type:"dashboard"` widget showing
+   "today's hours"). The leaf's `CnTimeTab` is mounted via the integration
+   registry, not as bespoke pipelinq components.
+4. **Declare the `timemanager` dependency** in `src/manifest.json`
+   `dependencies[]` so the install-time requirement is explicit.
+5. **Link via OR integration endpoints.** Capture, listing and totals all flow
+   through the leaf's `TimeController` / OR integration link endpoints
+   (`openregister_*_links`), not through any pipelinq-owned route.
+
+## Out of Scope
+
+- Hour-capture data model, timer state, weekly grid, totals — owned by the
+  time-tracker leaf, not Pipelinq.
+- Approval / submission / period-locking — see `time-approval-workflow`
+  (handed to shillinq).
+- Invoicing / rate management — shillinq.
+- Mobile / offline capture UX — see `time-entry-mobile` (also leaf-backed).
 
 ## Impact
 
-- **New schemas**: 1 (`timeEntry`)
-- **New backend files**: 2 (`TimerController.php`, `TimeEntryService.php`)
-- **New frontend files**: 5 views (`TimerWidget.vue`, `TimeEntryList.vue`, `ManualEntryDialog.vue`, `WeeklyGrid.vue`, `TimeEntryDetail.vue`)
-- **Modified files**: 3 (`pipelinq_register.json`, `appinfo/routes.php`, `src/router/index.js`, `src/navigation/MainMenu.vue`)
-- **Risk**: Medium — introduces first time-tracking subsystem; timer state requires careful session handling
+- **New schemas**: 0 (capture model owned by the leaf).
+- **Modified schemas**: Pipelinq register schemas gain `time-tracker` in
+  `linkedTypes`.
+- **Modified files**: `src/manifest.json` (tab/widget placement + `timemanager`
+  dependency), `lib/Settings/pipelinq_register.json` (`linkedTypes` only).
+- **Removed from prior draft**: `timeEntry` schema, `TimerController.php`,
+  `TimeEntryService.php`, 5 bespoke Vue views.
+- **Dependency**: OpenRegister `integration-time-tracker` leaf must be shipped;
+  NC `timemanager` app installed at runtime.
+- **Risk**: Low — no app-owned data layer; glue is declarative
+  (`linkedTypes` + manifest).
