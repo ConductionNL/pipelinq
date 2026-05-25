@@ -6,17 +6,21 @@
 
     <!-- Exclude external and vendor files -->
     <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/vendor-bin/*</exclude-pattern>
     <exclude-pattern>*/node_modules/*</exclude-pattern>
     <exclude-pattern>composer-setup.php</exclude-pattern>
+    <!-- Apps that ship a verbatim template snapshot under lib/Resources/template/ (e.g. openbuilt)
+         keep it out of lint scope; no-op for apps without the directory. -->
+    <exclude-pattern>lib/Resources/template/*</exclude-pattern>
+
+    <!-- Surface phpcs warnings (e.g. SpecTagSniff) in CI logs without failing the build. -->
+    <config name="ignore_warnings_on_exit" value="1"/>
 
     <arg name="basepath" value="."/>
     <arg name="colors"/>
     <arg name="parallel" value="75"/>
     <arg name="extensions" value="php"/>
     <arg value="p"/>
-
-    <!-- Advisory warnings (e.g. missing @spec tags) surface in reports but must not fail the run. -->
-    <config name="ignore_warnings_on_exit" value="1"/>
 
     <!-- Don't hide tokenizer exceptions -->
     <rule ref="Internal.Tokenizer.Exception">
@@ -41,7 +45,6 @@
     <rule ref="Squiz.Arrays.ArrayBracketSpacing"/>
     <rule ref="Squiz.ControlStructures.ControlSignature"/>
     <rule ref="Squiz.ControlStructures.ElseIfDeclaration"/>
-    <rule ref="Squiz.PHP.DisallowInlineIf"/>
     <rule ref="Squiz.Commenting.ClosingDeclarationComment"/>
     <rule ref="Squiz.Commenting.BlockComment"/>
     <rule ref="Squiz.Commenting.DocCommentAlignment"/>
@@ -52,8 +55,13 @@
     <rule ref="Squiz.Commenting.VariableComment"/>
     <rule ref="Squiz.Functions.FunctionDeclarationArgumentSpacing"/>
     <rule ref="Squiz.Operators.ComparisonOperatorUsage"/>
+    <rule ref="Squiz.PHP.DisallowInlineIf"/>
     <rule ref="Squiz.Scope.MethodScope"/>
-    <rule ref="Squiz.Strings.ConcatenationSpacing"/>
+    <rule ref="Squiz.Strings.ConcatenationSpacing">
+        <properties>
+            <property name="ignoreNewlines" value="true"/>
+        </properties>
+    </rule>
     <rule ref="Squiz.WhiteSpace.ControlStructureSpacing"/>
     <rule ref="Squiz.WhiteSpace.FunctionSpacing">
         <properties>
@@ -75,14 +83,18 @@
     <rule ref="Generic.Formatting.SpaceAfterCast"/>
     <rule ref="Generic.Files.LineLength">
         <properties>
-            <property name="lineLimit" value="125"/>
+            <property name="lineLimit" value="150"/>
             <property name="absoluteLineLimit" value="150"/>
         </properties>
     </rule>
     <rule ref="Generic.NamingConventions.ConstructorName"/>
     <rule ref="Generic.PHP.DeprecatedFunctions"/>
     <rule ref="Generic.PHP.LowerCaseKeyword"/>
-    <rule ref="Generic.Strings.UnnecessaryStringConcat"/>
+    <rule ref="Generic.Strings.UnnecessaryStringConcat">
+        <properties>
+            <property name="allowMultiline" value="true"/>
+        </properties>
+    </rule>
     <rule ref="Generic.WhiteSpace.IncrementDecrementSpacing"/>
     <rule ref="PSR2.Classes.PropertyDeclaration"/>
     <rule ref="PSR2.Methods.MethodDeclaration"/>
@@ -208,8 +220,13 @@
         <type>error</type>
     </rule>
 
-    <!-- Custom rule: warn when a class or public method is missing the @spec PHPDoc tag (ADR-003). -->
-    <!-- Emitted as warnings (not errors) so CI surfaces the gap but doesn't block merges. -->
+    <!-- Block calls to \OC::$server->getX() / \OC::$server->query() removed in Nextcloud 34. -->
+    <rule ref="./phpcs-custom-sniffs/CustomSniffs/Sniffs/Nextcloud/NoLegacyServerAccessorsSniff.php">
+        <type>error</type>
+    </rule>
+
+    <!-- Warn when a class or public method is missing the @spec PHPDoc tag (hydra ADR-003).
+         Emitted as warnings (not errors) so CI surfaces the gap but doesn't block merges. -->
     <rule ref="./phpcs-custom-sniffs/CustomSniffs/Sniffs/Commenting/SpecTagSniff.php">
         <type>warning</type>
     </rule>

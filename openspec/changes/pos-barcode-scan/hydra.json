@@ -1,0 +1,10 @@
+{
+  "spec_slug": "pos-barcode-scan",
+  "title": "POS Barcode Scan (HID + camera)",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [
+    "pos-product-catalogue"
+  ],
+  "issue": null
+}

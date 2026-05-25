@@ -15,6 +15,9 @@
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-8
  */
 
 declare(strict_types=1);
@@ -111,6 +114,8 @@ class SettingsController extends Controller
      * @return JSONResponse The settings response.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
      */
     public function index(): JSONResponse
     {
@@ -135,6 +140,8 @@ class SettingsController extends Controller
      * marked @NoAdminRequired so non-admin users can read settings.
      *
      * @return JSONResponse The updated settings response.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
      */
     public function create(): JSONResponse
     {
@@ -153,6 +160,8 @@ class SettingsController extends Controller
      * Re-import the Pipelinq configuration from the JSON file.
      *
      * @return JSONResponse The re-import result.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-8
      */
     public function reimport(): JSONResponse
     {

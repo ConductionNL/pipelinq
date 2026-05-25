@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-60
  */
 
 declare(strict_types=1);
@@ -54,6 +56,8 @@ class CalendarSyncService
      * @param array  $attendees        Attendee email addresses.
      *
      * @return array<string, mixed> The CalendarLink data.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-60
      */
     public function buildCalendarLinkData(
         string $eventUid,
@@ -89,6 +93,8 @@ class CalendarSyncService
      * @param array  $attendees   Attendee email addresses.
      *
      * @return string The iCalendar VEVENT string.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-60
      */
     public function generateVEvent(
         string $title,
@@ -142,6 +148,8 @@ class CalendarSyncService
      * @param string $endDate ISO 8601 end date.
      *
      * @return bool True if the event end date has passed.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-60
      */
     public function isEventPassed(string $endDate): bool
     {

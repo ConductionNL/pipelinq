@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
  */
 
 declare(strict_types=1);
@@ -33,6 +35,8 @@ class ContactDataBuilder
      * @param string $uid       The contact UID.
      *
      * @return array The client data ready for saving.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
      */
     public function buildClientImportData(array $ncContact, string $uid): array
     {
@@ -75,6 +79,8 @@ class ContactDataBuilder
      * @param ?string $clientId  The optional client ID.
      *
      * @return array The contact data ready for saving.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
      */
     public function buildContactImportData(array $ncContact, string $uid, ?string $clientId): array
     {

@@ -1,0 +1,131 @@
+# phpstan baseline for pipelinq lint debt.
+#
+# All 25 entries below are tracked in https://github.com/ConductionNL/pipelinq/issues/496
+# and consist of unread DI properties (feature-flag stubs), three unused
+# named-constants (escalation/expiry thresholds awaiting wire-up), one OC-namespace
+# class psalm/phpstan can't see (CsrfTokenManager — fleet decision pending), and
+# two logic warnings worth investigating.
+#
+# Do NOT regenerate this baseline without first triaging issue #496.
+
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\BackgroundJob\\\\CallbackOverdueJob\\:\\:\\$notificationService is never read, only written\\.$#"
+			count: 1
+			path: lib/BackgroundJob/CallbackOverdueJob.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\BackgroundJob\\\\ComplaintSlaJob\\:\\:\\$complaintSlaService is never read, only written\\.$#"
+			count: 1
+			path: lib/BackgroundJob/ComplaintSlaJob.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\BackgroundJob\\\\EmailSyncJob\\:\\:\\$emailSyncService is never read, only written\\.$#"
+			count: 1
+			path: lib/BackgroundJob/EmailSyncJob.php
+
+		-
+			message: "#^Constant OCA\\\\Pipelinq\\\\BackgroundJob\\\\TaskEscalationJob\\:\\:ESCALATION_THRESHOLD_HOURS is unused\\.$#"
+			count: 1
+			path: lib/BackgroundJob/TaskEscalationJob.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\BackgroundJob\\\\TaskEscalationJob\\:\\:\\$taskService is never read, only written\\.$#"
+			count: 1
+			path: lib/BackgroundJob/TaskEscalationJob.php
+
+		-
+			message: "#^Constant OCA\\\\Pipelinq\\\\BackgroundJob\\\\TaskExpiryJob\\:\\:ESCALATION_THRESHOLD is unused\\.$#"
+			count: 1
+			path: lib/BackgroundJob/TaskExpiryJob.php
+
+		-
+			message: "#^Constant OCA\\\\Pipelinq\\\\BackgroundJob\\\\TaskExpiryJob\\:\\:IN_PROGRESS_GRACE is unused\\.$#"
+			count: 1
+			path: lib/BackgroundJob/TaskExpiryJob.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\BackgroundJob\\\\TaskExpiryJob\\:\\:\\$notificationService is never read, only written\\.$#"
+			count: 1
+			path: lib/BackgroundJob/TaskExpiryJob.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Controller\\\\AutomationController\\:\\:\\$l10n is never read, only written\\.$#"
+			count: 1
+			path: lib/Controller/AutomationController.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Controller\\\\SchedulesController\\:\\:\\$groupManager is never read, only written\\.$#"
+			count: 1
+			path: lib/Controller/SchedulesController.php
+
+		-
+			message: "#^Comparison operation \"\\<\" between int\\<0, max\\> and 0 is always false\\.$#"
+			count: 1
+			path: lib/Service/ActivityTimelineService.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\AutomationService\\:\\:\\$appConfig is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/AutomationService.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\AutomationService\\:\\:\\$userSession is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/AutomationService.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\CalendarSyncService\\:\\:\\$logger is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/CalendarSyncService.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\CallbackService\\:\\:\\$logger is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/CallbackService.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\EmailSyncService\\:\\:\\$logger is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/EmailSyncService.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\IntakeFormService\\:\\:\\$appConfig is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/IntakeFormService.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\IntakeFormService\\:\\:\\$logger is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/IntakeFormService.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\KennisbankService\\:\\:\\$logger is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/KennisbankService.php
+
+		-
+			message: "#^Parameter \\$csrfTokenManager of method OCA\\\\Pipelinq\\\\Service\\\\NoteEventService\\:\\:__construct\\(\\) has invalid type OC\\\\Security\\\\CSRF\\\\CsrfTokenManager\\.$#"
+			count: 2
+			path: lib/Service/NoteEventService.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\ReportingService\\:\\:\\$logger is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/ReportingService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between true and false will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/ScheduledTaskService.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\TaskService\\:\\:\\$logger is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/TaskService.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\TaskService\\:\\:\\$userSession is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/TaskService.php

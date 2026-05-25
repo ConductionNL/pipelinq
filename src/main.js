@@ -16,6 +16,7 @@ import pinia from './pinia.js'
 import App from './App.vue'
 import bundledManifest from './manifest.json'
 import customComponents from './customComponents.js'
+import registry from './registry.js'
 import { initializeStores } from './store/store.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
@@ -103,6 +104,7 @@ tryLoadTranslations()
 // of @conduction/nextcloud-vue@1.0.0-beta.12; defence-in-depth here.
 const pageTypesProp = { ...defaultPageTypes }
 const customComponentsProp = { ...customComponents }
+const registryProp = { ...registry }
 
 // Create and mount Vue instance immediately so the App renders.
 new Vue({
@@ -112,6 +114,7 @@ new Vue({
 		props: {
 			manifest: bundledManifest,
 			customComponents: customComponentsProp,
+			registry: registryProp,
 			pageTypes: pageTypesProp,
 		},
 	}),

@@ -37,6 +37,7 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\AppFramework\Services\IInitialState;
 use OCP\Comments\ICommentsManager;
 
 /**
@@ -109,6 +110,27 @@ class Application extends App implements IBootstrap
     public function boot(IBootContext $context): void
     {
         $server = $context->getServerContainer();
+
+        // Hand the Features & Roadmap surface its build-time feature list.
+        // docs/features.json is regenerated from openspec/specs/ by the
+        // org-wide Features Extract workflow stage (.github/workflows/quality.yml).
+        // Pull IInitialState from the per-app container so the serialized key
+        // is correctly namespaced as `initial-state-pipelinq-<key>`.
+        try {
+            $initialState  = $this->getContainer()->get(IInitialState::class);
+            $featuresPath  = __DIR__.'/../../docs/features.json';
+            $features      = [];
+            if (is_file($featuresPath) === true) {
+                $decoded = json_decode((string) file_get_contents($featuresPath), associative: true);
+                if (is_array($decoded) === true) {
+                    $features = $decoded;
+                }
+            }
+
+            $initialState->provideInitialState('features_roadmap_features', $features);
+        } catch (\Exception $e) {
+            // Initial state unavailable — Features tab will fall back to []
+        }
 
         try {
             $commentsManager = $server->get(ICommentsManager::class);

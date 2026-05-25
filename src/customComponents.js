@@ -3,14 +3,14 @@
 //
 // Custom-component registry for pipelinq's manifest-driven app shell.
 //
-// Every entry here is the "escape hatch" — pages that don't fit one
-// of the manifest's built-in types/widgets. Keep this file focused.
+// Every entry here is the "escape hatch" — pages and widgets that don't
+// fit one of the manifest's built-in types. Keep this file focused.
 // Adding entries requires explicit justification in the design doc;
 // removing them (by migrating to a built-in type) is the right
 // direction.
 //
 // Resolution order at runtime:
-//   1. Built-in page types          (CnIndexPage, CnDetailPage, …)
+//   1. Built-in page types          (CnIndexPage, CnDetailPage, CnDashboardPage, …)
 //   2. Built-in widget types        (version-info, register-mapping, …)
 //   3. customComponents (this file) ← consumer-injected components
 //
@@ -18,28 +18,33 @@
 //   - openspec/changes/pipelinq-manifest-v1/design.md
 //   - hydra/openspec/architecture/adr-024-app-manifest.md
 
-// --- Genuine exceptions (no abstract analogue). ---
-import DashboardView from './views/Dashboard.vue'
+// --- Pipeline board — bespoke kanban (lib gap: no kanban page type). ---
 import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
 import MyWorkView from './views/MyWork.vue'
-import PublicSurveyFormView from './views/surveys/PublicSurveyForm.vue'
 
-// --- Bespoke create wizards (lib gap: multi-step actions). ---
-import ContactmomentForm from './views/contactmomenten/ContactmomentForm.vue'
-import TaskForm from './views/tasks/TaskForm.vue'
+// --- Dashboard (manifest type:"dashboard") — header actions and
+//     per-widget slot components. The Dashboard route itself is rendered
+//     by CnDashboardPage; this file only exposes the 8 widget components
+//     and the header actions component that the manifest's `slots` and
+//     `actionsComponent` fields reference by name. ---
+import DashboardHeaderActions from './views/dashboard/DashboardHeaderActions.vue'
+import OpenLeadsKpiWidget from './views/dashboard/widgets/OpenLeadsKpiWidget.vue'
+import OpenRequestsKpiWidget from './views/dashboard/widgets/OpenRequestsKpiWidget.vue'
+import PipelineValueKpiWidget from './views/dashboard/widgets/PipelineValueKpiWidget.vue'
+import OverdueKpiWidget from './views/dashboard/widgets/OverdueKpiWidget.vue'
+import RequestsByStatusWidget from './views/dashboard/widgets/RequestsByStatusWidget.vue'
+import ComplaintsWidget from './views/dashboard/widgets/ComplaintsWidget.vue'
+import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
+import ClientOverviewWidget from './views/dashboard/widgets/ClientOverviewWidget.vue'
 
 // --- Queues — bespoke routing-rule editor (lib gap: routing-rules widget). ---
 import QueueListView from './views/queues/QueueList.vue'
 import QueueDetailView from './views/queues/QueueDetail.vue'
 
-// --- Kennisbank wiki (lib gap: no `wiki` page type). ---
-import KennisbankHomeView from './views/kennisbank/KennisbankHome.vue'
+// --- Kennisbank wiki article detail (lib gap: no `wiki` page type). ---
 import ArticleDetailView from './views/kennisbank/ArticleDetail.vue'
-import ArticleEditorView from './views/kennisbank/ArticleEditor.vue'
-import CategoryManagerView from './views/kennisbank/CategoryManager.vue'
 
-// --- Surveys builder/analytics (lib gap: no `form-builder` page type). ---
-import SurveyFormView from './views/surveys/SurveyForm.vue'
+// --- Surveys analytics (lib gap: no chart-widget page type). ---
 import SurveyAnalyticsView from './views/surveys/SurveyAnalytics.vue'
 
 // --- Forms (lib gap: no `form-builder` page type for the visual builder;
@@ -66,31 +71,31 @@ import SyncSettingsView from './views/sync/SyncSettings.vue'
 // --- Features & Roadmap page — thin wrapper around the lib's
 //     CnFeaturesAndRoadmapView (in-product roadmap surface powered by
 //     OpenRegister's github-issue-proxy). See ConductionNL/hydra#251. ---
-import FeaturesRoadmapView from './views/FeaturesRoadmap.vue'
 
 export default {
-	// Genuine exceptions
-	DashboardView,
+	// Pipeline + MyWork
 	PipelineBoardView,
 	MyWorkView,
-	PublicSurveyFormView,
 
-	// Bespoke create wizards
-	ContactmomentForm,
-	TaskForm,
+	// Dashboard widget components (resolved via Dashboard page's `slots` map)
+	DashboardHeaderActions,
+	OpenLeadsKpiWidget,
+	OpenRequestsKpiWidget,
+	PipelineValueKpiWidget,
+	OverdueKpiWidget,
+	RequestsByStatusWidget,
+	ComplaintsWidget,
+	MyWorkWidget,
+	ClientOverviewWidget,
 
 	// Queues
 	QueueListView,
 	QueueDetailView,
 
 	// Kennisbank
-	KennisbankHomeView,
 	ArticleDetailView,
-	ArticleEditorView,
-	CategoryManagerView,
 
 	// Surveys
-	SurveyFormView,
 	SurveyAnalyticsView,
 
 	// Forms (list + submissions are declarative type:index; visual builder stays custom)
@@ -109,5 +114,4 @@ export default {
 	SyncSettingsView,
 
 	// Features & Roadmap page (lib's CnFeaturesAndRoadmapView)
-	FeaturesRoadmap: FeaturesRoadmapView,
 }

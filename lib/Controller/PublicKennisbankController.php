@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-31
  */
 
 declare(strict_types=1);
@@ -62,6 +64,8 @@ class PublicKennisbankController extends Controller
      * @PublicPage
      * @NoCSRFRequired
      * @BruteForceProtection(action=kennisbank)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-31
      */
     public function index(): JSONResponse
     {
@@ -107,6 +111,8 @@ class PublicKennisbankController extends Controller
      * @PublicPage
      * @NoCSRFRequired
      * @BruteForceProtection(action=kennisbank)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-31
      */
     public function show(string $id): JSONResponse
     {
