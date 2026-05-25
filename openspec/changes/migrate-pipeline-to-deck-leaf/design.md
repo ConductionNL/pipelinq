@@ -1,5 +1,7 @@
 # Design: migrate-pipeline-to-deck-leaf
 
+**status: pr-created**
+
 ## Architecture
 
 The bespoke board is replaced by the OpenRegister **deck leaf**
