@@ -143,3 +143,28 @@ git push -u origin feature/my-feature
 
 # Open a PR to development
 ```
+
+## Local Mail Integration (Greenmail)
+
+Pipelinq's workflow triggers and notifications can be demoed locally against the [Greenmail](https://greenmail-mail-test.github.io/greenmail/) container that ships with the OpenRegister dev stack.
+
+**Seed test data:**
+```bash
+bash ../openregister/docker/mail/seed-mail.sh
+```
+
+This sends 11 realistic Dutch case-management emails (omgevingsvergunning, kapvergunning, welstandsadvies, klachten, deadline-herinneringen) across 5 auto-created accounts — all explicitly tagged as procest/pipelinq-relevant scenarios.
+
+**Configure the Nextcloud Mail app** (Settings → Mail → Add account → Manual):
+
+| Setting | Value |
+|---------|-------|
+| IMAP host | `greenmail` (from container) or `localhost` (from host) |
+| IMAP port | `3143` |
+| SMTP host | same as IMAP |
+| SMTP port | `3025` |
+| Security | None |
+| Username | email address (e.g. `behandelaar@test.local`) |
+| Password | same as username |
+
+Accounts created by the seed: `admin@test.local`, `behandelaar@test.local`, `coordinator@test.local`, `burger@test.local`, `leverancier@test.local`.
