@@ -256,6 +256,8 @@ class SettingsService
      * @param string $default The default value.
      *
      * @return string The config value.
+     *
+     * @spec openspec/changes/archive/retrofit-2026-05-24-admin-settings/tasks.md#task-1
      */
     public function getConfigValue(string $key, string $default=''): string
     {
@@ -269,6 +271,8 @@ class SettingsService
      * @param string $value The config value.
      *
      * @return void
+     *
+     * @spec openspec/changes/archive/retrofit-2026-05-24-admin-settings/tasks.md#task-1
      */
     public function setConfigValue(string $key, string $value): void
     {
