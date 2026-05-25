@@ -120,6 +120,9 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-2
+		 */
 		filterOptions() {
 			return [
 				{ value: 'all', label: this.t('pipelinq', 'All') },
@@ -138,6 +141,9 @@ export default {
 		this.reload()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-6
+		 */
 		reload() {
 			this.items = []
 			this.page = 1
@@ -145,6 +151,9 @@ export default {
 			this.total = 0
 			this.fetchPage(1)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-7
+		 */
 		setFilter(value) {
 			if (this.activeFilter === value) {
 				return
@@ -152,6 +161,9 @@ export default {
 			this.activeFilter = value
 			this.reload()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-1
+		 */
 		async fetchPage(page) {
 			if (!this.entityId || !this.entityType) {
 				return
@@ -184,11 +196,17 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-5
+		 */
 		loadMore() {
 			if (this.page < this.pages && !this.loading) {
 				this.fetchPage(this.page + 1)
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-4
+		 */
 		iconFor(item) {
 			if (item.type === 'contactmoment') {
 				const channel = (item.metadata && item.metadata.channel) || ''
@@ -214,6 +232,9 @@ export default {
 			}
 			return Message
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-9
+		 */
 		typeLabel(type) {
 			switch (type) {
 			case 'contactmoment': return this.t('pipelinq', 'Contact moment')
@@ -224,11 +245,17 @@ export default {
 			default: return type
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-8
+		 */
 		truncate(text) {
 			if (!text) return ''
 			const max = 120
 			return text.length > max ? text.substring(0, max) + '...' : text
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-3
+		 */
 		formatDate(dateStr) {
 			if (!dateStr) return ''
 			const date = new Date(dateStr)

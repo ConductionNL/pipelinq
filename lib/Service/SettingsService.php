@@ -153,6 +153,7 @@ class SettingsService
      * @return array The import result.
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag) — $force is a simple re-import toggle
+      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-16
      */
     public function loadSettings(bool $force=false): array
     {
@@ -204,6 +205,7 @@ class SettingsService
      * @param string $userId The user ID.
      *
      * @return array The user settings as key-boolean pairs.
+      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-15
      */
     public function getUserSettings(string $userId): array
     {
@@ -227,6 +229,7 @@ class SettingsService
      * @param array  $data   The settings data to update.
      *
      * @return array The updated user settings.
+      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-17
      */
     public function updateUserSettings(string $userId, array $data): array
     {

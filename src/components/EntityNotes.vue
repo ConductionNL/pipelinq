@@ -74,6 +74,9 @@ export default {
 		}
 	},
 	watch: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-14
+		 */
 		objectId() {
 			this.fetchNotes()
 		},
@@ -82,6 +85,9 @@ export default {
 		this.fetchNotes()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-12
+		 */
 		async fetchNotes() {
 			this.loading = true
 			try {
@@ -105,6 +111,9 @@ export default {
 			this.loading = false
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-10
+		 */
 		async addNote() {
 			if (this.newMessage.trim() === '') return
 			this.submitting = true
@@ -131,6 +140,9 @@ export default {
 			this.submitting = false
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-11
+		 */
 		async deleteNote(noteId) {
 			try {
 				const response = await fetch(
@@ -152,6 +164,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-13
+		 */
 		formatTime(timestamp) {
 			if (!timestamp) return ''
 			const date = new Date(timestamp)

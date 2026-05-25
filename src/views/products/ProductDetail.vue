@@ -142,19 +142,31 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-8
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
 		isNew() {
 			return !this.productId || this.productId === 'new'
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-6
+		 */
 		loading() {
 			return this.objectStore.loading.product || false
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-12
+		 */
 		productData() {
 			if (this.isNew) return {}
 			return this.objectStore.getObject('product', this.productId) || {}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-13
+		 */
 		sidebarProps() {
 			const config = this.objectStore.objectTypeRegistry.product || {}
 			return {
@@ -165,6 +177,9 @@ export default {
 			}
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-7
+	 */
 	async mounted() {
 		if (!this.isNew) {
 			await this.objectStore.fetchObject('product', this.productId)
@@ -172,6 +187,9 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-10
+		 */
 		async onFormSave(formData) {
 			const result = await this.objectStore.saveObject('product', formData)
 			if (result) {
@@ -186,6 +204,9 @@ export default {
 				showError(error?.message || t('pipelinq', 'Failed to save product. Please try again.'))
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-9
+		 */
 		onFormCancel() {
 			if (this.isNew) {
 				this.$router.push({ name: 'Products' })
@@ -193,6 +214,9 @@ export default {
 				this.editing = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-3
+		 */
 		async confirmDelete() {
 			if (confirm(t('pipelinq', 'Are you sure you want to delete this product?'))) {
 				const success = await this.objectStore.deleteObject('product', this.productId)
@@ -204,6 +228,9 @@ export default {
 				}
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-4
+		 */
 		async fetchRelated() {
 			try {
 				const leadProducts = await this.objectStore.fetchCollection('leadProduct', {
@@ -224,11 +251,17 @@ export default {
 				}
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-11
+		 */
 		openLead(item) {
 			if (item.lead) {
 				this.$router.push({ name: 'LeadDetail', params: { id: item.lead } })
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-5
+		 */
 		formatCurrency(value) {
 			if (!value && value !== 0) return '-'
 			return formatLocaleCurrency(value)

@@ -113,6 +113,9 @@ export default {
 			],
 		}
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-53
+	 */
 	async mounted() {
 		try {
 			const { objectStore } = await initializeStores()
@@ -123,9 +126,15 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-54
+		 */
 		onClientSelected(client) {
 			this.selectedClient = client
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-55
+		 */
 		async onSubmit() {
 			this.submitted = true
 			if (!this.form.title) {
@@ -186,6 +195,9 @@ export default {
 				this.submitting = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-56
+		 */
 		resetForm() {
 			this.form = { title: '', category: null, priority: 'normal', channel: null }
 			this.selectedClient = null
@@ -194,6 +206,9 @@ export default {
 			this.successLink = ''
 			this.fetchRecentRequests()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-52
+		 */
 		async fetchRecentRequests() {
 			if (!this.config?.request) return
 			try {

@@ -18,6 +18,9 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 		sourceNames: (state) => state.tags.map((t) => t.name),
 	},
 	actions: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-29
+		 */
 		async fetchSources() {
 			this.loading = true
 			this.error = null
@@ -34,6 +37,9 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-28
+		 */
 		async addSource(name) {
 			try {
 				const response = await fetch(API_BASE, {
@@ -55,6 +61,9 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-30
+		 */
 		async removeSource(id) {
 			try {
 				const response = await fetch(`${API_BASE}/${id}`, {
@@ -74,6 +83,9 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-31
+		 */
 		async renameSource(id, name) {
 			try {
 				const response = await fetch(`${API_BASE}/${id}`, {

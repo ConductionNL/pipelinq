@@ -216,9 +216,15 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-12
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-18
+		 */
 		typeOptions() {
 			return DEFAULT_RELATIONSHIP_TYPES.map(t => ({
 				value: t.value,
@@ -228,6 +234,9 @@ export default {
 				symmetric: t.symmetric,
 			}))
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-17
+		 */
 		strengthOptions() {
 			return [
 				{ value: 'strong', label: t('pipelinq', 'Strong') },
@@ -235,6 +244,9 @@ export default {
 				{ value: 'weak', label: t('pipelinq', 'Weak') },
 			]
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-8
+		 */
 		groupedRelationships() {
 			const groups = {}
 			for (const rel of this.relationships) {
@@ -259,6 +271,9 @@ export default {
 		await this.fetchRelationships()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-7
+		 */
 		async fetchRelationships() {
 			this.loading = true
 			try {
@@ -279,6 +294,9 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-10
+		 */
 		async loadEntityName(entityId, entityType) {
 			try {
 				const type = entityType === 'client' ? 'client' : 'contact'
@@ -295,16 +313,25 @@ export default {
 		getEntityName(entityId) {
 			return this.entityNameCache[entityId] || entityId || '-'
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-9
+		 */
 		isEnded(rel) {
 			if (!rel.endDate) {
 				return false
 			}
 			return new Date(rel.endDate) < new Date()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-11
+		 */
 		navigateToEntity(rel) {
 			const type = rel.toType === 'client' ? 'ClientDetail' : 'ContactDetail'
 			this.$router.push({ name: type, params: { id: rel.toContact } })
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-13
+		 */
 		onTypeSelect(typeValue) {
 			const typeObj = DEFAULT_RELATIONSHIP_TYPES.find(t => t.value === typeValue)
 			if (typeObj) {
@@ -313,6 +340,9 @@ export default {
 				this.addForm._symmetric = typeObj.symmetric
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-16
+		 */
 		async searchEntities(query) {
 			if (this.searchTimeout) {
 				clearTimeout(this.searchTimeout)
@@ -336,6 +366,9 @@ export default {
 				}
 			}, 300)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-15
+		 */
 		async saveRelationship() {
 			if (!this.addForm.toContact || !this.addForm.type) {
 				return
@@ -423,6 +456,9 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to save relationship'))
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-6
+		 */
 		editRelationship(rel) {
 			this.editingRelationship = { ...rel }
 			// Find the inverse relationship to track it
@@ -443,10 +479,16 @@ export default {
 			}
 			this.showAddDialog = true
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-14
+		 */
 		removeRelationship(rel) {
 			this.deletingRelationship = rel
 			this.showDeleteDialog = true
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-5
+		 */
 		async confirmRemove() {
 			if (!this.deletingRelationship) {
 				return
@@ -474,6 +516,9 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to remove relationship'))
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-4
+		 */
 		closeDialog() {
 			this.showAddDialog = false
 			this.editingRelationship = null

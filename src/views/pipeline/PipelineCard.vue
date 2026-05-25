@@ -89,12 +89,21 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-42
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-36
+		 */
 		currentColumnValue() {
 			return this.item[this.columnProperty] || ''
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
+		 */
 		isOverdue() {
 			if (this.entityType === 'lead') {
 				if (!this.item.expectedCloseDate) return false
@@ -107,21 +116,36 @@ export default {
 			}
 			return false
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-37
+		 */
 		daysAge() {
 			return getDaysAge(this.item)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-34
+		 */
 		agingClass() {
 			return getAgingClass(this.daysAge)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-35
+		 */
 		agingLabel() {
 			return formatAge(this.daysAge)
 		},
 		isStaleItem() {
 			return isStale(this.item, this.entityType)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-46
+		 */
 		stageOptions() {
 			return this.stages.map(s => s.name)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-47
+		 */
 		userOptions() {
 			return this.users
 		},
@@ -129,12 +153,18 @@ export default {
 	watch: {
 		currentColumnValue: {
 			immediate: true,
+			/**
+			 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
+			 */
 			handler(val) {
 				this.selectedStage = val || null
 			},
 		},
 		'item.assignee': {
 			immediate: true,
+			/**
+			 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
+			 */
 			handler(val) {
 				this.selectedAssignee = val || null
 			},
@@ -149,6 +179,9 @@ export default {
 		getPriorityColor,
 		getStatusLabel,
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-41
+		 */
 		async loadUsers() {
 			if (usersCache) {
 				this.users = usersCache
@@ -171,6 +204,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-45
+		 */
 		async onStageChange(newStage) {
 			if (!newStage || newStage === this.currentColumnValue) return
 			try {
@@ -186,6 +222,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-43
+		 */
 		async onAssignChange(newAssignee) {
 			if (newAssignee === this.item.assignee) return
 			try {
@@ -201,6 +240,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-44
+		 */
 		onDragStart(e) {
 			const data = {
 				id: this.item.id,
@@ -211,6 +253,9 @@ export default {
 			e.dataTransfer.effectAllowed = 'move'
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-38
+		 */
 		formatDate(dateStr) {
 			return formatLocaleDate(dateStr)
 		},

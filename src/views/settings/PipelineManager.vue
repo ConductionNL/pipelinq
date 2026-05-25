@@ -115,12 +115,21 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-46
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-51
+		 */
 		pipelines() {
 			return this.objectStore.collections.pipeline || []
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-45
+		 */
 		loading() {
 			return this.objectStore.loading.pipeline || false
 		},
@@ -129,6 +138,9 @@ export default {
 		await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-52
+		 */
 		schemaLabel(pipeline) {
 			const mappings = pipeline.propertyMappings
 			if (mappings && mappings.length > 0) {
@@ -142,10 +154,16 @@ export default {
 			}
 			return labels[pipeline.entityType] || pipeline.entityType || ''
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-53
+		 */
 		stageCount(pipeline) {
 			const count = (pipeline.stages || []).length
 			return n('pipelinq', '%n stage', '%n stages', count)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-54
+		 */
 		stagePreview(pipeline) {
 			const stages = pipeline.stages || []
 			if (stages.length === 0) return t('pipelinq', 'No stages')
@@ -157,10 +175,16 @@ export default {
 			const last = sorted.slice(-2).map(s => s.name)
 			return [...first, '...', ...last].join(' → ')
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-49
+		 */
 		onEdit(pipeline) {
 			this.editingPipeline = pipeline
 			this.showForm = true
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-47
+		 */
 		async onDeleteClick(pipeline) {
 			// W1: Prevent deleting the default pipeline
 			if (pipeline.isDefault) {
@@ -179,6 +203,9 @@ export default {
 
 			this.deletingPipeline = pipeline
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-48
+		 */
 		async onDeleteConfirm() {
 			const id = this.deletingPipeline.id
 			this.deletingPipeline = null
@@ -186,6 +213,9 @@ export default {
 			await this.objectStore.deleteObject('pipeline', id)
 			await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-50
+		 */
 		async onSave(pipelineData) {
 			// W5: Auto-set first pipeline as default
 			const isFirstPipeline = this.pipelines.length === 0
@@ -223,6 +253,9 @@ export default {
 			this.editingPipeline = null
 			await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-44
+		 */
 		async countAffectedItems(pipelineId) {
 			const headers = {
 				'Content-Type': 'application/json',

@@ -143,26 +143,41 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-34
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
 		isEdit() {
 			return !!this.complaint?.id
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-27
+		 */
 		availableStatuses() {
 			if (!this.isEdit) return ['new']
 			const current = this.complaint.status || 'new'
 			return [current, ...getAllowedTransitions(current)]
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-29
+		 */
 		clients() {
 			return this.objectStore.collections.client || []
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-28
+		 */
 		clientOptions() {
 			return this.clients.map(c => ({
 				value: c.id,
 				label: c.name || c.id,
 			}))
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-30
+		 */
 		contactOptions() {
 			if (!this.form.client) return []
 			return this.allContacts
@@ -172,6 +187,9 @@ export default {
 					label: c.name || c.id,
 				}))
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-32
+		 */
 		errors() {
 			const errors = {}
 			if (!this.form.title || !this.form.title.trim()) {
@@ -187,6 +205,9 @@ export default {
 			}
 			return errors
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-33
+		 */
 		isValid() {
 			return Object.keys(this.errors).length === 0
 				&& this.form.title?.trim()
@@ -194,6 +215,9 @@ export default {
 				&& this.form.description?.trim()
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-31
+	 */
 	async created() {
 		await Promise.all([
 			this.objectStore.fetchCollection('client', { _limit: 100 }),
@@ -219,10 +243,16 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-35
+		 */
 		onClientChange() {
 			// Reset contact when client changes
 			this.form.contact = null
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-36
+		 */
 		onSave() {
 			if (!this.isValid) return
 

@@ -45,6 +45,9 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-50
+		 */
 		items() {
 			return this.activities.map((activity) => {
 				const typeLabel = activity.entityType === 'lead' ? 'Lead' : 'Request'
@@ -64,10 +67,16 @@ export default {
 		await this.fetchData()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-51
+		 */
 		onShow(item) {
 			const type = item._entityType === 'lead' ? 'leads' : 'requests'
 			window.location.href = '/index.php/apps/pipelinq/' + type + '/' + item._entityId
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-49
+		 */
 		formatTimeAgo(dateStr) {
 			if (!dateStr) return ''
 			try {
@@ -87,6 +96,9 @@ export default {
 				return dateStr
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-47
+		 */
 		async fetchData() {
 			this.loading = true
 			try {
@@ -134,6 +146,9 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-48
+		 */
 		async fetchRaw(config, type, params = {}) {
 			const typeConfig = config[type]
 			if (!typeConfig) return []

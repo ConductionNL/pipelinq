@@ -66,6 +66,9 @@ export default {
 		PipelineSidebar,
 	},
 
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-app-shell/tasks.md#task-3
+	 */
 	provide() {
 		return {
 			// Channel for CnDetailPage → host-rendered CnObjectSidebar.
@@ -161,6 +164,9 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-app-shell/tasks.md#task-2
+		 */
 		permissions() {
 			return window.OC?.currentUser?.permissions ?? []
 		},
@@ -174,10 +180,14 @@ export default {
 		 *
 		 * @param {string} key Translation key.
 		 * @return {string} Translated string (or the key on miss).
+		  * @spec openspec/changes/reverse-2026-05-26-fe-app-shell/tasks.md#task-4
 		 */
 		translateForApp(key) {
 			return ncT('pipelinq', key)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-app-shell/tasks.md#task-1
+		 */
 		onPipelineSidebarSave(pipelineData) {
 			if (typeof this.pipelineSidebarState.onSave === 'function') {
 				this.pipelineSidebarState.onSave(pipelineData)

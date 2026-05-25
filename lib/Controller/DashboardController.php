@@ -48,6 +48,7 @@ class DashboardController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+      * @spec openspec/changes/reverse-2026-05-26-be-dashboard-pipeline/tasks.md#task-1
      */
     public function page(): TemplateResponse
     {

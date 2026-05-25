@@ -67,6 +67,7 @@ class ProspectSettingsController extends Controller
      *
      * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service if available, null otherwise.
      * @throws \RuntimeException If the service is not available.
+      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-4
      */
     public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
@@ -84,6 +85,7 @@ class ProspectSettingsController extends Controller
      *
      * @return \OCA\OpenRegister\Service\ConfigurationService|null The Configuration service if available, null otherwise.
      * @throws \RuntimeException If the service is not available.
+      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-3
      */
     public function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService
     {
