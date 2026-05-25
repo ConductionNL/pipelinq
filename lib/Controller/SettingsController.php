@@ -79,6 +79,7 @@ class SettingsController extends Controller
      *
      * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service if available, null otherwise.
      * @throws \RuntimeException If the service is not available.
+      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-6
      */
     public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
@@ -96,6 +97,7 @@ class SettingsController extends Controller
      *
      * @return \OCA\OpenRegister\Service\ConfigurationService|null The Configuration service if available, null otherwise.
      * @throws \RuntimeException If the service is not available.
+      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-5
      */
     public function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService
     {
@@ -196,6 +198,7 @@ class SettingsController extends Controller
      * @return JSONResponse The user settings response.
      *
      * @NoAdminRequired
+      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-7
      */
     public function getUserSettings(): JSONResponse
     {
@@ -212,6 +215,7 @@ class SettingsController extends Controller
      * @return JSONResponse The updated user settings response.
      *
      * @NoAdminRequired
+      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-8
      */
     public function updateUserSettings(): JSONResponse
     {

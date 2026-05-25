@@ -113,9 +113,15 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-46
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-43
+		 */
 		isValid() {
 			const hasName = this.form.name.trim().length > 0
 			const hasClient = !!this.selectedClient
@@ -126,16 +132,25 @@ export default {
 	watch: {
 		contact: {
 			immediate: true,
+			/**
+			 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-42
+			 */
 			handler(val) {
 				if (val && Object.keys(val).length > 0) {
 					this.populateForm(val)
 				}
 			},
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-50
+		 */
 		selectedClient(val) {
 			this.form.client = val
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-45
+	 */
 	async mounted() {
 		await this.loadInitialClients()
 		if (this.preSelectedClient) {
@@ -144,6 +159,9 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-48
+		 */
 		populateForm(data) {
 			this.form = {
 				name: data.name || '',
@@ -158,10 +176,16 @@ export default {
 			}
 			this.errors = { name: '', client: '', email: '', phone: '' }
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-44
+		 */
 		async loadInitialClients() {
 			const clients = await this.objectStore.fetchCollection('client', { _limit: 50 })
 			this.clientOptions = (clients || []).map(c => ({ id: c.id, name: c.name || c.id }))
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-41
+		 */
 		async ensureClientInOptions(clientId) {
 			if (!this.clientOptions.find(c => c.id === clientId)) {
 				try {
@@ -174,6 +198,9 @@ export default {
 				}
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-49
+		 */
 		searchClients(query) {
 			clearTimeout(this.searchTimeout)
 			this.searchTimeout = setTimeout(async () => {
@@ -188,6 +215,9 @@ export default {
 				}
 			}, 300)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-52
+		 */
 		validateField(field) {
 			switch (field) {
 			case 'name':
@@ -220,6 +250,9 @@ export default {
 				break
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-51
+		 */
 		validateAll() {
 			this.validateField('name')
 			this.validateField('client')
@@ -227,6 +260,9 @@ export default {
 			this.validateField('phone')
 			return this.isValid
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-47
+		 */
 		onSave() {
 			if (!this.validateAll()) {
 				return

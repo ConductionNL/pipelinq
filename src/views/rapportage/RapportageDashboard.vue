@@ -137,12 +137,18 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-rapportage-ui/tasks.md#task-6
+		 */
 		slaStatusClass() {
 			if (this.kpis.slaCompliance >= this.kpis.slaTarget) return 'kpi-card--success'
 			if (this.kpis.slaCompliance >= this.kpis.slaTarget - 5) return 'kpi-card--warning'
 			return 'kpi-card--danger'
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-rapportage-ui/tasks.md#task-5
+	 */
 	mounted() {
 		this.fetchData()
 		this.refreshInterval = setInterval(() => {
@@ -153,6 +159,9 @@ export default {
 		clearInterval(this.refreshInterval)
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-rapportage-ui/tasks.md#task-4
+		 */
 		async fetchData() {
 			this.loading = this.kpis.totalContacts === 0
 			try {
@@ -162,9 +171,15 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-rapportage-ui/tasks.md#task-7
+		 */
 		trendClass(trend) {
 			return trend > 0 ? 'trend--up' : 'trend--down'
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-rapportage-ui/tasks.md#task-3
+		 */
 		exportCsv() {
 			window.location.href = generateUrl('/apps/pipelinq/api/rapportage/export')
 		},

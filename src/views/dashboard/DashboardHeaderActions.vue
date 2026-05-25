@@ -71,6 +71,9 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-4
+		 */
 		async refresh() {
 			this.refreshing = true
 			invalidateDashboardData()
@@ -82,14 +85,23 @@ export default {
 			// brief visual feedback
 			setTimeout(() => { this.refreshing = false }, 400)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-2
+		 */
 		onLeadCreated(leadId) {
 			this.showLeadDialog = false
 			this.$router.push({ name: 'LeadDetail', params: { id: leadId } })
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-3
+		 */
 		onRequestCreated(requestId) {
 			this.showRequestDialog = false
 			this.$router.push({ name: 'RequestDetail', params: { id: requestId } })
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-1
+		 */
 		onClientCreated(clientId) {
 			this.showClientDialog = false
 			this.$router.push({ name: 'ClientDetail', params: { id: clientId } })

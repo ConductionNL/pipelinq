@@ -182,6 +182,9 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-40
+		 */
 		filteredClients() {
 			if (!this.searchQuery) return this.clients.slice(0, 20)
 			const query = this.searchQuery.toLowerCase()
@@ -197,6 +200,9 @@ export default {
 		await this.fetchData()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-38
+		 */
 		async fetchData() {
 			this.loading = true
 			try {
@@ -212,6 +218,9 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-39
+		 */
 		async fetchRaw(type, params = {}) {
 			const typeConfig = this.config[type]
 			if (!typeConfig) return []
@@ -237,19 +246,31 @@ export default {
 			const data = await response.json()
 			return data.results || data || []
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-42
+		 */
 		viewClient(client) {
 			window.location.href = '/index.php/apps/pipelinq/clients/' + client.id
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-37
+		 */
 		createRequestForClient(client) {
 			this.actionClient = client
 			this.actionType = 'request'
 			this.actionTitle = ''
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-36
+		 */
 		createLeadForClient(client) {
 			this.actionClient = client
 			this.actionType = 'lead'
 			this.actionTitle = ''
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-34
+		 */
 		async copyEmail(client) {
 			try {
 				await navigator.clipboard.writeText(client.email)
@@ -259,11 +280,17 @@ export default {
 				console.error('Failed to copy email:', err)
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-33
+		 */
 		cancelAction() {
 			this.actionClient = null
 			this.actionType = ''
 			this.actionTitle = ''
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-41
+		 */
 		async submitAction() {
 			if (!this.actionTitle || !this.actionClient) return
 
@@ -310,6 +337,9 @@ export default {
 				this.actionSubmitting = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-35
+		 */
 		async createClient() {
 			this.newClientSubmitted = true
 			if (!this.newClient.name) return

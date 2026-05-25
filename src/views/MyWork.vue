@@ -162,13 +162,22 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-12
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-4
+		 */
 		currentUser() {
 			return OC.currentUser
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-2
+		 */
 		closedStageNames() {
 			const names = new Set()
 			for (const p of this.pipelines) {
@@ -181,6 +190,9 @@ export default {
 			return names
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-14
+		 */
 		pipelineMap() {
 			const map = {}
 			for (const p of this.pipelines) {
@@ -189,6 +201,9 @@ export default {
 			return map
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-1
+		 */
 		allItems() {
 			const now = startOfToday()
 			const weekEnd = endOfWeek()
@@ -252,21 +267,36 @@ export default {
 			return items
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-8
+		 */
 		filteredItems() {
 			if (this.filter === 'all') return this.allItems
 			return this.allItems.filter(i => i.entityType === this.filter)
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-11
+		 */
 		leadCount() {
 			return this.filteredItems.filter(i => i.entityType === 'lead').length
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-15
+		 */
 		requestCount() {
 			return this.filteredItems.filter(i => i.entityType === 'request').length
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-16
+		 */
 		totalCount() {
 			return this.filteredItems.length
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-10
+		 */
 		groupedItems() {
 			const groups = {
 				overdue: [],
@@ -293,6 +323,9 @@ export default {
 			return groups
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-17
+		 */
 		visibleGroups() {
 			const defs = [
 				{ key: 'overdue', label: t('pipelinq', 'Overdue') },
@@ -305,6 +338,9 @@ export default {
 				.filter(d => d.items.length > 0)
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-5
+		 */
 		emptyMessage() {
 			if (this.filter === 'lead') return t('pipelinq', 'No leads assigned to you')
 			if (this.filter === 'request') return t('pipelinq', 'No requests assigned to you')
@@ -319,6 +355,9 @@ export default {
 		getPriorityLabel,
 		getPriorityColor,
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-3
+		 */
 		computeGroup(due, now, weekEnd, isClosed) {
 			if (!due) return 'no-due-date'
 			if (isClosed) return 'no-due-date'
@@ -327,6 +366,9 @@ export default {
 			return 'upcoming'
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-6
+		 */
 		async fetchAll() {
 			this.loading = true
 			this.error = null
@@ -363,6 +405,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-7
+		 */
 		async fetchRaw(type, params = {}) {
 			const config = this.objectStore.objectTypeRegistry[type]
 			if (!config) return []
@@ -389,6 +434,9 @@ export default {
 			return data.results || data || []
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-9
+		 */
 		formatDate(dateStr) {
 			if (!dateStr) return ''
 			try {
@@ -398,6 +446,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-13
+		 */
 		openItem(item) {
 			if (item.entityType === 'lead') {
 				this.$router.push({ name: 'LeadDetail', params: { id: item.id } })

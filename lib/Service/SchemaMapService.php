@@ -75,6 +75,7 @@ class SchemaMapService
      * @param ?string $schemaId The schema ID to resolve.
      *
      * @return ?string The entity type or null.
+      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-11
      */
     public function resolveEntityType(?string $schemaId): ?string
     {

@@ -17,6 +17,9 @@ export default {
 			complaints: [],
 		}
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-7
+	 */
 	async mounted() {
 		try {
 			this.complaints = await getComplaints()

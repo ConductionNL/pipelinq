@@ -246,25 +246,43 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-16
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-26
+		 */
 		settingsStore() {
 			return useSettingsStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-23
+		 */
 		pipelines() {
 			return this.objectStore.collections.pipeline || []
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-22
+		 */
 		pipelineSelectOptions() {
 			return this.pipelines.map(p => ({
 				value: p.id,
 				label: p.title,
 			}))
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-25
+		 */
 		selectedPipeline() {
 			if (!this.selectedPipelineId) return null
 			return this.pipelines.find(p => p.id === this.selectedPipelineId) || null
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-24
+		 */
 		propertyMappings() {
 			return this.selectedPipeline?.propertyMappings || []
 		},
@@ -274,6 +292,9 @@ export default {
 		hasTotals() {
 			return this.propertyMappings.some(m => m.totalsProperty)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-27
+		 */
 		showFilterOptions() {
 			const options = [{ id: 'all', label: t('pipelinq', 'All') }]
 			for (const mapping of this.propertyMappings) {
@@ -284,16 +305,28 @@ export default {
 			}
 			return options
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-29
+		 */
 		sortedStages() {
 			if (!this.selectedPipeline?.stages) return []
 			return [...this.selectedPipeline.stages].sort((a, b) => a.order - b.order)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-21
+		 */
 		openStages() {
 			return this.sortedStages.filter(s => !s.isClosed)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-3
+		 */
 		closedStages() {
 			return this.sortedStages.filter(s => s.isClosed)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-1
+		 */
 		allItems() {
 			let result = this.items
 			const filter = this.showFilter?.id || this.showFilter || 'all'
@@ -306,6 +339,9 @@ export default {
 			}
 			return result
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-28
+		 */
 		sortedListItems() {
 			const items = [...this.allItems]
 			const priorityOrder = { urgent: 0, high: 1, normal: 2, low: 3 }
@@ -355,10 +391,16 @@ export default {
 		},
 	},
 	watch: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-25
+		 */
 		selectedPipeline(val) {
 			this.syncSidebarState(val)
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-15
+	 */
 	async mounted() {
 		// Activate pipeline sidebar
 		if (this.pipelineSidebarState) {
@@ -387,6 +429,9 @@ export default {
 		}
 		this.loading = false
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-2
+	 */
 	beforeDestroy() {
 		if (this.pipelineSidebarState) {
 			this.pipelineSidebarState.active = false
@@ -410,6 +455,7 @@ export default {
 		 * still be in flight when /pipeline is the landing route.
 		 *
 		 * @param {string[]} slugs Object-type slugs to register (e.g. 'pipeline').
+		  * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-4
 		 */
 		async ensureObjectTypes(slugs) {
 			const registry = this.objectStore.objectTypeRegistry || {}
@@ -430,18 +476,27 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-30
+		 */
 		syncSidebarState(pipeline) {
 			if (this.pipelineSidebarState) {
 				this.pipelineSidebarState.pipeline = pipeline
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-32
+		 */
 		toggleSidebar() {
 			if (this.pipelineSidebarState) {
 				this.pipelineSidebarState.open = !this.pipelineSidebarState.open
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-19
+		 */
 		async onSidebarSave(pipelineData) {
 			await this.objectStore.saveObject('pipeline', pipelineData)
 			await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
@@ -453,6 +508,9 @@ export default {
 			return this.propertyMappings.find(m => m.schemaSlug === item._schemaSlug) || null
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-10
+		 */
 		getColumnProperty(item) {
 			const mapping = this.getMappingForItem(item)
 			return mapping?.columnProperty || 'stage'
@@ -462,6 +520,9 @@ export default {
 			return item[this.getColumnProperty(item)] || ''
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-11
+		 */
 		getItemTotalsValue(item) {
 			const mapping = this.getMappingForItem(item)
 			if (!mapping?.totalsProperty) return null
@@ -469,6 +530,9 @@ export default {
 			return val !== undefined && val !== null ? val : null
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-12
+		 */
 		getStageItems(stageName) {
 			return this.allItems
 				.filter(item => {
@@ -481,6 +545,9 @@ export default {
 				.sort((a, b) => (a.stageOrder || 0) - (b.stageOrder || 0))
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-13
+		 */
 		getStageTotalValue(stageName) {
 			const stageItems = this.getStageItems(stageName)
 			let total = 0
@@ -493,10 +560,16 @@ export default {
 			return total
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-18
+		 */
 		async onPipelineChange() {
 			await this.fetchPipelineItems()
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-7
+		 */
 		async fetchPipelineItems() {
 			if (!this.selectedPipelineId) return
 			this.loading = true
@@ -512,6 +585,9 @@ export default {
 			this.loading = false
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-6
+		 */
 		async fetchItemsViaMappings(pipeline) {
 			const mappings = pipeline.propertyMappings || []
 			const promises = mappings.map(async (mapping) => {
@@ -526,6 +602,9 @@ export default {
 			this.items = results.flat()
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-5
+		 */
 		async fetchItemsLegacy(pipeline) {
 			// Fallback for old pipelines with entityType
 			const et = pipeline?.entityType
@@ -547,6 +626,9 @@ export default {
 			]
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-8
+		 */
 		async fetchSchemaItems(schemaSlug) {
 			const config = this.objectStore.objectTypeRegistry[schemaSlug]
 			if (!config) return []
@@ -568,6 +650,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
+		 */
 		async onDrop(event, targetStage) {
 			try {
 				const data = JSON.parse(event.dataTransfer.getData('application/json'))
@@ -587,10 +672,16 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-31
+		 */
 		toggleClosedStage(stageName) {
 			this.expandedClosed = this.expandedClosed === stageName ? null : stageName
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-33
+		 */
 		toggleSort(column) {
 			if (this.sortBy === column) {
 				this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc'
@@ -600,12 +691,18 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-14
+		 */
 		isItemOverdue(item) {
 			const dateStr = item.expectedCloseDate || item.requestedAt
 			if (!dateStr) return false
 			return new Date(dateStr) < new Date()
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-9
+		 */
 		formatDate(dateStr) {
 			if (!dateStr) return '\u2014'
 			return formatDate(dateStr)
@@ -623,6 +720,9 @@ export default {
 			return formatAge(getDaysAge(item))
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-20
+		 */
 		openItem(item) {
 			if (item._schemaSlug === 'lead') {
 				this.$router.push({ name: 'LeadDetail', params: { id: item.id } })

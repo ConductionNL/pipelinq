@@ -109,22 +109,37 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-35
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
 		isNew() {
 			return !this.contactId || this.contactId === 'new'
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-38
+		 */
 		preSelectedClient() {
 			return this.$route.query.client || null
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-33
+		 */
 		loading() {
 			return this.objectStore.loading.contact || false
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-31
+		 */
 		contactData() {
 			if (this.isNew) return {}
 			return this.objectStore.getObject('contact', this.contactId) || {}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-39
+		 */
 		sidebarProps() {
 			const config = this.objectStore.objectTypeRegistry.contact || {}
 			return {
@@ -135,6 +150,9 @@ export default {
 			}
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-34
+	 */
 	async mounted() {
 		if (!this.isNew) {
 			await this.objectStore.fetchObject('contact', this.contactId)
@@ -142,6 +160,9 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-32
+		 */
 		async loadClientName() {
 			const clientId = this.contactData.client
 			if (clientId) {
@@ -153,6 +174,9 @@ export default {
 				}
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-37
+		 */
 		async onFormSave(formData) {
 			const result = await this.objectStore.saveObject('contact', formData)
 			if (result) {
@@ -169,6 +193,9 @@ export default {
 				showError(error?.message || t('pipelinq', 'Failed to save contact. Please try again.'))
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-40
+		 */
 		async syncToContacts(objectId) {
 			try {
 				await fetch('/apps/pipelinq/api/contacts-sync/write-back', {
@@ -184,6 +211,9 @@ export default {
 				// Sync failure is non-blocking
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-36
+		 */
 		onFormCancel() {
 			if (this.isNew) {
 				this.$router.push({ name: 'Contacts' })
@@ -191,6 +221,9 @@ export default {
 				this.editing = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-30
+		 */
 		async confirmDelete() {
 			if (confirm(t('pipelinq', 'Are you sure you want to delete this contact?'))) {
 				const success = await this.objectStore.deleteObject('contact', this.contactId)

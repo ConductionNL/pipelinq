@@ -26,6 +26,9 @@ export default {
 	computed: { store() { return useSurveyStore() }, survey() { return this.store.currentSurvey } },
 	async mounted() { this.loading = true; try { await this.store.fetchSurvey(this.surveyId); if (this.survey) await this.store.fetchResponses(this.surveyId, { _limit: 1000 }) } finally { this.loading = false } },
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-15
+		 */
 		exportCsv() {
 			if (!this.survey || !this.store.responses.length) return
 			const qs = this.survey.questions || []; const hdr = ['ID', 'Date', ...qs.map(q => q.text)]

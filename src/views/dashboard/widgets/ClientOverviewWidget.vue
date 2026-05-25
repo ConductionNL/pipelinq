@@ -42,10 +42,16 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-6
+		 */
 		recent() {
 			return this.clients.slice(0, 5)
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-5
+	 */
 	async mounted() {
 		try {
 			this.clients = await getClients()
