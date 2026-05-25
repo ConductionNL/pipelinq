@@ -198,10 +198,24 @@
         },
         "title": "Lead",
         "icon": "TrendingUp",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "summary": "A sales lead or business opportunity",
         "description": "Represents a sales lead — a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.",
         "@type": "schema:Demand",
+        "linkedTypes": ["deck"],
+        "configuration": {
+          "x-openregister-relations": [
+            {
+              "type": "deck",
+              "via": "openregister_deck_links",
+              "onCardMovedToWonStack": {
+                "action": "set-field",
+                "field": "status",
+                "value": "won"
+              }
+            }
+          ]
+        },
         "required": [
           "title"
         ],
@@ -304,10 +318,24 @@
         "slug": "request",
         "title": "Request",
         "icon": "FileDocumentOutline",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "summary": "A service request (verzoek) — the pre-state of a case",
         "description": "Represents a client service request that may be converted to a case in Procest. Tracks status lifecycle, priority, assignment, and optional pipeline placement.",
         "@type": "schema:Demand",
+        "linkedTypes": ["deck"],
+        "configuration": {
+          "x-openregister-relations": [
+            {
+              "type": "deck",
+              "via": "openregister_deck_links",
+              "onCardMovedToWonStack": {
+                "action": "set-field",
+                "field": "status",
+                "value": "completed"
+              }
+            }
+          ]
+        },
         "required": [
           "title"
         ],
@@ -530,9 +558,9 @@
         "slug": "pipeline",
         "title": "Pipeline",
         "icon": "Pipe",
-        "version": "2.0.0",
-        "summary": "A view-backed pipeline defining stages for tracking entities",
-        "description": "Represents a pipeline — an ordered list of stages through which entities progress. Backed by an OpenRegister View that defines which schemas appear on the board. Each schema can have its own property-to-stage mapping and totals configuration. Mapped to Schema.org ItemList.",
+        "version": "3.0.0",
+        "summary": "A thin CRM pipeline config mapping stage rules onto a Deck board",
+        "description": "Represents a CRM pipeline configuration — maps pipeline stages to a Deck board and its stacks, preserving CRM-specific semantics (probability, won/closed/default flags) that Deck itself does not model. Board mechanics (columns, cards, drag-and-drop) are provided by the OpenRegister deck leaf. Mapped to Schema.org ItemList.",
         "@type": "schema:ItemList",
         "required": [
           "title",
@@ -549,43 +577,13 @@
             "type": "string",
             "description": "Description of the pipeline's purpose"
           },
-          "viewId": {
-            "type": "string",
-            "description": "UUID reference to the OpenRegister View defining which schemas this pipeline displays",
-            "format": "uuid"
-          },
-          "propertyMappings": {
-            "type": "array",
-            "description": "Per-schema configuration for column placement and totals aggregation",
-            "items": {
-              "type": "object",
-              "required": [
-                "schemaSlug",
-                "columnProperty"
-              ],
-              "properties": {
-                "schemaSlug": {
-                  "type": "string",
-                  "description": "Slug of the schema this mapping applies to (e.g., 'lead', 'request')"
-                },
-                "columnProperty": {
-                  "type": "string",
-                  "description": "Name of the property that determines which column an item appears in (e.g., 'stage', 'status')"
-                },
-                "totalsProperty": {
-                  "type": "string",
-                  "description": "Name of the numeric property to sum in column headers (e.g., 'value'). Null if no totals for this schema."
-                }
-              }
-            }
-          },
-          "totalsLabel": {
-            "type": "string",
-            "description": "Display label for column totals (e.g., 'EUR', 'Hours')"
+          "deckBoardId": {
+            "type": "integer",
+            "description": "NC Deck board ID that this pipeline is realised as"
           },
           "stages": {
             "type": "array",
-            "description": "Ordered list of pipeline stages (schema:ItemListElement)",
+            "description": "Ordered list of CRM stage rules mapped onto Deck stacks (schema:ItemListElement)",
             "items": {
               "type": "object",
               "required": [
@@ -600,6 +598,10 @@
                 "order": {
                   "type": "integer",
                   "description": "Display order of the stage (1-based)"
+                },
+                "deckStackId": {
+                  "type": "integer",
+                  "description": "NC Deck stack ID that this stage is mapped to"
                 },
                 "probability": {
                   "type": "integer",
@@ -617,9 +619,10 @@
                   "description": "Whether this closed stage represents a won/successful outcome. Only valid when isClosed is true.",
                   "default": false
                 },
-                "color": {
-                  "type": "string",
-                  "description": "CSS hex color for the stage (e.g., '#10B981')"
+                "isDefault": {
+                  "type": "boolean",
+                  "description": "Whether this is the default entry stage for new leads/requests in this pipeline",
+                  "default": false
                 }
               }
             }

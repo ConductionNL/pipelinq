@@ -35,8 +35,8 @@ import ComplaintsWidget from './views/dashboard/widgets/ComplaintsWidget.vue'
 import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
 import ClientOverviewWidget from './views/dashboard/widgets/ClientOverviewWidget.vue'
 
-// --- Kanban board (lib gap: no kanban/board page type). ---
-import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
+// Bespoke kanban board removed — board mechanics now provided by the
+// OpenRegister deck leaf (integration-deck). See openspec/changes/migrate-pipeline-to-deck-leaf/.
 
 // --- Queues / routing rules (lib gap: no routing-rules widget). ---
 import QueueListView from './views/queues/QueueList.vue'
@@ -135,13 +135,6 @@ const registry = {
 		kind: 'widget',
 		component: ClientOverviewWidget,
 		_note: 'Top-5 recent clients with a view-all link to ClientList.',
-	},
-
-	// --- Kanban board. ---
-	PipelineBoardView: {
-		kind: 'page',
-		component: PipelineBoardView,
-		_note: 'Kanban board with drag-and-drop lane management; lib gap: no kanban/board page type.',
 	},
 
 	// --- Queues / routing rules. ---

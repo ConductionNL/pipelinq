@@ -77,9 +77,9 @@ class ReportingController extends Controller
     /**
      * Update SLA configuration.
      *
-     * @return JSONResponse The updated SLA targets.
+     * Admin-only: no @NoAdminRequired annotation.
      *
-     * @NoAdminRequired
+     * @return JSONResponse The updated SLA targets.
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
      */
