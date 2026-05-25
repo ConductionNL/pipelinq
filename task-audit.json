@@ -1,0 +1,55 @@
+{
+  "spec": "openspec/changes/migrate-pipeline-to-deck-leaf",
+  "verified": [
+    {
+      "task": "0.1",
+      "file": "src/manifest.json",
+      "ok": true,
+      "note": "deck listed in dependencies[]; leaf key 'deck' documented"
+    },
+    {
+      "task": "1.1",
+      "file": "src/views/pipeline/PipelineBoard.vue",
+      "ok": true,
+      "note": "File deleted; PipelineCard.vue and PipelineSidebar.vue also deleted; all registry entries removed from customComponents.js, registry.js, App.vue"
+    },
+    {
+      "task": "2.1",
+      "file": "lib/Settings/pipelinq_register.json",
+      "ok": true,
+      "note": "lead.linkedTypes=['deck'], request.linkedTypes=['deck']; pipeline schema v3.0.0 retains probability/isWon/isClosed/isDefault per stage"
+    },
+    {
+      "task": "3.1",
+      "file": "src/manifest.json",
+      "ok": true,
+      "note": "LeadDetail and RequestDetail pages updated: sidebar.tabs includes CnDeckTab; config.widgets includes CnDeckCard mini-kanban; dependencies includes 'deck'"
+    },
+    {
+      "task": "4.1",
+      "file": "lib/Settings/pipelinq_register.json",
+      "ok": true,
+      "note": "x-openregister-relations added to lead and request schemas: onCardMovedToWonStack sets status=won (lead) / status=completed (request)"
+    },
+    {
+      "task": "5.1",
+      "file": "build",
+      "ok": true,
+      "note": "npm run build: 0 errors, 2 pre-existing asset-size warnings"
+    },
+    {
+      "task": "5.2",
+      "file": "lib/Settings/pipelinq_register.json",
+      "ok": true,
+      "note": "PHP json_decode succeeds; all 26 schemas present"
+    },
+    {
+      "task": "5.4",
+      "file": "src/views/pipeline/",
+      "ok": true,
+      "note": "Directory removed; no remaining imports of PipelineBoardView, PipelineSidebar, or PipelineCard"
+    }
+  ],
+  "stubs": [],
+  "missing_routes": []
+}
