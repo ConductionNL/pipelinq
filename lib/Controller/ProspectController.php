@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-34
  */
 
 declare(strict_types=1);
@@ -84,6 +86,8 @@ class ProspectController extends Controller
      * @return JSONResponse The created client and lead.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-34
      */
     public function createLead(): JSONResponse
     {

@@ -42,7 +42,7 @@ See [ARCHITECTURE.md](../../../docs/ARCHITECTURE.md) for the full Pipeline and S
 
 ## Requirements
 
-### REQ-PIPE-001: Pipeline CRUD [MVP]
+### Requirement: Pipeline CRUD [MVP]
 
 The system MUST support creating, reading, updating, and deleting pipelines. Pipelines are managed by admins via the Nextcloud admin settings page (see DESIGN-REFERENCES.md Section 3.7).
 
@@ -100,7 +100,7 @@ The system MUST support creating, reading, updating, and deleting pipelines. Pip
 
 ---
 
-### REQ-PIPE-002: Pipeline Entity Types [MVP]
+### Requirement: Pipeline Entity Types [MVP]
 
 Each pipeline MUST declare which entity types it supports. This controls which entities can be placed on the pipeline and which entities appear on the kanban board.
 
@@ -127,7 +127,7 @@ Each pipeline MUST declare which entity types it supports. This controls which e
 
 ---
 
-### REQ-PIPE-003: Default Pipelines [MVP]
+### Requirement: Default Pipelines [MVP]
 
 The system MUST create default pipelines during app initialization (repair step) so the app is usable out-of-the-box without configuration.
 
@@ -178,7 +178,7 @@ The system MUST create default pipelines during app initialization (repair step)
 
 ---
 
-### REQ-PIPE-004: Stage CRUD [MVP]
+### Requirement: Stage CRUD [MVP]
 
 The system MUST support creating, reading, updating, reordering, and deleting stages within a pipeline. Stages are managed via the admin settings page as sub-items of their parent pipeline.
 
@@ -238,7 +238,7 @@ The system MUST support creating, reading, updating, reordering, and deleting st
 
 ---
 
-### REQ-PIPE-005: Stage Validation [MVP]
+### Requirement: Stage Validation [MVP]
 
 The system MUST enforce validation rules on stage configuration to maintain pipeline integrity.
 
@@ -276,7 +276,7 @@ The system MUST enforce validation rules on stage configuration to maintain pipe
 
 ---
 
-### REQ-PIPE-006: Kanban Board View [MVP]
+### Requirement: Kanban Board View [MVP]
 
 The system MUST provide a kanban board view for each pipeline showing stages as columns and leads/requests as cards. Request cards MUST be visually distinct from lead cards.
 
@@ -300,7 +300,7 @@ The system MUST provide a kanban board view for each pipeline showing stages as 
 
 ---
 
-### REQ-PIPE-007: Pipeline View Toggle [MVP]
+### Requirement: Pipeline View Toggle [MVP]
 
 The system MUST support toggling between kanban board view and list table view for each pipeline. Both views show the same data, just in different formats.
 
@@ -350,7 +350,7 @@ The system MUST support toggling between kanban board view and list table view f
 
 ---
 
-### REQ-PIPE-008: Stage Column Headers [MVP]
+### Requirement: Stage Column Headers [MVP]
 
 Each stage column on the kanban board MUST display aggregate information in its header.
 
@@ -372,7 +372,7 @@ Each stage column on the kanban board MUST display aggregate information in its 
 
 ---
 
-### REQ-PIPE-009: Add Entity from Stage Column [MVP]
+### Requirement: Add Entity from Stage Column [MVP]
 
 The system MUST allow creating new entities directly from within a stage column on the kanban board. On mixed pipelines, the quick-create form MUST include an entity type selector.
 
@@ -383,7 +383,7 @@ The system MUST allow creating new entities directly from within a stage column 
 
 ---
 
-### REQ-PIPE-010: Pipeline Selection on Entity [MVP]
+### Requirement: Pipeline Selection on Entity [MVP]
 
 Leads and requests MUST be assignable to a pipeline and stage, either during creation or via editing.
 
@@ -421,7 +421,7 @@ Leads and requests MUST be assignable to a pipeline and stage, either during cre
 
 ---
 
-### REQ-PIPE-011: Stage Probability Mapping [V1]
+### Requirement: Stage Probability Mapping [V1]
 
 When a lead is moved to a stage that has a probability value set, the system MUST automatically update the lead's probability to match the stage probability.
 
@@ -448,7 +448,7 @@ When a lead is moved to a stage that has a probability value set, the system MUS
 
 ---
 
-### REQ-PIPE-012: Pipeline Analytics [V1]
+### Requirement: Pipeline Analytics [V1]
 
 The system MUST provide analytics for each pipeline to help managers understand conversion rates and bottlenecks.
 
@@ -477,7 +477,7 @@ The system MUST provide analytics for each pipeline to help managers understand 
 
 ---
 
-### REQ-PIPE-013: Pipeline Funnel Visualization [V1]
+### Requirement: Pipeline Funnel Visualization [V1]
 
 The system MUST display a funnel chart showing the distribution of leads/requests across pipeline stages.
 
@@ -493,7 +493,7 @@ The system MUST display a funnel chart showing the distribution of leads/request
 
 ---
 
-### REQ-PIPE-014: Stage Revenue Summary [V1]
+### Requirement: Stage Revenue Summary [V1]
 
 The system MUST display the total monetary value of leads in each stage to provide at-a-glance pipeline valuation.
 
@@ -515,7 +515,7 @@ The system MUST display the total monetary value of leads in each stage to provi
 
 ---
 
-### REQ-PIPE-015: Error Scenarios [MVP]
+### Requirement: Error Scenarios [MVP]
 
 The system MUST handle error conditions gracefully with meaningful feedback.
 
@@ -558,7 +558,7 @@ The system MUST handle error conditions gracefully with meaningful feedback.
 
 ---
 
-### REQ-PIPE-016: Pipeline List on Admin Settings [MVP]
+### Requirement: Pipeline List on Admin Settings [MVP]
 
 The admin settings page MUST display all pipelines with their configuration summary. See DESIGN-REFERENCES.md Section 3.7 for the wireframe.
 
@@ -584,7 +584,7 @@ The admin settings page MUST display all pipelines with their configuration summ
 
 ---
 
-### REQ-PIPE-017: Pipeline Selector Dropdown [MVP]
+### Requirement: Pipeline Selector Dropdown [MVP]
 
 The pipeline view MUST include a dropdown to switch between pipelines.
 
@@ -604,7 +604,7 @@ The pipeline view MUST include a dropdown to switch between pipelines.
 
 ---
 
-### REQ-PIPE-018: Pipeline Card Quick Actions [MVP]
+### Requirement: Pipeline Card Quick Actions [MVP]
 
 Pipeline cards MUST support quick actions for moving between stages and assigning users without opening the detail view.
 
@@ -631,7 +631,7 @@ Pipeline cards MUST support quick actions for moving between stages and assignin
 
 ## Requirements
 
-### Requirement: REQ-PIPE-019: Multiple Pipelines per Organization [V1]
+### Requirement: Multiple Pipelines per Organization [V1] (REQ-PIPE-019)
 
 Organizations MUST be able to maintain multiple active pipelines simultaneously, each targeting different workflows or teams. This enables separate sales processes (e.g., government deals vs. commercial, inbound vs. outbound) and prevents forcing all leads through a single funnel. Inspired by EspoCRM's multi-pipeline opportunities and Krayin's pipeline-per-team model.
 
@@ -663,7 +663,7 @@ Organizations MUST be able to maintain multiple active pipelines simultaneously,
 
 ---
 
-### Requirement: REQ-PIPE-020: Pipeline Template Creation [Enterprise]
+### Requirement: Pipeline Template Creation [Enterprise] (REQ-PIPE-020)
 
 The system SHOULD allow admins to save an existing pipeline configuration as a reusable template. Templates accelerate onboarding by providing pre-built pipeline configurations that match common workflows (sales, service, hiring, procurement). Krayin ships with a default pipeline template; EspoCRM uses installable extension packs.
 
@@ -696,7 +696,7 @@ The system SHOULD allow admins to save an existing pipeline configuration as a r
 
 ---
 
-### Requirement: REQ-PIPE-021: Stage Automation on Transition [Enterprise]
+### Requirement: Stage Automation on Transition [Enterprise] (REQ-PIPE-021)
 
 The system SHOULD support configurable automation actions triggered when a lead or request moves to a specific stage. This reduces manual work and ensures consistency in follow-up actions. EspoCRM implements this via its BPM engine; Krayin uses a workflow automation system with event-based triggers on lead stage changes.
 
@@ -738,7 +738,7 @@ The system SHOULD support configurable automation actions triggered when a lead 
 
 ---
 
-### Requirement: REQ-PIPE-022: Pipeline Filtering and Search [MVP]
+### Requirement: Pipeline Filtering and Search [MVP] (REQ-PIPE-022)
 
 The pipeline kanban and list views MUST support filtering and searching items to help users focus on specific subsets of leads or requests. This is a fundamental CRM capability present in all competitors (EspoCRM, Krayin, Twenty, BottleCRM).
 
@@ -782,7 +782,7 @@ The pipeline kanban and list views MUST support filtering and searching items to
 
 ---
 
-### Requirement: REQ-PIPE-023: Pipeline Access Control [V1]
+### Requirement: Pipeline Access Control [V1] (REQ-PIPE-023)
 
 The system SHOULD enforce access control on pipelines to ensure users only see and interact with pipelines relevant to their role. Access control is managed via OpenRegister's RBAC system. EspoCRM uses team-based access with role-level restrictions; Krayin has a "bouncer" system with all/group/individual permission levels.
 
@@ -814,7 +814,7 @@ The system SHOULD enforce access control on pipelines to ensure users only see a
 
 ---
 
-### Requirement: REQ-PIPE-024: Pipeline Dashboard Widgets [V1]
+### Requirement: Pipeline Dashboard Widgets [V1] (REQ-PIPE-024)
 
 The Pipelinq dashboard MUST include pipeline-specific widgets that provide at-a-glance visibility into pipeline health and performance. These widgets complement the full kanban view by surfacing key metrics on the landing page.
 
@@ -853,7 +853,7 @@ The Pipelinq dashboard MUST include pipeline-specific widgets that provide at-a-
 
 ---
 
-### Requirement: REQ-PIPE-025: Stage SLA and Deadline Tracking [Enterprise]
+### Requirement: Stage SLA and Deadline Tracking [Enterprise] (REQ-PIPE-025)
 
 The system SHOULD support configuring maximum time limits (SLAs) per stage so that leads and requests that exceed the expected duration are flagged for attention. SLA tracking is a common feature in government CRM contexts where response time commitments are contractual. EspoCRM offers SLA tracking in its Cases module; Krayin does not have built-in SLA.
 
@@ -892,7 +892,7 @@ The system SHOULD support configuring maximum time limits (SLAs) per stage so th
 
 ---
 
-### Requirement: REQ-PIPE-026: Pipeline Reporting [V1]
+### Requirement: Pipeline Reporting [V1] (REQ-PIPE-026)
 
 The system SHOULD provide exportable pipeline reports that summarize pipeline performance over a configurable time period. Reports complement real-time analytics by providing historical snapshots for management review and tender compliance.
 
@@ -929,7 +929,7 @@ The system SHOULD provide exportable pipeline reports that summarize pipeline pe
 
 ---
 
-### Requirement: REQ-PIPE-027: Win/Loss Tracking [Enterprise]
+### Requirement: Win/Loss Tracking [Enterprise] (REQ-PIPE-027)
 
 The system SHOULD track the outcome of closed leads with structured reason data to enable analysis of why deals are won or lost. This is a standard CRM feature in EspoCRM (close reason field on opportunities), Krayin (lost reason on leads), and all enterprise CRMs.
 
@@ -966,7 +966,7 @@ The system SHOULD track the outcome of closed leads with structured reason data 
 
 ---
 
-### Requirement: REQ-PIPE-028: Pipeline Sidebar Details [MVP]
+### Requirement: Pipeline Sidebar Details [MVP] (REQ-PIPE-028)
 
 The pipeline view MUST include a sidebar panel that displays detailed information about the currently selected pipeline and its stages without navigating away from the board. The sidebar provides quick access to pipeline metadata and stage configuration.
 
@@ -1007,7 +1007,7 @@ The pipeline view MUST include a sidebar panel that displays detailed informatio
 
 ---
 
-### Requirement: REQ-PIPE-029: View Persistence and User Preferences [V1]
+### Requirement: View Persistence and User Preferences [V1] (REQ-PIPE-029)
 
 The system MUST remember per-user pipeline view preferences so that returning to the pipeline view restores the user's last configuration. This reduces friction when users have consistent workflow patterns.
 
@@ -1042,7 +1042,7 @@ The system MUST remember per-user pipeline view preferences so that returning to
 
 ---
 
-### Requirement: REQ-PIPE-030: Weighted Pipeline Value and Sales Forecast [V1]
+### Requirement: Weighted Pipeline Value and Sales Forecast [V1] (REQ-PIPE-030)
 
 The system MUST calculate and display weighted pipeline values to provide a realistic forecast of expected revenue. The weighted value multiplies each lead's value by its stage probability, giving a more accurate picture than raw totals. This is a standard feature in EspoCRM (opportunity reports), Krayin (pipeline dashboard), and all enterprise CRMs.
 

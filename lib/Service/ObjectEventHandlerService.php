@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-47
  */
 
 declare(strict_types=1);
@@ -48,6 +50,8 @@ class ObjectEventHandlerService
      * @param object $objectEntity The created object entity.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-47
      */
     public function handleCreated(object $objectEntity): void
     {
@@ -81,6 +85,8 @@ class ObjectEventHandlerService
      * @param ?object $oldObject The old object entity or null.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-47
      */
     public function handleUpdated(object $newObject, ?object $oldObject): void
     {
@@ -175,6 +181,8 @@ class ObjectEventHandlerService
      * @param string $objectId   The object ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-47
      */
     private function fireAutomations(string $trigger, array $entityData, string $objectId): void
     {
@@ -200,6 +208,8 @@ class ObjectEventHandlerService
      * @param string $objectId   The object ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-47
      */
     private function fireUpdateAutomations(
         string $entityType,

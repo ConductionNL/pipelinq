@@ -115,7 +115,7 @@ webpackConfig.optimization = {
 			},
 			vendor: {
 				name: appId + '-shared-vendor',
-				test: /[\\/]node_modules[\\/](vue|pinia|vue-material-design-icons|@vueuse|core-js)[\\/]/,
+				test: /[\\/]node_modules[\\/](vue|vue-router|vue-i18n|pinia|vue-material-design-icons|@vueuse|core-js|axios)[\\/]/,
 				priority: 20,
 				reuseExistingChunk: true,
 				enforce: true,

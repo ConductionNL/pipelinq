@@ -15,6 +15,9 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-41
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-42
  */
 
 declare(strict_types=1);
@@ -63,6 +66,8 @@ class PublicFormController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @CORS
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-41
      */
     public function show(string $id): JSONResponse
     {
@@ -94,6 +99,8 @@ class PublicFormController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @CORS
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-42
      */
     public function submit(string $id): JSONResponse
     {

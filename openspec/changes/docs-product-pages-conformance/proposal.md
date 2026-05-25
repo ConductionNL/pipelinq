@@ -1,8 +1,10 @@
-## Why
+# Proposal: Docs Product Pages Conformance
 
-The Pipelinq documentation site does not conform to the canonical `@conduction/docusaurus-preset` product-pages structure (audited 2026-05-13). Folder taxonomy is wrong-cased, root-level markdown files belong in dedicated subdirectories, `installation.md` is missing, Redocusaurus is not mounted, the Dutch locale is disabled with stale metadata, and two em-dash violations exist in a feature document. The shillinq migration (PR #83) established the pattern; pipelinq is next in the queue.
+## Problem
 
-## What Changes
+The Pipelinq documentation site does not conform to the canonical `@conduction/docusaurus-preset` product-pages structure (audited 2026-05-13). Folder taxonomy is wrong-cased (`docs/features/` instead of `docs/Features/`), root-level markdown files belong in dedicated subdirectories, `installation.md` is missing, Redocusaurus is not mounted, the Dutch locale is disabled with stale metadata that causes SSR failures (per ADR-030), and two em-dash violations exist in a feature document. The shillinq migration (PR #83) established the pattern; pipelinq is next in the queue.
+
+## Proposed Change
 
 - **Rename** `docs/features/` → `docs/Features/` (40 files, preserves history via `git mv`)
 - **Rename** `docs/tutorials/` → `docs/user-guide/` (21 items including `_category_.json` files, preserves history)
@@ -15,7 +17,7 @@ The Pipelinq documentation site does not conform to the canonical `@conduction/d
 - **Create** `docs/UseCases/index.md` — `draft: true` stub citing issue #353
 - **Create** `docs/Integrations/index.md` — `draft: true` stub citing issue #353
 - **Create** `docs/installation.md` — real install steps (prerequisites, App Store, initial config, troubleshooting)
-- **Delete** stale `docs/i18n/nl/` metadata files (code.json, plugin-content-docs/, theme-classic/) that broke Dutch SSR per ADR-030
+- **Delete** stale `docs/i18n/nl/` metadata files (code.json, plugin-content-docs/, theme-classic/) that block Dutch SSR per ADR-030
 - **Re-enable** `nl` locale in `docs/docusaurus.config.js` (escape hatch: revert to `['en']` if SSR fails, cite #354)
 - **Add** `redocusaurus@^2.0.0` to `docs/package.json`
 - **Create** `docs/static/oas/pipelinq.json` — OpenAPI placeholder shim (`{"openapi":"3.0.0","info":{"title":"Pipelinq","version":"0.0.0"},"paths":{}}`)
@@ -23,15 +25,17 @@ The Pipelinq documentation site does not conform to the canonical `@conduction/d
 - **Add** `API Documentation` navbar link pointing to `/api`
 - **Fix** em-dash gate: `git grep -E '—' docs/` must return 0 after all moves
 
-## Capabilities
-
 ### New Capabilities
 
 - `docs-product-pages-conformance`: Canonical product-pages folder taxonomy, installation guide, API documentation route via Redocusaurus, Dutch locale, em-dash-free content
 
-### Modified Capabilities
+### Out of Scope
 
-_(none — this change is purely documentation/configuration, it does not alter any existing feature spec requirements)_
+- Authoring content for `UseCases/` or `Integrations/` (#353)
+- Dutch translation pass (#354)
+- Authoring real OpenAPI spec (#355)
+- Fixing `docs/src/pages/index.js` orange-color count (#356)
+- Any PHP, Vue, or OpenRegister schema changes
 
 ## Impact
 

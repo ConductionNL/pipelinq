@@ -3,7 +3,7 @@
   "info": {
     "title": "Pipelinq CRM Register",
     "description": "Client Relationship Management register for the Pipelinq Nextcloud app. Manages clients, contacts, leads, requests, and pipelines.",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "x-openregister": {
     "type": "application",
@@ -1202,10 +1202,23 @@
         "slug": "task",
         "title": "Task",
         "icon": "ClipboardCheck",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "summary": "A callback request or follow-up task (terugbelverzoek / opvolgtaak / informatievraag)",
         "description": "Represents an internal task — a callback request (terugbelverzoek), follow-up task (opvolgtaak), or information request (informatievraag) assigned to a user or department. Maps to VNG InterneTaak and Schema.org Action.",
         "@type": "schema:Action",
+        "configuration": {
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "open",
+            "final": [],
+            "transitions": {
+              "claim":    { "from": ["open"],           "to": "in_behandeling", "description": "Pick up the task: caller becomes the assignee." },
+              "complete": { "from": ["in_behandeling"], "to": "afgerond",       "description": "Mark the task as completed." },
+              "expire":   { "from": ["in_behandeling"], "to": "verlopen",       "description": "Mark the task as expired (deadline passed)." },
+              "reopen":   { "from": ["afgerond", "verlopen"], "to": "open",     "description": "Re-open a closed or expired task." }
+            }
+          }
+        },
         "required": [
           "subject",
           "type"

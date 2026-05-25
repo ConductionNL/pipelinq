@@ -15,6 +15,9 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-32
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-33
  */
 
 declare(strict_types=1);
@@ -62,6 +65,8 @@ class KennisbankController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-32
      */
     public function publicIndex(): JSONResponse
     {
@@ -97,6 +102,8 @@ class KennisbankController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-32
      */
     public function publicShow(string $id): JSONResponse
     {
@@ -127,6 +134,8 @@ class KennisbankController extends Controller
      * @return JSONResponse The response containing the feedback data.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-33
      */
     public function submitFeedback(): JSONResponse
     {

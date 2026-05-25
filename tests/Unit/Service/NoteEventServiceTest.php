@@ -19,10 +19,13 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OC\Security\CSRF\CsrfTokenManager;
 use OCA\Pipelinq\Service\ActivityService;
 use OCA\Pipelinq\Service\NoteEventService;
 use OCA\Pipelinq\Service\NotificationService;
 use OCA\Pipelinq\Service\SettingsService;
+use OCP\Http\Client\IClientService;
+use OCP\IURLGenerator;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -57,6 +60,9 @@ class NoteEventServiceTest extends TestCase
         $activityService     = $this->createMock(ActivityService::class);
         $settingsService     = $this->createMock(SettingsService::class);
         $userSession         = $this->createMock(IUserSession::class);
+        $urlGenerator        = $this->createMock(IURLGenerator::class);
+        $clientService       = $this->createMock(IClientService::class);
+        $csrfTokenManager    = $this->createMock(CsrfTokenManager::class);
         $this->logger        = $this->createMock(LoggerInterface::class);
 
         $this->service = new NoteEventService(
@@ -64,6 +70,9 @@ class NoteEventServiceTest extends TestCase
             $activityService,
             $settingsService,
             $userSession,
+            $urlGenerator,
+            $clientService,
+            $csrfTokenManager,
             $this->logger,
         );
     }//end setUp()

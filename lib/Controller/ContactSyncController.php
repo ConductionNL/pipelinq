@@ -15,6 +15,9 @@
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-27
  */
 
 declare(strict_types=1);
@@ -54,6 +57,8 @@ class ContactSyncController extends Controller
      * @return JSONResponse The search results.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
      */
     public function search(): JSONResponse
     {
@@ -81,6 +86,8 @@ class ContactSyncController extends Controller
      * @return JSONResponse The import result.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
      */
     public function import(): JSONResponse
     {
@@ -122,6 +129,8 @@ class ContactSyncController extends Controller
      * @return JSONResponse The sync result.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-27
      */
     public function writeBack(): JSONResponse
     {

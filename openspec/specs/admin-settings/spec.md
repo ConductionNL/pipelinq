@@ -1,5 +1,7 @@
 ---
 status: implemented
+retrofit_extensions:
+  - REQ-AS-110
 ---
 
 # Admin Settings Specification
@@ -14,7 +16,7 @@ The admin settings page provides a Nextcloud admin panel for configuring Pipelin
 
 ## Requirements
 
-### REQ-AS-010: Nextcloud Admin Panel Registration [MVP]
+### Requirement: Nextcloud Admin Panel Registration [MVP]
 
 The system MUST register a settings page in the Nextcloud admin panel under "Administration". Only users with Nextcloud admin privileges MUST be able to access this page.
 
@@ -43,7 +45,7 @@ The system MUST register a settings page in the Nextcloud admin panel under "Adm
 
 ---
 
-### REQ-AS-012: Register Status Display [MVP]
+### Requirement: Register Status Display [MVP]
 
 The admin settings page MUST display the current register configuration status so administrators can verify the OpenRegister integration is working.
 
@@ -67,7 +69,7 @@ The admin settings page MUST display the current register configuration status s
 
 ---
 
-### REQ-AS-015: Re-import Configuration Action [MVP]
+### Requirement: Re-import Configuration Action [MVP]
 
 The admin settings page MUST provide a button to re-run the register configuration import, allowing administrators to recover from failed imports or apply updated schemas.
 
@@ -88,7 +90,7 @@ The admin settings page MUST provide a button to re-run the register configurati
 
 ---
 
-### REQ-AS-020: Pipeline Management [MVP]
+### Requirement: Pipeline Management [MVP]
 
 The admin settings MUST provide full CRUD operations for pipelines. Pipelines are stored as OpenRegister objects with schema `pipeline`.
 
@@ -139,7 +141,7 @@ The admin settings MUST provide full CRUD operations for pipelines. Pipelines ar
 
 ---
 
-### REQ-AS-030: Stage Management [MVP]
+### Requirement: Stage Management [MVP]
 
 The admin settings MUST provide CRUD operations for stages within each pipeline. Stages are stored as OpenRegister objects with schema `stage`.
 
@@ -207,7 +209,7 @@ The admin settings MUST provide CRUD operations for stages within each pipeline.
 
 ---
 
-### REQ-AS-040: Default Pipeline Selection [MVP]
+### Requirement: Default Pipeline Selection [MVP]
 
 The admin settings MUST allow selecting one pipeline as the default. The default pipeline is used when creating new leads or requests that are not explicitly assigned to a pipeline.
 
@@ -242,7 +244,7 @@ The admin settings MUST allow selecting one pipeline as the default. The default
 
 ---
 
-### REQ-AS-050: Lead Source Configuration [V1]
+### Requirement: Lead Source Configuration [V1]
 
 The admin settings SHOULD allow customizing the list of available lead source values. Lead sources are displayed as a dropdown when creating or editing leads.
 
@@ -289,7 +291,7 @@ The admin settings SHOULD allow customizing the list of available lead source va
 
 ---
 
-### REQ-AS-060: Request Channel Configuration [V1]
+### Requirement: Request Channel Configuration [V1]
 
 The admin settings SHOULD allow customizing the list of available request channel values. Channels are displayed as a dropdown when creating or editing requests.
 
@@ -329,7 +331,7 @@ The admin settings SHOULD allow customizing the list of available request channe
 
 ---
 
-### REQ-AS-070: Default Pipelines on Installation [MVP]
+### Requirement: Default Pipelines on Installation [MVP]
 
 When Pipelinq is installed for the first time, the system MUST create default pipelines and stages via the repair step / configuration import.
 
@@ -370,7 +372,7 @@ When Pipelinq is installed for the first time, the system MUST create default pi
 
 ---
 
-### REQ-AS-080: Settings Persistence [MVP]
+### Requirement: Settings Persistence [MVP]
 
 All admin settings MUST be persisted and survive app updates and server restarts.
 
@@ -392,7 +394,7 @@ All admin settings MUST be persisted and survive app updates and server restarts
 
 ---
 
-### REQ-AS-090: Queue Management Section [Enterprise]
+### Requirement: Queue Management Section [Enterprise]
 
 The admin settings page SHALL include a "Queues" section for managing queues. Admins can create, edit, and delete queues, configure categories, set capacity limits, and assign agents to queues.
 
@@ -423,7 +425,7 @@ The admin settings page SHALL include a "Queues" section for managing queues. Ad
 
 ---
 
-### REQ-AS-100: Skill Management Section [Enterprise]
+### Requirement: Skill Management Section [Enterprise]
 
 The admin settings page SHALL include a "Skills" section for managing skill definitions and agent skill profiles.
 
@@ -550,7 +552,7 @@ The admin settings page provides a Nextcloud admin panel for configuring Pipelin
 
 ## Requirements
 
-### REQ-AS-010: Nextcloud Admin Panel Registration [MVP]
+### Requirement: Nextcloud Admin Panel Registration [MVP]
 
 The system MUST register a settings page in the Nextcloud admin panel under "Administration". Only users with Nextcloud admin privileges MUST be able to access this page. The implementation uses `OCP\Settings\ISettings` (`AdminSettings.php`) and `OCP\Settings\IIconSection` (`SettingsSection.php`) to register the "Pipelinq" section with priority 10.
 
@@ -1199,3 +1201,45 @@ Gaps / partially implemented:
 - Property mappings and view association (pipeline-to-view) are now specified.
 - User notification preferences are specified separately from admin settings.
 - **Architectural note**: Stages are stored as a JSON array within the pipeline object (`pipeline.stages[]`), not as separate OpenRegister objects. This is correct per the implementation.
+
+---
+
+## Requirements — retrofit (reverse-spec 2026-05-24)
+
+The following REQ was drafted via `/opsx-reverse-spec` from observed behavior of `SettingsService` generic config accessors. Code already existed; this REQ retroactively specifies it.
+
+### REQ-AS-110: Generic typed app-config accessor MUST scope every read/write to the Pipelinq APP_ID
+
+`SettingsService` MUST expose a pair of generic accessors — `getConfigValue(key, default='')` and `setConfigValue(key, value)` — that wrap `IAppConfig::getValueString()` / `setValueString()` scoped to `Application::APP_ID` (`pipelinq`). All other Pipelinq services (e.g. `ProspectDiscoveryService`) MUST read and write app-scoped configuration through these accessors rather than calling `IAppConfig` directly with a hardcoded app id, so that the app-id binding has a single source of truth.
+
+#### Scenario: Get returns the stored value
+- GIVEN the key `register` has been previously written with value `"42"`
+- WHEN a caller invokes `getConfigValue(key: 'register')`
+- THEN the returned value MUST be `"42"`
+- AND `IAppConfig::getValueString()` MUST have been called with app id `pipelinq`
+
+#### Scenario: Get returns the supplied default when key is unset
+- GIVEN no value has been stored for the key `client_schema`
+- WHEN a caller invokes `getConfigValue(key: 'client_schema', default: 'fallback')`
+- THEN the returned value MUST be `"fallback"`
+
+#### Scenario: Get returns empty string when default omitted and key is unset
+- GIVEN no value has been stored for the key `unknown_key`
+- WHEN a caller invokes `getConfigValue(key: 'unknown_key')`
+- THEN the returned value MUST be `""` (empty string — the default-default)
+
+#### Scenario: Set persists the value scoped to APP_ID
+- GIVEN a caller invokes `setConfigValue(key: 'lead_schema', value: 'lead-42')`
+- WHEN a subsequent reader invokes `getConfigValue(key: 'lead_schema')`
+- THEN the returned value MUST be `"lead-42"`
+- AND `IAppConfig::setValueString()` MUST have been called with app id `pipelinq`
+
+#### Scenario: Other apps' config is not affected
+- GIVEN another Nextcloud app has a key `register` with value `"77"` set under its own app id
+- WHEN a Pipelinq caller invokes `setConfigValue(key: 'register', value: 'new-value')`
+- THEN only the Pipelinq-scoped `register` MUST change
+- AND the other app's `register` MUST remain `"77"`
+
+**Notes**
+- The accessor is intentionally string-only (`getValueString` / `setValueString`). Callers that need typed values are expected to coerce on the boundary (e.g. `(int)$settings->getConfigValue('limit', '100')`). A future tightening could expose typed `getConfigInt`/`getConfigBool` overloads, but the current single-pair API matches every observed call site.
+- The argument-name `key` is observed in named-arg call sites (e.g. `ProspectDiscoveryService` uses `getConfigValue(key: 'register')`). The signature is `public function getConfigValue(string $key, string $default='')` — renaming the parameters would silently break those callers.
