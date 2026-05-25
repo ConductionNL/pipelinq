@@ -12,6 +12,10 @@ return [
         ['name' => 'settings#getUserSettings', 'url' => '/api/user/settings', 'verb' => 'GET'],
         ['name' => 'settings#updateUserSettings', 'url' => '/api/user/settings', 'verb' => 'PUT'],
 
+        // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g. CnSupportDialog)
+        ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
+        ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
+
         // Lead sources
         ['name' => 'lead_source#index', 'url' => '/api/settings/lead-sources', 'verb' => 'GET'],
         ['name' => 'lead_source#create', 'url' => '/api/settings/lead-sources', 'verb' => 'POST'],
