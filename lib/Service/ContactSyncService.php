@@ -15,6 +15,9 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-27
  */
 
 declare(strict_types=1);
@@ -52,6 +55,8 @@ class ContactSyncService
      * @param string $query The search query.
      *
      * @return array The matching contacts.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
      */
     public function searchContacts(string $query): array
     {
@@ -80,6 +85,8 @@ class ContactSyncService
      * @return array The created object data.
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter) — $addressBookKey kept for future per-book import support
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
      */
     public function importContact(string $uid, string $addressBookKey, string $type='client', ?string $clientId=null): array
     {
@@ -115,6 +122,8 @@ class ContactSyncService
      * @param string $objectId   The object ID.
      *
      * @return ?string The contacts UID or null.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-27
      */
     public function syncToContacts(string $objectType, string $objectId): ?string
     {

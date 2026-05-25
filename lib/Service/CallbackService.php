@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-25
  */
 
 declare(strict_types=1);
@@ -33,6 +35,7 @@ use Psr\Log\LoggerInterface;
  * and attempt threshold checks for terugbelverzoeken.
  *
  * @spec openspec/changes/callback-management/tasks.md#task-1.1
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-25
  */
 class CallbackService
 {

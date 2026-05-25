@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-35
  */
 
 declare(strict_types=1);
@@ -100,6 +102,8 @@ class ProspectSettingsController extends Controller
      * Admin-only: no @NoAdminRequired annotation.
      *
      * @return JSONResponse The ICP settings.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-35
      */
     public function index(): JSONResponse
     {
@@ -112,6 +116,8 @@ class ProspectSettingsController extends Controller
      * Admin-only: no @NoAdminRequired annotation.
      *
      * @return JSONResponse The save result.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-35
      */
     public function update(): JSONResponse
     {

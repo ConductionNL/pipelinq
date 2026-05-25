@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-59
  */
 
 declare(strict_types=1);
@@ -117,6 +119,8 @@ class QueueService
      * @param string $queueId   The queue UUID to assign to.
      *
      * @return bool True on success.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-59
      */
     public function assignToQueue(string $requestId, string $queueId): bool
     {
@@ -129,6 +133,8 @@ class QueueService
      * @param string $requestId The request UUID.
      *
      * @return bool True on success.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-59
      */
     public function removeFromQueue(string $requestId): bool
     {

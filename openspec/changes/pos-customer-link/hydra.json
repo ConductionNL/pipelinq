@@ -1,0 +1,8 @@
+{
+  "spec_slug": "pos-customer-link",
+  "title": "POS Attach Customer to Ticket",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [],
+  "issue": null
+}

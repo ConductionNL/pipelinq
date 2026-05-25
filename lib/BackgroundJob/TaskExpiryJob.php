@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-23
  */
 
 declare(strict_types=1);
@@ -82,6 +84,8 @@ class TaskExpiryJob extends TimedJob
      * @param mixed $argument The job argument (unused).
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-23
      */
     protected function run(mixed $argument): void
     {

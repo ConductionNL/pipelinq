@@ -41,7 +41,7 @@ See [ARCHITECTURE.md](../../../docs/ARCHITECTURE.md) for the full Lead entity de
 
 ## Requirements
 
-### REQ-LEAD-001: Lead CRUD [MVP]
+### Requirement: Lead CRUD [MVP]
 
 The system MUST support creating, reading, updating, and deleting lead records. Each lead MUST have a `title`. All leads are stored as OpenRegister objects in the `pipelinq` register using the `lead` schema.
 
@@ -103,7 +103,7 @@ The system MUST support creating, reading, updating, and deleting lead records. 
 
 ---
 
-### REQ-LEAD-002: Lead Validation [MVP]
+### Requirement: Lead Validation [MVP]
 
 The system MUST enforce validation rules on lead properties to maintain data integrity.
 
@@ -144,7 +144,7 @@ The system MUST enforce validation rules on lead properties to maintain data int
 
 ---
 
-### REQ-LEAD-003: Lead List View [MVP]
+### Requirement: Lead List View [MVP]
 
 The system MUST provide a list view of all leads with search, sort, and filter capabilities. The list view is the primary navigation for leads and MUST support efficient browsing of large datasets.
 
@@ -213,7 +213,7 @@ The system MUST provide a list view of all leads with search, sort, and filter c
 
 ---
 
-### REQ-LEAD-004: Lead Detail View [MVP]
+### Requirement: Lead Detail View [MVP]
 
 The system MUST provide a detail view for each lead that displays all properties, pipeline progress, linked entities, and activity timeline. The layout MUST follow the wireframe in DESIGN-REFERENCES.md Section 3.4.
 
@@ -269,7 +269,7 @@ The system MUST provide a detail view for each lead that displays all properties
 
 ---
 
-### REQ-LEAD-005: Lead Source Tracking [MVP]
+### Requirement: Lead Source Tracking [MVP]
 
 The system MUST support tracking where leads originate from. Source values are managed via the lead sources admin settings (TagManager-based CRUD at `/api/settings/lead-sources`).
 
@@ -299,7 +299,7 @@ The system MUST support tracking where leads originate from. Source values are m
 
 ---
 
-### REQ-LEAD-006: Lead Assignment [MVP]
+### Requirement: Lead Assignment [MVP]
 
 The system MUST support assigning leads to Nextcloud users. Assignment determines which user is responsible for the lead and controls visibility in the My Work view.
 
@@ -338,7 +338,7 @@ The system MUST support assigning leads to Nextcloud users. Assignment determine
 
 ---
 
-### REQ-LEAD-007: Lead Lifecycle via Pipeline Stages [MVP]
+### Requirement: Lead Lifecycle via Pipeline Stages [MVP]
 
 A lead's lifecycle from creation to won/lost MUST be driven by pipeline stages. Moving a lead to a closed stage (isClosed: true) represents the end of the sales process for that lead.
 
@@ -379,7 +379,7 @@ A lead's lifecycle from creation to won/lost MUST be driven by pipeline stages. 
 
 ---
 
-### REQ-LEAD-008: Lead Value and Probability [MVP]
+### Requirement: Lead Value and Probability [MVP]
 
 The system MUST support tracking the monetary value and win probability of leads for pipeline valuation and sales forecasting.
 
@@ -406,7 +406,7 @@ The system MUST support tracking the monetary value and win probability of leads
 
 ---
 
-### REQ-LEAD-009: Lead Expected Close Date [MVP]
+### Requirement: Lead Expected Close Date [MVP]
 
 The system MUST support an expected close date to track when a lead is anticipated to close.
 
@@ -428,7 +428,7 @@ The system MUST support an expected close date to track when a lead is anticipat
 
 ---
 
-### REQ-LEAD-010: Lead Priority [MVP]
+### Requirement: Lead Priority [MVP]
 
 The system MUST support four priority levels to enable triage and sorting of leads.
 
@@ -455,7 +455,7 @@ The system MUST support four priority levels to enable triage and sorting of lea
 
 ---
 
-### REQ-LEAD-011: Quick Actions on Lead Cards [MVP]
+### Requirement: Quick Actions on Lead Cards [MVP]
 
 The system MUST support quick actions on lead cards (in kanban and list views) to enable common operations without opening the detail view. This follows the pattern described in DESIGN-REFERENCES.md Section 3.2 and is a standard CRM pattern (HubSpot, Salesforce).
 
@@ -485,7 +485,7 @@ The system MUST support quick actions on lead cards (in kanban and list views) t
 
 ---
 
-### REQ-LEAD-012: Stale Lead Detection [V1]
+### Requirement: Stale Lead Detection [V1]
 
 The system MUST detect leads with no activity for a configurable number of days and highlight them to prevent forgotten opportunities.
 
@@ -507,7 +507,7 @@ The system MUST detect leads with no activity for a configurable number of days 
 
 ---
 
-### REQ-LEAD-013: Aging Indicator [V1]
+### Requirement: Aging Indicator [V1]
 
 The system MUST display how long a lead has been in its current stage to help identify bottlenecks.
 
@@ -527,7 +527,7 @@ The system MUST display how long a lead has been in its current stage to help id
 
 ---
 
-### REQ-LEAD-014: Lead Import/Export CSV [V1]
+### Requirement: Lead Import/Export CSV [V1]
 
 The system MUST support importing leads from CSV and exporting leads to CSV for migration and reporting.
 
@@ -557,7 +557,7 @@ The system MUST support importing leads from CSV and exporting leads to CSV for 
 
 ---
 
-### REQ-LEAD-015: Error Scenarios [MVP]
+### Requirement: Error Scenarios [MVP]
 
 The system MUST handle error conditions gracefully and provide meaningful feedback to users.
 
