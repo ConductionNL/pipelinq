@@ -73,6 +73,7 @@ class IcpConfigService
      * Get all ICP settings.
      *
      * @return array The ICP configuration.
+      * @spec openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-9
      */
     public function getSettings(): array
     {
@@ -101,6 +102,7 @@ class IcpConfigService
      * @param array $data The ICP data to save.
      *
      * @return string The ICP hash.
+      * @spec openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-11
      */
     public function saveSettings(array $data): string
     {
@@ -116,6 +118,7 @@ class IcpConfigService
      * Check if ICP is configured.
      *
      * @return bool True if at least one ICP criterion is set.
+      * @spec openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-10
      */
     public function isConfigured(): bool
     {
@@ -138,6 +141,7 @@ class IcpConfigService
      * Get ICP criteria for scoring.
      *
      * @return array The raw ICP criteria.
+      * @spec openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-7
      */
     public function getCriteria(): array
     {
@@ -155,6 +159,7 @@ class IcpConfigService
      * Get the ICP hash for cache invalidation.
      *
      * @return string The hash of current ICP settings.
+      * @spec openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-8
      */
     public function getIcpHash(): string
     {

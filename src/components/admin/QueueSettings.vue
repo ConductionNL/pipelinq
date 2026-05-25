@@ -93,12 +93,21 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-19
+		 */
 		queuesStore() {
 			return useQueuesStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-17
+		 */
 		loading() {
 			return this.queuesStore.loading
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-18
+		 */
 		queues() {
 			return this.queuesStore.queues
 		},
@@ -107,6 +116,9 @@ export default {
 		this.queuesStore.fetchQueues()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-21
+		 */
 		startEdit(queue) {
 			this.editingId = queue.id
 			this.editForm = {
@@ -115,10 +127,16 @@ export default {
 				agentsInput: (queue.assignedAgents || []).join(', '),
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-15
+		 */
 		cancelEdit() {
 			this.editingId = null
 			this.editForm = {}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-20
+		 */
 		async saveEdit() {
 			const data = {
 				...this.editForm,
@@ -134,6 +152,9 @@ export default {
 			await this.queuesStore.saveQueue(data)
 			this.cancelEdit()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-14
+		 */
 		async addQueue() {
 			await this.queuesStore.saveQueue({
 				title: t('pipelinq', 'New Queue'),
@@ -141,6 +162,9 @@ export default {
 				categories: [],
 			})
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-16
+		 */
 		async deleteQueue(queue) {
 			if (confirm(t('pipelinq', 'Delete queue "{title}"? Items will be unqueued.', { title: queue.title }))) {
 				await this.queuesStore.deleteQueue(queue.id)

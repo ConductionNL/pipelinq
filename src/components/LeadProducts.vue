@@ -193,15 +193,27 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-17
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-19
+		 */
 		productOptions() {
 			return this.products.map(p => ({ id: p.id, name: p.name || p.id }))
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-15
+		 */
 		grandTotal() {
 			return this.lineItems.reduce((sum, item) => sum + this.calculateTotal(item), 0)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-16
+		 */
 		hasManualOverride() {
 			if (this.leadValue === null || this.leadValue === undefined) return false
 			if (this.lineItems.length === 0) return false
@@ -212,6 +224,9 @@ export default {
 		await this.fetchData()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-12
+		 */
 		async fetchData() {
 			this.loading = true
 			try {
@@ -231,22 +246,34 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-14
+		 */
 		getProductName(productId) {
 			const product = this.products.find(p => p.id === productId)
 			return product?.name || productId || '-'
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-11
+		 */
 		calculateTotal(item) {
 			const qty = Number(item.quantity) || 0
 			const price = Number(item.unitPrice) || 0
 			const discount = Number(item.discount) || 0
 			return (qty * price) * (1 - discount / 100)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-18
+		 */
 		onProductSelect(productId) {
 			const product = this.products.find(p => p.id === productId)
 			if (product) {
 				this.addForm.unitPrice = Number(product.unitPrice) || 0
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-10
+		 */
 		async addLineItem() {
 			if (!this.addForm.product) return
 
@@ -269,6 +296,9 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to add product'))
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-22
+		 */
 		async updateLineItem(item) {
 			try {
 				const total = this.calculateTotal(item)
@@ -285,6 +315,9 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to update line item'))
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-20
+		 */
 		async removeLineItem(item) {
 			if (!confirm(t('pipelinq', 'Remove this product from the lead?'))) return
 
@@ -296,6 +329,9 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to remove line item'))
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-21
+		 */
 		resetAddForm() {
 			this.addForm = {
 				product: null,
@@ -305,6 +341,9 @@ export default {
 				notes: '',
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-13
+		 */
 		formatCurrency(value) {
 			if (value === null || value === undefined) return '-'
 			return formatLocaleCurrency(value)

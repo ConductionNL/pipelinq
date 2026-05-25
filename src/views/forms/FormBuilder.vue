@@ -145,6 +145,9 @@ export default {
 		isNew() {
 			return !this.formId
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-8
+		 */
 		fieldTypeOptions() {
 			return [
 				{ value: 'text', label: this.t('pipelinq', 'Text') },
@@ -157,6 +160,9 @@ export default {
 				{ value: 'hidden', label: this.t('pipelinq', 'Hidden') },
 			]
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-10
+		 */
 		mappingOptions() {
 			return [
 				{ value: 'contact.name', label: this.t('pipelinq', 'Contact: Name') },
@@ -168,12 +174,18 @@ export default {
 			]
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-11
+	 */
 	mounted() {
 		if (this.formId) {
 			this.loadForm()
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-9
+		 */
 		async loadForm() {
 			this.loading = true
 			try {
@@ -189,6 +201,9 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-12
+		 */
 		parseMappings() {
 			const mappings = this.form.fieldMappings || {}
 			this.mappingFor = (this.form.fields || []).map((f) => {
@@ -196,6 +211,9 @@ export default {
 				return m ? m.entity + '.' + m.property : null
 			})
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-7
+		 */
 		buildMappings() {
 			const result = {}
 			const fields = this.form.fields || []
@@ -208,6 +226,9 @@ export default {
 			}
 			return result
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-6
+		 */
 		addField() {
 			this.form.fields.push({
 				name: '',
@@ -220,10 +241,16 @@ export default {
 			})
 			this.mappingFor.push(null)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-13
+		 */
 		removeField(index) {
 			this.form.fields.splice(index, 1)
 			this.mappingFor.splice(index, 1)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-14
+		 */
 		async save() {
 			this.form.fieldMappings = this.buildMappings()
 

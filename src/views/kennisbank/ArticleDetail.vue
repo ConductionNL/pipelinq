@@ -131,6 +131,9 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-kennisbank-ui/tasks.md#task-2
+		 */
 		renderedBody() {
 			if (!this.article || !this.article.body) {
 				return ''
@@ -149,6 +152,9 @@ export default {
 		this.fetchArticle()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-kennisbank-ui/tasks.md#task-1
+		 */
 		async fetchArticle() {
 			this.loading = true
 			try {
@@ -160,6 +166,9 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-kennisbank-ui/tasks.md#task-3
+		 */
 		async submitRating(rating) {
 			try {
 				const url = generateUrl('/apps/pipelinq/api/kennisbank/feedback')
@@ -173,6 +182,9 @@ export default {
 				showError(t('pipelinq', 'Failed to submit feedback'))
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-kennisbank-ui/tasks.md#task-4
+		 */
 		async submitSuggestion() {
 			try {
 				const url = generateUrl('/apps/pipelinq/api/kennisbank/feedback')

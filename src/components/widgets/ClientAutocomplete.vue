@@ -45,12 +45,18 @@ export default {
 		},
 		placeholder: {
 			type: String,
+			/**
+			 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-9
+			 */
 			default() {
 				return t('pipelinq', 'Search client...')
 			},
 		},
 		label: {
 			type: String,
+			/**
+			 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-9
+			 */
 			default() {
 				return t('pipelinq', 'Client')
 			},
@@ -67,10 +73,16 @@ export default {
 		}
 	},
 	watch: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-14
+		 */
 		value(newVal) {
 			this.selectedClient = newVal
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-10
+	 */
 	async mounted() {
 		try {
 			const { objectStore } = await initializeStores()
@@ -80,6 +92,9 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-11
+		 */
 		onInput() {
 			if (this.selectedClient) {
 				return
@@ -89,6 +104,9 @@ export default {
 				this.searchClients()
 			}, 300)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-12
+		 */
 		async searchClients() {
 			if (!this.config?.client || !this.query || this.query.length < 2) {
 				this.results = []
@@ -124,6 +142,9 @@ export default {
 				this.showDropdown = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-13
+		 */
 		selectClient(client) {
 			this.selectedClient = client
 			this.query = ''
@@ -131,6 +152,9 @@ export default {
 			this.showDropdown = false
 			this.$emit('input', client)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-8
+		 */
 		clearSelection() {
 			this.selectedClient = null
 			this.query = ''

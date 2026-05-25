@@ -82,6 +82,9 @@ export default {
 	},
 	mounted() { this.fetchData() },
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-rapportage-ui/tasks.md#task-1
+		 */
 		async fetchData() {
 			this.loading = true
 			try { this.agents = [] } finally { this.loading = false }

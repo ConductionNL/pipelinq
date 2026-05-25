@@ -6,6 +6,7 @@ import { translate as t } from '@nextcloud/l10n'
 
 /**
  * Task type labels.
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-55
  */
 export function getTaskTypeLabels() {
 	return {
@@ -17,6 +18,7 @@ export function getTaskTypeLabels() {
 
 /**
  * Task status labels.
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-53
  */
 export function getTaskStatusLabels() {
 	return {
@@ -29,6 +31,7 @@ export function getTaskStatusLabels() {
 
 /**
  * Task priority labels.
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-51
  */
 export function getTaskPriorityLabels() {
 	return {
@@ -52,6 +55,7 @@ export const TASK_PRIORITY_ORDER = {
  *
  * @param {string} type The task type key.
  * @return {string} The label.
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-54
  */
 export function getTaskTypeLabel(type) {
 	return getTaskTypeLabels()[type] || type || '-'
@@ -62,6 +66,7 @@ export function getTaskTypeLabel(type) {
  *
  * @param {string} status The task status key.
  * @return {string} The label.
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-52
  */
 export function getTaskStatusLabel(status) {
 	return getTaskStatusLabels()[status] || status || '-'
@@ -72,6 +77,7 @@ export function getTaskStatusLabel(status) {
  *
  * @param {string} priority The task priority key.
  * @return {string} The label.
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-50
  */
 export function getTaskPriorityLabel(priority) {
 	return getTaskPriorityLabels()[priority] || priority || '-'
@@ -82,6 +88,7 @@ export function getTaskPriorityLabel(priority) {
  *
  * @param {string} priority The task priority key.
  * @return {string} CSS color string.
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-49
  */
 export function getTaskPriorityColor(priority) {
 	switch (priority) {
@@ -101,6 +108,7 @@ export function getTaskPriorityColor(priority) {
  *
  * @param {object} task The task object.
  * @return {boolean} True if overdue.
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-56
  */
 export function isTaskOverdue(task) {
 	if (!task.deadline) return false
@@ -112,6 +120,7 @@ export function isTaskOverdue(task) {
  * Get the default deadline (next business day at 17:00).
  *
  * @return {string} ISO datetime string.
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-48
  */
 export function getDefaultDeadline() {
 	const now = new Date()
@@ -127,6 +136,7 @@ export function getDefaultDeadline() {
  * Fetch the current user's Nextcloud group IDs via OCS API.
  *
  * @return {Promise<string[]>} Array of group IDs.
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-47
  */
 export async function fetchUserGroups() {
 	try {
@@ -153,6 +163,7 @@ export async function fetchUserGroups() {
  *
  * @param {string} query The search query.
  * @return {Promise<Array>} Array of {id, label, type, icon} objects.
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-57
  */
 export async function searchAssignees(query) {
 	if (!query || query.length < 1) return []

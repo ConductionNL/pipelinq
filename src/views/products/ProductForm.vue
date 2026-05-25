@@ -153,9 +153,15 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-18
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-17
+		 */
 		isValid() {
 			const hasName = this.form.name.trim().length > 0
 			const hasType = !!this.form.type
@@ -163,6 +169,9 @@ export default {
 			const noErrors = Object.values(this.errors).every(e => !e)
 			return hasName && hasType && hasPrice && noErrors
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-14
+		 */
 		categoryOptions() {
 			return this.categories.map(c => ({ id: c.id, name: c.name }))
 		},
@@ -170,6 +179,9 @@ export default {
 	watch: {
 		product: {
 			immediate: true,
+			/**
+			 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-16
+			 */
 			handler(val) {
 				if (val && Object.keys(val).length > 0) {
 					this.populateForm(val)
@@ -181,6 +193,9 @@ export default {
 		await this.fetchCategories()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-20
+		 */
 		populateForm(data) {
 			this.form = {
 				name: data.name || '',
@@ -196,6 +211,9 @@ export default {
 			}
 			this.errors = { name: '', type: '', unitPrice: '' }
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-22
+		 */
 		validateField(field) {
 			switch (field) {
 			case 'name':
@@ -221,12 +239,18 @@ export default {
 				break
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-21
+		 */
 		validateAll() {
 			this.validateField('name')
 			this.validateField('type')
 			this.validateField('unitPrice')
 			return this.isValid
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-19
+		 */
 		onSave() {
 			if (!this.validateAll()) {
 				return
@@ -242,6 +266,9 @@ export default {
 			}
 			this.$emit('save', data)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-15
+		 */
 		async fetchCategories() {
 			try {
 				const results = await this.objectStore.fetchCollection('productCategory', { _limit: 100 })

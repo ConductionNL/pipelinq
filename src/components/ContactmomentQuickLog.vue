@@ -155,27 +155,45 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-23
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-20
+		 */
 		clients() {
 			return this.objectStore.collections.client || []
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-19
+		 */
 		clientSelectOptions() {
 			return this.clients.map(c => ({
 				value: c.id,
 				label: c.name || c.id,
 			}))
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-26
+		 */
 		requests() {
 			return this.objectStore.collections.request || []
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-25
+		 */
 		requestSelectOptions() {
 			return this.requests.map(r => ({
 				value: r.id,
 				label: r.title || r.id,
 			}))
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-22
+		 */
 		errors() {
 			const errors = {}
 			if (!this.form.subject || !this.form.subject.trim()) {
@@ -190,6 +208,9 @@ export default {
 			return this.form.subject?.trim() && this.form.channel
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-21
+	 */
 	async created() {
 		await Promise.all([
 			this.objectStore.fetchCollection('client', { _limit: 100 }),
@@ -209,6 +230,9 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-24
+		 */
 		async onSave() {
 			if (!this.isValid) return
 

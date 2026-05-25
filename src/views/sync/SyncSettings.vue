@@ -85,9 +85,15 @@ export default {
 		this.loadSettings()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-sync-ui/tasks.md#task-1
+		 */
 		async loadSettings() {
 			// Load from user config
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-sync-ui/tasks.md#task-4
+		 */
 		async updateSyncEnabled() {
 			try {
 				showSuccess(
@@ -99,9 +105,15 @@ export default {
 				showError(t('pipelinq', 'Failed to update sync settings'))
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-sync-ui/tasks.md#task-2
+		 */
 		async updateAccounts() {
 			// Save selected accounts
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-sync-ui/tasks.md#task-3
+		 */
 		async updateCalendarSync() {
 			try {
 				showSuccess(

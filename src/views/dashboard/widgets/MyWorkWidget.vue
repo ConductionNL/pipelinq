@@ -55,6 +55,9 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-8
+		 */
 		allItems() {
 			const closed = getClosedStageNames(this.pipelines)
 			const now = new Date()
@@ -101,13 +104,22 @@ export default {
 
 			return items
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-12
+		 */
 		total() {
 			return this.allItems.length
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-9
+		 */
 		items() {
 			return this.allItems.slice(0, 5)
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-10
+	 */
 	async mounted() {
 		try {
 			const [myLeads, myRequests, pipelines] = await Promise.all([
@@ -124,6 +136,9 @@ export default {
 	},
 	methods: {
 		formatDate,
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-11
+		 */
 		openItem(item) {
 			if (item.entityType === 'lead') {
 				this.$router.push({ name: 'LeadDetail', params: { id: item.id } })

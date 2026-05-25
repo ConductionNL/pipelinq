@@ -135,6 +135,9 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-27
+		 */
 		isValid() {
 			const hasName = this.form.name.trim().length > 0
 			const hasType = !!this.form.type
@@ -145,6 +148,9 @@ export default {
 	watch: {
 		client: {
 			immediate: true,
+			/**
+			 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-26
+			 */
 			handler(val) {
 				if (val && Object.keys(val).length > 0) {
 					this.populateForm(val)
@@ -153,6 +159,9 @@ export default {
 		},
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-29
+		 */
 		populateForm(data) {
 			this.form = {
 				name: data.name || '',
@@ -166,6 +175,9 @@ export default {
 			// Clear errors when populating
 			this.errors = { name: '', type: '', email: '', phone: '', website: '' }
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
+		 */
 		validateField(field) {
 			switch (field) {
 			case 'name':
@@ -207,6 +219,9 @@ export default {
 				break
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-30
+		 */
 		validateAll() {
 			this.validateField('name')
 			this.validateField('type')
@@ -215,6 +230,9 @@ export default {
 			this.validateField('website')
 			return this.isValid
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-28
+		 */
 		onSave() {
 			if (!this.validateAll()) {
 				return

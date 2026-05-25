@@ -82,6 +82,7 @@ class CallbackOverdueJob extends TimedJob
      * @param mixed $argument The job argument (unused).
      *
      * @return void
+      * @spec openspec/changes/reverse-2026-05-26-be-background-jobs/tasks.md#task-1
      */
     protected function run(mixed $argument): void
     {

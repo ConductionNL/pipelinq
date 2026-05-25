@@ -199,41 +199,68 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-53
+		 */
 		schemaLabels() {
 			const mappings = this.pipeline?.propertyMappings
 			if (!mappings || mappings.length === 0) return ''
 			return mappings.map(m => m.schemaSlug).join(', ')
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-55
+		 */
 		stageCount() {
 			if (!this.pipeline?.stages) return '0'
 			return n('pipelinq', '%n stage', '%n stages', this.pipeline.stages.length)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-54
+		 */
 		sortedStages() {
 			if (!this.pipeline?.stages) return []
 			return [...this.pipeline.stages].sort((a, b) => a.order - b.order)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-56
+		 */
 		stageFlow() {
 			if (this.sortedStages.length === 0) return t('pipelinq', 'No stages')
 			return this.sortedStages.map(s => s.name).join(' \u2192 ')
 		},
 	},
 	watch: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-52
+		 */
 		open(val) {
 			this.internalOpen = val
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-48
+		 */
 		internalOpen(val) {
 			this.$emit('update:open', val)
 		},
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-50
+		 */
 		onEdit() {
 			this.formPipeline = this.pipeline
 			this.showForm = true
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-49
+		 */
 		onCreate() {
 			this.formPipeline = null
 			this.showForm = true
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-51
+		 */
 		onSave(pipelineData) {
 			this.showForm = false
 			this.formPipeline = null

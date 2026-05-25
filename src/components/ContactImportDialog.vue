@@ -82,6 +82,9 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-3
+		 */
 		onSearch(value) {
 			this.query = value
 			clearTimeout(this.searchTimeout)
@@ -94,6 +97,9 @@ export default {
 			}, 300)
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-1
+		 */
 		async doSearch() {
 			this.searching = true
 			try {
@@ -117,6 +123,9 @@ export default {
 			this.searching = false
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-2
+		 */
 		async importContact(contact) {
 			this.importing = contact.uid
 			try {
