@@ -4,6 +4,8 @@
 
 Implement appointment scheduling in Pipelinq by adding Service, Resource, Booking, and WalkInTicket entities with availability computation, a public self-booking portal, and email/calendar workflows for confirmations, reminders, reschedules, and no-show tracking.
 
+**Leaf-first boundary (ADR-022).** Calendar read/write and email dispatch are NOT built in pipelinq. They are delegated to `email-calendar-sync`, which consumes the OpenRegister `calendar` (`integration-calendar`) and `email` (`integration-email`) integration leaves. Pipelinq builds only the genuinely app-specific booking domain — Service/Resource/Booking/WalkInTicket entities, 15-minute slot computation, skill-based routing, deposit holds, no-show tracking, the walk-in queue, and the public portal. Calendar VEVENT linkage and `.ics`/confirmation email mechanics belong to the leaves.
+
 **Standards**: Schema.org (`schema:Event`, `schema:Service`, `schema:LocalBusiness`), iCalendar (RFC 5545 for `.ics` attachments), vCard email matching, Dutch locale formatting (WCAG 2.1 AA for accessibility)
 **Feature tier**: V1 (core booking, portal, email flows), V2 (automation triggers, advanced rules), V3 (mobile app, waitlist)
 **Entities used**: Service, Resource, Booking, WalkInTicket (new to Pipelinq); Customer (from client-management)
@@ -11,11 +13,11 @@ Implement appointment scheduling in Pipelinq by adding Service, Resource, Bookin
 
 ---
 
-## Requirements
+## ADDED Requirements
 
 ---
 
-### REQ-APT-001: Service Entity Schema
+### Requirement: REQ-APT-001 Service Entity Schema (renumbered for delta validation)
 
 The system MUST support Service entities with configurable duration, pricing, skills, multi-step composition, and booking policies.
 
@@ -35,7 +37,7 @@ The system MUST support Service entities with configurable duration, pricing, sk
 
 ---
 
-### REQ-APT-002: Resource Entity Schema
+### Requirement: REQ-APT-002 Resource Entity Schema
 
 The system MUST support Resource entities (staff, room, equipment) with working hours, vacations, skills, and optional calendar sync.
 
@@ -61,7 +63,7 @@ The system MUST support Resource entities (staff, room, equipment) with working 
 
 ---
 
-### REQ-APT-003: Availability Computation
+### Requirement: REQ-APT-003 Availability Computation
 
 The system MUST compute available 15-minute-aligned slots per resource per date by intersecting working hours, vacations, booked times, and calendar-synced blocks.
 
@@ -87,7 +89,7 @@ The system MUST compute available 15-minute-aligned slots per resource per date 
 
 ---
 
-### REQ-APT-004: Skill-Based Routing
+### Requirement: REQ-APT-004 Skill-Based Routing
 
 The system MUST query skill-routing to determine which Resources are eligible for a Service, then intersect with availability.
 
@@ -107,7 +109,7 @@ The system MUST query skill-routing to determine which Resources are eligible fo
 
 ---
 
-### REQ-APT-005: Public Booking Portal
+### Requirement: REQ-APT-005 Public Booking Portal
 
 The system MUST provide a public, unauthenticated web portal at `/book/{serviceSlug}` where customers self-book appointments.
 
@@ -134,7 +136,7 @@ The system MUST provide a public, unauthenticated web portal at `/book/{serviceS
 
 ---
 
-### REQ-APT-006: Booking Confirmation Email
+### Requirement: REQ-APT-006 Booking Confirmation Email
 
 The system MUST send a confirmation email immediately after a Booking is created or deposit is paid, including an `.ics` calendar attachment and signed reschedule/cancel links.
 
@@ -156,7 +158,7 @@ The system MUST send a confirmation email immediately after a Booking is created
 
 ---
 
-### REQ-APT-007: Reminder Email and SMS
+### Requirement: REQ-APT-007 Reminder Email and SMS
 
 The system MUST send a 24-hour reminder email and optional SMS before each appointment.
 
@@ -178,7 +180,7 @@ The system MUST send a 24-hour reminder email and optional SMS before each appoi
 
 ---
 
-### REQ-APT-008: Reschedule via Signed Link
+### Requirement: REQ-APT-008 Reschedule via Signed Link
 
 The system MUST allow customers to reschedule appointments via a signed email link without logging in, preserving the audit trail by marking the original Booking as rescheduled and creating a new Booking.
 
@@ -198,7 +200,7 @@ The system MUST allow customers to reschedule appointments via a signed email li
 
 ---
 
-### REQ-APT-009: Cancellation with Policy Enforcement
+### Requirement: REQ-APT-009 Cancellation with Policy Enforcement
 
 The system MUST enforce configurable cancellation policies: free-until-N-hours-before, always-charge, or no-charge. Late cancellations trigger optional payment charges.
 
@@ -224,7 +226,7 @@ The system MUST enforce configurable cancellation policies: free-until-N-hours-b
 
 ---
 
-### REQ-APT-010: Deposit-Required Bookings
+### Requirement: REQ-APT-010 Deposit-Required Bookings
 
 The system MUST support optional deposits: bookings requiring deposits are created with `status: "pending-deposit"`, the slot is held for 15 minutes, and on successful payment `status` transitions to `confirmed`.
 
@@ -250,7 +252,7 @@ The system MUST support optional deposits: bookings requiring deposits are creat
 
 ---
 
-### REQ-APT-011: No-Show Tracking and Fees
+### Requirement: REQ-APT-011 No-Show Tracking and Fees
 
 The system MUST track no-shows, increment customer lifetime no-show count, and optionally charge fees.
 
@@ -276,7 +278,7 @@ The system MUST track no-shows, increment customer lifetime no-show count, and o
 
 ---
 
-### REQ-APT-012: Walk-In Queue
+### Requirement: REQ-APT-012 Walk-In Queue
 
 The system MUST support walk-in arrivals (WalkInTicket) for businesses that mix scheduled and unscheduled service.
 
@@ -302,7 +304,7 @@ The system MUST support walk-in arrivals (WalkInTicket) for businesses that mix 
 
 ---
 
-### REQ-APT-013: Booking Status Lifecycle
+### Requirement: REQ-APT-013 Booking Status Lifecycle
 
 The system MUST enforce a valid status transition flow: pending-deposit → confirmed → completed/no-show/cancelled, with rescheduled as a parallel branch.
 
@@ -328,7 +330,7 @@ The system MUST enforce a valid status transition flow: pending-deposit → conf
 
 ---
 
-### REQ-APT-014: Customer Timeline Integration
+### Requirement: REQ-APT-014 Customer Timeline Integration
 
 The system MUST display all Bookings on the Customer detail page in the CRM, showing past and future appointments with status, service, resource, and time.
 
@@ -348,7 +350,7 @@ The system MUST display all Bookings on the Customer detail page in the CRM, sho
 
 ---
 
-### REQ-APT-015: Admin Booking Management
+### Requirement: REQ-APT-015 Admin Booking Management
 
 The system MUST provide admin views for staff to manage Services, Resources, and Bookings: list, create, edit, and delete.
 
@@ -375,7 +377,7 @@ The system MUST provide admin views for staff to manage Services, Resources, and
 
 ---
 
-### REQ-APT-016: AvailabilityCache
+### Requirement: REQ-APT-016 AvailabilityCache
 
 The system MUST maintain a read-only cache of free slots per resource per date for sub-second queries. Cache is regenerated on Resource/Booking/vacation changes and expires after 24 hours.
 
@@ -401,7 +403,7 @@ The system MUST maintain a read-only cache of free slots per resource per date f
 
 ---
 
-### REQ-APT-017: Compliance and Audit Trails
+### Requirement: REQ-APT-017 Compliance and Audit Trails
 
 The system MUST provide full audit trails for regulatory compliance: AVG right-to-be-forgotten (pseudonymize, not delete), NL Boekhoudplicht 7-year retention, and WCAG 2.1 AA accessibility on the public portal.
 
@@ -429,27 +431,29 @@ The system MUST provide full audit trails for regulatory compliance: AVG right-t
 
 ---
 
-### REQ-APT-018: Bi-Directional Calendar Sync
+### Requirement: REQ-APT-018 Bi-Directional Calendar Sync
 
-The system MUST sync staff calendar blocks (vacation, lunch, meetings) from Google/Outlook/iCloud via email-calendar-sync every 5 minutes, and push created Bookings back to staff calendars.
+**Leaf-first (ADR-022).** Calendar read/write is NOT implemented in pipelinq. Staff calendar blocks are read, and Booking events are written, through the OpenRegister **`calendar` leaf** (`integration-calendar`) — mediated by `email-calendar-sync`, which itself consumes the calendar leaf's `CalendarProvider`/VEVENT link+create API. Pipelinq MUST NOT add its own CalDAV client or `X-PIPELINQ-*` VEVENT properties (that would reproduce the ADR-022 "parallel link table" / "duplicate CalDAV sync" anti-pattern observed on decidesk). Pipelinq owns only the availability-cache invalidation that reacts to the leaf's synced blocks.
+
+The system MUST react to staff calendar blocks (vacation, lunch, meetings) synced by the `calendar` leaf every 5 minutes, and MUST push created Bookings back to staff calendars by creating VEVENTs through the leaf.
 
 **Feature tier**: V1
 
 #### Scenario: Calendar-synced block is respected in availability
 
-- **GIVEN** a staff member has a "lunch" event 12:00-13:00 in their Outlook calendar
-- **WHEN** the email-calendar-sync syncs the calendar
+- **GIVEN** a staff member has a "lunch" event 12:00-13:00 in their calendar
+- **WHEN** the `calendar` leaf (via email-calendar-sync) syncs the calendar
 - **THEN** within 5 minutes the AvailabilityCache MUST be invalidated, and no customer can book that staff member 12:00-13:00
 
-#### Scenario: Booking is pushed to staff calendar
+#### Scenario: Booking is pushed to staff calendar via the leaf
 
 - **GIVEN** a Booking is created for staff member X on 2026-05-25 14:00
 - **WHEN** the Booking is confirmed
-- **THEN** an event MUST be created in X's calendar (via email-calendar-sync push) with customer name, service, and a deep-link back to the Booking in Pipelinq
+- **THEN** a VEVENT MUST be created in X's calendar **through the `calendar` leaf's create API** (not a pipelinq-local CalDAV write) with customer name, service, and a deep-link back to the Booking in Pipelinq
 
 ---
 
-### REQ-APT-019: Unit Tests and Code Quality
+### Requirement: REQ-APT-019 Unit Tests and Code Quality
 
 Every new PHP service, controller, and background job MUST have PHPUnit tests with at least 3 test methods. Code MUST pass phpcs, phpstan, and phpmd linters.
 
@@ -475,7 +479,7 @@ Every new PHP service, controller, and background job MUST have PHPUnit tests wi
 
 ---
 
-### REQ-APT-020: Internationalization (i18n)
+### Requirement: REQ-APT-020 Internationalization (i18n)
 
 All user-visible strings in the portal, admin UI, and email templates MUST have translations in English and Dutch. No hardcoded strings.
 

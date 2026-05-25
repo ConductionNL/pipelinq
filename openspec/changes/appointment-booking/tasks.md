@@ -1,5 +1,13 @@
 # Tasks: Appointment Booking
 
+> **Leaf-first (ADR-022).** Calendar read/write and email/SMS dispatch are delegated to
+> `email-calendar-sync`, which consumes the OR `calendar` (`integration-calendar`) and `email`
+> (`integration-email`) leaves; payments/SMS go through openconnector. Where these tasks
+> reference `email-calendar-sync` for block-fetching or booking push, that path resolves to the
+> `calendar` leaf's VEVENT link/create API — pipelinq adds NO CalDAV client and NO local
+> calendar/email link schema. Build only the booking domain (Service/Resource/Booking/
+> WalkInTicket, slots, skill routing, deposits, no-show, walk-in queue, portal).
+
 ## Section 0: Deduplication Check
 
 ### Task 0.1: Verify no overlap with existing services [MVP]
