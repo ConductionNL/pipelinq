@@ -122,6 +122,20 @@
       },
       "contact": {
         "slug": "contact",
+        "x-openregister-notifications": {
+          "newContact": {
+            "trigger": { "type": "created" },
+            "enabled": true,
+            "channels": ["nc-notification"],
+            "recipients": [
+              { "kind": "groups", "groups": ["sales"] }
+            ],
+            "subject": {
+              "nl": "Nieuw contact: {{name}}",
+              "en": "New contact: {{name}}"
+            }
+          }
+        },
         "title": "Contact",
         "icon": "CardAccountDetails",
         "version": "1.0.0",
@@ -167,6 +181,21 @@
       },
       "lead": {
         "slug": "lead",
+        "x-openregister-notifications": {
+          "newLead": {
+            "trigger": { "type": "created" },
+            "enabled": true,
+            "channels": ["nc-notification"],
+            "recipients": [
+              { "kind": "groups", "groups": ["sales"] },
+              { "kind": "field", "field": "assignee" }
+            ],
+            "subject": {
+              "nl": "Nieuwe lead: {{title}}",
+              "en": "New lead: {{title}}"
+            }
+          }
+        },
         "title": "Lead",
         "icon": "TrendingUp",
         "version": "1.0.0",
