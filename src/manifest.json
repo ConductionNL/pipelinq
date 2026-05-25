@@ -2,7 +2,8 @@
 	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
 	"version": "1.0.0",
 	"dependencies": [
-		"openregister"
+		"openregister",
+		"deck"
 	],
 	"menu": [
 		{
@@ -72,7 +73,7 @@
 			"id": "Pipeline",
 			"label": "Pipeline",
 			"icon": "icon-category-organization",
-			"route": "Pipeline",
+			"route": "Pipelines",
 			"order": 100
 		},
 		{
@@ -248,7 +249,30 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "request",
-				"sidebar": true
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "deck",
+							"label": "Deck",
+							"component": "CnDeckTab",
+							"config": {
+								"linkedType": "deck"
+							}
+						}
+					]
+				},
+				"widgets": [
+					{
+						"id": "request-deck-kanban",
+						"component": "CnDeckCard",
+						"config": {
+							"view": "mini-kanban",
+							"linkedType": "deck"
+						}
+					}
+				]
 			}
 		},
 		{
@@ -345,7 +369,30 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "lead",
-				"sidebar": true
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "deck",
+							"label": "Deck",
+							"component": "CnDeckTab",
+							"config": {
+								"linkedType": "deck"
+							}
+						}
+					]
+				},
+				"widgets": [
+					{
+						"id": "lead-deck-kanban",
+						"component": "CnDeckCard",
+						"config": {
+							"view": "mini-kanban",
+							"linkedType": "deck"
+						}
+					}
+				]
 			}
 		},
 		{
@@ -466,14 +513,6 @@
 				"schema": "product",
 				"sidebar": true
 			}
-		},
-		{
-			"id": "Pipeline",
-			"route": "/pipeline",
-			"type": "custom",
-			"title": "Pipeline",
-			"component": "PipelineBoardView",
-			"_note": "Bespoke kanban board with drag-drop column reorder + per-card status transitions. No lib analogue."
 		},
 		{
 			"id": "Queues",
