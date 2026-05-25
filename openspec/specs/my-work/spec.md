@@ -16,7 +16,7 @@ The design follows the wireframe in DESIGN-REFERENCES.md section 3.5.
 
 ## Requirements
 
-### REQ-MW-010: Personal Workload View [MVP]
+### Requirement: Personal Workload View [MVP]
 
 The system MUST provide a "My Work" view showing all leads and requests assigned to the current user. Only open items are shown by default, with a toggle to include completed items.
 
@@ -46,7 +46,7 @@ The system MUST provide a "My Work" view showing all leads and requests assigned
 
 ---
 
-### REQ-MW-020: Sorting [MVP]
+### Requirement: Sorting [MVP]
 
 Within each temporal group, items MUST be sorted by priority first, then by due date ascending.
 
@@ -60,7 +60,7 @@ Within each temporal group, items MUST be sorted by priority first, then by due 
 
 ---
 
-### REQ-MW-030: Temporal Grouping [MVP]
+### Requirement: Temporal Grouping [MVP]
 
 Items MUST be organized into four temporal groups displayed top to bottom: Overdue, Due This Week, Upcoming, No Due Date. Empty groups MUST be hidden.
 
@@ -90,7 +90,7 @@ Items MUST be organized into four temporal groups displayed top to bottom: Overd
 
 ---
 
-### REQ-MW-040: Filtering [MVP]
+### Requirement: Filtering [MVP]
 
 The system MUST allow filtering by entity type: All (default), Leads, Requests.
 
@@ -106,7 +106,7 @@ The system MUST allow filtering by entity type: All (default), Leads, Requests.
 
 ---
 
-### REQ-MW-050: Overdue Item Highlighting [MVP]
+### Requirement: Overdue Item Highlighting [MVP]
 
 Overdue items MUST be visually distinct with red indicators and "N days overdue" text.
 
@@ -121,7 +121,7 @@ Overdue items MUST be visually distinct with red indicators and "N days overdue"
 
 ---
 
-### REQ-MW-060: Item Navigation [MVP]
+### Requirement: Item Navigation [MVP]
 
 Each item MUST be clickable, navigating to the full detail view.
 
@@ -131,7 +131,7 @@ Each item MUST be clickable, navigating to the full detail view.
 
 ---
 
-### REQ-MW-070: Cross-App Workload [V1]
+### Requirement: Cross-App Workload [V1]
 
 The system SHOULD include items from Procest (cases and tasks assigned to the current user) in the My Work view.
 
@@ -157,7 +157,7 @@ The system SHOULD include items from Procest (cases and tasks assigned to the cu
 
 ---
 
-### REQ-MW-080: Item Card Layout [MVP]
+### Requirement: Item Card Layout [MVP]
 
 Each item MUST follow a consistent card layout showing entity badge, title, stage/status, pipeline, value (leads), due date, and priority.
 
@@ -171,7 +171,7 @@ Each item MUST follow a consistent card layout showing entity badge, title, stag
 
 ---
 
-### REQ-MW-090: Queue-Based Work Section [Enterprise]
+### Requirement: Queue-Based Work Section [Enterprise]
 
 The My Work view SHALL include a "My Queues" tab showing items from queues the current user is assigned to, providing a queue-centric view of incoming work alongside the existing time-based grouping.
 
@@ -284,7 +284,7 @@ The design follows the wireframe in DESIGN-REFERENCES.md section 3.5.
 
 ## Requirements
 
-### REQ-MW-010: Personal Workload View [MVP]
+### Requirement: Personal Workload View [MVP]
 
 The system MUST provide a "My Work" view showing all leads, requests, and tasks assigned to the current user. Only open items are shown by default, with a toggle to include completed items. Tasks assigned to Nextcloud groups the user belongs to MUST also appear.
 
@@ -316,7 +316,7 @@ The system MUST provide a "My Work" view showing all leads, requests, and tasks 
 
 ---
 
-### REQ-MW-020: Sorting [MVP]
+### Requirement: Sorting [MVP]
 
 Within each temporal group, items MUST be sorted by priority first, then by due date ascending.
 
@@ -330,7 +330,7 @@ Within each temporal group, items MUST be sorted by priority first, then by due 
 
 ---
 
-### REQ-MW-030: Temporal Grouping [MVP]
+### Requirement: Temporal Grouping [MVP]
 
 Items MUST be organized into four temporal groups displayed top to bottom: Overdue, Due This Week, Upcoming, No Due Date. Empty groups MUST be hidden.
 
@@ -360,7 +360,7 @@ Items MUST be organized into four temporal groups displayed top to bottom: Overd
 
 ---
 
-### REQ-MW-040: Filtering [MVP]
+### Requirement: Filtering [MVP]
 
 The system MUST allow filtering by entity type: All (default), Leads, Requests, Tasks.
 
@@ -376,7 +376,7 @@ The system MUST allow filtering by entity type: All (default), Leads, Requests, 
 
 ---
 
-### REQ-MW-050: Overdue Item Highlighting [MVP]
+### Requirement: Overdue Item Highlighting [MVP]
 
 Overdue items MUST be visually distinct with red indicators and "N days overdue" text.
 
@@ -391,7 +391,7 @@ Overdue items MUST be visually distinct with red indicators and "N days overdue"
 
 ---
 
-### REQ-MW-060: Item Navigation [MVP]
+### Requirement: Item Navigation [MVP]
 
 Each item MUST be clickable, navigating to the full detail view.
 
@@ -401,7 +401,7 @@ Each item MUST be clickable, navigating to the full detail view.
 
 ---
 
-### REQ-MW-070: Cross-App Workload [V1]
+### Requirement: Cross-App Workload [V1]
 
 The system MUST include items from Procest (cases and tasks assigned to the current user) in the My Work view.
 
@@ -427,7 +427,7 @@ The system MUST include items from Procest (cases and tasks assigned to the curr
 
 ---
 
-### REQ-MW-080: Item Card Layout [MVP]
+### Requirement: Item Card Layout [MVP]
 
 Each item MUST follow a consistent card layout showing entity badge, title, stage/status, pipeline, value (leads), due date, and priority.
 
@@ -449,7 +449,7 @@ Each item MUST follow a consistent card layout showing entity badge, title, stag
 
 ## Requirements
 
-### REQ-MW-090: KPI Summary Widgets [V1]
+### Requirement: KPI Summary Widgets [V1]
 
 The My Work view MUST display a row of key performance indicator (KPI) summary tiles at the top, giving the user an at-a-glance overview of their personal workload metrics. These tiles are scoped to the current user's assigned items only (not the team or organization totals shown on the Dashboard).
 
@@ -476,7 +476,7 @@ The My Work view MUST display a row of key performance indicator (KPI) summary t
 
 ---
 
-### REQ-MW-100: Quick Actions [V1]
+### Requirement: Quick Actions [V1]
 
 The My Work view MUST provide quick action buttons that allow the user to create new items directly from the workspace without navigating away.
 
@@ -507,7 +507,7 @@ The My Work view MUST provide quick action buttons that allow the user to create
 
 ---
 
-### REQ-MW-110: Recent Activity Feed [V1]
+### Requirement: Recent Activity Feed [V1]
 
 The My Work view MUST include a collapsible recent activity feed showing the latest changes to items assigned to the current user, providing context on what has happened since their last visit.
 
@@ -535,7 +535,7 @@ The My Work view MUST include a collapsible recent activity feed showing the lat
 
 ---
 
-### REQ-MW-120: Upcoming Follow-Ups [V1]
+### Requirement: Upcoming Follow-Ups [V1]
 
 The My Work view MUST display upcoming follow-up actions scheduled for the current user, drawn from lead follow-up dates and request scheduled callback dates.
 
@@ -563,7 +563,7 @@ The My Work view MUST display upcoming follow-up actions scheduled for the curre
 
 ---
 
-### REQ-MW-130: Calendar Integration [V1]
+### Requirement: Calendar Integration [V1]
 
 The My Work view SHOULD display upcoming meetings and calendar events from the user's Nextcloud Calendar that are linked to CRM entities (clients, contacts, leads).
 
@@ -592,7 +592,7 @@ The My Work view SHOULD display upcoming meetings and calendar events from the u
 
 ---
 
-### REQ-MW-140: Notification Inbox Summary [V1]
+### Requirement: Notification Inbox Summary [V1]
 
 The My Work view MUST display a summary of unread Pipelinq notifications, providing quick access to assignment changes, stage/status updates, and note additions.
 
@@ -620,7 +620,7 @@ The My Work view MUST display a summary of unread Pipelinq notifications, provid
 
 ---
 
-### REQ-MW-150: Saved Filters [Enterprise]
+### Requirement: Saved Filters [Enterprise]
 
 The system MUST allow users to save and recall filter combinations for the My Work view, enabling quick access to frequently used workload slices.
 
@@ -650,7 +650,7 @@ The system MUST allow users to save and recall filter combinations for the My Wo
 
 ---
 
-### REQ-MW-160: Customizable Layout [Enterprise]
+### Requirement: Customizable Layout [Enterprise]
 
 The My Work view MUST allow users to customize which sections are visible and their display order, enabling personalization of the workspace.
 
@@ -674,7 +674,7 @@ The My Work view MUST allow users to customize which sections are visible and th
 
 ---
 
-### REQ-MW-170: Responsive Mobile View [MVP]
+### Requirement: Responsive Mobile View [MVP]
 
 The My Work view MUST be fully usable on mobile devices with screen widths down to 320px, following progressive disclosure patterns to optimize for small screens.
 
@@ -705,7 +705,7 @@ The My Work view MUST be fully usable on mobile devices with screen widths down 
 
 ---
 
-### REQ-MW-180: Role-Based Content [V1]
+### Requirement: Role-Based Content [V1]
 
 The My Work view MUST adapt its content and available actions based on the user's role, distinguishing between KCC agents, team managers, and administrators.
 
@@ -739,7 +739,7 @@ The My Work view MUST adapt its content and available actions based on the user'
 
 ---
 
-### REQ-MW-190: Auto-Refresh and Real-Time Updates [V1]
+### Requirement: Auto-Refresh and Real-Time Updates [V1]
 
 The My Work view MUST keep data current through periodic auto-refresh, ensuring the user always sees their latest workload state.
 
@@ -764,7 +764,7 @@ The My Work view MUST keep data current through periodic auto-refresh, ensuring 
 
 ---
 
-### REQ-MW-200: Priority and Pipeline Filter Extensions [V1]
+### Requirement: Priority and Pipeline Filter Extensions [V1]
 
 The My Work view MUST extend the basic entity type filter with additional filter dimensions for priority level and pipeline, enabling more precise workload slicing.
 

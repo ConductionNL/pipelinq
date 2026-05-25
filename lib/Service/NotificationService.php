@@ -15,6 +15,9 @@
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-16
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
  */
 
 declare(strict_types=1);
@@ -75,6 +78,8 @@ class NotificationService
      * @param string $author         The author user ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
      */
     public function notifyAssignment(
         string $entityType,
@@ -117,6 +122,8 @@ class NotificationService
      * @param string $author     The user who completed the task.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
      */
     public function notifyTaskCompleted(
         string $title,
@@ -152,6 +159,8 @@ class NotificationService
      * @param string $deadline       The task deadline.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
      */
     public function notifyTaskReassigned(
         string $title,
@@ -186,6 +195,8 @@ class NotificationService
      * @param string $deadline The task deadline.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
      */
     public function notifyTaskExpired(
         string $title,
@@ -215,6 +226,8 @@ class NotificationService
      * @param string $author         The author user ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
      */
     public function notifyStageChange(
         string $title,
@@ -250,6 +263,8 @@ class NotificationService
      * @param string $author         The author user ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
      */
     public function notifyStatusChange(
         string $title,
@@ -285,6 +300,8 @@ class NotificationService
      * @param string $author         The author user ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
      */
     public function notifyNoteAdded(
         string $entityType,
@@ -320,6 +337,8 @@ class NotificationService
      * @param string $author         The author user ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-16
      */
     public function notifyDealWon(
         string $title,

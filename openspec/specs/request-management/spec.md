@@ -55,7 +55,7 @@ Request management handles the intake and tracking of requests (verzoeken) — s
 
 ## Requirements
 
-### REQ-RM-010: Request CRUD [MVP]
+### Requirement: Request CRUD [MVP]
 
 The system MUST support creating, reading, updating, and deleting request records. Each request MUST have a `title`. The `status` MUST default to `new` when not explicitly provided. The `channel` field MUST be added to the OpenRegister schema to support persistence.
 
@@ -97,7 +97,7 @@ The system MUST support creating, reading, updating, and deleting request record
 
 ---
 
-### REQ-RM-020: Request Status Lifecycle [MVP]
+### Requirement: Request Status Lifecycle [MVP]
 
 The system MUST enforce allowed status transitions as defined in the transition table. The frontend MUST present only valid transitions for the current status.
 
@@ -128,7 +128,7 @@ The system MUST enforce allowed status transitions as defined in the transition 
 
 ---
 
-### REQ-RM-030: Request List View [MVP]
+### Requirement: Request List View [MVP]
 
 The system MUST provide a full list view with search, sort, filter, and pagination. The current basic table MUST be enhanced with filtering controls and sortable columns.
 
@@ -173,7 +173,7 @@ The system MUST provide a full list view with search, sort, filter, and paginati
 
 ---
 
-### REQ-RM-040: Request Detail View [MVP]
+### Requirement: Request Detail View [MVP]
 
 The system MUST provide a detail view with proper layout including core info, client link, pipeline position, assignment, and activity timeline. The current basic form MUST be replaced with a structured detail layout.
 
@@ -199,7 +199,7 @@ The system MUST provide a detail view with proper layout including core info, cl
 
 ---
 
-### REQ-RM-050: Request Assignment [MVP]
+### Requirement: Request Assignment [MVP]
 
 The system MUST allow assigning a request to a Nextcloud user via a user picker dropdown.
 
@@ -217,7 +217,7 @@ The system MUST allow assigning a request to a Nextcloud user via a user picker 
 
 ---
 
-### REQ-RM-060: Request Priority [MVP]
+### Requirement: Request Priority [MVP]
 
 The system MUST support four priority levels with visual indicators in all views.
 
@@ -238,7 +238,7 @@ The system MUST support four priority levels with visual indicators in all views
 
 ---
 
-### REQ-RM-070: Request Channel Tracking [V1]
+### Requirement: Request Channel Tracking [V1]
 
 The system MUST support tracking the intake channel. Channel values come from SystemTag-based admin settings (already implemented). The `channel` field MUST be added to the OpenRegister schema.
 
@@ -252,7 +252,7 @@ The system MUST support tracking the intake channel. Channel values come from Sy
 
 ---
 
-### REQ-RM-080: Request Category/Product Classification [V1]
+### Requirement: Request Category/Product Classification [V1]
 
 The system SHOULD support categorizing requests by product or service type. Categories are free-text strings that MAY be pre-populated from admin configuration.
 
@@ -268,7 +268,7 @@ The system SHOULD support categorizing requests by product or service type. Cate
 
 ---
 
-### REQ-RM-090: Request-to-Case Conversion [V1]
+### Requirement: Request-to-Case Conversion [V1]
 
 The system MUST support converting a request to a case in Procest.
 
@@ -295,7 +295,7 @@ The system MUST support converting a request to a case in Procest.
 
 ---
 
-### REQ-RM-100: Request on Pipeline [MVP]
+### Requirement: Request on Pipeline [MVP]
 
 A request MAY optionally be placed on a pipeline. When on a pipeline, the request has a `stage`, `stageOrder`, and appears on the kanban board.
 
@@ -316,7 +316,7 @@ A request MAY optionally be placed on a pipeline. When on a pipeline, the reques
 
 ---
 
-### REQ-RM-110: Request Validation Rules [MVP]
+### Requirement: Request Validation Rules [MVP]
 
 The system MUST enforce validation rules for request data integrity.
 
@@ -338,7 +338,7 @@ The system MUST enforce validation rules for request data integrity.
 
 ---
 
-### REQ-RM-120: Request Queue Assignment [Enterprise]
+### Requirement: Request Queue Assignment [Enterprise]
 
 The request entity SHALL support an optional `queue` reference field linking the request to a queue for workload management.
 
@@ -501,7 +501,7 @@ Request management handles the intake and tracking of requests (verzoeken) — s
 
 ## Requirements
 
-### REQ-RM-010: Request CRUD [MVP]
+### Requirement: Request CRUD [MVP]
 
 The system MUST support creating, reading, updating, and deleting request records. Each request MUST have a `title`. The `status` MUST default to `new` when not explicitly provided. All properties defined in the data model MUST be persisted via OpenRegister.
 
@@ -543,7 +543,7 @@ The system MUST support creating, reading, updating, and deleting request record
 
 ---
 
-### REQ-RM-020: Request Status Lifecycle [MVP]
+### Requirement: Request Status Lifecycle [MVP]
 
 The system MUST enforce allowed status transitions as defined in the transition table. The frontend MUST present only valid transitions for the current status.
 
@@ -574,7 +574,7 @@ The system MUST enforce allowed status transitions as defined in the transition 
 
 ---
 
-### REQ-RM-030: Request List View [MVP]
+### Requirement: Request List View [MVP]
 
 The system MUST provide a full list view with search, sort, filter, and pagination. The current basic table MUST be enhanced with filtering controls and sortable columns.
 
@@ -619,7 +619,7 @@ The system MUST provide a full list view with search, sort, filter, and paginati
 
 ---
 
-### REQ-RM-040: Request Detail View [MVP]
+### Requirement: Request Detail View [MVP]
 
 The system MUST provide a detail view with proper layout including core info, client link, pipeline position, assignment, and activity timeline. The current basic form MUST be replaced with a structured detail layout.
 
@@ -645,7 +645,7 @@ The system MUST provide a detail view with proper layout including core info, cl
 
 ---
 
-### REQ-RM-050: Request Assignment [MVP]
+### Requirement: Request Assignment [MVP]
 
 The system MUST allow assigning a request to a Nextcloud user via a user picker dropdown.
 
@@ -663,7 +663,7 @@ The system MUST allow assigning a request to a Nextcloud user via a user picker 
 
 ---
 
-### REQ-RM-060: Request Priority [MVP]
+### Requirement: Request Priority [MVP]
 
 The system MUST support four priority levels with visual indicators in all views.
 
@@ -684,7 +684,7 @@ The system MUST support four priority levels with visual indicators in all views
 
 ---
 
-### REQ-RM-070: Request Channel Tracking [V1]
+### Requirement: Request Channel Tracking [V1]
 
 The system MUST support tracking the intake channel. Channel values come from SystemTag-based admin settings (already implemented). The `channel` field is present in the OpenRegister schema.
 
@@ -698,7 +698,7 @@ The system MUST support tracking the intake channel. Channel values come from Sy
 
 ---
 
-### REQ-RM-080: Request Category/Product Classification [V1]
+### Requirement: Request Category/Product Classification [V1]
 
 The system MUST support categorizing requests by product or service type. Categories are free-text strings that MAY be pre-populated from admin configuration.
 
@@ -714,7 +714,7 @@ The system MUST support categorizing requests by product or service type. Catego
 
 ---
 
-### REQ-RM-090: Request-to-Case Conversion [V1]
+### Requirement: Request-to-Case Conversion [V1]
 
 The system MUST support converting a request to a case in Procest.
 
@@ -741,7 +741,7 @@ The system MUST support converting a request to a case in Procest.
 
 ---
 
-### REQ-RM-100: Request on Pipeline [MVP]
+### Requirement: Request on Pipeline [MVP]
 
 A request MUST be optionally placeable on a pipeline. When on a pipeline, the request has a `stage`, `stageOrder`, and appears on the kanban board.
 
@@ -762,7 +762,7 @@ A request MUST be optionally placeable on a pipeline. When on a pipeline, the re
 
 ---
 
-### REQ-RM-110: Request Validation Rules [MVP]
+### Requirement: Request Validation Rules [MVP]
 
 The system MUST enforce validation rules for request data integrity.
 
@@ -786,7 +786,7 @@ The system MUST enforce validation rules for request data integrity.
 
 ## Requirements
 
-### REQ-RM-120: Request-Contact Linking [MVP]
+### Requirement: Request-Contact Linking [MVP]
 
 The system MUST support linking a request to a specific contact person at the client organization. The `contact` field in the request schema stores a UUID reference to a contact object. When a request is linked to both a client and a contact, the contact MUST belong to that client.
 
@@ -816,7 +816,7 @@ The system MUST support linking a request to a specific contact person at the cl
 
 ---
 
-### REQ-RM-130: Request Notes and Activity Timeline [MVP]
+### Requirement: Request Notes and Activity Timeline [MVP]
 
 The system MUST support adding notes to requests via the Nextcloud ICommentsManager and displaying an activity timeline showing status changes, assignment changes, and user notes. This leverages the existing `EntityNotes` component and `ActivityService`.
 
@@ -847,7 +847,7 @@ The system MUST support adding notes to requests via the Nextcloud ICommentsMana
 
 ---
 
-### REQ-RM-140: Request SLA Tracking [Enterprise]
+### Requirement: Request SLA Tracking [Enterprise]
 
 The system SHOULD support tracking service level agreement (SLA) response and resolution times for requests. SLA targets are defined per category or globally and enable monitoring of service quality.
 
@@ -879,7 +879,7 @@ The system SHOULD support tracking service level agreement (SLA) response and re
 
 ---
 
-### REQ-RM-150: Bulk Request Operations [V1]
+### Requirement: Bulk Request Operations [V1]
 
 The system MUST support performing actions on multiple requests at once from the list view. Bulk actions reduce repetitive work for request handlers processing a high volume of incoming requests.
 
@@ -912,7 +912,7 @@ The system MUST support performing actions on multiple requests at once from the
 
 ---
 
-### REQ-RM-160: Request Templates [V1]
+### Requirement: Request Templates [V1]
 
 The system SHOULD support pre-defined request templates to standardize common request types. Templates pre-fill the title, description, category, priority, and optionally the pipeline/stage, reducing data entry time and ensuring consistency.
 
@@ -937,7 +937,7 @@ The system SHOULD support pre-defined request templates to standardize common re
 
 ---
 
-### REQ-RM-170: Request Reporting and KPIs [V1]
+### Requirement: Request Reporting and KPIs [V1]
 
 The system MUST provide reporting capabilities for request management performance. KPIs include request volume, average handling time, status distribution, and assignment workload. Reports leverage the existing `MetricsRepository` and `MetricsFormatter` services.
 
@@ -973,7 +973,7 @@ The system MUST provide reporting capabilities for request management performanc
 
 ---
 
-### REQ-RM-180: Request Search and Faceted Filtering [MVP]
+### Requirement: Request Search and Faceted Filtering [MVP]
 
 The system MUST support full-text search across request fields and faceted filtering using OpenRegister's `facetable` schema properties. The request schema marks `status`, `priority`, `assignee`, `category`, `channel`, and `stage` as facetable.
 
@@ -1004,7 +1004,7 @@ The system MUST support full-text search across request fields and faceted filte
 
 ---
 
-### REQ-RM-190: Request-to-Case Conversion with Data Mapping [V1]
+### Requirement: Request-to-Case Conversion with Data Mapping [V1]
 
 When converting a request to a Procest case, the system MUST map request fields to case fields following the VNG Verzoek-to-Zaak relationship pattern. This extends REQ-RM-090 with detailed field mapping and error handling.
 
@@ -1040,7 +1040,7 @@ When converting a request to a Procest case, the system MUST map request fields 
 
 ---
 
-### REQ-RM-200: Request Pipeline Kanban View [MVP]
+### Requirement: Request Pipeline Kanban View [MVP]
 
 Requests placed on a pipeline MUST appear on the kanban board alongside leads. Request-specific kanban interactions include drag-and-drop stage changes, quick status updates, and visual differentiation from leads.
 
@@ -1071,7 +1071,7 @@ Requests placed on a pipeline MUST appear on the kanban board alongside leads. R
 
 ---
 
-### REQ-RM-210: Request Notification and Assignment Alerts [V1]
+### Requirement: Request Notification and Assignment Alerts [V1]
 
 The system MUST send Nextcloud notifications when requests are created, assigned, reassigned, or have their status changed. This leverages the existing `ObjectEventHandlerService`, `ObjectEventDispatcher`, and `NotificationService`.
 
@@ -1103,7 +1103,7 @@ The system MUST send Nextcloud notifications when requests are created, assigned
 
 ---
 
-### REQ-RM-220: Request Quick Create from Client Detail [MVP]
+### Requirement: Request Quick Create from Client Detail [MVP]
 
 The system MUST support creating a request directly from a client's detail view, pre-linking the request to that client. This provides a natural workflow where a service agent receiving a call can create a request without leaving the client context.
 

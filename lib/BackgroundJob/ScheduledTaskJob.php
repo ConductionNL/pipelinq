@@ -66,11 +66,13 @@ class ScheduledTaskJob extends TimedJob
      * Delegates all processing to ScheduledTaskService::processScheduledTasks().
      * Catches every Throwable so the job queue remains healthy.
      *
-     * @param mixed $argument The job argument (unused).
+     * @param mixed $argument The job argument (unused; required by TimedJob).
      *
      * @return void
      *
      * @spec openspec/changes/task-background-jobs/tasks.md#task-4
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     protected function run($argument): void
     {

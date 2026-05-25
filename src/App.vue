@@ -7,10 +7,15 @@
  channel so detail pages (CnDetailPage) can drive a single
  host-rendered CnObjectSidebar through the #sidebar slot.
 
- The legacy `sidebarState` and `pipelineSidebarState` channels are
- preserved so the bespoke pipeline kanban (PipelineBoard.vue) and any
- other custom view that injects them keep working through the
- transition.
+ The legacy `sidebarState` channel is still provided as a no-op
+ surface for any straggler view that injects it (notably the dead
+ `views/clients/ClientList.vue`), but App.vue no longer renders a
+ CnIndexSidebar — the lib's CnAppRoot auto-hoists CnIndexPage's
+ sidebar at NcContent level, so rendering one here too produced the
+ double-sidebar bug visible on every index page.
+
+ The `pipelineSidebarState` channel stays in active use by the
+ bespoke PipelineBoard kanban (PipelineSidebar component below).
 
  @spec openspec/changes/pipelinq-manifest-v1/tasks.md
 -->
@@ -18,6 +23,7 @@
 	<CnAppRoot
 		:manifest="manifest"
 		:custom-components="customComponents"
+		:registry="registry"
 		:page-types="pageTypes"
 		app-id="pipelinq"
 		:translate="translateForApp"
@@ -35,18 +41,6 @@
 				:tabs="objectSidebarState.tabs"
 				:open="objectSidebarState.open"
 				@update:open="objectSidebarState.open = $event" />
-			<CnIndexSidebar
-				v-if="sidebarState.active"
-				:schema="sidebarState.schema"
-				:visible-columns="sidebarState.visibleColumns"
-				:search-value="sidebarState.searchValue"
-				:active-filters="sidebarState.activeFilters"
-				:facet-data="sidebarState.facetData"
-				:open="sidebarState.open"
-				@update:open="sidebarState.open = $event"
-				@search="onSidebarSearch"
-				@columns-change="onSidebarColumnsChange"
-				@filter-change="onSidebarFilterChange" />
 			<PipelineSidebar
 				v-if="pipelineSidebarState.active && !sidebarState.active"
 				:pipeline="pipelineSidebarState.pipeline"
@@ -60,7 +54,7 @@
 <script>
 import Vue from 'vue'
 import { translate as ncT } from '@nextcloud/l10n'
-import { CnAppRoot, CnIndexSidebar, CnObjectSidebar } from '@conduction/nextcloud-vue'
+import { CnAppRoot, CnObjectSidebar } from '@conduction/nextcloud-vue'
 import PipelineSidebar from './views/pipeline/PipelineSidebar.vue'
 
 export default {
@@ -68,7 +62,6 @@ export default {
 
 	components: {
 		CnAppRoot,
-		CnIndexSidebar,
 		CnObjectSidebar,
 		PipelineSidebar,
 	},
@@ -105,6 +98,17 @@ export default {
 		 *   - `pages[].config.sections[].component` (settings rich sections)
 		 */
 		customComponents: {
+			type: Object,
+			default: () => ({}),
+		},
+		/**
+		 * V2 component registry — maps string keys from `manifest.pages[].component`
+		 * to `{ kind, component }` entries. Passed through to CnAppRoot for v2
+		 * renderer resolution. The v2 renderer emits a one-shot deprecation
+		 * warning when both `registry` and `customComponents` are present and the
+		 * manifest declares `$schema` as the v2 URL.
+		 */
+		registry: {
 			type: Object,
 			default: () => ({}),
 		},
@@ -173,23 +177,6 @@ export default {
 		 */
 		translateForApp(key) {
 			return ncT('pipelinq', key)
-		},
-		onSidebarSearch(value) {
-			this.sidebarState.searchValue = value
-			if (typeof this.sidebarState.onSearch === 'function') {
-				this.sidebarState.onSearch(value)
-			}
-		},
-		onSidebarColumnsChange(columns) {
-			this.sidebarState.visibleColumns = columns
-			if (typeof this.sidebarState.onColumnsChange === 'function') {
-				this.sidebarState.onColumnsChange(columns)
-			}
-		},
-		onSidebarFilterChange(filter) {
-			if (typeof this.sidebarState.onFilterChange === 'function') {
-				this.sidebarState.onFilterChange(filter)
-			}
 		},
 		onPipelineSidebarSave(pipelineData) {
 			if (typeof this.pipelineSidebarState.onSave === 'function') {

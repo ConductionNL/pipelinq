@@ -15,6 +15,11 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-4
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-5
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-6
  */
 
 declare(strict_types=1);
@@ -104,6 +109,8 @@ class SettingsService
      * Get all Pipelinq settings.
      *
      * @return array The settings as key-value pairs.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
      */
     public function getSettings(): array
     {
@@ -121,6 +128,8 @@ class SettingsService
      * @param array $data The settings data to update.
      *
      * @return array The updated settings.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
      */
     public function updateSettings(array $data): array
     {
@@ -155,6 +164,8 @@ class SettingsService
      * Delegates to DefaultPipelineService.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-4
      */
     public function createDefaultPipelines(): void
     {
@@ -166,6 +177,8 @@ class SettingsService
      * Delegates to DefaultQueueService.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-5
      */
     public function createDefaultQueues(): void
     {
@@ -177,6 +190,8 @@ class SettingsService
      * Delegates to DefaultQueueService.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-6
      */
     public function createDefaultSkills(): void
     {
@@ -241,6 +256,8 @@ class SettingsService
      * @param string $default The default value.
      *
      * @return string The config value.
+     *
+     * @spec openspec/changes/archive/retrofit-2026-05-24-admin-settings/tasks.md#task-1
      */
     public function getConfigValue(string $key, string $default=''): string
     {
@@ -254,6 +271,8 @@ class SettingsService
      * @param string $value The config value.
      *
      * @return void
+     *
+     * @spec openspec/changes/archive/retrofit-2026-05-24-admin-settings/tasks.md#task-1
      */
     public function setConfigValue(string $key, string $value): void
     {
