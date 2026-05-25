@@ -19,7 +19,9 @@ MKB service businesses urgently need better scheduling. Current tools fail becau
 
 ## Solution
 
-Implement appointment booking as a new Pipelinq module using existing OpenRegister and email-calendar-sync infrastructure:
+**Leaf-first boundary (ADR-022).** Calendar read/write and email/SMS dispatch are NOT built in pipelinq. They are delegated to `email-calendar-sync`, which consumes the OpenRegister `calendar` (`integration-calendar`) and `email` (`integration-email`) integration leaves; SMS/payment dispatch goes through openconnector. Pipelinq builds only the genuinely app-specific booking domain (Service/Resource/Booking/WalkInTicket entities, slot computation, skill-based routing, deposits, no-show, walk-in queue, public portal). Booking events are written to staff calendars through the calendar leaf's VEVENT create API — pipelinq adds no CalDAV client of its own.
+
+Implement appointment booking as a new Pipelinq module using existing OpenRegister abstractions and the calendar/email leaves (via email-calendar-sync):
 
 1. **Service** — a bookable offering with duration, skills required, pricing, deposit policy, cancellation policy, multi-step sub-steps.
 2. **Resource** — staff member, room, or equipment with working hours, vacation dates, skills, and optional calendar sync link so their Outlook/Google Calendar blocks are fetched automatically.
@@ -27,7 +29,7 @@ Implement appointment booking as a new Pipelinq module using existing OpenRegist
 4. **WalkInTicket** — a queue entry for unscheduled arrivals, separately tracked so barbershops can mix both model.
 5. **AvailabilityCache** — per-resource per-day free blocks (regenerated on Resource or Booking change) for fast slot queries.
 6. **Customer-facing portal** — a public website at `/book/{service-slug}` where customers pick date + time and self-book without logging in. Integrates skill-routing to never show unqualified resources.
-7. **Bi-directional calendar sync** — via email-calendar-sync: staff's Google/Outlook calendar blocks are ingested every 5 minutes, bookings push back to staff calendars so they see booked appointments.
+7. **Bi-directional calendar sync** — via email-calendar-sync, which consumes the OR `calendar` leaf: staff calendar blocks are ingested every 5 minutes, and booking VEVENTs are pushed back to staff calendars through the leaf's create API (no pipelinq-local CalDAV client).
 8. **Confirmation + reminder flows** — email-calendar-sync dispatches confirmation on booking creation, reminder 24 hours before, SMS optional. Signed deep-links allow reschedule/cancel without logging in.
 9. **No-show tracking and fees** — staff marks booking as no-show; system increments customer lifetime no-show count; optional deposit or fee is charged via openconnector (Mollie/Stripe).
 10. **Reschedule audit trail** — original booking transitions to `rescheduled`, new booking created with `previousBookingId` reference, audit trail preserved.
