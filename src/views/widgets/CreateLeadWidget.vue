@@ -14,6 +14,7 @@
 
 			<NcSelect v-model="form.pipeline"
 				:options="pipelineOptions"
+				:input-label="t('pipelinq', 'Pipeline')"
 				:placeholder="t('pipelinq', 'Pipeline')"
 				label="label"
 				track-by="id"
@@ -26,6 +27,7 @@
 
 			<NcSelect v-model="form.source"
 				:options="sourceOptions"
+				:input-label="t('pipelinq', 'Source')"
 				:placeholder="t('pipelinq', 'Source')"
 				input-id="lead-source" />
 

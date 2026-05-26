@@ -157,6 +157,7 @@
 				<NcSelect
 					:value="assigneeOption"
 					:options="userOptions"
+					:input-label="t('pipelinq', 'Assign to user')"
 					:clearable="true"
 					label="label"
 					:reduce="o => o.value"

@@ -52,6 +52,7 @@
 							class="field-input">
 						<NcSelect v-model="field.type"
 							:options="fieldTypeOptions"
+							:input-label="t('pipelinq', 'Field type')"
 							label="label"
 							:reduce="opt => opt.value"
 							class="field-type" />
@@ -73,6 +74,7 @@
 							<label>{{ t('pipelinq', 'Map to') }}:</label>
 							<NcSelect v-model="mappingFor[index]"
 								:options="mappingOptions"
+								:aria-label-combobox="t('pipelinq', 'Map to')"
 								label="label"
 								:reduce="opt => opt.value"
 								:placeholder="t('pipelinq', 'Entity property')" />

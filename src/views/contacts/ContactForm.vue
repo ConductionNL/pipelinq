@@ -16,6 +16,7 @@
 			<NcSelect
 				v-model="selectedClient"
 				input-id="contact-client"
+				:aria-label-combobox="t('pipelinq', 'Client')"
 				:options="clientOptions"
 				:placeholder="t('pipelinq', 'Search for a client...')"
 				label="name"

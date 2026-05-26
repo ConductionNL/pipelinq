@@ -59,33 +59,20 @@
 			@save="onSave"
 			@cancel="showForm = false; editingPipeline = null" />
 
-		<NcDialog v-if="deletingPipeline"
-			:name="t('pipelinq', 'Delete pipeline')"
-			@closing="deletingPipeline = null">
-			<p>{{ t('pipelinq', 'Are you sure you want to delete "{title}"?', { title: deletingPipeline.title }) }}</p>
-			<p v-if="deleteAffectedCount > 0" class="delete-warning">
-				{{ t('pipelinq', '{count} leads/requests are on this pipeline. They will be removed from the pipeline but not deleted.', { count: deleteAffectedCount }) }}
-			</p>
-			<p v-if="deletingPipeline.stages && deletingPipeline.stages.length > 0" class="delete-warning">
-				{{ t('pipelinq', 'This pipeline has {count} stages. All stage configuration will be lost.', { count: deletingPipeline.stages.length }) }}
-			</p>
-			<template #actions>
-				<NcButton type="tertiary" @click="deletingPipeline = null">
-					{{ t('pipelinq', 'Cancel') }}
-				</NcButton>
-				<NcButton type="error" @click="onDeleteConfirm">
-					{{ t('pipelinq', 'Delete') }}
-				</NcButton>
-			</template>
-		</NcDialog>
+		<DeletePipelineDialog v-if="deletingPipeline"
+			:pipeline="deletingPipeline"
+			:affected-count="deleteAffectedCount"
+			@cancel="deletingPipeline = null"
+			@confirm="onDeleteConfirm" />
 	</div>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
+import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import { useObjectStore } from '../../store/modules/object.js'
 import PipelineForm from './PipelineForm.vue'
+import DeletePipelineDialog from '../../dialogs/DeletePipelineDialog.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
@@ -96,10 +83,10 @@ export default {
 	name: 'PipelineManager',
 	components: {
 		NcButton,
-		NcDialog,
 		NcEmptyContent,
 		NcLoadingIcon,
 		PipelineForm,
+		DeletePipelineDialog,
 		Delete,
 		Pencil,
 		Plus,

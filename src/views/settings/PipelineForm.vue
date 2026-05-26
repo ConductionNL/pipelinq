@@ -24,6 +24,7 @@
 						<label>{{ t('pipelinq', 'View') }}</label>
 						<NcSelect v-model="form.viewId"
 							:options="viewOptions"
+							:aria-label-combobox="t('pipelinq', 'View')"
 							:clearable="true"
 							label="label"
 							:reduce="o => o.value"
