@@ -42,9 +42,6 @@ import ClientOverviewWidget from './views/dashboard/widgets/ClientOverviewWidget
 import QueueListView from './views/queues/QueueList.vue'
 import QueueDetailView from './views/queues/QueueDetail.vue'
 
-// --- Kennisbank wiki article detail (lib gap: no wiki article detail type). ---
-import ArticleDetailView from './views/kennisbank/ArticleDetail.vue'
-
 // --- Surveys analytics (lib gap: no chart-widget page type). ---
 import SurveyAnalyticsView from './views/surveys/SurveyAnalytics.vue'
 
@@ -147,13 +144,6 @@ const registry = {
 		kind: 'page',
 		component: QueueDetailView,
 		_note: 'Bespoke routing-rule condition + action builder; lib gap: no routing-rules detail widget.',
-	},
-
-	// --- Kennisbank wiki. ---
-	ArticleDetailView: {
-		kind: 'page',
-		component: ArticleDetailView,
-		_note: 'Rendered markdown article view with related-articles panel; lib gap: no wiki article detail type.',
 	},
 
 	// --- Surveys. ---

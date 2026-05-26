@@ -91,13 +91,6 @@
 			"order": 120
 		},
 		{
-			"id": "Kennisbank",
-			"label": "Kennisbank",
-			"icon": "icon-info",
-			"route": "Kennisbank",
-			"order": 130
-		},
-		{
 			"id": "MyWork",
 			"label": "My Work",
 			"icon": "icon-user",
@@ -543,108 +536,6 @@
 				"register": "pipelinq",
 				"schema": "queue",
 				"sidebar": true
-			}
-		},
-		{
-			"id": "Kennisbank",
-			"route": "/kennisbank",
-			"type": "dashboard",
-			"title": "Kennisbank",
-			"config": {
-				"widgets": [
-					{
-						"id": "kennisbankCategories",
-						"title": "Categories",
-						"type": "CnTreeView"
-					},
-					{
-						"id": "kennisbankArticles",
-						"title": "Articles",
-						"type": "CnIndexPage"
-					}
-				],
-				"layout": [
-					{
-						"id": "kennisbankCategories",
-						"widgetId": "kennisbankCategories",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 3,
-						"gridHeight": 12
-					},
-					{
-						"id": "kennisbankArticles",
-						"widgetId": "kennisbankArticles",
-						"gridX": 3,
-						"gridY": 0,
-						"gridWidth": 9,
-						"gridHeight": 12
-					}
-				]
-			}
-		},
-		{
-			"id": "KennisbankNew",
-			"route": "/kennisbank/articles/new",
-			"type": "form",
-			"title": "New article",
-			"config": {
-				"register": "pipelinq",
-				"schema": "article",
-				"mode": "create",
-				"submitEndpoint": "/index.php/apps/openregister/api/objects/pipelinq/article",
-				"submitMethod": "POST",
-				"fieldWidgets": [
-					{
-						"component": "CnMarkdownEditor",
-						"id": "body"
-					}
-				]
-			}
-		},
-		{
-			"id": "KennisbankDetail",
-			"route": "/kennisbank/articles/:id",
-			"type": "wiki",
-			"title": "Article",
-			"config": {
-				"register": "pipelinq",
-				"schema": "article",
-				"titleField": "title",
-				"contentField": "body",
-				"categoryField": "category"
-			}
-		},
-		{
-			"id": "KennisbankEdit",
-			"route": "/kennisbank/articles/:id/edit",
-			"type": "form",
-			"title": "Edit article",
-			"config": {
-				"register": "pipelinq",
-				"schema": "article",
-				"mode": "edit",
-				"submitEndpoint": "/index.php/apps/openregister/api/objects/pipelinq/article/:id",
-				"submitMethod": "PUT",
-				"fieldWidgets": [
-					{
-						"component": "CnMarkdownEditor",
-						"id": "body"
-					}
-				]
-			}
-		},
-		{
-			"id": "KennisbankCategories",
-			"route": "/kennisbank/categories",
-			"type": "custom",
-			"title": "Categories",
-			"component": "CnTreeView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "articleCategory",
-				"parentField": "parent",
-				"editable": true
 			}
 		},
 		{

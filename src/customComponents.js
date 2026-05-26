@@ -41,9 +41,6 @@ import ClientOverviewWidget from './views/dashboard/widgets/ClientOverviewWidget
 import QueueListView from './views/queues/QueueList.vue'
 import QueueDetailView from './views/queues/QueueDetail.vue'
 
-// --- Kennisbank wiki article detail (lib gap: no `wiki` page type). ---
-import ArticleDetailView from './views/kennisbank/ArticleDetail.vue'
-
 // --- Surveys analytics (lib gap: no chart-widget page type). ---
 import SurveyAnalyticsView from './views/surveys/SurveyAnalytics.vue'
 
@@ -90,9 +87,6 @@ export default {
 	// Queues
 	QueueListView,
 	QueueDetailView,
-
-	// Kennisbank
-	ArticleDetailView,
 
 	// Surveys
 	SurveyAnalyticsView,
