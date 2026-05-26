@@ -14,16 +14,19 @@
 
 			<NcSelect v-model="form.category"
 				:options="categoryOptions"
+				:input-label="t('pipelinq', 'Category')"
 				:placeholder="t('pipelinq', 'Category')"
 				input-id="request-category" />
 
 			<NcSelect v-model="form.priority"
 				:options="priorityOptions"
+				:input-label="t('pipelinq', 'Priority')"
 				:placeholder="t('pipelinq', 'Priority')"
 				input-id="request-priority" />
 
 			<NcSelect v-model="form.channel"
 				:options="channelOptions"
+				:input-label="t('pipelinq', 'Channel')"
 				:placeholder="t('pipelinq', 'Channel')"
 				input-id="request-channel" />
 

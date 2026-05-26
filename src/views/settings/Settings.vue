@@ -102,6 +102,7 @@
 </template>
 
 <script>
+import { loadState } from '@nextcloud/initial-state'
 import { CnRegisterMapping, CnVersionInfoCard } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcNoteCard, NcSettingsSection } from '@nextcloud/vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
@@ -138,7 +139,7 @@ export default {
 	data() {
 		return {
 			config: {},
-			appVersion: document.getElementById('pipelinq-settings')?.dataset?.version || 'Unknown',
+			appVersion: loadState('pipelinq', 'version', 'Unknown'),
 			reimporting: false,
 			saving: false,
 			message: '',

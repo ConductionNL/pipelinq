@@ -65,7 +65,8 @@
 							{{ getStatusLabel(requestData.status) }}
 						</span>
 						<NcSelect
-							v-if="statusTransitions.length > 0 && !isConverted"
+							v-if="canChangeStatus"
+							:input-label="t('pipelinq', 'Change status')"
 							:value="null"
 							:options="statusTransitionOptions"
 							:placeholder="t('pipelinq', 'Change status')"
@@ -133,6 +134,7 @@
 					v-if="!isConverted"
 					:value="assigneeOption"
 					:options="userOptions"
+					:input-label="t('pipelinq', 'Assign to user')"
 					:clearable="true"
 					label="label"
 					:reduce="o => o.value"
@@ -150,6 +152,7 @@
 					v-if="!isConverted"
 					:value="queueOption || null"
 					:options="queueOptions"
+					:input-label="t('pipelinq', 'Queue')"
 					:clearable="true"
 					label="label"
 					:reduce="o => o.value"
@@ -399,6 +402,14 @@ export default {
 				id: s,
 				label: getStatusLabel(s),
 			}))
+		},
+		/**
+		 * Whether the status-transition control should be shown.
+		 *
+		 * @spec exclude trivial template guard helper
+		 */
+		canChangeStatus() {
+			return this.statusTransitions.length !== 0 && !this.isConverted
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-3

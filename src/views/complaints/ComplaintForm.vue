@@ -29,6 +29,7 @@
 				<NcSelect
 					v-model="form.category"
 					:options="categoryOptions"
+					:aria-label-combobox="t('pipelinq', 'Category')"
 					:clearable="false"
 					:placeholder="t('pipelinq', 'Select category')" />
 				<span v-if="errors.category" class="field-error">{{ errors.category }}</span>
@@ -38,6 +39,7 @@
 				<NcSelect
 					v-model="form.priority"
 					:options="priorityOptions"
+					:aria-label-combobox="t('pipelinq', 'Priority')"
 					:clearable="false"
 					:placeholder="t('pipelinq', 'Priority')" />
 			</div>
@@ -50,6 +52,7 @@
 				<NcSelect
 					v-model="form.channel"
 					:options="channelOptions"
+					:aria-label-combobox="t('pipelinq', 'Channel')"
 					:clearable="true"
 					:placeholder="t('pipelinq', 'Select channel')" />
 			</div>
@@ -58,6 +61,7 @@
 				<NcSelect
 					v-model="form.status"
 					:options="availableStatuses"
+					:aria-label-combobox="t('pipelinq', 'Status')"
 					:clearable="false"
 					:placeholder="t('pipelinq', 'Status')" />
 			</div>
@@ -69,6 +73,7 @@
 			<NcSelect
 				v-model="form.client"
 				:options="clientOptions"
+				:aria-label-combobox="t('pipelinq', 'Client')"
 				:clearable="true"
 				label="label"
 				:reduce="o => o.value"
@@ -82,6 +87,7 @@
 			<NcSelect
 				v-model="form.contact"
 				:options="contactOptions"
+				:aria-label-combobox="t('pipelinq', 'Contact person')"
 				:clearable="true"
 				label="label"
 				:reduce="o => o.value"

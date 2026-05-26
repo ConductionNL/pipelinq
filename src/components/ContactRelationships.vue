@@ -73,6 +73,7 @@
 						<NcSelect
 							v-model="addForm.toContact"
 							:options="entityOptions"
+							:aria-label-combobox="t('pipelinq', 'Related entity')"
 							:placeholder="t('pipelinq', 'Search contacts and clients...')"
 							label="name"
 							:reduce="opt => opt.id"
@@ -83,6 +84,7 @@
 						<NcSelect
 							v-model="addForm.type"
 							:options="typeOptions"
+							:aria-label-combobox="t('pipelinq', 'Relationship type')"
 							:placeholder="t('pipelinq', 'Select type...')"
 							label="label"
 							:reduce="opt => opt.value"
@@ -107,6 +109,7 @@
 						<NcSelect
 							v-model="addForm.strength"
 							:options="strengthOptions"
+							:aria-label-combobox="t('pipelinq', 'Strength')"
 							:placeholder="t('pipelinq', 'Select strength...')"
 							label="label"
 							:reduce="opt => opt.value" />

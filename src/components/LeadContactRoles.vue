@@ -62,6 +62,7 @@
 						<NcSelect
 							v-model="addForm.toContact"
 							:options="contactOptions"
+							:aria-label-combobox="t('pipelinq', 'Contact')"
 							:placeholder="t('pipelinq', 'Search contacts...')"
 							label="name"
 							:reduce="opt => opt.id"
@@ -72,6 +73,7 @@
 						<NcSelect
 							v-model="addForm.type"
 							:options="roleOptions"
+							:aria-label-combobox="t('pipelinq', 'Role')"
 							:placeholder="t('pipelinq', 'Select role...')"
 							label="label"
 							:reduce="opt => opt.value" />

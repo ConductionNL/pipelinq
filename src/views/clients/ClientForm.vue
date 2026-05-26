@@ -18,6 +18,7 @@
 				<NcSelect
 					v-model="form.type"
 					input-id="client-type"
+					:aria-label-combobox="t('pipelinq', 'Type')"
 					:options="typeOptions"
 					:placeholder="t('pipelinq', 'Select type')"
 					data-testid="client-type-select"

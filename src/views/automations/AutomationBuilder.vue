@@ -19,6 +19,7 @@
 				<label>{{ t('pipelinq', 'Trigger') }}</label>
 				<NcSelect v-model="form.trigger"
 					:options="triggerOptions"
+					:aria-label-combobox="t('pipelinq', 'Trigger')"
 					:placeholder="t('pipelinq', 'Select trigger event')"
 					label="label"
 					:reduce="opt => opt.value" />
@@ -30,6 +31,7 @@
 					<input v-model="condition.field" type="text" :placeholder="t('pipelinq', 'Field name')">
 					<NcSelect v-model="condition.operator"
 						:options="operatorOptions"
+						:input-label="t('pipelinq', 'Condition operator')"
 						label="label"
 						:reduce="opt => opt.value" />
 					<input v-model="condition.value" type="text" :placeholder="t('pipelinq', 'Value')">
@@ -54,6 +56,7 @@
 						<span class="action-number">{{ index + 1 }}</span>
 						<NcSelect v-model="action.type"
 							:options="actionOptions"
+							:input-label="t('pipelinq', 'Action type')"
 							label="label"
 							:reduce="opt => opt.value"
 							class="action-type-select" />

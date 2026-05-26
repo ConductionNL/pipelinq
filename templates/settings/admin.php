@@ -9,4 +9,4 @@ Util::addScript($appId, $appId . '-shared-vendor');
 Util::addScript($appId, $appId . '-shared-nc-vue');
 Util::addScript($appId, $appId . '-settings');
 ?>
-<div id="pipelinq-settings" data-config="<?php p($_['config'] ?? '{}'); ?>" data-version="<?php p($_['version'] ?? ''); ?>"></div>
+<div id="pipelinq-settings" data-config="<?php p($_['config'] ?? '{}'); ?>"></div>
