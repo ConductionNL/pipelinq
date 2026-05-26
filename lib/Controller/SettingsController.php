@@ -15,6 +15,9 @@
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-8
  */
 
 declare(strict_types=1);
@@ -76,6 +79,7 @@ class SettingsController extends Controller
      *
      * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service if available, null otherwise.
      * @throws \RuntimeException If the service is not available.
+      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-6
      */
     public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
@@ -93,6 +97,7 @@ class SettingsController extends Controller
      *
      * @return \OCA\OpenRegister\Service\ConfigurationService|null The Configuration service if available, null otherwise.
      * @throws \RuntimeException If the service is not available.
+      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-5
      */
     public function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService
     {
@@ -111,6 +116,8 @@ class SettingsController extends Controller
      * @return JSONResponse The settings response.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
      */
     public function index(): JSONResponse
     {
@@ -135,6 +142,8 @@ class SettingsController extends Controller
      * marked @NoAdminRequired so non-admin users can read settings.
      *
      * @return JSONResponse The updated settings response.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
      */
     public function create(): JSONResponse
     {
@@ -153,6 +162,8 @@ class SettingsController extends Controller
      * Re-import the Pipelinq configuration from the JSON file.
      *
      * @return JSONResponse The re-import result.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-8
      */
     public function reimport(): JSONResponse
     {
@@ -187,6 +198,7 @@ class SettingsController extends Controller
      * @return JSONResponse The user settings response.
      *
      * @NoAdminRequired
+      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-7
      */
     public function getUserSettings(): JSONResponse
     {
@@ -203,6 +215,7 @@ class SettingsController extends Controller
      * @return JSONResponse The updated user settings response.
      *
      * @NoAdminRequired
+      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-8
      */
     public function updateUserSettings(): JSONResponse
     {

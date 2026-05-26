@@ -127,6 +127,7 @@ class PublicSurveyController extends PublicShareController
      * @PublicPage
      * @NoCSRFRequired
      * @BruteForceProtection(action=pipelinq_survey)
+      * @spec openspec/changes/reverse-2026-05-26-be-public-survey/tasks.md#task-1
      */
     public function show(string $token): JSONResponse
     {
@@ -179,6 +180,7 @@ class PublicSurveyController extends PublicShareController
      *
      * @PublicPage
      * @BruteForceProtection(action=pipelinq_survey_submit)
+      * @spec openspec/changes/reverse-2026-05-26-be-public-survey/tasks.md#task-2
      */
     public function submit(string $token): JSONResponse
     {

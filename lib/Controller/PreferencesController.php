@@ -37,7 +37,6 @@ use OCP\IUserSession;
  */
 class PreferencesController extends Controller
 {
-
     /**
      * Constructor.
      *
@@ -54,7 +53,6 @@ class PreferencesController extends Controller
 
     }//end __construct()
 
-
     /**
      * Read a per-user preference value.
      *
@@ -64,6 +62,7 @@ class PreferencesController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-1
      */
     public function getPreference(string $key): JSONResponse
     {
@@ -84,10 +83,14 @@ class PreferencesController extends Controller
             default: ''
         );
 
-        return new JSONResponse(data: ['value' => ($value === '' ? null : $value)]);
+        $stored = null;
+        if ($value !== '') {
+            $stored = $value;
+        }
+
+        return new JSONResponse(data: ['value' => $stored]);
 
     }//end getPreference()
-
 
     /**
      * Write a per-user preference value. An empty value clears it.
@@ -99,6 +102,7 @@ class PreferencesController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-2
      */
     public function setPreference(string $key, string $value=''): JSONResponse
     {
@@ -112,6 +116,7 @@ class PreferencesController extends Controller
             return new JSONResponse(data: ['message' => 'Invalid key'], statusCode: Http::STATUS_BAD_REQUEST);
         }
 
+        $stored = null;
         if ($value === '') {
             $this->config->deleteUserValue(
                 userId: $user->getUID(),
@@ -125,12 +130,12 @@ class PreferencesController extends Controller
                 key: 'pref_'.$safeKey,
                 value: $value
             );
+            $stored = $value;
         }
 
-        return new JSONResponse(data: ['value' => ($value === '' ? null : $value)]);
+        return new JSONResponse(data: ['value' => $stored]);
 
     }//end setPreference()
-
 
     /**
      * Restrict keys to a safe charset so callers cannot reach arbitrary
@@ -146,6 +151,4 @@ class PreferencesController extends Controller
         return substr((string) $safe, offset: 0, length: 64);
 
     }//end sanitizeKey()
-
-
 }//end class

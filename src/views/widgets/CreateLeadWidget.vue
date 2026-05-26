@@ -94,6 +94,9 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-26
+		 */
 		pipelineOptions() {
 			return this.pipelines.map((p) => ({
 				id: p.id,
@@ -102,6 +105,9 @@ export default {
 			}))
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-22
+	 */
 	async mounted() {
 		try {
 			const { objectStore } = await initializeStores()
@@ -112,9 +118,15 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-23
+		 */
 		onClientSelected(client) {
 			this.selectedClient = client
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-20
+		 */
 		async fetchPipelines() {
 			if (!this.config?.pipeline) return
 			try {
@@ -143,17 +155,26 @@ export default {
 				console.error('Failed to fetch pipelines:', err)
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-21
+		 */
 		getFirstStage(pipeline) {
 			const stages = pipeline?.stages || []
 			if (stages.length === 0) return { name: '', order: 1 }
 			const sorted = [...stages].sort((a, b) => (a.order || 0) - (b.order || 0))
 			return sorted[0]
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-24
+		 */
 		onQuickAdd() {
 			if (this.form.title) {
 				this.onSubmit()
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-25
+		 */
 		async onSubmit() {
 			this.submitted = true
 			if (!this.form.title) {
@@ -216,6 +237,9 @@ export default {
 				this.submitting = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-27
+		 */
 		resetForm() {
 			this.form = {
 				title: '',

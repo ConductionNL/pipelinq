@@ -15,6 +15,9 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-23
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-24
  */
 
 declare(strict_types=1);
@@ -95,6 +98,7 @@ class TaskService
      * Calculate the default deadline (next business day at 17:00).
      *
      * @return string ISO 8601 datetime string.
+      * @spec openspec/changes/reverse-2026-05-26-be-tasks/tasks.md#task-2
      */
     public function getDefaultDeadline(): string
     {
@@ -122,6 +126,7 @@ class TaskService
      * @param int    $businessHours Number of business hours to add.
      *
      * @return string ISO 8601 deadline datetime string.
+      * @spec openspec/changes/reverse-2026-05-26-be-tasks/tasks.md#task-1
      */
     public function calculateDeadline(string $createdAt, int $businessHours): string
     {
@@ -150,6 +155,7 @@ class TaskService
      * @param array<string, mixed> $data The task data to validate.
      *
      * @return array{valid: bool, errors: array<string>} Validation result.
+      * @spec openspec/changes/reverse-2026-05-26-be-tasks/tasks.md#task-3
      */
     public function validateTask(array $data): array
     {
@@ -188,6 +194,8 @@ class TaskService
      * @param int    $thresholdHours Hours before deadline to trigger escalation.
      *
      * @return bool True if the deadline is within the threshold.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-24
      */
     public function isDeadlineApproaching(string $deadline, int $thresholdHours=4): bool
     {
@@ -205,6 +213,8 @@ class TaskService
      * @param string $deadline ISO 8601 deadline datetime.
      *
      * @return bool True if the deadline has passed.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-23
      */
     public function isDeadlinePassed(string $deadline): bool
     {

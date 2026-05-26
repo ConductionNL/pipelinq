@@ -1,60 +1,82 @@
-# Proposal: time-approval-workflow
+# Proposal: time-approval-workflow (hand approval + invoicing to shillinq)
 
-## Problem
+## Why
 
-Time entries in Pipelinq can be created and edited freely with no approval gate, no period-based locking, and no audit trail for post-lock corrections. Market intelligence covering 22/26 competitors shows that a submit/approve/lock cycle is a universal, expected feature in professional time-tracking software:
+The original draft of this change proposed building a full timesheet
+submit/approve/lock lifecycle **inside Pipelinq**: two new OR schemas
+(`timesheetPeriod`, `timesheetEditRequest`), a `TimesheetService` state machine,
+a `TimesheetController`, four approval Vue views, and Nextcloud notifications.
 
-1. **No weekly submission** — Employees have no way to formally submit a week's time for manager review. Without submission, managers cannot distinguish "in progress" entries from "complete, ready to bill" entries, leading to premature or delayed invoicing.
-2. **No manager approval** — There is no approval step that lets a manager confirm hours before a billing run. Competitors (Harvest, Tempo, Clockify, Everhour, Kantata) all gate invoicing on approved timesheets.
-3. **No period locking** — After approval, time entries remain editable. Uncontrolled edits to approved periods corrupt billing data, violate audit requirements (DCAA/SOX), and undermine trust in invoiced amounts.
-4. **No controlled post-lock correction** — When a locked entry genuinely needs correction (error, missing project), there is no structured way to request and document the change. Employees must ask an admin to unlock records directly, with no paper trail.
+Two facts make that the wrong home:
 
-Without a submit/approve/lock cycle, Pipelinq cannot serve professional services firms, government contractors, or any organisation that requires auditable time records before issuing invoices.
+1. **The time-tracker leaf explicitly excludes approval + invoicing.** Its
+   proposal states the out-of-scope items are "Invoicing; approval workflows
+   (those belong in a separate billing app); rate management." Pipelinq consumes
+   that leaf for capture (see `time-entry-core`).
+2. **hydra ADR-022** forbids an app building a parallel mechanism for a
+   capability that belongs to another part of the fleet. Approval-before-billing
+   and invoicing are **shillinq's** domain — shillinq already owns the billing
+   ledger and WIP balance (see `pipelinq-time-to-shillinq-wip`,
+   `pipelinq-project-to-shillinq-ledger`).
 
-## Solution
+The user decision: **time-tracker leaf for capture, shillinq for billing.**
+Approval is the gate before billing, so it belongs with billing in shillinq, not
+in Pipelinq.
 
-Implement a three-stage time approval workflow:
+This change is therefore **re-pointed from "build approval in Pipelinq" to
+"hand approval + invoicing to shillinq"**. Pipelinq builds no timesheet schema,
+no state machine, and no approval UI. It declares shillinq as the owner of the
+submit → approve → lock → invoice lifecycle and ensures captured hours (from the
+time-tracker leaf) are reachable by shillinq.
 
-1. **Submit** — A user submits all time entries for a calendar week as a `timesheetPeriod`. The period moves from status `open` to `submitted`. All underlying time entries are marked read-only for the submitter while pending review.
+## What Changes
 
-2. **Approve / Reject** — A manager reviews submitted timesheets and either approves (→ `approved`) or rejects with a mandatory comment (→ `rejected`). Rejection returns entries to `open` so the employee can correct and re-submit. Approval triggers automatic period locking.
+### Remove the in-pipelinq approval subsystem from scope
 
-3. **Lock** — On approval, the `timesheetPeriod` transitions to `locked` and all associated time entries are locked via OpenRegister's built-in `ObjectService.lockObject()`. Locked entries cannot be edited through normal flows.
+1. **No `timesheetPeriod` / `timesheetEditRequest` schemas** in Pipelinq.
+2. **No `TimesheetService`, no `TimesheetController`, no approval Vue views**
+   (`TimesheetSubmit`, `TimesheetApprovalInbox`, `TimesheetApprovalDetail`,
+   `TimesheetEditRequestDialog`).
+3. **No approval/locking notifications** authored in Pipelinq.
 
-4. **Post-lock edit request** — An employee needing to correct a locked entry submits a `timesheetEditRequest` with a mandatory reason. A manager reviews and approves or rejects the request. On approval the specific time entry is unlocked, edited, and re-locked; the edit reason is appended to the audit trail.
+### Hand the lifecycle to shillinq (pointer + dependency)
 
-## Scope
-
-- New OpenRegister schema: `timesheetPeriod` (weekly submission with status lifecycle)
-- New OpenRegister schema: `timesheetEditRequest` (post-lock correction request)
-- Frontend: Timesheet submission view (`TimesheetSubmit.vue`) — weekly grid + submit action
-- Frontend: Manager approval inbox (`TimesheetApprovalInbox.vue`) — list of submitted periods
-- Frontend: Approval detail view (`TimesheetApprovalDetail.vue`) — approve/reject with comment
-- Frontend: Edit request dialog (`TimesheetEditRequestDialog.vue`) — reason + manager review
-- Backend: Status transition controller (`TimesheetController`) for submit/approve/reject/lock
-- Backend: `TimesheetService` enforcing state machine rules
-- Notifications: Nextcloud notification to manager on submission; to employee on approve/reject
-- i18n keys for all workflow states and actions (Dutch + English)
-- Seed data: 3 `timesheetPeriod` objects and 2 `timesheetEditRequest` objects with Dutch values
+4. **Shillinq owns submit / approve / reject / lock / edit-request / invoicing.**
+   This change records that ownership and depends on shillinq exposing the
+   approval + billing surface. Pipelinq links to it rather than re-implementing.
+5. **Captured hours are reachable by shillinq.** Time entries captured via the
+   time-tracker leaf are linked to Pipelinq objects through OR integration link
+   tables; shillinq reads those links (or receives them via the existing
+   WIP-sync integration) to drive approval + billing. No pipelinq-side approval
+   state is introduced.
+6. **Pipelinq surfaces a link to shillinq's approval inbox** where useful (e.g.
+   a manifest menu entry / detail-page action that deep-links to shillinq), not
+   an in-app approval screen.
 
 ## Out of Scope
 
-- Time entry creation UI — covered by `time-entry-core`
-- Multi-stage approval (more than one approver per period) — Enterprise tier
-- Delegation of approval to a deputy manager
-- DCAA / SOX compliance certification — separate change
-- Client-specific approval rules
-- Automatic submission reminders / email notifications (Nextcloud notifications only in V1)
-- Bulk approval of multiple periods in one click
-- Approval on mobile app
+- Hour capture — owned by the time-tracker leaf (see `time-entry-core`).
+- Timesheet submission, approval, rejection, period-locking, edit-requests,
+  invoicing, rate management — all owned by **shillinq**.
+- Building any approval schema, state machine, controller, or view in Pipelinq.
 
-## Success Criteria
+## Interaction with existing changes
 
-- An employee can submit their week's time entries in a single action; the period status changes to `submitted` and the manager receives a Nextcloud notification
-- A manager can view all submitted timesheets grouped by employee and week; approve or reject each with a comment
-- Approving a period locks all associated time entries via `ObjectService.lockObject()`; the employee's edit controls are replaced with a lock indicator
-- Rejecting a period with a mandatory comment returns entries to editable `open` state; the employee sees the rejection reason
-- A locked entry's edit button opens a `TimesheetEditRequestDialog`; the request records the reason and creates a `timesheetEditRequest` object
-- Approved edit requests unlock the specific entry for correction, then re-lock it; the edit reason appears in the audit trail tab
-- `npm run build` produces zero errors after all changes
-- All user-visible strings use `t()` and are present in both `l10n/en.json` and `l10n/nl.json`
+- **`pipelinq-time-to-shillinq-wip`** assumed Pipelinq emitted a
+  `TimeEntryApprovedEvent` on an in-app approval. With approval moving to
+  shillinq, that change's trigger inverts: shillinq approves, then accrues WIP
+  internally. The WIP-sync change SHOULD be re-pointed or archived as a
+  follow-up (flagged for the maintainer; tracked separately, not in this change).
+
+## Impact
+
+- **New schemas**: 0.
+- **New backend/frontend files**: 0 approval logic.
+- **Modified files**: `src/manifest.json` (optional deep-link to shillinq's
+  approval inbox).
+- **Removed from prior draft**: 2 schemas, `TimesheetService`,
+  `TimesheetController`, 4 Vue views, approval notifications, seed data.
+- **Dependency**: shillinq must expose the approval + invoicing surface for
+  time captured against Pipelinq objects.
+- **Risk**: Low for Pipelinq (no code owned here); the lifecycle risk moves to
+  shillinq.

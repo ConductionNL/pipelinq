@@ -14,8 +14,8 @@
  sidebar at NcContent level, so rendering one here too produced the
  double-sidebar bug visible on every index page.
 
- The `pipelineSidebarState` channel stays in active use by the
- bespoke PipelineBoard kanban (PipelineSidebar component below).
+ The bespoke PipelineSidebar was removed with the pipeline board migration
+ to the OpenRegister deck leaf. See openspec/changes/migrate-pipeline-to-deck-leaf/.
 
  @spec openspec/changes/pipelinq-manifest-v1/tasks.md
 -->
@@ -41,12 +41,6 @@
 				:tabs="objectSidebarState.tabs"
 				:open="objectSidebarState.open"
 				@update:open="objectSidebarState.open = $event" />
-			<PipelineSidebar
-				v-if="pipelineSidebarState.active && !sidebarState.active"
-				:pipeline="pipelineSidebarState.pipeline"
-				:open="pipelineSidebarState.open"
-				@update:open="pipelineSidebarState.open = $event"
-				@save="onPipelineSidebarSave" />
 		</template>
 	</CnAppRoot>
 </template>
@@ -55,7 +49,6 @@
 import Vue from 'vue'
 import { translate as ncT } from '@nextcloud/l10n'
 import { CnAppRoot, CnObjectSidebar } from '@conduction/nextcloud-vue'
-import PipelineSidebar from './views/pipeline/PipelineSidebar.vue'
 
 export default {
 	name: 'App',
@@ -63,20 +56,19 @@ export default {
 	components: {
 		CnAppRoot,
 		CnObjectSidebar,
-		PipelineSidebar,
 	},
 
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-app-shell/tasks.md#task-3
+	 */
 	provide() {
 		return {
 			// Channel for CnDetailPage → host-rendered CnObjectSidebar.
 			// Vue.observable makes the plain object reactive for Vue 2.
 			objectSidebarState: this.objectSidebarState,
-			// Legacy channels — kept so bespoke index views (CnIndexPage
-			// wrappers) and the PipelineBoard's custom sidebar continue
-			// to inject them. Migrating these to the lib's
-			// objectSidebarState contract is a follow-up.
+			// Legacy channel — kept so bespoke index views (CnIndexPage
+			// wrappers) continue to inject it.
 			sidebarState: this.sidebarState,
-			pipelineSidebarState: this.pipelineSidebarState,
 		}
 	},
 
@@ -150,17 +142,13 @@ export default {
 				onColumnsChange: null,
 				onFilterChange: null,
 			}),
-			// Legacy channel for the bespoke pipeline kanban sidebar.
-			pipelineSidebarState: Vue.observable({
-				active: false,
-				open: true,
-				pipeline: null,
-				onSave: null,
-			}),
 		}
 	},
 
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-app-shell/tasks.md#task-2
+		 */
 		permissions() {
 			return window.OC?.currentUser?.permissions ?? []
 		},
@@ -174,14 +162,10 @@ export default {
 		 *
 		 * @param {string} key Translation key.
 		 * @return {string} Translated string (or the key on miss).
+		  * @spec openspec/changes/reverse-2026-05-26-fe-app-shell/tasks.md#task-4
 		 */
 		translateForApp(key) {
 			return ncT('pipelinq', key)
-		},
-		onPipelineSidebarSave(pipelineData) {
-			if (typeof this.pipelineSidebarState.onSave === 'function') {
-				this.pipelineSidebarState.onSave(pipelineData)
-			}
 		},
 	},
 }

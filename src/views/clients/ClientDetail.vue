@@ -28,7 +28,7 @@
 		object-type="pipelinq_client"
 		:object-id="clientId"
 		:sidebar-props="sidebarProps">
-		<template #header-actions>
+		<template #actions>
 			<NcButton type="primary" @click="editing = true">
 				{{ t('pipelinq', 'Edit') }}
 			</NcButton>
@@ -360,19 +360,31 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-13
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
 		isNew() {
 			return !this.clientId || this.clientId === 'new'
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-11
+		 */
 		loading() {
 			return this.objectStore.loading.client || false
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-4
+		 */
 		clientData() {
 			if (this.isNew) return {}
 			return this.objectStore.getObject('client', this.clientId) || {}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-21
+		 */
 		sidebarProps() {
 			const config = this.objectStore.objectTypeRegistry.client || {}
 			return {
@@ -382,29 +394,50 @@ export default {
 				hiddenTabs: ['tasks'],
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-17
+		 */
 		openLeadsCount() {
 			return this.leads.filter(l => !this.isClosedLead(l)).length
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-18
+		 */
 		openLeadsValue() {
 			return this.leads
 				.filter(l => !this.isClosedLead(l))
 				.reduce((sum, l) => sum + (parseFloat(l.value) || 0), 0)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-24
+		 */
 		wonLeadsCount() {
 			return this.leads.filter(l => l.status === 'won').length
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-25
+		 */
 		wonLeadsValue() {
 			return this.leads
 				.filter(l => l.status === 'won')
 				.reduce((sum, l) => sum + (parseFloat(l.value) || 0), 0)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-19
+		 */
 		openRequestsCount() {
 			return this.requests.filter(r => r.status === 'new' || r.status === 'in_progress').length
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-23
+		 */
 		totalValue() {
 			return this.openLeadsValue + this.wonLeadsValue
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-12
+	 */
 	async mounted() {
 		if (!this.isNew) {
 			await this.objectStore.fetchObject('client', this.clientId)
@@ -412,6 +445,9 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-16
+		 */
 		async onFormSave(formData) {
 			const result = await this.objectStore.saveObject('client', formData)
 			if (result) {
@@ -427,6 +463,9 @@ export default {
 				showError(error?.message || t('pipelinq', 'Failed to save client. Please try again.'))
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-22
+		 */
 		async syncToContacts(objectId) {
 			try {
 				await fetch('/apps/pipelinq/api/contacts-sync/write-back', {
@@ -442,6 +481,9 @@ export default {
 				// Sync failure is non-blocking
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-15
+		 */
 		onFormCancel() {
 			if (this.isNew) {
 				this.$router.push({ name: 'Clients' })
@@ -449,9 +491,15 @@ export default {
 				this.editing = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-20
+		 */
 		showDeleteWarning() {
 			this.showDelete = true
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-5
+		 */
 		async confirmDelete() {
 			this.showDelete = false
 			const success = await this.objectStore.deleteObject('client', this.clientId)
@@ -462,6 +510,9 @@ export default {
 				showError(error?.message || t('pipelinq', 'Failed to delete client.'))
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-8
+		 */
 		async fetchRelated() {
 			const allRequests = await this.objectStore.fetchCollection('request', {
 				_limit: 50,
@@ -507,6 +558,9 @@ export default {
 				this.complaints = []
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-10
+		 */
 		formatDate(dateStr) {
 			if (!dateStr) return '-'
 			try {
@@ -515,22 +569,37 @@ export default {
 				return dateStr
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-14
+		 */
 		async onContactmomentSaved() {
 			this.showContactmomentQuickLog = false
 			await this.fetchRelated()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-7
+		 */
 		createRequest() {
 			this.$router.push({ name: 'RequestDetail', params: { id: 'new' }, query: { client: this.clientId } })
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-3
+		 */
 		addContact() {
 			this.$router.push({ name: 'ContactDetail', params: { id: 'new' }, query: { client: this.clientId } })
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-6
+		 */
 		createComplaint() {
 			this.$router.push({ name: 'ComplaintDetail', params: { id: 'new' }, query: { client: this.clientId } })
 		},
 		isClosedLead(lead) {
 			return lead.status === 'won' || lead.status === 'lost'
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-9
+		 */
 		formatCurrency(value) {
 			if (value === 0 || value == null) return 'EUR 0'
 			return 'EUR ' + new Intl.NumberFormat('nl-NL').format(value)

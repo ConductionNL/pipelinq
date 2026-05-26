@@ -1,6 +1,9 @@
 import { useObjectStore } from './modules/object.js'
 import { useSettingsStore } from './modules/settings.js'
 
+/**
+ * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-60
+ */
 export async function initializeStores() {
 	const settingsStore = useSettingsStore()
 	const objectStore = useObjectStore()

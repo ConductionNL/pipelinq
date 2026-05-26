@@ -4,6 +4,8 @@
  * Priority sort comparator, capacity check, and routing suggestion logic.
  */
 
+import { translate as t } from '@nextcloud/l10n'
+
 /**
  * Priority ordering map (lower number = higher priority).
  */
@@ -15,6 +17,7 @@ const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 }
  * @param {object} a First item
  * @param {object} b Second item
  * @return {number} Sort comparison result
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-37
  */
 export function prioritySortComparator(a, b) {
 	const pa = PRIORITY_ORDER[a.priority] ?? 2
@@ -36,6 +39,7 @@ export function prioritySortComparator(a, b) {
  * @param {object} queue Queue object
  * @param {number} currentCount Current number of items in the queue
  * @return {boolean} True if queue is at or over capacity
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-36
  */
 export function isAtCapacity(queue, currentCount) {
 	if (!queue.maxCapacity) return false
@@ -47,6 +51,7 @@ export function isAtCapacity(queue, currentCount) {
  *
  * @param {string} dateStr ISO date string (requestedAt or dateCreated)
  * @return {string} Human-readable waiting time (e.g., "waiting 3 days")
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-35
  */
 export function getWaitingTime(dateStr) {
 	if (!dateStr) return ''
@@ -57,11 +62,11 @@ export function getWaitingTime(dateStr) {
 
 	if (diffDays === 0) {
 		const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-		if (diffHours === 0) return 'just now'
-		return `waiting ${diffHours}h`
+		if (diffHours === 0) return t('pipelinq', 'just now')
+		return t('pipelinq', 'waiting {hours}h', { hours: diffHours })
 	}
-	if (diffDays === 1) return 'waiting 1 day'
-	return `waiting ${diffDays} days`
+	if (diffDays === 1) return t('pipelinq', 'waiting 1 day')
+	return t('pipelinq', 'waiting {days} days', { days: diffDays })
 }
 
 /**
@@ -69,6 +74,7 @@ export function getWaitingTime(dateStr) {
  *
  * @param {Array} items Queue items
  * @return {string} Waiting time of the oldest item
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-34
  */
 export function getOldestWaitingTime(items) {
 	if (!items || items.length === 0) return '-'
@@ -90,6 +96,7 @@ export function getOldestWaitingTime(items) {
  * @param {Array} skills All skill definitions
  * @param {Array} agentProfiles All agent profiles
  * @return {Array} Agent profiles with matching skills
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-33
  */
 export function findMatchingAgents(category, skills, agentProfiles) {
 	if (!category) {
@@ -121,6 +128,7 @@ export function findMatchingAgents(category, skills, agentProfiles) {
  *
  * @param {Array} agents Array of { profile, workload } objects
  * @return {Array} Sorted array
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-38
  */
 export function sortByWorkload(agents) {
 	return [...agents].sort((a, b) => a.workload - b.workload)
@@ -131,6 +139,7 @@ export function sortByWorkload(agents) {
  *
  * @param {Array} agents Array of { profile, workload } objects
  * @return {{ available: Array, atCapacity: number }}
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-32
  */
 export function filterByCapacity(agents) {
 	const available = []

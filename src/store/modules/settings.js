@@ -30,6 +30,9 @@ export const useSettingsStore = defineStore('settings', {
 		},
 	},
 	actions: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-43
+		 */
 		async fetchSettings() {
 			this.loading = true
 			this.error = null
@@ -64,6 +67,9 @@ export const useSettingsStore = defineStore('settings', {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-44
+		 */
 		async saveSettings(settingsData) {
 			this.loading = true
 			this.error = null

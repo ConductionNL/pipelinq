@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "spec_slug": "public-intake-forms",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [
+    "integration-forms"
+  ],
+  "issue": "",
+  "pipeline": {},
+  "cycles": []
+}

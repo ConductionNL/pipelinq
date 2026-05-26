@@ -29,7 +29,7 @@
 		object-type="pipelinq_request"
 		:object-id="requestId"
 		:sidebar-props="sidebarProps">
-		<template #header-actions>
+		<template #actions>
 			<NcButton v-if="!isConverted" type="primary" @click="editing = true">
 				{{ t('pipelinq', 'Edit') }}
 			</NcButton>
@@ -128,52 +128,45 @@
 		</CnDetailCard>
 
 		<CnDetailCard :title="t('pipelinq', 'Assignment')">
-			<NcSelect
-				v-if="!isConverted"
-				:value="assigneeOption"
-				:options="userOptions"
-				:clearable="true"
-				label="label"
-				:reduce="o => o.value"
-				:placeholder="t('pipelinq', 'Assign to user')"
-				:filterable="true"
-				@input="onAssigneeChange" />
-			<span v-else>{{ requestData.assignee || t('pipelinq', 'Unassigned') }}</span>
+			<template #actions>
+				<NcSelect
+					v-if="!isConverted"
+					:value="assigneeOption"
+					:options="userOptions"
+					:clearable="true"
+					label="label"
+					:reduce="o => o.value"
+					:placeholder="t('pipelinq', 'Assign to user')"
+					:filterable="true"
+					class="assignment-select"
+					@input="onAssigneeChange" />
+			</template>
+			<span v-if="isConverted">{{ requestData.assignee || t('pipelinq', 'Unassigned') }}</span>
 		</CnDetailCard>
 
 		<CnDetailCard :title="t('pipelinq', 'Queue')">
+			<template #actions>
+				<NcSelect
+					v-if="!isConverted"
+					:value="queueOption || null"
+					:options="queueOptions"
+					:clearable="true"
+					label="label"
+					:reduce="o => o.value"
+					:placeholder="queueData ? t('pipelinq', 'Change queue') : t('pipelinq', 'Assign to queue')"
+					:filterable="true"
+					class="queue-select"
+					@input="onQueueChange" />
+			</template>
+
 			<div v-if="queueData" class="queue-link">
 				<a href="#" @click.prevent="$router.push({ name: 'QueueDetail', params: { id: queueData.id } })">
 					{{ queueData.title }}
 				</a>
-				<NcSelect
-					v-if="!isConverted"
-					:value="queueOption"
-					:options="queueOptions"
-					:clearable="true"
-					label="label"
-					:reduce="o => o.value"
-					:placeholder="t('pipelinq', 'Change queue')"
-					:filterable="true"
-					class="queue-select"
-					@input="onQueueChange" />
 			</div>
-			<div v-else>
-				<NcSelect
-					v-if="!isConverted"
-					:value="null"
-					:options="queueOptions"
-					:clearable="true"
-					label="label"
-					:reduce="o => o.value"
-					:placeholder="t('pipelinq', 'Assign to queue')"
-					:filterable="true"
-					class="queue-select"
-					@input="onQueueChange" />
-				<p v-else class="section-empty">
-					{{ t('pipelinq', 'Not in a queue') }}
-				</p>
-			</div>
+			<p v-else-if="isConverted" class="section-empty">
+				{{ t('pipelinq', 'Not in a queue') }}
+			</p>
 		</CnDetailCard>
 
 		<!-- Routing Suggestions -->
@@ -338,22 +331,37 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-17
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
 		isNew() {
 			return !this.requestId || this.requestId === 'new'
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-25
+		 */
 		preLinkedClient() {
 			return this.$route.query.client || null
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-13
+		 */
 		loading() {
 			return this.objectStore.loading.request || false
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-28
+		 */
 		requestData() {
 			if (this.isNew) return {}
 			return this.objectStore.getObject('request', this.requestId) || {}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-30
+		 */
 		sidebarProps() {
 			const config = this.objectStore.objectTypeRegistry.request || {}
 			return {
@@ -365,56 +373,95 @@ export default {
 		isConverted() {
 			return this.requestData.status === 'converted'
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-4
+		 */
 		canConvert() {
 			return this.requestData.status === 'in_progress'
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-5
+		 */
 		canDelete() {
 			return !this.isConverted
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-34
+		 */
 		statusTransitions() {
 			return getAllowedTransitions(this.requestData.status)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-33
+		 */
 		statusTransitionOptions() {
 			return this.statusTransitions.map(s => ({
 				id: s,
 				label: getStatusLabel(s),
 			}))
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-3
+		 */
 		assigneeOption() {
 			if (!this.requestData.assignee) return null
 			const user = this.users.find(u => u.value === this.requestData.assignee)
 			return user || { value: this.requestData.assignee, label: this.requestData.assignee }
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-35
+		 */
 		userOptions() {
 			return this.users
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-26
+		 */
 		queueOption() {
 			if (!this.queueData) return null
 			return { value: this.queueData.id, label: this.queueData.title }
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-27
+		 */
 		queueOptions() {
 			return this.allQueues
 				.filter(q => q.isActive !== false)
 				.map(q => ({ value: q.id, label: q.title }))
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-29
+		 */
 		showRoutingSuggestions() {
 			return !this.isNew && !this.isConverted && (this.requestData.queue || this.requestData.category)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-31
+		 */
 		sortedStages() {
 			if (!this.pipelineData?.stages) return []
 			return [...this.pipelineData.stages].sort((a, b) => a.order - b.order)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-8
+		 */
 		currentStageOrder() {
 			if (!this.requestData.stage || !this.sortedStages.length) return -1
 			const stage = this.sortedStages.find(s => s.name === this.requestData.stage)
 			return stage ? stage.order : -1
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-16
+		 */
 		nextStage() {
 			if (this.currentStageOrder < 0) return null
 			const openStages = this.sortedStages.filter(s => !s.isClosed)
 			return openStages.find(s => s.order > this.currentStageOrder) || null
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-14
+	 */
 	async mounted() {
 		this.fetchUsers()
 		if (!this.isNew) {
@@ -428,6 +475,9 @@ export default {
 		getPriorityLabel,
 		getPriorityColor,
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-9
+		 */
 		async fetchRelated() {
 			if (this.requestData.client) {
 				const client = await this.objectStore.fetchObject('client', this.requestData.client)
@@ -456,6 +506,9 @@ export default {
 				this.contactmomenten = []
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-12
+		 */
 		formatDatetime(dateStr) {
 			if (!dateStr) return '-'
 			try {
@@ -464,6 +517,9 @@ export default {
 				return dateStr
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-19
+		 */
 		async onContactmomentSaved() {
 			this.showContactmomentQuickLog = false
 			try {
@@ -478,6 +534,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-10
+		 */
 		async fetchUsers() {
 			try {
 				const response = await fetch('/ocs/v2.php/cloud/users?format=json', {
@@ -494,6 +553,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-32
+		 */
 		stageClass(stage) {
 			if (this.currentStageOrder < 0) return ''
 			if (stage.order < this.currentStageOrder) return 'stage-completed'
@@ -501,6 +563,9 @@ export default {
 			return 'stage-future'
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-24
+		 */
 		async onStatusChange(option) {
 			if (!option) return
 			const newStatus = option.id || option
@@ -511,6 +576,9 @@ export default {
 			await this.objectStore.fetchObject('request', this.requestId)
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-22
+		 */
 		async onQueueChange(queueId) {
 			await this.objectStore.saveObject('request', {
 				...this.requestData,
@@ -525,6 +593,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-23
+		 */
 		async onRoutingAssign(userId) {
 			await this.objectStore.saveObject('request', {
 				...this.requestData,
@@ -533,6 +604,9 @@ export default {
 			await this.objectStore.fetchObject('request', this.requestId)
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-18
+		 */
 		async onAssigneeChange(userId) {
 			await this.objectStore.saveObject('request', {
 				...this.requestData,
@@ -541,6 +615,9 @@ export default {
 			await this.objectStore.fetchObject('request', this.requestId)
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-15
+		 */
 		async moveToNextStage() {
 			if (!this.nextStage) return
 			await this.objectStore.saveObject('request', {
@@ -551,6 +628,9 @@ export default {
 			await this.objectStore.fetchObject('request', this.requestId)
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-7
+		 */
 		async convertToCase() {
 			const confirmed = confirm(
 				t('pipelinq', 'Convert this request to a case? This action cannot be undone.'),
@@ -571,10 +651,16 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-36
+		 */
 		viewCase() {
 			// TODO: Navigate to Procest case when integration is available
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-21
+		 */
 		async onFormSave(formData) {
 			const result = await this.objectStore.saveObject('request', formData)
 			if (result) {
@@ -591,6 +677,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-20
+		 */
 		onFormCancel() {
 			if (this.isNew) {
 				this.$router.push({ name: 'Requests' })
@@ -599,6 +688,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-6
+		 */
 		async confirmDelete() {
 			this.showDeleteDialog = false
 			const success = await this.objectStore.deleteObject('request', this.requestId)
@@ -610,6 +702,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-11
+		 */
 		formatDate(dateStr) {
 			if (!dateStr) return '-'
 			try {

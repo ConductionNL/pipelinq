@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-35
  */
 
 declare(strict_types=1);
@@ -46,6 +48,7 @@ class IcpConfigReader
      * @param string $default The default value.
      *
      * @return string The config value.
+      * @spec openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-3
      */
     public function getString(string $key, string $default=''): string
     {
@@ -63,6 +66,7 @@ class IcpConfigReader
      * @param string $value The value to store.
      *
      * @return void
+      * @spec openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-6
      */
     public function setString(string $key, string $value): void
     {
@@ -79,6 +83,7 @@ class IcpConfigReader
      * @param string $key The config key.
      *
      * @return array The decoded array.
+      * @spec openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-2
      */
     public function getJsonArray(string $key): array
     {
@@ -99,6 +104,7 @@ class IcpConfigReader
      * @param mixed  $value The array to encode and store.
      *
      * @return void
+      * @spec openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-5
      */
     public function setJsonArray(string $key, mixed $value): void
     {
@@ -130,6 +136,7 @@ class IcpConfigReader
      * @param mixed  $value The boolean value.
      *
      * @return void
+      * @spec openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-4
      */
     public function setBool(string $key, mixed $value): void
     {

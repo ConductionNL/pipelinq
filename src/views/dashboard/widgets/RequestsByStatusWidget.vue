@@ -38,6 +38,9 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-18
+		 */
 		rows() {
 			const counts = {}
 			for (const r of this.requests) {
@@ -56,6 +59,9 @@ export default {
 				}))
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-17
+	 */
 	async mounted() {
 		try {
 			this.requests = await getRequests()

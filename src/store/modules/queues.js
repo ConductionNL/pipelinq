@@ -17,6 +17,9 @@ export const useQueuesStore = defineStore('queues', {
 		getQueueById: (state) => (id) => state.queues.find(q => q.id === id),
 	},
 	actions: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-37
+		 */
 		async fetchQueues() {
 			this.loading = true
 			this.error = null
@@ -32,6 +35,9 @@ export const useQueuesStore = defineStore('queues', {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-35
+		 */
 		async fetchQueue(id) {
 			this.loading = true
 			this.error = null
@@ -49,6 +55,9 @@ export const useQueuesStore = defineStore('queues', {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-38
+		 */
 		async saveQueue(data) {
 			this.loading = true
 			this.error = null
@@ -68,6 +77,9 @@ export const useQueuesStore = defineStore('queues', {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-34
+		 */
 		async deleteQueue(id) {
 			this.loading = true
 			this.error = null
@@ -87,6 +99,9 @@ export const useQueuesStore = defineStore('queues', {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-36
+		 */
 		async fetchQueueItems(queueId) {
 			this.loading = true
 			this.error = null

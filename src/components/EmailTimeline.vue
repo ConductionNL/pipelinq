@@ -52,6 +52,9 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-29
+		 */
 		groupedEmails() {
 			// Group by thread ID, show latest first
 			return [...this.emails].sort((a, b) =>
@@ -61,10 +64,16 @@ export default {
 	},
 	mounted() { this.fetchEmails() },
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-27
+		 */
 		async fetchEmails() {
 			this.loading = true
 			try { this.emails = [] } finally { this.loading = false }
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-28
+		 */
 		formatDate(dateStr) {
 			if (!dateStr) return ''
 			return new Date(dateStr).toLocaleString('nl-NL', {

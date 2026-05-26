@@ -18,8 +18,8 @@
 //   - openspec/changes/pipelinq-manifest-v1/design.md
 //   - hydra/openspec/architecture/adr-024-app-manifest.md
 
-// --- Pipeline board — bespoke kanban (lib gap: no kanban page type). ---
-import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
+// Bespoke kanban board removed — board mechanics now provided by the
+// OpenRegister deck leaf (integration-deck). See openspec/changes/migrate-pipeline-to-deck-leaf/.
 import MyWorkView from './views/MyWork.vue'
 
 // --- Dashboard (manifest type:"dashboard") — header actions and
@@ -40,9 +40,6 @@ import ClientOverviewWidget from './views/dashboard/widgets/ClientOverviewWidget
 // --- Queues — bespoke routing-rule editor (lib gap: routing-rules widget). ---
 import QueueListView from './views/queues/QueueList.vue'
 import QueueDetailView from './views/queues/QueueDetail.vue'
-
-// --- Kennisbank wiki article detail (lib gap: no `wiki` page type). ---
-import ArticleDetailView from './views/kennisbank/ArticleDetail.vue'
 
 // --- Surveys analytics (lib gap: no chart-widget page type). ---
 import SurveyAnalyticsView from './views/surveys/SurveyAnalytics.vue'
@@ -73,8 +70,7 @@ import SyncSettingsView from './views/sync/SyncSettings.vue'
 //     OpenRegister's github-issue-proxy). See ConductionNL/hydra#251. ---
 
 export default {
-	// Pipeline + MyWork
-	PipelineBoardView,
+	// MyWork
 	MyWorkView,
 
 	// Dashboard widget components (resolved via Dashboard page's `slots` map)
@@ -91,9 +87,6 @@ export default {
 	// Queues
 	QueueListView,
 	QueueDetailView,
-
-	// Kennisbank
-	ArticleDetailView,
 
 	// Surveys
 	SurveyAnalyticsView,

@@ -1,0 +1,26 @@
+# Tasks
+
+Reverse-spec annotation of 22 method(s) for product catalog screens. Each task = one method annotated against the `product-catalog` capability (observed behavior).
+
+- [x] task-1: product-catalog — `src/views/products/ProductCreateDialog.vue::objectStore` (reverse-spec annotation)
+- [x] task-2: product-catalog — `src/views/products/ProductCreateDialog.vue::onSave` (reverse-spec annotation)
+- [x] task-3: product-catalog — `src/views/products/ProductDetail.vue::confirmDelete` (reverse-spec annotation)
+- [x] task-4: product-catalog — `src/views/products/ProductDetail.vue::fetchRelated` (reverse-spec annotation)
+- [x] task-5: product-catalog — `src/views/products/ProductDetail.vue::formatCurrency` (reverse-spec annotation)
+- [x] task-6: product-catalog — `src/views/products/ProductDetail.vue::loading` (reverse-spec annotation)
+- [x] task-7: product-catalog — `src/views/products/ProductDetail.vue::mounted` (reverse-spec annotation)
+- [x] task-8: product-catalog — `src/views/products/ProductDetail.vue::objectStore` (reverse-spec annotation)
+- [x] task-9: product-catalog — `src/views/products/ProductDetail.vue::onFormCancel` (reverse-spec annotation)
+- [x] task-10: product-catalog — `src/views/products/ProductDetail.vue::onFormSave` (reverse-spec annotation)
+- [x] task-11: product-catalog — `src/views/products/ProductDetail.vue::openLead` (reverse-spec annotation)
+- [x] task-12: product-catalog — `src/views/products/ProductDetail.vue::productData` (reverse-spec annotation)
+- [x] task-13: product-catalog — `src/views/products/ProductDetail.vue::sidebarProps` (reverse-spec annotation)
+- [x] task-14: product-catalog — `src/views/products/ProductForm.vue::categoryOptions` (reverse-spec annotation)
+- [x] task-15: product-catalog — `src/views/products/ProductForm.vue::fetchCategories` (reverse-spec annotation)
+- [x] task-16: product-catalog — `src/views/products/ProductForm.vue::handler` (reverse-spec annotation)
+- [x] task-17: product-catalog — `src/views/products/ProductForm.vue::isValid` (reverse-spec annotation)
+- [x] task-18: product-catalog — `src/views/products/ProductForm.vue::objectStore` (reverse-spec annotation)
+- [x] task-19: product-catalog — `src/views/products/ProductForm.vue::onSave` (reverse-spec annotation)
+- [x] task-20: product-catalog — `src/views/products/ProductForm.vue::populateForm` (reverse-spec annotation)
+- [x] task-21: product-catalog — `src/views/products/ProductForm.vue::validateAll` (reverse-spec annotation)
+- [x] task-22: product-catalog — `src/views/products/ProductForm.vue::validateField` (reverse-spec annotation)

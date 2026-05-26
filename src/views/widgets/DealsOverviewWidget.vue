@@ -46,6 +46,9 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-28
+		 */
 		clientMap() {
 			const map = {}
 			for (const c of this.clients) {
@@ -53,6 +56,9 @@ export default {
 			}
 			return map
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-31
+		 */
 		items() {
 			return this.leads.map((lead) => {
 				const client = this.clientMap[lead.client] || this.clientMap[lead.clientId]
@@ -72,9 +78,15 @@ export default {
 		await this.fetchData()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-32
+		 */
 		onShow(item) {
 			window.location.href = '/index.php/apps/pipelinq/leads/' + item.id
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-29
+		 */
 		async fetchData() {
 			this.loading = true
 			try {
@@ -93,6 +105,9 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-30
+		 */
 		async fetchRaw(config, type, params = {}) {
 			const typeConfig = config[type]
 			if (!typeConfig) return []

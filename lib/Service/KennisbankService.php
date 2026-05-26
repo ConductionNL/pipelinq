@@ -15,6 +15,9 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-31
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-33
  */
 
 declare(strict_types=1);
@@ -68,6 +71,8 @@ class KennisbankService
      * @param int         $offset   Offset for pagination.
      *
      * @return array<string, mixed> Filter parameters used by the controller to query articles.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-31
      */
     public function getPublicArticles(
         ?string $search=null,
@@ -102,6 +107,8 @@ class KennisbankService
      * @param array<string, mixed> $article The article data.
      *
      * @return array<string, mixed> The article with internal fields removed.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-31
      */
     public function stripInternalFields(array $article): array
     {
@@ -120,6 +127,8 @@ class KennisbankService
      * @param string|null $comment   Optional improvement suggestion.
      *
      * @return array{valid: bool, errors: array<string>} Validation result.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-33
      */
     public function validateFeedback(
         string $articleId,
@@ -155,6 +164,8 @@ class KennisbankService
      * @param string|null $comment   Optional improvement suggestion.
      *
      * @return array<string, mixed> The feedback object data.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-33
      */
     public function buildFeedbackData(
         string $articleId,
@@ -190,6 +201,8 @@ class KennisbankService
      * @param int $negativeCount Number of "niet_nuttig" ratings.
      *
      * @return float The usefulness score as a percentage (0-100).
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-33
      */
     public function calculateUsefulnessScore(
         int $positiveCount,

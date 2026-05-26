@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-52
  */
 
 declare(strict_types=1);
@@ -80,6 +82,7 @@ class ComplaintSlaService
      * @param string $category The complaint category.
      *
      * @return int The SLA hours, or 0 if not configured.
+      * @spec openspec/changes/reverse-2026-05-26-be-complaint-sla/tasks.md#task-2
      */
     public function getSlaHoursForCategory(string $category): int
     {
@@ -114,6 +117,7 @@ class ComplaintSlaService
      * @param DateTimeInterface|null $from     The starting point (defaults to now).
      *
      * @return DateTimeImmutable|null The deadline, or null if no SLA configured.
+      * @spec openspec/changes/reverse-2026-05-26-be-complaint-sla/tasks.md#task-1
      */
     public function calculateDeadline(
         string $category,
@@ -151,6 +155,7 @@ class ComplaintSlaService
      * @param DateTimeInterface|null $now       The current time (defaults to now).
      *
      * @return bool True if the complaint is overdue.
+      * @spec openspec/changes/reverse-2026-05-26-be-complaint-sla/tasks.md#task-3
      */
     public function isOverdue(
         array $complaint,
