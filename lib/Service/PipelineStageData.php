@@ -34,7 +34,7 @@ class PipelineStageData
      * @param ?string $viewId The view ID to associate with the pipeline.
      *
      * @return array The sales pipeline object data.
-      * @spec openspec/changes/reverse-2026-05-26-be-dashboard-pipeline/tasks.md#task-2
+     * @spec   openspec/changes/reverse-2026-05-26-be-dashboard-pipeline/tasks.md#task-2
      */
     public function getSalesPipelineData(?string $viewId=null): array
     {
@@ -58,7 +58,7 @@ class PipelineStageData
      * @param ?string $viewId The view ID to associate with the pipeline.
      *
      * @return array The service requests pipeline object data.
-      * @spec openspec/changes/reverse-2026-05-26-be-dashboard-pipeline/tasks.md#task-3
+     * @spec   openspec/changes/reverse-2026-05-26-be-dashboard-pipeline/tasks.md#task-3
      */
     public function getServiceRequestsPipelineData(?string $viewId=null): array
     {

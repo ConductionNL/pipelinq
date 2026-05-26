@@ -109,6 +109,7 @@
 			"label": "Documentation",
 			"icon": "icon-info",
 			"href": "https://pipelinq.conduction.nl/",
+			"section": "footer",
 			"order": 160
 		},
 		{
@@ -137,7 +138,7 @@
 			"label": "Features & roadmap",
 			"icon": "icon-toggle",
 			"route": "FeaturesRoadmap",
-			"section": "settings",
+			"section": "footer",
 			"order": 230
 		}
 	],

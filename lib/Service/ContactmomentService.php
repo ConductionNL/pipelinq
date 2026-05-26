@@ -62,7 +62,7 @@ class ContactmomentService
      * @return \OCA\OpenRegister\Service\ObjectService The object service.
      *
      * @throws \RuntimeException If OpenRegister is not available.
-      * @spec openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-2
+     * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-2
      */
     public function getObjectService(): \OCA\OpenRegister\Service\ObjectService
     {

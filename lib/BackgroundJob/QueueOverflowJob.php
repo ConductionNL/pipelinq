@@ -67,7 +67,7 @@ class QueueOverflowJob extends TimedJob
      * @return void
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-      * @spec openspec/changes/reverse-2026-05-26-be-background-jobs/tasks.md#task-2
+     * @spec                                          openspec/changes/reverse-2026-05-26-be-background-jobs/tasks.md#task-2
      */
     protected function run(mixed $argument): void
     {

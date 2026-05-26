@@ -49,7 +49,7 @@ class ContactLinkedUidsService
      * Get all contactsUid values from existing Pipelinq clients and contacts.
      *
      * @return array The linked contact UIDs.
-      * @spec openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-1
+     * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-1
      */
     public function getLinkedContactsUids(): array
     {
