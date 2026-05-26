@@ -42,6 +42,7 @@
 				<label>{{ t('pipelinq', 'Source') }}</label>
 				<NcSelect v-model="form.source"
 					:options="sourceOptions"
+					:aria-label-combobox="t('pipelinq', 'Source')"
 					:clearable="true"
 					:placeholder="t('pipelinq', 'Select source')" />
 			</div>
@@ -49,6 +50,7 @@
 				<label>{{ t('pipelinq', 'Priority') }}</label>
 				<NcSelect v-model="form.priority"
 					:options="priorityOptions"
+					:aria-label-combobox="t('pipelinq', 'Priority')"
 					:clearable="false"
 					:placeholder="t('pipelinq', 'Select priority')" />
 			</div>
@@ -67,6 +69,7 @@
 			<label>{{ t('pipelinq', 'Client') }}</label>
 			<NcSelect v-model="form.client"
 				:options="clientOptions"
+				:aria-label-combobox="t('pipelinq', 'Client')"
 				:clearable="true"
 				label="label"
 				:reduce="o => o.value"
@@ -79,6 +82,7 @@
 				<label>{{ t('pipelinq', 'Pipeline') }}</label>
 				<NcSelect v-model="form.pipeline"
 					:options="pipelineOptions"
+					:aria-label-combobox="t('pipelinq', 'Pipeline')"
 					:clearable="true"
 					label="label"
 					:reduce="o => o.value"
@@ -89,6 +93,7 @@
 				<label>{{ t('pipelinq', 'Stage') }}</label>
 				<NcSelect v-model="form.stage"
 					:options="stageOptions"
+					:aria-label-combobox="t('pipelinq', 'Stage')"
 					:clearable="true"
 					:disabled="!form.pipeline"
 					:placeholder="form.pipeline ? t('pipelinq', 'Select stage') : t('pipelinq', 'Select pipeline first')" />

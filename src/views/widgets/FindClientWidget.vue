@@ -17,6 +17,7 @@
 				:error="newClientSubmitted && !newClient.name" />
 			<NcSelect v-model="newClient.type"
 				:options="typeOptions"
+				:input-label="t('pipelinq', 'Type')"
 				:placeholder="t('pipelinq', 'Type')"
 				input-id="new-client-type" />
 			<NcTextField :value.sync="newClient.email"

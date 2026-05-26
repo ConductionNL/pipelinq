@@ -21,6 +21,7 @@
 				<NcSelect
 					v-model="form.channel"
 					:options="channelOptions"
+					:aria-label-combobox="t('pipelinq', 'Channel')"
 					:clearable="false"
 					:placeholder="t('pipelinq', 'Select channel')" />
 			</div>
@@ -29,6 +30,7 @@
 				<NcSelect
 					v-model="form.outcome"
 					:options="outcomeOptions"
+					:aria-label-combobox="t('pipelinq', 'Outcome')"
 					:clearable="true"
 					:placeholder="t('pipelinq', 'Select outcome')" />
 			</div>
@@ -40,6 +42,7 @@
 			<NcSelect
 				v-model="form.client"
 				:options="clientSelectOptions"
+				:aria-label-combobox="t('pipelinq', 'Client')"
 				:clearable="true"
 				label="label"
 				:reduce="o => o.value"
@@ -52,6 +55,7 @@
 			<NcSelect
 				v-model="form.request"
 				:options="requestSelectOptions"
+				:aria-label-combobox="t('pipelinq', 'Request')"
 				:clearable="true"
 				label="label"
 				:reduce="o => o.value"

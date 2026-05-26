@@ -27,6 +27,7 @@
 				<NcSelect
 					v-model="form.type"
 					input-id="product-type"
+					:aria-label-combobox="t('pipelinq', 'Type')"
 					:options="typeOptions"
 					:placeholder="t('pipelinq', 'Select type')"
 					@input="validateField('type')" />
@@ -39,6 +40,7 @@
 				<NcSelect
 					v-model="form.status"
 					input-id="product-status"
+					:aria-label-combobox="t('pipelinq', 'Status')"
 					:options="statusOptions"
 					:placeholder="t('pipelinq', 'Select status')" />
 			</div>
@@ -89,6 +91,7 @@
 			<NcSelect
 				v-model="form.category"
 				input-id="product-category"
+				:aria-label-combobox="t('pipelinq', 'Category')"
 				:options="categoryOptions"
 				:placeholder="t('pipelinq', 'Select category')"
 				label="name"

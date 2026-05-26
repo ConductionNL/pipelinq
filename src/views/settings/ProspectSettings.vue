@@ -44,6 +44,7 @@
 				<NcSelect
 					v-model="form.provinces"
 					:options="provinceOptions"
+					:aria-label-combobox="t('pipelinq', 'Provinces')"
 					:multiple="true"
 					:placeholder="t('pipelinq', 'Select provinces')" />
 			</div>
@@ -54,6 +55,7 @@
 				<NcSelect
 					v-model="form.legalForms"
 					:options="legalFormOptions"
+					:aria-label-combobox="t('pipelinq', 'Legal Forms')"
 					:multiple="true"
 					:placeholder="t('pipelinq', 'Select legal forms')" />
 			</div>

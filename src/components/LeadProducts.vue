@@ -106,6 +106,7 @@
 						<NcSelect
 							v-model="addForm.product"
 							:options="productOptions"
+							:aria-label-combobox="t('pipelinq', 'Product')"
 							:placeholder="t('pipelinq', 'Search products...')"
 							label="name"
 							:reduce="opt => opt.id"
