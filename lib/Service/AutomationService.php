@@ -101,7 +101,7 @@ class AutomationService
      * @param array  $entityData The entity data to check conditions against.
      *
      * @return bool Whether the automation matches.
-      * @spec openspec/changes/reverse-2026-05-26-be-automation/tasks.md#task-5
+     * @spec   openspec/changes/reverse-2026-05-26-be-automation/tasks.md#task-5
      */
     public function matchesConditions(array $automation, string $trigger, array $entityData): bool
     {
@@ -196,7 +196,7 @@ class AutomationService
      * @param array  $entityData The entity data.
      *
      * @return array The webhook payload.
-      * @spec openspec/changes/reverse-2026-05-26-be-automation/tasks.md#task-3
+     * @spec   openspec/changes/reverse-2026-05-26-be-automation/tasks.md#task-3
      */
     public function buildWebhookPayload(array $automation, string $trigger, array $entityData): array
     {
@@ -217,7 +217,7 @@ class AutomationService
      * @param array  $payload    The payload to send.
      *
      * @return array The execution result with status and response.
-      * @spec openspec/changes/reverse-2026-05-26-be-automation/tasks.md#task-4
+     * @spec   openspec/changes/reverse-2026-05-26-be-automation/tasks.md#task-4
      */
     public function fireWebhook(string $webhookUrl, array $payload): array
     {

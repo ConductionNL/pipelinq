@@ -56,7 +56,7 @@ class ProspectController extends Controller
      * @return JSONResponse The prospect results.
      *
      * @NoAdminRequired
-      * @spec openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-1
+     * @spec            openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-1
      */
     public function index(): JSONResponse
     {

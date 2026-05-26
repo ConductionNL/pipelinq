@@ -98,7 +98,7 @@ class TaskService
      * Calculate the default deadline (next business day at 17:00).
      *
      * @return string ISO 8601 datetime string.
-      * @spec openspec/changes/reverse-2026-05-26-be-tasks/tasks.md#task-2
+     * @spec   openspec/changes/reverse-2026-05-26-be-tasks/tasks.md#task-2
      */
     public function getDefaultDeadline(): string
     {
@@ -126,7 +126,7 @@ class TaskService
      * @param int    $businessHours Number of business hours to add.
      *
      * @return string ISO 8601 deadline datetime string.
-      * @spec openspec/changes/reverse-2026-05-26-be-tasks/tasks.md#task-1
+     * @spec   openspec/changes/reverse-2026-05-26-be-tasks/tasks.md#task-1
      */
     public function calculateDeadline(string $createdAt, int $businessHours): string
     {
@@ -155,7 +155,7 @@ class TaskService
      * @param array<string, mixed> $data The task data to validate.
      *
      * @return array{valid: bool, errors: array<string>} Validation result.
-      * @spec openspec/changes/reverse-2026-05-26-be-tasks/tasks.md#task-3
+     * @spec   openspec/changes/reverse-2026-05-26-be-tasks/tasks.md#task-3
      */
     public function validateTask(array $data): array
     {

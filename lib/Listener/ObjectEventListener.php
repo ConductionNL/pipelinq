@@ -50,7 +50,7 @@ class ObjectEventListener implements IEventListener
      * @param Event $event The event to handle.
      *
      * @return void
-      * @spec openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-2
+     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-2
      */
     public function handle(Event $event): void
     {
