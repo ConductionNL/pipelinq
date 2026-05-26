@@ -53,7 +53,7 @@ class ObjectEventDispatcher
      * @param string $assignee   The assignee user ID.
      *
      * @return void
-      * @spec openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-4
+     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-4
      */
     public function dispatchCreated(string $entityType, string $title, string $objectId, string $assignee): void
     {
@@ -85,7 +85,7 @@ class ObjectEventDispatcher
      * @param string $assignee   The new assignee user ID.
      *
      * @return void
-      * @spec openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-3
+     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-3
      */
     public function dispatchAssigneeChange(
         string $entityType,
@@ -117,7 +117,7 @@ class ObjectEventDispatcher
      * @param string $assignee The current assignee.
      *
      * @return void
-      * @spec openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-7
+     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-7
      */
     public function dispatchStageChange(string $title, string $objectId, string $newStage, string $assignee): void
     {
@@ -148,7 +148,7 @@ class ObjectEventDispatcher
      * @param string $assignee  The current assignee.
      *
      * @return void
-      * @spec openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-8
+     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-8
      */
     public function dispatchStatusChange(string $title, string $objectId, string $newStatus, string $assignee): void
     {
@@ -179,7 +179,7 @@ class ObjectEventDispatcher
      * @param string $assignee The current assignee.
      *
      * @return void
-      * @spec openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-6
+     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-6
      */
     public function dispatchDealWon(string $title, string $value, string $objectId, string $assignee): void
     {
@@ -209,7 +209,7 @@ class ObjectEventDispatcher
      * @param string $assignee The current assignee.
      *
      * @return void
-      * @spec openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-5
+     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-5
      */
     public function dispatchDealLost(string $title, string $objectId, string $assignee): void
     {

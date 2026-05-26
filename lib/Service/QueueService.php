@@ -53,7 +53,7 @@ class QueueService
      * @param string $queueId The queue UUID.
      *
      * @return int The number of items in the queue.
-      * @spec openspec/changes/reverse-2026-05-26-be-queue/tasks.md#task-1
+     * @spec   openspec/changes/reverse-2026-05-26-be-queue/tasks.md#task-1
      */
     public function getQueueDepth(string $queueId): int
     {
@@ -97,7 +97,7 @@ class QueueService
      * @param int|null             $currentCount Optional override for current count.
      *
      * @return bool True if the queue is at or over capacity.
-      * @spec openspec/changes/reverse-2026-05-26-be-queue/tasks.md#task-2
+     * @spec   openspec/changes/reverse-2026-05-26-be-queue/tasks.md#task-2
      */
     public function isAtCapacity(array $queue, ?int $currentCount=null): bool
     {
@@ -147,7 +147,7 @@ class QueueService
      * Process overflow for all queues that are at capacity and have an overflow target.
      *
      * @return int The number of items moved.
-      * @spec openspec/changes/reverse-2026-05-26-be-queue/tasks.md#task-3
+     * @spec   openspec/changes/reverse-2026-05-26-be-queue/tasks.md#task-3
      */
     public function processOverflow(): int
     {

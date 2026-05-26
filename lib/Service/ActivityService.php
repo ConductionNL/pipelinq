@@ -253,7 +253,7 @@ class ActivityService
      * @param ?string $affectedUser The affected user or null.
      *
      * @return void
-      * @spec openspec/changes/reverse-2026-05-26-be-activity-notify/tasks.md#task-1
+     * @spec   openspec/changes/reverse-2026-05-26-be-activity-notify/tasks.md#task-1
      */
     public function publishDealLost(
         string $title,

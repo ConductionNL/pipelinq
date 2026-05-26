@@ -41,7 +41,7 @@ class DeepLinkRegistrationListener implements IEventListener
      * @param Event $event The event to handle
      *
      * @return void
-      * @spec openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-1
+     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-1
      */
     public function handle(Event $event): void
     {
