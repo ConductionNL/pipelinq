@@ -35,6 +35,7 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -59,11 +60,13 @@ class RoutingController extends Controller
      *
      * @param IRequest        $request        The request.
      * @param RoutingService  $routingService The routing service.
+     * @param IUserSession    $userSession    The user session.
      * @param LoggerInterface $logger         The logger.
      */
     public function __construct(
         IRequest $request,
         private RoutingService $routingService,
+        private IUserSession $userSession,
         private LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
@@ -86,6 +89,14 @@ class RoutingController extends Controller
     #[NoCSRFRequired]
     public function getSuggestions(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(
+                ['message' => 'Authentication required'],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+
         $entityType = (string) $this->request->getParam('entityType', '');
         $entityId   = (string) $this->request->getParam('entityId', '');
 

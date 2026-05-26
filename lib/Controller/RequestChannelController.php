@@ -26,8 +26,12 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\SystemTagService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUserSession;
 
 /**
  * Controller for request channel management.
@@ -41,10 +45,12 @@ class RequestChannelController extends Controller
      *
      * @param IRequest         $request          The request.
      * @param SystemTagService $systemTagService The system tag service.
+     * @param IUserSession     $userSession      The user session.
      */
     public function __construct(
         IRequest $request,
         private SystemTagService $systemTagService,
+        private IUserSession $userSession,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -54,12 +60,16 @@ class RequestChannelController extends Controller
      *
      * @return JSONResponse The response containing tags.
      *
-     * @NoAdminRequired
-     *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-10
      */
+    #[NoAdminRequired]
     public function index(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+
         return new JSONResponse(
                 [
                     'success' => true,
@@ -75,6 +85,7 @@ class RequestChannelController extends Controller
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-10
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function create(): JSONResponse
     {
         $name = $this->request->getParam('name', '');
@@ -99,6 +110,7 @@ class RequestChannelController extends Controller
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-10
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function update(string $id): JSONResponse
     {
         $name = $this->request->getParam('name', '');
@@ -124,6 +136,7 @@ class RequestChannelController extends Controller
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-10
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function destroy(string $id): JSONResponse
     {
         try {

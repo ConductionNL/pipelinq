@@ -34,6 +34,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -48,13 +49,15 @@ class ActivityTimelineController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest                $request The request.
-     * @param ActivityTimelineService $service The activity timeline service.
-     * @param LoggerInterface         $logger  The logger.
+     * @param IRequest                $request     The request.
+     * @param ActivityTimelineService $service     The activity timeline service.
+     * @param IUserSession            $userSession The user session.
+     * @param LoggerInterface         $logger      The logger.
      */
     public function __construct(
         IRequest $request,
         private ActivityTimelineService $service,
+        private IUserSession $userSession,
         private LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
@@ -74,6 +77,11 @@ class ActivityTimelineController extends Controller
      */
     public function getTimeline(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $entityType = (string) $this->request->getParam('entityType', '');
         $entityId   = (string) $this->request->getParam('entityId', '');
 
@@ -125,6 +133,11 @@ class ActivityTimelineController extends Controller
      */
     public function getWorklog(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $entityType = (string) $this->request->getParam('entityType', '');
         $entityId   = (string) $this->request->getParam('entityId', '');
 
@@ -173,6 +186,11 @@ class ActivityTimelineController extends Controller
      */
     public function createWorklog(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $entityType = (string) $this->request->getParam('entityType', '');
         $entityId   = (string) $this->request->getParam('entityId', '');
         $duration   = (string) $this->request->getParam('duration', '');

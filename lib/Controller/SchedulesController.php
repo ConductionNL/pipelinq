@@ -83,6 +83,11 @@ class SchedulesController extends Controller
     #[NoAdminRequired]
     public function index(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $params = [
                 'status'          => $this->request->getParam('status', ''),
@@ -121,6 +126,11 @@ class SchedulesController extends Controller
     #[NoAdminRequired]
     public function create(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $type     = (string) $this->request->getParam('type', '');
         $subject  = (string) $this->request->getParam('subject', '');
         $deadline = (string) $this->request->getParam('deadline', '');
@@ -203,6 +213,11 @@ class SchedulesController extends Controller
     #[NoAdminRequired]
     public function pending(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $window = (int) $this->request->getParam('window', 60);
             if ($window > 1440) {
@@ -247,6 +262,11 @@ class SchedulesController extends Controller
     #[NoAdminRequired]
     public function show(string $id): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $task = $this->scheduledTaskService->getScheduledTask($id);
             return new JSONResponse($task);
