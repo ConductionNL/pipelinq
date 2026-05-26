@@ -16,16 +16,16 @@ return [
         ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
         ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
 
-        // Lead sources
-        ['name' => 'lead_source#index', 'url' => '/api/settings/lead-sources', 'verb' => 'GET'],
-        ['name' => 'lead_source#create', 'url' => '/api/settings/lead-sources', 'verb' => 'POST'],
-        ['name' => 'lead_source#update', 'url' => '/api/settings/lead-sources/{id}', 'verb' => 'PUT'],
-        ['name' => 'lead_source#destroy', 'url' => '/api/settings/lead-sources/{id}', 'verb' => 'DELETE'],
+        // Lead sources (camelCase slug matches LeadSourceController class name)
+        ['name' => 'leadSource#index', 'url' => '/api/settings/lead-sources', 'verb' => 'GET'],
+        ['name' => 'leadSource#create', 'url' => '/api/settings/lead-sources', 'verb' => 'POST'],
+        ['name' => 'leadSource#update', 'url' => '/api/settings/lead-sources/{id}', 'verb' => 'PUT'],
+        ['name' => 'leadSource#destroy', 'url' => '/api/settings/lead-sources/{id}', 'verb' => 'DELETE'],
 
-        // Contacts sync
-        ['name' => 'contact_sync#search', 'url' => '/api/contacts-sync/search', 'verb' => 'GET'],
-        ['name' => 'contact_sync#import', 'url' => '/api/contacts-sync/import', 'verb' => 'POST'],
-        ['name' => 'contact_sync#writeBack', 'url' => '/api/contacts-sync/write-back', 'verb' => 'POST'],
+        // Contacts sync (camelCase slug matches ContactSyncController class name)
+        ['name' => 'contactSync#search', 'url' => '/api/contacts-sync/search', 'verb' => 'GET'],
+        ['name' => 'contactSync#import', 'url' => '/api/contacts-sync/import', 'verb' => 'POST'],
+        ['name' => 'contactSync#writeBack', 'url' => '/api/contacts-sync/write-back', 'verb' => 'POST'],
 
         // Entity notes
         ['name' => 'notes#list', 'url' => '/api/notes/{objectType}/{objectId}', 'verb' => 'GET'],
@@ -33,31 +33,31 @@ return [
         ['name' => 'notes#deleteAll', 'url' => '/api/notes/{objectType}/{objectId}', 'verb' => 'DELETE'],
         ['name' => 'notes#deleteSingle', 'url' => '/api/notes/single/{noteId}', 'verb' => 'DELETE'],
 
-        // Request channels
-        ['name' => 'request_channel#index', 'url' => '/api/settings/request-channels', 'verb' => 'GET'],
-        ['name' => 'request_channel#create', 'url' => '/api/settings/request-channels', 'verb' => 'POST'],
-        ['name' => 'request_channel#update', 'url' => '/api/settings/request-channels/{id}', 'verb' => 'PUT'],
-        ['name' => 'request_channel#destroy', 'url' => '/api/settings/request-channels/{id}', 'verb' => 'DELETE'],
+        // Request channels (camelCase slug matches RequestChannelController class name)
+        ['name' => 'requestChannel#index', 'url' => '/api/settings/request-channels', 'verb' => 'GET'],
+        ['name' => 'requestChannel#create', 'url' => '/api/settings/request-channels', 'verb' => 'POST'],
+        ['name' => 'requestChannel#update', 'url' => '/api/settings/request-channels/{id}', 'verb' => 'PUT'],
+        ['name' => 'requestChannel#destroy', 'url' => '/api/settings/request-channels/{id}', 'verb' => 'DELETE'],
 
         // Prospect discovery
         ['name' => 'prospect#index', 'url' => '/api/prospects', 'verb' => 'GET'],
         ['name' => 'prospect#createLead', 'url' => '/api/prospects/create-lead', 'verb' => 'POST'],
 
-        // Prospect settings (admin only)
-        ['name' => 'prospect_settings#index', 'url' => '/api/prospects/settings', 'verb' => 'GET'],
-        ['name' => 'prospect_settings#update', 'url' => '/api/prospects/settings', 'verb' => 'PUT'],
+        // Prospect settings (admin only; camelCase slug matches ProspectSettingsController class name)
+        ['name' => 'prospectSettings#index', 'url' => '/api/prospects/settings', 'verb' => 'GET'],
+        ['name' => 'prospectSettings#update', 'url' => '/api/prospects/settings', 'verb' => 'PUT'],
 
-        // Public intake forms (no auth)
-        ['name' => 'public_form#show', 'url' => '/api/public/forms/{id}', 'verb' => 'GET'],
-        ['name' => 'public_form#submit', 'url' => '/api/public/forms/{id}/submit', 'verb' => 'POST'],
+        // Public intake forms (no auth; camelCase slug matches PublicFormController class name)
+        ['name' => 'publicForm#show', 'url' => '/api/public/forms/{id}', 'verb' => 'GET'],
+        ['name' => 'publicForm#submit', 'url' => '/api/public/forms/{id}/submit', 'verb' => 'POST'],
 
-        // Intake form management (authenticated)
-        ['name' => 'intake_form#embed', 'url' => '/api/forms/{id}/embed', 'verb' => 'GET'],
-        ['name' => 'intake_form#export', 'url' => '/api/forms/{id}/submissions/export', 'verb' => 'GET'],
+        // Intake form management (authenticated; camelCase slug matches IntakeFormController class name)
+        ['name' => 'intakeForm#embed', 'url' => '/api/forms/{id}/embed', 'verb' => 'GET'],
+        ['name' => 'intakeForm#export', 'url' => '/api/forms/{id}/submissions/export', 'verb' => 'GET'],
         // Automations
         ['name' => 'automation#metadata', 'url' => '/api/automations/metadata', 'verb' => 'GET'],
         ['name' => 'automation#test', 'url' => '/api/automations/test', 'verb' => 'POST'],
-        // Kennisbank public API
+        // Kennisbank public API (authenticated; routes KennisbankController)
         ['name' => 'kennisbank#publicIndex', 'url' => '/api/kennisbank/public', 'verb' => 'GET'],
         ['name' => 'kennisbank#publicShow', 'url' => '/api/kennisbank/public/{id}', 'verb' => 'GET'],
         ['name' => 'kennisbank#submitFeedback', 'url' => '/api/kennisbank/feedback', 'verb' => 'POST'],
@@ -65,13 +65,13 @@ return [
         ['name' => 'reporting#getSla', 'url' => '/api/rapportage/sla', 'verb' => 'GET'],
         ['name' => 'reporting#updateSla', 'url' => '/api/rapportage/sla', 'verb' => 'PUT'],
         ['name' => 'reporting#exportCsv', 'url' => '/api/rapportage/export', 'verb' => 'GET'],
-        // Public survey endpoints (unauthenticated)
-        ['name' => 'public_survey#show', 'url' => '/public/survey/{token}', 'verb' => 'GET'],
-        ['name' => 'public_survey#submit', 'url' => '/public/survey/{token}/respond', 'verb' => 'POST'],
+        // Public survey endpoints (unauthenticated; camelCase slug matches PublicSurveyController class name)
+        ['name' => 'publicSurvey#show', 'url' => '/public/survey/{token}', 'verb' => 'GET'],
+        ['name' => 'publicSurvey#submit', 'url' => '/public/survey/{token}/respond', 'verb' => 'POST'],
 
-        // Public kennisbank API (unauthenticated)
-        ['name' => 'public_kennisbank#index', 'url' => '/api/public/kennisbank/articles', 'verb' => 'GET'],
-        ['name' => 'public_kennisbank#show', 'url' => '/api/public/kennisbank/articles/{id}', 'verb' => 'GET'],
+        // Public kennisbank API (unauthenticated; camelCase slug matches PublicKennisbankController class name)
+        ['name' => 'publicKennisbank#index', 'url' => '/api/public/kennisbank/articles', 'verb' => 'GET'],
+        ['name' => 'publicKennisbank#show', 'url' => '/api/public/kennisbank/articles/{id}', 'verb' => 'GET'],
 
         // Contactmomenten (permission-checked delete)
         ['name' => 'contactmoment#destroy', 'url' => '/api/contactmomenten/{id}', 'verb' => 'DELETE'],
@@ -95,10 +95,10 @@ return [
         ['name' => 'schedules#update',  'url' => '/api/schedules/{id}',    'verb' => 'PUT'],
         ['name' => 'schedules#destroy', 'url' => '/api/schedules/{id}',    'verb' => 'DELETE'],
 
-        // Activity timeline and worklog endpoints.
-        ['name' => 'activity_timeline#getTimeline',  'url' => '/api/timeline', 'verb' => 'GET'],
-        ['name' => 'activity_timeline#getWorklog',   'url' => '/api/worklog',  'verb' => 'GET'],
-        ['name' => 'activity_timeline#createWorklog','url' => '/api/worklog',  'verb' => 'POST'],
+        // Activity timeline and worklog endpoints (camelCase slug matches ActivityTimelineController class name)
+        ['name' => 'activityTimeline#getTimeline',  'url' => '/api/timeline', 'verb' => 'GET'],
+        ['name' => 'activityTimeline#getWorklog',   'url' => '/api/worklog',  'verb' => 'GET'],
+        ['name' => 'activityTimeline#createWorklog','url' => '/api/worklog',  'verb' => 'POST'],
 
         // Skill-based routing suggestions — must precede SPA catch-all.
         ['name' => 'routing#getSuggestions', 'url' => '/api/routing/suggestions', 'verb' => 'GET'],

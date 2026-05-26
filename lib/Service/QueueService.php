@@ -91,30 +91,6 @@ class QueueService
     }//end getQueueDepth()
 
     /**
-     * Check whether a queue is at capacity.
-     *
-     * @param array<string, mixed> $queue        The queue object.
-     * @param int|null             $currentCount Optional override for current count.
-     *
-     * @return bool True if the queue is at or over capacity.
-     * @spec   openspec/changes/reverse-2026-05-26-be-queue/tasks.md#task-2
-     */
-    public function isAtCapacity(array $queue, ?int $currentCount=null): bool
-    {
-        $maxCapacity = $queue['maxCapacity'] ?? null;
-        if ($maxCapacity === null || $maxCapacity <= 0) {
-            return false;
-        }
-
-        if ($currentCount === null) {
-            $queueId      = $queue['id'] ?? '';
-            $currentCount = $this->getQueueDepth(queueId: $queueId);
-        }
-
-        return $currentCount >= (int) $maxCapacity;
-    }//end isAtCapacity()
-
-    /**
      * Assign a request to a queue by updating its queue field.
      *
      * @param string $requestId The request UUID.

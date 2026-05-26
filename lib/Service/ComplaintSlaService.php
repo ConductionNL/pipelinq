@@ -52,16 +52,6 @@ class ComplaintSlaService
     ];
 
     /**
-     * Statuses that indicate a complaint is still open (not terminal).
-     *
-     * @var array<string>
-     */
-    private const OPEN_STATUSES = [
-        'new',
-        'in_progress',
-    ];
-
-    /**
      * Constructor.
      *
      * @param IAppConfig      $appConfig The app configuration service.
@@ -138,66 +128,4 @@ class ComplaintSlaService
         return $start->modify('+'.$hours.' hours');
     }//end calculateDeadline()
 
-    /**
-     * Check whether a complaint is overdue based on its SLA deadline.
-     *
-     * A complaint is overdue when:
-     * 1. It has an slaDeadline set
-     * 2. Its status is open (new or in_progress)
-     * 3. The current time is past the deadline
-     *
-     * @param array<string, mixed>   $complaint The complaint data array.
-     * @param DateTimeInterface|null $now       The current time (defaults to now).
-     *
-     * @return bool True if the complaint is overdue.
-     * @spec   openspec/changes/reverse-2026-05-26-be-complaint-sla/tasks.md#task-3
-     */
-    public function isOverdue(
-        array $complaint,
-        ?DateTimeInterface $now=null,
-    ): bool {
-        $deadline = $complaint['slaDeadline'] ?? null;
-        $status   = $complaint['status'] ?? 'new';
-
-        if ($deadline === null || $deadline === '') {
-            return false;
-        }
-
-        if (in_array($status, self::OPEN_STATUSES, true) === false) {
-            return false;
-        }
-
-        try {
-            $deadlineDate = new DateTimeImmutable($deadline);
-        } catch (Exception $e) {
-            $this->logger->warning(
-                'ComplaintSlaService: Invalid deadline format "{deadline}"',
-                [
-                    'deadline'  => $deadline,
-                    'exception' => $e->getMessage(),
-                ],
-            );
-            return false;
-        }
-
-        if ($now !== null) {
-            $currentTime = new DateTimeImmutable($now->format('Y-m-d\TH:i:sP'));
-        } else {
-            $currentTime = new DateTimeImmutable();
-        }
-
-        return $currentTime > $deadlineDate;
-    }//end isOverdue()
-
-    /**
-     * Check if a complaint status is open (non-terminal).
-     *
-     * @param string $status The complaint status.
-     *
-     * @return bool True if the status is open.
-     */
-    public function isOpenStatus(string $status): bool
-    {
-        return in_array($status, self::OPEN_STATUSES, true);
-    }//end isOpenStatus()
 }//end class

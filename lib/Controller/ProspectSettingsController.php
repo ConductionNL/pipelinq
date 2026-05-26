@@ -27,6 +27,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\IcpConfigService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
@@ -101,12 +102,13 @@ class ProspectSettingsController extends Controller
     /**
      * Get current ICP configuration.
      *
-     * Admin-only: no @NoAdminRequired annotation.
+     * Admin-only endpoint (requires admin settings permission).
      *
      * @return JSONResponse The ICP settings.
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-35
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function index(): JSONResponse
     {
         return new JSONResponse(data: $this->icpConfig->getSettings());
@@ -115,12 +117,13 @@ class ProspectSettingsController extends Controller
     /**
      * Save ICP configuration.
      *
-     * Admin-only: no @NoAdminRequired annotation.
+     * Admin-only endpoint (requires admin settings permission).
      *
      * @return JSONResponse The save result.
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-35
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function update(): JSONResponse
     {
         $data = $this->request->getParams();

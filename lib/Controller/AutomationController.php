@@ -24,9 +24,11 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\AutomationService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
 
 /**
  * Controller for automation CRUD and metadata endpoints.
@@ -38,11 +40,13 @@ class AutomationController extends Controller
      *
      * @param IRequest          $request           The request.
      * @param AutomationService $automationService The automation service.
+     * @param IUserSession      $userSession       The user session.
      * @param IL10N             $l10n              The localization service.
      */
     public function __construct(
         IRequest $request,
         private AutomationService $automationService,
+        private IUserSession $userSession,
         private IL10N $l10n,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
@@ -58,6 +62,11 @@ class AutomationController extends Controller
      */
     public function metadata(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         return new JSONResponse(
                 [
                     'triggers' => $this->automationService->getValidTriggers(),
@@ -76,6 +85,11 @@ class AutomationController extends Controller
      */
     public function test(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         $automation = $this->request->getParam('automation', []);
         $trigger    = $this->request->getParam('trigger', '');
         $entityData = $this->request->getParam('entityData', []);

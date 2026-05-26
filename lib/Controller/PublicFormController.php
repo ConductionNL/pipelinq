@@ -62,7 +62,6 @@ class PublicFormController extends Controller
      *
      * @return JSONResponse The public form definition.
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
      * @CORS
@@ -95,7 +94,6 @@ class PublicFormController extends Controller
      *
      * @return JSONResponse The submission result.
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
      * @CORS

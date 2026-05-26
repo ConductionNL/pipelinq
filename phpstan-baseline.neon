@@ -129,3 +129,31 @@ parameters:
 			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\TaskService\\:\\:\\$userSession is never read, only written\\.$#"
 			count: 1
 			path: lib/Service/TaskService.php
+
+		# Known FP: AuthorizedAdminSetting accepts APP_ID string at runtime but PHPStan
+		# expects a class-string<IDelegatedSettings>. This is a fleet-wide false positive
+		# (tracked in https://github.com/ConductionNL/pipelinq/issues/496).
+		-
+			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class-string<OCP\\\\Settings\\\\IDelegatedSettings>, string given\\.$#"
+			count: 3
+			path: lib/Controller/LeadSourceController.php
+
+		-
+			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class-string<OCP\\\\Settings\\\\IDelegatedSettings>, string given\\.$#"
+			count: 2
+			path: lib/Controller/ProspectSettingsController.php
+
+		-
+			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class-string<OCP\\\\Settings\\\\IDelegatedSettings>, string given\\.$#"
+			count: 1
+			path: lib/Controller/ReportingController.php
+
+		-
+			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class-string<OCP\\\\Settings\\\\IDelegatedSettings>, string given\\.$#"
+			count: 3
+			path: lib/Controller/RequestChannelController.php
+
+		-
+			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class-string<OCP\\\\Settings\\\\IDelegatedSettings>, string given\\.$#"
+			count: 2
+			path: lib/Controller/SettingsController.php

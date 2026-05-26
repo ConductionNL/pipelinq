@@ -27,9 +27,11 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\KennisbankService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
 
 /**
  * Controller for knowledge base public API and feedback.
@@ -44,11 +46,13 @@ class KennisbankController extends Controller
      *
      * @param IRequest          $request           The request.
      * @param KennisbankService $kennisbankService The kennisbank service.
+     * @param IUserSession      $userSession       The user session.
      * @param IL10N             $l10n              The localization service.
      */
     public function __construct(
         IRequest $request,
         private KennisbankService $kennisbankService,
+        private IUserSession $userSession,
         private IL10N $l10n,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
@@ -62,7 +66,6 @@ class KennisbankController extends Controller
      *
      * @return JSONResponse The response containing public articles query parameters.
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
      *
@@ -99,7 +102,6 @@ class KennisbankController extends Controller
      *
      * @return JSONResponse The response containing the article.
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
      *
@@ -139,6 +141,11 @@ class KennisbankController extends Controller
      */
     public function submitFeedback(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         $articleId = $this->request->getParam('articleId', '');
         $rating    = $this->request->getParam('rating', '');
         $comment   = $this->request->getParam('comment');

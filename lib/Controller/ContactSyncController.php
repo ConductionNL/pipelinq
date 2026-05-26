@@ -27,9 +27,11 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ContactSyncService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
 
 /**
  * Controller for contact synchronization.
@@ -41,11 +43,13 @@ class ContactSyncController extends Controller
      *
      * @param IRequest           $request            The request.
      * @param ContactSyncService $contactSyncService The contact sync service.
+     * @param IUserSession       $userSession        The user session.
      * @param IL10N              $l10n               The localization service.
      */
     public function __construct(
         IRequest $request,
         private ContactSyncService $contactSyncService,
+        private IUserSession $userSession,
         private IL10N $l10n,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
@@ -62,6 +66,11 @@ class ContactSyncController extends Controller
      */
     public function search(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         $query = $this->request->getParam('q', '');
         if (trim($query) === '') {
             return new JSONResponse(['results' => []]);
@@ -91,6 +100,11 @@ class ContactSyncController extends Controller
      */
     public function import(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         $uid            = $this->request->getParam('uid', '');
         $addressBookKey = $this->request->getParam('addressBookKey', '');
         $type           = $this->request->getParam('type', 'client');
@@ -134,6 +148,11 @@ class ContactSyncController extends Controller
      */
     public function writeBack(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         $objectType = $this->request->getParam('objectType', '');
         $objectId   = $this->request->getParam('objectId', '');
 

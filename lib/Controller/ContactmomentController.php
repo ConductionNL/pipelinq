@@ -27,6 +27,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ContactmomentService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\NotPermittedException;
 use OCP\IL10N;
@@ -74,7 +75,7 @@ class ContactmomentController extends Controller
         if ($user === null) {
             return new JSONResponse(
                 ['error' => $this->l10n->t('Authentication required')],
-                401
+                Http::STATUS_UNAUTHORIZED
             );
         }
 

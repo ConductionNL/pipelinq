@@ -26,6 +26,7 @@ use OCA\Pipelinq\Service\CallbackService;
 use OCA\Pipelinq\Service\NotificationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -77,8 +78,14 @@ class CallbackController extends Controller
      *
      * @spec openspec/changes/callback-management/tasks.md#task-2.1
      */
+    #[NoAdminRequired]
     public function attempt(string $id): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         $result = $this->request->getParam('result', '');
         $notes  = $this->request->getParam('notes', '');
 
@@ -127,8 +134,14 @@ class CallbackController extends Controller
      *
      * @spec openspec/changes/callback-management/tasks.md#task-2.1
      */
+    #[NoAdminRequired]
     public function claim(string $id): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $taskData = $this->getTaskStub(id: $id);
             if ($taskData === null) {
@@ -167,8 +180,14 @@ class CallbackController extends Controller
      *
      * @spec openspec/changes/callback-management/tasks.md#task-2.1
      */
+    #[NoAdminRequired]
     public function complete(string $id): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         $resultText = $this->request->getParam('resultText', '');
 
         try {
@@ -231,8 +250,14 @@ class CallbackController extends Controller
      *
      * @spec openspec/changes/callback-management/tasks.md#task-2.1
      */
+    #[NoAdminRequired]
     public function reassign(string $id): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         $assignee     = $this->request->getParam('assignee', '');
         $assigneeType = $this->request->getParam('assigneeType', '');
 
