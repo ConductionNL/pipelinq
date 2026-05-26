@@ -94,27 +94,48 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 */
 		profilesStore() {
 			return useAgentProfilesStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-11
+		 */
 		skillsStore() {
 			return useSkillsStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-6
+		 */
 		loading() {
 			return this.profilesStore.loading
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 */
 		profiles() {
 			return this.profilesStore.profiles
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 */
 		allSkills() {
 			return this.skillsStore.skills
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-7
+	 */
 	mounted() {
 		this.profilesStore.fetchProfiles()
 		this.skillsStore.fetchSkills()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-5
+		 */
 		getSkillNames(profile) {
 			if (!profile.skills || !this.allSkills.length) return []
 			return profile.skills
@@ -122,14 +143,23 @@ export default {
 				.filter(Boolean)
 				.map(s => s.title)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-12
+		 */
 		startEdit(profile) {
 			this.editingId = profile.id
 			this.editForm = { ...profile }
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-3
+		 */
 		cancelEdit() {
 			this.editingId = null
 			this.editForm = {}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-13
+		 */
 		toggleSkill(skillId, checked) {
 			const skills = [...(this.editForm.skills || [])]
 			if (checked) {
@@ -140,10 +170,16 @@ export default {
 			}
 			this.editForm = { ...this.editForm, skills }
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-10
+		 */
 		async saveEdit() {
 			await this.profilesStore.saveProfile(this.editForm)
 			this.cancelEdit()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 */
 		async addProfile() {
 			const userId = prompt(t('pipelinq', 'Enter Nextcloud user ID:'))
 			if (!userId) return
@@ -154,6 +190,9 @@ export default {
 				isAvailable: true,
 			})
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-4
+		 */
 		async deleteProfile(profile) {
 			if (confirm(t('pipelinq', 'Delete agent profile for "{userId}"?', { userId: profile.userId }))) {
 				await this.profilesStore.deleteProfile(profile.id)

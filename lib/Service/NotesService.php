@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-29
  */
 
 declare(strict_types=1);
@@ -59,6 +61,8 @@ class NotesService
      * @param string $objectId   The object ID.
      *
      * @return array The notes.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-29
      */
     public function getNotes(string $objectType, string $objectId): array
     {
@@ -102,6 +106,8 @@ class NotesService
      * @param string $message    The note message.
      *
      * @return array The created note.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-29
      */
     public function addNote(string $objectType, string $objectId, string $message): array
     {
@@ -138,6 +144,8 @@ class NotesService
      * @param int $noteId The note ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-29
      */
     public function deleteNote(int $noteId): void
     {
@@ -161,6 +169,8 @@ class NotesService
      * @param string $objectId   The object ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-29
      */
     public function deleteAllNotes(string $objectType, string $objectId): void
     {

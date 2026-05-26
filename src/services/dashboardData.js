@@ -87,26 +87,44 @@ function cached(key, fetcher) {
 	return promise
 }
 
+/**
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-17
+ */
 export function getLeads() {
 	return cached('lead', () => fetchRaw('lead', { _limit: 500 }))
 }
 
+/**
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-21
+ */
 export function getRequests() {
 	return cached('request', () => fetchRaw('request', { _limit: 500 }))
 }
 
+/**
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-20
+ */
 export function getPipelines() {
 	return cached('pipeline', () => fetchRaw('pipeline', { _limit: 100 }))
 }
 
+/**
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-16
+ */
 export function getComplaints() {
 	return cached('complaint', () => fetchRaw('complaint', { _limit: 500 }))
 }
 
+/**
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-14
+ */
 export function getClients() {
 	return cached('client', () => fetchRaw('client', { _limit: 500 }))
 }
 
+/**
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-18
+ */
 export function getMyLeads() {
 	if (!OC.currentUser) return Promise.resolve([])
 	return cached('lead:mine', () => fetchRaw('lead', {
@@ -115,6 +133,9 @@ export function getMyLeads() {
 	}))
 }
 
+/**
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-19
+ */
 export function getMyRequests() {
 	if (!OC.currentUser) return Promise.resolve([])
 	return cached('request:mine', () => fetchRaw('request', {
@@ -127,6 +148,7 @@ export function getMyRequests() {
  * Drop every cached dataset. Call from a "Refresh" UI action or
  * after creating a new object so the dashboard reflects the change
  * on the next widget mount/remount.
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-22
  */
 export function invalidateDashboardData() {
 	cache.clear()
@@ -139,6 +161,7 @@ export function invalidateDashboardData() {
  *
  * @param {Array} pipelines - Pipeline records.
  * @return {Set<string>} Names of stages flagged isClosed.
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-15
  */
 export function getClosedStageNames(pipelines) {
 	const names = new Set()

@@ -174,9 +174,15 @@ export default {
 		isNew() {
 			return !this.automationId
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-automations-ui/tasks.md#task-5
+		 */
 		canSave() {
 			return this.form.name && this.form.trigger && this.form.actions.length > 0
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-automations-ui/tasks.md#task-13
+		 */
 		triggerOptions() {
 			return [
 				{ value: 'lead_created', label: this.t('pipelinq', 'Lead created') },
@@ -188,6 +194,9 @@ export default {
 				{ value: 'request_status_changed', label: this.t('pipelinq', 'Request status changed') },
 			]
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-automations-ui/tasks.md#task-1
+		 */
 		actionOptions() {
 			return [
 				{ value: 'assign_lead', label: this.t('pipelinq', 'Assign lead') },
@@ -198,6 +207,9 @@ export default {
 				{ value: 'webhook', label: this.t('pipelinq', 'Call webhook') },
 			]
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-automations-ui/tasks.md#task-8
+		 */
 		operatorOptions() {
 			return [
 				{ value: 'eq', label: '=' },
@@ -209,12 +221,18 @@ export default {
 			]
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-automations-ui/tasks.md#task-7
+	 */
 	mounted() {
 		if (this.automationId) {
 			this.loadAutomation()
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-automations-ui/tasks.md#task-6
+		 */
 		async loadAutomation() {
 			this.loading = true
 			try {
@@ -230,6 +248,9 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-automations-ui/tasks.md#task-9
+		 */
 		parseConditions() {
 			const conds = this.form.triggerConditions || {}
 			this.conditions = Object.entries(conds).map(([field, val]) => {
@@ -239,6 +260,9 @@ export default {
 				return { field, operator: 'eq', value: String(val) }
 			})
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-automations-ui/tasks.md#task-4
+		 */
 		buildConditions() {
 			const result = {}
 			for (const c of this.conditions) {
@@ -251,18 +275,33 @@ export default {
 			}
 			return result
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-automations-ui/tasks.md#task-3
+		 */
 		addCondition() {
 			this.conditions.push({ field: '', operator: 'eq', value: '' })
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-automations-ui/tasks.md#task-11
+		 */
 		removeCondition(index) {
 			this.conditions.splice(index, 1)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-automations-ui/tasks.md#task-2
+		 */
 		addAction() {
 			this.form.actions.push({ type: null, config: {} })
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-automations-ui/tasks.md#task-10
+		 */
 		removeAction(index) {
 			this.form.actions.splice(index, 1)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-automations-ui/tasks.md#task-12
+		 */
 		async save() {
 			this.form.triggerConditions = this.buildConditions()
 			const objectStore = useObjectStore()

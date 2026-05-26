@@ -29,7 +29,7 @@
 		object-type="pipelinq_complaint"
 		:object-id="complaintId"
 		:sidebar-props="sidebarProps">
-		<template #header-actions>
+		<template #actions>
 			<NcButton v-if="!isTerminal" type="primary" @click="editing = true">
 				{{ t('pipelinq', 'Edit') }}
 			</NcButton>
@@ -153,15 +153,18 @@
 		</CnDetailCard>
 
 		<CnDetailCard :title="t('pipelinq', 'Assignment')">
-			<NcSelect
-				:value="assigneeOption"
-				:options="userOptions"
-				:clearable="true"
-				label="label"
-				:reduce="o => o.value"
-				:placeholder="t('pipelinq', 'Assign to user')"
-				:filterable="true"
-				@input="onAssigneeChange" />
+			<template #actions>
+				<NcSelect
+					:value="assigneeOption"
+					:options="userOptions"
+					:clearable="true"
+					label="label"
+					:reduce="o => o.value"
+					:placeholder="t('pipelinq', 'Assign to user')"
+					:filterable="true"
+					class="assignment-select"
+					@input="onAssigneeChange" />
+			</template>
 		</CnDetailCard>
 
 		<!-- Audit Trail / Status History -->
@@ -281,22 +284,37 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-16
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
 		isNew() {
 			return !this.complaintId || this.complaintId === 'new'
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-21
+		 */
 		preLinkedClient() {
 			return this.$route.query.client || null
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-14
+		 */
 		loading() {
 			return this.objectStore.loading.complaint || false
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-6
+		 */
 		complaintData() {
 			if (this.isNew) return {}
 			return this.objectStore.getObject('complaint', this.complaintId) || {}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-23
+		 */
 		sidebarProps() {
 			const config = this.objectStore.objectTypeRegistry.complaint || {}
 			return {
@@ -308,26 +326,44 @@ export default {
 		isTerminal() {
 			return isTerminalStatus(this.complaintData.status)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-25
+		 */
 		statusTransitions() {
 			return getAllowedTransitions(this.complaintData.status)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-24
+		 */
 		slaIndicator() {
 			return getSlaIndicator(this.complaintData.slaDeadline, this.complaintData.status)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-4
+		 */
 		assigneeOption() {
 			if (!this.complaintData.assignedTo) return null
 			const user = this.users.find(u => u.value === this.complaintData.assignedTo)
 			return user || { value: this.complaintData.assignedTo, label: this.complaintData.assignedTo }
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-26
+		 */
 		userOptions() {
 			return this.users
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-22
+		 */
 		resolutionDialogTitle() {
 			return this.pendingTransition === 'rejected'
 				? t('pipelinq', 'Reject complaint')
 				: t('pipelinq', 'Resolve complaint')
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-15
+	 */
 	async mounted() {
 		this.fetchUsers()
 		if (!this.isNew) {
@@ -346,6 +382,9 @@ export default {
 		getSlaIndicator,
 		getSlaColor,
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-13
+		 */
 		getTransitionLabel(status) {
 			if (status === 'in_progress') return t('pipelinq', 'In behandeling nemen')
 			if (status === 'resolved') return t('pipelinq', 'Afhandelen')
@@ -353,12 +392,18 @@ export default {
 			return getStatusLabel(status)
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-12
+		 */
 		getTransitionButtonType(status) {
 			if (status === 'rejected') return 'error'
 			if (status === 'resolved') return 'success'
 			return 'secondary'
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-20
+		 */
 		onStatusTransition(targetStatus) {
 			if (requiresResolution(targetStatus)) {
 				this.pendingTransition = targetStatus
@@ -369,6 +414,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-8
+		 */
 		async confirmResolution() {
 			if (!this.resolutionText.trim()) return
 
@@ -382,6 +430,9 @@ export default {
 			this.resolutionText = ''
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-3
+		 */
 		async applyStatusChange(newStatus, extraData = {}) {
 			const previousStatus = this.complaintData.status
 
@@ -401,6 +452,9 @@ export default {
 			})
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-9
+		 */
 		async fetchRelated() {
 			if (this.complaintData.client) {
 				const client = await this.objectStore.fetchObject('client', this.complaintData.client)
@@ -412,6 +466,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-10
+		 */
 		async fetchUsers() {
 			try {
 				const response = await fetch('/ocs/v2.php/cloud/users?format=json', {
@@ -428,6 +485,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-5
+		 */
 		buildStatusHistory() {
 			// Try to build from audit trail if available
 			const auditTrail = this.complaintData._auditTrail || this.complaintData.auditTrail
@@ -455,6 +515,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-17
+		 */
 		async onAssigneeChange(userId) {
 			await this.objectStore.saveObject('complaint', {
 				...this.complaintData,
@@ -463,6 +526,9 @@ export default {
 			await this.objectStore.fetchObject('complaint', this.complaintId)
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-19
+		 */
 		async onFormSave(formData) {
 			const result = await this.objectStore.saveObject('complaint', formData)
 			if (result) {
@@ -479,6 +545,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-18
+		 */
 		onFormCancel() {
 			if (this.isNew) {
 				this.$router.push({ name: 'Complaints' })
@@ -487,6 +556,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-7
+		 */
 		async confirmDelete() {
 			this.showDeleteDialog = false
 			const success = await this.objectStore.deleteObject('complaint', this.complaintId)
@@ -498,6 +570,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-11
+		 */
 		formatDateTime(dateStr) {
 			if (!dateStr) return '-'
 			try {

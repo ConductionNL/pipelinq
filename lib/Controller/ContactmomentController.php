@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-39
  */
 
 declare(strict_types=1);
@@ -63,6 +65,8 @@ class ContactmomentController extends Controller
      * @return JSONResponse The response.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-39
      */
     public function destroy(string $id): JSONResponse
     {

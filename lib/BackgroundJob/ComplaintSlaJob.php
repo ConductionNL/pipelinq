@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-21
  */
 
 declare(strict_types=1);
@@ -69,6 +71,8 @@ class ComplaintSlaJob extends TimedJob
      * @param mixed $argument The job argument (unused, required by TimedJob).
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-21
      */
     protected function run($argument): void
     {

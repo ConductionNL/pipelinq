@@ -15,6 +15,9 @@
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-15
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-16
  */
 
 declare(strict_types=1);
@@ -54,6 +57,8 @@ class ActivityService
      * @param ?string $affectedUser The affected user or null.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-15
      */
     public function publishCreated(
         string $entityType,
@@ -88,6 +93,8 @@ class ActivityService
      * @param string $objectId    The object ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-15
      */
     public function publishAssigned(
         string $entityType,
@@ -123,6 +130,8 @@ class ActivityService
      * @param ?string $affectedUser The affected user or null.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-15
      */
     public function publishStageChanged(
         string $title,
@@ -152,6 +161,8 @@ class ActivityService
      * @param ?string $affectedUser The affected user or null.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-15
      */
     public function publishStatusChanged(
         string $title,
@@ -181,6 +192,8 @@ class ActivityService
      * @param ?string $affectedUser The affected user or null.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-15
      */
     public function publishNoteAdded(
         string $entityType,
@@ -210,6 +223,8 @@ class ActivityService
      * @param ?string $affectedUser The affected user or null.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-16
      */
     public function publishDealWon(
         string $title,
@@ -238,6 +253,7 @@ class ActivityService
      * @param ?string $affectedUser The affected user or null.
      *
      * @return void
+      * @spec openspec/changes/reverse-2026-05-26-be-activity-notify/tasks.md#task-1
      */
     public function publishDealLost(
         string $title,

@@ -55,6 +55,9 @@ export default {
 	},
 	emits: ['create-lead'],
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-prospect-ui/tasks.md#task-1
+		 */
 		scoreClass() {
 			const score = this.prospect.fitScore || 0
 			if (score > 70) return 'score--high'

@@ -14,6 +14,9 @@ export const useProspectStore = defineStore('prospect', {
 		error: null,
 	}),
 	actions: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-33
+		 */
 		async fetchProspects(refresh = false) {
 			this.loading = true
 			this.error = null
@@ -50,6 +53,9 @@ export const useProspectStore = defineStore('prospect', {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-32
+		 */
 		async createLeadFromProspect(prospectData) {
 			try {
 				const response = await fetch('/apps/pipelinq/api/prospects/create-lead', {

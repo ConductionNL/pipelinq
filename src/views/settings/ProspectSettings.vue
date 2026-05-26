@@ -159,6 +159,9 @@ export default {
 		await this.fetchSettings()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-65
+		 */
 		async fetchSettings() {
 			this.loading = true
 			try {
@@ -189,6 +192,9 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-66
+		 */
 		async save() {
 			this.saving = true
 			this.message = ''

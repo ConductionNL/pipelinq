@@ -2,7 +2,8 @@
 	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
 	"version": "1.0.0",
 	"dependencies": [
-		"openregister"
+		"openregister",
+		"deck"
 	],
 	"menu": [
 		{
@@ -72,7 +73,7 @@
 			"id": "Pipeline",
 			"label": "Pipeline",
 			"icon": "icon-category-organization",
-			"route": "Pipeline",
+			"route": "Pipelines",
 			"order": 100
 		},
 		{
@@ -88,13 +89,6 @@
 			"icon": "icon-files",
 			"route": "Queues",
 			"order": 120
-		},
-		{
-			"id": "Kennisbank",
-			"label": "Kennisbank",
-			"icon": "icon-info",
-			"route": "Kennisbank",
-			"order": 130
 		},
 		{
 			"id": "MyWork",
@@ -123,7 +117,6 @@
 			"label": "Pipelines",
 			"icon": "icon-category-organization",
 			"route": "Pipelines",
-			"section": "settings",
 			"order": 200
 		},
 		{
@@ -131,7 +124,6 @@
 			"label": "Forms",
 			"icon": "icon-file",
 			"route": "Forms",
-			"section": "settings",
 			"order": 210
 		},
 		{
@@ -139,7 +131,6 @@
 			"label": "Automations",
 			"icon": "icon-play",
 			"route": "Automations",
-			"section": "settings",
 			"order": 220
 		},
 		{
@@ -252,7 +243,30 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "request",
-				"sidebar": true
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "deck",
+							"label": "Deck",
+							"component": "CnDeckTab",
+							"config": {
+								"linkedType": "deck"
+							}
+						}
+					]
+				},
+				"widgets": [
+					{
+						"id": "request-deck-kanban",
+						"component": "CnDeckCard",
+						"config": {
+							"view": "mini-kanban",
+							"linkedType": "deck"
+						}
+					}
+				]
 			}
 		},
 		{
@@ -349,7 +363,30 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "lead",
-				"sidebar": true
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "deck",
+							"label": "Deck",
+							"component": "CnDeckTab",
+							"config": {
+								"linkedType": "deck"
+							}
+						}
+					]
+				},
+				"widgets": [
+					{
+						"id": "lead-deck-kanban",
+						"component": "CnDeckCard",
+						"config": {
+							"view": "mini-kanban",
+							"linkedType": "deck"
+						}
+					}
+				]
 			}
 		},
 		{
@@ -472,14 +509,6 @@
 			}
 		},
 		{
-			"id": "Pipeline",
-			"route": "/pipeline",
-			"type": "custom",
-			"title": "Pipeline",
-			"component": "PipelineBoardView",
-			"_note": "Bespoke kanban board with drag-drop column reorder + per-card status transitions. No lib analogue."
-		},
-		{
 			"id": "Queues",
 			"route": "/queues",
 			"type": "index",
@@ -508,108 +537,6 @@
 				"register": "pipelinq",
 				"schema": "queue",
 				"sidebar": true
-			}
-		},
-		{
-			"id": "Kennisbank",
-			"route": "/kennisbank",
-			"type": "dashboard",
-			"title": "Kennisbank",
-			"config": {
-				"widgets": [
-					{
-						"id": "kennisbankCategories",
-						"title": "Categories",
-						"type": "CnTreeView"
-					},
-					{
-						"id": "kennisbankArticles",
-						"title": "Articles",
-						"type": "CnIndexPage"
-					}
-				],
-				"layout": [
-					{
-						"id": "kennisbankCategories",
-						"widgetId": "kennisbankCategories",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 3,
-						"gridHeight": 12
-					},
-					{
-						"id": "kennisbankArticles",
-						"widgetId": "kennisbankArticles",
-						"gridX": 3,
-						"gridY": 0,
-						"gridWidth": 9,
-						"gridHeight": 12
-					}
-				]
-			}
-		},
-		{
-			"id": "KennisbankNew",
-			"route": "/kennisbank/articles/new",
-			"type": "form",
-			"title": "New article",
-			"config": {
-				"register": "pipelinq",
-				"schema": "article",
-				"mode": "create",
-				"submitEndpoint": "/index.php/apps/openregister/api/objects/pipelinq/article",
-				"submitMethod": "POST",
-				"fieldWidgets": [
-					{
-						"component": "CnMarkdownEditor",
-						"id": "body"
-					}
-				]
-			}
-		},
-		{
-			"id": "KennisbankDetail",
-			"route": "/kennisbank/articles/:id",
-			"type": "wiki",
-			"title": "Article",
-			"config": {
-				"register": "pipelinq",
-				"schema": "article",
-				"titleField": "title",
-				"contentField": "body",
-				"categoryField": "category"
-			}
-		},
-		{
-			"id": "KennisbankEdit",
-			"route": "/kennisbank/articles/:id/edit",
-			"type": "form",
-			"title": "Edit article",
-			"config": {
-				"register": "pipelinq",
-				"schema": "article",
-				"mode": "edit",
-				"submitEndpoint": "/index.php/apps/openregister/api/objects/pipelinq/article/:id",
-				"submitMethod": "PUT",
-				"fieldWidgets": [
-					{
-						"component": "CnMarkdownEditor",
-						"id": "body"
-					}
-				]
-			}
-		},
-		{
-			"id": "KennisbankCategories",
-			"route": "/kennisbank/categories",
-			"type": "custom",
-			"title": "Categories",
-			"component": "CnTreeView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "articleCategory",
-				"parentField": "parent",
-				"editable": true
 			}
 		},
 		{
@@ -931,7 +858,10 @@
 			"id": "FeaturesRoadmap",
 			"route": "/features-roadmap",
 			"type": "roadmap",
-			"title": "Features & roadmap"
+			"title": "Features & roadmap",
+			"config": {
+				"documentationUrl": "https://pipelinq.conduction.nl"
+			}
 		}
 	]
 }

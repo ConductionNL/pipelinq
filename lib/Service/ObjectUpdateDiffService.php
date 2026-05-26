@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-48
  */
 
 declare(strict_types=1);
@@ -37,6 +39,8 @@ class ObjectUpdateDiffService
      * @param ObjectEventDispatcher $dispatcher The event dispatcher.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-48
      */
     public function dispatchAssigneeChangeIfNeeded(
         array $oldData,
@@ -70,6 +74,8 @@ class ObjectUpdateDiffService
      * @param ObjectEventDispatcher $dispatcher The event dispatcher.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-48
      */
     public function dispatchStageChangeIfNeeded(
         array $newData,
@@ -128,6 +134,8 @@ class ObjectUpdateDiffService
      * @param ObjectEventDispatcher $dispatcher The event dispatcher.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-48
      */
     public function dispatchStatusChangeIfNeeded(
         array $newData,

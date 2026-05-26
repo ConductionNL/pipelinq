@@ -15,6 +15,9 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-50
  */
 
 declare(strict_types=1);
@@ -55,6 +58,8 @@ class ReportingController extends Controller
      * @return JSONResponse The SLA targets.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
      */
     public function getSla(): JSONResponse
     {
@@ -72,9 +77,11 @@ class ReportingController extends Controller
     /**
      * Update SLA configuration.
      *
+     * Admin-only: no @NoAdminRequired annotation.
+     *
      * @return JSONResponse The updated SLA targets.
      *
-     * @NoAdminRequired
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
      */
     public function updateSla(): JSONResponse
     {
@@ -122,6 +129,8 @@ class ReportingController extends Controller
      * @return DataDownloadResponse|JSONResponse The CSV download or error.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-50
      */
     public function exportCsv(): DataDownloadResponse|JSONResponse
     {

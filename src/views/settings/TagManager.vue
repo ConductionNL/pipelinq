@@ -101,10 +101,16 @@ export default {
 		},
 		addLabel: {
 			type: String,
+			/**
+			 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-91
+			 */
 			default() { return t('pipelinq', '+ Add') },
 		},
 		addPlaceholder: {
 			type: String,
+			/**
+			 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-91
+			 */
 			default() { return t('pipelinq', 'Enter name...') },
 		},
 		usageCheck: {
@@ -122,6 +128,9 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-94
+		 */
 		startAdding() {
 			this.adding = true
 			this.newName = ''
@@ -130,11 +139,17 @@ export default {
 				this.$refs.addInput?.focus()
 			})
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-88
+		 */
 		cancelAdding() {
 			this.adding = false
 			this.newName = ''
 			this.error = null
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-92
+		 */
 		async saveNew() {
 			const name = this.newName.trim()
 			if (!name) return
@@ -157,6 +172,9 @@ export default {
 				this.error = e.message
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-95
+		 */
 		startEditing(tag) {
 			this.editingId = tag.id
 			this.editName = tag.name
@@ -165,11 +183,17 @@ export default {
 				this.$refs.editInput?.[0]?.focus()
 			})
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-89
+		 */
 		cancelEdit() {
 			this.editingId = null
 			this.editName = ''
 			this.error = null
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-93
+		 */
 		async saveRename(id) {
 			const name = this.editName.trim()
 			if (!name) return
@@ -192,6 +216,9 @@ export default {
 				this.error = e.message
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-90
+		 */
 		async confirmRemove(tag) {
 			let message = t('pipelinq', 'Are you sure you want to remove "{name}"?', { name: tag.name })
 

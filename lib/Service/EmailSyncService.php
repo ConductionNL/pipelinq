@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-61
  */
 
 declare(strict_types=1);
@@ -77,6 +79,7 @@ class EmailSyncService
      * @param string $email The email address.
      *
      * @return string|null The domain, or null if invalid.
+      * @spec openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-4
      */
     public function extractDomain(string $email): ?string
     {
@@ -106,6 +109,7 @@ class EmailSyncService
      * @param string $userId The user ID.
      *
      * @return bool True if sync is enabled.
+      * @spec openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-7
      */
     public function isSyncEnabled(string $userId): bool
     {
@@ -123,6 +127,7 @@ class EmailSyncService
      * @param string $userId The user ID.
      *
      * @return array<int> Array of mail account IDs.
+      * @spec openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-6
      */
     public function getSyncAccounts(string $userId): array
     {
@@ -149,6 +154,7 @@ class EmailSyncService
      * @param bool   $enabled Whether sync is enabled.
      *
      * @return void
+      * @spec openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-9
      */
     public function setSyncEnabled(string $userId, bool $enabled): void
     {
@@ -173,6 +179,7 @@ class EmailSyncService
      * @param array<int> $accounts Array of mail account IDs.
      *
      * @return void
+      * @spec openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-8
      */
     public function setSyncAccounts(string $userId, array $accounts): void
     {
@@ -190,6 +197,7 @@ class EmailSyncService
      * @param string $userId The user ID.
      *
      * @return string|null ISO 8601 timestamp of last sync, or null.
+      * @spec openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-5
      */
     public function getLastSyncTime(string $userId): ?string
     {
@@ -213,6 +221,7 @@ class EmailSyncService
      * @param string $userId The user ID.
      *
      * @return void
+      * @spec openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-10
      */
     public function updateLastSyncTime(string $userId): void
     {
@@ -239,6 +248,7 @@ class EmailSyncService
      * @param string|null $syncSource       The mail account ID.
      *
      * @return array<string, mixed> The EmailLink data.
+      * @spec openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-3
      */
     public function buildEmailLinkData(
         string $messageId,

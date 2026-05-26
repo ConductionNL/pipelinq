@@ -24,13 +24,13 @@
 			<input :value="q.text" :placeholder="t('pipelinq', 'Question text')" @input="setProp(i, 'text', $event.target.value)">
 			<div v-if="q.type === 'multiple_choice'" class="opts">
 				<div v-for="(o, oi) in q.options || []" :key="oi" class="opt-row">
-					<input :value="o" :placeholder="'Option ' + (oi+1)" @input="setOpt(i, oi, $event.target.value)">
+					<input :value="o" :placeholder="t('pipelinq', 'Option {n}', { n: oi + 1 })" @input="setOpt(i, oi, $event.target.value)">
 					<button v-if="(q.options || []).length > 2" type="button" @click="rmOpt(i, oi)">
 						x
 					</button>
 				</div>
 				<button v-if="(q.options || []).length < 20" type="button" @click="addOpt(i)">
-					+ Option
+					+ {{ t('pipelinq', 'Option') }}
 				</button>
 			</div>
 		</div>
@@ -46,13 +46,28 @@ export default {
 	props: { value: { type: Array, default: () => [] } },
 	computed: { questions() { return this.value || [] } },
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-3
+		 */
 		emit(arr) { this.$emit('input', arr) },
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-1
+		 */
 		add() { this.emit([...this.questions, { id: uuid(), type: 'rating', text: '', required: true, options: [], order: this.questions.length + 1 }]) },
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-4
+		 */
 		remove(i) { const a = [...this.questions]; a.splice(i, 1); this.emit(a) },
 		setProp(i, k, v) { const a = [...this.questions]; a[i] = { ...a[i], [k]: v }; this.emit(a) },
 		setType(i, t) { const a = [...this.questions]; a[i] = { ...a[i], type: t }; if (t === 'multiple_choice' && (!a[i].options || a[i].options.length < 2)) a[i].options = ['', '']; this.emit(a) },
 		setOpt(i, oi, v) { const a = [...this.questions]; const opts = [...(a[i].options || [])]; opts[oi] = v; a[i] = { ...a[i], options: opts }; this.emit(a) },
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-2
+		 */
 		addOpt(i) { const a = [...this.questions]; a[i] = { ...a[i], options: [...(a[i].options || []), ''] }; this.emit(a) },
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-5
+		 */
 		rmOpt(i, oi) { const a = [...this.questions]; const opts = [...(a[i].options || [])]; opts.splice(oi, 1); a[i] = { ...a[i], options: opts }; this.emit(a) },
 	},
 }

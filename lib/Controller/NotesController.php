@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-29
  */
 
 declare(strict_types=1);
@@ -60,6 +62,8 @@ class NotesController extends Controller
      * @return JSONResponse The response containing notes.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-29
      */
     public function list(string $objectType, string $objectId): JSONResponse
     {
@@ -87,6 +91,8 @@ class NotesController extends Controller
      * @return JSONResponse The response containing the created note.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-29
      */
     public function create(string $objectType, string $objectId): JSONResponse
     {
@@ -126,6 +132,8 @@ class NotesController extends Controller
      * @return JSONResponse The response.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-29
      */
     public function deleteAll(string $objectType, string $objectId): JSONResponse
     {
@@ -152,6 +160,8 @@ class NotesController extends Controller
      * @return JSONResponse The response.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-29
      */
     public function deleteSingle(int $noteId): JSONResponse
     {

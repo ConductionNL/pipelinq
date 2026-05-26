@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-36
  */
 
 declare(strict_types=1);
@@ -33,6 +35,7 @@ class KvkResultMapper
      * @param string $sbiCode The SBI code that matched.
      *
      * @return array|null The mapped result or null.
+      * @spec openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-12
      */
     public function mapResult(array $item, string $sbiCode): ?array
     {

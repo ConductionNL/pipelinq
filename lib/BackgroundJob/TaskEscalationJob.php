@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-24
  */
 
 declare(strict_types=1);
@@ -70,6 +72,8 @@ class TaskEscalationJob extends TimedJob
      * @param mixed $argument The job argument (unused).
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-24
      */
     protected function run($argument): void
     {

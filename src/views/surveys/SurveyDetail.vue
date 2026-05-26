@@ -48,13 +48,28 @@ export default {
 	props: { surveyId: { type: String, required: true } },
 	data() { return { loading: false } },
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-19
+		 */
 		store() { return useSurveyStore() },
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-20
+		 */
 		survey() { return this.store.currentSurvey },
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-18
+		 */
 		publicUrl() { return this.survey?.token ? window.location.origin + generateUrl('/apps/pipelinq/public/survey/' + this.survey.token) : '' },
 	},
 	async mounted() { this.loading = true; try { await this.store.fetchSurvey(this.surveyId); if (this.survey) await this.store.fetchResponses(this.surveyId, { _limit: 500 }) } finally { this.loading = false } },
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-16
+		 */
 		copyLink() { navigator.clipboard.writeText(this.publicUrl) },
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-17
+		 */
 		async del() { if (confirm(t('pipelinq', 'Delete this survey and all responses?'))) { await this.store.deleteSurvey(this.surveyId); this.$router.push({ name: 'Surveys' }) } },
 	},
 }

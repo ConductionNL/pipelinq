@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-64
  */
 
 declare(strict_types=1);
@@ -53,6 +55,7 @@ class ConfigFileLoaderService
      * @return array The parsed configuration data.
      *
      * @throws RuntimeException If the file cannot be read or parsed.
+      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-10
      */
     public function loadConfigurationFile(): array
     {
@@ -82,6 +85,7 @@ class ConfigFileLoaderService
      * @param array $data The configuration data.
      *
      * @return array The data with sourceType ensured.
+      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-9
      */
     public function ensureSourceType(array $data): array
     {

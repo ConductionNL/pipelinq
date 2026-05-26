@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-10
  */
 
 declare(strict_types=1);
@@ -53,6 +55,8 @@ class RequestChannelController extends Controller
      * @return JSONResponse The response containing tags.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-10
      */
     public function index(): JSONResponse
     {
@@ -68,6 +72,8 @@ class RequestChannelController extends Controller
      * Create a new request channel tag.
      *
      * @return JSONResponse The response containing the created tag.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-10
      */
     public function create(): JSONResponse
     {
@@ -90,6 +96,8 @@ class RequestChannelController extends Controller
      * @param string $id The tag ID.
      *
      * @return JSONResponse The response containing the renamed tag.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-10
      */
     public function update(string $id): JSONResponse
     {
@@ -113,6 +121,8 @@ class RequestChannelController extends Controller
      * @param string $id The tag ID.
      *
      * @return JSONResponse The response.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-10
      */
     public function destroy(string $id): JSONResponse
     {

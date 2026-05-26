@@ -113,9 +113,15 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-59
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-62
+		 */
 		sortedCategories() {
 			return [...this.categories].sort((a, b) => {
 				const orderA = a.order ?? 999
@@ -129,6 +135,9 @@ export default {
 		await this.fetchCategories()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-58
+		 */
 		async fetchCategories() {
 			this.loading = true
 			try {
@@ -140,6 +149,9 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-63
+		 */
 		startAdding() {
 			this.adding = true
 			this.addForm = { name: '', description: '' }
@@ -148,11 +160,17 @@ export default {
 				this.$refs.addInput?.focus()
 			})
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-55
+		 */
 		cancelAdding() {
 			this.adding = false
 			this.addForm = { name: '', description: '' }
 			this.error = null
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-61
+		 */
 		async saveNew() {
 			const name = this.addForm.name.trim()
 			if (!name) return
@@ -171,6 +189,9 @@ export default {
 				this.error = e.message || t('pipelinq', 'Failed to create category')
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-64
+		 */
 		startEditing(cat) {
 			this.editingId = cat.id
 			this.editForm = {
@@ -182,11 +203,17 @@ export default {
 				this.$refs.editInput?.[0]?.focus()
 			})
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-56
+		 */
 		cancelEdit() {
 			this.editingId = null
 			this.editForm = { name: '', description: '' }
 			this.error = null
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-60
+		 */
 		async saveEdit(id) {
 			const name = this.editForm.name.trim()
 			if (!name) return
@@ -205,6 +232,9 @@ export default {
 				this.error = e.message || t('pipelinq', 'Failed to update category')
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-57
+		 */
 		async confirmRemove(cat) {
 			const message = t('pipelinq', 'Are you sure you want to remove "{name}"?', { name: cat.name })
 			if (confirm(message)) {

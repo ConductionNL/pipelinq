@@ -72,6 +72,7 @@ class ProspectDiscoveryService
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag)  — $refresh is a simple cache bypass toggle
      * @SuppressWarnings(PHPMD.CyclomaticComplexity) — orchestration method with multiple sources
      * @SuppressWarnings(PHPMD.NPathComplexity)      — orchestration method with multiple sources
+      * @spec openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-15
      */
     public function discover(bool $refresh=false): array
     {
@@ -165,6 +166,7 @@ class ProspectDiscoveryService
      * @param array $prospectData The prospect data.
      *
      * @return array The created client and lead IDs.
+      * @spec openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-14
      */
     public function createLeadFromProspect(array $prospectData): array
     {
