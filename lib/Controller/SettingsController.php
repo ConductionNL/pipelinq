@@ -28,6 +28,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IL10N;
@@ -202,10 +203,13 @@ class SettingsController extends Controller
      */
     public function getUserSettings(): JSONResponse
     {
-        $userId = $this->userSession->getUser()->getUID();
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
+        }
 
         return new JSONResponse(
-            data: $this->settingsService->getUserSettings(userId: $userId)
+            data: $this->settingsService->getUserSettings(userId: $user->getUID())
         );
     }//end getUserSettings()
 
@@ -219,11 +223,15 @@ class SettingsController extends Controller
      */
     public function updateUserSettings(): JSONResponse
     {
-        $userId = $this->userSession->getUser()->getUID();
-        $data   = $this->request->getParams();
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
+        }
+
+        $data = $this->request->getParams();
 
         return new JSONResponse(
-            data: $this->settingsService->updateUserSettings(userId: $userId, data: $data)
+            data: $this->settingsService->updateUserSettings(userId: $user->getUID(), data: $data)
         );
     }//end updateUserSettings()
 }//end class
