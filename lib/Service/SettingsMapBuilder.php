@@ -41,7 +41,7 @@ class SettingsMapBuilder
      * @param array $schemas The imported schemas.
      *
      * @return array The slug-to-ID map.
-      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-12
+     * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-12
      */
     public function buildSchemaSlugMap(array $schemas): array
     {
@@ -62,7 +62,7 @@ class SettingsMapBuilder
      * @param array $registers The imported registers.
      *
      * @return mixed The register ID or null.
-      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-14
+     * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-14
      */
     public function findRegisterIdBySlug(array $registers): mixed
     {
@@ -84,7 +84,7 @@ class SettingsMapBuilder
      * @param array $views The imported views.
      *
      * @return ?string The view ID or null.
-      * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-13
+     * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-13
      */
     public function findDefaultViewId(array $views): ?string
     {

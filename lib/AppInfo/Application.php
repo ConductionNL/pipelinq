@@ -117,9 +117,9 @@ class Application extends App implements IBootstrap
         // Pull IInitialState from the per-app container so the serialized key
         // is correctly namespaced as `initial-state-pipelinq-<key>`.
         try {
-            $initialState  = $this->getContainer()->get(IInitialState::class);
-            $featuresPath  = __DIR__.'/../../docs/features.json';
-            $features      = [];
+            $initialState = $this->getContainer()->get(IInitialState::class);
+            $featuresPath = __DIR__.'/../../docs/features.json';
+            $features     = [];
             if (is_file($featuresPath) === true) {
                 $decoded = json_decode((string) file_get_contents($featuresPath), associative: true);
                 if (is_array($decoded) === true) {
@@ -129,7 +129,7 @@ class Application extends App implements IBootstrap
 
             $initialState->provideInitialState('features_roadmap_features', $features);
         } catch (\Exception $e) {
-            // Initial state unavailable — Features tab will fall back to []
+            // Initial state unavailable — Features tab will fall back to [].
         }
 
         try {

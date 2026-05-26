@@ -54,7 +54,7 @@ class AutomationController extends Controller
      * @return JSONResponse The automation metadata.
      *
      * @NoAdminRequired
-      * @spec openspec/changes/reverse-2026-05-26-be-automation/tasks.md#task-1
+     * @spec            openspec/changes/reverse-2026-05-26-be-automation/tasks.md#task-1
      */
     public function metadata(): JSONResponse
     {
@@ -72,7 +72,7 @@ class AutomationController extends Controller
      * @return JSONResponse The test result.
      *
      * @NoAdminRequired
-      * @spec openspec/changes/reverse-2026-05-26-be-automation/tasks.md#task-2
+     * @spec            openspec/changes/reverse-2026-05-26-be-automation/tasks.md#task-2
      */
     public function test(): JSONResponse
     {
