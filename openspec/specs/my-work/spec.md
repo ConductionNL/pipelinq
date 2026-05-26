@@ -27,16 +27,19 @@ The system MUST provide a "My Work" view showing all leads and requests assigned
 - AND lead items MUST also show pipeline value (if set)
 
 #### Scenario: Only open items by default
+@e2e exclude requires assigned items as test data
 - WHEN the user views My Work
 - THEN only leads in non-closed stages and requests with non-terminal statuses MUST be shown
 - AND closed/completed/rejected/converted items MUST NOT appear by default
 
 #### Scenario: Toggle to show completed items
+@e2e exclude requires completed assigned items
 - WHEN the user enables the "Show completed" toggle
 - THEN completed and closed items MUST also be displayed
 - AND completed items MUST be visually distinct (muted color or completed badge)
 
 #### Scenario: Item count display
+@e2e exclude requires assigned items
 - WHEN the user views My Work
 - THEN the header MUST display the total count and breakdown (e.g., "Leads (5) · Requests (3) — 8 items total")
 
@@ -51,10 +54,12 @@ The system MUST provide a "My Work" view showing all leads and requests assigned
 Within each temporal group, items MUST be sorted by priority first, then by due date ascending.
 
 #### Scenario: Default sort order within groups
+@e2e exclude requires multiple assigned items
 - WHEN the user views My Work
 - THEN within each group, items MUST be sorted by priority (urgent > high > normal > low), then by due date ascending
 
 #### Scenario: Items without due date positioning
+@e2e exclude requires items without due dates
 - WHEN items exist without a due date
 - THEN they MUST be grouped in the "No Due Date" section
 
@@ -65,26 +70,32 @@ Within each temporal group, items MUST be sorted by priority first, then by due 
 Items MUST be organized into four temporal groups displayed top to bottom: Overdue, Due This Week, Upcoming, No Due Date. Empty groups MUST be hidden.
 
 #### Scenario: Overdue group
+@e2e exclude requires items with past due dates
 - WHEN a lead has expectedCloseDate in the past
 - THEN it MUST appear in the "Overdue" group with "N days overdue" displayed
 
 #### Scenario: Due This Week group
+@e2e exclude requires items due this week
 - WHEN a lead has expectedCloseDate within the current calendar week (today through Sunday)
 - THEN it MUST appear in the "Due This Week" group
 
 #### Scenario: Upcoming group
+@e2e exclude requires future-dated items
 - WHEN a lead has expectedCloseDate after the current week
 - THEN it MUST appear in the "Upcoming" group
 
 #### Scenario: No Due Date group
+@e2e exclude requires items without due dates
 - WHEN an item has no due date set
 - THEN it MUST appear in the "No Due Date" group (last group)
 
 #### Scenario: Section item counts
+@e2e exclude requires assigned items
 - WHEN a group contains items
 - THEN the group header MUST display its item count (e.g., "Overdue (2)")
 
 #### Scenario: Empty group behavior
+@e2e exclude requires controlled data state
 - WHEN a group contains no items
 - THEN it MUST be hidden (not shown as empty section)
 
@@ -101,6 +112,7 @@ The system MUST allow filtering by entity type: All (default), Leads, Requests.
 - AND grouping MUST be preserved
 
 #### Scenario: Filter with empty result
+@e2e exclude requires data and filter interaction
 - WHEN filtering produces no items
 - THEN the system MUST display an empty state message
 
@@ -111,10 +123,12 @@ The system MUST allow filtering by entity type: All (default), Leads, Requests.
 Overdue items MUST be visually distinct with red indicators and "N days overdue" text.
 
 #### Scenario: Overdue visual treatment
+@e2e exclude requires overdue items
 - WHEN an item is overdue
 - THEN it MUST display a red visual indicator and "N days overdue" in red text
 
 #### Scenario: Due today is not overdue
+@e2e exclude requires item due today
 - WHEN an item is due today
 - THEN it MUST appear in "Due This Week" (not Overdue)
 - AND it SHOULD show "Due today" as a warning indicator
@@ -126,6 +140,7 @@ Overdue items MUST be visually distinct with red indicators and "N days overdue"
 Each item MUST be clickable, navigating to the full detail view.
 
 #### Scenario: Click item to navigate
+@e2e exclude requires assigned items
 - WHEN the user clicks a lead or request item
 - THEN the system MUST navigate to the respective detail view
 
@@ -136,6 +151,7 @@ Each item MUST be clickable, navigating to the full detail view.
 The system SHOULD include items from Procest (cases and tasks assigned to the current user) in the My Work view.
 
 #### Scenario: Include Procest tasks
+@e2e exclude V1 Procest integration; not yet implemented
 - GIVEN the current user has 3 leads in Pipelinq and 2 tasks in Procest assigned to them
 - WHEN they view My Work with cross-app integration enabled
 - THEN all 5 items MUST appear in a unified list
@@ -143,12 +159,14 @@ The system SHOULD include items from Procest (cases and tasks assigned to the cu
 - AND Procest items MUST follow the same sorting and grouping rules
 
 #### Scenario: Filter includes Procest entity types
+@e2e exclude V1 Procest integration; not yet implemented
 - GIVEN the cross-app workload is enabled
 - WHEN the user views the filter options
 - THEN the filter MUST include additional options: "Tasks" and/or "Cases"
 - AND "All" MUST include Procest items
 
 #### Scenario: Procest unavailable gracefully
+@e2e exclude backend graceful degradation; covered by PHPUnit
 - GIVEN Procest is not installed or not accessible
 - WHEN the user views My Work
 - THEN the system MUST display only Pipelinq items (leads and requests)
@@ -162,10 +180,12 @@ The system SHOULD include items from Procest (cases and tasks assigned to the cu
 Each item MUST follow a consistent card layout showing entity badge, title, stage/status, pipeline, value (leads), due date, and priority.
 
 #### Scenario: Lead card in My Work
+@e2e exclude requires assigned lead data
 - WHEN a lead is displayed
 - THEN it MUST show [LEAD] badge, title, stage, pipeline name, value, expected close date, and priority badge
 
 #### Scenario: Request card in My Work
+@e2e exclude requires assigned request data
 - WHEN a request is displayed
 - THEN it MUST show [REQ] badge, title, status, due date, and priority badge
 
@@ -176,28 +196,33 @@ Each item MUST follow a consistent card layout showing entity badge, title, stag
 The My Work view SHALL include a "My Queues" tab showing items from queues the current user is assigned to, providing a queue-centric view of incoming work alongside the existing time-based grouping.
 
 #### Scenario: View items from assigned queues
+@e2e exclude Enterprise queue feature
 - WHEN the current user is assigned to queues "Vergunningen" and "Klachten"
 - THEN the My Work view SHALL display a "My Queues" tab/section
 - THEN the section SHALL show items grouped by queue name
 - THEN within each queue group, items SHALL be sorted by priority then age
 
 #### Scenario: Queue section shows unassigned items
+@e2e exclude Enterprise queue feature
 - WHEN queue "Vergunningen" contains 5 items (3 unassigned, 2 assigned to others)
 - THEN the "My Queues" section SHALL show all 5 items
 - THEN unassigned items SHALL be visually distinguished (e.g., "Unassigned" badge)
 - THEN items assigned to others SHALL show the assignee name
 
 #### Scenario: Pick from queue in My Work
+@e2e exclude Enterprise queue feature
 - WHEN an agent clicks "Pick" on an unassigned item in the My Queues section
 - THEN the item's assignee SHALL be set to the current user
 - THEN the item SHALL move to the "My Items" section (existing temporal grouping)
 
 #### Scenario: No queue assignments
+@e2e exclude Enterprise queue feature
 - WHEN the current user is not assigned to any queues
 - THEN the "My Queues" tab/section SHALL display "You are not assigned to any queues"
 - THEN the existing time-based My Work view SHALL still function normally
 
 #### Scenario: Toggle between views
+@e2e exclude V1 view toggle; not yet implemented
 - WHEN the My Work view is displayed
 - THEN the user SHALL be able to toggle between "My Items" (existing temporal view) and "My Queues" (queue-based view)
 - THEN the default view SHALL be "My Items"
@@ -289,6 +314,7 @@ The design follows the wireframe in DESIGN-REFERENCES.md section 3.5.
 The system MUST provide a "My Work" view showing all leads, requests, and tasks assigned to the current user. Only open items are shown by default, with a toggle to include completed items. Tasks assigned to Nextcloud groups the user belongs to MUST also appear.
 
 #### Scenario: View assigned leads, requests, and tasks
+@e2e exclude V1 task cards; not yet implemented
 - WHEN the current user navigates to "My Work"
 - THEN the system MUST display all open leads, requests, and tasks assigned to them
 - AND tasks assigned to Nextcloud groups the user belongs to MUST also be included
@@ -297,16 +323,19 @@ The system MUST provide a "My Work" view showing all leads, requests, and tasks 
 - AND task items MUST show: type sub-badge (Terugbelverzoek/Opvolgtaak/Informatievraag), deadline, and assignee
 
 #### Scenario: Only open items by default
+@e2e exclude requires assigned items as test data
 - WHEN the user views My Work
 - THEN only leads in non-closed stages, requests with non-terminal statuses, and tasks with status open or in_behandeling MUST be shown
 - AND closed/completed/rejected/converted items and tasks with status afgerond or verlopen MUST NOT appear by default
 
 #### Scenario: Toggle to show completed items
+@e2e exclude requires completed assigned items
 - WHEN the user enables the "Show completed" toggle
 - THEN completed and closed items MUST also be displayed, including tasks with status afgerond and verlopen
 - AND completed items MUST be visually distinct (muted color or completed badge)
 
 #### Scenario: Item count display
+@e2e exclude requires assigned items
 - WHEN the user views My Work
 - THEN the header MUST display the total count and breakdown (e.g., "Leads (5) · Requests (3) · Tasks (4) — 12 items total")
 
@@ -321,10 +350,12 @@ The system MUST provide a "My Work" view showing all leads, requests, and tasks 
 Within each temporal group, items MUST be sorted by priority first, then by due date ascending.
 
 #### Scenario: Default sort order within groups
+@e2e exclude requires multiple assigned items
 - WHEN the user views My Work
 - THEN within each group, items MUST be sorted by priority (urgent > high > normal > low), then by due date ascending
 
 #### Scenario: Items without due date positioning
+@e2e exclude requires items without due dates
 - WHEN items exist without a due date
 - THEN they MUST be grouped in the "No Due Date" section
 
@@ -335,26 +366,32 @@ Within each temporal group, items MUST be sorted by priority first, then by due 
 Items MUST be organized into four temporal groups displayed top to bottom: Overdue, Due This Week, Upcoming, No Due Date. Empty groups MUST be hidden.
 
 #### Scenario: Overdue group
+@e2e exclude requires items with past due dates
 - WHEN a lead has expectedCloseDate in the past
 - THEN it MUST appear in the "Overdue" group with "N days overdue" displayed
 
 #### Scenario: Due This Week group
+@e2e exclude requires items due this week
 - WHEN a lead has expectedCloseDate within the current calendar week (today through Sunday)
 - THEN it MUST appear in the "Due This Week" group
 
 #### Scenario: Upcoming group
+@e2e exclude requires future-dated items
 - WHEN a lead has expectedCloseDate after the current week
 - THEN it MUST appear in the "Upcoming" group
 
 #### Scenario: No Due Date group
+@e2e exclude requires items without due dates
 - WHEN an item has no due date set
 - THEN it MUST appear in the "No Due Date" group (last group)
 
 #### Scenario: Section item counts
+@e2e exclude requires assigned items
 - WHEN a group contains items
 - THEN the group header MUST display its item count (e.g., "Overdue (2)")
 
 #### Scenario: Empty group behavior
+@e2e exclude requires controlled data state
 - WHEN a group contains no items
 - THEN it MUST be hidden (not shown as empty section)
 
@@ -371,6 +408,7 @@ The system MUST allow filtering by entity type: All (default), Leads, Requests, 
 - AND grouping MUST be preserved
 
 #### Scenario: Filter with empty result
+@e2e exclude requires data and filter interaction
 - WHEN filtering produces no items
 - THEN the system MUST display an empty state message
 
@@ -381,10 +419,12 @@ The system MUST allow filtering by entity type: All (default), Leads, Requests, 
 Overdue items MUST be visually distinct with red indicators and "N days overdue" text.
 
 #### Scenario: Overdue visual treatment
+@e2e exclude requires overdue items
 - WHEN an item is overdue
 - THEN it MUST display a red visual indicator and "N days overdue" in red text
 
 #### Scenario: Due today is not overdue
+@e2e exclude requires item due today
 - WHEN an item is due today
 - THEN it MUST appear in "Due This Week" (not Overdue)
 - AND it SHOULD show "Due today" as a warning indicator
@@ -396,6 +436,7 @@ Overdue items MUST be visually distinct with red indicators and "N days overdue"
 Each item MUST be clickable, navigating to the full detail view.
 
 #### Scenario: Click item to navigate
+@e2e exclude requires assigned items
 - WHEN the user clicks a lead or request item
 - THEN the system MUST navigate to the respective detail view
 
@@ -406,6 +447,7 @@ Each item MUST be clickable, navigating to the full detail view.
 The system MUST include items from Procest (cases and tasks assigned to the current user) in the My Work view.
 
 #### Scenario: Include Procest tasks
+@e2e exclude V1 Procest integration; not yet implemented
 - GIVEN the current user has 3 leads in Pipelinq and 2 tasks in Procest assigned to them
 - WHEN they view My Work with cross-app integration enabled
 - THEN all 5 items MUST appear in a unified list
@@ -413,12 +455,14 @@ The system MUST include items from Procest (cases and tasks assigned to the curr
 - AND Procest items MUST follow the same sorting and grouping rules
 
 #### Scenario: Filter includes Procest entity types
+@e2e exclude V1 Procest integration; not yet implemented
 - GIVEN the cross-app workload is enabled
 - WHEN the user views the filter options
 - THEN the filter MUST include additional options: "Tasks" and/or "Cases"
 - AND "All" MUST include Procest items
 
 #### Scenario: Procest unavailable gracefully
+@e2e exclude backend graceful degradation; covered by PHPUnit
 - GIVEN Procest is not installed or not accessible
 - WHEN the user views My Work
 - THEN the system MUST display only Pipelinq items (leads and requests)
@@ -432,14 +476,17 @@ The system MUST include items from Procest (cases and tasks assigned to the curr
 Each item MUST follow a consistent card layout showing entity badge, title, stage/status, pipeline, value (leads), due date, and priority.
 
 #### Scenario: Lead card in My Work
+@e2e exclude requires assigned lead data
 - WHEN a lead is displayed
 - THEN it MUST show [LEAD] badge, title, stage, pipeline name, value, expected close date, and priority badge
 
 #### Scenario: Request card in My Work
+@e2e exclude requires assigned request data
 - WHEN a request is displayed
 - THEN it MUST show [REQ] badge, title, status, due date, and priority badge
 
 #### Scenario: Task card in My Work
+@e2e exclude V1 task cards; not yet implemented
 - WHEN a task is displayed
 - THEN it MUST show [TASK] badge with type sub-label (Terugbelverzoek/Opvolgtaak/Informatievraag), subject, status, deadline, priority badge, and assignee name
 - AND if the task is a terugbelverzoek with a preferred time slot, it MUST show the time slot
@@ -464,12 +511,14 @@ The My Work view MUST display a row of key performance indicator (KPI) summary t
 - AND each tile MUST be clickable, scrolling to or filtering the relevant items
 
 #### Scenario: KPI tiles update with filter
+@e2e exclude requires data and filter interaction
 - GIVEN the user selects the "Leads" entity type filter
 - WHEN the filter is applied
 - THEN the "Open Requests" tile MUST show 0 or be visually muted
 - AND the "Pipeline Value" tile MUST reflect only filtered leads
 
 #### Scenario: KPI tiles with zero values
+@e2e exclude depends on test data state
 - GIVEN the user has no overdue items
 - WHEN the view loads
 - THEN the "Overdue" tile MUST display 0 with default (non-error) styling
@@ -487,6 +536,7 @@ The My Work view MUST provide quick action buttons that allow the user to create
 - AND each button MUST open the respective create dialog as a modal overlay
 
 #### Scenario: Create lead via quick action
+@e2e exclude requires navigation to lead create form with data
 - GIVEN the user clicks the "New Lead" quick action button
 - WHEN the lead create dialog opens
 - THEN the assignee field MUST be pre-filled with the current user
@@ -494,12 +544,14 @@ The My Work view MUST provide quick action buttons that allow the user to create
 - AND the user MUST be navigated to the new lead's detail view
 
 #### Scenario: Create request via quick action
+@e2e exclude requires navigation to request create form
 - GIVEN the user clicks the "New Request" quick action button
 - WHEN the request create dialog opens
 - THEN the assignee field MUST be pre-filled with the current user
 - AND upon successful creation, the My Work list MUST refresh to include the new request
 
 #### Scenario: Create contact via quick action
+@e2e exclude requires navigation to contact create form
 - GIVEN the user clicks the "New Contact" quick action button
 - WHEN the contact create dialog opens and the user saves a contact
 - THEN the user MUST be navigated to the new contact's detail view
@@ -512,23 +564,27 @@ The My Work view MUST provide quick action buttons that allow the user to create
 The My Work view MUST include a collapsible recent activity feed showing the latest changes to items assigned to the current user, providing context on what has happened since their last visit.
 
 #### Scenario: Display recent activity
+@e2e exclude requires activity data; covered by activity-timeline spec
 - GIVEN the user has leads and requests assigned to them
 - WHEN the user views My Work
 - THEN the system MUST display a "Recent Activity" section showing the 10 most recently modified items assigned to the user
 - AND each activity entry MUST show: entity type badge, item title, a relative timestamp (e.g., "2h ago", "3d ago"), and the type of change if available
 
 #### Scenario: Activity entry navigation
+@e2e exclude requires activity data
 - GIVEN the recent activity feed is displayed
 - WHEN the user clicks on an activity entry
 - THEN the system MUST navigate to the respective item's detail view
 
 #### Scenario: Collapse activity feed
+@e2e exclude requires activity data
 - GIVEN the recent activity section is displayed
 - WHEN the user clicks the section header to collapse it
 - THEN the activity feed MUST collapse, showing only the header
 - AND the collapsed/expanded state MUST persist across page reloads via local storage
 
 #### Scenario: Empty activity feed
+@e2e exclude depends on data state
 - GIVEN the user has no recently modified items
 - WHEN the user views the Recent Activity section
 - THEN the system MUST display "No recent activity on your items"
@@ -540,6 +596,7 @@ The My Work view MUST include a collapsible recent activity feed showing the lat
 The My Work view MUST display upcoming follow-up actions scheduled for the current user, drawn from lead follow-up dates and request scheduled callback dates.
 
 #### Scenario: Display follow-up reminders
+@e2e exclude V1 follow-up feature; not yet implemented
 - GIVEN the user has leads with a followUpDate field set to today or a future date
 - WHEN the user views My Work
 - THEN the system MUST display a "Follow-ups" section listing items with upcoming follow-up dates
@@ -547,16 +604,19 @@ The My Work view MUST display upcoming follow-up actions scheduled for the curre
 - AND each entry MUST show: entity badge, item title, follow-up date, and a relative indicator ("Today", "Tomorrow", "In 3 days")
 
 #### Scenario: Follow-up due today highlighted
+@e2e exclude V1 follow-up feature; not yet implemented
 - GIVEN a lead has a followUpDate set to today
 - WHEN the user views the Follow-ups section
 - THEN the item MUST be highlighted with a warning indicator and the label "Follow-up today"
 
 #### Scenario: Overdue follow-ups
+@e2e exclude V1 follow-up feature; not yet implemented
 - GIVEN a lead has a followUpDate in the past that has not been marked complete
 - WHEN the user views the Follow-ups section
 - THEN the item MUST appear at the top of the list with a red "Overdue follow-up" indicator
 
 #### Scenario: No follow-ups scheduled
+@e2e exclude V1 follow-up feature; not yet implemented
 - GIVEN the user has no items with upcoming follow-up dates
 - WHEN the user views My Work
 - THEN the Follow-ups section MUST be hidden (not shown as empty)
@@ -568,24 +628,28 @@ The My Work view MUST display upcoming follow-up actions scheduled for the curre
 The My Work view SHOULD display upcoming meetings and calendar events from the user's Nextcloud Calendar that are linked to CRM entities (clients, contacts, leads).
 
 #### Scenario: Display upcoming meetings
+@e2e exclude V1 calendar integration; not yet implemented
 - GIVEN the user has calendar events in the next 7 days that contain a link to a Pipelinq entity in the description or location field
 - WHEN the user views My Work
 - THEN the system MUST display a "Upcoming Meetings" section showing these calendar events
 - AND each entry MUST show: meeting title, date/time, and the linked entity name (if resolvable)
 
 #### Scenario: Calendar integration via Nextcloud CalDAV
+@e2e exclude V1 calendar integration; not yet implemented
 - GIVEN the Nextcloud Calendar app is installed and the user has at least one calendar
 - WHEN the system fetches upcoming meetings
 - THEN the system MUST use the Nextcloud CalDAV API (OCP\Calendar\IManager) to retrieve events
 - AND the system MUST only show events from the current user's calendars
 
 #### Scenario: Calendar app not available
+@e2e exclude backend graceful degradation
 - GIVEN the Nextcloud Calendar app is not installed
 - WHEN the user views My Work
 - THEN the Upcoming Meetings section MUST be hidden
 - AND no error MUST be displayed
 
 #### Scenario: No upcoming meetings
+@e2e exclude V1 calendar integration; not yet implemented
 - GIVEN the user has no linked calendar events in the next 7 days
 - WHEN the user views My Work
 - THEN the Upcoming Meetings section MUST be hidden
@@ -597,23 +661,27 @@ The My Work view SHOULD display upcoming meetings and calendar events from the u
 The My Work view MUST display a summary of unread Pipelinq notifications, providing quick access to assignment changes, stage/status updates, and note additions.
 
 #### Scenario: Display notification count
+@e2e exclude requires Nextcloud notification data
 - GIVEN the user has unread Pipelinq notifications (assignments, stage changes, notes)
 - WHEN the user views My Work
 - THEN the header MUST display a notification badge showing the count of unread Pipelinq notifications
 - AND clicking the badge MUST expand a notification dropdown or navigate to the Nextcloud notifications panel
 
 #### Scenario: Notification types displayed
+@e2e exclude requires notification data
 - GIVEN the user has unread notifications
 - WHEN the notification dropdown is expanded
 - THEN each notification MUST show: notification type icon (assignment, stage change, note), summary text, relative timestamp, and a link to the related item
 
 #### Scenario: Mark notification as read
+@e2e exclude requires existing notifications
 - GIVEN the notification dropdown is displayed with unread notifications
 - WHEN the user clicks on a notification
 - THEN the system MUST mark it as read via the Nextcloud Notifications API (OCP\Notification\IManager)
 - AND the notification count badge MUST update
 
 #### Scenario: No unread notifications
+@e2e exclude depends on notification state
 - GIVEN the user has no unread Pipelinq notifications
 - WHEN the user views My Work
 - THEN the notification badge MUST NOT be displayed
@@ -625,24 +693,28 @@ The My Work view MUST display a summary of unread Pipelinq notifications, provid
 The system MUST allow users to save and recall filter combinations for the My Work view, enabling quick access to frequently used workload slices.
 
 #### Scenario: Save current filter as preset
+@e2e exclude Enterprise user preference feature
 - GIVEN the user has applied a combination of filters (entity type, show completed, priority filter)
 - WHEN the user clicks "Save Filter" and enters a name (e.g., "Urgent Leads Only")
 - THEN the system MUST persist the filter configuration as a named preset in user preferences
 - AND the preset MUST appear in a "Saved Filters" dropdown in the controls area
 
 #### Scenario: Apply saved filter
+@e2e exclude Enterprise user preference feature
 - GIVEN the user has saved filters
 - WHEN the user selects a saved filter from the dropdown
 - THEN the system MUST apply all filter settings from the preset
 - AND the item list and KPI tiles MUST update to reflect the filter
 
 #### Scenario: Delete saved filter
+@e2e exclude Enterprise user preference feature
 - GIVEN the user has saved filters
 - WHEN the user clicks the delete icon next to a saved filter
 - THEN the system MUST remove the preset after confirmation
 - AND the dropdown MUST update to reflect the removal
 
 #### Scenario: Saved filters persist across sessions
+@e2e exclude Enterprise persistence feature
 - GIVEN the user has saved filters
 - WHEN the user logs out and logs back in
 - THEN all saved filters MUST still be available
@@ -655,18 +727,21 @@ The system MUST allow users to save and recall filter combinations for the My Wo
 The My Work view MUST allow users to customize which sections are visible and their display order, enabling personalization of the workspace.
 
 #### Scenario: Toggle section visibility
+@e2e exclude Enterprise customization feature
 - GIVEN the user is on My Work and opens the layout customization panel (gear icon)
 - WHEN the user toggles off the "Recent Activity" section
 - THEN the Recent Activity section MUST be hidden from the view
 - AND the preference MUST persist across page reloads
 
 #### Scenario: Reorder sections
+@e2e exclude Enterprise customization feature
 - GIVEN the user opens the layout customization panel
 - WHEN the user drags the "Follow-ups" section above the "Workload Groups" section
 - THEN the view MUST re-render with Follow-ups appearing before the workload groups
 - AND the order MUST persist via user settings
 
 #### Scenario: Reset to default layout
+@e2e exclude Enterprise customization feature
 - GIVEN the user has customized the layout
 - WHEN the user clicks "Reset to Default"
 - THEN the system MUST restore the original section order and visibility
@@ -679,6 +754,7 @@ The My Work view MUST allow users to customize which sections are visible and th
 The My Work view MUST be fully usable on mobile devices with screen widths down to 320px, following progressive disclosure patterns to optimize for small screens.
 
 #### Scenario: Mobile card layout
+@e2e exclude mobile viewport; not in CI scope
 - GIVEN the user accesses My Work on a device with viewport width below 768px
 - WHEN the view renders
 - THEN work cards MUST stack vertically at full width
@@ -686,18 +762,21 @@ The My Work view MUST be fully usable on mobile devices with screen widths down 
 - AND the filter buttons MUST be accessible via a collapsible filter bar or dropdown
 
 #### Scenario: Touch-friendly interaction targets
+@e2e exclude mobile viewport; not in CI scope
 - GIVEN the user is on a touch device
 - WHEN interacting with My Work
 - THEN all interactive elements (cards, buttons, toggles) MUST have a minimum touch target of 44x44px (WCAG 2.5.5)
 - AND cards MUST have sufficient padding for reliable tap targets
 
 #### Scenario: Mobile quick actions
+@e2e exclude mobile viewport; not in CI scope
 - GIVEN the user accesses My Work on a mobile device
 - WHEN the view renders
 - THEN the quick action buttons (V1) MUST collapse into a floating action button (FAB) with expandable options
 - AND the FAB MUST be positioned in the bottom-right corner for thumb accessibility
 
 #### Scenario: Narrow viewport group headers
+@e2e exclude mobile viewport; not in CI scope
 - GIVEN the user views My Work on a viewport below 480px
 - WHEN temporal groups are displayed
 - THEN group headers MUST remain sticky at the top of the scroll container
@@ -710,6 +789,7 @@ The My Work view MUST be fully usable on mobile devices with screen widths down 
 The My Work view MUST adapt its content and available actions based on the user's role, distinguishing between KCC agents, team managers, and administrators.
 
 #### Scenario: KCC agent view (default)
+@e2e exclude Enterprise role-based views; not yet implemented
 - GIVEN the user has no special Pipelinq admin or manager role
 - WHEN they view My Work
 - THEN the system MUST show only items assigned directly to them
@@ -717,6 +797,7 @@ The My Work view MUST adapt its content and available actions based on the user'
 - AND the quick action buttons MUST be limited to "New Request" and "New Contact" (no "New Lead" unless the user has lead access)
 
 #### Scenario: Team manager view
+@e2e exclude Enterprise role-based views; not yet implemented
 - GIVEN the user has a Nextcloud group role designated as team manager (configurable in Pipelinq settings)
 - WHEN they view My Work
 - THEN the system MUST show a "Team" toggle in the header that switches between "My Items" and "Team Items"
@@ -725,12 +806,14 @@ The My Work view MUST adapt its content and available actions based on the user'
 - AND a "Team Members" mini-widget MUST show each team member's workload count
 
 #### Scenario: Manager team member drill-down
+@e2e exclude Enterprise role-based views; not yet implemented
 - GIVEN the manager has selected "Team Items" view
 - WHEN the manager clicks on a team member in the Team Members widget
 - THEN the workload list MUST filter to show only that team member's assigned items
 - AND a breadcrumb or back button MUST allow returning to the full team view
 
 #### Scenario: Administrator view
+@e2e exclude Enterprise role-based views; not yet implemented
 - GIVEN the user is a Nextcloud admin or has the Pipelinq admin group
 - WHEN they view My Work
 - THEN the system MUST show an "Organization" toggle in addition to "My Items" and "Team"
@@ -744,6 +827,7 @@ The My Work view MUST adapt its content and available actions based on the user'
 The My Work view MUST keep data current through periodic auto-refresh, ensuring the user always sees their latest workload state.
 
 #### Scenario: Periodic auto-refresh
+@e2e exclude timer-based background fetch; not UI-observable
 - GIVEN the user has My Work open
 - WHEN 5 minutes have elapsed since the last data fetch
 - THEN the system MUST automatically re-fetch all workload data in the background
@@ -757,6 +841,7 @@ The My Work view MUST keep data current through periodic auto-refresh, ensuring 
 - AND the refresh button MUST show a spinning animation during the fetch
 
 #### Scenario: Stale data indicator
+@e2e exclude requires stale data condition
 - GIVEN the auto-refresh has failed (network error) and data is older than 10 minutes
 - WHEN the user views My Work
 - THEN the system MUST display a warning banner: "Data may be outdated. Last updated: [timestamp]"
@@ -769,6 +854,7 @@ The My Work view MUST keep data current through periodic auto-refresh, ensuring 
 The My Work view MUST extend the basic entity type filter with additional filter dimensions for priority level and pipeline, enabling more precise workload slicing.
 
 #### Scenario: Filter by priority
+@e2e exclude requires assigned items
 - GIVEN the user is on My Work
 - WHEN the user selects a priority filter (e.g., "Urgent", "High")
 - THEN only items matching the selected priority MUST be displayed
@@ -776,18 +862,21 @@ The My Work view MUST extend the basic entity type filter with additional filter
 - AND the item count and KPI tiles MUST update to reflect the filtered set
 
 #### Scenario: Filter by pipeline
+@e2e exclude requires assigned items with pipeline
 - GIVEN the user has leads across multiple pipelines
 - WHEN the user selects a pipeline filter (e.g., "Sales Pipeline")
 - THEN only leads belonging to the selected pipeline MUST be displayed
 - AND requests (which may not belong to a pipeline) MUST still appear unless explicitly filtered out
 
 #### Scenario: Combined filters
+@e2e exclude requires test data
 - GIVEN the user selects entity type "Leads", priority "Urgent", and pipeline "Enterprise Sales"
 - WHEN the filters are applied
 - THEN only urgent leads in the Enterprise Sales pipeline assigned to the user MUST be displayed
 - AND the active filter count MUST be shown as a badge on the filter control (e.g., "Filters (3)")
 
 #### Scenario: Clear all filters
+@e2e exclude requires active filters
 - GIVEN the user has applied multiple filters
 - WHEN the user clicks "Clear filters"
 - THEN all filters MUST reset to defaults (All entities, all priorities, all pipelines)

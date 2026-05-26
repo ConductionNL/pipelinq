@@ -2,6 +2,8 @@
 
 ## Purpose
 
+@e2e exclude backend routing engine — skill matching and advisory routing logic are PHP service operations; covered by PHPUnit
+
 Skill-based routing enables intelligent work distribution by matching requests to agents based on their expertise areas. Skills are defined by admins, assigned to agents via profiles, and matched against request categories to generate advisory routing suggestions. The system is advisory-only (no auto-assignment) to maintain human accountability.
 
 **Standards**: Schema.org (`DefinedTerm` for skills, `Person` for agent profiles)

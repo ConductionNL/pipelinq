@@ -6,6 +6,8 @@ status: implemented
 
 ## Purpose
 
+@e2e exclude backend integration — vCard sync via Nextcloud IManager is a PHP service; covered by PHPUnit
+
 Sync Pipelinq clients and contacts with Nextcloud Contacts via IManager to eliminate duplicate data entry and keep address books current.
 
 ## Requirements

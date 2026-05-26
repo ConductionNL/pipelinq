@@ -5,6 +5,9 @@ status: implemented
 # Prometheus Metrics Endpoint
 
 ## Purpose
+
+@e2e exclude backend API endpoint — Prometheus metrics and health check are HTTP API concerns; no UI surface; covered by Newman
+
 Expose application metrics in Prometheus text exposition format at `GET /api/metrics` for monitoring, alerting, and operational dashboards. Provide a complementary health check endpoint for container orchestration. Enable CRM-specific observability covering pipeline value, client counts, conversion rates, and OpenRegister integration health.
 
 ## Requirements

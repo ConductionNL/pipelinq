@@ -5,6 +5,9 @@ status: draft
 # product-catalog-quoting Specification
 
 ## Purpose
+
+@e2e exclude draft/unbuilt spec — quote generation and PDF export not yet implemented; no UI surface to test
+
 Extend the existing product catalog with quote generation capabilities: line items with quantities and discounts, quote lifecycle management, and PDF proposal generation. For government context, maps to "producten en diensten" offerings with formal pricing.
 
 ## Context

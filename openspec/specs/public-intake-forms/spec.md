@@ -5,6 +5,9 @@ status: draft
 # public-intake-forms Specification
 
 ## Purpose
+
+@e2e exclude draft/unbuilt spec — embeddable intake forms not yet implemented; no UI surface to test
+
 Provide embeddable HTML forms for external websites that create contacts and leads in Pipelinq upon submission. Forms are customizable in styling, support spam protection, and can be embedded via iframe or JavaScript snippet on any website.
 
 ## Context

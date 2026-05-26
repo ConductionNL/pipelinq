@@ -7,6 +7,8 @@
 
 ## Requirements
 
+@e2e exclude documentation CI concern — folder taxonomy conformance is a docs-site structure check, not a Nextcloud app UI; covered by CI file-tree checks
+
 ### Requirement: Canonical folder taxonomy
 The docs site SHALL organise content under the canonical folder set: `Features/`, `user-guide/`, `UseCases/`, `Integrations/`, and `Technical/`. Folder names SHALL use the exact casing defined by the `@conduction/docusaurus-preset` product-pages spec. No content SHALL remain under the old `features/` (lowercase) or `tutorials/` names.
 

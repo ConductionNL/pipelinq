@@ -5,6 +5,9 @@ status: draft
 # crm-workflow-automation Specification
 
 ## Purpose
+
+@e2e exclude draft/unbuilt spec — n8n workflow automation UI bridge not yet implemented; no UI surface to test
+
 Expose n8n workflow automation capabilities within the Pipelinq UI. Visual workflow builder for CRM automation: trigger-action workflows, conditional branching, and scheduled actions. Bridges the gap between n8n's powerful backend automation and Pipelinq's user-facing CRM interface.
 
 ## Context
