@@ -6,6 +6,8 @@ status: draft
 
 ## Purpose
 
+@e2e exclude draft/unbuilt spec — email and calendar sync integration not yet implemented; no UI surface to test
+
 Enable bidirectional email and calendar synchronization in Pipelinq. Emails are automatically linked to contacts and pipeline items by matching sender/recipient addresses. Calendar events for follow-ups and meetings are synced with Nextcloud Calendar. This ensures that all communication context is captured in the CRM without manual data entry, leveraging Nextcloud's existing Mail and Calendar apps.
 
 Email/calendar sync is a standard CRM capability, with modern platforms offering Gmail and Outlook sync with automatic contact matching and domain-based company linking, IMAP/SMTP integration with email-to-entity linking, and calendar sync with auto-contact creation from meeting participants. Nextcloud's built-in Mail and Calendar apps provide a natural integration path that standalone backends cannot match.

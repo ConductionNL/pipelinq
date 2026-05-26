@@ -27,6 +27,7 @@ The system MUST register a settings page in the Nextcloud admin panel under "Adm
 - AND clicking it MUST display the Pipelinq settings page
 
 #### Scenario: Non-admin user cannot access settings
+@e2e exclude access control; covered by PHPUnit
 - GIVEN a regular (non-admin) Nextcloud user
 - WHEN they attempt to access the Pipelinq admin settings URL directly
 - THEN the system MUST deny access (HTTP 403 or redirect)
@@ -50,6 +51,7 @@ The system MUST register a settings page in the Nextcloud admin panel under "Adm
 The admin settings page MUST display the current register configuration status so administrators can verify the OpenRegister integration is working.
 
 #### Scenario: Register is configured
+@e2e exclude OR register status; covered by PHPUnit
 
 - GIVEN the repair step has run and the register exists
 - WHEN the admin opens the settings page
@@ -60,6 +62,7 @@ The admin settings page MUST display the current register configuration status s
   - List of 5 schemas with their names and IDs
 
 #### Scenario: Register is not configured
+@e2e exclude OR register status; covered by PHPUnit
 
 - GIVEN OpenRegister is not installed or the repair step hasn't run
 - WHEN the admin opens the settings page
@@ -74,6 +77,7 @@ The admin settings page MUST display the current register configuration status s
 The admin settings page MUST provide a button to re-run the register configuration import, allowing administrators to recover from failed imports or apply updated schemas.
 
 #### Scenario: Re-import succeeds
+@e2e exclude PHP repair step; covered by PHPUnit
 
 - GIVEN the admin clicks "Re-import configuration"
 - WHEN the backend processes the request via `POST /api/settings/reimport`
@@ -82,6 +86,7 @@ The admin settings page MUST provide a button to re-run the register configurati
 - AND a success notification MUST be displayed
 
 #### Scenario: Re-import fails
+@e2e exclude PHP repair step error handling; covered by PHPUnit
 
 - GIVEN OpenRegister is not available
 - WHEN the admin clicks "Re-import configuration"
@@ -95,6 +100,7 @@ The admin settings page MUST provide a button to re-run the register configurati
 The admin settings MUST provide full CRUD operations for pipelines. Pipelines are stored as OpenRegister objects with schema `pipeline`.
 
 #### Scenario: List all pipelines
+@e2e exclude requires existing pipeline data
 - GIVEN the system has 2 pipelines: "Sales Pipeline" (default, 7 stages) and "Service Pipeline" (5 stages)
 - WHEN the admin views the Pipelines section
 - THEN the system MUST display both pipelines
@@ -102,6 +108,7 @@ The admin settings MUST provide full CRUD operations for pipelines. Pipelines ar
 - AND each pipeline MUST have an "Edit" action button
 
 #### Scenario: Create a new pipeline
+@e2e exclude requires OR write; creates side-effect data
 - GIVEN the admin clicks "+ Add Pipeline"
 - WHEN they enter title "Enterprise Sales", select entity types ["lead"], and save
 - THEN a new pipeline MUST be created in OpenRegister
@@ -109,18 +116,21 @@ The admin settings MUST provide full CRUD operations for pipelines. Pipelines ar
 - AND the admin MUST be immediately redirected to the stage management for this pipeline (so they can add stages)
 
 #### Scenario: Create pipeline -- title required
+@e2e exclude form validation; covered by PHPUnit
 - GIVEN the admin is creating a new pipeline
 - WHEN they submit without entering a title
 - THEN the system MUST display a validation error: "Pipeline title is required"
 - AND the pipeline MUST NOT be created
 
 #### Scenario: Edit pipeline title and entity types
+@e2e exclude requires existing pipeline
 - GIVEN an existing pipeline "Sales Pipeline"
 - WHEN the admin changes the title to "B2B Sales Pipeline" and saves
 - THEN the pipeline title MUST be updated
 - AND all leads/requests referencing this pipeline MUST continue to work (pipeline reference is by ID, not by title)
 
 #### Scenario: Delete a pipeline
+@e2e exclude requires existing pipeline
 - GIVEN a pipeline "Old Pipeline" that is NOT the default pipeline
 - WHEN the admin clicks "Delete" and confirms the deletion
 - THEN the pipeline and all its stages MUST be removed from OpenRegister
@@ -128,12 +138,14 @@ The admin settings MUST provide full CRUD operations for pipelines. Pipelines ar
 - AND leads/requests that were on this pipeline MUST have their `pipeline` and `stage` references cleared (set to null)
 
 #### Scenario: Delete pipeline -- confirmation required
+@e2e exclude UI confirmation dialog; requires pipeline data
 - GIVEN a pipeline with 5 leads on it
 - WHEN the admin clicks "Delete"
 - THEN the system MUST show a confirmation dialog with the count of affected items
 - AND deletion MUST NOT proceed until the admin confirms
 
 #### Scenario: Delete default pipeline -- prevented
+@e2e exclude backend rule; covered by PHPUnit
 - GIVEN the "Sales Pipeline" is marked as default
 - WHEN the admin attempts to delete it
 - THEN the system MUST prevent deletion
@@ -146,6 +158,7 @@ The admin settings MUST provide full CRUD operations for pipelines. Pipelines ar
 The admin settings MUST provide CRUD operations for stages within each pipeline. Stages are stored as OpenRegister objects with schema `stage`.
 
 #### Scenario: List stages for a pipeline
+@e2e exclude requires existing pipeline with stages
 - GIVEN the admin is editing "Sales Pipeline"
 - WHEN the stage management section is displayed
 - THEN the system MUST list all stages in order: New (0), Contacted (1), Qualified (2), Proposal (3), Negotiation (4), Won (5), Lost (6)
@@ -153,23 +166,27 @@ The admin settings MUST provide CRUD operations for stages within each pipeline.
 - AND stages MUST be displayed in ascending order by their `order` field
 
 #### Scenario: Add a new stage
+@e2e exclude requires existing pipeline; creates side-effect data
 - GIVEN the admin is editing "Sales Pipeline"
 - WHEN they click "+ Add Stage" and enter title "Demo", probability 50, order 3
 - THEN a new stage MUST be created in OpenRegister with `pipeline` referencing "Sales Pipeline"
 - AND if the order conflicts with existing stages, the system MUST automatically re-order subsequent stages (shift them up by 1)
 
 #### Scenario: Add stage -- title required
+@e2e exclude form validation; covered by PHPUnit
 - GIVEN the admin is adding a stage
 - WHEN they submit without a title
 - THEN the system MUST display a validation error: "Stage title is required"
 
 #### Scenario: Edit a stage
+@e2e exclude requires existing stage data
 - GIVEN the stage "Contacted" with probability 20
 - WHEN the admin changes the title to "First Contact" and probability to 25
 - THEN the stage MUST be updated in OpenRegister
 - AND leads in this stage MUST continue to reference it correctly (reference is by ID)
 
 #### Scenario: Reorder stages via drag-and-drop
+@e2e exclude drag-and-drop; requires existing stages
 - GIVEN stages in order: New (0), Contacted (1), Qualified (2)
 - WHEN the admin drags "Qualified" between "New" and "Contacted"
 - THEN the order MUST update to: New (0), Qualified (1), Contacted (2)
@@ -177,12 +194,14 @@ The admin settings MUST provide CRUD operations for stages within each pipeline.
 - AND leads on these stages MUST retain their stage assignment (only the stage order changes, not the stage-to-lead relationship)
 
 #### Scenario: Delete a stage
+@e2e exclude requires existing stage
 - GIVEN a stage "Demo" with 0 leads/requests currently in it
 - WHEN the admin deletes the stage
 - THEN the stage MUST be removed from OpenRegister
 - AND subsequent stages MUST be re-ordered to fill the gap
 
 #### Scenario: Delete a stage with items on it
+@e2e exclude requires stage with pipeline items
 - GIVEN a stage "Qualified" with 3 leads and 1 request
 - WHEN the admin deletes the stage
 - THEN the system MUST display a warning: "4 items are currently in this stage. They will be moved to the previous stage."
@@ -190,18 +209,21 @@ The admin settings MUST provide CRUD operations for stages within each pipeline.
 - AND if no previous stage exists (order 0 is being deleted), items MUST be moved to the next stage
 
 #### Scenario: Stage validation -- unique order within pipeline
+@e2e exclude backend validation; covered by PHPUnit
 - GIVEN stages with orders 0, 1, 2, 3 in a pipeline
 - WHEN the admin manually sets a stage order to a value that already exists
 - THEN the system MUST automatically adjust other stage orders to maintain uniqueness
 - AND no two stages in the same pipeline MUST have the same `order` value
 
 #### Scenario: Stage validation -- at least one non-closed stage
+@e2e exclude backend validation; covered by PHPUnit
 - GIVEN a pipeline with stages: "New" (isClosed=false) and "Done" (isClosed=true)
 - WHEN the admin attempts to delete "New" (the only non-closed stage)
 - THEN the system MUST prevent deletion
 - AND the system MUST display an error: "A pipeline must have at least one non-closed stage"
 
 #### Scenario: Stage validation -- at least one non-closed stage (edit)
+@e2e exclude backend validation; covered by PHPUnit
 - GIVEN a pipeline with stages: "Active" (isClosed=false) and "Done" (isClosed=true)
 - WHEN the admin attempts to set "Active" to isClosed=true
 - THEN the system MUST prevent the change
@@ -214,6 +236,7 @@ The admin settings MUST provide CRUD operations for stages within each pipeline.
 The admin settings MUST allow selecting one pipeline as the default. The default pipeline is used when creating new leads or requests that are not explicitly assigned to a pipeline.
 
 #### Scenario: Set default pipeline
+@e2e exclude requires existing pipelines
 - GIVEN pipelines "Sales Pipeline" and "Service Pipeline" exist, with "Sales Pipeline" as default
 - WHEN the admin marks "Service Pipeline" as default
 - THEN the "Service Pipeline" `isDefault` field MUST be set to `true`
@@ -221,22 +244,26 @@ The admin settings MUST allow selecting one pipeline as the default. The default
 - AND only one pipeline MUST have `isDefault = true` at any time
 
 #### Scenario: Default pipeline indicator
+@e2e exclude requires default pipeline data
 - GIVEN "Sales Pipeline" is the default
 - WHEN the admin views the pipeline list
 - THEN "Sales Pipeline" MUST display a visual indicator (e.g., star icon, "(default)" label)
 - AND other pipelines MUST NOT display this indicator
 
 #### Scenario: New lead uses default pipeline
+@e2e exclude backend default assignment; covered by PHPUnit
 - GIVEN "Sales Pipeline" is the default pipeline
 - WHEN a user creates a new lead without specifying a pipeline
 - THEN the lead SHOULD be placed on "Sales Pipeline" at the first non-closed stage (lowest order)
 
 #### Scenario: First pipeline auto-becomes default
+@e2e exclude backend auto-default; covered by PHPUnit
 - GIVEN no pipelines exist
 - WHEN the admin creates the first pipeline
 - THEN it MUST automatically be marked as default
 
 #### Scenario: Cannot unset default without replacement
+@e2e exclude backend validation; covered by PHPUnit
 - GIVEN "Sales Pipeline" is the only pipeline and is default
 - WHEN the admin attempts to unmark it as default
 - THEN the system MUST prevent this
@@ -249,34 +276,40 @@ The admin settings MUST allow selecting one pipeline as the default. The default
 The admin settings SHOULD allow customizing the list of available lead source values. Lead sources are displayed as a dropdown when creating or editing leads.
 
 #### Scenario: Default lead sources
+@e2e exclude OR data; covered by PHPUnit
 - GIVEN a fresh Pipelinq installation
 - THEN the following lead sources MUST be available by default: `website`, `email`, `phone`, `referral`, `partner`, `campaign`, `social_media`, `event`, `other`
 
 #### Scenario: List lead sources
+@e2e exclude requires existing sources
 - GIVEN the admin views the Lead Sources section
 - THEN all configured sources MUST be displayed
 - AND each source MUST show its label
 - AND each unused source MUST have a "Remove" action
 
 #### Scenario: Add a custom source
+@e2e exclude requires form interaction; creates side-effect data
 - GIVEN the admin clicks "+ Add Source"
 - WHEN they enter "Trade Show" and save
 - THEN "Trade Show" MUST be added to the source list
 - AND "Trade Show" MUST appear as an option in the lead creation/edit form's source dropdown
 
 #### Scenario: Add duplicate source -- prevented
+@e2e exclude backend dedup; covered by PHPUnit
 - GIVEN "website" already exists as a lead source
 - WHEN the admin attempts to add "website" again
 - THEN the system MUST prevent the addition
 - AND the system MUST display: "This source already exists"
 
 #### Scenario: Remove an unused source
+@e2e exclude requires existing unused source
 - GIVEN lead source "social_media" exists and no leads use it
 - WHEN the admin removes "social_media"
 - THEN it MUST no longer appear in the source list or creation form dropdown
 - AND existing leads MUST NOT be affected (no leads reference it)
 
 #### Scenario: Remove a source used by existing leads
+@e2e exclude backend usage check; covered by PHPUnit
 - GIVEN lead source "website" is used by 5 existing leads
 - WHEN the admin attempts to remove "website"
 - THEN the system MUST display a warning: "5 leads currently use this source. They will retain their source value, but it will no longer be available for new leads."
@@ -284,6 +317,7 @@ The admin settings SHOULD allow customizing the list of available lead source va
 - AND the 5 existing leads MUST retain `source: "website"` (the value is NOT cleared from existing records)
 
 #### Scenario: Source label editing
+@e2e exclude requires existing sources
 - GIVEN lead source "social_media" exists
 - WHEN the admin renames it to "Social Media"
 - THEN the display label MUST update
@@ -296,33 +330,39 @@ The admin settings SHOULD allow customizing the list of available lead source va
 The admin settings SHOULD allow customizing the list of available request channel values. Channels are displayed as a dropdown when creating or editing requests.
 
 #### Scenario: Default request channels
+@e2e exclude OR data; covered by PHPUnit
 - GIVEN a fresh Pipelinq installation
 - THEN the following channels MUST be available by default: `phone`, `email`, `website`, `counter`, `post`
 
 #### Scenario: List request channels
+@e2e exclude requires existing channels
 - GIVEN the admin views the Request Channels section
 - THEN all configured channels MUST be displayed
 - AND each channel MUST show its label
 - AND each unused channel MUST have a "Remove" action
 
 #### Scenario: Add a custom channel
+@e2e exclude requires form interaction; creates side-effect data
 - GIVEN the admin clicks "+ Add Channel"
 - WHEN they enter "Service Desk" and save
 - THEN "Service Desk" MUST be added to the channel list
 - AND "Service Desk" MUST appear as an option in the request creation/edit form's channel dropdown
 
 #### Scenario: Add duplicate channel -- prevented
+@e2e exclude backend dedup; covered by PHPUnit
 - GIVEN "email" already exists as a channel
 - WHEN the admin attempts to add "email" again
 - THEN the system MUST prevent the addition
 - AND the system MUST display: "This channel already exists"
 
 #### Scenario: Remove an unused channel
+@e2e exclude requires existing unused channel
 - GIVEN channel "post" exists and no requests use it
 - WHEN the admin removes "post"
 - THEN it MUST no longer appear in the channel list or creation form dropdown
 
 #### Scenario: Remove a channel used by existing requests
+@e2e exclude backend usage check; covered by PHPUnit
 - GIVEN channel "phone" is used by 8 existing requests
 - WHEN the admin attempts to remove "phone"
 - THEN the system MUST display a warning: "8 requests currently use this channel. They will retain their channel value, but it will no longer be available for new requests."
@@ -336,6 +376,7 @@ The admin settings SHOULD allow customizing the list of available request channe
 When Pipelinq is installed for the first time, the system MUST create default pipelines and stages via the repair step / configuration import.
 
 #### Scenario: Default Sales Pipeline created
+@e2e exclude PHP repair step; covered by PHPUnit
 - GIVEN Pipelinq is freshly installed
 - WHEN the repair step runs
 - THEN a "Sales Pipeline" MUST be created with `entityTypes: ["lead"]` and `isDefault: true`
@@ -351,6 +392,7 @@ When Pipelinq is installed for the first time, the system MUST create default pi
   | 6 | Lost | 0 | true | false |
 
 #### Scenario: Default Service Pipeline created
+@e2e exclude PHP repair step; covered by PHPUnit
 - GIVEN Pipelinq is freshly installed
 - WHEN the repair step runs
 - THEN a "Service Pipeline" MUST be created with `entityTypes: ["request"]` and `isDefault: false`
@@ -364,6 +406,7 @@ When Pipelinq is installed for the first time, the system MUST create default pi
   | 4 | Converted to Case | -- | true | false |
 
 #### Scenario: Repair step is idempotent
+@e2e exclude PHP repair step; covered by PHPUnit
 - GIVEN the default pipelines already exist
 - WHEN the repair step runs again (e.g., during app update)
 - THEN the system MUST NOT create duplicate pipelines
@@ -377,16 +420,19 @@ When Pipelinq is installed for the first time, the system MUST create default pi
 All admin settings MUST be persisted and survive app updates and server restarts.
 
 #### Scenario: Pipeline settings persist across restarts
+@e2e exclude persistence; covered by PHPUnit
 - GIVEN the admin has created a custom pipeline "Enterprise Sales" with 5 stages
 - WHEN the Nextcloud server restarts
 - THEN the pipeline and its stages MUST still exist and be functional
 
 #### Scenario: Source/channel settings persist
+@e2e exclude persistence; covered by PHPUnit
 - GIVEN the admin has added custom lead sources and request channels
 - WHEN the app is updated to a new version
 - THEN all custom sources and channels MUST be preserved
 
 #### Scenario: Settings stored in OpenRegister
+@e2e exclude OR persistence; covered by PHPUnit
 - GIVEN pipeline and stage configurations
 - THEN pipelines MUST be stored as OpenRegister objects with schema `pipeline`
 - AND stages MUST be stored as OpenRegister objects with schema `stage`
@@ -399,26 +445,31 @@ All admin settings MUST be persisted and survive app updates and server restarts
 The admin settings page SHALL include a "Queues" section for managing queues. Admins can create, edit, and delete queues, configure categories, set capacity limits, and assign agents to queues.
 
 #### Scenario: View queue list in admin settings
+@e2e exclude Enterprise queue feature
 - GIVEN an admin navigates to the Pipelinq admin settings
 - THEN a "Queues" section SHALL be displayed after the Pipelines section
 - THEN all queues SHALL be listed with title, item count, agent count, and active status
 
 #### Scenario: Create a queue from admin settings
+@e2e exclude Enterprise queue feature
 - WHEN an admin clicks "Add queue" and enters title "Vergunningen", categories ["vergunningen"], maxCapacity 50
 - THEN a new queue object SHALL be created in OpenRegister
 - THEN the queue SHALL appear in the queue list
 
 #### Scenario: Edit a queue
+@e2e exclude Enterprise queue feature
 - WHEN an admin clicks "Edit" on queue "Vergunningen"
 - THEN a form SHALL display with all queue fields editable (title, description, categories, maxCapacity, isActive, sortOrder)
 - THEN saving SHALL persist changes to OpenRegister
 
 #### Scenario: Delete a queue from admin settings
+@e2e exclude Enterprise queue feature
 - WHEN an admin clicks "Delete" on queue "Oude Wachtrij"
 - THEN a confirmation dialog SHALL appear warning about items in the queue
 - THEN confirming SHALL delete the queue and unqueue all items
 
 #### Scenario: Assign agents to a queue
+@e2e exclude Enterprise queue feature
 - WHEN an admin opens the agent assignment panel for queue "Vergunningen"
 - THEN a user picker SHALL display all Nextcloud users
 - THEN the admin SHALL be able to add/remove agents from the queue's assignedAgents list
@@ -430,26 +481,31 @@ The admin settings page SHALL include a "Queues" section for managing queues. Ad
 The admin settings page SHALL include a "Skills" section for managing skill definitions and agent skill profiles.
 
 #### Scenario: View skills list in admin settings
+@e2e exclude Enterprise skill routing feature
 - GIVEN an admin navigates to the Pipelinq admin settings
 - THEN a "Skills" section SHALL be displayed after the Queues section
 - THEN all skills SHALL be listed with title, category mappings, and agent count
 
 #### Scenario: Create a skill
+@e2e exclude Enterprise skill routing feature
 - WHEN an admin clicks "Add skill" and enters title "Vergunningen", categories ["vergunningen", "omgevingsrecht"]
 - THEN a new skill object SHALL be created in OpenRegister
 - THEN the skill SHALL appear in the skills list
 
 #### Scenario: Edit a skill
+@e2e exclude Enterprise skill routing feature
 - WHEN an admin clicks "Edit" on skill "Vergunningen"
 - THEN a form SHALL display with title, description, categories, and isActive fields
 - THEN saving SHALL persist changes
 
 #### Scenario: Delete a skill
+@e2e exclude Enterprise skill routing feature
 - WHEN an admin deletes skill "Vergunningen"
 - THEN the skill SHALL be removed from OpenRegister
 - THEN the skill SHALL be removed from all agent profiles that reference it
 
 #### Scenario: Manage agent skill profiles
+@e2e exclude Enterprise skill routing feature
 - WHEN an admin opens the "Agent Skills" panel
 - THEN a list of Nextcloud users SHALL be displayed
 - THEN for each user, the admin SHALL be able to assign/remove skills, set maxConcurrent, and toggle isAvailable
@@ -563,6 +619,7 @@ The system MUST register a settings page in the Nextcloud admin panel under "Adm
 - AND clicking it MUST display the Pipelinq settings page
 
 #### Scenario: Non-admin user cannot access settings
+@e2e exclude access control; covered by PHPUnit
 - GIVEN a regular (non-admin) Nextcloud user
 - WHEN they attempt to access the Pipelinq admin settings URL directly
 - THEN the system MUST deny access (HTTP 403 or redirect)
@@ -581,6 +638,7 @@ The system MUST register a settings page in the Nextcloud admin panel under "Adm
 - AND sections 3-7 MUST only render when the register is configured (`config.register` is non-empty)
 
 #### Scenario: Non-admin user can read settings via API
+@e2e exclude API auth; covered by Newman
 - GIVEN a regular (non-admin) Nextcloud user
 - WHEN they call `GET /api/settings`
 - THEN the system MUST return the current config (register IDs, schema IDs) because the endpoint is annotated `@NoAdminRequired`
@@ -604,6 +662,7 @@ The admin settings page MUST display version information about the Pipelinq inst
   - A support footer with links to `support@conduction.nl` and `sales@conduction.nl` for SLA inquiries
 
 #### Scenario: Version passed from backend
+@e2e exclude backend version injection; covered by PHPUnit
 - GIVEN `AdminSettings::getForm()` is called
 - THEN the TemplateResponse MUST include the app version via `$this->appManager->getAppVersion(Application::APP_ID)`
 - AND the version MUST be available to the Vue component as a data attribute on the `#pipelinq-settings` element
@@ -631,6 +690,7 @@ The admin settings page MUST display a register configuration mapping interface 
 - AND the register config key MUST be `register`
 
 #### Scenario: Save register mapping
+@e2e exclude requires OR register data
 - GIVEN the admin modifies the register or schema assignments in the mapping UI
 - WHEN they click Save
 - THEN the component MUST emit a `save` event with the updated configuration
@@ -639,6 +699,7 @@ The admin settings page MUST display a register configuration mapping interface 
 - AND a success notification "Configuration saved" MUST be displayed
 
 #### Scenario: Register not configured hides dependent sections
+@e2e exclude UI state; requires unconfigured state
 - GIVEN the register mapping has not been configured (config.register is empty)
 - WHEN the admin views the settings page
 - THEN the Pipeline Manager, Product Category Manager, Lead Sources, Request Channels, and Prospect Settings sections MUST NOT be rendered
@@ -651,6 +712,7 @@ The admin settings page MUST display a register configuration mapping interface 
 The admin settings page MUST provide a button to re-run the register configuration import, allowing administrators to recover from failed imports or apply updated schemas.
 
 #### Scenario: Re-import button in version card
+@e2e exclude UI element requiring configured register
 - GIVEN the admin views the settings page
 - THEN a "Re-import configuration" button MUST be visible in the Version Information card actions slot
 - AND the button MUST show a Refresh icon when idle
@@ -658,6 +720,7 @@ The admin settings page MUST provide a button to re-run the register configurati
 - AND the button MUST be disabled during the re-import
 
 #### Scenario: Re-import succeeds
+@e2e exclude PHP repair step; covered by PHPUnit
 - GIVEN the admin clicks "Re-import configuration"
 - WHEN the frontend POSTs to `/apps/pipelinq/api/settings/reimport`
 - THEN the backend MUST call `SettingsService::loadSettings(force: true)` which delegates to `SettingsLoadService`
@@ -667,6 +730,7 @@ The admin settings page MUST provide a button to re-run the register configurati
 - AND a success NcNoteCard MUST display "Configuration re-imported successfully"
 
 #### Scenario: Re-import fails
+@e2e exclude PHP repair step error handling; covered by PHPUnit
 - GIVEN OpenRegister is not available or the import throws an exception
 - WHEN the admin clicks "Re-import configuration"
 - THEN the backend MUST return HTTP 500 with `success: false` and an error message
@@ -679,6 +743,7 @@ The admin settings page MUST provide a button to re-run the register configurati
 The admin settings MUST provide full CRUD operations for pipelines. Pipelines are stored as OpenRegister objects with schema `pipeline`. Stages are stored as a JSON array within each pipeline object (`pipeline.stages[]`), not as separate OpenRegister objects.
 
 #### Scenario: List all pipelines
+@e2e exclude requires existing pipeline data
 - GIVEN the system has 2 pipelines: "Sales Pipeline" (default, 7 stages) and "Service Pipeline" (5 stages)
 - WHEN the admin views the Pipelines section
 - THEN the `PipelineManager` component MUST fetch pipelines via `objectStore.fetchCollection('pipeline', { _limit: 100 })`
@@ -686,12 +751,14 @@ The admin settings MUST provide full CRUD operations for pipelines. Pipelines ar
 - AND each pipeline MUST have Edit (pencil icon) and Delete (trash icon) action buttons
 
 #### Scenario: Create a new pipeline
+@e2e exclude requires OR write; creates side-effect data
 - GIVEN the admin clicks "Add pipeline"
 - WHEN the PipelineForm overlay opens and they enter title "Enterprise Sales", configure property mappings, add stages, and click Create
 - THEN a new pipeline MUST be created via `objectStore.saveObject('pipeline', pipelineData)`
 - AND the pipeline list MUST refresh via `objectStore.fetchCollection('pipeline', { _limit: 100 })`
 
 #### Scenario: Create pipeline -- title required
+@e2e exclude form validation; covered by PHPUnit
 - GIVEN the admin is creating a new pipeline
 - WHEN they attempt to save without entering a title
 - THEN the PipelineForm MUST display a validation error: "Pipeline title is required" via the `errors.title` computed property
@@ -699,18 +766,21 @@ The admin settings MUST provide full CRUD operations for pipelines. Pipelines ar
 - AND the pipeline MUST NOT be created
 
 #### Scenario: Create pipeline -- at least one stage required
+@e2e exclude validation; covered by PHPUnit
 - GIVEN the admin is creating a new pipeline with no stages added
 - WHEN they attempt to save
 - THEN the Save/Create button MUST be disabled because `isValid` requires `form.stages.length > 0`
 - AND the stages section MUST show "No stages yet. Add at least one stage."
 
 #### Scenario: Edit pipeline title and properties
+@e2e exclude requires existing pipeline
 - GIVEN an existing pipeline "Sales Pipeline"
 - WHEN the admin clicks the Edit button, changes the title to "B2B Sales Pipeline", and saves
 - THEN the pipeline MUST be updated via `objectStore.saveObject('pipeline', pipelineData)`
 - AND the pipeline list MUST refresh to show the new title
 
 #### Scenario: Delete a pipeline
+@e2e exclude requires existing pipeline
 - GIVEN a pipeline "Old Pipeline" that is NOT the default pipeline
 - WHEN the admin clicks the Delete button
 - THEN the system MUST count affected items by querying OpenRegister for leads and requests with `pipeline=<id>`
@@ -720,6 +790,7 @@ The admin settings MUST provide full CRUD operations for pipelines. Pipelines ar
 - AND upon confirmation, the pipeline MUST be deleted via `objectStore.deleteObject('pipeline', id)` and the list MUST refresh
 
 #### Scenario: Delete default pipeline -- prevented
+@e2e exclude backend rule; covered by PHPUnit
 - GIVEN the "Sales Pipeline" is marked as default
 - WHEN the admin attempts to delete it
 - THEN the system MUST prevent deletion immediately (before showing the dialog)
@@ -732,46 +803,54 @@ The admin settings MUST provide full CRUD operations for pipelines. Pipelines ar
 The admin settings MUST provide CRUD operations for stages within each pipeline via the `PipelineForm` component. Stages are stored as a JSON array on the pipeline object, each with: `name`, `order`, `probability`, `isClosed`, `isWon`, and `color`.
 
 #### Scenario: List stages for a pipeline
+@e2e exclude requires existing pipeline with stages
 - GIVEN the admin is editing "Sales Pipeline" in the PipelineForm
 - THEN the form MUST list all stages sorted by their `order` field (via `sortedStages` computed)
 - AND each stage row MUST show: drag handle, up/down reorder buttons, order number, name field, probability field (number input), color picker, isClosed switch, isWon switch (disabled unless isClosed is true), and a delete button
 
 #### Scenario: Add a new stage
+@e2e exclude requires existing pipeline; creates side-effect data
 - GIVEN the admin is editing a pipeline
 - WHEN they click "Add stage"
 - THEN a new stage MUST be appended with `order` set to `maxOrder + 1`, empty name, null probability, `isClosed: false`, `isWon: false`, and no color
 
 #### Scenario: Add stage -- name required
+@e2e exclude validation; covered by PHPUnit
 - GIVEN the admin has added a stage with an empty name
 - WHEN they attempt to save the pipeline
 - THEN the `stageErrors` computed MUST produce `name: "Stage name is required"` for that stage
 - AND the Save button MUST be disabled (via `isValid`)
 
 #### Scenario: Reorder stages via drag-and-drop
+@e2e exclude drag-and-drop; requires existing stages
 - GIVEN stages in order: New (0), Contacted (1), Qualified (2)
 - WHEN the admin drags "Qualified" between "New" and "Contacted" using the drag handle
 - THEN `vuedraggable` MUST trigger the `@end` event which calls `recomputeOrders()`
 - AND the `order` field of all stages MUST be recalculated to sequential integers (0, 1, 2, ...)
 
 #### Scenario: Reorder stages via up/down buttons
+@e2e exclude requires existing stages
 - GIVEN stages in order: New (0), Contacted (1), Qualified (2)
 - WHEN the admin clicks the "up" button on "Qualified"
 - THEN the `moveStage(stage, -1)` method MUST swap the `order` values of "Qualified" and "Contacted"
 - AND the stage list MUST re-sort to: New (0), Qualified (1), Contacted (2)
 
 #### Scenario: Delete a stage
+@e2e exclude requires existing stage
 - GIVEN a pipeline with stages: New (0), Contacted (1), Qualified (2)
 - WHEN the admin deletes "Contacted"
 - THEN the stage MUST be removed from the `form.stages` array
 - AND `recomputeOrders()` MUST re-number remaining stages to: New (0), Qualified (1)
 
 #### Scenario: Stage validation -- at least one non-closed stage
+@e2e exclude backend validation; covered by PHPUnit
 - GIVEN a pipeline with stages: "Active" (isClosed=false) and "Done" (isClosed=true)
 - WHEN the admin sets "Active" to isClosed=true
 - THEN the `errors.stages` computed MUST produce: "Pipeline must have at least one non-closed stage"
 - AND the Save button MUST be disabled
 
 #### Scenario: Stage validation -- isWon requires isClosed
+@e2e exclude backend validation; covered by PHPUnit
 - GIVEN a stage with `isClosed=false`
 - WHEN the admin attempts to set `isWon=true`
 - THEN the isWon switch MUST be disabled (`:disabled="!stage.isClosed"`)
@@ -789,17 +868,20 @@ The admin settings MUST provide CRUD operations for stages within each pipeline 
 The PipelineForm MUST allow administrators to configure property mappings that define which schemas participate in the pipeline and how objects are placed into columns.
 
 #### Scenario: Add a property mapping
+@e2e exclude requires existing pipeline
 - GIVEN the admin is editing a pipeline
 - WHEN they click "Add mapping"
 - THEN a new mapping row MUST appear with fields: Schema slug (text, placeholder "e.g. lead, request"), Column property (text, defaulting to "stage"), and Totals property (text, optional, placeholder "e.g. value")
 
 #### Scenario: Configure multiple schema mappings
+@e2e exclude requires existing pipelines
 - GIVEN a pipeline with mappings for "lead" (column: "stage", totals: "value") and "request" (column: "stage", totals: null)
 - WHEN the pipeline is saved
 - THEN the `propertyMappings` array MUST be serialized as part of the pipeline object
 - AND the pipeline card in the list view MUST display schema slugs from the mappings as the entity type badge
 
 #### Scenario: Remove a property mapping
+@e2e exclude requires existing mapping
 - GIVEN a pipeline with 2 property mappings
 - WHEN the admin clicks the delete button on one mapping
 - THEN the mapping MUST be removed from the `propertyMappings` array
@@ -811,23 +893,27 @@ The PipelineForm MUST allow administrators to configure property mappings that d
 The admin settings MUST allow selecting one pipeline as the default. The default pipeline is used when creating new leads or requests that are not explicitly assigned to a pipeline.
 
 #### Scenario: Set default pipeline
+@e2e exclude requires existing pipelines
 - GIVEN pipelines "Sales Pipeline" (default) and "Service Pipeline" exist
 - WHEN the admin edits "Service Pipeline" and sets `isDefault=true`
 - THEN `PipelineManager.onSave()` MUST iterate all other pipelines that have `isDefault=true` and save them with `isDefault: false` via `objectStore.saveObject()`
 - AND only one pipeline MUST have `isDefault = true` at any time
 
 #### Scenario: Default pipeline indicator
+@e2e exclude requires default pipeline data
 - GIVEN "Sales Pipeline" is the default
 - WHEN the admin views the pipeline list
 - THEN "Sales Pipeline" MUST display a yellow star icon (`<Star>` with class `default-star`, color `var(--color-warning)`)
 - AND other pipelines MUST NOT display this indicator
 
 #### Scenario: First pipeline auto-becomes default
+@e2e exclude backend auto-default; covered by PHPUnit
 - GIVEN no pipelines exist (or only one which is being created)
 - WHEN the admin creates the first pipeline
 - THEN `PipelineManager.onSave()` MUST automatically set `isDefault: true` on the new pipeline
 
 #### Scenario: Cannot unset default without replacement
+@e2e exclude backend validation; covered by PHPUnit
 - GIVEN "Sales Pipeline" is the only default pipeline
 - WHEN the admin edits it and unchecks the "Default pipeline" switch
 - THEN `PipelineManager.onSave()` MUST detect no other defaults exist
@@ -841,12 +927,14 @@ The admin settings MUST allow selecting one pipeline as the default. The default
 The PipelineForm MUST allow associating a pipeline with a saved view to define which schemas are displayed in the pipeline board.
 
 #### Scenario: Select a view for a pipeline
+@e2e exclude requires existing pipeline
 - GIVEN the admin is editing a pipeline
 - THEN a "View" dropdown (NcSelect) MUST be displayed, populated from `getViews()` (via `viewService.js`)
 - AND the dropdown MUST be clearable (optional association)
 - AND selecting a view MUST set `form.viewId` on the pipeline
 
 #### Scenario: Totals label configuration
+@e2e exclude requires existing pipeline
 - GIVEN the admin is editing a pipeline
 - THEN a "Totals label" text field MUST be displayed with placeholder "e.g. EUR, hours, items"
 - AND the help text MUST explain: "Label shown next to column totals. Leave empty to hide totals."
@@ -858,23 +946,27 @@ The PipelineForm MUST allow associating a pipeline with a saved view to define w
 The admin settings MUST allow customizing the list of available lead source values. Lead sources are managed as system tags (via `SystemTagService`) and displayed using the reusable `TagManager` component.
 
 #### Scenario: Default lead sources
+@e2e exclude OR data; covered by PHPUnit
 - GIVEN a fresh Pipelinq installation
 - WHEN the repair step (`InitializeSettings`) runs
 - THEN `SystemTagService::ensureDefaults()` MUST create the following lead sources with objectType `pipelinq_lead_source`: `website`, `email`, `phone`, `referral`, `partner`, `campaign`, `social_media`, `event`, `other`
 
 #### Scenario: List lead sources
+@e2e exclude requires existing sources
 - GIVEN the admin views the Lead Sources section
 - THEN the `TagManager` component MUST render with title "Lead Sources" and add label "+ Add Source"
 - AND tags MUST be fetched via `leadSourcesStore.fetchSources()` on mount
 - AND each source MUST display as a chip/pill with inline remove button (x)
 
 #### Scenario: Add a custom source
+@e2e exclude requires form interaction; creates side-effect data
 - GIVEN the admin clicks "+ Add Source"
 - WHEN the inline input appears and they type "Trade Show" and press Enter
 - THEN `leadSourcesStore.addSource('Trade Show')` MUST be called
 - AND the new source MUST appear as a chip in the list
 
 #### Scenario: Remove a source with usage check
+@e2e exclude backend usage check; covered by PHPUnit
 - GIVEN lead source "website" exists
 - WHEN the admin clicks the remove button (x) on "website"
 - THEN the `usageCheck` function MUST query OpenRegister for leads with `source=website` via `countObjectsWithField('lead', 'source', 'website')`
@@ -882,6 +974,7 @@ The admin settings MUST allow customizing the list of available lead source valu
 - AND upon confirmation, `leadSourcesStore.removeSource(id)` MUST be called
 
 #### Scenario: Rename a source via double-click
+@e2e exclude requires existing sources
 - GIVEN lead source "social_media" exists
 - WHEN the admin double-clicks on the chip label
 - THEN the chip MUST switch to edit mode with an inline text input pre-filled with "social_media"
@@ -895,21 +988,25 @@ The admin settings MUST allow customizing the list of available lead source valu
 The admin settings MUST allow customizing the list of available request channel values, using the same `TagManager` component as lead sources.
 
 #### Scenario: Default request channels
+@e2e exclude OR data; covered by PHPUnit
 - GIVEN a fresh Pipelinq installation
 - WHEN the repair step runs
 - THEN `SystemTagService::ensureDefaults()` MUST create the following channels with objectType `pipelinq_request_channel`: `phone`, `email`, `website`, `counter`, `post`
 
 #### Scenario: List request channels
+@e2e exclude requires existing channels
 - GIVEN the admin views the Request Channels section
 - THEN the `TagManager` component MUST render with title "Request Channels" and add label "+ Add Channel"
 - AND tags MUST be fetched via `requestChannelsStore.fetchChannels()` on mount
 
 #### Scenario: Add a custom channel
+@e2e exclude requires form interaction; creates side-effect data
 - GIVEN the admin clicks "+ Add Channel"
 - WHEN they enter "Service Desk" and press Enter
 - THEN `requestChannelsStore.addChannel('Service Desk')` MUST be called
 
 #### Scenario: Remove a channel with usage check
+@e2e exclude backend usage check; covered by PHPUnit
 - GIVEN channel "phone" is used by existing requests
 - WHEN the admin clicks the remove button
 - THEN the usage check MUST query `countObjectsWithField('request', 'channel', 'phone')`
@@ -922,6 +1019,7 @@ The admin settings MUST allow customizing the list of available request channel 
 The admin settings MUST include an Ideal Customer Profile (ICP) configuration section for prospect discovery, rendered via the `ProspectSettings` component.
 
 #### Scenario: ICP form fields
+@e2e exclude V1 ICP feature; requires ICP configuration
 - GIVEN the admin views the Prospect Discovery section
 - THEN the form MUST display the following fields:
   | Field | Type | Description |
@@ -937,6 +1035,7 @@ The admin settings MUST include an Ideal Customer Profile (ICP) configuration se
   | OpenCorporates | Checkbox | Enable OpenCorporates as supplementary data source |
 
 #### Scenario: Load existing ICP settings
+@e2e exclude V1 ICP feature
 - GIVEN ICP settings have been previously saved
 - WHEN the ProspectSettings component mounts
 - THEN it MUST fetch settings from `GET /apps/pipelinq/api/prospects/settings`
@@ -944,6 +1043,7 @@ The admin settings MUST include an Ideal Customer Profile (ICP) configuration se
 - AND the KVK API Key MUST display as `***configured***` if previously set (never expose the raw key)
 
 #### Scenario: Save ICP settings
+@e2e exclude V1 ICP feature
 - GIVEN the admin fills in the ICP form and clicks "Save ICP Settings"
 - THEN the form MUST PUT to `/apps/pipelinq/api/prospects/settings` with the payload
 - AND SBI codes and keywords MUST be parsed from comma-separated strings to arrays
@@ -957,6 +1057,7 @@ The admin settings MUST include an Ideal Customer Profile (ICP) configuration se
 When Pipelinq is installed for the first time, the system MUST create default pipelines and stages via the repair step / configuration import.
 
 #### Scenario: Default Sales Pipeline created
+@e2e exclude PHP repair step; covered by PHPUnit
 - GIVEN Pipelinq is freshly installed
 - WHEN the repair step runs (`InitializeSettings::run()`)
 - THEN `SettingsService::createDefaultPipelines()` MUST delegate to `DefaultPipelineService::createDefaultPipelines()`
@@ -973,6 +1074,7 @@ When Pipelinq is installed for the first time, the system MUST create default pi
   | 6 | Lost | 0 | true | false |
 
 #### Scenario: Default Service Pipeline created
+@e2e exclude PHP repair step; covered by PHPUnit
 - GIVEN Pipelinq is freshly installed
 - WHEN the repair step runs
 - THEN a "Service Pipeline" MUST be created with `isDefault: false`
@@ -986,6 +1088,7 @@ When Pipelinq is installed for the first time, the system MUST create default pi
   | 4 | Converted to Case | -- | true | false |
 
 #### Scenario: Repair step is idempotent
+@e2e exclude PHP repair step; covered by PHPUnit
 - GIVEN the default pipelines already exist
 - WHEN the repair step runs again (e.g., during app update)
 - THEN `DefaultPipelineService` MUST check if "Sales Pipeline" already exists
@@ -993,6 +1096,7 @@ When Pipelinq is installed for the first time, the system MUST create default pi
 - AND existing pipelines and stages MUST NOT be modified
 
 #### Scenario: Repair step handles missing OpenRegister
+@e2e exclude PHP error handling; covered by PHPUnit
 - GIVEN OpenRegister is not installed
 - WHEN the repair step runs
 - THEN `InitializeSettings::run()` MUST output a warning: "OpenRegister app is not installed -- skipping configuration import"
@@ -1005,6 +1109,7 @@ When Pipelinq is installed for the first time, the system MUST create default pi
 Each user MUST be able to configure their notification preferences via a per-user settings dialog (`UserSettings.vue`), separate from the admin settings.
 
 #### Scenario: User settings dialog content
+@e2e exclude requires user settings dialog interaction
 - GIVEN a user opens the Pipelinq settings dialog (NcAppSettingsDialog)
 - THEN the Notifications section MUST display three toggle switches:
   | Setting Key | Label | Default |
@@ -1015,12 +1120,14 @@ Each user MUST be able to configure their notification preferences via a per-use
 - AND each toggle MUST show a descriptive hint below it
 
 #### Scenario: Toggle a notification preference
+@e2e exclude requires user settings dialog
 - GIVEN the user toggles "Lead & request assignments" off
 - THEN the frontend MUST PUT to `/apps/pipelinq/api/user/settings` with `{ notify_assignments: false }`
 - AND the backend MUST persist the value via `IConfig::setUserValue()` for that user
 - AND the toggle MUST show a loading state while saving
 
 #### Scenario: User settings persist per user
+@e2e exclude persistence; covered by PHPUnit
 - GIVEN user A has `notify_assignments: false` and user B has the default `notify_assignments: true`
 - WHEN each user fetches their settings via `GET /apps/pipelinq/api/user/settings`
 - THEN user A MUST receive `notify_assignments: false`
@@ -1033,22 +1140,26 @@ Each user MUST be able to configure their notification preferences via a per-use
 All admin settings MUST be persisted via `OCP\IAppConfig` and survive app updates and server restarts.
 
 #### Scenario: Config keys persisted via IAppConfig
+@e2e exclude IAppConfig persistence; covered by PHPUnit
 - GIVEN the admin saves settings
 - THEN the following config keys MUST be persisted via `IAppConfig::setValueString()` under app ID `pipelinq`:
   `register`, `client_schema`, `contact_schema`, `lead_schema`, `request_schema`, `pipeline_schema`, `product_schema`, `productCategory_schema`, `leadProduct_schema`
 
 #### Scenario: Pipeline settings persist as OpenRegister objects
+@e2e exclude OR persistence; covered by PHPUnit
 - GIVEN the admin has created a custom pipeline "Enterprise Sales" with 5 stages
 - WHEN the Nextcloud server restarts
 - THEN the pipeline and its stages MUST still exist in OpenRegister and be functional
 
 #### Scenario: Source/channel settings persist as system tags
+@e2e exclude system tag persistence; covered by PHPUnit
 - GIVEN the admin has added custom lead sources and request channels
 - WHEN the app is updated to a new version
 - THEN all custom sources and channels MUST be preserved (stored via `SystemTagService`)
 - AND the repair step MUST only ensure defaults exist without overwriting customs
 
 #### Scenario: User settings persist via IConfig
+@e2e exclude IConfig persistence; covered by PHPUnit
 - GIVEN a user has modified notification preferences
 - WHEN the server restarts
 - THEN user preferences MUST be preserved via `IConfig::getUserValue()` / `IConfig::setUserValue()`
@@ -1060,11 +1171,13 @@ All admin settings MUST be persisted via `OCP\IAppConfig` and survive app update
 All admin settings UI text MUST support Dutch (nl) and English (en) translations via the Nextcloud `t()` and `n()` translation functions.
 
 #### Scenario: All UI strings use t() function
+@e2e exclude i18n code audit; covered by static analysis
 - GIVEN the admin settings components: Settings.vue, PipelineManager.vue, PipelineForm.vue, TagManager.vue, ProspectSettings.vue, UserSettings.vue
 - THEN every user-visible string MUST be wrapped in `t('pipelinq', '...')` or `n('pipelinq', '...')` for pluralization
 - AND the backend MUST use `IL10N::t()` for translatable response messages (e.g., "Configuration re-imported successfully")
 
 #### Scenario: Pluralization for stage count
+@e2e exclude i18n; covered by unit tests
 - GIVEN a pipeline with 1 stage
 - THEN the display MUST show "1 stage" (singular)
 - AND for 5 stages it MUST show "5 stages" (plural)
@@ -1084,12 +1197,14 @@ The admin settings page MUST comply with WCAG AA accessibility standards for all
 - AND all icon-only buttons MUST have `title` attributes for screen readers
 
 #### Scenario: Keyboard navigation
+@e2e exclude WCAG; covered by accessibility tooling
 - GIVEN the admin is using keyboard navigation
 - THEN all interactive elements (buttons, inputs, switches, drag handles) MUST be focusable
 - AND the TagManager inline inputs MUST support Enter to save and Escape to cancel
 - AND the pipeline form MUST be dismissible (Cancel button)
 
 #### Scenario: Color contrast
+@e2e exclude WCAG; covered by accessibility tooling
 - GIVEN the admin settings page uses CSS custom properties
 - THEN all text MUST use Nextcloud theme variables (`var(--color-main-text)`, `var(--color-text-maxcontrast)`) to ensure sufficient contrast
 - AND destructive actions MUST use `var(--color-error)` for visual distinction
@@ -1213,28 +1328,33 @@ The following REQ was drafted via `/opsx-reverse-spec` from observed behavior of
 `SettingsService` MUST expose a pair of generic accessors — `getConfigValue(key, default='')` and `setConfigValue(key, value)` — that wrap `IAppConfig::getValueString()` / `setValueString()` scoped to `Application::APP_ID` (`pipelinq`). All other Pipelinq services (e.g. `ProspectDiscoveryService`) MUST read and write app-scoped configuration through these accessors rather than calling `IAppConfig` directly with a hardcoded app id, so that the app-id binding has a single source of truth.
 
 #### Scenario: Get returns the stored value
+@e2e exclude ConfigService unit test; covered by PHPUnit
 - GIVEN the key `register` has been previously written with value `"42"`
 - WHEN a caller invokes `getConfigValue(key: 'register')`
 - THEN the returned value MUST be `"42"`
 - AND `IAppConfig::getValueString()` MUST have been called with app id `pipelinq`
 
 #### Scenario: Get returns the supplied default when key is unset
+@e2e exclude ConfigService unit test; covered by PHPUnit
 - GIVEN no value has been stored for the key `client_schema`
 - WHEN a caller invokes `getConfigValue(key: 'client_schema', default: 'fallback')`
 - THEN the returned value MUST be `"fallback"`
 
 #### Scenario: Get returns empty string when default omitted and key is unset
+@e2e exclude ConfigService unit test; covered by PHPUnit
 - GIVEN no value has been stored for the key `unknown_key`
 - WHEN a caller invokes `getConfigValue(key: 'unknown_key')`
 - THEN the returned value MUST be `""` (empty string — the default-default)
 
 #### Scenario: Set persists the value scoped to APP_ID
+@e2e exclude ConfigService unit test; covered by PHPUnit
 - GIVEN a caller invokes `setConfigValue(key: 'lead_schema', value: 'lead-42')`
 - WHEN a subsequent reader invokes `getConfigValue(key: 'lead_schema')`
 - THEN the returned value MUST be `"lead-42"`
 - AND `IAppConfig::setValueString()` MUST have been called with app id `pipelinq`
 
 #### Scenario: Other apps' config is not affected
+@e2e exclude ConfigService unit test; covered by PHPUnit
 - GIVEN another Nextcloud app has a key `register` with value `"77"` set under its own app id
 - WHEN a Pipelinq caller invokes `setConfigValue(key: 'register', value: 'new-value')`
 - THEN only the Pipelinq-scoped `register` MUST change

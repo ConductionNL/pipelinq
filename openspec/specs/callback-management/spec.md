@@ -1,5 +1,7 @@
 ## ADDED Requirements
 
+@e2e exclude backend schema/register config — task schema registration is a PHP repair-step; covered by PHPUnit
+
 ### Requirement: Task Schema Registration
 
 The system MUST register a `task` schema in the pipelinq OpenRegister register with properties supporting terugbelverzoeken, opvolgtaken, and informatievragen. The schema maps to VNG `InterneTaak` and Schema.org `Action`.

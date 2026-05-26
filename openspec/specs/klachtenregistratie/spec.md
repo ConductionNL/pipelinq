@@ -1,6 +1,9 @@
 # Klachtenregistratie (Complaint Registration) — Delta Spec
 
 ## Purpose
+
+@e2e exclude backend delta spec — complaint schema and SLA logic are OR-object CRUD and PHP service; covered by PHPUnit
+
 Add complaint registration and tracking to Pipelinq, enabling KCC agents and CRM users to register, categorize, follow up on, and resolve customer complaints. Complaints are linked to contacts and organizations with SLA-based deadline tracking and full audit trail.
 
 **Main spec ref**: [client-management/spec.md](../../../../specs/client-management/spec.md)
