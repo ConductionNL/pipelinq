@@ -6,6 +6,8 @@ status: draft
 
 ## Purpose
 
+@e2e exclude draft/unbuilt spec — rapportage analytics dashboard not yet implemented; no UI surface to test
+
 Contactmomenten rapportage provides management dashboards, KPI monitoring, and reporting on all registered contact moments. This enables KCC managers to monitor service levels, identify bottlenecks, and optimize staffing. This is the second most demanded capability: **98% of klantinteractie-tenders** (51/52) require contact moment reporting with KPIs and SLA monitoring.
 
 **Standards**: VNG Klantinteracties (reporting on `Contactmoment` entities), Common Ground (API-based data extraction), ISO 18295 (Customer contact centres)

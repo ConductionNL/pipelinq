@@ -5,6 +5,9 @@ status: implemented
 # Register Content Internationalization
 
 ## Purpose
+
+@e2e exclude backend i18n infrastructure — translatable field storage, language fallback chain, and IL10N wiring are PHP/OR-object concerns; covered by PHPUnit
+
 Enable multi-language support for Pipelinq's register objects, allowing users to view and manage CRM and pipeline content in their preferred language. Built on OpenRegister's register-i18n foundation (see `openregister/openspec/specs/register-i18n/spec.md`). This spec covers both data-level i18n for translatable register content (pipeline names, product descriptions) and app UI string translations via Nextcloud's `IL10N` / `t()` system per ADR-005.
 
 ## Requirements

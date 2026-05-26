@@ -2,6 +2,8 @@
 
 ## Purpose
 
+@e2e exclude backend data model — queue entity CRUD and routing logic are OR-object/PHP service; covered by PHPUnit
+
 Queue management provides priority-ordered work queues for organizing requests. Queues enable workload distribution across teams, ensuring urgent items are handled first and work is routed to the right agents. Queues are independent from pipelines: a request can be in a queue (waiting for pickup) AND on a pipeline (tracking progress).
 
 **Standards**: Schema.org (`ItemList`)

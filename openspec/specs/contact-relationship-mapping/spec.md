@@ -6,6 +6,8 @@ status: partial
 
 ## Purpose
 
+@e2e exclude backend data model — contact relationship entity and inverse-link logic are OR-object CRUD; covered by PHPUnit
+
 Model bidirectional typed relationships between contacts (parent/child, partner, colleague, employer/employee). Auto-create inverse relationships. For government: family relationships for social domain, company structures for permits, organizational hierarchies. For CRM: understand decision-making hierarchies, identify influencers and gatekeepers, and map stakeholder networks.
 
 ## Context

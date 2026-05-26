@@ -11,6 +11,9 @@ retrofit_extensions:
 # activity-timeline Specification
 
 ## Purpose
+
+@e2e exclude backend service — activity entries are created by PHP event listeners and stored as OR objects; covered by PHPUnit
+
 Provide a chronological activity feed per contact, organization, and pipeline item in Pipelinq. All interactions -- status changes, notes, emails, calls, document uploads, field changes, and linked case events -- appear in one unified timeline. This gives the complete "klantbeeld" (customer view) that relationship managers need to understand the full history of any entity at a glance.
 
 Activity timelines are the single most requested CRM feature and are implemented in nearly all modern CRM platforms -- they answer "what happened with this contact?" without searching through multiple views. Common approaches include audit-log-style timelines, journal-style activity tracking, and chronological task linking.

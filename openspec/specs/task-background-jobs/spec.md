@@ -1,5 +1,7 @@
 ## ADDED Requirements
 
+@e2e exclude backend background job — task expiry TimedJob runs in PHP cron; no UI surface; covered by PHPUnit
+
 ### Requirement: Task Expiry Background Job
 
 The system MUST run a periodic background job that detects tasks past their deadline and updates their status to "verlopen".
