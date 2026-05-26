@@ -142,17 +142,4 @@ class CalendarSyncService
         return $vcal;
     }//end generateVEvent()
 
-    /**
-     * Determine if a calendar event has passed its end date.
-     *
-     * @param string $endDate ISO 8601 end date.
-     *
-     * @return bool True if the event end date has passed.
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-60
-     */
-    public function isEventPassed(string $endDate): bool
-    {
-        return new \DateTime($endDate) < new \DateTime();
-    }//end isEventPassed()
 }//end class

@@ -60,47 +60,6 @@ class IntakeFormService
     }//end __construct()
 
     /**
-     * Validate submission data against form field definitions.
-     *
-     * @param array $form       The form configuration.
-     * @param array $submission The submitted data.
-     *
-     * @return array Validation result with 'valid' boolean and 'errors' array.
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-42
-     */
-    public function validateSubmission(array $form, array $submission): array
-    {
-        $errors = [];
-        $fields = $form['fields'] ?? [];
-
-        foreach ($fields as $field) {
-            $name     = $field['name'] ?? '';
-            $required = $field['required'] ?? false;
-            $type     = $field['type'] ?? 'text';
-            $value    = $submission[$name] ?? null;
-
-            if ($required === true && (empty($value) === true && $value !== '0')) {
-                $errors[] = sprintf('Field "%s" is required', $name);
-                continue;
-            }
-
-            if (empty($value) === true) {
-                continue;
-            }
-
-            if ($type === 'email' && filter_var($value, FILTER_VALIDATE_EMAIL) === false) {
-                $errors[] = sprintf('Field "%s" must be a valid email address', $name);
-            }
-        }//end foreach
-
-        return [
-            'valid'  => empty($errors),
-            'errors' => $errors,
-        ];
-    }//end validateSubmission()
-
-    /**
      * Check if a submission is spam (honeypot field filled).
      *
      * @param array $submission The submitted data.

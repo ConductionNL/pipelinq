@@ -81,7 +81,7 @@ class PublicSurveyController extends PublicShareController
      *
      * @return bool Always false.
      */
-    public function isPasswordProtected(): bool
+    protected function isPasswordProtected(): bool
     {
         return false;
     }//end isPasswordProtected()
@@ -131,6 +131,12 @@ class PublicSurveyController extends PublicShareController
      */
     public function show(string $token): JSONResponse
     {
+        // isValidToken() is required by PublicShareController and always returns
+        // true for this controller (tokens are validated via OR lookup below).
+        if ($this->isValidToken() === false) {
+            return new JSONResponse(['error' => 'Invalid token'], Http::STATUS_NOT_FOUND);
+        }
+
         try {
             $survey = $this->findSurveyByToken(token: $token);
             if ($survey === null) {

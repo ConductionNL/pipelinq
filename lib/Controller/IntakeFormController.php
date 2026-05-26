@@ -27,10 +27,12 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\IntakeFormService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IURLGenerator;
+use OCP\IUserSession;
 
 /**
  * Controller for managing intake forms (embed code, submissions, export).
@@ -43,11 +45,13 @@ class IntakeFormController extends Controller
      * @param IRequest          $request           The request.
      * @param IntakeFormService $intakeFormService The intake form service.
      * @param IURLGenerator     $urlGenerator      The URL generator.
+     * @param IUserSession      $userSession       The user session.
      */
     public function __construct(
         IRequest $request,
         private IntakeFormService $intakeFormService,
         private IURLGenerator $urlGenerator,
+        private IUserSession $userSession,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -65,6 +69,11 @@ class IntakeFormController extends Controller
      */
     public function embed(string $id): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $baseUrl = $this->urlGenerator->getAbsoluteURL('/');
 
         return new JSONResponse(
@@ -86,8 +95,13 @@ class IntakeFormController extends Controller
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-44
      */
-    public function export(string $id): DataDownloadResponse
+    public function export(string $id): DataDownloadResponse|JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+
         // In production, fetch form and submissions from OpenRegister.
         $csv = $this->intakeFormService->exportCsv(submissions: [], fields: []);
 

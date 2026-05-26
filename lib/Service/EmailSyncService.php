@@ -35,33 +35,6 @@ use Psr\Log\LoggerInterface;
 class EmailSyncService
 {
     /**
-     * Common public email domains that should not be matched to organizations.
-     *
-     * @var array<string>
-     */
-    private const PUBLIC_DOMAINS = [
-        'gmail.com',
-        'outlook.com',
-        'hotmail.com',
-        'yahoo.com',
-        'icloud.com',
-        'live.com',
-        'msn.com',
-        'aol.com',
-        'protonmail.com',
-        'mail.com',
-        'zoho.com',
-        'yandex.com',
-        'gmx.com',
-        'gmx.net',
-        'web.de',
-        'ziggo.nl',
-        'kpnmail.nl',
-        'xs4all.nl',
-        'hetnet.nl',
-    ];
-
-    /**
      * Constructor.
      *
      * @param IConfig         $config The user config.
@@ -90,36 +63,6 @@ class EmailSyncService
 
         return strtolower(trim($parts[1]));
     }//end extractDomain()
-
-    /**
-     * Check if a domain is a common public email provider.
-     *
-     * @param string $domain The domain to check.
-     *
-     * @return bool True if the domain is a public provider.
-     */
-    public function isPublicDomain(string $domain): bool
-    {
-        return in_array(strtolower($domain), self::PUBLIC_DOMAINS, true);
-    }//end isPublicDomain()
-
-    /**
-     * Check if email sync is enabled for a user.
-     *
-     * @param string $userId The user ID.
-     *
-     * @return bool True if sync is enabled.
-     * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-7
-     */
-    public function isSyncEnabled(string $userId): bool
-    {
-        return $this->config->getUserValue(
-            $userId,
-            'pipelinq',
-            'email_sync_enabled',
-            'false',
-        ) === 'true';
-    }//end isSyncEnabled()
 
     /**
      * Get the mail accounts configured for sync by a user.

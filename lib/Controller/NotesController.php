@@ -27,9 +27,11 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\NoteEventService;
 use OCA\Pipelinq\Service\NotesService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
 
 /**
  * Controller for managing notes on Pipelinq entities.
@@ -42,12 +44,14 @@ class NotesController extends Controller
      * @param IRequest         $request          The request.
      * @param NotesService     $notesService     The notes service.
      * @param NoteEventService $noteEventService The note event service.
+     * @param IUserSession     $userSession      The user session.
      * @param IL10N            $l10n             The localization service.
      */
     public function __construct(
         IRequest $request,
         private NotesService $notesService,
         private NoteEventService $noteEventService,
+        private IUserSession $userSession,
         private IL10N $l10n,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
@@ -67,6 +71,11 @@ class NotesController extends Controller
      */
     public function list(string $objectType, string $objectId): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         if (in_array($objectType, NotesService::VALID_TYPES, true) === false) {
             return new JSONResponse(['error' => $this->l10n->t('Invalid object type')], 400);
         }
@@ -96,6 +105,11 @@ class NotesController extends Controller
      */
     public function create(string $objectType, string $objectId): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         if (in_array($objectType, NotesService::VALID_TYPES, true) === false) {
             return new JSONResponse(['error' => $this->l10n->t('Invalid object type')], 400);
         }
@@ -137,6 +151,11 @@ class NotesController extends Controller
      */
     public function deleteAll(string $objectType, string $objectId): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         if (in_array($objectType, NotesService::VALID_TYPES, true) === false) {
             return new JSONResponse(['error' => $this->l10n->t('Invalid object type')], 400);
         }
@@ -165,6 +184,11 @@ class NotesController extends Controller
      */
     public function deleteSingle(int $noteId): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $this->notesService->deleteNote(noteId: $noteId);
             return new JSONResponse(['success' => true]);

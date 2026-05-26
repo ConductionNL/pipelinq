@@ -29,7 +29,6 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -60,14 +59,12 @@ class RoutingService
     /**
      * Constructor.
      *
-     * @param IAppConfig         $appConfig   The app config.
-     * @param IUserSession       $userSession The user session.
-     * @param ContainerInterface $container   The container (for OpenRegister ObjectService).
-     * @param LoggerInterface    $logger      The logger.
+     * @param IAppConfig         $appConfig The app config.
+     * @param ContainerInterface $container The container (for OpenRegister ObjectService).
+     * @param LoggerInterface    $logger    The logger.
      */
     public function __construct(
         private IAppConfig $appConfig,
-        private IUserSession $userSession,
         private ContainerInterface $container,
         private LoggerInterface $logger,
     ) {
@@ -417,37 +414,6 @@ class RoutingService
         $max = (int) ($profile['maxConcurrent'] ?? self::DEFAULT_MAX_CONCURRENT);
         return $workload >= $max;
     }//end isAgentAtCapacity()
-
-    /**
-     * Verify the current user may view routing data for this entity.
-     *
-     * Authorization rule: the requesting user must be the assignee on the
-     * entity, a member of an assigned group, or a Nextcloud admin. The check
-     * is intentionally permissive in absence of richer ACLs; tighten as RBAC
-     * matures.
-     *
-     * @param array<string, mixed> $entity The loaded entity.
-     *
-     * @return bool True if the user is authorized.
-     *
-     * @spec openspec/changes/skill-routing/tasks.md#task-2.3
-     */
-    public function authorizeEntity(array $entity): bool
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return false;
-        }
-
-        $uid      = $user->getUID();
-        $assignee = (string) ($entity['assignee'] ?? '');
-        if ($assignee !== '' && $assignee === $uid) {
-            return true;
-        }
-
-        // Admins always allowed; defer to caller-side check via group membership.
-        return true;
-    }//end authorizeEntity()
 
     /**
      * Get the OpenRegister ObjectService via the container.

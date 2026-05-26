@@ -26,9 +26,11 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ProspectDiscoveryService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
 
 /**
  * Controller for prospect discovery.
@@ -40,11 +42,13 @@ class ProspectController extends Controller
      *
      * @param IRequest                 $request          The request.
      * @param ProspectDiscoveryService $discoveryService The discovery service.
+     * @param IUserSession             $userSession      The user session.
      * @param IL10N                    $l10n             The localization service.
      */
     public function __construct(
         IRequest $request,
         private ProspectDiscoveryService $discoveryService,
+        private IUserSession $userSession,
         private IL10N $l10n,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
@@ -60,6 +64,11 @@ class ProspectController extends Controller
      */
     public function index(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         $refresh = $this->request->getParam(key: 'refresh', default: 'false') === 'true';
 
         try {
@@ -92,6 +101,11 @@ class ProspectController extends Controller
      */
     public function createLead(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         $data = $this->request->getParams();
 
         if (isset($data['tradeName']) === false || $data['tradeName'] === '') {

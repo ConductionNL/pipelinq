@@ -29,6 +29,7 @@ use OCA\Pipelinq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IL10N;
@@ -138,14 +139,14 @@ class SettingsController extends Controller
     /**
      * Update Pipelinq settings.
      *
-     * Admin-only: no @NoAdminRequired annotation, so Nextcloud
-     * enforces admin privileges. The index() method is intentionally
-     * marked @NoAdminRequired so non-admin users can read settings.
+     * Admin-only endpoint (requires admin settings permission). The index()
+     * method carries the read permission so non-admin users can read settings.
      *
      * @return JSONResponse The updated settings response.
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function create(): JSONResponse
     {
         $data   = $this->request->getParams();
@@ -166,6 +167,7 @@ class SettingsController extends Controller
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-8
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function reimport(): JSONResponse
     {
         try {
