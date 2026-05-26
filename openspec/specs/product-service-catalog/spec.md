@@ -7,6 +7,9 @@ status: implemented
 **Owned by**: Pipelinq (CRM product catalog for citizen service delivery)
 
 ## Purpose
+
+@e2e exclude backend API spec — PDC public read-only API, UPL conformance, and zaaktype linking are backend/API concerns; covered by Newman and PHPUnit
+
 Implement a government product and service catalog (PDC - Producten- en Dienstencatalogus) as a core Pipelinq capability for CRM-driven citizen service delivery, conforming to the Uniforme Productnamenlijst (UPL) and Single Digital Gateway (SDG) standards. The PDC integrates with Pipelinq's existing product entities and CRM workflows, enabling KCC (Klant Contact Centrum) agents to look up products during citizen interactions, link products to contact moments, and initiate service requests. Products MUST support structured content blocks, publication lifecycle, target audience classification, pricing, multilingual content for cross-border EU access, zaaktype linking, versioning, bundling, and analytics. The catalog MUST expose a public read-only API for integration with municipal websites, citizen portals, and the SDG Your Europe portal.
 
 **Source**: Gap identified in cross-platform analysis; mandated standard for Dutch municipalities. IPDC (Interbestuurlijke Producten- en Dienstencatalogus) is the national reference catalog; municipalities maintain local PDC instances that reference IPDC entries and extend them with local pricing, procedures, and channel information.

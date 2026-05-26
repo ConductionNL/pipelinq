@@ -37,6 +37,7 @@ The dashboard MUST use the `CnDashboardPage` component to render a configurable 
 - AND upon successful creation, the user MUST be navigated to the detail view of the created entity
 
 #### Scenario: Error state with retry
+@e2e exclude backend API error injection; covered by unit tests
 - GIVEN a network error occurs during dashboard data fetching
 - WHEN the dashboard fails to load
 - THEN an error message MUST be displayed with a "Retry" button
@@ -49,18 +50,21 @@ The dashboard MUST use the `CnDashboardPage` component to render a configurable 
 The dashboard MUST display a row of four KPI summary cards at the top of the page using `CnStatsBlock` components, providing headline metrics at a glance. Each card MUST suppress its title bar (`showTitle: false`) and render in horizontal orientation.
 
 #### Scenario: Display open leads count
+@e2e exclude OR API aggregation; no stable test data
 - WHEN the user views the dashboard
 - THEN the "Open Leads" KPI card MUST display the count of leads whose `stage` name does NOT appear in any pipeline stage where `isClosed = true`
 - AND the card MUST use the `TrendingUp` icon with `variant="primary"`
 - AND clicking the card MUST navigate to the Leads view filtered by `status=open`
 
 #### Scenario: Display open requests count
+@e2e exclude OR API aggregation; no stable test data
 - WHEN the user views the dashboard
 - THEN the "Open Requests" KPI card MUST display the count of requests with `status` equal to `new` or `in_progress`
 - AND the card MUST use the `FileDocument` icon with `variant="primary"`
 - AND clicking the card MUST navigate to the Requests view filtered by `status=open`
 
 #### Scenario: Display pipeline total value
+@e2e exclude OR API aggregation; no stable test data
 - WHEN the user views the dashboard
 - THEN the "Pipeline Value" KPI card MUST display the sum of `value` for all leads in non-closed stages
 - AND the value MUST be formatted as EUR currency with Dutch locale (e.g., "EUR 125.200")
@@ -68,6 +72,7 @@ The dashboard MUST display a row of four KPI summary cards at the top of the pag
 - AND clicking the card MUST navigate to the Pipeline view
 
 #### Scenario: Display overdue items count
+@e2e exclude OR API aggregation; no stable test data
 - WHEN the user views the dashboard
 - THEN the "Overdue" KPI card MUST display the combined count of:
   - Leads in non-closed stages with `expectedCloseDate` in the past
@@ -88,6 +93,7 @@ The dashboard MUST display a row of four KPI summary cards at the top of the pag
 The dashboard MUST display a horizontal bar chart showing the distribution of requests across status values.
 
 #### Scenario: Render status distribution bars
+@e2e exclude chart data depends on OR API
 - GIVEN requests exist in the system
 - WHEN the user views the "Requests by Status" widget
 - THEN a horizontal bar chart MUST render one row per status that has at least one request
@@ -107,6 +113,7 @@ The dashboard MUST display a horizontal bar chart showing the distribution of re
 The dashboard MUST display a "My Work" widget showing items assigned to the current user, sorted by urgency.
 
 #### Scenario: Display assigned items
+@e2e exclude depends on test data
 - GIVEN leads and/or requests are assigned to the current user
 - WHEN the user views the "My Work" widget
 - THEN the widget MUST display up to 5 items (leads and requests combined)
@@ -114,12 +121,14 @@ The dashboard MUST display a "My Work" widget showing items assigned to the curr
 - AND items MUST be sorted by: overdue items first, then by priority order (`urgent` > `high` > `normal` > `low`), then by due date ascending
 
 #### Scenario: Overdue item highlighting
+@e2e exclude depends on test data with due dates
 - GIVEN an assigned lead has `expectedCloseDate` in the past, or an assigned request has `requestedAt` older than 30 days with status `new` or `in_progress`
 - WHEN the item appears in the "My Work" widget
 - THEN the item row MUST have a red-tinted background (`my-work-item--overdue`)
 - AND the due date MUST be displayed in red with bold font weight
 
 #### Scenario: View all link for overflow
+@e2e exclude depends on data volume
 - GIVEN the user has more than 5 assigned items
 - WHEN the user views the "My Work" widget
 - THEN a "View all ({count})" link MUST appear below the list
@@ -150,6 +159,7 @@ The dashboard MUST display a "Client Overview" widget showing the most recent cl
 - AND clicking it MUST navigate to the `ClientList` view
 
 #### Scenario: No clients exist
+@e2e exclude depends on clean data state
 - GIVEN no clients exist in the system
 - WHEN the user views the "Client Overview" widget
 - THEN the widget MUST display the message "No clients yet"
@@ -161,6 +171,7 @@ The dashboard MUST display a "Client Overview" widget showing the most recent cl
 The dashboard MUST display a "Top Products by Pipeline Value" widget showing the top products by aggregated pipeline revenue from `LeadProduct` line items.
 
 #### Scenario: Revenue by product display
+@e2e exclude depends on OR product data
 - GIVEN leads exist with `LeadProduct` line items linked to products
 - WHEN the user views the dashboard
 - THEN a "Top Products" widget MUST display the top 3 products ranked by total pipeline value (sum of `total` from line items)
@@ -168,6 +179,7 @@ The dashboard MUST display a "Top Products by Pipeline Value" widget showing the
 - AND products with higher total value MUST appear first
 
 #### Scenario: No products in pipeline
+@e2e exclude depends on data state
 - GIVEN no leads have `LeadProduct` line items, or `leadProduct`/`product` schemas are not configured
 - WHEN the user views the dashboard
 - THEN the "Top Products" widget MUST display "No product data yet"
@@ -185,6 +197,7 @@ The dashboard MUST include a Prospect Discovery widget that displays companies m
 - AND the widget MUST NOT interfere with existing KPI cards, charts, or My Work preview
 
 #### Scenario: Widget collapsed by default
+@e2e exclude user-preference stored in backend
 - WHEN the dashboard loads
 - THEN the Prospect Discovery widget MUST be expandable/collapsible
 - AND the collapsed state MUST show: widget title, number of prospects found, and top prospect's company name
@@ -197,6 +210,7 @@ The dashboard MUST include a Prospect Discovery widget that displays companies m
 The dashboard MUST keep its data current through automatic and manual refresh mechanisms.
 
 #### Scenario: Automatic periodic refresh
+@e2e exclude timer-based background fetch; not UI-observable
 - WHEN the dashboard is mounted and visible
 - THEN the dashboard MUST fetch all data immediately on mount
 - AND it MUST set up a periodic refresh timer at a 5-minute interval (`5 * 60 * 1000` ms)
@@ -209,6 +223,7 @@ The dashboard MUST keep its data current through automatic and manual refresh me
 - AND the button MUST be disabled during the fetch to prevent double-requests
 
 #### Scenario: Parallel data fetching
+@e2e exclude async fetch order is implementation detail
 - WHEN the dashboard fetches data
 - THEN it MUST issue all API requests in parallel via `Promise.all` for: leads (limit 500), requests (limit 500), pipelines (limit 100), clients (limit 500), user's assigned leads (limit 200), and user's assigned requests (limit 200)
 - AND each entity type MUST only be fetched if its schema is configured in `objectTypeRegistry`
@@ -220,12 +235,14 @@ The dashboard MUST keep its data current through automatic and manual refresh me
 The dashboard layout MUST support user customization through the `CnDashboardPage` grid system.
 
 #### Scenario: Layout change persistence
+@e2e exclude user layout preference stored in backend
 - GIVEN the user rearranges widgets in the dashboard
 - WHEN the `layout-change` event fires from `CnDashboardPage`
 - THEN the new layout MUST be captured in the component's `dashboardLayout` state
 - AND each layout item MUST contain: `id`, `widgetId`, `gridX`, `gridY`, `gridWidth`, `gridHeight`, and optional `showTitle`
 
 #### Scenario: Widget definitions
+@e2e exclude static JSON config; covered by unit tests
 - WHEN the dashboard initializes
 - THEN it MUST register exactly 7 widget definitions with `CnDashboardPage`:
   - `count-open-leads` (Open Leads)
@@ -244,6 +261,7 @@ The dashboard layout MUST support user customization through the `CnDashboardPag
 Pipelinq MUST register dashboard widgets with the Nextcloud Dashboard API (`OCP\Dashboard\IWidget`) so they appear in the platform-level dashboard and in MyDash.
 
 #### Scenario: Registered Nextcloud dashboard widgets
+@e2e exclude PHP OCP\Dashboard\IWidget registration
 - WHEN Nextcloud loads dashboard widgets
 - THEN Pipelinq MUST provide four `IWidget` implementations:
   - `ClientSearchWidget` -- searchable client list
@@ -253,6 +271,7 @@ Pipelinq MUST register dashboard widgets with the Nextcloud Dashboard API (`OCP\
 - AND each widget MUST implement: `getId()` (returning a unique `pipelinq_*` identifier), `getTitle()` (translated via `IL10N`), `getOrder()`, `getIconClass()`, and `load()` (loading the widget's JavaScript entry point and CSS)
 
 #### Scenario: Widget script loading
+@e2e exclude webpack bundle loading; covered by smoke test
 - WHEN a Nextcloud dashboard widget's `load()` method is called
 - THEN it MUST register the widget's JavaScript bundle via `Util::addScript(APP_ID, APP_ID . '-{widgetName}')` (e.g., `pipelinq-dealsOverviewWidget`)
 - AND it MUST load shared dashboard widget styles via `Util::addStyle(APP_ID, 'dashboardWidgets')`
@@ -264,6 +283,7 @@ Pipelinq MUST register dashboard widgets with the Nextcloud Dashboard API (`OCP\
 The dashboard MUST render correctly under NL Design System government themes via CSS custom properties.
 
 #### Scenario: CSS variable usage for colors
+@e2e exclude CSS implementation detail; covered by style tests
 - WHEN the dashboard renders under any NL Design theme
 - THEN all background colors MUST use Nextcloud CSS variables (`--color-background-dark`, `--color-background-hover`)
 - AND all text colors MUST use Nextcloud CSS variables (`--color-text-maxcontrast`, `--color-error`)
@@ -283,6 +303,7 @@ The dashboard MUST adapt to different viewport sizes while maintaining usability
 - AND scrollable widget content (My Work, Client Overview) MUST use `overflow: auto` to prevent layout overflow
 
 #### Scenario: Widget content text overflow
+@e2e exclude CSS overflow behavior; covered by visual regression
 - WHEN widget content contains long text (client names, lead titles)
 - THEN text MUST be truncated with ellipsis (`text-overflow: ellipsis; white-space: nowrap; overflow: hidden`)
 - AND the full text MUST remain accessible (via browser-native title attribute or tooltip)

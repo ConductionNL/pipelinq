@@ -592,6 +592,7 @@ The system MUST handle error conditions gracefully and provide meaningful feedba
 The system SHOULD support creating leads from external channels beyond manual entry. This includes web form submissions, email parsing, and integration with the prospect discovery module. External lead capture reduces data entry and ensures no potential opportunity is missed.
 
 #### Scenario: Create lead from prospect discovery widget
+@e2e exclude V1 prospect feature; not yet implemented
 
 - GIVEN the prospect discovery widget displays a prospect "TechBedrijf BV" (KVK: 12345678, SBI: 62 - IT-dienstverlening, fitScore: 82%, city: Amsterdam)
 - WHEN the user clicks "Create Lead" on the prospect card
@@ -603,6 +604,7 @@ The system SHOULD support creating leads from external channels beyond manual en
 - AND a success notification MUST be displayed: "Lead created from prospect: TechBedrijf BV"
 
 #### Scenario: Create lead via public web form API
+@e2e exclude API endpoint; covered by Newman
 
 - GIVEN an admin has configured a lead capture endpoint with allowed fields (title, description, contactEmail, contactName, source)
 - WHEN an external system POSTs to `/api/public/lead-capture/{apiKey}` with valid data
@@ -612,6 +614,7 @@ The system SHOULD support creating leads from external channels beyond manual en
 - AND the system MUST return HTTP 201 with the created lead's ID
 
 #### Scenario: Reject lead capture with invalid API key
+@e2e exclude API auth; covered by Newman
 
 - GIVEN a public lead capture endpoint
 - WHEN an external system POSTs to `/api/public/lead-capture/{invalidKey}`
@@ -620,6 +623,7 @@ The system SHOULD support creating leads from external channels beyond manual en
 - AND the system SHOULD log the failed attempt for security monitoring
 
 #### Scenario: Create lead from inbound email
+@e2e exclude V1 email integration; not yet implemented
 
 - GIVEN n8n workflow configured with an email-to-lead trigger
 - WHEN a new email arrives at the configured inbox matching lead capture rules
@@ -636,6 +640,7 @@ The system SHOULD support creating leads from external channels beyond manual en
 The system SHOULD support scoring leads based on configurable qualification criteria to help sales teams prioritize effort. Scoring provides an objective measure complementing the subjective pipeline stage progression.
 
 #### Scenario: Configure scoring criteria in admin settings
+@e2e exclude V1 scoring; not yet implemented
 
 - GIVEN the admin navigates to Pipelinq settings
 - WHEN they open the "Lead Scoring" section
@@ -653,6 +658,7 @@ The system SHOULD support scoring leads based on configurable qualification crit
 - AND the admin MUST be able to adjust point values
 
 #### Scenario: Auto-calculate qualification score on lead save
+@e2e exclude backend scoring; covered by PHPUnit
 
 - GIVEN a lead "Gemeente XYZ digitalisering" with value EUR 50,000, linked client, source "referral", priority "high", expectedCloseDate in 15 days
 - WHEN the lead is saved or updated
@@ -670,6 +676,7 @@ The system SHOULD support scoring leads based on configurable qualification crit
 - AND scores below 40 SHOULD be shown as "cold"
 
 #### Scenario: Sort leads by qualification score
+@e2e exclude requires scored lead data
 
 - GIVEN multiple leads with different qualification scores
 - WHEN the user sorts the lead list by "Score" descending
@@ -683,6 +690,7 @@ The system SHOULD support scoring leads based on configurable qualification crit
 The system SHOULD support converting a lead into a client record when the lead reaches a sufficient qualification stage. Unlike EspoCRM's atomic conversion that creates separate Account + Contact + Opportunity, Pipelinq's unified model keeps the lead as the deal record and promotes the associated entity to a full client.
 
 #### Scenario: Convert lead with no existing client
+@e2e exclude requires existing lead record
 
 - GIVEN a lead "Acme Corp Infrastructure Upgrade" in stage "Qualified" with no linked client
 - AND the lead has contact name "Petra Jansen", email "petra@acme.nl"
@@ -693,6 +701,7 @@ The system SHOULD support converting a lead into a client record when the lead r
 - AND a contact person record SHOULD be created and linked to both the client and the lead
 
 #### Scenario: Link lead to existing client via search
+@e2e exclude requires lead and client data
 
 - GIVEN a lead "Website Redesign" with no linked client
 - WHEN the user clicks "Link Client" and searches for "Gemeente Utrecht"
@@ -702,6 +711,7 @@ The system SHOULD support converting a lead into a client record when the lead r
 - AND the lead MUST appear on the client's detail view under "Leads"
 
 #### Scenario: Bulk convert leads to clients
+@e2e exclude requires multiple lead records
 
 - GIVEN 5 selected leads in stage "Qualified" with no linked clients
 - WHEN the user selects "Create Clients" from the bulk actions menu
@@ -717,6 +727,7 @@ The system SHOULD support converting a lead into a client record when the lead r
 The system SHOULD support automated lead assignment based on configurable rules to distribute incoming leads fairly across the sales team.
 
 #### Scenario: Configure round-robin assignment
+@e2e exclude Enterprise assignment feature; not yet implemented
 
 - GIVEN the admin navigates to Pipelinq settings -> "Assignment Rules"
 - WHEN they enable round-robin assignment and select users "jan", "maria", "pieter"
@@ -725,6 +736,7 @@ The system SHOULD support automated lead assignment based on configurable rules 
 - AND the rotation MUST cycle: jan -> maria -> pieter -> jan -> ...
 
 #### Scenario: Round-robin assignment on lead creation
+@e2e exclude Enterprise backend; covered by PHPUnit
 
 - GIVEN round-robin is enabled with users ["jan", "maria", "pieter"] and the last assigned user was "jan"
 - WHEN a new lead is created (via form, API, or prospect conversion) without specifying an assignee
@@ -733,6 +745,7 @@ The system SHOULD support automated lead assignment based on configurable rules 
 - AND if "maria" is disabled or deleted from Nextcloud, the system MUST skip to "pieter"
 
 #### Scenario: Manual assignment overrides round-robin
+@e2e exclude Enterprise backend; covered by PHPUnit
 
 - GIVEN round-robin is enabled
 - WHEN a user explicitly selects an assignee during lead creation
@@ -740,6 +753,7 @@ The system SHOULD support automated lead assignment based on configurable rules 
 - AND the round-robin counter MUST NOT advance (the explicit choice does not consume a rotation slot)
 
 #### Scenario: Assignment based on lead source
+@e2e exclude Enterprise backend; covered by PHPUnit
 
 - GIVEN the admin has configured source-based assignment rules:
   - source "website" -> assign to "jan"
@@ -756,6 +770,7 @@ The system SHOULD support automated lead assignment based on configurable rules 
 The system SHOULD detect and help resolve duplicate leads to maintain data quality. Deduplication checks during creation and provides a merge interface for existing duplicates.
 
 #### Scenario: Warn on potential duplicate during creation
+@e2e exclude requires existing leads
 
 - GIVEN an existing lead titled "Gemeente Utrecht Website Redesign" linked to client "Gemeente Utrecht"
 - WHEN a user creates a new lead with title "Website Redesign Gemeente Utrecht"
@@ -765,6 +780,7 @@ The system SHOULD detect and help resolve duplicate leads to maintain data quali
 - AND the user MUST be able to click "View existing" to navigate to the potential duplicate
 
 #### Scenario: Detect duplicate by client and similar value
+@e2e exclude backend dedup; covered by PHPUnit
 
 - GIVEN an existing lead for client "Acme Corp" with value EUR 50,000, source "website"
 - WHEN a user creates a new lead for the same client "Acme Corp" with value EUR 50,000
@@ -772,6 +788,7 @@ The system SHOULD detect and help resolve duplicate leads to maintain data quali
 - AND the warning MUST be more prominent than a title-only match
 
 #### Scenario: Merge two duplicate leads
+@e2e exclude requires duplicate lead data
 
 - GIVEN two leads:
   - Lead A: "Acme Digitalization" (value: EUR 25,000, source: "website", stage: "Contacted", notes: 3)
@@ -799,6 +816,7 @@ The system SHOULD support tagging leads with user-defined labels beyond the sing
 - AND the tags MUST be displayed on the kanban card (if configured in card settings)
 
 #### Scenario: Filter leads by tag
+@e2e exclude requires tagged lead data
 
 - GIVEN 10 leads: 4 tagged "government", 3 tagged "enterprise", 2 tagged both "government" and "enterprise", 1 untagged
 - WHEN the user filters the lead list by tag "government"
@@ -806,6 +824,7 @@ The system SHOULD support tagging leads with user-defined labels beyond the sing
 - AND the user SHOULD be able to combine tag filters with other filters (source, stage, assignee)
 
 #### Scenario: Manage lead tags in admin settings
+@e2e exclude requires admin access and tag management
 
 - GIVEN the admin navigates to Pipelinq settings
 - WHEN they open the "Lead Tags" section
@@ -815,6 +834,7 @@ The system SHOULD support tagging leads with user-defined labels beyond the sing
 - AND the admin SHOULD be warned before removing a tag used by existing leads
 
 #### Scenario: Auto-tag leads based on source
+@e2e exclude backend automation; covered by PHPUnit
 
 - GIVEN the admin has configured auto-tagging rules:
   - source "website" -> tag "inbound"
@@ -831,6 +851,7 @@ The system SHOULD support tagging leads with user-defined labels beyond the sing
 The system MUST support automated nurturing workflows that trigger actions based on lead stage, age, or score. Nurturing workflows are implemented as n8n workflows triggered by OpenRegister object events.
 
 #### Scenario: Configure stage-based follow-up reminders
+@e2e exclude Enterprise feature; not yet implemented
 
 - GIVEN an n8n workflow configured to listen for lead stage changes
 - WHEN a lead enters the "Contacted" stage
@@ -839,6 +860,7 @@ The system MUST support automated nurturing workflows that trigger actions based
 - AND if the lead moves to a different stage before the reminder triggers, the reminder MUST be cancelled
 
 #### Scenario: Nurture stale leads with automated notifications
+@e2e exclude Enterprise automation; not yet implemented
 
 - GIVEN an n8n workflow configured with a stale lead trigger (threshold: 14 days)
 - WHEN a lead has had no activity for 14 days and is in a non-closed stage
@@ -846,6 +868,7 @@ The system MUST support automated nurturing workflows that trigger actions based
 - AND the workflow SHOULD offer quick actions in the notification: "Add Note", "View Lead", "Mark as Lost"
 
 #### Scenario: Escalate high-value stale leads
+@e2e exclude Enterprise automation; not yet implemented
 
 - GIVEN an n8n workflow configured for escalation
 - WHEN a lead with value above EUR 50,000 has been stale for more than 7 days
@@ -869,6 +892,7 @@ The system SHOULD provide reporting and analytics for lead management performanc
 - AND the system MUST display the weighted pipeline value (sum of all weighted values)
 
 #### Scenario: Lead conversion rate by source
+@e2e exclude analytics; V1 feature
 
 - GIVEN leads from multiple sources over a configurable date range
 - WHEN the user views the "Source Performance" report
@@ -881,6 +905,7 @@ The system SHOULD provide reporting and analytics for lead management performanc
 - AND sources MUST be sorted by conversion rate descending
 
 #### Scenario: Lead aging report
+@e2e exclude analytics; V1 feature
 
 - GIVEN leads in various pipeline stages
 - WHEN the user views the "Lead Aging" report
@@ -893,6 +918,7 @@ The system SHOULD provide reporting and analytics for lead management performanc
 - AND clicking a category MUST filter the lead list to show those leads
 
 #### Scenario: Won/lost analysis
+@e2e exclude analytics; V1 feature
 
 - GIVEN closed leads (won and lost) over the past 12 months
 - WHEN the user views the "Win/Loss Analysis" report
@@ -922,6 +948,7 @@ The system MUST support attaching products as line items to leads to detail the 
   - lineTotal: EUR 500
 
 #### Scenario: Calculate lead value from line items
+@e2e exclude backend calculation; covered by PHPUnit
 
 - GIVEN a lead with line items:
   - Cloud Server License: qty 10, unitPrice EUR 500, discount 10% -> lineTotal EUR 4,500
@@ -932,6 +959,7 @@ The system MUST support attaching products as line items to leads to detail the 
 - AND the lead detail MUST show both the individual line items and the total value
 
 #### Scenario: Remove product line item
+@e2e exclude requires existing lead with line items
 
 - GIVEN a lead with 3 line items totaling EUR 10,000
 - WHEN the user removes one line item worth EUR 3,000

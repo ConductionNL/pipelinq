@@ -6,6 +6,8 @@ status: implemented
 
 ## Purpose
 
+@e2e exclude backend integration foundation — register schema init, Pinia store wiring, and OR API CRUD are PHP/JS infrastructure; covered by PHPUnit and unit tests
+
 Pipelinq stores all data as OpenRegister objects -- it owns no database tables. This specification defines how the register and schemas are initialized, how the frontend and backend interact with the OpenRegister API for CRUD operations, how Pinia stores manage state, how schema validation works, how errors are handled, and how cross-entity references, audit trails, RBAC, pagination, and performance concerns are addressed. OpenRegister is the foundational layer for every Pipelinq feature.
 
 **Standards**: OpenAPI 3.0.0 (schema format), OpenRegister API conventions
