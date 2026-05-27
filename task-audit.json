@@ -1,66 +1,15 @@
 {
-  "spec": "openspec/changes/migrate-kennisbank-to-xwiki-leaf",
+  "spec": "openspec/changes/migrate-automation-to-flow-leaf",
   "verified": [
-    {
-      "task": "0.1",
-      "file": "docs/Integrations/xwiki-openconnector-source.yaml",
-      "ok": true,
-      "note": "Leaf key documented: xwiki; required app: openconnector; source template created at docs/Integrations/xwiki-openconnector-source.yaml"
-    },
-    {
-      "task": "1.1",
-      "file": "lib/Controller/KennisbankController.php",
-      "ok": true,
-      "note": "deleted; also deleted PublicKennisbankController.php, KennisbankService.php, KennisbankReviewJob.php"
-    },
-    {
-      "task": "1.1",
-      "file": "src/components/kennisbank/",
-      "ok": true,
-      "note": "directory deleted (ArticleFeedback.vue, ArticleListItem.vue, CategoryManager.vue, CategoryTree.vue, CategoryTreeNode.vue, FeedbackSummary.vue)"
-    },
-    {
-      "task": "1.1",
-      "file": "appinfo/routes.php",
-      "ok": true,
-      "note": "kennisbank and publicKennisbank routes removed"
-    },
-    {
-      "task": "1.1",
-      "file": "src/store/store.js",
-      "ok": true,
-      "note": "kennisartikel/kenniscategorie/kennisfeedback store registrations removed"
-    },
-    {
-      "task": "1.2",
-      "file": "lib/Settings/pipelinq_register.json",
-      "ok": true,
-      "note": "kennisartikel, kenniscategorie, kennisfeedback schemas removed from schemas[] and definitions"
-    },
-    {
-      "task": "1.3",
-      "file": null,
-      "ok": true,
-      "note": "No hand-rolled XWikiController/XWikiWidget/XWikiSidebarTab built; older xwiki-integration change superseded"
-    },
-    {
-      "task": "2.1",
-      "file": "lib/Settings/pipelinq_register.json",
-      "ok": true,
-      "note": "xwiki added to linkedTypes on client ([\"xwiki\"]), lead ([\"deck\",\"xwiki\"]), request ([\"deck\",\"xwiki\"])"
-    },
-    {
-      "task": "3.1",
-      "file": "src/manifest.json",
-      "ok": true,
-      "note": "openconnector added to dependencies[]; CnXwikiTab + CnXwikiCard added to ClientDetail, LeadDetail, RequestDetail"
-    },
-    {
-      "task": "4.1",
-      "file": "openspec/changes/migrate-kennisbank-to-xwiki-leaf/design.md",
-      "ok": true,
-      "note": "Follow-up tracking item documented in design.md with export/import/relink steps"
-    }
+    {"task": "0.1", "file": "openspec/changes/migrate-automation-to-flow-leaf/design.md", "ok": true, "note": "Leaf key 'flow', NC dependency 'workflowengine' documented; authoring lives in NC Flow/n8n."},
+    {"task": "1.1", "file": "lib/Controller/AutomationController.php", "ok": true, "note": "Deleted - no in-app automation engine remains."},
+    {"task": "1.1", "file": "lib/Service/AutomationService.php", "ok": true, "note": "Deleted - webhook-firing/DMN service removed."},
+    {"task": "1.1", "file": "src/views/automations/AutomationBuilder.vue", "ok": true, "note": "Deleted - bespoke automation UI removed."},
+    {"task": "1.1", "file": "appinfo/routes.php", "ok": true, "note": "Automation routes removed."},
+    {"task": "1.2", "file": "lib/Settings/pipelinq_register.json", "ok": true, "note": "automation and automationLog schemas retired from both schemas[] list and definitions."},
+    {"task": "2.1", "file": "lib/Settings/pipelinq_register.json", "ok": true, "note": "flow added to linkedTypes on lead, request, client."},
+    {"task": "3.1", "file": "src/manifest.json", "ok": true, "note": "CnFlowTab + CnFlowCard added to LeadDetail, RequestDetail, ClientDetail. workflowengine added to dependencies[]."},
+    {"task": "4.1", "file": "openspec/changes/migrate-automation-to-flow-leaf/tasks.md", "ok": true, "note": "Follow-up migration recorded; existing objects left in place per ADR-032."}
   ],
   "stubs": [],
   "missing_routes": []
