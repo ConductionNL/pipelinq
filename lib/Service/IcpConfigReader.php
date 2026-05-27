@@ -78,6 +78,29 @@ class IcpConfigReader
     }//end setString()
 
     /**
+     * Set a sensitive (masked) credential value in app config.
+     *
+     * Passes sensitive:true and lazy:true so the value is excluded from
+     * occ config:list output and Nextcloud support archives (NC 29+).
+     *
+     * @param string $key   The config key.
+     * @param string $value The secret value to store.
+     *
+     * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-6
+     */
+    public function setSensitiveString(string $key, string $value): void
+    {
+        $this->appConfig->setValueString(
+            app: Application::APP_ID,
+            key: $key,
+            value: $value,
+            sensitive: true,
+            lazy: true
+        );
+    }//end setSensitiveString()
+
+    /**
      * Get a JSON array from app config.
      *
      * @param string $key The config key.
