@@ -88,7 +88,11 @@ class IntakeFormService
      */
     public function isRateLimited(string $ip, string $formId): bool
     {
-        $key = 'pipelinq_intake_'.md5($ip.'_'.$formId);
+        // Key on IP only so that cycling formId cannot bypass the per-IP budget.
+        // The $formId parameter is retained in the signature for callers that may
+        // log or trace it, but it is intentionally NOT included in the cache key.
+        unset($formId);
+        $key = 'pipelinq_intake_'.md5($ip);
 
         if (function_exists('apcu_fetch') === false) {
             return false;
@@ -207,7 +211,7 @@ class IntakeFormService
             $headers[] = $field['label'] ?? $field['name'] ?? 'Unknown';
         }
 
-        $rows = [implode(',', array_map(fn($h) => '"'.str_replace('"', '""', $h).'"', $headers))];
+        $rows = [implode(',', array_map([$this, 'neutralizeCsvCell'], $headers))];
 
         foreach ($submissions as $sub) {
             $row  = [
@@ -223,9 +227,29 @@ class IntakeFormService
                 $row[] = $value;
             }
 
-            $rows[] = implode(',', array_map(fn($v) => '"'.str_replace('"', '""', (string) $v).'"', $row));
+            $rows[] = implode(',', array_map([$this, 'neutralizeCsvCell'], $row));
         }//end foreach
 
         return implode("\n", $rows);
     }//end exportCsv()
+
+    /**
+     * Neutralize a CSV cell value to prevent formula injection.
+     *
+     * Prefixes cells starting with =, +, -, @, tab, or CR with a single
+     * quote so spreadsheet applications treat them as plain text.
+     *
+     * @param mixed $value The raw cell value.
+     *
+     * @return string The quoted and injection-safe cell string.
+     */
+    private function neutralizeCsvCell(mixed $value): string
+    {
+        $str = (string) $value;
+        if (preg_match('/^[=+\-@\t\r]/', $str) === 1) {
+            $str = "'".$str;
+        }
+
+        return '"'.str_replace('"', '""', $str).'"';
+    }//end neutralizeCsvCell()
 }//end class
