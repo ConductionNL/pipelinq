@@ -233,7 +233,9 @@ class IcpConfigService
     private function saveApiKeyField(array $data): void
     {
         if (isset($data['kvkApiKey']) === true && $data['kvkApiKey'] !== '***configured***') {
-            $this->reader->setString(key: 'icp_kvk_api_key', value: (string) $data['kvkApiKey']);
+            // Store the KVK API key as sensitive so it is excluded from
+            // occ config:list output and Nextcloud support archives (issue #599).
+            $this->reader->setSensitiveString(key: 'icp_kvk_api_key', value: (string) $data['kvkApiKey']);
         }
     }//end saveApiKeyField()
 
