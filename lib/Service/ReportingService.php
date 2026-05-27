@@ -210,20 +210,37 @@ class ReportingService
     public function generateCsv(array $headers, array $rows): string
     {
         $bom    = "\xEF\xBB\xBF";
-        $output = $bom.implode(';', $headers)."\n";
+        $output = $bom.implode(';', array_map([$this, 'neutralizeCsvCell'], $headers))."\n";
 
         foreach ($rows as $row) {
             $output .= implode(
                     ';',
-                    array_map(
-                static fn($v) => '"'.str_replace('"', '""', (string) $v).'"',
-                $row,
-            )
+                    array_map([$this, 'neutralizeCsvCell'], $row)
                     )."\n";
         }
 
         return $output;
     }//end generateCsv()
+
+    /**
+     * Neutralize a CSV cell value to prevent formula injection.
+     *
+     * Prefixes cells starting with =, +, -, @, tab, or CR with a single
+     * quote so spreadsheet applications treat them as plain text.
+     *
+     * @param mixed $value The raw cell value.
+     *
+     * @return string The quoted and injection-safe cell string.
+     */
+    private function neutralizeCsvCell(mixed $value): string
+    {
+        $str = (string) $value;
+        if (preg_match('/^[=+\-@\t\r]/', $str) === 1) {
+            $str = "'".$str;
+        }
+
+        return '"'.str_replace('"', '""', $str).'"';
+    }//end neutralizeCsvCell()
 
     /**
      * Calculate average handling time from durations.
