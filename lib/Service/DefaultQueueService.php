@@ -144,9 +144,7 @@ class DefaultQueueService
                         'schema'   => $queueSchemaId,
                     ],
                     'limit'   => 1,
-                ],
-                _rbac: false,
-                _multitenancy: false
+                ]
             );
 
             if (empty($existing) === false) {
@@ -160,9 +158,7 @@ class DefaultQueueService
                     [],
                     $registerId,
                     $queueSchemaId,
-                    null,
-                    _rbac: false,
-                    _multitenancy: false
+                    null
                 );
                 $this->logger->info("Pipelinq: Created default queue '{$queueData['title']}'");
             }
@@ -203,9 +199,7 @@ class DefaultQueueService
                         'schema'   => $skillSchemaId,
                     ],
                     'limit'   => 1,
-                ],
-                _rbac: false,
-                _multitenancy: false
+                ]
             );
 
             if (empty($existing) === false) {
@@ -219,9 +213,7 @@ class DefaultQueueService
                     [],
                     $registerId,
                     $skillSchemaId,
-                    null,
-                    _rbac: false,
-                    _multitenancy: false
+                    null
                 );
                 $this->logger->info("Pipelinq: Created default skill '{$skillData['title']}'");
             }

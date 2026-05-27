@@ -114,10 +114,8 @@ class ContactVcardService
         try {
             $object = $objectService->findObject(
                 $objectId,
-                    $registerId,
-                    $schemaId,
-                    _rbac: false,
-                    _multitenancy: false
+                $registerId,
+                $schemaId
             );
         } catch (\Exception $e) {
             $this->logger->error('Pipelinq: Failed to fetch object for sync', ['exception' => $e->getMessage()]);

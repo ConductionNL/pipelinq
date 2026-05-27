@@ -22,7 +22,9 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\Pipelinq\Controller\CallbackController;
 use OCA\Pipelinq\Service\CallbackService;
 use OCA\Pipelinq\Service\NotificationService;
+use OCA\Pipelinq\Service\ScheduledTaskService;
 use OCP\IAppConfig;
+use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -64,11 +66,25 @@ class CallbackControllerTest extends TestCase
     private IRequest $request;
 
     /**
+     * Mock scheduled task service.
+     *
+     * @var ScheduledTaskService&MockObject
+     */
+    private ScheduledTaskService $scheduledTaskService;
+
+    /**
      * Mock app config.
      *
      * @var IAppConfig&MockObject
      */
     private IAppConfig $appConfig;
+
+    /**
+     * Mock group manager.
+     *
+     * @var IGroupManager&MockObject
+     */
+    private IGroupManager $groupManager;
 
     /**
      * Mock user session.
@@ -84,23 +100,27 @@ class CallbackControllerTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->request             = $this->createMock(IRequest::class);
-        $this->callbackService     = $this->createMock(CallbackService::class);
-        $this->notificationService = $this->createMock(NotificationService::class);
-        $this->appConfig           = $this->createMock(IAppConfig::class);
-        $this->userSession         = $this->createMock(IUserSession::class);
-        $user                      = $this->createMock(\OCP\IUser::class);
+        $this->request               = $this->createMock(IRequest::class);
+        $this->callbackService       = $this->createMock(CallbackService::class);
+        $this->notificationService   = $this->createMock(NotificationService::class);
+        $this->scheduledTaskService  = $this->createMock(ScheduledTaskService::class);
+        $this->appConfig             = $this->createMock(IAppConfig::class);
+        $this->groupManager          = $this->createMock(IGroupManager::class);
+        $this->userSession           = $this->createMock(IUserSession::class);
+        $user                        = $this->createMock(\OCP\IUser::class);
         $user->method('getUID')->willReturn('test-agent');
         $this->userSession->method('getUser')->willReturn($user);
-        $logger                    = $this->createMock(LoggerInterface::class);
-        $l10n                      = $this->createMock(IL10N::class);
+        $logger                      = $this->createMock(LoggerInterface::class);
+        $l10n                        = $this->createMock(IL10N::class);
         $l10n->method('t')->willReturnArgument(0);
 
         $this->controller = new CallbackController(
             $this->request,
             $this->callbackService,
             $this->notificationService,
+            $this->scheduledTaskService,
             $this->appConfig,
+            $this->groupManager,
             $this->userSession,
             $l10n,
             $logger,
@@ -125,7 +145,7 @@ class CallbackControllerTest extends TestCase
     }//end testAttemptReturns400WhenResultMissing()
 
     /**
-     * Test attempt returns 404 when task not found (no config).
+     * Test attempt returns 404 when task not found.
      *
      * @return void
      */
@@ -136,7 +156,8 @@ class CallbackControllerTest extends TestCase
             ['notes', '', ''],
         ]);
 
-        $this->appConfig->method('getValueString')->willReturn('');
+        $this->scheduledTaskService->method('getScheduledTask')
+            ->willThrowException(new \RuntimeException('Task not found'));
 
         $response = $this->controller->attempt('task-123');
 
@@ -155,11 +176,14 @@ class CallbackControllerTest extends TestCase
             ['notes', '', 'Voicemail'],
         ]);
 
-        $this->appConfig->method('getValueString')->willReturn('configured');
+        $taskData = ['id' => 'task-123', 'status' => 'open', 'assigneeUserId' => 'test-agent', 'attempts' => []];
+        $this->scheduledTaskService->method('getScheduledTask')->willReturn($taskData);
+        // authorizeTaskMutation is void; not throwing = authorized.
 
         $updatedTask = ['id' => 'task-123', 'attempts' => [['result' => 'niet_bereikbaar']]];
         $this->callbackService->method('addAttempt')->willReturn($updatedTask);
         $this->callbackService->method('isAttemptThresholdReached')->willReturn(false);
+        $this->scheduledTaskService->method('updateScheduledTask')->willReturn($updatedTask);
 
         $response = $this->controller->attempt('task-123');
 
@@ -173,7 +197,8 @@ class CallbackControllerTest extends TestCase
      */
     public function testClaimReturns403WhenNotEligible(): void
     {
-        $this->appConfig->method('getValueString')->willReturn('configured');
+        $taskData = ['id' => 'task-123', 'status' => 'open', 'assigneeGroupId' => 'support'];
+        $this->scheduledTaskService->method('getScheduledTask')->willReturn($taskData);
         $this->callbackService->method('validateClaim')->willReturn([
             'eligible' => false,
             'reason'   => 'User is not a member of the assigned group',
@@ -191,14 +216,15 @@ class CallbackControllerTest extends TestCase
      */
     public function testClaimReturnsSuccessWhenEligible(): void
     {
-        $this->appConfig->method('getValueString')->willReturn('configured');
+        $taskData = ['id' => 'task-123', 'status' => 'open'];
+        $this->scheduledTaskService->method('getScheduledTask')->willReturn($taskData);
         $this->callbackService->method('validateClaim')->willReturn([
             'eligible' => true,
             'reason'   => '',
         ]);
-        $this->callbackService->method('applyClaim')->willReturn([
-            'id' => 'task-123', 'assigneeUserId' => 'agent-001', 'status' => 'in_behandeling',
-        ]);
+        $claimedTask = ['id' => 'task-123', 'assigneeUserId' => 'agent-001', 'status' => 'in_behandeling'];
+        $this->callbackService->method('applyClaim')->willReturn($claimedTask);
+        $this->scheduledTaskService->method('updateScheduledTask')->willReturn($claimedTask);
 
         $response = $this->controller->claim('task-123');
 
@@ -212,7 +238,9 @@ class CallbackControllerTest extends TestCase
      */
     public function testCompleteReturns400ForInvalidTransition(): void
     {
-        $this->appConfig->method('getValueString')->willReturn('configured');
+        $taskData = ['id' => 'task-123', 'status' => 'open', 'assigneeUserId' => 'test-agent'];
+        $this->scheduledTaskService->method('getScheduledTask')->willReturn($taskData);
+        // authorizeTaskMutation is void; not throwing = authorized.
         $this->callbackService->method('validateStatusTransition')->willReturn([
             'valid'  => false,
             'reason' => 'Transition not allowed',
@@ -234,6 +262,8 @@ class CallbackControllerTest extends TestCase
             ['assignee', '', ''],
             ['assigneeType', '', ''],
         ]);
+        // Admin check: user is admin.
+        $this->groupManager->method('isAdmin')->willReturn(true);
 
         $response = $this->controller->reassign('task-123');
 
@@ -241,7 +271,25 @@ class CallbackControllerTest extends TestCase
     }//end testReassignReturns400WhenAssigneeMissing()
 
     /**
-     * Test reassign returns success with valid data.
+     * Test reassign returns 403 when caller is not an admin.
+     *
+     * @return void
+     */
+    public function testReassignReturns403WhenNotAdmin(): void
+    {
+        $this->request->method('getParam')->willReturnMap([
+            ['assignee', '', 'new-user'],
+            ['assigneeType', '', 'user'],
+        ]);
+        $this->groupManager->method('isAdmin')->willReturn(false);
+
+        $response = $this->controller->reassign('task-123');
+
+        $this->assertSame(403, $response->getStatus());
+    }//end testReassignReturns403WhenNotAdmin()
+
+    /**
+     * Test reassign returns success with valid data (admin user).
      *
      * @return void
      */
@@ -251,18 +299,16 @@ class CallbackControllerTest extends TestCase
             ['assignee', '', 'new-user'],
             ['assigneeType', '', 'user'],
         ]);
+        $this->groupManager->method('isAdmin')->willReturn(true);
 
-        $this->appConfig->method('getValueString')->willReturn('configured');
-        $this->callbackService->method('applyReassignment')->willReturn([
-            'id' => 'task-123', 'assigneeUserId' => 'new-user',
-        ]);
-        $this->callbackService->method('addAttempt')->willReturn([
-            'id' => 'task-123', 'assigneeUserId' => 'new-user', 'attempts' => [],
-        ]);
+        $taskData        = ['id' => 'task-123', 'status' => 'open', 'subject' => 'Call'];
+        $reassignedTask  = ['id' => 'task-123', 'assigneeUserId' => 'new-user'];
+        $withAttemptTask = ['id' => 'task-123', 'assigneeUserId' => 'new-user', 'attempts' => []];
 
-        $user = $this->createMock(\OCP\IUser::class);
-        $user->method('getUID')->willReturn('current-user');
-        $this->userSession->method('getUser')->willReturn($user);
+        $this->scheduledTaskService->method('getScheduledTask')->willReturn($taskData);
+        $this->callbackService->method('applyReassignment')->willReturn($reassignedTask);
+        $this->callbackService->method('addAttempt')->willReturn($withAttemptTask);
+        $this->scheduledTaskService->method('updateScheduledTask')->willReturn($withAttemptTask);
 
         $response = $this->controller->reassign('task-123');
 
