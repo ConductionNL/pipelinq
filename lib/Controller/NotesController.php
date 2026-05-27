@@ -32,6 +32,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
 
 /**
  * Controller for managing notes on Pipelinq entities.
@@ -46,6 +47,7 @@ class NotesController extends Controller
      * @param NoteEventService $noteEventService The note event service.
      * @param IUserSession     $userSession      The user session.
      * @param IL10N            $l10n             The localization service.
+     * @param LoggerInterface  $logger           The logger.
      */
     public function __construct(
         IRequest $request,
@@ -53,6 +55,7 @@ class NotesController extends Controller
         private NoteEventService $noteEventService,
         private IUserSession $userSession,
         private IL10N $l10n,
+        private LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -87,7 +90,8 @@ class NotesController extends Controller
             );
             return new JSONResponse(['notes' => $notes]);
         } catch (\Exception $e) {
-            return new JSONResponse(['error' => $e->getMessage()], 500);
+            $this->logger->error('NotesController: list failed', ['exception' => $e]);
+            return new JSONResponse(['error' => $this->l10n->t('An unexpected error occurred')], 500);
         }
     }//end list()
 
@@ -133,19 +137,22 @@ class NotesController extends Controller
 
             return new JSONResponse(['note' => $note]);
         } catch (\Exception $e) {
-            return new JSONResponse(['error' => $e->getMessage()], 500);
+            $this->logger->error('NotesController: create failed', ['exception' => $e]);
+            return new JSONResponse(['error' => $this->l10n->t('An unexpected error occurred')], 500);
         }
     }//end create()
 
     /**
-     * Delete all notes for an entity (cleanup on entity deletion).
+     * Delete all notes for an entity (admin/cleanup only).
+     *
+     * Restricted to Nextcloud administrators. Regular users may only delete
+     * their own notes via deleteSingle(). This prevents any authenticated
+     * user from bulk-deleting all notes on entities they do not own.
      *
      * @param string $objectType The object type.
      * @param string $objectId   The object ID.
      *
      * @return JSONResponse The response.
-     *
-     * @NoAdminRequired
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-29
      */
@@ -154,6 +161,10 @@ class NotesController extends Controller
         $user = $this->userSession->getUser();
         if ($user === null) {
             return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($user->isAdmin() === false) {
+            return new JSONResponse(['error' => $this->l10n->t('Admin privileges required')], Http::STATUS_FORBIDDEN);
         }
 
         if (in_array($objectType, NotesService::VALID_TYPES, true) === false) {
@@ -167,7 +178,8 @@ class NotesController extends Controller
             );
             return new JSONResponse(['success' => true]);
         } catch (\Exception $e) {
-            return new JSONResponse(['error' => $e->getMessage()], 500);
+            $this->logger->error('NotesController: deleteAll failed', ['exception' => $e]);
+            return new JSONResponse(['error' => $this->l10n->t('An unexpected error occurred')], 500);
         }
     }//end deleteAll()
 
@@ -193,7 +205,8 @@ class NotesController extends Controller
             $this->notesService->deleteNote(noteId: $noteId);
             return new JSONResponse(['success' => true]);
         } catch (\Exception $e) {
-            return new JSONResponse(['error' => $e->getMessage()], 403);
+            $this->logger->warning('NotesController: deleteSingle denied', ['exception' => $e->getMessage(), 'noteId' => $noteId]);
+            return new JSONResponse(['error' => $this->l10n->t('Not authorized or note not found')], Http::STATUS_FORBIDDEN);
         }
     }//end deleteSingle()
 }//end class
