@@ -1,5 +1,7 @@
 # Design: migrate-kennisbank-to-xwiki-leaf
 
+status: pr-created
+
 ## Architecture
 
 The bespoke kennisbank is replaced by the OpenRegister **xwiki leaf**
@@ -85,6 +87,18 @@ export → import-as-xWiki-pages → relink pass is required. Scoped as a separa
 follow-up to keep this migration bounded (ADR-032). The maintainer SHOULD open a
 tracking issue at apply time per the team's "file issues for deferred work"
 convention.
+
+**Follow-up tracking item (ADR-032):**
+- Export all `kennisartikel` / `kenniscategorie` / `kennisfeedback` objects from
+  OpenRegister via the Objects API export endpoint.
+- Import content as xWiki pages in the `Kennisbank` space (preserving category
+  hierarchy as sub-spaces).
+- Re-link any objects that reference `kennisartikel` UUIDs to the new xWiki
+  page URLs via the xwiki leaf link mechanism.
+- Open a GitHub issue on ConductionNL/pipelinq tagged `follow-up:content-migration`
+  to track this work.
+
+status: follow-up — not in this change
 
 ## Risks
 

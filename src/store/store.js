@@ -59,15 +59,6 @@ export async function initializeStores() {
 		if (config.register && config.agentProfile_schema) {
 			objectStore.registerObjectType('agentProfile', config.agentProfile_schema, config.register)
 		}
-		if (config.register && config.kennisartikel_schema) {
-			objectStore.registerObjectType('kennisartikel', config.kennisartikel_schema, config.register)
-		}
-		if (config.register && config.kenniscategorie_schema) {
-			objectStore.registerObjectType('kenniscategorie', config.kenniscategorie_schema, config.register)
-		}
-		if (config.register && config.kennisfeedback_schema) {
-			objectStore.registerObjectType('kennisfeedback', config.kennisfeedback_schema, config.register)
-		}
 		if (config.register && config.contactmoment_schema) {
 			objectStore.registerObjectType('contactmoment', config.contactmoment_schema, config.register)
 		}

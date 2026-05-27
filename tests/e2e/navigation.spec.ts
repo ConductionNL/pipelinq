@@ -11,7 +11,7 @@ test.describe.skip('Sidebar Navigation', () => {  // TODO(#392): rewrite for man
 		for (const label of [
 			'Dashboard', 'Clients', 'Contacts', 'Leads', 'Requests',
 			'Tasks', 'Contactmomenten', 'Complaints', 'Products', 'Pipeline',
-			'Surveys', 'Queues', 'Kennisbank', 'My Work', 'Reporting', 'Documentation',
+			'Surveys', 'Queues', 'My Work', 'Reporting', 'Documentation',
 		]) {
 			await expect(nav.getByText(label, { exact: true })).toBeVisible()
 		}
@@ -33,7 +33,6 @@ test.describe.skip('Sidebar Navigation', () => {  // TODO(#392): rewrite for man
 			Pipeline: '/apps/pipelinq/pipeline',
 			Surveys: '/apps/pipelinq/surveys',
 			Queues: '/apps/pipelinq/queues',
-			Kennisbank: '/apps/pipelinq/kennisbank',
 			'My Work': '/apps/pipelinq/my-work',
 			Reporting: '/apps/pipelinq/rapportage',
 		}
