@@ -154,7 +154,18 @@ class ScheduledTaskService
             $filters['deadline']['<='] = $params['to'];
         }
 
+        $items = [];
+        $total = 0;
+
         try {
+            // Fetch the total count without pagination so the envelope
+            // reflects the true result-set size, not just the page size.
+            $allItems = $this->getObjectService()->findAll(
+                ['filters' => $filters]
+            );
+            $total    = count($allItems);
+
+            // Fetch the paginated page.
             $items = $this->getObjectService()->findAll(
                 [
                     'filters' => $filters,
@@ -168,11 +179,12 @@ class ScheduledTaskService
                 'ScheduledTaskService: findAll failed',
                 ['exception' => $e]
             );
-            $items = [];
-        }
+        }//end try
 
-        $total = count($items);
-        $pages = (int) ceil($total / $limit);
+        $pages = 0;
+        if ($total > 0) {
+            $pages = (int) ceil($total / $limit);
+        }
 
         return [
             'items' => $items,
@@ -201,14 +213,16 @@ class ScheduledTaskService
         }
 
         try {
-            $object = $this->getObjectService()->findObject(
+            $object = $this->getObjectService()->find(
                 $id,
+                [],
+                false,
                 $registerId,
                 $schemaId
             );
         } catch (Throwable $e) {
             $this->logger->error(
-                'ScheduledTaskService: findObject failed',
+                'ScheduledTaskService: find failed',
                 ['exception' => $e, 'id' => $id]
             );
             throw new RuntimeException('Task not found');
@@ -250,6 +264,13 @@ class ScheduledTaskService
 
         if (isset($data['deadline']) === false || trim((string) $data['deadline']) === '') {
             throw new InvalidArgumentException('Invalid input');
+        }
+
+        // Require ISO-8601 format (YYYY-MM-DD or YYYY-MM-DDThh:mm[:ss][Z])
+        // to prevent relative expressions like "yesterday" or "+2 weeks" from
+        // passing silently and producing server-timezone-dependent deadlines.
+        if ($this->isValidIso8601Deadline(deadline: (string) $data['deadline']) === false) {
+            throw new InvalidArgumentException('Deadline must be a valid ISO-8601 date (e.g. 2025-12-31 or 2025-12-31T14:00:00Z)');
         }
 
         [$registerId, $schemaId] = $this->getRegisterAndSchema();
@@ -536,6 +557,32 @@ class ScheduledTaskService
 
         throw new OCSForbiddenException('Not authorized');
     }//end authorizeTaskMutation()
+
+    /**
+     * Validate that a deadline string is an ISO-8601 date or datetime.
+     *
+     * Accepts YYYY-MM-DD and YYYY-MM-DDThh:mm (with optional seconds and Z/offset).
+     * Rejects relative expressions ("yesterday", "+2 weeks") that strtotime accepts,
+     * preventing server-timezone-dependent deadline values.
+     *
+     * @param string $deadline The raw deadline string.
+     *
+     * @return bool True when the format is a strict ISO-8601 date(-time).
+     */
+    private function isValidIso8601Deadline(string $deadline): bool
+    {
+        // YYYY-MM-DD (date only).
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $deadline) === 1) {
+            return true;
+        }
+
+        // YYYY-MM-DDThh:mm, YYYY-MM-DDThh:mm:ss, with optional Z or offset.
+        if (preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(Z|[+-]\d{2}:\d{2})?$/', $deadline) === 1) {
+            return true;
+        }
+
+        return false;
+    }//end isValidIso8601Deadline()
 
     /**
      * Read configured register and task schema IDs.

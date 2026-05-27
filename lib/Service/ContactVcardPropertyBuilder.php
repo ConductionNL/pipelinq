@@ -157,8 +157,10 @@ class ContactVcardPropertyBuilder
         }
 
         try {
-            $client = $objectService->findObject(
+            $client = $objectService->find(
                 $clientId,
+                [],
+                false,
                 $registerId,
                 $schemaId
             );

@@ -101,7 +101,6 @@ class PreferencesController extends Controller
      * @return JSONResponse `{value: string|null}`.
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      * @spec            openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-2
      */
     public function setPreference(string $key, string $value=''): JSONResponse

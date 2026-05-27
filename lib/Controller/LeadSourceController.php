@@ -32,6 +32,7 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
 
 /**
  * Controller for lead source management.
@@ -46,11 +47,13 @@ class LeadSourceController extends Controller
      * @param IRequest         $request          The request.
      * @param SystemTagService $systemTagService The system tag service.
      * @param IUserSession     $userSession      The user session.
+     * @param LoggerInterface  $logger           The logger.
      */
     public function __construct(
         IRequest $request,
         private SystemTagService $systemTagService,
         private IUserSession $userSession,
+        private LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -148,7 +151,8 @@ class LeadSourceController extends Controller
             );
             return new JSONResponse(['success' => true]);
         } catch (\Exception $e) {
-            return new JSONResponse(['success' => false, 'message' => $e->getMessage()], 500);
+            $this->logger->error('LeadSourceController::destroy failed', ['exception' => $e]);
+            return new JSONResponse(['success' => false, 'message' => 'An unexpected error occurred'], 500);
         }
     }//end destroy()
 }//end class

@@ -166,18 +166,33 @@ class ReportingService
     /**
      * Update SLA target for a channel.
      *
+     * Validates that channel and metric are in the DEFAULT_SLA_TARGETS allowlist
+     * before constructing the appconfig key, preventing arbitrary key injection
+     * into oc_appconfig (issue #606).
+     *
      * @param string $channel The channel type.
      * @param string $metric  The metric name.
      * @param string $value   The target value.
      *
-     * @return void
+     * @return bool False when channel or metric is not in the allowlist.
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
      */
-    public function setSlaTarget(string $channel, string $metric, string $value): void
+    public function setSlaTarget(string $channel, string $metric, string $value): bool
     {
+        // Validate channel against the allowlist.
+        if (isset(self::DEFAULT_SLA_TARGETS[$channel]) === false) {
+            return false;
+        }
+
+        // Validate metric against the allowed metrics for this channel.
+        if (array_key_exists($metric, self::DEFAULT_SLA_TARGETS[$channel]) === false) {
+            return false;
+        }
+
         $key = 'sla_'.$channel.'_'.$metric;
         $this->appConfig->setValueString('pipelinq', $key, $value);
+        return true;
     }//end setSlaTarget()
 
     /**
@@ -195,20 +210,37 @@ class ReportingService
     public function generateCsv(array $headers, array $rows): string
     {
         $bom    = "\xEF\xBB\xBF";
-        $output = $bom.implode(';', $headers)."\n";
+        $output = $bom.implode(';', array_map([$this, 'neutralizeCsvCell'], $headers))."\n";
 
         foreach ($rows as $row) {
             $output .= implode(
                     ';',
-                    array_map(
-                static fn($v) => '"'.str_replace('"', '""', (string) $v).'"',
-                $row,
-            )
+                    array_map([$this, 'neutralizeCsvCell'], $row)
                     )."\n";
         }
 
         return $output;
     }//end generateCsv()
+
+    /**
+     * Neutralize a CSV cell value to prevent formula injection.
+     *
+     * Prefixes cells starting with =, +, -, @, tab, or CR with a single
+     * quote so spreadsheet applications treat them as plain text.
+     *
+     * @param mixed $value The raw cell value.
+     *
+     * @return string The quoted and injection-safe cell string.
+     */
+    private function neutralizeCsvCell(mixed $value): string
+    {
+        $str = (string) $value;
+        if (preg_match('/^[=+\-@\t\r]/', $str) === 1) {
+            $str = "'".$str;
+        }
+
+        return '"'.str_replace('"', '""', $str).'"';
+    }//end neutralizeCsvCell()
 
     /**
      * Calculate average handling time from durations.

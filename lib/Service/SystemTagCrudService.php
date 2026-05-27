@@ -168,7 +168,11 @@ class SystemTagCrudService
     }//end unassignAndCleanup()
 
     /**
-     * Rename a system tag.
+     * Rename a system tag, preserving the existing userAssignable value.
+     *
+     * The previous implementation hardcoded userAssignable:false on every
+     * rename, permanently locking the tag from the Nextcloud UI regardless of
+     * how it was originally created (issue #605).
      *
      * @param int    $tagId   The tag ID.
      * @param string $newName The new name.
@@ -178,11 +182,19 @@ class SystemTagCrudService
      */
     public function renameSystemTag(int $tagId, string $newName): void
     {
+        // Read existing flags so we do not clobber userAssignable on rename.
+        $existingTags   = $this->tagManager->getTagsByIds([(string) $tagId]);
+        $userAssignable = false;
+        if (empty($existingTags) === false) {
+            $existingTag    = reset($existingTags);
+            $userAssignable = $existingTag->isUserAssignable();
+        }
+
         $this->tagManager->updateTag(
             tagId: (string) $tagId,
             newName: $newName,
             userVisible: true,
-            userAssignable: false,
+            userAssignable: $userAssignable,
             color: null
         );
     }//end renameSystemTag()

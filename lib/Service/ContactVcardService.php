@@ -35,6 +35,16 @@ use Psr\Log\LoggerInterface;
 class ContactVcardService
 {
     /**
+     * Allowed object types for vCard sync.
+     *
+     * Only these values may be used to construct an IAppConfig key, preventing
+     * an unvalidated caller-supplied $objectType from reaching arbitrary keys.
+     *
+     * @var string[]
+     */
+    private const ALLOWED_OBJECT_TYPES = ['client', 'contact'];
+
+    /**
      * Constructor.
      *
      * @param IContactsManager            $contactsManager The contacts manager.
@@ -102,6 +112,11 @@ class ContactVcardService
      */
     private function fetchPipelinqObject(string $objectType, string $objectId): ?array
     {
+        if (in_array($objectType, self::ALLOWED_OBJECT_TYPES, true) === false) {
+            $this->logger->warning('ContactVcardService: invalid objectType', ['objectType' => $objectType]);
+            return null;
+        }
+
         $objectService = $this->getObjectService();
         $registerId    = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
         $schemaId      = $this->appConfig->getValueString(Application::APP_ID, "{$objectType}_schema", '');
@@ -112,8 +127,10 @@ class ContactVcardService
         }
 
         try {
-            $object = $objectService->findObject(
+            $object = $objectService->find(
                 $objectId,
+                [],
+                false,
                 $registerId,
                 $schemaId
             );
