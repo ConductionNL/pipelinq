@@ -15,7 +15,6 @@ import {
 import pinia from './pinia.js'
 import App from './App.vue'
 import bundledManifest from './manifest.json'
-import customComponents from './customComponents.js'
 import registry from './registry.js'
 import { initializeStores } from './store/store.js'
 
@@ -95,15 +94,14 @@ const router = new VueRouter({
 tryLoadTranslations()
 
 // Pass shallow copies of the registry maps to CnAppRoot. The lib exports
-// `defaultPageTypes` (and consumers' `customComponents`) as frozen module
-// objects in some bundle shapes — Vue 2's `Vue.extend()` mutates component
-// definitions to attach an internal `_Ctor` cache, which throws
-// "Cannot add property _Ctor, object is not extensible" against a frozen
-// source map. Cloning here yields extensible objects without changing
-// the values the lib resolves at render time. Shipped lib-side as part
-// of @conduction/nextcloud-vue@1.0.0-beta.12; defence-in-depth here.
+// `defaultPageTypes` and `registry` as frozen module objects in some bundle
+// shapes — Vue 2's `Vue.extend()` mutates component definitions to attach an
+// internal `_Ctor` cache, which throws "Cannot add property _Ctor, object is
+// not extensible" against a frozen source map. Cloning here yields extensible
+// objects without changing the values the lib resolves at render time.
+// Shipped lib-side as part of @conduction/nextcloud-vue@1.0.0-beta.12;
+// defence-in-depth here.
 const pageTypesProp = { ...defaultPageTypes }
-const customComponentsProp = { ...customComponents }
 const registryProp = { ...registry }
 
 // Create and mount Vue instance immediately so the App renders.
@@ -113,7 +111,6 @@ new Vue({
 	render: (h) => h(App, {
 		props: {
 			manifest: bundledManifest,
-			customComponents: customComponentsProp,
 			registry: registryProp,
 			pageTypes: pageTypesProp,
 		},
