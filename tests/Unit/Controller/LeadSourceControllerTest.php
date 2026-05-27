@@ -23,6 +23,8 @@ use OCA\Pipelinq\Controller\LeadSourceController;
 use OCA\Pipelinq\Service\SystemTagService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUser;
+use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -45,16 +47,39 @@ class LeadSourceControllerTest extends TestCase
     private SystemTagService $tagService;
 
     /**
+     * Mock user session.
+     *
+     * @var IUserSession
+     */
+    private IUserSession $userSession;
+
+    /**
+     * Mock request.
+     *
+     * @var IRequest
+     */
+    private IRequest $request;
+
+    /**
      * Set up the test.
      *
      * @return void
      */
     protected function setUp(): void
     {
-        $request          = $this->createMock(IRequest::class);
-        $this->tagService = $this->createMock(SystemTagService::class);
+        $this->request     = $this->createMock(IRequest::class);
+        $this->tagService  = $this->createMock(SystemTagService::class);
+        $this->userSession = $this->createMock(IUserSession::class);
 
-        $this->controller = new LeadSourceController($request, $this->tagService);
+        $user = $this->createMock(IUser::class);
+        $user->method('getUID')->willReturn('test-user');
+        $this->userSession->method('getUser')->willReturn($user);
+
+        $this->controller = new LeadSourceController(
+            $this->request,
+            $this->tagService,
+            $this->userSession,
+        );
     }//end setUp()
 
     /**
@@ -89,7 +114,7 @@ class LeadSourceControllerTest extends TestCase
         $this->tagService->method('addTag')
             ->willReturn(['id' => 2, 'name' => 'Referral']);
 
-        $controller = new LeadSourceController($request, $this->tagService);
+        $controller = new LeadSourceController($request, $this->tagService, $this->userSession);
         $response   = $controller->create();
 
         $data = $response->getData();
@@ -110,7 +135,7 @@ class LeadSourceControllerTest extends TestCase
         $this->tagService->method('addTag')
             ->willThrowException(new \InvalidArgumentException('Tag name cannot be empty'));
 
-        $controller = new LeadSourceController($request, $this->tagService);
+        $controller = new LeadSourceController($request, $this->tagService, $this->userSession);
         $response   = $controller->create();
 
         $this->assertSame(400, $response->getStatus());
@@ -130,4 +155,5 @@ class LeadSourceControllerTest extends TestCase
         $data = $response->getData();
         $this->assertTrue($data['success']);
     }//end testDestroyReturnsSuccess()
+
 }//end class
