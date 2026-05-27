@@ -261,25 +261,6 @@ test.describe.skip('Queues page', () => {  // TODO(#392): rewrite for manifest-d
 	})
 })
 
-test.describe.skip('Kennisbank page', () => {  // TODO(#392): rewrite for manifest-driven app shell
-
-	test('renders knowledge base with search and categories', async ({ page }) => {
-		await page.goto('/apps/pipelinq/kennisbank')
-		await expect(page.getByRole('heading', { name: 'Knowledge Base', level: 2 })).toBeVisible({ timeout: 10000 })
-		await expect(page.getByPlaceholder('Search articles')).toBeVisible()
-		await expect(page.getByRole('button', { name: 'New Article' })).toBeVisible()
-	})
-
-	test('new article form has correct fields', async ({ page }) => {
-		await page.goto('/apps/pipelinq/kennisbank/articles/new')
-		await expect(page.getByRole('heading', { name: 'New Article', level: 2 })).toBeVisible({ timeout: 10000 })
-		await expect(page.getByRole('textbox', { name: 'Title' })).toBeVisible()
-		await expect(page.getByRole('textbox', { name: /Summary/i })).toBeVisible()
-		await expect(page.getByPlaceholder(/Markdown/i)).toBeVisible()
-		await expect(page.getByRole('button', { name: 'Publish' })).toBeVisible()
-		await expect(page.getByRole('button', { name: 'Save as draft' })).toBeVisible()
-	})
-})
 
 test.describe.skip('Reporting page', () => {  // TODO(#392): rewrite for manifest-driven app shell
 
