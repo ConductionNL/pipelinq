@@ -3,9 +3,14 @@
 
 <!--
  Pipelinq app shell. Mounts CnAppRoot with the bundled manifest and
- the customComponents registry; provides the `objectSidebarState`
- channel so detail pages (CnDetailPage) can drive a single
- host-rendered CnObjectSidebar through the #sidebar slot.
+ the v2 kind-tagged registry prop (ADR-036); provides the
+ `objectSidebarState` channel so detail pages (CnDetailPage) can drive
+ a single host-rendered CnObjectSidebar through the #sidebar slot.
+
+ The deprecated `customComponents` prop has been replaced by the v2
+ `registry` prop (ADR-036). Each page/widget component is wrapped as
+ `{ kind, component }` in src/registry.js and resolved by CnPageRenderer
+ at render time. See nextcloud-vue#458 and openregister#1988.
 
  The legacy `sidebarState` channel is still provided as a no-op
  surface for any straggler view that injects it (notably the dead
@@ -22,7 +27,6 @@
 <template>
 	<CnAppRoot
 		:manifest="manifest"
-		:custom-components="customComponents"
 		:registry="registry"
 		:page-types="pageTypes"
 		app-id="pipelinq"
@@ -83,22 +87,11 @@ export default {
 			required: true,
 		},
 		/**
-		 * Registry of consumer-injected components used by:
-		 *   - `type: "custom"` pages (`page.component`)
-		 *   - `headerComponent` / `actionsComponent` slot overrides
-		 *   - `pages[].config.sidebarTabs[].component` (detail tab tabs)
-		 *   - `pages[].config.sections[].component` (settings rich sections)
-		 */
-		customComponents: {
-			type: Object,
-			default: () => ({}),
-		},
-		/**
-		 * V2 component registry — maps string keys from `manifest.pages[].component`
-		 * to `{ kind, component }` entries. Passed through to CnAppRoot for v2
-		 * renderer resolution. The v2 renderer emits a one-shot deprecation
-		 * warning when both `registry` and `customComponents` are present and the
-		 * manifest declares `$schema` as the v2 URL.
+		 * V2 component registry (ADR-036) — maps string keys from
+		 * `manifest.pages[].component` to `{ kind, component }` entries.
+		 * Page components use `kind: "page"`; dashboard widget/header
+		 * overrides use `kind: "widget"`. Passed through to CnAppRoot for
+		 * v2 renderer resolution. See nextcloud-vue#458 and openregister#1988.
 		 */
 		registry: {
 			type: Object,

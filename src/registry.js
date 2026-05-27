@@ -1,25 +1,26 @@
-// SPDX-License-Identifier: EUPL-1.2
-// Copyright (C) 2026 Conduction B.V.
-//
-// V2 component registry for pipelinq.
-//
-// Every entry here corresponds to a manifest `type: "custom"` page, a
-// dashboard widget rendered via a `slots` mapping, or a
-// `headerComponent` / `actionsComponent` override on a typed page.
-//
-// Recognised kinds: page, modal, widget, form-field, cell-renderer
-//
-// Resolution order (v2 renderer):
-//   1. Built-in page types   (CnIndexPage, CnDetailPage, CnDashboardPage, …)
-//   2. Built-in widget types (version-info, register-mapping, …)
-//   3. registry (this file)  ← consumer-injected components
-//   4. customComponents      ← v1 fallback, kept during transition
-//
-// See:
-//   - openspec/changes/pipelinq-manifest-v1/design.md
-//   - hydra/openspec/architecture/adr-036-manifest-v2.md
+/**
+ * Pipelinq v2 component registry (ADR-036).
+ *
+ * Kind-tagged map passed as the `registry` prop to CnAppRoot. CnPageRenderer
+ * resolves each manifest page's `component` string against entries whose
+ * `kind === "page"` (with precedence over the deprecated `customComponents`
+ * prop, which Pipelinq no longer ships after this migration).
+ *
+ * Every full-page bespoke route is wrapped as `{ kind: 'page', component }`
+ * via the `page()` helper. Dashboard widget components that are resolved
+ * through a manifest `slots` map or `actionsComponent` field are wrapped
+ * as `{ kind: 'widget', component }` via the `widget()` helper. Only
+ * components that genuinely cannot be expressed as a declarative manifest
+ * type belong here — the lib's built-in `index`/`detail`/`dashboard` types
+ * cover the majority of pipelinq pages.
+ *
+ * @see hydra/openspec/architecture/adr-036-manifest-v2.md
+ * @see openspec/changes/pipelinq-manifest-v1/design.md
+ *
+ * SPDX-License-Identifier: EUPL-1.2
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ */
 
-// --- MyWork — bespoke per-user surface mixing tasks + leads + requests. ---
 import MyWorkView from './views/MyWork.vue'
 
 // --- Dashboard (manifest-driven type:"dashboard") — header actions and
@@ -62,139 +63,64 @@ import AgentPerformanceView from './views/rapportage/AgentPerformance.vue'
 import PipelineManagerView from './views/settings/PipelineManager.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
 
-// --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
-
 /**
- * V2 component registry.
+ * Wrap a Vue component into the v2 registry shape required by CnAppRoot's
+ * `registry` prop (`kind: "page"` is the discriminator CnPageRenderer keys
+ * page dispatch off).
  *
- * Keys must match the `component` strings used in the manifest.
- * All full-page custom routes are kind: "page" — the v2 renderer resolves
- * any `component` key from this registry at render time.
- *
- * @type {Record<string, { kind: string, component: object, _note?: string }>}
+ * @param {object} component Vue component options.
+ * @return {object} A `{ kind: "page", component }` registry entry.
  */
-const registry = {
-	// --- MyWork — multi-entity user dashboard. ---
-	MyWorkView: {
-		kind: 'page',
-		component: MyWorkView,
-		_note: 'Personalised work surface mixing tasks + leads + requests for the current user; no single-entity typed page captures multi-entity user dashboard.',
-	},
-
-	// --- Dashboard widgets (rendered as #widget-{id} slots inside
-	//     CnDashboardPage via the manifest Dashboard page's `slots` map).
-	//     KPI widgets compute their counts from multiple cross-schema
-	//     fetches (e.g. overdue = leads filtered against pipeline
-	//     isClosed stages) that the declarative `stats-block` +
-	//     `dataSource` shorthand can't express, so they ship as small
-	//     custom widget components instead. ---
-	DashboardHeaderActions: {
-		kind: 'widget',
-		component: DashboardHeaderActions,
-		_note: 'Dashboard header buttons (New Lead / Request / Client + Refresh) wired as the Dashboard page actionsComponent.',
-	},
-	OpenLeadsKpiWidget: {
-		kind: 'widget',
-		component: OpenLeadsKpiWidget,
-		_note: 'KPI card for open leads (leads minus those in pipeline stages flagged isClosed). Renders <CnStatsBlock>.',
-	},
-	OpenRequestsKpiWidget: {
-		kind: 'widget',
-		component: OpenRequestsKpiWidget,
-		_note: 'KPI card for open requests (status new or in_progress). Renders <CnStatsBlock>.',
-	},
-	PipelineValueKpiWidget: {
-		kind: 'widget',
-		component: PipelineValueKpiWidget,
-		_note: 'KPI card for total open-lead value in EUR. Renders <CnStatsBlock>.',
-	},
-	OverdueKpiWidget: {
-		kind: 'widget',
-		component: OverdueKpiWidget,
-		_note: 'KPI card for overdue leads + stale requests. Renders <CnStatsBlock>.',
-	},
-	RequestsByStatusWidget: {
-		kind: 'widget',
-		component: RequestsByStatusWidget,
-		_note: 'Horizontal bar chart of requests grouped by status. Standalone widget — fetches its own data.',
-	},
-	ComplaintsWidget: {
-		kind: 'widget',
-		component: ComplaintsWidget,
-		_note: 'Open / overdue / status breakdown of complaints. Wraps the existing ComplaintsOverviewWidget with a self-contained fetch.',
-	},
-	MyWorkWidget: {
-		kind: 'widget',
-		component: MyWorkWidget,
-		_note: 'Top-5 list of leads + requests assigned to the current user, sorted by overdue → priority → due date.',
-	},
-	ClientOverviewWidget: {
-		kind: 'widget',
-		component: ClientOverviewWidget,
-		_note: 'Top-5 recent clients with a view-all link to ClientList.',
-	},
-
-	// --- Queues / routing rules. ---
-	QueueListView: {
-		kind: 'page',
-		component: QueueListView,
-		_note: 'Bespoke routing-rule editor list with priority ordering; lib gap: no routing-rules list widget.',
-	},
-	QueueDetailView: {
-		kind: 'page',
-		component: QueueDetailView,
-		_note: 'Bespoke routing-rule condition + action builder; lib gap: no routing-rules detail widget.',
-	},
-
-	// --- Surveys. ---
-	SurveyAnalyticsView: {
-		kind: 'page',
-		component: SurveyAnalyticsView,
-		_note: 'Chart-driven survey response analytics with apexcharts; lib gap: no chart-widget page type.',
-	},
-
-	// --- Forms visual builder. ---
-	FormBuilderView: {
-		kind: 'page',
-		component: FormBuilderView,
-		_note: 'Visual form builder with drag-and-drop field palette; lib gap: no form-builder page type. Forms list + FormSubmissions use declarative type:"index".',
-	},
-
-	// --- Automations visual builder. ---
-	AutomationBuilderView: {
-		kind: 'page',
-		component: AutomationBuilderView,
-		_note: 'Visual automation graph editor (trigger + actions); lib gap: no automation-graph page type. Automations list + AutomationHistory use declarative type:"index".',
-	},
-
-	// --- Reporting dashboards. ---
-	RapportageDashboardView: {
-		kind: 'page',
-		component: RapportageDashboardView,
-		_note: 'KPI reporting dashboard with apexcharts; lib gap: no chart-widget page type.',
-	},
-	ChannelAnalyticsView: {
-		kind: 'page',
-		component: ChannelAnalyticsView,
-		_note: 'Channel breakdown analytics with apexcharts; lib gap: no chart-widget page type.',
-	},
-	AgentPerformanceView: {
-		kind: 'page',
-		component: AgentPerformanceView,
-		_note: 'Per-agent performance charts with apexcharts; lib gap: no chart-widget page type.',
-	},
-
-	// --- Admin managers. ---
-	PipelineManagerView: {
-		kind: 'page',
-		component: PipelineManagerView,
-		_note: 'Pipeline stage + transition manager with drag-and-drop reordering; lib gap: no pipeline-designer page type.',
-	},
-	SyncSettingsView: {
-		kind: 'page',
-		component: SyncSettingsView,
-		_note: 'External integration sync configuration panel; lib gap: no settings rich-section type for complex integration config.',
-	},
+function page(component) {
+	return { kind: 'page', component }
 }
 
-export default registry
+/**
+ * Wrap a Vue component into the v2 registry shape for dashboard widgets
+ * and header/actions overrides (`kind: "widget"`).
+ *
+ * @param {object} component Vue component options.
+ * @return {object} A `{ kind: "widget", component }` registry entry.
+ */
+function widget(component) {
+	return { kind: 'widget', component }
+}
+
+export default {
+	// --- MyWork — multi-entity user dashboard. ---
+	MyWorkView: page(MyWorkView),
+
+	// --- Dashboard widget components (resolved via Dashboard page's `slots`
+	//     map and `actionsComponent` field). ---
+	DashboardHeaderActions: widget(DashboardHeaderActions),
+	OpenLeadsKpiWidget: widget(OpenLeadsKpiWidget),
+	OpenRequestsKpiWidget: widget(OpenRequestsKpiWidget),
+	PipelineValueKpiWidget: widget(PipelineValueKpiWidget),
+	OverdueKpiWidget: widget(OverdueKpiWidget),
+	RequestsByStatusWidget: widget(RequestsByStatusWidget),
+	ComplaintsWidget: widget(ComplaintsWidget),
+	MyWorkWidget: widget(MyWorkWidget),
+	ClientOverviewWidget: widget(ClientOverviewWidget),
+
+	// --- Queues / routing rules. ---
+	QueueListView: page(QueueListView),
+	QueueDetailView: page(QueueDetailView),
+
+	// --- Surveys. ---
+	SurveyAnalyticsView: page(SurveyAnalyticsView),
+
+	// --- Forms visual builder. ---
+	FormBuilderView: page(FormBuilderView),
+
+	// --- Automations visual builder. ---
+	AutomationBuilderView: page(AutomationBuilderView),
+
+	// --- Reporting dashboards. ---
+	RapportageDashboardView: page(RapportageDashboardView),
+	ChannelAnalyticsView: page(ChannelAnalyticsView),
+	AgentPerformanceView: page(AgentPerformanceView),
+
+	// --- Admin managers. ---
+	PipelineManagerView: page(PipelineManagerView),
+	SyncSettingsView: page(SyncSettingsView),
+}
