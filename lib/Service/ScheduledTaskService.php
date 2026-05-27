@@ -154,7 +154,18 @@ class ScheduledTaskService
             $filters['deadline']['<='] = $params['to'];
         }
 
+        $items = [];
+        $total = 0;
+
         try {
+            // Fetch the total count without pagination so the envelope
+            // reflects the true result-set size, not just the page size.
+            $allItems = $this->getObjectService()->findAll(
+                ['filters' => $filters]
+            );
+            $total    = count($allItems);
+
+            // Fetch the paginated page.
             $items = $this->getObjectService()->findAll(
                 [
                     'filters' => $filters,
@@ -168,11 +179,12 @@ class ScheduledTaskService
                 'ScheduledTaskService: findAll failed',
                 ['exception' => $e]
             );
-            $items = [];
-        }
+        }//end try
 
-        $total = count($items);
-        $pages = (int) ceil($total / $limit);
+        $pages = 0;
+        if ($total > 0) {
+            $pages = (int) ceil($total / $limit);
+        }
 
         return [
             'items' => $items,
