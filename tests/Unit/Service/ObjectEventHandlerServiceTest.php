@@ -24,7 +24,10 @@ use OCA\Pipelinq\Service\ObjectEventDispatcher;
 use OCA\Pipelinq\Service\ObjectEventHandlerService;
 use OCA\Pipelinq\Service\ObjectUpdateDiffService;
 use OCA\Pipelinq\Service\SchemaMapService;
+use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Tests for ObjectEventHandlerService.
@@ -63,12 +66,19 @@ class ObjectEventHandlerServiceTest extends TestCase
         $this->dispatcher       = $this->createMock(ObjectEventDispatcher::class);
         $diffService            = new ObjectUpdateDiffService();
         $automationService      = $this->createMock(AutomationService::class);
+        $appConfig              = $this->createMock(IAppConfig::class);
+        $appConfig->method('getValueString')->willReturn('');
+        $container              = $this->createMock(ContainerInterface::class);
+        $logger                 = $this->createMock(LoggerInterface::class);
 
         $this->service = new ObjectEventHandlerService(
             $this->schemaMapService,
             $this->dispatcher,
             $diffService,
             $automationService,
+            $appConfig,
+            $container,
+            $logger,
         );
     }//end setUp()
 

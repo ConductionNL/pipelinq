@@ -23,8 +23,16 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\AppInfo\Application;
+use OCP\IAppConfig;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
+
 /**
  * Service for handling object event business logic.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @spec                                           openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-47
  */
 class ObjectEventHandlerService
 {
@@ -35,12 +43,18 @@ class ObjectEventHandlerService
      * @param ObjectEventDispatcher   $dispatcher        The event dispatcher.
      * @param ObjectUpdateDiffService $diffService       The update diff service.
      * @param AutomationService       $automationService The automation service.
+     * @param IAppConfig              $appConfig         The app config.
+     * @param ContainerInterface      $container         The DI container.
+     * @param LoggerInterface         $logger            The logger.
      */
     public function __construct(
         private SchemaMapService $schemaMapService,
         private ObjectEventDispatcher $dispatcher,
         private ObjectUpdateDiffService $diffService,
         private AutomationService $automationService,
+        private IAppConfig $appConfig,
+        private ContainerInterface $container,
+        private LoggerInterface $logger,
     ) {
     }//end __construct()
 
@@ -174,7 +188,14 @@ class ObjectEventHandlerService
     }//end extractOldData()
 
     /**
-     * Fire matching automations for entity creation.
+     * Fire matching automations for entity creation or update events.
+     *
+     * Loads automation rules from OpenRegister, evaluates each rule's conditions
+     * against the trigger + entity data, and dispatches webhook actions for
+     * every matching, active automation.
+     *
+     * Failures are caught and logged; automation errors must never break the
+     * main object-event flow.
      *
      * @param string $trigger    The trigger event name.
      * @param array  $entityData The entity data.
@@ -187,17 +208,110 @@ class ObjectEventHandlerService
     private function fireAutomations(string $trigger, array $entityData, string $objectId): void
     {
         try {
-            $payload = $this->automationService->buildWebhookPayload(
-                automation: ['name' => $trigger],
-                trigger: $trigger,
-                entityData: array_merge($entityData, ['id' => $objectId])
-            );
-            // Webhook firing is handled by the automation execution engine.
-            // This is a placeholder for the full automation matching pipeline.
+            $automations = $this->loadAutomationRules();
+            if ($automations === []) {
+                return;
+            }
+
+            $fullEntityData = array_merge($entityData, ['id' => $objectId]);
+
+            foreach ($automations as $automation) {
+                if ($this->automationService->matchesConditions($automation, $trigger, $fullEntityData) === false) {
+                    continue;
+                }
+
+                $actions = $automation['actions'] ?? [];
+                foreach ($actions as $action) {
+                    if (($action['type'] ?? '') !== 'webhook') {
+                        continue;
+                    }
+
+                    $webhookUrl = (string) ($action['webhookUrl'] ?? '');
+                    if ($webhookUrl === '') {
+                        continue;
+                    }
+
+                    $payload = $this->automationService->buildWebhookPayload(
+                        automation: $automation,
+                        trigger: $trigger,
+                        entityData: $fullEntityData
+                    );
+
+                    $result = $this->automationService->fireWebhook($webhookUrl, $payload);
+                    $this->logger->info(
+                        'ObjectEventHandlerService: automation webhook fired',
+                        [
+                            'trigger'        => $trigger,
+                            'automationName' => $automation['name'] ?? '',
+                            'status'         => $result['status'] ?? 'unknown',
+                        ]
+                    );
+                }//end foreach
+            }//end foreach
         } catch (\Exception $e) {
             // Automation failures must not break the main event flow.
-        }
+            $this->logger->error(
+                'ObjectEventHandlerService: fireAutomations failed',
+                ['trigger' => $trigger, 'error' => $e->getMessage()]
+            );
+        }//end try
     }//end fireAutomations()
+
+    /**
+     * Load automation rules from OpenRegister.
+     *
+     * Returns an empty array when OR is unavailable or not configured.
+     *
+     * @return array<int, array<string, mixed>> The automation rule objects.
+     */
+    private function loadAutomationRules(): array
+    {
+        $registerId       = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $automationSchema = $this->appConfig->getValueString(Application::APP_ID, 'automation_schema', '');
+
+        if ($registerId === '' || $automationSchema === '') {
+            return [];
+        }
+
+        try {
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+            $results       = $objectService->findAll(
+                [
+                    'filters' => [
+                        'register' => $registerId,
+                        'schema'   => $automationSchema,
+                        'isActive' => true,
+                    ],
+                    'limit'   => 200,
+                ]
+            );
+
+            if (is_array($results) === false) {
+                return [];
+            }
+
+            // Normalise ObjectEntity-or-array items to plain arrays.
+            $rules = [];
+            foreach ($results as $item) {
+                if (is_array($item) === true) {
+                    $rules[] = $item;
+                } else if (is_object($item) === true && method_exists($item, 'getObject') === true) {
+                    $data = $item->getObject();
+                    if (is_array($data) === true) {
+                        $rules[] = $data;
+                    }
+                }
+            }
+
+            return $rules;
+        } catch (\Exception $e) {
+            $this->logger->warning(
+                'ObjectEventHandlerService: could not load automation rules',
+                ['error' => $e->getMessage()]
+            );
+            return [];
+        }//end try
+    }//end loadAutomationRules()
 
     /**
      * Fire matching automations for entity update events.

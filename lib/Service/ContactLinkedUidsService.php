@@ -89,9 +89,7 @@ class ContactLinkedUidsService
 
         try {
             $objects = $objectService->findAll(
-                ['filters' => ['register' => $registerId, 'schema' => $schemaId], 'limit' => 500],
-                _rbac: false,
-                _multitenancy: false
+                ['filters' => ['register' => $registerId, 'schema' => $schemaId], 'limit' => 500]
             );
 
             foreach ($objects as $obj) {
