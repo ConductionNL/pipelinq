@@ -54,9 +54,6 @@ return [
         // Intake form management (authenticated; camelCase slug matches IntakeFormController class name)
         ['name' => 'intakeForm#embed', 'url' => '/api/forms/{id}/embed', 'verb' => 'GET'],
         ['name' => 'intakeForm#export', 'url' => '/api/forms/{id}/submissions/export', 'verb' => 'GET'],
-        // Automations
-        ['name' => 'automation#metadata', 'url' => '/api/automations/metadata', 'verb' => 'GET'],
-        ['name' => 'automation#test', 'url' => '/api/automations/test', 'verb' => 'POST'],
         // Kennisbank public API (authenticated; routes KennisbankController)
         ['name' => 'kennisbank#publicIndex', 'url' => '/api/kennisbank/public', 'verb' => 'GET'],
         ['name' => 'kennisbank#publicShow', 'url' => '/api/kennisbank/public/{id}', 'verb' => 'GET'],
