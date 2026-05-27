@@ -128,4 +128,53 @@ class ComplaintSlaService
         return $start->modify('+'.$hours.' hours');
     }//end calculateDeadline()
 
+    /**
+     * Determine whether a complaint is overdue.
+     *
+     * A complaint is overdue when its slaDeadline is in the past and its
+     * status is still open (not resolved or rejected).
+     *
+     * @param array<string, mixed>   $complaint The complaint object array.
+     * @param DateTimeInterface|null $now       The reference time (defaults to now).
+     *
+     * @return bool True when the complaint is overdue.
+     * @spec   openspec/changes/reverse-2026-05-26-be-complaint-sla/tasks.md#task-3
+     */
+    public function isOverdue(array $complaint, ?DateTimeInterface $now=null): bool
+    {
+        $deadline = $complaint['slaDeadline'] ?? null;
+
+        if ($deadline === null || $deadline === '') {
+            return false;
+        }
+
+        $status = $complaint['status'] ?? '';
+
+        if ($this->isOpenStatus(status: $status) === false) {
+            return false;
+        }
+
+        try {
+            $deadlineDate = new DateTimeImmutable((string) $deadline);
+        } catch (Exception $e) {
+            return false;
+        }
+
+        $reference = $now ?? new DateTimeImmutable();
+
+        return $deadlineDate < $reference;
+    }//end isOverdue()
+
+    /**
+     * Check whether a complaint status is considered open (not yet resolved).
+     *
+     * @param string $status The complaint status value.
+     *
+     * @return bool True when the status is open.
+     * @spec   openspec/changes/reverse-2026-05-26-be-complaint-sla/tasks.md#task-3
+     */
+    public function isOpenStatus(string $status): bool
+    {
+        return in_array($status, ['new', 'in_progress'], true);
+    }//end isOpenStatus()
 }//end class

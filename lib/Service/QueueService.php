@@ -120,6 +120,28 @@ class QueueService
     }//end removeFromQueue()
 
     /**
+     * Determine whether a queue is at or over its maximum capacity.
+     *
+     * Returns false when no maxCapacity is configured (null or zero).
+     *
+     * @param array<string, mixed> $queue        The queue object array.
+     * @param int                  $currentCount The current number of items in the queue.
+     *
+     * @return bool True when the queue is at or over capacity.
+     * @spec   openspec/changes/reverse-2026-05-26-be-queue/tasks.md#task-2
+     */
+    public function isAtCapacity(array $queue, int $currentCount): bool
+    {
+        $maxCapacity = $queue['maxCapacity'] ?? null;
+
+        if ($maxCapacity === null || (int) $maxCapacity <= 0) {
+            return false;
+        }
+
+        return $currentCount >= (int) $maxCapacity;
+    }//end isAtCapacity()
+
+    /**
      * Process overflow for all queues that are at capacity and have an overflow target.
      *
      * @return int The number of items moved.
