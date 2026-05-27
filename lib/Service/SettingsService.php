@@ -33,6 +33,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for managing Pipelinq settings.
+ *
+ * @spec openspec/changes/migrate-kennisbank-to-xwiki-leaf/tasks.md#task-1.2
  */
 class SettingsService
 {
@@ -53,9 +55,6 @@ class SettingsService
         'automationLog_schema',
         'contactmoment_schema',
         'task_schema',
-        'kennisartikel_schema',
-        'kenniscategorie_schema',
-        'kennisfeedback_schema',
         'emailLink_schema',
         'calendarLink_schema',
         'relationship_schema',
@@ -64,9 +63,6 @@ class SettingsService
         'queue_schema',
         'skill_schema',
         'agentProfile_schema',
-        'kennisbank_review_interval',
-        'kennisbank_default_visibility',
-        'kennisbank_editor_group',
         'complaint_sla_service',
         'complaint_sla_product',
         'complaint_sla_communication',

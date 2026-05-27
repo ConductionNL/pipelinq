@@ -3,7 +3,8 @@
 	"version": "1.0.0",
 	"dependencies": [
 		"openregister",
-		"deck"
+		"deck",
+		"openconnector"
 	],
 	"menu": [
 		{
@@ -211,7 +212,29 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "client",
-				"sidebar": true
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "xwiki",
+							"label": "Knowledge",
+							"component": "CnXwikiTab",
+							"config": {
+								"linkedType": "xwiki"
+							}
+						}
+					]
+				},
+				"widgets": [
+					{
+						"id": "client-xwiki-preview",
+						"component": "CnXwikiCard",
+						"config": {
+							"linkedType": "xwiki"
+						}
+					}
+				]
 			}
 		},
 		{
@@ -254,6 +277,14 @@
 							"config": {
 								"linkedType": "deck"
 							}
+						},
+						{
+							"id": "xwiki",
+							"label": "Knowledge",
+							"component": "CnXwikiTab",
+							"config": {
+								"linkedType": "xwiki"
+							}
 						}
 					]
 				},
@@ -264,6 +295,13 @@
 						"config": {
 							"view": "mini-kanban",
 							"linkedType": "deck"
+						}
+					},
+					{
+						"id": "request-xwiki-preview",
+						"component": "CnXwikiCard",
+						"config": {
+							"linkedType": "xwiki"
 						}
 					}
 				]
@@ -374,6 +412,14 @@
 							"config": {
 								"linkedType": "deck"
 							}
+						},
+						{
+							"id": "xwiki",
+							"label": "Knowledge",
+							"component": "CnXwikiTab",
+							"config": {
+								"linkedType": "xwiki"
+							}
 						}
 					]
 				},
@@ -384,6 +430,13 @@
 						"config": {
 							"view": "mini-kanban",
 							"linkedType": "deck"
+						}
+					},
+					{
+						"id": "lead-xwiki-preview",
+						"component": "CnXwikiCard",
+						"config": {
+							"linkedType": "xwiki"
 						}
 					}
 				]
