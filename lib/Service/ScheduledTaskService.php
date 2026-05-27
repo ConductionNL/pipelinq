@@ -161,9 +161,7 @@ class ScheduledTaskService
                     'limit'   => $limit,
                     'offset'  => (($page - 1) * $limit),
                     'order'   => ['deadline' => 'ASC'],
-                ],
-                _rbac: false,
-                _multitenancy: false
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->error(
@@ -206,9 +204,7 @@ class ScheduledTaskService
             $object = $this->getObjectService()->findObject(
                 $id,
                 $registerId,
-                $schemaId,
-                _rbac: false,
-                _multitenancy: false
+                $schemaId
             );
         } catch (Throwable $e) {
             $this->logger->error(
@@ -276,9 +272,7 @@ class ScheduledTaskService
             [],
             $registerId,
             $schemaId,
-            null,
-            _rbac: false,
-            _multitenancy: false
+            null
         );
 
         return $this->normalizeToArray(object: $saved);
@@ -312,9 +306,7 @@ class ScheduledTaskService
             [],
             $registerId,
             $schemaId,
-            $id,
-            _rbac: false,
-            _multitenancy: false
+            $id
         );
 
         return $this->normalizeToArray(object: $saved);
@@ -331,11 +323,7 @@ class ScheduledTaskService
      */
     public function deleteScheduledTask(string $id): void
     {
-        $this->getObjectService()->deleteObject(
-            $id,
-            _rbac: false,
-            _multitenancy: false
-        );
+        $this->getObjectService()->deleteObject($id);
     }//end deleteScheduledTask()
 
     /**
@@ -381,9 +369,7 @@ class ScheduledTaskService
                     ],
                     'limit'   => 100,
                     'order'   => ['deadline' => 'ASC'],
-                ],
-                _rbac: false,
-                _multitenancy: false
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->error(
@@ -500,9 +486,7 @@ class ScheduledTaskService
                     [],
                     $registerId,
                     $schemaId,
-                    (string) ($task['id'] ?? ''),
-                    _rbac: false,
-                    _multitenancy: false
+                    (string) ($task['id'] ?? '')
                 );
             } catch (Throwable $e) {
                 $this->logger->error(

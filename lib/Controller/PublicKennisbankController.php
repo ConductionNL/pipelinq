@@ -34,6 +34,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Public controller for kennisbank article listing and detail.
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-31
  */
 class PublicKennisbankController extends Controller
 {
@@ -70,11 +72,12 @@ class PublicKennisbankController extends Controller
     public function index(): JSONResponse
     {
         try {
-            $objectService = $this->getObjectService();
-            $config        = $this->settingsService->getSettings();
+            $config = $this->settingsService->getSettings();
             if (empty($config['register']) === true || empty($config['kennisartikel_schema']) === true) {
-                return new JSONResponse(data: ['results' => [], 'total' => 0]);
+                return new JSONResponse(['results' => [], 'total' => 0]);
             }
+
+            $objectService = $this->getObjectService();
 
             $filters = ['status' => 'gepubliceerd', 'visibility' => 'openbaar', '_limit' => 20];
             $search  = $this->request->getParam('_search', '');
@@ -82,22 +85,34 @@ class PublicKennisbankController extends Controller
                 $filters['_search'] = $search;
             }
 
-            $result   = $objectService->findAll(
-                register: $config['register'],
-                schema: $config['kennisartikel_schema'],
-                filters: $filters,
+            $result = $objectService->findAll(
+                [
+                    'filters' => array_merge(
+                        ['register' => $config['register'], 'schema' => $config['kennisartikel_schema']],
+                        $filters
+                    ),
+                ]
             );
-            $articles = array_map(
-                callback: [$this, 'stripInternalFields'],
-                array: ($result['results'] ?? []),
+
+            // Server-side guard: only expose gepubliceerd + openbaar articles regardless
+            // of what the OR filter layer returns (defensive enforcement).
+            $rawArticles  = $result['results'] ?? [];
+            $safeArticles = array_values(
+                array_filter(
+                    $rawArticles,
+                    static function (array $a): bool {
+                        return ($a['status'] ?? '') === 'gepubliceerd'
+                            && ($a['visibility'] ?? '') === 'openbaar';
+                    }
+                )
             );
-            $total    = ($result['total'] ?? count(value: $articles));
-            return new JSONResponse(
-                data: ['results' => $articles, 'total' => $total],
-            );
+
+            $articles = array_map([$this, 'stripInternalFields'], $safeArticles);
+            $total    = count($articles);
+            return new JSONResponse(['results' => $articles, 'total' => $total]);
         } catch (\Exception $e) {
             $this->logger->error('Public kennisbank error: '.$e->getMessage());
-            return new JSONResponse(data: ['error' => 'Failed to fetch articles'], statusCode: 500);
+            return new JSONResponse(['error' => 'Failed to fetch articles'], 500);
         }//end try
     }//end index()
 
@@ -117,28 +132,34 @@ class PublicKennisbankController extends Controller
     public function show(string $id): JSONResponse
     {
         try {
-            $objectService = $this->getObjectService();
-            $config        = $this->settingsService->getSettings();
+            $config = $this->settingsService->getSettings();
             if (empty($config['register']) === true || empty($config['kennisartikel_schema']) === true) {
-                return new JSONResponse(data: ['error' => 'Not configured'], statusCode: 404);
+                return new JSONResponse(['error' => 'Not configured'], 404);
             }
 
-            $article = $objectService->findOne(
-                register: $config['register'],
-                schema: $config['kennisartikel_schema'],
-                id: $id,
+            $objectService = $this->getObjectService();
+
+            $results = $objectService->findAll(
+                [
+                    'filters' => [
+                        'register' => $config['register'],
+                        'schema'   => $config['kennisartikel_schema'],
+                        'id'       => $id,
+                    ],
+                ]
             );
+            $article = ($results['results'] ?? $results)[0] ?? null;
             if ($article === null
                 || ($article['status'] ?? '') !== 'gepubliceerd'
                 || ($article['visibility'] ?? '') !== 'openbaar'
             ) {
-                return new JSONResponse(data: ['error' => 'Article not found'], statusCode: 404);
+                return new JSONResponse(['error' => 'Article not found'], 404);
             }
 
-            return new JSONResponse(data: $this->stripInternalFields(article: $article));
+            return new JSONResponse($this->stripInternalFields(article: $article));
         } catch (\Exception $e) {
             $this->logger->error('Public kennisbank show error: '.$e->getMessage());
-            return new JSONResponse(data: ['error' => 'Failed to fetch article'], statusCode: 500);
+            return new JSONResponse(['error' => 'Failed to fetch article'], 500);
         }//end try
     }//end show()
 

@@ -147,12 +147,10 @@ class ContactVcardWriterService
             $updateData['contactsUid'] = $contactsUid;
             $objectService->saveObject(
                 $updateData,
-                    [],
-                    $registerId,
-                    $schemaId,
-                    null,
-                    _rbac: false,
-                    _multitenancy: false
+                [],
+                $registerId,
+                $schemaId,
+                null
             );
         } catch (\Exception $e) {
             $this->logger->warning(

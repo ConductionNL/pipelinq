@@ -31,6 +31,7 @@ use Psr\Log\LoggerInterface;
  * Service for CRM workflow automation management.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @spec                                           openspec/changes/reverse-2026-05-26-be-automation/tasks.md#task-1
  */
 class AutomationService
 {
@@ -77,6 +78,7 @@ class AutomationService
      * Get the list of valid trigger types.
      *
      * @return array The valid trigger types.
+     * @spec   openspec/changes/reverse-2026-05-26-be-automation/tasks.md#task-1
      */
     public function getValidTriggers(): array
     {
@@ -87,6 +89,7 @@ class AutomationService
      * Get the list of valid action types.
      *
      * @return array The valid action types.
+     * @spec   openspec/changes/reverse-2026-05-26-be-automation/tasks.md#task-1
      */
     public function getValidActions(): array
     {
@@ -213,16 +216,28 @@ class AutomationService
     /**
      * Execute a webhook action by sending entity data to the configured URL.
      *
+     * The URL is validated against an SSRF allow-list before firing:
+     * - Scheme must be http or https.
+     * - Resolved IP must not be loopback (127.x, ::1), link-local (169.254.x),
+     *   RFC-1918 private (10.x, 172.16-31.x, 192.168.x), or ULA IPv6 (fc00::/7).
+     * - Response body is never returned to the caller (SSRF exfiltration guard).
+     *
      * @param string $webhookUrl The target webhook URL.
      * @param array  $payload    The payload to send.
      *
-     * @return array The execution result with status and response.
+     * @return array The execution result with status (no response body exposed).
      * @spec   openspec/changes/reverse-2026-05-26-be-automation/tasks.md#task-4
      */
     public function fireWebhook(string $webhookUrl, array $payload): array
     {
         if (empty($webhookUrl) === true) {
             return ['status' => 'skipped', 'reason' => 'No webhook URL configured'];
+        }
+
+        $ssrfCheck = $this->validateWebhookUrl(webhookUrl: $webhookUrl);
+        if ($ssrfCheck !== null) {
+            $this->logger->warning('Automation webhook blocked (SSRF guard): '.$ssrfCheck, ['url' => $webhookUrl]);
+            return ['status' => 'blocked', 'reason' => $ssrfCheck];
         }
 
         try {
@@ -232,9 +247,13 @@ class AutomationService
             curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            // Disable redirects to prevent SSRF via redirect chains.
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+            // Cap response body to prevent memory exhaustion.
+            curl_setopt($ch, CURLOPT_BUFFERSIZE, 65536);
 
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $rawResponse = curl_exec($ch);
+            $httpCode    = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
 
             if ($httpCode >= 200 && $httpCode < 300) {
@@ -243,10 +262,10 @@ class AutomationService
                 $status = 'failure';
             }
 
+            // Never return raw response body to the caller (SSRF exfiltration guard).
             return [
                 'status'   => $status,
                 'httpCode' => $httpCode,
-                'response' => $response,
             ];
         } catch (\Exception $e) {
             $this->logger->error('Automation webhook failed: '.$e->getMessage());
@@ -256,4 +275,122 @@ class AutomationService
             ];
         }//end try
     }//end fireWebhook()
+
+    /**
+     * Validate a webhook URL against the SSRF allow-list.
+     *
+     * Returns a string describing the rejection reason, or null when the URL is safe.
+     *
+     * @param string $webhookUrl The URL to validate.
+     *
+     * @return string|null Rejection reason or null when allowed.
+     * @spec   openspec/changes/reverse-2026-05-26-be-automation/tasks.md#task-4
+     */
+    public function validateWebhookUrl(string $webhookUrl): ?string
+    {
+        $parsed = parse_url($webhookUrl);
+        if ($parsed === false || empty($parsed['scheme']) === true || empty($parsed['host']) === true) {
+            return 'Malformed URL';
+        }
+
+        $scheme = strtolower($parsed['scheme']);
+        if (in_array($scheme, ['http', 'https'], true) === false) {
+            return 'Only http and https schemes are allowed';
+        }
+
+        $host = $parsed['host'];
+
+        // Resolve the hostname to an IP.
+        $ip = gethostbyname($host);
+
+        // Gethostbyname returns the original string on failure.
+        if ($ip === $host && filter_var($host, FILTER_VALIDATE_IP) === false) {
+            return 'Could not resolve hostname';
+        }
+
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false) {
+            return $this->validateIpv4(ip: $ip);
+        }
+
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false) {
+            return $this->validateIpv6(ip: $ip);
+        }
+
+        return null;
+    }//end validateWebhookUrl()
+
+    /**
+     * Validate an IPv4 address against the SSRF block-list.
+     *
+     * @param string $ip The IPv4 address.
+     *
+     * @return string|null Rejection reason or null when allowed.
+     */
+    private function validateIpv4(string $ip): ?string
+    {
+        $long = ip2long($ip);
+        if ($long === false) {
+            return 'Invalid IPv4 address';
+        }
+
+        // Loopback: 127.0.0.0/8.
+        if (($long & 0xFF000000) === 0x7F000000) {
+            return 'Loopback addresses are not allowed';
+        }
+
+        // Link-local: 169.254.0.0/16.
+        if (($long & 0xFFFF0000) === 0xA9FE0000) {
+            return 'Link-local addresses are not allowed';
+        }
+
+        // RFC-1918: 10.0.0.0/8.
+        if (($long & 0xFF000000) === 0x0A000000) {
+            return 'Private (RFC-1918) addresses are not allowed';
+        }
+
+        // RFC-1918: 172.16.0.0/12.
+        if (($long & 0xFFF00000) === 0xAC100000) {
+            return 'Private (RFC-1918) addresses are not allowed';
+        }
+
+        // RFC-1918: 192.168.0.0/16.
+        if (($long & 0xFFFF0000) === 0xC0A80000) {
+            return 'Private (RFC-1918) addresses are not allowed';
+        }
+
+        return null;
+    }//end validateIpv4()
+
+    /**
+     * Validate an IPv6 address against the SSRF block-list.
+     *
+     * @param string $ip The IPv6 address.
+     *
+     * @return string|null Rejection reason or null when allowed.
+     */
+    private function validateIpv6(string $ip): ?string
+    {
+        // Loopback: ::1.
+        if ($ip === '::1') {
+            return 'Loopback addresses are not allowed';
+        }
+
+        // ULA: fc00::/7 — first byte is 0xFC or 0xFD.
+        $packed = inet_pton($ip);
+        if ($packed !== false) {
+            $firstByte = ord($packed[0]);
+            if (($firstByte & 0xFE) === 0xFC) {
+                return 'ULA (private) IPv6 addresses are not allowed';
+            }
+
+            // Link-local: fe80::/10.
+            $firstTwoBits = ($firstByte & 0xC0);
+            $secondBits   = (ord($packed[0]) & 0x3F);
+            if ($firstByte === 0xFE && ($ord1 = ord($packed[1])) >= 0x80 && $ord1 <= 0xBF) {
+                return 'Link-local IPv6 addresses are not allowed';
+            }
+        }
+
+        return null;
+    }//end validateIpv6()
 }//end class

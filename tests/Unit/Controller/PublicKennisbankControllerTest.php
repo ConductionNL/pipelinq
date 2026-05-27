@@ -76,12 +76,6 @@ class PublicKennisbankControllerTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->markTestSkipped(
-            'See https://github.com/ConductionNL/pipelinq/issues/286 — '
-            .'PublicKennisbankController calls findOne()/findAll() on OpenRegister ObjectService '
-            .'with named args that do not match the real API. Unskip once #286 is resolved.'
-        );
-
         $this->request         = $this->createMock(IRequest::class);
         $this->container       = $this->createMock(ContainerInterface::class);
         $this->appManager      = $this->createMock(IAppManager::class);
@@ -141,7 +135,10 @@ class PublicKennisbankControllerTest extends TestCase
         $this->request->method('getParam')->willReturn('');
 
         $objectServiceMock = $this->getMockBuilder(\stdClass::class)->addMethods(['findAll'])->getMock();
-        $objectServiceMock->method('findAll')->willReturn(['results' => [['id' => '1', 'title' => 'Article']], 'total' => 1]);
+        $objectServiceMock->method('findAll')->willReturn([
+            'results' => [['id' => '1', 'title' => 'Article', 'status' => 'gepubliceerd', 'visibility' => 'openbaar']],
+            'total'   => 1,
+        ]);
         $this->container->method('get')->willReturn($objectServiceMock);
 
         $data = $this->buildController()->index()->getData();
@@ -193,16 +190,8 @@ class PublicKennisbankControllerTest extends TestCase
     public function testIndexStripsInternalFields(): void
     {
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
-        $this->settingsService->method('getSettings')->willReturn(['register' => 'r', 'kennisartikel_schema' => 's']);
-        $this->request->method('getParam')->willReturn('');
-
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)->addMethods(['findAll'])->getMock();
-        $objectServiceMock->method('findAll')->willReturn(['results' => [['id' => '1', 'title' => 'A', 'author' => 'secret', 'lastUpdatedBy' => 'u', 'zaaktypeLinks' => []]]]);
-        $this->container->method('get')->willReturn($objectServiceMock);
-
-        $article = $this->buildController()->index()->getData()['results'][0];
         $this->settingsService->method('getSettings')->willReturn([
-            'register'           => 'reg-uuid',
+            'register'             => 'reg-uuid',
             'kennisartikel_schema' => 'schema-uuid',
         ]);
         $this->request->method('getParam')->willReturn('');
@@ -214,6 +203,8 @@ class PublicKennisbankControllerTest extends TestCase
             'results' => [[
                 'id'            => '1',
                 'title'         => 'Article',
+                'status'        => 'gepubliceerd',
+                'visibility'    => 'openbaar',
                 'author'        => 'secret-user',
                 'lastUpdatedBy' => 'another-user',
                 'zaaktypeLinks' => ['link1'],
@@ -254,8 +245,8 @@ class PublicKennisbankControllerTest extends TestCase
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
         $this->settingsService->method('getSettings')->willReturn(['register' => 'r', 'kennisartikel_schema' => 's']);
 
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)->addMethods(['findOne'])->getMock();
-        $objectServiceMock->method('findOne')->willReturn(null);
+        $objectServiceMock = $this->getMockBuilder(\stdClass::class)->addMethods(['findAll'])->getMock();
+        $objectServiceMock->method('findAll')->willReturn(['results' => []]);
         $this->container->method('get')->willReturn($objectServiceMock);
 
         $this->assertSame(404, $this->buildController()->show(id: 'missing')->getStatus());
@@ -271,10 +262,15 @@ class PublicKennisbankControllerTest extends TestCase
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
         $this->settingsService->method('getSettings')->willReturn(['register' => 'r', 'kennisartikel_schema' => 's']);
 
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)->addMethods(['findOne'])->getMock();
-        $objectServiceMock->method('findOne')->willReturn(['id' => 'abc', 'title' => 'Public', 'status' => 'gepubliceerd', 'visibility' => 'openbaar']);
-        $this->assertArrayHasKey('error', $response->getData());
-    }//end testIndexReturns500OnException()
+        $objectServiceMock = $this->getMockBuilder(\stdClass::class)->addMethods(['findAll'])->getMock();
+        $objectServiceMock->method('findAll')->willReturn([
+            'results' => [['id' => 'abc', 'title' => 'Public', 'status' => 'gepubliceerd', 'visibility' => 'openbaar']],
+        ]);
+        $this->container->method('get')->willReturn($objectServiceMock);
+
+        $response = $this->buildController()->show(id: 'abc');
+        $this->assertSame(200, $response->getStatus());
+    }//end testShowReturnsPublicArticle()
 
     /**
      * Test that show returns 404 when article is not found.
@@ -285,14 +281,14 @@ class PublicKennisbankControllerTest extends TestCase
     {
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
         $this->settingsService->method('getSettings')->willReturn([
-            'register'           => 'reg-uuid',
+            'register'             => 'reg-uuid',
             'kennisartikel_schema' => 'schema-uuid',
         ]);
 
         $objectServiceMock = $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['findOne'])
+            ->addMethods(['findAll'])
             ->getMock();
-        $objectServiceMock->method('findOne')->willReturn(null);
+        $objectServiceMock->method('findAll')->willReturn(['results' => []]);
         $this->container->method('get')->willReturn($objectServiceMock);
 
         $response = $this->buildController()->show(id: 'nonexistent');
@@ -301,7 +297,7 @@ class PublicKennisbankControllerTest extends TestCase
     }//end testShowReturns404WhenArticleNotFound()
 
     /**
-     * Test that show returns 404 for non-public articles.
+     * Test that show returns 404 for non-public articles (visibility=intern).
      *
      * @return void
      */
@@ -309,15 +305,17 @@ class PublicKennisbankControllerTest extends TestCase
     {
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
         $this->settingsService->method('getSettings')->willReturn([
-            'register'           => 'reg-uuid',
+            'register'             => 'reg-uuid',
             'kennisartikel_schema' => 'schema-uuid',
         ]);
 
         $objectServiceMock = $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['findOne'])
+            ->addMethods(['findAll'])
             ->getMock();
-        // Article exists but visibility is 'intern', not 'openbaar'.
-        $objectServiceMock->method('findOne')->willReturn(['id' => '1', 'status' => 'gepubliceerd', 'visibility' => 'intern']);
+        // Article exists but visibility is 'intern', not 'openbaar' — server-side guard must reject it.
+        $objectServiceMock->method('findAll')->willReturn([
+            'results' => [['id' => '1', 'status' => 'gepubliceerd', 'visibility' => 'intern']],
+        ]);
         $this->container->method('get')->willReturn($objectServiceMock);
 
         $response = $this->buildController()->show(id: '1');
@@ -334,18 +332,22 @@ class PublicKennisbankControllerTest extends TestCase
     {
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
         $this->settingsService->method('getSettings')->willReturn([
-            'register'           => 'reg-uuid',
+            'register'             => 'reg-uuid',
             'kennisartikel_schema' => 'schema-uuid',
         ]);
 
         $objectServiceMock = $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['findOne'])
+            ->addMethods(['findAll'])
             ->getMock();
-        $objectServiceMock->method('findOne')->willReturn([
-            'id'         => 'abc',
-            'title'      => 'Public Article',
-            'status'     => 'gepubliceerd',
-            'visibility' => 'openbaar',
+        $objectServiceMock->method('findAll')->willReturn([
+            'results' => [
+                [
+                    'id'         => 'abc',
+                    'title'      => 'Public Article',
+                    'status'     => 'gepubliceerd',
+                    'visibility' => 'openbaar',
+                ],
+            ],
         ]);
         $this->container->method('get')->willReturn($objectServiceMock);
 
@@ -353,5 +355,5 @@ class PublicKennisbankControllerTest extends TestCase
 
         $this->assertSame(200, $response->getStatus());
         $this->assertSame('Public Article', $response->getData()['title']);
-    }//end testShowReturnsPublicArticle()
+    }//end testShowReturnsArticleForPublicArticle()
 }//end class

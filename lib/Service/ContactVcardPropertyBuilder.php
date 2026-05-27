@@ -159,10 +159,8 @@ class ContactVcardPropertyBuilder
         try {
             $client = $objectService->findObject(
                 $clientId,
-                    $registerId,
-                    $schemaId,
-                    _rbac: false,
-                    _multitenancy: false
+                $registerId,
+                $schemaId
             );
             $data   = $this->serializeResult(result: $client);
             return $data['name'] ?? null;

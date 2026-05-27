@@ -105,12 +105,10 @@ class ContactImportService
 
         $created = $objectService->saveObject(
             $data,
-                [],
-                $registerId,
-                $schemaId,
-                null,
-                _rbac: false,
-                _multitenancy: false
+            [],
+            $registerId,
+            $schemaId,
+            null
         );
 
         return $this->serializeResult(result: $created);
