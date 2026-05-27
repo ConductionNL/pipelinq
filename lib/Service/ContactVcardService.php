@@ -112,8 +112,10 @@ class ContactVcardService
         }
 
         try {
-            $object = $objectService->findObject(
+            $object = $objectService->find(
                 $objectId,
+                [],
+                false,
                 $registerId,
                 $schemaId
             );

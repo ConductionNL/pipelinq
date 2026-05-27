@@ -238,12 +238,22 @@ class PublicSurveyController extends PublicShareController
             ];
 
             $created = $this->getObjectService()->saveObject(
+                $responseData,
+                [],
                 $registerId,
                 $responseSchemaId,
-                $responseData,
+                null,
             );
+
+            $createdId = '';
+            if (is_object($created) === true && method_exists($created, 'getUuid') === true) {
+                $createdId = $created->getUuid();
+            } else if (is_array($created) === true) {
+                $createdId = (string) ($created['id'] ?? $created['uuid'] ?? '');
+            }
+
             return new JSONResponse(
-                ['message' => 'Thank you for your feedback!', 'id' => $created->getUuid()],
+                ['message' => 'Thank you for your feedback!', 'id' => $createdId],
                 Http::STATUS_CREATED,
             );
         } catch (\Exception $e) {
@@ -268,10 +278,15 @@ class PublicSurveyController extends PublicShareController
             return null;
         }
 
-        $results = $this->getObjectService()->getObjects(
-            $regId,
-            $schemaId,
-            ['token' => $token, '_limit' => 1],
+        $results = $this->getObjectService()->findAll(
+            [
+                'filters' => [
+                    'register' => $regId,
+                    'schema'   => $schemaId,
+                    'token'    => $token,
+                ],
+                'limit'   => 1,
+            ]
         );
         $items   = $results['results'] ?? $results ?? [];
         if (empty($items) === true) {
