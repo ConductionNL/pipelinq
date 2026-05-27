@@ -30,6 +30,8 @@ use Psr\Container\ContainerInterface;
 
 /**
  * Service for loading and importing Pipelinq configuration.
+ *
+ * @spec openspec/changes/migrate-kennisbank-to-xwiki-leaf/tasks.md#task-1.2
  */
 class SettingsLoadService
 {

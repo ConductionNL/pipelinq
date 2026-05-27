@@ -33,6 +33,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for managing Pipelinq settings.
+ *
+ * @spec openspec/changes/migrate-kennisbank-to-xwiki-leaf/tasks.md#task-1.2
  */
 class SettingsService
 {
