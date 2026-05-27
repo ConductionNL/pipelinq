@@ -19,7 +19,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
-use OCA\Pipelinq\Service\AutomationService;
 use OCA\Pipelinq\Service\ObjectEventDispatcher;
 use OCA\Pipelinq\Service\ObjectEventHandlerService;
 use OCA\Pipelinq\Service\ObjectUpdateDiffService;
@@ -62,13 +61,11 @@ class ObjectEventHandlerServiceTest extends TestCase
         $this->schemaMapService = $this->createMock(SchemaMapService::class);
         $this->dispatcher       = $this->createMock(ObjectEventDispatcher::class);
         $diffService            = new ObjectUpdateDiffService();
-        $automationService      = $this->createMock(AutomationService::class);
 
         $this->service = new ObjectEventHandlerService(
             $this->schemaMapService,
             $this->dispatcher,
             $diffService,
-            $automationService,
         );
     }//end setUp()
 

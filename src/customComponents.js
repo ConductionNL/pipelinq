@@ -50,12 +50,6 @@ import SurveyAnalyticsView from './views/surveys/SurveyAnalytics.vue'
 //     intakeSubmission with `config.filter: { form: "@route.id" }`). ---
 import FormBuilderView from './views/forms/FormBuilder.vue'
 
-// --- Automations (lib gap: no `automation-graph` page type for the visual
-//     builder; the `Automations` list page is a declarative `type:"index"`,
-//     and `Automations › History` is a declarative `type:"index"` on
-//     automationLog with `config.filter: { automation: "@route.id" }`). ---
-import AutomationBuilderView from './views/automations/AutomationBuilder.vue'
-
 // --- Reporting dashboards (lib gap: chart widgets not yet registered). ---
 import RapportageDashboardView from './views/rapportage/RapportageDashboard.vue'
 import ChannelAnalyticsView from './views/rapportage/ChannelAnalytics.vue'
@@ -93,9 +87,6 @@ export default {
 
 	// Forms (list + submissions are declarative type:index; visual builder stays custom)
 	FormBuilderView,
-
-	// Automations (list + history are declarative type:index; visual builder stays custom)
-	AutomationBuilderView,
 
 	// Reporting
 	RapportageDashboardView,
