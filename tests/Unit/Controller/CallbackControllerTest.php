@@ -89,6 +89,9 @@ class CallbackControllerTest extends TestCase
         $this->notificationService = $this->createMock(NotificationService::class);
         $this->appConfig           = $this->createMock(IAppConfig::class);
         $this->userSession         = $this->createMock(IUserSession::class);
+        $user                      = $this->createMock(\OCP\IUser::class);
+        $user->method('getUID')->willReturn('test-agent');
+        $this->userSession->method('getUser')->willReturn($user);
         $logger                    = $this->createMock(LoggerInterface::class);
         $l10n                      = $this->createMock(IL10N::class);
         $l10n->method('t')->willReturnArgument(0);

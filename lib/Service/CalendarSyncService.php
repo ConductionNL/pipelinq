@@ -141,5 +141,4 @@ class CalendarSyncService
 
         return $vcal;
     }//end generateVEvent()
-
 }//end class
