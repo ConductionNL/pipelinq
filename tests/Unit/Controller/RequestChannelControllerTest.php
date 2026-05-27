@@ -23,6 +23,8 @@ use OCA\Pipelinq\Controller\RequestChannelController;
 use OCA\Pipelinq\Service\SystemTagService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUser;
+use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -45,16 +47,32 @@ class RequestChannelControllerTest extends TestCase
     private SystemTagService $tagService;
 
     /**
+     * Mock user session.
+     *
+     * @var IUserSession
+     */
+    private IUserSession $userSession;
+
+    /**
      * Set up the test.
      *
      * @return void
      */
     protected function setUp(): void
     {
-        $request          = $this->createMock(IRequest::class);
-        $this->tagService = $this->createMock(SystemTagService::class);
+        $request           = $this->createMock(IRequest::class);
+        $this->tagService  = $this->createMock(SystemTagService::class);
+        $this->userSession = $this->createMock(IUserSession::class);
 
-        $this->controller = new RequestChannelController($request, $this->tagService);
+        $user = $this->createMock(IUser::class);
+        $user->method('getUID')->willReturn('test-user');
+        $this->userSession->method('getUser')->willReturn($user);
+
+        $this->controller = new RequestChannelController(
+            $request,
+            $this->tagService,
+            $this->userSession,
+        );
     }//end setUp()
 
     /**
@@ -104,4 +122,5 @@ class RequestChannelControllerTest extends TestCase
 
         $this->assertSame(500, $response->getStatus());
     }//end testDestroyReturnsErrorOnException()
+
 }//end class

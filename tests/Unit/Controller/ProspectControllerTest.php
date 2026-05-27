@@ -24,6 +24,8 @@ use OCA\Pipelinq\Service\ProspectDiscoveryService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUser;
+use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -61,12 +63,17 @@ class ProspectControllerTest extends TestCase
     {
         $this->request          = $this->createMock(IRequest::class);
         $this->discoveryService = $this->createMock(ProspectDiscoveryService::class);
+        $userSession            = $this->createMock(IUserSession::class);
+        $user                   = $this->createMock(IUser::class);
+        $user->method('getUID')->willReturn('test-user');
+        $userSession->method('getUser')->willReturn($user);
         $l10n                   = $this->createMock(IL10N::class);
         $l10n->method('t')->willReturnArgument(0);
 
         $this->controller = new ProspectController(
             $this->request,
             $this->discoveryService,
+            $userSession,
             $l10n,
         );
     }//end setUp()

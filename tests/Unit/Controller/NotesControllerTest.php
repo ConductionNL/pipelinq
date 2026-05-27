@@ -24,6 +24,8 @@ use OCA\Pipelinq\Service\NoteEventService;
 use OCA\Pipelinq\Service\NotesService;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUser;
+use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -55,6 +57,10 @@ class NotesControllerTest extends TestCase
         $request            = $this->createMock(IRequest::class);
         $this->notesService = $this->createMock(NotesService::class);
         $noteEventService   = $this->createMock(NoteEventService::class);
+        $userSession        = $this->createMock(IUserSession::class);
+        $user               = $this->createMock(IUser::class);
+        $user->method('getUID')->willReturn('test-user');
+        $userSession->method('getUser')->willReturn($user);
         $l10n               = $this->createMock(IL10N::class);
         $l10n->method('t')->willReturnArgument(0);
 
@@ -62,6 +68,7 @@ class NotesControllerTest extends TestCase
             $request,
             $this->notesService,
             $noteEventService,
+            $userSession,
             $l10n,
         );
     }//end setUp()
