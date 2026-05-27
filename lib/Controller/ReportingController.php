@@ -106,18 +106,29 @@ class ReportingController extends Controller
                 );
             }
 
+            $skipped = 0;
             foreach ($targets as $channel => $metrics) {
                 if (is_array($metrics) === false) {
                     continue;
                 }
 
                 foreach ($metrics as $metric => $value) {
-                    $this->reportingService->setSlaTarget(
+                    $accepted = $this->reportingService->setSlaTarget(
                         channel: $channel,
                         metric: $metric,
                         value: (string) $value,
                     );
+                    if ($accepted === false) {
+                        $skipped++;
+                    }
                 }
+            }
+
+            if ($skipped > 0) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('One or more unknown channel or metric values were skipped')],
+                    400,
+                );
             }
 
             return new JSONResponse(
