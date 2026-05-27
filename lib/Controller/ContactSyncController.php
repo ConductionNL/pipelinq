@@ -32,6 +32,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
 
 /**
  * Controller for contact synchronization.
@@ -45,12 +46,14 @@ class ContactSyncController extends Controller
      * @param ContactSyncService $contactSyncService The contact sync service.
      * @param IUserSession       $userSession        The user session.
      * @param IL10N              $l10n               The localization service.
+     * @param LoggerInterface    $logger             The logger.
      */
     public function __construct(
         IRequest $request,
         private ContactSyncService $contactSyncService,
         private IUserSession $userSession,
         private IL10N $l10n,
+        private LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -80,10 +83,9 @@ class ContactSyncController extends Controller
             $results = $this->contactSyncService->searchContacts($query);
             return new JSONResponse(['results' => $results]);
         } catch (\Exception $e) {
+            $this->logger->error('ContactSyncController::search failed', ['exception' => $e]);
             return new JSONResponse(
-                    [
-                        'error' => $e->getMessage(),
-                    ],
+                    ['error' => $this->l10n->t('An unexpected error occurred')],
                     500
                     );
         }
@@ -128,10 +130,9 @@ class ContactSyncController extends Controller
                     ]
                     );
         } catch (\Exception $e) {
+            $this->logger->error('ContactSyncController::import failed', ['exception' => $e]);
             return new JSONResponse(
-                    [
-                        'error' => $e->getMessage(),
-                    ],
+                    ['error' => $this->l10n->t('An unexpected error occurred')],
                     500
                     );
         }//end try
@@ -176,10 +177,9 @@ class ContactSyncController extends Controller
                     ]
                     );
         } catch (\Exception $e) {
+            $this->logger->error('ContactSyncController::writeBack failed', ['exception' => $e]);
             return new JSONResponse(
-                    [
-                        'error' => $e->getMessage(),
-                    ],
+                    ['error' => $this->l10n->t('An unexpected error occurred')],
                     500
                     );
         }

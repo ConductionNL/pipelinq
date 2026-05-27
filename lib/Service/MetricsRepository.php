@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\AppInfo\Application;
+use OCP\IAppConfig;
 use OCP\IDBConnection;
 use Psr\Log\LoggerInterface;
 
@@ -35,41 +37,61 @@ class MetricsRepository
     /**
      * Constructor.
      *
-     * @param IDBConnection   $db     Database connection.
-     * @param LoggerInterface $logger Logger.
+     * @param IDBConnection   $db        Database connection.
+     * @param LoggerInterface $logger    Logger.
+     * @param IAppConfig      $appConfig App config for schema ID lookup.
      */
     public function __construct(
         private IDBConnection $db,
         private LoggerInterface $logger,
+        private IAppConfig $appConfig,
     ) {
     }//end __construct()
 
     /**
      * Get lead counts grouped by status and pipeline.
      *
-     * @return array<array{status: string, pipeline: string, cnt: string}> Grouped counts.
+     * Queries OpenRegister objects table using the configured lead schema ID
+     * to scope results to this app's data only (avoids cross-tenant leakage).
+     * Returns raw rows; JSON field extraction is done in PHP to remain
+     * portable across MySQL and PostgreSQL.
+     *
+     * @return array<array{status: string, pipeline: string, cnt: int}> Grouped counts.
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-54
      */
     public function getLeadCounts(): array
     {
+        $schemaId = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+        if ($schemaId === '') {
+            return [];
+        }
+
         try {
             $qb = $this->db->getQueryBuilder();
-            $qb->select(
-                $qb->createFunction("JSON_UNQUOTE(JSON_EXTRACT(o.object, '$.status')) AS status"),
-                $qb->createFunction("JSON_UNQUOTE(JSON_EXTRACT(o.object, '$.pipeline')) AS pipeline"),
-            )
-                ->selectAlias($qb->func()->count('o.id'), 'cnt')
+            $qb->select('o.object')
                 ->from('openregister_objects', 'o')
-                ->innerJoin('o', 'openregister_schemas', 's', $qb->expr()->eq('o.schema', 's.id'))
-                ->where($qb->expr()->like('s.title', $qb->createNamedParameter('%ead%')))
-                ->groupBy('status', 'pipeline');
+                ->where($qb->expr()->eq('o.schema', $qb->createNamedParameter($schemaId)));
 
             $result = $qb->executeQuery();
             $rows   = $result->fetchAll();
             $result->closeCursor();
 
-            return $rows;
+            // Aggregate in PHP for DB-portability.
+            $counts = [];
+            foreach ($rows as $row) {
+                $obj      = json_decode($row['object'] ?? '{}', true) ?? [];
+                $status   = (string) ($obj['status'] ?? '');
+                $pipeline = (string) ($obj['pipeline'] ?? '');
+                $key      = $status.'|'.$pipeline;
+                if (isset($counts[$key]) === false) {
+                    $counts[$key] = ['status' => $status, 'pipeline' => $pipeline, 'cnt' => 0];
+                }
+
+                $counts[$key]['cnt']++;
+            }
+
+            return array_values($counts);
         } catch (\Exception $e) {
             $this->logger->warning(
                 message: '[MetricsRepository] Failed to get lead counts',
@@ -82,30 +104,44 @@ class MetricsRepository
     /**
      * Get lead value totals grouped by pipeline.
      *
-     * @return array<array{pipeline: string, total_value: string}> Pipeline values.
+     * Queries using the configured lead schema ID and aggregates in PHP
+     * to remain portable across MySQL and PostgreSQL.
+     *
+     * @return array<array{pipeline: string, total_value: float}> Pipeline values.
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-56
      */
     public function getLeadValueByPipeline(): array
     {
-        try {
-            $valueSumExpr = "COALESCE(SUM(CAST(JSON_UNQUOTE(JSON_EXTRACT(o.object, '$.value')) AS DECIMAL(15,2))), 0)";
+        $schemaId = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+        if ($schemaId === '') {
+            return [];
+        }
 
+        try {
             $qb = $this->db->getQueryBuilder();
-            $qb->select(
-                $qb->createFunction("JSON_UNQUOTE(JSON_EXTRACT(o.object, '$.pipeline')) AS pipeline"),
-            )
-                ->selectAlias($qb->createFunction($valueSumExpr), 'total_value')
+            $qb->select('o.object')
                 ->from('openregister_objects', 'o')
-                ->innerJoin('o', 'openregister_schemas', 's', $qb->expr()->eq('o.schema', 's.id'))
-                ->where($qb->expr()->like('s.title', $qb->createNamedParameter('%ead%')))
-                ->groupBy('pipeline');
+                ->where($qb->expr()->eq('o.schema', $qb->createNamedParameter($schemaId)));
 
             $result = $qb->executeQuery();
             $rows   = $result->fetchAll();
             $result->closeCursor();
 
-            return $rows;
+            // Aggregate in PHP for DB-portability.
+            $totals = [];
+            foreach ($rows as $row) {
+                $obj      = json_decode($row['object'] ?? '{}', true) ?? [];
+                $pipeline = (string) ($obj['pipeline'] ?? '');
+                $value    = (float) ($obj['value'] ?? 0);
+                if (isset($totals[$pipeline]) === false) {
+                    $totals[$pipeline] = ['pipeline' => $pipeline, 'total_value' => 0.0];
+                }
+
+                $totals[$pipeline]['total_value'] += $value;
+            }
+
+            return array_values($totals);
         } catch (\Exception $e) {
             $this->logger->warning(
                 message: '[MetricsRepository] Failed to get lead values',
@@ -150,28 +186,43 @@ class MetricsRepository
     /**
      * Get service request counts grouped by status.
      *
-     * @return array<array{status: string, cnt: string}> Grouped counts.
+     * Queries using the configured request schema ID and aggregates in PHP
+     * to remain portable across MySQL and PostgreSQL.
+     *
+     * @return array<array{status: string, cnt: int}> Grouped counts.
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-54
      */
     public function getRequestCounts(): array
     {
+        $schemaId = $this->appConfig->getValueString(Application::APP_ID, 'request_schema', '');
+        if ($schemaId === '') {
+            return [];
+        }
+
         try {
             $qb = $this->db->getQueryBuilder();
-            $qb->select(
-                $qb->createFunction("JSON_UNQUOTE(JSON_EXTRACT(o.object, '$.status')) AS status"),
-            )
-                ->selectAlias($qb->func()->count('o.id'), 'cnt')
+            $qb->select('o.object')
                 ->from('openregister_objects', 'o')
-                ->innerJoin('o', 'openregister_schemas', 's', $qb->expr()->eq('o.schema', 's.id'))
-                ->where($qb->expr()->like('s.title', $qb->createNamedParameter('%equest%')))
-                ->groupBy('status');
+                ->where($qb->expr()->eq('o.schema', $qb->createNamedParameter($schemaId)));
 
             $result = $qb->executeQuery();
             $rows   = $result->fetchAll();
             $result->closeCursor();
 
-            return $rows;
+            // Aggregate in PHP for DB-portability.
+            $counts = [];
+            foreach ($rows as $row) {
+                $obj    = json_decode($row['object'] ?? '{}', true) ?? [];
+                $status = (string) ($obj['status'] ?? '');
+                if (isset($counts[$status]) === false) {
+                    $counts[$status] = ['status' => $status, 'cnt' => 0];
+                }
+
+                $counts[$status]['cnt']++;
+            }
+
+            return array_values($counts);
         } catch (\Exception $e) {
             $this->logger->warning(
                 message: '[MetricsRepository] Failed to get request counts',

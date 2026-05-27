@@ -136,8 +136,17 @@ class AutomationService
     {
         foreach ($conditions as $field => $expected) {
             $actual = $entityData[$field] ?? null;
-            if ($actual === null) {
-                return false;
+
+            // A null actual value is valid for conditions that test for
+            // null/absence (e.g. neq with a non-null expected, or eq with null).
+            // Only short-circuit when the condition cannot possibly match.
+            if ($actual === null && is_array($expected) === false) {
+                // Simple equality check: null matches null expected only.
+                if ($expected !== null) {
+                    return false;
+                }
+
+                continue;
             }
 
             if (is_array($expected) === true) {
