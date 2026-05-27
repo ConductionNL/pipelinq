@@ -26,12 +26,16 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\KennisbankService;
+use OCA\Pipelinq\Service\SettingsService;
+use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Controller for knowledge base public API and feedback.
@@ -44,16 +48,24 @@ class KennisbankController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest          $request           The request.
-     * @param KennisbankService $kennisbankService The kennisbank service.
-     * @param IUserSession      $userSession       The user session.
-     * @param IL10N             $l10n              The localization service.
+     * @param IRequest           $request           The request.
+     * @param KennisbankService  $kennisbankService The kennisbank service.
+     * @param IUserSession       $userSession       The user session.
+     * @param IL10N              $l10n              The localization service.
+     * @param SettingsService    $settingsService   The settings service.
+     * @param ContainerInterface $container         The DI container.
+     * @param IAppManager        $appManager        The app manager.
+     * @param LoggerInterface    $logger            The logger.
      */
     public function __construct(
         IRequest $request,
         private KennisbankService $kennisbankService,
         private IUserSession $userSession,
         private IL10N $l10n,
+        private SettingsService $settingsService,
+        private ContainerInterface $container,
+        private IAppManager $appManager,
+        private LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -170,17 +182,58 @@ class KennisbankController extends Controller
                 comment: $comment,
             );
 
+            $saved = $this->persistFeedback(feedbackData: $feedbackData);
+
             return new JSONResponse(
                     [
-                        'feedback' => $feedbackData,
+                        'feedback' => $saved ?? $feedbackData,
                         'schema'   => 'kennisfeedback',
                     ]
                     );
         } catch (\Exception $e) {
+            $this->logger->error('KennisbankController::submitFeedback failed', ['exception' => $e]);
             return new JSONResponse(
                 ['error' => $this->l10n->t('Failed to submit feedback')],
                 500,
             );
-        }
+        }//end try
     }//end submitFeedback()
+
+    /**
+     * Persist feedback data via OpenRegister ObjectService.
+     *
+     * Returns the saved object or null if OpenRegister is unavailable.
+     *
+     * @param array $feedbackData The feedback data to persist.
+     *
+     * @return array|null The saved object or null.
+     */
+    private function persistFeedback(array $feedbackData): ?array
+    {
+        if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
+            $this->logger->warning('KennisbankController: OpenRegister not available, feedback not persisted');
+            return null;
+        }
+
+        try {
+            $settings = $this->settingsService->getSettings();
+            $register = $settings['register'] ?? '';
+            $schema   = $settings['kennisfeedback_schema'] ?? '';
+
+            if ($register === '' || $schema === '') {
+                $this->logger->warning('KennisbankController: register or kennisfeedback_schema not configured');
+                return null;
+            }
+
+            /*
+             * @var \OCA\OpenRegister\Service\ObjectService $objectService
+             */
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+
+            return $objectService->saveObject($feedbackData, [], $register, $schema, null);
+        } catch (\Exception $e) {
+            $this->logger->error('KennisbankController: failed to persist feedback', ['exception' => $e]);
+            return null;
+        }//end try
+    }//end persistFeedback()
 }//end class

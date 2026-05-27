@@ -132,6 +132,9 @@ class CallbackOverdueJob extends TimedJob
     /**
      * Mark a task as notified at the current time.
      *
+     * Also prunes stale notification entries older than twice the cooldown
+     * window so the oc_appconfig table does not grow without bound.
+     *
      * @param string $taskId The task object ID.
      *
      * @return void
@@ -142,5 +145,39 @@ class CallbackOverdueJob extends TimedJob
     {
         $key = self::NOTIFIED_KEY_PREFIX.$taskId;
         $this->appConfig->setValueString(Application::APP_ID, $key, (string) time());
+        $this->pruneStaleNotifications();
     }//end markNotified()
+
+    /**
+     * Remove notification entries that are older than twice the cooldown window.
+     *
+     * This prevents unlimited growth of oc_appconfig rows created by markNotified().
+     *
+     * @return void
+     */
+    private function pruneStaleNotifications(): void
+    {
+        try {
+            $keys      = $this->appConfig->getKeys(Application::APP_ID);
+            $cutoff    = time() - (self::NOTIFICATION_COOLDOWN * 2);
+            $prefix    = self::NOTIFIED_KEY_PREFIX;
+            $prefixLen = strlen($prefix);
+
+            foreach ($keys as $key) {
+                if (substr($key, 0, $prefixLen) !== $prefix) {
+                    continue;
+                }
+
+                $timestamp = (int) $this->appConfig->getValueString(Application::APP_ID, $key, '0');
+                if ($timestamp > 0 && $timestamp < $cutoff) {
+                    $this->appConfig->deleteKey(Application::APP_ID, $key);
+                }
+            }
+        } catch (\Exception $e) {
+            $this->logger->warning(
+                'CallbackOverdueJob: failed to prune stale notifications',
+                ['exception' => $e]
+            );
+        }//end try
+    }//end pruneStaleNotifications()
 }//end class

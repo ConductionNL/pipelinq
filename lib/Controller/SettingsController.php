@@ -36,6 +36,7 @@ use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -63,6 +64,7 @@ class SettingsController extends Controller
      * @param SettingsService    $settingsService The settings service.
      * @param IUserSession       $userSession     The user session.
      * @param IL10N              $l10n            The localization service.
+     * @param LoggerInterface    $logger          The logger.
      */
     public function __construct(
         IRequest $request,
@@ -72,6 +74,7 @@ class SettingsController extends Controller
         private SettingsService $settingsService,
         private IUserSession $userSession,
         private IL10N $l10n,
+        private LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -185,10 +188,11 @@ class SettingsController extends Controller
                     ]
                     );
         } catch (\Exception $e) {
+            $this->logger->error('SettingsController::reimport failed', ['exception' => $e]);
             return new JSONResponse(
                     [
                         'success' => false,
-                        'message' => $e->getMessage(),
+                        'message' => $this->l10n->t('An unexpected error occurred'),
                     ],
                     500
                     );
