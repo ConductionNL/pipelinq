@@ -83,5 +83,43 @@ if (class_exists(ObjectService::class) === false) {
             return [];
         }//end saveObject()
 
+        /**
+         * Set the active register for subsequent calls (fluent API).
+         *
+         * @param string|int $register Register slug or ID.
+         *
+         * @return static
+         */
+        public function setRegister(string|int $register): static
+        {
+            return $this;
+        }//end setRegister()
+
+        /**
+         * Set the active schema for subsequent calls (fluent API).
+         *
+         * @param string|int $schema Schema slug or ID.
+         *
+         * @return static
+         */
+        public function setSchema(string|int $schema): static
+        {
+            return $this;
+        }//end setSchema()
+
+        /**
+         * Delete an object by UUID.
+         *
+         * @param string      $uuid     The object UUID.
+         * @param string|null $register Register slug or ID (optional, overrides setRegister).
+         * @param string|null $schema   Schema slug or ID (optional, overrides setSchema).
+         *
+         * @return bool
+         */
+        public function deleteObject(string $uuid, string|int|null $register=null, string|int|null $schema=null): bool
+        {
+            return true;
+        }//end deleteObject()
+
     }//end class
 }//end if
