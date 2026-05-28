@@ -1,36 +1,16 @@
 {
-  "spec": "openspec/changes/2026-03-20-lead-product-link",
+  "spec": "openspec/changes/2026-03-20-pipeline",
   "verified": [
-    {
-      "task": "1.1",
-      "file": "src/components/LeadProducts.vue",
-      "ok": true,
-      "detail": "productOptions computed updated to include SKU in label format 'Name (SKU)'"
-    },
-    {
-      "task": "2.1",
-      "file": "src/components/LeadProducts.vue",
-      "ok": true,
-      "detail": "Notes column header added to thead; Notes td added to tbody rows and tfoot"
-    },
-    {
-      "task": "2.2",
-      "file": "src/components/LeadProducts.vue",
-      "ok": true,
-      "detail": "inline input with v-model + @change=updateNotes(item); updateNotes method saves full item via objectStore.saveObject"
-    },
-    {
-      "task": "3.1",
-      "file": "src/views/leads/LeadDetail.vue",
-      "ok": true,
-      "detail": "_valueOverride: false in data(); _computeValueOverride() fetches leadProducts and compares sum vs lead.value; called from mounted() and onFormSave()"
-    },
-    {
-      "task": "3.2",
-      "file": "src/views/leads/LeadDetail.vue",
-      "ok": true,
-      "detail": "onProductValueChanged replaced hasLineItems guard with !_valueOverride; syncLeadValue resets _valueOverride to false"
-    }
+    {"task": "1.1", "file": "src/views/pipeline/PipelineBoard.vue", "ok": true},
+    {"task": "1.2", "file": "src/views/pipeline/PipelineBoard.vue", "ok": true},
+    {"task": "1.3", "file": "src/views/pipeline/PipelineBoard.vue", "ok": true},
+    {"task": "1.4", "file": "l10n/en.json", "ok": true},
+    {"task": "1.4", "file": "l10n/nl.json", "ok": true},
+    {"task": "2.1", "file": "src/views/settings/PipelineForm.vue", "ok": true},
+    {"task": "2.2", "file": "src/views/settings/PipelineForm.vue", "ok": true},
+    {"task": "2.3", "file": "src/views/settings/PipelineForm.vue", "ok": true},
+    {"task": "2.4", "file": "src/views/settings/PipelineForm.vue", "ok": true},
+    {"task": "2.5", "file": "l10n/en.json", "ok": true}
   ],
   "stubs": [],
   "missing_routes": []
