@@ -37,9 +37,9 @@
       "cycle": 1,
       "trigger": "build:queued",
       "started_at": "2026-05-28T05:14:51Z",
-      "ended_at": null,
-      "outcome": "in-flight",
-      "outcome_reason": null,
+      "ended_at": "2026-05-28T11:39:47Z",
+      "outcome": "needs-input",
+      "outcome_reason": "applier returned fail verdict",
       "pattern_tags": [
         "browser-test-nc-setup-failed"
       ],
