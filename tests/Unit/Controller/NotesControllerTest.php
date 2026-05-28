@@ -79,20 +79,13 @@ class NotesControllerTest extends TestCase
             'request_schema' => 'schema-request',
         ]);
 
-        // Build a minimal OR ObjectEntity stub that objectExists() can return.
-        $mockObject = $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['getUuid'])
-            ->getMock();
-        $mockObject->method('getUuid')->willReturn('object-uuid');
-
-        // Object service stub: find() returns a non-null object for any scoped lookup.
-        $objectServiceStub = $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['find'])
-            ->getMock();
-        $objectServiceStub->method('find')->willReturn($mockObject);
+        // Object service mock: find() returns a non-null array for any scoped lookup,
+        // which makes objectExists() return true so subsequent controller logic runs.
+        $objectServiceMock = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $objectServiceMock->method('find')->willReturn(['id' => 'object-uuid']);
 
         $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturn($objectServiceStub);
+        $container->method('get')->willReturn($objectServiceMock);
 
         $groupManager = $this->createMock(IGroupManager::class);
         $groupManager->method('isAdmin')->willReturn(true);
