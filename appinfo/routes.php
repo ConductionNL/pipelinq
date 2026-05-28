@@ -54,9 +54,6 @@ return [
         // Intake form management (authenticated; camelCase slug matches IntakeFormController class name)
         ['name' => 'intakeForm#embed', 'url' => '/api/forms/{id}/embed', 'verb' => 'GET'],
         ['name' => 'intakeForm#export', 'url' => '/api/forms/{id}/submissions/export', 'verb' => 'GET'],
-        // Automations
-        ['name' => 'automation#metadata', 'url' => '/api/automations/metadata', 'verb' => 'GET'],
-        ['name' => 'automation#test', 'url' => '/api/automations/test', 'verb' => 'POST'],
         // Rapportage / reporting
         ['name' => 'reporting#getSla', 'url' => '/api/rapportage/sla', 'verb' => 'GET'],
         ['name' => 'reporting#updateSla', 'url' => '/api/rapportage/sla', 'verb' => 'PUT'],
