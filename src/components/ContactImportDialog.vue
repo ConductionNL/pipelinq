@@ -52,6 +52,7 @@
 
 <script>
 import { NcButton, NcDialog, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
 
 export default {
 	name: 'ContactImportDialog',
@@ -104,7 +105,7 @@ export default {
 			this.searching = true
 			try {
 				const response = await fetch(
-					`/apps/pipelinq/api/contacts-sync/search?q=${encodeURIComponent(this.query)}`,
+					generateUrl(`/apps/pipelinq/api/contacts-sync/search?q=${encodeURIComponent(this.query)}`),
 					{
 						headers: {
 							'Content-Type': 'application/json',
@@ -138,7 +139,7 @@ export default {
 					body.clientId = this.clientId
 				}
 
-				const response = await fetch('/apps/pipelinq/api/contacts-sync/import', {
+				const response = await fetch(generateUrl('/apps/pipelinq/api/contacts-sync/import'), {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',

@@ -15,6 +15,7 @@
 
 <script>
 import { NcDashboardWidget, NcEmptyContent } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
 import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
 import { initializeStores } from '../../store/store.js'
 import { formatCurrency } from '../../services/localeUtils.js'
@@ -82,7 +83,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-32
 		 */
 		onShow(item) {
-			window.location.href = '/index.php/apps/pipelinq/leads/' + item.id
+			window.location.href = generateUrl('/apps/pipelinq/leads/' + item.id)
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-29
@@ -118,8 +119,8 @@ export default {
 				queryParams.set(key, value)
 			}
 
-			const url = '/apps/openregister/api/objects/' + typeConfig.register + '/' + typeConfig.schema
-				+ (queryParams.toString() ? '?' + queryParams.toString() : '')
+			const url = generateUrl('/apps/openregister/api/objects/' + typeConfig.register + '/' + typeConfig.schema
+				+ (queryParams.toString() ? '?' + queryParams.toString() : ''))
 
 			const response = await fetch(url, {
 				headers: {
