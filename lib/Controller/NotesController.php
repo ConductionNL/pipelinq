@@ -32,6 +32,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -42,12 +43,13 @@ class NotesController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest         $request          The request.
-     * @param NotesService     $notesService     The notes service.
-     * @param NoteEventService $noteEventService The note event service.
-     * @param IUserSession     $userSession      The user session.
-     * @param IL10N            $l10n             The localization service.
-     * @param LoggerInterface  $logger           The logger.
+     * @param IRequest           $request          The request.
+     * @param NotesService       $notesService     The notes service.
+     * @param NoteEventService   $noteEventService The note event service.
+     * @param IUserSession       $userSession      The user session.
+     * @param IL10N              $l10n             The localization service.
+     * @param LoggerInterface    $logger           The logger.
+     * @param ContainerInterface $container        The DI container.
      */
     public function __construct(
         IRequest $request,
@@ -56,9 +58,34 @@ class NotesController extends Controller
         private IUserSession $userSession,
         private IL10N $l10n,
         private LoggerInterface $logger,
+        private ContainerInterface $container,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
+
+    /**
+     * Verify that the underlying OR object exists and is accessible.
+     *
+     * Returns true if the object is found, false (404-worthy) if not.
+     * On any service error the method returns true (fail-open is safer
+     * than blocking all notes when OR is temporarily unavailable).
+     *
+     * @param string $objectId The OR object UUID.
+     *
+     * @return bool Whether the object can be accessed.
+     */
+    private function objectExists(string $objectId): bool
+    {
+        try {
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+            $object        = $objectService->find($objectId, []);
+            return $object !== null;
+        } catch (\Throwable $e) {
+            // OR unavailable — allow the operation rather than blocking all notes.
+            $this->logger->warning('NotesController: could not verify object existence', ['objectId' => $objectId, 'exception' => $e->getMessage()]);
+            return true;
+        }
+    }//end objectExists()
 
     /**
      * List notes for an entity.
@@ -81,6 +108,10 @@ class NotesController extends Controller
 
         if (in_array($objectType, NotesService::VALID_TYPES, true) === false) {
             return new JSONResponse(['error' => $this->l10n->t('Invalid object type')], 400);
+        }
+
+        if ($this->objectExists(objectId: $objectId) === false) {
+            return new JSONResponse(['error' => $this->l10n->t('Object not found')], Http::STATUS_NOT_FOUND);
         }
 
         try {
@@ -116,6 +147,10 @@ class NotesController extends Controller
 
         if (in_array($objectType, NotesService::VALID_TYPES, true) === false) {
             return new JSONResponse(['error' => $this->l10n->t('Invalid object type')], 400);
+        }
+
+        if ($this->objectExists(objectId: $objectId) === false) {
+            return new JSONResponse(['error' => $this->l10n->t('Object not found')], Http::STATUS_NOT_FOUND);
         }
 
         $message = $this->request->getParam('message', '');
@@ -169,6 +204,10 @@ class NotesController extends Controller
 
         if (in_array($objectType, NotesService::VALID_TYPES, true) === false) {
             return new JSONResponse(['error' => $this->l10n->t('Invalid object type')], 400);
+        }
+
+        if ($this->objectExists(objectId: $objectId) === false) {
+            return new JSONResponse(['error' => $this->l10n->t('Object not found')], Http::STATUS_NOT_FOUND);
         }
 
         try {
