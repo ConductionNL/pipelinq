@@ -377,6 +377,56 @@ class ScheduledTaskService
     }//end deleteScheduledTask()
 
     /**
+     * Find open tasks whose deadline is in the past (overdue).
+     *
+     * Returns tasks with `status = open` and `deadline < now`, ordered by
+     * deadline ascending. These are candidates for the `verlopen` transition.
+     *
+     * @return array<int, array<string, mixed>> The overdue tasks.
+     *
+     * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+     */
+    public function getOverdueTasks(): array
+    {
+        [$registerId, $schemaId] = $this->getRegisterAndSchema();
+        if ($registerId === '' || $schemaId === '') {
+            return [];
+        }
+
+        $now = new DateTimeImmutable('now');
+
+        try {
+            $items = $this->getObjectService()->findAll(
+                [
+                    'filters' => [
+                        'register' => $registerId,
+                        'schema'   => $schemaId,
+                        'status'   => 'open',
+                        'deadline' => [
+                            '<' => $now->format(DateTimeInterface::ATOM),
+                        ],
+                    ],
+                    'limit'   => 100,
+                    'order'   => ['deadline' => 'ASC'],
+                ]
+            );
+        } catch (Throwable $e) {
+            $this->logger->error(
+                'ScheduledTaskService: getOverdueTasks failed',
+                ['exception' => $e]
+            );
+            return [];
+        }//end try
+
+        $normalised = [];
+        foreach ($items as $item) {
+            $normalised[] = $this->normalizeToArray(object: $item);
+        }
+
+        return $normalised;
+    }//end getOverdueTasks()
+
+    /**
      * Find open tasks with a deadline inside the next `$windowMinutes`.
      *
      * The window is capped at 1440 minutes (24 hours).
@@ -452,9 +502,14 @@ class ScheduledTaskService
      */
     public function processScheduledTasks(): void
     {
-        $candidates = $this->getPendingTasks(windowMinutes: self::EXPIRY_THRESHOLD_MINUTES);
-        $now        = new DateTimeImmutable('now');
-        $expiryCut  = $now->modify('-4 hours');
+        // Due-soon tasks (deadline within the next 4 hours) → notify + in_behandeling.
+        $dueSoon = $this->getPendingTasks(windowMinutes: self::EXPIRY_THRESHOLD_MINUTES);
+        // Overdue tasks (deadline already passed) → mark verlopen.
+        $overdue    = $this->getOverdueTasks();
+        $candidates = array_merge($overdue, $dueSoon);
+
+        $now       = new DateTimeImmutable('now');
+        $expiryCut = $now->modify('-4 hours');
 
         [$registerId, $schemaId] = $this->getRegisterAndSchema();
         if ($registerId === '' || $schemaId === '') {
