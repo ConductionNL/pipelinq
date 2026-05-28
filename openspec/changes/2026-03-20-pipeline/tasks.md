@@ -2,7 +2,7 @@
 
 ## 1. Pipeline Search Bar (REQ-PIPE-022)
 
-- [ ] 1.1 Add `searchQuery` data property to `PipelineBoard.vue`
+- [x] 1.1 Add `searchQuery` data property to `PipelineBoard.vue`
   - **spec_ref**: `specs/pipeline/spec.md#REQ-PIPE-022`
   - **files**: `src/views/pipeline/PipelineBoard.vue`
   - **acceptance_criteria**:
@@ -10,7 +10,7 @@
     - THEN a `searchQuery` string data property exists, initialised to `''`
     - AND the property is reset to `''` whenever the active pipeline changes
 
-- [ ] 1.2 Add `filteredItems` computed property that applies `searchQuery` filter to `allItems`
+- [x] 1.2 Add `filteredItems` computed property that applies `searchQuery` filter to `allItems`
   - **spec_ref**: `specs/pipeline/spec.md#REQ-PIPE-022`
   - **files**: `src/views/pipeline/PipelineBoard.vue`
   - **acceptance_criteria**:
@@ -20,7 +20,7 @@
     - THEN `filteredItems` contains only items whose `title` includes `'gemeente'` (case-insensitive)
     - AND the column renderer uses `filteredItems` instead of `allItems`
 
-- [ ] 1.3 Render `NcTextField` search input in the pipeline header
+- [x] 1.3 Render `NcTextField` search input in the pipeline header
   - **spec_ref**: `specs/pipeline/spec.md#REQ-PIPE-022`
   - **files**: `src/views/pipeline/PipelineBoard.vue`
   - **acceptance_criteria**:
@@ -30,7 +30,7 @@
     - AND the input is positioned between the pipeline selector and the "Show" filter
     - AND the input has an associated `aria-label` for WCAG compliance
 
-- [ ] 1.4 Add translation keys for the search input
+- [x] 1.4 Add translation keys for the search input
   - **files**: `l10n/en.json`, `l10n/nl.json`
   - **acceptance_criteria**:
     - `'Search pipeline...'` key added to `en.json`
@@ -38,7 +38,7 @@
 
 ## 2. Stage Probability Validation (REQ-PIPE-005 Scenario 24)
 
-- [ ] 2.1 Add per-stage `probabilityError` tracking to `PipelineForm.vue`
+- [x] 2.1 Add per-stage `probabilityError` tracking to `PipelineForm.vue`
   - **spec_ref**: `specs/pipeline/spec.md#REQ-PIPE-005-scenario-24`
   - **files**: `src/views/settings/PipelineForm.vue`
   - **acceptance_criteria**:
@@ -46,7 +46,7 @@
     - THEN each stage row object in the stages array includes a `probabilityError` string (empty string = no error)
     - AND `probabilityError` is initialised to `''` when a stage row is created or loaded
 
-- [ ] 2.2 Add `validateProbability(stage)` method and wire to stage probability `@input`
+- [x] 2.2 Add `validateProbability(stage)` method and wire to stage probability `@input`
   - **spec_ref**: `specs/pipeline/spec.md#REQ-PIPE-005-scenario-24`
   - **files**: `src/views/settings/PipelineForm.vue`
   - **acceptance_criteria**:
@@ -58,7 +58,7 @@
     - THEN `stage.probabilityError` is `''` (empty probability is valid)
     - AND boundary values `0` and `100` are treated as valid (no error)
 
-- [ ] 2.3 Render inline error message below the probability input
+- [x] 2.3 Render inline error message below the probability input
   - **spec_ref**: `specs/pipeline/spec.md#REQ-PIPE-005-scenario-24`
   - **files**: `src/views/settings/PipelineForm.vue`
   - **acceptance_criteria**:
@@ -67,7 +67,7 @@
     - AND the error text MUST use `color: var(--color-error)`
     - AND the error disappears (v-if) when `stage.probabilityError` is `''`
 
-- [ ] 2.4 Disable the save button while any stage has a validation error
+- [x] 2.4 Disable the save button while any stage has a validation error
   - **spec_ref**: `specs/pipeline/spec.md#REQ-PIPE-005-scenario-24`
   - **files**: `src/views/settings/PipelineForm.vue`
   - **acceptance_criteria**:
@@ -76,7 +76,7 @@
     - GIVEN all `probabilityError` values are `''`
     - THEN the save button MUST be enabled
 
-- [ ] 2.5 Add translation key for the probability validation error
+- [x] 2.5 Add translation key for the probability validation error
   - **files**: `l10n/en.json`, `l10n/nl.json`
   - **acceptance_criteria**:
     - `'Probability must be between 0 and 100'` added to `en.json`
