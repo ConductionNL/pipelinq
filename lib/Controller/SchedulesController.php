@@ -377,6 +377,18 @@ class SchedulesController extends Controller
         $payload = $this->request->getParams();
         unset($payload['id'], $payload['_route']);
 
+        // Strip fields that only admins may set to prevent privilege escalation.
+        $isAdmin = $this->groupManager->isAdmin($userId);
+        if ($isAdmin === false) {
+            unset(
+                $payload['assigneeUserId'],
+                $payload['assigneeGroupId'],
+                $payload['status'],
+                $payload['createdAt'],
+                $payload['attempts']
+            );
+        }
+
         try {
             $updated = $this->scheduledTaskService->updateScheduledTask($id, $payload);
             return new JSONResponse($updated);

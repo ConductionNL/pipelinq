@@ -32,7 +32,6 @@ use OCA\Pipelinq\Service\RoutingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
-use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -86,7 +85,6 @@ class RoutingController extends Controller
      * @spec openspec/changes/skill-routing/tasks.md#task-2.2
      */
     #[NoAdminRequired]
-    #[NoCSRFRequired]
     public function getSuggestions(): JSONResponse
     {
         $user = $this->userSession->getUser();

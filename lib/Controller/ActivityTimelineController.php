@@ -35,6 +35,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -53,15 +54,43 @@ class ActivityTimelineController extends Controller
      * @param ActivityTimelineService $service     The activity timeline service.
      * @param IUserSession            $userSession The user session.
      * @param LoggerInterface         $logger      The logger.
+     * @param ContainerInterface      $container   The DI container.
      */
     public function __construct(
         IRequest $request,
         private ActivityTimelineService $service,
         private IUserSession $userSession,
         private LoggerInterface $logger,
+        private ContainerInterface $container,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
+
+    /**
+     * Verify that the underlying OR object exists and is accessible.
+     *
+     * Returns true if the object is found. Returns false on a clean 404.
+     * Fails open on service errors so a temporary OR outage does not block
+     * the entire timeline/worklog surface.
+     *
+     * @param string $entityId The OR object UUID.
+     *
+     * @return bool Whether the object can be accessed.
+     */
+    private function objectExists(string $entityId): bool
+    {
+        try {
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+            $object        = $objectService->find($entityId, []);
+            return $object !== null;
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'ActivityTimelineController: could not verify object existence',
+                ['entityId' => $entityId, 'exception' => $e->getMessage()]
+            );
+            return true;
+        }
+    }//end objectExists()
 
     /**
      * Return the merged activity timeline for an entity.
@@ -90,6 +119,10 @@ class ActivityTimelineController extends Controller
                 ['message' => 'entityType and entityId are required'],
                 Http::STATUS_BAD_REQUEST
             );
+        }
+
+        if ($this->objectExists(entityId: $entityId) === false) {
+            return new JSONResponse(['message' => 'Entity not found'], Http::STATUS_NOT_FOUND);
         }
 
         $params = [
@@ -148,6 +181,10 @@ class ActivityTimelineController extends Controller
             );
         }
 
+        if ($this->objectExists(entityId: $entityId) === false) {
+            return new JSONResponse(['message' => 'Entity not found'], Http::STATUS_NOT_FOUND);
+        }
+
         $params = [
             '_page'  => $this->request->getParam('_page'),
             '_limit' => $this->request->getParam('_limit'),
@@ -202,6 +239,10 @@ class ActivityTimelineController extends Controller
             );
         }
 
+        if ($this->objectExists(entityId: $entityId) === false) {
+            return new JSONResponse(['message' => 'Entity not found'], Http::STATUS_NOT_FOUND);
+        }
+
         $data = [
             'duration'    => $duration,
             'description' => $this->request->getParam('description'),
@@ -230,3 +271,5 @@ class ActivityTimelineController extends Controller
         }
     }//end createWorklog()
 }//end class
+
+        if ($entityType === '' || $entityId === '' || $duration ==
