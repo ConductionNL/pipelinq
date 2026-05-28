@@ -5,7 +5,9 @@
  * for the pipeline view-backed board system.
  */
 
-const API_BASE = '/apps/openregister/api'
+import { generateUrl } from '@nextcloud/router'
+
+const API_BASE = generateUrl('/apps/openregister/api')
 
 /**
  * Build standard request headers for Nextcloud API calls.

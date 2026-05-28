@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
+import { generateUrl } from '@nextcloud/router'
 
-const API_BASE = '/apps/pipelinq/api/settings/lead-sources'
+const API_BASE = generateUrl('/apps/pipelinq/api/settings/lead-sources')
 
 const headers = () => ({
 	'Content-Type': 'application/json',

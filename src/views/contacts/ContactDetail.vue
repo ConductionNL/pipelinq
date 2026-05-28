@@ -82,6 +82,7 @@
 <script>
 import { NcButton } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import ContactForm from './ContactForm.vue'
 import ContactRelationships from '../../components/ContactRelationships.vue'
@@ -198,7 +199,7 @@ export default {
 		 */
 		async syncToContacts(objectId) {
 			try {
-				await fetch('/apps/pipelinq/api/contacts-sync/write-back', {
+				await fetch(generateUrl('/apps/pipelinq/api/contacts-sync/write-back'), {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',

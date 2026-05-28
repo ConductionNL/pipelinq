@@ -70,6 +70,7 @@
 <script>
 import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from '../../store/modules/object.js'
 import PipelineForm from './PipelineForm.vue'
 import DeletePipelineDialog from '../../dialogs/DeletePipelineDialog.vue'
@@ -262,7 +263,7 @@ export default {
 				const config = this.objectStore.objectTypeRegistry[slug]
 				if (!config) continue
 				try {
-					const url = `/apps/openregister/api/objects/${config.register}/${config.schema}?pipeline=${pipelineId}&_limit=1`
+					const url = generateUrl(`/apps/openregister/api/objects/${config.register}/${config.schema}?pipeline=${pipelineId}&_limit=1`)
 					const resp = await fetch(url, { headers })
 					if (resp.ok) {
 						const data = await resp.json()

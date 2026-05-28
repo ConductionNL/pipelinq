@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from './object.js'
 
 export const useSurveyStore = defineStore('survey', {
@@ -53,7 +54,7 @@ export const useSurveyStore = defineStore('survey', {
 			if (!cfg) return []
 			const qp = new URLSearchParams()
 			Object.entries(params).forEach(([k, v]) => { if (v != null && v !== '') qp.set(k, v) })
-			const url = '/apps/openregister/api/objects/' + cfg.register + '/' + cfg.schema + (qp.toString() ? '?' + qp : '')
+			const url = generateUrl('/apps/openregister/api/objects/' + cfg.register + '/' + cfg.schema + (qp.toString() ? '?' + qp : ''))
 			const r = await fetch(url, { headers: { 'Content-Type': 'application/json', requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' } })
 			if (!r.ok) throw new Error('Failed to fetch ' + type)
 			const d = await r.json()
@@ -66,19 +67,19 @@ export const useSurveyStore = defineStore('survey', {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-53
 		 */
-		async fetchSurvey(id) { this.surveyLoading = true; try { const cfg = useObjectStore().objectTypeRegistry.survey; const r = await fetch('/apps/openregister/api/objects/' + cfg.register + '/' + cfg.schema + '/' + id, { headers: { 'Content-Type': 'application/json', requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' } }); if (!r.ok) throw new Error('Fetch failed'); this.currentSurvey = await r.json(); return this.currentSurvey } finally { this.surveyLoading = false } },
+		async fetchSurvey(id) { this.surveyLoading = true; try { const cfg = useObjectStore().objectTypeRegistry.survey; const r = await fetch(generateUrl('/apps/openregister/api/objects/' + cfg.register + '/' + cfg.schema + '/' + id), { headers: { 'Content-Type': 'application/json', requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' } }); if (!r.ok) throw new Error('Fetch failed'); this.currentSurvey = await r.json(); return this.currentSurvey } finally { this.surveyLoading = false } },
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-50
 		 */
-		async createSurvey(data) { const cfg = useObjectStore().objectTypeRegistry.survey; const r = await fetch('/apps/openregister/api/objects/' + cfg.register + '/' + cfg.schema, { method: 'POST', headers: { 'Content-Type': 'application/json', requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' }, body: JSON.stringify(data) }); if (!r.ok) throw new Error('Create failed'); const c = await r.json(); this.surveys.unshift(c); return c },
+		async createSurvey(data) { const cfg = useObjectStore().objectTypeRegistry.survey; const r = await fetch(generateUrl('/apps/openregister/api/objects/' + cfg.register + '/' + cfg.schema), { method: 'POST', headers: { 'Content-Type': 'application/json', requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' }, body: JSON.stringify(data) }); if (!r.ok) throw new Error('Create failed'); const c = await r.json(); this.surveys.unshift(c); return c },
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-59
 		 */
-		async updateSurvey(id, data) { const cfg = useObjectStore().objectTypeRegistry.survey; const r = await fetch('/apps/openregister/api/objects/' + cfg.register + '/' + cfg.schema + '/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json', requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' }, body: JSON.stringify(data) }); if (!r.ok) throw new Error('Update failed'); const u = await r.json(); const i = this.surveys.findIndex(s => s.id === id); if (i !== -1) this.surveys.splice(i, 1, u); if (this.currentSurvey?.id === id) this.currentSurvey = u; return u },
+		async updateSurvey(id, data) { const cfg = useObjectStore().objectTypeRegistry.survey; const r = await fetch(generateUrl('/apps/openregister/api/objects/' + cfg.register + '/' + cfg.schema + '/' + id), { method: 'PUT', headers: { 'Content-Type': 'application/json', requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' }, body: JSON.stringify(data) }); if (!r.ok) throw new Error('Update failed'); const u = await r.json(); const i = this.surveys.findIndex(s => s.id === id); if (i !== -1) this.surveys.splice(i, 1, u); if (this.currentSurvey?.id === id) this.currentSurvey = u; return u },
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-51
 		 */
-		async deleteSurvey(id) { const cfg = useObjectStore().objectTypeRegistry.survey; await fetch('/apps/openregister/api/objects/' + cfg.register + '/' + cfg.schema + '/' + id, { method: 'DELETE', headers: { requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' } }); this.surveys = this.surveys.filter(s => s.id !== id); if (this.currentSurvey?.id === id) this.currentSurvey = null },
+		async deleteSurvey(id) { const cfg = useObjectStore().objectTypeRegistry.survey; await fetch(generateUrl('/apps/openregister/api/objects/' + cfg.register + '/' + cfg.schema + '/' + id), { method: 'DELETE', headers: { requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' } }); this.surveys = this.surveys.filter(s => s.id !== id); if (this.currentSurvey?.id === id) this.currentSurvey = null },
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-52
 		 */
@@ -86,6 +87,6 @@ export const useSurveyStore = defineStore('survey', {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-58
 		 */
-		async submitPublicResponse(token, data) { const r = await fetch('/apps/pipelinq/public/survey/' + token + '/respond', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || 'Submit failed') } return r.json() },
+		async submitPublicResponse(token, data) { const r = await fetch(generateUrl('/apps/pipelinq/public/survey/' + token + '/respond'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || 'Submit failed') } return r.json() },
 	},
 })

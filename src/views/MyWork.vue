@@ -113,6 +113,7 @@
 
 <script>
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from '../store/modules/object.js'
 import {
 	getStatusLabel,
@@ -418,8 +419,8 @@ export default {
 				queryParams.set(key, value)
 			}
 
-			const url = `/apps/openregister/api/objects/${config.register}/${config.schema}`
-				+ (queryParams.toString() ? '?' + queryParams.toString() : '')
+			const url = generateUrl(`/apps/openregister/api/objects/${config.register}/${config.schema}`
+				+ (queryParams.toString() ? '?' + queryParams.toString() : ''))
 
 			const response = await fetch(url, {
 				headers: {
