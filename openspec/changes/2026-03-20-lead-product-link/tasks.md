@@ -2,7 +2,7 @@
 
 ## 1. SKU Search in Add Product Dialog
 
-- [ ] 1.1 Update `productOptions` computed in `LeadProducts.vue` to include SKU in option label
+- [x] 1.1 Update `productOptions` computed in `LeadProducts.vue` to include SKU in option label
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-001`
   - **files**: `pipelinq/src/components/LeadProducts.vue`
   - **acceptance_criteria**:
@@ -14,7 +14,7 @@
 
 ## 2. Notes Column in Line Items Table
 
-- [ ] 2.1 Add "Notes" column header and cell to the line items table in `LeadProducts.vue`
+- [x] 2.1 Add "Notes" column header and cell to the line items table in `LeadProducts.vue`
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-002`
   - **files**: `pipelinq/src/components/LeadProducts.vue`
   - **acceptance_criteria**:
@@ -22,7 +22,7 @@
     - THEN a "Notes" column MUST be visible in the table
     - AND each row MUST display the `item.notes` value (or placeholder if empty)
 
-- [ ] 2.2 Make notes field inline-editable with save-on-change
+- [x] 2.2 Make notes field inline-editable with save-on-change
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-002`
   - **files**: `pipelinq/src/components/LeadProducts.vue`
   - **acceptance_criteria**:
@@ -34,7 +34,7 @@
 
 ## 3. Auto-Recalculation of Lead Value
 
-- [ ] 3.1 Add `_valueOverride` ref and compute override state on mount in `LeadDetail.vue`
+- [x] 3.1 Add `_valueOverride` ref and compute override state on mount in `LeadDetail.vue`
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-003`
   - **files**: `pipelinq/src/views/leads/LeadDetail.vue`
   - **acceptance_criteria**:
@@ -45,7 +45,7 @@
     - AND given a lead with `value` null or 0 and no line items
     - THEN `_valueOverride` MUST be `false`
 
-- [ ] 3.2 Replace null/zero guard in `onProductValueChanged` with `_valueOverride` check
+- [x] 3.2 Replace null/zero guard in `onProductValueChanged` with `_valueOverride` check
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-003`
   - **files**: `pipelinq/src/views/leads/LeadDetail.vue`
   - **acceptance_criteria**:

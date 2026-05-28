@@ -1,15 +1,36 @@
 {
-  "spec": "openspec/changes/migrate-automation-to-flow-leaf",
+  "spec": "openspec/changes/2026-03-20-lead-product-link",
   "verified": [
-    {"task": "0.1", "file": "openspec/changes/migrate-automation-to-flow-leaf/design.md", "ok": true, "note": "Leaf key 'flow', NC dependency 'workflowengine' documented; authoring lives in NC Flow/n8n."},
-    {"task": "1.1", "file": "lib/Controller/AutomationController.php", "ok": true, "note": "Deleted - no in-app automation engine remains."},
-    {"task": "1.1", "file": "lib/Service/AutomationService.php", "ok": true, "note": "Deleted - webhook-firing/DMN service removed."},
-    {"task": "1.1", "file": "src/views/automations/AutomationBuilder.vue", "ok": true, "note": "Deleted - bespoke automation UI removed."},
-    {"task": "1.1", "file": "appinfo/routes.php", "ok": true, "note": "Automation routes removed."},
-    {"task": "1.2", "file": "lib/Settings/pipelinq_register.json", "ok": true, "note": "automation and automationLog schemas retired from both schemas[] list and definitions."},
-    {"task": "2.1", "file": "lib/Settings/pipelinq_register.json", "ok": true, "note": "flow added to linkedTypes on lead, request, client."},
-    {"task": "3.1", "file": "src/manifest.json", "ok": true, "note": "CnFlowTab + CnFlowCard added to LeadDetail, RequestDetail, ClientDetail. workflowengine added to dependencies[]."},
-    {"task": "4.1", "file": "openspec/changes/migrate-automation-to-flow-leaf/tasks.md", "ok": true, "note": "Follow-up migration recorded; existing objects left in place per ADR-032."}
+    {
+      "task": "1.1",
+      "file": "src/components/LeadProducts.vue",
+      "ok": true,
+      "detail": "productOptions computed updated to include SKU in label format 'Name (SKU)'"
+    },
+    {
+      "task": "2.1",
+      "file": "src/components/LeadProducts.vue",
+      "ok": true,
+      "detail": "Notes column header added to thead; Notes td added to tbody rows and tfoot"
+    },
+    {
+      "task": "2.2",
+      "file": "src/components/LeadProducts.vue",
+      "ok": true,
+      "detail": "inline input with v-model + @change=updateNotes(item); updateNotes method saves full item via objectStore.saveObject"
+    },
+    {
+      "task": "3.1",
+      "file": "src/views/leads/LeadDetail.vue",
+      "ok": true,
+      "detail": "_valueOverride: false in data(); _computeValueOverride() fetches leadProducts and compares sum vs lead.value; called from mounted() and onFormSave()"
+    },
+    {
+      "task": "3.2",
+      "file": "src/views/leads/LeadDetail.vue",
+      "ok": true,
+      "detail": "onProductValueChanged replaced hasLineItems guard with !_valueOverride; syncLeadValue resets _valueOverride to false"
+    }
   ],
   "stubs": [],
   "missing_routes": []
