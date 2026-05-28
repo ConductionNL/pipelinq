@@ -29,7 +29,6 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -55,7 +54,6 @@ class CallbackController extends Controller
      * @param CallbackService      $callbackService      The callback service.
      * @param NotificationService  $notificationService  The notification service.
      * @param ScheduledTaskService $scheduledTaskService The scheduled task service.
-     * @param IAppConfig           $appConfig            The app config.
      * @param IGroupManager        $groupManager         The group manager.
      * @param IUserSession         $userSession          The user session.
      * @param IL10N                $l10n                 The localization service.
@@ -66,7 +64,6 @@ class CallbackController extends Controller
         private CallbackService $callbackService,
         private NotificationService $notificationService,
         private ScheduledTaskService $scheduledTaskService,
-        private IAppConfig $appConfig,
         private IGroupManager $groupManager,
         private IUserSession $userSession,
         private IL10N $l10n,

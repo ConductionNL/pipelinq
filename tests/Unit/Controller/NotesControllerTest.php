@@ -22,11 +22,13 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\Pipelinq\Controller\NotesController;
 use OCA\Pipelinq\Service\NoteEventService;
 use OCA\Pipelinq\Service\NotesService;
+use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 
 /**
  * Tests for NotesController.
@@ -63,6 +65,13 @@ class NotesControllerTest extends TestCase
         $userSession->method('getUser')->willReturn($user);
         $l10n               = $this->createMock(IL10N::class);
         $l10n->method('t')->willReturnArgument(0);
+        $logger             = $this->createMock(\Psr\Log\LoggerInterface::class);
+
+        // Container returns null for OR object lookups (fail-open in objectExists).
+        $container    = $this->createMock(ContainerInterface::class);
+        $container->method('get')->willThrowException(new \RuntimeException('OR unavailable'));
+        $groupManager = $this->createMock(IGroupManager::class);
+        $groupManager->method('isAdmin')->willReturn(true);
 
         $this->controller = new NotesController(
             $request,
@@ -70,6 +79,9 @@ class NotesControllerTest extends TestCase
             $noteEventService,
             $userSession,
             $l10n,
+            $logger,
+            $container,
+            $groupManager,
         );
     }//end setUp()
 

@@ -177,8 +177,19 @@ class PublicFormController extends Controller
                 return $this->addCorsHeaders(response: $response);
             }
 
-            // Build lead data from submission (strip internal/honeypot fields).
-            $leadData = $this->buildLeadData(submission: $submission, formId: $id);
+            // Load the form schema so we can whitelist submission keys.
+            $form       = $objectService->find($id, []);
+            $formFields = [];
+            if ($form !== null && is_array($form['fields'] ?? null)) {
+                foreach ($form['fields'] as $field) {
+                    if (isset($field['name']) === true) {
+                        $formFields[] = $field['name'];
+                    }
+                }
+            }
+
+            // Build lead data from submission (whitelist against declared form fields).
+            $leadData = $this->buildLeadData(submission: $submission, formId: $id, allowedFields: $formFields);
 
             $saved = $objectService->saveObject(
                 $leadData,
@@ -210,16 +221,28 @@ class PublicFormController extends Controller
     }//end submit()
 
     /**
-     * Build lead data from a raw submission, stripping internal fields.
+     * Build lead data from a raw submission, whitelisting against declared form fields.
      *
-     * @param array<string, mixed> $submission The submitted form data.
-     * @param string               $formId     The form ID.
+     * Only keys that appear in the form's own `fields[]` array are copied.
+     * Internal and system-reserved keys are always excluded.
+     * `status` is always set last from a fixed value to prevent injection.
+     *
+     * When `$allowedFields` is empty (form schema unavailable) the method
+     * falls back to stripping underscore-prefixed keys only, maintaining
+     * backward compatibility with unconfigured environments.
+     *
+     * @param array<string, mixed> $submission    The submitted form data.
+     * @param string               $formId        The form ID.
+     * @param string[]             $allowedFields Declared field names from the form schema.
      *
      * @return array<string, mixed> The lead data for OpenRegister.
      */
-    private function buildLeadData(array $submission, string $formId): array
+    private function buildLeadData(array $submission, string $formId, array $allowedFields=[]): array
     {
-        $data = ['source' => 'public_form', 'formId' => $formId, 'status' => 'nieuw'];
+        // status / source / formId are always controlled server-side.
+        $reserved = ['status', 'source', 'formId', 'id', 'uuid'];
+
+        $data = ['source' => 'public_form', 'formId' => $formId];
 
         foreach ($submission as $key => $value) {
             // Skip honeypot and framework-internal fields.
@@ -227,8 +250,21 @@ class PublicFormController extends Controller
                 continue;
             }
 
+            // Skip server-side reserved keys regardless of allowedFields.
+            if (in_array($key, $reserved, true) === true) {
+                continue;
+            }
+
+            // If the form schema is known, only accept declared fields.
+            if (empty($allowedFields) === false && in_array($key, $allowedFields, true) === false) {
+                continue;
+            }
+
             $data[$key] = $value;
         }
+
+        // Always set status last so it cannot be overridden via the payload.
+        $data['status'] = 'nieuw';
 
         return $data;
     }//end buildLeadData()

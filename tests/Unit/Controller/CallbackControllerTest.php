@@ -119,7 +119,6 @@ class CallbackControllerTest extends TestCase
             $this->callbackService,
             $this->notificationService,
             $this->scheduledTaskService,
-            $this->appConfig,
             $this->groupManager,
             $this->userSession,
             $l10n,
