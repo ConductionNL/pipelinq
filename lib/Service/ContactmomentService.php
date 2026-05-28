@@ -138,10 +138,13 @@ class ContactmomentService
             );
         }
 
-        $objectArray = $object->getObject();
-        $agent       = $objectArray['agent'] ?? '';
-        $isCreator   = ($agent === $currentUserId);
-        $isAdmin     = $this->groupManager->isAdmin($currentUserId);
+        // Use the OR-immutable createdBy field (set by the platform on every
+        // saveObject/createObject call) rather than the user-mutable `agent` field.
+        // Any caller with OR write-access can stamp `agent: victim_uid`; `createdBy`
+        // is protected by the platform and cannot be overwritten via the public API.
+        $createdBy = $object->getCreatedBy() ?? '';
+        $isCreator = ($createdBy !== '' && $createdBy === $currentUserId);
+        $isAdmin   = $this->groupManager->isAdmin($currentUserId);
 
         if ($isCreator === false && $isAdmin === false) {
             throw new NotPermittedException(

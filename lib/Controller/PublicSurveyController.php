@@ -230,6 +230,41 @@ class PublicSurveyController extends PublicShareController
                 return new JSONResponse(['error' => 'Answers are required'], Http::STATUS_BAD_REQUEST);
             }
 
+            // Cap the total answers payload to 64 KiB to prevent DOS-via-blob.
+            if (strlen((string) json_encode($answers)) > 65536) {
+                return new JSONResponse(['error' => 'Answers payload too large'], Http::STATUS_REQUEST_ENTITY_TOO_LARGE);
+            }
+
+            // Validate each answer key against the survey's declared question IDs.
+            // Unknown keys (attacker-injected fields) are stripped silently.
+            $questions   = $data['questions'] ?? [];
+            $questionIds = [];
+            if (is_array($questions) === true) {
+                foreach ($questions as $question) {
+                    if (is_array($question) === true && isset($question['id']) === true) {
+                        $questionIds[] = (string) $question['id'];
+                    }
+                }
+            }
+
+            if (empty($questionIds) === false) {
+                $answers = array_intersect_key($answers, array_flip($questionIds));
+            }
+
+            // Enforce per-answer scalar-value caps to prevent nested-blob injection.
+            foreach ($answers as $key => $value) {
+                if (is_array($value) === true) {
+                    // Allow flat arrays (multi-select) but forbid nested objects.
+                    foreach ($value as $item) {
+                        if (is_array($item) === true || is_object($item) === true) {
+                            return new JSONResponse(['error' => 'Invalid answer value for question '.$key], Http::STATUS_BAD_REQUEST);
+                        }
+                    }
+                } else if (is_string($value) === true && strlen($value) > 4096) {
+                    return new JSONResponse(['error' => 'Answer value too long for question '.$key], Http::STATUS_BAD_REQUEST);
+                }
+            }
+
             $settings         = $this->settingsService->getSettings();
             $registerId       = $settings['register'] ?? '';
             $responseSchemaId = $settings['surveyResponse_schema'] ?? '';
