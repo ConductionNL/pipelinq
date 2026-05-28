@@ -28,6 +28,8 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\MetricsFormatter;
 use OCA\Pipelinq\Service\MetricsRepository;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\TextPlainResponse;
 use OCP\IRequest;
 use OCP\App\IAppManager;
@@ -63,6 +65,8 @@ class MetricsController extends Controller
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-53
      */
+    #[PublicPage]
+    #[NoAdminRequired]
     public function index(): TextPlainResponse
     {
         $metrics  = $this->collectMetrics();

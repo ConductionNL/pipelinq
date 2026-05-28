@@ -237,7 +237,7 @@ class PublicSurveyController extends PublicShareController
                 return new JSONResponse(['error' => 'Survey system is not configured'], Http::STATUS_SERVICE_UNAVAILABLE);
             }
 
-            // respondentId / entityType / entityId are server-derived or omitted;
+            // RespondentId / entityType / entityId are server-derived or omitted;
             // never trust values from the anonymous submission body.
             $responseData = [
                 'surveyId'    => $data['id'] ?? '',

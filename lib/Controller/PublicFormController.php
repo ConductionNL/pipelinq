@@ -180,7 +180,7 @@ class PublicFormController extends Controller
             // Load the form schema so we can whitelist submission keys.
             $form       = $objectService->find($id, []);
             $formFields = [];
-            if ($form !== null && is_array($form['fields'] ?? null)) {
+            if ($form !== null && is_array($form['fields'] ?? null) === true) {
                 foreach ($form['fields'] as $field) {
                     if (isset($field['name']) === true) {
                         $formFields[] = $field['name'];
@@ -239,7 +239,7 @@ class PublicFormController extends Controller
      */
     private function buildLeadData(array $submission, string $formId, array $allowedFields=[]): array
     {
-        // status / source / formId are always controlled server-side.
+        // Status / source / formId are always controlled server-side.
         $reserved = ['status', 'source', 'formId', 'id', 'uuid'];
 
         $data = ['source' => 'public_form', 'formId' => $formId];
