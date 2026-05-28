@@ -11,9 +11,9 @@
 					:options="pipelineSelectOptions"
 					:clearable="false"
 					label="label"
-					:reduce="o => o.value"
-					:placeholder="t('pipelinq', 'Select pipeline')"
 					:input-label="t('pipelinq', 'Select pipeline')"
+					:placeholder="t('pipelinq', 'Select pipeline')"
+					:reduce="o => o.value"
 					class="pipeline-selector"
 					@input="onPipelineChange" />
 				<NcSelect
