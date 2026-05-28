@@ -161,37 +161,11 @@ class ReportingController extends Controller
             return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
         }
 
-        try {
-            $headers = [
-                $this->l10n->t('Date'),
-                $this->l10n->t('Channel'),
-                $this->l10n->t('Agent'),
-                $this->l10n->t('Client'),
-                $this->l10n->t('Subject'),
-                $this->l10n->t('Result'),
-                $this->l10n->t('Duration'),
-            ];
-
-            // In production, data would be fetched from OpenRegister based on filters.
-            $rows = [];
-
-            $csv = $this->reportingService->generateCsv(
-                headers: $headers,
-                rows: $rows,
-            );
-
-            $filename = 'contactmomenten-rapport-'.date('Y-m-d').'.csv';
-
-            return new DataDownloadResponse(
-                $csv,
-                $filename,
-                'text/csv; charset=utf-8',
-            );
-        } catch (\Exception $e) {
-            return new JSONResponse(
-                ['error' => $this->l10n->t('Failed to generate export')],
-                500,
-            );
-        }//end try
+        // CSV export requires OpenRegister data integration.
+        // Returning 501 until OR contactmoment retrieval is wired.
+        return new JSONResponse(
+            ['error' => $this->l10n->t('Export not yet implemented')],
+            Http::STATUS_NOT_IMPLEMENTED,
+        );
     }//end exportCsv()
 }//end class

@@ -27,6 +27,7 @@ use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 /**
  * Tests for ProspectController.
@@ -75,6 +76,7 @@ class ProspectControllerTest extends TestCase
             $this->discoveryService,
             $userSession,
             $l10n,
+            $this->createMock(LoggerInterface::class),
         );
     }//end setUp()
 
