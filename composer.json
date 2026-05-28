@@ -16,7 +16,9 @@
 	},
 	"autoload-dev": {
 		"psr-4": {
-			"OCA\\OpenRegister\\": "tests/Stubs/"
+			"OCA\\OpenRegister\\": "tests/Stubs/",
+			"Doctrine\\DBAL\\": "tests/Stubs/DBAL/",
+			"OC\\": "tests/Stubs/OC/"
 		}
 	},
 	"require": {

@@ -60,8 +60,8 @@ class IntakeFormService
      * Constructor.
      *
      * @param IAppConfig      $appConfig    The app configuration.
-     * @param LoggerInterface $logger       The logger.
      * @param ICacheFactory   $cacheFactory The cache factory for APCu fallback.
+     * @param LoggerInterface $logger       The logger.
      */
     public function __construct(
         private IAppConfig $appConfig,

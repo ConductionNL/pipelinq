@@ -26,6 +26,7 @@ use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 /**
  * Tests for ContactSyncController.
@@ -68,12 +69,14 @@ class ContactSyncControllerTest extends TestCase
         $userSession->method('getUser')->willReturn($user);
         $l10n              = $this->createMock(IL10N::class);
         $l10n->method('t')->willReturnArgument(0);
+        $logger            = $this->createMock(LoggerInterface::class);
 
         $this->controller = new ContactSyncController(
             $this->request,
             $this->syncService,
             $userSession,
             $l10n,
+            $logger,
         );
     }//end setUp()
 

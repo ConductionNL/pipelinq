@@ -266,6 +266,7 @@ class ProspectDiscoveryService
             /*
              * @var \OCA\OpenRegister\Service\ObjectService $objectService
              */
+
             $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 
             $clients = $objectService->findAll(
