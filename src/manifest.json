@@ -4,7 +4,7 @@
 	"dependencies": [
 		"openregister",
 		"deck",
-		"openconnector"
+		"workflowengine"
 	],
 	"menu": [
 		{
@@ -128,13 +128,6 @@
 			"order": 210
 		},
 		{
-			"id": "Automations",
-			"label": "Automations",
-			"icon": "icon-play",
-			"route": "Automations",
-			"order": 220
-		},
-		{
 			"id": "FeaturesRoadmapMenu",
 			"label": "Features & roadmap",
 			"icon": "icon-toggle",
@@ -217,21 +210,21 @@
 					"showMetadata": true,
 					"tabs": [
 						{
-							"id": "xwiki",
-							"label": "Knowledge",
-							"component": "CnXwikiTab",
+							"id": "flow",
+							"label": "Flow",
+							"component": "CnFlowTab",
 							"config": {
-								"linkedType": "xwiki"
+								"linkedType": "flow"
 							}
 						}
 					]
 				},
 				"widgets": [
 					{
-						"id": "client-xwiki-preview",
-						"component": "CnXwikiCard",
+						"id": "client-flow-card",
+						"component": "CnFlowCard",
 						"config": {
-							"linkedType": "xwiki"
+							"linkedType": "flow"
 						}
 					}
 				]
@@ -279,11 +272,11 @@
 							}
 						},
 						{
-							"id": "xwiki",
-							"label": "Knowledge",
-							"component": "CnXwikiTab",
+							"id": "flow",
+							"label": "Flow",
+							"component": "CnFlowTab",
 							"config": {
-								"linkedType": "xwiki"
+								"linkedType": "flow"
 							}
 						}
 					]
@@ -298,10 +291,10 @@
 						}
 					},
 					{
-						"id": "request-xwiki-preview",
-						"component": "CnXwikiCard",
+						"id": "request-flow-card",
+						"component": "CnFlowCard",
 						"config": {
-							"linkedType": "xwiki"
+							"linkedType": "flow"
 						}
 					}
 				]
@@ -414,11 +407,11 @@
 							}
 						},
 						{
-							"id": "xwiki",
-							"label": "Knowledge",
-							"component": "CnXwikiTab",
+							"id": "flow",
+							"label": "Flow",
+							"component": "CnFlowTab",
 							"config": {
-								"linkedType": "xwiki"
+								"linkedType": "flow"
 							}
 						}
 					]
@@ -433,10 +426,10 @@
 						}
 					},
 					{
-						"id": "lead-xwiki-preview",
-						"component": "CnXwikiCard",
+						"id": "lead-flow-card",
+						"component": "CnFlowCard",
 						"config": {
-							"linkedType": "xwiki"
+							"linkedType": "flow"
 						}
 					}
 				]
@@ -815,96 +808,6 @@
 					"enabled": true,
 					"showMetadata": true
 				}
-			}
-		},
-		{
-			"id": "Automations",
-			"route": "/automations",
-			"type": "index",
-			"title": "Automations",
-			"config": {
-				"register": "pipelinq",
-				"schema": "automation",
-				"columns": [
-					"name",
-					"trigger",
-					"isActive",
-					"lastRun",
-					"runCount"
-				],
-				"actions": [
-					{
-						"id": "history",
-						"label": "View history",
-						"icon": "history",
-						"handler": "navigate",
-						"route": "AutomationHistory"
-					}
-				],
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true
-				}
-			}
-		},
-		{
-			"id": "AutomationNew",
-			"route": "/automations/new",
-			"type": "detail",
-			"title": "New automation",
-			"config": {
-				"register": "pipelinq",
-				"schema": "automation",
-				"sidebar": true
-			},
-			"slots": {
-				"default": "AutomationBuilderView"
-			}
-		},
-		{
-			"id": "AutomationDetail",
-			"route": "/automations/:id",
-			"type": "detail",
-			"title": "Automation",
-			"config": {
-				"register": "pipelinq",
-				"schema": "automation",
-				"sidebar": true
-			},
-			"slots": {
-				"default": "AutomationBuilderView"
-			}
-		},
-		{
-			"id": "AutomationHistory",
-			"route": "/automations/:id/history",
-			"type": "index",
-			"title": "Automation history",
-			"config": {
-				"register": "pipelinq",
-				"schema": "automationLog",
-				"filter": {
-					"automation": "@route.id"
-				},
-				"sortKey": "triggeredAt",
-				"sortOrder": "desc",
-				"columns": [
-					"triggeredAt",
-					"status",
-					"triggerEntity",
-					"actionsExecuted",
-					"error"
-				],
-				"emptyText": "This automation has not been triggered yet.",
-				"selectable": false,
-				"showAdd": false,
-				"showFormDialog": false,
-				"showEditAction": false,
-				"showCopyAction": false,
-				"showDeleteAction": false,
-				"showMassImport": false,
-				"showMassCopy": false,
-				"showMassDelete": false
 			}
 		},
 		{
