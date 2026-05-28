@@ -26,6 +26,7 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\NoteEventService;
 use OCA\Pipelinq\Service\NotesService;
+use OCA\Pipelinq\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -43,6 +44,21 @@ use Psr\Log\LoggerInterface;
 class NotesController extends Controller
 {
     /**
+     * Maps the pipelinq_ objectType prefix to its settings config key for schema resolution.
+     *
+     * This ensures objectExists() scopes OR lookups to this app's own register+schema,
+     * preventing IDOR against objects in other apps or registers.
+     *
+     * @var array<string, string>
+     */
+    private const OBJECT_TYPE_TO_SCHEMA_KEY = [
+        'pipelinq_client'  => 'client_schema',
+        'pipelinq_contact' => 'contact_schema',
+        'pipelinq_lead'    => 'lead_schema',
+        'pipelinq_request' => 'request_schema',
+    ];
+
+    /**
      * Constructor.
      *
      * @param IRequest           $request          The request.
@@ -53,6 +69,7 @@ class NotesController extends Controller
      * @param LoggerInterface    $logger           The logger.
      * @param ContainerInterface $container        The DI container.
      * @param IGroupManager      $groupManager     The group manager.
+     * @param SettingsService    $settingsService  The settings service.
      */
     public function __construct(
         IRequest $request,
@@ -63,31 +80,57 @@ class NotesController extends Controller
         private LoggerInterface $logger,
         private ContainerInterface $container,
         private IGroupManager $groupManager,
+        private SettingsService $settingsService,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
 
     /**
-     * Verify that the underlying OR object exists and is accessible.
+     * Verify that the underlying OR object exists within this app's own register+schema.
      *
-     * Returns true if the object is found, false (404-worthy) if not.
-     * On any service error the method returns true (fail-open is safer
-     * than blocking all notes when OR is temporarily unavailable).
+     * Scopes the lookup to the app's register and the schema that corresponds to
+     * the given objectType. Returns false when the object is not found in the
+     * expected schema (including when it exists in a different app's schema — IDOR
+     * prevention). Returns false on all unexpected errors (fail-closed) so that
+     * a broken OR connection does not silently grant access.
      *
-     * @param string $objectId The OR object UUID.
+     * @param string $objectType The pipelinq object type (must be in VALID_TYPES).
+     * @param string $objectId   The OR object UUID.
      *
-     * @return bool Whether the object can be accessed.
+     * @return bool Whether the object exists and belongs to this app.
      */
-    private function objectExists(string $objectId): bool
+    private function objectExists(string $objectType, string $objectId): bool
     {
+        $schemaKey = self::OBJECT_TYPE_TO_SCHEMA_KEY[$objectType] ?? null;
+        if ($schemaKey === null) {
+            return false;
+        }
+
         try {
+            $settings   = $this->settingsService->getSettings();
+            $registerId = $settings['register'] ?? '';
+            $schemaId   = $settings[$schemaKey] ?? '';
+
+            if ($registerId === '' || $schemaId === '') {
+                // Settings not yet configured — fail closed.
+                $this->logger->warning('NotesController: register or schema not configured', ['objectType' => $objectType]);
+                return false;
+            }
+
             $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-            $object        = $objectService->find($objectId, []);
+            $object        = $objectService->find(
+                id: $objectId,
+                register: $registerId,
+                schema: $schemaId
+            );
             return $object !== null;
+        } catch (\OCP\DB\Exception | \OCP\AppFramework\Db\DoesNotExistException $e) {
+            // Expected "not found" path — return false without noise.
+            return false;
         } catch (\Throwable $e) {
-            // OR unavailable — allow the operation rather than blocking all notes.
-            $this->logger->warning('NotesController: could not verify object existence', ['objectId' => $objectId, 'exception' => $e->getMessage()]);
-            return true;
+            // Unexpected error — fail closed and log.
+            $this->logger->error('NotesController: objectExists check failed', ['objectId' => $objectId, 'exception' => $e->getMessage()]);
+            return false;
         }
     }//end objectExists()
 
@@ -114,7 +157,7 @@ class NotesController extends Controller
             return new JSONResponse(['error' => $this->l10n->t('Invalid object type')], 400);
         }
 
-        if ($this->objectExists(objectId: $objectId) === false) {
+        if ($this->objectExists(objectType: $objectType, objectId: $objectId) === false) {
             return new JSONResponse(['error' => $this->l10n->t('Object not found')], Http::STATUS_NOT_FOUND);
         }
 
@@ -153,7 +196,7 @@ class NotesController extends Controller
             return new JSONResponse(['error' => $this->l10n->t('Invalid object type')], 400);
         }
 
-        if ($this->objectExists(objectId: $objectId) === false) {
+        if ($this->objectExists(objectType: $objectType, objectId: $objectId) === false) {
             return new JSONResponse(['error' => $this->l10n->t('Object not found')], Http::STATUS_NOT_FOUND);
         }
 
@@ -211,7 +254,7 @@ class NotesController extends Controller
             return new JSONResponse(['error' => $this->l10n->t('Invalid object type')], 400);
         }
 
-        if ($this->objectExists(objectId: $objectId) === false) {
+        if ($this->objectExists(objectType: $objectType, objectId: $objectId) === false) {
             return new JSONResponse(['error' => $this->l10n->t('Object not found')], Http::STATUS_NOT_FOUND);
         }
 

@@ -22,6 +22,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\Pipelinq\Controller\NotesController;
 use OCA\Pipelinq\Service\NoteEventService;
 use OCA\Pipelinq\Service\NotesService;
+use OCA\Pipelinq\Service\SettingsService;
 use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -67,9 +68,32 @@ class NotesControllerTest extends TestCase
         $l10n->method('t')->willReturnArgument(0);
         $logger             = $this->createMock(\Psr\Log\LoggerInterface::class);
 
-        // Container returns null for OR object lookups (fail-open in objectExists).
-        $container    = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willThrowException(new \RuntimeException('OR unavailable'));
+        // Provide a settings service that returns valid register + schema IDs
+        // so objectExists() can scope the OR lookup to the correct entity.
+        $settingsService = $this->createMock(SettingsService::class);
+        $settingsService->method('getSettings')->willReturn([
+            'register'       => 'reg-123',
+            'client_schema'  => 'schema-client',
+            'contact_schema' => 'schema-contact',
+            'lead_schema'    => 'schema-lead',
+            'request_schema' => 'schema-request',
+        ]);
+
+        // Build a minimal OR ObjectEntity stub that objectExists() can return.
+        $mockObject = $this->getMockBuilder(\stdClass::class)
+            ->addMethods(['getUuid'])
+            ->getMock();
+        $mockObject->method('getUuid')->willReturn('object-uuid');
+
+        // Object service stub: find() returns a non-null object for any scoped lookup.
+        $objectServiceStub = $this->getMockBuilder(\stdClass::class)
+            ->addMethods(['find'])
+            ->getMock();
+        $objectServiceStub->method('find')->willReturn($mockObject);
+
+        $container = $this->createMock(ContainerInterface::class);
+        $container->method('get')->willReturn($objectServiceStub);
+
         $groupManager = $this->createMock(IGroupManager::class);
         $groupManager->method('isAdmin')->willReturn(true);
 
@@ -82,6 +106,7 @@ class NotesControllerTest extends TestCase
             $logger,
             $container,
             $groupManager,
+            $settingsService,
         );
     }//end setUp()
 

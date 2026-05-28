@@ -65,6 +65,30 @@ class ScheduledTaskService
     ];
 
     /**
+     * Task fields that any authenticated user may modify.
+     *
+     * All other incoming keys are silently stripped before the merge to
+     * prevent mass-assignment of admin-only or system fields.
+     * Admin-only fields (status, assigneeUserId, assigneeGroupId, attempts,
+     * createdAt, completedAt) are handled separately in the controller.
+     *
+     * @var array<string>
+     */
+    public const MUTABLE_FIELDS = [
+        'type',
+        'subject',
+        'description',
+        'priority',
+        'deadline',
+        'clientId',
+        'requestId',
+        'contactMomentSummary',
+        'callbackPhoneNumber',
+        'preferredTimeSlot',
+        'resultText',
+    ];
+
+    /**
      * Maximum window in minutes for pending-task queries (24 hours).
      *
      * @var int
@@ -315,7 +339,12 @@ class ScheduledTaskService
     public function updateScheduledTask(string $id, array $data): array
     {
         $existing = $this->getScheduledTask(id: $id);
-        unset($data['createdBy']);
+
+        // Strip any fields not explicitly on the allowlist (MUTABLE_FIELDS +
+        // admin-only fields already filtered by the controller).  This prevents
+        // mass-assignment of system/immutable fields like createdBy, uuid, etc.
+        $allowedKeys  = array_merge(self::MUTABLE_FIELDS, ['status', 'assigneeUserId', 'assigneeGroupId', 'createdAt', 'completedAt', 'attempts']);
+        $data         = array_intersect_key($data, array_flip($allowedKeys));
 
         $merged       = array_merge($existing, $data);
         $merged['id'] = $id;
