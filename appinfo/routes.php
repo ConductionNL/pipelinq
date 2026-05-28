@@ -54,13 +54,6 @@ return [
         // Intake form management (authenticated; camelCase slug matches IntakeFormController class name)
         ['name' => 'intakeForm#embed', 'url' => '/api/forms/{id}/embed', 'verb' => 'GET'],
         ['name' => 'intakeForm#export', 'url' => '/api/forms/{id}/submissions/export', 'verb' => 'GET'],
-        // Automations
-        ['name' => 'automation#metadata', 'url' => '/api/automations/metadata', 'verb' => 'GET'],
-        ['name' => 'automation#test', 'url' => '/api/automations/test', 'verb' => 'POST'],
-        // Kennisbank public API (authenticated; routes KennisbankController)
-        ['name' => 'kennisbank#publicIndex', 'url' => '/api/kennisbank/public', 'verb' => 'GET'],
-        ['name' => 'kennisbank#publicShow', 'url' => '/api/kennisbank/public/{id}', 'verb' => 'GET'],
-        ['name' => 'kennisbank#submitFeedback', 'url' => '/api/kennisbank/feedback', 'verb' => 'POST'],
         // Rapportage / reporting
         ['name' => 'reporting#getSla', 'url' => '/api/rapportage/sla', 'verb' => 'GET'],
         ['name' => 'reporting#updateSla', 'url' => '/api/rapportage/sla', 'verb' => 'PUT'],
@@ -68,10 +61,6 @@ return [
         // Public survey endpoints (unauthenticated; camelCase slug matches PublicSurveyController class name)
         ['name' => 'publicSurvey#show', 'url' => '/public/survey/{token}', 'verb' => 'GET'],
         ['name' => 'publicSurvey#submit', 'url' => '/public/survey/{token}/respond', 'verb' => 'POST'],
-
-        // Public kennisbank API (unauthenticated; camelCase slug matches PublicKennisbankController class name)
-        ['name' => 'publicKennisbank#index', 'url' => '/api/public/kennisbank/articles', 'verb' => 'GET'],
-        ['name' => 'publicKennisbank#show', 'url' => '/api/public/kennisbank/articles/{id}', 'verb' => 'GET'],
 
         // Contactmomenten (permission-checked delete)
         ['name' => 'contactmoment#destroy', 'url' => '/api/contactmomenten/{id}', 'verb' => 'DELETE'],

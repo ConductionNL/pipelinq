@@ -75,9 +75,7 @@ class QueueService
                         'queue'    => $queueId,
                     ],
                     'limit'   => 1,
-                ],
-                _rbac: false,
-                _multitenancy: false
+                ]
             );
 
             return count($results);
@@ -169,9 +167,7 @@ class QueueService
                         'schema'   => $queueSchemaId,
                     ],
                     'limit'   => 200,
-                ],
-                _rbac: false,
-                _multitenancy: false
+                ]
             );
 
             foreach ($queues as $queue) {
@@ -206,7 +202,7 @@ class QueueService
         }
 
         $depth = $this->getQueueDepth(queueId: $queueId);
-        if ($depth <= (int) $maxCapacity) {
+        if ($this->isAtCapacity(queue: $queue, currentCount: $depth) === false) {
             return 0;
         }
 
@@ -261,9 +257,7 @@ class QueueService
                     ],
                     'limit'   => $count,
                     'order'   => ['dateCreated' => 'DESC'],
-                ],
-                _rbac: false,
-                _multitenancy: false
+                ]
             );
 
             foreach ($items as $item) {
@@ -312,9 +306,7 @@ class QueueService
                 [],
                 $registerId,
                 $schemaId,
-                null,
-                _rbac: false,
-                _multitenancy: false
+                null
             );
 
             return true;

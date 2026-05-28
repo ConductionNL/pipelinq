@@ -25,7 +25,9 @@ use OCA\Pipelinq\Service\OpenCorporatesApiClient;
 use OCA\Pipelinq\Service\ProspectDiscoveryService;
 use OCA\Pipelinq\Service\ProspectScoringService;
 use OCA\Pipelinq\Service\SettingsService;
+use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -73,6 +75,10 @@ class ProspectDiscoveryServiceTest extends TestCase
             'lead_schema'   => 'lead',
         ]);
 
+        $container  = $this->createMock(ContainerInterface::class);
+        $appManager = $this->createMock(IAppManager::class);
+        $appManager->method('getInstalledApps')->willReturn([]);
+
         $this->service = new ProspectDiscoveryService(
             $this->icpConfig,
             $kvkClient,
@@ -80,6 +86,8 @@ class ProspectDiscoveryServiceTest extends TestCase
             $scoring,
             $settings,
             $logger,
+            $container,
+            $appManager,
         );
     }//end setUp()
 

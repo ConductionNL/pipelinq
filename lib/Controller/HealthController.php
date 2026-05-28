@@ -26,6 +26,8 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IDBConnection;
 use OCP\IRequest;
@@ -59,12 +61,12 @@ class HealthController extends Controller
     /**
      * Health check endpoint.
      *
-     * @NoCSRFRequired
-     *
      * @return JSONResponse Health status
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-58
      */
+    #[PublicPage]
+    #[NoAdminRequired]
     public function index(): JSONResponse
     {
         $checks = [];

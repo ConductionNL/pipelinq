@@ -51,7 +51,7 @@
 			<h4>{{ t('pipelinq', 'Recent requests') }}</h4>
 			<ul>
 				<li v-for="req in recentRequests" :key="req.id">
-					<a :href="'/index.php/apps/pipelinq/requests/' + req.id">
+					<a :href="generateUrl('/apps/pipelinq/requests/' + req.id)">
 						{{ req.title || t('pipelinq', 'Untitled') }}
 					</a>
 					<span class="recent-status">{{ req.status }}</span>
@@ -63,6 +63,7 @@
 
 <script>
 import { NcTextField, NcButton, NcSelect, NcNoteCard } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
 import ClientAutocomplete from '../../components/widgets/ClientAutocomplete.vue'
 import { initializeStores } from '../../store/store.js'
 
@@ -129,6 +130,7 @@ export default {
 		}
 	},
 	methods: {
+		generateUrl,
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-54
 		 */
@@ -174,8 +176,8 @@ export default {
 						: this.form.channel
 				}
 
-				const url = '/apps/openregister/api/objects/'
-					+ typeConfig.register + '/' + typeConfig.schema
+				const url = generateUrl('/apps/openregister/api/objects/'
+					+ typeConfig.register + '/' + typeConfig.schema)
 
 				const response = await fetch(url, {
 					method: 'POST',
@@ -190,7 +192,7 @@ export default {
 				if (!response.ok) throw new Error('Failed to create request')
 				const created = await response.json()
 				const id = created.id || created.uuid
-				this.successLink = '/index.php/apps/pipelinq/requests/' + id
+				this.successLink = generateUrl('/apps/pipelinq/requests/' + id)
 				this.success = true
 			} catch (err) {
 				console.error('StartRequestWidget create error:', err)
@@ -217,9 +219,9 @@ export default {
 			try {
 				const typeConfig = this.config.request
 				const params = new URLSearchParams({ _limit: '3', _order: 'desc' })
-				const url = '/apps/openregister/api/objects/'
+				const url = generateUrl('/apps/openregister/api/objects/'
 					+ typeConfig.register + '/' + typeConfig.schema
-					+ '?' + params.toString()
+					+ '?' + params.toString())
 
 				const response = await fetch(url, {
 					headers: {

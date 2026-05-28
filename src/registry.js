@@ -49,10 +49,6 @@ import SurveyAnalyticsView from './views/surveys/SurveyAnalytics.vue'
 //     Forms list + FormSubmissions are declarative type:"index"). ---
 import FormBuilderView from './views/forms/FormBuilder.vue'
 
-// --- Automations visual builder (lib gap: no automation-graph page type;
-//     Automations list + AutomationHistory are declarative type:"index"). ---
-import AutomationBuilderView from './views/automations/AutomationBuilder.vue'
-
 // --- Reporting dashboards (lib gap: no chart-widget page type). ---
 import RapportageDashboardView from './views/rapportage/RapportageDashboard.vue'
 import ChannelAnalyticsView from './views/rapportage/ChannelAnalytics.vue'
@@ -158,13 +154,6 @@ const registry = {
 		kind: 'page',
 		component: FormBuilderView,
 		_note: 'Visual form builder with drag-and-drop field palette; lib gap: no form-builder page type. Forms list + FormSubmissions use declarative type:"index".',
-	},
-
-	// --- Automations visual builder. ---
-	AutomationBuilderView: {
-		kind: 'page',
-		component: AutomationBuilderView,
-		_note: 'Visual automation graph editor (trigger + actions); lib gap: no automation-graph page type. Automations list + AutomationHistory use declarative type:"index".',
 	},
 
 	// --- Reporting dashboards. ---

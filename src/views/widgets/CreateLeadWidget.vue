@@ -52,6 +52,7 @@
 
 <script>
 import { NcTextField, NcButton, NcSelect, NcNoteCard } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
 import ClientAutocomplete from '../../components/widgets/ClientAutocomplete.vue'
 import { initializeStores } from '../../store/store.js'
 
@@ -133,9 +134,9 @@ export default {
 			if (!this.config?.pipeline) return
 			try {
 				const typeConfig = this.config.pipeline
-				const url = '/apps/openregister/api/objects/'
+				const url = generateUrl('/apps/openregister/api/objects/'
 					+ typeConfig.register + '/' + typeConfig.schema
-					+ '?_limit=50'
+					+ '?_limit=50')
 
 				const response = await fetch(url, {
 					headers: {
@@ -215,8 +216,8 @@ export default {
 						: this.form.source
 				}
 
-				const url = '/apps/openregister/api/objects/'
-					+ typeConfig.register + '/' + typeConfig.schema
+				const url = generateUrl('/apps/openregister/api/objects/'
+					+ typeConfig.register + '/' + typeConfig.schema)
 
 				const response = await fetch(url, {
 					method: 'POST',
@@ -231,7 +232,7 @@ export default {
 				if (!response.ok) throw new Error('Failed to create lead')
 				const created = await response.json()
 				const id = created.id || created.uuid
-				this.successLink = '/index.php/apps/pipelinq/leads/' + id
+				this.successLink = generateUrl('/apps/pipelinq/leads/' + id)
 				this.success = true
 			} catch (err) {
 				console.error('CreateLeadWidget create error:', err)

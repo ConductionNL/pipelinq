@@ -65,6 +65,30 @@ class ScheduledTaskService
     ];
 
     /**
+     * Task fields that any authenticated user may modify.
+     *
+     * All other incoming keys are silently stripped before the merge to
+     * prevent mass-assignment of admin-only or system fields.
+     * Admin-only fields (status, assigneeUserId, assigneeGroupId, attempts,
+     * createdAt, completedAt) are handled separately in the controller.
+     *
+     * @var array<string>
+     */
+    public const MUTABLE_FIELDS = [
+        'type',
+        'subject',
+        'description',
+        'priority',
+        'deadline',
+        'clientId',
+        'requestId',
+        'contactMomentSummary',
+        'callbackPhoneNumber',
+        'preferredTimeSlot',
+        'resultText',
+    ];
+
+    /**
      * Maximum window in minutes for pending-task queries (24 hours).
      *
      * @var int
@@ -154,27 +178,37 @@ class ScheduledTaskService
             $filters['deadline']['<='] = $params['to'];
         }
 
+        $items = [];
+        $total = 0;
+
         try {
+            // Fetch the total count without pagination so the envelope
+            // reflects the true result-set size, not just the page size.
+            $allItems = $this->getObjectService()->findAll(
+                ['filters' => $filters]
+            );
+            $total    = count($allItems);
+
+            // Fetch the paginated page.
             $items = $this->getObjectService()->findAll(
                 [
                     'filters' => $filters,
                     'limit'   => $limit,
                     'offset'  => (($page - 1) * $limit),
                     'order'   => ['deadline' => 'ASC'],
-                ],
-                _rbac: false,
-                _multitenancy: false
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->error(
                 'ScheduledTaskService: findAll failed',
                 ['exception' => $e]
             );
-            $items = [];
-        }
+        }//end try
 
-        $total = count($items);
-        $pages = (int) ceil($total / $limit);
+        $pages = 0;
+        if ($total > 0) {
+            $pages = (int) ceil($total / $limit);
+        }
 
         return [
             'items' => $items,
@@ -203,16 +237,16 @@ class ScheduledTaskService
         }
 
         try {
-            $object = $this->getObjectService()->findObject(
+            $object = $this->getObjectService()->find(
                 $id,
+                [],
+                false,
                 $registerId,
-                $schemaId,
-                _rbac: false,
-                _multitenancy: false
+                $schemaId
             );
         } catch (Throwable $e) {
             $this->logger->error(
-                'ScheduledTaskService: findObject failed',
+                'ScheduledTaskService: find failed',
                 ['exception' => $e, 'id' => $id]
             );
             throw new RuntimeException('Task not found');
@@ -256,6 +290,13 @@ class ScheduledTaskService
             throw new InvalidArgumentException('Invalid input');
         }
 
+        // Require ISO-8601 format (YYYY-MM-DD or YYYY-MM-DDThh:mm[:ss][Z])
+        // to prevent relative expressions like "yesterday" or "+2 weeks" from
+        // passing silently and producing server-timezone-dependent deadlines.
+        if ($this->isValidIso8601Deadline(deadline: (string) $data['deadline']) === false) {
+            throw new InvalidArgumentException('Deadline must be a valid ISO-8601 date (e.g. 2025-12-31 or 2025-12-31T14:00:00Z)');
+        }
+
         [$registerId, $schemaId] = $this->getRegisterAndSchema();
         if ($registerId === '' || $schemaId === '') {
             throw new RuntimeException('Register or task schema not configured');
@@ -276,9 +317,7 @@ class ScheduledTaskService
             [],
             $registerId,
             $schemaId,
-            null,
-            _rbac: false,
-            _multitenancy: false
+            null
         );
 
         return $this->normalizeToArray(object: $saved);
@@ -300,7 +339,12 @@ class ScheduledTaskService
     public function updateScheduledTask(string $id, array $data): array
     {
         $existing = $this->getScheduledTask(id: $id);
-        unset($data['createdBy']);
+
+        // Strip any fields not explicitly on the allowlist (MUTABLE_FIELDS +
+        // admin-only fields already filtered by the controller).  This prevents
+        // mass-assignment of system/immutable fields like createdBy, uuid, etc.
+        $allowedKeys  = array_merge(self::MUTABLE_FIELDS, ['status', 'assigneeUserId', 'assigneeGroupId', 'createdAt', 'completedAt', 'attempts']);
+        $data         = array_intersect_key($data, array_flip($allowedKeys));
 
         $merged       = array_merge($existing, $data);
         $merged['id'] = $id;
@@ -312,9 +356,7 @@ class ScheduledTaskService
             [],
             $registerId,
             $schemaId,
-            $id,
-            _rbac: false,
-            _multitenancy: false
+            $id
         );
 
         return $this->normalizeToArray(object: $saved);
@@ -331,11 +373,7 @@ class ScheduledTaskService
      */
     public function deleteScheduledTask(string $id): void
     {
-        $this->getObjectService()->deleteObject(
-            $id,
-            _rbac: false,
-            _multitenancy: false
-        );
+        $this->getObjectService()->deleteObject($id);
     }//end deleteScheduledTask()
 
     /**
@@ -381,9 +419,7 @@ class ScheduledTaskService
                     ],
                     'limit'   => 100,
                     'order'   => ['deadline' => 'ASC'],
-                ],
-                _rbac: false,
-                _multitenancy: false
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->error(
@@ -500,9 +536,7 @@ class ScheduledTaskService
                     [],
                     $registerId,
                     $schemaId,
-                    (string) ($task['id'] ?? ''),
-                    _rbac: false,
-                    _multitenancy: false
+                    (string) ($task['id'] ?? '')
                 );
             } catch (Throwable $e) {
                 $this->logger->error(
@@ -552,6 +586,32 @@ class ScheduledTaskService
 
         throw new OCSForbiddenException('Not authorized');
     }//end authorizeTaskMutation()
+
+    /**
+     * Validate that a deadline string is an ISO-8601 date or datetime.
+     *
+     * Accepts YYYY-MM-DD and YYYY-MM-DDThh:mm (with optional seconds and Z/offset).
+     * Rejects relative expressions ("yesterday", "+2 weeks") that strtotime accepts,
+     * preventing server-timezone-dependent deadline values.
+     *
+     * @param string $deadline The raw deadline string.
+     *
+     * @return bool True when the format is a strict ISO-8601 date(-time).
+     */
+    private function isValidIso8601Deadline(string $deadline): bool
+    {
+        // YYYY-MM-DD (date only).
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $deadline) === 1) {
+            return true;
+        }
+
+        // YYYY-MM-DDThh:mm, YYYY-MM-DDThh:mm:ss, with optional Z or offset.
+        if (preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(Z|[+-]\d{2}:\d{2})?$/', $deadline) === 1) {
+            return true;
+        }
+
+        return false;
+    }//end isValidIso8601Deadline()
 
     /**
      * Read configured register and task schema IDs.

@@ -24,11 +24,12 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\CallbackService;
 use OCA\Pipelinq\Service\NotificationService;
+use OCA\Pipelinq\Service\ScheduledTaskService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IAppConfig;
+use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -49,19 +50,21 @@ class CallbackController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest            $request             The request.
-     * @param CallbackService     $callbackService     The callback service.
-     * @param NotificationService $notificationService The notification service.
-     * @param IAppConfig          $appConfig           The app config.
-     * @param IUserSession        $userSession         The user session.
-     * @param IL10N               $l10n                The localization service.
-     * @param LoggerInterface     $logger              The logger.
+     * @param IRequest             $request              The request.
+     * @param CallbackService      $callbackService      The callback service.
+     * @param NotificationService  $notificationService  The notification service.
+     * @param ScheduledTaskService $scheduledTaskService The scheduled task service.
+     * @param IGroupManager        $groupManager         The group manager.
+     * @param IUserSession         $userSession          The user session.
+     * @param IL10N                $l10n                 The localization service.
+     * @param LoggerInterface      $logger               The logger.
      */
     public function __construct(
         IRequest $request,
         private CallbackService $callbackService,
         private NotificationService $notificationService,
-        private IAppConfig $appConfig,
+        private ScheduledTaskService $scheduledTaskService,
+        private IGroupManager $groupManager,
         private IUserSession $userSession,
         private IL10N $l10n,
         private LoggerInterface $logger,
@@ -97,8 +100,7 @@ class CallbackController extends Controller
         }
 
         try {
-            // Build task data stub — in production, fetch from OpenRegister.
-            $taskData = $this->getTaskStub(id: $id);
+            $taskData = $this->fetchTask(id: $id);
             if ($taskData === null) {
                 return new JSONResponse(
                     ['error' => $this->l10n->t('Task not found')],
@@ -106,7 +108,13 @@ class CallbackController extends Controller
                 );
             }
 
+            $authCheck = $this->checkTaskAuth(task: $taskData, userId: $user->getUID());
+            if ($authCheck !== null) {
+                return $authCheck;
+            }
+
             $taskData     = $this->callbackService->addAttempt($taskData, $result, $notes);
+            $taskData     = $this->scheduledTaskService->updateScheduledTask($id, $taskData);
             $suggestClose = $this->callbackService->isAttemptThresholdReached($taskData);
 
             return new JSONResponse(
@@ -143,7 +151,7 @@ class CallbackController extends Controller
         }
 
         try {
-            $taskData = $this->getTaskStub(id: $id);
+            $taskData = $this->fetchTask(id: $id);
             if ($taskData === null) {
                 return new JSONResponse(
                     ['error' => $this->l10n->t('Task not found')],
@@ -160,6 +168,7 @@ class CallbackController extends Controller
             }
 
             $taskData = $this->callbackService->applyClaim($taskData);
+            $taskData = $this->scheduledTaskService->updateScheduledTask($id, $taskData);
 
             return new JSONResponse(['task' => $taskData]);
         } catch (\Exception $e) {
@@ -191,12 +200,17 @@ class CallbackController extends Controller
         $resultText = $this->request->getParam('resultText', '');
 
         try {
-            $taskData = $this->getTaskStub(id: $id);
+            $taskData = $this->fetchTask(id: $id);
             if ($taskData === null) {
                 return new JSONResponse(
                     ['error' => $this->l10n->t('Task not found')],
                     Http::STATUS_NOT_FOUND
                 );
+            }
+
+            $authCheck = $this->checkTaskAuth(task: $taskData, userId: $user->getUID());
+            if ($authCheck !== null) {
+                return $authCheck;
             }
 
             $transition = $this->callbackService->validateStatusTransition(
@@ -212,15 +226,12 @@ class CallbackController extends Controller
             }
 
             $taskData = $this->callbackService->applyCompletion($taskData, $resultText);
+            $taskData = $this->scheduledTaskService->updateScheduledTask($id, $taskData);
 
             // Notify the creating agent about completion.
             $createdBy = $taskData['createdBy'] ?? '';
             if (empty($createdBy) === false) {
-                $user   = $this->userSession->getUser();
-                $author = 'system';
-                if ($user !== null) {
-                    $author = $user->getUID();
-                }
+                $author = $user->getUID();
 
                 $this->notificationService->notifyTaskCompleted(
                     $taskData['subject'] ?? '',
@@ -268,8 +279,16 @@ class CallbackController extends Controller
             );
         }
 
+        // Reassign is a manager/admin-only operation.
+        if ($this->groupManager->isAdmin($user->getUID()) === false) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Only administrators may reassign tasks')],
+                Http::STATUS_FORBIDDEN
+            );
+        }
+
         try {
-            $taskData = $this->getTaskStub(id: $id);
+            $taskData = $this->fetchTask(id: $id);
             if ($taskData === null) {
                 return new JSONResponse(
                     ['error' => $this->l10n->t('Task not found')],
@@ -281,14 +300,11 @@ class CallbackController extends Controller
 
             // Log the reassignment as an attempt entry.
             $taskData = $this->callbackService->addAttempt($taskData, 'hertoegewezen', '');
+            $taskData = $this->scheduledTaskService->updateScheduledTask($id, $taskData);
 
             // Notify the new assignee if it's a user.
             if ($assigneeType === 'user') {
-                $user   = $this->userSession->getUser();
-                $author = 'system';
-                if ($user !== null) {
-                    $author = $user->getUID();
-                }
+                $author = $user->getUID();
 
                 $this->notificationService->notifyTaskReassigned(
                     $taskData['subject'] ?? '',
@@ -310,38 +326,42 @@ class CallbackController extends Controller
     }//end reassign()
 
     /**
-     * Get a task data stub by ID.
-     *
-     * In production, this queries OpenRegister. For now, returns a minimal
-     * structure that the frontend can use.
+     * Fetch a task from the real persistence layer (ScheduledTaskService).
      *
      * @param string $id The task object ID.
      *
      * @return array<string, mixed>|null Task data or null if not found.
      */
-    private function getTaskStub(string $id): ?array
+    private function fetchTask(string $id): ?array
     {
-        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        $schema   = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
-
-        if ($register === '' || $schema === '') {
-            $this->logger->warning('CallbackController: register or task_schema not configured');
+        try {
+            return $this->scheduledTaskService->getScheduledTask($id);
+        } catch (\RuntimeException $e) {
             return null;
         }
+    }//end fetchTask()
 
-        // NOTE: In production, fetch the actual task from OpenRegister:
-        // GET /api/registers/{register}/schemas/{schema}/objects/{id}
-        // For now, return a stub indicating the task exists.
-        return [
-            'id'              => $id,
-            'status'          => 'open',
-            'type'            => 'terugbelverzoek',
-            'subject'         => '',
-            'attempts'        => [],
-            'assigneeUserId'  => null,
-            'assigneeGroupId' => null,
-            'createdBy'       => '',
-            'deadline'        => '',
-        ];
-    }//end getTaskStub()
+    /**
+     * Check that the current user is authorised to mutate a task.
+     *
+     * Returns a JSONResponse with a 403 status when the user is not allowed,
+     * or null when the user is authorised.
+     *
+     * @param array<string, mixed> $task   The task object.
+     * @param string               $userId The acting user ID.
+     *
+     * @return JSONResponse|null Null on success, 403 response on failure.
+     */
+    private function checkTaskAuth(array $task, string $userId): ?JSONResponse
+    {
+        try {
+            $this->scheduledTaskService->authorizeTaskMutation($task, $userId);
+            return null;
+        } catch (\OCP\AppFramework\OCS\OCSForbiddenException $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Not authorized to modify this task')],
+                Http::STATUS_FORBIDDEN
+            );
+        }
+    }//end checkTaskAuth()
 }//end class

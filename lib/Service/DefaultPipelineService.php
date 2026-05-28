@@ -79,9 +79,7 @@ class DefaultPipelineService
                         'title'    => 'Sales Pipeline',
                     ],
                     'limit'   => 1,
-                ],
-                _rbac: false,
-                _multitenancy: false
+                ]
             );
 
             if (empty($existing) === false) {
@@ -131,9 +129,7 @@ class DefaultPipelineService
             [],
             $registerId,
             $schemaId,
-            null,
-            _rbac: false,
-            _multitenancy: false
+            null
         );
 
         $title = $data['title'] ?? 'Unknown';

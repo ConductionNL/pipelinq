@@ -21,6 +21,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCP\App\IAppManager;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -45,12 +47,14 @@ class ProspectDiscoveryService
     /**
      * Constructor.
      *
-     * @param IcpConfigService        $icpConfig The ICP config service.
-     * @param KvkApiClient            $kvkClient The KVK API client.
-     * @param OpenCorporatesApiClient $ocClient  The OpenCorporates client.
-     * @param ProspectScoringService  $scoring   The scoring service.
-     * @param SettingsService         $settings  The settings service.
-     * @param LoggerInterface         $logger    The logger.
+     * @param IcpConfigService        $icpConfig  The ICP config service.
+     * @param KvkApiClient            $kvkClient  The KVK API client.
+     * @param OpenCorporatesApiClient $ocClient   The OpenCorporates client.
+     * @param ProspectScoringService  $scoring    The scoring service.
+     * @param SettingsService         $settings   The settings service.
+     * @param LoggerInterface         $logger     The logger.
+     * @param ContainerInterface      $container  The DI container.
+     * @param IAppManager             $appManager The app manager.
      */
     public function __construct(
         private IcpConfigService $icpConfig,
@@ -59,6 +63,8 @@ class ProspectDiscoveryService
         private ProspectScoringService $scoring,
         private SettingsService $settings,
         private LoggerInterface $logger,
+        private ContainerInterface $container,
+        private IAppManager $appManager,
     ) {
     }//end __construct()
 
@@ -226,29 +232,20 @@ class ProspectDiscoveryService
                 array: $prospects,
                 callback: function (array $prospect) use ($clientNames): bool {
                     $tradeName = strtolower(string: trim(string: $prospect['tradeName'] ?? ''));
-                    foreach ($clientNames as $clientName) {
-                        if ($tradeName === $clientName) {
-                            return false;
-                        }
-
-                        // Fuzzy match: check if one contains the other.
-                        if ($tradeName !== '' && $clientName !== '') {
-                            if (str_contains(haystack: $tradeName, needle: $clientName) === true
-                                || str_contains(haystack: $clientName, needle: $tradeName) === true
-                            ) {
-                                return false;
-                            }
-                        }
+                    if ($tradeName === '') {
+                        return true;
                     }
 
-                    return true;
+                    // Use strict normalised equality only; bidirectional str_contains
+                    // produces false positives on common substrings like "BV" or "Group".
+                    return in_array($tradeName, $clientNames, true) === false;
                 }
             )
         );
     }//end excludeExistingClients()
 
     /**
-     * Get names of existing clients (lowercased).
+     * Get names of existing clients (lowercased) from OpenRegister.
      *
      * @return array The client names.
      */
@@ -262,9 +259,35 @@ class ProspectDiscoveryService
                 return [];
             }
 
-            // Use the OpenRegister API internally via curl to get clients.
-            // This is a simplification; in production, inject ObjectService.
-            return [];
+            if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
+                return [];
+            }
+
+            /*
+             * @var \OCA\OpenRegister\Service\ObjectService $objectService
+             */
+
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+
+            $clients = $objectService->findAll(
+                [
+                    'filters' => [
+                        'register' => $register,
+                        'schema'   => $schema,
+                    ],
+                    'limit'   => 1000,
+                ]
+            );
+
+            $names = [];
+            foreach ($clients as $client) {
+                $name = $client['name'] ?? $client['tradeName'] ?? '';
+                if ($name !== '') {
+                    $names[] = strtolower(trim($name));
+                }
+            }
+
+            return $names;
         } catch (\Exception $e) {
             $this->logger->warning(
                 message: 'Failed to fetch existing clients for exclusion',

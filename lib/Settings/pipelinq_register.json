@@ -31,8 +31,6 @@
           "leadProduct",
           "intakeForm",
           "intakeSubmission",
-          "automation",
-          "automationLog",
           "contactmoment",
           "task",
           "kennisartikel",
@@ -60,6 +58,7 @@
         "summary": "A client (person or organization) in the CRM",
         "description": "Represents a client entity — either a natural person or an organization. Mapped to Schema.org Person/Organization and vCard (RFC 6350) field conventions. Clients are the primary relationship entity in Pipelinq.",
         "@type": "schema:Person",
+        "linkedTypes": ["flow"],
         "required": [
           "name",
           "type"
@@ -202,7 +201,7 @@
         "summary": "A sales lead or business opportunity",
         "description": "Represents a sales lead — a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.",
         "@type": "schema:Demand",
-        "linkedTypes": ["deck"],
+        "linkedTypes": ["deck", "flow"],
         "configuration": {
           "x-openregister-relations": [
             {
@@ -322,7 +321,7 @@
         "summary": "A service request (verzoek) — the pre-state of a case",
         "description": "Represents a client service request that may be converted to a case in Procest. Tracks status lifecycle, priority, assignment, and optional pipeline placement.",
         "@type": "schema:Demand",
-        "linkedTypes": ["deck"],
+        "linkedTypes": ["deck", "flow"],
         "configuration": {
           "x-openregister-relations": [
             {
@@ -976,170 +975,6 @@
             "default": "processed",
             "title": "Status",
             "facetable": true
-          }
-        }
-      },
-      "automation": {
-        "slug": "automation",
-        "title": "Automation",
-        "icon": "RobotOutline",
-        "version": "1.0.0",
-        "summary": "A CRM workflow automation rule",
-        "description": "Represents a trigger-action automation for CRM events. When the trigger fires and conditions match, the configured actions execute in sequence. Optionally fires an n8n webhook.",
-        "@type": "schema:Action",
-        "required": [
-          "name",
-          "trigger"
-        ],
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Automation name",
-            "maxLength": 255,
-            "minLength": 1
-          },
-          "trigger": {
-            "type": "string",
-            "description": "The CRM event that activates this automation",
-            "enum": [
-              "lead_created",
-              "lead_stage_changed",
-              "lead_assigned",
-              "lead_value_changed",
-              "contact_created",
-              "request_created",
-              "request_status_changed"
-            ],
-            "title": "Trigger",
-            "facetable": true
-          },
-          "triggerConditions": {
-            "type": "object",
-            "description": "Filter conditions for the trigger (e.g., stage, pipeline, value threshold)",
-            "visible": false
-          },
-          "actions": {
-            "type": "array",
-            "description": "Ordered list of actions to execute when triggered",
-            "items": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "enum": [
-                    "assign_lead",
-                    "move_stage",
-                    "send_notification",
-                    "update_field",
-                    "add_note",
-                    "webhook"
-                  ]
-                },
-                "config": {
-                  "type": "object",
-                  "description": "Action-specific configuration"
-                }
-              }
-            }
-          },
-          "isActive": {
-            "type": "boolean",
-            "description": "Whether the automation is enabled",
-            "default": true,
-            "title": "Active",
-            "facetable": true
-          },
-          "lastRun": {
-            "type": "string",
-            "description": "ISO timestamp of last execution",
-            "format": "date-time",
-            "visible": false
-          },
-          "runCount": {
-            "type": "integer",
-            "description": "Total number of times this automation has executed",
-            "default": 0,
-            "visible": false
-          },
-          "webhookUrl": {
-            "type": "string",
-            "description": "n8n webhook URL for external workflow execution",
-            "format": "uri",
-            "visible": false
-          },
-          "n8nWorkflowId": {
-            "type": "string",
-            "description": "Reference to the n8n workflow ID",
-            "visible": false
-          }
-        }
-      },
-      "automationLog": {
-        "slug": "automationLog",
-        "title": "Automation Log",
-        "icon": "History",
-        "version": "1.0.0",
-        "summary": "Execution log entry for a CRM automation",
-        "description": "Records each execution of an automation including trigger details, actions executed, and outcome.",
-        "@type": "schema:Action",
-        "required": [
-          "automation",
-          "triggeredAt",
-          "status"
-        ],
-        "properties": {
-          "automation": {
-            "type": "string",
-            "description": "UUID reference to the automation that executed",
-            "format": "uuid"
-          },
-          "triggeredAt": {
-            "type": "string",
-            "description": "When the automation was triggered",
-            "format": "date-time"
-          },
-          "triggerEntity": {
-            "type": "string",
-            "description": "UUID of the entity that triggered the automation",
-            "format": "uuid"
-          },
-          "actionsExecuted": {
-            "type": "array",
-            "description": "List of actions executed and their results",
-            "items": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "description": "Action type that was executed"
-                },
-                "result": {
-                  "type": "string",
-                  "description": "Outcome of the action"
-                },
-                "error": {
-                  "type": "string",
-                  "description": "Error message if the action failed"
-                }
-              }
-            },
-            "visible": false
-          },
-          "status": {
-            "type": "string",
-            "description": "Execution outcome",
-            "enum": [
-              "success",
-              "failure",
-              "partial"
-            ],
-            "title": "Status",
-            "facetable": true
-          },
-          "error": {
-            "type": "string",
-            "description": "Error message if execution failed",
-            "visible": false
           }
         }
       },

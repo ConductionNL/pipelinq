@@ -89,9 +89,21 @@ class SchedulesController extends Controller
         }
 
         try {
+            $userId  = $user->getUID();
+            $isAdmin = $this->groupManager->isAdmin($userId);
+
+            // Default-scope to the requesting user's own tasks unless admin.
+            // Admins may pass an explicit assigneeUserId to override.
+            $requestedAssignee = (string) $this->request->getParam('assigneeUserId', '');
+            if ($isAdmin === false) {
+                // Non-admins always see only their own tasks regardless of the
+                // requested filter (prevents cross-user IDOR via query param).
+                $requestedAssignee = $userId;
+            }
+
             $params = [
                 'status'          => $this->request->getParam('status', ''),
-                'assigneeUserId'  => $this->request->getParam('assigneeUserId', ''),
+                'assigneeUserId'  => $requestedAssignee,
                 'assigneeGroupId' => $this->request->getParam('assigneeGroupId', ''),
                 'from'            => $this->request->getParam('from', ''),
                 'to'              => $this->request->getParam('to', ''),
@@ -151,13 +163,22 @@ class SchedulesController extends Controller
             );
         }
 
+        $userId  = $user->getUID();
+        $isAdmin = $this->groupManager->isAdmin($userId);
+
+        $requestedAssignee = (string) $this->request->getParam('assigneeUserId', '');
+        // Non-admins may not assign tasks to other users; silently scope to self.
+        if ($isAdmin === false && $requestedAssignee !== '' && $requestedAssignee !== $userId) {
+            $requestedAssignee = $userId;
+        }
+
         $data = [
             'type'                => $type,
             'subject'             => $subject,
             'deadline'            => $deadline,
             'description'         => (string) $this->request->getParam('description', ''),
             'priority'            => (string) $this->request->getParam('priority', 'normaal'),
-            'assigneeUserId'      => (string) $this->request->getParam('assigneeUserId', ''),
+            'assigneeUserId'      => $requestedAssignee,
             'assigneeGroupId'     => (string) $this->request->getParam('assigneeGroupId', ''),
             'clientId'            => (string) $this->request->getParam('clientId', ''),
             'requestId'           => (string) $this->request->getParam('requestId', ''),
@@ -228,7 +249,21 @@ class SchedulesController extends Controller
                 $window = 1;
             }
 
-            $items = $this->scheduledTaskService->getPendingTasks($window);
+            $userId  = $user->getUID();
+            $isAdmin = $this->groupManager->isAdmin($userId);
+            $items   = $this->scheduledTaskService->getPendingTasks($window);
+
+            // Non-admins see only their own pending tasks.
+            if ($isAdmin === false) {
+                $items = array_values(
+                    array_filter(
+                        $items,
+                        static function (array $task) use ($userId): bool {
+                            return ($task['assigneeUserId'] ?? '') === $userId;
+                        }
+                    )
+                );
+            }
 
             return new JSONResponse(
                 [
@@ -269,6 +304,17 @@ class SchedulesController extends Controller
 
         try {
             $task = $this->scheduledTaskService->getScheduledTask($id);
+
+            // Non-admins may only view their own tasks.
+            $userId  = $user->getUID();
+            $isAdmin = $this->groupManager->isAdmin($userId);
+            if ($isAdmin === false && ($task['assigneeUserId'] ?? '') !== $userId) {
+                return new JSONResponse(
+                    ['message' => 'Not found'],
+                    Http::STATUS_NOT_FOUND
+                );
+            }
+
             return new JSONResponse($task);
         } catch (\RuntimeException $e) {
             return new JSONResponse(
@@ -327,6 +373,18 @@ class SchedulesController extends Controller
 
         $payload = $this->request->getParams();
         unset($payload['id'], $payload['_route']);
+
+        // Strip fields that only admins may set to prevent privilege escalation.
+        $isAdmin = $this->groupManager->isAdmin($userId);
+        if ($isAdmin === false) {
+            unset(
+                $payload['assigneeUserId'],
+                $payload['assigneeGroupId'],
+                $payload['status'],
+                $payload['createdAt'],
+                $payload['attempts']
+            );
+        }
 
         try {
             $updated = $this->scheduledTaskService->updateScheduledTask($id, $payload);

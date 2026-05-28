@@ -31,6 +31,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
 
 /**
  * Controller for prospect discovery.
@@ -44,12 +45,14 @@ class ProspectController extends Controller
      * @param ProspectDiscoveryService $discoveryService The discovery service.
      * @param IUserSession             $userSession      The user session.
      * @param IL10N                    $l10n             The localization service.
+     * @param LoggerInterface          $logger           The logger.
      */
     public function __construct(
         IRequest $request,
         private ProspectDiscoveryService $discoveryService,
         private IUserSession $userSession,
         private IL10N $l10n,
+        private LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -124,8 +127,9 @@ class ProspectController extends Controller
 
             return new JSONResponse(data: $result, statusCode: 201);
         } catch (\Exception $e) {
+            $this->logger->error('ProspectController::createLead failed', ['exception' => $e]);
             return new JSONResponse(
-                data: ['error' => $e->getMessage()],
+                data: ['error' => $this->l10n->t('Operation failed')],
                 statusCode: 500
             );
         }//end try

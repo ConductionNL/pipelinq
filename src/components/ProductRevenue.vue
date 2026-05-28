@@ -27,6 +27,7 @@
 
 <script>
 import { NcLoadingIcon } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from '../store/modules/object.js'
 import { formatCurrency as formatLocaleCurrency } from '../services/localeUtils.js'
 
@@ -66,7 +67,7 @@ export default {
 				}
 
 				// Fetch all lead products
-				const lpUrl = `/apps/openregister/api/objects/${config.leadProduct.register}/${config.leadProduct.schema}?_limit=500`
+				const lpUrl = generateUrl(`/apps/openregister/api/objects/${config.leadProduct.register}/${config.leadProduct.schema}?_limit=500`)
 				const lpResponse = await fetch(lpUrl, {
 					headers: {
 						'Content-Type': 'application/json',

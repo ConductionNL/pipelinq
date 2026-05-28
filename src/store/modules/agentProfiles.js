@@ -2,6 +2,7 @@
  * Agent Profiles store for Pipelinq — manages agent skill profiles via OpenRegister API.
  */
 import { defineStore } from 'pinia'
+import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from './object.js'
 
 export const useAgentProfilesStore = defineStore('agentProfiles', {
@@ -92,7 +93,7 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 			const requestConfig = objectStore.objectTypeRegistry.request
 			if (requestConfig) {
 				try {
-					const url = `/apps/openregister/api/objects/${requestConfig.register}/${requestConfig.schema}?assignee=${encodeURIComponent(userId)}&_limit=1`
+					const url = generateUrl(`/apps/openregister/api/objects/${requestConfig.register}/${requestConfig.schema}?assignee=${encodeURIComponent(userId)}&_limit=1`)
 					const response = await fetch(url, {
 						headers: {
 							'Content-Type': 'application/json',
@@ -117,7 +118,7 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 			const leadConfig = objectStore.objectTypeRegistry.lead
 			if (leadConfig) {
 				try {
-					const url = `/apps/openregister/api/objects/${leadConfig.register}/${leadConfig.schema}?assignee=${encodeURIComponent(userId)}&status=open&_limit=1`
+					const url = generateUrl(`/apps/openregister/api/objects/${leadConfig.register}/${leadConfig.schema}?assignee=${encodeURIComponent(userId)}&status=open&_limit=1`)
 					const response = await fetch(url, {
 						headers: {
 							'Content-Type': 'application/json',
@@ -148,7 +149,7 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 		async _countOpenRequests(config, userId) {
 			const terminalStatuses = ['completed', 'rejected', 'converted']
 			try {
-				const url = `/apps/openregister/api/objects/${config.register}/${config.schema}?assignee=${encodeURIComponent(userId)}&_limit=200`
+				const url = generateUrl(`/apps/openregister/api/objects/${config.register}/${config.schema}?assignee=${encodeURIComponent(userId)}&_limit=200`)
 				const response = await fetch(url, {
 					headers: {
 						'Content-Type': 'application/json',

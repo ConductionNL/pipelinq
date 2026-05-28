@@ -315,7 +315,7 @@ class ActivityTimelineService
                 'limit'   => self::PER_SCHEMA_CEILING,
             ];
 
-            $results = $objectService->findAll($params, _rbac: false, _multitenancy: false);
+            $results = $objectService->findAll($params);
 
             return $this->normaliseResultset(results: $results);
         } catch (\Throwable $e) {
@@ -607,9 +607,7 @@ class ActivityTimelineService
             [],
             $config['register'],
             $config['contactmoment'],
-            null,
-            _rbac: false,
-            _multitenancy: false
+            null
         );
 
         $savedArray = $this->extractObjectArray(saved: $saved);

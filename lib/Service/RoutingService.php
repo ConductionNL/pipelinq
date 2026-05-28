@@ -101,9 +101,7 @@ class RoutingService
         try {
             $entity = $objectService->find(
                 $entityId,
-                [],
-                _rbac: false,
-                _multitenancy: false
+                []
             );
         } catch (\Throwable $e) {
             $this->logger->error(
@@ -191,9 +189,7 @@ class RoutingService
                             'assignee' => $userId,
                         ],
                         'limit'   => 999,
-                    ],
-                    _rbac: false,
-                    _multitenancy: false
+                    ]
                 );
 
                 foreach ($requests as $request) {
@@ -222,9 +218,7 @@ class RoutingService
                             'status'   => 'open',
                         ],
                         'limit'   => 999,
-                    ],
-                    _rbac: false,
-                    _multitenancy: false
+                    ]
                 );
 
                 $count += count($leads);
@@ -276,9 +270,7 @@ class RoutingService
                         'isActive' => true,
                     ],
                     'limit'   => 999,
-                ],
-                _rbac: false,
-                _multitenancy: false
+                ]
             );
         } catch (\Throwable $e) {
             $this->logger->error(
@@ -320,9 +312,7 @@ class RoutingService
                         'schema'   => $agentProfileSchemaId,
                     ],
                     'limit'   => 999,
-                ],
-                _rbac: false,
-                _multitenancy: false
+                ]
             );
         } catch (\Throwable $e) {
             $this->logger->error(

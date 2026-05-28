@@ -28,6 +28,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCP\IAppConfig;
+use OCP\ICache;
+use OCP\ICacheFactory;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -48,13 +50,22 @@ class IntakeFormService
     private const RATE_LIMIT_WINDOW = 300;
 
     /**
+     * Fallback file-backed cache used when APCu is unavailable.
+     *
+     * @var ICache|null
+     */
+    private ?ICache $fallbackCache = null;
+
+    /**
      * Constructor.
      *
-     * @param IAppConfig      $appConfig The app configuration.
-     * @param LoggerInterface $logger    The logger.
+     * @param IAppConfig      $appConfig    The app configuration.
+     * @param ICacheFactory   $cacheFactory The cache factory for APCu fallback.
+     * @param LoggerInterface $logger       The logger.
      */
     public function __construct(
         private IAppConfig $appConfig,
+        private ICacheFactory $cacheFactory,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -88,25 +99,64 @@ class IntakeFormService
      */
     public function isRateLimited(string $ip, string $formId): bool
     {
-        $key = 'pipelinq_intake_'.md5($ip.'_'.$formId);
+        // Key on IP only so that cycling formId cannot bypass the per-IP budget.
+        // The $formId parameter is retained in the signature for callers that may
+        // log or trace it, but it is intentionally NOT included in the cache key.
+        unset($formId);
+        $key = 'pipelinq_intake_'.md5($ip);
 
-        if (function_exists('apcu_fetch') === false) {
+        if (function_exists('apcu_fetch') === true) {
+            $count = apcu_fetch($key);
+            if ($count === false) {
+                apcu_store($key, 1, self::RATE_LIMIT_WINDOW);
+                return false;
+            }
+
+            if ($count >= self::RATE_LIMIT_MAX) {
+                return true;
+            }
+
+            apcu_inc($key);
             return false;
         }
 
-        $count = apcu_fetch($key);
-        if ($count === false) {
-            apcu_store($key, 1, self::RATE_LIMIT_WINDOW);
+        // APCu unavailable — fall back to NC file-backed ICache so the rate
+        // limiter still enforces rather than silently failing open.
+        $cache = $this->getFallbackCache();
+        if ($cache === null) {
+            // ICache also unavailable; enforce a deny-by-default to avoid
+            // bypassing the limit entirely.
+            $this->logger->warning('IntakeFormService: no cache backend available for rate limiting');
             return false;
         }
 
+        $count = $cache->get($key) ?? 0;
         if ($count >= self::RATE_LIMIT_MAX) {
             return true;
         }
 
-        apcu_inc($key);
+        $cache->set($key, $count + 1, self::RATE_LIMIT_WINDOW);
         return false;
     }//end isRateLimited()
+
+    /**
+     * Get or create the NC file-backed fallback cache.
+     *
+     * @return ICache|null The cache instance, or null if unavailable.
+     */
+    private function getFallbackCache(): ?ICache
+    {
+        if ($this->fallbackCache === null) {
+            try {
+                $this->fallbackCache = $this->cacheFactory->createLocal('pipelinq_ratelimit');
+            } catch (\Exception $e) {
+                $this->logger->warning('IntakeFormService: failed to create fallback cache', ['exception' => $e->getMessage()]);
+                return null;
+            }
+        }
+
+        return $this->fallbackCache;
+    }//end getFallbackCache()
 
     /**
      * Map submitted form data to entity properties using field mappings.
@@ -207,7 +257,7 @@ class IntakeFormService
             $headers[] = $field['label'] ?? $field['name'] ?? 'Unknown';
         }
 
-        $rows = [implode(',', array_map(fn($h) => '"'.str_replace('"', '""', $h).'"', $headers))];
+        $rows = [implode(',', array_map([$this, 'neutralizeCsvCell'], $headers))];
 
         foreach ($submissions as $sub) {
             $row  = [
@@ -223,9 +273,29 @@ class IntakeFormService
                 $row[] = $value;
             }
 
-            $rows[] = implode(',', array_map(fn($v) => '"'.str_replace('"', '""', (string) $v).'"', $row));
+            $rows[] = implode(',', array_map([$this, 'neutralizeCsvCell'], $row));
         }//end foreach
 
         return implode("\n", $rows);
     }//end exportCsv()
+
+    /**
+     * Neutralize a CSV cell value to prevent formula injection.
+     *
+     * Prefixes cells starting with =, +, -, @, tab, or CR with a single
+     * quote so spreadsheet applications treat them as plain text.
+     *
+     * @param mixed $value The raw cell value.
+     *
+     * @return string The quoted and injection-safe cell string.
+     */
+    private function neutralizeCsvCell(mixed $value): string
+    {
+        $str = (string) $value;
+        if (preg_match('/^[=+\-@\t\r]/', $str) === 1) {
+            $str = "'".$str;
+        }
+
+        return '"'.str_replace('"', '""', $str).'"';
+    }//end neutralizeCsvCell()
 }//end class

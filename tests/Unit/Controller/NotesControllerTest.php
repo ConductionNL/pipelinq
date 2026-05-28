@@ -22,11 +22,14 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\Pipelinq\Controller\NotesController;
 use OCA\Pipelinq\Service\NoteEventService;
 use OCA\Pipelinq\Service\NotesService;
+use OCA\Pipelinq\Service\SettingsService;
+use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 
 /**
  * Tests for NotesController.
@@ -63,6 +66,36 @@ class NotesControllerTest extends TestCase
         $userSession->method('getUser')->willReturn($user);
         $l10n               = $this->createMock(IL10N::class);
         $l10n->method('t')->willReturnArgument(0);
+        $logger             = $this->createMock(\Psr\Log\LoggerInterface::class);
+
+        // Provide a settings service that returns valid register + schema IDs
+        // so objectExists() can scope the OR lookup to the correct entity.
+        $settingsService = $this->createMock(SettingsService::class);
+        $settingsService->method('getSettings')->willReturn([
+            'register'       => 'reg-123',
+            'client_schema'  => 'schema-client',
+            'contact_schema' => 'schema-contact',
+            'lead_schema'    => 'schema-lead',
+            'request_schema' => 'schema-request',
+        ]);
+
+        // Build a minimal OR ObjectEntity stub that objectExists() can return.
+        $mockObject = $this->getMockBuilder(\stdClass::class)
+            ->addMethods(['getUuid'])
+            ->getMock();
+        $mockObject->method('getUuid')->willReturn('object-uuid');
+
+        // Object service stub: find() returns a non-null object for any scoped lookup.
+        $objectServiceStub = $this->getMockBuilder(\stdClass::class)
+            ->addMethods(['find'])
+            ->getMock();
+        $objectServiceStub->method('find')->willReturn($mockObject);
+
+        $container = $this->createMock(ContainerInterface::class);
+        $container->method('get')->willReturn($objectServiceStub);
+
+        $groupManager = $this->createMock(IGroupManager::class);
+        $groupManager->method('isAdmin')->willReturn(true);
 
         $this->controller = new NotesController(
             $request,
@@ -70,6 +103,10 @@ class NotesControllerTest extends TestCase
             $noteEventService,
             $userSession,
             $l10n,
+            $logger,
+            $container,
+            $groupManager,
+            $settingsService,
         );
     }//end setUp()
 

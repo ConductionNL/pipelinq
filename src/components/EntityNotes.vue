@@ -48,6 +48,7 @@
 
 <script>
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
 
 export default {
 	name: 'EntityNotes',
@@ -92,7 +93,7 @@ export default {
 			this.loading = true
 			try {
 				const response = await fetch(
-					`/apps/pipelinq/api/notes/${this.objectType}/${this.objectId}`,
+					generateUrl(`/apps/pipelinq/api/notes/${this.objectType}/${this.objectId}`),
 					{
 						headers: {
 							'Content-Type': 'application/json',
@@ -119,7 +120,7 @@ export default {
 			this.submitting = true
 			try {
 				const response = await fetch(
-					`/apps/pipelinq/api/notes/${this.objectType}/${this.objectId}`,
+					generateUrl(`/apps/pipelinq/api/notes/${this.objectType}/${this.objectId}`),
 					{
 						method: 'POST',
 						headers: {
@@ -146,7 +147,7 @@ export default {
 		async deleteNote(noteId) {
 			try {
 				const response = await fetch(
-					`/apps/pipelinq/api/notes/single/${noteId}`,
+					generateUrl(`/apps/pipelinq/api/notes/single/${noteId}`),
 					{
 						method: 'DELETE',
 						headers: {

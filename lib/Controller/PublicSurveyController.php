@@ -214,10 +214,55 @@ class PublicSurveyController extends PublicShareController
                 );
             }
 
+            // Replicate the activeUntil check from show() so an expired survey
+            // cannot still accept submissions via a direct POST.
+            $until = $data['activeUntil'] ?? null;
+            if ($until !== null && $until !== '' && strtotime($until) < time()) {
+                return new JSONResponse(
+                    ['error' => 'This survey is no longer accepting responses'],
+                    Http::STATUS_GONE,
+                );
+            }
+
             $body    = $this->request->getParams();
             $answers = $body['answers'] ?? [];
             if (empty($answers) === true || is_array($answers) === false) {
                 return new JSONResponse(['error' => 'Answers are required'], Http::STATUS_BAD_REQUEST);
+            }
+
+            // Cap the total answers payload to 64 KiB to prevent DOS-via-blob.
+            if (strlen((string) json_encode($answers)) > 65536) {
+                return new JSONResponse(['error' => 'Answers payload too large'], Http::STATUS_REQUEST_ENTITY_TOO_LARGE);
+            }
+
+            // Validate each answer key against the survey's declared question IDs.
+            // Unknown keys (attacker-injected fields) are stripped silently.
+            $questions   = $data['questions'] ?? [];
+            $questionIds = [];
+            if (is_array($questions) === true) {
+                foreach ($questions as $question) {
+                    if (is_array($question) === true && isset($question['id']) === true) {
+                        $questionIds[] = (string) $question['id'];
+                    }
+                }
+            }
+
+            if (empty($questionIds) === false) {
+                $answers = array_intersect_key($answers, array_flip($questionIds));
+            }
+
+            // Enforce per-answer scalar-value caps to prevent nested-blob injection.
+            foreach ($answers as $key => $value) {
+                if (is_array($value) === true) {
+                    // Allow flat arrays (multi-select) but forbid nested objects.
+                    foreach ($value as $item) {
+                        if (is_array($item) === true || is_object($item) === true) {
+                            return new JSONResponse(['error' => 'Invalid answer value for question '.$key], Http::STATUS_BAD_REQUEST);
+                        }
+                    }
+                } else if (is_string($value) === true && strlen($value) > 4096) {
+                    return new JSONResponse(['error' => 'Answer value too long for question '.$key], Http::STATUS_BAD_REQUEST);
+                }
             }
 
             $settings         = $this->settingsService->getSettings();
@@ -227,23 +272,32 @@ class PublicSurveyController extends PublicShareController
                 return new JSONResponse(['error' => 'Survey system is not configured'], Http::STATUS_SERVICE_UNAVAILABLE);
             }
 
+            // RespondentId / entityType / entityId are server-derived or omitted;
+            // never trust values from the anonymous submission body.
             $responseData = [
-                'surveyId'     => $data['id'] ?? '',
-                'answers'      => $answers,
-                'respondentId' => $body['respondentId'] ?? null,
-                'entityType'   => $body['entityType'] ?? null,
-                'entityId'     => $body['entityId'] ?? null,
-                'completedAt'  => (new \DateTime())->format('c'),
-                'ipHash'       => hash('sha256', $this->request->getRemoteAddress()),
+                'surveyId'    => $data['id'] ?? '',
+                'answers'     => $answers,
+                'completedAt' => (new \DateTime())->format('c'),
+                'ipHash'      => hash('sha256', $this->request->getRemoteAddress()),
             ];
 
             $created = $this->getObjectService()->saveObject(
+                $responseData,
+                [],
                 $registerId,
                 $responseSchemaId,
-                $responseData,
+                null,
             );
+
+            $createdId = '';
+            if (is_object($created) === true && method_exists($created, 'getUuid') === true) {
+                $createdId = $created->getUuid();
+            } else if (is_array($created) === true) {
+                $createdId = (string) ($created['id'] ?? $created['uuid'] ?? '');
+            }
+
             return new JSONResponse(
-                ['message' => 'Thank you for your feedback!', 'id' => $created->getUuid()],
+                ['message' => 'Thank you for your feedback!', 'id' => $createdId],
                 Http::STATUS_CREATED,
             );
         } catch (\Exception $e) {
@@ -268,10 +322,15 @@ class PublicSurveyController extends PublicShareController
             return null;
         }
 
-        $results = $this->getObjectService()->getObjects(
-            $regId,
-            $schemaId,
-            ['token' => $token, '_limit' => 1],
+        $results = $this->getObjectService()->findAll(
+            [
+                'filters' => [
+                    'register' => $regId,
+                    'schema'   => $schemaId,
+                    'token'    => $token,
+                ],
+                'limit'   => 1,
+            ]
         );
         $items   = $results['results'] ?? $results ?? [];
         if (empty($items) === true) {

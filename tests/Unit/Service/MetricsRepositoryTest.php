@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Service\MetricsRepository;
+use OCP\IAppConfig;
 use OCP\IDBConnection;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -43,8 +44,10 @@ class MetricsRepositoryTest extends TestCase
             ->willThrowException(new \RuntimeException('DB error'));
 
         $logger->expects($this->once())->method('warning');
+        $appConfig = $this->createMock(IAppConfig::class);
+        $appConfig->method('getValueString')->willReturn('lead-schema-id');
 
-        $repo = new MetricsRepository($db, $logger);
+        $repo = new MetricsRepository($db, $logger, $appConfig);
         $this->assertSame([], $repo->getLeadCounts());
     }//end testGetLeadCountsReturnsEmptyOnException()
 
@@ -61,7 +64,8 @@ class MetricsRepositoryTest extends TestCase
         $db->method('getQueryBuilder')
             ->willThrowException(new \RuntimeException('DB error'));
 
-        $repo = new MetricsRepository($db, $logger);
+        $appConfig = $this->createMock(IAppConfig::class);
+        $repo      = new MetricsRepository($db, $logger, $appConfig);
         $this->assertSame([], $repo->getLeadValueByPipeline());
     }//end testGetLeadValueReturnsEmptyOnException()
 
@@ -78,7 +82,8 @@ class MetricsRepositoryTest extends TestCase
         $db->method('getQueryBuilder')
             ->willThrowException(new \RuntimeException('DB error'));
 
-        $repo = new MetricsRepository($db, $logger);
+        $appConfig = $this->createMock(IAppConfig::class);
+        $repo      = new MetricsRepository($db, $logger, $appConfig);
         $this->assertSame(0, $repo->countObjectsBySchemaPattern('%client%'));
     }//end testCountReturnsZeroOnException()
 
@@ -95,7 +100,8 @@ class MetricsRepositoryTest extends TestCase
         $db->method('getQueryBuilder')
             ->willThrowException(new \RuntimeException('DB error'));
 
-        $repo = new MetricsRepository($db, $logger);
+        $appConfig = $this->createMock(IAppConfig::class);
+        $repo      = new MetricsRepository($db, $logger, $appConfig);
         $this->assertSame([], $repo->getRequestCounts());
     }//end testGetRequestCountsReturnsEmptyOnException()
 }//end class
