@@ -343,8 +343,8 @@ class ScheduledTaskService
         // Strip any fields not explicitly on the allowlist (MUTABLE_FIELDS +
         // admin-only fields already filtered by the controller).  This prevents
         // mass-assignment of system/immutable fields like createdBy, uuid, etc.
-        $allowedKeys  = array_merge(self::MUTABLE_FIELDS, ['status', 'assigneeUserId', 'assigneeGroupId', 'createdAt', 'completedAt', 'attempts']);
-        $data         = array_intersect_key($data, array_flip($allowedKeys));
+        $allowedKeys = array_merge(self::MUTABLE_FIELDS, ['status', 'assigneeUserId', 'assigneeGroupId', 'createdAt', 'completedAt', 'attempts']);
+        $data        = array_intersect_key($data, array_flip($allowedKeys));
 
         $merged       = array_merge($existing, $data);
         $merged['id'] = $id;

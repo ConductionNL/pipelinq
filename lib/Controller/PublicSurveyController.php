@@ -241,8 +241,8 @@ class PublicSurveyController extends PublicShareController
             // permissively (allowlist skipped) to preserve backward compatibility.
             // Any survey that has at least one question with an 'id' engages the
             // allowlist — answers keyed by unknown IDs are dropped.
-            $questions    = $data['questions'] ?? [];
-            $questionIds  = [];
+            $questions       = $data['questions'] ?? [];
+            $questionIds     = [];
             $questionsWithId = 0;
             $totalQuestions  = 0;
             if (is_array($questions) === true) {
@@ -345,7 +345,7 @@ class PublicSurveyController extends PublicShareController
                 'limit'   => 1,
             ]
         );
-        $items   = $results['results'] ?? $results ?? [];
+        $items   = $results['results'] ?? [];
         if (empty($items) === true) {
             return null;
         }
