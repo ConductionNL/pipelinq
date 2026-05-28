@@ -1,5 +1,7 @@
 # Design: lead-product-link
 
+status: pr-created
+
 ## Architecture Overview
 
 All three gaps are purely frontend issues. The `lead` and `leadProduct` schemas in OpenRegister already define all required fields (`lead.value`, `leadProduct.notes`, `product.sku`). No new PHP controllers, register schemas, or API endpoints are required. All changes are confined to two Vue components.
