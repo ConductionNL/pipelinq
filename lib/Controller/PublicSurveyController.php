@@ -214,6 +214,16 @@ class PublicSurveyController extends PublicShareController
                 );
             }
 
+            // Replicate the activeUntil check from show() so an expired survey
+            // cannot still accept submissions via a direct POST.
+            $until = $data['activeUntil'] ?? null;
+            if ($until !== null && $until !== '' && strtotime($until) < time()) {
+                return new JSONResponse(
+                    ['error' => 'This survey is no longer accepting responses'],
+                    Http::STATUS_GONE,
+                );
+            }
+
             $body    = $this->request->getParams();
             $answers = $body['answers'] ?? [];
             if (empty($answers) === true || is_array($answers) === false) {
@@ -227,14 +237,13 @@ class PublicSurveyController extends PublicShareController
                 return new JSONResponse(['error' => 'Survey system is not configured'], Http::STATUS_SERVICE_UNAVAILABLE);
             }
 
+            // respondentId / entityType / entityId are server-derived or omitted;
+            // never trust values from the anonymous submission body.
             $responseData = [
-                'surveyId'     => $data['id'] ?? '',
-                'answers'      => $answers,
-                'respondentId' => $body['respondentId'] ?? null,
-                'entityType'   => $body['entityType'] ?? null,
-                'entityId'     => $body['entityId'] ?? null,
-                'completedAt'  => (new \DateTime())->format('c'),
-                'ipHash'       => hash('sha256', $this->request->getRemoteAddress()),
+                'surveyId'    => $data['id'] ?? '',
+                'answers'     => $answers,
+                'completedAt' => (new \DateTime())->format('c'),
+                'ipHash'      => hash('sha256', $this->request->getRemoteAddress()),
             ];
 
             $created = $this->getObjectService()->saveObject(
