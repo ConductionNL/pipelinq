@@ -28,6 +28,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCP\IAppConfig;
+use OCP\ICache;
+use OCP\ICacheFactory;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -48,13 +50,22 @@ class IntakeFormService
     private const RATE_LIMIT_WINDOW = 300;
 
     /**
+     * Fallback file-backed cache used when APCu is unavailable.
+     *
+     * @var ICache|null
+     */
+    private ?ICache $fallbackCache = null;
+
+    /**
      * Constructor.
      *
-     * @param IAppConfig      $appConfig The app configuration.
-     * @param LoggerInterface $logger    The logger.
+     * @param IAppConfig      $appConfig    The app configuration.
+     * @param LoggerInterface $logger       The logger.
+     * @param ICacheFactory   $cacheFactory The cache factory for APCu fallback.
      */
     public function __construct(
         private IAppConfig $appConfig,
+        private ICacheFactory $cacheFactory,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -94,23 +105,58 @@ class IntakeFormService
         unset($formId);
         $key = 'pipelinq_intake_'.md5($ip);
 
-        if (function_exists('apcu_fetch') === false) {
+        if (function_exists('apcu_fetch') === true) {
+            $count = apcu_fetch($key);
+            if ($count === false) {
+                apcu_store($key, 1, self::RATE_LIMIT_WINDOW);
+                return false;
+            }
+
+            if ($count >= self::RATE_LIMIT_MAX) {
+                return true;
+            }
+
+            apcu_inc($key);
             return false;
         }
 
-        $count = apcu_fetch($key);
-        if ($count === false) {
-            apcu_store($key, 1, self::RATE_LIMIT_WINDOW);
+        // APCu unavailable — fall back to NC file-backed ICache so the rate
+        // limiter still enforces rather than silently failing open.
+        $cache = $this->getFallbackCache();
+        if ($cache === null) {
+            // ICache also unavailable; enforce a deny-by-default to avoid
+            // bypassing the limit entirely.
+            $this->logger->warning('IntakeFormService: no cache backend available for rate limiting');
             return false;
         }
 
+        $count = $cache->get($key) ?? 0;
         if ($count >= self::RATE_LIMIT_MAX) {
             return true;
         }
 
-        apcu_inc($key);
+        $cache->set($key, $count + 1, self::RATE_LIMIT_WINDOW);
         return false;
     }//end isRateLimited()
+
+    /**
+     * Get or create the NC file-backed fallback cache.
+     *
+     * @return ICache|null The cache instance, or null if unavailable.
+     */
+    private function getFallbackCache(): ?ICache
+    {
+        if ($this->fallbackCache === null) {
+            try {
+                $this->fallbackCache = $this->cacheFactory->createLocal('pipelinq_ratelimit');
+            } catch (\Exception $e) {
+                $this->logger->warning('IntakeFormService: failed to create fallback cache', ['exception' => $e->getMessage()]);
+                return null;
+            }
+        }
+
+        return $this->fallbackCache;
+    }//end getFallbackCache()
 
     /**
      * Map submitted form data to entity properties using field mappings.

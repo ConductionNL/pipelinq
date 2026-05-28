@@ -271,5 +271,3 @@ class ActivityTimelineController extends Controller
         }
     }//end createWorklog()
 }//end class
-
-        if ($entityType === '' || $entityId === '' || $duration ==

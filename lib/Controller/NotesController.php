@@ -29,6 +29,7 @@ use OCA\Pipelinq\Service\NotesService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -50,6 +51,7 @@ class NotesController extends Controller
      * @param IL10N              $l10n             The localization service.
      * @param LoggerInterface    $logger           The logger.
      * @param ContainerInterface $container        The DI container.
+     * @param IGroupManager      $groupManager     The group manager.
      */
     public function __construct(
         IRequest $request,
@@ -59,6 +61,7 @@ class NotesController extends Controller
         private IL10N $l10n,
         private LoggerInterface $logger,
         private ContainerInterface $container,
+        private IGroupManager $groupManager,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -198,7 +201,7 @@ class NotesController extends Controller
             return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
         }
 
-        if ($user->isAdmin() === false) {
+        if ($this->groupManager->isAdmin($user->getUID()) === false) {
             return new JSONResponse(['error' => $this->l10n->t('Admin privileges required')], Http::STATUS_FORBIDDEN);
         }
 
