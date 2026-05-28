@@ -101,6 +101,14 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_REGEX = /^[+]?[\d\s\-().]{7,20}$/
 const URL_REGEX = /^https?:\/\/.+\..+/
 
+/**
+ * @spec openspec/changes/2026-03-20-client-management/tasks.md#task-3.1
+ */
+const TYPE_MAPPING = {
+	person: 'schema:Person',
+	organization: 'schema:Organization',
+}
+
 export default {
 	name: 'ClientForm',
 	components: {
@@ -233,6 +241,7 @@ export default {
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-28
+		 * @spec openspec/changes/2026-03-20-client-management/tasks.md#task-3.1
 		 */
 		onSave() {
 			if (!this.validateAll()) {
@@ -242,12 +251,7 @@ export default {
 			if (this.client?.id) {
 				data.id = this.client.id
 			}
-			// Set Schema.org @type based on client type
-			if (data.type === 'organization') {
-				data['@type'] = 'schema:Organization'
-			} else {
-				data['@type'] = 'schema:Person'
-			}
+			data['@type'] = TYPE_MAPPING[data.type] ?? 'schema:Person'
 			this.$emit('save', data)
 		},
 	},
