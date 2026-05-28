@@ -89,7 +89,7 @@ class IntakeFormController extends Controller
      *
      * @param string $id The form ID.
      *
-     * @return DataDownloadResponse The CSV download response.
+     * @return DataDownloadResponse|JSONResponse The CSV download or 501 stub response.
      *
      * @NoAdminRequired
      *
@@ -102,13 +102,8 @@ class IntakeFormController extends Controller
             return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
         }
 
-        // In production, fetch form and submissions from OpenRegister.
-        $csv = $this->intakeFormService->exportCsv(submissions: [], fields: []);
-
-        return new DataDownloadResponse(
-            data: $csv,
-            filename: 'submissions-'.$id.'.csv',
-            contentType: 'text/csv'
-        );
+        // CSV export requires OpenRegister data integration.
+        // Returning 501 until OR submission retrieval is wired.
+        return new JSONResponse(['message' => 'Export not yet implemented'], Http::STATUS_NOT_IMPLEMENTED);
     }//end export()
 }//end class

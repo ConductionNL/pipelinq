@@ -26,6 +26,7 @@ use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 /**
  * Tests for RequestChannelController.
@@ -72,6 +73,7 @@ class RequestChannelControllerTest extends TestCase
             $request,
             $this->tagService,
             $this->userSession,
+            $this->createMock(LoggerInterface::class),
         );
     }//end setUp()
 
