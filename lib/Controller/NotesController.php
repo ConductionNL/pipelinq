@@ -28,6 +28,7 @@ use OCA\Pipelinq\Service\NoteEventService;
 use OCA\Pipelinq\Service\NotesService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IL10N;
@@ -194,6 +195,7 @@ class NotesController extends Controller
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-29
      */
+    #[NoAdminRequired]
     public function deleteAll(string $objectType, string $objectId): JSONResponse
     {
         $user = $this->userSession->getUser();

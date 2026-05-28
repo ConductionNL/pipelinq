@@ -167,12 +167,9 @@ class SchedulesController extends Controller
         $isAdmin = $this->groupManager->isAdmin($userId);
 
         $requestedAssignee = (string) $this->request->getParam('assigneeUserId', '');
-        // Non-admins may not assign tasks to other users.
+        // Non-admins may not assign tasks to other users; silently scope to self.
         if ($isAdmin === false && $requestedAssignee !== '' && $requestedAssignee !== $userId) {
-            return new JSONResponse(
-                ['message' => 'Not authorized to assign tasks to other users'],
-                Http::STATUS_FORBIDDEN
-            );
+            $requestedAssignee = $userId;
         }
 
         $data = [

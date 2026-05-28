@@ -30,6 +30,7 @@ use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Tests for SettingsController.
@@ -72,6 +73,7 @@ class SettingsControllerTest extends TestCase
         $user->method('getUID')->willReturn('admin');
         $userSession->method('getUser')->willReturn($user);
         $l10n->method('t')->willReturnArgument(0);
+        $logger = $this->createMock(LoggerInterface::class);
 
         $this->controller = new SettingsController(
             $request,
@@ -81,6 +83,7 @@ class SettingsControllerTest extends TestCase
             $this->settingsService,
             $userSession,
             $l10n,
+            $logger,
         );
     }//end setUp()
 

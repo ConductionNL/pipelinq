@@ -125,7 +125,11 @@ class ComplaintSlaService
             $start = new DateTimeImmutable();
         }
 
-        return $start->modify('+'.$hours.' hours');
+        // DateTimeImmutable::modify() always returns static here; assert confirms it.
+        $result = $start->modify('+'.$hours.' hours');
+        assert($result !== false);
+
+        return $result;
     }//end calculateDeadline()
 
     /**

@@ -98,15 +98,11 @@ class ComplaintSlaJob extends TimedJob
         $this->logger->info('ComplaintSlaJob: Starting SLA deadline check');
 
         try {
-            // In production, this would query OpenRegister for complaints
-            // with status in ['new', 'in_progress'] and check deadlines.
-            // The actual querying is handled at the OpenRegister level;
-            // this job serves as the monitoring and logging layer.
-            //
-            // Future enhancement: integrate with OpenRegister ObjectService
-            // to query complaints and send notifications for overdue items.
+            $overdueCount = $this->checkOverdueComplaints(register: $register, complaintSchema: $complaintSchema);
+
             $this->logger->info(
                 'ComplaintSlaJob: SLA deadline check completed',
+                ['overdue' => $overdueCount],
             );
         } catch (Exception $e) {
             $this->logger->error(
@@ -115,4 +111,58 @@ class ComplaintSlaJob extends TimedJob
             );
         }//end try
     }//end run()
+
+    /**
+     * Iterate over open complaints and count overdue ones.
+     *
+     * Placeholder: replace the fetchComplaints() stub with a real
+     * ObjectService::findAll() call once OpenRegister is wired in.
+     *
+     * @param string $register        The register UUID.
+     * @param string $complaintSchema The complaint schema UUID.
+     *
+     * @return int The number of overdue complaints detected.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-21
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    private function checkOverdueComplaints(string $register, string $complaintSchema): int
+    {
+        $overdueCount = 0;
+        $complaints   = $this->fetchComplaints(register: $register, schema: $complaintSchema);
+
+        foreach ($complaints as $complaint) {
+            if ($this->complaintSlaService->isOverdue(complaint: $complaint) === true) {
+                $overdueCount++;
+                $this->logger->warning(
+                    'ComplaintSlaJob: Overdue complaint detected',
+                    ['id' => (string) ($complaint['id'] ?? 'unknown')],
+                );
+            }
+        }
+
+        return $overdueCount;
+    }//end checkOverdueComplaints()
+
+    /**
+     * Fetch open complaints from OpenRegister.
+     *
+     * Returns an empty array until ObjectService is wired up.
+     *
+     * @param string $register The register UUID.
+     * @param string $schema   The complaint schema UUID.
+     *
+     * @return array<int, array<string, mixed>> The complaints.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    private function fetchComplaints(string $register, string $schema): array
+    {
+        // Placeholder until OpenRegister ObjectService is injected.
+        // Future: return $this->objectService->findAll([...]).
+        unset($register, $schema);
+
+        return [];
+    }//end fetchComplaints()
 }//end class

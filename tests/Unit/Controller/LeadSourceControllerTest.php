@@ -26,6 +26,7 @@ use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 /**
  * Tests for LeadSourceController.
@@ -70,6 +71,7 @@ class LeadSourceControllerTest extends TestCase
         $this->request     = $this->createMock(IRequest::class);
         $this->tagService  = $this->createMock(SystemTagService::class);
         $this->userSession = $this->createMock(IUserSession::class);
+        $logger            = $this->createMock(LoggerInterface::class);
 
         $user = $this->createMock(IUser::class);
         $user->method('getUID')->willReturn('test-user');
@@ -79,6 +81,7 @@ class LeadSourceControllerTest extends TestCase
             $this->request,
             $this->tagService,
             $this->userSession,
+            $logger,
         );
     }//end setUp()
 
@@ -114,7 +117,7 @@ class LeadSourceControllerTest extends TestCase
         $this->tagService->method('addTag')
             ->willReturn(['id' => 2, 'name' => 'Referral']);
 
-        $controller = new LeadSourceController($request, $this->tagService, $this->userSession);
+        $controller = new LeadSourceController($request, $this->tagService, $this->userSession, $this->createMock(LoggerInterface::class));
         $response   = $controller->create();
 
         $data = $response->getData();
@@ -135,7 +138,7 @@ class LeadSourceControllerTest extends TestCase
         $this->tagService->method('addTag')
             ->willThrowException(new \InvalidArgumentException('Tag name cannot be empty'));
 
-        $controller = new LeadSourceController($request, $this->tagService, $this->userSession);
+        $controller = new LeadSourceController($request, $this->tagService, $this->userSession, $this->createMock(LoggerInterface::class));
         $response   = $controller->create();
 
         $this->assertSame(400, $response->getStatus());

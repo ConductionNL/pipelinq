@@ -85,6 +85,9 @@
                 <referencedClass name="OCP\Migration\IRepairStep"/>
                 <!-- Nextcloud server internals -->
                 <referencedClass name="OC"/>
+                <!-- OCP types not yet present in the nextcloud/ocp Composer stub at this version -->
+                <referencedClass name="OCP\ICache"/>
+                <referencedClass name="OCP\AppFramework\PublicShareController"/>
                 <!-- GuzzleHttp (loaded via composer at runtime) -->
                 <referencedClass name="GuzzleHttp\Client"/>
                 <referencedClass name="GuzzleHttp\Exception\GuzzleException"/>

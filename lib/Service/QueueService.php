@@ -202,7 +202,7 @@ class QueueService
         }
 
         $depth = $this->getQueueDepth(queueId: $queueId);
-        if ($depth <= (int) $maxCapacity) {
+        if ($this->isAtCapacity(queue: $queue, currentCount: $depth) === false) {
             return 0;
         }
 
