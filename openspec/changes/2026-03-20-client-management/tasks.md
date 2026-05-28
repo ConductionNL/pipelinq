@@ -2,7 +2,7 @@
 
 ## 0. Deduplication Check
 
-- [ ] 0.1 Verify no existing component or utility duplicates the summary stats computation
+- [x] 0.1 Verify no existing component or utility duplicates the summary stats computation
   - Search `pipelinq/src/` for any existing stats aggregation helpers or computed properties
     that sum lead values or count open requests
   - Search `openregister/lib/Service/` for `ObjectService::aggregateObjects()` or similar
@@ -10,14 +10,14 @@
   - **Finding**: All aggregation is done client-side from already-fetched arrays; no overlap
     with platform services. Client-side computation is the established pattern in `ClientDetail.vue`.
 
-- [ ] 0.2 Verify no existing sync trigger or badge helper in `ContactDetail.vue`
+- [x] 0.2 Verify no existing sync trigger or badge helper in `ContactDetail.vue`
   - Confirm `ContactDetail.vue` has no `syncToContacts()` method or `contactsUid` badge logic
   - Confirm `ClientDetail.vue` has the reference implementation to copy from
   - **Finding**: `ClientDetail.vue` has the full pattern; `ContactDetail.vue` is missing both.
 
 ## 1. Client Summary Statistics
 
-- [ ] 1.1 Add summary statistics card to `ClientDetail.vue`
+- [x] 1.1 Add summary statistics card to `ClientDetail.vue`
   - **spec_ref**: `REQ-CLT-001` / `openspec/specs/client-management/spec.md#Client Detail View`
   - **files**: `pipelinq/src/views/clients/ClientDetail.vue`
   - **tier**: MVP
@@ -42,7 +42,7 @@
 
 ## 2. Contact Sync Enhancements
 
-- [ ] 2.1 Add write-back sync on contact save in `ContactDetail.vue`
+- [x] 2.1 Add write-back sync on contact save in `ContactDetail.vue`
   - **spec_ref**: `REQ-SYN-001` / `openspec/specs/contacts-sync/spec.md#Sync Trigger Behavior`
   - **files**: `pipelinq/src/views/contacts/ContactDetail.vue`
   - **tier**: MVP
@@ -56,7 +56,7 @@
     - THEN the system MUST POST to `/api/contacts-sync/write-back` with `objectType=contact`
     - AND sync failure MUST NOT block the save operation or success toast
 
-- [ ] 2.2 Add sync status badge to `ContactDetail.vue`
+- [x] 2.2 Add sync status badge to `ContactDetail.vue`
   - **spec_ref**: `REQ-SYN-002` / `openspec/specs/contacts-sync/spec.md#Sync Status Indicator`
   - **files**: `pipelinq/src/views/contacts/ContactDetail.vue`
   - **tier**: MVP
@@ -73,7 +73,7 @@
 
 ## 3. Dynamic @type Mapping
 
-- [ ] 3.1 Set `@type` based on client type in `ClientForm.vue`
+- [x] 3.1 Set `@type` based on client type in `ClientForm.vue`
   - **spec_ref**: `REQ-CLT-002` / `openspec/specs/client-management/spec.md#Client Creation`
   - **files**: `pipelinq/src/views/clients/ClientForm.vue`
   - **tier**: MVP

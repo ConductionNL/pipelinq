@@ -1,5 +1,7 @@
 # Design: client-management enhancements
 
+status: pr-created
+
 ## Architecture Overview
 
 All changes are frontend-only. No new schemas, registers, or API routes are introduced. Data
