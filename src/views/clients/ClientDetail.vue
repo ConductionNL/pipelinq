@@ -90,6 +90,10 @@
 					<span class="summary-value summary-value--total">{{ formatCurrency(totalValue) }}</span>
 					<span class="summary-label">{{ t('pipelinq', 'Total value') }}</span>
 				</div>
+				<div class="summary-item">
+					<span class="summary-value summary-value--date">{{ clientSince ? formatDate(clientSince) : '-' }}</span>
+					<span class="summary-label">{{ t('pipelinq', 'Client since') }}</span>
+				</div>
 			</div>
 		</CnDetailCard>
 
@@ -435,6 +439,12 @@ export default {
 		totalValue() {
 			return this.openLeadsValue + this.wonLeadsValue
 		},
+		/**
+		 * @spec openspec/changes/2026-03-20-client-management/tasks.md#task-1.1
+		 */
+		clientSince() {
+			return this.clientData.createdAt || null
+		},
 	},
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-12
@@ -712,7 +722,7 @@ export default {
 
 .summary-grid {
 	display: grid;
-	grid-template-columns: repeat(4, 1fr);
+	grid-template-columns: repeat(5, 1fr);
 	gap: 16px;
 }
 
@@ -733,6 +743,10 @@ export default {
 
 .summary-value--total {
 	color: var(--color-primary);
+}
+
+.summary-value--date {
+	font-size: 14px;
 }
 
 .summary-label {

@@ -363,4 +363,113 @@ class ScheduledTaskServiceTest extends TestCase
         );
         $this->addToAssertionCount(1);
     }//end testAuthorizeAllowsGroupMember()
+
+    /**
+     * Past-deadline open tasks must transition to 'verlopen' via processScheduledTasks.
+     *
+     * This covers C-W7-01: the expiry branch requires overdue tasks to be fetched
+     * via getOverdueTasks() (deadline < now), not via getPendingTasks() which only
+     * returns future deadlines.
+     *
+     * @return void
+     */
+    public function testProcessScheduledTasksTransitionsOverdueTaskToVerlopen(): void
+    {
+        // Task with a deadline 24 hours in the past — well past the expiryCut of 4 h.
+        $pastDeadline = (new \DateTimeImmutable('-24 hours'))->format(\DateTimeInterface::ATOM);
+
+        $stub = $this->makeObjectServiceStub();
+
+        // findAll is called twice: once for getOverdueTasks (returns our task),
+        // once for getPendingTasks (returns empty, all future).
+        $callCount = 0;
+        $stub->findAllReturn = [];
+
+        // We override findAll via a custom anonymous class to handle two calls.
+        $overdueTask = [
+            'id'       => 'task-overdue-1',
+            'status'   => 'open',
+            'subject'  => 'Overdue task',
+            'deadline' => $pastDeadline,
+            'attempts' => [],
+        ];
+
+        $stub2 = new class($overdueTask) {
+            public array $lastSaveArgs = [];
+            public mixed $saveReturn   = [];
+
+            /** @var array<string, mixed> */
+            private array $overdueTask;
+            private int $callCount = 0;
+
+            public function __construct(array $overdueTask)
+            {
+                $this->overdueTask = $overdueTask;
+            }
+
+            /**
+             * @param  array<string, mixed> $config
+             * @return array<int, mixed>
+             */
+            public function findAll(array $config=[], bool $_rbac=true, bool $_multitenancy=true): array
+            {
+                $this->callCount++;
+                $deadlineFilter = $config['filters']['deadline'] ?? [];
+
+                // getOverdueTasks uses '<' filter; getPendingTasks uses '>='/'<=' filter.
+                if (isset($deadlineFilter['<']) === true) {
+                    return [$this->overdueTask];
+                }
+
+                return [];
+            }//end findAll()
+
+            /**
+             * @param  array<string, mixed>|object $object
+             * @param  array<int|string, mixed>    $extend
+             * @return mixed
+             */
+            public function saveObject(
+                array | object $object,
+                ?array $extend=[],
+                $register=null,
+                $schema=null,
+                ?string $uuid=null,
+                bool $_rbac=true,
+                bool $_multitenancy=true,
+                bool $silent=false,
+                ?array $uploadedFiles=null
+            ) {
+                $this->lastSaveArgs = [
+                    'object'   => $object,
+                    'register' => $register,
+                    'schema'   => $schema,
+                    'uuid'     => $uuid,
+                ];
+                return $object;
+            }//end saveObject()
+
+            /**
+             * @return mixed
+             */
+            public function findObject(string $id, $register, $schema, bool $_rbac=true, bool $_multitenancy=true)
+            {
+                return null;
+            }//end findObject()
+
+            public function deleteObject(string $id, bool $_rbac=true, bool $_multitenancy=true): bool
+            {
+                return true;
+            }//end deleteObject()
+        };
+
+        $this->container->method('get')->willReturn($stub2);
+
+        $service = $this->makeService();
+        $service->processScheduledTasks();
+
+        // The overdue task must have been saved with status 'verlopen'.
+        $this->assertNotEmpty($stub2->lastSaveArgs, 'saveObject was not called for the overdue task');
+        $this->assertSame('verlopen', $stub2->lastSaveArgs['object']['status']);
+    }//end testProcessScheduledTasksTransitionsOverdueTaskToVerlopen()
 }//end class

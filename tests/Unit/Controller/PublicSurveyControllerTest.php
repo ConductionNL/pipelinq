@@ -110,6 +110,21 @@ class PublicSurveyControllerTest extends TestCase
     }//end buildController()
 
     /**
+     * Build an ObjectService mock with findAll returning the given items.
+     *
+     * @param array<int, mixed> $items Items to return in findAll.
+     *
+     * @return \OCA\OpenRegister\Service\ObjectService&MockObject The mock.
+     */
+    private function buildObjectServiceMock(array $items): \OCA\OpenRegister\Service\ObjectService
+    {
+        $mock = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $mock->method('findAll')->willReturn(['results' => $items]);
+        $mock->method('saveObject')->willReturn(['id' => 'new-response-uuid']);
+        return $mock;
+    }//end buildObjectServiceMock()
+
+    /**
      * Test that isPasswordProtected always returns false.
      *
      * @return void
@@ -144,15 +159,12 @@ class PublicSurveyControllerTest extends TestCase
      */
     public function testShowReturns404WhenSurveyNotFound(): void
     {
-        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
-
         $this->settingsService->method('getSettings')->willReturn([
             'register'      => 'reg-id',
             'survey_schema' => 'schema-id',
         ]);
 
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)->addMethods(['getObjects'])->getMock();
-        $objectServiceMock->method('getObjects')->willReturn(['results' => []]);
+        $objectServiceMock = $this->buildObjectServiceMock([]);
         $this->container->method('get')->willReturn($objectServiceMock);
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
 
@@ -168,16 +180,13 @@ class PublicSurveyControllerTest extends TestCase
      */
     public function testShowReturns410ForInactiveSurvey(): void
     {
-        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
-
         $this->settingsService->method('getSettings')->willReturn([
             'register'      => 'reg-id',
             'survey_schema' => 'schema-id',
         ]);
 
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)->addMethods(['getObjects'])->getMock();
-        $objectServiceMock->method('getObjects')->willReturn([
-            'results' => [['id' => '1', 'status' => 'closed', 'token' => 'tok']],
+        $objectServiceMock = $this->buildObjectServiceMock([
+            ['id' => '1', 'status' => 'closed', 'token' => 'tok'],
         ]);
         $this->container->method('get')->willReturn($objectServiceMock);
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
@@ -194,16 +203,13 @@ class PublicSurveyControllerTest extends TestCase
      */
     public function testShowReturnsActiveSurvey(): void
     {
-        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
-
         $this->settingsService->method('getSettings')->willReturn([
             'register'      => 'reg-id',
             'survey_schema' => 'schema-id',
         ]);
 
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)->addMethods(['getObjects'])->getMock();
-        $objectServiceMock->method('getObjects')->willReturn([
-            'results' => [['id' => '1', 'title' => 'My Survey', 'status' => 'active', 'token' => 'tok']],
+        $objectServiceMock = $this->buildObjectServiceMock([
+            ['id' => '1', 'title' => 'My Survey', 'status' => 'active', 'token' => 'tok'],
         ]);
         $this->container->method('get')->willReturn($objectServiceMock);
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
@@ -221,17 +227,14 @@ class PublicSurveyControllerTest extends TestCase
      */
     public function testSubmitReturns400WhenAnswersMissing(): void
     {
-        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
-
         $this->settingsService->method('getSettings')->willReturn([
             'register'                => 'reg-id',
             'survey_schema'           => 'schema-id',
             'surveyResponse_schema'   => 'response-schema-id',
         ]);
 
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)->addMethods(['getObjects'])->getMock();
-        $objectServiceMock->method('getObjects')->willReturn([
-            'results' => [['id' => '1', 'status' => 'active', 'token' => 'tok']],
+        $objectServiceMock = $this->buildObjectServiceMock([
+            ['id' => '1', 'status' => 'active', 'token' => 'tok'],
         ]);
         $this->container->method('get')->willReturn($objectServiceMock);
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
@@ -250,25 +253,151 @@ class PublicSurveyControllerTest extends TestCase
      */
     public function testSubmitReturns503WhenNotConfigured(): void
     {
-        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
-
         // Survey found but no surveyResponse_schema configured.
         $this->settingsService->method('getSettings')->willReturn([
             'register'      => 'reg-id',
             'survey_schema' => 'schema-id',
         ]);
 
-        $objectServiceMock = $this->getMockBuilder(\stdClass::class)->addMethods(['getObjects'])->getMock();
-        $objectServiceMock->method('getObjects')->willReturn([
-            'results' => [['id' => '1', 'status' => 'active', 'token' => 'tok']],
+        $objectServiceMock = $this->buildObjectServiceMock([
+            ['id' => '1', 'status' => 'active', 'token' => 'tok'],
         ]);
         $this->container->method('get')->willReturn($objectServiceMock);
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
-        $this->request->method('getParams')->willReturn(['answers' => [['question' => 'Q1', 'answer' => 'A1']]]);
+        $this->request->method('getParams')->willReturn(['answers' => ['some-uuid' => 'yes']]);
         $this->request->method('getRemoteAddress')->willReturn('127.0.0.1');
 
         $response = $this->buildController()->submit(token: 'tok');
 
         $this->assertSame(Http::STATUS_SERVICE_UNAVAILABLE, $response->getStatus());
     }//end testSubmitReturns503WhenNotConfigured()
+
+    /**
+     * Test that the question-ID allowlist strips unknown answer keys when
+     * questions have IDs, and retains known keys.
+     *
+     * The survey has two questions with known UUIDs. The submission includes
+     * those two keys plus an extra attacker-injected key. After the allowlist
+     * filter only the two known keys must survive in the saved response.
+     *
+     * @return void
+     */
+    public function testSubmitAllowlistStripsUnknownAnswerKeys(): void
+    {
+        $knownId1 = '11111111-1111-1111-1111-111111111111';
+        $knownId2 = '22222222-2222-2222-2222-222222222222';
+        $unknownId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+
+        $survey = [
+            'id'        => 'survey-uuid',
+            'status'    => 'active',
+            'token'     => 'tok',
+            'questions' => [
+                ['id' => $knownId1, 'type' => 'rating',   'text' => 'Q1'],
+                ['id' => $knownId2, 'type' => 'open_text', 'text' => 'Q2'],
+            ],
+        ];
+
+        $this->settingsService->method('getSettings')->willReturn([
+            'register'              => 'reg-id',
+            'survey_schema'         => 'schema-id',
+            'surveyResponse_schema' => 'response-schema-id',
+        ]);
+
+        // Capture the data passed to saveObject so we can assert on it.
+        $savedData = null;
+        $objectServiceMock = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $objectServiceMock->method('findAll')->willReturn(['results' => [$survey]]);
+        $objectServiceMock->method('saveObject')
+            ->willReturnCallback(
+                function () use (&$savedData) {
+                    $savedData = func_get_arg(0);
+                    return ['id' => 'new-uuid'];
+                }
+            );
+
+        $this->container->method('get')->willReturn($objectServiceMock);
+        $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
+
+        $this->request->method('getRemoteAddress')->willReturn('127.0.0.1');
+        $this->request->method('getParams')->willReturn([
+            'answers' => [
+                $knownId1  => '4',
+                $knownId2  => 'Great service!',
+                $unknownId => 'injected',
+            ],
+        ]);
+
+        $response = $this->buildController()->submit(token: 'tok');
+
+        $this->assertSame(Http::STATUS_CREATED, $response->getStatus());
+
+        // The saved answers must only contain the two known question IDs.
+        $this->assertIsArray($savedData);
+        $this->assertArrayHasKey('answers', $savedData);
+        $this->assertArrayHasKey($knownId1, $savedData['answers']);
+        $this->assertArrayHasKey($knownId2, $savedData['answers']);
+        $this->assertArrayNotHasKey($unknownId, $savedData['answers'], 'Unknown answer key must be stripped by the allowlist');
+        $this->assertCount(2, $savedData['answers']);
+    }//end testSubmitAllowlistStripsUnknownAnswerKeys()
+
+    /**
+     * Test that the allowlist is skipped (permissive) when ALL questions lack
+     * an 'id' field (legacy survey data).
+     *
+     * All answer keys must pass through unchanged in this scenario.
+     *
+     * @return void
+     */
+    public function testSubmitAllowlistPermissiveForLegacySurveyWithoutQuestionIds(): void
+    {
+        $survey = [
+            'id'        => 'survey-uuid',
+            'status'    => 'active',
+            'token'     => 'tok',
+            'questions' => [
+                ['type' => 'rating',    'text' => 'Q1'],
+                ['type' => 'open_text', 'text' => 'Q2'],
+            ],
+        ];
+
+        $this->settingsService->method('getSettings')->willReturn([
+            'register'              => 'reg-id',
+            'survey_schema'         => 'schema-id',
+            'surveyResponse_schema' => 'response-schema-id',
+        ]);
+
+        $savedData = null;
+        $objectServiceMock2 = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $objectServiceMock2->method('findAll')->willReturn(['results' => [$survey]]);
+        $objectServiceMock2->method('saveObject')
+            ->willReturnCallback(
+                function () use (&$savedData) {
+                    $savedData = func_get_arg(0);
+                    return ['id' => 'new-uuid'];
+                }
+            );
+
+        $this->container->method('get')->willReturn($objectServiceMock2);
+        $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
+
+        $this->request->method('getRemoteAddress')->willReturn('127.0.0.1');
+        $this->request->method('getParams')->willReturn([
+            'answers' => [
+                'q1' => '4',
+                'q2' => 'Great service!',
+            ],
+        ]);
+
+        $response = $this->buildController()->submit(token: 'tok');
+
+        $this->assertSame(Http::STATUS_CREATED, $response->getStatus());
+
+        // All answers must pass through when no question has an id (legacy).
+        $this->assertIsArray($savedData);
+        $this->assertArrayHasKey('answers', $savedData);
+        $this->assertCount(2, $savedData['answers']);
+        $this->assertArrayHasKey('q1', $savedData['answers']);
+        $this->assertArrayHasKey('q2', $savedData['answers']);
+    }//end testSubmitAllowlistPermissiveForLegacySurveyWithoutQuestionIds()
 }//end class

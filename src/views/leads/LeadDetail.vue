@@ -190,6 +190,7 @@ export default {
 			clientData: null,
 			contactData: null,
 			pipelineData: null,
+			_valueOverride: false,
 		}
 	},
 	computed: {
@@ -259,6 +260,7 @@ export default {
 		if (!this.isNew) {
 			await this.objectStore.fetchObject('lead', this.leadId)
 			await this.fetchRelated()
+			await this._computeValueOverride()
 		}
 	},
 	methods: {
@@ -311,6 +313,7 @@ export default {
 				} else {
 					await this.objectStore.fetchObject('lead', this.leadId)
 					await this.fetchRelated()
+					await this._computeValueOverride()
 					this.editing = false
 				}
 			} else {
@@ -342,13 +345,22 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-35
+		 * @spec openspec/changes/2026-03-20-lead-product-link/tasks.md#task-3.1
+		 */
+		async _computeValueOverride() {
+			const items = await this.objectStore.fetchCollection('leadProduct', {
+				_limit: 100,
+				lead: this.leadId,
+			})
+			const computedTotal = (items || []).reduce((sum, lp) => sum + (Number(lp.total) || 0), 0)
+			const value = Number(this.leadData.value) || 0
+			this._valueOverride = value !== 0 && Math.abs(value - computedTotal) > 0.001
+		},
+		/**
+		 * @spec openspec/changes/2026-03-20-lead-product-link/tasks.md#task-3.2
 		 */
 		async onProductValueChanged(newTotal) {
-			// Auto-recalculate lead value from product line items (per spec).
-			// Only skip if the user has explicitly set a manual override.
-			const hasLineItems = newTotal > 0
-			if (hasLineItems) {
+			if (!this._valueOverride) {
 				await this.syncLeadValue(newTotal)
 			}
 		},
@@ -361,6 +373,7 @@ export default {
 				value,
 			})
 			await this.objectStore.fetchObject('lead', this.leadId)
+			this._valueOverride = false
 		},
 	},
 }

@@ -23,6 +23,7 @@
 							<th>{{ t('pipelinq', 'Unit Price') }}</th>
 							<th>{{ t('pipelinq', 'Discount') }}</th>
 							<th>{{ t('pipelinq', 'Total') }}</th>
+							<th>{{ t('pipelinq', 'Notes') }}</th>
 							<th />
 						</tr>
 					</thead>
@@ -59,6 +60,14 @@
 								{{ formatCurrency(calculateTotal(item)) }}
 							</td>
 							<td>
+								<input
+									v-model="item.notes"
+									type="text"
+									class="inline-input inline-input--notes"
+									:placeholder="t('pipelinq', 'Notities...')"
+									@change="updateNotes(item)">
+							</td>
+							<td>
 								<NcButton type="tertiary" @click="removeLineItem(item)">
 									{{ t('pipelinq', 'Remove') }}
 								</NcButton>
@@ -73,6 +82,7 @@
 							<td class="total-cell total-cell--grand">
 								{{ formatCurrency(grandTotal) }}
 							</td>
+							<td />
 							<td />
 						</tr>
 					</tfoot>
@@ -201,10 +211,13 @@ export default {
 			return useObjectStore()
 		},
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-19
+		 * @spec openspec/changes/2026-03-20-lead-product-link/tasks.md#task-1.1
 		 */
 		productOptions() {
-			return this.products.map(p => ({ id: p.id, name: p.name || p.id }))
+			return this.products.map(p => ({
+				id: p.id,
+				name: p.sku ? `${p.name || p.id} (${p.sku})` : (p.name || p.id),
+			}))
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-15
@@ -308,12 +321,23 @@ export default {
 					quantity: item.quantity,
 					unitPrice: item.unitPrice,
 					discount: item.discount,
+					notes: item.notes,
 					total,
 				})
 				item.total = total
 				this.$emit('value-changed', this.grandTotal)
 			} catch (e) {
 				showError(e.message || t('pipelinq', 'Failed to update line item'))
+			}
+		},
+		/**
+		 * @spec openspec/changes/2026-03-20-lead-product-link/tasks.md#task-2.2
+		 */
+		async updateNotes(item) {
+			try {
+				await this.objectStore.saveObject('leadProduct', { ...item })
+			} catch (e) {
+				showError(e.message || t('pipelinq', 'Failed to update notes'))
 			}
 		},
 		/**
@@ -419,6 +443,10 @@ export default {
 .inline-input--price,
 .inline-input--discount {
 	width: 90px;
+}
+
+.inline-input--notes {
+	width: 180px;
 }
 
 .total-cell {

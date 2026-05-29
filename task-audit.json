@@ -1,15 +1,16 @@
 {
-  "spec": "openspec/changes/migrate-automation-to-flow-leaf",
+  "spec": "openspec/changes/2026-03-20-pipeline",
   "verified": [
-    {"task": "0.1", "file": "openspec/changes/migrate-automation-to-flow-leaf/design.md", "ok": true, "note": "Leaf key 'flow', NC dependency 'workflowengine' documented; authoring lives in NC Flow/n8n."},
-    {"task": "1.1", "file": "lib/Controller/AutomationController.php", "ok": true, "note": "Deleted - no in-app automation engine remains."},
-    {"task": "1.1", "file": "lib/Service/AutomationService.php", "ok": true, "note": "Deleted - webhook-firing/DMN service removed."},
-    {"task": "1.1", "file": "src/views/automations/AutomationBuilder.vue", "ok": true, "note": "Deleted - bespoke automation UI removed."},
-    {"task": "1.1", "file": "appinfo/routes.php", "ok": true, "note": "Automation routes removed."},
-    {"task": "1.2", "file": "lib/Settings/pipelinq_register.json", "ok": true, "note": "automation and automationLog schemas retired from both schemas[] list and definitions."},
-    {"task": "2.1", "file": "lib/Settings/pipelinq_register.json", "ok": true, "note": "flow added to linkedTypes on lead, request, client."},
-    {"task": "3.1", "file": "src/manifest.json", "ok": true, "note": "CnFlowTab + CnFlowCard added to LeadDetail, RequestDetail, ClientDetail. workflowengine added to dependencies[]."},
-    {"task": "4.1", "file": "openspec/changes/migrate-automation-to-flow-leaf/tasks.md", "ok": true, "note": "Follow-up migration recorded; existing objects left in place per ADR-032."}
+    {"task": "1.1", "file": "src/views/pipeline/PipelineBoard.vue", "ok": true},
+    {"task": "1.2", "file": "src/views/pipeline/PipelineBoard.vue", "ok": true},
+    {"task": "1.3", "file": "src/views/pipeline/PipelineBoard.vue", "ok": true},
+    {"task": "1.4", "file": "l10n/en.json", "ok": true},
+    {"task": "1.4", "file": "l10n/nl.json", "ok": true},
+    {"task": "2.1", "file": "src/views/settings/PipelineForm.vue", "ok": true},
+    {"task": "2.2", "file": "src/views/settings/PipelineForm.vue", "ok": true},
+    {"task": "2.3", "file": "src/views/settings/PipelineForm.vue", "ok": true},
+    {"task": "2.4", "file": "src/views/settings/PipelineForm.vue", "ok": true},
+    {"task": "2.5", "file": "l10n/en.json", "ok": true}
   ],
   "stubs": [],
   "missing_routes": []
