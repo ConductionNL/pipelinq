@@ -119,6 +119,7 @@
 
 <script>
 import { NcButton, NcLoadingIcon, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
 
 export default {
 	name: 'ProspectSettings',
@@ -167,7 +168,7 @@ export default {
 		async fetchSettings() {
 			this.loading = true
 			try {
-				const response = await fetch('/apps/pipelinq/api/prospects/settings', {
+				const response = await fetch(generateUrl('/apps/pipelinq/api/prospects/settings'), {
 					headers: {
 						'Content-Type': 'application/json',
 						requesttoken: OC.requestToken,
@@ -213,7 +214,7 @@ export default {
 			}
 
 			try {
-				const response = await fetch('/apps/pipelinq/api/prospects/settings', {
+				const response = await fetch(generateUrl('/apps/pipelinq/api/prospects/settings'), {
 					method: 'PUT',
 					headers: {
 						'Content-Type': 'application/json',

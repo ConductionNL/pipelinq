@@ -2,6 +2,7 @@
  * Queues store for Pipelinq — manages queue CRUD via OpenRegister API.
  */
 import { defineStore } from 'pinia'
+import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from './object.js'
 
 export const useQueuesStore = defineStore('queues', {
@@ -113,7 +114,7 @@ export const useQueuesStore = defineStore('queues', {
 					return []
 				}
 
-				const url = `/apps/openregister/api/objects/${config.register}/${config.schema}?queue=${queueId}&_limit=200`
+				const url = generateUrl(`/apps/openregister/api/objects/${config.register}/${config.schema}?queue=${queueId}&_limit=200`)
 				const response = await fetch(url, {
 					headers: {
 						'Content-Type': 'application/json',

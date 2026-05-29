@@ -12,6 +12,7 @@
 // (5 min). Call `invalidateDashboardData()` to force a refetch (used
 // by the "Refresh" header action).
 
+import { generateUrl } from '@nextcloud/router'
 import { initializeStores } from '../store/store.js'
 
 const CACHE_TTL_MS = 5 * 60 * 1000
@@ -30,9 +31,9 @@ function buildUrl(typeConfig, params = {}) {
 		if (value === undefined || value === null || value === '') continue
 		queryParams.set(key, value)
 	}
-	return '/apps/openregister/api/objects/'
+	return generateUrl('/apps/openregister/api/objects/'
 		+ typeConfig.register + '/' + typeConfig.schema
-		+ (queryParams.toString() ? '?' + queryParams.toString() : '')
+		+ (queryParams.toString() ? '?' + queryParams.toString() : ''))
 }
 
 /**
