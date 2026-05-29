@@ -237,17 +237,30 @@ class PublicSurveyController extends PublicShareController
 
             // Validate each answer key against the survey's declared question IDs.
             // Unknown keys (attacker-injected fields) are stripped silently.
-            $questions   = $data['questions'] ?? [];
-            $questionIds = [];
+            // Legacy surveys where ALL questions lack an 'id' field are handled
+            // permissively (allowlist skipped) to preserve backward compatibility.
+            // Any survey that has at least one question with an 'id' engages the
+            // allowlist — answers keyed by unknown IDs are dropped.
+            $questions       = $data['questions'] ?? [];
+            $questionIds     = [];
+            $questionsWithId = 0;
+            $totalQuestions  = 0;
             if (is_array($questions) === true) {
                 foreach ($questions as $question) {
-                    if (is_array($question) === true && isset($question['id']) === true) {
-                        $questionIds[] = (string) $question['id'];
+                    if (is_array($question) === true) {
+                        $totalQuestions++;
+                        if (isset($question['id']) === true) {
+                            $questionIds[] = (string) $question['id'];
+                            $questionsWithId++;
+                        }
                     }
                 }
             }
 
-            if (empty($questionIds) === false) {
+            // Engage the allowlist only when at least one question carries an ID.
+            // If every question lacks an ID (legacy data), fall through permissively.
+            $allLegacy = ($totalQuestions > 0 && $questionsWithId === 0);
+            if ($allLegacy === false && empty($questionIds) === false) {
                 $answers = array_intersect_key($answers, array_flip($questionIds));
             }
 
@@ -332,7 +345,7 @@ class PublicSurveyController extends PublicShareController
                 'limit'   => 1,
             ]
         );
-        $items   = $results['results'] ?? $results ?? [];
+        $items   = $results['results'] ?? [];
         if (empty($items) === true) {
             return null;
         }

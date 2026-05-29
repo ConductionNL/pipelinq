@@ -131,7 +131,7 @@ class NotesController extends Controller
             // Unexpected error — fail closed and log.
             $this->logger->error('NotesController: objectExists check failed', ['objectId' => $objectId, 'exception' => $e->getMessage()]);
             return false;
-        }
+        }//end try
     }//end objectExists()
 
     /**

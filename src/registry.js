@@ -35,8 +35,9 @@ import ComplaintsWidget from './views/dashboard/widgets/ComplaintsWidget.vue'
 import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
 import ClientOverviewWidget from './views/dashboard/widgets/ClientOverviewWidget.vue'
 
-// Bespoke kanban board removed — board mechanics now provided by the
-// OpenRegister deck leaf (integration-deck). See openspec/changes/migrate-pipeline-to-deck-leaf/.
+// Bespoke kanban board with in-memory search (REQ-PIPE-022).
+// See openspec/changes/2026-03-20-pipeline/design.md.
+import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
 
 // --- Queues / routing rules (lib gap: no routing-rules widget). ---
 import QueueListView from './views/queues/QueueList.vue'
@@ -171,6 +172,13 @@ const registry = {
 		kind: 'page',
 		component: AgentPerformanceView,
 		_note: 'Per-agent performance charts with apexcharts; lib gap: no chart-widget page type.',
+	},
+
+	// --- Pipeline board (kanban + list with in-memory search). ---
+	PipelineBoardView: {
+		kind: 'page',
+		component: PipelineBoardView,
+		_note: 'Pipeline kanban/list board with in-memory title search (REQ-PIPE-022). Restored after migrate-pipeline-to-deck-leaf; coexists with Deck integration.',
 	},
 
 	// --- Admin managers. ---
