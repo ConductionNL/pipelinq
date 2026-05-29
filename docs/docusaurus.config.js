@@ -63,7 +63,7 @@ const config = createConfig({
              plus the standard node_modules bucket. */
           exclude: ['**/node_modules/**', 'src/**'],
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://github.com/ConductionNL/pipelinq/tree/main/docs/',
+          editUrl: 'https://codeberg.org/Conduction/pipelinq/src/branch/main/docs/',
         },
         blog: false,
         theme: {
@@ -108,8 +108,8 @@ const config = createConfig({
         position: 'left',
       },
       {
-        href: 'https://github.com/ConductionNL/pipelinq',
-        label: 'GitHub',
+        href: 'https://codeberg.org/Conduction/pipelinq',
+        label: 'Codeberg',
         position: 'right',
       },
       { type: 'localeDropdown', position: 'right' },
