@@ -162,6 +162,8 @@
 							<NcTextField :value="String(stage.probability ?? '')"
 								:label="t('pipelinq', 'Probability %')"
 								type="number"
+								:error="!!stageErrors[index]?.probability"
+								:helper-text="stageErrors[index]?.probability || ''"
 								class="stage-probability-field"
 								@update:value="v => stage.probability = v === '' ? null : Number(v)" />
 
@@ -287,6 +289,7 @@ export default {
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-42
+		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-2.2
 		 */
 		stageErrors() {
 			return this.form.stages.map(stage => {

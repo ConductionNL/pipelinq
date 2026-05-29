@@ -28,6 +28,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Client for the KVK Handelsregister Zoeken API.
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-36
  */
 class KvkApiClient
 {
@@ -90,7 +92,7 @@ class KvkApiClient
     private function searchBySbiCode(string $apiKey, string $sbiCode, array &$results): void
     {
         try {
-            $body = $this->fetchResults(apiKey: $apiKey);
+            $body = $this->fetchResults(apiKey: $apiKey, sbiCode: $sbiCode);
 
             if (isset($body['resultaten']) === false) {
                 return;
@@ -111,19 +113,21 @@ class KvkApiClient
     }//end searchBySbiCode()
 
     /**
-     * Fetch results from the KVK API.
+     * Fetch results from the KVK API filtered by SBI code.
      *
-     * @param string $apiKey The KVK API key.
+     * @param string $apiKey  The KVK API key.
+     * @param string $sbiCode The SBI code to filter on.
      *
      * @return array The decoded response body.
      */
-    private function fetchResults(string $apiKey): array
+    private function fetchResults(string $apiKey, string $sbiCode): array
     {
         $queryParams = [
-            'apikey' => $apiKey,
-            'type'   => 'hoofdvestiging',
-            'pagina' => '1',
-            'aantal' => '50',
+            'apikey'             => $apiKey,
+            'type'               => 'hoofdvestiging',
+            'pagina'             => '1',
+            'aantal'             => '50',
+            'sbiHoofdActiviteit' => $sbiCode,
         ];
 
         $url = self::API_BASE.'/zoeken?'.http_build_query(data: $queryParams);

@@ -1,5 +1,7 @@
 # Design: pipeline search and stage validation
 
+**status: pr-created**
+
 ## Architecture Overview
 
 Both features are pure frontend changes to existing components. No new files, no backend endpoints, no schema changes.

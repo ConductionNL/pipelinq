@@ -430,7 +430,7 @@ pagination, audit trails, file attachments, relation management, locking.
 |----------|------|----------|-------------|
 | title | string | Yes | Survey title (schema:name) |
 | description | string | No | Survey description shown to respondents (schema:description) |
-| questions | array | Yes | Ordered list of survey questions |
+| questions | array | Yes | Ordered list of survey questions (see per-question fields below) |
 | status | string | No | Survey lifecycle status |
 | token | string | No | Unique public access token (UUID) for the survey response URL |
 | linkedEntityType | string | No | Entity type this survey is linked to |
@@ -440,6 +440,19 @@ pagination, audit trails, file attachments, relation management, locking.
 | createdBy | string | No | Nextcloud user UID of the survey creator |
 | createdAt | string | No | Date and time the survey was created |
 | updatedAt | string | No | Date and time the survey was last updated |
+
+**Per-question item fields** (`survey.questions[]`):
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| id | string (UUID) | Yes | Unique question identifier. Used as the answer key in `surveyResponse.answers` and as the allowlist for `PublicSurveyController::submit` — only answer keys matching a known question `id` are accepted. |
+| type | string | Yes | Question type: `nps`, `rating`, `multiple_choice`, `open_text`, `yes_no` |
+| text | string | Yes | Question text displayed to the respondent (max 500 chars) |
+| required | boolean | No | Whether the question must be answered (default: true) |
+| options | array | No | Answer options for `multiple_choice` type (max 20 items) |
+| order | integer | No | Display order of the question |
+
+> **Allowlist enforcement note:** `PublicSurveyController::submit` extracts every `id` from `questions` and uses `array_intersect_key` to strip unknown answer keys before saving the response. If all questions in a survey lack an `id` (legacy data), the allowlist is skipped and all answers are accepted (permissive fallback). Surveys created after this ADR must always supply per-question UUIDs.
 
 ---
 

@@ -74,7 +74,7 @@
 			"id": "Pipeline",
 			"label": "Pipeline",
 			"icon": "icon-category-organization",
-			"route": "Pipelines",
+			"route": "Pipeline",
 			"order": 100
 		},
 		{
@@ -704,6 +704,13 @@
 			"type": "custom",
 			"title": "Agent performance",
 			"component": "AgentPerformanceView"
+		},
+		{
+			"id": "Pipeline",
+			"route": "/pipeline",
+			"type": "custom",
+			"title": "Pipeline",
+			"component": "PipelineBoardView"
 		},
 		{
 			"id": "Pipelines",
