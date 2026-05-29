@@ -9,9 +9,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ConductionNL/pipelinq/releases"><img src="https://img.shields.io/github/v/release/ConductionNL/pipelinq" alt="Latest release"></a>
-  <a href="https://github.com/ConductionNL/pipelinq/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="License"></a>
-  <a href="https://github.com/ConductionNL/pipelinq/actions"><img src="https://img.shields.io/github/actions/workflow/status/ConductionNL/pipelinq/code-quality.yml?label=quality" alt="Code quality"></a>
+  <a href="https://codeberg.org/Conduction/pipelinq/releases"><img src="https://img.shields.io/gitea/v/release/Conduction/pipelinq?gitea_url=https%3A%2F%2Fcodeberg.org" alt="Latest release"></a>
+  <a href="https://codeberg.org/Conduction/pipelinq/src/branch/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="License"></a>
+  <a href="https://ci.codeberg.org/repos/Conduction/pipelinq"><img src="https://ci.codeberg.org/api/badges/Conduction/pipelinq/status.svg" alt="Code quality"></a>
   <a href="https://pipelinq.conduction.nl"><img src="https://img.shields.io/badge/docs-pipelinq.conduction.nl-green" alt="Documentation"></a>
 </p>
 
@@ -19,11 +19,11 @@
 
 Pipelinq brings CRM capabilities natively into Nextcloud. Track clients and organizations, manage leads through visual kanban pipelines, capture service requests before they become formal cases, and log every interaction — without leaving your Nextcloud workspace.
 
-📚 **[Step-by-step tutorials](https://pipelinq.conduction.nl/docs/category/tutorials)** — user + admin walkthroughs with screenshots, kept in sync with the live UI via the [journeydoc](https://github.com/ConductionNL/hydra/blob/development/openspec/architecture/adr-030-journeydoc-pattern.md) capture spec defined in hydra.
+📚 **[Step-by-step tutorials](https://pipelinq.conduction.nl/docs/category/tutorials)** — user + admin walkthroughs with screenshots, kept in sync with the live UI via the [journeydoc](https://codeberg.org/Conduction/hydra/src/branch/development/openspec/architecture/adr-030-journeydoc-pattern.md) capture spec defined in hydra.
 
-It pairs naturally with [Procest](https://github.com/ConductionNL/procest) to form a complete intake-to-resolution workflow: Pipelinq handles the customer-facing side, Procest handles the internal case processing.
+It pairs naturally with [Procest](https://codeberg.org/Conduction/procest) to form a complete intake-to-resolution workflow: Pipelinq handles the customer-facing side, Procest handles the internal case processing.
 
-> **Requires:** [OpenRegister](https://github.com/ConductionNL/openregister) — all data is stored as OpenRegister objects (no own database tables).
+> **Requires:** [OpenRegister](https://codeberg.org/Conduction/openregister) — all data is stored as OpenRegister objects (no own database tables).
 
 ## Screenshots
 
@@ -55,7 +55,7 @@ It pairs naturally with [Procest](https://github.com/ConductionNL/procest) to fo
 
 ### Request Intake
 - **Verzoeken** — Capture incoming service requests before they're handed to formal case management
-- **Request-to-Case Bridge** — Hand off requests directly to [Procest](https://github.com/ConductionNL/procest) when ready
+- **Request-to-Case Bridge** — Hand off requests directly to [Procest](https://codeberg.org/Conduction/procest) when ready
 - **Status Tracking** — Follow requests through intake statuses with activity timeline
 
 ### Work Management
@@ -118,7 +118,7 @@ pipelinq/
 |-----------|---------|
 | Nextcloud | 28 – 33 |
 | PHP | 8.1+ |
-| [OpenRegister](https://github.com/ConductionNL/openregister) | latest |
+| [OpenRegister](https://codeberg.org/Conduction/openregister) | latest |
 
 ## Installation
 
@@ -134,7 +134,7 @@ pipelinq/
 
 ```bash
 cd /var/www/html/custom_apps
-git clone https://github.com/ConductionNL/pipelinq.git
+git clone https://codeberg.org/Conduction/pipelinq.git
 cd pipelinq
 npm install
 npm run build
@@ -204,9 +204,9 @@ Full documentation is available at **[pipelinq.app](https://pipelinq.app)**
 
 ## Related Apps
 
-- **[Procest](https://github.com/ConductionNL/procest)** — Case management; receives requests handed off from Pipelinq
-- **[OpenRegister](https://github.com/ConductionNL/openregister)** — Object storage layer (required dependency)
-- **[OpenCatalogi](https://github.com/ConductionNL/opencatalogi)** — Application catalogue
+- **[Procest](https://codeberg.org/Conduction/procest)** — Case management; receives requests handed off from Pipelinq
+- **[OpenRegister](https://codeberg.org/Conduction/openregister)** — Object storage layer (required dependency)
+- **[OpenCatalogi](https://codeberg.org/Conduction/opencatalogi)** — Application catalogue
 
 ## Support
 
