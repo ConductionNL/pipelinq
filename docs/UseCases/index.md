@@ -10,5 +10,5 @@ draft: true
 Practical examples of how organizations use Pipelinq to manage their client relationships and sales pipelines.
 
 :::note
-This section is coming soon. Tracked in [issue #353](https://github.com/ConductionNL/pipelinq/issues/353).
+This section is coming soon. Tracked in [issue #353](https://codeberg.org/Conduction/pipelinq/issues/353).
 :::

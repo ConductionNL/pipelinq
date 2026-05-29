@@ -20,7 +20,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://github.com/ConductionNL/pipelinq
+ * @link https://codeberg.org/Conduction/pipelinq
  *
  * @spec openspec/changes/activity-timeline/tasks.md#task-1
  * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-12

@@ -144,7 +144,7 @@ class PublicSurveyControllerTest extends TestCase
      */
     public function testShowReturns404WhenSurveyNotFound(): void
     {
-        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
+        $this->markTestSkipped('See https://codeberg.org/Conduction/pipelinq/issues/286 — ObjectService API mismatch.');
 
         $this->settingsService->method('getSettings')->willReturn([
             'register'      => 'reg-id',
@@ -168,7 +168,7 @@ class PublicSurveyControllerTest extends TestCase
      */
     public function testShowReturns410ForInactiveSurvey(): void
     {
-        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
+        $this->markTestSkipped('See https://codeberg.org/Conduction/pipelinq/issues/286 — ObjectService API mismatch.');
 
         $this->settingsService->method('getSettings')->willReturn([
             'register'      => 'reg-id',
@@ -194,7 +194,7 @@ class PublicSurveyControllerTest extends TestCase
      */
     public function testShowReturnsActiveSurvey(): void
     {
-        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
+        $this->markTestSkipped('See https://codeberg.org/Conduction/pipelinq/issues/286 — ObjectService API mismatch.');
 
         $this->settingsService->method('getSettings')->willReturn([
             'register'      => 'reg-id',
@@ -221,7 +221,7 @@ class PublicSurveyControllerTest extends TestCase
      */
     public function testSubmitReturns400WhenAnswersMissing(): void
     {
-        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
+        $this->markTestSkipped('See https://codeberg.org/Conduction/pipelinq/issues/286 — ObjectService API mismatch.');
 
         $this->settingsService->method('getSettings')->willReturn([
             'register'                => 'reg-id',
@@ -250,7 +250,7 @@ class PublicSurveyControllerTest extends TestCase
      */
     public function testSubmitReturns503WhenNotConfigured(): void
     {
-        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
+        $this->markTestSkipped('See https://codeberg.org/Conduction/pipelinq/issues/286 — ObjectService API mismatch.');
 
         // Survey found but no surveyResponse_schema configured.
         $this->settingsService->method('getSettings')->willReturn([

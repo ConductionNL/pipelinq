@@ -2,7 +2,7 @@
   "spec_slug": "pipelinq-time-to-shillinq-wip",
   "title": "Cross-app: Time \u2192 shillinq WIP Ledger",
   "app": "pipelinq",
-  "repo": "https://github.com/ConductionNL/pipelinq",
+  "repo": "https://codeberg.org/Conduction/pipelinq",
   "depends_on": [
     "time-approval-workflow"
   ],

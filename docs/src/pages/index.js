@@ -294,7 +294,7 @@ export default function Home() {
           secondaryCta={{ label: 'Read the docs', href: '/docs/intro' }}
           tertiaryCta={{
             label: 'View on GitHub',
-            href: 'https://github.com/ConductionNL/pipelinq',
+            href: 'https://codeberg.org/Conduction/pipelinq',
           }}
           iconColor="var(--c-orange-knvb)"
           icon={PIPELINQ_ICON}

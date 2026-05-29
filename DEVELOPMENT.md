@@ -5,7 +5,7 @@
 - Docker & Docker Compose
 - Node.js >= 18
 - npm
-- A running Nextcloud instance with [OpenRegister](https://github.com/ConductionNL/openregister) installed
+- A running Nextcloud instance with [OpenRegister](https://codeberg.org/Conduction/openregister) installed
 
 ## Local Development
 

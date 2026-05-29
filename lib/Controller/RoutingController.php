@@ -18,7 +18,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://github.com/ConductionNL/pipelinq
+ * @link https://codeberg.org/Conduction/pipelinq
  *
  * @spec openspec/changes/skill-routing/tasks.md#task-2
  */

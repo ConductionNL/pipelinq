@@ -53,7 +53,7 @@ use Throwable;
  *   and the RBAC verdict is not swallowed by a blanket catch (a denial is
  *   surfaced as a `forbidden` error envelope).
  *
- * @spec https://github.com/ConductionNL/pipelinq/issues/342
+ * @spec https://codeberg.org/Conduction/pipelinq/issues/342
  */
 class PipelinqToolProvider implements IMcpToolProvider
 {
@@ -148,7 +148,7 @@ class PipelinqToolProvider implements IMcpToolProvider
      *
      * @return string "pipelinq"
      *
-     * @spec https://github.com/ConductionNL/pipelinq/issues/342
+     * @spec https://codeberg.org/Conduction/pipelinq/issues/342
      */
     public function getAppId(): string
     {
@@ -164,7 +164,7 @@ class PipelinqToolProvider implements IMcpToolProvider
      *
      * @return array<int, array<string, mixed>>
      *
-     * @spec https://github.com/ConductionNL/pipelinq/issues/342
+     * @spec https://codeberg.org/Conduction/pipelinq/issues/342
      */
     public function getTools(): array
     {
@@ -184,7 +184,7 @@ class PipelinqToolProvider implements IMcpToolProvider
      *
      * @return array<string, mixed>
      *
-     * @spec https://github.com/ConductionNL/pipelinq/issues/342
+     * @spec https://codeberg.org/Conduction/pipelinq/issues/342
      */
     public function invokeTool(string $toolId, array $arguments): array
     {

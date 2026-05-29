@@ -2,7 +2,7 @@
   "spec_slug": "billable-categories-and-tags",
   "title": "Billable / Non-billable / Internal / WBSO / DBA Tags",
   "app": "pipelinq",
-  "repo": "https://github.com/ConductionNL/pipelinq",
+  "repo": "https://codeberg.org/Conduction/pipelinq",
   "depends_on": [
     "time-entry-core"
   ],

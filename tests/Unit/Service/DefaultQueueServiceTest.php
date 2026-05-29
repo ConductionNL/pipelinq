@@ -125,7 +125,7 @@ class DefaultQueueServiceTest extends TestCase
      */
     public function testCreateDefaultQueuesSkipsWhenQueuesAlreadyExist(): void
     {
-        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
+        $this->markTestSkipped('See https://codeberg.org/Conduction/pipelinq/issues/286 — ObjectService API mismatch.');
 
         $this->appConfig
             ->method('getValueString')
@@ -157,7 +157,7 @@ class DefaultQueueServiceTest extends TestCase
      */
     public function testCreateDefaultQueuesCreatesDefaultQueues(): void
     {
-        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
+        $this->markTestSkipped('See https://codeberg.org/Conduction/pipelinq/issues/286 — ObjectService API mismatch.');
 
         $this->appConfig
             ->method('getValueString')
@@ -208,7 +208,7 @@ class DefaultQueueServiceTest extends TestCase
      */
     public function testCreateDefaultSkillsCreatesDefaultSkills(): void
     {
-        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
+        $this->markTestSkipped('See https://codeberg.org/Conduction/pipelinq/issues/286 — ObjectService API mismatch.');
 
         $this->appConfig
             ->method('getValueString')

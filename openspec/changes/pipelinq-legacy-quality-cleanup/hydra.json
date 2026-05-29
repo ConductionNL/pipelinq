@@ -2,7 +2,7 @@
   "spec_slug": "pipelinq-legacy-quality-cleanup",
   "title": "Pipelinq Legacy Quality Cleanup",
   "app": "pipelinq",
-  "repo": "https://github.com/ConductionNL/pipelinq",
+  "repo": "https://codeberg.org/Conduction/pipelinq",
   "depends_on": [],
   "issue": null
 }

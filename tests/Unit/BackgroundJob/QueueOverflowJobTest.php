@@ -100,7 +100,7 @@ class QueueOverflowJobTest extends TestCase
      */
     public function testJobMovesOverflowItems(): void
     {
-        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — QueueService ObjectService API mismatch.');
+        $this->markTestSkipped('See https://codeberg.org/Conduction/pipelinq/issues/286 — QueueService ObjectService API mismatch.');
 
         $this->queueService
             ->expects($this->once())
@@ -124,7 +124,7 @@ class QueueOverflowJobTest extends TestCase
      */
     public function testJobLogsDebugWhenNoOverflow(): void
     {
-        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — QueueService ObjectService API mismatch.');
+        $this->markTestSkipped('See https://codeberg.org/Conduction/pipelinq/issues/286 — QueueService ObjectService API mismatch.');
 
         $this->queueService
             ->expects($this->once())
@@ -148,7 +148,7 @@ class QueueOverflowJobTest extends TestCase
      */
     public function testJobLogsErrorOnException(): void
     {
-        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — QueueService ObjectService API mismatch.');
+        $this->markTestSkipped('See https://codeberg.org/Conduction/pipelinq/issues/286 — QueueService ObjectService API mismatch.');
 
         $this->queueService
             ->expects($this->once())

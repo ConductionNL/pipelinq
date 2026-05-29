@@ -2,7 +2,7 @@
   "spec_slug": "cti-screenpop-adapter",
   "title": "CTI Screen-Pop and Click-to-Dial Adapter",
   "app": "pipelinq",
-  "repo": "https://github.com/ConductionNL/pipelinq",
+  "repo": "https://codeberg.org/Conduction/pipelinq",
   "depends_on": [],
   "issue": null
 }

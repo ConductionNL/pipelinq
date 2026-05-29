@@ -2,7 +2,7 @@
   "spec_slug": "callback-management",
   "title": "Callback Management",
   "app": "pipelinq",
-  "repo": "https://github.com/ConductionNL/pipelinq",
+  "repo": "https://codeberg.org/Conduction/pipelinq",
   "depends_on": [],
   "issue": null
 }

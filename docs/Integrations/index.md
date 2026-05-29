@@ -10,5 +10,5 @@ draft: true
 How Pipelinq connects with the rest of your Nextcloud environment and external tools.
 
 :::note
-This section is coming soon. Tracked in [issue #353](https://github.com/ConductionNL/pipelinq/issues/353).
+This section is coming soon. Tracked in [issue #353](https://codeberg.org/Conduction/pipelinq/issues/353).
 :::

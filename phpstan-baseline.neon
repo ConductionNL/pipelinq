@@ -1,6 +1,6 @@
 # phpstan baseline for pipelinq lint debt.
 #
-# All 25 entries below are tracked in https://github.com/ConductionNL/pipelinq/issues/496
+# All 25 entries below are tracked in https://codeberg.org/Conduction/pipelinq/issues/496
 # and consist of unread DI properties (feature-flag stubs), three unused
 # named-constants (escalation/expiry thresholds awaiting wire-up), one OC-namespace
 # class psalm/phpstan can't see (CsrfTokenManager — fleet decision pending), and

@@ -77,7 +77,7 @@ class PublicKennisbankControllerTest extends TestCase
     protected function setUp(): void
     {
         $this->markTestSkipped(
-            'See https://github.com/ConductionNL/pipelinq/issues/286 — '
+            'See https://codeberg.org/Conduction/pipelinq/issues/286 — '
             .'PublicKennisbankController calls findOne()/findAll() on OpenRegister ObjectService '
             .'with named args that do not match the real API. Unskip once #286 is resolved.'
         );

@@ -15,7 +15,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://github.com/ConductionNL/pipelinq
+ * @link https://codeberg.org/Conduction/pipelinq
  *
  * @spec openspec/changes/task-background-jobs/tasks.md#task-2
  *

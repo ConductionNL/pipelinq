@@ -2,9 +2,9 @@
   "spec_slug": "skill-routing",
   "title": "Skill-Based Routing Specification",
   "app": "pipelinq",
-  "repo": "https://github.com/ConductionNL/pipelinq",
+  "repo": "https://codeberg.org/Conduction/pipelinq",
   "depends_on": [
     "queue-management"
   ],
-  "issue": "https://github.com/ConductionNL/pipelinq/issues/311"
+  "issue": "https://codeberg.org/Conduction/pipelinq/issues/311"
 }

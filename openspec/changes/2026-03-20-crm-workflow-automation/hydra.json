@@ -2,7 +2,7 @@
   "spec_slug": "2026-03-20-crm-workflow-automation",
   "title": "Proposal: crm-workflow-automation",
   "app": "pipelinq",
-  "repo": "https://github.com/ConductionNL/pipelinq",
+  "repo": "https://codeberg.org/Conduction/pipelinq",
   "depends_on": [],
   "issue": null
 }

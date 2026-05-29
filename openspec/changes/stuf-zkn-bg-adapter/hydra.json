@@ -2,7 +2,7 @@
   "spec_slug": "stuf-zkn-bg-adapter",
   "title": "StUF ZKN + BG adapter for zaaksysteem integration",
   "app": "pipelinq",
-  "repo": "https://github.com/ConductionNL/pipelinq",
+  "repo": "https://codeberg.org/Conduction/pipelinq",
   "depends_on": [],
   "issue": null
 }

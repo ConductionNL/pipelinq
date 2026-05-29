@@ -2,7 +2,7 @@
   "spec_slug": "forecast-roll-up-and-categories",
   "title": "Forecast Roll-Up and Categories",
   "app": "pipelinq",
-  "repo": "https://github.com/ConductionNL/pipelinq",
+  "repo": "https://codeberg.org/Conduction/pipelinq",
   "depends_on": [],
   "issue": null
 }
