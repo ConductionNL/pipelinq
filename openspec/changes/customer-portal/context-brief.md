@@ -176,7 +176,7 @@ Portal users MUST be able to request a machine-readable export of all data the p
 - **`omnichannel-registratie`** (pipelinq spec): portal-submitted requests appear as a new channel (`portal`) in the omnichannel inbox; medewerker replies route back to the portal as in-app notifications plus optional email.
 - **`openconnector`**: SSO federation hook (v2) goes through openconnector; outbound webhooks (e.g. notify the tenant's analytics platform on portal-login events) use openconnector source rows.
 - **`openregister`**: the `pipelinq-portal` register is a separate register from `pipelinq` to enforce the auth-domain isolation at the storage layer; the `portal_audit_event` schema is a candidate for promotion to a shared spec since `customer-portal`, `decidesk participant portal`, and any future Conduction portal-style apps will need the same shape.
-- **`hydra/openspec` shared specs**: `i18n-nl` and `i18n-en` cover all portal user-facing strings; a new shared ADR is warranted on "customer auth domain separation" since this rule will apply to every Conduction app that exposes data to non-employees (decidesk participants, openbuilt citizen-developer portals, …).
+- **`hydra/openspec` shared specs**: `i18n-nl` and `i18n-en` cover all portal user-facing strings; a new shared ADR is warranted on "customer auth domain separation" since this rule will apply to every Conduction app that exposes data to non-employees (decidesk participants, openbuild citizen-developer portals, …).
 
 ## Target Users
 
