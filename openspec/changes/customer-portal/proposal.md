@@ -92,7 +92,7 @@ The portal must be:
 - **sla-engine-and-escalation** — portal-submitted requests immediately enter SLA pipeline; "wachten op uw reactie" status (REQ-004) is the `awaiting-customer` pause condition
 - **docudesk** — documents (contracts, quotes) are fetched via docudesk service; signing flows are v2
 - **openconnector** — SSO federation hook (v2); outbound webhooks for analytics
-- **openregister** — `pipelinq-portal` is a separate register; `portal_audit_event` schema is candidate for promotion to shared spec (will be needed by decidesk participant portal, future openbuilt portals)
+- **openregister** — `pipelinq-portal` is a separate register; `portal_audit_event` schema is candidate for promotion to shared spec (will be needed by decidesk participant portal, future openbuild portals)
 - **omnichannel-registratie** — portal requests appear as channel `portal` in medewerker inbox
 - **whatsapp-sms-channel-adapter** — SMS-based MFA (v1 uses TOTP; SMS fallback v2); portal invite emails can fall back to WhatsApp for customer-preferred delivery
 
