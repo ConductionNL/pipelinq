@@ -28,6 +28,7 @@
 
 <script>
 import { NcTextField, NcButton } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
 import Close from 'vue-material-design-icons/Close.vue'
 import { initializeStores } from '../../store/store.js'
 
@@ -120,9 +121,9 @@ export default {
 					_search: this.query,
 					_limit: '10',
 				})
-				const url = '/apps/openregister/api/objects/'
+				const url = generateUrl('/apps/openregister/api/objects/'
 					+ typeConfig.register + '/' + typeConfig.schema
-					+ '?' + params.toString()
+					+ '?' + params.toString())
 
 				const response = await fetch(url, {
 					headers: {

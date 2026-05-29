@@ -132,6 +132,7 @@
 
 <script>
 import { NcTextField, NcButton, NcSelect, NcNoteCard, NcLoadingIcon } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
 import Account from 'vue-material-design-icons/Account.vue'
 import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
@@ -232,8 +233,8 @@ export default {
 				queryParams.set(key, value)
 			}
 
-			const url = '/apps/openregister/api/objects/' + typeConfig.register + '/' + typeConfig.schema
-				+ (queryParams.toString() ? '?' + queryParams.toString() : '')
+			const url = generateUrl('/apps/openregister/api/objects/' + typeConfig.register + '/' + typeConfig.schema
+				+ (queryParams.toString() ? '?' + queryParams.toString() : ''))
 
 			const response = await fetch(url, {
 				headers: {
@@ -251,7 +252,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-42
 		 */
 		viewClient(client) {
-			window.location.href = '/index.php/apps/pipelinq/clients/' + client.id
+			window.location.href = generateUrl('/apps/pipelinq/clients/' + client.id)
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-37
@@ -314,8 +315,8 @@ export default {
 					body.status = 'open'
 				}
 
-				const url = '/apps/openregister/api/objects/'
-					+ typeConfig.register + '/' + typeConfig.schema
+				const url = generateUrl('/apps/openregister/api/objects/'
+					+ typeConfig.register + '/' + typeConfig.schema)
 
 				const response = await fetch(url, {
 					method: 'POST',
@@ -331,7 +332,7 @@ export default {
 				const created = await response.json()
 				const id = created.id || created.uuid
 				const path = type === 'request' ? 'requests' : 'leads'
-				window.location.href = '/index.php/apps/pipelinq/' + path + '/' + id
+				window.location.href = generateUrl('/apps/pipelinq/' + path + '/' + id)
 			} catch (err) {
 				console.error('Action submit error:', err)
 			} finally {
@@ -360,8 +361,8 @@ export default {
 					body.email = this.newClient.email
 				}
 
-				const url = '/apps/openregister/api/objects/'
-					+ typeConfig.register + '/' + typeConfig.schema
+				const url = generateUrl('/apps/openregister/api/objects/'
+					+ typeConfig.register + '/' + typeConfig.schema)
 
 				const response = await fetch(url, {
 					method: 'POST',
