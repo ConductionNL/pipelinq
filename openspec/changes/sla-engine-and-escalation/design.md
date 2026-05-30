@@ -233,7 +233,7 @@ Facet sidebar: filter by `slaStatus` value.
 
 #### Attainment Dashboard
 
-Widget (integrated into `mydash` or standalone):
+Widget (integrated into `launchpad` or standalone):
 - **KPI card**: "SLA Attainment Q2 2026: 92% ✓" — tappable to drilldown.
 - **Drilldown table**:
   - Rows: by policy, or by customer, or by team (selector).
@@ -255,7 +255,7 @@ Widget (integrated into `mydash` or standalone):
 | `omnichannel-registratie` | Contact preference lookup | Customer's preferred channel from omnichannel profile; escalations respect it. |
 | `openconnector` | Webhook escalations | Engine dispatches via openconnector source rows with retry/log. |
 | `openregister` | Core platform | `ObjectService` for CRUD; `WebhookService` for webhook dispatch; background job framework; event dispatcher. |
-| `mydash` | Reporting UI | Attainment endpoints feed SLA KPI tiles. |
+| `launchpad` | Reporting UI | Attainment endpoints feed SLA KPI tiles. |
 | `docudesk` | Contract-level tier | Contract documents carry `slaTierOverride` annotation; engine reads during policy resolution. |
 | Nextcloud built-ins | Notifications | `IAppConfig`, `NotificationService`, `IEventDispatcher`, `MailerService`. |
 

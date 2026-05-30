@@ -16,7 +16,7 @@ Define the requirements for a cross-cutting SLA engine that observes object-crea
 
 **Depends on**: `openregister` (core platform), `request-management` (requests + events), `complaint-management` (klachten + events), `callback-management` (callbacks + events)
 
-**Extends/Integrates with**: `openconnector` (webhooks), `whatsapp-sms-channel-adapter` (customer notifications), `omnichannel-registratie` (contact preferences), `mydash` (attainment dashboard), `docudesk` (contract-level tier override)
+**Extends/Integrates with**: `openconnector` (webhooks), `whatsapp-sms-channel-adapter` (customer notifications), `omnichannel-registratie` (contact preferences), `launchpad` (attainment dashboard), `docudesk` (contract-level tier override)
 
 ---
 

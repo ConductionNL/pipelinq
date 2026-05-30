@@ -8,7 +8,7 @@ Proposed
 
 ## Context
 
-Conduction apps (OpenCatalogi, Procest, Pipelinq, MyDash, Decidesk, DocuDesk, ZaakAfhandelApp, Larpingapp, Softwarecatalog, OpenRegister itself) all consume the same set of "things linked to an object" — files, notes, tasks, calendar events, mail, contacts, deck cards, talk conversations, and an expanding catalogue of NC-ecosystem and external services.
+Conduction apps (OpenCatalogi, Procest, Pipelinq, LaunchPad, Decidesk, DocuDesk, ZaakAfhandelApp, Larpingapp, Softwarecatalog, OpenRegister itself) all consume the same set of "things linked to an object" — files, notes, tasks, calendar events, mail, contacts, deck cards, talk conversations, and an expanding catalogue of NC-ecosystem and external services.
 
 Until now this was implemented in two rigid places:
 

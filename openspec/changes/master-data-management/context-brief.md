@@ -195,7 +195,7 @@ Conduction-interne specs: **OpenRegister ADR-005** (i18n keys vs identifiers), *
 - **opencatalogi** — consumeert MDM voor organisatie- en product-master (product-catalogus vereist consistente vendor-info).
 - **decidesk** — consumeert MDM voor lid- en organisatie-master in besluitvormingsprocessen; bij merge worden besluitstemmen en deelname-historie geherlinkt zonder integriteitsverlies.
 - **docudesk** — bewaart juridische onderbouwing van merges (bij grote merges met financiële impact), AVG-verwijderingsverzoeken en hun afhandeling.
-- **mydash** — publiceert MDM-quality-dashboard: data-quality-score-trend, aantal openstaande duplicate-candidates, sync-queue-health (queued/sent/failed), top-10 master-entities met laagste kwaliteit, AVG-verzoek-doorlooptijd.
+- **launchpad** — publiceert MDM-quality-dashboard: data-quality-score-trend, aantal openstaande duplicate-candidates, sync-queue-health (queued/sent/failed), top-10 master-entities met laagste kwaliteit, AVG-verzoek-doorlooptijd.
 
 ## Target users
 

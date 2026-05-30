@@ -341,7 +341,7 @@
     - CLV comparison uses customer spend data from pos-transaction-core
 
 - [ ] 7.2 Create reporting dashboard widget / view
-  - **files**: `pipelinq/src/views/loyalty/LoyaltyReporting.vue` OR `mydash` integration
+  - **files**: `pipelinq/src/views/loyalty/LoyaltyReporting.vue` OR `launchpad` integration
   - **spec_ref**: REQ-LOY-008
   - Display:
     - KPI cards (ActiveAccounts, PointsIssued, Redeemed, Expired, BreakageRate, RedemptionRate, Cost%)
@@ -529,8 +529,8 @@
   - financeq can import and display outstanding points liability on balance sheet
   - Test monthly export workflow
 
-- [ ] 11.3 Integration with mydash (reporting widgets)
-  - Loyalty KPI dashboard widget available in mydash
+- [ ] 11.3 Integration with launchpad (reporting widgets)
+  - Loyalty KPI dashboard widget available in launchpad
   - Period selector and drill-down links work
   - Export to PDF/CSV functional
 

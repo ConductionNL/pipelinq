@@ -119,7 +119,7 @@ The non-goal is replacing the deal stage workflow (`pipeline` spec owns that). F
 ## Cross-App
 
 - **openregister**: snapshots, overrides, and quotas are OR schemas in the `pipelinq` register; depends on OR's `cron-trigger` extension for the Monday job.
-- **mydash**: forecast snapshots are a primary widget source for the sales leadership dashboard; mydash reads via the `/api/forecast/snapshots` endpoint, no install-time coupling.
+- **launchpad**: forecast snapshots are a primary widget source for the sales leadership dashboard; launchpad reads via the `/api/forecast/snapshots` endpoint, no install-time coupling.
 - **openconnector**: exporting snapshots to external BI tools (Tableau, Power BI) is handled by the `bi-export-and-data-warehouse-sink` spec, which reads snapshot rows as a source.
 - **openzaak / zaakafhandelapp**: out of scope — government workflow apps do not produce sales forecasts.
 

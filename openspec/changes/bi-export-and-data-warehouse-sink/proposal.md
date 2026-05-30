@@ -69,7 +69,7 @@ The non-goal is real-time streaming (Kafka, CDC log replication); minimum cadenc
 
 - **openconnector**: destination credentials stored in OpenConnector sources; each destination references an OC source. New connector types (BigQuery, Snowflake, Azure Data Lake) are added to OC first.
 - **openregister**: all four new schemas live in the `pipelinq` register
-- **mydash**: reads `export_run` summary metrics (success rate, last run time, row volumes) for ops dashboard
+- **launchpad**: reads `export_run` summary metrics (success rate, last run time, row volumes) for ops dashboard
 - **docudesk**: export file manifests are compatible with docudesk's archival package format (future integration)
 
 ### Seed Data

@@ -46,7 +46,7 @@ Each app in this workspace has its own git repository. The container mounts the 
 
 ```bash
 # Scan for active changes across all apps
-for app in procest pipelinq openregister opencatalogi docudesk mydash nldesign openconnector softwarecatalog zaakafhandelapp openklant larpingapp planix; do
+for app in procest pipelinq openregister opencatalogi docudesk launchpad nldesign openconnector softwarecatalog zaakafhandelapp openklant larpingapp planix; do
   if [ -d "$app/openspec/changes" ]; then
     for change_dir in $app/openspec/changes/*/; do
       if [ -f "${change_dir}tasks.md" ] && [[ "$change_dir" != *"/archive/"* ]]; then
