@@ -1,3 +1,7 @@
+---
+status: pr-created
+---
+
 # Design: admin-settings-duplicate-prevention
 
 ## Architecture
