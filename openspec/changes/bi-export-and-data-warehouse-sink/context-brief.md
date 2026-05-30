@@ -136,7 +136,7 @@ The non-goal is being a real-time streaming pipeline (Kafka / CDC log replicatio
 
 - **openconnector**: every destination is backed by an OpenConnector source; credentials never live in pipelinq itself. New destination types may require new OC connector types (e.g. BigQuery, Snowflake) — these are added in openconnector first.
 - **openregister**: all four new schemas (`export_job`, `export_destination`, `export_run`, `export_schema_snapshot`) live in the `pipelinq` register.
-- **mydash**: can read `export_run` summary metrics to show export health on the ops dashboard.
+- **launchpad**: can read `export_run` summary metrics to show export health on the ops dashboard.
 - **docudesk**: the file manifest written to the destination is conceptually compatible with docudesk's "archive package" — future spec could turn an export run into a sealed archival package.
 - **forecast-roll-up-and-categories**: forecast snapshots are a primary candidate source schema for export to BI tools.
 

@@ -12,7 +12,7 @@ This will:
 2. Remove all containers and volumes (full data reset)
 3. Start containers fresh
 4. Wait for Nextcloud to become ready
-5. Install core apps: openregister, opencatalogi, softwarecatalog, nldesign, mydash
+5. Install core apps: openregister, opencatalogi, softwarecatalog, nldesign, launchpad
 
 **Model check — only apply when this skill is run standalone. Skip this section entirely if this skill was called from within another skill — the calling skill is responsible for model selection.**
 

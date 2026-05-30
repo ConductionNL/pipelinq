@@ -89,7 +89,7 @@ Extended `Contact` schema:
 - Multi-tenant geheimhouding-afscherming via OpenRegister views
 - BSN-masking in HTML-output (geleverd door DocuDesk)
 - Justis-integratie voor VOG-screening-verwerking (integratie config in OpenConnector)
-- Dashboard-widget voor dagelijkse BRP-monitor-rapportage (onderdeel van mydash-integratie)
+- Dashboard-widget voor dagelijkse BRP-monitor-rapportage (onderdeel van launchpad-integratie)
 - SMS/WhatsApp notificatie voor certificaat-verlopen (admin email via Nextcloud Notifications)
 
 ## Success Criteria

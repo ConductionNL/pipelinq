@@ -11,7 +11,7 @@ Run automated browser tests for any of the Nextcloud apps in this workspace. Tes
 
 **Input**: Optional argument after `/test-app`:
 - No argument → ask which app to test
-- App name → test that app directly (e.g., `procest`, `pipelinq`, `nldesign`, `mydash`)
+- App name → test that app directly (e.g., `procest`, `pipelinq`, `nldesign`, `launchpad`)
 
 ---
 
@@ -23,7 +23,7 @@ If no app name was provided, ask the user using AskUserQuestion:
 - **procest** — Case management (7 feature groups)
 - **pipelinq** — CRM / Pipeline management (8 feature groups)
 - **nldesign** — NL Design System theming (admin settings only)
-- **mydash** — Customizable dashboard (widgets, tiles, templates)
+- **launchpad** — Customizable dashboard (widgets, tiles, templates)
 
 Store the selected app as `{APP}`.
 

@@ -41,7 +41,7 @@ with optional cross-brand points pooling.
 - **Schema changes**: 9 new OpenRegister schemas; no breaking changes
 - **Cross-app integration**: pos-transaction-core (trigger), klantbeeld-360 (customer link),
   voucher-engine (redemption codes), openconnector (email/SMS), financeq (liability booking),
-  mydash (dashboards)
+  launchpad (dashboards)
 - **Risk**: Medium — introduces new data model with financial implications (IFRS 15 / RJ 270
   outstanding points liability); requires seed data, migrations, and audit trail integration
 - **Feature tier**: MVP — core points, tiers, redemption, gift cards; reporting in V1.5

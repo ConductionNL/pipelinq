@@ -35,7 +35,7 @@ Scan for open proposals (directories in `openspec/changes/` that contain a `prop
 
 ```bash
 # For each app directory, find open proposals
-for app in procest pipelinq docudesk openregister opencatalogi mydash nldesign larpingapp openconnector softwarecatalog zaakafhandelapp; do
+for app in procest pipelinq docudesk openregister opencatalogi launchpad nldesign larpingapp openconnector softwarecatalog zaakafhandelapp; do
   if [ -d "$app/openspec/changes" ]; then
     for change in $app/openspec/changes/*/proposal.md; do
       echo "$app:$(basename $(dirname $change))"
