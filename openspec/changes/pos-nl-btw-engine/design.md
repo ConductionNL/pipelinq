@@ -327,6 +327,30 @@ for customer-facing receipts.
 
 ---
 
+## Shillinq Consumer Update (non-breaking)
+
+The `pipelinq.PosTransaction.confirmed` CloudEvent now carries `invoiceBreakdown` (and `priceMode`)
+in addition to the existing `taxBreakdown`. These are additive fields, so the change is non-breaking
+for existing consumers.
+
+**Shillinq's `CloudEventConsumer` MUST be updated to iterate `invoiceBreakdown` and post one GL
+line per tax rate** (instead of a single 21% VAT line), using each row's `base` for the net amount,
+`tax` for the VAT debit/credit, and `description` as the GL line label. For accurate net VAT
+liability, a separate per-rate compliance report is also available at
+`GET /api/pos-transactions/tax-report` (optionally filtered by `?status=settled`), which aggregates
+every fiscally-final transaction's `invoiceBreakdown` and nets out refunds.
+
+## Inclusive vs Exclusive Pricing (implemented)
+
+`priceMode` is implemented end-to-end, not display-only. In `incl` mode the entered `unitPrice`
+already contains BTW; the server extracts the net base per line (`net = gross / (1 + rate/100)`,
+`tax = gross − net`) before grouping by rate. In `excl` mode BTW is added on top
+(`tax = net × rate/100`). The persisted per-rate `base` is always tax-exclusive, so the GL split
+shillinq receives is identical regardless of how prices were entered. Dutch rounding is applied to
+cents per line, then summed.
+
+---
+
 ## Reuse Analysis
 
 | Platform Capability | Usage in this change |
