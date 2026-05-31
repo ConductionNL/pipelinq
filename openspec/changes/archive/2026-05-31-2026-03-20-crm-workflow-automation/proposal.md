@@ -1,3 +1,5 @@
+> SUPERSEDED 2026-05-31: feature implemented; archived twin archive/2026-03-21-crm-workflow-automation. Archived as already-delivered. (Bespoke automation engine subsequently migrated to the OpenRegister flow leaf — see migrate-automation-to-flow-leaf.)
+
 # Proposal: crm-workflow-automation
 
 ## Problem

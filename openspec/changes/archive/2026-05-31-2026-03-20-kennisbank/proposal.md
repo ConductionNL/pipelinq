@@ -1,3 +1,5 @@
+> SUPERSEDED 2026-05-31: feature implemented; archived twin archive/2026-03-21-kennisbank. Archived as already-delivered. (Bespoke kennisbank subsequently migrated to the OpenRegister xwiki leaf — see migrate-kennisbank-to-xwiki-leaf.)
+
 # Proposal: kennisbank
 
 ## Summary

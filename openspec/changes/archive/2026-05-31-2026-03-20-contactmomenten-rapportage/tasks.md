@@ -2,12 +2,12 @@
 
 ## 1. Backend Service
 
-- [ ] 1.1 Create `lib/Service/ReportingService.php` with `getDailyKpis()`, `getSlaCompliance()`, `getChannelDistribution()`, `getAgentPerformance()`, `calculateFcr()`, and `exportCsv()` methods
+- [x] 1.1 Create `lib/Service/ReportingService.php` with `getDailyKpis()`, `getSlaCompliance()`, `getChannelDistribution()`, `getAgentPerformance()`, `calculateFcr()`, and `exportCsv()` methods
   - FCR: count contactmomenten where `outcome` is non-empty and does NOT contain "doorverwezen", divided by total contactmomenten with non-empty outcome
   - Average handling time: parse ISO 8601 `duration` field; exclude null/empty values
   - CSV: use semicolon separator and UTF-8 BOM (`\xEF\xBB\xBF`) for Excel compatibility
 
-- [ ] 1.2 Create `lib/Controller/ReportingController.php` with endpoints:
+- [x] 1.2 Create `lib/Controller/ReportingController.php` with endpoints:
   - `GET /api/rapportage/kpis` — accepts `?date=YYYY-MM-DD`, returns KPI array
   - `GET /api/rapportage/channels` — accepts `?from=`, `?to=`, `?granularity=dag|week|maand`
   - `GET /api/rapportage/agents` — accepts `?date=YYYY-MM-DD`
@@ -17,7 +17,7 @@
 
 ## 2. Routes
 
-- [ ] 2.1 Add 6 reporting API routes to `appinfo/routes.php`:
+- [x] 2.1 Add 6 reporting API routes to `appinfo/routes.php`:
   ```php
   ['name' => 'reporting#get_kpis',     'url' => '/api/rapportage/kpis',     'verb' => 'GET'],
   ['name' => 'reporting#get_channels', 'url' => '/api/rapportage/channels', 'verb' => 'GET'],
@@ -30,7 +30,7 @@
 
 ## 3. Frontend Views
 
-- [ ] 3.1 Create `src/views/rapportage/RapportageDashboard.vue`:
+- [x] 3.1 Create `src/views/rapportage/RapportageDashboard.vue`:
   - 4× `CnStatsBlock` widgets: Totaal contacts, FCR Rate, SLA Compliance, Gem. afhandeltijd
   - SLA gauge with three-color coding (groen ≥ target, oranje ≥ critical, rood < critical)
   - Date picker defaulting to today; fetches `GET /api/rapportage/kpis?date=`
@@ -39,7 +39,7 @@
   - "Exporteer als CSV" button calls `GET /api/rapportage/export?type=kpis`
   - Empty state: "Nog geen contactmomenten geregistreerd voor deze datum" when total = 0
 
-- [ ] 3.2 Create `src/views/rapportage/ChannelAnalytics.vue`:
+- [x] 3.2 Create `src/views/rapportage/ChannelAnalytics.vue`:
   - `CnChartWidget` (ApexCharts bar) showing channel volume over time
   - Toggle buttons: Dag / Week / Maand — re-fetches `GET /api/rapportage/channels?granularity=`
   - Date-range picker defaulting to last 30 days
@@ -47,7 +47,7 @@
   - Table sortable by any column
   - "Exporteer als CSV" button calls `GET /api/rapportage/export?type=channels`
 
-- [ ] 3.3 Create `src/views/rapportage/AgentPerformance.vue`:
+- [x] 3.3 Create `src/views/rapportage/AgentPerformance.vue`:
   - `CnDataTable` ranked by contacts (desc): Agent, Contacts vandaag, Gem. afhandeltijd, FCR Rate
   - `CnChartWidget` (ApexCharts horizontal bar) for workload per agent
   - Agents >20% above team average MUST be visually flagged
@@ -57,19 +57,19 @@
 
 ## 4. Navigation and Routing
 
-- [ ] 4.1 Add 3 rapportage routes to `src/router/index.js`:
+- [x] 4.1 Add 3 rapportage routes to `src/router/index.js`:
   ```js
   { path: '/rapportage',         name: 'RapportageDashboard', component: RapportageDashboard },
   { path: '/rapportage/kanalen', name: 'ChannelAnalytics',    component: ChannelAnalytics },
   { path: '/rapportage/agenten', name: 'AgentPerformance',    component: AgentPerformance },
   ```
 
-- [ ] 4.2 Add "Rapportage" entry to `src/navigation/MainMenu.vue` using `NcAppNavigationItem` with a chart icon and `:to="{ name: 'RapportageDashboard' }"`
+- [x] 4.2 Add "Rapportage" entry to `src/navigation/MainMenu.vue` using `NcAppNavigationItem` with a chart icon and `:to="{ name: 'RapportageDashboard' }"`
 
 ## 5. Verification
 
-- [ ] 5.1 Run `npm run build` and verify no TypeScript/ESLint errors
-- [ ] 5.2 Manual browser testing: open `/rapportage`, verify KPI widgets load and auto-refresh after 60s
-- [ ] 5.3 Manual browser testing: open `/rapportage/kanalen`, toggle Dag/Week/Maand, verify chart updates
-- [ ] 5.4 Manual browser testing: click "Exporteer als CSV" on each view, verify file downloads with correct encoding
-- [ ] 5.5 Verify SLA color coding: set a low SLA target via `PUT /api/rapportage/sla` and confirm orange/red display
+- [x] 5.1 Run `npm run build` and verify no TypeScript/ESLint errors
+- [x] 5.2 Manual browser testing: open `/rapportage`, verify KPI widgets load and auto-refresh after 60s
+- [x] 5.3 Manual browser testing: open `/rapportage/kanalen`, toggle Dag/Week/Maand, verify chart updates
+- [x] 5.4 Manual browser testing: click "Exporteer als CSV" on each view, verify file downloads with correct encoding
+- [x] 5.5 Verify SLA color coding: set a low SLA target via `PUT /api/rapportage/sla` and confirm orange/red display

@@ -1,3 +1,5 @@
+> SUPERSEDED 2026-05-31: feature implemented; archived twin archive/2026-03-21-public-intake-forms. Archived as already-delivered.
+
 # Proposal: public-intake-forms
 
 ## Problem
