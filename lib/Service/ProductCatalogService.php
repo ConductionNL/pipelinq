@@ -334,22 +334,141 @@ class ProductCatalogService
     }//end variantSkusUnique()
 
     /**
+     * Maximum accepted barcode length.
+     *
+     * Scanned barcodes are untrusted input. The longest mainstream linear
+     * symbology (GS1-128) tops out well under this bound, so anything longer is
+     * rejected before it can be used in a lookup. EAN-13 / UPC-A (V1 scope) are
+     * 8-14 digits.
+     *
+     * @var int
+     */
+    public const BARCODE_MAX_LENGTH = 64;
+
+    /**
+     * Whether a scanned string is a syntactically acceptable barcode.
+     *
+     * The scanned value is untrusted client input. A barcode is accepted only
+     * when it is non-empty after trimming, no longer than BARCODE_MAX_LENGTH,
+     * and contains nothing but the characters real linear symbologies emit
+     * (digits, uppercase letters, space, hyphen, dot). This blocks control
+     * characters and any payload that could be abused downstream while remaining
+     * permissive enough for EAN/UPC/Code-128 alphanumerics.
+     *
+     * @param string $barcode The trimmed barcode candidate.
+     *
+     * @return bool Whether the candidate is an acceptable barcode.
+     *
+     * @spec openspec/changes/pos-barcode-scan/specs/pos-barcode-scan/spec.md#REQ-PBS-004
+     */
+    public function isValidBarcode(string $barcode): bool
+    {
+        if ($barcode === '' || strlen($barcode) > self::BARCODE_MAX_LENGTH) {
+            return false;
+        }
+
+        return preg_match('/^[A-Za-z0-9 .-]+$/', $barcode) === 1;
+    }//end isValidBarcode()
+
+    /**
+     * Match a scanned barcode against a set of products and their variants.
+     *
+     * Pure resolution logic (no I/O), unit-testable in isolation. A direct
+     * product-level barcode match takes priority and short-circuits before any
+     * variant scan. When no product-level barcode matches, each product's
+     * variants are scanned; only ACTIVE variants are eligible so a discontinued
+     * variant can never be sold via a scan. The matched variant's zero-based
+     * index within `variants` is returned so the caller can address it without
+     * re-searching.
+     *
+     * @param array<int, array<string, mixed>> $products The candidate products.
+     * @param string                           $barcode  The (already validated) barcode.
+     *
+     * @return array{product: array<string, mixed>, variantIndex: int|null}|null
+     *         The match, or null when nothing matches.
+     *
+     * @spec openspec/changes/pos-barcode-scan/specs/pos-barcode-scan/spec.md#REQ-PBS-004
+     * @spec openspec/changes/pos-barcode-scan/specs/pos-barcode-scan/spec.md#REQ-PBS-005
+     */
+    public function matchProductByBarcode(array $products, string $barcode): ?array
+    {
+        // Pass 1: top-level barcode match takes priority (short-circuit).
+        foreach ($products as $product) {
+            if (is_array($product) === true && (string) ($product['barcode'] ?? '') === $barcode) {
+                return ['product' => $product, 'variantIndex' => null];
+            }
+        }
+
+        // Pass 2: active variant barcode match.
+        foreach ($products as $product) {
+            if (is_array($product) === false) {
+                continue;
+            }
+
+            $variantIndex = $this->matchActiveVariantIndex(product: $product, barcode: $barcode);
+            if ($variantIndex !== null) {
+                $variant = ((array) ($product['variants'] ?? []))[$variantIndex];
+                $product['matchedVariantSku']   = (string) ($variant['sku'] ?? '');
+                $product['matchedVariantIndex'] = $variantIndex;
+                return ['product' => $product, 'variantIndex' => $variantIndex];
+            }
+        }
+
+        return null;
+    }//end matchProductByBarcode()
+
+    /**
+     * Find the index of the active variant whose barcode equals the scanned
+     * value, or null when none matches.
+     *
+     * Inactive variants are skipped so a discontinued variant can never be sold
+     * via a scan (REQ-PBS-005).
+     *
+     * @param array<string, mixed> $product The product to scan.
+     * @param string               $barcode The (already validated) barcode.
+     *
+     * @return int|null The zero-based variant index, or null.
+     *
+     * @spec openspec/changes/pos-barcode-scan/specs/pos-barcode-scan/spec.md#REQ-PBS-005
+     */
+    private function matchActiveVariantIndex(array $product, string $barcode): ?int
+    {
+        $index = 0;
+        foreach (((array) ($product['variants'] ?? [])) as $variant) {
+            if (is_array($variant) === true
+                && ($variant['status'] ?? 'active') !== 'inactive'
+                && (string) ($variant['barcode'] ?? '') === $barcode
+            ) {
+                return $index;
+            }
+
+            $index++;
+        }
+
+        return null;
+    }//end matchActiveVariantIndex()
+
+    /**
      * Look up a product by barcode within this app's product schema.
      *
      * The barcode is matched against the product's own barcode and against each
-     * variant barcode. The query is constrained to this app's configured
-     * register + product schema, so a caller can never reach objects outside
-     * the catalogue (no IDOR). Returns null when no product matches.
+     * ACTIVE variant barcode. A direct product-level match takes priority over
+     * any variant match. The query is constrained to this app's configured
+     * register + product schema, so a caller can never reach objects outside the
+     * catalogue (no IDOR). The scanned value is untrusted and is validated for
+     * length + charset before it is used. Returns null when no product matches.
+     *
+     * When a variant matches, the returned product carries a resolved
+     * `matchedVariantSku` and a zero-based `matchedVariantIndex`.
      *
      * @param string $barcode The scanned barcode.
      *
-     * @return array<string, mixed>|null The matching product (with a resolved
-     *                                   matchedVariantSku when a variant matched),
-     *                                   or null.
+     * @return array<string, mixed>|null The matching product, or null.
      *
-     * @throws OCSBadRequestException If the barcode is empty.
+     * @throws OCSBadRequestException If the barcode is empty or malformed.
      *
      * @spec openspec/changes/pos-product-catalogue/specs/pos-product-catalogue/spec.md#REQ-PPC-005
+     * @spec openspec/changes/pos-barcode-scan/specs/pos-barcode-scan/spec.md#REQ-PBS-005
      */
     public function lookupByBarcode(string $barcode): ?array
     {
@@ -358,24 +477,20 @@ class ProductCatalogService
             throw new OCSBadRequestException('Geef een barcode op.');
         }
 
+        if ($this->isValidBarcode(barcode: $barcode) === false) {
+            throw new OCSBadRequestException('Ongeldige barcode.');
+        }
+
         [$register, $schema] = $this->config();
 
         $products = $this->fetchProducts(register: $register, schema: $schema);
 
-        foreach ($products as $product) {
-            if ((string) ($product['barcode'] ?? '') === $barcode) {
-                return $product;
-            }
-
-            foreach (((array) ($product['variants'] ?? [])) as $variant) {
-                if (is_array($variant) === true && (string) ($variant['barcode'] ?? '') === $barcode) {
-                    $product['matchedVariantSku'] = (string) ($variant['sku'] ?? '');
-                    return $product;
-                }
-            }
+        $match = $this->matchProductByBarcode(products: $products, barcode: $barcode);
+        if ($match === null) {
+            return null;
         }
 
-        return null;
+        return $match['product'];
     }//end lookupByBarcode()
 
     /**

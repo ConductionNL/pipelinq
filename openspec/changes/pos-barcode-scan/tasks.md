@@ -2,12 +2,9 @@
 
 ## 0. Deduplication Check
 
-- [ ] 0.1 Verify that `pos-product-catalogue` tasks 7.1 and 7.2 are complete — `BarcodeInput.vue` must exist before this change proceeds. If not merged yet, coordinate sequencing.
-- [ ] 0.2 Search `src/composables/` for any existing barcode or scanner composable:
-  - `grep -r "BarcodeDetector\|keyboard.wedge\|barcode" src/composables/`
-  - If a composable already exists, extend it rather than create a new one.
-- [ ] 0.3 Confirm that `product.barcode` and `product.variants[].barcode` are present in `lib/Settings/pipelinq_register.json` (added by `pos-product-catalogue`).
-  - If absent, `pos-product-catalogue` has not been merged — block this task until it is.
+- [x] 0.1 Verify that `pos-product-catalogue` tasks 7.1 and 7.2 are complete — `BarcodeInput.vue` exists (`src/components/products/BarcodeInput.vue`) and the merged `ProductCatalogService::lookupByBarcode` + `POST /api/products/barcode-lookup` endpoint are present.
+- [x] 0.2 Searched `src/composables/` — no composables directory existed; the scanning composables are net-new (no parallel barcode composable to extend).
+- [x] 0.3 Confirmed `product.barcode` and `product.variants[].barcode` are present in `lib/Settings/pipelinq_register.json` (seeded products carry barcodes). Backend `lookupByBarcode` already matched variant barcodes — EXTENDED it to (a) return a zero-based `variantIndex`, (b) exclude inactive variants, (c) keep top-level priority, and (d) validate the scanned barcode (untrusted input).
 
 ---
 

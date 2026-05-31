@@ -98,7 +98,14 @@ class ProductCatalogController extends Controller
                     );
                 }
 
-                return ['product' => $product];
+                // Surface the matched variant index (null on a top-level match)
+                // so the client can address the variant without re-searching.
+                $variantIndex = null;
+                if (isset($product['matchedVariantIndex']) === true) {
+                    $variantIndex = (int) $product['matchedVariantIndex'];
+                }
+
+                return ['product' => $product, 'variantIndex' => $variantIndex];
             },
             label: 'lookupBarcode'
         );
