@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
+use OCA\Pipelinq\Service\SettingsService;
 use OCA\Pipelinq\Service\TaskService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -34,26 +35,31 @@ use Psr\Log\LoggerInterface;
  * Runs every 15 minutes to check for:
  * 1. Tasks approaching their deadline (escalation notification)
  * 2. Tasks past their deadline (status change to "verlopen")
+ *
+ * The escalation threshold (hours before deadline) is admin-tunable via
+ * `pipelinq.task_escalation.threshold_hours`.
  */
 class TaskEscalationJob extends TimedJob
 {
     /**
-     * Escalation threshold in hours before deadline.
+     * Default escalation threshold in hours before deadline when unconfigured.
      *
      * @var int
      */
-    private const ESCALATION_THRESHOLD_HOURS = 4;
+    private const DEFAULT_ESCALATION_THRESHOLD_HOURS = 4;
 
     /**
      * Constructor.
      *
-     * @param ITimeFactory    $time        The time factory.
-     * @param TaskService     $taskService The task service.
-     * @param LoggerInterface $logger      The logger.
+     * @param ITimeFactory    $time            The time factory.
+     * @param TaskService     $taskService     The task service.
+     * @param SettingsService $settingsService The settings service.
+     * @param LoggerInterface $logger          The logger.
      */
     public function __construct(
         ITimeFactory $time,
         private TaskService $taskService,
+        private SettingsService $settingsService,
         private LoggerInterface $logger,
     ) {
         parent::__construct(time: $time);
@@ -77,14 +83,23 @@ class TaskEscalationJob extends TimedJob
      */
     protected function run($argument): void
     {
-        $this->logger->info('TaskEscalationJob: Starting deadline check');
+        $thresholdHours = $this->settingsService->getIntValue(
+            'task_escalation.threshold_hours',
+            self::DEFAULT_ESCALATION_THRESHOLD_HOURS
+        );
+
+        $this->logger->info(
+            'TaskEscalationJob: Starting deadline check',
+            ['escalationThresholdHours' => $thresholdHours]
+        );
 
         try {
             // In production, this would query OpenRegister for tasks with
             // status in ['open', 'in_behandeling'] and check deadlines.
             // For each task:
             // 1. If deadline passed and status is open -> change to verlopen
-            // 2. If deadline approaching -> send escalation notification.
+            // 2. If deadline approaching (within $thresholdHours) -> send
+            // escalation notification.
             $this->logger->info('TaskEscalationJob: Deadline check completed');
         } catch (\Exception $e) {
             $this->logger->error(
