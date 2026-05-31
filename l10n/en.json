@@ -1076,7 +1076,14 @@
         "Geparkeerd": "Geparkeerd",
         "Bevestigd": "Bevestigd",
         "Afgerekend": "Afgerekend",
-        "Teruggeboekt": "Teruggeboekt"
+        "Teruggeboekt": "Teruggeboekt",
+        "Scan barcode": "Scan barcode",
+        "Open camera": "Open camera",
+        "Close camera": "Close camera",
+        "Multiple products found for barcode {barcode}": "Multiple products found for barcode {barcode}",
+        "Aim at barcode…": "Aim at barcode…",
+        "Camera not available": "Camera not available",
+        "Product found: {name}": "Product found: {name}"
     },
     "plurals": {}
 }
