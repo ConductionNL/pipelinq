@@ -53,6 +53,11 @@ use Psr\Log\LoggerInterface;
  *  persistence helpers) as many small, single-purpose methods; the cohesion is
  *  intentional and splitting it would scatter one transactional concern across
  *  several classes without reducing real complexity.
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods) The public surface is the POS
+ *  calculation core (recalculateLine / computeTotals / normalizePriceMode), the
+ *  BTW report aggregator (buildTaxReport / taxReport), the five lifecycle
+ *  transitions, the manager gate and the event emitter — all single-purpose and
+ *  unit-tested individually; collapsing them would only hide tested seams.
  *
  * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
  */
@@ -148,7 +153,11 @@ class PosTransactionService
      */
     public function normalizePriceMode(mixed $mode): string
     {
-        $value = is_string($mode) ? strtolower(trim($mode)) : '';
+        $value = '';
+        if (is_string($mode) === true) {
+            $value = strtolower(trim($mode));
+        }
+
         if (in_array($value, self::PRICE_MODES, true) === true) {
             return $value;
         }
@@ -197,8 +206,8 @@ class PosTransactionService
      *
      * @param array<string, mixed> $lineData  The raw line data.
      * @param string|null          $priceMode The transaction price mode ('excl'|'incl');
-     *                                         null falls back to the line's own priceMode
-     *                                         or the 'excl' default.
+     *                                        null falls back to the line's own priceMode
+     *                                        or the 'excl' default.
      *
      * @return array<string, mixed> The line data with computed net, taxAmount and lineTotal.
      *
@@ -215,14 +224,15 @@ class PosTransactionService
         $mode = $this->normalizePriceMode(mode: ($priceMode ?? ($lineData['priceMode'] ?? null)));
 
         $amount = ($quantity * $unitPrice * (1 - ($discount / 100)));
+
+        // Default ('excl'): entered amount is the net base, BTW added on top.
+        $net       = $amount;
+        $taxAmount = ($net * ($taxRate / 100));
+
         if ($mode === 'incl') {
             // Entered amount is BTW-inclusive: extract the net base out of it.
             $net       = ($amount / (1 + ($taxRate / 100)));
             $taxAmount = ($amount - $net);
-        } else {
-            // Entered amount is the net base: BTW is added on top.
-            $net       = $amount;
-            $taxAmount = ($net * ($taxRate / 100));
         }
 
         $lineData['quantity']  = $quantity;
@@ -251,7 +261,7 @@ class PosTransactionService
      *
      * @param array<int, array<string, mixed>> $lines     The transaction's line items.
      * @param string|null                      $priceMode The transaction price mode
-     *                                                     ('excl'|'incl'); null defaults to 'excl'.
+     *                                                    ('excl'|'incl'); null defaults to 'excl'.
      *
      * @return array<string, mixed> Computed totals: priceMode, subtotal, discountTotal,
      *                               taxBreakdown, invoiceBreakdown, totalTax, total.
@@ -268,17 +278,15 @@ class PosTransactionService
         $byRate        = [];
 
         foreach ($lines as $rawLine) {
-            $line     = $this->recalculateLine(lineData: $rawLine, priceMode: $mode);
-            $quantity = (float) $line['quantity'];
-            $discount = (float) $line['discount'];
-            $taxRate  = (float) $line['taxRate'];
+            $line    = $this->recalculateLine(lineData: $rawLine, priceMode: $mode);
+            $taxRate = (float) $line['taxRate'];
 
             // Net base is the tax-exclusive amount the line computed for this
             // price mode; the gross-before-discount uses the same mode so the
             // discount figure is consistent (incl-mode strips BTW out first).
-            $net           = (float) $line['net'];
-            $taxAmount     = (float) $line['taxAmount'];
-            $grossNoDisc   = $this->lineNetBeforeDiscount(line: $line, mode: $mode);
+            $net         = (float) $line['net'];
+            $taxAmount   = (float) $line['taxAmount'];
+            $grossNoDisc = $this->lineNetBeforeDiscount(line: $line, mode: $mode);
 
             $subtotal      += $net;
             $discountTotal += ($grossNoDisc - $net);
@@ -291,8 +299,6 @@ class PosTransactionService
 
             $byRate[$rateKey]['base'] += $net;
             $byRate[$rateKey]['tax']  += $taxAmount;
-
-            unset($quantity);
         }//end foreach
 
         $taxBreakdown     = [];
@@ -390,8 +396,12 @@ class PosTransactionService
                 continue;
             }
 
-            $sign  = ($status === 'refunded') ? -1.0 : 1.0;
-            $rows  = $transaction['invoiceBreakdown'] ?? $transaction['taxBreakdown'] ?? [];
+            $sign = 1.0;
+            if ($status === 'refunded') {
+                $sign = -1.0;
+            }
+
+            $rows = $transaction['invoiceBreakdown'] ?? $transaction['taxBreakdown'] ?? [];
             if (is_array($rows) === false) {
                 continue;
             }
@@ -413,8 +423,8 @@ class PosTransactionService
 
                 $byRate[$rateKey]['base'] += $base;
                 $byRate[$rateKey]['tax']  += $tax;
-                $totalBase                += $base;
-                $totalTax                 += $tax;
+                $totalBase += $base;
+                $totalTax  += $tax;
             }//end foreach
         }//end foreach
 
@@ -713,12 +723,17 @@ class PosTransactionService
     {
         $confirmedAt = (string) ($transaction['confirmedAt'] ?? '');
 
+        $time = $this->now();
+        if ($confirmedAt !== '') {
+            $time = $confirmedAt;
+        }
+
         return [
             'specversion'     => '1.0',
             'type'            => self::EVENT_CONFIRMED,
             'source'          => self::EVENT_SOURCE,
             'id'              => $eventId,
-            'time'            => ($confirmedAt !== '') ? $confirmedAt : $this->now(),
+            'time'            => $time,
             'datacontenttype' => 'application/json',
             'data'            => [
                 'transactionId'    => (string) ($transaction['id'] ?? $transaction['uuid'] ?? ''),

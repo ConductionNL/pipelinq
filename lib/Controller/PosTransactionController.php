@@ -211,7 +211,10 @@ class PosTransactionController extends Controller
         }
 
         $statusParam = (string) $this->request->getParam('status', '');
-        $status      = ($statusParam !== '') ? $statusParam : null;
+        $status      = null;
+        if ($statusParam !== '') {
+            $status = $statusParam;
+        }
 
         return $this->run(
             action: fn (): array => $this->service->taxReport(status: $status),
