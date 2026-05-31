@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.22] - 2026-05-31
+
+### Added
+
+- POS transaction core (Kassabon): two OpenRegister schemas — `posTransaction`
+  (`schema:Order`) with lifecycle `draft → parked → confirmed → settled →
+  refunded`, server-computed subtotal, total discount, per-BTW-rate tax
+  breakdown and grand total; and `posTransactionLine` (`schema:OrderItem`) with
+  quantity, discount and computed `taxAmount`/`lineTotal`. Includes seed data.
+- `PosTransactionService` with server-authoritative total/tax calculation,
+  lifecycle transitions (confirm/settle/refund/park/resume) and a
+  `pipelinq.PosTransaction.confirmed` CloudEvent emitted fire-and-forget to
+  Shillinq on confirmation. Refund is manager-gated (admin or configured
+  `pos_manager_group`, fail-closed).
+- `PosTransactionController` lifecycle endpoints under `/api/pos-transactions/{id}/*`
+  with per-user authentication and app-schema-scoped object access (IDOR-safe).
+- POS frontend: list, detail (context-sensitive lifecycle actions, per-rate tax
+  breakdown, totals; isolated refund dialog) and a cart editor with real-time
+  totals; "Kassabon" navigation entry. Dutch + English translations.
+
 ## [0.2.20] - 2026-05-31
 
 ### Added
