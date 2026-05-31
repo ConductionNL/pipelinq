@@ -49,6 +49,8 @@ use Psr\Log\LoggerInterface;
  * enforced server-side in the service.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ *
+ * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
  */
 class PosTransactionController extends Controller
 {
@@ -83,7 +85,10 @@ class PosTransactionController extends Controller
     #[NoAdminRequired]
     public function confirm(string $id): JSONResponse
     {
-        return $this->run(fn (string $uid): array => $this->service->confirmTransaction($id, $uid), 'confirm');
+        return $this->run(
+            action: fn (string $uid): array => $this->service->confirmTransaction(id: $id, userId: $uid),
+            label: 'confirm'
+        );
     }//end confirm()
 
     /**
@@ -98,7 +103,10 @@ class PosTransactionController extends Controller
     #[NoAdminRequired]
     public function settle(string $id): JSONResponse
     {
-        return $this->run(fn (string $uid): array => $this->service->settleTransaction($id, $uid), 'settle');
+        return $this->run(
+            action: fn (string $uid): array => $this->service->settleTransaction(id: $id, userId: $uid),
+            label: 'settle'
+        );
     }//end settle()
 
     /**
@@ -114,7 +122,10 @@ class PosTransactionController extends Controller
     public function refund(string $id): JSONResponse
     {
         $reason = (string) $this->request->getParam('reason', '');
-        return $this->run(fn (string $uid): array => $this->service->refundTransaction($id, $reason, $uid), 'refund');
+        return $this->run(
+            action: fn (string $uid): array => $this->service->refundTransaction(id: $id, reason: $reason, userId: $uid),
+            label: 'refund'
+        );
     }//end refund()
 
     /**
@@ -129,7 +140,10 @@ class PosTransactionController extends Controller
     #[NoAdminRequired]
     public function park(string $id): JSONResponse
     {
-        return $this->run(fn (string $uid): array => $this->service->parkTransaction($id, $uid), 'park');
+        return $this->run(
+            action: fn (string $uid): array => $this->service->parkTransaction(id: $id, userId: $uid),
+            label: 'park'
+        );
     }//end park()
 
     /**
@@ -144,7 +158,10 @@ class PosTransactionController extends Controller
     #[NoAdminRequired]
     public function resume(string $id): JSONResponse
     {
-        return $this->run(fn (string $uid): array => $this->service->resumeTransaction($id, $uid), 'resume');
+        return $this->run(
+            action: fn (string $uid): array => $this->service->resumeTransaction(id: $id, userId: $uid),
+            label: 'resume'
+        );
     }//end resume()
 
     /**

@@ -59,6 +59,13 @@ import AgentPerformanceView from './views/rapportage/AgentPerformance.vue'
 import PipelineManagerView from './views/settings/PipelineManager.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
 
+// --- POS transactions (lib gap: list needs custom row navigation to the cart
+//     editor; detail needs lifecycle action buttons + tax breakdown; form is a
+//     bespoke cart editor with real-time totals). ---
+import PosTransactionListView from './views/pos/PosTransactionList.vue'
+import PosTransactionDetailView from './views/pos/PosTransactionDetail.vue'
+import PosTransactionFormView from './views/pos/PosTransactionForm.vue'
+
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
 /**
@@ -191,6 +198,23 @@ const registry = {
 		kind: 'page',
 		component: SyncSettingsView,
 		_note: 'External integration sync configuration panel; lib gap: no settings rich-section type for complex integration config.',
+	},
+
+	// --- POS transactions. ---
+	PosTransactionListView: {
+		kind: 'page',
+		component: PosTransactionListView,
+		_note: 'POS receipt list; custom so rows navigate to the cart editor / detail and the empty state offers "Nieuwe transactie".',
+	},
+	PosTransactionDetailView: {
+		kind: 'page',
+		component: PosTransactionDetailView,
+		_note: 'POS receipt detail with context-sensitive lifecycle buttons (confirm/settle/refund/park/resume), per-rate tax breakdown and totals; lib detail page cannot express POS lifecycle actions.',
+	},
+	PosTransactionFormView: {
+		kind: 'page',
+		component: PosTransactionFormView,
+		_note: 'Bespoke cart editor: inline line-item rows with product picker + real-time totals; lib has no cart/line-editor page type.',
 	},
 }
 

@@ -129,7 +129,7 @@
 
 ## 5. Frontend — Views
 
-- [ ] 5.1 Create `src/views/pos/PosTransactionList.vue`
+- [x] 5.1 Create `src/views/pos/PosTransactionList.vue`
   - **spec_ref**: `specs/pos-transaction-core/spec.md#REQ-POS-008`
   - **files**: `pipelinq/src/views/pos/PosTransactionList.vue`
   - **acceptance_criteria**:
@@ -140,7 +140,7 @@
     - AND rows MUST navigate to detail on click
     - AND empty state MUST show "Geen transacties gevonden" with "Nieuwe transactie" button
 
-- [ ] 5.2 Create `src/views/pos/PosTransactionDetail.vue`
+- [x] 5.2 Create `src/views/pos/PosTransactionDetail.vue`
   - **spec_ref**: `specs/pos-transaction-core/spec.md#REQ-POS-004, #REQ-POS-005,
     #REQ-POS-006, #REQ-POS-007, #REQ-POS-009`
   - **files**: `pipelinq/src/views/pos/PosTransactionDetail.vue`
@@ -152,7 +152,7 @@
     - AND lifecycle action buttons MUST be context-sensitive per the status table in design.md
     - AND the "Terugboeken" button MUST be hidden for non-manager users
 
-- [ ] 5.3 Create `src/views/pos/PosTransactionForm.vue`
+- [x] 5.3 Create `src/views/pos/PosTransactionForm.vue`
   - **spec_ref**: `specs/pos-transaction-core/spec.md#REQ-POS-001, #REQ-POS-002`
   - **files**: `pipelinq/src/views/pos/PosTransactionForm.vue`
   - **acceptance_criteria**:
@@ -167,7 +167,7 @@
 
 ## 6. Frontend — Components
 
-- [ ] 6.1 Create `src/components/pos/PosLineItemRow.vue`
+- [x] 6.1 Create `src/components/pos/PosLineItemRow.vue`
   - **spec_ref**: `specs/pos-transaction-core/spec.md#REQ-POS-002`
   - **files**: `pipelinq/src/components/pos/PosLineItemRow.vue`
   - **acceptance_criteria**:
@@ -178,7 +178,7 @@
     - AND any field change MUST emit `update:line` with recomputed taxAmount and lineTotal
     - AND a remove button MUST emit `remove`
 
-- [ ] 6.2 Create `src/components/pos/PosTotalsPanel.vue`
+- [x] 6.2 Create `src/components/pos/PosTotalsPanel.vue`
   - **spec_ref**: `specs/pos-transaction-core/spec.md#REQ-POS-003`
   - **files**: `pipelinq/src/components/pos/PosTotalsPanel.vue`
   - **acceptance_criteria**:
@@ -192,7 +192,7 @@
 
 ## 7. Frontend — Navigation and Routing
 
-- [ ] 7.1 Add POS routes to `src/router/index.js`
+- [x] 7.1 Add POS routes to `src/router/index.js`
   - **files**: `pipelinq/src/router/index.js`
   - **acceptance_criteria**:
     - GIVEN the router is initialised
@@ -200,7 +200,7 @@
       `/pos/:id` → PosTransactionDetail, `/pos/:id/edit` → PosTransactionForm MUST be registered
     - AND all routes MUST be named
 
-- [ ] 7.2 Add "Kassabon" navigation entry to `src/navigation/MainMenu.vue`
+- [x] 7.2 Add "Kassabon" navigation entry to `src/navigation/MainMenu.vue`
   - **files**: `pipelinq/src/navigation/MainMenu.vue`
   - **acceptance_criteria**:
     - GIVEN the app is open
@@ -211,8 +211,8 @@
 
 ## 8. Verification
 
-- [ ] 8.1 Run `npm run build` — zero errors or warnings
-- [ ] 8.2 Run PHP static analysis (`phpstan`, `phpcs`) on new PHP files — zero errors
+- [x] 8.1 Run `npm run build` — zero errors or warnings
+- [x] 8.2 Run PHP static analysis (`phpstan`, `phpcs`) on new PHP files — zero errors
 - [ ] 8.3 Manual browser test: create draft → add 2 lines → verify real-time totals →
   confirm → verify CloudEvent emitted → settle
 - [ ] 8.4 Manual browser test: park transaction → navigate away → resume from list →
