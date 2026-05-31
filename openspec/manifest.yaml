@@ -31,6 +31,7 @@ dependencies:
 consumes:
   # OpenRegister — SHIPPED (in OR main specs; consumed at runtime today)
   - contacts-actions                   # OR: Contacts integration provider (archived 2026-05-01)
+  - integration-time-tracker           # OR: time-tracker leaf — TimeProvider + TimeTrackerLinks{Controller,Service,Mapper} (PHP) + nc-vue CnTimeTrackerTab/CnTimeTrackerCard (referenceType `time-tracker`, requiredApp `timemanager`). Consumed at runtime via linkedTypes glue + manifest placement.
   # OpenRegister — declared intent; capability is an active OR change not yet
   # promoted to OR's main specs, so runtime adoption is pending it shipping.
   - register-resolver-service          # OR: request-scoped register/schema id resolution (active change)
