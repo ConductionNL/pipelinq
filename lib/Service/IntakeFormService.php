@@ -257,7 +257,7 @@ class IntakeFormService
             $headers[] = $field['label'] ?? $field['name'] ?? 'Unknown';
         }
 
-        $rows = [implode(',', array_map([$this, 'neutralizeCsvCell'], $headers))];
+        $rows = [implode(',', array_map($this->neutralizeCsvCell(...), $headers))];
 
         foreach ($submissions as $sub) {
             $row  = [
@@ -273,7 +273,7 @@ class IntakeFormService
                 $row[] = $value;
             }
 
-            $rows[] = implode(',', array_map([$this, 'neutralizeCsvCell'], $row));
+            $rows[] = implode(',', array_map($this->neutralizeCsvCell(...), $row));
         }//end foreach
 
         return implode("\n", $rows);

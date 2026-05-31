@@ -129,14 +129,31 @@ class RoutingService
         $available = $this->filterByAvailability(profiles: $candidates);
         [$inCapacity, $atCapacityCount] = $this->filterByCapacity(profiles: $available);
 
+        $suggestions = $this->buildSuggestions(inCapacity: $inCapacity);
+
+        return [
+            'suggestions' => $suggestions,
+            'atCapacity'  => $atCapacityCount,
+            'noMatch'     => $suggestions === [] && $atCapacityCount === 0,
+        ];
+    }//end getSuggestedAgents()
+
+    /**
+     * Build the workload-sorted suggestion list from in-capacity profiles.
+     *
+     * @param array<int, array<string, mixed>> $inCapacity The profiles within capacity.
+     *
+     * @return array<int, array<string, mixed>> The suggestions, ascending by workload.
+     */
+    private function buildSuggestions(array $inCapacity): array
+    {
         $suggestions = [];
         foreach ($inCapacity as $profile) {
             $userId        = (string) ($profile['userId'] ?? '');
-            $workload      = $this->getAgentWorkload(userId: $userId);
             $suggestions[] = [
                 'userId'        => $userId,
                 'displayName'   => (string) ($profile['displayName'] ?? $userId),
-                'workload'      => $workload,
+                'workload'      => $this->getAgentWorkload(userId: $userId),
                 'maxConcurrent' => (int) ($profile['maxConcurrent'] ?? self::DEFAULT_MAX_CONCURRENT),
                 'matchedSkill'  => (string) ($profile['matchedSkill'] ?? ''),
                 'categories'    => $profile['matchedCategories'] ?? [],
@@ -145,12 +162,8 @@ class RoutingService
 
         usort($suggestions, static fn(array $a, array $b): int => $a['workload'] <=> $b['workload']);
 
-        return [
-            'suggestions' => $suggestions,
-            'atCapacity'  => $atCapacityCount,
-            'noMatch'     => $suggestions === [] && $atCapacityCount === 0,
-        ];
-    }//end getSuggestedAgents()
+        return $suggestions;
+    }//end buildSuggestions()
 
     /**
      * Count open items (requests + leads) assigned to a user.
@@ -259,10 +272,30 @@ class RoutingService
             return [];
         }
 
-        $objectService = $this->getObjectService();
+        $skills = $this->loadActiveSkills(registerId: $registerId, skillSchemaId: $skillSchemaId, category: $category);
+        $matchingSkillsById = $this->collectMatchingSkills(skills: $skills, category: $category);
+        if ($matchingSkillsById === []) {
+            return [];
+        }
 
+        $profiles = $this->loadAgentProfiles(registerId: $registerId, agentProfileSchemaId: $agentProfileSchemaId);
+
+        return $this->matchProfilesToSkills(profiles: $profiles, matchingSkillsById: $matchingSkillsById);
+    }//end findMatchingAgents()
+
+    /**
+     * Load all active skills, returning an empty list on failure.
+     *
+     * @param string $registerId    The configured register ID.
+     * @param string $skillSchemaId The skill schema ID.
+     * @param string $category      The category (for error context only).
+     *
+     * @return iterable<mixed> The active skill objects (empty on error).
+     */
+    private function loadActiveSkills(string $registerId, string $skillSchemaId, string $category): iterable
+    {
         try {
-            $skills = $objectService->findAll(
+            return $this->getObjectService()->findAll(
                 [
                     'filters' => [
                         'register' => $registerId,
@@ -279,33 +312,48 @@ class RoutingService
             );
             return [];
         }
+    }//end loadActiveSkills()
 
-        // Collect skills that match this category.
+    /**
+     * Index skills that declare the given category by their ID.
+     *
+     * @param iterable<mixed> $skills   The candidate skills.
+     * @param string          $category The category to match.
+     *
+     * @return array<string, mixed> Map of skill ID => skill, for matching skills.
+     */
+    private function collectMatchingSkills(iterable $skills, string $category): array
+    {
         $matchingSkillsById = [];
         foreach ($skills as $skill) {
             $categories = $skill['categories'] ?? [];
-            if (is_array($categories) === false) {
+            if (is_array($categories) === false || in_array($category, $categories, true) === false) {
                 continue;
             }
 
-            if (in_array($category, $categories, true) === true) {
-                $skillId = (string) ($skill['id'] ?? ($skill['@self']['id'] ?? ''));
-                if ($skillId === '') {
-                    continue;
-                }
-
-                $matchingSkillsById[$skillId] = $skill;
+            $skillId = (string) ($skill['id'] ?? ($skill['@self']['id'] ?? ''));
+            if ($skillId === '') {
+                continue;
             }
+
+            $matchingSkillsById[$skillId] = $skill;
         }
 
-        if ($matchingSkillsById === []) {
-            return [];
-        }
+        return $matchingSkillsById;
+    }//end collectMatchingSkills()
 
-        $matchingSkillIds = array_keys($matchingSkillsById);
-
+    /**
+     * Load all agent profiles, returning an empty list on failure.
+     *
+     * @param string $registerId           The configured register ID.
+     * @param string $agentProfileSchemaId The agent-profile schema ID.
+     *
+     * @return iterable<mixed> The agent-profile objects (empty on error).
+     */
+    private function loadAgentProfiles(string $registerId, string $agentProfileSchemaId): iterable
+    {
         try {
-            $profiles = $objectService->findAll(
+            return $this->getObjectService()->findAll(
                 [
                     'filters' => [
                         'register' => $registerId,
@@ -321,6 +369,19 @@ class RoutingService
             );
             return [];
         }
+    }//end loadAgentProfiles()
+
+    /**
+     * Match agent profiles against the matching skills and annotate each match.
+     *
+     * @param iterable<mixed>      $profiles           The candidate agent profiles.
+     * @param array<string, mixed> $matchingSkillsById Map of skill ID => skill.
+     *
+     * @return array<int, array<string, mixed>> The matched, annotated profiles.
+     */
+    private function matchProfilesToSkills(iterable $profiles, array $matchingSkillsById): array
+    {
+        $matchingSkillIds = array_keys($matchingSkillsById);
 
         $matched = [];
         foreach ($profiles as $profile) {
@@ -341,7 +402,7 @@ class RoutingService
         }
 
         return $matched;
-    }//end findMatchingAgents()
+    }//end matchProfilesToSkills()
 
     /**
      * Filter out profiles where isAvailable === false.
@@ -357,7 +418,7 @@ class RoutingService
         return array_values(
                 array_filter(
             $profiles,
-            static fn(array $p): bool => ($p['isAvailable'] ?? true) !== false
+            static fn(array $profile): bool => ($profile['isAvailable'] ?? true) !== false
         )
                 );
     }//end filterByAvailability()

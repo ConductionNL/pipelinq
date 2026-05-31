@@ -210,12 +210,12 @@ class ReportingService
     public function generateCsv(array $headers, array $rows): string
     {
         $bom    = "\xEF\xBB\xBF";
-        $output = $bom.implode(';', array_map([$this, 'neutralizeCsvCell'], $headers))."\n";
+        $output = $bom.implode(';', array_map($this->neutralizeCsvCell(...), $headers))."\n";
 
         foreach ($rows as $row) {
             $output .= implode(
                     ';',
-                    array_map([$this, 'neutralizeCsvCell'], $row)
+                    array_map($this->neutralizeCsvCell(...), $row)
                     )."\n";
         }
 

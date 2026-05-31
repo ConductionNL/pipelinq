@@ -40,6 +40,11 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Controller for managing notes on Pipelinq entities.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the collaborators a notes
+ *  endpoint legitimately needs (notes + event services, session, l10n, logger,
+ *  group manager, settings, OR container); splitting them would add indirection
+ *  without reducing real coupling.
  */
 class NotesController extends Controller
 {
