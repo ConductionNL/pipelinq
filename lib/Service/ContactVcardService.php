@@ -31,6 +31,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for syncing Pipelinq objects to Nextcloud Contacts as vCards.
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-28
  */
 class ContactVcardService
 {
@@ -47,12 +49,13 @@ class ContactVcardService
     /**
      * Constructor.
      *
-     * @param IContactsManager            $contactsManager The contacts manager.
-     * @param IAppConfig                  $appConfig       The app config.
-     * @param ContainerInterface          $container       The container.
-     * @param ContactVcardWriterService   $writerService   The vCard writer.
-     * @param ContactVcardPropertyBuilder $propBuilder     The property builder.
-     * @param LoggerInterface             $logger          The logger.
+     * @param IContactsManager            $contactsManager  The contacts manager.
+     * @param IAppConfig                  $appConfig        The app config.
+     * @param ContainerInterface          $container        The container.
+     * @param ContactVcardWriterService   $writerService    The vCard writer.
+     * @param ContactVcardPropertyBuilder $propBuilder      The property builder.
+     * @param LoggerInterface             $logger           The logger.
+     * @param RegisterResolverService     $registerResolver The register resolver.
      */
     public function __construct(
         private IContactsManager $contactsManager,
@@ -61,6 +64,7 @@ class ContactVcardService
         private ContactVcardWriterService $writerService,
         private ContactVcardPropertyBuilder $propBuilder,
         private LoggerInterface $logger,
+        private RegisterResolverService $registerResolver,
     ) {
     }//end __construct()
 
@@ -118,7 +122,7 @@ class ContactVcardService
         }
 
         $objectService = $this->getObjectService();
-        $registerId    = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $registerId    = $this->registerResolver->resolve('contact');
         $schemaId      = $this->appConfig->getValueString(Application::APP_ID, "{$objectType}_schema", '');
 
         if ($registerId === '' || $schemaId === '') {
