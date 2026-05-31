@@ -3190,6 +3190,81 @@
           { "minQuantity": 4, "unitPrice": 110.00, "label": "Pakket 4 gesprekken" },
           { "minQuantity": 10, "unitPrice": 95.00, "label": "Jaarprogramma (10+)" }
         ]
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "product", "slug": "product-shampoo-keratine" },
+        "name": "Shampoo Keratine",
+        "description": "Voedende keratineshampoo voor beschadigd haar, 250 ml",
+        "sku": "HAR-SHA-001",
+        "barcode": "8710919041022",
+        "unitPrice": 14.95,
+        "type": "product",
+        "status": "active",
+        "unit": "fles",
+        "taxRate": 21,
+        "btwClass": "hoog"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "product", "slug": "product-haargel-flex-hold" },
+        "name": "Haargel Flex Hold",
+        "description": "Stijlvaste haargel met flexibele hold, zonder uitdrogen",
+        "sku": "HAR-GEL-002",
+        "barcode": "8714100247021",
+        "unitPrice": 8.95,
+        "type": "product",
+        "status": "active",
+        "unit": "pot",
+        "taxRate": 21,
+        "btwClass": "hoog",
+        "variants": [
+          { "sku": "HAR-GEL-002-75", "name": "75 ml", "attributes": { "inhoud": "75 ml" }, "unitPrice": 5.95, "barcode": "8714100247038", "status": "active" },
+          { "sku": "HAR-GEL-002-150", "name": "150 ml", "attributes": { "inhoud": "150 ml" }, "unitPrice": 8.95, "barcode": "8714100247045", "status": "active" },
+          { "sku": "HAR-GEL-002-300", "name": "300 ml", "attributes": { "inhoud": "300 ml" }, "unitPrice": 14.50, "barcode": "8714100247052", "status": "active" }
+        ]
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "product", "slug": "product-nagellak-set" },
+        "name": "Nagellak Essie",
+        "description": "Professionele nagellak, langhoudend, 13.5 ml",
+        "sku": "NAG-LAK-001",
+        "barcode": "30008361",
+        "unitPrice": 10.50,
+        "type": "product",
+        "status": "active",
+        "unit": "flesje",
+        "taxRate": 21,
+        "btwClass": "hoog",
+        "variants": [
+          { "sku": "NAG-LAK-001-RED", "name": "Ballet Slippers (roze)", "attributes": { "kleur": "Ballet Slippers" }, "unitPrice": 10.50, "barcode": "30008362", "status": "active" },
+          { "sku": "NAG-LAK-001-BLU", "name": "Lapiz of Luxury (blauw)", "attributes": { "kleur": "Lapiz of Luxury" }, "unitPrice": 10.50, "barcode": "30008363", "status": "active" },
+          { "sku": "NAG-LAK-001-NUD", "name": "Vanity Fairest (nude)", "attributes": { "kleur": "Vanity Fairest" }, "unitPrice": 10.50, "barcode": "30008364", "status": "active" }
+        ]
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "product", "slug": "product-conditioner-hydra" },
+        "name": "Conditioner Hydra Boost",
+        "description": "Intensieve herstelconditioner met hyaluronzuur, 300 ml",
+        "sku": "HAR-CON-003",
+        "barcode": "8720608064038",
+        "unitPrice": 12.75,
+        "type": "product",
+        "status": "active",
+        "unit": "tube",
+        "taxRate": 9,
+        "btwClass": "laag"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "product", "slug": "product-kleurenkaart-salontester" },
+        "name": "Kleurenkaart Salontester",
+        "description": "Haar-kleurenkaart voor gebruik in de salonruimte — niet voor verkoop",
+        "sku": "SLN-TST-001",
+        "barcode": "8720608999001",
+        "unitPrice": 0.00,
+        "type": "product",
+        "status": "active",
+        "unit": "stuk",
+        "taxRate": 21,
+        "btwClass": "hoog"
       }
     ]
   }

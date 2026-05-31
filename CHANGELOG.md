@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.26] - 2026-05-31
+
+### Added
+
+- POS barcode scanning (pos-barcode-scan, builds on pos-product-catalogue):
+  - `useBarcodeScanner` composable: HID keyboard-wedge detection (rapid-burst
+    + Enter terminator; ≥4 chars and ≤50 ms average inter-key delay; never
+    hijacks ordinary form typing; buffer resets after 200 ms idle) and camera
+    scanning via the browser `BarcodeDetector` API (feature-detected, graceful
+    HID-only fallback, stream torn down on scan/unmount). The HID timing logic
+    is a pure, unit-testable `createHidBufferReducer`.
+  - `useBarcodeProductLookup` composable: validates the untrusted scanned value
+    then resolves it through the IDOR-safe server endpoint, mapping the response
+    to `{ product, variant, variantIndex, status }`.
+  - Unified `BarcodeScanner.vue` (always-visible HID input, feature-detected
+    camera button + viewfinder overlay, loading/found/error status) wired into
+    `ProductBarcodeSearch.vue` with found/not-found/ambiguous handling, variant
+    query passthrough, and a 5-second auto-clearing empty state.
+  - nl + en translations for all scan-feedback strings.
+  - 5 Dutch seed products with EAN-13 barcodes (incl. variant-level barcodes).
+
+### Changed
+
+- `ProductCatalogService::lookupByBarcode` now resolves variant barcodes to a
+  zero-based `variantIndex` (parent product + variant), excludes inactive
+  variants from scan results, preserves top-level barcode priority, and
+  validates the scanned (untrusted) barcode for length + charset before any
+  lookup. The `POST /api/products/barcode-lookup` response now returns
+  `{ product, variantIndex }`.
+
+### Security
+
+- Scanned barcodes are treated as untrusted input: rejected unless non-empty,
+  ≤ 64 chars, and within the `[A-Za-z0-9 .-]` charset — on both the client and
+  the server — before any lookup. Lookups remain scoped to the app's own
+  register + product schema (no IDOR).
+
 ## [0.2.25] - 2026-05-31
 
 ### Added
