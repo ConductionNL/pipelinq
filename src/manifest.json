@@ -4,7 +4,8 @@
 	"dependencies": [
 		"openregister",
 		"deck",
-		"workflowengine"
+		"workflowengine",
+		"timemanager"
 	],
 	"menu": [
 		{
@@ -216,6 +217,14 @@
 							"config": {
 								"linkedType": "flow"
 							}
+						},
+						{
+							"id": "time-tracker",
+							"label": "Time",
+							"component": "CnTimeTrackerTab",
+							"config": {
+								"linkedType": "time-tracker"
+							}
 						}
 					]
 				},
@@ -225,6 +234,13 @@
 						"component": "CnFlowCard",
 						"config": {
 							"linkedType": "flow"
+						}
+					},
+					{
+						"id": "client-time-card",
+						"component": "CnTimeTrackerCard",
+						"config": {
+							"linkedType": "time-tracker"
 						}
 					}
 				]
@@ -278,6 +294,14 @@
 							"config": {
 								"linkedType": "flow"
 							}
+						},
+						{
+							"id": "time-tracker",
+							"label": "Time",
+							"component": "CnTimeTrackerTab",
+							"config": {
+								"linkedType": "time-tracker"
+							}
 						}
 					]
 				},
@@ -295,6 +319,13 @@
 						"component": "CnFlowCard",
 						"config": {
 							"linkedType": "flow"
+						}
+					},
+					{
+						"id": "request-time-card",
+						"component": "CnTimeTrackerCard",
+						"config": {
+							"linkedType": "time-tracker"
 						}
 					}
 				]
@@ -413,6 +444,14 @@
 							"config": {
 								"linkedType": "flow"
 							}
+						},
+						{
+							"id": "time-tracker",
+							"label": "Time",
+							"component": "CnTimeTrackerTab",
+							"config": {
+								"linkedType": "time-tracker"
+							}
 						}
 					]
 				},
@@ -430,6 +469,13 @@
 						"component": "CnFlowCard",
 						"config": {
 							"linkedType": "flow"
+						}
+					},
+					{
+						"id": "lead-time-card",
+						"component": "CnTimeTrackerCard",
+						"config": {
+							"linkedType": "time-tracker"
 						}
 					}
 				]

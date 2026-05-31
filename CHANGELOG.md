@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.20] - 2026-05-31
+
+### Added
+
+- Consume the OpenRegister time-tracker leaf (`integration-time-tracker`) for
+  hour capture against clients, leads and requests (hydra ADR-022): add
+  `time-tracker` to the `linkedTypes` of the `client`, `lead` and `request`
+  schemas, place the leaf's `CnTimeTrackerTab` + `CnTimeTrackerCard` on those
+  detail pages via the app manifest (ADR-024), and declare the `timemanager`
+  runtime dependency. No bespoke time subsystem is introduced; approval and
+  invoicing remain out of scope (handed to shillinq).
+
 ## [0.2.19] - 2026-05-31
 
 ### Changed
