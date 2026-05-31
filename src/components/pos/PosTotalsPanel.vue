@@ -21,7 +21,7 @@
 		</div>
 		<div class="pos-totals__row pos-totals__row--total">
 			<span>{{ t('pipelinq', 'Total') }}</span>
-			<span>{{ formatEur(totals.total) }}</span>
+			<span>{{ formatEur(totals.total) }} <small class="pos-totals__mode">{{ priceModeSuffix }}</small></span>
 		</div>
 	</div>
 </template>
@@ -36,6 +36,10 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+		priceMode: {
+			type: String,
+			default: 'excl',
+		},
 	},
 	computed: {
 		/**
@@ -46,7 +50,17 @@ export default {
 		 * @return {object} The computed totals.
 		 */
 		totals() {
-			return computeTotals(this.lines)
+			return computeTotals(this.lines, this.priceMode)
+		},
+		/**
+		 * Inclusive / exclusive BTW suffix shown next to the total.
+		 *
+		 * @return {string} The suffix.
+		 */
+		priceModeSuffix() {
+			return this.priceMode === 'incl'
+				? t('pipelinq', 'incl. BTW')
+				: t('pipelinq', 'excl. BTW')
 		},
 	},
 	methods: {
@@ -86,5 +100,11 @@ export default {
 	font-size: 18px;
 	font-weight: 700;
 	color: var(--color-primary-element);
+}
+
+.pos-totals__mode {
+	font-size: 12px;
+	font-weight: 400;
+	color: var(--color-text-maxcontrast);
 }
 </style>

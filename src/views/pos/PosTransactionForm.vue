@@ -25,6 +25,13 @@
 					label="label"
 					:clearable="true"
 					@input="onClientSelect" />
+				<NcSelect
+					:value="selectedPriceMode"
+					:options="priceModeOptions"
+					:input-label="t('pipelinq', 'Price mode')"
+					label="label"
+					:clearable="false"
+					@input="onPriceModeSelect" />
 				<NcTextField
 					:value.sync="transaction.notes"
 					:label="t('pipelinq', 'Notes')" />
@@ -49,6 +56,7 @@
 						:key="line._key"
 						:line="line"
 						:products="products"
+						:price-mode="priceMode"
 						@update:line="updateLine(index, $event)"
 						@remove="removeLine(index)" />
 				</tbody>
@@ -61,7 +69,7 @@
 				{{ t('pipelinq', 'Add line') }}
 			</NcButton>
 
-			<PosTotalsPanel :lines="lines" />
+			<PosTotalsPanel :lines="lines" :price-mode="priceMode" />
 
 			<div class="pos-form__actions">
 				<NcButton type="primary" :disabled="saving" @click="save">
@@ -100,7 +108,7 @@ export default {
 	},
 	data() {
 		return {
-			transaction: { status: 'draft', terminalId: '', notes: '', client: null },
+			transaction: { status: 'draft', terminalId: '', notes: '', client: null, priceMode: 'excl' },
 			lines: [],
 			products: [],
 			clients: [],
@@ -145,6 +153,33 @@ export default {
 		 */
 		selectedClient() {
 			return this.clientOptions.find(o => o.id === this.transaction.client) || null
+		},
+		/**
+		 * The current price mode ('excl' default).
+		 *
+		 * @return {string} The price mode.
+		 */
+		priceMode() {
+			return this.transaction.priceMode === 'incl' ? 'incl' : 'excl'
+		},
+		/**
+		 * Available price mode options.
+		 *
+		 * @return {Array<object>} The options.
+		 */
+		priceModeOptions() {
+			return [
+				{ id: 'excl', label: t('pipelinq', 'Excl. BTW') },
+				{ id: 'incl', label: t('pipelinq', 'Incl. BTW') },
+			]
+		},
+		/**
+		 * The selected price mode option.
+		 *
+		 * @return {object} The option.
+		 */
+		selectedPriceMode() {
+			return this.priceModeOptions.find(o => o.id === this.priceMode) || this.priceModeOptions[0]
 		},
 	},
 	async mounted() {
@@ -267,7 +302,7 @@ export default {
 
 				let sortOrder = 1
 				for (const line of this.lines) {
-					const computed = recalculateLine(line)
+					const computed = recalculateLine(line, this.priceMode)
 					const payload = {
 						transaction: txId,
 						product: line.product || null,
@@ -302,6 +337,14 @@ export default {
 		 */
 		onClientSelect(option) {
 			this.transaction.client = option ? option.id : null
+		},
+		/**
+		 * Apply a price mode selection.
+		 *
+		 * @param {object|null} option The chosen price mode.
+		 */
+		onPriceModeSelect(option) {
+			this.$set(this.transaction, 'priceMode', option ? option.id : 'excl')
 		},
 		/**
 		 * Return to the transaction list.
