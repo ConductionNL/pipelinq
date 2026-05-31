@@ -247,6 +247,53 @@
               "win":  { "from": ["open"], "to": "won",  "description": "Close the lead as won. Authorization: assignee or a member of the sales group.", "authorization": { "field": "assignee", "groups": ["sales"] } },
               "lose": { "from": ["open"], "to": "lost", "description": "Close the lead as lost. Authorization: assignee or a member of the sales group.", "authorization": { "field": "assignee", "groups": ["sales"] } }
             }
+          },
+          "x-openregister-calculations": {
+            "daysSinceActivity": {
+              "type": "integer",
+              "materialise": false,
+              "description": "Staleness — days since the lead was last touched. Derived from @self.updated (the object's last save) so it is always fresh on read; lead-management spec staleness scenario (Scenario 49). A consumer flags the lead as stale when this exceeds the configured threshold.",
+              "expression": {
+                "dateDiff": { "from": { "prop": "@self.updated" }, "to": "now", "unit": "days" }
+              }
+            },
+            "daysInStage": {
+              "type": "integer",
+              "materialise": false,
+              "description": "Aging — days the lead has spent in its current pipeline stage. Diffs stageEnteredAt against now; falls back to @self.created when the stage-change writer has not yet populated stageEnteredAt (lead-management spec Aging Indicator, Scenario 50/51).",
+              "expression": {
+                "dateDiff": {
+                  "from": { "if": [ { "ne": [ { "prop": "stageEnteredAt" }, null ] }, { "prop": "stageEnteredAt" }, { "prop": "@self.created" } ] },
+                  "to": "now",
+                  "unit": "days"
+                }
+              }
+            },
+            "weightedValue": {
+              "type": "number",
+              "materialise": false,
+              "description": "Probability-weighted lead value (value * probability / 100). Single-object derived figure feeding the Pipeline Value KPI. NOTE: the lead-management spec's 'lead value from line items' sum (Scenario: Calculate lead value from line items) is a cross-schema aggregation over leadProduct rows and is NOT expressible as a single-object calculation — it remains a service/frontend concern per ADR-031 exception (2).",
+              "expression": {
+                "/": [ { "*": [ { "prop": "value" }, { "prop": "probability" } ] }, 100 ]
+              }
+            },
+            "qualificationScore": {
+              "type": "integer",
+              "materialise": true,
+              "description": "Backend qualification score (0-100), materialised on every save. Resolves the lead-management spec 'frontend vs backend qualification score' open question: the score is a backend calculation; the frontend reads it. Point weights mirror the spec's default scoring criteria (Scenario: Auto-calculate qualification score on lead save): value present +10, value above EUR 10000 +20, client linked +15, contact linked +10, source referral/partner +15, expectedCloseDate set +10, priority high/urgent +10, description present +5.",
+              "expression": {
+                "+": [
+                  { "if": [ { "gt": [ { "prop": "value" }, 0 ] }, 10, 0 ] },
+                  { "if": [ { "gt": [ { "prop": "value" }, 10000 ] }, 20, 0 ] },
+                  { "if": [ { "ne": [ { "prop": "client" }, null ] }, 15, 0 ] },
+                  { "if": [ { "ne": [ { "prop": "contact" }, null ] }, 10, 0 ] },
+                  { "if": [ { "or": [ { "eq": [ { "prop": "source" }, "referral" ] }, { "eq": [ { "prop": "source" }, "partner" ] } ] }, 15, 0 ] },
+                  { "if": [ { "ne": [ { "prop": "expectedCloseDate" }, null ] }, 10, 0 ] },
+                  { "if": [ { "or": [ { "eq": [ { "prop": "priority" }, "high" ] }, { "eq": [ { "prop": "priority" }, "urgent" ] } ] }, 10, 0 ] },
+                  { "if": [ { "ne": [ { "prop": "description" }, null ] }, 5, 0 ] }
+                ]
+              }
+            }
           }
         },
         "required": [
@@ -343,6 +390,24 @@
             ],
             "default": "open",
             "title": "Status",
+            "facetable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Free-text description of the opportunity (used by the qualification-score calculation: presence is worth +5 points)",
+            "visible": false
+          },
+          "stageEnteredAt": {
+            "type": "string",
+            "description": "Timestamp the lead entered its current pipeline stage. Set by the stage-change writer; the aging calculation diffs this against now. When unset, aging falls back to @self.created.",
+            "format": "date-time",
+            "visible": false
+          },
+          "qualificationScore": {
+            "type": "integer",
+            "description": "Backend-computed qualification score (0-100). Materialised by the x-openregister-calculations.qualificationScore annotation on every save — never written by service code. Resolves the lead-management spec 'frontend vs backend qualification score' open question in favour of a backend calculation.",
+            "minimum": 0,
+            "maximum": 100,
             "facetable": true
           }
         }
