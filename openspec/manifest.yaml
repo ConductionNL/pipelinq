@@ -1,0 +1,58 @@
+# pipelinq — OpenSpec coordination manifest
+#
+# Declarative home for the shared specs pipelinq consumes (ADR-024 / Hydra
+# `adopt-app-manifest`). This is the OpenSpec *coordination* manifest — it
+# records cross-app dependencies, consumed shared capabilities, the minimum
+# OpenRegister version, and pipelinq's exemplar role. It is distinct from the
+# nc-vue *runtime* manifest at `src/manifest.json` (which declares routes,
+# navigation, and page types for the front-end shell).
+#
+# See:
+#   - hydra/openspec/changes/adopt-app-manifest/      (fleet-wide adoption)
+#   - hydra/openspec/architecture/adr-024-app-manifest.md
+#   - openspec/changes/archive/2026-05-18-pipelinq-adopt-or-abstractions-split/design.md
+#     (Decision 7 — src/store/modules/object.js is the createObjectStore exemplar)
+
+app: pipelinq
+
+# Tier 3 — frontend exemplar. pipelinq is the reference implementation for the
+# nc-vue createObjectStore pattern (Decision 7 of the OR-abstractions split).
+tier: 3
+
+# Cross-app install-time dependencies. pipelinq is hard-coupled to OpenRegister
+# for its data layer (registers, schemas, objects, RBAC, audit trail).
+dependencies:
+  - openregister
+
+# Shared specs pipelinq consumes. Each entry is the canonical capability name as
+# owned by its home repo (OpenRegister or nextcloud-vue). Declaring `consumes`
+# here is the deliverable — it records intent and lets Hydra coordination trace
+# which apps depend on each shared capability, independent of runtime adoption.
+consumes:
+  # OpenRegister — SHIPPED (in OR main specs; consumed at runtime today)
+  - contacts-actions                   # OR: Contacts integration provider (archived 2026-05-01)
+  # OpenRegister — declared intent; capability is an active OR change not yet
+  # promoted to OR's main specs, so runtime adoption is pending it shipping.
+  - register-resolver-service          # OR: request-scoped register/schema id resolution (active change)
+  - pluggable-integration-registry     # OR: integration registry (active change)
+  - i18n-source-of-truth               # OR: translatable-field source of truth (active change)
+  - i18n-api-language-negotiation      # OR: Accept-Language negotiation (active change)
+  # nextcloud-vue — declared intent; runtime adoption pending the named change
+  - multi-tenancy-context              # nc-vue: useTenantContext composable (active change)
+
+# Minimum OpenRegister version. Pinned to the OR release that ships the
+# `contacts-actions` integration provider (archived to OR main specs
+# 2026-05-01; first contained in the v1.0.2 tag). register-resolver-service
+# and the i18n capabilities are still active OR changes (not yet promoted to
+# OR main specs / a tagged release), so they are declared in `consumes` as
+# forward intent rather than gating this pin. Bump this pin once those
+# capabilities ship in a tagged OR release.
+openregister:
+  min-version: "1.0.2"
+
+# Exemplar role. pipelinq's src/store/modules/object.js is the fleet reference
+# implementation of the nc-vue createObjectStore pattern. Hydra coordination
+# recognises this app as the object-store reference so future audits cite this
+# declaration instead of re-investigating.
+pipelinq:
+  role: object-store-exemplar
