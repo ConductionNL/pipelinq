@@ -82,6 +82,29 @@ class SettingsService
     ];
 
     /**
+     * Tenant-tunable admin-config keys migrated from hardcoded constants
+     * (Phase 7). Each value is the historical constant default, so an
+     * unconfigured install preserves prior behavior exactly.
+     *
+     * These keys are surfaced through getSettings()/updateSettings() so the
+     * existing admin-gated SettingsController write path persists them.
+     *
+     * @var array<string, string>
+     */
+    public const TUNABLE_DEFAULTS = [
+        'queue_overflow.poll_interval_seconds'     => '300',
+        'task_expiry.poll_interval_seconds'        => '900',
+        'task_expiry.escalation_threshold_seconds' => '14400',
+        'task_expiry.in_progress_grace_seconds'    => '86400',
+        'task_escalation.threshold_hours'          => '4',
+        'task.business_hour_start'                 => '8',
+        'task.business_hour_end'                   => '17',
+        'prospect_discovery.cache_ttl_seconds'     => '3600',
+        'kvk.api_base_url'                         => 'https://api.kvk.nl/api/v1',
+        'opencorporates.api_base_url'              => 'https://api.opencorporates.com/v0.4',
+    ];
+
+    /**
      * Constructor.
      *
      * @param IAppConfig             $appConfig           The app config.
@@ -115,6 +138,10 @@ class SettingsService
             $config[$key] = $this->appConfig->getValueString(Application::APP_ID, $key, '');
         }
 
+        foreach (self::TUNABLE_DEFAULTS as $key => $default) {
+            $config[$key] = $this->appConfig->getValueString(Application::APP_ID, $key, $default);
+        }
+
         return $config;
     }//end getSettings()
 
@@ -130,6 +157,12 @@ class SettingsService
     public function updateSettings(array $data): array
     {
         foreach (self::CONFIG_KEYS as $key) {
+            if (isset($data[$key]) === true) {
+                $this->appConfig->setValueString(Application::APP_ID, $key, (string) $data[$key]);
+            }
+        }
+
+        foreach (array_keys(array: self::TUNABLE_DEFAULTS) as $key) {
             if (isset($data[$key]) === true) {
                 $this->appConfig->setValueString(Application::APP_ID, $key, (string) $data[$key]);
             }
@@ -277,4 +310,44 @@ class SettingsService
     {
         $this->appConfig->setValueString(Application::APP_ID, $key, $value);
     }//end setConfigValue()
+
+    /**
+     * Get an integer admin-config value by key.
+     *
+     * Used by background jobs and services for the tenant-tunable timing and
+     * threshold values migrated from hardcoded constants (Phase 7). The
+     * caller supplies the historical constant as the default so an
+     * unconfigured install preserves prior behavior.
+     *
+     * @param string $key     The config key.
+     * @param int    $default The default value (the historical constant).
+     *
+     * @return int The configured value, or the default if unset.
+     *
+     * @spec openspec/changes/pipelinq-admin-config-magic-numbers/specs/pipelinq-or-adoption/spec.md
+     */
+    public function getIntValue(string $key, int $default): int
+    {
+        return $this->appConfig->getValueInt(Application::APP_ID, $key, $default);
+    }//end getIntValue()
+
+    /**
+     * Get a string admin-config value by key (typed wrapper).
+     *
+     * Used for the tenant-tunable third-party API base URLs migrated from
+     * hardcoded constants (Phase 7). The caller supplies the known host as
+     * the default. The key is admin-only (written via the admin-gated
+     * SettingsController), so no untrusted input reaches the URL.
+     *
+     * @param string $key     The config key.
+     * @param string $default The default value (the historical constant).
+     *
+     * @return string The configured value, or the default if unset.
+     *
+     * @spec openspec/changes/pipelinq-admin-config-magic-numbers/specs/pipelinq-or-adoption/spec.md
+     */
+    public function getStringValue(string $key, string $default): string
+    {
+        return $this->appConfig->getValueString(Application::APP_ID, $key, $default);
+    }//end getStringValue()
 }//end class
