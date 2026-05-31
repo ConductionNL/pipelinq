@@ -106,6 +106,15 @@ class SettingsService
         'prospect_discovery.cache_ttl_seconds'     => '3600',
         'kvk.api_base_url'                         => 'https://api.kvk.nl/api/v1',
         'opencorporates.api_base_url'              => 'https://api.opencorporates.com/v0.4',
+        'receipt_company_name'                     => 'Conduction B.V.',
+        'receipt_company_address'                  => '',
+        'receipt_company_phone'                    => '',
+        'receipt_company_vat'                      => '',
+        'receipt_company_kvk'                      => '',
+        'receipt_email_sender'                     => '',
+        'receipt_printer_host'                     => '',
+        'receipt_printer_port'                     => '9100',
+        'receipt_default_template'                 => '',
     ];
 
     /**
