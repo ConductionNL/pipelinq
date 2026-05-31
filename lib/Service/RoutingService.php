@@ -272,7 +272,7 @@ class RoutingService
             return [];
         }
 
-        $skills             = $this->loadActiveSkills(registerId: $registerId, skillSchemaId: $skillSchemaId, category: $category);
+        $skills = $this->loadActiveSkills(registerId: $registerId, skillSchemaId: $skillSchemaId, category: $category);
         $matchingSkillsById = $this->collectMatchingSkills(skills: $skills, category: $category);
         if ($matchingSkillsById === []) {
             return [];
