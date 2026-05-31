@@ -357,7 +357,7 @@ class RoutingService
         return array_values(
                 array_filter(
             $profiles,
-            static fn(array $p): bool => ($p['isAvailable'] ?? true) !== false
+            static fn(array $profile): bool => ($profile['isAvailable'] ?? true) !== false
         )
                 );
     }//end filterByAvailability()

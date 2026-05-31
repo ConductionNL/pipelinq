@@ -33,6 +33,7 @@ use OCP\IAppConfig;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Public controller for intake form rendering and submission.
@@ -200,7 +201,7 @@ class PublicFormController extends Controller
             );
 
             if ($saved === null) {
-                throw new \RuntimeException('Failed to persist submission');
+                throw new RuntimeException('Failed to persist submission');
             }
 
             $response = new JSONResponse(

@@ -142,11 +142,9 @@ class ContactmomentService
         // saveObject/createObject call) rather than the user-mutable `agent` field.
         // Any caller with OR write-access can stamp `agent: victim_uid`; `createdBy`
         // is protected by the platform and cannot be overwritten via the public API.
-        if (is_array($object) === true) {
-            $createdBy = ($object['createdBy'] ?? '');
-        } else {
-            $createdBy = ($object->getCreatedBy() ?? '');
-        }//end if
+        $createdBy = is_array($object) === true
+            ? ($object['createdBy'] ?? '')
+            : ($object->getCreatedBy() ?? '');
 
         $isCreator = ($createdBy !== '' && $createdBy === $currentUserId);
         $isAdmin   = $this->groupManager->isAdmin($currentUserId);
