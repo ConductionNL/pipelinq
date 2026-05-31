@@ -2,7 +2,7 @@
 
 ## 0. Deduplication Check
 
-- [ ] 0.1 Verify no existing OpenRegister service or Pipelinq component already implements variant matrix, modifier groups, or price tier logic.
+- [x] 0.1 Verify no existing OpenRegister service or Pipelinq component already implements variant matrix, modifier groups, or price tier logic.
   - Search `openspec/specs/`, `lib/Service/`, and `src/components/` for: "variant", "modifier", "priceTier", "btwClass", "barcode"
   - Document findings: if overlap found, extend existing code; if none found, proceed.
 
@@ -10,37 +10,37 @@
 
 ## 1. Data Model — product schema extension
 
-- [ ] 1.1 Add `barcode` property to the `product` schema in `lib/Settings/pipelinq_register.json`
+- [x] 1.1 Add `barcode` property to the `product` schema in `lib/Settings/pipelinq_register.json`
   - **spec_ref**: `specs/pos-product-catalogue/spec.md#REQ-PPC-005`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
     - GIVEN a product object is created with `barcode: "8714100838623"`
     - THEN the field MUST be stored and returned by the OpenRegister API
 
-- [ ] 1.2 Add `btwClass` property (string enum: hoog/laag/nul/vrijgesteld, facetable) to the `product` schema
+- [x] 1.2 Add `btwClass` property (string enum: hoog/laag/nul/vrijgesteld, facetable) to the `product` schema
   - **spec_ref**: `specs/pos-product-catalogue/spec.md#REQ-PPC-004`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
     - GIVEN `btwClass` is set to `laag`
     - THEN the facet sidebar MUST count it in the "laag" bucket
 
-- [ ] 1.3 Add `duration` property (integer, minutes) to the `product` schema
+- [x] 1.3 Add `duration` property (integer, minutes) to the `product` schema
   - **spec_ref**: `specs/pos-product-catalogue/spec.md#REQ-PPC-006`
   - **files**: `lib/Settings/pipelinq_register.json`
 
-- [ ] 1.4 Add `variants` property (array of objects) to the `product` schema
+- [x] 1.4 Add `variants` property (array of objects) to the `product` schema
   - **spec_ref**: `specs/pos-product-catalogue/spec.md#REQ-PPC-001`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
     - Schema MUST define `items.properties`: sku (string), name (string), attributes (object), unitPrice (number), barcode (string), status (enum: active/inactive)
 
-- [ ] 1.5 Add `modifierGroups` property (array of objects) to the `product` schema
+- [x] 1.5 Add `modifierGroups` property (array of objects) to the `product` schema
   - **spec_ref**: `specs/pos-product-catalogue/spec.md#REQ-PPC-002`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
     - Schema MUST define `items.properties`: name, required (bool), multiSelect (bool), min (int), max (int), options (array of {name, priceAdjustment})
 
-- [ ] 1.6 Add `priceTiers` property (array of objects) to the `product` schema
+- [x] 1.6 Add `priceTiers` property (array of objects) to the `product` schema
   - **spec_ref**: `specs/pos-product-catalogue/spec.md#REQ-PPC-003`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -50,7 +50,7 @@
 
 ## 2. Seed Data
 
-- [ ] 2.1 Add 5 Dutch product seed objects to `components.objects[]` in `pipelinq_register.json`
+- [x] 2.1 Add 5 Dutch product seed objects to `components.objects[]` in `pipelinq_register.json`
   - **spec_ref**: Company ADR-001 (data-layer) — seed data requirement
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
