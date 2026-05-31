@@ -106,6 +106,13 @@ return [
         ['name' => 'productCatalog#lookupBarcode', 'url' => '/api/products/barcode-lookup', 'verb' => 'POST'],
         ['name' => 'productCatalog#resolvePrice',  'url' => '/api/products/resolve-price',  'verb' => 'POST'],
 
+        // POS receipt operations (camelCase slug matches PosReceiptController class name).
+        // receiptTemplate / receiptPrintLog CRUD is handled by OpenRegister's generic
+        // object API; these are the render/email/thermal-print actions on a transaction.
+        ['name' => 'posReceipt#preview', 'url' => '/api/pos-transactions/{id}/receipt/preview', 'verb' => 'GET'],
+        ['name' => 'posReceipt#email',   'url' => '/api/pos-transactions/{id}/receipt/email',   'verb' => 'POST'],
+        ['name' => 'posReceipt#print',   'url' => '/api/pos-transactions/{id}/receipt/print',   'verb' => 'POST'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
