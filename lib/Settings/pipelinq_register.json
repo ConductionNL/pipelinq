@@ -2529,6 +2529,23 @@
               "type": "object"
             }
           },
+          "invoiceBreakdown": {
+            "type": "array",
+            "description": "Per-rate GL posting breakdown for shillinq, e.g. [{ rate: 21, base: 100.00, tax: 21.00, description: \"Standard VAT (21%)\" }] (server-computed). Shillinq posts one GL line per rate.",
+            "items": {
+              "type": "object"
+            }
+          },
+          "priceMode": {
+            "type": "string",
+            "description": "Whether the cashier-entered unitPrice values are tax-inclusive (incl) or tax-exclusive (excl). Internal tax is always computed on the net (exclusive) base. Default: excl.",
+            "enum": [
+              "excl",
+              "incl"
+            ],
+            "default": "excl",
+            "title": "Price mode"
+          },
           "totalTax": {
             "type": "number",
             "description": "Aggregate tax amount, sum of taxBreakdown[*].tax (server-computed)",
