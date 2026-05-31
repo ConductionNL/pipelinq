@@ -31,11 +31,13 @@ use Psr\Log\LoggerInterface;
 class ProspectDiscoveryService
 {
     /**
-     * Cache TTL in seconds (1 hour).
+     * Default cache TTL in seconds (1 hour) when unconfigured.
+     *
+     * Tunable via `pipelinq.prospect_discovery.cache_ttl_seconds`.
      *
      * @var int
      */
-    private const CACHE_TTL = 3600;
+    private const DEFAULT_CACHE_TTL = 3600;
 
     /**
      * Cache key prefix.
@@ -358,7 +360,11 @@ class ProspectDiscoveryService
     private function setInCache(string $key, array $data): void
     {
         if (function_exists(function: 'apcu_store') === true) {
-            apcu_store($key, $data, self::CACHE_TTL);
+            $ttl = $this->settings->getIntValue(
+                'prospect_discovery.cache_ttl_seconds',
+                self::DEFAULT_CACHE_TTL
+            );
+            apcu_store($key, $data, $ttl);
         }
     }//end setInCache()
 }//end class

@@ -22,6 +22,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use OCA\Pipelinq\Service\OpenCorporatesApiClient;
 use OCA\Pipelinq\Service\OpenCorporatesResultMapper;
 use OCP\Http\Client\IClientService;
+use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -30,6 +31,21 @@ use Psr\Log\LoggerInterface;
  */
 class OpenCorporatesApiClientTest extends TestCase
 {
+    /**
+     * Build an IAppConfig mock that echoes the supplied default string value.
+     *
+     * @return IAppConfig The configured mock.
+     */
+    private function appConfigMock(): IAppConfig
+    {
+        $appConfig = $this->createMock(IAppConfig::class);
+        $appConfig->method('getValueString')->willReturnCallback(
+            static fn (string $app, string $key, string $default=''): string => $default
+        );
+
+        return $appConfig;
+    }//end appConfigMock()
+
     /**
      * Test search returns empty for empty keywords.
      *
@@ -41,7 +57,7 @@ class OpenCorporatesApiClientTest extends TestCase
         $logger        = $this->createMock(LoggerInterface::class);
         $resultMapper  = new OpenCorporatesResultMapper();
 
-        $client = new OpenCorporatesApiClient($clientService, $logger, $resultMapper);
+        $client = new OpenCorporatesApiClient($clientService, $this->appConfigMock(), $logger, $resultMapper);
 
         $this->assertSame([], $client->search(['keywords' => []]));
     }//end testSearchReturnsEmptyForNoKeywords()
@@ -57,7 +73,7 @@ class OpenCorporatesApiClientTest extends TestCase
         $logger        = $this->createMock(LoggerInterface::class);
         $resultMapper  = new OpenCorporatesResultMapper();
 
-        $client = new OpenCorporatesApiClient($clientService, $logger, $resultMapper);
+        $client = new OpenCorporatesApiClient($clientService, $this->appConfigMock(), $logger, $resultMapper);
 
         $this->assertSame([], $client->search([]));
     }//end testSearchReturnsEmptyWithoutKeywordsKey()

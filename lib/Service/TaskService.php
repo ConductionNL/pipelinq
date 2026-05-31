@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\AppInfo\Application;
+use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -69,30 +71,66 @@ class TaskService
     ];
 
     /**
-     * Default business hours start.
+     * Default business hours start when unconfigured.
      *
      * @var int
      */
-    private const BUSINESS_HOUR_START = 8;
+    private const DEFAULT_BUSINESS_HOUR_START = 8;
 
     /**
-     * Default business hours end.
+     * Default business hours end when unconfigured.
      *
      * @var int
      */
-    private const BUSINESS_HOUR_END = 17;
+    private const DEFAULT_BUSINESS_HOUR_END = 17;
 
     /**
      * Constructor.
      *
      * @param IUserSession    $userSession The user session.
+     * @param IAppConfig      $appConfig   The app config.
      * @param LoggerInterface $logger      The logger.
      */
     public function __construct(
         private IUserSession $userSession,
+        private IAppConfig $appConfig,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
+
+    /**
+     * Get the admin-configured business-hour start (default 8).
+     *
+     * Tunable via `pipelinq.task.business_hour_start`; the default preserves
+     * the historical 08:00 start so an unconfigured install is unchanged.
+     *
+     * @return int The business-hour start (0-23).
+     */
+    private function getBusinessHourStart(): int
+    {
+        return $this->appConfig->getValueInt(
+            Application::APP_ID,
+            'task.business_hour_start',
+            self::DEFAULT_BUSINESS_HOUR_START
+        );
+    }//end getBusinessHourStart()
+
+    /**
+     * Get the admin-configured business-hour end (default 17).
+     *
+     * Tunable via `pipelinq.task.business_hour_end`; the default preserves the
+     * historical 17:00 end so an unconfigured install is unchanged.
+     *
+     * @return int The business-hour end (0-23).
+     */
+    private function getBusinessHourEnd(): int
+    {
+        return $this->appConfig->getValueInt(
+            Application::APP_ID,
+            'task.business_hour_end',
+            self::DEFAULT_BUSINESS_HOUR_END
+        );
+    }//end getBusinessHourEnd()
 
     /**
      * Calculate the default deadline (next business day at 17:00).
@@ -111,7 +149,7 @@ class TaskService
             $deadline->modify('+1 day');
         }
 
-        $deadline->setTime(self::BUSINESS_HOUR_END, 0, 0);
+        $deadline->setTime($this->getBusinessHourEnd(), 0, 0);
 
         return $deadline->format(\DateTime::ATOM);
     }//end getDefaultDeadline()
@@ -130,8 +168,10 @@ class TaskService
      */
     public function calculateDeadline(string $createdAt, int $businessHours): string
     {
-        $start     = new \DateTime($createdAt);
-        $remaining = $businessHours;
+        $start         = new \DateTime($createdAt);
+        $remaining     = $businessHours;
+        $businessStart = $this->getBusinessHourStart();
+        $businessEnd   = $this->getBusinessHourEnd();
 
         while ($remaining > 0) {
             $start->modify('+1 hour');
@@ -141,7 +181,7 @@ class TaskService
             }
 
             $hour = (int) $start->format('G');
-            if ($hour >= self::BUSINESS_HOUR_START && $hour < self::BUSINESS_HOUR_END) {
+            if ($hour >= $businessStart && $hour < $businessEnd) {
                 $remaining--;
             }
         }
