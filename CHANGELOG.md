@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.17] - 2026-05-31
+
+### Added
+
+- Lifecycle annotations (`x-openregister-lifecycle`) on the `lead`, `request`,
+  `complaint`, `calendarLink` and `kennisartikel` schemas (the `task` schema
+  already carried one). Each declares `field` / `initial` / `final` plus
+  per-transition `from` / `to`, a human-readable `description` (state-transition
+  rule) and an `authorization` block (assignee/author field + optional sales
+  group). The kennisartikel `visibility` enum (`intern` / `openbaar`) stays a
+  separate orthogonal field, not part of the lifecycle.
+- Notification annotations (`x-openregister-notifications`) with `transition`
+  triggers on `lead` (`win` → leadWon, `lose` → leadLost), `task`
+  (`complete` → taskCompleted, `expire` → taskExpired), `request`
+  (`complete` → requestCompleted) and `complaint` (`resolve` →
+  complaintResolved). Every `trigger.action` key equals a lifecycle transition
+  **name** (not a destination state) so OpenRegister's
+  AnnotationNotificationDispatcher matches it against
+  `ObjectTransitionedEvent::getAction()`.
+- `RegisterAnnotationsTest` — asserts every lifecycle annotation is well-formed
+  (field/initial/transitions resolve to declared enum states, each transition
+  documented) and that every notification transition `action` resolves to a
+  declared transition name and never to a destination state.
+
+### Notes
+
+- Behaviour-preserving: on-wire status values are unchanged and the existing
+  imperative `NotificationService::send()` and `ActivityService` paths are
+  retained. The new transition-triggered notification rules stay **dormant**
+  until pipelinq routes its status changes through OpenRegister's
+  `TransitionEngine` (today status is written directly via `saveObject`, which
+  does not dispatch `ObjectTransitionedEvent`). `ActivityService::setSubject()`
+  is intentionally not migrated — it feeds the Nextcloud Activity stream, a
+  surface the notification-annotation runtime does not replace.
+- Implements openspec change `pipelinq-or-lifecycle-notification` (Phase 2
+  lifecycle + Phase 3 notification annotation migration).
+
 ## [0.2.16] - 2026-05-31
 
 ### Changed
