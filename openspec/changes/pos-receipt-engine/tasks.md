@@ -86,7 +86,7 @@ OpenRegister's ObjectService (no Eloquent models / DB migrations), and has **no*
 
 ## 8. Internationalization (i18n)
 
-- [ ] 8.1 Add English translation keys to `l10n/en.json`:
+- [x] 8.1 Add English translation keys to `l10n/en.json` (+ `en.js`). Implemented keys may differ slightly from the draft below (no Printer-status keys, which are deferred with task 4.10); the receipt-action keys are all present:
   ```
   "Print Receipt": "Print Receipt"
   "Email Receipt": "Email Receipt"
@@ -110,7 +110,7 @@ OpenRegister's ObjectService (no Eloquent models / DB migrations), and has **no*
   "Rendered content": "Rendered content"
   ```
 
-- [ ] 8.2 Add Dutch translation keys to `l10n/nl.json`:
+- [x] 8.2 Add Dutch translation keys to `l10n/nl.json` (+ `nl.js`):
   ```
   "Print Receipt": "Bonnetje afdrukken"
   "Email Receipt": "Bonnetje e-mailen"
@@ -134,8 +134,6 @@ OpenRegister's ObjectService (no Eloquent models / DB migrations), and has **no*
   "Rendered content": "Weergegeven inhoud"
   ```
 
-- [x] 8.1 English keys added to `l10n/en.json` (+ `en.js`)
-- [x] 8.2 Dutch keys added to `l10n/nl.json` (+ `nl.js`)
 - [x] 8.3 Key parity verified — all new keys present in both nl + en (ADR-007)
 
 ## 9. Testing: Unit tests
