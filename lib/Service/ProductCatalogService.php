@@ -125,7 +125,7 @@ class ProductCatalogService
      * Defensive: invalid tiers (missing / non-positive minQuantity) are dropped
      * so a malformed stored tier cannot corrupt resolution.
      *
-     * @param array<int, array<string, mixed>> $tiers The raw price tiers.
+     * @param array<int, mixed> $tiers The raw price tiers (each entry may be malformed).
      *
      * @return array<int, array<string, mixed>> The cleaned, sorted tiers.
      *
