@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.25] - 2026-05-31
+
+### Added
+
+- POS Receipt Engine (builds on pos-transaction-core / pos-nl-btw-engine):
+  - `receiptTemplate` and `receiptPrintLog` OpenRegister schemas (customizable
+    header/footer/company/layout templates; append-only audit log of every print/email).
+  - `ReceiptService` renders a transaction to plain-text, HTML and an ESC/POS thermal
+    byte stream, reusing the persisted `invoiceBreakdown` for BTW lines (tax is never
+    re-derived). Template rendering is injection/SSRF-safe (no expression evaluation).
+  - Legal-invoice variant auto-selected for sales ≥ EUR 100: full per-rate BTW breakdown
+    plus a Dutch compliance footer (VAT id, KvK, invoice number, dates).
+  - `InvoiceSequenceService` allocates gap-free, race-safe, non-forgeable sequential
+    legal invoice numbers (`YYYY-NNNNNN`, compare-and-set, year reset).
+  - `ReceiptDeliveryService` + `PosReceiptController` expose per-transaction
+    `receipt/preview`, `receipt/email` and `receipt/print` endpoints (authenticated,
+    app-register-scoped — no IDOR; email constrained to the linked customer — no spam).
+  - Frontend: isolated `PrintReceiptModal` / `EmailReceiptModal` + `ReceiptPreviewPane`,
+    wired into the POS transaction detail view; nl + en translations.
+
+### Security
+
+- Legal invoice numbers are server-allocated and verified against the immutable
+  receipt audit log, so a client-forged `invoiceNumber` on a transaction cannot be
+  honoured.
+
+### Fixed
+
+- Cleared a pre-existing PHPStan strict-comparison finding in `ProductCatalogService`
+  and a `vue/no-reserved-keys` ESLint error in `LeadDetail.vue`.
+
 ## [0.2.24] - 2026-05-31
 
 ### Added
