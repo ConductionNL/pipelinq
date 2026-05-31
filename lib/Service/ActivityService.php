@@ -31,6 +31,17 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for publishing Pipelinq activity events.
+ *
+ * The `setSubject()` call in {@see self::publish()} writes to the Nextcloud
+ * Activity stream (`OCP\Activity\IManager`/`IEvent`), which is a distinct
+ * surface from notifications. It is intentionally NOT migrated to
+ * `x-openregister-notifications`: the annotation runtime emits
+ * `nc-notification` channel notifications and does not feed the Activity
+ * stream, so replacing this call would silently drop the activity feed.
+ * Notification-channel delivery for lifecycle transitions is covered
+ * declaratively by the schema annotations (see {@see NotificationService}).
+ *
+ * @spec openspec/changes/pipelinq-or-lifecycle-notification/tasks.md#task-3.2
  */
 class ActivityService
 {
