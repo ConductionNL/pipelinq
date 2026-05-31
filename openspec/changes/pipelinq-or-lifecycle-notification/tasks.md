@@ -43,9 +43,24 @@ Migrate per ADR-022.
 
 Audit citation: `04-hardcoded.md`.
 
-- [ ] 3.1 `lib/Service/NotificationService.php:405-412` — direct
-      `notificationManager->notify()` calls. Replace with
-      `x-openregister-notifications` triggers on the relevant schemas (likely
-      task/callback/lead).
-- [ ] 3.2 `lib/Service/ActivityService.php:291` — `setSubject()` call. Same migration —
-      activity events become notification triggers on lifecycle transitions.
+- [x] 3.1 `lib/Service/NotificationService.php` — declared
+      `x-openregister-notifications` transition triggers on `lead` (`win` → leadWon,
+      `lose` → leadLost), `task` (`complete` → taskCompleted, `expire` → taskExpired),
+      `request` (`complete` → requestCompleted) and `complaint` (`resolve` →
+      complaintResolved). Every `trigger.action` key equals a lifecycle **transition
+      NAME** (NOT a destination state) so OpenRegister's
+      AnnotationNotificationDispatcher matches it against
+      `ObjectTransitionedEvent::getAction()` (mirrors the openbuild action-key fix).
+      The imperative `notify()` path is retained verbatim and the annotation rules
+      stay DORMANT until pipelinq routes status changes through OR's TransitionEngine
+      (today status is written directly via `saveObject`, which does not dispatch
+      `ObjectTransitionedEvent`); removing the imperative path now would silently drop
+      live notifications and the per-user opt-out settings the annotation runtime does
+      not replicate. Documented in the class docblock.
+- [x] 3.2 `lib/Service/ActivityService.php` — the `setSubject()` call writes to the
+      Nextcloud **Activity stream** (`OCP\Activity\IEvent`), a different surface from
+      notifications. Intentionally NOT migrated: the `x-openregister-notifications`
+      runtime emits `nc-notification` notifications and does not feed the activity
+      feed, so replacing it would drop the feed (behaviour change). Rationale
+      documented in the class docblock; notification-channel coverage for transitions
+      is provided by the schema annotations in task 3.1.
