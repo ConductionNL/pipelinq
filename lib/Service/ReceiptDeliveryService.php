@@ -357,7 +357,13 @@ class ReceiptDeliveryService
      *
      * Allocated once and persisted on the transaction; subsequent receipts reuse
      * the same number so a reprint never mints a second invoice number for the
-     * same sale. The number is server-allocated and never accepted from input.
+     * same sale. The number is server-allocated and **never accepted from input**:
+     * because the posTransaction object is writable through OpenRegister's generic
+     * object API, a client could pre-seed a forged `invoiceNumber` field. We only
+     * trust an existing value when a prior immutable receiptPrintLog for this
+     * transaction recorded that exact number (proof the server issued it); any
+     * other pre-existing value is treated as forged and overwritten with a fresh
+     * server-allocated number.
      *
      * @param array<string, mixed> $transaction The transaction.
      *
@@ -371,7 +377,9 @@ class ReceiptDeliveryService
             return $transaction;
         }
 
-        if ((string) ($transaction['invoiceNumber'] ?? '') !== '') {
+        $id       = (string) ($transaction['id'] ?? $transaction['uuid'] ?? '');
+        $existing = (string) ($transaction['invoiceNumber'] ?? '');
+        if ($existing !== '' && $this->isServerIssuedInvoiceNumber(transactionId: $id, number: $existing) === true) {
             return $transaction;
         }
 
@@ -400,6 +408,48 @@ class ReceiptDeliveryService
     }//end ensureInvoiceNumber()
 
     /**
+     * Whether a given invoice number was previously issued by the server for
+     * this transaction, evidenced by an immutable receiptPrintLog entry.
+     *
+     * The audit log is server-written and append-only, so a match proves the
+     * number is authentic rather than a client-forged value injected onto the
+     * transaction object through the generic OpenRegister write API.
+     *
+     * @param string $transactionId The transaction UUID.
+     * @param string $number        The candidate invoice number.
+     *
+     * @return bool Whether a prior log entry recorded this number for this transaction.
+     *
+     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-004
+     */
+    private function isServerIssuedInvoiceNumber(string $transactionId, string $number): bool
+    {
+        if ($transactionId === '' || $number === '') {
+            return false;
+        }
+
+        try {
+            [$register, $schema] = $this->resolveSchema(schemaKey: 'receiptPrintLog_schema');
+            $results = $this->getObjectService()->findAll(
+                config: [
+                    'filters' => [
+                        'register'      => $register,
+                        'schema'        => $schema,
+                        'transaction'   => $transactionId,
+                        'invoiceNumber' => $number,
+                    ],
+                ]
+            );
+        } catch (\Throwable $e) {
+            // Fail closed: if we cannot prove the number was server-issued, treat
+            // it as unverified and let the caller allocate a fresh one.
+            return false;
+        }
+
+        return count(($results ?? [])) > 0;
+    }//end isServerIssuedInvoiceNumber()
+
+    /**
      * Write an immutable receiptPrintLog audit entry.
      *
      * Each call creates a NEW log object (append-only); entries are never
@@ -419,11 +469,12 @@ class ReceiptDeliveryService
     {
         $log = array_merge(
             [
-                'transaction' => (string) ($transaction['id'] ?? $transaction['uuid'] ?? ''),
-                'template'    => (string) ($template['id'] ?? $template['uuid'] ?? ''),
-                'action'      => $action,
-                'status'      => $status,
-                'printedAt'   => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
+                'transaction'   => (string) ($transaction['id'] ?? $transaction['uuid'] ?? ''),
+                'template'      => (string) ($template['id'] ?? $template['uuid'] ?? ''),
+                'action'        => $action,
+                'status'        => $status,
+                'invoiceNumber' => (string) ($transaction['invoiceNumber'] ?? ''),
+                'printedAt'     => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
             ],
             $extra
         );
