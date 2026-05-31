@@ -99,6 +99,10 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+		priceMode: {
+			type: String,
+			default: 'excl',
+		},
 	},
 	data() {
 		return {
@@ -161,7 +165,7 @@ export default {
 		 * @return {object} The computed line.
 		 */
 		computed() {
-			return recalculateLine(this.local)
+			return recalculateLine(this.local, this.priceMode)
 		},
 	},
 	methods: {
@@ -195,7 +199,7 @@ export default {
 		 * Emit the recomputed line to the parent.
 		 */
 		emitUpdate() {
-			this.$emit('update:line', recalculateLine({ ...this.line, ...this.local }))
+			this.$emit('update:line', recalculateLine({ ...this.line, ...this.local }, this.priceMode))
 		},
 	},
 }
