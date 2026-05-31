@@ -83,6 +83,15 @@ export async function initializeStores() {
 		if (config.register && config.receiptPrintLog_schema) {
 			objectStore.registerObjectType('receiptPrintLog', config.receiptPrintLog_schema, config.register)
 		}
+		if (config.register && config.refundReason_schema) {
+			objectStore.registerObjectType('refundReason', config.refundReason_schema, config.register)
+		}
+		if (config.register && config.posRefund_schema) {
+			objectStore.registerObjectType('posRefund', config.posRefund_schema, config.register)
+		}
+		if (config.register && config.posRefundLine_schema) {
+			objectStore.registerObjectType('posRefundLine', config.posRefundLine_schema, config.register)
+		}
 	}
 
 	return { settingsStore, objectStore }

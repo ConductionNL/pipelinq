@@ -86,6 +86,13 @@
 			"order": 95
 		},
 		{
+			"id": "PosRefunds",
+			"label": "Retouren",
+			"icon": "icon-history",
+			"route": "PosRefunds",
+			"order": 96
+		},
+		{
 			"id": "Pipeline",
 			"label": "Pipeline",
 			"icon": "icon-category-organization",
@@ -664,6 +671,61 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "posTransaction"
+			}
+		},
+		{
+			"id": "PosRefunds",
+			"route": "/pos/refunds",
+			"type": "custom",
+			"title": "Retouren",
+			"component": "PosRefundListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posRefund"
+			}
+		},
+		{
+			"id": "PosRefundNewFromTransaction",
+			"route": "/pos/refunds/new/:transactionId",
+			"type": "custom",
+			"title": "Nieuwe retour",
+			"component": "PosRefundFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posRefund"
+			}
+		},
+		{
+			"id": "PosRefundNew",
+			"route": "/pos/refunds/new",
+			"type": "custom",
+			"title": "Nieuwe retour",
+			"component": "PosRefundFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posRefund"
+			}
+		},
+		{
+			"id": "PosRefundEdit",
+			"route": "/pos/refunds/:id/edit",
+			"type": "custom",
+			"title": "Retour bewerken",
+			"component": "PosRefundFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posRefund"
+			}
+		},
+		{
+			"id": "PosRefundDetail",
+			"route": "/pos/refunds/:id",
+			"type": "custom",
+			"title": "Retour",
+			"component": "PosRefundDetailView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posRefund"
 			}
 		},
 		{
