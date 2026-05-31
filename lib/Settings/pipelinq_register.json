@@ -2808,6 +2808,12 @@
             "type": "string",
             "description": "The rendered receipt content captured for audit"
           },
+          "invoiceNumber": {
+            "type": "string",
+            "description": "Server-issued legal invoice number recorded with this action (empty for non-invoice receipts). Used to prove a number on a transaction was server-issued, not client-forged.",
+            "maxLength": 32,
+            "facetable": true
+          },
           "status": {
             "type": "string",
             "description": "Outcome of the action",
