@@ -164,6 +164,58 @@ export function computeTotals(lines, priceMode = null) {
 }
 
 /**
+ * Compute the proportional refund taxAmount and lineTotal for a single returned
+ * line. Mirrors PosRefundService::recalculateLine(): the proportion of the
+ * original line's persisted tax and total, clamped to [0, 1] so an over-quantity
+ * return can never inflate the refund. Used for the real-time refund preview;
+ * the backend recomputes the persisted figures on confirm.
+ *
+ * @param {object} originalLine The original posTransactionLine (with persisted
+ *   quantity, taxAmount and lineTotal).
+ * @param {number} returnedQty The quantity being returned.
+ * @return {{ratio: number, taxAmount: number, lineTotal: number}} The amounts.
+ */
+export function refundLineAmounts(originalLine, returnedQty) {
+	const originalQty = Number(originalLine?.quantity) || 0
+	const returned = Math.max(0, Number(returnedQty) || 0)
+	const ratio = originalQty > 0 ? Math.min(1, returned / originalQty) : 0
+	const origTax = Number(originalLine?.taxAmount) || 0
+	const origTotal = Number(originalLine?.lineTotal) || 0
+
+	return {
+		ratio,
+		taxAmount: money(origTax * ratio),
+		lineTotal: money(origTotal * ratio),
+	}
+}
+
+/**
+ * Aggregate a set of refund lines into refundAmount (excl. tax), totalTax and
+ * grand total. Each line carries its own computed taxAmount and lineTotal (incl.
+ * tax). Mirrors PosRefundService::recalculateTotals().
+ *
+ * @param {Array<object>} lines The refund lines with computed taxAmount /
+ *   lineTotal fields.
+ * @return {{refundAmount: number, totalTax: number, total: number}} The totals.
+ */
+export function computeRefundTotals(lines) {
+	let totalTax = 0
+	let total = 0
+	for (const line of lines || []) {
+		totalTax += Number(line.taxAmount) || 0
+		total += Number(line.lineTotal) || 0
+	}
+	totalTax = money(totalTax)
+	total = money(total)
+
+	return {
+		refundAmount: money(total - totalTax),
+		totalTax,
+		total,
+	}
+}
+
+/**
  * Format a number as a Dutch-locale EUR amount, e.g. "€ 1.234,56".
  *
  * @param {number} value The amount.

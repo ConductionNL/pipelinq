@@ -132,7 +132,7 @@
 
 ## 4. Frontend — Store Registration
 
-- [ ] 4.1 Register `posRefund`, `posRefundLine`, and `refundReason` object types in `src/store/store.js`
+- [x] 4.1 Register `posRefund`, `posRefundLine`, and `refundReason` object types in `src/store/store.js`
   - **files**: `pipelinq/src/store/store.js`
   - **acceptance_criteria**:
     - GIVEN the app initialises
@@ -145,7 +145,7 @@
 
 ## 5. Frontend — Views
 
-- [ ] 5.1 Create `src/views/pos/PosRefundList.vue`
+- [x] 5.1 Create `src/views/pos/PosRefundList.vue`
   - **spec_ref**: `specs/pos-refund-return/specs.md#REQ-REF-008`
   - **files**: `pipelinq/src/views/pos/PosRefundList.vue`
   - **acceptance_criteria**:
@@ -158,7 +158,7 @@
     - AND rows MUST navigate to detail on click
     - AND empty state MUST show "Geen retouren gevonden" with "Nieuwe retour" button
 
-- [ ] 5.2 Create `src/views/pos/PosRefundDetail.vue`
+- [x] 5.2 Create `src/views/pos/PosRefundDetail.vue`
   - **spec_ref**: `specs/pos-refund-return/specs.md#REQ-REF-009, #REQ-REF-012`
   - **files**: `pipelinq/src/views/pos/PosRefundDetail.vue`
   - **acceptance_criteria**:
@@ -172,7 +172,7 @@
     - AND completed/rejected refunds MUST have no action buttons
     - AND timestamps (confirmedAt, rejectedAt) MUST be displayed when set
 
-- [ ] 5.3 Create `src/views/pos/PosRefundForm.vue`
+- [x] 5.3 Create `src/views/pos/PosRefundForm.vue`
   - **spec_ref**: `specs/pos-refund-return/specs.md#REQ-REF-002, #REQ-REF-003, #REQ-REF-004,
     #REQ-REF-005, #REQ-REF-010, #REQ-REF-011`
   - **files**: `pipelinq/src/views/pos/PosRefundForm.vue`
@@ -198,7 +198,7 @@
 
 ## 6. Frontend — Components
 
-- [ ] 6.1 Create `src/components/pos/PosRefundLineRow.vue`
+- [x] 6.1 Create `src/components/pos/PosRefundLineRow.vue`
   - **spec_ref**: `specs/pos-refund-return/specs.md#REQ-REF-003, #REQ-REF-004, #REQ-REF-005`
   - **files**: `pipelinq/src/components/pos/PosRefundLineRow.vue`
   - **acceptance_criteria**:
@@ -216,7 +216,7 @@
     - AND remove button MUST emit `remove`
     - AND returned qty validation MUST reject values > original qty
 
-- [ ] 6.2 Create `src/components/pos/PosRefundTotalsPanel.vue`
+- [x] 6.2 Create `src/components/pos/PosRefundTotalsPanel.vue`
   - **spec_ref**: `specs/pos-refund-return/specs.md#REQ-REF-006, #REQ-REF-010, #REQ-REF-011`
   - **files**: `pipelinq/src/components/pos/PosRefundTotalsPanel.vue`
   - **acceptance_criteria**:
@@ -232,7 +232,7 @@
 
 ## 7. Frontend — Navigation and Routing
 
-- [ ] 7.1 Add POS refund routes to `src/router/index.js`
+- [x] 7.1 Add POS refund routes to `src/router/index.js`
   - **files**: `pipelinq/src/router/index.js`
   - **acceptance_criteria**:
     - GIVEN the router is initialised
@@ -244,7 +244,7 @@
       - `/pos/refunds/:id/edit` → PosRefundForm (edit mode)
       MUST all be registered with route names
 
-- [ ] 7.2 Add "Retouren" navigation entry to `src/navigation/MainMenu.vue`
+- [x] 7.2 Add "Retouren" navigation entry to `src/navigation/MainMenu.vue`
   - **files**: `pipelinq/src/navigation/MainMenu.vue`
   - **acceptance_criteria**:
     - GIVEN the app is open
@@ -252,7 +252,7 @@
     - AND the item MUST be highlighted when the current route starts with `/pos/refunds`
     - AND clicking it MUST navigate to `/pos/refunds`
 
-- [ ] 7.3 Add "Retour registreren" button to `src/views/pos/PosTransactionDetail.vue`
+- [x] 7.3 Add "Retour registreren" button to `src/views/pos/PosTransactionDetail.vue`
   - **files**: `pipelinq/src/views/pos/PosTransactionDetail.vue`
   - **acceptance_criteria**:
     - GIVEN a transaction detail is displayed with status confirmed or settled
@@ -264,8 +264,8 @@
 
 ## 8. Verification
 
-- [ ] 8.1 Run `npm run build` — zero errors or warnings
-- [ ] 8.2 Run PHP static analysis (`phpstan`, `phpcs`) on new PHP files — zero errors
+- [x] 8.1 Run `npm run build` — zero errors or warnings
+- [x] 8.2 Run PHP static analysis (`phpstan`, `phpcs`) on new PHP files — zero errors
 - [ ] 8.3 Manual browser test: Create refund from transaction detail → select items with partial
   quantities → verify real-time totals → confirm → verify CloudEvents emitted (check logs)
 - [ ] 8.4 Manual browser test: Filter refund list by status, refund reason, date range

@@ -65,6 +65,9 @@ import SyncSettingsView from './views/sync/SyncSettings.vue'
 import PosTransactionListView from './views/pos/PosTransactionList.vue'
 import PosTransactionDetailView from './views/pos/PosTransactionDetail.vue'
 import PosTransactionFormView from './views/pos/PosTransactionForm.vue'
+import PosRefundListView from './views/pos/PosRefundList.vue'
+import PosRefundDetailView from './views/pos/PosRefundDetail.vue'
+import PosRefundFormView from './views/pos/PosRefundForm.vue'
 
 // --- Product barcode lookup (lib gap: index pages have no server-authoritative
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
@@ -219,6 +222,23 @@ const registry = {
 		kind: 'page',
 		component: PosTransactionFormView,
 		_note: 'Bespoke cart editor: inline line-item rows with product picker + real-time totals; lib has no cart/line-editor page type.',
+	},
+
+	// --- POS refunds / returns. ---
+	PosRefundListView: {
+		kind: 'page',
+		component: PosRefundListView,
+		_note: 'Refund list; custom so rows navigate to the refund detail and the empty state offers "Nieuwe retour".',
+	},
+	PosRefundDetailView: {
+		kind: 'page',
+		component: PosRefundDetailView,
+		_note: 'Refund detail with manager-gated confirm/reject lifecycle buttons, returned-line table, server-computed totals and the original-transaction context; lib detail page cannot express POS refund lifecycle actions.',
+	},
+	PosRefundFormView: {
+		kind: 'page',
+		component: PosRefundFormView,
+		_note: 'Bespoke return editor: select original lines with partial quantities, per-line reason + restock toggle and real-time refund totals; lib has no line-selection/refund page type.',
 	},
 
 	// --- Product barcode lookup. ---
