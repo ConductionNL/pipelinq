@@ -30,20 +30,24 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for queue operations such as capacity checks, overflow routing, and item assignment.
+ *
+ * @spec openspec/changes/reverse-2026-05-26-be-queue/tasks.md#task-1
  */
 class QueueService
 {
     /**
      * Constructor.
      *
-     * @param IAppConfig         $appConfig The app config.
-     * @param ContainerInterface $container The container.
-     * @param LoggerInterface    $logger    The logger.
+     * @param IAppConfig              $appConfig        The app config.
+     * @param ContainerInterface      $container        The container.
+     * @param LoggerInterface         $logger           The logger.
+     * @param RegisterResolverService $registerResolver The register resolver.
      */
     public function __construct(
         private IAppConfig $appConfig,
         private ContainerInterface $container,
         private LoggerInterface $logger,
+        private RegisterResolverService $registerResolver,
     ) {
     }//end __construct()
 
@@ -57,7 +61,7 @@ class QueueService
      */
     public function getQueueDepth(string $queueId): int
     {
-        $registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $registerId = $this->registerResolver->resolve('queue');
         $schemaId   = $this->appConfig->getValueString(Application::APP_ID, 'request_schema', '');
 
         if ($registerId === '' || $schemaId === '') {
@@ -147,7 +151,7 @@ class QueueService
      */
     public function processOverflow(): int
     {
-        $registerId    = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $registerId    = $this->registerResolver->resolve('queue');
         $queueSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'queue_schema', '');
 
         if ($registerId === '' || $queueSchemaId === '') {
@@ -236,7 +240,7 @@ class QueueService
      */
     private function moveExcessItems(string $fromQueueId, string $toQueueId, int $count): int
     {
-        $registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $registerId = $this->registerResolver->resolve('queue');
         $schemaId   = $this->appConfig->getValueString(Application::APP_ID, 'request_schema', '');
 
         if ($registerId === '' || $schemaId === '') {
@@ -290,7 +294,7 @@ class QueueService
      */
     private function updateRequestQueueField(string $requestId, ?string $queueId): bool
     {
-        $registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $registerId = $this->registerResolver->resolve('queue');
         $schemaId   = $this->appConfig->getValueString(Application::APP_ID, 'request_schema', '');
 
         if ($registerId === '' || $schemaId === '') {

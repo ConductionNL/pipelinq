@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Introduced `RegisterResolverService` and migrated the eight
+  `$appConfig->getValueString(APP_ID, 'register', '')` call sites in
+  `QueueService` (4), `DefaultQueueService` (2), `ContactVcardService` (1) and
+  `ContactVcardWriterService` (1) to `RegisterResolverService::resolve(...)`.
+  Behavior-preserving: every logical name resolves to the same instance-scoped
+  `register` config value, now request-scoped memoised. Phase 1 of the
+  pipelinq OR-abstractions adoption (openspec change
+  `pipelinq-or-register-resolver`). 16 register reads in 11 other files remain
+  for a follow-up slice.
 - PHPMD burn-down: cleared all 36 above-baseline PHPMD violations via
   behavior-preserving refactors — extracted methods to cut CyclomaticComplexity /
   NPathComplexity / ExcessiveMethodLength across PublicSurveyController,
