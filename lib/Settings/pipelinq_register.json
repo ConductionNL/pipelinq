@@ -47,7 +47,10 @@
           "posTransaction",
           "posTransactionLine",
           "receiptTemplate",
-          "receiptPrintLog"
+          "receiptPrintLog",
+          "refundReason",
+          "posRefund",
+          "posRefundLine"
         ],
         "tablePrefix": "",
         "folder": "Open Registers/Pipelinq"
@@ -2687,6 +2690,214 @@
           }
         }
       },
+      "refundReason": {
+        "slug": "refundReason",
+        "title": "Refund Reason",
+        "icon": "TagOutline",
+        "version": "1.0.0",
+        "summary": "A configurable reason code for a POS refund / return",
+        "description": "Lookup / enumeration of standard refund reasons (damaged, unwanted, wrong item, expired, cashier error, other). Managers can mark reasons active/inactive to control which appear in refund forms. Mapped to Schema.org DefinedTerm.",
+        "@type": "schema:DefinedTerm",
+        "required": [
+          "code",
+          "label"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Machine-readable code, e.g. DAMAGED, UNWANTED",
+            "maxLength": 32,
+            "title": "Code",
+            "facetable": true
+          },
+          "label": {
+            "type": "string",
+            "description": "Display label, e.g. Artikel beschadigd",
+            "maxLength": 128,
+            "title": "Label"
+          },
+          "description": {
+            "type": "string",
+            "description": "Help text shown in the refund form",
+            "maxLength": 255
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether this reason is available for new refunds",
+            "default": true,
+            "title": "Active",
+            "facetable": true
+          },
+          "icon": {
+            "type": "string",
+            "description": "Optional icon identifier for the reason",
+            "maxLength": 64
+          }
+        }
+      },
+      "posRefund": {
+        "slug": "posRefund",
+        "title": "POS Refund",
+        "icon": "Cash refund",
+        "version": "1.0.0",
+        "summary": "A refund / return document for a previously settled or confirmed POS transaction",
+        "description": "Represents a full or partial refund against a posTransaction. refundAmount and totalTax are server-computed by PosRefundService from the refund lines and the original transaction's persisted, server-authoritative tax data; client-supplied amounts are never trusted. Lifecycle: pending -> completed (manager confirm) or pending -> rejected. Completed and rejected refunds are immutable. Mapped to Schema.org Order (type=refund).",
+        "@type": "schema:Order",
+        "required": [
+          "originalTransaction",
+          "cashier",
+          "status",
+          "refundReason"
+        ],
+        "properties": {
+          "reference": {
+            "type": "string",
+            "description": "Human-readable refund reference, e.g. RET-2026-0001",
+            "maxLength": 64,
+            "title": "Reference",
+            "facetable": true
+          },
+          "originalTransaction": {
+            "type": "string",
+            "description": "UUID reference to the original posTransaction being refunded",
+            "format": "uuid",
+            "title": "Original transaction"
+          },
+          "cashier": {
+            "type": "string",
+            "description": "Nextcloud user UID of the cashier processing the return",
+            "maxLength": 255,
+            "title": "Cashier",
+            "facetable": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Lifecycle status of the refund",
+            "enum": [
+              "pending",
+              "completed",
+              "rejected"
+            ],
+            "default": "pending",
+            "title": "Status",
+            "facetable": true
+          },
+          "refundReason": {
+            "type": "string",
+            "description": "UUID reference to a refundReason describing the overall reason",
+            "title": "Refund reason",
+            "facetable": true
+          },
+          "paymentMethod": {
+            "type": "string",
+            "description": "Original tender method (cash, card_visa, card_mastercard, digital_wallet)",
+            "maxLength": 64,
+            "title": "Payment method",
+            "facetable": true
+          },
+          "paymentReference": {
+            "type": "string",
+            "description": "Transaction id from the original payment, used for tender reversal reference",
+            "maxLength": 128
+          },
+          "refundAmount": {
+            "type": "number",
+            "description": "Total refund amount excl. tax (server-computed from refund lines)",
+            "minimum": 0,
+            "default": 0
+          },
+          "totalTax": {
+            "type": "number",
+            "description": "Aggregate tax being refunded (server-computed from refund lines)",
+            "minimum": 0,
+            "default": 0
+          },
+          "notes": {
+            "type": "string",
+            "description": "Cashier notes on the return"
+          },
+          "confirmedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp of completion"
+          },
+          "rejectedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp of rejection"
+          },
+          "rejectionReason": {
+            "type": "string",
+            "description": "Text reason if the refund was rejected",
+            "maxLength": 255
+          },
+          "cloudEventId": {
+            "type": "string",
+            "description": "CloudEvents id of the emitted refund reversal event",
+            "maxLength": 64
+          }
+        }
+      },
+      "posRefundLine": {
+        "slug": "posRefundLine",
+        "title": "POS Refund Line",
+        "icon": "CartArrowDown",
+        "version": "1.0.0",
+        "summary": "One returnable item on a posRefund, linked to the original transaction line",
+        "description": "A single returned item on a posRefund. taxAmount and lineTotal are server-computed proportionally from the original posTransactionLine and the returned quantity; client-supplied amounts are never trusted. restock controls whether a stock back-in event is emitted to Shillinq on completion. Mapped to Schema.org OrderItem (type=refund-line).",
+        "@type": "schema:OrderItem",
+        "required": [
+          "refund",
+          "originalLine",
+          "returnedQuantity",
+          "returnReason"
+        ],
+        "properties": {
+          "refund": {
+            "type": "string",
+            "description": "UUID reference to the parent posRefund",
+            "format": "uuid"
+          },
+          "originalLine": {
+            "type": "string",
+            "description": "UUID reference to the original posTransactionLine being refunded",
+            "format": "uuid"
+          },
+          "returnedQuantity": {
+            "type": "number",
+            "description": "Number of units being refunded (supports fractions)",
+            "minimum": 0.001,
+            "default": 1
+          },
+          "returnReason": {
+            "type": "string",
+            "description": "UUID reference to a refundReason for this specific item",
+            "title": "Return reason"
+          },
+          "restock": {
+            "type": "boolean",
+            "description": "Whether the returned item should be restored to inventory",
+            "default": true,
+            "title": "Restock"
+          },
+          "taxAmount": {
+            "type": "number",
+            "description": "Computed: (returnedQty / originalQty) * original line taxAmount",
+            "minimum": 0,
+            "default": 0
+          },
+          "lineTotal": {
+            "type": "number",
+            "description": "Computed: (returnedQty / originalQty) * original line total",
+            "minimum": 0,
+            "default": 0
+          },
+          "notes": {
+            "type": "string",
+            "description": "Line-specific return notes, e.g. dent on back corner"
+          }
+        }
+      },
       "receiptTemplate": {
         "slug": "receiptTemplate",
         "title": "Receipt Template",
@@ -3265,6 +3476,157 @@
         "unit": "stuk",
         "taxRate": 21,
         "btwClass": "hoog"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "refundReason", "slug": "reason-damaged" },
+        "code": "DAMAGED",
+        "label": "Artikel beschadigd",
+        "description": "Goederen ontvangen in beschadigde staat",
+        "isActive": true
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "refundReason", "slug": "reason-unwanted" },
+        "code": "UNWANTED",
+        "label": "Klant wil terug",
+        "description": "Klant is van gedachten veranderd",
+        "isActive": true
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "refundReason", "slug": "reason-wrong-item" },
+        "code": "WRONG",
+        "label": "Verkeerd artikel",
+        "description": "Verkeerde artikel gegeven of besteld",
+        "isActive": true
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "refundReason", "slug": "reason-expired" },
+        "code": "EXPIRED",
+        "label": "Verlopen product",
+        "description": "Goederen zijn verlopen",
+        "isActive": true
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "refundReason", "slug": "reason-error" },
+        "code": "ERROR",
+        "label": "Kassa-fout",
+        "description": "Fout gemaakt bij invoering of betaling",
+        "isActive": true
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "refundReason", "slug": "reason-other" },
+        "code": "OTHER",
+        "label": "Overig",
+        "description": "Andere reden",
+        "isActive": true
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posRefund", "slug": "ref-2026-0001" },
+        "reference": "RET-2026-0001",
+        "originalTransaction": "txn-2026-0001",
+        "cashier": "admin",
+        "status": "completed",
+        "refundReason": "reason-damaged",
+        "paymentMethod": "cash",
+        "paymentReference": "TXN-2026-0001",
+        "refundAmount": 2.95,
+        "totalTax": 0.27,
+        "confirmedAt": "2026-05-20T09:22:00+02:00",
+        "notes": "Klant zei dat kopje beschadigd was"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posRefund", "slug": "ref-2026-0002" },
+        "reference": "RET-2026-0002",
+        "originalTransaction": "txn-2026-0003",
+        "cashier": "emma.bakker",
+        "status": "pending",
+        "refundReason": "reason-wrong-item",
+        "paymentMethod": "card_visa",
+        "paymentReference": "VISA-5678",
+        "refundAmount": 39.99,
+        "totalTax": 6.95,
+        "notes": "Klant wil USB-C hub niet — vervanging besteld"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posRefund", "slug": "ref-2026-0003" },
+        "reference": "RET-2026-0003",
+        "originalTransaction": "txn-2026-0005",
+        "cashier": "admin",
+        "status": "completed",
+        "refundReason": "reason-damaged",
+        "paymentMethod": "card_mastercard",
+        "paymentReference": "MC-9012",
+        "refundAmount": 703.30,
+        "totalTax": 147.69,
+        "confirmedAt": "2026-05-20T10:00:00+02:00",
+        "notes": "Laptop volledig retour na verzendschade. Klant is tevreden met volledige terugbetaling."
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posRefund", "slug": "ref-2026-0004" },
+        "reference": "RET-2026-0004",
+        "originalTransaction": "txn-2026-0003",
+        "cashier": "jan.smit",
+        "status": "rejected",
+        "refundReason": "reason-unwanted",
+        "paymentMethod": "cash",
+        "refundAmount": 0,
+        "totalTax": 0,
+        "rejectedAt": "2026-05-20T10:45:00+02:00",
+        "rejectionReason": "Retourperiode verstreken (product gekocht 45 dagen geleden)"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posRefundLine", "slug": "refline-0001-koffie" },
+        "refund": "ref-2026-0001",
+        "originalLine": "txnline-0001-koffie",
+        "returnedQuantity": 1,
+        "returnReason": "reason-damaged",
+        "restock": false,
+        "taxAmount": 0.27,
+        "lineTotal": 3.22,
+        "notes": "Kopje had scheurtje in handvat"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posRefundLine", "slug": "refline-0002-hub" },
+        "refund": "ref-2026-0002",
+        "originalLine": "txnline-0003-hub",
+        "returnedQuantity": 1,
+        "returnReason": "reason-wrong-item",
+        "restock": true,
+        "taxAmount": 6.95,
+        "lineTotal": 49.80,
+        "notes": "Klant had 5-poorts hub nodig, niet 7-poorts"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posRefundLine", "slug": "refline-0003-laptop" },
+        "refund": "ref-2026-0003",
+        "originalLine": "txnline-0005-laptop",
+        "returnedQuantity": 1,
+        "returnReason": "reason-damaged",
+        "restock": false,
+        "taxAmount": 147.69,
+        "lineTotal": 851.00,
+        "notes": "Verzendschade — groot gat in scherm"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posRefundLine", "slug": "refline-0004-sleeve" },
+        "refund": "ref-2026-0004",
+        "originalLine": "txnline-0003-sleeve",
+        "returnedQuantity": 1,
+        "returnReason": "reason-unwanted",
+        "restock": false,
+        "taxAmount": 0,
+        "lineTotal": 0,
+        "notes": "Nooit gebruikt; kleur past niet"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posRefundLine", "slug": "refline-0005-broodje-partial" },
+        "refund": "ref-2026-0002",
+        "originalLine": "txnline-0001-broodje",
+        "returnedQuantity": 1,
+        "returnReason": "reason-error",
+        "restock": true,
+        "taxAmount": 0.38,
+        "lineTotal": 4.63,
+        "notes": "Een broodje te veel gegeven op kassamachine"
       }
     ]
   }
