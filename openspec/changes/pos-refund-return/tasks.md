@@ -2,18 +2,25 @@
 
 ## 0. Deduplication Check
 
-- [ ] 0.1 Search `openspec/specs/` and `openregister/lib/Service/` for any existing refund,
+- [x] 0.1 Search `openspec/specs/` and `openregister/lib/Service/` for any existing refund,
   return, or stock reversal logic; document findings (expected: no overlap)
   - **acceptance_criteria**:
     - GIVEN the search is complete
     - THEN a one-line finding MUST be appended: "No overlap found" or reference to existing
       capability and why new code is needed
+  - **finding**: No overlap found. The merged `PosTransactionService::refundTransaction()`
+    only flips a whole transaction to `status=refunded` with a free-text `refundReason` and
+    emits no reversal/stock event. This change adds the structured `posRefund`/`posRefundLine`
+    record model (partial line selection, reason codes, restock, server-computed reversal
+    amounts, reversal + stock CloudEvents), referencing the parent posTransaction and reusing
+    its persisted, server-authoritative tax data. No refund/return/stock-reversal logic exists
+    in `openregister/lib/Service/` or elsewhere in `pipelinq/lib/`.
 
 ---
 
 ## 1. Data Model
 
-- [ ] 1.1 Add `refundReason` schema to `lib/Settings/pipelinq_register.json`
+- [x] 1.1 Add `refundReason` schema to `lib/Settings/pipelinq_register.json`
   - **spec_ref**: `specs/pos-refund-return/specs.md#REQ-REF-001`
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -22,7 +29,7 @@
       description (string, optional), isActive (boolean, default true), icon (string, optional)
     - AND the schema MUST NOT have a `@type` (or use "schema:DefinedTerm")
 
-- [ ] 1.2 Add `posRefund` schema to `lib/Settings/pipelinq_register.json`
+- [x] 1.2 Add `posRefund` schema to `lib/Settings/pipelinq_register.json`
   - **spec_ref**: `specs/pos-refund-return/specs.md#REQ-REF-002, #REQ-REF-006, #REQ-REF-007`
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -33,7 +40,7 @@
     - AND `status` enum MUST be: pending, completed, rejected (default: pending)
     - AND `originalTransaction` MUST be required (UUID reference to posTransaction)
 
-- [ ] 1.3 Add `posRefundLine` schema to `lib/Settings/pipelinq_register.json`
+- [x] 1.3 Add `posRefundLine` schema to `lib/Settings/pipelinq_register.json`
   - **spec_ref**: `specs/pos-refund-return/specs.md#REQ-REF-003, #REQ-REF-005, #REQ-REF-008`
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -44,7 +51,7 @@
     - AND `restock` MUST default to true
     - AND `@type: "schema:OrderItem"` MUST be set on the schema
 
-- [ ] 1.4 Add seed data: refundReason (6 objects), posRefund (4 objects), posRefundLine (5 objects)
+- [x] 1.4 Add seed data: refundReason (6 objects), posRefund (4 objects), posRefundLine (5 objects)
   using the `@self` envelope in `pipelinq_register.json`
   - **spec_ref**: ADR-001 (data-layer) — seed data requirements
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
@@ -56,7 +63,7 @@
     - AND 5 posRefundLine objects MUST be created with realistic Dutch context
     - AND re-importing with `force: false` MUST NOT create duplicates (matched by slug)
 
-- [ ] 1.5 Update the register's `schemas` list to include refundReason, posRefund, posRefundLine
+- [x] 1.5 Update the register's `schemas` list to include refundReason, posRefund, posRefundLine
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
     - GIVEN the app is installed / repair step runs
