@@ -1,3 +1,5 @@
+> SUPERSEDED 2026-05-31: this umbrella was split per ADR-032 into child slices that are now all implemented and archived. Coverage: Phase 1 → `pipelinq-or-register-resolver`; Phases 2-3 → `pipelinq-or-lifecycle-notification`; Phases 4-5 → `pipelinq-or-archival-calculations`; Phase 6 → `pipelinq-or-spec-rewrites`; Phase 7 → `pipelinq-admin-config-magic-numbers`; Phases 8-10 → `pipelinq-manifest-i18n-tenant` (Phase 9 runtime tenancy/i18n deferred there, blocked on nc-vue + OR prerequisites). The `pipelinq-or-adoption` capability spec is synced to `openspec/specs/`. No uncovered scope.
+
 # Proposal: pipelinq — adopt OpenRegister abstractions
 
 ## Problem
