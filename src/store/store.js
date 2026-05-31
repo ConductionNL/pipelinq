@@ -77,6 +77,12 @@ export async function initializeStores() {
 		if (config.register && config.posTransactionLine_schema) {
 			objectStore.registerObjectType('posTransactionLine', config.posTransactionLine_schema, config.register)
 		}
+		if (config.register && config.receiptTemplate_schema) {
+			objectStore.registerObjectType('receiptTemplate', config.receiptTemplate_schema, config.register)
+		}
+		if (config.register && config.receiptPrintLog_schema) {
+			objectStore.registerObjectType('receiptPrintLog', config.receiptPrintLog_schema, config.register)
+		}
 	}
 
 	return { settingsStore, objectStore }
