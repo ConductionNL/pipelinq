@@ -165,12 +165,27 @@ npm run build      # Production build
 composer phpcs          # Check coding standards
 composer cs:fix         # Auto-fix issues
 composer phpmd          # Mess detection
+composer psalm          # Static analysis (Psalm)
+composer phpstan        # Static analysis (PHPStan, level 5)
 composer phpmetrics     # HTML metrics report
+composer check:strict   # Run the full strict gate suite (all of the above + phpunit)
 
 # Frontend
 npm run lint            # ESLint
 npm run stylelint       # CSS linting
 ```
+
+The strict gate suite (PHPCS, PHPMD, Psalm, PHPStan, PHPUnit) runs on **every
+pull request** through the shared `ConductionNL/.github` quality workflow, and a
+**weekly cron** (`code-quality.yml`, Mondays 06:00 UTC) re-runs it against
+`development` to catch drift between PRs.
+
+The one-off legacy quality cleanup (PHPCS/PHPMD/PHPStan burn-down split out of
+`pipelinq-legacy-quality-cleanup` per ADR-032) is **complete**: PHPCS and PHPMD
+are clean with no legacy-debt suppression sections, and PHPStan runs clean at
+level 5. The remaining `phpstan-baseline.neon` entries are intentional,
+documented tracked debt (unread forward-compat DI stubs and one nextcloud/ocp
+stub false-positive) — see the file header and issue #496 before regenerating.
 
 ## Tech Stack
 
@@ -181,7 +196,7 @@ npm run stylelint       # CSS linting
 | Backend | PHP 8.1+, Nextcloud App Framework |
 | Data | OpenRegister (PostgreSQL JSON objects) |
 | UX | @conduction/nextcloud-vue, vue-draggable |
-| Quality | PHPCS, PHPMD, phpmetrics, ESLint, Stylelint |
+| Quality | PHPCS, PHPMD, Psalm, PHPStan, phpmetrics, ESLint, Stylelint |
 
 ## Documentation
 
