@@ -259,4 +259,258 @@ class RegisterAnnotationsTest extends TestCase
 
         $this->assertGreaterThan(expected: 0, actual: $checked, message: 'Expected at least one transition notification.');
     }//end testNotificationActionKeysResolveToTransitionNames()
+
+    /**
+     * Operator vocabulary recognised by the OpenRegister v1 calculation
+     * evaluator (mirrors CalculationAnnotationValidator::VALID_OPS).
+     *
+     * @var array<int, string>
+     */
+    private const VALID_CALC_OPS = [
+        'prop',
+        'lit',
+        'concat',
+        'if',
+        'not',
+        'and',
+        'or',
+        '+',
+        '-',
+        '*',
+        '/',
+        '%',
+        'eq',
+        'ne',
+        'lt',
+        'lte',
+        'gt',
+        'gte',
+        'now',
+        'diffDays',
+        'formatDate',
+        'dateDiff',
+    ];
+
+    /**
+     * Allowed `type` values for a calculation declaration.
+     *
+     * @var array<int, string>
+     */
+    private const VALID_CALC_TYPES = ['string', 'integer', 'number', 'boolean', 'date'];
+
+    /**
+     * `@self.*` system fields the OpenRegister evaluator injects at read time.
+     *
+     * @var array<int, string>
+     */
+    private const SELF_FIELDS = ['id', 'uuid', 'register', 'schema', 'owner', 'created', 'updated'];
+
+    /**
+     * Every `x-openregister-calculations` block must be well-formed: each
+     * calculation declares a valid `type` + `expression`, every operator is in
+     * the v1 vocabulary, and every `prop` reference resolves to a declared
+     * property, a sibling calculation, or a known `@self.*` system field.
+     *
+     * Mirrors OpenRegister's CalculationAnnotationValidator so a malformed
+     * annotation fails here before it ever reaches a schema save.
+     *
+     * @return void
+     */
+    public function testCalculationAnnotationsAreWellFormed(): void
+    {
+        $checked = 0;
+
+        foreach ($this->schemas as $name => $schema) {
+            $calcs = self::annotation(schema: $schema, key: 'x-openregister-calculations');
+            if ($calcs === null) {
+                continue;
+            }
+
+            $this->assertNotEmpty(actual: $calcs, message: "Schema {$name} calculations must not be empty.");
+
+            $propKeys  = array_keys(($schema['properties'] ?? []));
+            $calcNames = array_keys($calcs);
+            $allRefs   = array_merge($propKeys, $calcNames);
+
+            foreach ($calcs as $calcName => $spec) {
+                $this->assertIsString(actual: $calcName, message: "Schema {$name} calculation name must be a string.");
+                $this->assertIsArray(actual: $spec, message: "Schema {$name}.{$calcName} must be an object.");
+
+                $type = (string) ($spec['type'] ?? '');
+                $this->assertContains(
+                    needle: $type,
+                    haystack: self::VALID_CALC_TYPES,
+                    message: "Schema {$name}.{$calcName} type '{$type}' must be a valid calculation type."
+                );
+
+                if (array_key_exists('materialise', $spec) === true) {
+                    $this->assertIsBool(actual: $spec['materialise'], message: "Schema {$name}.{$calcName} materialise must be boolean.");
+                }
+
+                $this->assertArrayHasKey(key: 'expression', array: $spec, message: "Schema {$name}.{$calcName} needs an expression.");
+                $this->assertExpressionWellFormed(
+                    expr: $spec['expression'],
+                    where: "{$name}.{$calcName}",
+                    allRefs: $allRefs
+                );
+
+                $checked++;
+            }//end foreach
+        }//end foreach
+
+        $this->assertGreaterThan(expected: 0, actual: $checked, message: 'Expected at least one calculation annotation.');
+    }//end testCalculationAnnotationsAreWellFormed()
+
+    /**
+     * Recursively assert a calculation expression uses only known operators and
+     * that every `prop` reference resolves.
+     *
+     * @param mixed              $expr    The expression node.
+     * @param string             $where   Schema.calc label for messages.
+     * @param array<int, string> $allRefs Valid property + sibling-calc names.
+     *
+     * @return void
+     */
+    private function assertExpressionWellFormed(mixed $expr, string $where, array $allRefs): void
+    {
+        if (is_array($expr) === false) {
+            // Bare scalar literal — always valid.
+            return;
+        }
+
+        $this->assertCount(expectedCount: 1, haystack: $expr, message: "Expression in {$where} must be single-key.");
+
+        $op = (string) array_key_first($expr);
+        $this->assertContains(
+            needle: $op,
+            haystack: self::VALID_CALC_OPS,
+            message: "Expression in {$where} uses unknown operator '{$op}'."
+        );
+
+        $args = $expr[$op];
+
+        if ($op === 'prop') {
+            $ref = (string) $args;
+            if (is_array($args) === true) {
+                $ref = (string) ($args[0] ?? '');
+            }
+
+            $this->assertNotSame(expected: '', actual: $ref, message: "prop in {$where} must name a reference.");
+
+            if (str_starts_with($ref, '@self.') === true) {
+                $sysField = substr($ref, 6);
+                $this->assertContains(
+                    needle: $sysField,
+                    haystack: self::SELF_FIELDS,
+                    message: "@self.{$sysField} in {$where} is not a known system field."
+                );
+
+                return;
+            }
+
+            $this->assertContains(
+                needle: $ref,
+                haystack: $allRefs,
+                message: "prop '{$ref}' in {$where} is not a declared property or sibling calculation."
+            );
+
+            return;
+        }//end if
+
+        if ($op === 'dateDiff') {
+            $this->assertIsArray(actual: $args, message: "dateDiff in {$where} needs a keyed argument object.");
+            foreach (['from', 'to', 'unit'] as $key) {
+                $this->assertArrayHasKey(key: $key, array: $args, message: "dateDiff in {$where} requires '{$key}'.");
+            }
+
+            $this->assertExpressionWellFormed(expr: $args['from'], where: $where, allRefs: $allRefs);
+            $this->assertExpressionWellFormed(expr: $args['to'], where: $where, allRefs: $allRefs);
+            return;
+        }
+
+        if (is_array($args) === false) {
+            $this->assertExpressionWellFormed(expr: $args, where: $where, allRefs: $allRefs);
+            return;
+        }
+
+        foreach ($args as $sub) {
+            $this->assertExpressionWellFormed(expr: $sub, where: $where, allRefs: $allRefs);
+        }
+    }//end assertExpressionWellFormed()
+
+    /**
+     * Every `x-openregister-archival` block must be well-formed: a `retention`
+     * object with a parseable ISO-8601 `default` duration and, where present,
+     * an array of rules each carrying a non-empty `condition`, a parseable
+     * `retention` duration, and (optionally) a string `reason`.
+     *
+     * Mirrors OpenRegister's ArchivalAnnotationValidator.
+     *
+     * @return void
+     */
+    public function testArchivalAnnotationsAreWellFormed(): void
+    {
+        $checked = 0;
+
+        foreach ($this->schemas as $name => $schema) {
+            $archival = self::annotation(schema: $schema, key: 'x-openregister-archival');
+            if ($archival === null) {
+                continue;
+            }
+
+            $this->assertArrayHasKey(key: 'retention', array: $archival, message: "Schema {$name} archival needs a retention block.");
+            $retention = $archival['retention'];
+            $this->assertIsArray(actual: $retention, message: "Schema {$name} retention must be an object.");
+
+            $this->assertArrayHasKey(key: 'default', array: $retention, message: "Schema {$name} retention needs a default duration.");
+            $this->assertTrue(
+                condition: self::isIsoDuration(value: (string) $retention['default']),
+                message: "Schema {$name} retention.default '{$retention['default']}' must be a valid duration."
+            );
+
+            foreach ((array) ($retention['rules'] ?? []) as $index => $rule) {
+                $label = "Schema {$name} archival rule {$index}";
+                $this->assertIsArray(actual: $rule, message: "{$label} must be an object.");
+
+                $this->assertArrayHasKey(key: 'condition', array: $rule, message: "{$label} needs a condition.");
+                $this->assertIsString(actual: $rule['condition'], message: "{$label} condition must be a string.");
+                $this->assertNotSame(expected: '', actual: trim((string) $rule['condition']), message: "{$label} condition must not be empty.");
+
+                $this->assertArrayHasKey(key: 'retention', array: $rule, message: "{$label} needs a retention duration.");
+                $this->assertTrue(
+                    condition: self::isIsoDuration(value: (string) $rule['retention']),
+                    message: "{$label} retention '{$rule['retention']}' must be a valid duration."
+                );
+
+                if (array_key_exists('reason', $rule) === true) {
+                    $this->assertIsString(actual: $rule['reason'], message: "{$label} reason must be a string.");
+                }
+            }//end foreach
+
+            $checked++;
+        }//end foreach
+
+        $this->assertGreaterThan(expected: 0, actual: $checked, message: 'Expected at least one archival annotation.');
+    }//end testArchivalAnnotationsAreWellFormed()
+
+    /**
+     * Return true when the value parses as an ISO-8601 duration via DateInterval.
+     *
+     * @param string $value Candidate duration string.
+     *
+     * @return bool True when parseable.
+     */
+    private static function isIsoDuration(string $value): bool
+    {
+        if ($value === '') {
+            return false;
+        }
+
+        try {
+            new \DateInterval($value);
+            return true;
+        } catch (\Exception $unused) {
+            return false;
+        }
+    }//end isIsoDuration()
 }//end class
