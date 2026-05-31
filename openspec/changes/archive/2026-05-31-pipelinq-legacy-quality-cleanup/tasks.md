@@ -1,8 +1,13 @@
 # Tasks: Pipelinq Legacy Quality Cleanup
 
+> All tasks marked [x] as COVERED-BY-CHILD (ADR-032 split, 2026-05-31):
+> Phases 1-2 → `pipelinq-quality-phpcs-burndown`; Phase 3 → `pipelinq-quality-phpmd-burndown`;
+> Phases 4-6 → `pipelinq-quality-phpstan-burndown`. All three children are implemented and
+> archived; `composer check:strict` runs clean.
+
 ## Phase 1 — Inventory + Planning
 
-- [ ] 1.1 Run `composer phpcs` and capture current baseline error count
+- [x] 1.1 Run `composer phpcs` and capture current baseline error count
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-001`
   - **files**: (read-only inventory — no file changes)
   - **acceptance_criteria**:
@@ -12,7 +17,7 @@
     - AND the total number of violations per file MUST be recorded
     - AND the exclude-pattern entries in `phpcs.xml` MUST be listed
 
-- [ ] 1.2 Run `composer phpmd` for the first time as a unified gate and capture
+- [x] 1.2 Run `composer phpmd` for the first time as a unified gate and capture
       violation count + categories
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-002`
   - **files**: (read-only inventory — no file changes)
@@ -23,7 +28,7 @@
     - AND violations MUST be grouped by rule category
     - AND the decision (fix-outright vs baseline) MUST be documented
 
-- [ ] 1.3 Run `composer phpstan` for the first time as a unified gate and capture
+- [x] 1.3 Run `composer phpstan` for the first time as a unified gate and capture
       error count + categories
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-003`
   - **files**: (read-only inventory — no file changes)
@@ -34,14 +39,14 @@
     - AND errors MUST be grouped by category (missing types, null dereferences, etc.)
     - AND the decision (fix-outright vs baseline) MUST be documented
 
-- [ ] 1.4 Decide per gate: fix-outright if < 50 violations, capture baseline if ≥ 50
+- [x] 1.4 Decide per gate: fix-outright if < 50 violations, capture baseline if ≥ 50
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-002`, `specs/quality-gates/spec.md#REQ-QG-003`
   - **acceptance_criteria**:
     - GIVEN the violation counts from tasks 1.2 and 1.3
     - THEN a written decision MUST exist for PHPMD (fix-outright OR baseline)
     - AND a written decision MUST exist for PHPStan (fix-outright OR baseline)
 
-- [ ] 1.5 Confirm CI runs `composer check:strict` on every PR before starting burn-down
+- [x] 1.5 Confirm CI runs `composer check:strict` on every PR before starting burn-down
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-004`
   - **files**: CI configuration file (path TBD)
   - **acceptance_criteria**:
@@ -58,7 +63,7 @@ For each file: fix sniff violations, update file-level docblock with `@spec`
 tag, verify named-parameter calls use positional style, then remove the
 `<exclude-pattern>` entry from `phpcs.xml`.
 
-- [ ] 2.1 Excluded file 1 — fix sniffs + drop exclude
+- [x] 2.1 Excluded file 1 — fix sniffs + drop exclude
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-001`, `specs/quality-gates/spec.md#REQ-QG-005`
   - **files**: (path identified in Phase 1)
   - **acceptance_criteria**:
@@ -71,7 +76,7 @@ tag, verify named-parameter calls use positional style, then remove the
     - AND the corresponding `<exclude-pattern>` entry MUST be removed from `phpcs.xml`
     - AND `composer phpcs` globally MUST still exit with code 0
 
-- [ ] 2.2 Excluded file 2 — fix sniffs + drop exclude
+- [x] 2.2 Excluded file 2 — fix sniffs + drop exclude
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-001`, `specs/quality-gates/spec.md#REQ-QG-005`
   - **files**: (path identified in Phase 1)
   - **acceptance_criteria**:
@@ -83,7 +88,7 @@ tag, verify named-parameter calls use positional style, then remove the
     - AND the corresponding `<exclude-pattern>` entry MUST be removed from `phpcs.xml`
     - AND `composer phpcs` globally MUST still exit with code 0
 
-- [ ] 2.3 Excluded file 3 — fix sniffs + drop exclude
+- [x] 2.3 Excluded file 3 — fix sniffs + drop exclude
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-001`, `specs/quality-gates/spec.md#REQ-QG-005`
   - **files**: (path identified in Phase 1)
   - **acceptance_criteria**:
@@ -95,7 +100,7 @@ tag, verify named-parameter calls use positional style, then remove the
     - AND the corresponding `<exclude-pattern>` entry MUST be removed from `phpcs.xml`
     - AND `composer phpcs` globally MUST still exit with code 0
 
-- [ ] 2.4 Drop the legacy-debt block from `phpcs.xml` entirely
+- [x] 2.4 Drop the legacy-debt block from `phpcs.xml` entirely
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-001`
   - **files**: `phpcs.xml`
   - **acceptance_criteria**:
@@ -112,7 +117,7 @@ tag, verify named-parameter calls use positional style, then remove the
 Contingent on Phase 1 decision (task 1.4). If fix-outright, this phase
 is a single PR. If baseline captured, work through violations by category.
 
-- [ ] 3.1 (Baseline path only) Generate `phpmd.baseline.xml` from first run
+- [x] 3.1 (Baseline path only) Generate `phpmd.baseline.xml` from first run
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-002`
   - **files**: `phpmd.baseline.xml`, `composer.json`
   - **acceptance_criteria**:
@@ -122,7 +127,7 @@ is a single PR. If baseline captured, work through violations by category.
     - AND `composer phpmd` MUST exit with code 0 using the baseline
     - AND the `--baseline-file phpmd.baseline.xml` flag MUST be in `composer.json`
 
-- [ ] 3.2 Fix ElseExpression violations — reshape `if/else` to early-return
+- [x] 3.2 Fix ElseExpression violations — reshape `if/else` to early-return
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-002`
   - **files**: PHP files with ElseExpression violations
   - **acceptance_criteria**:
@@ -131,7 +136,7 @@ is a single PR. If baseline captured, work through violations by category.
     - THEN PHPMD MUST not flag those locations
     - AND the baseline line count MUST be reduced (or gate runs clean if fix-outright)
 
-- [ ] 3.3 Fix CyclomaticComplexity / NPathComplexity violations — extract methods
+- [x] 3.3 Fix CyclomaticComplexity / NPathComplexity violations — extract methods
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-002`
   - **files**: PHP files with complexity violations
   - **acceptance_criteria**:
@@ -140,7 +145,7 @@ is a single PR. If baseline captured, work through violations by category.
     - THEN PHPMD MUST not flag those methods
     - AND extracted methods MUST have docblocks with `@spec` tag
 
-- [ ] 3.4 Fix MissingImport violations — add `use` statements
+- [x] 3.4 Fix MissingImport violations — add `use` statements
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-002`
   - **files**: PHP files with missing imports
   - **acceptance_criteria**:
@@ -148,7 +153,7 @@ is a single PR. If baseline captured, work through violations by category.
     - WHEN `use` statements are added at the top of each file
     - THEN PHPMD MUST not flag those locations
 
-- [ ] 3.5 Fix StaticAccess violations — replace with dependency injection
+- [x] 3.5 Fix StaticAccess violations — replace with dependency injection
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-002`
   - **files**: PHP files with static calls
   - **acceptance_criteria**:
@@ -157,7 +162,7 @@ is a single PR. If baseline captured, work through violations by category.
     - THEN PHPMD MUST not flag those calls
     - AND the injected service MUST be declared `private readonly` per ADR-003
 
-- [ ] 3.6 Fix variable-naming violations (LongVariable, ShortVariable,
+- [x] 3.6 Fix variable-naming violations (LongVariable, ShortVariable,
       UnusedFormalParameter)
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-002`
   - **files**: PHP files with naming violations
@@ -167,7 +172,7 @@ is a single PR. If baseline captured, work through violations by category.
       intentionally unused)
     - THEN PHPMD MUST not flag those locations
 
-- [ ] 3.7 (Baseline path only) Delete `phpmd.baseline.xml` when it reaches 0 lines
+- [x] 3.7 (Baseline path only) Delete `phpmd.baseline.xml` when it reaches 0 lines
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-002`
   - **files**: `phpmd.baseline.xml`, `composer.json`
   - **acceptance_criteria**:
@@ -183,7 +188,7 @@ is a single PR. If baseline captured, work through violations by category.
 Contingent on Phase 1 decision (task 1.4). If fix-outright, this phase
 is a single PR. If baseline captured, work through errors by category.
 
-- [ ] 4.1 (Baseline path only) Generate `phpstan-baseline.neon` from first run
+- [x] 4.1 (Baseline path only) Generate `phpstan-baseline.neon` from first run
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-003`
   - **files**: `phpstan-baseline.neon`, `phpstan.neon`
   - **acceptance_criteria**:
@@ -193,7 +198,7 @@ is a single PR. If baseline captured, work through errors by category.
     - AND `phpstan.neon` MUST include it via `includes: [phpstan-baseline.neon]`
     - AND `composer phpstan` MUST exit with code 0
 
-- [ ] 4.2 Fix missing return-type and param-type declarations
+- [x] 4.2 Fix missing return-type and param-type declarations
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-003`
   - **files**: PHP files with missing type declarations
   - **acceptance_criteria**:
@@ -202,7 +207,7 @@ is a single PR. If baseline captured, work through errors by category.
     - THEN PHPStan MUST not report those errors
     - AND `composer phpstan` MUST exit with code 0 (or baseline line count reduces)
 
-- [ ] 4.3 Fix mixed-type errors — specify union or generic types
+- [x] 4.3 Fix mixed-type errors — specify union or generic types
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-003`
   - **files**: PHP files with `mixed` type usage
   - **acceptance_criteria**:
@@ -210,7 +215,7 @@ is a single PR. If baseline captured, work through errors by category.
     - WHEN union types or PHPDoc generics are added
     - THEN PHPStan MUST not report those errors
 
-- [ ] 4.4 Fix possibly-null dereference errors
+- [x] 4.4 Fix possibly-null dereference errors
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-003`
   - **files**: PHP files with null-safety issues
   - **acceptance_criteria**:
@@ -218,7 +223,7 @@ is a single PR. If baseline captured, work through errors by category.
     - WHEN null-checks or null-safe operators (`?->`) are added
     - THEN PHPStan MUST not report those errors
 
-- [ ] 4.5 (Baseline path only) Delete `phpstan-baseline.neon` when it reaches 0 lines
+- [x] 4.5 (Baseline path only) Delete `phpstan-baseline.neon` when it reaches 0 lines
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-003`
   - **files**: `phpstan-baseline.neon`, `phpstan.neon`
   - **acceptance_criteria**:
@@ -231,7 +236,7 @@ is a single PR. If baseline captured, work through errors by category.
 
 ## Phase 5 — CI Integration
 
-- [ ] 5.1 Verify `composer check:strict` runs in CI on every PR
+- [x] 5.1 Verify `composer check:strict` runs in CI on every PR
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-004`
   - **files**: CI configuration file
   - **acceptance_criteria**:
@@ -240,7 +245,7 @@ is a single PR. If baseline captured, work through errors by category.
     - THEN the CI MUST execute `composer check:strict`
     - AND a non-zero exit code MUST block the PR from merging
 
-- [ ] 5.2 Add weekly cron smoke-test for `composer check:strict` on `development`
+- [x] 5.2 Add weekly cron smoke-test for `composer check:strict` on `development`
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-004`
   - **files**: CI configuration file
   - **acceptance_criteria**:
@@ -249,7 +254,7 @@ is a single PR. If baseline captured, work through errors by category.
     - THEN it MUST execute `composer check:strict` against `development`
     - AND it MUST report pass/fail (notification or status badge)
 
-- [ ] 5.3 Confirm final state: no baselines, no excludes, gate runs clean
+- [x] 5.3 Confirm final state: no baselines, no excludes, gate runs clean
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-001`, `specs/quality-gates/spec.md#REQ-QG-002`, `specs/quality-gates/spec.md#REQ-QG-003`
   - **acceptance_criteria**:
     - GIVEN all phases complete
@@ -263,7 +268,7 @@ is a single PR. If baseline captured, work through errors by category.
 
 ## Phase 6 — Documentation
 
-- [ ] 6.1 Update README quality-gates section
+- [x] 6.1 Update README quality-gates section
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-006`
   - **files**: `README.md`
   - **acceptance_criteria**:
@@ -273,7 +278,7 @@ is a single PR. If baseline captured, work through errors by category.
       `composer phpstan`, and `composer check:strict`
     - AND they MUST find a note that `check:strict` runs in CI on every PR
 
-- [ ] 6.2 Note in `app-config.json` (if applicable) that legacy quality cleanup is done
+- [x] 6.2 Note in `app-config.json` (if applicable) that legacy quality cleanup is done
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-006`
   - **files**: `app-config.json`
   - **acceptance_criteria**:
@@ -282,7 +287,7 @@ is a single PR. If baseline captured, work through errors by category.
     - THEN a field or comment MUST indicate that the legacy quality debt has
       been resolved
 
-- [ ] 6.3 Close the burn-down tracking issue once the last baseline line is removed
+- [x] 6.3 Close the burn-down tracking issue once the last baseline line is removed
   - **spec_ref**: `specs/quality-gates/spec.md#REQ-QG-001`, `specs/quality-gates/spec.md#REQ-QG-002`, `specs/quality-gates/spec.md#REQ-QG-003`
   - **acceptance_criteria**:
     - GIVEN all baselines are empty or never created

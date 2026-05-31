@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.19] - 2026-05-31
+
+### Changed
+
+- Completed the PHPStan burn-down, CI-integration, and documentation slice
+  (`pipelinq-quality-phpstan-burndown`, split from `pipelinq-legacy-quality-cleanup`
+  per ADR-032). PHPStan runs clean at level 5; the `phpstan-baseline.neon` was
+  resynced to drop seven stale entries (three unused constants now wired up, a
+  CsrfTokenManager invalid-type, and two logic warnings) that no longer fire,
+  leaving 22 intentional, documented tracked-debt entries (issue #496).
+- Pinned the strict static-analysis gate toggles (phpcs/phpmd/psalm/phpstan/
+  phpmetrics/frontend/eslint) explicitly in `.github/workflows/code-quality.yml`
+  so the strict-gate posture is self-documenting and cannot regress if the
+  shared `ConductionNL/.github` workflow defaults change.
+- Documented the strict gate suite (incl. `composer check:strict`), the
+  per-PR + weekly-cron CI wiring, and the completed legacy-quality cleanup in
+  the README.
+
+### Added
+
+- Weekly smoke-test cron (`code-quality.yml`, Mondays 06:00 UTC) that re-runs
+  the full strict gate suite against `development` to catch drift between PRs.
+
 ## [0.2.18] - 2026-05-31
 
 ### Added
