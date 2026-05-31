@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.23] - 2026-05-31
+
+### Added
+
+- POS product catalogue: extended the `product` schema into a POS-grade product
+  master while keeping the flat CRM fields backward-compatible. New optional
+  properties: `barcode` (EAN/UPC, `schema:gtin`), `btwClass` (Dutch BTW class
+  enum `hoog`/`laag`/`nul`/`vrijgesteld`, facetable), `duration` (service
+  minutes), `variants` (size × colour matrix with per-variant SKU, price
+  override, barcode and status), `modifierGroups` (configurable add-ons with
+  per-option price adjustments), and `priceTiers` (quantity-break pricing).
+- `ProductCatalogService` — server-authoritative catalogue resolution: BTW
+  class → tax-rate mapping (fail-closed to 21%), effective unit-price resolution
+  across quantity tiers and per-variant overrides, variant SKU uniqueness, and a
+  barcode lookup scoped to this app's own register + product schema (IDOR-safe).
+- `ProductCatalogController` endpoints `POST /api/products/barcode-lookup` and
+  `POST /api/products/resolve-price` with per-user authentication and
+  app-schema-scoped access; effective price and BTW rate resolved server-side,
+  never trusted from the client.
+- Product frontend: variant matrix editor (`ProductVariantPanel` + isolated
+  `ProductVariantDialog`), `ModifierGroupPanel`, `PriceTierTable`, BTW-class
+  selector with `taxRate` auto-sync, barcode + duration fields, and a
+  scan-to-navigate `ProductBarcodeSearch` view backed by the scoped lookup API.
+- Five Dutch product seed objects demonstrating variants, modifier groups,
+  price tiers, the `vrijgesteld` BTW class and service duration.
+- Dutch + English translations for all new catalogue UI strings.
+
 ## [0.2.22] - 2026-05-31
 
 ### Added
