@@ -399,12 +399,9 @@ class ProductCatalogService
             }
         }
 
-        // Pass 2: active variant barcode match.
+        // Pass 2: active variant barcode match. Each element is guaranteed to be
+        // an array by the method's declared input type (and pass 1 above).
         foreach ($products as $product) {
-            if (is_array($product) === false) {
-                continue;
-            }
-
             $variantIndex = $this->matchActiveVariantIndex(product: $product, barcode: $barcode);
             if ($variantIndex !== null) {
                 $variant = ((array) ($product['variants'] ?? []))[$variantIndex];

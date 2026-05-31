@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.27] - 2026-05-31
+
+### Added
+
+- POS refund + return (pos-refund-return, builds on pos-transaction-core + pos-nl-btw-engine):
+  - New OpenRegister schemas `refundReason` (DefinedTerm), `posRefund`
+    (schema:Order, type=refund) and `posRefundLine` (schema:OrderItem,
+    type=refund-line) with seed data (6 reasons, 4 refunds, 5 refund lines).
+  - `PosRefundService` computing every refund amount server-side from each
+    original `posTransactionLine`'s persisted tax (proportional, ratio clamped
+    to [0,1]); client-supplied amounts are never trusted.
+  - Cumulative over-refund cap: confirm sums all already-completed refunds for
+    the same transaction and rejects when the running total would exceed the
+    original transaction total.
+  - Manager-gated (fail-closed) confirm / reject lifecycle; rejected and
+    completed refunds are immutable.
+  - Fire-and-forget CloudEvents on confirm: `pipelinq.TransactionRefund.completed`
+    (accounting reversal with negative amounts) and per-restocked-line
+    `shillinq.StockMovement` (positive quantity); silent no-op when no consumer.
+  - IDOR-safe `PosRefundController` (`POST /api/pos-refunds/{id}/confirm|reject`,
+    authenticated, scoped to this app's own posRefund schema).
+  - Refund list / detail / form views with original-line selection, partial
+    quantities, per-line reason + restock toggle, real-time refund totals; an
+    isolated reject dialog; a "Retouren" navigation entry; and a
+    "Retour registreren" button on the transaction detail.
+  - Dutch + English translations; `PosRefundServiceTest` (16 tests) covering
+    proportional refunds, the over-refund cap (incl. cumulative), the
+    manager-gate fail-closed, reject-without-events, and the reversal/stock
+    event shapes.
+
+### Fixed
+
+- Removed a dead `is_array()` guard in `ProductCatalogService` flagged by PHPStan.
+
 ## [0.2.26] - 2026-05-31
 
 ### Added

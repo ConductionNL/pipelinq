@@ -64,6 +64,13 @@ class SettingsLoadService
         'queue',
         'skill',
         'agentProfile',
+        'posTransaction',
+        'posTransactionLine',
+        'receiptTemplate',
+        'receiptPrintLog',
+        'refundReason',
+        'posRefund',
+        'posRefundLine',
     ];
 
     /**

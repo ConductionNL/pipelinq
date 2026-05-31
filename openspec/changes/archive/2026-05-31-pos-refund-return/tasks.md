@@ -2,18 +2,25 @@
 
 ## 0. Deduplication Check
 
-- [ ] 0.1 Search `openspec/specs/` and `openregister/lib/Service/` for any existing refund,
+- [x] 0.1 Search `openspec/specs/` and `openregister/lib/Service/` for any existing refund,
   return, or stock reversal logic; document findings (expected: no overlap)
   - **acceptance_criteria**:
     - GIVEN the search is complete
     - THEN a one-line finding MUST be appended: "No overlap found" or reference to existing
       capability and why new code is needed
+  - **finding**: No overlap found. The merged `PosTransactionService::refundTransaction()`
+    only flips a whole transaction to `status=refunded` with a free-text `refundReason` and
+    emits no reversal/stock event. This change adds the structured `posRefund`/`posRefundLine`
+    record model (partial line selection, reason codes, restock, server-computed reversal
+    amounts, reversal + stock CloudEvents), referencing the parent posTransaction and reusing
+    its persisted, server-authoritative tax data. No refund/return/stock-reversal logic exists
+    in `openregister/lib/Service/` or elsewhere in `pipelinq/lib/`.
 
 ---
 
 ## 1. Data Model
 
-- [ ] 1.1 Add `refundReason` schema to `lib/Settings/pipelinq_register.json`
+- [x] 1.1 Add `refundReason` schema to `lib/Settings/pipelinq_register.json`
   - **spec_ref**: `specs/pos-refund-return/specs.md#REQ-REF-001`
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -22,7 +29,7 @@
       description (string, optional), isActive (boolean, default true), icon (string, optional)
     - AND the schema MUST NOT have a `@type` (or use "schema:DefinedTerm")
 
-- [ ] 1.2 Add `posRefund` schema to `lib/Settings/pipelinq_register.json`
+- [x] 1.2 Add `posRefund` schema to `lib/Settings/pipelinq_register.json`
   - **spec_ref**: `specs/pos-refund-return/specs.md#REQ-REF-002, #REQ-REF-006, #REQ-REF-007`
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -33,7 +40,7 @@
     - AND `status` enum MUST be: pending, completed, rejected (default: pending)
     - AND `originalTransaction` MUST be required (UUID reference to posTransaction)
 
-- [ ] 1.3 Add `posRefundLine` schema to `lib/Settings/pipelinq_register.json`
+- [x] 1.3 Add `posRefundLine` schema to `lib/Settings/pipelinq_register.json`
   - **spec_ref**: `specs/pos-refund-return/specs.md#REQ-REF-003, #REQ-REF-005, #REQ-REF-008`
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -44,7 +51,7 @@
     - AND `restock` MUST default to true
     - AND `@type: "schema:OrderItem"` MUST be set on the schema
 
-- [ ] 1.4 Add seed data: refundReason (6 objects), posRefund (4 objects), posRefundLine (5 objects)
+- [x] 1.4 Add seed data: refundReason (6 objects), posRefund (4 objects), posRefundLine (5 objects)
   using the `@self` envelope in `pipelinq_register.json`
   - **spec_ref**: ADR-001 (data-layer) — seed data requirements
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
@@ -56,7 +63,7 @@
     - AND 5 posRefundLine objects MUST be created with realistic Dutch context
     - AND re-importing with `force: false` MUST NOT create duplicates (matched by slug)
 
-- [ ] 1.5 Update the register's `schemas` list to include refundReason, posRefund, posRefundLine
+- [x] 1.5 Update the register's `schemas` list to include refundReason, posRefund, posRefundLine
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
     - GIVEN the app is installed / repair step runs
@@ -66,7 +73,7 @@
 
 ## 2. Backend Service
 
-- [ ] 2.1 Create `lib/Service/PosRefundService.php`
+- [x] 2.1 Create `lib/Service/PosRefundService.php`
   - **spec_ref**: `specs/pos-refund-return/specs.md#REQ-REF-003, #REQ-REF-006, #REQ-REF-007,
     #REQ-REF-010, #REQ-REF-011, #REQ-REF-012, #REQ-REF-014`
   - **files**: `pipelinq/lib/Service/PosRefundService.php`
@@ -96,7 +103,7 @@
       - Skip lines with restock=false
     - AND every public method MUST have `@spec openspec/changes/pos-refund-return/tasks.md#2.1`
 
-- [ ] 2.2 Create `lib/Controller/PosRefundController.php`
+- [x] 2.2 Create `lib/Controller/PosRefundController.php`
   - **spec_ref**: `specs/pos-refund-return/specs.md#REQ-REF-006, #REQ-REF-007`
   - **files**: `pipelinq/lib/Controller/PosRefundController.php`
   - **acceptance_criteria**:
@@ -112,7 +119,7 @@
 
 ## 3. Backend Routes
 
-- [ ] 3.1 Add POS refund routes to `appinfo/routes.php`
+- [x] 3.1 Add POS refund routes to `appinfo/routes.php`
   - **spec_ref**: ADR-002 (api)
   - **files**: `pipelinq/appinfo/routes.php`
   - **acceptance_criteria**:
@@ -125,7 +132,7 @@
 
 ## 4. Frontend — Store Registration
 
-- [ ] 4.1 Register `posRefund`, `posRefundLine`, and `refundReason` object types in `src/store/store.js`
+- [x] 4.1 Register `posRefund`, `posRefundLine`, and `refundReason` object types in `src/store/store.js`
   - **files**: `pipelinq/src/store/store.js`
   - **acceptance_criteria**:
     - GIVEN the app initialises
@@ -138,7 +145,7 @@
 
 ## 5. Frontend — Views
 
-- [ ] 5.1 Create `src/views/pos/PosRefundList.vue`
+- [x] 5.1 Create `src/views/pos/PosRefundList.vue`
   - **spec_ref**: `specs/pos-refund-return/specs.md#REQ-REF-008`
   - **files**: `pipelinq/src/views/pos/PosRefundList.vue`
   - **acceptance_criteria**:
@@ -151,7 +158,7 @@
     - AND rows MUST navigate to detail on click
     - AND empty state MUST show "Geen retouren gevonden" with "Nieuwe retour" button
 
-- [ ] 5.2 Create `src/views/pos/PosRefundDetail.vue`
+- [x] 5.2 Create `src/views/pos/PosRefundDetail.vue`
   - **spec_ref**: `specs/pos-refund-return/specs.md#REQ-REF-009, #REQ-REF-012`
   - **files**: `pipelinq/src/views/pos/PosRefundDetail.vue`
   - **acceptance_criteria**:
@@ -165,7 +172,7 @@
     - AND completed/rejected refunds MUST have no action buttons
     - AND timestamps (confirmedAt, rejectedAt) MUST be displayed when set
 
-- [ ] 5.3 Create `src/views/pos/PosRefundForm.vue`
+- [x] 5.3 Create `src/views/pos/PosRefundForm.vue`
   - **spec_ref**: `specs/pos-refund-return/specs.md#REQ-REF-002, #REQ-REF-003, #REQ-REF-004,
     #REQ-REF-005, #REQ-REF-010, #REQ-REF-011`
   - **files**: `pipelinq/src/views/pos/PosRefundForm.vue`
@@ -191,7 +198,7 @@
 
 ## 6. Frontend — Components
 
-- [ ] 6.1 Create `src/components/pos/PosRefundLineRow.vue`
+- [x] 6.1 Create `src/components/pos/PosRefundLineRow.vue`
   - **spec_ref**: `specs/pos-refund-return/specs.md#REQ-REF-003, #REQ-REF-004, #REQ-REF-005`
   - **files**: `pipelinq/src/components/pos/PosRefundLineRow.vue`
   - **acceptance_criteria**:
@@ -209,7 +216,7 @@
     - AND remove button MUST emit `remove`
     - AND returned qty validation MUST reject values > original qty
 
-- [ ] 6.2 Create `src/components/pos/PosRefundTotalsPanel.vue`
+- [x] 6.2 Create `src/components/pos/PosRefundTotalsPanel.vue`
   - **spec_ref**: `specs/pos-refund-return/specs.md#REQ-REF-006, #REQ-REF-010, #REQ-REF-011`
   - **files**: `pipelinq/src/components/pos/PosRefundTotalsPanel.vue`
   - **acceptance_criteria**:
@@ -225,7 +232,7 @@
 
 ## 7. Frontend — Navigation and Routing
 
-- [ ] 7.1 Add POS refund routes to `src/router/index.js`
+- [x] 7.1 Add POS refund routes to `src/router/index.js`
   - **files**: `pipelinq/src/router/index.js`
   - **acceptance_criteria**:
     - GIVEN the router is initialised
@@ -237,7 +244,7 @@
       - `/pos/refunds/:id/edit` → PosRefundForm (edit mode)
       MUST all be registered with route names
 
-- [ ] 7.2 Add "Retouren" navigation entry to `src/navigation/MainMenu.vue`
+- [x] 7.2 Add "Retouren" navigation entry to `src/navigation/MainMenu.vue`
   - **files**: `pipelinq/src/navigation/MainMenu.vue`
   - **acceptance_criteria**:
     - GIVEN the app is open
@@ -245,7 +252,7 @@
     - AND the item MUST be highlighted when the current route starts with `/pos/refunds`
     - AND clicking it MUST navigate to `/pos/refunds`
 
-- [ ] 7.3 Add "Retour registreren" button to `src/views/pos/PosTransactionDetail.vue`
+- [x] 7.3 Add "Retour registreren" button to `src/views/pos/PosTransactionDetail.vue`
   - **files**: `pipelinq/src/views/pos/PosTransactionDetail.vue`
   - **acceptance_criteria**:
     - GIVEN a transaction detail is displayed with status confirmed or settled
@@ -257,8 +264,8 @@
 
 ## 8. Verification
 
-- [ ] 8.1 Run `npm run build` — zero errors or warnings
-- [ ] 8.2 Run PHP static analysis (`phpstan`, `phpcs`) on new PHP files — zero errors
+- [x] 8.1 Run `npm run build` — zero errors or warnings
+- [x] 8.2 Run PHP static analysis (`phpstan`, `phpcs`) on new PHP files — zero errors
 - [ ] 8.3 Manual browser test: Create refund from transaction detail → select items with partial
   quantities → verify real-time totals → confirm → verify CloudEvents emitted (check logs)
 - [ ] 8.4 Manual browser test: Filter refund list by status, refund reason, date range
@@ -274,3 +281,15 @@
 - [ ] 8.9 Verify audit trail records creation, edits, confirmation, rejection with timestamps and user info
 - [ ] 8.10 Integration test (if applicable): Mock Shillinq webhook receiver and verify refund +
   stock movement events arrive with correct structure
+
+> **Verification status (honest):** The build (8.1) and full PHP static analysis
+> (8.2: phpcs + phpmd + phpstan all green on lib/) pass. The core logic behind the
+> manual/live scenarios is covered by `PosRefundServiceTest` (16 tests, 45 assertions):
+> partial proportional refund (8.3), restock-only stock movement emission (8.5),
+> over-refund cap incl. cumulative (8.7), reject without events (8.6), and the
+> reversal CloudEvent shape (8.10). The remaining browser scenarios (8.3 UI flow,
+> 8.4 list filters, 8.6 UI, 8.9 audit trail) and live idempotent import (8.8) require
+> a deployed instance and were NOT executed in this isolated worktree (no live
+> Shillinq/inventory consumer is configured — events are emitted fire-and-forget and
+> are a silent no-op when no subscriber exists). Seed objects use unique `@self`
+> slugs so OR's slug-matched import is idempotent by construction (8.8).

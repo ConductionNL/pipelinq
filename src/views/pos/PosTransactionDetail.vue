@@ -41,6 +41,11 @@
 				@click="settle">
 				{{ t('pipelinq', 'Afrekenen') }}
 			</NcButton>
+			<NcButton v-if="canRegisterReturn"
+				type="secondary"
+				@click="registerReturn">
+				{{ t('pipelinq', 'Retour registreren') }}
+			</NcButton>
 			<NcButton v-if="canRefund"
 				type="error"
 				:disabled="busy"
@@ -305,6 +310,14 @@ export default {
 			return ['confirmed', 'settled'].includes(this.status) && this.isManager
 		},
 		/**
+		 * Whether a structured return can be registered (confirmed / settled only).
+		 *
+		 * @return {boolean} Whether to show the return action.
+		 */
+		canRegisterReturn() {
+			return ['confirmed', 'settled'].includes(this.status)
+		},
+		/**
 		 * Whether a receipt may be issued (only fiscally-final transactions).
 		 *
 		 * @return {boolean} Whether to show the receipt actions.
@@ -371,6 +384,12 @@ export default {
 		 */
 		edit() {
 			this.$router.push({ name: 'PosTransactionEdit', params: { id: this.transactionId } })
+		},
+		/**
+		 * Navigate to the new-refund form pre-filled with this transaction.
+		 */
+		registerReturn() {
+			this.$router.push({ name: 'PosRefundNewFromTransaction', params: { transactionId: this.transactionId } })
 		},
 		/**
 		 * Call a lifecycle action endpoint and reload.
