@@ -48,7 +48,7 @@ export default {
 		 * @return {Array<string>} The column keys.
 		 */
 		visibleColumns() {
-			return ['reference', 'cashier', 'terminalId', 'status', 'total', 'created']
+			return ['reference', 'cashier', 'terminalId', 'status', 'priceMode', 'total', 'created']
 		},
 	},
 	methods: {

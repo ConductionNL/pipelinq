@@ -21,21 +21,74 @@ function money(value) {
 	return Math.round((Number(value) + Number.EPSILON) * 100) / 100
 }
 
+const PRICE_MODES = ['excl', 'incl']
+
 /**
- * Compute taxAmount and lineTotal for a single line.
+ * Dutch GL descriptions per common BTW rate, mirroring the PHP
+ * PosTransactionService::RATE_DESCRIPTIONS map.
+ */
+const RATE_DESCRIPTIONS = {
+	0: 'Nultarief (0%)',
+	9: 'Verlaagd tarief (9%)',
+	21: 'Standaardtarief (21%)',
+}
+
+/**
+ * Normalise a price mode to a known value ('excl' default).
+ *
+ * @param {*} mode The raw price mode.
+ * @return {string} Either 'excl' or 'incl'.
+ */
+export function normalizePriceMode(mode) {
+	const value = typeof mode === 'string' ? mode.trim().toLowerCase() : ''
+	return PRICE_MODES.includes(value) ? value : 'excl'
+}
+
+/**
+ * Human-readable Dutch GL description for a BTW rate.
+ *
+ * @param {number} rate The BTW rate percentage.
+ * @return {string} The description.
+ */
+export function rateDescription(rate) {
+	const intRate = Math.round(Number(rate) || 0)
+	if (RATE_DESCRIPTIONS[intRate] !== undefined) {
+		return RATE_DESCRIPTIONS[intRate]
+	}
+	return `${rate}% BTW`
+}
+
+/**
+ * Compute net, taxAmount and lineTotal for a single line.
+ *
+ * In 'excl' mode the entered unitPrice is the net base and BTW is added on top.
+ * In 'incl' mode the entered unitPrice already contains BTW and the net base is
+ * extracted out of it. The persisted `net` is always the tax-exclusive base, so
+ * the per-rate breakdown is identical regardless of entry mode. Mirrors
+ * PosTransactionService::recalculateLine().
  *
  * @param {object} line The raw line.
+ * @param {string|null} priceMode The transaction price mode ('excl'|'incl').
  * @return {object} The line with computed quantity, unitPrice, discount,
- *   taxRate, taxAmount and lineTotal.
+ *   taxRate, net, taxAmount and lineTotal.
  */
-export function recalculateLine(line) {
+export function recalculateLine(line, priceMode = null) {
 	const quantity = Math.max(0, Number(line.quantity) || 0)
 	const unitPrice = Math.max(0, Number(line.unitPrice) || 0)
 	const discount = Math.min(100, Math.max(0, Number(line.discount) || 0))
 	const taxRate = Math.min(100, Math.max(0, line.taxRate === undefined || line.taxRate === null ? 21 : Number(line.taxRate)))
+	const mode = normalizePriceMode(priceMode ?? line.priceMode ?? null)
 
-	const net = quantity * unitPrice * (1 - discount / 100)
-	const taxAmount = net * (taxRate / 100)
+	const amount = quantity * unitPrice * (1 - discount / 100)
+	let net
+	let taxAmount
+	if (mode === 'incl') {
+		net = amount / (1 + taxRate / 100)
+		taxAmount = amount - net
+	} else {
+		net = amount
+		taxAmount = net * (taxRate / 100)
+	}
 
 	return {
 		...line,
@@ -43,6 +96,7 @@ export function recalculateLine(line) {
 		unitPrice,
 		discount,
 		taxRate,
+		net: money(net),
 		taxAmount: money(taxAmount),
 		lineTotal: money(net + taxAmount),
 	}
@@ -51,43 +105,59 @@ export function recalculateLine(line) {
 /**
  * Compute aggregate totals for a set of lines.
  *
+ * Mirrors PosTransactionService::computeTotals(): groups tax by rate into a
+ * taxBreakdown array and a GL-oriented invoiceBreakdown array (with Dutch
+ * descriptions). The optional priceMode is threaded into recalculateLine so the
+ * per-line net base is extracted correctly whether prices were entered incl. or
+ * excl. BTW. Used only for a real-time preview; the backend recomputes the
+ * persisted figures, so client-side values are never trusted.
+ *
  * @param {Array<object>} lines The line items.
- * @return {{subtotal: number, discountTotal: number, taxBreakdown: Array<object>, totalTax: number, total: number}} The totals.
+ * @param {string|null} priceMode The transaction price mode ('excl'|'incl').
+ * @return {{priceMode: string, subtotal: number, discountTotal: number, taxBreakdown: Array<object>, invoiceBreakdown: Array<object>, totalTax: number, total: number}} The totals.
  */
-export function computeTotals(lines) {
+export function computeTotals(lines, priceMode = null) {
+	const mode = normalizePriceMode(priceMode)
 	let subtotal = 0
 	let discountTotal = 0
 	let totalTax = 0
 	const byRate = {}
 
 	for (const raw of lines || []) {
-		const line = recalculateLine(raw)
-		const gross = line.quantity * line.unitPrice
-		const net = gross * (1 - line.discount / 100)
+		const line = recalculateLine(raw, mode)
+		const grossNoDisc = line.quantity * line.unitPrice
+		const netNoDisc = mode === 'incl' ? grossNoDisc / (1 + line.taxRate / 100) : grossNoDisc
 
-		subtotal += net
-		discountTotal += gross - net
+		subtotal += line.net
+		discountTotal += netNoDisc - line.net
 		totalTax += line.taxAmount
 
 		const key = String(line.taxRate)
 		if (!byRate[key]) {
 			byRate[key] = { rate: line.taxRate, base: 0, tax: 0 }
 		}
-		byRate[key].base += net
+		byRate[key].base += line.net
 		byRate[key].tax += line.taxAmount
 	}
 
-	const taxBreakdown = Object.values(byRate)
-		.sort((a, b) => a.rate - b.rate)
-		.map(entry => ({ rate: entry.rate, base: money(entry.base), tax: money(entry.tax) }))
+	const sorted = Object.values(byRate).sort((a, b) => a.rate - b.rate)
+	const taxBreakdown = sorted.map(entry => ({ rate: entry.rate, base: money(entry.base), tax: money(entry.tax) }))
+	const invoiceBreakdown = sorted.map(entry => ({
+		rate: entry.rate,
+		base: money(entry.base),
+		tax: money(entry.tax),
+		description: rateDescription(entry.rate),
+	}))
 
 	subtotal = money(subtotal)
 	totalTax = money(totalTax)
 
 	return {
+		priceMode: mode,
 		subtotal,
 		discountTotal: money(discountTotal),
 		taxBreakdown,
+		invoiceBreakdown,
 		totalTax,
 		total: money(subtotal + totalTax),
 	}

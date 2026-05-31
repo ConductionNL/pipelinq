@@ -67,6 +67,10 @@
 					<label>{{ t('pipelinq', 'Status') }}</label>
 					<CnStatusBadge :status="transaction.status" :label="statusLabel" />
 				</div>
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Price mode') }}</label>
+					<span>{{ priceModeLabel }}</span>
+				</div>
 				<div v-if="transaction.notes" class="info-field info-field--wide">
 					<label>{{ t('pipelinq', 'Notes') }}</label>
 					<span>{{ transaction.notes }}</span>
@@ -129,31 +133,8 @@
 		</CnDetailCard>
 
 		<CnDetailCard :title="t('pipelinq', 'Tax breakdown')">
-			<table class="pos-detail__tax">
-				<thead>
-					<tr>
-						<th>{{ t('pipelinq', 'Rate') }}</th>
-						<th class="num">
-							{{ t('pipelinq', 'Base') }}
-						</th>
-						<th class="num">
-							{{ t('pipelinq', 'VAT') }}
-						</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="rate in taxBreakdown" :key="rate.rate">
-						<td>{{ rate.rate }}%</td>
-						<td class="num">
-							{{ formatEur(rate.base) }}
-						</td>
-						<td class="num">
-							{{ formatEur(rate.tax) }}
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			<PosTotalsPanel :lines="lines" />
+			<TaxBreakdownCard :transaction="transaction" />
+			<PosTotalsPanel :lines="lines" :price-mode="priceMode" />
 		</CnDetailCard>
 
 		<PosRefundDialog
@@ -170,6 +151,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { CnDetailPage, CnDetailCard, CnStatusBadge } from '@conduction/nextcloud-vue'
 import PosTotalsPanel from '../../components/pos/PosTotalsPanel.vue'
+import TaxBreakdownCard from '../../components/pos/TaxBreakdownCard.vue'
 import PosRefundDialog from '../../modals/PosRefundDialog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { formatEur } from '../../services/posTotals.js'
@@ -190,6 +172,7 @@ export default {
 		CnDetailCard,
 		CnStatusBadge,
 		PosTotalsPanel,
+		TaxBreakdownCard,
 		PosRefundDialog,
 	},
 	props: {
@@ -236,12 +219,22 @@ export default {
 			return t('pipelinq', STATUS_LABELS[this.status] || this.status)
 		},
 		/**
-		 * Persisted tax breakdown rows.
+		 * The transaction's price mode ('excl' default).
 		 *
-		 * @return {Array<object>} The rows.
+		 * @return {string} The price mode.
 		 */
-		taxBreakdown() {
-			return this.transaction.taxBreakdown || []
+		priceMode() {
+			return this.transaction.priceMode === 'incl' ? 'incl' : 'excl'
+		},
+		/**
+		 * Human-readable price mode label.
+		 *
+		 * @return {string} The label.
+		 */
+		priceModeLabel() {
+			return this.priceMode === 'incl'
+				? t('pipelinq', 'Prijzen incl. BTW')
+				: t('pipelinq', 'Prijzen excl. BTW')
 		},
 		/**
 		 * Number of line items.
@@ -404,15 +397,13 @@ export default {
 	font-size: 13px;
 }
 
-.pos-detail__lines,
-.pos-detail__tax {
+.pos-detail__lines {
 	width: 100%;
 	border-collapse: collapse;
 	margin-bottom: 12px;
 }
 
-.pos-detail__lines th,
-.pos-detail__tax th {
+.pos-detail__lines th {
 	text-align: left;
 	font-size: 12px;
 	color: var(--color-text-maxcontrast);
@@ -420,8 +411,7 @@ export default {
 	border-bottom: 1px solid var(--color-border);
 }
 
-.pos-detail__lines td,
-.pos-detail__tax td {
+.pos-detail__lines td {
 	padding: 6px 8px;
 	border-bottom: 1px solid var(--color-border);
 }

@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.24] - 2026-05-31
+
+### Added
+
+- POS NL BTW engine (builds on pos-transaction-core / pos-product-catalogue):
+  - Per-rate `invoiceBreakdown` array on `posTransaction` with Dutch GL descriptions
+    (`Nultarief (0%)` / `Verlaagd tarief (9%)` / `Standaardtarief (21%)`) that shillinq
+    consumes to post one GL line per BTW rate; included in the confirmed CloudEvent.
+  - `GET /api/pos-transactions/tax-report` — per-rate BTW compliance report aggregating
+    every fiscally-final transaction (confirmed/settled/refunded) and netting out refunds,
+    optionally filtered by `?status=`.
+  - End-to-end tax-inclusive vs tax-exclusive pricing via a `priceMode` field (`excl` default).
+    In `incl` mode the net base is extracted out of the entered price
+    (`net = gross / (1 + rate/100)`); the per-rate base is always tax-exclusive so the GL
+    split is identical regardless of entry mode. Server-authoritative — client totals are
+    never trusted; `taxRate` is clamped 0–100 and `priceMode` is allow-listed.
+  - `TaxBreakdownCard.vue` showing the tax summary (Belastingaangifte) and invoice
+    breakdown (Factuurverdeling) tables on the transaction detail; price-mode toggle on the
+    form and price-mode label on detail/totals.
+  - Mixed-rate seed transactions (0%/9%/21%, incl. one `incl`-mode cart) and 9 line items.
+
+### Changed
+
+- `PosTransactionService::recalculateLine` / `computeTotals` now accept a `priceMode` and
+  emit `net` + `invoiceBreakdown`; the confirmed CloudEvent payload carries `invoiceBreakdown`
+  and `priceMode`.
+
 ## [0.2.23] - 2026-05-31
 
 ### Added
