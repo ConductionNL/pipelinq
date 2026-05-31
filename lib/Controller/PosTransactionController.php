@@ -190,6 +190,37 @@ class PosTransactionController extends Controller
     }//end resume()
 
     /**
+     * Per-rate BTW compliance report for shillinq GL posting.
+     *
+     * Aggregates every fiscally-final transaction (confirmed / settled /
+     * refunded) into a per-rate base + tax split. Refunds are netted out.
+     * Read-only and computed server-side from the persisted, server-authoritative
+     * breakdowns — no client figures are trusted. An optional `status` query
+     * param narrows the report (e.g. only `settled`).
+     *
+     * @return JSONResponse The aggregated report.
+     *
+     * @spec openspec/changes/pos-nl-btw-engine/specs/pos-nl-btw-engine/spec.md#REQ-BTW-003
+     */
+    #[NoAdminRequired]
+    public function taxReport(): JSONResponse
+    {
+        $uid = $this->requireUserId();
+        if ($uid instanceof JSONResponse) {
+            return $uid;
+        }
+
+        $statusParam = (string) $this->request->getParam('status', '');
+        $status      = ($statusParam !== '') ? $statusParam : null;
+
+        return $this->run(
+            action: fn (): array => $this->service->taxReport(status: $status),
+            label: 'taxReport',
+            key: 'report'
+        );
+    }//end taxReport()
+
+    /**
      * Require an authenticated user, returning their UID.
      *
      * Returns a 401 JSONResponse when no user is in the session. Every
@@ -220,13 +251,14 @@ class PosTransactionController extends Controller
      *
      * @param callable $action The action to run.
      * @param string   $label  A short label for log context.
+     * @param string   $key    The response envelope key (default 'transaction').
      *
      * @return JSONResponse The response.
      */
-    private function run(callable $action, string $label): JSONResponse
+    private function run(callable $action, string $label, string $key='transaction'): JSONResponse
     {
         try {
-            return new JSONResponse(['transaction' => $action()]);
+            return new JSONResponse([$key => $action()]);
         } catch (OCSNotFoundException $e) {
             return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
         } catch (OCSForbiddenException $e) {
