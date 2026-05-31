@@ -1136,6 +1136,25 @@
         "summary": "A registered contact moment (interaction) with a client",
         "description": "Represents a single interaction with a client across any channel (phone, email, counter, chat, social media, letter). Mapped to Schema.org CommunicateAction and VNG Klantinteracties Contactmoment.",
         "@type": "schema:CommunicateAction",
+        "configuration": {
+          "x-openregister-archival": {
+            "retention": {
+              "default": "P2Y",
+              "rules": [
+                {
+                  "condition": "outcome == 'afgehandeld'",
+                  "retention": "P2Y",
+                  "reason": "Resolved client contact moments (callback logs, counter/phone interactions) retained 2 years as the operational client-interaction record (VNG Klantinteracties), then disposed per ADR-024. DPO sign-off pending (task 4.1)."
+                },
+                {
+                  "condition": "outcome == 'doorverbonden'",
+                  "retention": "P1Y",
+                  "reason": "Transferred (doorverbonden) contact moments are short-lived routing records; 1-year retention before disposition. DPO sign-off pending."
+                }
+              ]
+            }
+          }
+        },
         "required": [
           "subject",
           "channel"
@@ -1259,6 +1278,23 @@
               "complete": { "from": ["in_behandeling"], "to": "afgerond",       "description": "Mark the task as completed." },
               "expire":   { "from": ["in_behandeling"], "to": "verlopen",       "description": "Mark the task as expired (deadline passed)." },
               "reopen":   { "from": ["afgerond", "verlopen"], "to": "open",     "description": "Re-open a closed or expired task." }
+            }
+          },
+          "x-openregister-archival": {
+            "retention": {
+              "default": "P2Y",
+              "rules": [
+                {
+                  "condition": "status == 'afgerond'",
+                  "retention": "P2Y",
+                  "reason": "Completed task history (incl. callback requests / terugbelverzoeken) retained 2 years as operational record, then disposed per ADR-024. DPO sign-off pending (task 4.1)."
+                },
+                {
+                  "condition": "status == 'verlopen'",
+                  "retention": "P1Y",
+                  "reason": "Expired (never-actioned) tasks carry little record value; 1-year retention for audit, then disposed. DPO sign-off pending."
+                }
+              ]
             }
           }
         },
@@ -1410,6 +1446,23 @@
               "publish":  { "from": ["concept", "gearchiveerd"], "to": "gepubliceerd", "description": "Publish the article so it becomes available to agents (intern) and, when visibility is openbaar, to citizens. Authorization: author or a knowledge editor.", "authorization": { "field": "author" } },
               "archive":  { "from": ["gepubliceerd", "concept"], "to": "gearchiveerd", "description": "Withdraw the article from publication and archive it. Authorization: author or a knowledge editor.", "authorization": { "field": "author" } },
               "reopen":   { "from": ["gearchiveerd"], "to": "concept", "description": "Move an archived article back to concept for further editing. Authorization: author or a knowledge editor.", "authorization": { "field": "author" } }
+            }
+          },
+          "x-openregister-archival": {
+            "retention": {
+              "default": "P7Y",
+              "rules": [
+                {
+                  "condition": "status == 'gearchiveerd'",
+                  "retention": "P7Y",
+                  "reason": "Archived (withdrawn) knowledge-base article versions retained 7 years per the Archiefwet baseline term before disposition per ADR-024. Editors archive superseded versions; this rule governs how long the archived copy is kept. DPO sign-off pending (task 4.1)."
+                },
+                {
+                  "condition": "status == 'concept'",
+                  "retention": "P1Y",
+                  "reason": "Draft (concept) articles never published carry no statutory record value; 1-year retention for clean-up of abandoned drafts. DPO sign-off pending."
+                }
+              ]
             }
           }
         },
