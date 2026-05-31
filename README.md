@@ -63,6 +63,21 @@ It pairs naturally with [Procest](https://github.com/ConductionNL/procest) to fo
 - **Activity Feed** — Real-time updates on assignments, stage changes, new notes, and interactions
 - **Contact Moments** — Log calls, emails, visits, and other client interactions with timestamps
 
+### Point of Sale (BTW engine)
+- **Per-item BTW rate** — Each line carries its own Dutch VAT rate; the rate is pre-filled from the
+  product's `btwClass` and may be overridden per line
+- **Per-rate breakdown** — Receipts and the detail view show tax grouped by rate (e.g. "9% BTW: €X",
+  "21% BTW: €Y"); totals are recomputed server-side and never trusted from the client
+- **Inclusive / exclusive pricing** — A transaction's `priceMode` controls whether entered prices
+  already contain BTW (`incl`) or have it added on top (`excl`); the net base is the same either way
+- **GL invoice breakdown** — An `invoiceBreakdown` array (with Dutch descriptions) plus a
+  `GET /api/pos-transactions/tax-report` endpoint give shillinq a per-rate split for GL posting
+
+> **Dutch BTW rates** — `0%` zero-rated/exempt items (vouchers, certain exports), `9%` reduced rate
+> (food, beverages, books), `21%` standard rate (most goods and services). Set a product's
+> `taxRate` / `btwClass` in the catalog so it pre-fills onto POS lines; an unknown class
+> fails closed to the 21% standard rate so BTW is never silently dropped to zero.
+
 ### Integrations
 - **Unified Search** — Deep links for clients, leads, and requests in Nextcloud's global search
 - **Activity Stream** — Nextcloud activity integration for assignments and status changes

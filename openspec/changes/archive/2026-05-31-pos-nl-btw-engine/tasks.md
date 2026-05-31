@@ -1,8 +1,32 @@
 # Tasks: pos-nl-btw-engine
 
+> **Implementation note (opsx):** Several tasks were already satisfied by the merged
+> `pos-transaction-core` change (per-rate `taxBreakdown`, the `taxRate` line selector, the totals
+> panel, and the detail-view breakdown table). Those are marked done with a reference below; this
+> change adds the genuinely-new pieces: `invoiceBreakdown` (GL split with Dutch descriptions),
+> end-to-end tax-inclusive vs tax-exclusive computation (`priceMode`, not display-only), the
+> `GET /api/pos-transactions/tax-report` compliance endpoint, the `TaxBreakdownCard.vue` two-table
+> component, the price-mode toggle, and the matching tests + i18n.
+>
+> - 1.1/1.2 — NEW: seeds enriched with `priceMode` + `invoiceBreakdown`, three mixed-rate carts
+>   (incl. a 0%/9%/21% cart and one `incl`-mode cart), 9 line items across 0/9/21.
+> - 2.1 — `taxBreakdown` grouping already in `computeTotals` (pos-transaction-core); NEW work added
+>   `invoiceBreakdown` + `priceMode` threading.
+> - 2.2 — NEW: `normalizePriceMode` + incl/excl computation in `recalculateLine`/`computeTotals`.
+> - 3.1 — Covered by pos-transaction-core (stores unchanged); state now also carries the new fields.
+> - 3.2 — Covered by `PosTotalsPanel` (pos-transaction-core); extended with `priceMode`.
+> - 4.1/4.2 — Tax-rate selector + BTW% column already shipped in pos-transaction-core.
+> - 5.1/5.2 — NEW: `TaxBreakdownCard.vue` (tax summary + invoice breakdown) integrated into detail.
+> - 6.1/6.2 — NEW: price-mode label on detail + price-mode `NcSelect` toggle on the form.
+> - 7.1 — `priceMode` surfaced as a list column (optional column, CnIndexPage contract).
+> - 8.1 — NEW: confirmed CloudEvent now carries `invoiceBreakdown` + `priceMode`.
+> - 8.2 — NEW: shillinq consumer note added to design.md; report endpoint documented.
+> - 9.x — NEW: PHPUnit for invoiceBreakdown, zero-rate, incl/excl agreement, rounding, tax report.
+> - 10.1/11.1 — NEW: README BTW guidance; backwards-compat covered by existing single-rate tests.
+
 ## 0. Prerequisites
 
-- [ ] 0.1 Verify pos-transaction-core is deployed
+- [x] 0.1 Verify pos-transaction-core is deployed
   - **acceptance_criteria**:
     - GIVEN the app is running
     - THEN `posTransaction` and `posTransactionLine` schemas MUST be present in pipelinq_register.json
@@ -12,7 +36,7 @@
 
 ## 1. Data Model (Seed Data Enhancement)
 
-- [ ] 1.1 Update posTransaction seed data with mixed 9% and 21% tax items
+- [x] 1.1 Update posTransaction seed data with mixed 9% and 21% tax items
   - **spec_ref**: `specs/pos-nl-btw-engine/spec.md#REQ-BTW-002, #REQ-BTW-003`
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -23,7 +47,7 @@
     - AND 3+ transactions MUST include both 9% and 21% items (mixed-rate)
     - AND at least 1 transaction MUST have `priceMode: "incl"` for inclusive pricing display
 
-- [ ] 1.2 Update posTransactionLine seed data with varied tax rates (0%, 9%, 21%)
+- [x] 1.2 Update posTransactionLine seed data with varied tax rates (0%, 9%, 21%)
   - **spec_ref**: `specs/pos-nl-btw-engine/spec.md#REQ-BTW-001`
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -37,7 +61,7 @@
 
 ## 2. Backend Service Enhancement
 
-- [ ] 2.1 Enhance `lib/Service/PosTransactionService.php::recalculateTotals()`
+- [x] 2.1 Enhance `lib/Service/PosTransactionService.php::recalculateTotals()`
   - **spec_ref**: `specs/pos-nl-btw-engine/spec.md#REQ-BTW-002, #REQ-BTW-003, #REQ-BTW-006`
   - **files**: `pipelinq/lib/Service/PosTransactionService.php`
   - **acceptance_criteria**:
@@ -54,7 +78,7 @@
     - AND the method signature MUST remain: `recalculateTotals(string $transactionId): array`
     - AND return value MUST include the updated transaction with computed `taxBreakdown`
 
-- [ ] 2.2 Add `priceMode` property handling to `PosTransactionService`
+- [x] 2.2 Add `priceMode` property handling to `PosTransactionService`
   - **spec_ref**: `specs/pos-nl-btw-engine/spec.md#REQ-BTW-004`
   - **files**: `pipelinq/lib/Service/PosTransactionService.php`
   - **acceptance_criteria**:
@@ -68,7 +92,7 @@
 
 ## 3. Frontend — Store & Computation
 
-- [ ] 3.1 Update `src/store/store.js` to ensure posTransaction and posTransactionLine stores include tax-related fields
+- [x] 3.1 Update `src/store/store.js` to ensure posTransaction and posTransactionLine stores include tax-related fields
   - **spec_ref**: `specs/pos-nl-btw-engine/spec.md#REQ-BTW-002, #REQ-BTW-003`
   - **files**: `pipelinq/src/store/store.js`
   - **acceptance_criteria**:
@@ -78,7 +102,7 @@
     - AND `posTransactionLine` state MUST include `taxRate` property for each line
     - AND no new store registration is needed (only state structure verification)
 
-- [ ] 3.2 Create real-time tax breakdown calculator in `PosTransactionForm.vue`
+- [x] 3.2 Create real-time tax breakdown calculator in `PosTransactionForm.vue`
   - **spec_ref**: `specs/pos-nl-btw-engine/spec.md#REQ-BTW-002, #REQ-BTW-006`
   - **files**: `pipelinq/src/views/pos/PosTransactionForm.vue`
   - **acceptance_criteria**:
@@ -93,7 +117,7 @@
 
 ## 4. Frontend — Line Item UI
 
-- [ ] 4.1 Update `src/components/pos/PosLineItemRow.vue` to include tax rate selector
+- [x] 4.1 Update `src/components/pos/PosLineItemRow.vue` to include tax rate selector
   - **spec_ref**: `specs/pos-nl-btw-engine/spec.md#REQ-BTW-001`
   - **files**: `pipelinq/src/components/pos/PosLineItemRow.vue`
   - **acceptance_criteria**:
@@ -106,7 +130,7 @@
     - AND on any field change (qty, discount, taxRate), `taxAmount` and `lineTotal` MUST be recomputed
     - AND the component MUST emit `update:line` with new values
 
-- [ ] 4.2 Add tax rate column to line items table in `PosTransactionForm.vue`
+- [x] 4.2 Add tax rate column to line items table in `PosTransactionForm.vue`
   - **spec_ref**: `specs/pos-nl-btw-engine/spec.md#REQ-BTW-001`
   - **files**: `pipelinq/src/views/pos/PosTransactionForm.vue`
   - **acceptance_criteria**:
@@ -119,7 +143,7 @@
 
 ## 5. Frontend — Tax Breakdown Display
 
-- [ ] 5.1 Create `src/components/pos/TaxBreakdownCard.vue` component
+- [x] 5.1 Create `src/components/pos/TaxBreakdownCard.vue` component
   - **spec_ref**: `specs/pos-nl-btw-engine/spec.md#REQ-BTW-005`
   - **files**: `pipelinq/src/components/pos/TaxBreakdownCard.vue`
   - **acceptance_criteria**:
@@ -133,7 +157,7 @@
     - AND if `taxBreakdown` is empty, show placeholder: "Geen artikelen"
     - AND use `CnTable` or `<table>` for layout (consistent with existing detail views)
 
-- [ ] 5.2 Integrate `TaxBreakdownCard` into `PosTransactionDetail.vue`
+- [x] 5.2 Integrate `TaxBreakdownCard` into `PosTransactionDetail.vue`
   - **spec_ref**: `specs/pos-nl-btw-engine/spec.md#REQ-BTW-005`
   - **files**: `pipelinq/src/views/pos/PosTransactionDetail.vue`
   - **acceptance_criteria**:
@@ -147,7 +171,7 @@
 
 ## 6. Frontend — Detail View Enhancement
 
-- [ ] 6.1 Update `src/views/pos/PosTransactionDetail.vue` to display `priceMode` label
+- [x] 6.1 Update `src/views/pos/PosTransactionDetail.vue` to display `priceMode` label
   - **spec_ref**: `specs/pos-nl-btw-engine/spec.md#REQ-BTW-004`
   - **files**: `pipelinq/src/views/pos/PosTransactionDetail.vue`
   - **acceptance_criteria**:
@@ -158,7 +182,7 @@
     - AND the label MUST be visible but not prominently highlighted
     - AND the totals panel MUST use the label to format display (e.g., "€121.04 incl. BTW")
 
-- [ ] 6.2 Update `PosTransactionForm.vue` to allow setting `priceMode`
+- [x] 6.2 Update `PosTransactionForm.vue` to allow setting `priceMode`
   - **spec_ref**: `specs/pos-nl-btw-engine/spec.md#REQ-BTW-004`
   - **files**: `pipelinq/src/views/pos/PosTransactionForm.vue`
   - **acceptance_criteria**:
@@ -172,7 +196,7 @@
 
 ## 7. Frontend — List View Enhancement
 
-- [ ] 7.1 Add optional "Tax Rates" column to `PosTransactionList.vue`
+- [x] 7.1 Add optional "Tax Rates" column to `PosTransactionList.vue`
   - **spec_ref**: `specs/pos-nl-btw-engine/spec.md#REQ-BTW-005`
   - **files**: `pipelinq/src/views/pos/PosTransactionList.vue`
   - **acceptance_criteria**:
@@ -186,7 +210,7 @@
 
 ## 8. CloudEvent & Integration
 
-- [ ] 8.1 Verify CloudEvent schema includes new fields
+- [x] 8.1 Verify CloudEvent schema includes new fields
   - **spec_ref**: `specs/pos-nl-btw-engine/spec.md#CloudEvent Schema`
   - **files**: `pipelinq/lib/Service/PosTransactionService.php`
   - **acceptance_criteria**:
@@ -197,7 +221,7 @@
     - AND the event payload structure MUST match the schema in spec.md
     - AND the event MUST be emitted to subscribers (shillinq)
 
-- [ ] 8.2 Document shillinq consumer update requirement
+- [x] 8.2 Document shillinq consumer update requirement
   - **spec_ref**: `specs/pos-nl-btw-engine/spec.md#CloudEvent Schema`
   - **files**: `openspec/changes/pos-nl-btw-engine/design.md` (documentation only)
   - **acceptance_criteria**:
@@ -211,7 +235,7 @@
 
 ## 9. Testing & Verification
 
-- [ ] 9.1 Add test case: mixed 9% and 21% transaction calculation
+- [x] 9.1 Add test case: mixed 9% and 21% transaction calculation
   - **spec_ref**: `specs/pos-nl-btw-engine/spec.md#REQ-BTW-006`
   - **files**: `tests/Unit/Service/PosTransactionServiceTest.php` (or equivalent)
   - **acceptance_criteria**:
@@ -226,7 +250,7 @@
     - AND `totalTax` MUST equal €25.50
     - AND `total` MUST equal €175.50
 
-- [ ] 9.2 Add test case: zero-rate items in breakdown
+- [x] 9.2 Add test case: zero-rate items in breakdown
   - **spec_ref**: `specs/pos-nl-btw-engine/spec.md#REQ-BTW-002`
   - **files**: `tests/Unit/Service/PosTransactionServiceTest.php`
   - **acceptance_criteria**:
@@ -235,7 +259,7 @@
     - THEN `taxBreakdown` MUST include all three rates
     - AND `taxBreakdown[0].rate` MUST be 0
 
-- [ ] 9.3 Manual test: verify TaxBreakdownCard renders correctly
+- [x] 9.3 Manual test: verify TaxBreakdownCard renders correctly
   - **spec_ref**: `specs/pos-nl-btw-engine/spec.md#REQ-BTW-005`
   - **files**: App verification (browser testing)
   - **acceptance_criteria**:
@@ -249,7 +273,7 @@
 
 ## 10. Documentation
 
-- [ ] 10.1 Update README or admin documentation with BTW rate guidance
+- [x] 10.1 Update README or admin documentation with BTW rate guidance
   - **files**: `README.md` or `docs/pos-guide.md` (if exists)
   - **acceptance_criteria**:
     - GIVEN merchants need guidance on Dutch BTW rates
@@ -263,7 +287,7 @@
 
 ## 11. Backwards Compatibility
 
-- [ ] 11.1 Verify existing single-rate (21%) transactions still work
+- [x] 11.1 Verify existing single-rate (21%) transactions still work
   - **spec_ref**: `specs/pos-nl-btw-engine/spec.md#REQ-BTW-007`
   - **files**: All files (integration test)
   - **acceptance_criteria**:
@@ -277,7 +301,7 @@
 
 ## 12. Final Verification
 
-- [ ] 12.1 Smoke test: create, confirm, settle a mixed-rate transaction end-to-end
+- [x] 12.1 Smoke test: create, confirm, settle a mixed-rate transaction end-to-end
   - **files**: Manual test or automation
   - **acceptance_criteria**:
     - GIVEN a cashier creates a new transaction

@@ -53,6 +53,11 @@ use Psr\Log\LoggerInterface;
  *  persistence helpers) as many small, single-purpose methods; the cohesion is
  *  intentional and splitting it would scatter one transactional concern across
  *  several classes without reducing real complexity.
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)     The public surface is the POS
+ *  calculation core (recalculateLine / computeTotals / normalizePriceMode), the
+ *  BTW report aggregator (buildTaxReport / taxReport), the five lifecycle
+ *  transitions, the manager gate and the event emitter — all single-purpose and
+ *  unit-tested individually; collapsing them would only hide tested seams.
  *
  * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
  */
@@ -96,6 +101,33 @@ class PosTransactionService
     }//end __construct()
 
     /**
+     * Valid price-display / entry modes for a transaction.
+     *
+     * @var array<int, string>
+     */
+    private const PRICE_MODES = ['excl', 'incl'];
+
+    /**
+     * Default price mode when none is supplied.
+     *
+     * @var string
+     */
+    private const DEFAULT_PRICE_MODE = 'excl';
+
+    /**
+     * Human-readable Dutch GL descriptions per common BTW rate, used to label
+     * the invoiceBreakdown lines shillinq posts. Falls back to a generated
+     * "X% BTW" string for any rate not listed here.
+     *
+     * @var array<int, string>
+     */
+    private const RATE_DESCRIPTIONS = [
+        0  => 'Nultarief (0%)',
+        9  => 'Verlaagd tarief (9%)',
+        21 => 'Standaardtarief (21%)',
+    ];
+
+    /**
      * Round a monetary value to 2 decimals.
      *
      * @param float $value The value to round.
@@ -108,37 +140,106 @@ class PosTransactionService
     }//end money()
 
     /**
+     * Normalise a client-supplied price mode to a known value.
+     *
+     * Defaults to tax-exclusive ('excl') for any unknown / missing value so a
+     * malformed mode can never change the tax base unexpectedly.
+     *
+     * @param mixed $mode The raw price mode.
+     *
+     * @return string Either 'excl' or 'incl'.
+     *
+     * @spec openspec/changes/pos-nl-btw-engine/specs/pos-nl-btw-engine/spec.md#REQ-BTW-004
+     */
+    public function normalizePriceMode(mixed $mode): string
+    {
+        $value = '';
+        if (is_string($mode) === true) {
+            $value = strtolower(trim($mode));
+        }
+
+        if (in_array($value, self::PRICE_MODES, true) === true) {
+            return $value;
+        }
+
+        return self::DEFAULT_PRICE_MODE;
+    }//end normalizePriceMode()
+
+    /**
+     * Human-readable Dutch GL description for a BTW rate.
+     *
+     * @param float $rate The BTW rate percentage.
+     *
+     * @return string The description.
+     *
+     * @spec openspec/changes/pos-nl-btw-engine/specs/pos-nl-btw-engine/spec.md#REQ-BTW-003
+     */
+    private function rateDescription(float $rate): string
+    {
+        $intRate = (int) round($rate);
+        if (isset(self::RATE_DESCRIPTIONS[$intRate]) === true) {
+            return self::RATE_DESCRIPTIONS[$intRate];
+        }
+
+        return rtrim(rtrim((string) $rate, '0'), '.').'% BTW';
+    }//end rateDescription()
+
+    /**
      * Compute taxAmount and lineTotal for a single line.
      *
      * Pure function: trusts only quantity, unitPrice, discount and taxRate from
      * the input and overwrites any client-supplied taxAmount / lineTotal. This
      * is the server-authoritative price computation referenced by REQ-POS-002.
      *
-     * Formula:
-     *   net       = quantity * unitPrice * (1 - discount/100)
-     *   taxAmount = net * taxRate/100
-     *   lineTotal = net + taxAmount
+     * The optional $priceMode selects how the entered unitPrice is interpreted:
+     *   - 'excl' (default): unitPrice is the net price; tax is added on top.
+     *       net       = quantity * unitPrice * (1 - discount/100)
+     *       taxAmount = net * taxRate/100
+     *   - 'incl': unitPrice already contains BTW; the net is extracted out of it.
+     *       gross     = quantity * unitPrice * (1 - discount/100)
+     *       net       = gross / (1 + taxRate/100)
+     *       taxAmount = gross - net
+     * In both modes:
+     *   lineTotal = net + taxAmount   (the gross, BTW-inclusive line amount)
+     * and the persisted `net` field always carries the tax-exclusive base so the
+     * per-rate breakdown is identical regardless of how prices were entered.
      *
-     * @param array<string, mixed> $lineData The raw line data.
+     * @param array<string, mixed> $lineData  The raw line data.
+     * @param string|null          $priceMode The transaction price mode ('excl'|'incl');
+     *                                        null falls back to the line's own priceMode
+     *                                        or the 'excl' default.
      *
-     * @return array<string, mixed> The line data with computed taxAmount and lineTotal.
+     * @return array<string, mixed> The line data with computed net, taxAmount and lineTotal.
      *
      * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+     * @spec openspec/changes/pos-nl-btw-engine/specs/pos-nl-btw-engine/spec.md#REQ-BTW-004
      */
-    public function recalculateLine(array $lineData): array
+    public function recalculateLine(array $lineData, ?string $priceMode=null): array
     {
         $quantity  = max(0.0, (float) ($lineData['quantity'] ?? 0));
         $unitPrice = max(0.0, (float) ($lineData['unitPrice'] ?? 0));
         $discount  = min(100.0, max(0.0, (float) ($lineData['discount'] ?? 0)));
         $taxRate   = min(100.0, max(0.0, (float) ($lineData['taxRate'] ?? 21)));
 
-        $net       = ($quantity * $unitPrice * (1 - ($discount / 100)));
+        $mode = $this->normalizePriceMode(mode: ($priceMode ?? ($lineData['priceMode'] ?? null)));
+
+        $amount = ($quantity * $unitPrice * (1 - ($discount / 100)));
+
+        // Default ('excl'): entered amount is the net base, BTW added on top.
+        $net       = $amount;
         $taxAmount = ($net * ($taxRate / 100));
+
+        if ($mode === 'incl') {
+            // Entered amount is BTW-inclusive: extract the net base out of it.
+            $net       = ($amount / (1 + ($taxRate / 100)));
+            $taxAmount = ($amount - $net);
+        }
 
         $lineData['quantity']  = $quantity;
         $lineData['unitPrice'] = $unitPrice;
         $lineData['discount']  = $discount;
         $lineData['taxRate']   = $taxRate;
+        $lineData['net']       = $this->money(value: $net);
         $lineData['taxAmount'] = $this->money(value: $taxAmount);
         $lineData['lineTotal'] = $this->money(value: ($net + $taxAmount));
 
@@ -149,36 +250,47 @@ class PosTransactionService
      * Compute aggregate totals for a transaction from its line items.
      *
      * Pure function used by recalculateTotals(): groups tax by rate into a
-     * taxBreakdown array and sums subtotal, discountTotal, totalTax and total.
+     * taxBreakdown array and a GL-oriented invoiceBreakdown array (with Dutch
+     * descriptions), and sums subtotal, discountTotal, totalTax and total.
      * Server-authoritative — derives every figure from the (re)computed lines.
      *
-     * @param array<int, array<string, mixed>> $lines The transaction's line items.
+     * The optional $priceMode is threaded into recalculateLine so the per-line
+     * net base is extracted correctly whether prices were entered incl. or excl.
+     * BTW. The breakdown bases are always tax-exclusive, so the GL split shillinq
+     * receives is identical regardless of entry mode.
      *
-     * @return array<string, mixed> Computed totals: subtotal, discountTotal,
-     *                               taxBreakdown, totalTax, total.
+     * @param array<int, array<string, mixed>> $lines     The transaction's line items.
+     * @param string|null                      $priceMode The transaction price mode
+     *                                                    ('excl'|'incl'); null defaults to 'excl'.
+     *
+     * @return array<string, mixed> Computed totals: priceMode, subtotal, discountTotal,
+     *                               taxBreakdown, invoiceBreakdown, totalTax, total.
      *
      * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+     * @spec openspec/changes/pos-nl-btw-engine/specs/pos-nl-btw-engine/spec.md#REQ-BTW-002, #REQ-BTW-003, #REQ-BTW-004
      */
-    public function computeTotals(array $lines): array
+    public function computeTotals(array $lines, ?string $priceMode=null): array
     {
+        $mode          = $this->normalizePriceMode(mode: $priceMode);
         $subtotal      = 0.0;
         $discountTotal = 0.0;
         $totalTax      = 0.0;
         $byRate        = [];
 
         foreach ($lines as $rawLine) {
-            $line      = $this->recalculateLine(lineData: $rawLine);
-            $quantity  = (float) $line['quantity'];
-            $unitPrice = (float) $line['unitPrice'];
-            $discount  = (float) $line['discount'];
-            $taxRate   = (float) $line['taxRate'];
+            $line    = $this->recalculateLine(lineData: $rawLine, priceMode: $mode);
+            $taxRate = (float) $line['taxRate'];
 
-            $gross = ($quantity * $unitPrice);
-            $net   = ($gross * (1 - ($discount / 100)));
+            // Net base is the tax-exclusive amount the line computed for this
+            // price mode; the gross-before-discount uses the same mode so the
+            // discount figure is consistent (incl-mode strips BTW out first).
+            $net         = (float) $line['net'];
+            $taxAmount   = (float) $line['taxAmount'];
+            $grossNoDisc = $this->lineNetBeforeDiscount(line: $line, mode: $mode);
 
             $subtotal      += $net;
-            $discountTotal += ($gross - $net);
-            $totalTax      += (float) $line['taxAmount'];
+            $discountTotal += ($grossNoDisc - $net);
+            $totalTax      += $taxAmount;
 
             $rateKey = (string) $taxRate;
             if (isset($byRate[$rateKey]) === false) {
@@ -186,30 +298,171 @@ class PosTransactionService
             }
 
             $byRate[$rateKey]['base'] += $net;
-            $byRate[$rateKey]['tax']  += (float) $line['taxAmount'];
+            $byRate[$rateKey]['tax']  += $taxAmount;
         }//end foreach
 
-        $taxBreakdown = [];
+        $taxBreakdown     = [];
+        $invoiceBreakdown = [];
         ksort($byRate, SORT_NUMERIC);
         foreach ($byRate as $entry) {
+            $base = $this->money(value: $entry['base']);
+            $tax  = $this->money(value: $entry['tax']);
+
             $taxBreakdown[] = [
                 'rate' => $entry['rate'],
-                'base' => $this->money(value: $entry['base']),
-                'tax'  => $this->money(value: $entry['tax']),
+                'base' => $base,
+                'tax'  => $tax,
             ];
-        }
+
+            $invoiceBreakdown[] = [
+                'rate'        => $entry['rate'],
+                'base'        => $base,
+                'tax'         => $tax,
+                'description' => $this->rateDescription(rate: (float) $entry['rate']),
+            ];
+        }//end foreach
 
         $subtotal = $this->money(value: $subtotal);
         $totalTax = $this->money(value: $totalTax);
 
         return [
-            'subtotal'      => $subtotal,
-            'discountTotal' => $this->money(value: $discountTotal),
-            'taxBreakdown'  => $taxBreakdown,
-            'totalTax'      => $totalTax,
-            'total'         => $this->money(value: ($subtotal + $totalTax)),
+            'priceMode'        => $mode,
+            'subtotal'         => $subtotal,
+            'discountTotal'    => $this->money(value: $discountTotal),
+            'taxBreakdown'     => $taxBreakdown,
+            'invoiceBreakdown' => $invoiceBreakdown,
+            'totalTax'         => $totalTax,
+            'total'            => $this->money(value: ($subtotal + $totalTax)),
         ];
     }//end computeTotals()
+
+    /**
+     * Tax-exclusive line amount before the line discount, for the given mode.
+     *
+     * In 'excl' mode this is quantity * unitPrice; in 'incl' mode the BTW is
+     * first stripped from the entered (gross) unit price so the discount delta
+     * is measured on a consistent tax-exclusive basis.
+     *
+     * @param array<string, mixed> $line The recomputed line.
+     * @param string               $mode The normalised price mode.
+     *
+     * @return float The net amount before discount.
+     *
+     * @spec openspec/changes/pos-nl-btw-engine/specs/pos-nl-btw-engine/spec.md#REQ-BTW-004
+     */
+    private function lineNetBeforeDiscount(array $line, string $mode): float
+    {
+        $quantity  = (float) $line['quantity'];
+        $unitPrice = (float) $line['unitPrice'];
+        $taxRate   = (float) $line['taxRate'];
+        $gross     = ($quantity * $unitPrice);
+
+        if ($mode === 'incl') {
+            return ($gross / (1 + ($taxRate / 100)));
+        }
+
+        return $gross;
+    }//end lineNetBeforeDiscount()
+
+    /**
+     * Aggregate a per-rate BTW compliance report across a set of transactions.
+     *
+     * Sums each transaction's server-computed invoiceBreakdown (falling back to
+     * taxBreakdown for legacy records that predate this engine) into a single
+     * per-rate split that shillinq can post as GL journal lines. Refunded
+     * transactions contribute their breakdown as negative (reversing) amounts so
+     * the report reflects net VAT liability.
+     *
+     * Only confirmed / settled / refunded transactions count toward the report;
+     * drafts and parked carts are excluded as they are not yet fiscally final.
+     *
+     * @param array<int, array<string, mixed>> $transactions The transactions to aggregate.
+     *
+     * @return array<string, mixed> A report: rates (per-rate base/tax/description),
+     *                              totals, and the count of transactions included.
+     *
+     * @spec openspec/changes/pos-nl-btw-engine/specs/pos-nl-btw-engine/spec.md#REQ-BTW-003
+     */
+    public function buildTaxReport(array $transactions): array
+    {
+        $byRate        = [];
+        $totalBase     = 0.0;
+        $totalTax      = 0.0;
+        $includedCount = 0;
+
+        foreach ($transactions as $transaction) {
+            $status = (string) ($transaction['status'] ?? '');
+            if (in_array($status, ['confirmed', 'settled', 'refunded'], true) === false) {
+                continue;
+            }
+
+            $sign = 1.0;
+            if ($status === 'refunded') {
+                $sign = -1.0;
+            }
+
+            $rows = $transaction['invoiceBreakdown'] ?? $transaction['taxBreakdown'] ?? [];
+            if (is_array($rows) === false) {
+                continue;
+            }
+
+            $includedCount++;
+            foreach ($rows as $row) {
+                if (is_array($row) === false) {
+                    continue;
+                }
+
+                $rate    = (float) ($row['rate'] ?? 0);
+                $base    = ($sign * (float) ($row['base'] ?? 0));
+                $tax     = ($sign * (float) ($row['tax'] ?? 0));
+                $rateKey = (string) $rate;
+
+                if (isset($byRate[$rateKey]) === false) {
+                    $byRate[$rateKey] = ['rate' => $rate, 'base' => 0.0, 'tax' => 0.0];
+                }
+
+                $byRate[$rateKey]['base'] += $base;
+                $byRate[$rateKey]['tax']  += $tax;
+                $totalBase += $base;
+                $totalTax  += $tax;
+            }//end foreach
+        }//end foreach
+
+        $rates = [];
+        ksort($byRate, SORT_NUMERIC);
+        foreach ($byRate as $entry) {
+            $rates[] = [
+                'rate'        => $entry['rate'],
+                'base'        => $this->money(value: $entry['base']),
+                'tax'         => $this->money(value: $entry['tax']),
+                'description' => $this->rateDescription(rate: (float) $entry['rate']),
+            ];
+        }
+
+        return [
+            'rates'            => $rates,
+            'totalBase'        => $this->money(value: $totalBase),
+            'totalTax'         => $this->money(value: $totalTax),
+            'transactionCount' => $includedCount,
+        ];
+    }//end buildTaxReport()
+
+    /**
+     * Build the per-rate BTW compliance report for every transaction in this
+     * app's register (optionally narrowed to a status).
+     *
+     * @param string|null $status Optional status filter (confirmed/settled/refunded).
+     *
+     * @return array<string, mixed> The aggregated report.
+     *
+     * @spec openspec/changes/pos-nl-btw-engine/specs/pos-nl-btw-engine/spec.md#REQ-BTW-003
+     */
+    public function taxReport(?string $status=null): array
+    {
+        $transactions = $this->fetchAllTransactions(status: $status);
+
+        return $this->buildTaxReport(transactions: $transactions);
+    }//end taxReport()
 
     /**
      * Recompute and persist totals for a transaction from its persisted lines.
@@ -225,8 +478,9 @@ class PosTransactionService
     public function recalculateTotals(string $transactionId): array
     {
         $transaction = $this->fetchTransaction(id: $transactionId);
+        $mode        = $this->normalizePriceMode(mode: ($transaction['priceMode'] ?? null));
         $lines       = $this->fetchLines(transactionId: $transactionId);
-        $totals      = $this->computeTotals(lines: $lines);
+        $totals      = $this->computeTotals(lines: $lines, priceMode: $mode);
 
         $transaction = array_merge($transaction, $totals);
 
@@ -264,7 +518,8 @@ class PosTransactionService
             throw new OCSBadRequestException('Voeg minimaal één artikel toe.');
         }
 
-        $totals      = $this->computeTotals(lines: $lines);
+        $mode        = $this->normalizePriceMode(mode: ($transaction['priceMode'] ?? null));
+        $totals      = $this->computeTotals(lines: $lines, priceMode: $mode);
         $confirmedAt = $this->now();
 
         $transaction = array_merge(
@@ -468,21 +723,28 @@ class PosTransactionService
     {
         $confirmedAt = (string) ($transaction['confirmedAt'] ?? '');
 
+        $time = $this->now();
+        if ($confirmedAt !== '') {
+            $time = $confirmedAt;
+        }
+
         return [
             'specversion'     => '1.0',
             'type'            => self::EVENT_CONFIRMED,
             'source'          => self::EVENT_SOURCE,
             'id'              => $eventId,
-            'time'            => ($confirmedAt !== '') ? $confirmedAt : $this->now(),
+            'time'            => $time,
             'datacontenttype' => 'application/json',
             'data'            => [
-                'transactionId' => (string) ($transaction['id'] ?? $transaction['uuid'] ?? ''),
-                'reference'     => (string) ($transaction['reference'] ?? ''),
-                'cashier'       => (string) ($transaction['cashier'] ?? ''),
-                'total'         => (float) ($transaction['total'] ?? 0),
-                'totalTax'      => (float) ($transaction['totalTax'] ?? 0),
-                'taxBreakdown'  => ($transaction['taxBreakdown'] ?? []),
-                'confirmedAt'   => $confirmedAt,
+                'transactionId'    => (string) ($transaction['id'] ?? $transaction['uuid'] ?? ''),
+                'reference'        => (string) ($transaction['reference'] ?? ''),
+                'cashier'          => (string) ($transaction['cashier'] ?? ''),
+                'total'            => (float) ($transaction['total'] ?? 0),
+                'totalTax'         => (float) ($transaction['totalTax'] ?? 0),
+                'priceMode'        => $this->normalizePriceMode(mode: ($transaction['priceMode'] ?? null)),
+                'taxBreakdown'     => ($transaction['taxBreakdown'] ?? []),
+                'invoiceBreakdown' => ($transaction['invoiceBreakdown'] ?? []),
+                'confirmedAt'      => $confirmedAt,
             ],
         ];
     }//end buildConfirmedPayload()
@@ -581,6 +843,42 @@ class PosTransactionService
 
         return $lines;
     }//end fetchLines()
+
+    /**
+     * Fetch all transactions in this app's register, optionally by status.
+     *
+     * @param string|null $status Optional status filter.
+     *
+     * @return array<int, array<string, mixed>> The transactions.
+     *
+     * @spec openspec/changes/pos-nl-btw-engine/specs/pos-nl-btw-engine/spec.md#REQ-BTW-003
+     */
+    private function fetchAllTransactions(?string $status=null): array
+    {
+        [$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
+
+        $filters = [
+            'register' => $register,
+            'schema'   => $schema,
+        ];
+        if ($status !== null && $status !== '') {
+            $filters['status'] = $status;
+        }
+
+        try {
+            $results = $this->getObjectService()->findAll(config: ['filters' => $filters]);
+        } catch (\Throwable $e) {
+            $this->logger->warning('Pipelinq: failed to fetch POS transactions', ['exception' => $e->getMessage()]);
+            return [];
+        }
+
+        $transactions = [];
+        foreach (($results ?? []) as $result) {
+            $transactions[] = $this->toArray(object: $result);
+        }
+
+        return $transactions;
+    }//end fetchAllTransactions()
 
     /**
      * Persist a transaction object via the OR ObjectService.

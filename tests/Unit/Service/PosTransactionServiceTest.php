@@ -174,6 +174,223 @@ class PosTransactionServiceTest extends TestCase
     }//end testComputeTotalsGroupsTaxByRate()
 
     /**
+     * computeTotals builds an invoiceBreakdown with Dutch GL descriptions per rate.
+     *
+     * @return void
+     */
+    public function testComputeTotalsBuildsInvoiceBreakdown(): void
+    {
+        $lines = [
+            // 9% base 50.00 => tax 4.50.
+            ['quantity' => 1, 'unitPrice' => 50.00, 'discount' => 0, 'taxRate' => 9],
+            // 21% base 100.00 => tax 21.00.
+            ['quantity' => 1, 'unitPrice' => 100.00, 'discount' => 0, 'taxRate' => 21],
+        ];
+
+        $totals = $this->service->computeTotals($lines);
+
+        $this->assertSame('excl', $totals['priceMode']);
+        $this->assertSame(25.50, $totals['totalTax']);
+        $this->assertSame(175.50, $totals['total']);
+        $this->assertCount(2, $totals['invoiceBreakdown']);
+
+        $this->assertSame(9.0, $totals['invoiceBreakdown'][0]['rate']);
+        $this->assertSame(50.00, $totals['invoiceBreakdown'][0]['base']);
+        $this->assertSame(4.50, $totals['invoiceBreakdown'][0]['tax']);
+        $this->assertSame('Verlaagd tarief (9%)', $totals['invoiceBreakdown'][0]['description']);
+
+        $this->assertSame(21.0, $totals['invoiceBreakdown'][1]['rate']);
+        $this->assertSame('Standaardtarief (21%)', $totals['invoiceBreakdown'][1]['description']);
+    }//end testComputeTotalsBuildsInvoiceBreakdown()
+
+    /**
+     * Zero-rated lines appear in both breakdowns and sort first.
+     *
+     * @return void
+     */
+    public function testComputeTotalsIncludesZeroRate(): void
+    {
+        $lines = [
+            ['quantity' => 1, 'unitPrice' => 100.00, 'discount' => 0, 'taxRate' => 21],
+            ['quantity' => 1, 'unitPrice' => 25.00, 'discount' => 0, 'taxRate' => 0],
+            ['quantity' => 1, 'unitPrice' => 50.00, 'discount' => 0, 'taxRate' => 9],
+        ];
+
+        $totals = $this->service->computeTotals($lines);
+
+        $this->assertCount(3, $totals['taxBreakdown']);
+        $this->assertSame(0.0, $totals['taxBreakdown'][0]['rate']);
+        $this->assertSame(25.00, $totals['taxBreakdown'][0]['base']);
+        $this->assertSame(0.0, $totals['taxBreakdown'][0]['tax']);
+        $this->assertSame('Nultarief (0%)', $totals['invoiceBreakdown'][0]['description']);
+        $this->assertSame(9.0, $totals['taxBreakdown'][1]['rate']);
+        $this->assertSame(21.0, $totals['taxBreakdown'][2]['rate']);
+    }//end testComputeTotalsIncludesZeroRate()
+
+    /**
+     * In tax-inclusive mode the net base is extracted out of the entered price,
+     * and the per-rate base equals the original excl. base for the same goods.
+     *
+     * 121.00 incl @ 21% => net 100.00, tax 21.00.
+     *
+     * @return void
+     */
+    public function testInclusivePriceModeExtractsNetBase(): void
+    {
+        $line = $this->service->recalculateLine([
+            'quantity'  => 1,
+            'unitPrice' => 121.00,
+            'discount'  => 0,
+            'taxRate'   => 21,
+        ], 'incl');
+
+        $this->assertSame(100.00, $line['net']);
+        $this->assertSame(21.00, $line['taxAmount']);
+        // lineTotal (gross) stays at the entered inclusive amount.
+        $this->assertSame(121.00, $line['lineTotal']);
+    }//end testInclusivePriceModeExtractsNetBase()
+
+    /**
+     * Inclusive vs exclusive entry of the same goods yields the same VAT split.
+     *
+     * Exclusive: unitPrice 100 @ 21% => tax 21, total 121.
+     * Inclusive: unitPrice 121 @ 21% => net 100, tax 21, total 121.
+     *
+     * @return void
+     */
+    public function testInclusiveAndExclusiveAgreeOnTaxSplit(): void
+    {
+        $excl = $this->service->computeTotals(
+            [['quantity' => 1, 'unitPrice' => 100.00, 'discount' => 0, 'taxRate' => 21]],
+            'excl'
+        );
+        $incl = $this->service->computeTotals(
+            [['quantity' => 1, 'unitPrice' => 121.00, 'discount' => 0, 'taxRate' => 21]],
+            'incl'
+        );
+
+        $this->assertSame('incl', $incl['priceMode']);
+        $this->assertSame($excl['subtotal'], $incl['subtotal']);
+        $this->assertSame($excl['totalTax'], $incl['totalTax']);
+        $this->assertSame($excl['total'], $incl['total']);
+        $this->assertSame(
+            $excl['taxBreakdown'][0]['base'],
+            $incl['taxBreakdown'][0]['base']
+        );
+    }//end testInclusiveAndExclusiveAgreeOnTaxSplit()
+
+    /**
+     * Inclusive mode rounds the extracted net / tax to cents correctly on a
+     * price that does not divide evenly.
+     *
+     * 10.00 incl @ 9% => net 9.1743..., tax 0.8256...; rounded net 9.17, tax 0.83.
+     *
+     * @return void
+     */
+    public function testInclusivePriceModeRoundsToCents(): void
+    {
+        $line = $this->service->recalculateLine([
+            'quantity'  => 1,
+            'unitPrice' => 10.00,
+            'discount'  => 0,
+            'taxRate'   => 9,
+        ], 'incl');
+
+        $this->assertSame(9.17, $line['net']);
+        $this->assertSame(0.83, $line['taxAmount']);
+        $this->assertSame(10.00, $line['lineTotal']);
+    }//end testInclusivePriceModeRoundsToCents()
+
+    /**
+     * normalizePriceMode is fail-safe: unknown / malformed values fall back to
+     * 'excl' so a bad client value can never change the tax base unexpectedly.
+     *
+     * @return void
+     */
+    public function testNormalizePriceModeFallsBackToExclusive(): void
+    {
+        $this->assertSame('incl', $this->service->normalizePriceMode('incl'));
+        $this->assertSame('incl', $this->service->normalizePriceMode('  INCL '));
+        $this->assertSame('excl', $this->service->normalizePriceMode('excl'));
+        $this->assertSame('excl', $this->service->normalizePriceMode(null));
+        $this->assertSame('excl', $this->service->normalizePriceMode('garbage'));
+        $this->assertSame('excl', $this->service->normalizePriceMode(42));
+    }//end testNormalizePriceModeFallsBackToExclusive()
+
+    /**
+     * buildTaxReport aggregates per-rate base/tax across final transactions and
+     * nets out refunds (which contribute negative amounts).
+     *
+     * @return void
+     */
+    public function testBuildTaxReportAggregatesAndNetsRefunds(): void
+    {
+        $transactions = [
+            // Counted: settled, 9% + 21%.
+            [
+                'status'           => 'settled',
+                'invoiceBreakdown' => [
+                    ['rate' => 9, 'base' => 50.00, 'tax' => 4.50],
+                    ['rate' => 21, 'base' => 100.00, 'tax' => 21.00],
+                ],
+            ],
+            // Refund nets out half of the 21% line.
+            [
+                'status'           => 'refunded',
+                'invoiceBreakdown' => [
+                    ['rate' => 21, 'base' => 50.00, 'tax' => 10.50],
+                ],
+            ],
+            // Excluded: draft is not fiscally final.
+            [
+                'status'           => 'draft',
+                'invoiceBreakdown' => [
+                    ['rate' => 21, 'base' => 999.00, 'tax' => 209.79],
+                ],
+            ],
+        ];
+
+        $report = $this->service->buildTaxReport($transactions);
+
+        $this->assertSame(2, $report['transactionCount']);
+        $this->assertCount(2, $report['rates']);
+
+        // 9%: 50 base / 4.50 tax.
+        $this->assertSame(9.0, $report['rates'][0]['rate']);
+        $this->assertSame(50.00, $report['rates'][0]['base']);
+        $this->assertSame(4.50, $report['rates'][0]['tax']);
+
+        // 21%: 100 - 50 = 50 base / 21.00 - 10.50 = 10.50 tax.
+        $this->assertSame(21.0, $report['rates'][1]['rate']);
+        $this->assertSame(50.00, $report['rates'][1]['base']);
+        $this->assertSame(10.50, $report['rates'][1]['tax']);
+
+        $this->assertSame(100.00, $report['totalBase']);
+        $this->assertSame(15.00, $report['totalTax']);
+    }//end testBuildTaxReportAggregatesAndNetsRefunds()
+
+    /**
+     * buildTaxReport falls back to taxBreakdown for legacy records that have no
+     * invoiceBreakdown.
+     *
+     * @return void
+     */
+    public function testBuildTaxReportFallsBackToTaxBreakdown(): void
+    {
+        $report = $this->service->buildTaxReport([
+            [
+                'status'       => 'confirmed',
+                'taxBreakdown' => [['rate' => 21, 'base' => 80.00, 'tax' => 16.80]],
+            ],
+        ]);
+
+        $this->assertSame(1, $report['transactionCount']);
+        $this->assertCount(1, $report['rates']);
+        $this->assertSame(16.80, $report['rates'][0]['tax']);
+        $this->assertSame('Standaardtarief (21%)', $report['rates'][0]['description']);
+    }//end testBuildTaxReportFallsBackToTaxBreakdown()
+
+    /**
      * computeTotals tracks the aggregate discount across lines.
      *
      * @return void
