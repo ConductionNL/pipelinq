@@ -62,7 +62,7 @@
 
 ## 3. Product Form — new fields
 
-- [ ] 3.1 Add `barcode` text input to `ProductForm.vue`
+- [x] 3.1 Add `barcode` text input to `ProductForm.vue`
   - **spec_ref**: `specs/pos-product-catalogue/spec.md#REQ-PPC-005`
   - **files**: `src/views/products/ProductForm.vue`
   - **acceptance_criteria**:
@@ -70,7 +70,7 @@
     - THEN a "Barcode (EAN/UPC)" text input MUST be present
     - AND it MUST save to the `barcode` field on submit
 
-- [ ] 3.2 Add `btwClass` dropdown to `ProductForm.vue` with auto-sync of `taxRate`
+- [x] 3.2 Add `btwClass` dropdown to `ProductForm.vue` with auto-sync of `taxRate`
   - **spec_ref**: `specs/pos-product-catalogue/spec.md#REQ-PPC-004`
   - **files**: `src/views/products/ProductForm.vue`
   - **acceptance_criteria**:
@@ -78,7 +78,7 @@
     - THEN `taxRate` MUST be set to 9 automatically
     - AND the `taxRate` input MUST become read-only while a `btwClass` is selected
 
-- [ ] 3.3 Add `duration` integer input to `ProductForm.vue` (visible only when `type === 'service'`)
+- [x] 3.3 Add `duration` integer input to `ProductForm.vue` (visible only when `type === 'service'`)
   - **spec_ref**: `specs/pos-product-catalogue/spec.md#REQ-PPC-006`
   - **files**: `src/views/products/ProductForm.vue`
   - **acceptance_criteria**:
@@ -89,7 +89,7 @@
 
 ## 4. ProductVariantPanel component
 
-- [ ] 4.1 Create `src/components/products/ProductVariantPanel.vue`
+- [x] 4.1 Create `src/components/products/ProductVariantPanel.vue`
   - **spec_ref**: `specs/pos-product-catalogue/spec.md#REQ-PPC-001`
   - **files**: `src/components/products/ProductVariantPanel.vue`
   - **acceptance_criteria**:
@@ -99,7 +99,7 @@
     - AND each row MUST have an edit icon (inline popover) and delete icon
     - AND on save, `product.variants` MUST be updated via `objectStore.saveObject()`
 
-- [ ] 4.2 Add SKU uniqueness validation in `ProductVariantPanel.vue`
+- [x] 4.2 Add SKU uniqueness validation in `ProductVariantPanel.vue`
   - **spec_ref**: `specs/pos-product-catalogue/spec.md#REQ-PPC-001`
   - **files**: `src/components/products/ProductVariantPanel.vue`
   - **acceptance_criteria**:
@@ -111,7 +111,7 @@
 
 ## 5. ModifierGroupPanel component
 
-- [ ] 5.1 Create `src/components/products/ModifierGroupPanel.vue`
+- [x] 5.1 Create `src/components/products/ModifierGroupPanel.vue`
   - **spec_ref**: `specs/pos-product-catalogue/spec.md#REQ-PPC-002`
   - **files**: `src/components/products/ModifierGroupPanel.vue`
   - **acceptance_criteria**:
@@ -126,7 +126,7 @@
 
 ## 6. PriceTierTable component
 
-- [ ] 6.1 Create `src/components/products/PriceTierTable.vue`
+- [x] 6.1 Create `src/components/products/PriceTierTable.vue`
   - **spec_ref**: `specs/pos-product-catalogue/spec.md#REQ-PPC-003`
   - **files**: `src/components/products/PriceTierTable.vue`
   - **acceptance_criteria**:
@@ -141,7 +141,7 @@
 
 ## 7. BarcodeInput component and product list integration
 
-- [ ] 7.1 Create `src/components/products/BarcodeInput.vue`
+- [x] 7.1 Create `src/components/products/BarcodeInput.vue`
   - **spec_ref**: `specs/pos-product-catalogue/spec.md#REQ-PPC-005`
   - **files**: `src/components/products/BarcodeInput.vue`
   - **acceptance_criteria**:
@@ -149,7 +149,7 @@
     - Component has a text input that auto-focuses when mounted (supports keyboard-wedge scanners)
     - A camera icon button toggles a barcode camera scanner (if available)
 
-- [ ] 7.2 Integrate `BarcodeInput.vue` into `ProductList.vue` search bar
+- [x] 7.2 Integrate `BarcodeInput.vue` into `ProductList.vue` search bar
   - **spec_ref**: `specs/pos-product-catalogue/spec.md#REQ-PPC-005`
   - **files**: `src/views/products/ProductList.vue`
   - **acceptance_criteria**:
@@ -162,7 +162,7 @@
 
 ## 8. ProductDetail — new panels
 
-- [ ] 8.1 Add Varianten `CnDetailCard` section to `ProductDetail.vue` with `ProductVariantPanel`
+- [x] 8.1 Add Varianten `CnDetailCard` section to `ProductDetail.vue` with `ProductVariantPanel`
   - **spec_ref**: `specs/pos-product-catalogue/spec.md#REQ-PPC-001`
   - **files**: `src/views/products/ProductDetail.vue`
   - **acceptance_criteria**:
@@ -170,15 +170,15 @@
     - THEN a "Varianten" section MUST be visible in the detail view
     - AND the section MUST be collapsed/hidden when `variants` is empty
 
-- [ ] 8.2 Add Modificatiegroepen `CnDetailCard` section to `ProductDetail.vue` with `ModifierGroupPanel`
+- [x] 8.2 Add Modificatiegroepen `CnDetailCard` section to `ProductDetail.vue` with `ModifierGroupPanel`
   - **spec_ref**: `specs/pos-product-catalogue/spec.md#REQ-PPC-002`
   - **files**: `src/views/products/ProductDetail.vue`
 
-- [ ] 8.3 Add Prijsstaffels `CnDetailCard` section to `ProductDetail.vue` with `PriceTierTable`
+- [x] 8.3 Add Prijsstaffels `CnDetailCard` section to `ProductDetail.vue` with `PriceTierTable`
   - **spec_ref**: `specs/pos-product-catalogue/spec.md#REQ-PPC-003`
   - **files**: `src/views/products/ProductDetail.vue`
 
-- [ ] 8.4 Display `duration` in product info panel when `type = service`
+- [x] 8.4 Display `duration` in product info panel when `type = service`
   - **spec_ref**: `specs/pos-product-catalogue/spec.md#REQ-PPC-006`
   - **files**: `src/views/products/ProductDetail.vue`
   - **acceptance_criteria**:
@@ -189,7 +189,7 @@
 
 ## 9. Verification
 
-- [ ] 9.1 Run `npm run build` in the pipelinq app directory — MUST produce zero errors
+- [x] 9.1 Run `npm run build` in the pipelinq app directory — MUST produce zero errors
 - [ ] 9.2 Manually verify seed data: open Nextcloud, navigate to Producten, confirm 5 seed products appear with correct fields
 - [ ] 9.3 Verify BTW class facet filter works: filter by "laag" and confirm only relevant products appear
 - [ ] 9.4 Verify barcode search: type a barcode from seed data into the search bar, confirm the product loads
