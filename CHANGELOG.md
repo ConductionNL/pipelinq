@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.18] - 2026-05-31
+
+### Added
+
+- Calculation annotations (`x-openregister-calculations`) on the `lead` schema,
+  declaring derived/computed fields per ADR-031 instead of service code:
+  `qualificationScore` (backend score 0-100, `materialise: true`, mirrors the
+  lead-management default scoring criteria — resolves the spec's frontend-vs-backend
+  open question in favour of a backend calculation), `daysSinceActivity`
+  (staleness, virtual, diffs `@self.updated` against `now`), `daysInStage`
+  (aging, virtual, diffs `stageEnteredAt`/`@self.created` against `now`), and
+  `weightedValue` (`value * probability / 100` for the Pipeline Value KPI).
+  Validated clean against OpenRegister's `CalculationAnnotationValidator`.
+- Backing lead properties: `qualificationScore` (integer), `stageEnteredAt`
+  (date-time, aging input), and `description` (scoring input).
+- Archival retention annotations (`x-openregister-archival.retention`) on
+  `kennisartikel` (`P7Y` archived knowledge-base versions), `task` (`P2Y`
+  completed task / callback history), and `contactmoment` (`P2Y` resolved
+  client contact log). Each carries condition-based rules with reasons;
+  DPO sign-off on exact periods is pending. Validated clean against
+  OpenRegister's `ArchivalAnnotationValidator`.
+- Unit tests asserting both annotation families are well-formed
+  (`RegisterAnnotationsTest::testCalculationAnnotationsAreWellFormed` and
+  `testArchivalAnnotationsAreWellFormed`).
+
+### Changed
+
+- `lead-management` spec: the Lead Qualification Scoring requirement now states
+  the score is a backend `x-openregister-calculations.qualificationScore`
+  materialised on save, read by the frontend.
+
 ## [0.2.17] - 2026-05-31
 
 ### Added
