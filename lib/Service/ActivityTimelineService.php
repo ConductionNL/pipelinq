@@ -130,7 +130,46 @@ class ActivityTimelineService
     public function getTimeline(string $entityType, string $entityId, array $params): array
     {
         $page  = max(1, (int) ($params['_page'] ?? 1));
-        $limit = (int) ($params['_limit'] ?? self::DEFAULT_LIMIT);
+        $limit = $this->normaliseLimit(rawLimit: ($params['_limit'] ?? null));
+
+        $config     = $this->getConfig();
+        $registerId = $config['register'];
+
+        // If no register is configured, return an empty timeline (do not raise).
+        if ($registerId === '') {
+            return $this->emptyResult(page: $page);
+        }
+
+        $merged = $this->collectActivities(
+            entityType: $entityType,
+            entityId: $entityId,
+            params: $params,
+            config: $config
+        );
+
+        // Sort by date descending (newest first).
+        usort(
+            $merged,
+            static function (array $left, array $right): int {
+                $leftDate  = (string) ($left['date'] ?? '');
+                $rightDate = (string) ($right['date'] ?? '');
+                return strcmp($rightDate, $leftDate);
+            }
+        );
+
+        return $this->paginate(merged: $merged, page: $page, limit: $limit);
+    }//end getTimeline()
+
+    /**
+     * Clamp a raw limit param into the [1, MAX_LIMIT] range.
+     *
+     * @param mixed $rawLimit The raw `_limit` request param.
+     *
+     * @return int The clamped page size.
+     */
+    private function normaliseLimit(mixed $rawLimit): int
+    {
+        $limit = (int) ($rawLimit ?? self::DEFAULT_LIMIT);
         if ($limit <= 0) {
             $limit = self::DEFAULT_LIMIT;
         }
@@ -139,26 +178,25 @@ class ActivityTimelineService
             $limit = self::MAX_LIMIT;
         }
 
-        $typesFilter = $this->normaliseTypes(rawTypes: ($params['types'] ?? null));
+        return $limit;
+    }//end normaliseLimit()
 
-        $from = null;
-        if (isset($params['from']) === true && $params['from'] !== '') {
-            $from = (string) $params['from'];
-        }
-
-        $to = null;
-        if (isset($params['to']) === true && $params['to'] !== '') {
-            $to = (string) $params['to'];
-        }
-
+    /**
+     * Query every configured schema and merge the normalized activities for an entity.
+     *
+     * @param string              $entityType The entity type.
+     * @param string              $entityId   The entity UUID.
+     * @param array<string,mixed> $params     Request params (types[], from, to).
+     * @param array<string,mixed> $config     The resolved register/schema config.
+     *
+     * @return array<int,array<string,mixed>> The merged, unsorted activities.
+     */
+    private function collectActivities(string $entityType, string $entityId, array $params, array $config): array
+    {
+        $typesFilter      = $this->normaliseTypes(rawTypes: ($params['types'] ?? null));
+        [$from, $to]      = $this->extractDateBounds(params: $params);
         $perSchemaFilters = $this->resolveEntityQueryParams(entityType: $entityType, entityId: $entityId);
-        $config           = $this->getConfig();
         $registerId       = $config['register'];
-
-        // If no register is configured, return an empty timeline (do not raise).
-        if ($registerId === '') {
-            return $this->emptyResult(page: $page);
-        }
 
         $merged = [];
 
@@ -179,35 +217,97 @@ class ActivityTimelineService
                 filters: $sourceFilter
             );
 
-            foreach ($objects as $object) {
-                $normalized = $this->normalizeActivity(
+            $merged = array_merge(
+                $merged,
+                $this->normalizeSchemaObjects(
+                    objects: $objects,
                     sourceType: $sourceType,
-                    object: $object,
                     entityType: $entityType,
-                    entityId: $entityId
-                );
-                if ($normalized === null) {
-                    continue;
-                }
-
-                if ($this->withinDateRange(date: $normalized['date'], from: $from, to: $to) === false) {
-                    continue;
-                }
-
-                $merged[] = $normalized;
-            }
+                    entityId: $entityId,
+                    from: $from,
+                    to: $to
+                )
+            );
         }//end foreach
 
-        // Sort by date descending (newest first).
-        usort(
-            $merged,
-            static function (array $left, array $right): int {
-                $leftDate  = (string) ($left['date'] ?? '');
-                $rightDate = (string) ($right['date'] ?? '');
-                return strcmp($rightDate, $leftDate);
-            }
-        );
+        return $merged;
+    }//end collectActivities()
 
+    /**
+     * Extract the optional from/to date bounds from request params.
+     *
+     * @param array<string,mixed> $params Request params.
+     *
+     * @return array{0: string|null, 1: string|null} The [from, to] bounds.
+     */
+    private function extractDateBounds(array $params): array
+    {
+        $from = null;
+        if (isset($params['from']) === true && $params['from'] !== '') {
+            $from = (string) $params['from'];
+        }
+
+        $to = null;
+        if (isset($params['to']) === true && $params['to'] !== '') {
+            $to = (string) $params['to'];
+        }
+
+        return [$from, $to];
+    }//end extractDateBounds()
+
+    /**
+     * Normalize a single schema's objects into activities, applying the date filter.
+     *
+     * @param iterable<mixed> $objects    The raw objects from the schema query.
+     * @param string          $sourceType The source type / schema config key.
+     * @param string          $entityType The entity type.
+     * @param string          $entityId   The entity UUID.
+     * @param string|null     $from       The lower date bound (inclusive) or null.
+     * @param string|null     $to         The upper date bound (inclusive) or null.
+     *
+     * @return array<int,array<string,mixed>> The normalized, in-range activities.
+     */
+    private function normalizeSchemaObjects(
+        iterable $objects,
+        string $sourceType,
+        string $entityType,
+        string $entityId,
+        ?string $from,
+        ?string $to
+    ): array {
+        $activities = [];
+        foreach ($objects as $object) {
+            $normalized = $this->normalizeActivity(
+                sourceType: $sourceType,
+                object: $object,
+                entityType: $entityType,
+                entityId: $entityId
+            );
+            if ($normalized === null) {
+                continue;
+            }
+
+            if ($this->withinDateRange(date: $normalized['date'], from: $from, to: $to) === false) {
+                continue;
+            }
+
+            $activities[] = $normalized;
+        }
+
+        return $activities;
+    }//end normalizeSchemaObjects()
+
+    /**
+     * Slice a sorted activity list into the requested page envelope.
+     *
+     * @param array<int,array<string,mixed>> $merged The sorted activities.
+     * @param int                            $page   The 1-based requested page.
+     * @param int                            $limit  The page size.
+     *
+     * @return array{items: array<int,array<string,mixed>>, total: int, page: int, pages: int}
+     */
+    private function paginate(array $merged, int $page, int $limit): array
+    {
         $total = count($merged);
 
         $pages = 1;
@@ -230,7 +330,7 @@ class ActivityTimelineService
             'page'  => $page,
             'pages' => $pages,
         ];
-    }//end getTimeline()
+    }//end paginate()
 
     /**
      * Map an internal source-type (matching schema config key) onto the public activity type label.
@@ -347,31 +447,50 @@ class ActivityTimelineService
 
         $output = [];
         foreach ($results as $item) {
-            if (is_array($item) === true) {
-                $output[] = $item;
-                continue;
-            }
-
-            if (is_object($item) === true && method_exists($item, 'getObject') === true) {
-                $value = $item->getObject();
-                if (is_array($value) === true) {
-                    // Promote id/uuid into the object payload if missing.
-                    if (isset($value['id']) === false && method_exists($item, 'getUuid') === true) {
-                        $value['id'] = $item->getUuid();
-                    }
-
-                    $output[] = $value;
-                    continue;
-                }
-            }
-
-            if (is_object($item) === true) {
-                $output[] = (array) $item;
+            $normalised = $this->normaliseResultItem(item: $item);
+            if ($normalised !== null) {
+                $output[] = $normalised;
             }
         }//end foreach
 
         return $output;
     }//end normaliseResultset()
+
+    /**
+     * Normalise a single result-set entry into an array payload.
+     *
+     * Arrays pass through unchanged; OpenRegister entities are unwrapped via
+     * getObject() (promoting id/uuid when missing); other objects are cast to
+     * array. Scalars yield null.
+     *
+     * @param mixed $item The raw result entry.
+     *
+     * @return array<string,mixed>|null The normalised payload, or null to skip.
+     */
+    private function normaliseResultItem(mixed $item): ?array
+    {
+        if (is_array($item) === true) {
+            return $item;
+        }
+
+        if (is_object($item) === false) {
+            return null;
+        }
+
+        if (method_exists($item, 'getObject') === true) {
+            $value = $item->getObject();
+            if (is_array($value) === true) {
+                // Promote id/uuid into the object payload if missing.
+                if (isset($value['id']) === false && method_exists($item, 'getUuid') === true) {
+                    $value['id'] = $item->getUuid();
+                }
+
+                return $value;
+            }
+        }
+
+        return (array) $item;
+    }//end normaliseResultItem()
 
     /**
      * Apply optional date range filtering to a normalised item.
@@ -400,28 +519,53 @@ class ActivityTimelineService
             return false;
         }
 
-        if ($from !== null) {
-            $fromTs = strtotime($from);
-            if ($fromTs !== false && $itemTs < $fromTs) {
-                return false;
-            }
-        }
-
-        if ($to !== null) {
-            // To-date is inclusive: treat as end-of-day if it's a bare date.
-            $toString = $to;
-            if (strlen($to) === 10) {
-                $toString = $to.'T23:59:59';
-            }
-
-            $toTs = strtotime($toString);
-            if ($toTs !== false && $itemTs > $toTs) {
-                return false;
-            }
-        }
-
-        return true;
+        return $this->isAfterFrom(itemTs: $itemTs, from: $from)
+            && $this->isBeforeTo(itemTs: $itemTs, to: $to);
     }//end withinDateRange()
+
+    /**
+     * Whether an item timestamp is at or after the (optional) lower bound.
+     *
+     * @param int         $itemTs The item's unix timestamp.
+     * @param string|null $from   The lower bound date or null.
+     *
+     * @return bool True when no lower bound applies or the item is in range.
+     */
+    private function isAfterFrom(int $itemTs, ?string $from): bool
+    {
+        if ($from === null) {
+            return true;
+        }
+
+        $fromTs = strtotime($from);
+        return $fromTs === false || $itemTs >= $fromTs;
+    }//end isAfterFrom()
+
+    /**
+     * Whether an item timestamp is at or before the (optional) inclusive upper bound.
+     *
+     * A bare date (length 10) is treated as end-of-day so the upper bound is inclusive.
+     *
+     * @param int         $itemTs The item's unix timestamp.
+     * @param string|null $to     The upper bound date or null.
+     *
+     * @return bool True when no upper bound applies or the item is in range.
+     */
+    private function isBeforeTo(int $itemTs, ?string $to): bool
+    {
+        if ($to === null) {
+            return true;
+        }
+
+        // To-date is inclusive: treat as end-of-day if it's a bare date.
+        $toString = $to;
+        if (strlen($to) === 10) {
+            $toString = $to.'T23:59:59';
+        }
+
+        $toTs = strtotime($toString);
+        return $toTs === false || $itemTs <= $toTs;
+    }//end isBeforeTo()
 
     /**
      * Build per-schema filter arrays for an entity-type/id pair.
@@ -636,14 +780,7 @@ class ActivityTimelineService
     public function getWorklog(string $entityType, string $entityId, array $params): array
     {
         $page  = max(1, (int) ($params['_page'] ?? 1));
-        $limit = (int) ($params['_limit'] ?? self::DEFAULT_LIMIT);
-        if ($limit <= 0) {
-            $limit = self::DEFAULT_LIMIT;
-        }
-
-        if ($limit > self::MAX_LIMIT) {
-            $limit = self::MAX_LIMIT;
-        }
+        $limit = $this->normaliseLimit(rawLimit: ($params['_limit'] ?? null));
 
         $config = $this->getConfig();
         if ($config['register'] === '' || $config['contactmoment'] === '') {
@@ -669,23 +806,11 @@ class ActivityTimelineService
             filters: $filters
         );
 
-        $items        = [];
-        $totalSeconds = 0;
-        foreach ($rawObjects as $object) {
-            $normalised = $this->normalizeActivity(
-                sourceType: 'contactmoment',
-                object: $object,
-                entityType: $entityType,
-                entityId: $entityId
-            );
-            if ($normalised === null) {
-                continue;
-            }
-
-            $items[]       = $normalised;
-            $duration      = (string) ($normalised['metadata']['duration'] ?? '');
-            $totalSeconds += $this->isoDurationToSeconds(duration: $duration);
-        }
+        [$items, $totalSeconds] = $this->collectWorklogItems(
+            rawObjects: $rawObjects,
+            entityType: $entityType,
+            entityId: $entityId
+        );
 
         usort(
             $items,
@@ -715,6 +840,38 @@ class ActivityTimelineService
             'totalDuration' => $this->secondsToIsoDuration(seconds: $totalSeconds),
         ];
     }//end getWorklog()
+
+    /**
+     * Normalise worklog contactmoments and accumulate their total duration.
+     *
+     * @param iterable<mixed> $rawObjects The raw worklog objects from the query.
+     * @param string          $entityType The entity type.
+     * @param string          $entityId   The entity UUID.
+     *
+     * @return array{0: array<int,array<string,mixed>>, 1: int} Tuple of (items, totalSeconds).
+     */
+    private function collectWorklogItems(iterable $rawObjects, string $entityType, string $entityId): array
+    {
+        $items        = [];
+        $totalSeconds = 0;
+        foreach ($rawObjects as $object) {
+            $normalised = $this->normalizeActivity(
+                sourceType: 'contactmoment',
+                object: $object,
+                entityType: $entityType,
+                entityId: $entityId
+            );
+            if ($normalised === null) {
+                continue;
+            }
+
+            $items[]       = $normalised;
+            $duration      = (string) ($normalised['metadata']['duration'] ?? '');
+            $totalSeconds += $this->isoDurationToSeconds(duration: $duration);
+        }
+
+        return [$items, $totalSeconds];
+    }//end collectWorklogItems()
 
     /**
      * Extract a plain array from an OpenRegister saveObject return value.

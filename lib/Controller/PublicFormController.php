@@ -33,6 +33,7 @@ use OCP\IAppConfig;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Public controller for intake form rendering and submission.
@@ -179,14 +180,7 @@ class PublicFormController extends Controller
 
             // Load the form schema so we can whitelist submission keys.
             $form       = $objectService->find($id, []);
-            $formFields = [];
-            if ($form !== null && is_array($form['fields'] ?? null) === true) {
-                foreach ($form['fields'] as $field) {
-                    if (isset($field['name']) === true) {
-                        $formFields[] = $field['name'];
-                    }
-                }
-            }
+            $formFields = $this->extractFormFieldNames(form: $form);
 
             // Build lead data from submission (whitelist against declared form fields).
             $leadData = $this->buildLeadData(submission: $submission, formId: $id, allowedFields: $formFields);
@@ -200,7 +194,7 @@ class PublicFormController extends Controller
             );
 
             if ($saved === null) {
-                throw new \RuntimeException('Failed to persist submission');
+                throw new RuntimeException('Failed to persist submission');
             }
 
             $response = new JSONResponse(
@@ -219,6 +213,29 @@ class PublicFormController extends Controller
 
         return $this->addCorsHeaders(response: $response);
     }//end submit()
+
+    /**
+     * Extract the declared field names from a loaded form object.
+     *
+     * @param array<string, mixed>|null $form The form object loaded from OpenRegister.
+     *
+     * @return array<int, string> The list of declared field names (may be empty).
+     */
+    private function extractFormFieldNames(?array $form): array
+    {
+        if ($form === null || is_array($form['fields'] ?? null) === false) {
+            return [];
+        }
+
+        $formFields = [];
+        foreach ($form['fields'] as $field) {
+            if (isset($field['name']) === true) {
+                $formFields[] = $field['name'];
+            }
+        }
+
+        return $formFields;
+    }//end extractFormFieldNames()
 
     /**
      * Build lead data from a raw submission, whitelisting against declared form fields.

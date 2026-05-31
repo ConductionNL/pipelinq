@@ -49,6 +49,14 @@ use Throwable;
  * `task` schema in OpenRegister. Responsible for time-window queries,
  * deadline-driven status transitions, and per-object mutation authorisation.
  *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Residual after the hot
+ *  methods (getScheduledTasks / createScheduledTask / processScheduledTasks)
+ *  were decomposed into small single-responsibility helpers; the class WMC is
+ *  now the sum of many readable methods rather than a few complex ones.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Wires the collaborators a
+ *  task-lifecycle service legitimately needs (config, session, groups,
+ *  notifications, OR container, logger, plus DateTime/exception value types).
+ *
  * @spec openspec/changes/task-background-jobs/tasks.md#task-1
  */
 class ScheduledTaskService
@@ -149,34 +157,7 @@ class ScheduledTaskService
         $page  = max(1, (int) ($params['_page'] ?? 1));
         $limit = min(100, max(1, (int) ($params['_limit'] ?? 20)));
 
-        $filters = [
-            'register' => $registerId,
-            'schema'   => $schemaId,
-        ];
-
-        if (isset($params['status']) === true && $params['status'] !== '') {
-            $filters['status'] = $params['status'];
-        }
-
-        if (isset($params['assigneeUserId']) === true && $params['assigneeUserId'] !== '') {
-            $filters['assigneeUserId'] = $params['assigneeUserId'];
-        }
-
-        if (isset($params['assigneeGroupId']) === true && $params['assigneeGroupId'] !== '') {
-            $filters['assigneeGroupId'] = $params['assigneeGroupId'];
-        }
-
-        if (isset($params['from']) === true && $params['from'] !== '') {
-            $filters['deadline'] = ['>=' => $params['from']];
-        }
-
-        if (isset($params['to']) === true && $params['to'] !== '') {
-            if (isset($filters['deadline']) === false || is_array($filters['deadline']) === false) {
-                $filters['deadline'] = [];
-            }
-
-            $filters['deadline']['<='] = $params['to'];
-        }
+        $filters = $this->buildTaskFilters(registerId: $registerId, schemaId: $schemaId, params: $params);
 
         $items = [];
         $total = 0;
@@ -217,6 +198,59 @@ class ScheduledTaskService
             'pages' => $pages,
         ];
     }//end getScheduledTasks()
+
+    /**
+     * Build the OpenRegister filter array for a scheduled-task list query.
+     *
+     * Applies the register/schema scope plus the optional status, assignee and
+     * deadline-window filters from the request params.
+     *
+     * @param string              $registerId The configured register ID.
+     * @param string              $schemaId   The task schema ID.
+     * @param array<string,mixed> $params     The request filter params.
+     *
+     * @return array<string,mixed> The assembled filter array.
+     */
+    private function buildTaskFilters(string $registerId, string $schemaId, array $params): array
+    {
+        $filters = [
+            'register' => $registerId,
+            'schema'   => $schemaId,
+        ];
+
+        foreach (['status', 'assigneeUserId', 'assigneeGroupId'] as $key) {
+            if (isset($params[$key]) === true && $params[$key] !== '') {
+                $filters[$key] = $params[$key];
+            }
+        }
+
+        return $this->applyDeadlineWindow(filters: $filters, params: $params);
+    }//end buildTaskFilters()
+
+    /**
+     * Apply the optional deadline from/to window onto an existing filter array.
+     *
+     * @param array<string,mixed> $filters The filters built so far.
+     * @param array<string,mixed> $params  The request params (from, to).
+     *
+     * @return array<string,mixed> The filters with any deadline window applied.
+     */
+    private function applyDeadlineWindow(array $filters, array $params): array
+    {
+        if (isset($params['from']) === true && $params['from'] !== '') {
+            $filters['deadline'] = ['>=' => $params['from']];
+        }
+
+        if (isset($params['to']) === true && $params['to'] !== '') {
+            if (isset($filters['deadline']) === false || is_array($filters['deadline']) === false) {
+                $filters['deadline'] = [];
+            }
+
+            $filters['deadline']['<='] = $params['to'];
+        }
+
+        return $filters;
+    }//end applyDeadlineWindow()
 
     /**
      * Fetch a single scheduled task by ID.
@@ -276,26 +310,7 @@ class ScheduledTaskService
      */
     public function createScheduledTask(array $data): array
     {
-        if (isset($data['type']) === false
-            || in_array($data['type'], self::VALID_TYPES, true) === false
-        ) {
-            throw new InvalidArgumentException('Invalid input');
-        }
-
-        if (isset($data['subject']) === false || trim((string) $data['subject']) === '') {
-            throw new InvalidArgumentException('Invalid input');
-        }
-
-        if (isset($data['deadline']) === false || trim((string) $data['deadline']) === '') {
-            throw new InvalidArgumentException('Invalid input');
-        }
-
-        // Require ISO-8601 format (YYYY-MM-DD or YYYY-MM-DDThh:mm[:ss][Z])
-        // to prevent relative expressions like "yesterday" or "+2 weeks" from
-        // passing silently and producing server-timezone-dependent deadlines.
-        if ($this->isValidIso8601Deadline(deadline: (string) $data['deadline']) === false) {
-            throw new InvalidArgumentException('Deadline must be a valid ISO-8601 date (e.g. 2025-12-31 or 2025-12-31T14:00:00Z)');
-        }
+        $this->validateTaskInput(data: $data);
 
         [$registerId, $schemaId] = $this->getRegisterAndSchema();
         if ($registerId === '' || $schemaId === '') {
@@ -322,6 +337,39 @@ class ScheduledTaskService
 
         return $this->normalizeToArray(object: $saved);
     }//end createScheduledTask()
+
+    /**
+     * Validate the required fields and deadline format for a new task.
+     *
+     * @param array<string,mixed> $data The incoming task data.
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException When type/subject/deadline are missing or invalid.
+     */
+    private function validateTaskInput(array $data): void
+    {
+        if (isset($data['type']) === false
+            || in_array($data['type'], self::VALID_TYPES, true) === false
+        ) {
+            throw new InvalidArgumentException('Invalid input');
+        }
+
+        if (isset($data['subject']) === false || trim((string) $data['subject']) === '') {
+            throw new InvalidArgumentException('Invalid input');
+        }
+
+        if (isset($data['deadline']) === false || trim((string) $data['deadline']) === '') {
+            throw new InvalidArgumentException('Invalid input');
+        }
+
+        // Require ISO-8601 format (YYYY-MM-DD or YYYY-MM-DDThh:mm[:ss][Z])
+        // to prevent relative expressions like "yesterday" or "+2 weeks" from
+        // passing silently and producing server-timezone-dependent deadlines.
+        if ($this->isValidIso8601Deadline(deadline: (string) $data['deadline']) === false) {
+            throw new InvalidArgumentException('Deadline must be a valid ISO-8601 date (e.g. 2025-12-31 or 2025-12-31T14:00:00Z)');
+        }
+    }//end validateTaskInput()
 
     /**
      * Update an existing scheduled task.
@@ -517,90 +565,166 @@ class ScheduledTaskService
         }
 
         foreach ($candidates as $task) {
-            $status = $task['status'] ?? '';
-            if (in_array($status, ['in_behandeling', 'afgerond', 'verlopen'], true) === true) {
-                continue;
-            }
-
-            if ($status !== 'open') {
-                continue;
-            }
-
-            $deadlineRaw = $task['deadline'] ?? '';
-            if ($deadlineRaw === '') {
-                continue;
-            }
-
-            try {
-                $deadline = new DateTimeImmutable((string) $deadlineRaw);
-            } catch (Throwable $e) {
-                continue;
-            }
-
-            if ($deadline > $now) {
-                // Not due yet.
-                continue;
-            }
-
-            $attempts = $task['attempts'] ?? [];
-            if (is_array($attempts) === false) {
-                $attempts = [];
-            }
-
-            $timestamp = $now->format(DateTimeInterface::ATOM);
-
-            if ($deadline < $expiryCut) {
-                $task['status'] = 'verlopen';
-                $attempts[]     = [
-                    'timestamp' => $timestamp,
-                    'result'    => 'expired',
-                ];
-            }
-
-            if ($deadline >= $expiryCut) {
-                $task['status'] = 'in_behandeling';
-                $attempts[]     = [
-                    'timestamp' => $timestamp,
-                    'result'    => 'notified',
-                ];
-
-                $assignee = $task['assigneeUserId'] ?? '';
-                if ($assignee !== '') {
-                    try {
-                        $this->notificationService->notifyAssignment(
-                            entityType: 'task',
-                            title: (string) ($task['subject'] ?? 'Scheduled task'),
-                            assigneeUserId: (string) $assignee,
-                            objectId: (string) ($task['id'] ?? ''),
-                            author: 'system'
-                        );
-                    } catch (Throwable $e) {
-                        $this->logger->error(
-                            'ScheduledTaskService: notification dispatch failed',
-                            ['exception' => $e]
-                        );
-                    }
-                }
-            }//end if
-
-            $task['attempts'] = $attempts;
-
-            try {
-                $this->getObjectService()->saveObject(
-                    $task,
-                    [],
-                    $registerId,
-                    $schemaId,
-                    (string) ($task['id'] ?? '')
-                );
-            } catch (Throwable $e) {
-                $this->logger->error(
-                    'ScheduledTaskService: task update failed',
-                    ['exception' => $e, 'id' => $task['id'] ?? null]
-                );
-            }
+            $this->processSingleTask(
+                task: $task,
+                now: $now,
+                expiryCut: $expiryCut,
+                registerId: $registerId,
+                schemaId: $schemaId
+            );
         }//end foreach
     }//end processScheduledTasks()
+
+    /**
+     * Apply the deadline-driven transition to a single candidate task.
+     *
+     * Open tasks past their deadline are marked `verlopen` (when overdue beyond
+     * the expiry cut) or `in_behandeling` with an assignee notification (when
+     * within the cut). Non-open or not-yet-due tasks are skipped.
+     *
+     * @param array<string,mixed> $task       The candidate task.
+     * @param DateTimeImmutable   $now        The reference "now".
+     * @param DateTimeImmutable   $expiryCut  The expiry threshold timestamp.
+     * @param string              $registerId The configured register ID.
+     * @param string              $schemaId   The task schema ID.
+     *
+     * @return void
+     */
+    private function processSingleTask(array $task, DateTimeImmutable $now, DateTimeImmutable $expiryCut, string $registerId, string $schemaId): void
+    {
+        if (($task['status'] ?? '') !== 'open') {
+            return;
+        }
+
+        $deadlineRaw = $task['deadline'] ?? '';
+        if ($deadlineRaw === '') {
+            return;
+        }
+
+        try {
+            $deadline = new DateTimeImmutable((string) $deadlineRaw);
+        } catch (Throwable $e) {
+            return;
+        }
+
+        if ($deadline > $now) {
+            // Not due yet.
+            return;
+        }
+
+        $task = $this->applyDeadlineTransition(
+            task: $task,
+            deadline: $deadline,
+            expiryCut: $expiryCut,
+            timestamp: $now->format(DateTimeInterface::ATOM)
+        );
+
+        $this->persistProcessedTask(task: $task, registerId: $registerId, schemaId: $schemaId);
+    }//end processSingleTask()
+
+    /**
+     * Compute the new status + appended attempt for a due task.
+     *
+     * Overdue-beyond-cut tasks become `verlopen` (expired attempt); tasks still
+     * within the cut become `in_behandeling` (notified attempt) and trigger an
+     * assignee notification.
+     *
+     * @param array<string,mixed> $task      The due task.
+     * @param DateTimeImmutable   $deadline  The parsed deadline.
+     * @param DateTimeImmutable   $expiryCut The expiry threshold.
+     * @param string              $timestamp The ATOM timestamp for the attempt.
+     *
+     * @return array<string,mixed> The task with updated status + attempts.
+     */
+    private function applyDeadlineTransition(array $task, DateTimeImmutable $deadline, DateTimeImmutable $expiryCut, string $timestamp): array
+    {
+        $attempts = $task['attempts'] ?? [];
+        if (is_array($attempts) === false) {
+            $attempts = [];
+        }
+
+        if ($deadline < $expiryCut) {
+            $task['status'] = 'verlopen';
+            $attempts[]     = [
+                'timestamp' => $timestamp,
+                'result'    => 'expired',
+            ];
+        }
+
+        if ($deadline >= $expiryCut) {
+            $task['status'] = 'in_behandeling';
+            $attempts[]     = [
+                'timestamp' => $timestamp,
+                'result'    => 'notified',
+            ];
+
+            $this->notifyTaskAssignee(task: $task);
+        }
+
+        $task['attempts'] = $attempts;
+
+        return $task;
+    }//end applyDeadlineTransition()
+
+    /**
+     * Persist a processed task, logging and swallowing save failures.
+     *
+     * @param array<string,mixed> $task       The task to save.
+     * @param string              $registerId The configured register ID.
+     * @param string              $schemaId   The task schema ID.
+     *
+     * @return void
+     */
+    private function persistProcessedTask(array $task, string $registerId, string $schemaId): void
+    {
+        try {
+            $this->getObjectService()->saveObject(
+                $task,
+                [],
+                $registerId,
+                $schemaId,
+                (string) ($task['id'] ?? '')
+            );
+        } catch (Throwable $e) {
+            $this->logger->error(
+                'ScheduledTaskService: task update failed',
+                ['exception' => $e, 'id' => $task['id'] ?? null]
+            );
+        }
+    }//end persistProcessedTask()
+
+    /**
+     * Notify a task's assignee that it has moved into processing.
+     *
+     * No-op when the task has no assignee. Notification failures are logged and
+     * swallowed so they do not abort the batch run.
+     *
+     * @param array<string,mixed> $task The task being transitioned.
+     *
+     * @return void
+     */
+    private function notifyTaskAssignee(array $task): void
+    {
+        $assignee = $task['assigneeUserId'] ?? '';
+        if ($assignee === '') {
+            return;
+        }
+
+        try {
+            $this->notificationService->notifyAssignment(
+                entityType: 'task',
+                title: (string) ($task['subject'] ?? 'Scheduled task'),
+                assigneeUserId: (string) $assignee,
+                objectId: (string) ($task['id'] ?? ''),
+                author: 'system'
+            );
+        } catch (Throwable $e) {
+            $this->logger->error(
+                'ScheduledTaskService: notification dispatch failed',
+                ['exception' => $e]
+            );
+        }
+    }//end notifyTaskAssignee()
 
     /**
      * Authorise a mutation on a task.

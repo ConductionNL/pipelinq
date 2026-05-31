@@ -93,6 +93,8 @@ class IntakeFormController extends Controller
      *
      * @NoAdminRequired
      *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) Route-bound {id}; consumed once OR submission retrieval is wired.
+     *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-44
      */
     public function export(string $id): DataDownloadResponse|JSONResponse
