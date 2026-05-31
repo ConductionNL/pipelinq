@@ -316,4 +316,142 @@ class ProductCatalogServiceTest extends TestCase
         $this->expectException(OCSBadRequestException::class);
         $this->service->lookupByBarcode('   ');
     }//end testLookupByBarcodeRejectsEmpty()
+
+    /**
+     * lookupByBarcode rejects a malformed (non-barcode-charset) barcode before
+     * touching OpenRegister — scanned input is untrusted.
+     *
+     * @return void
+     */
+    public function testLookupByBarcodeRejectsMalformed(): void
+    {
+        $this->expectException(OCSBadRequestException::class);
+        $this->service->lookupByBarcode("87123\n<script>");
+    }//end testLookupByBarcodeRejectsMalformed()
+
+    /**
+     * isValidBarcode accepts EAN/UPC and Code-128 alphanumerics and rejects
+     * empty, over-length and control-character payloads.
+     *
+     * @return void
+     */
+    public function testIsValidBarcode(): void
+    {
+        $this->assertTrue($this->service->isValidBarcode('8710919041022'));
+        $this->assertTrue($this->service->isValidBarcode('012345678905'));
+        $this->assertTrue($this->service->isValidBarcode('ABC-123.4 5'));
+        $this->assertFalse($this->service->isValidBarcode(''));
+        $this->assertFalse($this->service->isValidBarcode("8712\t34"));
+        $this->assertFalse($this->service->isValidBarcode("<inject>"));
+        $this->assertFalse($this->service->isValidBarcode(str_repeat('9', 65)));
+    }//end testIsValidBarcode()
+
+    /**
+     * matchProductByBarcode resolves a top-level product barcode with a null
+     * variant index.
+     *
+     * @return void
+     */
+    public function testMatchProductByBarcodeTopLevel(): void
+    {
+        $products = [
+            ['name' => 'Shampoo Keratine', 'barcode' => '8710919041022'],
+            ['name' => 'Conditioner', 'barcode' => '8720608064038'],
+        ];
+
+        $match = $this->service->matchProductByBarcode($products, '8710919041022');
+
+        $this->assertNotNull($match);
+        $this->assertSame('Shampoo Keratine', $match['product']['name']);
+        $this->assertNull($match['variantIndex']);
+    }//end testMatchProductByBarcodeTopLevel()
+
+    /**
+     * matchProductByBarcode resolves a variant barcode to the parent product
+     * and the matched variant's zero-based index (REQ-PBS-005).
+     *
+     * @return void
+     */
+    public function testMatchProductByBarcodeVariantResolvesParentAndIndex(): void
+    {
+        $products = [
+            [
+                'name'     => 'Haargel Flex Hold',
+                'barcode'  => '8714100247021',
+                'variants' => [
+                    ['sku' => 'HAR-GEL-002-75', 'barcode' => '8714100247038', 'status' => 'active'],
+                    ['sku' => 'HAR-GEL-002-150', 'barcode' => '8714100247045', 'status' => 'active'],
+                    ['sku' => 'HAR-GEL-002-300', 'barcode' => '8714100247052', 'status' => 'active'],
+                ],
+            ],
+        ];
+
+        $match = $this->service->matchProductByBarcode($products, '8714100247045');
+
+        $this->assertNotNull($match);
+        $this->assertSame('Haargel Flex Hold', $match['product']['name']);
+        $this->assertSame(1, $match['variantIndex']);
+        $this->assertSame('HAR-GEL-002-150', $match['product']['matchedVariantSku']);
+        $this->assertSame(1, $match['product']['matchedVariantIndex']);
+    }//end testMatchProductByBarcodeVariantResolvesParentAndIndex()
+
+    /**
+     * matchProductByBarcode never resolves an inactive variant — discontinued
+     * variants must not be sellable via scan (REQ-PBS-005).
+     *
+     * @return void
+     */
+    public function testMatchProductByBarcodeExcludesInactiveVariant(): void
+    {
+        $products = [
+            [
+                'name'     => 'Haargel Flex Hold',
+                'variants' => [
+                    ['sku' => 'HAR-GEL-002-150', 'barcode' => '8714100247045', 'status' => 'inactive'],
+                ],
+            ],
+        ];
+
+        $this->assertNull($this->service->matchProductByBarcode($products, '8714100247045'));
+    }//end testMatchProductByBarcodeExcludesInactiveVariant()
+
+    /**
+     * matchProductByBarcode prefers a top-level barcode over a variant carrying
+     * the same value, and short-circuits before scanning that variant
+     * (REQ-PBS-005).
+     *
+     * @return void
+     */
+    public function testMatchProductByBarcodeTopLevelTakesPriorityOverVariant(): void
+    {
+        $products = [
+            ['name' => 'Product A', 'barcode' => '8714100247021'],
+            [
+                'name'     => 'Product B',
+                'variants' => [
+                    ['sku' => 'B-1', 'barcode' => '8714100247021', 'status' => 'active'],
+                ],
+            ],
+        ];
+
+        $match = $this->service->matchProductByBarcode($products, '8714100247021');
+
+        $this->assertNotNull($match);
+        $this->assertSame('Product A', $match['product']['name']);
+        $this->assertNull($match['variantIndex']);
+    }//end testMatchProductByBarcodeTopLevelTakesPriorityOverVariant()
+
+    /**
+     * matchProductByBarcode returns null when nothing matches.
+     *
+     * @return void
+     */
+    public function testMatchProductByBarcodeNoMatch(): void
+    {
+        $products = [
+            ['name' => 'Shampoo', 'barcode' => '8710919041022'],
+        ];
+
+        $this->assertNull($this->service->matchProductByBarcode($products, '0000000000000'));
+    }//end testMatchProductByBarcodeNoMatch()
 }//end class
