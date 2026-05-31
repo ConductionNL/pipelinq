@@ -24,10 +24,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use DateTimeImmutable;
+use DateTimeInterface;
+use RuntimeException;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
+use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use Psr\Container\ContainerInterface;
@@ -40,10 +44,17 @@ use Psr\Log\LoggerInterface;
  * (server-authoritative). Client-supplied subtotal / tax / total values are
  * never trusted: confirm and recalculate always re-derive them from the lines.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the collaborators a POS
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Wires the collaborators a POS
  *  lifecycle service legitimately needs (OR container, app config, group
  *  manager, optional webhook dispatch, logger); splitting them would add
  *  indirection without reducing real coupling.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The class aggregates the
+ *  whole POS lifecycle (calc core + five transitions + event emit + OR
+ *  persistence helpers) as many small, single-purpose methods; the cohesion is
+ *  intentional and splitting it would scatter one transactional concern across
+ *  several classes without reducing real complexity.
+ *
+ * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
  */
 class PosTransactionService
 {
@@ -128,8 +139,8 @@ class PosTransactionService
         $lineData['unitPrice'] = $unitPrice;
         $lineData['discount']  = $discount;
         $lineData['taxRate']   = $taxRate;
-        $lineData['taxAmount'] = $this->money($taxAmount);
-        $lineData['lineTotal'] = $this->money(($net + $taxAmount));
+        $lineData['taxAmount'] = $this->money(value: $taxAmount);
+        $lineData['lineTotal'] = $this->money(value: ($net + $taxAmount));
 
         return $lineData;
     }//end recalculateLine()
@@ -156,7 +167,7 @@ class PosTransactionService
         $byRate        = [];
 
         foreach ($lines as $rawLine) {
-            $line      = $this->recalculateLine($rawLine);
+            $line      = $this->recalculateLine(lineData: $rawLine);
             $quantity  = (float) $line['quantity'];
             $unitPrice = (float) $line['unitPrice'];
             $discount  = (float) $line['discount'];
@@ -183,20 +194,20 @@ class PosTransactionService
         foreach ($byRate as $entry) {
             $taxBreakdown[] = [
                 'rate' => $entry['rate'],
-                'base' => $this->money($entry['base']),
-                'tax'  => $this->money($entry['tax']),
+                'base' => $this->money(value: $entry['base']),
+                'tax'  => $this->money(value: $entry['tax']),
             ];
         }
 
-        $subtotal = $this->money($subtotal);
-        $totalTax = $this->money($totalTax);
+        $subtotal = $this->money(value: $subtotal);
+        $totalTax = $this->money(value: $totalTax);
 
         return [
             'subtotal'      => $subtotal,
-            'discountTotal' => $this->money($discountTotal),
+            'discountTotal' => $this->money(value: $discountTotal),
             'taxBreakdown'  => $taxBreakdown,
             'totalTax'      => $totalTax,
-            'total'         => $this->money(($subtotal + $totalTax)),
+            'total'         => $this->money(value: ($subtotal + $totalTax)),
         ];
     }//end computeTotals()
 
@@ -213,13 +224,13 @@ class PosTransactionService
      */
     public function recalculateTotals(string $transactionId): array
     {
-        $transaction = $this->fetchTransaction($transactionId);
-        $lines       = $this->fetchLines($transactionId);
-        $totals      = $this->computeTotals($lines);
+        $transaction = $this->fetchTransaction(id: $transactionId);
+        $lines       = $this->fetchLines(transactionId: $transactionId);
+        $totals      = $this->computeTotals(lines: $lines);
 
         $transaction = array_merge($transaction, $totals);
 
-        return $this->saveTransaction($transactionId, $transaction);
+        return $this->saveTransaction(id: $transactionId, transaction: $transaction);
     }//end recalculateTotals()
 
     /**
@@ -241,19 +252,19 @@ class PosTransactionService
      */
     public function confirmTransaction(string $id, string $userId): array
     {
-        $transaction = $this->fetchTransaction($id);
+        $transaction = $this->fetchTransaction(id: $id);
         $status      = (string) ($transaction['status'] ?? '');
 
         if (in_array($status, self::CONFIRMABLE_FROM, true) === false) {
             throw new OCSBadRequestException('Alleen concept- of geparkeerde transacties kunnen worden bevestigd.');
         }
 
-        $lines = $this->fetchLines($id);
+        $lines = $this->fetchLines(transactionId: $id);
         if (count($lines) === 0) {
             throw new OCSBadRequestException('Voeg minimaal één artikel toe.');
         }
 
-        $totals      = $this->computeTotals($lines);
+        $totals      = $this->computeTotals(lines: $lines);
         $confirmedAt = $this->now();
 
         $transaction = array_merge(
@@ -266,12 +277,12 @@ class PosTransactionService
             ]
         );
 
-        $saved = $this->saveTransaction($id, $transaction);
+        $saved = $this->saveTransaction(id: $id, transaction: $transaction);
 
-        $eventId = $this->emitConfirmedEvent($saved);
+        $eventId = $this->emitConfirmedEvent(transaction: $saved);
         if ($eventId !== '') {
             $saved['cloudEventId'] = $eventId;
-            $saved                 = $this->saveTransaction($id, $saved);
+            $saved = $this->saveTransaction(id: $id, transaction: $saved);
         }
 
         $this->logger->info('Pipelinq: POS transaction confirmed', ['id' => $id, 'userId' => $userId]);
@@ -294,7 +305,7 @@ class PosTransactionService
      */
     public function settleTransaction(string $id, string $userId): array
     {
-        $transaction = $this->fetchTransaction($id);
+        $transaction = $this->fetchTransaction(id: $id);
 
         if ((string) ($transaction['status'] ?? '') !== 'confirmed') {
             throw new OCSBadRequestException('Transactie moet bevestigd zijn voor afrekenen.');
@@ -305,7 +316,7 @@ class PosTransactionService
 
         $this->logger->info('Pipelinq: POS transaction settled', ['id' => $id, 'userId' => $userId]);
 
-        return $this->saveTransaction($id, $transaction);
+        return $this->saveTransaction(id: $id, transaction: $transaction);
     }//end settleTransaction()
 
     /**
@@ -325,7 +336,7 @@ class PosTransactionService
      */
     public function refundTransaction(string $id, string $reason, string $userId): array
     {
-        if ($this->isManager($userId) === false) {
+        if ($this->isManager(userId: $userId) === false) {
             throw new OCSForbiddenException('Alleen een beheerder mag een transactie terugboeken.');
         }
 
@@ -333,7 +344,7 @@ class PosTransactionService
             throw new OCSBadRequestException('Vul een reden in voor de terugboeking.');
         }
 
-        $transaction = $this->fetchTransaction($id);
+        $transaction = $this->fetchTransaction(id: $id);
         $status      = (string) ($transaction['status'] ?? '');
 
         if (in_array($status, ['confirmed', 'settled'], true) === false) {
@@ -346,7 +357,7 @@ class PosTransactionService
 
         $this->logger->info('Pipelinq: POS transaction refunded', ['id' => $id, 'userId' => $userId]);
 
-        return $this->saveTransaction($id, $transaction);
+        return $this->saveTransaction(id: $id, transaction: $transaction);
     }//end refundTransaction()
 
     /**
@@ -364,7 +375,7 @@ class PosTransactionService
      */
     public function parkTransaction(string $id, string $userId): array
     {
-        $transaction = $this->fetchTransaction($id);
+        $transaction = $this->fetchTransaction(id: $id);
 
         if ((string) ($transaction['status'] ?? '') !== 'draft') {
             throw new OCSBadRequestException('Alleen concept-transacties kunnen worden geparkeerd.');
@@ -373,7 +384,9 @@ class PosTransactionService
         $transaction['status']   = 'parked';
         $transaction['parkedAt'] = $this->now();
 
-        return $this->saveTransaction($id, $transaction);
+        $this->logger->info('Pipelinq: POS transaction parked', ['id' => $id, 'userId' => $userId]);
+
+        return $this->saveTransaction(id: $id, transaction: $transaction);
     }//end parkTransaction()
 
     /**
@@ -391,7 +404,7 @@ class PosTransactionService
      */
     public function resumeTransaction(string $id, string $userId): array
     {
-        $transaction = $this->fetchTransaction($id);
+        $transaction = $this->fetchTransaction(id: $id);
 
         if ((string) ($transaction['status'] ?? '') !== 'parked') {
             throw new OCSBadRequestException('Alleen geparkeerde transacties kunnen worden hervat.');
@@ -400,7 +413,9 @@ class PosTransactionService
         $transaction['status']   = 'draft';
         $transaction['parkedAt'] = null;
 
-        return $this->saveTransaction($id, $transaction);
+        $this->logger->info('Pipelinq: POS transaction resumed', ['id' => $id, 'userId' => $userId]);
+
+        return $this->saveTransaction(id: $id, transaction: $transaction);
     }//end resumeTransaction()
 
     /**
@@ -421,28 +436,12 @@ class PosTransactionService
     public function emitConfirmedEvent(array $transaction): string
     {
         $eventId = $this->uuid();
-        $payload = [
-            'specversion'     => '1.0',
-            'type'            => self::EVENT_CONFIRMED,
-            'source'          => self::EVENT_SOURCE,
-            'id'              => $eventId,
-            'time'            => (string) ($transaction['confirmedAt'] ?? $this->now()),
-            'datacontenttype' => 'application/json',
-            'data'            => [
-                'transactionId' => (string) ($transaction['id'] ?? $transaction['uuid'] ?? ''),
-                'reference'     => (string) ($transaction['reference'] ?? ''),
-                'cashier'       => (string) ($transaction['cashier'] ?? ''),
-                'total'         => (float) ($transaction['total'] ?? 0),
-                'totalTax'      => (float) ($transaction['totalTax'] ?? 0),
-                'taxBreakdown'  => ($transaction['taxBreakdown'] ?? []),
-                'confirmedAt'   => (string) ($transaction['confirmedAt'] ?? ''),
-            ],
-        ];
+        $payload = $this->buildConfirmedPayload(eventId: $eventId, transaction: $transaction);
 
         try {
             $webhookService = $this->container->get('OCA\OpenRegister\Service\WebhookService');
-            $event          = new \OCP\EventDispatcher\Event();
-            $webhookService->dispatchEvent($event, self::EVENT_CONFIRMED, $payload);
+            $event          = new Event();
+            $webhookService->dispatchEvent(_event: $event, eventName: self::EVENT_CONFIRMED, payload: $payload);
             return $eventId;
         } catch (\Throwable $e) {
             // Fire-and-forget: a missing/failed downstream subscriber must not
@@ -454,6 +453,39 @@ class PosTransactionService
             return '';
         }//end try
     }//end emitConfirmedEvent()
+
+    /**
+     * Build the CloudEvents 1.0 envelope for a confirmed transaction.
+     *
+     * @param string               $eventId     The CloudEvents id.
+     * @param array<string, mixed> $transaction The confirmed transaction.
+     *
+     * @return array<string, mixed> The CloudEvent payload.
+     *
+     * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+     */
+    private function buildConfirmedPayload(string $eventId, array $transaction): array
+    {
+        $confirmedAt = (string) ($transaction['confirmedAt'] ?? '');
+
+        return [
+            'specversion'     => '1.0',
+            'type'            => self::EVENT_CONFIRMED,
+            'source'          => self::EVENT_SOURCE,
+            'id'              => $eventId,
+            'time'            => ($confirmedAt !== '') ? $confirmedAt : $this->now(),
+            'datacontenttype' => 'application/json',
+            'data'            => [
+                'transactionId' => (string) ($transaction['id'] ?? $transaction['uuid'] ?? ''),
+                'reference'     => (string) ($transaction['reference'] ?? ''),
+                'cashier'       => (string) ($transaction['cashier'] ?? ''),
+                'total'         => (float) ($transaction['total'] ?? 0),
+                'totalTax'      => (float) ($transaction['totalTax'] ?? 0),
+                'taxBreakdown'  => ($transaction['taxBreakdown'] ?? []),
+                'confirmedAt'   => $confirmedAt,
+            ],
+        ];
+    }//end buildConfirmedPayload()
 
     /**
      * Whether a user has manager permission for refund / void.
@@ -499,7 +531,7 @@ class PosTransactionService
      */
     private function fetchTransaction(string $id): array
     {
-        [$register, $schema] = $this->config('posTransaction_schema');
+        [$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
 
         try {
             $object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
@@ -511,7 +543,7 @@ class PosTransactionService
             throw new OCSNotFoundException('Transactie niet gevonden.');
         }
 
-        return $this->toArray($object);
+        return $this->toArray(object: $object);
     }//end fetchTransaction()
 
     /**
@@ -525,11 +557,11 @@ class PosTransactionService
      */
     private function fetchLines(string $transactionId): array
     {
-        [$register, $schema] = $this->config('posTransactionLine_schema');
+        [$register, $schema] = $this->config(schemaKey: 'posTransactionLine_schema');
 
         try {
             $results = $this->getObjectService()->findAll(
-                [
+                config: [
                     'filters' => [
                         'register'    => $register,
                         'schema'      => $schema,
@@ -544,7 +576,7 @@ class PosTransactionService
 
         $lines = [];
         foreach (($results ?? []) as $result) {
-            $lines[] = $this->toArray($result);
+            $lines[] = $this->toArray(object: $result);
         }
 
         return $lines;
@@ -562,14 +594,20 @@ class PosTransactionService
      */
     private function saveTransaction(string $id, array $transaction): array
     {
-        [$register, $schema] = $this->config('posTransaction_schema');
+        [$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
 
         // Never trust client-derived id/uuid; always write to the resolved id.
         unset($transaction['@self']);
 
-        $saved = $this->getObjectService()->saveObject($transaction, [], $register, $schema, $id);
+        $saved = $this->getObjectService()->saveObject(
+            object: $transaction,
+            extend: [],
+            register: $register,
+            schema: $schema,
+            uuid: $id
+        );
 
-        return $this->toArray($saved);
+        return $this->toArray(object: $saved);
     }//end saveTransaction()
 
     /**
@@ -600,7 +638,7 @@ class PosTransactionService
      *
      * @return object The object service.
      *
-     * @throws \RuntimeException If OpenRegister is not available.
+     * @throws RuntimeException If OpenRegister is not available.
      *
      * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
      */
@@ -609,7 +647,7 @@ class PosTransactionService
         try {
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         } catch (\Throwable $e) {
-            throw new \RuntimeException('OpenRegister service is not available.');
+            throw new RuntimeException('OpenRegister service is not available.');
         }
     }//end getObjectService()
 
@@ -650,7 +688,7 @@ class PosTransactionService
      */
     private function now(): string
     {
-        return (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM);
+        return (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
     }//end now()
 
     /**
