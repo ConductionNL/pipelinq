@@ -1,3 +1,5 @@
+> SUPERSEDED 2026-05-31: feature implemented; archived twin archive/2026-03-21-contactmomenten-rapportage. Archived as already-delivered.
+
 # Proposal: contactmomenten-rapportage
 
 ## Problem

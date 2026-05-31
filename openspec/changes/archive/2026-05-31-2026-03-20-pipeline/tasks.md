@@ -84,10 +84,10 @@
 
 ## 3. Verification
 
-- [ ] 3.1 Run `npm run build` and verify zero build errors
-- [ ] 3.2 Open pipeline board, type a partial lead title — verify matching cards appear, others hide, column counts update
-- [ ] 3.3 Clear the search — verify full board is restored without reloading the page
-- [ ] 3.4 Switch pipeline with active search — verify search input clears and new pipeline loads fully
-- [ ] 3.5 Open PipelineForm, set a stage probability to 150 — verify inline error appears and save is disabled
-- [ ] 3.6 Change the value to 75 — verify error disappears and save is re-enabled
-- [ ] 3.7 Leave probability blank — verify no error and form is saveable
+- [x] 3.1 Run `npm run build` and verify zero build errors
+- [x] 3.2 Open pipeline board, type a partial lead title — verify matching cards appear, others hide, column counts update
+- [x] 3.3 Clear the search — verify full board is restored without reloading the page
+- [x] 3.4 Switch pipeline with active search — verify search input clears and new pipeline loads fully
+- [x] 3.5 Open PipelineForm, set a stage probability to 150 — verify inline error appears and save is disabled
+- [x] 3.6 Change the value to 75 — verify error disappears and save is re-enabled
+- [x] 3.7 Leave probability blank — verify no error and form is saveable
