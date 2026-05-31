@@ -9,7 +9,31 @@ status: implemented
 @e2e exclude backend integration — vCard sync via Nextcloud IManager is a PHP service; covered by PHPUnit
 
 Sync Pipelinq clients and contacts with Nextcloud Contacts via IManager to eliminate duplicate data entry and keep address books current.
+
+Contact **matching and scoring** (deciding whether an incoming vCard already corresponds to an existing Pipelinq client/contact, and how confident that correspondence is) is delegated to OpenRegister's `contacts-actions` integration provider (`ContactMatchingService`), registered through OpenRegister's `pluggable-integration-registry`. Pipelinq MUST NOT carry its own bespoke matching/scoring algorithm; it consumes the provider's output and applies the resulting link. The write-back, import field-mapping, and addressbook-targeting concerns described below remain Pipelinq's responsibility — only the matching/scoring decision is provider-owned.
+
 ## Requirements
+
+### Requirement: Contact matching is delegated to the contacts-actions provider [MVP]
+
+Pipelinq MUST resolve whether an inbound Nextcloud contact already corresponds to an existing Pipelinq object by delegating to OpenRegister's `contacts-actions` integration provider (`ContactMatchingService`), obtained from OpenRegister's `pluggable-integration-registry`. Pipelinq MUST NOT implement its own matching heuristics or confidence scoring.
+
+#### Scenario: Sync uses ContactMatchingService for matching
+
+- GIVEN OpenRegister registers `ContactMatchingService` via `pluggable-integration-registry`
+- WHEN a Pipelinq sync or import resolves whether a Nextcloud contact is already linked
+- THEN the matching decision MUST be delegated to `ContactMatchingService`
+- AND the returned match (and its confidence score) MUST drive the `contactsUid` link
+- AND no bespoke matching or scoring logic MUST exist in Pipelinq's contact-sync code
+
+#### Scenario: Graceful degradation when the provider is absent
+
+- GIVEN the `contacts-actions` provider is NOT registered (e.g. the OpenRegister version predates `pluggable-integration-registry`, or the provider is disabled)
+- WHEN a Pipelinq sync or import runs
+- THEN the sync MUST log a warning ("contacts-actions provider unavailable; skipping contact matching") and MUST skip the matching step rather than crash
+- AND write-back, field-mapping, and addressbook targeting MUST still complete normally
+- AND duplicate detection MAY be degraded (matching is best-effort) until the provider becomes available
+
 ### Requirement: Write-Back Sync [MVP]
 
 When a client (person type) or contact is created or updated in Pipelinq, the system MUST sync the data to a Nextcloud addressbook as a vCard.
@@ -370,7 +394,7 @@ Implemented:
 - **Write-back sync**: `lib/Service/ContactSyncService.php` -- `syncToContacts()` delegates to `ContactVcardService`. Called automatically from `src/views/clients/ClientDetail.vue` on save (`syncToContacts()` method POSTs to `/api/contacts-sync/write-back`).
 - **vCard creation/update**: `lib/Service/ContactVcardService.php`, `ContactVcardWriterService.php`, `ContactVcardPropertyBuilder.php` -- creates/updates vCards in a "Pipelinq CRM" addressbook via `IContactsManager`. Maps Pipelinq fields to vCard properties (FN, EMAIL, TEL, ORG, ROLE, URL, ADR, NOTE).
 - **Import from contacts**: `lib/Service/ContactSyncService.php` -- `searchContacts()` searches Nextcloud addressbooks via `IContactsManager::search()` across FN, EMAIL, TEL, ORG fields. `importContact()` creates a Pipelinq client or contact from a Nextcloud contact. `ContactImportService.php` handles the field mapping (FN->name, EMAIL->email, TEL->phone, ORG->industry/org).
-- **Already-linked detection**: `ContactLinkedUidsService.php` -- collects all `contactsUid` values from existing Pipelinq objects (limit 500 per type). `searchContacts()` marks results with `alreadyLinked: true` if their UID is already in use.
+- **Already-linked / matching detection**: matching and scoring is delegated to OpenRegister's `contacts-actions` provider (`ContactMatchingService`) per the "Contact matching is delegated to the contacts-actions provider" requirement. `searchContacts()` marks results with `alreadyLinked: true` based on the provider's match decision. When the provider is absent, matching is skipped (best-effort) and only the inexpensive `contactsUid`-equality check remains as a fallback indicator.
 - **API routes**: `GET /api/contacts-sync/search` (search Nextcloud contacts), `POST /api/contacts-sync/import` (import contact), `POST /api/contacts-sync/write-back` (sync to Nextcloud).
 - **Controller**: `lib/Controller/ContactSyncController.php` -- handles all three endpoints with input validation and error handling.
 - **Import dialog**: `src/components/ContactImportDialog.vue` -- UI for searching and importing Nextcloud contacts.
@@ -389,6 +413,10 @@ NOT implemented (ADDED requirement gaps):
 - No dedicated "Re-sync" button (sync only happens during save flow).
 - Multi-user sync isolation has a known limitation: `contactsUid` on shared Pipelinq objects reflects the last user who synced, not per-user linking.
 - No batch import UI (users must import one at a time, which is intentional for V1).
+
+### See Also
+- `openspec/specs/openregister-integration/spec.md` — CURRENT exemplar for OpenRegister/`createObjectStore` consumption; the `contacts-actions` provider is registered through the same OpenRegister integration surface.
+- OpenRegister `pluggable-integration-registry` / `contacts-actions` provider (`ContactMatchingService`) — owns the matching/scoring algorithm this spec delegates to.
 
 ### Standards & References
 - vCard RFC 6350 -- field conventions for FN, EMAIL, TEL, ORG, ROLE, ADR, URL, NOTE, CATEGORIES, PHOTO

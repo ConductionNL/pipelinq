@@ -50,6 +50,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `getIntValue`/`getStringValue` getters. (The audit's cited
   `KennisbankReviewJob` review-interval constant no longer exists — kennisbank
   was migrated to XWiki — so nothing was migrated for it.)
+- `contacts-sync` spec rewritten to consume OpenRegister's `contacts-actions`
+  integration provider (`ContactMatchingService`, registered via
+  `pluggable-integration-registry`) for contact matching/scoring instead of a
+  bespoke algorithm; added a graceful-degradation requirement for when the
+  provider is absent (matching is skipped, write-back/import still complete).
+- `lead-management` spec: cited the `x-openregister-calculations.weightedValue`
+  annotation on the Pipeline Value reporting scenario and resolved the stale
+  "frontend vs backend scoring" open question in favour of the OR calculation
+  engine; field-table enums (`source`, `priority`) intentionally retained.
+- `pipelinq-or-adoption` change spec: declared `src/store/modules/object.js` as
+  the canonical `createObjectStore` exemplar (no code change — the live file
+  already matches the declared plugin list), cross-linked the
+  `openregister-integration` exemplar spec, and corrected the `adr-000`
+  reference to its real path `openspec/architecture/adr-000-data-model.md`.
+- Archived openspec change `pipelinq-or-spec-rewrites`
+  (`openspec/changes/archive/2026-05-31-pipelinq-or-spec-rewrites/`).
 
 ## [0.2.17] - 2026-05-31
 
