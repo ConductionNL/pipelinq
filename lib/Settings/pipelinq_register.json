@@ -2704,14 +2704,22 @@
         "cashier": "admin",
         "terminalId": "kassa-01",
         "status": "settled",
-        "subtotal": 19.75,
+        "priceMode": "excl",
+        "subtotal": 24.65,
         "discountTotal": 0,
-        "taxBreakdown": [{ "rate": 9, "base": 19.75, "tax": 1.78 }],
-        "totalTax": 1.78,
-        "total": 21.53,
+        "taxBreakdown": [
+          { "rate": 9, "base": 18.65, "tax": 1.68 },
+          { "rate": 21, "base": 6.00, "tax": 1.26 }
+        ],
+        "invoiceBreakdown": [
+          { "rate": 9, "base": 18.65, "tax": 1.68, "description": "Verlaagd tarief (9%)" },
+          { "rate": 21, "base": 6.00, "tax": 1.26, "description": "Standaardtarief (21%)" }
+        ],
+        "totalTax": 2.94,
+        "total": 27.59,
         "confirmedAt": "2026-05-20T09:14:00+02:00",
         "settledAt": "2026-05-20T09:14:30+02:00",
-        "notes": "Contante betaling"
+        "notes": "Contante betaling -- koffie, broodje en notitieboek"
       },
       {
         "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0002" },
@@ -2731,16 +2739,23 @@
         "cashier": "emma.bakker",
         "terminalId": "kassa-01",
         "status": "confirmed",
-        "subtotal": 89.97,
-        "discountTotal": 9.00,
+        "priceMode": "excl",
+        "subtotal": 107.96,
+        "discountTotal": 5.50,
         "taxBreakdown": [
-          { "rate": 21, "base": 80.97, "tax": 17.00 },
-          { "rate": 9, "base": 0, "tax": 0 }
+          { "rate": 0, "base": 10.00, "tax": 0 },
+          { "rate": 9, "base": 8.49, "tax": 0.76 },
+          { "rate": 21, "base": 89.47, "tax": 17.34 }
         ],
-        "totalTax": 17.00,
-        "total": 97.97,
+        "invoiceBreakdown": [
+          { "rate": 0, "base": 10.00, "tax": 0, "description": "Nultarief (0%)" },
+          { "rate": 9, "base": 8.49, "tax": 0.76, "description": "Verlaagd tarief (9%)" },
+          { "rate": 21, "base": 89.47, "tax": 17.34, "description": "Standaardtarief (21%)" }
+        ],
+        "totalTax": 18.10,
+        "total": 126.06,
         "confirmedAt": "2026-05-20T10:33:00+02:00",
-        "notes": "Zakelijke aankoop -- factuur gevraagd"
+        "notes": "Zakelijke aankoop -- factuur gevraagd (gemengd 0%/9%/21%)"
       },
       {
         "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0004" },
@@ -2748,13 +2763,17 @@
         "cashier": "jan.smit",
         "terminalId": "kassa-03",
         "status": "parked",
-        "subtotal": 24.95,
+        "priceMode": "incl",
+        "subtotal": 22.89,
         "discountTotal": 0,
-        "taxBreakdown": [{ "rate": 9, "base": 24.95, "tax": 2.25 }],
-        "totalTax": 2.25,
-        "total": 27.20,
+        "taxBreakdown": [{ "rate": 9, "base": 22.89, "tax": 2.06 }],
+        "invoiceBreakdown": [
+          { "rate": 9, "base": 22.89, "tax": 2.06, "description": "Verlaagd tarief (9%)" }
+        ],
+        "totalTax": 2.06,
+        "total": 24.95,
         "parkedAt": "2026-05-20T11:02:00+02:00",
-        "notes": "Klant even weg -- terugkomen"
+        "notes": "Klant even weg -- terugkomen (prijzen incl. BTW)"
       },
       {
         "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0005" },
@@ -2762,11 +2781,19 @@
         "cashier": "admin",
         "terminalId": "kassa-01",
         "status": "refunded",
-        "subtotal": 703.30,
+        "priceMode": "excl",
+        "subtotal": 718.30,
         "discountTotal": 0,
-        "taxBreakdown": [{ "rate": 21, "base": 703.30, "tax": 147.69 }],
-        "totalTax": 147.69,
-        "total": 850.99,
+        "taxBreakdown": [
+          { "rate": 9, "base": 15.00, "tax": 1.35 },
+          { "rate": 21, "base": 703.30, "tax": 147.69 }
+        ],
+        "invoiceBreakdown": [
+          { "rate": 9, "base": 15.00, "tax": 1.35, "description": "Verlaagd tarief (9%)" },
+          { "rate": 21, "base": 703.30, "tax": 147.69, "description": "Standaardtarief (21%)" }
+        ],
+        "totalTax": 149.04,
+        "total": 867.34,
         "confirmedAt": "2026-05-19T14:22:00+02:00",
         "settledAt": "2026-05-19T14:23:00+02:00",
         "refundedAt": "2026-05-20T09:45:00+02:00",
@@ -2797,6 +2824,18 @@
         "sortOrder": 2
       },
       {
+        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0001-notitieboek" },
+        "transaction": "txn-2026-0001",
+        "description": "Notitieboek A5 gelinieerd",
+        "quantity": 1,
+        "unitPrice": 6.00,
+        "discount": 0,
+        "taxRate": 21,
+        "taxAmount": 1.26,
+        "lineTotal": 7.26,
+        "sortOrder": 3
+      },
+      {
         "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0003-sleeve" },
         "transaction": "txn-2026-0003",
         "description": "Laptoptas 15,6 inch zwart",
@@ -2821,6 +2860,31 @@
         "sortOrder": 2
       },
       {
+        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0003-koffiebonen" },
+        "transaction": "txn-2026-0003",
+        "description": "Koffiebonen 250g (espresso)",
+        "quantity": 1,
+        "unitPrice": 8.49,
+        "discount": 0,
+        "taxRate": 9,
+        "taxAmount": 0.76,
+        "lineTotal": 9.25,
+        "sortOrder": 3
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0003-cadeaubon" },
+        "transaction": "txn-2026-0003",
+        "description": "Cadeaubon (waardebon)",
+        "quantity": 1,
+        "unitPrice": 10.00,
+        "discount": 0,
+        "taxRate": 0,
+        "taxAmount": 0,
+        "lineTotal": 10.00,
+        "sortOrder": 4,
+        "notes": "Vrijgesteld -- waardebon, geen BTW"
+      },
+      {
         "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0005-laptop" },
         "transaction": "txn-2026-0005",
         "description": "Laptop 14 inch (refurbished)",
@@ -2832,6 +2896,18 @@
         "lineTotal": 850.99,
         "sortOrder": 1,
         "notes": "Serienummer: NB-4821-X"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0005-laptophoes" },
+        "transaction": "txn-2026-0005",
+        "description": "Laptophoes vilt 14 inch",
+        "quantity": 1,
+        "unitPrice": 15.00,
+        "discount": 0,
+        "taxRate": 9,
+        "taxAmount": 1.35,
+        "lineTotal": 16.35,
+        "sortOrder": 2
       },
       {
         "@self": { "register": "pipelinq", "schema": "product", "slug": "product-cappuccino" },
