@@ -65,6 +65,8 @@ class SettingsService
         'agentProfile_schema',
         'posTransaction_schema',
         'posTransactionLine_schema',
+        'receiptTemplate_schema',
+        'receiptPrintLog_schema',
         'complaint_sla_service',
         'complaint_sla_product',
         'complaint_sla_communication',
