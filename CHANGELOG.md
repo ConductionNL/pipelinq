@@ -17,6 +17,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   runtime dependency. No bespoke time subsystem is introduced; approval and
   invoicing remain out of scope (handed to shillinq).
 
+## [0.2.21] - 2026-05-31
+
+### Added
+
+- Delegate the timesheet approval + invoicing lifecycle to shillinq
+  (`time-approval-workflow`, hydra ADR-022): declare shillinq as the owner of
+  submit → approve → reject → lock → edit-request → invoice in the OpenSpec
+  coordination manifest (`openspec/manifest.yaml`: soft delegation dependency +
+  `consumes: invoice-from-time-and-expense`), and surface a footer deep-link to
+  shillinq's billing/approval surface in `src/manifest.json`. Captured hours
+  remain reachable by shillinq via the existing time-tracker OR links; Pipelinq
+  builds no timesheet schema, service, controller, view, or approval state. The
+  pipelinq → shillinq approval CloudEvent emit is deferred until shillinq ships
+  an approval/invoice route or event consumer.
+
 ## [0.2.19] - 2026-05-31
 
 ### Changed

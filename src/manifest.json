@@ -135,6 +135,14 @@
 			"route": "FeaturesRoadmap",
 			"section": "footer",
 			"order": 230
+		},
+		{
+			"id": "BillingApproval",
+			"label": "Timesheet approval & billing",
+			"icon": "icon-category-monitoring",
+			"href": "/index.php/apps/shillinq/",
+			"section": "footer",
+			"order": 220
 		}
 	],
 	"pages": [
