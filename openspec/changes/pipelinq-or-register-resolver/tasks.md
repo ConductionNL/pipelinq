@@ -12,16 +12,21 @@ Eight call sites of `$appConfig->getValueString(APP_ID, 'register', '')`. Migrat
 ALL to `RegisterResolverService` per the OR-side spec. Audit citation:
 `.claude/audit-2026-05-03/04-hardcoded.md`.
 
-- [ ] 1.1 `lib/Service/QueueService.php:57` — replace
+- [x] 1.1 `lib/Service/QueueService.php` (line drifted to 60) — replaced
       `$appConfig->getValueString(APP_ID, 'register', '')` with
-      `RegisterResolverService::resolve('queue')`.
-- [ ] 1.2 `lib/Service/QueueService.php:145` — same migration.
-- [ ] 1.3 `lib/Service/QueueService.php:236` — same migration.
-- [ ] 1.4 `lib/Service/QueueService.php:292` — same migration.
-- [ ] 1.5 `lib/Service/DefaultQueueService.php:122` — same migration.
-- [ ] 1.6 `lib/Service/DefaultQueueService.php:179` — same migration.
-- [ ] 1.7 `lib/Service/ContactVcardService.php:102` — replace with
-      `RegisterResolverService::resolve('contact')`.
-- [ ] 1.8 `lib/Service/ContactVcardWriterService.php:139` — same migration as 1.7.
-- [ ] 1.9 Verify no remaining `getValueString(APP_ID, 'register', '')` matches in
-      `lib/` after the migration.
+      `$this->registerResolver->resolve('queue')`.
+- [x] 1.2 `lib/Service/QueueService.php` (line drifted to 150) — same migration.
+- [x] 1.3 `lib/Service/QueueService.php` (line drifted to 239) — same migration.
+- [x] 1.4 `lib/Service/QueueService.php` (line drifted to 293) — same migration.
+- [x] 1.5 `lib/Service/DefaultQueueService.php` (line drifted to 127) — same migration.
+- [x] 1.6 `lib/Service/DefaultQueueService.php` (line drifted to 182) — same migration.
+- [x] 1.7 `lib/Service/ContactVcardService.php` (line drifted to 121) — replaced with
+      `$this->registerResolver->resolve('contact')`.
+- [x] 1.8 `lib/Service/ContactVcardWriterService.php` (line drifted to 143) — same
+      migration as 1.7.
+- [x] 1.9 Verified no remaining `getValueString(APP_ID, 'register', '')` matches in
+      the **four targeted files** after the migration. NOTE: 16 register reads remain
+      in 11 OTHER `lib/` files (RoutingService, controllers, background jobs, etc.) that
+      the proposal's "Affected code" list does NOT name — they are out of this Phase-1
+      slice's scope (design Decision 1 scopes Phase 1 to exactly eight sites). A
+      follow-up slice should migrate the remaining reads.
