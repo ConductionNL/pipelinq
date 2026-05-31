@@ -2,18 +2,24 @@
 
 ## 0. Deduplication Check
 
-- [ ] 0.1 Search `openspec/specs/` and `openregister/lib/Service/` for any existing POS
+- [x] 0.1 Search `openspec/specs/` and `openregister/lib/Service/` for any existing POS
   or transaction logic; document findings (expected: no overlap)
   - **acceptance_criteria**:
     - GIVEN the search is complete
     - THEN a one-line finding MUST be appended to this task: "No overlap found" or a
       reference to the existing capability and why new code is needed
+  - **FINDING**: No overlap found. No POS/transaction/cart/kassabon schema, service or
+    controller exists in pipelinq (`lib/`, `pipelinq_register.json`) or in
+    `openregister/lib/Service/`. The closest analog, `leadProduct` (schema:Offer), is a
+    CRM deal line item with a single `total` field and no tax-rate-first design,
+    sortOrder, or per-line tax/lineTotal split; it is not reusable for POS. New code is
+    required.
 
 ---
 
 ## 1. Data Model
 
-- [ ] 1.1 Add `posTransaction` schema to `lib/Settings/pipelinq_register.json`
+- [x] 1.1 Add `posTransaction` schema to `lib/Settings/pipelinq_register.json`
   - **spec_ref**: `specs/pos-transaction-core/spec.md#REQ-POS-001`
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -23,7 +29,7 @@
       and defaults
     - AND `@type: "schema:Order"` MUST be set on the schema
 
-- [ ] 1.2 Add `posTransactionLine` schema to `lib/Settings/pipelinq_register.json`
+- [x] 1.2 Add `posTransactionLine` schema to `lib/Settings/pipelinq_register.json`
   - **spec_ref**: `specs/pos-transaction-core/spec.md#REQ-POS-002`
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -33,7 +39,7 @@
     - AND `discount` MUST be constrained to 0–100
     - AND `@type: "schema:OrderItem"` MUST be set on the schema
 
-- [ ] 1.3 Add seed data for posTransaction (5 objects) and posTransactionLine (5 objects)
+- [x] 1.3 Add seed data for posTransaction (5 objects) and posTransactionLine (5 objects)
   using the `@self` envelope in `pipelinq_register.json`
   - **spec_ref**: ADR-001 (data-layer) — seed data requirements
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
@@ -44,7 +50,7 @@
     - AND 5 posTransactionLine objects MUST be created with realistic Dutch products
     - AND re-importing with `force: false` MUST NOT create duplicates (matched by slug)
 
-- [ ] 1.4 Update the register's `schemas` list to include posTransaction and posTransactionLine
+- [x] 1.4 Update the register's `schemas` list to include posTransaction and posTransactionLine
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
     - GIVEN the app is installed / repair step runs
@@ -54,7 +60,7 @@
 
 ## 2. Backend Service
 
-- [ ] 2.1 Create `lib/Service/PosTransactionService.php`
+- [x] 2.1 Create `lib/Service/PosTransactionService.php`
   - **spec_ref**: `specs/pos-transaction-core/spec.md#REQ-POS-003, #REQ-POS-004,
     #REQ-POS-005, #REQ-POS-006, #REQ-POS-007, #REQ-POS-010`
   - **files**: `pipelinq/lib/Service/PosTransactionService.php`
@@ -76,7 +82,7 @@
       from design.md and store the returned event ID in `cloudEventId`
     - AND every public method MUST have `@spec openspec/changes/pos-transaction-core/tasks.md#2.1`
 
-- [ ] 2.2 Create `lib/Controller/PosTransactionController.php`
+- [x] 2.2 Create `lib/Controller/PosTransactionController.php`
   - **spec_ref**: `specs/pos-transaction-core/spec.md#REQ-POS-004, #REQ-POS-005,
     #REQ-POS-006, #REQ-POS-007`
   - **files**: `pipelinq/lib/Controller/PosTransactionController.php`
@@ -96,7 +102,7 @@
 
 ## 3. Backend Routes
 
-- [ ] 3.1 Add POS lifecycle routes to `appinfo/routes.php`
+- [x] 3.1 Add POS lifecycle routes to `appinfo/routes.php`
   - **spec_ref**: ADR-002 (api)
   - **files**: `pipelinq/appinfo/routes.php`
   - **acceptance_criteria**:
@@ -109,7 +115,7 @@
 
 ## 4. Frontend — Store Registration
 
-- [ ] 4.1 Register `posTransaction` and `posTransactionLine` object types in `src/store/store.js`
+- [x] 4.1 Register `posTransaction` and `posTransactionLine` object types in `src/store/store.js`
   - **files**: `pipelinq/src/store/store.js`
   - **acceptance_criteria**:
     - GIVEN the app initialises
