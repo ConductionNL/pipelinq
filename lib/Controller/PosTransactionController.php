@@ -85,8 +85,13 @@ class PosTransactionController extends Controller
     #[NoAdminRequired]
     public function confirm(string $id): JSONResponse
     {
+        $uid = $this->requireUserId();
+        if ($uid instanceof JSONResponse) {
+            return $uid;
+        }
+
         return $this->run(
-            action: fn (string $uid): array => $this->service->confirmTransaction(id: $id, userId: $uid),
+            action: fn (): array => $this->service->confirmTransaction(id: $id, userId: $uid),
             label: 'confirm'
         );
     }//end confirm()
@@ -103,8 +108,13 @@ class PosTransactionController extends Controller
     #[NoAdminRequired]
     public function settle(string $id): JSONResponse
     {
+        $uid = $this->requireUserId();
+        if ($uid instanceof JSONResponse) {
+            return $uid;
+        }
+
         return $this->run(
-            action: fn (string $uid): array => $this->service->settleTransaction(id: $id, userId: $uid),
+            action: fn (): array => $this->service->settleTransaction(id: $id, userId: $uid),
             label: 'settle'
         );
     }//end settle()
@@ -121,9 +131,14 @@ class PosTransactionController extends Controller
     #[NoAdminRequired]
     public function refund(string $id): JSONResponse
     {
+        $uid = $this->requireUserId();
+        if ($uid instanceof JSONResponse) {
+            return $uid;
+        }
+
         $reason = (string) $this->request->getParam('reason', '');
         return $this->run(
-            action: fn (string $uid): array => $this->service->refundTransaction(id: $id, reason: $reason, userId: $uid),
+            action: fn (): array => $this->service->refundTransaction(id: $id, reason: $reason, userId: $uid),
             label: 'refund'
         );
     }//end refund()
@@ -140,8 +155,13 @@ class PosTransactionController extends Controller
     #[NoAdminRequired]
     public function park(string $id): JSONResponse
     {
+        $uid = $this->requireUserId();
+        if ($uid instanceof JSONResponse) {
+            return $uid;
+        }
+
         return $this->run(
-            action: fn (string $uid): array => $this->service->parkTransaction(id: $id, userId: $uid),
+            action: fn (): array => $this->service->parkTransaction(id: $id, userId: $uid),
             label: 'park'
         );
     }//end park()
@@ -158,33 +178,55 @@ class PosTransactionController extends Controller
     #[NoAdminRequired]
     public function resume(string $id): JSONResponse
     {
+        $uid = $this->requireUserId();
+        if ($uid instanceof JSONResponse) {
+            return $uid;
+        }
+
         return $this->run(
-            action: fn (string $uid): array => $this->service->resumeTransaction(id: $id, userId: $uid),
+            action: fn (): array => $this->service->resumeTransaction(id: $id, userId: $uid),
             label: 'resume'
         );
     }//end resume()
 
     /**
-     * Run a lifecycle action with shared auth + error handling.
+     * Require an authenticated user, returning their UID.
      *
-     * Requires an authenticated user and maps the service's OCS exceptions to
-     * HTTP status codes (404 not found, 422 invalid transition / bad input,
-     * 403 manager-only).
+     * Returns a 401 JSONResponse when no user is in the session. Every
+     * lifecycle endpoint calls this before acting; object-level access is then
+     * scoped to this app's own posTransaction schema inside the service (a
+     * transaction in another app/register resolves to a 404), preventing IDOR.
      *
-     * @param callable $action The action, receiving the acting user UID.
+     * @return string|JSONResponse The acting user UID, or a 401 response.
+     */
+    private function requireUserId(): string|JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Authentication required')],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+
+        return $user->getUID();
+    }//end requireUserId()
+
+    /**
+     * Run a lifecycle action with shared error handling.
+     *
+     * Maps the service's OCS exceptions to HTTP status codes (404 not found,
+     * 422 invalid transition / bad input, 403 manager-only).
+     *
+     * @param callable $action The action to run.
      * @param string   $label  A short label for log context.
      *
      * @return JSONResponse The response.
      */
     private function run(callable $action, string $label): JSONResponse
     {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-        }
-
         try {
-            return new JSONResponse(['transaction' => $action($user->getUID())]);
+            return new JSONResponse(['transaction' => $action()]);
         } catch (OCSNotFoundException $e) {
             return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
         } catch (OCSForbiddenException $e) {
