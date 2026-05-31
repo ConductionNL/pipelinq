@@ -21,6 +21,7 @@ namespace OCA\Pipelinq\Tests\Unit\BackgroundJob;
 
 use OCA\Pipelinq\BackgroundJob\QueueOverflowJob;
 use OCA\Pipelinq\Service\QueueService;
+use OCA\Pipelinq\Service\SettingsService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -49,6 +50,13 @@ class QueueOverflowJobTest extends TestCase
     private QueueService $queueService;
 
     /**
+     * The settings service mock.
+     *
+     * @var SettingsService&MockObject
+     */
+    private SettingsService $settingsService;
+
+    /**
      * The logger mock.
      *
      * @var LoggerInterface&MockObject
@@ -62,9 +70,14 @@ class QueueOverflowJobTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->timeFactory  = $this->createMock(originalClassName: ITimeFactory::class);
-        $this->queueService = $this->createMock(originalClassName: QueueService::class);
-        $this->logger       = $this->createMock(originalClassName: LoggerInterface::class);
+        $this->timeFactory     = $this->createMock(originalClassName: ITimeFactory::class);
+        $this->queueService    = $this->createMock(originalClassName: QueueService::class);
+        $this->settingsService = $this->createMock(originalClassName: SettingsService::class);
+        $this->logger          = $this->createMock(originalClassName: LoggerInterface::class);
+
+        $this->settingsService->method('getIntValue')->willReturnCallback(
+            static fn (string $key, int $default): int => $default
+        );
 
         $this->timeFactory->method('getTime')->willReturn(time());
     }//end setUp()
@@ -79,6 +92,7 @@ class QueueOverflowJobTest extends TestCase
         return new QueueOverflowJob(
             time: $this->timeFactory,
             queueService: $this->queueService,
+            settingsService: $this->settingsService,
             logger: $this->logger,
         );
     }//end buildJob()

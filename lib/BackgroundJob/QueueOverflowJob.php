@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\BackgroundJob;
 
 use OCA\Pipelinq\Service\QueueService;
+use OCA\Pipelinq\Service\SettingsService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -29,31 +30,39 @@ use Psr\Log\LoggerInterface;
 /**
  * Timed background job that checks queue capacities and moves overflow items.
  *
- * Runs every 5 minutes (300 seconds).
+ * Runs every 5 minutes (300 seconds) by default; the interval is admin-tunable
+ * via `pipelinq.queue_overflow.poll_interval_seconds`.
  */
 class QueueOverflowJob extends TimedJob
 {
     /**
-     * Interval in seconds (5 minutes).
+     * Default poll interval in seconds (5 minutes) when unconfigured.
      *
      * @var int
      */
-    private const INTERVAL = 300;
+    private const DEFAULT_INTERVAL = 300;
 
     /**
      * Constructor.
      *
-     * @param ITimeFactory    $time         The time factory.
-     * @param QueueService    $queueService The queue service.
-     * @param LoggerInterface $logger       The logger.
+     * @param ITimeFactory    $time            The time factory.
+     * @param QueueService    $queueService    The queue service.
+     * @param SettingsService $settingsService The settings service.
+     * @param LoggerInterface $logger          The logger.
      */
     public function __construct(
         ITimeFactory $time,
         private QueueService $queueService,
+        private SettingsService $settingsService,
         private LoggerInterface $logger,
     ) {
         parent::__construct(time: $time);
-        $this->setInterval(seconds: self::INTERVAL);
+        $this->setInterval(
+            seconds: $this->settingsService->getIntValue(
+                'queue_overflow.poll_interval_seconds',
+                self::DEFAULT_INTERVAL
+            )
+        );
     }//end __construct()
 
     /**
