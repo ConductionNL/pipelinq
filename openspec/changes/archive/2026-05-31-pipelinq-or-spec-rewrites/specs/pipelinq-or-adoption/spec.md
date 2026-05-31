@@ -49,5 +49,8 @@ SHALL NOT flag the file as needing rewrite.
 - `openspec/specs/lead-management/spec.md` — minor edits per the archival+calc slice;
   existing enums kept.
 - `openspec/specs/contacts-sync/spec.md` — REWRITE per Phase 6.
-- `openspec/changes/archive/.../adr-000` — already reframed by Phase 1 PR #315; cite, do
-  not repeat.
+- `openspec/architecture/adr-000-data-model.md` — the data-model ADR (reframed in the
+  OR-adoption work) that establishes "OpenRegister owns built-in fields/capabilities; do
+  NOT redefine or rebuild". Cite, do not repeat. (Task 6.4 originally pointed at an
+  `openspec/changes/archive/.../adr-000` path; the canonical ADR actually lives under
+  `openspec/architecture/` — corrected here.)
