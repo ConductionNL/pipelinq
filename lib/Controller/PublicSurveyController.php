@@ -151,7 +151,11 @@ class PublicSurveyController extends PublicShareController
                 return $resp;
             }
 
-            $data   = is_array($survey) === true ? $survey : (array) $survey;
+            $data = (array) $survey;
+            if (is_array($survey) === true) {
+                $data = $survey;
+            }
+
             $closed = $this->checkSurveyAcceptingResponses(data: $data);
             if ($closed !== null) {
                 return $closed;
@@ -189,7 +193,10 @@ class PublicSurveyController extends PublicShareController
                 return $resp;
             }
 
-            $data = is_array($survey) === true ? $survey : (array) $survey;
+            $data = (array) $survey;
+            if (is_array($survey) === true) {
+                $data = $survey;
+            }
 
             // Replicate the status / activeUntil checks from show() so an
             // expired or inactive survey cannot still accept submissions via a

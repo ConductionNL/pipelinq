@@ -193,10 +193,10 @@ class ActivityTimelineService
      */
     private function collectActivities(string $entityType, string $entityId, array $params, array $config): array
     {
-        $typesFilter        = $this->normaliseTypes(rawTypes: ($params['types'] ?? null));
-        [$from, $to]        = $this->extractDateBounds(params: $params);
-        $perSchemaFilters   = $this->resolveEntityQueryParams(entityType: $entityType, entityId: $entityId);
-        $registerId         = $config['register'];
+        $typesFilter      = $this->normaliseTypes(rawTypes: ($params['types'] ?? null));
+        [$from, $to]      = $this->extractDateBounds(params: $params);
+        $perSchemaFilters = $this->resolveEntityQueryParams(entityType: $entityType, entityId: $entityId);
+        $registerId       = $config['register'];
 
         $merged = [];
 
@@ -258,17 +258,23 @@ class ActivityTimelineService
     /**
      * Normalize a single schema's objects into activities, applying the date filter.
      *
-     * @param iterable<mixed>     $objects    The raw objects from the schema query.
-     * @param string              $sourceType The source type / schema config key.
-     * @param string              $entityType The entity type.
-     * @param string              $entityId   The entity UUID.
-     * @param string|null         $from       The lower date bound (inclusive) or null.
-     * @param string|null         $to         The upper date bound (inclusive) or null.
+     * @param iterable<mixed> $objects    The raw objects from the schema query.
+     * @param string          $sourceType The source type / schema config key.
+     * @param string          $entityType The entity type.
+     * @param string          $entityId   The entity UUID.
+     * @param string|null     $from       The lower date bound (inclusive) or null.
+     * @param string|null     $to         The upper date bound (inclusive) or null.
      *
      * @return array<int,array<string,mixed>> The normalized, in-range activities.
      */
-    private function normalizeSchemaObjects(iterable $objects, string $sourceType, string $entityType, string $entityId, ?string $from, ?string $to): array
-    {
+    private function normalizeSchemaObjects(
+        iterable $objects,
+        string $sourceType,
+        string $entityType,
+        string $entityId,
+        ?string $from,
+        ?string $to
+    ): array {
         $activities = [];
         foreach ($objects as $object) {
             $normalized = $this->normalizeActivity(

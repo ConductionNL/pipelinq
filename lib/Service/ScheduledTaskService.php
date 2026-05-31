@@ -53,7 +53,7 @@ use Throwable;
  *  methods (getScheduledTasks / createScheduledTask / processScheduledTasks)
  *  were decomposed into small single-responsibility helpers; the class WMC is
  *  now the sum of many readable methods rather than a few complex ones.
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the collaborators a
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Wires the collaborators a
  *  task-lifecycle service legitimately needs (config, session, groups,
  *  notifications, OR container, logger, plus DateTime/exception value types).
  *
@@ -583,10 +583,10 @@ class ScheduledTaskService
      * within the cut). Non-open or not-yet-due tasks are skipped.
      *
      * @param array<string,mixed> $task       The candidate task.
-     * @param DateTimeImmutable    $now        The reference "now".
-     * @param DateTimeImmutable    $expiryCut  The expiry threshold timestamp.
-     * @param string               $registerId The configured register ID.
-     * @param string               $schemaId   The task schema ID.
+     * @param DateTimeImmutable   $now        The reference "now".
+     * @param DateTimeImmutable   $expiryCut  The expiry threshold timestamp.
+     * @param string              $registerId The configured register ID.
+     * @param string              $schemaId   The task schema ID.
      *
      * @return void
      */
@@ -630,9 +630,9 @@ class ScheduledTaskService
      * assignee notification.
      *
      * @param array<string,mixed> $task      The due task.
-     * @param DateTimeImmutable    $deadline  The parsed deadline.
-     * @param DateTimeImmutable    $expiryCut The expiry threshold.
-     * @param string               $timestamp The ATOM timestamp for the attempt.
+     * @param DateTimeImmutable   $deadline  The parsed deadline.
+     * @param DateTimeImmutable   $expiryCut The expiry threshold.
+     * @param string              $timestamp The ATOM timestamp for the attempt.
      *
      * @return array<string,mixed> The task with updated status + attempts.
      */
@@ -670,8 +670,8 @@ class ScheduledTaskService
      * Persist a processed task, logging and swallowing save failures.
      *
      * @param array<string,mixed> $task       The task to save.
-     * @param string               $registerId The configured register ID.
-     * @param string               $schemaId   The task schema ID.
+     * @param string              $registerId The configured register ID.
+     * @param string              $schemaId   The task schema ID.
      *
      * @return void
      */
