@@ -163,9 +163,56 @@ class SchedulesController extends Controller
             );
         }
 
-        $userId  = $user->getUID();
-        $isAdmin = $this->groupManager->isAdmin($userId);
+        $userId = $user->getUID();
+        $data   = $this->buildScheduledTaskData(
+            type: $type,
+            subject: $subject,
+            deadline: $deadline,
+            userId: $userId,
+            isAdmin: $this->groupManager->isAdmin($userId)
+        );
 
+        try {
+            $created = $this->scheduledTaskService->createScheduledTask($data);
+            return new JSONResponse($created, Http::STATUS_CREATED);
+        } catch (\InvalidArgumentException $e) {
+            return new JSONResponse(
+                ['message' => 'Invalid input'],
+                Http::STATUS_BAD_REQUEST
+            );
+        } catch (\Throwable $e) {
+            $this->logger->error(
+                'SchedulesController::create failed',
+                ['exception' => $e]
+            );
+            return new JSONResponse(
+                ['message' => 'Operation failed'],
+                Http::STATUS_INTERNAL_SERVER_ERROR
+            );
+        }//end try
+    }//end create()
+
+    /**
+     * Assemble the scheduled-task payload from request params.
+     *
+     * Scopes the assignee to self for non-admins and strips blank optional
+     * fields so they do not clobber schema defaults.
+     *
+     * @param string $type     The validated task type.
+     * @param string $subject  The validated subject.
+     * @param string $deadline The validated deadline.
+     * @param string $userId   The current user's UID.
+     * @param bool   $isAdmin  Whether the current user is an admin.
+     *
+     * @return array<string, string> The task data ready for the service.
+     */
+    private function buildScheduledTaskData(
+        string $type,
+        string $subject,
+        string $deadline,
+        string $userId,
+        bool $isAdmin
+    ): array {
         $requestedAssignee = (string) $this->request->getParam('assigneeUserId', '');
         // Non-admins may not assign tasks to other users; silently scope to self.
         if ($isAdmin === false && $requestedAssignee !== '' && $requestedAssignee !== $userId) {
@@ -202,25 +249,8 @@ class SchedulesController extends Controller
             }
         }
 
-        try {
-            $created = $this->scheduledTaskService->createScheduledTask($data);
-            return new JSONResponse($created, Http::STATUS_CREATED);
-        } catch (\InvalidArgumentException $e) {
-            return new JSONResponse(
-                ['message' => 'Invalid input'],
-                Http::STATUS_BAD_REQUEST
-            );
-        } catch (\Throwable $e) {
-            $this->logger->error(
-                'SchedulesController::create failed',
-                ['exception' => $e]
-            );
-            return new JSONResponse(
-                ['message' => 'Operation failed'],
-                Http::STATUS_INTERNAL_SERVER_ERROR
-            );
-        }//end try
-    }//end create()
+        return $data;
+    }//end buildScheduledTaskData()
 
     /**
      * List tasks due within a window.
