@@ -7,12 +7,13 @@
 			</p>
 		</div>
 
-		<BarcodeInput @scan="onScan" />
-
-		<NcLoadingIcon v-if="loading" :size="32" class="product-barcode-search__loading" />
+		<BarcodeScanner
+			:status="scanStatus"
+			:error-message="scanError"
+			@scan="onScan" />
 
 		<NcEmptyContent
-			v-else-if="notFoundBarcode"
+			v-if="notFoundBarcode"
 			:name="t('pipelinq', 'No product found')"
 			:description="t('pipelinq', 'No product found for barcode {barcode}', { barcode: notFoundBarcode })">
 			<template #icon>
@@ -28,26 +29,33 @@
 </template>
 
 <script>
-import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
-import { generateUrl } from '@nextcloud/router'
-import { showError } from '@nextcloud/dialogs'
+import { NcButton, NcEmptyContent } from '@nextcloud/vue'
 import BarcodeOff from 'vue-material-design-icons/BarcodeOff.vue'
-import BarcodeInput from '../../components/products/BarcodeInput.vue'
+import BarcodeScanner from '../../components/products/BarcodeScanner.vue'
+import { useBarcodeProductLookup } from '../../composables/useBarcodeProductLookup.js'
 
 export default {
 	name: 'ProductBarcodeSearch',
 	components: {
 		NcButton,
 		NcEmptyContent,
-		NcLoadingIcon,
 		BarcodeOff,
-		BarcodeInput,
+		BarcodeScanner,
+	},
+	setup() {
+		const { lookupByBarcode } = useBarcodeProductLookup()
+		return { lookupByBarcode }
 	},
 	data() {
 		return {
-			loading: false,
+			scanStatus: 'idle',
+			scanError: '',
 			notFoundBarcode: '',
+			errorTimer: null,
 		}
+	},
+	beforeDestroy() {
+		this.clearErrorTimer()
 	},
 	methods: {
 		/**
@@ -56,49 +64,69 @@ export default {
 		 * @param {string} barcode The scanned barcode.
 		 */
 		async onScan(barcode) {
-			this.loading = true
+			this.clearErrorTimer()
+			this.scanStatus = 'loading'
+			this.scanError = ''
 			this.notFoundBarcode = ''
-			try {
-				const response = await fetch(
-					generateUrl('/apps/pipelinq/api/products/barcode-lookup'),
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-						body: JSON.stringify({ barcode }),
-					},
-				)
 
-				if (response.status === 404) {
-					this.notFoundBarcode = barcode
-					return
-				}
+			const { product, variantIndex, status } = await this.lookupByBarcode(barcode)
 
-				if (!response.ok) {
-					showError(t('pipelinq', 'Barcode lookup failed'))
-					return
-				}
-
-				const data = await response.json()
-				const product = data.product || {}
+			if (status === 'found') {
+				this.scanStatus = 'found'
 				const id = product.id || product.uuid || (product['@self'] && product['@self'].id)
 				if (!id) {
-					this.notFoundBarcode = barcode
+					this.showNotFound(barcode)
 					return
 				}
-
 				const query = {}
-				if (product.matchedVariantSku) {
+				if (variantIndex !== null && product.matchedVariantSku) {
 					query.variant = product.matchedVariantSku
 				}
 				this.$router.push({ name: 'ProductDetail', params: { id }, query })
-			} catch (e) {
-				showError(t('pipelinq', 'Barcode lookup failed'))
-			} finally {
-				this.loading = false
+				return
+			}
+
+			if (status === 'ambiguous') {
+				this.scanStatus = 'error'
+				this.scanError = t('pipelinq', 'Multiple products found for barcode {barcode}', { barcode })
+				this.scheduleErrorClear()
+				return
+			}
+
+			// 'invalid' (malformed scan that fails the charset/length guard) and
+			// 'not_found' both surface as "no product found".
+			this.showNotFound(barcode)
+		},
+		/**
+		 * Show the not-found state for a barcode and auto-clear it.
+		 *
+		 * @param {string} barcode The unmatched barcode.
+		 */
+		showNotFound(barcode) {
+			this.scanStatus = 'error'
+			this.scanError = t('pipelinq', 'No product found for barcode {barcode}', { barcode })
+			this.notFoundBarcode = barcode
+			this.scheduleErrorClear()
+		},
+		/**
+		 * Auto-clear the error/empty state after 5 seconds.
+		 */
+		scheduleErrorClear() {
+			this.clearErrorTimer()
+			this.errorTimer = window.setTimeout(() => {
+				this.scanStatus = 'idle'
+				this.scanError = ''
+				this.notFoundBarcode = ''
+				this.errorTimer = null
+			}, 5000)
+		},
+		/**
+		 * Cancel any pending auto-clear timer.
+		 */
+		clearErrorTimer() {
+			if (this.errorTimer !== null) {
+				window.clearTimeout(this.errorTimer)
+				this.errorTimer = null
 			}
 		},
 		/**
@@ -124,9 +152,5 @@ export default {
 .product-barcode-search__intro {
 	color: var(--color-text-maxcontrast);
 	margin: 4px 0 0;
-}
-
-.product-barcode-search__loading {
-	margin-top: 24px;
 }
 </style>
