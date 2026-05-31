@@ -281,3 +281,15 @@
 - [ ] 8.9 Verify audit trail records creation, edits, confirmation, rejection with timestamps and user info
 - [ ] 8.10 Integration test (if applicable): Mock Shillinq webhook receiver and verify refund +
   stock movement events arrive with correct structure
+
+> **Verification status (honest):** The build (8.1) and full PHP static analysis
+> (8.2: phpcs + phpmd + phpstan all green on lib/) pass. The core logic behind the
+> manual/live scenarios is covered by `PosRefundServiceTest` (16 tests, 45 assertions):
+> partial proportional refund (8.3), restock-only stock movement emission (8.5),
+> over-refund cap incl. cumulative (8.7), reject without events (8.6), and the
+> reversal CloudEvent shape (8.10). The remaining browser scenarios (8.3 UI flow,
+> 8.4 list filters, 8.6 UI, 8.9 audit trail) and live idempotent import (8.8) require
+> a deployed instance and were NOT executed in this isolated worktree (no live
+> Shillinq/inventory consumer is configured — events are emitted fire-and-forget and
+> are a silent no-op when no subscriber exists). Seed objects use unique `@self`
+> slugs so OR's slug-matched import is idempotent by construction (8.8).
