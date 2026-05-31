@@ -31,6 +31,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for creating default queues and skills.
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-7
  */
 class DefaultQueueService
 {
@@ -104,14 +106,16 @@ class DefaultQueueService
     /**
      * Constructor.
      *
-     * @param IAppConfig         $appConfig The app config.
-     * @param ContainerInterface $container The container.
-     * @param LoggerInterface    $logger    The logger.
+     * @param IAppConfig              $appConfig        The app config.
+     * @param ContainerInterface      $container        The container.
+     * @param LoggerInterface         $logger           The logger.
+     * @param RegisterResolverService $registerResolver The register resolver.
      */
     public function __construct(
         private IAppConfig $appConfig,
         private ContainerInterface $container,
         private LoggerInterface $logger,
+        private RegisterResolverService $registerResolver,
     ) {
     }//end __construct()
 
@@ -124,7 +128,7 @@ class DefaultQueueService
      */
     public function createDefaultQueues(): void
     {
-        $registerId    = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $registerId    = $this->registerResolver->resolve('queue');
         $queueSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'queue_schema', '');
 
         if ($registerId === '' || $queueSchemaId === '') {
@@ -179,7 +183,7 @@ class DefaultQueueService
      */
     public function createDefaultSkills(): void
     {
-        $registerId    = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $registerId    = $this->registerResolver->resolve('queue');
         $skillSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'skill_schema', '');
 
         if ($registerId === '' || $skillSchemaId === '') {

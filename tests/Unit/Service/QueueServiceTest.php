@@ -21,6 +21,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\QueueService;
+use OCA\Pipelinq\Service\RegisterResolverService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -81,6 +82,7 @@ class QueueServiceTest extends TestCase
             appConfig: $this->appConfig,
             container: $this->container,
             logger: $this->logger,
+            registerResolver: new RegisterResolverService(appConfig: $this->appConfig),
         );
     }//end buildService()
 
