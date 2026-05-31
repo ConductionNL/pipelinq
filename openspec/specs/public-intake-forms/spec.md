@@ -561,3 +561,88 @@ The system MUST provide analytics for form performance monitoring.
 - **Resolved:** AVG compliance addressed via IP hashing, data retention, and deletion support.
 - **Design decision:** Forms support single-page layout only (no multi-step wizards in MVP/V1). Multi-step forms may be added as Enterprise feature.
 - **Design decision:** Duplicate contact handling uses email as primary dedup key, with phone as secondary soft match (logged but not blocked).
+## Requirements
+### Requirement: Public survey rendering and submission — documented operations
+
+The public survey display and submission implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `show`, `submit`). Each listed method realises an observable part of public survey display and submission and MUST behave as implemented in the current codebase.
+
+**Feature tier**: V1
+
+#### Scenario: Documented operations are available
+
+- GIVEN the backend service/controller is loaded
+- WHEN a caller invokes one of the documented operations for public survey display and submission
+- THEN the operation MUST execute and return a result consistent with the current implementation
+
+---
+
+### Requirement: Public survey rendering and submission — results derived from current CRM state
+
+Operations for public survey display and submission MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
+
+**Feature tier**: V1
+
+#### Scenario: Results reflect live state
+
+- GIVEN CRM data backing public survey display and submission
+- WHEN a documented operation runs
+- THEN its output MUST be derived from that data
+- AND it MUST change when the underlying data changes
+
+---
+
+### Requirement: Public survey rendering and submission — defensive handling of absent or invalid input
+
+Operations for public survey display and submission MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
+
+**Feature tier**: V1
+
+#### Scenario: Missing input does not crash the flow
+
+- GIVEN an operation for public survey display and submission is called with absent or invalid input
+- WHEN it executes
+- THEN it MUST return a safe default or a validation result
+- AND it MUST NOT raise an unhandled exception
+
+### Requirement: Forms and surveys UI — documented operations
+
+The intake form and survey builder/runner screens implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `add`, `addOpt`, `emit`, `remove`, `rmOpt`, `addField`). Each listed method realises an observable part of intake form and survey builder/runner screens and MUST behave as implemented in the current codebase.
+
+**Feature tier**: V1
+
+#### Scenario: Documented operations are available
+
+- GIVEN the frontend component/store is loaded
+- WHEN a caller invokes one of the documented operations for intake form and survey builder/runner screens
+- THEN the operation MUST execute and return a result consistent with the current implementation
+
+---
+
+### Requirement: Forms and surveys UI — results derived from current CRM state
+
+Operations for intake form and survey builder/runner screens MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
+
+**Feature tier**: V1
+
+#### Scenario: Results reflect live state
+
+- GIVEN CRM data backing intake form and survey builder/runner screens
+- WHEN a documented operation runs
+- THEN its output MUST be derived from that data
+- AND it MUST change when the underlying data changes
+
+---
+
+### Requirement: Forms and surveys UI — defensive handling of absent or invalid input
+
+Operations for intake form and survey builder/runner screens MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
+
+**Feature tier**: V1
+
+#### Scenario: Missing input does not crash the flow
+
+- GIVEN an operation for intake form and survey builder/runner screens is called with absent or invalid input
+- WHEN it executes
+- THEN it MUST return a safe default or a validation result
+- AND it MUST NOT raise an unhandled exception
+
