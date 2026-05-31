@@ -47,6 +47,16 @@
 				@click="showRefund = true">
 				{{ t('pipelinq', 'Terugboeken') }}
 			</NcButton>
+			<NcButton v-if="canIssueReceipt"
+				type="secondary"
+				@click="showPrint = true">
+				{{ t('pipelinq', 'Print Receipt') }}
+			</NcButton>
+			<NcButton v-if="canIssueReceipt"
+				type="secondary"
+				@click="showEmail = true">
+				{{ t('pipelinq', 'Email Receipt') }}
+			</NcButton>
 		</template>
 
 		<CnDetailCard :title="t('pipelinq', 'Transaction information')">
@@ -142,6 +152,20 @@
 			:submitting="busy"
 			@close="showRefund = false"
 			@confirm="refund" />
+
+		<PrintReceiptModal
+			v-if="showPrint"
+			:transaction-id="transactionId"
+			:templates="receiptTemplates"
+			@close="showPrint = false"
+			@printed="onReceiptIssued" />
+
+		<EmailReceiptModal
+			v-if="showEmail"
+			:transaction-id="transactionId"
+			:templates="receiptTemplates"
+			@close="showEmail = false"
+			@sent="onReceiptIssued" />
 	</CnDetailPage>
 </template>
 
@@ -153,6 +177,8 @@ import { CnDetailPage, CnDetailCard, CnStatusBadge } from '@conduction/nextcloud
 import PosTotalsPanel from '../../components/pos/PosTotalsPanel.vue'
 import TaxBreakdownCard from '../../components/pos/TaxBreakdownCard.vue'
 import PosRefundDialog from '../../modals/PosRefundDialog.vue'
+import PrintReceiptModal from '../../modals/PrintReceiptModal.vue'
+import EmailReceiptModal from '../../modals/EmailReceiptModal.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { formatEur } from '../../services/posTotals.js'
 
@@ -174,6 +200,8 @@ export default {
 		PosTotalsPanel,
 		TaxBreakdownCard,
 		PosRefundDialog,
+		PrintReceiptModal,
+		EmailReceiptModal,
 	},
 	props: {
 		posTransactionId: {
@@ -188,6 +216,9 @@ export default {
 			loading: false,
 			busy: false,
 			showRefund: false,
+			showPrint: false,
+			showEmail: false,
+			receiptTemplates: [],
 		}
 	},
 	computed: {
@@ -274,6 +305,14 @@ export default {
 			return ['confirmed', 'settled'].includes(this.status) && this.isManager
 		},
 		/**
+		 * Whether a receipt may be issued (only fiscally-final transactions).
+		 *
+		 * @return {boolean} Whether to show the receipt actions.
+		 */
+		canIssueReceipt() {
+			return ['confirmed', 'settled', 'refunded'].includes(this.status)
+		},
+		/**
 		 * Sidebar props (files / notes / audit trail).
 		 *
 		 * @return {object} The props.
@@ -304,9 +343,28 @@ export default {
 				this.lines = rows
 					.filter(l => l.transaction === this.transactionId)
 					.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+				await this.loadReceiptTemplates()
 			} finally {
 				this.loading = false
 			}
+		},
+		/**
+		 * Load the active receipt templates for the print/email modal pickers.
+		 */
+		async loadReceiptTemplates() {
+			try {
+				await this.objectStore.fetchCollection('receiptTemplate', { status: 'active', _limit: 100 })
+				const rows = this.objectStore.getCollection('receiptTemplate')?.results || []
+				this.receiptTemplates = rows.filter(tpl => (tpl.status || 'active') === 'active')
+			} catch (e) {
+				this.receiptTemplates = []
+			}
+		},
+		/**
+		 * Reload after a receipt is printed or emailed (the audit log changes).
+		 */
+		async onReceiptIssued() {
+			await this.load()
 		},
 		/**
 		 * Navigate to the editor.

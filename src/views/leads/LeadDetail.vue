@@ -190,7 +190,7 @@ export default {
 			clientData: null,
 			contactData: null,
 			pipelineData: null,
-			_valueOverride: false,
+			valueOverridden: false,
 		}
 	},
 	computed: {
@@ -354,13 +354,13 @@ export default {
 			})
 			const computedTotal = (items || []).reduce((sum, lp) => sum + (Number(lp.total) || 0), 0)
 			const value = Number(this.leadData.value) || 0
-			this._valueOverride = value !== 0 && Math.abs(value - computedTotal) > 0.001
+			this.valueOverridden = value !== 0 && Math.abs(value - computedTotal) > 0.001
 		},
 		/**
 		 * @spec openspec/changes/2026-03-20-lead-product-link/tasks.md#task-3.2
 		 */
 		async onProductValueChanged(newTotal) {
-			if (!this._valueOverride) {
+			if (!this.valueOverridden) {
 				await this.syncLeadValue(newTotal)
 			}
 		},
@@ -373,7 +373,7 @@ export default {
 				value,
 			})
 			await this.objectStore.fetchObject('lead', this.leadId)
-			this._valueOverride = false
+			this.valueOverridden = false
 		},
 	},
 }
