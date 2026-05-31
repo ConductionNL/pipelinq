@@ -193,6 +193,31 @@
               "nl": "Nieuwe lead: {{title}}",
               "en": "New lead: {{title}}"
             }
+          },
+          "leadWon": {
+            "trigger": { "type": "transition", "action": "win" },
+            "enabled": true,
+            "channels": ["nc-notification"],
+            "recipients": [
+              { "kind": "groups", "groups": ["sales"] },
+              { "kind": "field", "field": "assignee" }
+            ],
+            "subject": {
+              "nl": "Lead gewonnen: {{title}}",
+              "en": "Lead won: {{title}}"
+            }
+          },
+          "leadLost": {
+            "trigger": { "type": "transition", "action": "lose" },
+            "enabled": true,
+            "channels": ["nc-notification"],
+            "recipients": [
+              { "kind": "field", "field": "assignee" }
+            ],
+            "subject": {
+              "nl": "Lead verloren: {{title}}",
+              "en": "Lead lost: {{title}}"
+            }
           }
         },
         "title": "Lead",
@@ -324,6 +349,20 @@
       },
       "request": {
         "slug": "request",
+        "x-openregister-notifications": {
+          "requestCompleted": {
+            "trigger": { "type": "transition", "action": "complete" },
+            "enabled": true,
+            "channels": ["nc-notification"],
+            "recipients": [
+              { "kind": "field", "field": "assignee" }
+            ],
+            "subject": {
+              "nl": "Verzoek afgehandeld: {{title}}",
+              "en": "Request completed: {{title}}"
+            }
+          }
+        },
         "title": "Request",
         "icon": "FileDocumentOutline",
         "version": "1.1.0",
@@ -464,6 +503,20 @@
       },
       "complaint": {
         "slug": "complaint",
+        "x-openregister-notifications": {
+          "complaintResolved": {
+            "trigger": { "type": "transition", "action": "resolve" },
+            "enabled": true,
+            "channels": ["nc-notification"],
+            "recipients": [
+              { "kind": "field", "field": "assignee" }
+            ],
+            "subject": {
+              "nl": "Klacht opgelost: {{title}}",
+              "en": "Complaint resolved: {{title}}"
+            }
+          }
+        },
         "title": "Complaint",
         "icon": "AlertCircleOutline",
         "version": "1.0.0",
@@ -1099,6 +1152,32 @@
       },
       "task": {
         "slug": "task",
+        "x-openregister-notifications": {
+          "taskCompleted": {
+            "trigger": { "type": "transition", "action": "complete" },
+            "enabled": true,
+            "channels": ["nc-notification"],
+            "recipients": [
+              { "kind": "field", "field": "assignee" }
+            ],
+            "subject": {
+              "nl": "Taak afgerond: {{subject}}",
+              "en": "Task completed: {{subject}}"
+            }
+          },
+          "taskExpired": {
+            "trigger": { "type": "transition", "action": "expire" },
+            "enabled": true,
+            "channels": ["nc-notification"],
+            "recipients": [
+              { "kind": "field", "field": "assignee" }
+            ],
+            "subject": {
+              "nl": "Taak verlopen: {{subject}}",
+              "en": "Task expired: {{subject}}"
+            }
+          }
+        },
         "title": "Task",
         "icon": "ClipboardCheck",
         "version": "1.1.0",

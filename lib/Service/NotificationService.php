@@ -32,6 +32,23 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for sending Pipelinq notifications.
+ *
+ * Lifecycle-driven notifications (lead won/lost, task completed/expired,
+ * request completed, complaint resolved) are also declared declaratively as
+ * `x-openregister-notifications` transition triggers in
+ * `lib/Settings/pipelinq_register.json`, keyed on the lifecycle transition
+ * NAMES (`win`, `lose`, `complete`, `expire`, `resolve`) so OpenRegister's
+ * AnnotationNotificationDispatcher matches them against
+ * `ObjectTransitionedEvent::getAction()`. Those annotation rules stay DORMANT
+ * until pipelinq routes its status changes through OpenRegister's
+ * TransitionEngine (today status is written directly via `saveObject`, which
+ * does not dispatch `ObjectTransitionedEvent`). Until that migration lands the
+ * imperative `send()` path below remains the live delivery mechanism and is
+ * retained verbatim to preserve behaviour, including the per-user opt-out
+ * settings in {@see self::SUBJECT_SETTING_MAP} that the annotation runtime does
+ * not yet replicate.
+ *
+ * @spec openspec/changes/pipelinq-or-lifecycle-notification/tasks.md#task-3.1
  */
 class NotificationService
 {
