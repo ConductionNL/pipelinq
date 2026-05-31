@@ -705,6 +705,7 @@ The system SHOULD support scoring leads based on configurable qualification crit
 - THEN the system MUST calculate `qualificationScore` based on all enabled criteria
 - AND the score for this lead SHOULD be: 10 (value present) + 20 (above threshold) + 15 (client linked) + 15 (source referral) + 10 (close date within 30 days) + 10 (priority high) = 80
 - AND the score MUST be stored on the lead object as `qualificationScore`
+- AND the calculation MUST be expressed as an `x-openregister-calculations.qualificationScore` annotation (`materialise: true`) on the `lead` schema and evaluated by OpenRegister on save — Pipelinq MUST NOT carry a duplicate frontend or PHP scoring implementation (see the archival+calc slice, archived at `openspec/changes/archive/2026-05-31-pipelinq-or-archival-calculations/`)
 
 #### Scenario: Display qualification score on lead list and detail
 
@@ -930,6 +931,7 @@ The system SHOULD provide reporting and analytics for lead management performanc
 - AND the system MUST display weighted value per stage (value * probability for each lead, summed)
 - AND the system MUST display the total pipeline value (sum of all open leads)
 - AND the system MUST display the weighted pipeline value (sum of all weighted values)
+- AND each lead's weighted value (`value * probability / 100`) MUST come from the `x-openregister-calculations.weightedValue` annotation on the `lead` schema (see the archival+calc slice) rather than a re-implemented frontend formula; stage/pipeline aggregation over those per-lead values remains a view concern. Cross-schema lead-value aggregation from `leadProduct` line items is a separate, view-level summation (not a single-object calculation annotation).
 
 #### Scenario: Lead conversion rate by source
 @e2e exclude analytics; V1 feature
@@ -1089,4 +1091,8 @@ NOT implemented:
 - **Gap**: The spec says leads should be placed on the "first non-closed stage" of the default pipeline on creation, but this default assignment logic may not be implemented in the frontend form.
 - **Gap**: The spec references `currency` as a separate field (ISO 4217), but the schema does not include a `currency` property -- EUR is assumed/hardcoded in the UI.
 - **Open question**: Should lead validation happen in a Pipelinq validation service or rely entirely on OpenRegister's JSON Schema validation?
-- **Open question**: Should lead scoring be computed on the frontend (Vue computed property) or backend (n8n workflow / PHP service)?
+- **Resolved (archival+calc slice)**: Lead scoring and weighted value are computed by OpenRegister, not by a Vue computed property or a bespoke PHP/n8n service — they are declared as `x-openregister-calculations` annotations (`qualificationScore` with `materialise: true`; `weightedValue` derived) on the `lead` schema and evaluated by OpenRegister's calculation engine. See `openspec/changes/archive/2026-05-31-pipelinq-or-archival-calculations/`.
+
+### See Also
+- `openspec/specs/openregister-integration/spec.md` — CURRENT exemplar for OpenRegister consumption, the `createObjectStore` object store, and schema-annotation conventions.
+- `openspec/changes/archive/2026-05-31-pipelinq-or-archival-calculations/` — declares the `x-openregister-calculations` annotations (`qualificationScore`, `weightedValue`) and archival retention annotations consumed by this spec. The enum patterns in the field table above (`source`, `priority`) are intentionally retained as schema enums and were not migrated to calculations.
