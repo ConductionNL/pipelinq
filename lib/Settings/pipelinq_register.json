@@ -862,11 +862,158 @@
           },
           "taxRate": {
             "type": "number",
-            "description": "Tax percentage (0-100). Default: 21 (Dutch BTW)",
+            "description": "Tax percentage (0-100). Default: 21 (Dutch BTW). Auto-populated from btwClass when set.",
             "minimum": 0,
             "maximum": 100,
             "default": 21,
             "visible": false
+          },
+          "btwClass": {
+            "type": "string",
+            "description": "Dutch BTW class. Governs receipt printing and invoice BTW labels and drives taxRate: hoog (21%), laag (9%), nul (0%), vrijgesteld (exempt, 0%).",
+            "enum": [
+              "hoog",
+              "laag",
+              "nul",
+              "vrijgesteld"
+            ],
+            "title": "BTW Class",
+            "facetable": true
+          },
+          "barcode": {
+            "type": "string",
+            "description": "EAN-13 / UPC-A barcode for scanner lookup (schema:gtin)",
+            "maxLength": 64
+          },
+          "duration": {
+            "type": "integer",
+            "description": "Service duration in minutes (behandelingen, afspraken). Relevant when type=service.",
+            "minimum": 0,
+            "visible": false
+          },
+          "variants": {
+            "type": "array",
+            "description": "Variant matrix (e.g. size x colour). Each entry has its own sku, price override and barcode.",
+            "visible": false,
+            "items": {
+              "type": "object",
+              "properties": {
+                "sku": {
+                  "type": "string",
+                  "description": "Variant stock keeping unit (unique within the product)",
+                  "maxLength": 100
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Human-readable variant label",
+                  "maxLength": 255
+                },
+                "attributes": {
+                  "type": "object",
+                  "description": "Attribute key to value map (e.g. {\"maat\": \"S\", \"kleur\": \"Wit\"})"
+                },
+                "unitPrice": {
+                  "type": "number",
+                  "description": "Per-variant selling price in EUR. Defaults to the parent product unitPrice.",
+                  "minimum": 0
+                },
+                "barcode": {
+                  "type": "string",
+                  "description": "Per-variant EAN/UPC barcode",
+                  "maxLength": 64
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Whether the variant is available for sale",
+                  "enum": [
+                    "active",
+                    "inactive"
+                  ],
+                  "default": "active"
+                }
+              }
+            }
+          },
+          "modifierGroups": {
+            "type": "array",
+            "description": "Configurable add-on groups prompted at POS checkout (e.g. milk type, toppings).",
+            "visible": false,
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Modifier group name",
+                  "maxLength": 255
+                },
+                "required": {
+                  "type": "boolean",
+                  "description": "Whether the customer must choose at least one option",
+                  "default": false
+                },
+                "multiSelect": {
+                  "type": "boolean",
+                  "description": "Whether multiple options may be selected",
+                  "default": false
+                },
+                "min": {
+                  "type": "integer",
+                  "description": "Minimum number of options to select",
+                  "minimum": 0,
+                  "default": 0
+                },
+                "max": {
+                  "type": "integer",
+                  "description": "Maximum number of options to select",
+                  "minimum": 0,
+                  "default": 1
+                },
+                "options": {
+                  "type": "array",
+                  "description": "Selectable options with their price adjustments",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Option name",
+                        "maxLength": 255
+                      },
+                      "priceAdjustment": {
+                        "type": "number",
+                        "description": "Amount added to (or subtracted from) the line price in EUR",
+                        "default": 0
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "priceTiers": {
+            "type": "array",
+            "description": "Quantity-break pricing. The applicable tier is the one with the highest minQuantity that is at most the ordered quantity. Stored sorted ascending by minQuantity.",
+            "visible": false,
+            "items": {
+              "type": "object",
+              "properties": {
+                "minQuantity": {
+                  "type": "integer",
+                  "description": "Minimum ordered quantity for this tier to apply",
+                  "minimum": 1
+                },
+                "unitPrice": {
+                  "type": "number",
+                  "description": "Per-unit price in EUR when the tier applies",
+                  "minimum": 0
+                },
+                "label": {
+                  "type": "string",
+                  "description": "Human-readable tier label",
+                  "maxLength": 255
+                }
+              }
+            }
           },
           "image": {
             "type": "string",
@@ -2668,6 +2815,129 @@
         "lineTotal": 850.99,
         "sortOrder": 1,
         "notes": "Serienummer: NB-4821-X"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "product", "slug": "product-cappuccino" },
+        "name": "Cappuccino",
+        "description": "Verse espresso met opgeklopte melk",
+        "sku": "DRK-001",
+        "barcode": "8714100838623",
+        "unitPrice": 3.50,
+        "type": "product",
+        "status": "active",
+        "unit": "stuk",
+        "taxRate": 9,
+        "btwClass": "laag",
+        "modifierGroups": [
+          {
+            "name": "Melksoort",
+            "required": false,
+            "multiSelect": false,
+            "min": 0,
+            "max": 1,
+            "options": [
+              { "name": "Volle melk", "priceAdjustment": 0 },
+              { "name": "Halfvolle melk", "priceAdjustment": 0 },
+              { "name": "Havermelk", "priceAdjustment": 0.60 },
+              { "name": "Amandelmelk", "priceAdjustment": 0.60 }
+            ]
+          },
+          {
+            "name": "Grootte",
+            "required": true,
+            "multiSelect": false,
+            "min": 1,
+            "max": 1,
+            "options": [
+              { "name": "Klein (150ml)", "priceAdjustment": 0 },
+              { "name": "Groot (250ml)", "priceAdjustment": 0.80 }
+            ]
+          }
+        ]
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "product", "slug": "product-tshirt-conduction" },
+        "name": "T-shirt Conduction",
+        "description": "Unisex katoenen T-shirt met Conduction logo",
+        "sku": "KLD-TSH-001",
+        "barcode": "8712345600001",
+        "unitPrice": 19.95,
+        "type": "product",
+        "status": "active",
+        "unit": "stuk",
+        "taxRate": 21,
+        "btwClass": "hoog",
+        "variants": [
+          { "sku": "TSH-S-WIT", "name": "S — Wit", "attributes": { "maat": "S", "kleur": "Wit" }, "unitPrice": 19.95, "barcode": "8712345600002", "status": "active" },
+          { "sku": "TSH-M-WIT", "name": "M — Wit", "attributes": { "maat": "M", "kleur": "Wit" }, "unitPrice": 19.95, "barcode": "8712345600003", "status": "active" },
+          { "sku": "TSH-L-WIT", "name": "L — Wit", "attributes": { "maat": "L", "kleur": "Wit" }, "unitPrice": 19.95, "barcode": "8712345600004", "status": "active" },
+          { "sku": "TSH-S-ZWA", "name": "S — Zwart", "attributes": { "maat": "S", "kleur": "Zwart" }, "unitPrice": 19.95, "barcode": "8712345600005", "status": "active" },
+          { "sku": "TSH-M-ZWA", "name": "M — Zwart", "attributes": { "maat": "M", "kleur": "Zwart" }, "unitPrice": 19.95, "barcode": "8712345600006", "status": "active" },
+          { "sku": "TSH-L-ZWA", "name": "L — Zwart", "attributes": { "maat": "L", "kleur": "Zwart" }, "unitPrice": 21.95, "barcode": "8712345600007", "status": "active" }
+        ]
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "product", "slug": "product-a4-papier-500vel" },
+        "name": "A4 Papier 500 vel",
+        "description": "Wit kopieerpapier 80 g/m², pak van 500 vel",
+        "sku": "KAN-PAP-001",
+        "barcode": "8711764155064",
+        "unitPrice": 5.49,
+        "type": "product",
+        "status": "active",
+        "unit": "pak",
+        "taxRate": 21,
+        "btwClass": "hoog",
+        "priceTiers": [
+          { "minQuantity": 1, "unitPrice": 5.49, "label": "Losse verpakking" },
+          { "minQuantity": 5, "unitPrice": 4.75, "label": "Doos (5 pakken)" },
+          { "minQuantity": 10, "unitPrice": 4.25, "label": "Pallet (10+ pakken)" }
+        ]
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "product", "slug": "product-knippen-fohnen" },
+        "name": "Knippen en Föhnen",
+        "description": "Wassen, knippen en föhnen bij de kapper",
+        "sku": "SRV-KAP-001",
+        "unitPrice": 42.50,
+        "type": "service",
+        "status": "active",
+        "unit": "behandeling",
+        "taxRate": 21,
+        "btwClass": "hoog",
+        "duration": 60,
+        "modifierGroups": [
+          {
+            "name": "Extra behandeling",
+            "required": false,
+            "multiSelect": true,
+            "min": 0,
+            "max": 3,
+            "options": [
+              { "name": "Kleur bijwerken", "priceAdjustment": 25.00 },
+              { "name": "Voedingsmasker", "priceAdjustment": 12.50 },
+              { "name": "Hoofdmassage", "priceAdjustment": 8.00 }
+            ]
+          }
+        ]
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "product", "slug": "product-adviesgesprek" },
+        "name": "Adviesgesprek",
+        "description": "Persoonlijk adviesgesprek met een gecertificeerd consultant",
+        "sku": "SRV-ADV-001",
+        "unitPrice": 125.00,
+        "type": "service",
+        "status": "active",
+        "unit": "uur",
+        "taxRate": 0,
+        "btwClass": "vrijgesteld",
+        "duration": 60,
+        "priceTiers": [
+          { "minQuantity": 1, "unitPrice": 125.00, "label": "Enkel gesprek" },
+          { "minQuantity": 4, "unitPrice": 110.00, "label": "Pakket 4 gesprekken" },
+          { "minQuantity": 10, "unitPrice": 95.00, "label": "Jaarprogramma (10+)" }
+        ]
       }
     ]
   }

@@ -70,6 +70,18 @@
 					<span>{{ productData.taxRate !== undefined ? productData.taxRate + '%' : '21%' }}</span>
 				</div>
 				<div class="info-field">
+					<label>{{ t('pipelinq', 'BTW Class') }}</label>
+					<span>{{ btwClassLabel }}</span>
+				</div>
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Barcode') }}</label>
+					<span>{{ productData.barcode || '-' }}</span>
+				</div>
+				<div v-if="productData.type === 'service'" class="info-field">
+					<label>{{ t('pipelinq', 'Duration') }}</label>
+					<span>{{ durationLabel }}</span>
+				</div>
+				<div class="info-field">
 					<label>{{ t('pipelinq', 'Category') }}</label>
 					<span>{{ categoryName || '-' }}</span>
 				</div>
@@ -78,6 +90,25 @@
 				<label>{{ t('pipelinq', 'Description') }}</label>
 				<p>{{ productData.description }}</p>
 			</div>
+		</CnDetailCard>
+
+		<CnDetailCard :title="t('pipelinq', 'Variants')">
+			<ProductVariantPanel
+				:product="productData"
+				:highlight-sku="highlightVariantSku"
+				@saved="onPanelSaved" />
+		</CnDetailCard>
+
+		<CnDetailCard :title="t('pipelinq', 'Modifier groups')">
+			<ModifierGroupPanel
+				:product="productData"
+				@saved="onPanelSaved" />
+		</CnDetailCard>
+
+		<CnDetailCard :title="t('pipelinq', 'Price tiers')">
+			<PriceTierTable
+				:product="productData"
+				@saved="onPanelSaved" />
 		</CnDetailCard>
 
 		<CnDetailCard :title="t('pipelinq', 'Linked Leads')">
@@ -117,6 +148,9 @@ import { NcButton } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import ProductForm from './ProductForm.vue'
+import ProductVariantPanel from '../../components/products/ProductVariantPanel.vue'
+import ModifierGroupPanel from '../../components/products/ModifierGroupPanel.vue'
+import PriceTierTable from '../../components/products/PriceTierTable.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { formatCurrency as formatLocaleCurrency } from '../../services/localeUtils.js'
 
@@ -127,6 +161,9 @@ export default {
 		CnDetailPage,
 		CnDetailCard,
 		ProductForm,
+		ProductVariantPanel,
+		ModifierGroupPanel,
+		PriceTierTable,
 	},
 	props: {
 		productId: {
@@ -176,6 +213,44 @@ export default {
 				hiddenTabs: ['tasks'],
 			}
 		},
+		/**
+		 * Human-readable BTW class label.
+		 *
+		 * @return {string} The label.
+		 */
+		btwClassLabel() {
+			const map = {
+				hoog: t('pipelinq', 'Hoog (21%)'),
+				laag: t('pipelinq', 'Laag (9%)'),
+				nul: t('pipelinq', 'Nul (0%)'),
+				vrijgesteld: t('pipelinq', 'Vrijgesteld'),
+			}
+			return map[this.productData.btwClass] || '-'
+		},
+		/**
+		 * Human-readable service duration label.
+		 *
+		 * @return {string} The label.
+		 */
+		durationLabel() {
+			const minutes = Number(this.productData.duration)
+			if (!minutes) {
+				return '-'
+			}
+			if (minutes % 60 === 0) {
+				const hours = minutes / 60
+				return t('pipelinq', '{count} hour(s)', { count: hours })
+			}
+			return t('pipelinq', '{count} minute(s)', { count: minutes })
+		},
+		/**
+		 * Variant SKU to highlight from the barcode-search ?variant query.
+		 *
+		 * @return {string} The SKU.
+		 */
+		highlightVariantSku() {
+			return this.$route?.query?.variant || ''
+		},
 	},
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-7
@@ -203,6 +278,12 @@ export default {
 				const error = this.objectStore.getError('product')
 				showError(error?.message || t('pipelinq', 'Failed to save product. Please try again.'))
 			}
+		},
+		/**
+		 * Refresh the product after a variant / modifier / tier panel saved.
+		 */
+		async onPanelSaved() {
+			await this.objectStore.fetchObject('product', this.productId)
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-9
