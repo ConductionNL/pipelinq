@@ -1,3 +1,5 @@
+> SUPERSEDED 2026-05-31: feature implemented; archived twin archive/2026-02-25-pipeline-foundation. Archived as already-delivered.
+
 # Proposal: pipeline search and stage validation
 
 ## Problem

@@ -1,3 +1,5 @@
+> SUPERSEDED 2026-05-31: feature implemented; archived twin archive/2026-03-21-omnichannel-registratie. Archived as already-delivered.
+
 # Proposal: omnichannel-registratie
 
 ## Problem
