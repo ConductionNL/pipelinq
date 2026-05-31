@@ -98,11 +98,11 @@ class ProductCatalogService
      */
     public function btwClassToRate(?string $btwClass): int
     {
-        if ($btwClass === null || $btwClass === '') {
+        if ($this->isValidBtwClass(btwClass: $btwClass) === false) {
             return self::BTW_CLASS_RATES['hoog'];
         }
 
-        return self::BTW_CLASS_RATES[$btwClass] ?? self::BTW_CLASS_RATES['hoog'];
+        return self::BTW_CLASS_RATES[$btwClass];
     }//end btwClassToRate()
 
     /**
