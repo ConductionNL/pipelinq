@@ -113,10 +113,11 @@ class ReceiptDeliveryService
         $html = $this->receiptService->renderHtml(transaction: $transaction, template: $template);
 
         return [
-            'text'      => $text,
-            'html'      => $html,
-            'isInvoice' => $this->receiptService->isInvoiceTransaction(transaction: $transaction),
-            'reference' => (string) ($transaction['reference'] ?? $transaction['id'] ?? ''),
+            'text'          => $text,
+            'html'          => $html,
+            'isInvoice'     => $this->receiptService->isInvoiceTransaction(transaction: $transaction),
+            'reference'     => (string) ($transaction['reference'] ?? $transaction['id'] ?? ''),
+            'customerEmail' => $this->customerEmail(transaction: $transaction),
         ];
     }//end preview()
 
