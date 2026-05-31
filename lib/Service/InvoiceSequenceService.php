@@ -136,9 +136,14 @@ class InvoiceSequenceService
         $storedYear = $this->appConfig->getValueInt(Application::APP_ID, self::COUNTER_YEAR_KEY, 0);
         $current    = $this->appConfig->getValueInt(Application::APP_ID, self::COUNTER_KEY, 0);
 
-        // New year (or first ever use): reset the sequence under its own CAS.
+        // New year (or first ever use): reset the sequence. The stored counter
+        // is zeroed so the compare-and-set below (expected: 0) matches and the
+        // first invoice of the new year becomes ...-000001. setValueInt is a no-op
+        // when the value already matches, so a concurrent caller that already
+        // reset is harmless.
         if ($storedYear !== $year) {
             $this->appConfig->setValueInt(Application::APP_ID, self::COUNTER_YEAR_KEY, $year);
+            $this->appConfig->setValueInt(Application::APP_ID, self::COUNTER_KEY, 0);
             $current = 0;
         }
 
@@ -169,7 +174,7 @@ class InvoiceSequenceService
      *
      * @return int The number of updated rows.
      */
-    private function casCounter(int $expected, int $next): int
+    protected function casCounter(int $expected, int $next): int
     {
         $qb = $this->db->getQueryBuilder();
         $qb->update('appconfig')
@@ -190,7 +195,7 @@ class InvoiceSequenceService
      *
      * @return int 1 if this call set the value to 1, else 0.
      */
-    private function seedCounter(): int
+    protected function seedCounter(): int
     {
         $existing = $this->appConfig->getValueInt(Application::APP_ID, self::COUNTER_KEY, 0);
         if ($existing !== 0) {
