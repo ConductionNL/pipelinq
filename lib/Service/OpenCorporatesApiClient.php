@@ -23,7 +23,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\AppInfo\Application;
 use OCP\Http\Client\IClientService;
+use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -32,25 +34,51 @@ use Psr\Log\LoggerInterface;
 class OpenCorporatesApiClient
 {
     /**
-     * OpenCorporates API base URL.
+     * Default OpenCorporates API base URL when unconfigured.
+     *
+     * The effective base URL is admin-tunable via
+     * `pipelinq.opencorporates.api_base_url`. The value is admin-only (written
+     * through the admin-gated SettingsController); no end-user input reaches
+     * the request URL, so there is no SSRF regression.
      *
      * @var string
      */
-    private const API_BASE = 'https://api.opencorporates.com/v0.4';
+    private const DEFAULT_API_BASE = 'https://api.opencorporates.com/v0.4';
 
     /**
      * Constructor.
      *
      * @param IClientService             $clientService The HTTP client service.
+     * @param IAppConfig                 $appConfig     The app config.
      * @param LoggerInterface            $logger        The logger.
      * @param OpenCorporatesResultMapper $resultMapper  The result mapper.
      */
     public function __construct(
         private IClientService $clientService,
+        private IAppConfig $appConfig,
         private LoggerInterface $logger,
         private OpenCorporatesResultMapper $resultMapper,
     ) {
     }//end __construct()
+
+    /**
+     * Get the admin-configured OpenCorporates API base URL.
+     *
+     * Default https://api.opencorporates.com/v0.4.
+     *
+     * @return string The base URL with no trailing slash.
+     */
+    private function getApiBase(): string
+    {
+        return rtrim(
+            $this->appConfig->getValueString(
+                Application::APP_ID,
+                'opencorporates.api_base_url',
+                self::DEFAULT_API_BASE
+            ),
+            '/'
+        );
+    }//end getApiBase()
 
     /**
      * Search OpenCorporates for Dutch companies.
@@ -122,7 +150,7 @@ class OpenCorporatesApiClient
             'order'             => 'score',
         ];
 
-        $url = self::API_BASE.'/companies/search?'.http_build_query(data: $queryParams);
+        $url = $this->getApiBase().'/companies/search?'.http_build_query(data: $queryParams);
 
         $client   = $this->clientService->newClient();
         $response = $client->get(
