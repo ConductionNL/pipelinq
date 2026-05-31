@@ -6,12 +6,30 @@ on:
   pull_request:
     branches: [main, beta, development]
   workflow_dispatch:
+  # Weekly smoke-test cron (pipelinq-quality-phpstan-burndown, Phase 5). A
+  # scheduled run always uses the default branch's workflow file and ref
+  # (development), so this re-runs the full strict gate suite — phpcs, phpmd,
+  # psalm, phpstan (composer check:strict equivalent) plus phpunit — against
+  # development once a week to catch drift between PRs. Mondays 06:00 UTC.
+  schedule:
+    - cron: "0 6 * * 1"
 
 jobs:
   quality:
     uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
       app-name: pipelinq
+      # Strict static-analysis gate suite (composer check:strict equivalent).
+      # These mirror the shared-workflow defaults (all true) but are pinned
+      # here explicitly so the strict-gate posture is self-documenting and
+      # cannot regress silently if the shared defaults ever change.
+      enable-phpcs: true
+      enable-phpmd: true
+      enable-psalm: true
+      enable-phpstan: true
+      enable-phpmetrics: true
+      enable-frontend: true
+      enable-eslint: true
       enable-sbom: true
       enable-phpunit: true
       # Newman: tests/newman/pipelinq-api.postman_collection.json doesn't pass
