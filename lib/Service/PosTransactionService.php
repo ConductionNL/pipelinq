@@ -53,7 +53,7 @@ use Psr\Log\LoggerInterface;
  *  persistence helpers) as many small, single-purpose methods; the cohesion is
  *  intentional and splitting it would scatter one transactional concern across
  *  several classes without reducing real complexity.
- * @SuppressWarnings(PHPMD.TooManyPublicMethods) The public surface is the POS
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)     The public surface is the POS
  *  calculation core (recalculateLine / computeTotals / normalizePriceMode), the
  *  BTW report aggregator (buildTaxReport / taxReport), the five lifecycle
  *  transitions, the manager gate and the event emitter — all single-purpose and
