@@ -21,6 +21,14 @@ tier: 3
 
 # Cross-app install-time dependencies. pipelinq is hard-coupled to OpenRegister
 # for its data layer (registers, schemas, objects, RBAC, audit trail).
+#
+# shillinq is a SOFT (delegation) dependency, not install-time: pipelinq hands
+# the timesheet submit -> approve -> reject -> lock -> edit-request -> invoice
+# lifecycle to shillinq (hydra ADR-022 — no parallel mechanism for a fleet
+# capability owned elsewhere; the time-tracker leaf explicitly excludes approval
+# + invoicing). pipelinq does NOT require shillinq to be installed to function;
+# it only deep-links to shillinq's billing/approval surface when present. See the
+# `time-approval-workflow` change and the `consumes` note below.
 dependencies:
   - openregister
 
@@ -40,6 +48,18 @@ consumes:
   - i18n-api-language-negotiation      # OR: Accept-Language negotiation (active change)
   # nextcloud-vue — declared intent; runtime adoption pending the named change
   - multi-tenancy-context              # nc-vue: useTenantContext composable (active change)
+  # shillinq — DELEGATED capability (time-approval-workflow change). pipelinq
+  # captures hours via the time-tracker leaf and links them to its objects via OR
+  # integration link tables; shillinq OWNS the approval-before-billing + invoicing
+  # lifecycle and reads those hours (via OR links or the WIP-sync integration).
+  # The invoice surface is shillinq's `invoice-from-time-and-expense` spec
+  # ("invoice generation from approved time entries"); approval gates billing and
+  # lives with billing in shillinq. Runtime hand-off available TODAY = a deep-link
+  # from pipelinq's manifest to shillinq's billing surface (src/manifest.json).
+  # A pipelinq->shillinq approval CloudEvent emit is BLOCKED-ON-PREREQ until
+  # shillinq ships an approval/invoice route or event consumer (its deployed
+  # controllers are Dashboard/Health/Metrics/Preferences/Settings only).
+  - invoice-from-time-and-expense      # shillinq: approval-before-billing + invoicing lifecycle owner (delegated, not built here)
 
 # Minimum OpenRegister version. Pinned to the OR release that ships the
 # `contacts-actions` integration provider (archived to OR main specs
