@@ -7,11 +7,17 @@ status: implemented
 ## Purpose
 
 Track the cross-cutting work that aligns pipelinq with the shared OpenRegister
-abstractions and multi-tenant deployment model. This slice covers Phase 7:
-moving hardcoded constants (background-job timing, business hours, third-party
-API base URLs, cache TTL, default review intervals) into admin-config so they
-are tunable per deployment without code changes, while preserving current
-behavior for any install that leaves them unconfigured.
+abstractions and multi-tenant deployment model. This slice covers Phase 7
+(admin-config) and Phase 8 (manifest adoption). Phase 7 moves hardcoded
+constants (background-job timing, business hours, third-party API base URLs,
+cache TTL, default review intervals) into admin-config so they are tunable per
+deployment without code changes, while preserving current behavior for any
+install that leaves them unconfigured. Phase 8 ships the OpenSpec coordination
+manifest (`openspec/manifest.yaml`) declaring pipelinq's tier, OpenRegister
+dependency, the shared specs it consumes, the minimum OR version, and its
+object-store-exemplar role. The Phase 9 multi-tenancy + i18n runtime-adoption
+consumes are declared in the manifest; their runtime adoption is deferred until
+the nc-vue / OpenRegister prerequisites ship.
 
 ## Requirements
 
@@ -50,3 +56,41 @@ admin-config. Default values SHALL preserve current behavior.
 - **WHEN** any service reads a value migrated under Phase 7
 - **THEN** the value SHALL equal the constant value listed in
   `.claude/audit-2026-05-03/04-hardcoded.md`.
+
+### Requirement: pipelinq declares its manifest
+
+pipelinq SHALL ship `openspec/manifest.yaml` declaring `tier: 3` (frontend exemplar),
+`dependencies: ["openregister"]`, the consumed shared specs, the minimum OR version, and
+its exemplar role.
+
+#### Scenario: Manifest declares exemplar role
+
+- **GIVEN** `openspec/manifest.yaml` declares
+  `pipelinq.role: object-store-exemplar` (or equivalent key from `adopt-app-manifest`)
+- **WHEN** Hydra coordination loads the manifest
+- **THEN** it SHALL recognize pipelinq as the reference implementation.
+
+#### Scenario: Manifest pins minimum OR version including contacts-actions
+
+- **GIVEN** the spec-rewrites slice depends on the `contacts-actions` provider in OR
+- **WHEN** the manifest declares minimum OR version
+- **THEN** the version pin SHALL include the OR release that ships
+  `contacts-actions`.
+
+### Requirement: pipelinq consumes shared multi-tenancy + i18n specs
+
+pipelinq SHALL consume `multi-tenancy-context`, `i18n-source-of-truth`, and
+`i18n-api-language-negotiation`.
+
+#### Scenario: createObjectStore receives tenant context explicitly
+
+- **GIVEN** the nc-vue `multi-tenancy-context` composable is available
+- **WHEN** `src/store/modules/object.js` invokes `createObjectStore('object', {...})`
+- **THEN** the factory call SHALL pass the tenant context from `useTenantContext()`
+  explicitly (formalising the implicit dependency).
+
+#### Scenario: API respects Accept-Language
+
+- **GIVEN** a client sends `Accept-Language: nl-NL` to pipelinq
+- **WHEN** the response includes a translatable label or description
+- **THEN** the field SHALL return the Dutch translation per OR's negotiation spec.
