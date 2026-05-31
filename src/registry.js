@@ -66,6 +66,10 @@ import PosTransactionListView from './views/pos/PosTransactionList.vue'
 import PosTransactionDetailView from './views/pos/PosTransactionDetail.vue'
 import PosTransactionFormView from './views/pos/PosTransactionForm.vue'
 
+// --- Product barcode lookup (lib gap: index pages have no server-authoritative
+//     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
+import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
+
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
 /**
@@ -215,6 +219,13 @@ const registry = {
 		kind: 'page',
 		component: PosTransactionFormView,
 		_note: 'Bespoke cart editor: inline line-item rows with product picker + real-time totals; lib has no cart/line-editor page type.',
+	},
+
+	// --- Product barcode lookup. ---
+	ProductBarcodeSearchView: {
+		kind: 'page',
+		component: ProductBarcodeSearchView,
+		_note: 'Scan-to-navigate barcode search; resolves via the server-authoritative scoped barcode-lookup API and routes to the matching product (highlighting a matched variant).',
 	},
 }
 

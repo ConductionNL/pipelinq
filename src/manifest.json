@@ -72,6 +72,13 @@
 			"order": 90
 		},
 		{
+			"id": "ProductBarcodeSearch",
+			"label": "Barcode lookup",
+			"icon": "icon-search",
+			"route": "ProductBarcodeSearch",
+			"order": 91
+		},
+		{
 			"id": "PosTransactions",
 			"label": "Kassabon",
 			"icon": "icon-category-monitoring",
@@ -602,6 +609,17 @@
 					"enabled": true,
 					"showMetadata": true
 				}
+			}
+		},
+		{
+			"id": "ProductBarcodeSearch",
+			"route": "/products-barcode",
+			"type": "custom",
+			"title": "Barcode lookup",
+			"component": "ProductBarcodeSearchView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "product"
 			}
 		},
 		{
