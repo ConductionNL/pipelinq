@@ -35,6 +35,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `lead-management` spec: the Lead Qualification Scoring requirement now states
   the score is a backend `x-openregister-calculations.qualificationScore`
   materialised on save, read by the frontend.
+- Moved eleven hardcoded magic-number/URL constants to admin-config (Phase 7 of
+  OR-adoption), all with behavior-preserving defaults: background-job timing
+  (`pipelinq.queue_overflow.poll_interval_seconds`,
+  `pipelinq.task_expiry.poll_interval_seconds` / `.escalation_threshold_seconds`
+  / `.in_progress_grace_seconds`, `pipelinq.task_escalation.threshold_hours`),
+  business hours (`pipelinq.task.business_hour_start` / `.business_hour_end`),
+  prospect-discovery cache TTL (`pipelinq.prospect_discovery.cache_ttl_seconds`),
+  and the KVK / OpenCorporates API base URLs (`pipelinq.kvk.api_base_url`,
+  `pipelinq.opencorporates.api_base_url`) so EU/regional tenants can point at
+  alternate endpoints. The API-URL keys are admin-only (written via the
+  `#[AuthorizedAdminSetting]`-gated SettingsController), so no SSRF surface is
+  introduced. `SettingsService` gained a `TUNABLE_DEFAULTS` registry plus typed
+  `getIntValue`/`getStringValue` getters. (The audit's cited
+  `KennisbankReviewJob` review-interval constant no longer exists — kennisbank
+  was migrated to XWiki — so nothing was migrated for it.)
 
 ## [0.2.17] - 2026-05-31
 
