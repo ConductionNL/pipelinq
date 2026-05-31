@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- OpenSpec coordination manifest at `openspec/manifest.yaml` (Phase 8 of the
+  manifest + i18n + tenancy slice). Declares `tier: 3` (frontend exemplar),
+  `dependencies: ["openregister"]`, the six consumed shared specs
+  (`contacts-actions`, `register-resolver-service`, `pluggable-integration-registry`,
+  `i18n-source-of-truth`, `i18n-api-language-negotiation`, `multi-tenancy-context`),
+  the OR `min-version: "1.0.2"` pin, and the `object-store-exemplar` role.
+  Phase 9 runtime adoption of multi-tenancy + i18n is deferred until the
+  nextcloud-vue and OpenRegister prerequisites ship. Per Hydra `adopt-app-manifest`
+  / ADR-024.
 - Calculation annotations (`x-openregister-calculations`) on the `lead` schema,
   declaring derived/computed fields per ADR-031 instead of service code:
   `qualificationScore` (backend score 0-100, `materialise: true`, mirrors the
