@@ -1,0 +1,185 @@
+<?php
+
+/**
+ * Pipelinq PosTransactionController.
+ *
+ * Thin controller for POS transaction lifecycle actions (confirm, settle,
+ * refund, park, resume). All business logic and authorization live in
+ * PosTransactionService.
+ *
+ * @category Controller
+ * @package  OCA\Pipelinq\Controller
+ *
+ * @author    Conduction <info@conduction.nl>
+ * @copyright 2024 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * @version GIT: <git_id>
+ *
+ * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Pipelinq\Controller;
+
+use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\PosTransactionService;
+use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\OCS\OCSBadRequestException;
+use OCP\AppFramework\OCS\OCSForbiddenException;
+use OCP\AppFramework\OCS\OCSNotFoundException;
+use OCP\IL10N;
+use OCP\IRequest;
+use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
+
+/**
+ * Controller for POS transaction lifecycle endpoints.
+ *
+ * Authorization model: every action requires an authenticated user. Object
+ * access is scoped to this app's own posTransaction schema inside
+ * PosTransactionService (a transaction in another app/register resolves to a
+ * 404, preventing IDOR). Refund additionally requires manager permission,
+ * enforced server-side in the service.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ */
+class PosTransactionController extends Controller
+{
+    /**
+     * Constructor.
+     *
+     * @param IRequest              $request     The request.
+     * @param PosTransactionService $service     The POS transaction service.
+     * @param IUserSession          $userSession The user session.
+     * @param IL10N                 $l10n        The localization service.
+     * @param LoggerInterface       $logger      The logger.
+     */
+    public function __construct(
+        IRequest $request,
+        private PosTransactionService $service,
+        private IUserSession $userSession,
+        private IL10N $l10n,
+        private LoggerInterface $logger,
+    ) {
+        parent::__construct(appName: Application::APP_ID, request: $request);
+    }//end __construct()
+
+    /**
+     * Confirm a draft or parked transaction.
+     *
+     * @param string $id The transaction UUID.
+     *
+     * @return JSONResponse The updated transaction.
+     *
+     * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
+     */
+    #[NoAdminRequired]
+    public function confirm(string $id): JSONResponse
+    {
+        return $this->run(fn (string $uid): array => $this->service->confirmTransaction($id, $uid), 'confirm');
+    }//end confirm()
+
+    /**
+     * Settle a confirmed transaction.
+     *
+     * @param string $id The transaction UUID.
+     *
+     * @return JSONResponse The updated transaction.
+     *
+     * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
+     */
+    #[NoAdminRequired]
+    public function settle(string $id): JSONResponse
+    {
+        return $this->run(fn (string $uid): array => $this->service->settleTransaction($id, $uid), 'settle');
+    }//end settle()
+
+    /**
+     * Refund / void a confirmed or settled transaction (manager only).
+     *
+     * @param string $id The transaction UUID.
+     *
+     * @return JSONResponse The updated transaction.
+     *
+     * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
+     */
+    #[NoAdminRequired]
+    public function refund(string $id): JSONResponse
+    {
+        $reason = (string) $this->request->getParam('reason', '');
+        return $this->run(fn (string $uid): array => $this->service->refundTransaction($id, $reason, $uid), 'refund');
+    }//end refund()
+
+    /**
+     * Park a draft transaction.
+     *
+     * @param string $id The transaction UUID.
+     *
+     * @return JSONResponse The updated transaction.
+     *
+     * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
+     */
+    #[NoAdminRequired]
+    public function park(string $id): JSONResponse
+    {
+        return $this->run(fn (string $uid): array => $this->service->parkTransaction($id, $uid), 'park');
+    }//end park()
+
+    /**
+     * Resume a parked transaction.
+     *
+     * @param string $id The transaction UUID.
+     *
+     * @return JSONResponse The updated transaction.
+     *
+     * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
+     */
+    #[NoAdminRequired]
+    public function resume(string $id): JSONResponse
+    {
+        return $this->run(fn (string $uid): array => $this->service->resumeTransaction($id, $uid), 'resume');
+    }//end resume()
+
+    /**
+     * Run a lifecycle action with shared auth + error handling.
+     *
+     * Requires an authenticated user and maps the service's OCS exceptions to
+     * HTTP status codes (404 not found, 422 invalid transition / bad input,
+     * 403 manager-only).
+     *
+     * @param callable $action The action, receiving the acting user UID.
+     * @param string   $label  A short label for log context.
+     *
+     * @return JSONResponse The response.
+     */
+    private function run(callable $action, string $label): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
+        try {
+            return new JSONResponse(['transaction' => $action($user->getUID())]);
+        } catch (OCSNotFoundException $e) {
+            return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
+        } catch (OCSForbiddenException $e) {
+            return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
+        } catch (OCSBadRequestException $e) {
+            return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
+        } catch (\Throwable $e) {
+            $this->logger->error('PosTransactionController::'.$label.' failed', ['exception' => $e->getMessage()]);
+            return new JSONResponse(
+                ['error' => $this->l10n->t('An unexpected error occurred')],
+                Http::STATUS_INTERNAL_SERVER_ERROR
+            );
+        }//end try
+    }//end run()
+}//end class

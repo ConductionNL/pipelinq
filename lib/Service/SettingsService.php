@@ -63,6 +63,8 @@ class SettingsService
         'queue_schema',
         'skill_schema',
         'agentProfile_schema',
+        'posTransaction_schema',
+        'posTransactionLine_schema',
         'complaint_sla_service',
         'complaint_sla_product',
         'complaint_sla_communication',

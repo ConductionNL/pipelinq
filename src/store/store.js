@@ -71,6 +71,12 @@ export async function initializeStores() {
 		if (config.register && config.complaint_schema) {
 			objectStore.registerObjectType('complaint', config.complaint_schema, config.register)
 		}
+		if (config.register && config.posTransaction_schema) {
+			objectStore.registerObjectType('posTransaction', config.posTransaction_schema, config.register)
+		}
+		if (config.register && config.posTransactionLine_schema) {
+			objectStore.registerObjectType('posTransactionLine', config.posTransactionLine_schema, config.register)
+		}
 	}
 
 	return { settingsStore, objectStore }
