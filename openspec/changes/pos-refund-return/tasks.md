@@ -73,7 +73,7 @@
 
 ## 2. Backend Service
 
-- [ ] 2.1 Create `lib/Service/PosRefundService.php`
+- [x] 2.1 Create `lib/Service/PosRefundService.php`
   - **spec_ref**: `specs/pos-refund-return/specs.md#REQ-REF-003, #REQ-REF-006, #REQ-REF-007,
     #REQ-REF-010, #REQ-REF-011, #REQ-REF-012, #REQ-REF-014`
   - **files**: `pipelinq/lib/Service/PosRefundService.php`
@@ -103,7 +103,7 @@
       - Skip lines with restock=false
     - AND every public method MUST have `@spec openspec/changes/pos-refund-return/tasks.md#2.1`
 
-- [ ] 2.2 Create `lib/Controller/PosRefundController.php`
+- [x] 2.2 Create `lib/Controller/PosRefundController.php`
   - **spec_ref**: `specs/pos-refund-return/specs.md#REQ-REF-006, #REQ-REF-007`
   - **files**: `pipelinq/lib/Controller/PosRefundController.php`
   - **acceptance_criteria**:
@@ -119,7 +119,7 @@
 
 ## 3. Backend Routes
 
-- [ ] 3.1 Add POS refund routes to `appinfo/routes.php`
+- [x] 3.1 Add POS refund routes to `appinfo/routes.php`
   - **spec_ref**: ADR-002 (api)
   - **files**: `pipelinq/appinfo/routes.php`
   - **acceptance_criteria**:
