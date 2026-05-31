@@ -43,7 +43,7 @@ use OCP\IL10N;
  * callback surface, so a malicious template body cannot execute code, read
  * files or trigger SSRF. Unknown placeholders render as an empty string.
  *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods) The public surface is the
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)     The public surface is the
  *  render core (renderText / renderHtml / renderEscPos), the invoice-mode
  *  decision (isInvoiceTransaction / invoiceThreshold), the placeholder context
  *  builder and the company-details accessor — each single-purpose and

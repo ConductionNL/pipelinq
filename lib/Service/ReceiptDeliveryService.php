@@ -44,7 +44,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Service for receipt rendering, email delivery and thermal output.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the collaborators a
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Wires the collaborators a
  *  receipt orchestrator legitimately needs (OR container, renderer, invoice
  *  sequence, mailer, app config, logger); splitting them would add indirection
  *  without reducing real coupling.
