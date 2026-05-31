@@ -30,6 +30,8 @@ use Psr\Log\LoggerInterface;
  *
  * Creates calendar events from Pipelinq follow-ups and links
  * Nextcloud Calendar events to CRM entities by attendee matching.
+ *
+ * @spec openspec/changes/pipelinq-or-lifecycle-notification/tasks.md#task-2.2
  */
 class CalendarSyncService
 {
@@ -77,6 +79,12 @@ class CalendarSyncService
             'attendees'        => $attendees,
             'linkedEntityType' => $linkedEntityType,
             'linkedEntityId'   => $linkedEntityId,
+            // The `scheduled` literal is the declared lifecycle initial state of
+            // the calendarLink schema (x-openregister-lifecycle.initial). It is
+            // set explicitly here so the creation payload is self-describing even
+            // when the object is persisted without routing through OpenRegister's
+            // lifecycle initial-state listener; subsequent state changes go
+            // through the `complete` / `cancel` lifecycle transitions.
             'status'           => 'scheduled',
             'createdFrom'      => $createdFrom,
         ];
