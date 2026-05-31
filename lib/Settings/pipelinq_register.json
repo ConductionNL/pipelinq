@@ -43,7 +43,9 @@
           "surveyResponse",
           "queue",
           "skill",
-          "agentProfile"
+          "agentProfile",
+          "posTransaction",
+          "posTransactionLine"
         ],
         "tablePrefix": "",
         "folder": "Open Registers/Pipelinq"
@@ -2307,6 +2309,211 @@
             "facetable": true
           }
         }
+      },
+      "posTransaction": {
+        "slug": "posTransaction",
+        "title": "POS Transaction",
+        "icon": "Receipt",
+        "version": "1.0.0",
+        "summary": "A point-of-sale transaction (kassabon) with lifecycle, totals and tax breakdown",
+        "description": "Represents a POS cart / receipt from open (draft) through payment (confirmed -> settled) or cancellation (refunded). The taxBreakdown array captures tax per BTW rate so receipts can show 9% and 21% lines separately. Totals are server-computed by PosTransactionService and must never be trusted from the client. Mapped to Schema.org Order.",
+        "@type": "schema:Order",
+        "required": [
+          "cashier",
+          "status"
+        ],
+        "properties": {
+          "reference": {
+            "type": "string",
+            "description": "Human-readable transaction reference, e.g. TXN-2026-0001",
+            "maxLength": 64,
+            "title": "Reference",
+            "facetable": true
+          },
+          "cashier": {
+            "type": "string",
+            "description": "Nextcloud user UID of the logged-in cashier",
+            "maxLength": 255,
+            "title": "Cashier",
+            "facetable": true
+          },
+          "client": {
+            "type": "string",
+            "description": "Optional UUID reference to a client object for account sales",
+            "format": "uuid"
+          },
+          "terminalId": {
+            "type": "string",
+            "description": "POS terminal / register identifier, e.g. kassa-01",
+            "maxLength": 64,
+            "title": "Terminal",
+            "facetable": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Lifecycle status of the transaction",
+            "enum": [
+              "draft",
+              "parked",
+              "confirmed",
+              "settled",
+              "refunded"
+            ],
+            "default": "draft",
+            "title": "Status",
+            "facetable": true
+          },
+          "subtotal": {
+            "type": "number",
+            "description": "Sum of line totals excl. tax, after line-level discounts (server-computed)",
+            "minimum": 0,
+            "default": 0
+          },
+          "discountTotal": {
+            "type": "number",
+            "description": "Aggregate discount amount across all lines (server-computed)",
+            "minimum": 0,
+            "default": 0
+          },
+          "taxBreakdown": {
+            "type": "array",
+            "description": "Per-rate tax summary, e.g. [{ rate: 21, base: 100.00, tax: 21.00 }] (server-computed)",
+            "items": {
+              "type": "object"
+            }
+          },
+          "totalTax": {
+            "type": "number",
+            "description": "Aggregate tax amount, sum of taxBreakdown[*].tax (server-computed)",
+            "minimum": 0,
+            "default": 0
+          },
+          "total": {
+            "type": "number",
+            "description": "Grand total incl. tax, subtotal + totalTax (server-computed)",
+            "minimum": 0,
+            "default": 0
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional cashier notes on the transaction",
+            "visible": false
+          },
+          "parkedAt": {
+            "type": "string",
+            "description": "ISO 8601 timestamp when transaction was parked",
+            "format": "date-time",
+            "visible": false
+          },
+          "confirmedAt": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of confirmation",
+            "format": "date-time",
+            "visible": false
+          },
+          "settledAt": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of settlement",
+            "format": "date-time",
+            "visible": false
+          },
+          "refundedAt": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of refund / void",
+            "format": "date-time",
+            "visible": false
+          },
+          "refundReason": {
+            "type": "string",
+            "description": "Reason code / description for refund or void",
+            "visible": false
+          },
+          "cloudEventId": {
+            "type": "string",
+            "description": "CloudEvents id of the emitted confirmation event",
+            "visible": false
+          }
+        }
+      },
+      "posTransactionLine": {
+        "slug": "posTransactionLine",
+        "title": "POS Line Item",
+        "icon": "CartOutline",
+        "version": "1.0.0",
+        "summary": "A single sellable line item on a POS transaction",
+        "description": "One sellable item on a posTransaction. Quantity supports fractions for weight/volume items. taxAmount and lineTotal are computed on save by PosTransactionService and must never be trusted from the client. Mapped to Schema.org OrderItem.",
+        "@type": "schema:OrderItem",
+        "required": [
+          "transaction",
+          "description",
+          "quantity",
+          "unitPrice"
+        ],
+        "properties": {
+          "transaction": {
+            "type": "string",
+            "description": "UUID reference to the parent posTransaction",
+            "format": "uuid"
+          },
+          "product": {
+            "type": "string",
+            "description": "Optional UUID reference to a product object from the catalog",
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string",
+            "description": "Line description -- pre-filled from product.name, or free-text",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "quantity": {
+            "type": "number",
+            "description": "Number of units (supports fractions for weight/volume items)",
+            "minimum": 0.001,
+            "default": 1
+          },
+          "unitPrice": {
+            "type": "number",
+            "description": "Price per unit in EUR (pre-filled from product.unitPrice)",
+            "minimum": 0
+          },
+          "discount": {
+            "type": "number",
+            "description": "Discount percentage 0-100",
+            "minimum": 0,
+            "maximum": 100,
+            "default": 0
+          },
+          "taxRate": {
+            "type": "number",
+            "description": "BTW rate percentage. Default 21 (Dutch standard rate). Common values: 0, 9, 21",
+            "minimum": 0,
+            "maximum": 100,
+            "default": 21
+          },
+          "taxAmount": {
+            "type": "number",
+            "description": "Computed: (quantity * unitPrice * (1 - discount/100)) * taxRate/100",
+            "minimum": 0,
+            "default": 0
+          },
+          "lineTotal": {
+            "type": "number",
+            "description": "Computed: (quantity * unitPrice * (1 - discount/100)) + taxAmount",
+            "minimum": 0,
+            "default": 0
+          },
+          "sortOrder": {
+            "type": "integer",
+            "description": "Display order of the line within the transaction",
+            "default": 0
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional line-level notes, e.g. inclusief montage",
+            "visible": false
+          }
+        }
       }
     },
     "views": {
@@ -2325,6 +2532,143 @@
         },
         "isDefault": true
       }
-    }
+    },
+    "objects": [
+      {
+        "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0001" },
+        "reference": "TXN-2026-0001",
+        "cashier": "admin",
+        "terminalId": "kassa-01",
+        "status": "settled",
+        "subtotal": 19.75,
+        "discountTotal": 0,
+        "taxBreakdown": [{ "rate": 9, "base": 19.75, "tax": 1.78 }],
+        "totalTax": 1.78,
+        "total": 21.53,
+        "confirmedAt": "2026-05-20T09:14:00+02:00",
+        "settledAt": "2026-05-20T09:14:30+02:00",
+        "notes": "Contante betaling"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0002" },
+        "reference": "TXN-2026-0002",
+        "cashier": "jan.smit",
+        "terminalId": "kassa-02",
+        "status": "draft",
+        "subtotal": 0,
+        "discountTotal": 0,
+        "taxBreakdown": [],
+        "totalTax": 0,
+        "total": 0
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0003" },
+        "reference": "TXN-2026-0003",
+        "cashier": "emma.bakker",
+        "terminalId": "kassa-01",
+        "status": "confirmed",
+        "subtotal": 89.97,
+        "discountTotal": 9.00,
+        "taxBreakdown": [
+          { "rate": 21, "base": 80.97, "tax": 17.00 },
+          { "rate": 9, "base": 0, "tax": 0 }
+        ],
+        "totalTax": 17.00,
+        "total": 97.97,
+        "confirmedAt": "2026-05-20T10:33:00+02:00",
+        "notes": "Zakelijke aankoop -- factuur gevraagd"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0004" },
+        "reference": "TXN-2026-0004",
+        "cashier": "jan.smit",
+        "terminalId": "kassa-03",
+        "status": "parked",
+        "subtotal": 24.95,
+        "discountTotal": 0,
+        "taxBreakdown": [{ "rate": 9, "base": 24.95, "tax": 2.25 }],
+        "totalTax": 2.25,
+        "total": 27.20,
+        "parkedAt": "2026-05-20T11:02:00+02:00",
+        "notes": "Klant even weg -- terugkomen"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0005" },
+        "reference": "TXN-2026-0005",
+        "cashier": "admin",
+        "terminalId": "kassa-01",
+        "status": "refunded",
+        "subtotal": 703.30,
+        "discountTotal": 0,
+        "taxBreakdown": [{ "rate": 21, "base": 703.30, "tax": 147.69 }],
+        "totalTax": 147.69,
+        "total": 850.99,
+        "confirmedAt": "2026-05-19T14:22:00+02:00",
+        "settledAt": "2026-05-19T14:23:00+02:00",
+        "refundedAt": "2026-05-20T09:45:00+02:00",
+        "refundReason": "Artikel beschadigd bij levering -- retour verwerkt"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0001-koffie" },
+        "transaction": "txn-2026-0001",
+        "description": "Americano koffie",
+        "quantity": 2,
+        "unitPrice": 2.95,
+        "discount": 0,
+        "taxRate": 9,
+        "taxAmount": 0.53,
+        "lineTotal": 6.43,
+        "sortOrder": 1
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0001-broodje" },
+        "transaction": "txn-2026-0001",
+        "description": "Broodje kaas",
+        "quantity": 3,
+        "unitPrice": 4.25,
+        "discount": 0,
+        "taxRate": 9,
+        "taxAmount": 1.15,
+        "lineTotal": 13.90,
+        "sortOrder": 2
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0003-sleeve" },
+        "transaction": "txn-2026-0003",
+        "description": "Laptoptas 15,6 inch zwart",
+        "quantity": 1,
+        "unitPrice": 39.99,
+        "discount": 0,
+        "taxRate": 21,
+        "taxAmount": 6.95,
+        "lineTotal": 46.94,
+        "sortOrder": 1
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0003-hub" },
+        "transaction": "txn-2026-0003",
+        "description": "USB-C hub 7-poorts",
+        "quantity": 1,
+        "unitPrice": 54.98,
+        "discount": 10,
+        "taxRate": 21,
+        "taxAmount": 10.39,
+        "lineTotal": 59.87,
+        "sortOrder": 2
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0005-laptop" },
+        "transaction": "txn-2026-0005",
+        "description": "Laptop 14 inch (refurbished)",
+        "quantity": 1,
+        "unitPrice": 703.30,
+        "discount": 0,
+        "taxRate": 21,
+        "taxAmount": 147.69,
+        "lineTotal": 850.99,
+        "sortOrder": 1,
+        "notes": "Serienummer: NB-4821-X"
+      }
+    ]
   }
 }

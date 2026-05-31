@@ -72,6 +72,13 @@
 			"order": 90
 		},
 		{
+			"id": "PosTransactions",
+			"label": "Kassabon",
+			"icon": "icon-category-monitoring",
+			"route": "PosTransactions",
+			"order": 95
+		},
+		{
 			"id": "Pipeline",
 			"label": "Pipeline",
 			"icon": "icon-category-organization",
@@ -606,6 +613,50 @@
 				"register": "pipelinq",
 				"schema": "product",
 				"sidebar": true
+			}
+		},
+		{
+			"id": "PosTransactions",
+			"route": "/pos",
+			"type": "custom",
+			"title": "Kassabon",
+			"component": "PosTransactionListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posTransaction"
+			}
+		},
+		{
+			"id": "PosTransactionNew",
+			"route": "/pos/new",
+			"type": "custom",
+			"title": "Nieuwe transactie",
+			"component": "PosTransactionFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posTransaction"
+			}
+		},
+		{
+			"id": "PosTransactionEdit",
+			"route": "/pos/:id/edit",
+			"type": "custom",
+			"title": "Transactie bewerken",
+			"component": "PosTransactionFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posTransaction"
+			}
+		},
+		{
+			"id": "PosTransactionDetail",
+			"route": "/pos/:id",
+			"type": "custom",
+			"title": "Transactie",
+			"component": "PosTransactionDetailView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posTransaction"
 			}
 		},
 		{
