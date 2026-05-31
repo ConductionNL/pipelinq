@@ -1,3 +1,5 @@
+> SUPERSEDED 2026-05-31: this umbrella was split per ADR-032 into child slices that are now all implemented and archived. Coverage: Phases 1-2 (inventory + PHPCS burn-down) → `pipelinq-quality-phpcs-burndown`; Phase 3 (PHPMD) → `pipelinq-quality-phpmd-burndown`; Phases 4-6 (PHPStan + CI integration + docs) → `pipelinq-quality-phpstan-burndown`. All implementation scope is covered and the gate runs clean (`composer check:strict`). NOTE: the parent's `quality-gates` delta spec (REQ-QG-001..006) was authored here but never synced to `openspec/specs/` — the children referenced this parent's tasks rather than re-declaring the spec. The requirements it describes are all satisfied; the spec remains in this archived change as the canonical record.
+
 # Proposal: Pipelinq Legacy Quality Cleanup
 
 ## Problem
