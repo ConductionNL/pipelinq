@@ -186,7 +186,7 @@ import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
 
 export default {
-	name: 'KassakoppelingAuditDetail',
+	name: 'AuditDetail',
 
 	components: {
 		CnDetailPage,
@@ -330,8 +330,12 @@ export default {
 			if (!iso) return '-'
 			try {
 				return new Intl.DateTimeFormat('nl-NL', {
-					year: 'numeric', month: '2-digit', day: '2-digit',
-					hour: '2-digit', minute: '2-digit', second: '2-digit',
+					year: 'numeric',
+					month: '2-digit',
+					day: '2-digit',
+					hour: '2-digit',
+					minute: '2-digit',
+					second: '2-digit',
 					timeZone: 'UTC',
 				}).format(new Date(iso))
 			} catch {

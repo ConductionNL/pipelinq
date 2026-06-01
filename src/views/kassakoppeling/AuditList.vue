@@ -107,7 +107,7 @@ import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
-	name: 'KassakoppelingAuditList',
+	name: 'AuditList',
 
 	components: {
 		CnIndexPage,
