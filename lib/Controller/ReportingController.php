@@ -16,10 +16,11 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
+ * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
  * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
  * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-50
  */
-
+// @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
@@ -37,6 +38,8 @@ use OCP\IUserSession;
 
 /**
  * Controller for reporting endpoints and SLA configuration.
+ *
+ * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
  */
 class ReportingController extends Controller
 {
@@ -58,6 +61,120 @@ class ReportingController extends Controller
     }//end __construct()
 
     /**
+     * Get KPI data for the given date range.
+     *
+     * @return JSONResponse Total contacts, FCR %, avg handling time, SLA compliance.
+     *
+     * @NoAdminRequired
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+     */
+    public function getKpis(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        $from = $this->request->getParam('from', '');
+        $to   = $this->request->getParam('to', '');
+
+        if ($from === '' || $to === '') {
+            return new JSONResponse(['message' => 'Missing required parameters: from, to'], Http::STATUS_BAD_REQUEST);
+        }
+
+        // Validate date format.
+        if ($this->isValidDate(date: $from) === false || $this->isValidDate(date: $to) === false) {
+            return new JSONResponse(['message' => 'Invalid date format. Use ISO 8601 (YYYY-MM-DD or full datetime)'], Http::STATUS_BAD_REQUEST);
+        }
+
+        try {
+            $kpis = $this->reportingService->getKpis($from, $to);
+            return new JSONResponse($kpis);
+        } catch (\Throwable) {
+            return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
+        }//end try
+    }//end getKpis()
+
+    /**
+     * Get channel distribution and trend data.
+     *
+     * @return JSONResponse Channel distribution counts and time-series trend.
+     *
+     * @NoAdminRequired
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+     */
+    public function getChannels(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        $from        = $this->request->getParam('from', '');
+        $to          = $this->request->getParam('to', '');
+        $granularity = $this->request->getParam('granularity', 'daily');
+
+        if ($from === '' || $to === '') {
+            return new JSONResponse(['message' => 'Missing required parameters: from, to'], Http::STATUS_BAD_REQUEST);
+        }
+
+        if ($this->isValidDate(date: $from) === false || $this->isValidDate(date: $to) === false) {
+            return new JSONResponse(['message' => 'Invalid date format. Use ISO 8601 (YYYY-MM-DD or full datetime)'], Http::STATUS_BAD_REQUEST);
+        }
+
+        try {
+            $distribution = $this->reportingService->getChannelDistribution($from, $to);
+            $trend        = $this->reportingService->getChannelTrend($from, $to, $granularity);
+
+            return new JSONResponse(
+                    [
+                        'distribution' => $distribution,
+                        'trend'        => $trend,
+                    ]
+                    );
+        } catch (\Throwable) {
+            return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
+        }//end try
+    }//end getChannels()
+
+    /**
+     * Get per-agent performance table.
+     *
+     * @return JSONResponse Per-agent metrics: count, FCR %, avg handling time.
+     *
+     * @NoAdminRequired
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+     */
+    public function getAgents(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        $from = $this->request->getParam('from', '');
+        $to   = $this->request->getParam('to', '');
+
+        if ($from === '' || $to === '') {
+            return new JSONResponse(['message' => 'Missing required parameters: from, to'], Http::STATUS_BAD_REQUEST);
+        }
+
+        if ($this->isValidDate(date: $from) === false || $this->isValidDate(date: $to) === false) {
+            return new JSONResponse(['message' => 'Invalid date format. Use ISO 8601 (YYYY-MM-DD or full datetime)'], Http::STATUS_BAD_REQUEST);
+        }
+
+        try {
+            $agents = $this->reportingService->getAgentPerformance($from, $to);
+            return new JSONResponse(['agents' => $agents]);
+        } catch (\Throwable) {
+            return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
+        }//end try
+    }//end getAgents()
+
+    /**
      * Get SLA configuration.
      *
      * @return JSONResponse The SLA targets.
@@ -70,18 +187,15 @@ class ReportingController extends Controller
     {
         $user = $this->userSession->getUser();
         if ($user === null) {
-            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
         }
 
         try {
             $targets = $this->reportingService->getAllSlaTargets();
             return new JSONResponse(['targets' => $targets]);
-        } catch (\Exception $e) {
-            return new JSONResponse(
-                ['error' => $this->l10n->t('Failed to load SLA configuration')],
-                500,
-            );
-        }
+        } catch (\Throwable) {
+            return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
+        }//end try
     }//end getSla()
 
     /**
@@ -100,10 +214,7 @@ class ReportingController extends Controller
             $targets = $this->request->getParam('targets', []);
 
             if (is_array($targets) === false) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('Invalid SLA configuration')],
-                    400,
-                );
+                return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_BAD_REQUEST);
             }
 
             $skipped = 0;
@@ -125,10 +236,7 @@ class ReportingController extends Controller
             }
 
             if ($skipped > 0) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('One or more unknown channel or metric values were skipped')],
-                    400,
-                );
+                return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_BAD_REQUEST);
             }
 
             return new JSONResponse(
@@ -137,11 +245,8 @@ class ReportingController extends Controller
                         'targets' => $this->reportingService->getAllSlaTargets(),
                     ]
                     );
-        } catch (\Exception $e) {
-            return new JSONResponse(
-                ['error' => $this->l10n->t('Failed to update SLA configuration')],
-                500,
-            );
+        } catch (\Throwable) {
+            return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
         }//end try
     }//end updateSla()
 
@@ -158,14 +263,35 @@ class ReportingController extends Controller
     {
         $user = $this->userSession->getUser();
         if ($user === null) {
-            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
         }
 
         // CSV export requires OpenRegister data integration.
         // Returning 501 until OR contactmoment retrieval is wired.
         return new JSONResponse(
-            ['error' => $this->l10n->t('Export not yet implemented')],
+            ['message' => 'Export not yet implemented'],
             Http::STATUS_NOT_IMPLEMENTED,
         );
     }//end exportCsv()
+
+    /**
+     * Validate that a string is a parseable date or datetime.
+     *
+     * @param string $date The date string to validate.
+     *
+     * @return bool True if parseable, false otherwise.
+     */
+    private function isValidDate(string $date): bool
+    {
+        if ($date === '') {
+            return false;
+        }
+
+        try {
+            new \DateTimeImmutable($date);
+            return true;
+        } catch (\Exception) {
+            return false;
+        }//end try
+    }//end isValidDate()
 }//end class

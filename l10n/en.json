@@ -931,7 +931,6 @@
         "Unassigned": "Unassigned",
         "Unavailable": "Unavailable",
         "Unit": "Unit",
-        "Unit price": "Unit price",
         "Unit price must be 0 or greater": "Unit price must be 0 or greater",
         "Unknown": "Unknown",
         "Unknown Product": "Unknown Product",
@@ -1126,7 +1125,23 @@
         "Failed to save refund.": "Failed to save refund.",
         "This will reject the refund. Enter a reason for the rejection.": "This will reject the refund. Enter a reason for the rejection.",
         "Vul een reden in voor de afwijzing": "Enter a reason for the rejection",
-        "Max {max}": "Max {max}"
+        "Max {max}": "Max {max}",
+        "Total Contacts": "Total Contacts",
+        "FCR %": "FCR %",
+        "Avg Handling Time": "Avg Handling Time",
+        "SLA Compliance": "SLA Compliance",
+        "Channel Analytics": "Channel Analytics",
+        "Agent Performance": "Agent Performance",
+        "This week": "This week",
+        "This month": "This month",
+        "Custom": "Custom",
+        "Reporting Dashboard": "Reporting Dashboard",
+        "Back to Dashboard": "Back to Dashboard",
+        "Channel Comparison": "Channel Comparison",
+        "Team Summary": "Team Summary",
+        "Failed to load reporting data": "Failed to load reporting data",
+        "Failed to load channel data": "Failed to load channel data",
+        "Failed to load agent data": "Failed to load agent data"
     },
     "plurals": {}
 }
