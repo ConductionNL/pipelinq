@@ -50,7 +50,11 @@
           "receiptPrintLog",
           "refundReason",
           "posRefund",
-          "posRefundLine"
+          "posRefundLine",
+          "project",
+          "projectPhase",
+          "projectTask",
+          "projectActivity"
         ],
         "tablePrefix": "",
         "folder": "Open Registers/Pipelinq"
@@ -3072,6 +3076,276 @@
             "format": "date-time"
           }
         }
+      },
+      "project": {
+        "slug": "project",
+        "title": "Project",
+        "icon": "Briefcase",
+        "version": "1.0.0",
+        "summary": "A body of client work with optional budget and billable flag",
+        "description": "Top-level node in the Work Breakdown Structure. Maps to schema:Project. Carries an optional budget (hours and EUR), a default hourly rate, and a billable flag that child phases and tasks inherit when not explicitly overridden.",
+        "@type": "schema:Project",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Project name"
+          },
+          "client": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Client",
+            "description": "Reference to the client object"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Project scope description"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Lifecycle status of the project",
+            "enum": ["open", "on_hold", "in_progress", "completed", "cancelled"],
+            "default": "open"
+          },
+          "billable": {
+            "type": "boolean",
+            "title": "Billable",
+            "description": "Whether work on this project is billable; default true",
+            "default": true
+          },
+          "budgetHours": {
+            "type": "number",
+            "title": "Budget Hours",
+            "description": "Planned effort in hours"
+          },
+          "budgetAmount": {
+            "type": "number",
+            "title": "Budget Amount",
+            "description": "Planned spend in EUR"
+          },
+          "hourlyRate": {
+            "type": "number",
+            "title": "Hourly Rate",
+            "description": "Default billing rate in EUR/hour"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date",
+            "description": "Planned start date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "title": "End Date",
+            "description": "Planned end date"
+          },
+          "color": {
+            "type": "string",
+            "title": "Color",
+            "description": "Hex colour tag for visual distinction"
+          }
+        }
+      },
+      "projectPhase": {
+        "slug": "projectPhase",
+        "title": "Project Phase",
+        "icon": "TimelineClockOutline",
+        "version": "1.0.0",
+        "summary": "An ordered phase or milestone within a project",
+        "description": "Second level of the WBS. Maps to schema:Event (time-bounded work package). Inherits billable flag from parent project when not explicitly set.",
+        "@type": "schema:Event",
+        "required": [
+          "name",
+          "project"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Phase name"
+          },
+          "project": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project",
+            "description": "Reference to the parent project"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Phase objective"
+          },
+          "order": {
+            "type": "integer",
+            "title": "Order",
+            "description": "Display order within the project"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Lifecycle status of the phase",
+            "enum": ["open", "in_progress", "completed", "cancelled"],
+            "default": "open"
+          },
+          "billable": {
+            "type": "boolean",
+            "title": "Billable",
+            "description": "Overrides parent project billable flag when explicitly set; null means inherit"
+          },
+          "budgetHours": {
+            "type": "number",
+            "title": "Budget Hours",
+            "description": "Phase-level hours budget"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date",
+            "description": "Phase start date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "title": "End Date",
+            "description": "Phase end date"
+          }
+        }
+      },
+      "projectTask": {
+        "slug": "projectTask",
+        "title": "Project Task",
+        "icon": "CheckboxMarkedOutline",
+        "version": "1.0.0",
+        "summary": "A deliverable within a project phase",
+        "description": "Third level of the WBS. Maps to schema:Action. Carries estimated hours, an assignee (Nextcloud UID), and a deadline. Inherits billable flag from parent phase when not explicitly set. Stores a denormalised project reference for faster queries.",
+        "@type": "schema:Action",
+        "required": [
+          "name",
+          "phase"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Task name"
+          },
+          "phase": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Phase",
+            "description": "Reference to the parent projectPhase"
+          },
+          "project": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project",
+            "description": "Denormalised project reference for faster queries"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Task description"
+          },
+          "order": {
+            "type": "integer",
+            "title": "Order",
+            "description": "Display order within the phase"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Lifecycle status of the task",
+            "enum": ["open", "in_progress", "completed", "cancelled"],
+            "default": "open"
+          },
+          "billable": {
+            "type": "boolean",
+            "title": "Billable",
+            "description": "Overrides parent phase billable flag when explicitly set; null means inherit"
+          },
+          "estimatedHours": {
+            "type": "number",
+            "title": "Estimated Hours",
+            "description": "Planned effort for this task"
+          },
+          "assignee": {
+            "type": "string",
+            "title": "Assignee",
+            "description": "Nextcloud user UID (schema:agent)"
+          },
+          "deadline": {
+            "type": "string",
+            "format": "date",
+            "title": "Deadline",
+            "description": "Task completion deadline"
+          }
+        }
+      },
+      "projectActivity": {
+        "slug": "projectActivity",
+        "title": "Project Activity",
+        "icon": "ClockOutline",
+        "version": "1.0.0",
+        "summary": "A time entry registered against a project task",
+        "description": "Fourth level of the WBS. A time entry against a projectTask. Maps to schema:Action with duration (ISO 8601). Stores the Nextcloud user who performed the work, date, duration in minutes, and an optional billable override. Inherits billable flag from parent task when not explicitly set.",
+        "@type": "schema:Action",
+        "required": [
+          "task",
+          "date",
+          "durationMinutes",
+          "user"
+        ],
+        "properties": {
+          "task": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Task",
+            "description": "Reference to the parent projectTask"
+          },
+          "project": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project",
+            "description": "Denormalised project reference for faster queries"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Work done during this entry"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date",
+            "description": "Date the work was performed"
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "title": "Duration (minutes)",
+            "description": "Duration in minutes"
+          },
+          "billable": {
+            "type": "boolean",
+            "title": "Billable",
+            "description": "Overrides parent task billable flag when explicitly set; null means inherit"
+          },
+          "user": {
+            "type": "string",
+            "title": "User",
+            "description": "Nextcloud user UID who performed the work"
+          },
+          "hourlyRate": {
+            "type": "number",
+            "title": "Hourly Rate",
+            "description": "Rate override in EUR/hour; inherits from project when null"
+          }
+        }
       }
     },
     "views": {
@@ -3651,6 +3925,156 @@
         "taxAmount": 0.38,
         "lineTotal": 4.63,
         "notes": "Een broodje te veel gegeven op kassamachine"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "project", "slug": "project-digitalisering-amsterdam" },
+        "name": "Digitalisering Dienstverlening",
+        "client": "@ref:client-gemeente-amsterdam",
+        "description": "Modernisering van de publieke dienstverlening via digitale kanalen",
+        "status": "open",
+        "billable": true,
+        "budgetHours": 400,
+        "budgetAmount": 56000.00,
+        "hourlyRate": 140.00,
+        "startDate": "2026-02-01",
+        "endDate": "2026-08-31",
+        "color": "#4A90D9"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "project", "slug": "project-website-devries" },
+        "name": "Website Herontwerp",
+        "client": "@ref:client-devries-partners",
+        "description": "Redesign van de corporate website inclusief CMS-migratie",
+        "status": "in_progress",
+        "billable": true,
+        "budgetHours": 160,
+        "budgetAmount": 19200.00,
+        "hourlyRate": 120.00,
+        "startDate": "2026-03-15",
+        "endDate": "2026-06-30",
+        "color": "#F5A623"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "project", "slug": "project-hr-techbedrijf" },
+        "name": "HR Systeem Implementatie",
+        "client": "@ref:client-techbedrijf-bv",
+        "description": "Implementatie en migratie naar nieuw HR-platform",
+        "status": "open",
+        "billable": false,
+        "budgetHours": 80,
+        "budgetAmount": 0,
+        "hourlyRate": 0,
+        "startDate": "2026-05-01",
+        "endDate": "2026-07-31",
+        "color": "#7ED321"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "projectPhase", "slug": "phase-digitalisering-voorbereiding" },
+        "name": "Voorbereiding",
+        "project": "@ref:project-digitalisering-amsterdam",
+        "description": "Requirementsanalyse en stakeholderinterviews",
+        "order": 1,
+        "status": "completed",
+        "billable": true,
+        "budgetHours": 80,
+        "startDate": "2026-02-01",
+        "endDate": "2026-02-28"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "projectPhase", "slug": "phase-digitalisering-ontwerp" },
+        "name": "Ontwerp & Prototyping",
+        "project": "@ref:project-digitalisering-amsterdam",
+        "description": "UX-ontwerp, wireframes en klantvalidatie",
+        "order": 2,
+        "status": "in_progress",
+        "billable": true,
+        "budgetHours": 120,
+        "startDate": "2026-03-01",
+        "endDate": "2026-04-30"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "projectPhase", "slug": "phase-website-discovery" },
+        "name": "Discovery",
+        "project": "@ref:project-website-devries",
+        "description": "Intake, concurrentieanalyse en contentstrategie",
+        "order": 1,
+        "status": "completed",
+        "billable": true,
+        "budgetHours": 24,
+        "startDate": "2026-03-15",
+        "endDate": "2026-03-31"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "projectTask", "slug": "task-requirementsanalyse" },
+        "name": "Requirementsanalyse",
+        "phase": "@ref:phase-digitalisering-voorbereiding",
+        "project": "@ref:project-digitalisering-amsterdam",
+        "description": "Documenteren van functionele en niet-functionele eisen via interviews",
+        "order": 1,
+        "status": "completed",
+        "billable": true,
+        "estimatedHours": 24,
+        "assignee": "jan",
+        "deadline": "2026-02-14"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "projectTask", "slug": "task-wireframes" },
+        "name": "Wireframes maken",
+        "phase": "@ref:phase-digitalisering-ontwerp",
+        "project": "@ref:project-digitalisering-amsterdam",
+        "description": "Lage en hoge resolutie wireframes voor alle kernpagina's",
+        "order": 1,
+        "status": "in_progress",
+        "billable": true,
+        "estimatedHours": 40,
+        "assignee": "maria",
+        "deadline": "2026-03-31"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "projectTask", "slug": "task-contentstrategie" },
+        "name": "Contentstrategie opstellen",
+        "phase": "@ref:phase-website-discovery",
+        "project": "@ref:project-website-devries",
+        "description": "Sitemap, inhoudstypen en SEO-aanbevelingen",
+        "order": 2,
+        "status": "completed",
+        "billable": true,
+        "estimatedHours": 8,
+        "assignee": "pieter",
+        "deadline": "2026-03-28"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "projectActivity", "slug": "activity-req-werksessie-1" },
+        "task": "@ref:task-requirementsanalyse",
+        "project": "@ref:project-digitalisering-amsterdam",
+        "description": "Werksessie met projectteam gemeente — eerste ronde stakeholderinterviews",
+        "date": "2026-02-05",
+        "durationMinutes": 180,
+        "billable": true,
+        "user": "jan",
+        "hourlyRate": 140.00
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "projectActivity", "slug": "activity-wireframes-iteratie-1" },
+        "task": "@ref:task-wireframes",
+        "project": "@ref:project-digitalisering-amsterdam",
+        "description": "Eerste iteratie wireframes dashboard en zoekfunctionaliteit",
+        "date": "2026-03-10",
+        "durationMinutes": 240,
+        "billable": true,
+        "user": "maria",
+        "hourlyRate": 140.00
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "projectActivity", "slug": "activity-contentstrategie-1" },
+        "task": "@ref:task-contentstrategie",
+        "project": "@ref:project-website-devries",
+        "description": "Sitemap en inhoudsmatrix uitgewerkt, SEO-trefwoorden geïnventariseerd",
+        "date": "2026-03-22",
+        "durationMinutes": 120,
+        "billable": true,
+        "user": "pieter",
+        "hourlyRate": 120.00
       }
     ]
   }

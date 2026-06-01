@@ -93,6 +93,13 @@
 			"order": 96
 		},
 		{
+			"id": "Projects",
+			"label": "Projects",
+			"icon": "icon-category-organization",
+			"route": "Projects",
+			"order": 95
+		},
+		{
 			"id": "Pipeline",
 			"label": "Pipeline",
 			"icon": "icon-category-organization",
@@ -889,6 +896,27 @@
 			"type": "custom",
 			"title": "Agent performance",
 			"component": "AgentPerformanceView"
+		},
+		{
+			"id": "Projects",
+			"route": "/projects",
+			"type": "custom",
+			"title": "Projects",
+			"component": "ProjectListView"
+		},
+		{
+			"id": "ProjectDetail",
+			"route": "/projects/:id",
+			"type": "custom",
+			"title": "Project",
+			"component": "ProjectDetailView"
+		},
+		{
+			"id": "ProjectActivityList",
+			"route": "/projects/:id/activities",
+			"type": "custom",
+			"title": "Project activities",
+			"component": "ProjectActivityListView"
 		},
 		{
 			"id": "Pipeline",

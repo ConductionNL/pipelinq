@@ -191,6 +191,40 @@
 			</div>
 		</CnDetailCard>
 
+		<CnDetailCard :title="t('pipelinq', 'Projecten')">
+			<template #actions>
+				<NcButton @click="createProject">
+					{{ t('pipelinq', 'Nieuw project') }}
+				</NcButton>
+			</template>
+
+			<div v-if="projects.length === 0" class="section-empty">
+				<p>{{ t('pipelinq', 'Geen projecten gevonden') }}</p>
+			</div>
+			<div v-else class="viewTableContainer">
+				<table class="viewTable">
+					<thead>
+						<tr>
+							<th>{{ t('pipelinq', 'Naam') }}</th>
+							<th>{{ t('pipelinq', 'Status') }}</th>
+							<th>{{ t('pipelinq', 'Einddatum') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="project in projects"
+							:key="project.id"
+							class="viewTableRow"
+							@click="$router.push({ name: 'ProjectDetail', params: { id: project.id } })">
+							<td>{{ project.name || '-' }}</td>
+							<td>{{ project.status || '-' }}</td>
+							<td>{{ project.endDate || '-' }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</CnDetailCard>
+
 		<!-- Relationships -->
 		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Relationships')">
 			<ContactRelationships
@@ -360,6 +394,7 @@ export default {
 			leads: [],
 			contactmomenten: [],
 			complaints: [],
+			projects: [],
 			showDelete: false,
 			showContactmomentQuickLog: false,
 		}
@@ -568,6 +603,16 @@ export default {
 			} catch {
 				this.complaints = []
 			}
+
+			try {
+				const allProjects = await this.objectStore.fetchCollection('project', {
+					_limit: 50,
+					client: this.clientId,
+				})
+				this.projects = allProjects || []
+			} catch {
+				this.projects = []
+			}
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-10
@@ -604,6 +649,14 @@ export default {
 		 */
 		createComplaint() {
 			this.$router.push({ name: 'ComplaintDetail', params: { id: 'new' }, query: { client: this.clientId } })
+		},
+		/**
+		 * Navigate to create a new project pre-linked to this client.
+		 *
+		 * @spec openspec/changes/project-task-hierarchy/tasks.md#task-5.1
+		 */
+		createProject() {
+			this.$router.push({ name: 'ProjectDetail', params: { id: 'new' }, query: { client: this.clientId } })
 		},
 		isClosedLead(lead) {
 			return lead.status === 'won' || lead.status === 'lost'

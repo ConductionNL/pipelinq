@@ -73,6 +73,12 @@ import PosRefundFormView from './views/pos/PosRefundForm.vue'
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
 import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
 
+// --- Projects / WBS (lib gap: multi-level WBS tree, budget summary cards, and
+//     inline phase/task creation are not expressible via declarative manifest pages). ---
+import ProjectListView from './views/projects/ProjectList.vue'
+import ProjectDetailView from './views/projects/ProjectDetail.vue'
+import ProjectActivityListView from './views/projects/ProjectActivityList.vue'
+
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
 /**
@@ -246,6 +252,23 @@ const registry = {
 		kind: 'page',
 		component: ProductBarcodeSearchView,
 		_note: 'Scan-to-navigate barcode search; resolves via the server-authoritative scoped barcode-lookup API and routes to the matching product (highlighting a matched variant).',
+	},
+
+	// --- Projects / WBS. ---
+	ProjectListView: {
+		kind: 'page',
+		component: ProjectListView,
+		_note: 'Project list with search, status/client/billable filters and pagination; lib gap: multi-level WBS tree view is not expressible via declarative index pages.',
+	},
+	ProjectDetailView: {
+		kind: 'page',
+		component: ProjectDetailView,
+		_note: 'Project detail with budget summary cards, collapsible WBS tree (phases → tasks), inline add phase/task, time entry log, and over-budget warning; lib gap: no WBS tree or budget tracking page type.',
+	},
+	ProjectActivityListView: {
+		kind: 'page',
+		component: ProjectActivityListView,
+		_note: 'Time entry list for a project with date range / user / task / billable filters and a totals row; lib gap: no filtered-activity-list detail page type.',
 	},
 }
 
