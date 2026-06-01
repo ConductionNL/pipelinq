@@ -2470,6 +2470,19 @@
         "summary": "A point-of-sale transaction (kassabon) with lifecycle, totals and tax breakdown",
         "description": "Represents a POS cart / receipt from open (draft) through payment (confirmed -> settled) or cancellation (refunded). The taxBreakdown array captures tax per BTW rate so receipts can show 9% and 21% lines separately. Totals are server-computed by PosTransactionService and must never be trusted from the client. Mapped to Schema.org Order.",
         "@type": "schema:Order",
+        "configuration": {
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "draft",
+            "transitions": {
+              "confirm": { "from": ["draft", "parked"], "to": "confirmed", "description": "Confirm a draft or parked cart. Authorization: the cashier who owns the transaction, a member of the POS group, or an admin. The server recomputes totals and rejects an empty cart.", "authorization": { "field": "cashier", "groups": ["pos"] }, "requires": "OCA\\Pipelinq\\Lifecycle\\PosTransactionConfirmGuard" },
+              "settle":  { "from": ["confirmed"], "to": "settled", "description": "Mark a confirmed transaction as paid. Authorization: the cashier, a POS-group member, or an admin.", "authorization": { "field": "cashier", "groups": ["pos"] }, "requires": "OCA\\Pipelinq\\Lifecycle\\PosTransactionAccessGuard" },
+              "park":    { "from": ["draft"], "to": "parked", "description": "Park a draft cart for later. Authorization: the cashier, a POS-group member, or an admin.", "authorization": { "field": "cashier", "groups": ["pos"] }, "requires": "OCA\\Pipelinq\\Lifecycle\\PosTransactionAccessGuard" },
+              "resume":  { "from": ["parked"], "to": "draft", "description": "Resume a parked cart to draft. Authorization: the cashier, a POS-group member, or an admin.", "authorization": { "field": "cashier", "groups": ["pos"] }, "requires": "OCA\\Pipelinq\\Lifecycle\\PosTransactionAccessGuard" },
+              "refund":  { "from": ["confirmed", "settled"], "to": "refunded", "description": "Refund / void a confirmed or settled transaction. Authorization: a POS manager (member of the configured manager group) or an admin only.", "authorization": { "groups": ["pos_managers"] }, "requires": "OCA\\Pipelinq\\Lifecycle\\PosTransactionRefundGuard" }
+            }
+          }
+        },
         "required": [
           "cashier",
           "status"
@@ -2743,6 +2756,17 @@
         "summary": "A refund / return document for a previously settled or confirmed POS transaction",
         "description": "Represents a full or partial refund against a posTransaction. refundAmount and totalTax are server-computed by PosRefundService from the refund lines and the original transaction's persisted, server-authoritative tax data; client-supplied amounts are never trusted. Lifecycle: pending -> completed (manager confirm) or pending -> rejected. Completed and rejected refunds are immutable. Mapped to Schema.org Order (type=refund).",
         "@type": "schema:Order",
+        "configuration": {
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "pending",
+            "final": ["completed", "rejected"],
+            "transitions": {
+              "complete": { "from": ["pending"], "to": "completed", "description": "Confirm a pending refund (emits reversal + stock events). Authorization: a POS manager or admin only. The cumulative over-refund cap is enforced and amounts are recomputed server-side.", "authorization": { "groups": ["pos_managers"] }, "requires": "OCA\\Pipelinq\\Lifecycle\\PosRefundManagerGuard" },
+              "reject":   { "from": ["pending"], "to": "rejected", "description": "Reject a pending refund. Authorization: a POS manager or admin only.", "authorization": { "groups": ["pos_managers"] }, "requires": "OCA\\Pipelinq\\Lifecycle\\PosRefundManagerGuard" }
+            }
+          }
+        },
         "required": [
           "originalTransaction",
           "cashier",

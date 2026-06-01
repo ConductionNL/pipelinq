@@ -30,6 +30,11 @@ use OCA\Pipelinq\Dashboard\FindClientWidget;
 use OCA\Pipelinq\Dashboard\MyLeadsWidget;
 use OCA\Pipelinq\Dashboard\RecentActivitiesWidget;
 use OCA\Pipelinq\Dashboard\StartRequestWidget;
+use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Lifecycle\PosRefundManagerGuard;
+use OCA\Pipelinq\Lifecycle\PosTransactionAccessGuard;
+use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
+use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
 use OCA\Pipelinq\Listener\DeepLinkRegistrationListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCA\Pipelinq\Mcp\PipelinqToolProvider;
@@ -39,6 +44,10 @@ use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\AppFramework\Services\IInitialState;
 use OCP\Comments\ICommentsManager;
+use OCP\IAppConfig;
+use OCP\IGroupManager;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Main application class for the Pipelinq client and request management app.
@@ -98,7 +107,75 @@ class Application extends App implements IBootstrap
             'OCA\\OpenRegister\\Mcp\\IMcpToolProvider::pipelinq',
             PipelinqToolProvider::class
         );
+
+        $this->registerPosLifecycleGuards(context: $context);
     }//end register()
+
+    /**
+     * Register the POS lifecycle guards keyed by the FQCN tag the
+     * posTransaction / posRefund schemas reference in their
+     * x-openregister-lifecycle.transitions[*].requires.
+     *
+     * OpenRegister's LifecycleGuardRegistry resolves the `requires` tag to a
+     * concrete LifecycleGuardInterface instance via the app container (with the
+     * NC server container as FQCN fallback). The registry is fail-closed: a
+     * transition that references an unregistered guard tag cannot proceed, so
+     * these registrations are load-bearing for the POS lifecycle.
+     *
+     * @param IRegistrationContext $context The registration context.
+     *
+     * @return void
+     */
+    private function registerPosLifecycleGuards(IRegistrationContext $context): void
+    {
+        $context->registerService(
+            PosAccessPolicy::class,
+            static function ($c): PosAccessPolicy {
+                return new PosAccessPolicy(
+                    appConfig: $c->get(IAppConfig::class),
+                    groupManager: $c->get(IGroupManager::class),
+                );
+            }
+        );
+
+        $context->registerService(
+            PosTransactionAccessGuard::class,
+            static function ($c): PosTransactionAccessGuard {
+                return new PosTransactionAccessGuard(policy: $c->get(PosAccessPolicy::class));
+            }
+        );
+
+        $context->registerService(
+            PosTransactionConfirmGuard::class,
+            static function ($c): PosTransactionConfirmGuard {
+                return new PosTransactionConfirmGuard(
+                    policy: $c->get(PosAccessPolicy::class),
+                    container: $c->get(ContainerInterface::class),
+                    appConfig: $c->get(IAppConfig::class),
+                    logger: $c->get(LoggerInterface::class),
+                );
+            }
+        );
+
+        $context->registerService(
+            PosTransactionRefundGuard::class,
+            static function ($c): PosTransactionRefundGuard {
+                return new PosTransactionRefundGuard(policy: $c->get(PosAccessPolicy::class));
+            }
+        );
+
+        $context->registerService(
+            PosRefundManagerGuard::class,
+            static function ($c): PosRefundManagerGuard {
+                return new PosRefundManagerGuard(
+                    policy: $c->get(PosAccessPolicy::class),
+                    container: $c->get(ContainerInterface::class),
+                    appConfig: $c->get(IAppConfig::class),
+                    logger: $c->get(LoggerInterface::class),
+                );
+            }
+        );
+    }//end registerPosLifecycleGuards()
 
     /**
      * Boot the application and register comment display name resolvers.

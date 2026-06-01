@@ -76,3 +76,17 @@ if (interface_exists(\OCA\OpenRegister\Mcp\IMcpToolProvider::class) === false) {
 if (class_exists(\OCA\OpenRegister\Service\ObjectService::class) === false) {
     require_once __DIR__ . '/Stubs/Service/ObjectService.php';
 }
+
+// Load the lifecycle contract stubs so the POS lifecycle guards (which implement
+// OCA\OpenRegister\Lifecycle\LifecycleGuardInterface and return GuardResult) and
+// the POS services (which consume TransitionEngine) can be unit-tested without
+// the openregister app installed. Each guards itself; the real classes win when
+// OpenRegister is present.
+if (interface_exists(\OCA\OpenRegister\Lifecycle\LifecycleGuardInterface::class) === false) {
+    require_once __DIR__ . '/Stubs/Lifecycle/GuardResult.php';
+    require_once __DIR__ . '/Stubs/Lifecycle/LifecycleGuardInterface.php';
+}
+
+if (class_exists(\OCA\OpenRegister\Service\Lifecycle\TransitionEngine::class) === false) {
+    require_once __DIR__ . '/Stubs/Service/Lifecycle/TransitionEngine.php';
+}
