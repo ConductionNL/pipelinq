@@ -4,6 +4,9 @@
  * Pipelinq Routes
  *
  * @spec openspec/changes/admin-settings/tasks.md#task-4.1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 return [
