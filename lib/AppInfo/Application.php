@@ -35,6 +35,7 @@ use OCA\Pipelinq\Lifecycle\PosRefundManagerGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionAccessGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
+use OCA\Pipelinq\BackgroundJob\VerifyAuditChainJob;
 use OCA\Pipelinq\Listener\DeepLinkRegistrationListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCA\Pipelinq\Mcp\PipelinqToolProvider;
@@ -109,6 +110,9 @@ class Application extends App implements IBootstrap
         );
 
         $this->registerPosLifecycleGuards(context: $context);
+
+        // Background job: hourly Kassakoppeling audit chain verification.
+        $context->registerBackgroundJob(VerifyAuditChainJob::class);
     }//end register()
 
     /**

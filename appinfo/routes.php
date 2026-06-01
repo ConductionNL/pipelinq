@@ -119,6 +119,15 @@ return [
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
 
+        // Kassakoppeling audit log endpoints (camelCase slug matches KassakoppelingAuditController).
+        // IMPORTANT: export route MUST precede the {id} wildcard to prevent "export" being
+        // treated as an object ID.
+        ['name' => 'kassakoppelingAudit#index',                'url' => '/api/kassakoppeling/audit',             'verb' => 'GET'],
+        ['name' => 'kassakoppelingAudit#create',               'url' => '/api/kassakoppeling/audit',             'verb' => 'POST'],
+        ['name' => 'kassakoppelingAudit#exportBelastingdienst','url' => '/api/kassakoppeling/audit/export',      'verb' => 'GET'],
+        ['name' => 'kassakoppelingAudit#show',                 'url' => '/api/kassakoppeling/audit/{id}',        'verb' => 'GET'],
+        ['name' => 'kassakoppelingAudit#verify',               'url' => '/api/kassakoppeling/audit/{id}/verify', 'verb' => 'POST'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
