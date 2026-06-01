@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "spec_slug": "admin-settings",
+  "repo": "https://codeberg.org/Conduction/pipelinq",
+  "issue": 47,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-06-01T07:48:07Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [],
+      "stages": []
+    }
+  ]
+}
