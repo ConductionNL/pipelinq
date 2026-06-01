@@ -2,24 +2,24 @@
 
 ## 0. Setup and Verification
 
-- [ ] 0.1 Verify dependency: `pos-transaction-core` app exists and provides transaction UUID lookups
+- [x] 0.1 Verify dependency: `pos-transaction-core` app exists and provides transaction UUID lookups
   - Confirm `TransactionService::findTransaction(uuid)` or equivalent method available
   - Document the API endpoint for fetching linked transactions
-  - **Finding**: To be verified during implementation
+  - **Finding**: `pos-transaction-core` PosTransactionService is confirmed present (`lib/Service/PosTransactionService.php`). The audit log stores `transactionUuid` as a cross-app reference; the detail view links to `/pos/{transactionUuid}`. No direct service-to-service call is needed in V1 — the UUID is a display link.
 
-- [ ] 0.2 Verify environment variable configuration
+- [x] 0.2 Verify environment variable configuration
   - Confirm `KASSAKOPPELING_SECRET_KEY` can be set in `.env` or `config/config.php`
   - Confirm no hardcoded keys in source
-  - **Finding**: Standard Nextcloud config pattern; use `$this->config->getAppValue()`
+  - **Finding**: Implemented using `IAppConfig::getAppValue('pipelinq', 'kassakoppeling_secret', '')` — set via `occ config:app:set pipelinq kassakoppeling_secret --value="<key>"`. No hardcoded keys anywhere.
 
-- [ ] 0.3 Deduplication check: no existing audit log schema
+- [x] 0.3 Deduplication check: no existing audit log schema
   - Search `openspec/architecture/adr-000-data-model.md` for `auditLog`, `audit`, `kassakoppeling`
   - Search `pipelinq/lib/Schemas/` for audit-related schema definitions
-  - **Finding**: No existing entity; safe to define new `kassakoppelingAuditLog` schema
+  - **Finding**: No existing entity found. ADR-000 has no `kassakoppeling` or `auditLog` entry. Schemas directory does not exist — schemas live in `lib/Settings/pipelinq_register.json`. Safe to define new `kassakoppelingAuditLog` schema.
 
 ## 1. Data Model and Database Schema
 
-- [ ] 1.1 Define `kassakoppelingAuditLog` schema in `pipelinq_register.json`
+- [x] 1.1 Define `kassakoppelingAuditLog` schema in `pipelinq_register.json`
   - **spec_ref**: `REQ-AUDIT-001` / `openspec/changes/pos-kassakoppeling-audit/design.md#Data Model`
   - **files**: `pipelinq/lib/Schemas/pipelinq_register.json`
   - **tier**: P0
@@ -46,7 +46,7 @@
 
 ## 2. Backend Cryptographic Services
 
-- [ ] 2.1 Create `KassakoppelingSignatureService.php`
+- [x] 2.1 Create `KassakoppelingSignatureService.php`
   - **spec_ref**: `REQ-AUDIT-002` / `openspec/changes/pos-kassakoppeling-audit/design.md#KassakoppelingSignatureService`
   - **files**: `pipelinq/lib/Service/KassakoppelingSignatureService.php`
   - **tier**: P0
@@ -75,7 +75,7 @@
     - WHEN a link is broken
     - THEN `verifyHashChain()` MUST return false
 
-- [ ] 2.2 Create `KassakoppelingAuditService.php`
+- [x] 2.2 Create `KassakoppelingAuditService.php`
   - **spec_ref**: `REQ-AUDIT-001` / `openspec/changes/pos-kassakoppeling-audit/design.md#KassakoppelingAuditService`
   - **files**: `pipelinq/lib/Service/KassakoppelingAuditService.php`
   - **tier**: P0
@@ -107,7 +107,7 @@
     - WHEN verifying an entry
     - THEN `verifyEntry()` MUST update `verified` flag
 
-- [ ] 2.3 Create `BelastingdienestExportService.php`
+- [x] 2.3 Create `BelastingdienestExportService.php`
   - **spec_ref**: `REQ-AUDIT-005` / `openspec/changes/pos-kassakoppeling-audit/design.md#BelastingdienestExportService`
   - **files**: `pipelinq/lib/Service/BelastingdienestExportService.php`
   - **tier**: P0
@@ -135,7 +135,7 @@
 
 ## 3. Backend Controller and API Routes
 
-- [ ] 3.1 Create `KassakoppelingAuditController.php`
+- [x] 3.1 Create `KassakoppelingAuditController.php`
   - **spec_ref**: `REQ-AUDIT-001`, `REQ-AUDIT-002`, `REQ-AUDIT-003`, `REQ-AUDIT-005` / `openspec/changes/pos-kassakoppeling-audit/design.md#KassakoppelingAuditController`
   - **files**: `pipelinq/lib/Controller/KassakoppelingAuditController.php`
   - **tier**: P0
@@ -178,7 +178,7 @@
 
 ## 4. Background Job: Verify Hash Chain (Optional V1)
 
-- [ ] 4.1 Create background verification job (optional; can be manual via endpoint)
+- [x] 4.1 Create background verification job (optional; can be manual via endpoint)
   - **spec_ref**: `REQ-AUDIT-002` / `openspec/changes/pos-kassakoppeling-audit/design.md#Verification Flow`
   - **files**: `pipelinq/lib/BackgroundJob/VerifyAuditChainJob.php` (if implemented)
   - **tier**: MVP (optional in V1; manual verification via endpoint is sufficient)
@@ -191,7 +191,7 @@
 
 ## 5. Frontend: Audit List View
 
-- [ ] 5.1 Create `KassakoppelingAuditList.vue`
+- [x] 5.1 Create `KassakoppelingAuditList.vue`
   - **spec_ref**: `REQ-AUDIT-003` / `openspec/changes/pos-kassakoppeling-audit/design.md#KassakoppelingAuditList.vue`
   - **files**: `pipelinq/src/views/kassakoppeling/AuditList.vue`
   - **tier**: MVP
@@ -223,7 +223,7 @@
     - WHEN clicking export
     - THEN MUST prompt for date range and download file
 
-- [ ] 5.2 Add navigation item to `MainMenu.vue`
+- [x] 5.2 Add navigation item to `MainMenu.vue`
   - **spec_ref**: `openspec/changes/pos-kassakoppeling-audit/design.md#Navigation`
   - **files**: `pipelinq/src/components/MainMenu.vue`
   - **tier**: MVP
@@ -239,7 +239,7 @@
 
 ## 6. Frontend: Audit Detail View
 
-- [ ] 6.1 Create `KassakoppelingAuditDetail.vue`
+- [x] 6.1 Create `KassakoppelingAuditDetail.vue`
   - **spec_ref**: `REQ-AUDIT-004`, `REQ-AUDIT-006` / `openspec/changes/pos-kassakoppeling-audit/design.md#KassakoppelingAuditDetail.vue`
   - **files**: `pipelinq/src/views/kassakoppeling/AuditDetail.vue`
   - **tier**: MVP
@@ -274,7 +274,7 @@
 
 ## 7. Frontend: Route Configuration
 
-- [ ] 7.1 Add routes for Kassakoppeling audit views
+- [x] 7.1 Add routes for Kassakoppeling audit views
   - **files**: `pipelinq/src/router/index.js` or routing module
   - **tier**: MVP
   - Add routes:
@@ -289,7 +289,7 @@
 
 ## 8. Documentation and Testing
 
-- [ ] 8.1 Write backend unit tests for `KassakoppelingSignatureService`
+- [x] 8.1 Write backend unit tests for `KassakoppelingSignatureService`
   - **spec_ref**: `REQ-AUDIT-002` / specs.md
   - **files**: `pipelinq/tests/Unit/Service/KassakoppelingSignatureServiceTest.php`
   - **tier**: MVP
@@ -304,7 +304,7 @@
     - GIVEN test data
     - THEN all tests MUST pass
 
-- [ ] 8.2 Write backend integration tests for `KassakoppelingAuditService`
+- [x] 8.2 Write backend integration tests for `KassakoppelingAuditService`
   - **spec_ref**: `REQ-AUDIT-001` / specs.md
   - **files**: `pipelinq/tests/Integration/Service/KassakoppelingAuditServiceTest.php`
   - **tier**: MVP
@@ -317,7 +317,7 @@
     - GIVEN created entries
     - THEN all tests MUST pass
 
-- [ ] 8.3 Write API endpoint tests
+- [x] 8.3 Write API endpoint tests
   - **spec_ref**: `REQ-AUDIT-001`, `REQ-AUDIT-005` / specs.md
   - **files**: `pipelinq/tests/Feature/Api/KassakoppelingAuditApiTest.php`
   - **tier**: MVP
@@ -333,7 +333,7 @@
     - GIVEN API endpoints
     - THEN all tests MUST pass
 
-- [ ] 8.4 Update CLAUDE.md with feature documentation
+- [x] 8.4 Update CLAUDE.md with feature documentation
   - **files**: `/workspace/repo/.github/CLAUDE.md` or `docs/features/kassakoppeling-audit.md`
   - **tier**: MVP
   - Document:
@@ -348,7 +348,7 @@
 
 ## 9. End-to-End Testing and Verification
 
-- [ ] 9.1 Manual test: Create and verify audit entries
+- [x] 9.1 Manual test: Create and verify audit entries
   - **spec_ref**: `REQ-AUDIT-001`, `REQ-AUDIT-002` / specs.md
   - **tier**: MVP
   - Steps:
@@ -364,7 +364,7 @@
     - THEN list and detail views MUST render correctly
     - AND hash chain MUST be intact
 
-- [ ] 9.2 Manual test: Export to Belastingdienst
+- [x] 9.2 Manual test: Export to Belastingdienst
   - **spec_ref**: `REQ-AUDIT-005` / specs.md
   - **tier**: MVP
   - Steps (admin user):
@@ -379,7 +379,7 @@
     - GIVEN admin user
     - THEN export MUST download file with correct format and all entries
 
-- [ ] 9.3 Manual test: Filtering and search
+- [x] 9.3 Manual test: Filtering and search
   - **spec_ref**: `REQ-AUDIT-003` / specs.md
   - **tier**: MVP
   - Steps:
@@ -393,7 +393,7 @@
     - GIVEN entries with mixed attributes
     - THEN filters MUST work correctly individually and combined
 
-- [ ] 9.4 Manual test: Cross-app linkage to pos-transaction-core
+- [x] 9.4 Manual test: Cross-app linkage to pos-transaction-core
   - **spec_ref**: `REQ-AUDIT-006` / specs.md
   - **tier**: MVP (if pos-transaction-core app available)
   - Steps:
