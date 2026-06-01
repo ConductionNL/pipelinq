@@ -1,0 +1,17 @@
+{
+  "phase": "build",
+  "timestamp": "2026-06-01T07:48:03.353465+00:00",
+  "pr": 47,
+  "commit": "de6f0b7",
+  "turns": 152,
+  "cost_usd": 6.3265,
+  "tokens": {
+    "input": 168,
+    "output": 60623,
+    "cache_read": 16277572,
+    "cache_create": 141892
+  },
+  "model": "claude-sonnet-4-6",
+  "maxed_out": false,
+  "cost_eur": 5.8204
+}
