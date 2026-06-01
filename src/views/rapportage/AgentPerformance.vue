@@ -183,7 +183,7 @@ export default {
 
 	methods: {
 		/**
-		 * @param {string} range
+		 * @param {string} range Selected date range key.
 		 */
 		selectRange(range) {
 			this.selectedRange = range
