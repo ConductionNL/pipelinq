@@ -19,7 +19,27 @@ Knowledge base articles are stored as OpenRegister objects in the `pipelinq` reg
 - **Category (kenniscategorie)**: name, slug, parent (UUID reference for hierarchy), description, order, icon
 - **Feedback (kennisfeedback)**: article (UUID reference), rating (nuttig/niet_nuttig), comment, agent (Nextcloud UID), timestamp
 
-## ADDED Requirements
+## Capability Provided Via the XWiki Leaf
+
+> UPDATED 2026-06-01: The bespoke in-app kennisbank (the `src/views/kennisbank/`
+> and `src/components/kennisbank/` Vue components — `ArticleDetail.vue`,
+> category tree/manager, feedback widgets — and the `kennisbank.js` store) has
+> been **removed** from this app. Knowledge management is no longer a Pipelinq
+> core competency: the knowledge-base capability is now provided through the
+> **XWiki leaf integration** that OpenRegister exposes (`integration-xwiki`),
+> surfaced on CRM objects via the leaf's tab + widget + reference-property chip.
+> See the change `migrate-kennisbank-to-xwiki-leaf` (and the superseded
+> `xwiki-integration` proposal). The earlier reverse-engineered requirements
+> that named the deleted bespoke Vue components/methods (`fetchArticle`,
+> `renderedBody`, `submitRating`, `submitSuggestion`, …) have been removed from
+> this spec because the code they documented no longer exists.
+>
+> The requirements below describe the knowledge-base *capability*. Where that
+> capability is delivered, it is delivered by the XWiki leaf rather than by
+> app-local controllers/components. No bespoke kennisbank UI or store is to be
+> re-introduced in this app (hydra ADR-022: consume the OR abstraction).
+
+## Requirements
 
 ---
 
@@ -459,46 +479,4 @@ The system MUST provide a dedicated navigation section for the kennisbank within
   - Should the kennisbank be a module within Pipelinq (recommended) or a separate Nextcloud app? Recommendation: module within Pipelinq, as it shares the register and is tightly coupled to KCC workflows.
   - How does the 500ms search performance requirement scale beyond 500 articles? Recommendation: OpenRegister search is sufficient for <1000 articles; Full Text Search app for larger deployments.
   - Should article content support embedded videos (e.g., instructional videos)? Recommendation: support YouTube/Vimeo embeds in Markdown via iframe syntax.
-## Requirements
-### Requirement: Knowledge base UI — documented operations
-
-The knowledge base screens implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `fetchArticle`, `renderedBody`, `submitRating`, `submitSuggestion`). Each listed method realises an observable part of knowledge base screens and MUST behave as implemented in the current codebase.
-
-**Feature tier**: V1
-
-#### Scenario: Documented operations are available
-
-- GIVEN the frontend component/store is loaded
-- WHEN a caller invokes one of the documented operations for knowledge base screens
-- THEN the operation MUST execute and return a result consistent with the current implementation
-
----
-
-### Requirement: Knowledge base UI — results derived from current CRM state
-
-Operations for knowledge base screens MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
-
-**Feature tier**: V1
-
-#### Scenario: Results reflect live state
-
-- GIVEN CRM data backing knowledge base screens
-- WHEN a documented operation runs
-- THEN its output MUST be derived from that data
-- AND it MUST change when the underlying data changes
-
----
-
-### Requirement: Knowledge base UI — defensive handling of absent or invalid input
-
-Operations for knowledge base screens MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
-
-**Feature tier**: V1
-
-#### Scenario: Missing input does not crash the flow
-
-- GIVEN an operation for knowledge base screens is called with absent or invalid input
-- WHEN it executes
-- THEN it MUST return a safe default or a validation result
-- AND it MUST NOT raise an unhandled exception
 

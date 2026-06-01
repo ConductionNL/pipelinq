@@ -1,5 +1,13 @@
 # Reverse-spec — Automation UI
 
+> SUPERSEDED 2026-06-01: The bespoke automation rule editor Vue this reverse-spec
+> documented (`src/views/automations/AutomationBuilder.vue` etc.) has been
+> removed; automation migrated to the NC **workflowengine (Flow) leaf**. See the
+> change `migrate-automation-to-flow-leaf`. This reverse-spec stays archived for
+> history; its requirements were un-synced from
+> `openspec/specs/crm-workflow-automation/spec.md`. Do NOT resurrect the deleted
+> code.
+
 Retroactively specifies the observed behavior of 13 method(s) implementing automation rule editor screens. The code already exists and is exercised in the running app — this change documents its true capabilities as REQs and annotates each method with an `@spec` reference. No code logic changes.
 
 ## Affected code units
