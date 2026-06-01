@@ -1,0 +1,24 @@
+{
+  "spec": "openspec/changes/admin-settings",
+  "verified": [
+    {"task": "0.1", "file": "openspec/changes/admin-settings/tasks.md", "ok": true},
+    {"task": "1.1", "file": "lib/Service/ObjectenAccessService.php", "ok": true},
+    {"task": "2.1", "file": "lib/Service/ApiAuthService.php", "ok": true},
+    {"task": "3.1", "file": "lib/Controller/SettingsController.php", "ok": true},
+    {"task": "3.2", "file": "lib/Controller/SettingsController.php", "ok": true},
+    {"task": "3.3", "file": "lib/Controller/SettingsController.php", "ok": true},
+    {"task": "3.4", "file": "lib/Controller/SettingsController.php", "ok": true},
+    {"task": "3.5", "file": "lib/Controller/SettingsController.php", "ok": true},
+    {"task": "4.1", "file": "appinfo/routes.php", "ok": true},
+    {"task": "5.1", "file": "src/views/admin/AdminSettings.vue", "ok": true},
+    {"task": "5.2", "file": "src/views/admin/AdminSettings.vue", "ok": true},
+    {"task": "5.3", "file": "src/views/admin/AdminSettings.vue", "ok": true},
+    {"task": "5.4", "file": "src/views/admin/AdminSettings.vue", "ok": true},
+    {"task": "6.1", "file": "l10n/en.json", "ok": true},
+    {"task": "6.1", "file": "l10n/nl.json", "ok": true},
+    {"task": "7.5", "file": "tests/Unit/", "ok": true}
+  ],
+  "stubs": [],
+  "missing_routes": [],
+  "notes": "GIT_TOKEN not set in container — push and PR creation blocked. All code committed locally. phpunit: 22/22 tests pass. Hydra gates: 14/14 green."
+}
