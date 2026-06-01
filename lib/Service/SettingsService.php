@@ -118,6 +118,10 @@ class SettingsService
         'receipt_printer_host'                     => '',
         'receipt_printer_port'                     => '9100',
         'receipt_default_template'                 => '',
+        // xWiki integration settings (@spec openspec/changes/xwiki-integration/tasks.md#task-2.1)
+        'xwiki_default_space'                      => '',
+        'xwiki_cache_ttl'                          => '300',
+        'xwiki_direct_url'                         => '',
     ];
 
     /**

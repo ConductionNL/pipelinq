@@ -119,6 +119,13 @@ return [
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
 
+        // xWiki proxy endpoints — must precede the SPA catch-all.
+        // @spec openspec/changes/xwiki-integration/tasks.md#task-1.3
+        ['name' => 'xWiki#status', 'url' => '/api/xwiki/status', 'verb' => 'GET'],
+        ['name' => 'xWiki#search', 'url' => '/api/xwiki/search', 'verb' => 'GET'],
+        ['name' => 'xWiki#pages',  'url' => '/api/xwiki/pages',  'verb' => 'GET'],
+        ['name' => 'xWiki#page',   'url' => '/api/xwiki/page/{wiki}/{page}', 'verb' => 'GET', 'requirements' => ['page' => '.+']],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
