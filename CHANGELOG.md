@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **POS Bookkeeping**: Automated Z-report generation and idempotent submission to Shillinq
+  - Daily background job generates `posZReport` objects from confirmed/settled transactions
+  - `posJournalEntryOutbound` staging schema with GL account mapping and exponential backoff retry
+  - `glAccountMapping` schema for per-tax-rate debit/credit GL account configuration
+  - `PosBookkeepingService` with three-stage pipeline: aggregation, GL transformation, HTTP submission
+  - Idempotency keys (SHA256) prevent duplicate journal entries in Shillinq
+  - CloudEvent emission on successful posting (`pipelinq.PosJournalEntry.posted`, `pipelinq.PosZReport.submitted`)
+  - `GenerateZReportJob` scheduled daily at configurable time (default 23:59)
+  - `PosRetryBackoffJob` for exponential backoff retry (1 min, 5 min, 15 min, 1 hr)
+  - `PosBookkeepingController` with accounting-role authorization for manual resubmit
+  - Admin settings panel (GL mapping, Shillinq endpoint/token, alert email, test connection)
+  - Z-report list view with status/date/terminal/search filters
+  - Z-report detail view with tax breakdown, payment method breakdown, ledger items, submission timeline
+  - `SubmissionTimeline` component showing all submission attempts with colour-coded status badges
+
 ## [0.2.28] - 2026-06-01
 
 ### Security

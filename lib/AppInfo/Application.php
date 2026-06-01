@@ -24,6 +24,8 @@ namespace OCA\Pipelinq\AppInfo;
 use OCA\OpenRegister\Event\DeepLinkRegistrationEvent;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\Pipelinq\BackgroundJob\GenerateZReportJob;
+use OCA\Pipelinq\BackgroundJob\PosRetryBackoffJob;
 use OCA\Pipelinq\Dashboard\CreateLeadWidget;
 use OCA\Pipelinq\Dashboard\DealsOverviewWidget;
 use OCA\Pipelinq\Dashboard\FindClientWidget;
@@ -42,6 +44,7 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\BackgroundJob\IJobList;
 use OCP\AppFramework\Services\IInitialState;
 use OCP\Comments\ICommentsManager;
 use OCP\IAppConfig;
@@ -109,7 +112,64 @@ class Application extends App implements IBootstrap
         );
 
         $this->registerPosLifecycleGuards(context: $context);
+        $this->registerPosBookkeepingJobs(context: $context);
     }//end register()
+
+    /**
+     * Register the POS lifecycle guards keyed by the FQCN tag the
+     * posTransaction / posRefund schemas reference in their
+     * x-openregister-lifecycle.transitions[*].requires.
+     *
+     * OpenRegister's LifecycleGuardRegistry resolves the `requires` tag to a
+     * concrete LifecycleGuardInterface instance via the app container (with the
+     * NC server container as FQCN fallback). The registry is fail-closed: a
+     * transition that references an unregistered guard tag cannot proceed, so
+     * these registrations are load-bearing for the POS lifecycle.
+     *
+     * @param IRegistrationContext $context The registration context.
+     *
+     * @return void
+     */
+
+    /**
+     * Register the POS bookkeeping background jobs in the DI container and job list.
+     *
+     * GenerateZReportJob runs every 60 seconds and self-gates on the configured
+     * daily generation time. PosRetryBackoffJob is a QueuedJob instantiated
+     * on-demand when a Shillinq submission encounters a 5xx or network error.
+     *
+     * @param IRegistrationContext $context The registration context.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#3.3
+     */
+    private function registerPosBookkeepingJobs(IRegistrationContext $context): void
+    {
+        // Register the jobs as services so they are autoloadable from the DI container.
+        $context->registerService(
+            GenerateZReportJob::class,
+            static function ($c): GenerateZReportJob {
+                return new GenerateZReportJob(
+                    time: $c->get(\OCP\AppFramework\Utility\ITimeFactory::class),
+                    bookkeepingService: $c->get(\OCA\Pipelinq\Service\PosBookkeepingService::class),
+                    appConfig: $c->get(\OCP\IAppConfig::class),
+                    logger: $c->get(\Psr\Log\LoggerInterface::class),
+                );
+            }
+        );
+
+        $context->registerService(
+            PosRetryBackoffJob::class,
+            static function ($c): PosRetryBackoffJob {
+                return new PosRetryBackoffJob(
+                    time: $c->get(\OCP\AppFramework\Utility\ITimeFactory::class),
+                    bookkeepingService: $c->get(\OCA\Pipelinq\Service\PosBookkeepingService::class),
+                    logger: $c->get(\Psr\Log\LoggerInterface::class),
+                );
+            }
+        );
+    }//end registerPosBookkeepingJobs()
 
     /**
      * Register the POS lifecycle guards keyed by the FQCN tag the

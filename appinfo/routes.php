@@ -119,6 +119,15 @@ return [
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
 
+        // POS bookkeeping (camelCase slug matches PosBookkeepingController class name).
+        // Manual trigger / resubmit of a posJournalEntryOutbound to Shillinq.
+        ['name' => 'posBookkeeping#post', 'url' => '/api/pos-bookkeeping/post', 'verb' => 'POST'],
+
+        // POS bookkeeping admin configuration (camelCase slug matches Admin\PosBookkeepingConfigController).
+        ['name' => 'posBookkeepingConfig#index',          'url' => '/api/admin/pos-bookkeeping/config',            'verb' => 'GET'],
+        ['name' => 'posBookkeepingConfig#save',           'url' => '/api/admin/pos-bookkeeping/config',            'verb' => 'POST'],
+        ['name' => 'posBookkeepingConfig#testConnection', 'url' => '/api/admin/pos-bookkeeping/config/test',       'verb' => 'POST'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],

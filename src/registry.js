@@ -69,6 +69,13 @@ import PosRefundListView from './views/pos/PosRefundList.vue'
 import PosRefundDetailView from './views/pos/PosRefundDetail.vue'
 import PosRefundFormView from './views/pos/PosRefundForm.vue'
 
+// --- POS end-of-day bookkeeping (Z-report list + detail with submission timeline;
+//     admin settings panel for GL mapping and Shillinq configuration). ---
+// @spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#5.1,5.2,4.1
+import ZReportListView from './views/pos/ZReportList.vue'
+import ZReportDetailView from './views/pos/ZReportDetail.vue'
+import PosBookkeepingSettingsView from './views/admin/PosBookkeepingSettings.vue'
+
 // --- Product barcode lookup (lib gap: index pages have no server-authoritative
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
 import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
@@ -246,6 +253,24 @@ const registry = {
 		kind: 'page',
 		component: ProductBarcodeSearchView,
 		_note: 'Scan-to-navigate barcode search; resolves via the server-authoritative scoped barcode-lookup API and routes to the matching product (highlighting a matched variant).',
+	},
+
+	// --- POS end-of-day bookkeeping: Z-report list, detail, and admin settings. ---
+	// @spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#5.1,5.2,4.1
+	ZReportListView: {
+		kind: 'page',
+		component: ZReportListView,
+		_note: 'Z-report list with status/date/terminal/search filters; routes to ZReportDetail on row click.',
+	},
+	ZReportDetailView: {
+		kind: 'page',
+		component: ZReportDetailView,
+		_note: 'Z-report detail with tax breakdown, payment method breakdown, GL ledger items, submission timeline, and accounting-role-gated submit/retry actions.',
+	},
+	PosBookkeepingSettingsView: {
+		kind: 'page',
+		component: PosBookkeepingSettingsView,
+		_note: 'Admin settings panel for POS bookkeeping: Z-report time, Shillinq endpoint/token, alert email, GL account mapping per tax rate, connection test.',
 	},
 }
 
