@@ -26,14 +26,15 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use ReflectionClass;
 use RuntimeException;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
-use OCP\IGroupManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -44,22 +45,38 @@ use Psr\Log\LoggerInterface;
  * (server-authoritative). Client-supplied subtotal / tax / total values are
  * never trusted: confirm and recalculate always re-derive them from the lines.
  *
+ * Lifecycle transitions are applied through OpenRegister's TransitionEngine
+ * (ADR-031): the engine enforces the declarative x-openregister-lifecycle table
+ * on the posTransaction schema, runs the registered lifecycle guards (which own
+ * the per-object authorization that closes the IDOR), and fires
+ * ObjectTransitionedEvent for audit + notifications. This service no longer
+ * mutates `status` directly or hand-rolls a manager gate.
+ *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Wires the collaborators a POS
- *  lifecycle service legitimately needs (OR container, app config, group
- *  manager, optional webhook dispatch, logger); splitting them would add
- *  indirection without reducing real coupling.
+ *  lifecycle service legitimately needs (OR container, app config, optional
+ *  webhook dispatch, logger); splitting them would add indirection without
+ *  reducing real coupling.
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The class aggregates the
- *  whole POS lifecycle (calc core + five transitions + event emit + OR
+ *  whole POS lifecycle (calc core + five transition wrappers + event emit + OR
  *  persistence helpers) as many small, single-purpose methods; the cohesion is
  *  intentional and splitting it would scatter one transactional concern across
  *  several classes without reducing real complexity.
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)     The public surface is the POS
  *  calculation core (recalculateLine / computeTotals / normalizePriceMode), the
  *  BTW report aggregator (buildTaxReport / taxReport), the five lifecycle
- *  transitions, the manager gate and the event emitter — all single-purpose and
+ *  transition wrappers and the event emitter — all single-purpose and
  *  unit-tested individually; collapsing them would only hide tested seams.
+ * @SuppressWarnings(PHPMD.TooManyMethods)           Same cohesion rationale: the
+ *  calc core + report + five transition wrappers + engine/error-mapping helpers
+ *  + OR persistence helpers are one POS lifecycle concern, intentionally kept
+ *  together.
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)     The class aggregates the whole
+ *  POS transaction lifecycle as many small, single-purpose methods; the length
+ *  reflects breadth of a cohesive concern, not tangled logic. Splitting it would
+ *  scatter one transactional concern across several classes.
  *
  * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+ * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
  */
 class PosTransactionService
 {
@@ -78,24 +95,17 @@ class PosTransactionService
     private const EVENT_SOURCE = '/apps/pipelinq/pos';
 
     /**
-     * Statuses from which a transaction may be confirmed.
-     *
-     * @var array<int, string>
-     */
-    private const CONFIRMABLE_FROM = ['draft', 'parked'];
-
-    /**
      * Constructor.
      *
-     * @param ContainerInterface $container    The DI container.
-     * @param IAppConfig         $appConfig    The app config.
-     * @param IGroupManager      $groupManager The group manager.
-     * @param LoggerInterface    $logger       The logger.
+     * @param ContainerInterface $container The DI container.
+     * @param IAppConfig         $appConfig The app config.
+     * @param PosAccessPolicy    $policy    The shared POS access policy.
+     * @param LoggerInterface    $logger    The logger.
      */
     public function __construct(
         private ContainerInterface $container,
         private IAppConfig $appConfig,
-        private IGroupManager $groupManager,
+        private PosAccessPolicy $policy,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -451,14 +461,26 @@ class PosTransactionService
      * Build the per-rate BTW compliance report for every transaction in this
      * app's register (optionally narrowed to a status).
      *
+     * The cross-object BTW report aggregates every fiscally-final transaction in
+     * the register, so it is restricted to POS managers / admins (a cashier may
+     * only see their own sale, not the whole ledger). The gate fails closed.
+     *
      * @param string|null $status Optional status filter (confirmed/settled/refunded).
+     * @param string      $userId The acting user UID (must be a POS manager / admin).
      *
      * @return array<string, mixed> The aggregated report.
      *
+     * @throws OCSForbiddenException If the caller is not a POS manager / admin.
+     *
      * @spec openspec/changes/pos-nl-btw-engine/specs/pos-nl-btw-engine/spec.md#REQ-BTW-003
+     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.3
      */
-    public function taxReport(?string $status=null): array
+    public function taxReport(?string $status=null, string $userId=''): array
     {
+        if ($this->policy->isManager(userId: $userId) === false) {
+            throw new OCSForbiddenException('Alleen een beheerder mag het BTW-rapport opvragen.');
+        }
+
         $transactions = $this->fetchAllTransactions(status: $status);
 
         return $this->buildTaxReport(transactions: $transactions);
@@ -506,34 +528,32 @@ class PosTransactionService
      */
     public function confirmTransaction(string $id, string $userId): array
     {
+        // Pre-stage server-authoritative side-effect fields BEFORE the engine
+        // applies the status transition. Money is recomputed here (the guard
+        // verifies the non-empty-cart precondition and the per-object access
+        // rule that closes the IDOR; the engine validates the from-state).
         $transaction = $this->fetchTransaction(id: $id);
-        $status      = (string) ($transaction['status'] ?? '');
-
-        if (in_array($status, self::CONFIRMABLE_FROM, true) === false) {
-            throw new OCSBadRequestException('Alleen concept- of geparkeerde transacties kunnen worden bevestigd.');
-        }
-
-        $lines = $this->fetchLines(transactionId: $id);
-        if (count($lines) === 0) {
-            throw new OCSBadRequestException('Voeg minimaal één artikel toe.');
-        }
-
         $mode        = $this->normalizePriceMode(mode: ($transaction['priceMode'] ?? null));
+        $lines       = $this->fetchLines(transactionId: $id);
         $totals      = $this->computeTotals(lines: $lines, priceMode: $mode);
-        $confirmedAt = $this->now();
 
         $transaction = array_merge(
             $transaction,
             $totals,
             [
-                'status'      => 'confirmed',
-                'confirmedAt' => $confirmedAt,
+                'confirmedAt' => $this->now(),
                 'parkedAt'    => null,
             ]
         );
+        $this->saveTransaction(id: $id, transaction: $transaction);
 
-        $saved = $this->saveTransaction(id: $id, transaction: $transaction);
+        // Apply the transition through OpenRegister: it enforces the lifecycle
+        // table, runs PosTransactionConfirmGuard (access + non-empty cart), sets
+        // status=confirmed and fires ObjectTransitionedEvent.
+        $saved = $this->transitionObject(id: $id, action: 'confirm');
 
+        // Emit the shillinq accounting CloudEvent (fire-and-forget) and persist
+        // the resulting event id.
         $eventId = $this->emitConfirmedEvent(transaction: $saved);
         if ($eventId !== '') {
             $saved['cloudEventId'] = $eventId;
@@ -554,24 +574,23 @@ class PosTransactionService
      * @return array<string, mixed> The settled transaction.
      *
      * @throws OCSNotFoundException   If the transaction does not exist.
+     * @throws OCSForbiddenException  If the caller may not access the transaction.
      * @throws OCSBadRequestException If the transaction is not confirmed.
      *
      * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
      */
     public function settleTransaction(string $id, string $userId): array
     {
         $transaction = $this->fetchTransaction(id: $id);
-
-        if ((string) ($transaction['status'] ?? '') !== 'confirmed') {
-            throw new OCSBadRequestException('Transactie moet bevestigd zijn voor afrekenen.');
-        }
-
-        $transaction['status']    = 'settled';
         $transaction['settledAt'] = $this->now();
+        $this->saveTransaction(id: $id, transaction: $transaction);
+
+        $saved = $this->transitionObject(id: $id, action: 'settle');
 
         $this->logger->info('Pipelinq: POS transaction settled', ['id' => $id, 'userId' => $userId]);
 
-        return $this->saveTransaction(id: $id, transaction: $transaction);
+        return $saved;
     }//end settleTransaction()
 
     /**
@@ -588,31 +607,27 @@ class PosTransactionService
      * @throws OCSBadRequestException If the status is invalid or the reason is empty.
      *
      * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
      */
     public function refundTransaction(string $id, string $reason, string $userId): array
     {
-        if ($this->isManager(userId: $userId) === false) {
-            throw new OCSForbiddenException('Alleen een beheerder mag een transactie terugboeken.');
-        }
-
         if (trim($reason) === '') {
             throw new OCSBadRequestException('Vul een reden in voor de terugboeking.');
         }
 
+        // Manager authorization is enforced by PosTransactionRefundGuard inside
+        // the engine; the reason is a side-effect field persisted before the
+        // transition.
         $transaction = $this->fetchTransaction(id: $id);
-        $status      = (string) ($transaction['status'] ?? '');
-
-        if (in_array($status, ['confirmed', 'settled'], true) === false) {
-            throw new OCSBadRequestException('Alleen bevestigde of afgerekende transacties kunnen worden teruggeboekt.');
-        }
-
-        $transaction['status']       = 'refunded';
         $transaction['refundedAt']   = $this->now();
         $transaction['refundReason'] = $reason;
+        $this->saveTransaction(id: $id, transaction: $transaction);
+
+        $saved = $this->transitionObject(id: $id, action: 'refund');
 
         $this->logger->info('Pipelinq: POS transaction refunded', ['id' => $id, 'userId' => $userId]);
 
-        return $this->saveTransaction(id: $id, transaction: $transaction);
+        return $saved;
     }//end refundTransaction()
 
     /**
@@ -624,24 +639,23 @@ class PosTransactionService
      * @return array<string, mixed> The parked transaction.
      *
      * @throws OCSNotFoundException   If the transaction does not exist.
+     * @throws OCSForbiddenException  If the caller may not access the transaction.
      * @throws OCSBadRequestException If the transaction is not a draft.
      *
      * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
      */
     public function parkTransaction(string $id, string $userId): array
     {
         $transaction = $this->fetchTransaction(id: $id);
-
-        if ((string) ($transaction['status'] ?? '') !== 'draft') {
-            throw new OCSBadRequestException('Alleen concept-transacties kunnen worden geparkeerd.');
-        }
-
-        $transaction['status']   = 'parked';
         $transaction['parkedAt'] = $this->now();
+        $this->saveTransaction(id: $id, transaction: $transaction);
+
+        $saved = $this->transitionObject(id: $id, action: 'park');
 
         $this->logger->info('Pipelinq: POS transaction parked', ['id' => $id, 'userId' => $userId]);
 
-        return $this->saveTransaction(id: $id, transaction: $transaction);
+        return $saved;
     }//end parkTransaction()
 
     /**
@@ -653,25 +667,127 @@ class PosTransactionService
      * @return array<string, mixed> The resumed transaction.
      *
      * @throws OCSNotFoundException   If the transaction does not exist.
+     * @throws OCSForbiddenException  If the caller may not access the transaction.
      * @throws OCSBadRequestException If the transaction is not parked.
      *
      * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
      */
     public function resumeTransaction(string $id, string $userId): array
     {
         $transaction = $this->fetchTransaction(id: $id);
-
-        if ((string) ($transaction['status'] ?? '') !== 'parked') {
-            throw new OCSBadRequestException('Alleen geparkeerde transacties kunnen worden hervat.');
-        }
-
-        $transaction['status']   = 'draft';
         $transaction['parkedAt'] = null;
+        $this->saveTransaction(id: $id, transaction: $transaction);
+
+        $saved = $this->transitionObject(id: $id, action: 'resume');
 
         $this->logger->info('Pipelinq: POS transaction resumed', ['id' => $id, 'userId' => $userId]);
 
-        return $this->saveTransaction(id: $id, transaction: $transaction);
+        return $saved;
     }//end resumeTransaction()
+
+    /**
+     * Apply a named lifecycle transition through OpenRegister's TransitionEngine.
+     *
+     * The engine validates the declarative x-openregister-lifecycle table on the
+     * posTransaction schema, enforces per-object `update` RBAC, runs the
+     * transition's registered guard (which owns the per-object authorization
+     * that closes the IDOR), saves through ObjectService, and dispatches
+     * ObjectTransitionedEvent. A denial / invalid transition is mapped to the
+     * appropriate OCS exception so the controller surfaces 403 / 422 / 404.
+     *
+     * @param string $id     The transaction UUID.
+     * @param string $action The transition action.
+     *
+     * @return array<string, mixed> The saved transaction as an array.
+     *
+     * @throws OCSForbiddenException  When the guard / RBAC denies the transition.
+     * @throws OCSBadRequestException When the transition is invalid from the current state.
+     * @throws OCSNotFoundException   When the object cannot be resolved.
+     *
+     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
+     */
+    private function transitionObject(string $id, string $action): array
+    {
+        try {
+            $saved = $this->getTransitionEngine()->transition(objectId: $id, action: $action);
+        } catch (\Throwable $e) {
+            throw $this->mapTransitionError(e: $e);
+        }
+
+        return $this->toArray(object: $saved);
+    }//end transitionObject()
+
+    /**
+     * Map a TransitionEngine throwable to the correct OCS exception.
+     *
+     * Authorization denials (NotAuthorizedException / guard deny) → 403; an
+     * invalid-state transition → 422; everything else is rethrown for the
+     * controller's generic 500 handler. Matching is by class short-name + message
+     * so the app does not hard-depend on OR's exception classes at compile time.
+     *
+     * @param \Throwable $e The engine throwable.
+     *
+     * @return \Throwable The mapped OCS exception (or the original on no match).
+     *
+     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.3
+     */
+    private function mapTransitionError(\Throwable $e): \Throwable
+    {
+        $short   = (new ReflectionClass($e))->getShortName();
+        $message = $e->getMessage();
+
+        // Per-object RBAC denial from the engine → 403.
+        if ($short === 'NotAuthorizedException' || stripos($message, 'permission') !== false) {
+            $forbidden = 'Geen toegang tot deze transactie.';
+            if ($message !== '') {
+                $forbidden = $message;
+            }
+
+            return new OCSForbiddenException($forbidden);
+        }
+
+        // Guard authorization denials (HookStoppedException carrying the guard's
+        // deny message) → 403. The POS access / refund guards phrase denials with
+        // these Dutch markers; an IDOR attempt therefore surfaces as 403.
+        if ($this->isAccessDenial(message: $message) === true) {
+            return new OCSForbiddenException($message);
+        }
+
+        // Invalid-state transition or other guard precondition → 422.
+        if (stripos($message, 'not allowed from') !== false
+            || stripos($message, 'not declared') !== false
+            || stripos($message, 'artikel') !== false
+        ) {
+            return new OCSBadRequestException($message);
+        }
+
+        if (stripos($message, 'not found') !== false) {
+            return new OCSNotFoundException($message);
+        }
+
+        return $e;
+    }//end mapTransitionError()
+
+    /**
+     * Whether a transition-engine error message is an access (authz) denial.
+     *
+     * @param string $message The error message.
+     *
+     * @return bool Whether it represents an access denial (→ HTTP 403).
+     *
+     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.3
+     */
+    private function isAccessDenial(string $message): bool
+    {
+        foreach (['gemachtigd', 'beheerder', 'mag deze transactie', 'mag een transactie'] as $marker) {
+            if (stripos($message, $marker) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }//end isAccessDenial()
 
     /**
      * Emit the pipelinq.PosTransaction.confirmed CloudEvent (fire-and-forget).
@@ -748,37 +864,6 @@ class PosTransactionService
             ],
         ];
     }//end buildConfirmedPayload()
-
-    /**
-     * Whether a user has manager permission for refund / void.
-     *
-     * A manager is a member of the configured manager group
-     * (`pos_manager_group`, default `admin`) or a Nextcloud administrator.
-     * Fails closed: if no group is configured, only NC admins qualify.
-     *
-     * @param string $userId The user UID.
-     *
-     * @return bool Whether the user is a POS manager.
-     *
-     * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
-     */
-    public function isManager(string $userId): bool
-    {
-        if ($userId === '') {
-            return false;
-        }
-
-        if ($this->groupManager->isAdmin($userId) === true) {
-            return true;
-        }
-
-        $managerGroup = $this->appConfig->getValueString(Application::APP_ID, 'pos_manager_group', '');
-        if ($managerGroup === '') {
-            return false;
-        }
-
-        return $this->groupManager->isInGroup($userId, $managerGroup);
-    }//end isManager()
 
     /**
      * Fetch a transaction from this app's register, as an array.
@@ -948,6 +1033,24 @@ class PosTransactionService
             throw new RuntimeException('OpenRegister service is not available.');
         }
     }//end getObjectService()
+
+    /**
+     * Get the OpenRegister lifecycle TransitionEngine.
+     *
+     * @return object The transition engine.
+     *
+     * @throws RuntimeException If OpenRegister is not available.
+     *
+     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
+     */
+    private function getTransitionEngine(): object
+    {
+        try {
+            return $this->container->get('OCA\OpenRegister\Service\Lifecycle\TransitionEngine');
+        } catch (\Throwable $e) {
+            throw new RuntimeException('OpenRegister TransitionEngine is not available.');
+        }
+    }//end getTransitionEngine()
 
     /**
      * Normalise an OR object (entity or array) into a plain array.

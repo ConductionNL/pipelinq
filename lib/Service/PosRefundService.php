@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use ReflectionClass;
 use RuntimeException;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -35,7 +36,6 @@ use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
-use OCP\IGroupManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -46,24 +46,30 @@ use Psr\Log\LoggerInterface;
  * posTransactionLine's persisted, server-authoritative taxAmount / lineTotal
  * (which PosTransactionService wrote on confirm). Client-supplied refund
  * amounts are never trusted. The cumulative over-refund cap prevents refunding
- * more than was originally sold, per line and in aggregate. Confirm and reject
- * are manager-gated and fail closed.
+ * more than was originally sold, per line and in aggregate.
+ *
+ * Lifecycle transitions are applied through OpenRegister's TransitionEngine
+ * (ADR-031): the engine enforces the declarative x-openregister-lifecycle table
+ * on the posRefund schema and runs PosRefundManagerGuard, which owns the
+ * manager-only authorization AND the cumulative over-refund cap on `complete`.
+ * This service no longer mutates `status` directly or hand-rolls a manager gate.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Wires the collaborators a
- *  refund lifecycle service legitimately needs (OR container, app config, group
- *  manager, optional webhook dispatch, logger); splitting them would add
- *  indirection without reducing real coupling.
+ *  refund lifecycle service legitimately needs (OR container, app config,
+ *  optional webhook dispatch, logger); splitting them would add indirection
+ *  without reducing real coupling.
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The class aggregates the
- *  whole refund lifecycle (proportional calc + cap + two transitions + two event
- *  emitters + OR persistence helpers) as many small, single-purpose methods; the
- *  cohesion is intentional and splitting it would scatter one transactional
- *  concern across several classes without reducing real complexity.
+ *  whole refund lifecycle (proportional calc + two transition wrappers + two
+ *  event emitters + OR persistence helpers) as many small, single-purpose
+ *  methods; the cohesion is intentional and splitting it would scatter one
+ *  transactional concern across several classes without reducing real complexity.
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)     The public surface is the
  *  refund calculation core (recalculateLine / recalculateTotals), the two
- *  manager-gated transitions (confirmRefund / rejectRefund), the manager gate and
- *  the two event emitters — all single-purpose and unit-tested individually.
+ *  transition wrappers (confirmRefund / rejectRefund) and the two event
+ *  emitters — all single-purpose and unit-tested individually.
  *
  * @spec openspec/changes/pos-refund-return/tasks.md#2.1
+ * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.2
  */
 class PosRefundService
 {
@@ -89,26 +95,15 @@ class PosRefundService
     private const EVENT_SOURCE = '/apps/pipelinq/pos';
 
     /**
-     * A tolerance (one cent) applied to the over-refund cap so that
-     * floating-point rounding of proportional figures can never wrongly reject a
-     * legitimate full-quantity refund.
-     *
-     * @var float
-     */
-    private const CAP_TOLERANCE = 0.01;
-
-    /**
      * Constructor.
      *
-     * @param ContainerInterface $container    The DI container.
-     * @param IAppConfig         $appConfig    The app config.
-     * @param IGroupManager      $groupManager The group manager.
-     * @param LoggerInterface    $logger       The logger.
+     * @param ContainerInterface $container The DI container.
+     * @param IAppConfig         $appConfig The app config.
+     * @param LoggerInterface    $logger    The logger.
      */
     public function __construct(
         private ContainerInterface $container,
         private IAppConfig $appConfig,
-        private IGroupManager $groupManager,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -229,14 +224,7 @@ class PosRefundService
      */
     public function confirmRefund(string $id, string $userId): array
     {
-        if ($this->isManager(userId: $userId) === false) {
-            throw new OCSForbiddenException('Alleen een beheerder mag een retour bevestigen.');
-        }
-
         $refund = $this->fetchRefund(id: $id);
-        if ((string) ($refund['status'] ?? '') !== 'pending') {
-            throw new OCSBadRequestException('Alleen openstaande retouren kunnen worden bevestigd.');
-        }
 
         $lines = $this->fetchRefundLines(refundId: $id);
         if (count($lines) === 0) {
@@ -244,32 +232,24 @@ class PosRefundService
         }
 
         // Verify the original transaction exists (orphan guard, REQ-REF-014).
-        $original      = $this->fetchTransaction(id: (string) ($refund['originalTransaction'] ?? ''));
-        $originalTotal = (float) ($original['total'] ?? 0);
+        $this->fetchTransaction(id: (string) ($refund['originalTransaction'] ?? ''));
 
         // Server-authoritative recompute from the original lines' persisted tax.
-        $refund      = $this->recalculateTotals(refundId: $id);
-        $refundGross = ((float) ($refund['refundAmount'] ?? 0) + (float) ($refund['totalTax'] ?? 0));
+        // This persists the computed refundAmount / totalTax that the
+        // PosRefundManagerGuard then reads to enforce the cumulative over-refund
+        // cap during the `complete` transition.
+        $this->recalculateTotals(refundId: $id);
 
-        // Cumulative over-refund cap: this refund plus every already-completed
-        // refund for the same transaction must not exceed the original total.
-        $alreadyRefunded = $this->sumCompletedRefunds(
-            transactionId: (string) ($refund['originalTransaction'] ?? ''),
-            excludeRefundId: $id
-        );
+        // Stamp the completion timestamp before the engine flips the status.
+        $refund = $this->fetchRefund(id: $id);
+        $refund['confirmedAt'] = $this->now();
+        $this->saveRefund(id: $id, refund: $refund);
 
-        if (($alreadyRefunded + $refundGross) > ($originalTotal + self::CAP_TOLERANCE)) {
-            throw new OCSBadRequestException(
-                'Retourvolume (€'.number_format(($alreadyRefunded + $refundGross), 2, ',', '.').') '
-                .'overschrijdt originele totaal (€'.number_format($originalTotal, 2, ',', '.').').'
-            );
-        }
+        // Apply the transition through OpenRegister: PosRefundManagerGuard
+        // enforces manager-only + the cumulative over-refund cap, the engine
+        // validates the pending→completed move and fires ObjectTransitionedEvent.
+        $saved = $this->transitionObject(id: $id, action: 'complete');
 
-        $confirmedAt           = $this->now();
-        $refund['status']      = 'completed';
-        $refund['confirmedAt'] = $confirmedAt;
-
-        $saved   = $this->saveRefund(id: $id, refund: $refund);
         $eventId = $this->emitRefundEvent(refund: $saved);
         if ($eventId !== '') {
             $saved['cloudEventId'] = $eventId;
@@ -286,9 +266,11 @@ class PosRefundService
     /**
      * Reject a pending refund (manager only).
      *
-     * Validates manager permission (fail closed), that the refund is pending, and
-     * that a non-empty rejection reason was supplied; sets status=rejected +
-     * rejectedAt + rejectionReason. Emits no events and changes no stock.
+     * Validates that a non-empty rejection reason was supplied, stamps
+     * rejectedAt + rejectionReason, then applies the pending→rejected transition
+     * through OpenRegister's TransitionEngine. Manager authorization is enforced
+     * by PosRefundManagerGuard inside the engine (fail closed). Emits no events
+     * and changes no stock.
      *
      * @param string $id     The refund UUID.
      * @param string $reason The rejection reason (required).
@@ -301,30 +283,110 @@ class PosRefundService
      * @throws OCSBadRequestException If the status is invalid or the reason is empty.
      *
      * @spec openspec/changes/pos-refund-return/tasks.md#2.1
+     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.2
      */
     public function rejectRefund(string $id, string $reason, string $userId): array
     {
-        if ($this->isManager(userId: $userId) === false) {
-            throw new OCSForbiddenException('Alleen een beheerder mag een retour afwijzen.');
-        }
-
         if (trim($reason) === '') {
             throw new OCSBadRequestException('Vul een reden in voor de afwijzing.');
         }
 
         $refund = $this->fetchRefund(id: $id);
-        if ((string) ($refund['status'] ?? '') !== 'pending') {
-            throw new OCSBadRequestException('Alleen openstaande retouren kunnen worden afgewezen.');
-        }
-
-        $refund['status']          = 'rejected';
         $refund['rejectedAt']      = $this->now();
         $refund['rejectionReason'] = trim($reason);
+        $this->saveRefund(id: $id, refund: $refund);
+
+        $saved = $this->transitionObject(id: $id, action: 'reject');
 
         $this->logger->info('Pipelinq: POS refund rejected', ['id' => $id, 'userId' => $userId]);
 
-        return $this->saveRefund(id: $id, refund: $refund);
+        return $saved;
     }//end rejectRefund()
+
+    /**
+     * Apply a named lifecycle transition through OpenRegister's TransitionEngine.
+     *
+     * The engine validates the declarative x-openregister-lifecycle table on the
+     * posRefund schema, runs PosRefundManagerGuard (manager-only + over-refund
+     * cap on complete), saves through ObjectService and dispatches
+     * ObjectTransitionedEvent. Denials / invalid transitions are mapped to the
+     * correct OCS exceptions for the controller.
+     *
+     * @param string $id     The refund UUID.
+     * @param string $action The transition action ('complete'|'reject').
+     *
+     * @return array<string, mixed> The saved refund as an array.
+     *
+     * @throws OCSForbiddenException  When the guard / RBAC denies the transition.
+     * @throws OCSBadRequestException When the transition is invalid / cap exceeded.
+     * @throws OCSNotFoundException   When the object cannot be resolved.
+     *
+     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.2
+     */
+    private function transitionObject(string $id, string $action): array
+    {
+        try {
+            $saved = $this->getTransitionEngine()->transition(objectId: $id, action: $action);
+        } catch (\Throwable $e) {
+            throw $this->mapTransitionError(e: $e);
+        }
+
+        return $this->toArray(object: $saved);
+    }//end transitionObject()
+
+    /**
+     * Map a TransitionEngine throwable to the correct OCS exception.
+     *
+     * Authorization denials → 403; invalid-state / cap / guard denials → 422;
+     * missing object → 404; otherwise the original is rethrown for the
+     * controller's generic 500 handler.
+     *
+     * @param \Throwable $e The engine throwable.
+     *
+     * @return \Throwable The mapped OCS exception (or the original on no match).
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Each branch maps one distinct
+     *  engine-error class (RBAC, manager deny, cap/invalid-state, missing object)
+     *  to its HTTP status; collapsing them would lose the status fidelity.
+     *
+     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.3
+     */
+    private function mapTransitionError(\Throwable $e): \Throwable
+    {
+        $short   = (new ReflectionClass($e))->getShortName();
+        $message = $e->getMessage();
+
+        // Per-object RBAC denial → 403.
+        if ($short === 'NotAuthorizedException' || stripos($message, 'permission') !== false) {
+            $forbidden = 'Geen toegang tot deze retour.';
+            if ($message !== '') {
+                $forbidden = $message;
+            }
+
+            return new OCSForbiddenException($forbidden);
+        }
+
+        // Manager-authorization denial from PosRefundManagerGuard → 403.
+        if (stripos($message, 'beheerder mag een retour') !== false) {
+            return new OCSForbiddenException($message);
+        }
+
+        // Over-refund cap, invalid-state, or other precondition → 422.
+        if (stripos($message, 'overschrijdt') !== false
+            || stripos($message, 'not allowed from') !== false
+            || stripos($message, 'not declared') !== false
+            || stripos($message, 'ontbreekt') !== false
+            || stripos($message, 'Originele kassabon niet gevonden') !== false
+        ) {
+            return new OCSBadRequestException($message);
+        }
+
+        if (stripos($message, 'not found') !== false) {
+            return new OCSNotFoundException($message);
+        }
+
+        return $e;
+    }//end mapTransitionError()
 
     /**
      * Emit the pipelinq.TransactionRefund.completed CloudEvent (fire-and-forget).
@@ -503,89 +565,6 @@ class PosRefundService
     }//end buildStockMovementPayload()
 
     /**
-     * Sum the gross (incl. tax) amount of every completed refund for a
-     * transaction, optionally excluding one refund id.
-     *
-     * Used by the cumulative over-refund cap so a sequence of partial refunds can
-     * never exceed the original transaction total.
-     *
-     * @param string $transactionId   The original transaction UUID.
-     * @param string $excludeRefundId A refund id to exclude (the one being confirmed).
-     *
-     * @return float The sum of completed refund gross amounts.
-     *
-     * @spec openspec/changes/pos-refund-return/tasks.md#2.1
-     */
-    private function sumCompletedRefunds(string $transactionId, string $excludeRefundId): float
-    {
-        if ($transactionId === '') {
-            return 0.0;
-        }
-
-        [$register, $schema] = $this->config(schemaKey: 'posRefund_schema');
-
-        try {
-            $results = $this->getObjectService()->findAll(
-                config: [
-                    'filters' => [
-                        'register'            => $register,
-                        'schema'              => $schema,
-                        'originalTransaction' => $transactionId,
-                        'status'              => 'completed',
-                    ],
-                ]
-            );
-        } catch (\Throwable $e) {
-            $this->logger->warning('Pipelinq: failed to sum completed refunds', ['exception' => $e->getMessage()]);
-            return 0.0;
-        }
-
-        $sum = 0.0;
-        foreach (($results ?? []) as $result) {
-            $refund = $this->toArray(object: $result);
-            $id     = (string) ($refund['id'] ?? $refund['uuid'] ?? '');
-            if ($id === $excludeRefundId) {
-                continue;
-            }
-
-            $sum += ((float) ($refund['refundAmount'] ?? 0) + (float) ($refund['totalTax'] ?? 0));
-        }
-
-        return $this->money(value: $sum);
-    }//end sumCompletedRefunds()
-
-    /**
-     * Whether a user has manager permission for refund confirm / reject.
-     *
-     * A manager is a member of the configured manager group
-     * (`pos_manager_group`) or a Nextcloud administrator. Fails closed: if no
-     * group is configured, only NC admins qualify.
-     *
-     * @param string $userId The user UID.
-     *
-     * @return bool Whether the user is a POS manager.
-     *
-     * @spec openspec/changes/pos-refund-return/tasks.md#2.1
-     */
-    public function isManager(string $userId): bool
-    {
-        if ($userId === '') {
-            return false;
-        }
-
-        if ($this->groupManager->isAdmin($userId) === true) {
-            return true;
-        }
-
-        $managerGroup = $this->appConfig->getValueString(Application::APP_ID, 'pos_manager_group', '');
-        if ($managerGroup === '') {
-            return false;
-        }
-
-        return $this->groupManager->isInGroup($userId, $managerGroup);
-    }//end isManager()
-
-    /**
      * Fetch a refund from this app's register, as an array.
      *
      * @param string $id The refund UUID.
@@ -697,17 +676,23 @@ class PosRefundService
     }//end fetchOriginalLineSafe()
 
     /**
-     * Fetch the original transaction referenced by a refund.
+     * Assert the original transaction referenced by a refund exists (orphan guard).
+     *
+     * The cumulative over-refund cap (which needs the original total) is now
+     * enforced inside PosRefundManagerGuard during the `complete` transition;
+     * here the service only verifies the original transaction is present before
+     * recomputing/transitioning, so a refund can never be completed against a
+     * deleted sale (REQ-REF-014).
      *
      * @param string $id The transaction UUID.
      *
-     * @return array<string, mixed> The transaction.
+     * @return void
      *
      * @throws OCSNotFoundException If the transaction is not found.
      *
      * @spec openspec/changes/pos-refund-return/tasks.md#2.1
      */
-    private function fetchTransaction(string $id): array
+    private function fetchTransaction(string $id): void
     {
         [$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
 
@@ -720,8 +705,6 @@ class PosRefundService
         if ($object === null) {
             throw new OCSNotFoundException('Originele kassabon niet gevonden. Kan refund niet verwerken.');
         }
-
-        return $this->toArray(object: $object);
     }//end fetchTransaction()
 
     /**
@@ -824,6 +807,24 @@ class PosRefundService
             throw new RuntimeException('OpenRegister service is not available.');
         }
     }//end getObjectService()
+
+    /**
+     * Get the OpenRegister lifecycle TransitionEngine.
+     *
+     * @return object The transition engine.
+     *
+     * @throws RuntimeException If OpenRegister is not available.
+     *
+     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.2
+     */
+    private function getTransitionEngine(): object
+    {
+        try {
+            return $this->container->get('OCA\OpenRegister\Service\Lifecycle\TransitionEngine');
+        } catch (\Throwable $e) {
+            throw new RuntimeException('OpenRegister TransitionEngine is not available.');
+        }
+    }//end getTransitionEngine()
 
     /**
      * Normalise an OR object (entity or array) into a plain array.
