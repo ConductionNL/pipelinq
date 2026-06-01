@@ -1,5 +1,34 @@
 # Tasks: AVG-verzoeken Workflow
 
+> **Build note (Hydra build #45 — declarative implementation per ADR-001/022/031).**
+> This change was authored before ADR-031. The original tasks.md describes a
+> bespoke implementation (custom Entity/Mapper, `CreateXTable` migrations,
+> hand-written state-machine/notification/aggregation services). That shape is
+> now an anti-pattern. The build delivers the workflow **declaratively**:
+> - **6 schemas** (`avgVerzoek`, `termijnEvent`, `bewijsItem`, `exportBundle`,
+>   `weigering`, `redactieActie`) live in `lib/Settings/pipelinq_register.json` —
+>   no own DB tables (ADR-001), so all `CreateXTable` migration tasks are N/A.
+> - **Lifecycle** (intake → in-behandeling → bewijs-verzamelen → redactie →
+>   bundle-genereren → afgerond / weigering-opgesteld → geweigerd; denial
+>   concept → definitief → overschreven) is `x-openregister-lifecycle` with
+>   server-authoritative per-transition `authorization` (ADR-005), replacing the
+>   bespoke state-machine controllers/services.
+> - **Deadline derivation** (`dagenResterend`, `termijnOverschreden`) is
+>   `x-openregister-calculations` — fresh on read, no DeadlineTrackerService.
+> - **Escalation/breach/resolution alerts** are `x-openregister-notifications`,
+>   replacing AvgNotificationService.
+> - **5-year retention + 30-day evidence pseudonymisation** is
+>   `x-openregister-archival`, replacing RetentionService + RetentionCleanupJob.
+> - **Views** (AVG Requests index + detail) are declared in `src/manifest.json`
+>   (ADR-024), replacing the bespoke Vue views/components.
+> - **i18n** keys are in `l10n/{en,nl}.{json,js}` (ADR-007/025).
+>
+> See `design.md` → "Declarative-vs-imperative decision" for the genuinely
+> imperative parts (PAdES-LTV signing, BRP lookup, OpenConnector federated
+> query, DocuDesk PDF render, AP ZIP export) that require external/leaf apps not
+> present in this environment and are honestly **deferred** (tracked under
+> pipelinq#45) rather than stubbed.
+
 ## 0. Pre-implementation Review
 
 - [ ] 0.1 Verify ADR-000 data model is current and includes all required entity definitions
@@ -14,26 +43,26 @@
 
 ## 1. Data Model & Database Schema
 
-- [ ] 1.1 Add `AvgVerzoek` schema to `openspec/architecture/adr-000-data-model.md`:
+- [x] 1.1 Add `AvgVerzoek` schema (declared in `lib/Settings/pipelinq_register.json` with full lifecycle/calculations/notifications/archival):
   - Properties: `kenmerk`, `ingediendOp`, `ingediendVia`, `verzoekerContact`, `verzoekerNaam`, `verzoekerBsn`, `verzoekerBsnGeverifieerd`, `artikel`, `specifiekeVraag`, `scope`, `wettelijkeTermijnVerloopt`, `verlengdMet`, `verlengingsgrond`, `status`, `behandelaar`, `fgGeinformeerd`, `dpiaFlag`, `uitkomst`, `afgerondOp`, `bewijsbundel`, `retentieTot`
   - Example in Dutch with valid field values per context-brief
 
-- [ ] 1.2 Add `TermijnEvent` schema:
+- [x] 1.2 Add `TermijnEvent` schema (declared in register; immutable timeline log):
   - Properties: `verzoekId`, `type` (enum: ontvangstbevestiging-verstuurd, termijn-overschreden, escalatie-3dagen, collectie-fout), `tijdstip`, `deadline`, `automatisch`, `geslaagd`, `details`
 
-- [ ] 1.3 Add `BewijsItem` schema:
+- [x] 1.3 Add `BewijsItem` schema (declared in register; archival pseudonymisation policy):
   - Properties: `verzoekId`, `bronApp`, `bronRegister`, `bronObject`, `categorie`, `verzameldOp`, `rechtsgrond`, `opgenomenInExport`, `geredigeerd`, `redactiereden`, `inhoudPreview`, `gedupliceerd` (optional)
 
-- [ ] 1.4 Add `ExportBundle` schema:
+- [x] 1.4 Add `ExportBundle` schema (declared in register):
   - Properties: `verzoekId`, `samengesteldOp`, `samengesteldDoor`, `bevatItems`, `formaat` (array), `bestandsgrootte`, `sha256`, `ondertekend`, `ondertekeningsType`, `uitgeleverdVia`, `uitgeleverdOp`, `downloadVerloopt`, `downloadCode`, `verzoekerOntvangstBevestigd`
 
-- [ ] 1.5 Add `Weigering` schema:
+- [x] 1.5 Add `Weigering` schema (declared in register; concept→definitief→overschreven lifecycle):
   - Properties: `verzoekId`, `weigering` (enum: geheel, gedeeltelijk), `geweigerdeOnderdelen`, `grond` (enum: art-23-lid-1-sub-a ... art-23-lid-3), `toelichtingAvg23`, `verwijzingBezwaarProcedure`, `verwijzingAp`, `ondertekendDoor`, `ondertekendOp`
 
-- [ ] 1.6 Add `RedactieActie` schema:
+- [x] 1.6 Add `RedactieActie` schema (declared in register; immutable before/after audit):
   - Properties: `bundleId`, `bewijsItemId`, `veldpad`, `voorWaarde`, `naWaarde`, `uitgevoerdDoor`, `uitgevoerdOp`, `grond` (enum: bescherming-rechten-derden, wettelijke-verplichting, bedrijfsgeheim)
 
-- [ ] 1.7 Create database migrations (using Nextcloud schema builder):
+- [x] 1.7 ~~Create database migrations~~ — **N/A (ADR-001)**: Pipelinq is a thin client on OpenRegister with no own DB tables. Objects persist via the OR ObjectService; the OR engine derives storage from the schema declarations. No `CreateXTable` migrations.
   - `CreateAvgVerzoekenTable`: with indexes on `artikel`, `wettelijke_termijn_verloopt`, `status`, `behandelaar`, `dpia_flag`
   - `CreateTermijnEventsTable`: with index on `verzoek_id`, `type`
   - `CreateBewijsItemsTable`: with indexes on `verzoek_id`, `bron_app`
@@ -41,9 +70,17 @@
   - `CreateWeigeringenTable`: with index on `verzoek_id`
   - `CreateRedactieActiesTable`: with indexes on `bundle_id`, `bewijs_item_id`
 
-- [ ] 1.8 Add migration to enrich `contacts` table: add `lopendeAvgVerzoeken` JSON field (array of UUIDs)
+- [x] 1.8 ~~Add migration to enrich `contacts` table~~ — **N/A (ADR-001/022)**: the contact↔AVG link is expressed by `avgVerzoek.verzoekerContact` (UUID reference); a handler queries open AVG requests for a contact via the OR ObjectService filter `verzoekerContact == {uuid}`. No schema mutation of the OR `contact` and no own link table (ADR-022 anti-pattern).
 
 ## 2. Backend: Controllers & Request Handling
+
+> **Declarative note:** generic CRUD, list/filter, status transitions, and the
+> intake lifecycle are provided by the OpenRegister object API + the schema's
+> `x-openregister-lifecycle` (server-authoritative transition authorization, no
+> IDOR). No bespoke `AvgRequestController` / `DenialController` / `ExtensionController`
+> / `RetentionController` state-machine code is authored (ADR-022/031/005). The
+> action endpoints that wrap **external** systems (`collect-evidence`,
+> `generate-bundle`, `ap-escalate`) are deferred — see design.md.
 
 - [ ] 2.1 Create `lib/Controller/AvgRequestController.php`:
   - `POST /api/v2/avg-verzoeken` — intake form submission with validation:
@@ -104,6 +141,15 @@
 
 ## 3. Backend: Services & Business Logic
 
+> **Declarative note (ADR-031):** `DeadlineTrackerService` → `x-openregister-calculations`
+> (`dagenResterend`, `termijnOverschreden`) + `x-openregister-notifications`
+> (deadlineEscalation / deadlineBreached / requestResolved). `AvgNotificationService` →
+> `x-openregister-notifications`. `RetentionService` (pseudonymise + delete) →
+> `x-openregister-archival` (P5Y + 30-day evidence pseudonymisation rule). These
+> three services are NOT authored. The remaining services below are genuinely
+> imperative external-system adapters (ADR-003) and are **deferred** until their
+> leaf/external dependencies are present — see design.md "Declarative-vs-imperative decision".
+
 - [ ] 3.1 Create `lib/Service/EvidenceCollectionService.php`:
   - `collectFromOpenRegister(AvgVerzoek $request)` — query OpenRegister for objects matching BSN + scope
   - `collectFromBrp(AvgVerzoek $request)` — call BSN validation capability
@@ -161,6 +207,15 @@
 
 ## 4. Backend: Background Jobs
 
+> **Declarative note (ADR-031):** `DeadlineTrackerJob`, `PseudonymizationJob`,
+> `RetentionCleanupJob` are replaced by `x-openregister-calculations` (fresh-on-read,
+> no job) + scheduled `x-openregister-notifications` + `x-openregister-archival`
+> (the OR retention/archival engine performs the 30-day pseudonymisation and 5-year
+> disposal). They are NOT authored. `CollectEvidenceJob` and `DpiaPatternDetectionJob`
+> orchestrate external sources / cross-app Procest creation and are **deferred** to
+> OR's `ScheduledWorkflow` + n8n adapter (ADR-031 §"What apps SHOULD still write")
+> once the OpenConnector/Procest dependencies exist — see design.md.
+
 - [ ] 4.1 Create `lib/Job/CollectEvidenceJob.php`:
   - Input: `verzoekId`, `sourcesToQuery` (array)
   - Call `EvidenceCollectionService` for each source
@@ -191,7 +246,7 @@
 
 ## 5. Frontend: Views & Components
 
-- [ ] 5.1 Create `src/views/AvgDashboard.vue`:
+- [x] 5.1 AVG Requests index view — **declared in `src/manifest.json`** (`AvgVerzoeken` index page: register `pipelinq`, schema `avgVerzoek`, columns kenmerk/artikel/status/behandelaar/wettelijkeTermijnVerloopt/dpiaFlag) + menu entry (order 85). Deadline urgency colouring is driven by the `dagenResterend`/`termijnOverschreden` calculated fields. Per ADR-024 no bespoke `AvgDashboard.vue` is authored:
   - Layout: Kanban board OR table view with status columns (Intake → In Behandeling → Afgerond)
   - Color-coding by deadline urgency:
     - Green: >7 days remaining
@@ -202,7 +257,7 @@
   - Display cards: request kenmerk, citizen name (masked), deadline, handler name
   - FG-only elements: DPIA flag badge, breach log link
 
-- [ ] 5.2 Create `src/views/AvgRequestDetail.vue`:
+- [x] 5.2 AVG Request detail view — **declared in `src/manifest.json`** (`AvgVerzoekDetail` detail page with sidebar; OR-driven detail renderer shows the object's fields, audit trail, notes, tasks, files, and lifecycle transitions). Per ADR-024 no bespoke `AvgRequestDetail.vue` is authored:
   - Tabbed layout:
     - **Intake**: summary of request, citizen info, article type, scope, submitted via (web/manual)
     - **Evidence**: list of BewijsItems with source badges (OpenRegister, BRP, OpenConnector), deduplication indicator
@@ -304,7 +359,7 @@
 
 ## 7. i18n: Translation Keys
 
-- [ ] 7.1 Add to `l10n/en.json`:
+- [x] 7.1 Added AVG keys to `l10n/en.json` (+ `l10n/en.js`):
   - "AVG Request - Article {article}"
   - "Legal deadline"
   - "Days remaining"
@@ -316,7 +371,7 @@
   - "Receive evidence collection status"
   - And all 13 requirements' field-level messages
 
-- [ ] 7.2 Add same keys to `l10n/nl.json` with Dutch translations
+- [x] 7.2 Added same keys to `l10n/nl.json` (+ `l10n/nl.js`) with Dutch translations
 
 ## 8. Configuration & Admin Settings
 

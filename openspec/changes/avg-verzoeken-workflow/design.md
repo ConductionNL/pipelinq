@@ -1,5 +1,50 @@
 # Design: avg-verzoeken-workflow
 
+## Declarative-vs-imperative decision (ADR-031)
+
+This design predates ADR-031. The Hydra build (#45) implements the workflow
+**declaratively** wherever an `x-openregister-*` extension fits, and authors
+imperative code only for genuine external-system adapters. The original
+prose below (controllers/services/jobs/Vue components/migrations) is retained
+as the functional specification; the table records how each behaviour is
+actually realised.
+
+| Behaviour | Realisation | Original (anti-pattern) |
+|---|---|---|
+| 6 entities + storage | `lib/Settings/pipelinq_register.json` schemas; OR ObjectService persistence (ADR-001 — no own tables) | `CreateXTable` migrations + Entity/Mapper |
+| Request lifecycle + denial lifecycle | `x-openregister-lifecycle` with per-transition server-side `authorization` (ADR-005) | bespoke state-machine controllers/services |
+| Days-remaining / breach state | `x-openregister-calculations` (`dagenResterend`, `termijnOverschreden`) — fresh on read | `DeadlineTrackerService` |
+| Escalation / breach / resolution alerts | `x-openregister-notifications` (scheduled + transition triggers) | `AvgNotificationService`, `DeadlineTrackerJob` |
+| 5-year retention + 30-day evidence pseudonymisation | `x-openregister-archival` (P5Y default + condition rule) | `RetentionService` + `PseudonymizationJob` + `RetentionCleanupJob` |
+| Contact ↔ AVG link | `avgVerzoek.verzoekerContact` UUID reference + OR filter query | new `contacts.lopendeAvgVerzoeken` column / link table (ADR-022 anti-pattern) |
+| AVG Requests index + detail views | `src/manifest.json` index/detail pages + menu (ADR-024) | bespoke `AvgDashboard.vue` / `AvgRequestDetail.vue` + 9 components |
+| i18n | `l10n/{en,nl}.{json,js}` (ADR-007/025) | — |
+
+### Deferred — genuinely imperative, dependency absent (honest)
+
+The following are **external-system adapters** (ADR-003 / ADR-031 "What apps
+SHOULD still write"). The leaf/external apps they depend on are **not present**
+in this environment, so they are deferred rather than stubbed (ADR-022 exception
+2 + ADR-031 exception 1; tracked under pipelinq#45):
+
+- **PAdES-LTV bundle signing** (`BundleService.sign`) — needs a PKIoverheid
+  certificate + an XAdES/PAdES signing library and a Dutch TSA. No signing leaf
+  shipped. `exportBundle` schema records the resulting metadata
+  (`ondertekend`, `ondertekeningsType`, `sha256`) for when the adapter lands.
+- **DocuDesk PDF rendering** — needs the DocuDesk app's render API. Absent here.
+- **BRP / BSN validation** (`collectFromBrp`) — sister "BSN Validation"
+  capability not yet shipped (REQ-AVG-011 is explicitly `[DEPENDENCY]`).
+  `verzoekerBsnGeverifieerd` is modelled for when it lands.
+- **OpenConnector federated evidence query** (`collectFromOpenConnector`) —
+  needs OpenConnector AVG-export-endpoints (REQ-AVG-012 `[INTEGRATION]`,
+  org-implemented). The `bewijsItem` schema + `bron-onbereikbaar` category model
+  the result shape; the collection orchestration is deferred to OR's
+  `ScheduledWorkflow` + n8n adapter (ADR-031).
+- **DPIA pattern detection + Procest item creation** — cross-app write to
+  Procest; Procest integration absent. Deferred to a ScheduledWorkflow.
+- **AP escalation ZIP export** — bundles signed artefacts that depend on the
+  signing leaf above.
+
 ## Architecture
 
 ### Data Layer
