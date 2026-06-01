@@ -3211,7 +3211,7 @@
             "termijnOverschreden": {
               "type": "boolean",
               "materialise": false,
-              "description": "True when the statutory deadline has passed and the request is not yet in a final state. Pure function of deadline + status so consumers compute breach state without a service round-trip (REQ-AVG-002 breach scenario).",
+              "description": "True when the statutory deadline has passed and the request is not yet in a final state (afgerond/geweigerd/inactief). Pure function of deadline + status so consumers compute breach state without a service round-trip (REQ-AVG-002 breach scenario).",
               "expression": {
                 "and": [
                   {
@@ -3219,19 +3219,33 @@
                       {
                         "prop": "wettelijkeTermijnVerloopt"
                       },
-                      "now"
+                      {
+                        "now": []
+                      }
                     ]
                   },
                   {
-                    "notIn": [
+                    "ne": [
                       {
                         "prop": "status"
                       },
-                      [
-                        "afgerond",
-                        "geweigerd",
-                        "inactief"
-                      ]
+                      "afgerond"
+                    ]
+                  },
+                  {
+                    "ne": [
+                      {
+                        "prop": "status"
+                      },
+                      "geweigerd"
+                    ]
+                  },
+                  {
+                    "ne": [
+                      {
+                        "prop": "status"
+                      },
+                      "inactief"
                     ]
                   }
                 ]
