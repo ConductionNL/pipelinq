@@ -19,6 +19,9 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.2
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -44,7 +47,7 @@ use RuntimeException;
  * The signing key MUST be configured before entries can be created:
  *   occ config:app:set pipelinq kassakoppeling_secret --value="<strong-secret>"
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)  Wires the three collaborators
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the three collaborators
  *   (ObjectService via container, SignatureService, ExportService) that a
  *   tamper-evident ledger service legitimately needs.
  *
@@ -65,11 +68,11 @@ class KassakoppelingAuditService
     /**
      * Constructor.
      *
-     * @param ContainerInterface              $container       The DI container (for lazy OR ObjectService).
-     * @param IAppConfig                      $appConfig       The Nextcloud app config.
-     * @param KassakoppelingSignatureService  $signatureService The cryptographic signing service.
-     * @param BelastingdienestExportService   $exportService   The export formatter.
-     * @param LoggerInterface                 $logger          The logger.
+     * @param ContainerInterface             $container        The DI container (for lazy OR ObjectService).
+     * @param IAppConfig                     $appConfig        The Nextcloud app config.
+     * @param KassakoppelingSignatureService $signatureService The cryptographic signing service.
+     * @param BelastingdienestExportService  $exportService    The export formatter.
+     * @param LoggerInterface                $logger           The logger.
      */
     public function __construct(
         private ContainerInterface $container,
@@ -98,12 +101,16 @@ class KassakoppelingAuditService
      */
     public function createEntry(array $data): array
     {
-        $this->validateRequiredFields($data);
+        $this->validateRequiredFields(data: $data);
 
         // Fetch the hash of the previous entry for this register (or '0' if none).
         $registerNumber = (string) $data['registerNumber'];
-        $lastEntry      = $this->getLastEntry($registerNumber);
-        $previousHash   = ($lastEntry !== null) ? (string) ($lastEntry['currentHash'] ?? '0') : '0';
+        $lastEntry      = $this->getLastEntry(registerNumber: $registerNumber);
+        if ($lastEntry !== null) {
+            $previousHash = (string) ($lastEntry['currentHash'] ?? '0');
+        } else {
+            $previousHash = '0';
+        }
 
         $data['previousHash'] = $previousHash;
 
@@ -118,13 +125,13 @@ class KassakoppelingAuditService
         [$register, $schema] = $this->resolveConfig();
 
         $saved = $this->getObjectService()->saveObject(
-            object: $data,
-            extend: [],
-            register: $register,
-            schema: $schema,
+            $data,
+            [],
+            $register,
+            $schema,
         );
 
-        return $this->toArray($saved);
+        return $this->toArray(object: $saved);
     }//end createEntry()
 
     /**
@@ -149,23 +156,23 @@ class KassakoppelingAuditService
 
         // Map simple equality filters.
         foreach (['registerNumber', 'operatorId', 'action'] as $key) {
-            if (isset($filters[$key]) && (string) $filters[$key] !== '') {
+            if (isset($filters[$key]) === true && (string) $filters[$key] !== '') {
                 $orFilters[$key] = $filters[$key];
             }
         }
 
         // Date-range filters (timestamp >= fromDate and <= toDate).
-        if (isset($filters['fromDate']) && (string) $filters['fromDate'] !== '') {
+        if (isset($filters['fromDate']) === true && (string) $filters['fromDate'] !== '') {
             $orFilters['timestamp>='] = $filters['fromDate'];
         }
 
-        if (isset($filters['toDate']) && (string) $filters['toDate'] !== '') {
+        if (isset($filters['toDate']) === true && (string) $filters['toDate'] !== '') {
             $orFilters['timestamp<='] = $filters['toDate'];
         }
 
         try {
             $results = $this->getObjectService()->findAll(
-                config: ['filters' => $orFilters]
+                ['filters' => $orFilters]
             );
         } catch (\Throwable $e) {
             $this->logger->warning('KassakoppelingAuditService: failed to list entries', ['exception' => $e->getMessage()]);
@@ -174,7 +181,7 @@ class KassakoppelingAuditService
 
         $entries = [];
         foreach (($results ?? []) as $result) {
-            $entries[] = $this->toArray($result);
+            $entries[] = $this->toArray(object: $result);
         }
 
         return $entries;
@@ -197,9 +204,9 @@ class KassakoppelingAuditService
 
         try {
             $object = $this->getObjectService()->find(
-                id: $id,
-                register: $register,
-                schema: $schema,
+                $id,
+                $register,
+                $schema,
             );
         } catch (\Throwable $e) {
             $object = null;
@@ -209,7 +216,7 @@ class KassakoppelingAuditService
             throw new OCSNotFoundException('Audit entry not found.');
         }
 
-        return $this->toArray($object);
+        return $this->toArray(object: $object);
     }//end getEntry()
 
     /**
@@ -227,7 +234,7 @@ class KassakoppelingAuditService
      */
     public function verifyEntry(string $id): bool
     {
-        $entry     = $this->getEntry($id);
+        $entry     = $this->getEntry(id: $id);
         $signature = (string) ($entry['signature'] ?? '');
         $verified  = false;
 
@@ -239,15 +246,15 @@ class KassakoppelingAuditService
 
         // Persist the verified flag.
         [$register, $schema] = $this->resolveConfig();
-        $entryId             = (string) ($entry['id'] ?? $entry['uuid'] ?? $id);
+        $entryId = (string) ($entry['id'] ?? $entry['uuid'] ?? $id);
 
         try {
             $this->getObjectService()->saveObject(
-                object: array_merge($entry, ['verified' => $verified]),
-                extend: [],
-                register: $register,
-                schema: $schema,
-                uuid: $entryId,
+                array_merge($entry, ['verified' => $verified]),
+                [],
+                $register,
+                $schema,
+                $entryId,
             );
         } catch (\Throwable $e) {
             $this->logger->error('KassakoppelingAuditService: failed to persist verified flag', ['exception' => $e->getMessage()]);
@@ -269,7 +276,7 @@ class KassakoppelingAuditService
      */
     public function exportForBelastingdienst(string $fromDate, string $toDate, string $format='xml'): string
     {
-        $entries = $this->listEntries(['fromDate' => $fromDate, 'toDate' => $toDate]);
+        $entries = $this->listEntries(filters: ['fromDate' => $fromDate, 'toDate' => $toDate]);
 
         if ($format === 'json') {
             return $this->exportService->exportAsJson($entries);
@@ -295,14 +302,14 @@ class KassakoppelingAuditService
 
         try {
             $results = $this->getObjectService()->findAll(
-                config: [
-                    'filters'  => [
+                [
+                    'filters' => [
                         'register'       => $register,
                         'schema'         => $schema,
                         'registerNumber' => $registerNumber,
                     ],
-                    'order'    => ['timestamp' => 'DESC'],
-                    'limit'    => 1,
+                    'order'   => ['timestamp' => 'DESC'],
+                    'limit'   => 1,
                 ]
             );
         } catch (\Throwable $e) {
@@ -315,7 +322,11 @@ class KassakoppelingAuditService
         }
 
         $first = reset($results);
-        return $first !== false ? $this->toArray($first) : null;
+        if ($first === false) {
+            return null;
+        }
+
+        return $this->toArray(object: $first);
     }//end getLastEntry()
 
     /**

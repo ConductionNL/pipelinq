@@ -20,6 +20,9 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -108,7 +111,7 @@ class KassakoppelingSignatureService
     public function generateSignature(array $entryData): string
     {
         $key     = $this->getSecretKey();
-        $message = $this->buildSignMessage($entryData);
+        $message = $this->buildSignMessage(entryData: $entryData);
         return hash_hmac('sha256', $message, $key);
     }//end generateSignature()
 
@@ -125,9 +128,9 @@ class KassakoppelingSignatureService
      */
     public function generateHash(array $entryData, string $previousHash): string
     {
-        $data               = $entryData;
+        $data = $entryData;
         $data['previousHash'] = $previousHash;
-        $message            = $this->buildHashMessage($data);
+        $message = $this->buildHashMessage(entryData: $data);
         return hash('sha256', $message);
     }//end generateHash()
 
@@ -147,7 +150,7 @@ class KassakoppelingSignatureService
      */
     public function verifySignature(array $entryData, string $signature): bool
     {
-        $computed = $this->generateSignature($entryData);
+        $computed = $this->generateSignature(entryData: $entryData);
         return hash_equals($computed, $signature);
     }//end verifySignature()
 
@@ -170,7 +173,7 @@ class KassakoppelingSignatureService
         foreach ($entries as $entry) {
             $stored   = (string) ($entry['currentHash'] ?? '');
             $previous = (string) ($entry['previousHash'] ?? '0');
-            $computed = $this->generateHash($entry, $previous);
+            $computed = $this->generateHash(entryData: $entry, previousHash: $previous);
             if (hash_equals($computed, $stored) === false) {
                 return false;
             }
@@ -194,11 +197,11 @@ class KassakoppelingSignatureService
      */
     public function getSecretKey(): string
     {
-        $key = $this->appConfig->getAppValue('pipelinq', self::CONFIG_KEY, '');
+        $key = $this->appConfig->getValueString('pipelinq', self::CONFIG_KEY, '');
         if ($key === '') {
             throw new RuntimeException(
                 'Kassakoppeling signing key is not configured. '
-                . 'Set it via: occ config:app:set pipelinq kassakoppeling_secret --value="<key>"'
+                .'Set it via: occ config:app:set pipelinq kassakoppeling_secret --value="<key>"'
             );
         }
 

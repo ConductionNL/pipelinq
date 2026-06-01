@@ -19,6 +19,9 @@
  * @link https://pipelinq.nl
  *
  * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#8.2
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -43,6 +46,7 @@ use Psr\Log\LoggerInterface;
  */
 class KassakoppelingAuditServiceTest extends TestCase
 {
+
     /**
      * The service under test.
      *
@@ -99,37 +103,35 @@ class KassakoppelingAuditServiceTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->appConfig = $this->createMock(IAppConfig::class);
-        $this->appConfig
-            ->method('getAppValue')
-            ->with('pipelinq', 'kassakoppeling_secret', '')
-            ->willReturn($this->secretKey);
-
+        $this->appConfig = $this->createMock(originalClassName: IAppConfig::class);
         $this->appConfig
             ->method('getValueString')
-            ->willReturnMap([
-                ['pipelinq', 'register', '', 'pipelinq-register-id'],
-                ['pipelinq', 'kassakoppelingAuditLog_schema', '', 'audit-schema-id'],
-            ]);
+            ->willReturnMap(
+                [
+                    ['pipelinq', 'kassakoppeling_secret', '', $this->secretKey],
+                    ['pipelinq', 'register', '', 'pipelinq-register-id'],
+                    ['pipelinq', 'kassakoppelingAuditLog_schema', '', 'audit-schema-id'],
+                ]
+            );
 
         $this->signatureService = new KassakoppelingSignatureService(
             appConfig: $this->appConfig,
         );
 
-        $this->exportService = $this->createMock(BelastingdienestExportService::class);
+        $this->exportService = $this->createMock(originalClassName: BelastingdienestExportService::class);
 
         // Mock the OR ObjectService as a generic stdClass-based mock.
-        $this->objectService = $this->getMockBuilder(\stdClass::class)
+        $this->objectService = $this->getMockBuilder(className: \stdClass::class)
             ->addMethods(['saveObject', 'find', 'findAll'])
             ->getMock();
 
-        $this->container = $this->createMock(ContainerInterface::class);
+        $this->container = $this->createMock(originalClassName: ContainerInterface::class);
         $this->container
             ->method('get')
             ->with('OCA\OpenRegister\Service\ObjectService')
             ->willReturn($this->objectService);
 
-        $logger = $this->createMock(LoggerInterface::class);
+        $logger = $this->createMock(originalClassName: LoggerInterface::class);
 
         $this->service = new KassakoppelingAuditService(
             container: $this->container,
@@ -165,14 +167,16 @@ class KassakoppelingAuditServiceTest extends TestCase
             ->expects($this->once())
             ->method('saveObject')
             ->with(
-                $this->callback(function (array $saved): bool {
-                    return isset($saved['signature'])
+                $this->callback(
+                    callback: function (array $saved): bool {
+                        return isset($saved['signature'])
                         && isset($saved['currentHash'])
                         && isset($saved['previousHash'])
                         && $saved['previousHash'] === '0'
                         && strlen($saved['signature']) === 64
                         && strlen($saved['currentHash']) === 64;
-                }),
+                    }
+                ),
                 $this->anything(),
                 $this->anything(),
                 $this->anything(),
@@ -180,10 +184,10 @@ class KassakoppelingAuditServiceTest extends TestCase
             ->willReturnArgument(0);
 
         $entry = $this->service->createEntry($data);
-        $this->assertArrayHasKey('signature', $entry);
-        $this->assertArrayHasKey('currentHash', $entry);
-        $this->assertArrayHasKey('previousHash', $entry);
-        $this->assertSame('0', $entry['previousHash']);
+        $this->assertArrayHasKey(key: 'signature', array: $entry);
+        $this->assertArrayHasKey(key: 'currentHash', array: $entry);
+        $this->assertArrayHasKey(key: 'previousHash', array: $entry);
+        $this->assertSame(expected: '0', actual: $entry['previousHash']);
     }//end testCreateEntryInjectsSignatureAndHash()
 
     /**
@@ -193,10 +197,10 @@ class KassakoppelingAuditServiceTest extends TestCase
      */
     public function testCreateEntryLinksHashChainToPreviousEntry(): void
     {
-        $previousHash    = str_repeat('a', 64);
-        $previousEntry   = [
-            'id'          => 'prev-entry-uuid',
-            'currentHash' => $previousHash,
+        $previousHash  = str_repeat('a', 64);
+        $previousEntry = [
+            'id'             => 'prev-entry-uuid',
+            'currentHash'    => $previousHash,
             'registerNumber' => 'REG-001',
         ];
 
@@ -209,9 +213,11 @@ class KassakoppelingAuditServiceTest extends TestCase
             ->expects($this->once())
             ->method('saveObject')
             ->with(
-                $this->callback(function (array $saved) use ($previousHash): bool {
-                    return $saved['previousHash'] === $previousHash;
-                }),
+                $this->callback(
+                    callback: function (array $saved) use ($previousHash): bool {
+                        return $saved['previousHash'] === $previousHash;
+                    }
+                ),
                 $this->anything(),
                 $this->anything(),
                 $this->anything(),
@@ -227,7 +233,7 @@ class KassakoppelingAuditServiceTest extends TestCase
         ];
 
         $entry = $this->service->createEntry($data);
-        $this->assertSame($previousHash, $entry['previousHash']);
+        $this->assertSame(expected: $previousHash, actual: $entry['previousHash']);
     }//end testCreateEntryLinksHashChainToPreviousEntry()
 
     /**
@@ -237,15 +243,17 @@ class KassakoppelingAuditServiceTest extends TestCase
      */
     public function testCreateEntryThrowsForMissingRequiredField(): void
     {
-        $this->expectException(OCSBadRequestException::class);
+        $this->expectException(exception: OCSBadRequestException::class);
 
         // Missing 'action'.
-        $this->service->createEntry([
-            'operatorId'     => 'user_john',
-            'registerNumber' => 'REG-001',
-            'amount'         => 1000,
-            'timestamp'      => '2026-05-20T08:00:00Z',
-        ]);
+        $this->service->createEntry(
+                [
+                    'operatorId'     => 'user_john',
+                    'registerNumber' => 'REG-001',
+                    'amount'         => 1000,
+                    'timestamp'      => '2026-05-20T08:00:00Z',
+                ]
+                );
     }//end testCreateEntryThrowsForMissingRequiredField()
 
     /**
@@ -255,15 +263,17 @@ class KassakoppelingAuditServiceTest extends TestCase
      */
     public function testCreateEntryThrowsForInvalidAction(): void
     {
-        $this->expectException(OCSBadRequestException::class);
+        $this->expectException(exception: OCSBadRequestException::class);
 
-        $this->service->createEntry([
-            'operatorId'     => 'user_john',
-            'registerNumber' => 'REG-001',
-            'action'         => 'invalid-action',
-            'amount'         => 1000,
-            'timestamp'      => '2026-05-20T08:00:00Z',
-        ]);
+        $this->service->createEntry(
+                [
+                    'operatorId'     => 'user_john',
+                    'registerNumber' => 'REG-001',
+                    'action'         => 'invalid-action',
+                    'amount'         => 1000,
+                    'timestamp'      => '2026-05-20T08:00:00Z',
+                ]
+                );
     }//end testCreateEntryThrowsForInvalidAction()
 
     /**
@@ -283,9 +293,9 @@ class KassakoppelingAuditServiceTest extends TestCase
             ->willReturn($rawEntries);
 
         $entries = $this->service->listEntries();
-        $this->assertCount(2, $entries);
-        $this->assertSame('sale', $entries[0]['action']);
-        $this->assertSame('void', $entries[1]['action']);
+        $this->assertCount(expectedCount: 2, haystack: $entries);
+        $this->assertSame(expected: 'sale', actual: $entries[0]['action']);
+        $this->assertSame(expected: 'void', actual: $entries[1]['action']);
     }//end testListEntriesReturnsArray()
 
     /**
@@ -300,7 +310,7 @@ class KassakoppelingAuditServiceTest extends TestCase
             ->willThrowException(new \RuntimeException('DB error'));
 
         $entries = $this->service->listEntries();
-        $this->assertSame([], $entries);
+        $this->assertSame(expected: [], actual: $entries);
     }//end testListEntriesReturnsEmptyArrayOnException()
 
     /**
@@ -310,7 +320,7 @@ class KassakoppelingAuditServiceTest extends TestCase
      */
     public function testGetEntryThrowsForMissingEntry(): void
     {
-        $this->expectException(OCSNotFoundException::class);
+        $this->expectException(exception: OCSNotFoundException::class);
 
         $this->objectService
             ->method('find')
@@ -349,7 +359,7 @@ class KassakoppelingAuditServiceTest extends TestCase
             ->willReturn(array_merge($data, ['verified' => true]));
 
         $verified = $this->service->verifyEntry('entry-uuid-001');
-        $this->assertTrue($verified);
+        $this->assertTrue(condition: $verified);
     }//end testVerifyEntryReturnsTrueForValidEntry()
 
     /**
@@ -382,10 +392,12 @@ class KassakoppelingAuditServiceTest extends TestCase
             ->expects($this->once())
             ->method('saveObject')
             ->with(
-                $this->callback(function (array $saved) use (&$savedArgs): bool {
-                    $savedArgs = $saved;
-                    return array_key_exists('verified', $saved);
-                }),
+                $this->callback(
+                    callback: function (array $saved) use (&$savedArgs): bool {
+                        $savedArgs = $saved;
+                        return array_key_exists('verified', $saved);
+                    }
+                ),
                 $this->anything(),
                 $this->anything(),
                 $this->anything(),
@@ -395,7 +407,7 @@ class KassakoppelingAuditServiceTest extends TestCase
 
         $this->service->verifyEntry('entry-uuid-002');
 
-        $this->assertNotNull($savedArgs);
-        $this->assertArrayHasKey('verified', $savedArgs);
+        $this->assertNotNull(actual: $savedArgs);
+        $this->assertArrayHasKey(key: 'verified', array: $savedArgs);
     }//end testVerifyEntryUpdatesVerifiedFlag()
 }//end class

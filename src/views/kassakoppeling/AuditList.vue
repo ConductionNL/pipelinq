@@ -48,6 +48,7 @@
 						:options="actionOptions"
 						:placeholder="t('pipelinq', 'All actions')"
 						:label="t('pipelinq', 'Action')"
+						:input-label="t('pipelinq', 'Action')"
 						@update:value="onFilterChange" />
 					<NcDateTimePicker
 						v-model="filters.fromDate"
@@ -85,6 +86,7 @@
 						v-model="exportFormat"
 						:options="exportFormatOptions"
 						:label="t('pipelinq', 'Format')"
+						:input-label="t('pipelinq', 'Format')"
 						style="min-width: 100px" />
 					<NcButton
 						type="primary"

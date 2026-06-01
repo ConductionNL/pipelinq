@@ -19,6 +19,9 @@
  * @link https://pipelinq.nl
  *
  * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#8.3
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -46,6 +49,7 @@ use Psr\Log\LoggerInterface;
  */
 class KassakoppelingAuditControllerTest extends TestCase
 {
+
     /**
      * The controller under test.
      *
@@ -95,16 +99,16 @@ class KassakoppelingAuditControllerTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->request      = $this->createMock(IRequest::class);
-        $this->auditService = $this->createMock(KassakoppelingAuditService::class);
-        $this->groupManager = $this->createMock(IGroupManager::class);
-        $this->userSession  = $this->createMock(IUserSession::class);
-        $l10n               = $this->createMock(IL10N::class);
-        $logger             = $this->createMock(LoggerInterface::class);
+        $this->request      = $this->createMock(originalClassName: IRequest::class);
+        $this->auditService = $this->createMock(originalClassName: KassakoppelingAuditService::class);
+        $this->groupManager = $this->createMock(originalClassName: IGroupManager::class);
+        $this->userSession  = $this->createMock(originalClassName: IUserSession::class);
+        $l10n   = $this->createMock(originalClassName: IL10N::class);
+        $logger = $this->createMock(originalClassName: LoggerInterface::class);
 
         $l10n->method('t')->willReturnArgument(0);
 
-        $this->user = $this->createMock(IUser::class);
+        $this->user = $this->createMock(originalClassName: IUser::class);
         $this->user->method('getUID')->willReturn('test-user');
 
         $this->userSession->method('getUser')->willReturn($this->user);
@@ -146,9 +150,9 @@ class KassakoppelingAuditControllerTest extends TestCase
 
         $response = $this->controller->create();
 
-        $this->assertSame(Http::STATUS_CREATED, $response->getStatus());
+        $this->assertSame(expected: Http::STATUS_CREATED, actual: $response->getStatus());
         $data = $response->getData();
-        $this->assertArrayHasKey('entry', $data);
+        $this->assertArrayHasKey(key: 'entry', array: $data);
     }//end testCreateReturns201WithEntry()
 
     /**
@@ -165,7 +169,7 @@ class KassakoppelingAuditControllerTest extends TestCase
             ->willThrowException(new OCSBadRequestException("Required field 'action' is missing"));
 
         $response = $this->controller->create();
-        $this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+        $this->assertSame(expected: Http::STATUS_BAD_REQUEST, actual: $response->getStatus());
     }//end testCreateReturns400ForBadRequest()
 
     /**
@@ -180,13 +184,15 @@ class KassakoppelingAuditControllerTest extends TestCase
             ['id' => 'entry-2', 'action' => 'void'],
         ];
 
-        $this->request->method('getParam')->willReturnMap([
-            ['registerNumber', '', ''],
-            ['operatorId', '', ''],
-            ['action', '', ''],
-            ['fromDate', '', ''],
-            ['toDate', '', ''],
-        ]);
+        $this->request->method('getParam')->willReturnMap(
+                [
+                    ['registerNumber', '', ''],
+                    ['operatorId', '', ''],
+                    ['action', '', ''],
+                    ['fromDate', '', ''],
+                    ['toDate', '', ''],
+                ]
+                );
 
         $this->auditService
             ->expects($this->once())
@@ -195,10 +201,10 @@ class KassakoppelingAuditControllerTest extends TestCase
 
         $response = $this->controller->index();
 
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
+        $this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
         $data = $response->getData();
-        $this->assertArrayHasKey('entries', $data);
-        $this->assertCount(2, $data['entries']);
+        $this->assertArrayHasKey(key: 'entries', array: $data);
+        $this->assertCount(expectedCount: 2, haystack: $data['entries']);
     }//end testIndexReturns200WithEntries()
 
     /**
@@ -218,9 +224,9 @@ class KassakoppelingAuditControllerTest extends TestCase
 
         $response = $this->controller->show('entry-1');
 
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
+        $this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
         $data = $response->getData();
-        $this->assertArrayHasKey('entry', $data);
+        $this->assertArrayHasKey(key: 'entry', array: $data);
     }//end testShowReturns200WithEntry()
 
     /**
@@ -235,7 +241,7 @@ class KassakoppelingAuditControllerTest extends TestCase
             ->willThrowException(new OCSNotFoundException('Audit entry not found.'));
 
         $response = $this->controller->show('non-existent');
-        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+        $this->assertSame(expected: Http::STATUS_NOT_FOUND, actual: $response->getStatus());
     }//end testShowReturns404WhenNotFound()
 
     /**
@@ -253,10 +259,10 @@ class KassakoppelingAuditControllerTest extends TestCase
 
         $response = $this->controller->verify('entry-1');
 
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
+        $this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
         $data = $response->getData();
-        $this->assertTrue($data['verified']);
-        $this->assertSame('entry-1', $data['entryId']);
+        $this->assertTrue(condition: $data['verified']);
+        $this->assertSame(expected: 'entry-1', actual: $data['entryId']);
     }//end testVerifyReturns200WithVerifiedFlag()
 
     /**
@@ -272,7 +278,7 @@ class KassakoppelingAuditControllerTest extends TestCase
             ->willReturn(false);
 
         $response = $this->controller->exportBelastingdienst();
-        $this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+        $this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $response->getStatus());
     }//end testExportBelastingdienestReturns403ForNonAdmin()
 
     /**
@@ -287,14 +293,16 @@ class KassakoppelingAuditControllerTest extends TestCase
             ->with('test-user')
             ->willReturn(true);
 
-        $this->request->method('getParam')->willReturnMap([
-            ['fromDate', '', ''],
-            ['toDate', '', ''],
-            ['format', 'xml', 'xml'],
-        ]);
+        $this->request->method('getParam')->willReturnMap(
+                [
+                    ['fromDate', '', ''],
+                    ['toDate', '', ''],
+                    ['format', 'xml', 'xml'],
+                ]
+                );
 
         $response = $this->controller->exportBelastingdienst();
-        $this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+        $this->assertSame(expected: Http::STATUS_BAD_REQUEST, actual: $response->getStatus());
     }//end testExportBelastingdienestReturns400WhenDatesMissing()
 
     /**
@@ -309,11 +317,13 @@ class KassakoppelingAuditControllerTest extends TestCase
             ->with('test-user')
             ->willReturn(true);
 
-        $this->request->method('getParam')->willReturnMap([
-            ['fromDate', '', '2026-05-01'],
-            ['toDate', '', '2026-05-31'],
-            ['format', 'xml', 'xml'],
-        ]);
+        $this->request->method('getParam')->willReturnMap(
+                [
+                    ['fromDate', '', '2026-05-01'],
+                    ['toDate', '', '2026-05-31'],
+                    ['format', 'xml', 'xml'],
+                ]
+                );
 
         $this->auditService
             ->expects($this->once())
@@ -322,7 +332,7 @@ class KassakoppelingAuditControllerTest extends TestCase
             ->willReturn('<?xml version="1.0"?><KassakoppelingExport />');
 
         $response = $this->controller->exportBelastingdienst();
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
+        $this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
     }//end testExportBelastingdienestReturnsDownloadForAdmin()
 
     /**
@@ -332,12 +342,12 @@ class KassakoppelingAuditControllerTest extends TestCase
      */
     public function testCreateReturns401WhenUnauthenticated(): void
     {
-        $userSession = $this->createMock(IUserSession::class);
+        $userSession = $this->createMock(originalClassName: IUserSession::class);
         $userSession->method('getUser')->willReturn(null);
 
-        $l10n   = $this->createMock(IL10N::class);
+        $l10n = $this->createMock(originalClassName: IL10N::class);
         $l10n->method('t')->willReturnArgument(0);
-        $logger = $this->createMock(LoggerInterface::class);
+        $logger = $this->createMock(originalClassName: LoggerInterface::class);
 
         $controller = new KassakoppelingAuditController(
             request: $this->request,
@@ -351,6 +361,6 @@ class KassakoppelingAuditControllerTest extends TestCase
         $this->request->method('getParams')->willReturn([]);
 
         $response = $controller->create();
-        $this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+        $this->assertSame(expected: Http::STATUS_UNAUTHORIZED, actual: $response->getStatus());
     }//end testCreateReturns401WhenUnauthenticated()
 }//end class

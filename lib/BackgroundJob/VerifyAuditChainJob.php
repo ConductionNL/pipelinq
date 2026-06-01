@@ -19,6 +19,9 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#4.1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -63,8 +66,8 @@ class VerifyAuditChainJob extends TimedJob
         private readonly KassakoppelingAuditService $auditService,
         private readonly LoggerInterface $logger,
     ) {
-        parent::__construct($time);
-        $this->setInterval(self::INTERVAL_SECONDS);
+        parent::__construct(time: $time);
+        $this->setInterval(seconds: self::INTERVAL_SECONDS);
     }//end __construct()
 
     /**

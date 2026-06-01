@@ -18,6 +18,9 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.3
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -67,9 +70,9 @@ class BelastingdienestExportService
      */
     public function exportAsXml(array $entries): string
     {
-        $manifest = $this->buildManifest($entries);
+        $manifest = $this->buildManifest(entries: $entries);
 
-        $doc               = new \DOMDocument('1.0', 'UTF-8');
+        $doc = new \DOMDocument('1.0', 'UTF-8');
         $doc->formatOutput = true;
 
         $root = $doc->createElement('KassakoppelingExport');
@@ -79,15 +82,15 @@ class BelastingdienestExportService
 
         // --- Manifest block ---
         $manifestEl = $doc->createElement('Manifest');
-        $this->appendTextChild($doc, $manifestEl, 'ExportDate', $manifest['exportDate']);
-        $this->appendTextChild($doc, $manifestEl, 'EntryCount', (string) $manifest['entryCount']);
-        $this->appendTextChild($doc, $manifestEl, 'DateRangeFrom', $manifest['dateRange']['from'] ?? '');
-        $this->appendTextChild($doc, $manifestEl, 'DateRangeTo', $manifest['dateRange']['to'] ?? '');
-        $this->appendTextChild($doc, $manifestEl, 'ChainIntegrity', $manifest['chainIntegrity']);
+        $this->appendTextChild(doc: $doc, parent: $manifestEl, tag: 'ExportDate', text: $manifest['exportDate']);
+        $this->appendTextChild(doc: $doc, parent: $manifestEl, tag: 'EntryCount', text: (string) $manifest['entryCount']);
+        $this->appendTextChild(doc: $doc, parent: $manifestEl, tag: 'DateRangeFrom', text: $manifest['dateRange']['from'] ?? '');
+        $this->appendTextChild(doc: $doc, parent: $manifestEl, tag: 'DateRangeTo', text: $manifest['dateRange']['to'] ?? '');
+        $this->appendTextChild(doc: $doc, parent: $manifestEl, tag: 'ChainIntegrity', text: $manifest['chainIntegrity']);
 
         $registersEl = $doc->createElement('Registers');
         foreach ($manifest['registers'] as $reg) {
-            $this->appendTextChild($doc, $registersEl, 'Register', $reg);
+            $this->appendTextChild(doc: $doc, parent: $registersEl, tag: 'Register', text: $reg);
         }
 
         $manifestEl->appendChild($registersEl);
@@ -97,23 +100,32 @@ class BelastingdienestExportService
         $entriesEl = $doc->createElement('AuditEntries');
         foreach ($entries as $entry) {
             $entryEl = $doc->createElement('AuditEntry');
-            $this->appendTextChild($doc, $entryEl, 'Id', (string) ($entry['id'] ?? ''));
-            $this->appendTextChild($doc, $entryEl, 'OperatorId', (string) ($entry['operatorId'] ?? ''));
-            $this->appendTextChild($doc, $entryEl, 'RegisterNumber', (string) ($entry['registerNumber'] ?? ''));
-            $this->appendTextChild($doc, $entryEl, 'Action', (string) ($entry['action'] ?? ''));
-            $this->appendTextChild($doc, $entryEl, 'Amount', (string) ($entry['amount'] ?? '0'));
-            $this->appendTextChild($doc, $entryEl, 'ItemCount', (string) ($entry['itemCount'] ?? '0'));
-            $this->appendTextChild($doc, $entryEl, 'TaxAmount', (string) ($entry['taxAmount'] ?? '0'));
-            $this->appendTextChild($doc, $entryEl, 'Timestamp', (string) ($entry['timestamp'] ?? ''));
-            $this->appendTextChild($doc, $entryEl, 'TransactionUuid', (string) ($entry['transactionUuid'] ?? ''));
-            $this->appendTextChild($doc, $entryEl, 'Signature', (string) ($entry['signature'] ?? ''));
-            $this->appendTextChild($doc, $entryEl, 'PreviousHash', (string) ($entry['previousHash'] ?? ''));
-            $this->appendTextChild($doc, $entryEl, 'CurrentHash', (string) ($entry['currentHash'] ?? ''));
-            $this->appendTextChild($doc, $entryEl, 'Description', htmlspecialchars((string) ($entry['description'] ?? ''), ENT_XML1));
-            $this->appendTextChild($doc, $entryEl, 'Verified', ($entry['verified'] === null ? 'null' : ($entry['verified'] ? 'true' : 'false')));
-            $this->appendTextChild($doc, $entryEl, 'ExportedAt', (string) ($entry['exportedAt'] ?? ''));
+            $this->appendTextChild(doc: $doc, parent: $entryEl, tag: 'Id', text: (string) ($entry['id'] ?? ''));
+            $this->appendTextChild(doc: $doc, parent: $entryEl, tag: 'OperatorId', text: (string) ($entry['operatorId'] ?? ''));
+            $this->appendTextChild(doc: $doc, parent: $entryEl, tag: 'RegisterNumber', text: (string) ($entry['registerNumber'] ?? ''));
+            $this->appendTextChild(doc: $doc, parent: $entryEl, tag: 'Action', text: (string) ($entry['action'] ?? ''));
+            $this->appendTextChild(doc: $doc, parent: $entryEl, tag: 'Amount', text: (string) ($entry['amount'] ?? '0'));
+            $this->appendTextChild(doc: $doc, parent: $entryEl, tag: 'ItemCount', text: (string) ($entry['itemCount'] ?? '0'));
+            $this->appendTextChild(doc: $doc, parent: $entryEl, tag: 'TaxAmount', text: (string) ($entry['taxAmount'] ?? '0'));
+            $this->appendTextChild(doc: $doc, parent: $entryEl, tag: 'Timestamp', text: (string) ($entry['timestamp'] ?? ''));
+            $this->appendTextChild(doc: $doc, parent: $entryEl, tag: 'TransactionUuid', text: (string) ($entry['transactionUuid'] ?? ''));
+            $this->appendTextChild(doc: $doc, parent: $entryEl, tag: 'Signature', text: (string) ($entry['signature'] ?? ''));
+            $this->appendTextChild(doc: $doc, parent: $entryEl, tag: 'PreviousHash', text: (string) ($entry['previousHash'] ?? ''));
+            $this->appendTextChild(doc: $doc, parent: $entryEl, tag: 'CurrentHash', text: (string) ($entry['currentHash'] ?? ''));
+            $description = htmlspecialchars((string) ($entry['description'] ?? ''), ENT_XML1);
+            $this->appendTextChild(doc: $doc, parent: $entryEl, tag: 'Description', text: $description);
+            if ($entry['verified'] === null) {
+                $verifiedText = 'null';
+            } else if ($entry['verified'] === true) {
+                $verifiedText = 'true';
+            } else {
+                $verifiedText = 'false';
+            }
+
+            $this->appendTextChild(doc: $doc, parent: $entryEl, tag: 'Verified', text: $verifiedText);
+            $this->appendTextChild(doc: $doc, parent: $entryEl, tag: 'ExportedAt', text: (string) ($entry['exportedAt'] ?? ''));
             $entriesEl->appendChild($entryEl);
-        }
+        }//end foreach
 
         $root->appendChild($entriesEl);
 
@@ -136,11 +148,11 @@ class BelastingdienestExportService
      */
     public function exportAsJson(array $entries): string
     {
-        $manifest = $this->buildManifest($entries);
+        $manifest = $this->buildManifest(entries: $entries);
 
         $export = [
-            'version'    => self::EXPORT_VERSION,
-            'manifest'   => $manifest,
+            'version'      => self::EXPORT_VERSION,
+            'manifest'     => $manifest,
             'auditEntries' => array_values($entries),
         ];
 
@@ -200,15 +212,26 @@ class BelastingdienestExportService
             $chainValid = false;
         }
 
+        if ($timestamps === []) {
+            $dateFrom = null;
+            $dateTo   = null;
+        } else {
+            $dateFrom = reset($timestamps);
+            $dateTo   = end($timestamps);
+        }
+
+        if ($chainValid === true) {
+            $integrity = 'valid';
+        } else {
+            $integrity = 'invalid';
+        }
+
         return [
             'exportDate'     => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
             'entryCount'     => count($entries),
-            'dateRange'      => [
-                'from' => ($timestamps === [] ? null : reset($timestamps)),
-                'to'   => ($timestamps === [] ? null : end($timestamps)),
-            ],
+            'dateRange'      => ['from' => $dateFrom, 'to' => $dateTo],
             'registers'      => array_values($registers),
-            'chainIntegrity' => $chainValid ? 'valid' : 'invalid',
+            'chainIntegrity' => $integrity,
         ];
     }//end buildManifest()
 

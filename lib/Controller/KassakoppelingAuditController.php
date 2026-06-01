@@ -24,6 +24,9 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#3.1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -59,7 +62,7 @@ use Psr\Log\LoggerInterface;
  * Note: the export route MUST be registered BEFORE the {id} wildcard in
  * routes.php to prevent "export" being treated as an ID.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)  Wires the four service
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the four service
  *   collaborators a regulatory-compliance controller legitimately needs
  *   (audit service, group manager, user session, logger + l10n).
  *
@@ -70,12 +73,12 @@ class KassakoppelingAuditController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest                    $request      The request.
-     * @param KassakoppelingAuditService  $auditService The audit service.
-     * @param IGroupManager               $groupManager The group manager (admin check).
-     * @param IUserSession                $userSession  The user session.
-     * @param IL10N                       $l10n         Localisation.
-     * @param LoggerInterface             $logger       The logger.
+     * @param IRequest                   $request      The request.
+     * @param KassakoppelingAuditService $auditService The audit service.
+     * @param IGroupManager              $groupManager The group manager (admin check).
+     * @param IUserSession               $userSession  The user session.
+     * @param IL10N                      $l10n         Localisation.
+     * @param LoggerInterface            $logger       The logger.
      */
     public function __construct(
         IRequest $request,
@@ -280,8 +283,13 @@ class KassakoppelingAuditController extends Controller
         }
 
         try {
-            $content  = $this->auditService->exportForBelastingdienst($fromDate, $toDate, $format);
-            $mimeType = ($format === 'json') ? 'application/json' : 'application/xml';
+            $content = $this->auditService->exportForBelastingdienst($fromDate, $toDate, $format);
+            if ($format === 'json') {
+                $mimeType = 'application/json';
+            } else {
+                $mimeType = 'application/xml';
+            }
+
             $filename = sprintf(
                 'kassakoppeling-export-%s-to-%s.%s',
                 preg_replace('/[^0-9\-]/', '', $fromDate),

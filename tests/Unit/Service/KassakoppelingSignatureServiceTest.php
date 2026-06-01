@@ -20,6 +20,9 @@
  * @link https://pipelinq.nl
  *
  * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#8.1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -38,6 +41,7 @@ use RuntimeException;
  */
 class KassakoppelingSignatureServiceTest extends TestCase
 {
+
     /**
      * The service under test.
      *
@@ -65,15 +69,15 @@ class KassakoppelingSignatureServiceTest extends TestCase
      * @var array<string,mixed>
      */
     private array $testEntry = [
-        'operatorId'     => 'user_john',
-        'registerNumber' => 'REG-001',
-        'action'         => 'sale',
-        'amount'         => 4950,
-        'itemCount'      => 3,
-        'taxAmount'      => 870,
-        'timestamp'      => '2026-05-20T08:15:30Z',
-        'transactionUuid'=> 'uuid-txn-20260520-001',
-        'previousHash'   => '0',
+        'operatorId'      => 'user_john',
+        'registerNumber'  => 'REG-001',
+        'action'          => 'sale',
+        'amount'          => 4950,
+        'itemCount'       => 3,
+        'taxAmount'       => 870,
+        'timestamp'       => '2026-05-20T08:15:30Z',
+        'transactionUuid' => 'uuid-txn-20260520-001',
+        'previousHash'    => '0',
     ];
 
     /**
@@ -83,9 +87,9 @@ class KassakoppelingSignatureServiceTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->appConfig = $this->createMock(IAppConfig::class);
+        $this->appConfig = $this->createMock(originalClassName: IAppConfig::class);
         $this->appConfig
-            ->method('getAppValue')
+            ->method('getValueString')
             ->with('pipelinq', 'kassakoppeling_secret', '')
             ->willReturn($this->secretKey);
 
@@ -102,7 +106,11 @@ class KassakoppelingSignatureServiceTest extends TestCase
     public function testGenerateSignatureReturnsSha256HexString(): void
     {
         $sig = $this->service->generateSignature($this->testEntry);
-        $this->assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $sig, 'Signature must be 64-char lowercase hex');
+        $this->assertMatchesRegularExpression(
+            pattern: '/^[0-9a-f]{64}$/',
+            string: $sig,
+            message: 'Signature must be 64-char lowercase hex'
+        );
     }//end testGenerateSignatureReturnsSha256HexString()
 
     /**
@@ -114,7 +122,7 @@ class KassakoppelingSignatureServiceTest extends TestCase
     {
         $sig1 = $this->service->generateSignature($this->testEntry);
         $sig2 = $this->service->generateSignature($this->testEntry);
-        $this->assertSame($sig1, $sig2, 'Signature must be deterministic for the same input');
+        $this->assertSame(expected: $sig1, actual: $sig2, message: 'Signature must be deterministic for the same input');
     }//end testGenerateSignatureIsDeterministic()
 
     /**
@@ -126,8 +134,8 @@ class KassakoppelingSignatureServiceTest extends TestCase
     {
         $sig = $this->service->generateSignature($this->testEntry);
         $this->assertTrue(
-            $this->service->verifySignature($this->testEntry, $sig),
-            'verifySignature must return true for a freshly generated signature'
+            condition: $this->service->verifySignature($this->testEntry, $sig),
+            message: 'verifySignature must return true for a freshly generated signature'
         );
     }//end testVerifySignatureReturnsTrueForValidSignature()
 
@@ -138,11 +146,11 @@ class KassakoppelingSignatureServiceTest extends TestCase
      */
     public function testVerifySignatureReturnsFalseWhenAmountTampered(): void
     {
-        $sig     = $this->service->generateSignature($this->testEntry);
+        $sig      = $this->service->generateSignature($this->testEntry);
         $tampered = array_merge($this->testEntry, ['amount' => 9999]);
         $this->assertFalse(
-            $this->service->verifySignature($tampered, $sig),
-            'verifySignature must return false after tampering with the amount'
+            condition: $this->service->verifySignature($tampered, $sig),
+            message: 'verifySignature must return false after tampering with the amount'
         );
     }//end testVerifySignatureReturnsFalseWhenAmountTampered()
 
@@ -155,8 +163,8 @@ class KassakoppelingSignatureServiceTest extends TestCase
     {
         $wrongSig = str_repeat('a', 64);
         $this->assertFalse(
-            $this->service->verifySignature($this->testEntry, $wrongSig),
-            'verifySignature must return false for a wrong signature'
+            condition: $this->service->verifySignature($this->testEntry, $wrongSig),
+            message: 'verifySignature must return false for a wrong signature'
         );
     }//end testVerifySignatureReturnsFalseForWrongSignature()
 
@@ -168,7 +176,11 @@ class KassakoppelingSignatureServiceTest extends TestCase
     public function testGenerateHashReturnsSha256HexString(): void
     {
         $hash = $this->service->generateHash($this->testEntry, '0');
-        $this->assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $hash, 'Hash must be 64-char lowercase hex');
+        $this->assertMatchesRegularExpression(
+            pattern: '/^[0-9a-f]{64}$/',
+            string: $hash,
+            message: 'Hash must be 64-char lowercase hex'
+        );
     }//end testGenerateHashReturnsSha256HexString()
 
     /**
@@ -180,7 +192,7 @@ class KassakoppelingSignatureServiceTest extends TestCase
     {
         $hash1 = $this->service->generateHash($this->testEntry, '0');
         $hash2 = $this->service->generateHash($this->testEntry, '0');
-        $this->assertSame($hash1, $hash2, 'Hash must be deterministic');
+        $this->assertSame(expected: $hash1, actual: $hash2, message: 'Hash must be deterministic');
     }//end testGenerateHashIsDeterministic()
 
     /**
@@ -192,7 +204,7 @@ class KassakoppelingSignatureServiceTest extends TestCase
     {
         $hash1 = $this->service->generateHash($this->testEntry, '0');
         $hash2 = $this->service->generateHash($this->testEntry, str_repeat('f', 64));
-        $this->assertNotSame($hash1, $hash2, 'Different previousHash must produce different currentHash');
+        $this->assertNotSame(expected: $hash1, actual: $hash2, message: 'Different previousHash must produce different currentHash');
     }//end testGenerateHashDiffersWithDifferentPreviousHash()
 
     /**
@@ -206,17 +218,17 @@ class KassakoppelingSignatureServiceTest extends TestCase
         $entry1['previousHash'] = '0';
         $entry1['currentHash']  = $this->service->generateHash($entry1, '0');
 
-        $entry2                 = array_merge($this->testEntry, ['action' => 'void', 'timestamp' => '2026-05-20T08:18:15Z']);
+        $entry2 = array_merge($this->testEntry, ['action' => 'void', 'timestamp' => '2026-05-20T08:18:15Z']);
         $entry2['previousHash'] = $entry1['currentHash'];
         $entry2['currentHash']  = $this->service->generateHash($entry2, $entry1['currentHash']);
 
-        $entry3                 = array_merge($this->testEntry, ['action' => 'refund', 'timestamp' => '2026-05-20T09:45:20Z', 'operatorId' => 'user_maria']);
+        $entry3 = array_merge($this->testEntry, ['action' => 'refund', 'timestamp' => '2026-05-20T09:45:20Z', 'operatorId' => 'user_maria']);
         $entry3['previousHash'] = $entry2['currentHash'];
         $entry3['currentHash']  = $this->service->generateHash($entry3, $entry2['currentHash']);
 
         $this->assertTrue(
-            $this->service->verifyHashChain([$entry1, $entry2, $entry3]),
-            'verifyHashChain must return true for a correctly built chain'
+            condition: $this->service->verifyHashChain([$entry1, $entry2, $entry3]),
+            message: 'verifyHashChain must return true for a correctly built chain'
         );
     }//end testVerifyHashChainReturnsTrueForValidChain()
 
@@ -232,18 +244,16 @@ class KassakoppelingSignatureServiceTest extends TestCase
         $entry1['currentHash']  = $this->service->generateHash($entry1, '0');
 
         // Entry2 claims a wrong previousHash (not entry1's currentHash).
-        $entry2                 = array_merge($this->testEntry, ['action' => 'void']);
-        $entry2['previousHash'] = str_repeat('d', 64); // wrong previousHash
+        $entry2 = array_merge($this->testEntry, ['action' => 'void']);
+        $entry2['previousHash'] = str_repeat('d', 64);
         $entry2['currentHash']  = $this->service->generateHash($entry2, $entry2['previousHash']);
 
-        // verifyHashChain verifies each entry's currentHash in isolation, not the linkage.
-        // The broken link: entry2's previousHash does not equal entry1's currentHash.
-        // We must also corrupt entry2's currentHash to test that the chain rejects it:
-        $entry2['currentHash'] = str_repeat('e', 64); // tampered currentHash
+        // Corrupt entry2's currentHash to test that the chain rejects it.
+        $entry2['currentHash'] = str_repeat('e', 64);
 
         $this->assertFalse(
-            $this->service->verifyHashChain([$entry1, $entry2]),
-            'verifyHashChain must return false when a link\'s currentHash is tampered'
+            condition: $this->service->verifyHashChain([$entry1, $entry2]),
+            message: 'verifyHashChain must return false when a link\'s currentHash is tampered'
         );
     }//end testVerifyHashChainReturnsFalseForBrokenLink()
 
@@ -255,8 +265,8 @@ class KassakoppelingSignatureServiceTest extends TestCase
     public function testVerifyHashChainReturnsTrueForEmptyArray(): void
     {
         $this->assertTrue(
-            $this->service->verifyHashChain([]),
-            'Empty chain is trivially valid'
+            condition: $this->service->verifyHashChain([]),
+            message: 'Empty chain is trivially valid.'
         );
     }//end testVerifyHashChainReturnsTrueForEmptyArray()
 
@@ -267,11 +277,11 @@ class KassakoppelingSignatureServiceTest extends TestCase
      */
     public function testGetSecretKeyThrowsWhenNotConfigured(): void
     {
-        $this->expectException(RuntimeException::class);
+        $this->expectException(exception: RuntimeException::class);
 
-        $appConfig = $this->createMock(IAppConfig::class);
+        $appConfig = $this->createMock(originalClassName: IAppConfig::class);
         $appConfig
-            ->method('getAppValue')
+            ->method('getValueString')
             ->with('pipelinq', 'kassakoppeling_secret', '')
             ->willReturn('');
 
@@ -286,11 +296,11 @@ class KassakoppelingSignatureServiceTest extends TestCase
      */
     public function testGenerateSignatureThrowsWhenKeyNotConfigured(): void
     {
-        $this->expectException(RuntimeException::class);
+        $this->expectException(exception: RuntimeException::class);
 
-        $appConfig = $this->createMock(IAppConfig::class);
+        $appConfig = $this->createMock(originalClassName: IAppConfig::class);
         $appConfig
-            ->method('getAppValue')
+            ->method('getValueString')
             ->with('pipelinq', 'kassakoppeling_secret', '')
             ->willReturn('');
 
