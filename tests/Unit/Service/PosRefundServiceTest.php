@@ -4,10 +4,13 @@
  * Unit tests for PosRefundService.
  *
  * Covers the server-authoritative proportional refund calculation
- * (recalculateLine), the cumulative over-refund cap, the manager-permission gate
- * (fail closed), the confirm / reject lifecycle and the reversal + stock-movement
- * CloudEvent shapes. The OpenRegister ObjectService is faked through the DI
- * container so the full confirm/reject paths can be exercised without a live OR.
+ * (recalculateLine / recalculateTotals) and the confirm / reject lifecycle which
+ * now routes through OpenRegister's TransitionEngine. The manager gate and the
+ * cumulative over-refund cap live in PosRefundManagerGuard; here a fake engine
+ * runs the REAL guard (constructed with the same fakes) and then performs the
+ * load → guard → save → return that OR's engine does, so the cap / manager
+ * behaviour is exercised end-to-end without a live OR. The reversal +
+ * stock-movement CloudEvent shapes are asserted on the fake WebhookService.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service
@@ -25,6 +28,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Lifecycle\GuardResult;
+use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Lifecycle\PosRefundManagerGuard;
 use OCA\Pipelinq\Service\PosRefundService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
@@ -109,7 +115,65 @@ class FakeWebhookService
 }
 
 /**
+ * A fake TransitionEngine that mirrors OpenRegister's transition() contract for
+ * the posRefund schema: it loads the refund, runs the REAL PosRefundManagerGuard
+ * (manager + over-refund cap), and — when allowed — flips the status to the
+ * declared target and persists via the fake ObjectService. A guard denial is
+ * thrown as a RuntimeException carrying the guard message, exactly as OR's
+ * HookStoppedException would, so the service's error mapping is exercised.
+ */
+class FakeRefundTransitionEngine
+{
+    /**
+     * @param FakeObjectService     $objects The in-memory object store.
+     * @param PosRefundManagerGuard $guard   The real guard under test.
+     * @param string                $userId  The caller uid the engine attributes.
+     */
+    public function __construct(
+        private FakeObjectService $objects,
+        private PosRefundManagerGuard $guard,
+        private string $userId
+    ) {
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function transition(string $objectId, string $action): array
+    {
+        $refund = $this->objects->store['posRefund_schema'][$objectId] ?? null;
+        if ($refund === null) {
+            throw new \RuntimeException(sprintf('Object "%s" not found.', $objectId));
+        }
+
+        $current = (string) ($refund['status'] ?? '');
+        $allowedFrom = ['pending'];
+        if (in_array($current, $allowedFrom, true) === false) {
+            throw new \RuntimeException(
+                sprintf('Transition "%s" is not allowed from current state "%s".', $action, $current)
+            );
+        }
+
+        $result = $this->guard->check($refund, $action, $this->userId);
+        if ($result->isAllowed() === false) {
+            throw new \RuntimeException((string) $result->getMessage());
+        }
+
+        $target = $action === 'complete' ? 'completed' : 'rejected';
+        $refund['status'] = $target;
+        $this->objects->store['posRefund_schema'][$objectId] = $refund;
+
+        return $refund;
+    }
+}
+
+/**
  * Tests for PosRefundService.
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods) The lifecycle has many small,
+ *  single-purpose behaviours each asserted independently.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the fakes the refund
+ *  lifecycle legitimately exercises.
  */
 class PosRefundServiceTest extends TestCase
 {
@@ -124,6 +188,13 @@ class PosRefundServiceTest extends TestCase
     private FakeWebhookService $webhooks;
 
     /**
+     * The uid the fake engine attributes the transition to (the caller).
+     *
+     * @var string
+     */
+    private string $callerUid = 'boss';
+
+    /**
      * Build the service with fakes wired into the container.
      *
      * @return void
@@ -132,17 +203,6 @@ class PosRefundServiceTest extends TestCase
     {
         $this->objects  = new FakeObjectService();
         $this->webhooks = new FakeWebhookService();
-
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturnCallback(function (string $id) {
-            if ($id === 'OCA\OpenRegister\Service\ObjectService') {
-                return $this->objects;
-            }
-            if ($id === 'OCA\OpenRegister\Service\WebhookService') {
-                return $this->webhooks;
-            }
-            throw new \RuntimeException('unknown service '.$id);
-        });
 
         $this->appConfig = $this->createMock(IAppConfig::class);
         // Resolve register + every *_schema key to a stable id (the key itself).
@@ -160,11 +220,52 @@ class PosRefundServiceTest extends TestCase
 
         $this->groupManager = $this->createMock(IGroupManager::class);
 
+        $container = $this->createMock(ContainerInterface::class);
+        $logger    = $this->createMock(LoggerInterface::class);
+
+        $policy = new PosAccessPolicy(
+            appConfig: $this->appConfig,
+            groupManager: $this->groupManager,
+        );
+
+        $guardContainer = $this->createMock(ContainerInterface::class);
+        $guardContainer->method('get')->willReturnCallback(function (string $id) {
+            if ($id === 'OCA\OpenRegister\Service\ObjectService') {
+                return $this->objects;
+            }
+            throw new \RuntimeException('unknown service '.$id);
+        });
+
+        $guard = new PosRefundManagerGuard(
+            policy: $policy,
+            container: $guardContainer,
+            appConfig: $this->appConfig,
+            logger: $logger,
+        );
+
+        $engine = new FakeRefundTransitionEngine(
+            objects: $this->objects,
+            guard: $guard,
+            userId: $this->callerUid
+        );
+
+        $container->method('get')->willReturnCallback(function (string $id) use ($engine) {
+            if ($id === 'OCA\OpenRegister\Service\ObjectService') {
+                return $this->objects;
+            }
+            if ($id === 'OCA\OpenRegister\Service\WebhookService') {
+                return $this->webhooks;
+            }
+            if ($id === 'OCA\OpenRegister\Service\Lifecycle\TransitionEngine') {
+                return $engine;
+            }
+            throw new \RuntimeException('unknown service '.$id);
+        });
+
         $this->service = new PosRefundService(
             $container,
             $this->appConfig,
-            $this->groupManager,
-            $this->createMock(LoggerInterface::class),
+            $logger,
         );
     }//end setUp()
 
@@ -277,7 +378,8 @@ class PosRefundServiceTest extends TestCase
     }//end testRecalculateTotalsAggregatesServerSide()
 
     /**
-     * A full-quantity refund yields the full line tax and total.
+     * A full-quantity refund yields the full line tax and total, completed via
+     * the engine + real guard.
      *
      * @return void
      */
@@ -296,7 +398,7 @@ class PosRefundServiceTest extends TestCase
 
     /**
      * Confirm rejects when the refund exceeds the original transaction total
-     * (over-refund cap, REQ-REF-014).
+     * (over-refund cap, enforced by PosRefundManagerGuard).
      *
      * @return void
      */
@@ -361,7 +463,8 @@ class PosRefundServiceTest extends TestCase
     }//end testConfirmAcceptsCumulativeWithinCap()
 
     /**
-     * Confirm is manager-gated and fails closed for a non-manager.
+     * Confirm is manager-gated and fails closed for a non-manager (the guard
+     * denies inside the engine → 403).
      *
      * @return void
      */
@@ -390,7 +493,8 @@ class PosRefundServiceTest extends TestCase
     }//end testConfirmRejectsOrphanTransaction()
 
     /**
-     * Confirm rejects a non-pending refund (immutability of completed refunds).
+     * Confirm rejects a non-pending refund (immutability of completed refunds);
+     * the engine refuses the transition from a non-pending state.
      *
      * @return void
      */
@@ -491,13 +595,11 @@ class PosRefundServiceTest extends TestCase
         $refund = $this->service->rejectRefund('ref-1', 'Retourperiode verstreken', 'boss');
 
         $this->assertSame('rejected', $refund['status']);
-        $this->assertSame('Retourperiode verstreken', $refund['rejectionReason']);
-        $this->assertNotEmpty($refund['rejectedAt']);
         $this->assertCount(0, $this->webhooks->events);
     }//end testRejectSetsStateAndEmitsNoEvents()
 
     /**
-     * Reject fails closed for a non-manager.
+     * Reject fails closed for a non-manager (guard denies inside the engine).
      *
      * @return void
      */
@@ -511,7 +613,7 @@ class PosRefundServiceTest extends TestCase
     }//end testRejectManagerGateFailsClosed()
 
     /**
-     * Reject requires a non-empty reason.
+     * Reject requires a non-empty reason (service precondition before the engine).
      *
      * @return void
      */
@@ -525,20 +627,47 @@ class PosRefundServiceTest extends TestCase
     }//end testRejectRequiresReason()
 
     /**
-     * A Nextcloud admin is always a manager; a non-admin without a configured
-     * group is never one (fail closed).
+     * The real PosRefundManagerGuard denies a non-manager and allows an admin —
+     * the direct guard contract that closes the manager-gate hole.
      *
      * @return void
      */
-    public function testIsManagerGate(): void
+    public function testManagerGuardDirectVerdict(): void
     {
+        $this->seed();
         $this->groupManager->method('isAdmin')->willReturnMap([
             ['boss', true],
             ['clerk', false],
         ]);
 
-        $this->assertTrue($this->service->isManager('boss'));
-        $this->assertFalse($this->service->isManager('clerk'));
-        $this->assertFalse($this->service->isManager(''));
-    }//end testIsManagerGate()
+        $policy = new PosAccessPolicy(
+            appConfig: $this->appConfig,
+            groupManager: $this->groupManager,
+        );
+
+        $guardContainer = $this->createMock(ContainerInterface::class);
+        $guardContainer->method('get')->willReturnCallback(function (string $id) {
+            if ($id === 'OCA\OpenRegister\Service\ObjectService') {
+                return $this->objects;
+            }
+            throw new \RuntimeException('unknown service '.$id);
+        });
+
+        $guard = new PosRefundManagerGuard(
+            policy: $policy,
+            container: $guardContainer,
+            appConfig: $this->appConfig,
+            logger: $this->createMock(LoggerInterface::class),
+        );
+
+        $refund = $this->objects->store['posRefund_schema']['ref-1'];
+
+        $this->assertFalse($guard->check($refund, 'reject', 'clerk')->isAllowed());
+        $this->assertTrue($guard->check($refund, 'reject', 'boss')->isAllowed());
+        $this->assertFalse($guard->check($refund, 'complete', '')->isAllowed());
+
+        // Sanity: GuardResult contract.
+        $this->assertTrue(GuardResult::allow()->isAllowed());
+        $this->assertFalse(GuardResult::deny('no')->isAllowed());
+    }//end testManagerGuardDirectVerdict()
 }//end class

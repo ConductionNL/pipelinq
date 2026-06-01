@@ -26,12 +26,14 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Service\ProductCatalogService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\OCS\OCSBadRequestException;
+use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -41,15 +43,18 @@ use Psr\Log\LoggerInterface;
 /**
  * Controller for POS product catalogue endpoints.
  *
- * Authorization model: every action requires an authenticated user. Lookup and
- * price resolution are scoped inside ProductCatalogService to this app's own
- * register + product schema, so a caller can never reach objects outside the
- * catalogue (no IDOR). The effective price and tax rate are resolved
- * server-side from the persisted product and are never trusted from the client.
+ * Authorization model: every action requires an authenticated POS operator (a
+ * POS-group member or admin), enforced via PosAccessPolicy — the catalogue is a
+ * cashier capability, not an any-authenticated-user one. Lookup and price
+ * resolution are scoped inside ProductCatalogService to this app's own register
+ * + product schema, so a caller can never reach objects outside the catalogue
+ * (no IDOR). The effective price and tax rate are resolved server-side from the
+ * persisted product and are never trusted from the client.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
  * @spec openspec/changes/pos-product-catalogue/specs/pos-product-catalogue/spec.md#REQ-PPC-005
+ * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.2
  */
 class ProductCatalogController extends Controller
 {
@@ -59,6 +64,7 @@ class ProductCatalogController extends Controller
      * @param IRequest              $request     The request.
      * @param ProductCatalogService $service     The product catalogue service.
      * @param IUserSession          $userSession The user session.
+     * @param PosAccessPolicy       $policy      The shared POS access policy.
      * @param IL10N                 $l10n        The localization service.
      * @param LoggerInterface       $logger      The logger.
      */
@@ -66,6 +72,7 @@ class ProductCatalogController extends Controller
         IRequest $request,
         private ProductCatalogService $service,
         private IUserSession $userSession,
+        private PosAccessPolicy $policy,
         private IL10N $l10n,
         private LoggerInterface $logger,
     ) {
@@ -149,13 +156,16 @@ class ProductCatalogController extends Controller
     }//end resolvePrice()
 
     /**
-     * Require an authenticated user, returning their UID.
+     * Require an authenticated POS operator, returning their UID.
      *
-     * Returns a 401 JSONResponse when no user is in the session. Object-level
-     * access is then scoped to this app's own product schema inside the service,
-     * preventing IDOR.
+     * Returns a 401 JSONResponse when no user is in the session, and a 403 when
+     * the caller is not a POS-group member or admin. The catalogue surface is a
+     * cashier capability, not an any-authenticated-user one, so it is gated to
+     * POS operators (closing the over-broad #[NoAdminRequired] exposure).
      *
-     * @return string|JSONResponse The acting user UID, or a 401 response.
+     * @return string|JSONResponse The acting user UID, or a 401/403 response.
+     *
+     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.2
      */
     private function requireUserId(): string|JSONResponse
     {
@@ -167,7 +177,15 @@ class ProductCatalogController extends Controller
             );
         }
 
-        return $user->getUID();
+        $uid = $user->getUID();
+        if ($this->policy->isPosUser(userId: $uid) === false) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('POS access is required for the product catalogue')],
+                Http::STATUS_FORBIDDEN
+            );
+        }
+
+        return $uid;
     }//end requireUserId()
 
     /**
@@ -184,6 +202,8 @@ class ProductCatalogController extends Controller
             return new JSONResponse($action());
         } catch (OCSNotFoundException $e) {
             return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
+        } catch (OCSForbiddenException $e) {
+            return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
         } catch (OCSBadRequestException $e) {
             return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
         } catch (\Throwable $e) {
