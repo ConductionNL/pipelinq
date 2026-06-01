@@ -19,12 +19,16 @@
  * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
  * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
  * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-50
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 // @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use DateTimeImmutable;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ReportingService;
 use OCP\AppFramework\Controller;
@@ -32,7 +36,6 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
 
@@ -49,13 +52,11 @@ class ReportingController extends Controller
      * @param IRequest         $request          The request.
      * @param ReportingService $reportingService The reporting service.
      * @param IUserSession     $userSession      The user session.
-     * @param IL10N            $l10n             The localization service.
      */
     public function __construct(
         IRequest $request,
         private ReportingService $reportingService,
         private IUserSession $userSession,
-        private IL10N $l10n,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -288,7 +289,7 @@ class ReportingController extends Controller
         }
 
         try {
-            new \DateTimeImmutable($date);
+            new DateTimeImmutable($date);
             return true;
         } catch (\Exception) {
             return false;
