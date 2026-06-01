@@ -1221,9 +1221,25 @@ Operations for frontend API service helpers MUST tolerate missing, empty, or mal
 - THEN it MUST return a safe default or a validation result
 - AND it MUST NOT raise an unhandled exception
 
+> UPDATED 2026-06-01: The "Frontend state stores" requirement below originally
+> enumerated the store actions of `src/store/modules/kennisbank.js` (~22 methods)
+> and the automation store alongside the still-present modules. The
+> `kennisbank.js` module has been **removed** (knowledge management migrated to
+> the XWiki leaf — see `migrate-kennisbank-to-xwiki-leaf` and the `kennisbank`
+> spec), and automation migrated to the Flow leaf. The deleted-module methods no
+> longer apply; only the store modules that still exist are in scope.
+
 ### Requirement: Frontend state stores — documented operations
 
-The Pinia store actions and getters implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `_countOpenRequests`, `deleteProfile`, `fetchProfiles`, `getWorkload`, `saveProfile`, `_addToRecentlyViewed`). Each listed method realises an observable part of Pinia store actions and getters and MUST behave as implemented in the current codebase.
+The Pinia store actions and getters implemented in this app MUST provide the
+operations of the store modules that currently exist in `src/store/modules/`
+(`agentProfiles.js`, `leadSources.js`, `object.js`, `product.js`, `prospect.js`,
+`queues.js`, `requestChannels.js`, `settings.js`, `skills.js`, `survey.js` — for
+example `_countOpenRequests`, `deleteProfile`, `fetchProfiles`, `getWorkload`,
+`saveProfile`, `_addToRecentlyViewed`). Each listed method realises an observable
+part of Pinia store actions and getters and MUST behave as implemented in the
+current codebase. Methods of removed modules (`kennisbank.js`, automation) are
+out of scope.
 
 **Feature tier**: V1
 
