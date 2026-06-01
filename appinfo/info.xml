@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+    <id>pipelinq</id>
+    <name lang="en">Pipelinq</name>
+    <name lang="nl">Pipelinq</name>
+    <summary lang="en">CRM and customer interaction for Nextcloud</summary>
+    <summary lang="nl">CRM en klantinteractie voor Nextcloud</summary>
+    <description lang="en"><![CDATA[Pipelinq is a CRM built on Nextcloud + OpenRegister for managing clients, leads, requests, and customer interactions.]]></description>
+    <description lang="nl"><![CDATA[Pipelinq is een CRM gebouwd op Nextcloud + OpenRegister voor het beheren van klanten, leads, aanvragen en klantinteracties.]]></description>
+    <version>1.0.0</version>
+    <licence>agpl</licence>
+    <author mail="info@conduction.nl" homepage="https://conduction.nl">Conduction</author>
+    <namespace>Pipelinq</namespace>
+    <category>organization</category>
+    <bugs>https://codeberg.org/Conduction/pipelinq/issues</bugs>
+    <dependencies>
+        <nextcloud min-version="28" max-version="30"/>
+    </dependencies>
+    <settings>
+        <admin>OCA\Pipelinq\Settings\PipelinqAdmin</admin>
+        <admin-section>OCA\Pipelinq\Settings\PipelinqSection</admin-section>
+    </settings>
+</info>
