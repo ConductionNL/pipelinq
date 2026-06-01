@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.29] - 2026-06-01
+
+### Added
+
+- AVG-verzoeken (GDPR art. 15/16/17/18/20) workflow (avg-verzoeken-workflow,
+  pipelinq#45) — implemented declaratively per ADR-001/022/031:
+  - **6 OpenRegister schemas** in `lib/Settings/pipelinq_register.json`:
+    `avgVerzoek`, `termijnEvent`, `bewijsItem`, `exportBundle`, `weigering`,
+    `redactieActie` — thin client on OpenRegister, no own DB tables.
+  - **Lifecycle** (`x-openregister-lifecycle`) for the AVG request
+    (intake → in-behandeling → bewijs-verzamelen → redactie → bundle-genereren
+    → afgerond, plus weigering-opgesteld → geweigerd and deactivate → inactief)
+    and the denial (concept → definitief → overschreven), with
+    server-authoritative per-transition authorization (ADR-005, no IDOR).
+  - **Derived deadline fields** (`x-openregister-calculations`):
+    `dagenResterend`, `termijnOverschreden` — fresh on read, no tracker service.
+  - **Deadline escalation / breach / resolution alerts**
+    (`x-openregister-notifications`).
+  - **5-year retention + 30-day evidence pseudonymisation**
+    (`x-openregister-archival`).
+  - **AVG Requests index + detail views** wired into `src/manifest.json`
+    (ADR-024) with a navigation entry.
+  - **nl + en** translations (ADR-007/025).
+  - Genuinely-imperative parts (PAdES-LTV signing, BRP/BSN lookup, OpenConnector
+    federated evidence query, DocuDesk PDF render, Procest DPIA item, AP ZIP
+    export) are honestly **deferred** — their leaf/external dependencies are not
+    present — and documented in the change's design.md.
+
 ## [0.2.28] - 2026-06-01
 
 ### Security
