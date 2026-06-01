@@ -93,6 +93,14 @@
 			"order": 96
 		},
 		{
+			"id": "KassakoppelingAudit",
+			"label": "Kassakoppeling Audit",
+			"icon": "icon-category-security",
+			"route": "KassakoppelingAudit",
+			"section": "footer",
+			"order": 97
+		},
+		{
 			"id": "Pipeline",
 			"label": "Pipeline",
 			"icon": "icon-category-organization",
@@ -1009,6 +1017,28 @@
 			"title": "Features & roadmap",
 			"config": {
 				"documentationUrl": "https://pipelinq.conduction.nl"
+			}
+		},
+		{
+			"id": "KassakoppelingAudit",
+			"route": "/kassakoppeling/audit",
+			"type": "custom",
+			"title": "Kassakoppeling Audit",
+			"component": "KassakoppelingAuditListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "kassakoppelingAuditLog"
+			}
+		},
+		{
+			"id": "KassakoppelingAuditDetail",
+			"route": "/kassakoppeling/audit/:id",
+			"type": "custom",
+			"title": "Kassakoppeling Audit Entry",
+			"component": "KassakoppelingAuditDetailView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "kassakoppelingAuditLog"
 			}
 		}
 	]

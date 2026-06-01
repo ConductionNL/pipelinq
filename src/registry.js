@@ -73,6 +73,12 @@ import PosRefundFormView from './views/pos/PosRefundForm.vue'
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
 import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
 
+// --- Kassakoppeling audit log (POS Belastingdienst compliance; custom views because
+//     the list needs action-colour badges + EUR formatting + admin export; the detail
+//     needs a crypto-verification badge + collapsible signature section). ---
+import KassakoppelingAuditListView from './views/kassakoppeling/AuditList.vue'
+import KassakoppelingAuditDetailView from './views/kassakoppeling/AuditDetail.vue'
+
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
 /**
@@ -246,6 +252,18 @@ const registry = {
 		kind: 'page',
 		component: ProductBarcodeSearchView,
 		_note: 'Scan-to-navigate barcode search; resolves via the server-authoritative scoped barcode-lookup API and routes to the matching product (highlighting a matched variant).',
+	},
+
+	// --- Kassakoppeling audit log (POS Belastingdienst compliance). ---
+	KassakoppelingAuditListView: {
+		kind: 'page',
+		component: KassakoppelingAuditListView,
+		_note: 'POS Kassakoppeling-compliant audit log list; custom for action-colour badges + EUR formatting + admin-only Belastingdienst export button.',
+	},
+	KassakoppelingAuditDetailView: {
+		kind: 'page',
+		component: KassakoppelingAuditDetailView,
+		_note: 'POS audit entry detail with cryptographic verification badge (green/orange/gray), collapsible signature section (HMAC-SHA256 + SHA-256 hash chain), and transaction cross-link.',
 	},
 }
 
