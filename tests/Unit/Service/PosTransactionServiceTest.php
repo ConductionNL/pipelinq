@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Service\PosTransactionService;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -72,10 +73,15 @@ class PosTransactionServiceTest extends TestCase
         $this->groupManager = $this->createMock(IGroupManager::class);
         $logger             = $this->createMock(LoggerInterface::class);
 
+        $policy = new PosAccessPolicy(
+            appConfig: $this->appConfig,
+            groupManager: $this->groupManager,
+        );
+
         $this->service = new PosTransactionService(
             $container,
             $this->appConfig,
-            $this->groupManager,
+            $policy,
             $logger,
         );
     }//end setUp()
@@ -425,55 +431,6 @@ class PosTransactionServiceTest extends TestCase
         $this->assertSame(0.0, $totals['total']);
         $this->assertSame([], $totals['taxBreakdown']);
     }//end testComputeTotalsEmptyCart()
-
-    /**
-     * A Nextcloud admin is always treated as a POS manager (refund gate).
-     *
-     * @return void
-     */
-    public function testIsManagerTrueForAdmin(): void
-    {
-        $this->groupManager->method('isAdmin')->with('boss')->willReturn(true);
-
-        $this->assertTrue($this->service->isManager('boss'));
-    }//end testIsManagerTrueForAdmin()
-
-    /**
-     * A non-admin with no configured manager group is NOT a manager (fail-closed).
-     *
-     * @return void
-     */
-    public function testIsManagerFailsClosedWithoutGroup(): void
-    {
-        $this->groupManager->method('isAdmin')->with('clerk')->willReturn(false);
-        $this->appConfig->method('getValueString')->willReturn('');
-
-        $this->assertFalse($this->service->isManager('clerk'));
-    }//end testIsManagerFailsClosedWithoutGroup()
-
-    /**
-     * A non-admin who is a member of the configured manager group qualifies.
-     *
-     * @return void
-     */
-    public function testIsManagerTrueForConfiguredGroupMember(): void
-    {
-        $this->groupManager->method('isAdmin')->with('clerk')->willReturn(false);
-        $this->appConfig->method('getValueString')->willReturn('pos-managers');
-        $this->groupManager->method('isInGroup')->with('clerk', 'pos-managers')->willReturn(true);
-
-        $this->assertTrue($this->service->isManager('clerk'));
-    }//end testIsManagerTrueForConfiguredGroupMember()
-
-    /**
-     * An empty user id is never a manager.
-     *
-     * @return void
-     */
-    public function testIsManagerFalseForEmptyUser(): void
-    {
-        $this->assertFalse($this->service->isManager(''));
-    }//end testIsManagerFalseForEmptyUser()
 
     /**
      * The confirmed CloudEvent envelope carries the required accounting fields.
