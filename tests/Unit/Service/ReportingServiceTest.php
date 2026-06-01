@@ -15,6 +15,9 @@
  * @link https://pipelinq.nl
  *
  * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-6
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

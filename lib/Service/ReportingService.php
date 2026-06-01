@@ -20,6 +20,9 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
  * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-50
  * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-51
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -95,11 +98,16 @@ class ReportingService
             // Compute SLA compliance across all channels.
             $slaCompliance = 0.0;
             if ($total > 0) {
-                $channelGroups = $this->groupByChannel(contactmomenten: $contactmomenten);
-                $totalWithin   = 0;
+                // Group by channel preserving full moment arrays for SLA threshold evaluation.
+                $channelGroups = [];
+                foreach ($contactmomenten as $moment) {
+                    $channelName = $moment['channel'] ?? 'unknown';
+                    $channelGroups[$channelName][] = $moment;
+                }
+
+                $totalWithin = 0;
                 foreach ($channelGroups as $channel => $items) {
-                    $within       = $this->countWithinSla(channel: $channel, moments: $items);
-                    $totalWithin += $within;
+                    $totalWithin += $this->countWithinSla(channel: $channel, moments: $items);
                 }
 
                 $slaCompliance = round(($totalWithin / $total) * 100, 1);
@@ -170,11 +178,11 @@ class ReportingService
                 }
 
                 try {
-                    $dt = new \DateTimeImmutable($contactedAt);
+                    $dateTime = new \DateTimeImmutable($contactedAt);
                     if ($granularity === 'weekly') {
-                        $key = $dt->format('o-W');
+                        $key = $dateTime->format('o-W');
                     } else {
-                        $key = $dt->format('Y-m-d');
+                        $key = $dateTime->format('Y-m-d');
                     }
                 } catch (\Exception) {
                     continue;
@@ -261,7 +269,7 @@ class ReportingService
             $channelItems    = array_values(
                 array_filter(
                     $contactmomenten,
-                    static fn($m) => ($m['channel'] ?? '') === $channel,
+                    static fn($moment) => ($moment['channel'] ?? '') === $channel,
                 )
             );
 
@@ -301,7 +309,7 @@ class ReportingService
         $resolved = count(
             array_filter(
                 $contactmomenten,
-                static fn($m) => ($m['outcome'] ?? '') === 'opgelost',
+                static fn($moment) => ($moment['outcome'] ?? '') === 'opgelost',
             )
         );
 
@@ -513,6 +521,9 @@ class ReportingService
      * @param string $to   ISO 8601 end date.
      *
      * @return array<array<string, mixed>> Raw contactmoment data arrays.
+     *
+     * @psalm-suppress                                UnusedParam
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     private function fetchContactmomenten(string $from, string $to): array
     {
