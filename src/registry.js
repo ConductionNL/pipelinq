@@ -35,6 +35,11 @@ import ComplaintsWidget from './views/dashboard/widgets/ComplaintsWidget.vue'
 import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
 import ClientOverviewWidget from './views/dashboard/widgets/ClientOverviewWidget.vue'
 
+// --- xWiki integration components (ADR xwiki-integration). ---
+// @spec openspec/changes/xwiki-integration/tasks.md#task-4.1
+import XWikiWidget from './components/xwiki/XWikiWidget.vue'
+import XWikiSidebarTab from './components/xwiki/XWikiSidebarTab.vue'
+
 // Bespoke kanban board with in-memory search (REQ-PIPE-022).
 // See openspec/changes/2026-03-20-pipeline/design.md.
 import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
@@ -143,6 +148,19 @@ const registry = {
 		kind: 'widget',
 		component: ClientOverviewWidget,
 		_note: 'Top-5 recent clients with a view-all link to ClientList.',
+	},
+
+	// --- xWiki integration components. ---
+	// @spec openspec/changes/xwiki-integration/tasks.md#task-4.2
+	XWikiWidget: {
+		kind: 'widget',
+		component: XWikiWidget,
+		_note: 'xWiki Kennisbank widget — compact article list with optional search for the dashboard. Gracefully degrades when xWiki is unavailable.',
+	},
+	XWikiSidebarTab: {
+		kind: 'widget',
+		component: XWikiSidebarTab,
+		_note: 'xWiki sidebar tab with search, space browser, and inline article viewer. Used in client, lead, and request detail sidebars.',
 	},
 
 	// --- Queues / routing rules. ---

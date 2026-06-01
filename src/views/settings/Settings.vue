@@ -92,6 +92,10 @@
 		<!-- Prospect Discovery Settings -->
 		<ProspectSettings v-if="isConfigured" />
 
+		<!-- xWiki Integration Settings -->
+		<!-- @spec openspec/changes/xwiki-integration/tasks.md#task-8.1 -->
+		<XWikiAdminSettings v-if="isConfigured" />
+
 		<!-- Re-import Status -->
 		<div v-if="message" class="actions-section">
 			<NcNoteCard :type="messageType">
@@ -118,6 +122,7 @@ import TagManager from './TagManager.vue'
 import QueueSettings from '../../components/admin/QueueSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
 import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
+import XWikiAdminSettings from '../../components/xwiki/XWikiAdminSettings.vue'
 
 export default {
 	name: 'Settings',
@@ -136,6 +141,7 @@ export default {
 		QueueSettings,
 		SkillSettings,
 		AgentProfileSettings,
+		XWikiAdminSettings,
 	},
 	data() {
 		return {
