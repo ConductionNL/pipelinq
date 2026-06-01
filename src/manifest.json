@@ -93,6 +93,13 @@
 			"order": 96
 		},
 		{
+			"id": "CashShifts",
+			"label": "Kassalade",
+			"icon": "icon-category-monitoring",
+			"route": "CashShifts",
+			"order": 97
+		},
+		{
 			"id": "Pipeline",
 			"label": "Pipeline",
 			"icon": "icon-category-organization",
@@ -737,6 +744,39 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "posTransaction"
+			}
+		},
+		{
+			"id": "CashShifts",
+			"route": "/pos/shifts",
+			"type": "custom",
+			"title": "Kassalade",
+			"component": "CashShiftListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "cashShift"
+			}
+		},
+		{
+			"id": "CashShiftNew",
+			"route": "/pos/shifts/new",
+			"type": "custom",
+			"title": "Shift openen",
+			"component": "CashShiftFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "cashShift"
+			}
+		},
+		{
+			"id": "CashShiftDetail",
+			"route": "/pos/shifts/:id",
+			"type": "custom",
+			"title": "Kassalade-shift",
+			"component": "CashShiftDetailView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "cashShift"
 			}
 		},
 		{

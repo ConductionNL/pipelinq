@@ -69,6 +69,14 @@ import PosRefundListView from './views/pos/PosRefundList.vue'
 import PosRefundDetailView from './views/pos/PosRefundDetail.vue'
 import PosRefundFormView from './views/pos/PosRefundForm.vue'
 
+// --- Cash shift management (lib gap: list needs status/date/reference filters
+//     and shift-level navigation; detail needs multi-panel lifecycle UI with
+//     drop recording, blind-count entry, diff calculation and approve/reject
+//     workflow; form is a bespoke open-shift form). ---
+import CashShiftListView from './views/pos/CashShiftList.vue'
+import CashShiftDetailView from './views/pos/CashShiftDetail.vue'
+import CashShiftFormView from './views/pos/CashShiftForm.vue'
+
 // --- Product barcode lookup (lib gap: index pages have no server-authoritative
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
 import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
@@ -246,6 +254,23 @@ const registry = {
 		kind: 'page',
 		component: ProductBarcodeSearchView,
 		_note: 'Scan-to-navigate barcode search; resolves via the server-authoritative scoped barcode-lookup API and routes to the matching product (highlighting a matched variant).',
+	},
+
+	// --- Cash shift management (Kassalade). ---
+	CashShiftListView: {
+		kind: 'page',
+		component: CashShiftListView,
+		_note: 'Cash shift list with status/date range/reference filters; lib gap: standard index page has no multi-field filter toolbar for POS drawer shifts.',
+	},
+	CashShiftDetailView: {
+		kind: 'page',
+		component: CashShiftDetailView,
+		_note: 'Multi-panel cash shift detail: float declaration, drops list, blind-count entry, variance diff panel with approve/reject workflow; lib detail page cannot express POS cash lifecycle actions.',
+	},
+	CashShiftFormView: {
+		kind: 'page',
+		component: CashShiftFormView,
+		_note: 'Open-shift form with float amount declaration; lib has no cash-shift-open page type.',
 	},
 }
 
