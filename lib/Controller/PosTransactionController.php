@@ -42,15 +42,18 @@ use Psr\Log\LoggerInterface;
 /**
  * Controller for POS transaction lifecycle endpoints.
  *
- * Authorization model: every action requires an authenticated user. Object
- * access is scoped to this app's own posTransaction schema inside
- * PosTransactionService (a transaction in another app/register resolves to a
- * 404, preventing IDOR). Refund additionally requires manager permission,
- * enforced server-side in the service.
+ * Authorization model: every action requires an authenticated user. The
+ * cashier-level transitions (confirm/settle/park/resume) and refund are applied
+ * through OpenRegister's TransitionEngine, which runs the registered
+ * per-object lifecycle guards: confirm/settle/park/resume require the
+ * transaction's own cashier, a POS-group member, or an admin (closing the
+ * IDOR), and refund requires a POS manager / admin. taxReport (a cross-object
+ * report) is manager-only, enforced in the service.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
  * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
+ * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
  */
 class PosTransactionController extends Controller
 {
@@ -217,7 +220,7 @@ class PosTransactionController extends Controller
         }
 
         return $this->run(
-            action: fn (): array => $this->service->taxReport(status: $status),
+            action: fn (): array => $this->service->taxReport(status: $status, userId: $uid),
             label: 'taxReport',
             key: 'report'
         );

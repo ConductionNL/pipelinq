@@ -42,15 +42,16 @@ use Psr\Log\LoggerInterface;
 /**
  * Controller for POS refund lifecycle endpoints.
  *
- * Authorization model: every action requires an authenticated user. Object
- * access is scoped to this app's own posRefund schema inside PosRefundService
- * (a refund in another app/register resolves to a 404, preventing IDOR).
- * Confirm and reject additionally require manager permission, enforced
- * server-side in the service (fail closed).
+ * Authorization model: every action requires an authenticated user. Confirm
+ * (complete) and reject are applied through OpenRegister's TransitionEngine,
+ * which runs PosRefundManagerGuard: both require a POS manager / admin, and
+ * complete additionally enforces the cumulative over-refund cap — all
+ * server-side and fail closed.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
  * @spec openspec/changes/pos-refund-return/tasks.md#2.2
+ * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.2
  */
 class PosRefundController extends Controller
 {

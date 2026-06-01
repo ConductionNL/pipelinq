@@ -42,16 +42,18 @@ use Psr\Log\LoggerInterface;
 /**
  * Controller for POS receipt endpoints.
  *
- * Authorization model: every action requires an authenticated user. Object
- * access is scoped to this app's own posTransaction schema inside
- * ReceiptDeliveryService (a transaction in another app/register resolves to a
- * 404, preventing IDOR). Email recipients are constrained to the transaction's
- * linked customer, so the endpoint cannot be abused to send mail to arbitrary
- * addresses.
+ * Authorization model: every action requires an authenticated user AND
+ * per-object access — ReceiptDeliveryService asserts the caller is the
+ * transaction's own cashier, a POS-group member, or an admin before rendering
+ * (closing the IDOR where any authenticated user could preview/email/print any
+ * transaction by UUID). Email recipients are additionally constrained to the
+ * transaction's linked customer, so the endpoint cannot be abused to send mail
+ * to arbitrary addresses.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
  * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-008
+ * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.1
  */
 class PosReceiptController extends Controller
 {
@@ -94,7 +96,11 @@ class PosReceiptController extends Controller
         $templateId = $this->optionalString(name: 'template');
 
         return $this->run(
-            action: fn (): array => $this->service->preview(transactionId: $id, templateId: $templateId),
+            action: fn (): array => $this->service->preview(
+                transactionId: $id,
+                templateId: $templateId,
+                userId: $uid
+            ),
             label: 'preview',
             key: 'receipt'
         );

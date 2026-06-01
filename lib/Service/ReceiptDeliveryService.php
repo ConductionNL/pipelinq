@@ -33,7 +33,9 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use RuntimeException;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCP\AppFramework\OCS\OCSBadRequestException;
+use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -78,6 +80,7 @@ class ReceiptDeliveryService
      * @param InvoiceSequenceService $invoiceSequence The invoice number allocator.
      * @param IMailer                $mailer          The Nextcloud mailer.
      * @param IAppConfig             $appConfig       The app config.
+     * @param PosAccessPolicy        $policy          The shared POS access policy.
      * @param IL10N                  $l10n            The localization service.
      * @param LoggerInterface        $logger          The logger.
      */
@@ -87,6 +90,7 @@ class ReceiptDeliveryService
         private InvoiceSequenceService $invoiceSequence,
         private IMailer $mailer,
         private IAppConfig $appConfig,
+        private PosAccessPolicy $policy,
         private IL10N $l10n,
         private LoggerInterface $logger,
     ) {
@@ -97,17 +101,21 @@ class ReceiptDeliveryService
      *
      * @param string      $transactionId The transaction UUID.
      * @param string|null $templateId    Optional template UUID.
+     * @param string      $userId        The acting user UID (must be able to access the transaction).
      *
      * @return array<string, mixed> The preview: text, html, isInvoice, invoiceNumber(null for preview).
      *
-     * @throws OCSNotFoundException If the transaction is not in this app's register.
+     * @throws OCSNotFoundException  If the transaction is not in this app's register.
+     * @throws OCSForbiddenException If the caller may not access the transaction.
      *
      * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-003
+     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.1
      */
-    public function preview(string $transactionId, ?string $templateId=null): array
+    public function preview(string $transactionId, ?string $templateId=null, string $userId=''): array
     {
         $transaction = $this->loadTransactionWithLines(id: $transactionId);
-        $template    = $this->loadTemplate(id: $templateId);
+        $this->assertCanAccess(transaction: $transaction, userId: $userId);
+        $template = $this->loadTemplate(id: $templateId);
 
         $text = $this->receiptService->renderText(transaction: $transaction, template: $template);
         $html = $this->receiptService->renderHtml(transaction: $transaction, template: $template);
@@ -153,8 +161,9 @@ class ReceiptDeliveryService
         string $userId
     ): array {
         $transaction = $this->loadReceiptableTransaction(id: $transactionId);
-        $template    = $this->loadTemplate(id: $templateId);
-        $recipient   = $this->resolveCustomerRecipient(transaction: $transaction, requested: $requestedRecipient);
+        $this->assertCanAccess(transaction: $transaction, userId: $userId);
+        $template  = $this->loadTemplate(id: $templateId);
+        $recipient = $this->resolveCustomerRecipient(transaction: $transaction, requested: $requestedRecipient);
 
         $transaction = $this->ensureInvoiceNumber(transaction: $transaction);
         $subject     = $this->l10n->t('Your receipt').' '.(string) ($transaction['reference'] ?? '');
@@ -244,6 +253,7 @@ class ReceiptDeliveryService
     public function printReceipt(string $transactionId, ?string $templateId, string $userId): array
     {
         $transaction = $this->loadReceiptableTransaction(id: $transactionId);
+        $this->assertCanAccess(transaction: $transaction, userId: $userId);
         $template    = $this->loadTemplate(id: $templateId);
         $transaction = $this->ensureInvoiceNumber(transaction: $transaction);
 
@@ -608,6 +618,34 @@ class ReceiptDeliveryService
             return [];
         }
     }//end loadTemplate()
+
+    /**
+     * Assert the caller may access a transaction's receipt.
+     *
+     * A receipt exposes the full sale (line items, customer, totals), so it is
+     * scoped to the transaction's own cashier, a POS-group member, or an admin —
+     * the same per-object rule the lifecycle guards enforce. This closes the IDOR
+     * on the receipt endpoints, where any authenticated user could previously
+     * preview/email/print any transaction by UUID.
+     *
+     * @param array<string, mixed> $transaction The loaded transaction.
+     * @param string               $userId      The acting user UID.
+     *
+     * @return void
+     *
+     * @throws OCSForbiddenException If the caller may not access the transaction.
+     *
+     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.1
+     */
+    private function assertCanAccess(array $transaction, string $userId): void
+    {
+        if ($this->policy->canAccessTransaction(object: $transaction, userId: $userId) === false) {
+            throw new OCSForbiddenException(
+                'U mag het bonnetje van deze transactie niet inzien. Alleen de eigen '
+                .'kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.'
+            );
+        }
+    }//end assertCanAccess()
 
     /**
      * Resolve the register + a schema config key into their stored IDs.
