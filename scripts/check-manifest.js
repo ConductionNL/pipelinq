@@ -3,8 +3,8 @@
  * Validate src/manifest.json against the Conduction app-manifest schema.
  *
  * Uses validateManifest from @conduction/nextcloud-vue when available
- * (per ADR-024), falling back to AJV + the schema URL declared in
- * the manifest's $schema field.
+ * (per ADR-024), falling back to a structural guard that checks for the
+ * required top-level fields.
  *
  * @spec openspec/changes/time-entry-core/tasks.md#task-3.1
  */
@@ -12,7 +12,6 @@
 
 const path = require('path')
 const fs = require('fs')
-const https = require('https')
 
 const manifestPath = path.resolve(__dirname, '../src/manifest.json')
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
