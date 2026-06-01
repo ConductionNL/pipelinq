@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.28] - 2026-06-01
+
+### Security
+
+- POS lifecycle guard adoption (pos-lifecycle-guard-adoption) — closes a
+  confirmed IDOR (ADR-005) and removes the bespoke POS state machines (ADR-031):
+  - **IDOR fix:** `PosTransactionController::confirm/settle/park/resume` no
+    longer drive a transaction on bare session auth. Transitions now route
+    through OpenRegister's `TransitionEngine`, which runs per-object
+    `LifecycleGuardInterface` guards: confirm/settle/park/resume require the
+    transaction's own cashier, a POS-group member, or an admin; a non-owner is
+    denied (HTTP 403). Any authenticated user could previously drive any
+    transaction by UUID.
+  - **Declarative lifecycle:** `posTransaction`
+    (draft/parked/confirmed/settled/refunded) and `posRefund`
+    (pending/completed/rejected) now declare `x-openregister-lifecycle` in
+    `pipelinq_register.json` instead of hand-written PHP `setStatus` +
+    `isManager`. The engine enforces the transition table and fires
+    `ObjectTransitionedEvent` (audit + notifications).
+  - **Guards** (`lib/Lifecycle/`): `PosAccessPolicy` (owner/group/admin +
+    manager predicates), `PosTransactionAccessGuard`,
+    `PosTransactionConfirmGuard` (access + non-empty cart + server-recompute),
+    `PosTransactionRefundGuard` (manager-only), `PosRefundManagerGuard`
+    (manager-only + cumulative over-refund cap on `complete`). Registered
+    fail-closed in `Application::register()`.
+  - **Endpoint hardening:** receipt preview/email/print now assert per-object
+    access; the product barcode/price surface is gated to POS operators; the
+    cross-object BTW `taxReport` is restricted to POS managers/admins. All
+    return HTTP 403 otherwise.
+  - Server-authoritative money (computeTotals / proportional refund recompute)
+    and the over-refund cap are preserved as the documented ADR-031 guard
+    exception. The hand-rolled `isManager` and manual status mutation are
+    removed from both services.
+
 ## [0.2.27] - 2026-05-31
 
 ### Added
