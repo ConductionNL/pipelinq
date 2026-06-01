@@ -65,6 +65,13 @@
 			"order": 80
 		},
 		{
+			"id": "AvgVerzoeken",
+			"label": "AVG Requests",
+			"icon": "icon-category-security",
+			"route": "AvgVerzoeken",
+			"order": 85
+		},
+		{
 			"id": "Products",
 			"label": "Products",
 			"icon": "icon-files",
@@ -390,6 +397,39 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "complaint",
+				"sidebar": true
+			}
+		},
+		{
+			"id": "AvgVerzoeken",
+			"route": "/avg-verzoeken",
+			"type": "index",
+			"title": "AVG Requests",
+			"config": {
+				"register": "pipelinq",
+				"schema": "avgVerzoek",
+				"columns": [
+					"kenmerk",
+					"artikel",
+					"status",
+					"behandelaar",
+					"wettelijkeTermijnVerloopt",
+					"dpiaFlag"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			}
+		},
+		{
+			"id": "AvgVerzoekDetail",
+			"route": "/avg-verzoeken/:id",
+			"type": "detail",
+			"title": "AVG Request",
+			"config": {
+				"register": "pipelinq",
+				"schema": "avgVerzoek",
 				"sidebar": true
 			}
 		},
