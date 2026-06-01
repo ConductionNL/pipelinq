@@ -119,6 +119,16 @@ return [
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
 
+        // Cash shift management lifecycle (camelCase slug matches CashShiftController class name).
+        // cashShift / cashDrop / cashCount / cashDiff CRUD is handled by OpenRegister's generic
+        // object API; these endpoints cover the lifecycle transitions only.
+        // Specific action routes MUST appear before the generic {id} wildcard.
+        ['name' => 'cashShift#openShift',   'url' => '/api/pos-shifts/open',             'verb' => 'POST'],
+        ['name' => 'cashShift#recordDrop',  'url' => '/api/pos-shifts/{id}/drops',        'verb' => 'POST'],
+        ['name' => 'cashShift#recordCount', 'url' => '/api/pos-shifts/{id}/count',        'verb' => 'POST'],
+        ['name' => 'cashShift#approveDiff', 'url' => '/api/pos-shifts/{id}/diff/approve', 'verb' => 'POST'],
+        ['name' => 'cashShift#rejectDiff',  'url' => '/api/pos-shifts/{id}/diff/reject',  'verb' => 'POST'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
