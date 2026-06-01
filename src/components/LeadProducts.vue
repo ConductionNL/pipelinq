@@ -211,7 +211,7 @@ export default {
 			return useObjectStore()
 		},
 		/**
-		 * @spec openspec/changes/2026-03-20-lead-product-link/tasks.md#task-1.1
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-19
 		 */
 		productOptions() {
 			return this.products.map(p => ({

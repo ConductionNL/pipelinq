@@ -357,7 +357,7 @@ export default {
 			this.valueOverridden = value !== 0 && Math.abs(value - computedTotal) > 0.001
 		},
 		/**
-		 * @spec openspec/changes/2026-03-20-lead-product-link/tasks.md#task-3.2
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-35
 		 */
 		async onProductValueChanged(newTotal) {
 			if (!this.valueOverridden) {
