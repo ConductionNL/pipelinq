@@ -931,7 +931,6 @@
         "Unassigned": "Unassigned",
         "Unavailable": "Unavailable",
         "Unit": "Unit",
-        "Unit price": "Unit price",
         "Unit price must be 0 or greater": "Unit price must be 0 or greater",
         "Unknown": "Unknown",
         "Unknown Product": "Unknown Product",
@@ -1126,7 +1125,18 @@
         "Failed to save refund.": "Failed to save refund.",
         "This will reject the refund. Enter a reason for the rejection.": "This will reject the refund. Enter a reason for the rejection.",
         "Vul een reden in voor de afwijzing": "Enter a reason for the rejection",
-        "Max {max}": "Max {max}"
+        "Max {max}": "Max {max}",
+        "Mail account": "Mail account",
+        "Select mail account": "Select mail account",
+        "Excluded email addresses": "Excluded email addresses",
+        "Comma-separated email addresses to exclude": "Comma-separated email addresses to exclude",
+        "Sync now": "Sync now",
+        "Syncing...": "Syncing...",
+        "Failed to load sync settings": "Failed to load sync settings",
+        "Failed to save sync settings": "Failed to save sync settings",
+        "Sync settings saved": "Sync settings saved",
+        "Email sync triggered successfully": "Email sync triggered successfully",
+        "Failed to trigger email sync": "Failed to trigger email sync"
     },
     "plurals": {}
 }

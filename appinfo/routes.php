@@ -119,6 +119,12 @@ return [
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
 
+        // Email sync settings and manual trigger (camelCase slug matches EmailSyncController class name)
+        ['name' => 'emailSync#getSettings', 'url' => '/api/sync/email/settings', 'verb' => 'GET'],
+        ['name' => 'emailSync#saveSettings', 'url' => '/api/sync/email/settings', 'verb' => 'POST'],
+        ['name' => 'emailSync#triggerSync', 'url' => '/api/sync/email/trigger', 'verb' => 'POST'],
+        ['name' => 'emailSync#getStatus', 'url' => '/api/sync/email/status', 'verb' => 'GET'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],

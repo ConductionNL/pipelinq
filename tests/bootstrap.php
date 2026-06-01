@@ -24,6 +24,33 @@ define('PHPUNIT_RUN', 1);
 // ClassLoader instance is returned even when PHPUnit has already pulled it in.
 $autoloader = require __DIR__ . '/../vendor/autoload.php';
 
+// The shared vendor classmap may point to a different worktree's lib/.
+// Re-key all OCA\Pipelinq\ entries in the classmap so they resolve inside
+// this worktree rather than whichever worktree last wrote the shared vendor.
+// Also register a PSR-4 prefix so newly added classes (not yet in classmap)
+// are found in this worktree's lib/.
+if ($autoloader instanceof \Composer\Autoload\ClassLoader) {
+    $workDir     = dirname(__DIR__);
+    $classMap    = $autoloader->getClassMap();
+    $overrides   = [];
+    foreach ($classMap as $class => $path) {
+        if (str_starts_with($class, 'OCA\\Pipelinq\\') === true) {
+            // Extract the relative path from lib/ onwards and remap it.
+            $libPos = strpos($path, '/lib/');
+            if ($libPos !== false) {
+                $overrides[$class] = $workDir . substr($path, $libPos);
+            }
+        }
+    }
+    if ($overrides !== []) {
+        $autoloader->addClassMap($overrides);
+    }
+
+    // Prepend PSR-4 prefix so newly created classes (not yet in classmap)
+    // are always loaded from this worktree.
+    $autoloader->addPsr4('OCA\\Pipelinq\\', $workDir . '/lib/', prepend: true);
+}
+
 // Register the OCP/NCU namespaces from the nextcloud/ocp dev dependency so that
 // unit tests can run in a bare environment (no installed Nextcloud server). When
 // NC is present its own autoloader provides these and these mappings are inert.

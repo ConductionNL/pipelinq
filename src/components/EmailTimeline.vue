@@ -36,7 +36,7 @@
 </template>
 
 <script>
-import { NcLoadingIcon } from '@nextcloud/vue'
+import { NcLoadingIcon } from '@conduction/nextcloud-vue'
 
 export default {
 	name: 'EmailTimeline',

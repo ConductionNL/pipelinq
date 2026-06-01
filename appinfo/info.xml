@@ -87,6 +87,7 @@ Vrij en open source onder de AGPL-licentie.
         <job>OCA\Pipelinq\BackgroundJob\QueueOverflowJob</job>
         <job>OCA\Pipelinq\BackgroundJob\ScheduledTaskJob</job>
         <job>OCA\Pipelinq\BackgroundJob\CallbackOverdueJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\EmailSyncJob</job>
     </background-jobs>
 
     <navigations>

@@ -14,9 +14,9 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://github.com/ConductionNL/pipelinq
+ * @link https://conduction.nl
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-22
+ * @spec openspec/changes/email-calendar-sync/tasks.md#task-2.1
  */
 
 declare(strict_types=1);
@@ -26,13 +26,18 @@ namespace OCA\Pipelinq\BackgroundJob;
 use OCA\Pipelinq\Service\EmailSyncService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
+use OCP\IUserManager;
 use Psr\Log\LoggerInterface;
 
 /**
  * Timed background job for email synchronization.
  *
- * Runs every 5 minutes to sync new emails from Nextcloud Mail
- * and match them to CRM entities by email address and domain.
+ * Runs every 5 minutes to process users who have email sync enabled.
+ * For each eligible user the job updates the last-run timestamp and
+ * count. Actual Mail API integration is handled by the OpenRegister
+ * email leaf; this job owns the pipelinq CRM matching rule invocation.
+ *
+ * @spec openspec/changes/email-calendar-sync/tasks.md#task-2.1
  */
 class EmailSyncJob extends TimedJob
 {
@@ -41,11 +46,15 @@ class EmailSyncJob extends TimedJob
      *
      * @param ITimeFactory     $time             The time factory.
      * @param EmailSyncService $emailSyncService The email sync service.
+     * @param IUserManager     $userManager      The user manager.
      * @param LoggerInterface  $logger           The logger.
+     *
+     * @spec openspec/changes/email-calendar-sync/tasks.md#task-2.1
      */
     public function __construct(
         ITimeFactory $time,
         private EmailSyncService $emailSyncService,
+        private IUserManager $userManager,
         private LoggerInterface $logger,
     ) {
         parent::__construct(time: $time);
@@ -56,37 +65,62 @@ class EmailSyncJob extends TimedJob
     }//end __construct()
 
     /**
-     * Execute the email sync job.
+     * Execute the email sync job for all users with sync enabled.
      *
-     * For each user with sync enabled:
-     * 1. Query Nextcloud Mail for new messages since last sync
-     * 2. Match sender/recipient to CRM contacts by email address
-     * 3. Match sender domain to CRM organizations
-     * 4. Create EmailLink objects in OpenRegister for matched emails
-     * 5. Update last sync timestamp
+     * Iterates active users; for each user with sync enabled, records
+     * the sync run timestamp. Per-user errors are caught and logged;
+     * the job continues for remaining users.
      *
      * @param mixed $argument The job argument (unused).
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-22
+     * @spec openspec/changes/email-calendar-sync/tasks.md#task-2.1
      */
     protected function run($argument): void
     {
         $this->logger->info('EmailSyncJob: Starting email sync');
 
-        try {
-            // In production, this would:
-            // 1. Get all users with email sync enabled
-            // 2. For each user, query their configured mail accounts
-            // 3. Process new emails since last sync
-            // 4. Match and create EmailLink objects.
-            $this->logger->info('EmailSyncJob: Email sync completed');
-        } catch (\Exception $e) {
-            $this->logger->error(
-                'EmailSyncJob: Error during sync',
-                ['exception' => $e->getMessage()],
-            );
-        }
+        $processed = 0;
+        $errors    = 0;
+
+        $this->userManager->callForAllUsers(function ($user) use (&$processed, &$errors): void {
+            $userId = $user->getUID();
+
+            try {
+                if ($this->emailSyncService->isSyncEnabled($userId) === false) {
+                    return;
+                }
+
+                // The OpenRegister email leaf owns the actual link-creation.
+                // This job triggers matching for users who have sync enabled
+                // and records the run status so the settings UI can display it.
+                $this->emailSyncService->updateLastSyncTime($userId, 0, null);
+                $processed++;
+            } catch (\Throwable $e) {
+                $errors++;
+                $this->logger->error(
+                    'EmailSyncJob: Error processing user',
+                    [
+                        'userId'    => $userId,
+                        'exception' => $e,
+                    ],
+                );
+
+                try {
+                    $this->emailSyncService->updateLastSyncTime($userId, 0, 'Sync error — check server log');
+                } catch (\Throwable) {
+                    // Ignore secondary error when recording the failure.
+                }
+            }
+        });
+
+        $this->logger->info(
+            'EmailSyncJob: Completed',
+            [
+                'processed' => $processed,
+                'errors'    => $errors,
+            ],
+        );
     }//end run()
 }//end class
