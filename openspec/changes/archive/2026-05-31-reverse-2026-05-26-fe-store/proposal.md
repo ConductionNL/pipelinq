@@ -1,5 +1,14 @@
 # Reverse-spec — Frontend state stores
 
+> SUPERSEDED 2026-06-01 (partial): Of the 60 store methods this reverse-spec
+> documented, ~22 belonged to `src/store/modules/kennisbank.js` (migrated to the
+> XWiki leaf — `migrate-kennisbank-to-xwiki-leaf`) plus the automation store
+> (migrated to the Flow leaf — `migrate-automation-to-flow-leaf`); those modules
+> have been removed. The synced requirement in
+> `openspec/specs/openregister-integration/spec.md` was re-scoped to the store
+> modules that still exist. The remaining modules' coverage stands. Do NOT
+> resurrect the deleted kennisbank.js/automation store code.
+
 Retroactively specifies the observed behavior of 60 method(s) implementing Pinia store actions and getters. The code already exists and is exercised in the running app — this change documents its true capabilities as REQs and annotates each method with an `@spec` reference. No code logic changes.
 
 ## Affected code units

@@ -19,7 +19,29 @@ Built-in automation engines are a standard expectation in modern CRM platforms. 
 
 **Tender relevance:** Workflow/procesautomatisering appears in 38% of government tenders (26/69). The combination of automation with klantinteractie requirements (65% of tenders) makes CRM-specific automation a high-value differentiator.
 
-## ADDED Requirements
+## Automation Engine Provided Via the Flow Leaf
+
+> UPDATED 2026-06-01: The bespoke automation engine that was reverse-spec'd into
+> this capability (`lib/Controller/AutomationController.php`,
+> `lib/Service/AutomationService.php` — `metadata`, `test`, `buildWebhookPayload`,
+> `fireWebhook`, `matchesConditions` — plus `src/views/automations/AutomationBuilder.vue`
+> and the automation rule editor screens) has been **removed** from this app.
+> Automation orchestration is no longer owned by Pipelinq: it is provided through
+> the NC **workflowengine (Flow) leaf** that OpenRegister exposes
+> (`integration-flow`), with n8n as the execution backend. The leaf surfaces wired
+> flow rules + recent fire events on the CRM object (tab + widget); rule authoring
+> lives in NC Flow's admin UI and n8n. See the change
+> `migrate-automation-to-flow-leaf`. The earlier reverse-engineered requirements
+> that named the deleted bespoke backend/Vue methods have been removed from this
+> spec because that code no longer exists.
+>
+> The event-detection / activity / notification infrastructure in the
+> requirements below (`ObjectEventListener`, `ObjectEventHandlerService`,
+> `ActivityService`, `NotificationService`) still lives in the app and fires CRM
+> events; the *automation* of those events (triggers → actions) is delegated to
+> the Flow leaf, not to an app-local automation engine (hydra ADR-022).
+
+## Requirements
 
 ---
 
@@ -494,88 +516,4 @@ NOT implemented:
 - **Resolved**: Error handling is now specified (retry logic, loop detection, failure notifications).
 - **Resolved**: Permissions are now specified (admin-only management, service account execution).
 - **Design decision**: The automation builder is a Pipelinq-native UI that generates n8n workflows, not a wrapper around n8n's workflow editor. This provides a CRM-focused UX while leveraging n8n's execution engine.
-## Requirements
-### Requirement: Workflow automation engine — documented operations
-
-The automation triggers, conditions and webhooks implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `metadata`, `test`, `buildWebhookPayload`, `fireWebhook`, `matchesConditions`). Each listed method realises an observable part of automation triggers, conditions and webhooks and MUST behave as implemented in the current codebase.
-
-**Feature tier**: V1
-
-#### Scenario: Documented operations are available
-
-- GIVEN the backend service/controller is loaded
-- WHEN a caller invokes one of the documented operations for automation triggers, conditions and webhooks
-- THEN the operation MUST execute and return a result consistent with the current implementation
-
----
-
-### Requirement: Workflow automation engine — results derived from current CRM state
-
-Operations for automation triggers, conditions and webhooks MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
-
-**Feature tier**: V1
-
-#### Scenario: Results reflect live state
-
-- GIVEN CRM data backing automation triggers, conditions and webhooks
-- WHEN a documented operation runs
-- THEN its output MUST be derived from that data
-- AND it MUST change when the underlying data changes
-
----
-
-### Requirement: Workflow automation engine — defensive handling of absent or invalid input
-
-Operations for automation triggers, conditions and webhooks MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
-
-**Feature tier**: V1
-
-#### Scenario: Missing input does not crash the flow
-
-- GIVEN an operation for automation triggers, conditions and webhooks is called with absent or invalid input
-- WHEN it executes
-- THEN it MUST return a safe default or a validation result
-- AND it MUST NOT raise an unhandled exception
-
-### Requirement: Automation UI — documented operations
-
-The automation rule editor screens implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `actionOptions`, `addAction`, `addCondition`, `buildConditions`, `canSave`, `loadAutomation`). Each listed method realises an observable part of automation rule editor screens and MUST behave as implemented in the current codebase.
-
-**Feature tier**: V1
-
-#### Scenario: Documented operations are available
-
-- GIVEN the frontend component/store is loaded
-- WHEN a caller invokes one of the documented operations for automation rule editor screens
-- THEN the operation MUST execute and return a result consistent with the current implementation
-
----
-
-### Requirement: Automation UI — results derived from current CRM state
-
-Operations for automation rule editor screens MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
-
-**Feature tier**: V1
-
-#### Scenario: Results reflect live state
-
-- GIVEN CRM data backing automation rule editor screens
-- WHEN a documented operation runs
-- THEN its output MUST be derived from that data
-- AND it MUST change when the underlying data changes
-
----
-
-### Requirement: Automation UI — defensive handling of absent or invalid input
-
-Operations for automation rule editor screens MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
-
-**Feature tier**: V1
-
-#### Scenario: Missing input does not crash the flow
-
-- GIVEN an operation for automation rule editor screens is called with absent or invalid input
-- WHEN it executes
-- THEN it MUST return a safe default or a validation result
-- AND it MUST NOT raise an unhandled exception
 
