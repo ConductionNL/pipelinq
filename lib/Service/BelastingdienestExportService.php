@@ -112,8 +112,7 @@ class BelastingdienestExportService
             $this->appendTextChild(doc: $doc, parent: $entryEl, tag: 'Signature', text: (string) ($entry['signature'] ?? ''));
             $this->appendTextChild(doc: $doc, parent: $entryEl, tag: 'PreviousHash', text: (string) ($entry['previousHash'] ?? ''));
             $this->appendTextChild(doc: $doc, parent: $entryEl, tag: 'CurrentHash', text: (string) ($entry['currentHash'] ?? ''));
-            $description = htmlspecialchars((string) ($entry['description'] ?? ''), ENT_XML1);
-            $this->appendTextChild(doc: $doc, parent: $entryEl, tag: 'Description', text: $description);
+            $this->appendTextChild(doc: $doc, parent: $entryEl, tag: 'Description', text: (string) ($entry['description'] ?? ''));
             if ($entry['verified'] === null) {
                 $verifiedText = 'null';
             } else if ($entry['verified'] === true) {
