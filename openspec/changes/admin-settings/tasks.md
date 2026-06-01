@@ -2,7 +2,8 @@
 
 ## 0. Deduplication Check
 
-- [ ] 0.1 Search `openspec/specs/` and `openregister/lib/Service/` for token management, OAuth config, and per-schema access control
+- [x] 0.1 Search `openspec/specs/` and `openregister/lib/Service/` for token management, OAuth config, and per-schema access control
+  - **findings**: No overlap found. OpenRegister provides ObjectService/SchemaService for data management. Token management, OAuth config storage, and per-schema access RBAC have no equivalent in OpenRegister services. IAppConfig is the correct storage per ADR-001. ISecureRandom is the correct token generator per ADR-005.
   - **spec_ref**: ADR-012-deduplication
   - **acceptance_criteria**:
     - GIVEN the search is complete
@@ -11,7 +12,7 @@
 
 ## 1. Backend — ObjectenAccessService
 
-- [ ] 1.1 Create `lib/Service/ObjectenAccessService.php`
+- [x] 1.1 Create `lib/Service/ObjectenAccessService.php`
   - **spec_ref**: `specs/admin-settings/spec.md#REQ-ADM-002`
   - **files**: `lib/Service/ObjectenAccessService.php`
   - **acceptance_criteria**:
@@ -23,7 +24,7 @@
 
 ## 2. Backend — ApiAuthService
 
-- [ ] 2.1 Create `lib/Service/ApiAuthService.php`
+- [x] 2.1 Create `lib/Service/ApiAuthService.php`
   - **spec_ref**: `specs/admin-settings/spec.md#REQ-ADM-003`, `specs/admin-settings/spec.md#REQ-ADM-004`, `specs/admin-settings/spec.md#REQ-ADM-006`
   - **files**: `lib/Service/ApiAuthService.php`
   - **acceptance_criteria**:
@@ -42,7 +43,7 @@
 
 ## 3. Backend — SettingsController Extensions
 
-- [ ] 3.1 Add `saveObjectenAccess()` action to `lib/Controller/SettingsController.php`
+- [x] 3.1 Add `saveObjectenAccess()` action to `lib/Controller/SettingsController.php`
   - **spec_ref**: `specs/admin-settings/spec.md#REQ-ADM-002`
   - **files**: `lib/Controller/SettingsController.php`
   - **acceptance_criteria**:
@@ -51,7 +52,7 @@
     - AND HTTP 200 with updated access map MUST be returned
     - AND a non-admin request MUST return HTTP 403
 
-- [ ] 3.2 Add token management actions (`listTokens`, `generateToken`, `revokeToken`)
+- [x] 3.2 Add token management actions (`listTokens`, `generateToken`, `revokeToken`)
   - **spec_ref**: `specs/admin-settings/spec.md#REQ-ADM-003`
   - **files**: `lib/Controller/SettingsController.php`
   - **acceptance_criteria**:
@@ -63,7 +64,7 @@
     - THEN the token MUST be revoked and HTTP 200 returned
     - AND all three actions MUST enforce admin authorization
 
-- [ ] 3.3 Add `saveOAuth()` action for OAuth 2.0 config
+- [x] 3.3 Add `saveOAuth()` action for OAuth 2.0 config
   - **spec_ref**: `specs/admin-settings/spec.md#REQ-ADM-004`, `specs/admin-settings/spec.md#REQ-ADM-005`
   - **files**: `lib/Controller/SettingsController.php`
   - **acceptance_criteria**:
@@ -73,7 +74,7 @@
     - AND the client secret MUST NOT be returned in the response
     - AND non-admins MUST receive HTTP 403
 
-- [ ] 3.4 Add `saveMcp()` action for MCP server config
+- [x] 3.4 Add `saveMcp()` action for MCP server config
   - **spec_ref**: `specs/admin-settings/spec.md#REQ-ADM-006`
   - **files**: `lib/Controller/SettingsController.php`
   - **acceptance_criteria**:
@@ -82,7 +83,7 @@
     - AND secrets MUST NOT be returned in the response
     - AND non-admins MUST receive HTTP 403
 
-- [ ] 3.5 Extend `GET /api/settings` (index action) to include admin config
+- [x] 3.5 Extend `GET /api/settings` (index action) to include admin config
   - **spec_ref**: `specs/admin-settings/spec.md#REQ-ADM-002`
   - **files**: `lib/Controller/SettingsController.php`
   - **acceptance_criteria**:
@@ -91,7 +92,7 @@
 
 ## 4. Routes
 
-- [ ] 4.1 Register new settings API routes in `appinfo/routes.php`
+- [x] 4.1 Register new settings API routes in `appinfo/routes.php`
   - **spec_ref**: ADR-002-api
   - **files**: `appinfo/routes.php`
   - **acceptance_criteria**:
@@ -105,7 +106,7 @@
 
 ## 5. Frontend — AdminSettings.vue Extensions
 
-- [ ] 5.1 Add "Objects API Access" CnSettingsSection to `src/views/admin/AdminSettings.vue`
+- [x] 5.1 Add "Objects API Access" CnSettingsSection to `src/views/admin/AdminSettings.vue`
   - **spec_ref**: `specs/admin-settings/spec.md#REQ-ADM-002`
   - **files**: `src/views/admin/AdminSettings.vue`
   - **acceptance_criteria**:
@@ -117,7 +118,7 @@
     - AND a success/error notification MUST be shown using try/catch
     - AND the empty state "No schemas registered. Run re-import first." MUST show when no schemas exist
 
-- [ ] 5.2 Add "REST API Authentication" CnSettingsSection with token management
+- [x] 5.2 Add "REST API Authentication" CnSettingsSection with token management
   - **spec_ref**: `specs/admin-settings/spec.md#REQ-ADM-003`
   - **files**: `src/views/admin/AdminSettings.vue`
   - **acceptance_criteria**:
@@ -128,7 +129,7 @@
     - AND clicking "Revoke" MUST DELETE the token and remove the row
     - AND all store calls MUST be in try/catch with user-facing error feedback
 
-- [ ] 5.3 Add OAuth 2.0 configuration tab
+- [x] 5.3 Add OAuth 2.0 configuration tab
   - **spec_ref**: `specs/admin-settings/spec.md#REQ-ADM-004`, `specs/admin-settings/spec.md#REQ-ADM-005`
   - **files**: `src/views/admin/AdminSettings.vue`
   - **acceptance_criteria**:
@@ -140,7 +141,7 @@
     - AND on save, only non-placeholder values MUST be included in the POST body
     - AND a success/error notification MUST be shown
 
-- [ ] 5.4 Add "MCP Server Administration" CnSettingsSection
+- [x] 5.4 Add "MCP Server Administration" CnSettingsSection
   - **spec_ref**: `specs/admin-settings/spec.md#REQ-ADM-006`
   - **files**: `src/views/admin/AdminSettings.vue`
   - **acceptance_criteria**:
@@ -153,7 +154,7 @@
 
 ## 6. Translations
 
-- [ ] 6.1 Add translation keys for all new UI strings to `l10n/en.json` and `l10n/nl.json`
+- [x] 6.1 Add translation keys for all new UI strings to `l10n/en.json` and `l10n/nl.json`
   - **spec_ref**: ADR-007-i18n
   - **files**: `l10n/en.json`, `l10n/nl.json`
   - **acceptance_criteria**:
@@ -198,7 +199,7 @@
     - WHEN `npm run build` is run
     - THEN the build MUST complete without errors or warnings
 
-- [ ] 7.5 Run `composer check:strict` and verify all tests pass
+- [x] 7.5 Run `composer check:strict` and verify all tests pass
   - **acceptance_criteria**:
     - GIVEN the modified PHP files
     - WHEN `composer check:strict` is run
