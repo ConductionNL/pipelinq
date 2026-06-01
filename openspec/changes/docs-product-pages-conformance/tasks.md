@@ -2,7 +2,7 @@
 
 ## 1. Folder Renames (git mv — preserves history)
 
-- [ ] 1.1 Rename features folder to canonical casing
+- [x] 1.1 Rename features folder to canonical casing
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#Canonical folder taxonomy`
   - **files**: `docs/features/` → `docs/Features/` (40 files including README.md)
   - **acceptance_criteria**:
@@ -10,7 +10,7 @@
     - THEN `docs/Features/` SHALL exist with all 40 markdown files
     - AND `docs/features/` (lowercase) SHALL NOT exist
 
-- [ ] 1.2 Rename tutorials folder to user-guide
+- [x] 1.2 Rename tutorials folder to user-guide
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#Canonical folder taxonomy`
   - **files**: `docs/tutorials/` → `docs/user-guide/` (6 admin + 12 user files + _category_.json files)
   - **acceptance_criteria**:
@@ -18,7 +18,7 @@
     - THEN `docs/user-guide/` SHALL exist with admin/ and user/ subdirectories
     - AND `docs/tutorials/` SHALL NOT exist
 
-- [ ] 1.3 Rename screenshot directory to match user-guide rename
+- [x] 1.3 Rename screenshot directory to match user-guide rename
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#Screenshot paths consistent after rename`
   - **files**: `docs/static/screenshots/tutorials/` → `docs/static/screenshots/user-guide/`
   - **acceptance_criteria**:
@@ -28,21 +28,21 @@
 
 ## 2. Update Screenshot Paths in Tutorial Markdown
 
-- [ ] 2.1 Update admin tutorial screenshot references
+- [x] 2.1 Update admin tutorial screenshot references
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#Screenshot paths consistent after rename`
   - **files**: `docs/user-guide/admin/*.md`
   - **acceptance_criteria**:
     - GIVEN all admin tutorial markdown files are updated
     - THEN all `screenshots/tutorials/admin/` references SHALL be replaced with `screenshots/user-guide/admin/`
 
-- [ ] 2.2 Update user tutorial screenshot references
+- [x] 2.2 Update user tutorial screenshot references
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#Screenshot paths consistent after rename`
   - **files**: `docs/user-guide/user/*.md`
   - **acceptance_criteria**:
     - GIVEN all user tutorial markdown files are updated
     - THEN all `screenshots/tutorials/user/` references SHALL be replaced with `screenshots/user-guide/user/`
 
-- [ ] 2.3 Verify no stale screenshot paths remain
+- [x] 2.3 Verify no stale screenshot paths remain
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#Screenshot paths consistent after rename`
   - **files**: `docs/` (grep verification)
   - **acceptance_criteria**:
@@ -52,7 +52,7 @@
 
 ## 3. Root MD Moves into Technical/
 
-- [ ] 3.1 Create Technical/ directory and move ARCHITECTURE.md
+- [x] 3.1 Create Technical/ directory and move ARCHITECTURE.md
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#Canonical folder taxonomy`
   - **files**: `docs/ARCHITECTURE.md` → `docs/Technical/architecture.md`
   - **acceptance_criteria**:
@@ -60,7 +60,7 @@
     - THEN `docs/Technical/architecture.md` SHALL exist
     - AND `docs/ARCHITECTURE.md` SHALL NOT exist at docs root
 
-- [ ] 3.2 Move development.md to Technical/
+- [x] 3.2 Move development.md to Technical/
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#Canonical folder taxonomy`
   - **files**: `docs/development.md` → `docs/Technical/development.md`
   - **acceptance_criteria**:
@@ -68,7 +68,7 @@
     - THEN `docs/Technical/development.md` SHALL exist
     - AND `docs/development.md` SHALL NOT exist at docs root
 
-- [ ] 3.3 Move DESIGN-REFERENCES.md to Technical/
+- [x] 3.3 Move DESIGN-REFERENCES.md to Technical/
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#Canonical folder taxonomy`
   - **files**: `docs/DESIGN-REFERENCES.md` → `docs/Technical/design-references.md`
   - **acceptance_criteria**:
@@ -76,7 +76,7 @@
     - THEN `docs/Technical/design-references.md` SHALL exist
     - AND `docs/DESIGN-REFERENCES.md` SHALL NOT exist at docs root
 
-- [ ] 3.4 Move FEATURES.md to Technical/ as market-analysis
+- [x] 3.4 Move FEATURES.md to Technical/ as market-analysis
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#Canonical folder taxonomy`
   - **files**: `docs/FEATURES.md` → `docs/Technical/market-analysis.md`
   - **acceptance_criteria**:
@@ -86,7 +86,7 @@
 
 ## 4. GOVERNMENT-FEATURES.md Move + Em-dash Fix
 
-- [ ] 4.1 Move GOVERNMENT-FEATURES.md to Features/ and fix em-dashes
+- [x] 4.1 Move GOVERNMENT-FEATURES.md to Features/ and fix em-dashes
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#Canonical folder taxonomy`, `specs/docs-product-pages-conformance/spec.md#Em-dash-free content`
   - **files**: `docs/GOVERNMENT-FEATURES.md` → `docs/Features/government-compliance.md`
   - **acceptance_criteria**:
@@ -100,7 +100,7 @@
 
 ## 5. Em-dash Gate (full sweep)
 
-- [ ] 5.1 Sweep all docs/ for remaining em-dashes and fix them
+- [x] 5.1 Sweep all docs/ for remaining em-dashes and fix them
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#Em-dash-free content`
   - **files**: `docs/` (all markdown files)
   - **acceptance_criteria**:
@@ -110,7 +110,7 @@
 
 ## 6. New Stub Files
 
-- [ ] 6.1 Create UseCases/index.md stub
+- [x] 6.1 Create UseCases/index.md stub
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#Canonical folder taxonomy`
   - **files**: `docs/UseCases/index.md` (new file)
   - **acceptance_criteria**:
@@ -118,7 +118,7 @@
     - THEN `docs/UseCases/index.md` SHALL exist with `draft: true` frontmatter
     - AND the body SHALL cite issue #353
 
-- [ ] 6.2 Create Integrations/index.md stub
+- [x] 6.2 Create Integrations/index.md stub
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#Canonical folder taxonomy`
   - **files**: `docs/Integrations/index.md` (new file)
   - **acceptance_criteria**:
@@ -126,7 +126,7 @@
     - THEN `docs/Integrations/index.md` SHALL exist with `draft: true` frontmatter
     - AND the body SHALL cite issue #353
 
-- [ ] 6.3 Create installation.md with real install steps
+- [x] 6.3 Create installation.md with real install steps
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#Installation guide present`
   - **files**: `docs/installation.md` (new file)
   - **acceptance_criteria**:
@@ -137,7 +137,7 @@
 
 ## 7. i18n Cleanup
 
-- [ ] 7.1 Delete stale Dutch locale metadata files
+- [x] 7.1 Delete stale Dutch locale metadata files
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#Dutch locale enabled with clean metadata`
   - **files**: `docs/i18n/nl/code.json`, `docs/i18n/nl/docusaurus-plugin-content-docs/` (all), `docs/i18n/nl/docusaurus-theme-classic/` (all)
   - **acceptance_criteria**:
@@ -147,7 +147,7 @@
 
 ## 8. Re-enable Dutch Locale in Config
 
-- [ ] 8.1 Enable nl locale in docusaurus.config.js
+- [x] 8.1 Enable nl locale in docusaurus.config.js
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#Dutch locale enabled with clean metadata`
   - **files**: `docs/docusaurus.config.js`
   - **acceptance_criteria**:
@@ -160,21 +160,21 @@
 
 ## 9. Redocusaurus Setup
 
-- [ ] 9.1 Add redocusaurus dependency
+- [x] 9.1 Add redocusaurus dependency
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#API documentation route mounted`
   - **files**: `docs/package.json`
   - **acceptance_criteria**:
     - GIVEN the dependency is added
     - THEN `docs/package.json` SHALL contain `"redocusaurus": "^2.0.0"` in `dependencies`
 
-- [ ] 9.2 Create OpenAPI placeholder shim
+- [x] 9.2 Create OpenAPI placeholder shim
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#API documentation route mounted`
   - **files**: `docs/static/oas/pipelinq.json` (new file)
   - **acceptance_criteria**:
     - GIVEN the placeholder is created
     - THEN `docs/static/oas/pipelinq.json` SHALL contain a minimal valid OpenAPI 3.0 document: `{"openapi":"3.0.0","info":{"title":"Pipelinq","version":"0.0.0"},"paths":{}}`
 
-- [ ] 9.3 Mount Redocusaurus plugin at /api
+- [x] 9.3 Mount Redocusaurus plugin at /api
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#API documentation route mounted`
   - **files**: `docs/docusaurus.config.js`
   - **acceptance_criteria**:
@@ -183,7 +183,7 @@
     - AND its route SHALL be `/api`
     - AND its spec path SHALL reference `static/oas/pipelinq.json`
 
-- [ ] 9.4 Add API Documentation navbar item
+- [x] 9.4 Add API Documentation navbar item
   - **spec_ref**: `specs/docs-product-pages-conformance/spec.md#API documentation route mounted`
   - **files**: `docs/docusaurus.config.js`
   - **acceptance_criteria**:
@@ -206,7 +206,7 @@
 
 ## 11. Commit Openspec Artifacts
 
-- [ ] 11.1 Stage and commit openspec change files
+- [x] 11.1 Stage and commit openspec change files
   - **files**: `openspec/changes/docs-product-pages-conformance/`
   - **acceptance_criteria**:
     - GIVEN all artifacts are written
@@ -214,7 +214,7 @@
 
 ## 12. Commit Implementation
 
-- [ ] 12.1 Stage and commit all docs changes
+- [x] 12.1 Stage and commit all docs changes
   - **files**: `docs/`
   - **acceptance_criteria**:
     - GIVEN all documentation changes are staged
