@@ -50,7 +50,13 @@
           "receiptPrintLog",
           "refundReason",
           "posRefund",
-          "posRefundLine"
+          "posRefundLine",
+          "avgVerzoek",
+          "termijnEvent",
+          "bewijsItem",
+          "exportBundle",
+          "weigering",
+          "redactieActie"
         ],
         "tablePrefix": "",
         "folder": "Open Registers/Pipelinq"
@@ -3070,6 +3076,857 @@
             "type": "string",
             "description": "ISO 8601 timestamp of the action",
             "format": "date-time"
+          }
+        }
+      },
+      "avgVerzoek": {
+        "slug": "avgVerzoek",
+        "title": "AVG Request",
+        "icon": "ShieldAccountOutline",
+        "version": "1.0.0",
+        "summary": "A GDPR/AVG data-subject request (art. 15/16/17/18/20) handled within statutory deadlines",
+        "description": "Central entity modelling a citizen's GDPR rights request (inzage, rectificatie, vergetelheid, beperking, dataportabiliteit). Lifecycle, deadline escalation notifications, derived deadline calculations and the 5-year archival policy are declared as schema metadata (ADR-031) so OpenRegister owns the audit trail, RBAC per state, and retention. Thin client on OpenRegister — no own database tables (ADR-001/022).",
+        "@type": "schema:Action",
+        "configuration": {
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "ingediend",
+            "final": [
+              "afgerond",
+              "geweigerd",
+              "inactief"
+            ],
+            "transitions": {
+              "start": {
+                "from": [
+                  "ingediend"
+                ],
+                "to": "in-behandeling",
+                "description": "Begin handling the AVG request. Authorization: the assigned handler or a member of the avg group.",
+                "authorization": {
+                  "field": "behandelaar",
+                  "groups": [
+                    "avg"
+                  ]
+                }
+              },
+              "collect-evidence": {
+                "from": [
+                  "in-behandeling"
+                ],
+                "to": "bewijs-verzamelen",
+                "description": "Move into federated evidence collection. Authorization: the assigned handler.",
+                "authorization": {
+                  "field": "behandelaar"
+                }
+              },
+              "redact": {
+                "from": [
+                  "bewijs-verzamelen"
+                ],
+                "to": "redactie",
+                "description": "Evidence gathered; awaiting third-party redaction review. Authorization: the assigned handler.",
+                "authorization": {
+                  "field": "behandelaar"
+                }
+              },
+              "generate-bundle": {
+                "from": [
+                  "redactie"
+                ],
+                "to": "bundle-genereren",
+                "description": "Redactions approved; generate the signed export bundle. Authorization: the assigned handler.",
+                "authorization": {
+                  "field": "behandelaar"
+                }
+              },
+              "resolve": {
+                "from": [
+                  "bundle-genereren",
+                  "in-behandeling"
+                ],
+                "to": "afgerond",
+                "description": "Resolve the request and deliver the bundle to the citizen. Authorization: the assigned handler.",
+                "authorization": {
+                  "field": "behandelaar"
+                }
+              },
+              "draft-denial": {
+                "from": [
+                  "in-behandeling",
+                  "bewijs-verzamelen",
+                  "redactie"
+                ],
+                "to": "weigering-opgesteld",
+                "description": "Draft a denial under GDPR Art. 23. Authorization: the assigned handler or a member of the avg group.",
+                "authorization": {
+                  "field": "behandelaar",
+                  "groups": [
+                    "avg"
+                  ]
+                }
+              },
+              "deny": {
+                "from": [
+                  "weigering-opgesteld"
+                ],
+                "to": "geweigerd",
+                "description": "Finalise the denial after FG sign-off. Authorization: a member of the avg group (FG/Legal).",
+                "authorization": {
+                  "groups": [
+                    "avg"
+                  ]
+                }
+              },
+              "deactivate": {
+                "from": [
+                  "ingediend"
+                ],
+                "to": "inactief",
+                "description": "Reclassify a non-GDPR submission out of the AVG queue; no legal deadline applies. Authorization: the assigned handler or a member of the avg group.",
+                "authorization": {
+                  "field": "behandelaar",
+                  "groups": [
+                    "avg"
+                  ]
+                }
+              }
+            }
+          },
+          "x-openregister-calculations": {
+            "dagenResterend": {
+              "type": "integer",
+              "materialise": false,
+              "description": "Days remaining until the statutory deadline. Derived from wettelijkeTermijnVerloopt vs now so the dashboard urgency colour is always fresh on read (REQ-AVG-002). Negative once breached.",
+              "expression": {
+                "dateDiff": {
+                  "from": "now",
+                  "to": {
+                    "prop": "wettelijkeTermijnVerloopt"
+                  },
+                  "unit": "days"
+                }
+              }
+            },
+            "termijnOverschreden": {
+              "type": "boolean",
+              "materialise": false,
+              "description": "True when the statutory deadline has passed and the request is not yet in a final state. Pure function of deadline + status so consumers compute breach state without a service round-trip (REQ-AVG-002 breach scenario).",
+              "expression": {
+                "and": [
+                  {
+                    "lt": [
+                      {
+                        "prop": "wettelijkeTermijnVerloopt"
+                      },
+                      "now"
+                    ]
+                  },
+                  {
+                    "notIn": [
+                      {
+                        "prop": "status"
+                      },
+                      [
+                        "afgerond",
+                        "geweigerd",
+                        "inactief"
+                      ]
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "x-openregister-notifications": {
+            "deadlineEscalation": {
+              "trigger": {
+                "type": "schedule",
+                "when": "dagenResterend <= 3 && termijnOverschreden == false"
+              },
+              "enabled": true,
+              "channels": [
+                "nc-notification"
+              ],
+              "recipients": [
+                {
+                  "kind": "field",
+                  "field": "behandelaar"
+                },
+                {
+                  "kind": "group",
+                  "group": "avg"
+                }
+              ],
+              "subject": {
+                "nl": "AVG-verzoek {{kenmerk}} dreigt de wettelijke termijn te overschrijden",
+                "en": "AVG request {{kenmerk}} at risk of deadline breach"
+              }
+            },
+            "deadlineBreached": {
+              "trigger": {
+                "type": "schedule",
+                "when": "termijnOverschreden == true"
+              },
+              "enabled": true,
+              "channels": [
+                "nc-notification"
+              ],
+              "recipients": [
+                {
+                  "kind": "group",
+                  "group": "avg"
+                }
+              ],
+              "subject": {
+                "nl": "AVG-verzoek {{kenmerk}} heeft de wettelijke termijn overschreden — directe actie vereist",
+                "en": "AVG request {{kenmerk}} missed the legal deadline — immediate action required"
+              }
+            },
+            "requestResolved": {
+              "trigger": {
+                "type": "transition",
+                "action": "resolve"
+              },
+              "enabled": true,
+              "channels": [
+                "nc-notification"
+              ],
+              "recipients": [
+                {
+                  "kind": "field",
+                  "field": "behandelaar"
+                }
+              ],
+              "subject": {
+                "nl": "AVG-verzoek afgehandeld: {{kenmerk}}",
+                "en": "AVG request resolved: {{kenmerk}}"
+              }
+            }
+          },
+          "x-openregister-archival": {
+            "retention": {
+              "default": "P5Y",
+              "rules": [
+                {
+                  "condition": "status == 'afgerond' || status == 'geweigerd'",
+                  "retention": "P5Y",
+                  "reason": "Resolved/denied AVG dossiers are retained 5 years per RvIG guidelines as proof of correct handling for AP compliance reporting, then disposed (ADR-024, REQ-AVG-009). Deletion within the window requires FG approval with audit justification."
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "artikel",
+          "specifiekeVraag"
+        ],
+        "properties": {
+          "kenmerk": {
+            "type": "string",
+            "description": "Human-readable reference, e.g. AVG-2026-0001",
+            "maxLength": 32,
+            "title": "Reference",
+            "facetable": true
+          },
+          "ingediendOp": {
+            "type": "string",
+            "description": "ISO 8601 timestamp the request was received",
+            "format": "date-time",
+            "title": "Submitted at"
+          },
+          "ingediendVia": {
+            "type": "string",
+            "description": "Intake channel",
+            "enum": [
+              "web",
+              "handmatig",
+              "email",
+              "balie"
+            ],
+            "default": "web",
+            "title": "Submitted via",
+            "facetable": true
+          },
+          "verzoekerContact": {
+            "type": "string",
+            "description": "UUID reference to the associated contact (the citizen)",
+            "format": "uuid"
+          },
+          "verzoekerNaam": {
+            "type": "string",
+            "description": "Name of the requesting citizen",
+            "maxLength": 256
+          },
+          "verzoekerBsn": {
+            "type": "string",
+            "description": "Citizen BSN (9 digits). Pseudonymised per retention policy.",
+            "maxLength": 9
+          },
+          "verzoekerBsnGeverifieerd": {
+            "type": "boolean",
+            "description": "Whether the BSN was verified via the BRP lookup capability (REQ-AVG-011)",
+            "default": false,
+            "facetable": true
+          },
+          "artikel": {
+            "type": "string",
+            "description": "Classified GDPR article",
+            "enum": [
+              "art-15-inzage",
+              "art-16-rectificatie",
+              "art-17-vergetelheid",
+              "art-18-beperking",
+              "art-20-portabiliteit"
+            ],
+            "title": "Article",
+            "facetable": true
+          },
+          "specifiekeVraag": {
+            "type": "string",
+            "description": "The citizen's stated question or the handler's free-text description",
+            "maxLength": 4096
+          },
+          "scope": {
+            "type": "array",
+            "description": "Requested data scopes (e.g. parkeervergunningen, communicatie)",
+            "items": {
+              "type": "string"
+            }
+          },
+          "wettelijkeTermijnVerloopt": {
+            "type": "string",
+            "description": "Statutory deadline (30 days from submission, +60 if extended)",
+            "format": "date-time",
+            "title": "Legal deadline",
+            "facetable": true
+          },
+          "verlengdMet": {
+            "type": "integer",
+            "description": "Extension granted in days (0 or 60). Only one extension permitted (REQ-AVG-003).",
+            "default": 0
+          },
+          "verlengingsgrond": {
+            "type": "string",
+            "description": "Justification for the 60-day extension",
+            "maxLength": 1024
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status in the AVG request lifecycle",
+            "enum": [
+              "ingediend",
+              "in-behandeling",
+              "bewijs-verzamelen",
+              "redactie",
+              "bundle-genereren",
+              "weigering-opgesteld",
+              "afgerond",
+              "geweigerd",
+              "inactief"
+            ],
+            "default": "ingediend",
+            "title": "Status",
+            "facetable": true
+          },
+          "behandelaar": {
+            "type": "string",
+            "description": "Assigned handler (NC user id)",
+            "maxLength": 256,
+            "title": "Handler",
+            "facetable": true
+          },
+          "fgGeinformeerd": {
+            "type": "boolean",
+            "description": "Whether the Functionaris Gegevensbescherming (FG) has been informed",
+            "default": false
+          },
+          "dpiaFlag": {
+            "type": "string",
+            "description": "DPIA / AP-complaint flag (false-y when empty); set by pattern detection or manually",
+            "enum": [
+              "",
+              "dpia-aandacht",
+              "ap-klacht"
+            ],
+            "default": "",
+            "facetable": true
+          },
+          "uitkomst": {
+            "type": "string",
+            "description": "Final outcome summary",
+            "maxLength": 2048
+          },
+          "afgerondOp": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of resolution",
+            "format": "date-time"
+          },
+          "bewijsbundel": {
+            "type": "string",
+            "description": "UUID reference to the finalised ExportBundle",
+            "format": "uuid"
+          },
+          "retentieTot": {
+            "type": "string",
+            "description": "Retention deadline (5 years after resolution); managed by x-openregister-archival",
+            "format": "date-time"
+          }
+        }
+      },
+      "termijnEvent": {
+        "slug": "termijnEvent",
+        "title": "Deadline Event",
+        "icon": "ClockAlertOutline",
+        "version": "1.0.0",
+        "summary": "An immutable deadline-related event in an AVG request's timeline",
+        "description": "Append-only log of deadline events (receipt confirmation sent, escalation, breach, collection error) for an AvgVerzoek. Used for the breach audit trail and AP compliance reporting (REQ-AVG-002). Stored as an OpenRegister object so it inherits the immutable audit trail.",
+        "@type": "schema:Event",
+        "required": [
+          "verzoekId",
+          "type"
+        ],
+        "properties": {
+          "verzoekId": {
+            "type": "string",
+            "description": "UUID reference to the parent AvgVerzoek",
+            "format": "uuid",
+            "facetable": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Event type",
+            "enum": [
+              "ontvangstbevestiging-verstuurd",
+              "escalatie-3dagen",
+              "herinnering-7dagen",
+              "termijn-overschreden",
+              "collectie-fout",
+              "verlenging-aangevraagd",
+              "retentie-verloopt-verwijderd"
+            ],
+            "title": "Type",
+            "facetable": true
+          },
+          "tijdstip": {
+            "type": "string",
+            "description": "ISO 8601 timestamp the event occurred",
+            "format": "date-time"
+          },
+          "deadline": {
+            "type": "string",
+            "description": "The deadline this event relates to",
+            "format": "date-time"
+          },
+          "automatisch": {
+            "type": "boolean",
+            "description": "Whether the event was raised automatically by a scheduled check",
+            "default": true
+          },
+          "geslaagd": {
+            "type": "boolean",
+            "description": "Whether the associated action succeeded",
+            "default": true
+          },
+          "details": {
+            "type": "string",
+            "description": "Human-readable detail for the event",
+            "maxLength": 2048
+          }
+        }
+      },
+      "bewijsItem": {
+        "slug": "bewijsItem",
+        "title": "Evidence Item",
+        "icon": "FileSearchOutline",
+        "version": "1.0.0",
+        "summary": "A single piece of evidence collected from a federated source for an AVG request",
+        "description": "Evidence gathered from OpenRegister, BRP, or OpenConnector sources during collection (REQ-AVG-004). Content preview is pseudonymised 30 days after export via the archival policy while metadata is retained (REQ-AVG-009).",
+        "@type": "schema:DigitalDocument",
+        "configuration": {
+          "x-openregister-archival": {
+            "retention": {
+              "default": "P5Y",
+              "rules": [
+                {
+                  "condition": "opgenomenInExport == true",
+                  "retention": "P5Y",
+                  "reason": "Exported evidence is retained with the dossier for 5 years; the inhoudPreview is pseudonymised 30 days after export (REQ-AVG-009) while bronApp/bronRegister/categorie/rechtsgrond metadata stays intact for AP traceability."
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "verzoekId",
+          "bronApp"
+        ],
+        "properties": {
+          "verzoekId": {
+            "type": "string",
+            "description": "UUID reference to the parent AvgVerzoek",
+            "format": "uuid",
+            "facetable": true
+          },
+          "bronApp": {
+            "type": "string",
+            "description": "Source system the evidence came from",
+            "enum": [
+              "openregister",
+              "brp",
+              "openconnector",
+              "handmatig"
+            ],
+            "title": "Source",
+            "facetable": true
+          },
+          "bronRegister": {
+            "type": "string",
+            "description": "Source register/schema name",
+            "maxLength": 256
+          },
+          "bronObject": {
+            "type": "string",
+            "description": "Source object UUID/identifier",
+            "maxLength": 256
+          },
+          "categorie": {
+            "type": "string",
+            "description": "Evidence category for table-of-contents grouping (or bron-onbereikbaar on timeout)",
+            "maxLength": 128,
+            "facetable": true
+          },
+          "verzameldOp": {
+            "type": "string",
+            "description": "Exact collection timestamp (null on source timeout)",
+            "format": "date-time"
+          },
+          "rechtsgrond": {
+            "type": "string",
+            "description": "Legal basis for the processing of this evidence",
+            "maxLength": 512
+          },
+          "opgenomenInExport": {
+            "type": "boolean",
+            "description": "Whether this item is included in the export bundle",
+            "default": true,
+            "facetable": true
+          },
+          "geredigeerd": {
+            "type": "boolean",
+            "description": "Whether one or more redactions have been applied",
+            "default": false
+          },
+          "redactiereden": {
+            "type": "string",
+            "description": "Summary reason if redacted",
+            "maxLength": 512
+          },
+          "inhoudPreview": {
+            "type": "string",
+            "description": "Content preview (pseudonymised 30 days after export)",
+            "maxLength": 8192
+          },
+          "gedupliceerd": {
+            "type": "boolean",
+            "description": "Marked when a content-hash/objectId duplicate is detected",
+            "default": false
+          }
+        }
+      },
+      "exportBundle": {
+        "slug": "exportBundle",
+        "title": "Export Bundle",
+        "icon": "PackageVariantClosed",
+        "version": "1.0.0",
+        "summary": "A finalised, signed AVG data export (JSON + PDF) with integrity hash",
+        "description": "Completed export bundle for an AVG request (REQ-AVG-005). PAdES-LTV signing, DocuDesk PDF rendering and the secure download token are produced by external/leaf integrations; this schema records the resulting metadata immutably.",
+        "@type": "schema:DataDownload",
+        "required": [
+          "verzoekId"
+        ],
+        "properties": {
+          "verzoekId": {
+            "type": "string",
+            "description": "UUID reference to the parent AvgVerzoek",
+            "format": "uuid",
+            "facetable": true
+          },
+          "samengesteldOp": {
+            "type": "string",
+            "description": "ISO 8601 timestamp the bundle was assembled",
+            "format": "date-time"
+          },
+          "samengesteldDoor": {
+            "type": "string",
+            "description": "Handler who assembled the bundle (NC user id)",
+            "maxLength": 256
+          },
+          "bevatItems": {
+            "type": "array",
+            "description": "UUID references to BewijsItems included in the bundle",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "formaat": {
+            "type": "array",
+            "description": "Output formats present in the bundle",
+            "items": {
+              "type": "string",
+              "enum": [
+                "json",
+                "pdf"
+              ]
+            }
+          },
+          "bestandsgrootte": {
+            "type": "integer",
+            "description": "Total bundle size in bytes"
+          },
+          "sha256": {
+            "type": "string",
+            "description": "SHA-256 integrity hash of the finalised PDF",
+            "maxLength": 64
+          },
+          "ondertekend": {
+            "type": "boolean",
+            "description": "Whether the bundle is cryptographically signed",
+            "default": false,
+            "facetable": true
+          },
+          "ondertekeningsType": {
+            "type": "string",
+            "description": "Signature standard applied",
+            "enum": [
+              "",
+              "PAdES-LTV"
+            ],
+            "default": ""
+          },
+          "uitgeleverdVia": {
+            "type": "string",
+            "description": "Delivery channel",
+            "enum": [
+              "",
+              "veilige-download-link",
+              "berichtenbox"
+            ],
+            "default": ""
+          },
+          "uitgeleverdOp": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of delivery to the citizen",
+            "format": "date-time"
+          },
+          "downloadVerloopt": {
+            "type": "string",
+            "description": "Download link expiry (30 days from generation)",
+            "format": "date-time"
+          },
+          "downloadCode": {
+            "type": "string",
+            "description": "Opaque/encrypted download token reference (never plain text)",
+            "maxLength": 512
+          },
+          "verzoekerOntvangstBevestigd": {
+            "type": "boolean",
+            "description": "Set on first download by the citizen",
+            "default": false
+          }
+        }
+      },
+      "weigering": {
+        "slug": "weigering",
+        "title": "Denial",
+        "icon": "CancelOutline",
+        "version": "1.0.0",
+        "summary": "A partial or complete denial of an AVG request under GDPR Art. 23",
+        "description": "Records an explicit, justified denial with mandatory Art. 23 grounds and AP complaint reference (REQ-AVG-007). Lifecycle moves the denial from draft to finalised; an FG may overrule it. Authorization on transitions is enforced server-side by the OpenRegister lifecycle engine (ADR-005).",
+        "@type": "schema:RejectAction",
+        "configuration": {
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "concept",
+            "final": [
+              "definitief",
+              "overschreven"
+            ],
+            "transitions": {
+              "finalise": {
+                "from": [
+                  "concept"
+                ],
+                "to": "definitief",
+                "description": "Finalise the denial after FG sign-off; requires the AP reference. Authorization: a member of the avg group.",
+                "authorization": {
+                  "groups": [
+                    "avg"
+                  ]
+                }
+              },
+              "overrule": {
+                "from": [
+                  "definitief"
+                ],
+                "to": "overschreven",
+                "description": "FG overrules a finalised denial on appeal. Authorization: a member of the avg group.",
+                "authorization": {
+                  "groups": [
+                    "avg"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "verzoekId",
+          "weigering",
+          "grond",
+          "toelichtingAvg23"
+        ],
+        "properties": {
+          "verzoekId": {
+            "type": "string",
+            "description": "UUID reference to the parent AvgVerzoek",
+            "format": "uuid",
+            "facetable": true
+          },
+          "weigering": {
+            "type": "string",
+            "description": "Whether the request is wholly or partly denied",
+            "enum": [
+              "geheel",
+              "gedeeltelijk"
+            ],
+            "title": "Denial",
+            "facetable": true
+          },
+          "geweigerdeOnderdelen": {
+            "type": "array",
+            "description": "Denied scopes for a partial denial (e.g. scope:facturatie)",
+            "items": {
+              "type": "string"
+            }
+          },
+          "grond": {
+            "type": "string",
+            "description": "GDPR Art. 23 exception ground",
+            "enum": [
+              "art-23-lid-1-sub-a",
+              "art-23-lid-1-sub-b",
+              "art-23-lid-1-sub-c",
+              "art-23-lid-1-sub-d",
+              "art-23-lid-1-sub-e",
+              "art-23-lid-1-sub-f",
+              "art-23-lid-3"
+            ],
+            "title": "Ground",
+            "facetable": true
+          },
+          "toelichtingAvg23": {
+            "type": "string",
+            "description": "Motivation explaining the chosen ground (min. 100 characters enforced at intake)",
+            "minLength": 100,
+            "maxLength": 4096
+          },
+          "verwijzingBezwaarProcedure": {
+            "type": "string",
+            "description": "Reference to the objection procedure",
+            "maxLength": 1024
+          },
+          "verwijzingAp": {
+            "type": "string",
+            "description": "Mandatory AP complaint reference URL (required before finalisation)",
+            "maxLength": 1024
+          },
+          "status": {
+            "type": "string",
+            "description": "Denial lifecycle state",
+            "enum": [
+              "concept",
+              "definitief",
+              "overschreven"
+            ],
+            "default": "concept",
+            "title": "Status",
+            "facetable": true
+          },
+          "ondertekendDoor": {
+            "type": "string",
+            "description": "Handler who signed off the denial (NC user id)",
+            "maxLength": 256
+          },
+          "ondertekendOp": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of sign-off",
+            "format": "date-time"
+          }
+        }
+      },
+      "redactieActie": {
+        "slug": "redactieActie",
+        "title": "Redaction Action",
+        "icon": "MarkerCancel",
+        "version": "1.0.0",
+        "summary": "A field-level redaction applied to an evidence item before export",
+        "description": "Records each third-party redaction with before/after values for 4-eyes accountability (REQ-AVG-006). Stored as an OpenRegister object so the before/after audit is immutable and signed into the PAdES-LTV bundle.",
+        "@type": "schema:UpdateAction",
+        "required": [
+          "bewijsItemId",
+          "veldpad",
+          "grond"
+        ],
+        "properties": {
+          "bundleId": {
+            "type": "string",
+            "description": "UUID reference to the ExportBundle this redaction applies to",
+            "format": "uuid",
+            "facetable": true
+          },
+          "bewijsItemId": {
+            "type": "string",
+            "description": "UUID reference to the redacted BewijsItem",
+            "format": "uuid",
+            "facetable": true
+          },
+          "veldpad": {
+            "type": "string",
+            "description": "JSONPath of the redacted field (e.g. $.handhaver.naam)",
+            "maxLength": 512
+          },
+          "voorWaarde": {
+            "type": "string",
+            "description": "Value before redaction (audit only)",
+            "maxLength": 2048
+          },
+          "naWaarde": {
+            "type": "string",
+            "description": "Value after redaction (e.g. [redacted: third-party employee])",
+            "maxLength": 2048
+          },
+          "uitgevoerdDoor": {
+            "type": "string",
+            "description": "Handler who applied the redaction (NC user id)",
+            "maxLength": 256
+          },
+          "uitgevoerdOp": {
+            "type": "string",
+            "description": "ISO 8601 timestamp the redaction was applied",
+            "format": "date-time"
+          },
+          "grond": {
+            "type": "string",
+            "description": "Reason for the redaction",
+            "enum": [
+              "bescherming-rechten-derden",
+              "wettelijke-verplichting",
+              "bedrijfsgeheim"
+            ],
+            "title": "Ground",
+            "facetable": true
           }
         }
       }
