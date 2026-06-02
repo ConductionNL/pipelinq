@@ -13,6 +13,9 @@
  * @version GIT: <git-id>
  *
  * @link https://pipelinq.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -31,6 +34,7 @@ use Psr\Log\LoggerInterface;
  */
 class NotificationServiceTest extends TestCase
 {
+
     /**
      * The service under test.
      *
@@ -66,14 +70,14 @@ class NotificationServiceTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->notificationManager = $this->createMock(IManager::class);
-        $this->config              = $this->createMock(IConfig::class);
-        $this->logger              = $this->createMock(LoggerInterface::class);
+        $this->notificationManager = $this->createMock(originalClassName: IManager::class);
+        $this->config = $this->createMock(originalClassName: IConfig::class);
+        $this->logger = $this->createMock(originalClassName: LoggerInterface::class);
 
         $this->service = new NotificationService(
-            $this->notificationManager,
-            $this->config,
-            $this->logger,
+            notificationManager: $this->notificationManager,
+            config: $this->config,
+            logger: $this->logger,
         );
     }//end setUp()
 
@@ -102,7 +106,7 @@ class NotificationServiceTest extends TestCase
      */
     public function testNotifyAssignmentSendsForLead(): void
     {
-        $notification = $this->createMock(INotification::class);
+        $notification = $this->createMock(originalClassName: INotification::class);
         $notification->method('setApp')->willReturnSelf();
         $notification->method('setUser')->willReturnSelf();
         $notification->method('setDateTime')->willReturnSelf();
@@ -132,7 +136,7 @@ class NotificationServiceTest extends TestCase
      */
     public function testNotifyAssignmentSendsForRequest(): void
     {
-        $notification = $this->createMock(INotification::class);
+        $notification = $this->createMock(originalClassName: INotification::class);
         $notification->method('setApp')->willReturnSelf();
         $notification->method('setUser')->willReturnSelf();
         $notification->method('setDateTime')->willReturnSelf();
@@ -227,4 +231,80 @@ class NotificationServiceTest extends TestCase
             author: 'admin'
         );
     }//end testNotifyNoteAddedSkipsSelf()
+
+    /**
+     * Test notifyDealLost sends a lead_lost notification to assignee.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/reverse-2026-05-26-be-activity-notify/tasks.md#task-2
+     */
+    public function testNotifyDealLostSendsNotification(): void
+    {
+        $notification = $this->createMock(originalClassName: INotification::class);
+        $notification->method('setApp')->willReturnSelf();
+        $notification->method('setUser')->willReturnSelf();
+        $notification->method('setDateTime')->willReturnSelf();
+        $notification->method('setObject')->willReturnSelf();
+        $notification->method('setSubject')->willReturnSelf();
+
+        $this->config->method('getUserValue')->willReturn('true');
+        $this->notificationManager->method('createNotification')->willReturn($notification);
+        $this->notificationManager->expects($this->once())->method('notify');
+
+        $notification->expects($this->once())->method('setSubject')
+            ->with(
+                'lead_lost',
+                $this->callback(
+                    callback: function ($params) {
+                        return $params['title'] === 'Lost Deal' && $params['author'] === 'admin';
+                    }
+                )
+            );
+
+        $this->service->notifyDealLost(
+            title: 'Lost Deal',
+            assigneeUserId: 'user2',
+            objectId: '42',
+            author: 'admin'
+        );
+    }//end testNotifyDealLostSendsNotification()
+
+    /**
+     * Test sendNotification dispatches an arbitrary notification subject.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/reverse-2026-05-26-be-activity-notify/tasks.md#task-3
+     */
+    public function testSendNotificationDispatchesArbitrarySubject(): void
+    {
+        $notification = $this->createMock(originalClassName: INotification::class);
+        $notification->method('setApp')->willReturnSelf();
+        $notification->method('setUser')->willReturnSelf();
+        $notification->method('setDateTime')->willReturnSelf();
+        $notification->method('setObject')->willReturnSelf();
+        $notification->method('setSubject')->willReturnSelf();
+
+        $this->notificationManager->method('createNotification')->willReturn($notification);
+        $this->notificationManager->expects($this->once())->method('notify');
+
+        $notification->expects($this->once())->method('setSubject')
+            ->with(
+                'custom_event',
+                $this->callback(
+                    callback: function ($params) {
+                        return $params['key'] === 'value';
+                    }
+                )
+            );
+
+        $this->service->sendNotification(
+            userId: 'user1',
+            subject: 'custom_event',
+            parameters: ['key' => 'value'],
+            objectType: 'lead',
+            objectId: '99'
+        );
+    }//end testSendNotificationDispatchesArbitrarySubject()
 }//end class

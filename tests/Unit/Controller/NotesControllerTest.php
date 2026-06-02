@@ -85,10 +85,11 @@ class NotesControllerTest extends TestCase
                 ]
                 );
 
-        // Object service mock: find() returns a non-null ObjectEntity for any scoped lookup,
-        // which makes objectExists() return true so subsequent controller logic runs.
+        // Object service mock: find() returns a non-null ObjectEntity for any scoped
+        // lookup, which makes objectExists() return true so subsequent controller logic runs.
         $objectServiceMock = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
-        $objectServiceMock->method('find')->willReturn($this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class));
+        $entityMock        = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
+        $objectServiceMock->method('find')->willReturn($entityMock);
 
         $container = $this->createMock(ContainerInterface::class);
         $container->method('get')->willReturn($objectServiceMock);
