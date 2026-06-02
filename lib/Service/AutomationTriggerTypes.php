@@ -17,6 +17,9 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/email-calendar-sync/tasks.md#task-4.1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -37,19 +40,29 @@ class AutomationTriggerTypes
 {
     // V1 trigger types (active).
 
-    /** Triggered when a new lead is created. */
+    /**
+     * Triggered when a new lead is created.
+     */
     public const LEAD_CREATED = 'lead.created';
 
-    /** Triggered when a lead stage changes. */
+    /**
+     * Triggered when a lead stage changes.
+     */
     public const LEAD_STAGE_CHANGED = 'lead.stage_changed';
 
-    /** Triggered when a request is created. */
+    /**
+     * Triggered when a request is created.
+     */
     public const REQUEST_CREATED = 'request.created';
 
-    /** Triggered when a request status changes. */
+    /**
+     * Triggered when a request status changes.
+     */
     public const REQUEST_STATUS_CHANGED = 'request.status_changed';
 
-    /** Triggered when a contact is created. */
+    /**
+     * Triggered when a contact is created.
+     */
     public const CONTACT_CREATED = 'contact.created';
 
     // V2 trigger types (registered but NOT active — awaiting crm-workflow-automation spec).

@@ -17,6 +17,9 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/email-calendar-sync/tasks.md#task-3.1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -85,11 +88,13 @@ class EmailSyncController extends Controller
 
         $userId = $user->getUID();
 
-        return new JSONResponse([
-            'enabled'           => $this->emailSyncService->isSyncEnabled($userId),
-            'accounts'          => $this->emailSyncService->getSyncAccounts($userId),
-            'excludedAddresses' => $this->emailSyncService->getExcludedAddresses($userId),
-        ]);
+        return new JSONResponse(
+                [
+                    'enabled'           => $this->emailSyncService->isSyncEnabled($userId),
+                    'accounts'          => $this->emailSyncService->getSyncAccounts($userId),
+                    'excludedAddresses' => $this->emailSyncService->getExcludedAddresses($userId),
+                ]
+                );
     }//end getSettings()
 
     /**
@@ -111,8 +116,8 @@ class EmailSyncController extends Controller
             );
         }
 
-        $userId  = $user->getUID();
-        $enabled = $this->request->getParam('enabled');
+        $userId   = $user->getUID();
+        $enabled  = $this->request->getParam('enabled');
         $accounts = $this->request->getParam('accounts', []);
         $excluded = $this->request->getParam('excludedAddresses', []);
 
@@ -142,11 +147,13 @@ class EmailSyncController extends Controller
             $this->emailSyncService->setSyncAccounts($userId, $accounts);
             $this->emailSyncService->setExcludedAddresses($userId, $excluded);
 
-            return new JSONResponse([
-                'enabled'           => $this->emailSyncService->isSyncEnabled($userId),
-                'accounts'          => $this->emailSyncService->getSyncAccounts($userId),
-                'excludedAddresses' => $this->emailSyncService->getExcludedAddresses($userId),
-            ]);
+            return new JSONResponse(
+                    [
+                        'enabled'           => $this->emailSyncService->isSyncEnabled($userId),
+                        'accounts'          => $this->emailSyncService->getSyncAccounts($userId),
+                        'excludedAddresses' => $this->emailSyncService->getExcludedAddresses($userId),
+                    ]
+                    );
         } catch (\Throwable $e) {
             $this->logger->error('EmailSyncController::saveSettings failed', ['exception' => $e]);
             return new JSONResponse(
@@ -212,10 +219,12 @@ class EmailSyncController extends Controller
 
         $userId = $user->getUID();
 
-        return new JSONResponse([
-            'lastRun'   => $this->emailSyncService->getLastSyncTime($userId),
-            'linked'    => $this->emailSyncService->getLastSyncCount($userId),
-            'lastError' => $this->emailSyncService->getLastSyncError($userId),
-        ]);
+        return new JSONResponse(
+                [
+                    'lastRun'   => $this->emailSyncService->getLastSyncTime($userId),
+                    'linked'    => $this->emailSyncService->getLastSyncCount($userId),
+                    'lastError' => $this->emailSyncService->getLastSyncError($userId),
+                ]
+                );
     }//end getStatus()
 }//end class

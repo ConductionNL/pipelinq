@@ -17,6 +17,9 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/email-calendar-sync/tasks.md#task-2.1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -106,7 +109,7 @@ class EmailSyncService
      * This method defines the pipelinq CRM matching rule; the caller
      * is responsible for calling the email leaf link API on each match.
      *
-     * @param string                              $address The sender or recipient email address.
+     * @param string                                  $address       The sender or recipient email address.
      * @param \OCA\OpenRegister\Service\ObjectService $objectService OpenRegister ObjectService.
      *
      * @return array<array{entityType: string, entityId: string}> Matched entity references.
@@ -139,7 +142,7 @@ class EmailSyncService
             }
         } catch (\Throwable $e) {
             $this->logger->warning('EmailSyncService: contact lookup failed', ['exception' => $e]);
-        }
+        }//end try
 
         // Search clients by email field.
         try {
@@ -162,7 +165,7 @@ class EmailSyncService
             }
         } catch (\Throwable $e) {
             $this->logger->warning('EmailSyncService: client email lookup failed', ['exception' => $e]);
-        }
+        }//end try
 
         return $matches;
     }//end matchEmailToEntities()
@@ -173,7 +176,7 @@ class EmailSyncService
      * Returns null for public provider domains (gmail, outlook, etc.) to
      * prevent mass-matching unrelated contacts.
      *
-     * @param string                              $domain        The email domain (e.g. gemeente-utrecht.nl).
+     * @param string                                  $domain        The email domain (e.g. gemeente-utrecht.nl).
      * @param \OCA\OpenRegister\Service\ObjectService $objectService OpenRegister ObjectService.
      *
      * @return array{entityType: string, entityId: string}|null Match or null if not found.
@@ -182,7 +185,7 @@ class EmailSyncService
      */
     public function matchDomainToOrganization(string $domain, object $objectService): ?array
     {
-        if ($this->isPublicDomain($domain) === true) {
+        if ($this->isPublicDomain(domain: $domain) === true) {
             return null;
         }
 
@@ -266,11 +269,16 @@ class EmailSyncService
      */
     public function setSyncEnabled(string $userId, bool $enabled): void
     {
+        $value = 'false';
+        if ($enabled === true) {
+            $value = 'true';
+        }
+
         $this->config->setUserValue(
             $userId,
             'pipelinq',
             'email_sync_enabled',
-            $enabled === true ? 'true' : 'false',
+            $value,
         );
     }//end setSyncEnabled()
 

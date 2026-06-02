@@ -17,6 +17,9 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/email-calendar-sync/tasks.md#task-2.1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -84,36 +87,38 @@ class EmailSyncJob extends TimedJob
         $processed = 0;
         $errors    = 0;
 
-        $this->userManager->callForAllUsers(function ($user) use (&$processed, &$errors): void {
-            $userId = $user->getUID();
+        $this->userManager->callForAllUsers(
+                function ($user) use (&$processed, &$errors): void {
+                    $userId = $user->getUID();
 
-            try {
-                if ($this->emailSyncService->isSyncEnabled($userId) === false) {
-                    return;
+                    try {
+                        if ($this->emailSyncService->isSyncEnabled($userId) === false) {
+                            return;
+                        }
+
+                        // The OpenRegister email leaf owns the actual link-creation.
+                        // This job triggers matching for users who have sync enabled
+                        // and records the run status so the settings UI can display it.
+                        $this->emailSyncService->updateLastSyncTime($userId, 0, null);
+                        $processed++;
+                    } catch (\Throwable $e) {
+                        $errors++;
+                        $this->logger->error(
+                            'EmailSyncJob: Error processing user',
+                            [
+                                'userId'    => $userId,
+                                'exception' => $e,
+                            ],
+                        );
+
+                        try {
+                            $this->emailSyncService->updateLastSyncTime($userId, 0, 'Sync error — check server log');
+                        } catch (\Throwable) {
+                            // Ignore secondary error when recording the failure.
+                        }
+                    }//end try
                 }
-
-                // The OpenRegister email leaf owns the actual link-creation.
-                // This job triggers matching for users who have sync enabled
-                // and records the run status so the settings UI can display it.
-                $this->emailSyncService->updateLastSyncTime($userId, 0, null);
-                $processed++;
-            } catch (\Throwable $e) {
-                $errors++;
-                $this->logger->error(
-                    'EmailSyncJob: Error processing user',
-                    [
-                        'userId'    => $userId,
-                        'exception' => $e,
-                    ],
                 );
-
-                try {
-                    $this->emailSyncService->updateLastSyncTime($userId, 0, 'Sync error — check server log');
-                } catch (\Throwable) {
-                    // Ignore secondary error when recording the failure.
-                }
-            }
-        });
 
         $this->logger->info(
             'EmailSyncJob: Completed',
