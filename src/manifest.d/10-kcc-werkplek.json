@@ -1,0 +1,19 @@
+{
+  "menu": [
+    {
+      "id": "KccWerkplek",
+      "label": "KCC Werkplek",
+      "icon": "icon-comment",
+      "route": "KccWerkplek",
+      "order": 5
+    }
+  ],
+  "pages": [
+    {
+      "id": "KccWerkplek",
+      "route": "/werkplek",
+      "type": "custom",
+      "component": "KccWerkplekView"
+    }
+  ]
+}

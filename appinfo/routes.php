@@ -92,6 +92,12 @@ return [
         // Skill-based routing suggestions — must precede SPA catch-all.
         ['name' => 'routing#getSuggestions', 'url' => '/api/routing/suggestions', 'verb' => 'GET'],
 
+        // KCC werkplek — aggregated agent-workspace state + self-availability toggle
+        // (camelCase slug matches KccWerkplekController class name). Read-aggregation
+        // only; must precede the SPA catch-all (no {id} wildcards here).
+        ['name' => 'kccWerkplek#state', 'url' => '/api/kcc-werkplek/state', 'verb' => 'GET'],
+        ['name' => 'kccWerkplek#setAvailability', 'url' => '/api/kcc-werkplek/availability', 'verb' => 'PUT'],
+
         // POS transaction lifecycle (camelCase slug matches PosTransactionController class name).
         // CRUD is handled by OpenRegister's generic object API; these are the lifecycle actions.
         // The per-rate BTW compliance report must precede the {id} wildcard routes.

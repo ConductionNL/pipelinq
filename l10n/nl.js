@@ -1,6 +1,18 @@
 OC.L10N.register(
     "pipelinq",
     {
+    "KCC Werkplek" : "KCC Werkplek",
+    "Workload" : "Werklast",
+    "Available" : "Beschikbaar",
+    "Inbox" : "Inbox",
+    "No open items" : "Geen openstaande items",
+    "Register contactmoment" : "Contactmoment registreren",
+    "Clear" : "Wissen",
+    "Contactmoment registered" : "Contactmoment geregistreerd",
+    "Failed to load the workspace" : "Kan de werkplek niet laden",
+    "Could not update your availability" : "Kan je beschikbaarheid niet bijwerken",
+    "Contactmoment is not configured" : "Contactmoment is niet geconfigureerd",
+    "Could not register the contactmoment" : "Kan het contactmoment niet registreren",
     "Print Receipt" : "Bonnetje afdrukken",
     "Email Receipt" : "Bonnetje e-mailen",
     "Receipt Template" : "Bonnetje-sjabloon",

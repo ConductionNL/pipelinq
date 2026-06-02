@@ -1,5 +1,17 @@
 {
     "translations": {
+        "KCC Werkplek": "KCC Werkplek",
+        "Workload": "Workload",
+        "Available": "Available",
+        "Inbox": "Inbox",
+        "No open items": "No open items",
+        "Register contactmoment": "Register contactmoment",
+        "Clear": "Clear",
+        "Contactmoment registered": "Contactmoment registered",
+        "Failed to load the workspace": "Failed to load the workspace",
+        "Could not update your availability": "Could not update your availability",
+        "Contactmoment is not configured": "Contactmoment is not configured",
+        "Could not register the contactmoment": "Could not register the contactmoment",
         "+ Add": "+ Add",
         "+ Add Category": "+ Add Category",
         "+ Add Channel": "+ Add Channel",

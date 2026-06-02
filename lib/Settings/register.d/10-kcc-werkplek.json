@@ -1,0 +1,69 @@
+{
+  "components": {
+    "objects": [
+      {
+        "@self": { "register": "pipelinq", "schema": "queue", "slug": "queue-algemene-zaken" },
+        "title": "Algemene Zaken",
+        "description": "Diverse gemeentelijke vragen en informatieverzoeken",
+        "isActive": true,
+        "maxCapacity": null,
+        "sortOrder": 1
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "queue", "slug": "queue-vergunningen" },
+        "title": "Vergunningen",
+        "description": "Aanvragen en meldingen omgevingsvergunning",
+        "isActive": true,
+        "maxCapacity": 50,
+        "sortOrder": 2
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "queue", "slug": "queue-wmo-zorg" },
+        "title": "WMO / Zorg",
+        "description": "Wmo-aanvragen, hulpmiddelenvragen en zorgondersteuning",
+        "isActive": true,
+        "maxCapacity": 30,
+        "sortOrder": 3
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "agentProfile", "slug": "agent-jan-de-vries" },
+        "userId": "jan.devries",
+        "maxConcurrent": 3,
+        "isAvailable": true
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "agentProfile", "slug": "agent-fatima-el-amrani" },
+        "userId": "fatima.elamrani",
+        "maxConcurrent": 2,
+        "isAvailable": false
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "agentProfile", "slug": "agent-pieter-bakker" },
+        "userId": "pieter.bakker",
+        "maxConcurrent": 4,
+        "isAvailable": true
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "skill", "slug": "skill-vergunningen" },
+        "title": "Vergunningen",
+        "description": "Behandeling van omgevingsvergunningen en meldingen op basis van de Wabo",
+        "categories": ["vergunningen", "omgeving"],
+        "isActive": true
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "skill", "slug": "skill-wmo-zorg" },
+        "title": "WMO / Zorg",
+        "description": "Begeleiding bij Wmo-aanvragen, hulpmiddelen en zorgvragen",
+        "categories": ["wmo", "zorg", "hulpmiddelen"],
+        "isActive": true
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "skill", "slug": "skill-algemene-dienstverlening" },
+        "title": "Algemene Dienstverlening",
+        "description": "Brede gemeentelijke dienstverlening voor eerste lijn vragen",
+        "categories": ["algemeen", "informatie"],
+        "isActive": true
+      }
+    ]
+  }
+}

@@ -62,6 +62,9 @@ export async function initializeStores() {
 		if (config.register && config.contactmoment_schema) {
 			objectStore.registerObjectType('contactmoment', config.contactmoment_schema, config.register)
 		}
+		if (config.register && config.task_schema) {
+			objectStore.registerObjectType('task', config.task_schema, config.register)
+		}
 		if (config.register && config.survey_schema) {
 			objectStore.registerObjectType('survey', config.survey_schema, config.register)
 		}

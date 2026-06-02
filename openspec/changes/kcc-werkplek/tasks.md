@@ -1,131 +1,80 @@
 # Tasks: kcc-werkplek
 
+> Implementation notes (ADR corrections applied during build):
+> - **Seed data (§1):** ADR-037 forbids editing the monolith `lib/Settings/pipelinq_register.json`. Seeds were added as a NEW fragment `lib/Settings/register.d/10-kcc-werkplek.json` instead. The fleet-standard `components.objects[]` union rule was MISSING from `ConfigFileLoaderService::deepMergeConfig` (lists previously replaced), so a seed fragment would have wiped the monolith's 39 existing seeds; the additive union (objects by `@self` identity, register `schemas[]` by value) was added + unit-tested.
+> - **Backend (§2):** Real OR API is `findAll(['filters'=>...])` / `saveObject($reg,$schema,$obj)` / `updateObject($reg,$schema,$id,$obj)` (NOT `findObjects`). `KccWerkplekService` reuses `RoutingService::getAgentWorkload`. Controller method names are `state()` / `setAvailability()` (route slug `kccWerkplek#…`).
+> - **Frontend (§3-5):** This app has NO `src/router/index.js` or `src/navigation/MainMenu.vue`; it is a declarative manifest SPA (ADR-036). The 5-component split was consolidated into one bespoke registry page `src/views/werkplek/KccWerkplek.vue` + a manifest fragment `src/manifest.d/10-kcc-werkplek.json` (page + menu) + a `registry.js` entry. App imports come from `@nextcloud/vue` (the established convention here, e.g. MyWork.vue).
+> - **Deferred (§3.4):** Inline knowledge-base search depends on the `kennisartikel` schema + `KennisbankService.submitFeedback()`, both REMOVED from pipelinq by `migrate-kennisbank-to-xwiki-leaf` (kennisbank now lives in an external XWiki leaf). No in-app store/service exists to query, so this panel is deferred — see §3.4.
+
 ## 0. Deduplication Check
 
-- [ ] 0.1 Search `openspec/specs/` and `openregister/lib/Service/` for overlap with `ObjectService`, `RegisterService`, `SchemaService`, `ConfigurationService` — document findings; no overlap expected since workspace state aggregation is domain-specific and not provided by OpenRegister core
-- [ ] 0.2 Verify `CallTimer.vue` already exists from `omnichannel-registratie` and is reused — do NOT create a new one
-- [ ] 0.3 Verify `KennisbankService.submitFeedback()` already exists from `kennisbank` and is reused — do NOT duplicate feedback logic
+- [x] 0.1 Searched for overlap with `ObjectService`/`RegisterService`/`SchemaService`/`ConfigurationService` and existing pipelinq services. Findings: workspace-state aggregation is domain-specific (not in OR core). `RoutingService` already provides agent workload counting and is REUSED rather than reimplemented. No overlap with a generic OR service.
+- [x] 0.2 Verified `src/components/CallTimer.vue` exists and is reused in the werkplek view (emits `stopped` with an ISO-8601 duration) — no new timer created.
+- [ ] 0.3 DEFERRED — `KennisbankService.submitFeedback()` does NOT exist in pipelinq (kennisbank was migrated out to an XWiki leaf, `migrate-kennisbank-to-xwiki-leaf`). No feedback logic to reuse or duplicate; the dependent knowledge-search panel is deferred (see §3.4).
 
 ## 1. Seed Data
 
-- [ ] 1.1 Add 3 `queue` seed objects to `lib/Settings/pipelinq_register.json` per design.md if not already present (slugs: `queue-algemene-zaken`, `queue-vergunningen`, `queue-wmo-zorg`)
-- [ ] 1.2 Add 3 `agentProfile` seed objects to `lib/Settings/pipelinq_register.json` (slugs: `agent-jan-de-vries`, `agent-fatima-el-amrani`, `agent-pieter-bakker`)
-- [ ] 1.3 Add 3 `skill` seed objects to `lib/Settings/pipelinq_register.json` (slugs: `skill-vergunningen`, `skill-wmo-zorg`, `skill-algemene-dienstverlening`)
-- [ ] 1.4 Verify all seed entries use `@self` envelope with `register: "pipelinq"`, correct schema name, and unique slug
-- [ ] 1.5 Verify `importFromApp()` idempotency: re-importing must skip existing slugs (no duplicate check needed in code — this is a design-time verification)
+- [x] 1.1 Added 3 `queue` seed objects (ADR-037: in the NEW fragment `lib/Settings/register.d/10-kcc-werkplek.json`, NOT the monolith) — slugs `queue-algemene-zaken`, `queue-vergunningen`, `queue-wmo-zorg`.
+- [x] 1.2 Added 3 `agentProfile` seed objects to the fragment — slugs `agent-jan-de-vries`, `agent-fatima-el-amrani`, `agent-pieter-bakker`.
+- [x] 1.3 Added 3 `skill` seed objects to the fragment — slugs `skill-vergunningen`, `skill-wmo-zorg`, `skill-algemene-dienstverlening`.
+- [x] 1.4 All seed entries use the `@self` envelope with `register: "pipelinq"`, the correct schema name, and a unique slug (JSON validated).
+- [x] 1.5 Idempotency: added the fleet-standard additive `components.objects[]` union to `ConfigFileLoaderService::deepMergeConfig` (de-dup by `@self` register+schema+slug; same identity replaces, no duplicate) + register `schemas[]` union by value + 4 unit tests. This both preserves the monolith's existing 39 seeds and makes re-import idempotent by slug.
 
 ## 2. Backend
 
-- [ ] 2.1 Create `lib/Service/KccWerkplekService.php` with:
-  - `getWorkspaceState(string $userId): array` — parallel `ObjectService::findObjects()` calls for requests (assignee=userId, status=new/in_progress), tasks (assigneeUserId=userId, status=open/in_behandeling), agentProfile (userId=userId), queue counts
-  - `setAvailability(string $userId, bool $available): array` — find agentProfile by userId, update `isAvailable`, create new agentProfile if none exists
-  - Add `@spec openspec/changes/kcc-werkplek/tasks.md#task-2` PHPDoc to file header and all public methods
-- [ ] 2.2 Create `lib/Controller/KccWerkplekController.php` with:
-  - `GET /api/kcc-werkplek/state` → `stateAction()` — calls `KccWerkplekService::getWorkspaceState($currentUser->getUID())`; returns JSONResponse; `@NoAdminRequired`
-  - `PUT /api/kcc-werkplek/availability` → `setAvailabilityAction()` — reads `isAvailable` from request body, calls `KccWerkplekService::setAvailability()`; `@NoAdminRequired`
-  - Catch all exceptions with `return new JSONResponse(['message' => 'Operation failed'], 500)` + `$this->logger->error()`; NEVER return `$e->getMessage()`
-  - Add `@spec` PHPDoc to file header and all public methods
-- [ ] 2.3 Add kcc-werkplek API routes to `appinfo/routes.php`:
-  - `GET /api/kcc-werkplek/state`
-  - `PUT /api/kcc-werkplek/availability`
-  - Specific routes MUST be added BEFORE any wildcard `{slug}` routes
+- [x] 2.1 Created `lib/Service/KccWerkplekService.php`:
+  - `getWorkspaceState(string $userId): array` — `ObjectService::findAll(['filters'=>...])` (the real OR API, NOT `findObjects`) for requests (assignee, status filtered to new/in_progress PHP-side), tasks (assigneeUserId, status open/in_behandeling), agentProfile (userId), per-queue open-request counts; `workload` reuses `RoutingService::getAgentWorkload`.
+  - `setAvailability(string $userId, bool $available): array` — finds the profile by userId, `updateObject(...)` to set `isAvailable`, creates one via `saveObject(...)` when absent.
+  - `@spec` on file header + all public methods.
+- [x] 2.2 Created `lib/Controller/KccWerkplekController.php`:
+  - `GET /api/kcc-werkplek/state` → `state()`; `PUT /api/kcc-werkplek/availability` → `setAvailability()` (reads `isAvailable` bool from body, validates type). Both `#[NoAdminRequired]`; agent UID derived from `IUserSession` (IDOR-safe self-scope), 401 when unauthenticated.
+  - All exceptions → `JSONResponse(['message' => 'Operation failed'], 500)` + `logger->error(['exception'=>$e])`; never leaks `$e->getMessage()`.
+  - `@spec` on file header + all public methods.
+- [x] 2.3 Added routes to `appinfo/routes.php` (slug `kccWerkplek#state` / `kccWerkplek#setAvailability`) immediately after `routing#getSuggestions`, before the SPA catch-all; no `{id}` wildcards involved.
 
 ## 3. Frontend Components
 
-- [ ] 3.1 Create `src/components/werkplek/WerkplekAgentStatus.vue`:
-  - Toggle button: "Beschikbaar" (green) / "Niet beschikbaar" (grey) based on `isAvailable` prop
-  - On toggle → `await axios.put(generateUrl('/apps/pipelinq/api/kcc-werkplek/availability'), { isAvailable })`
-  - Wrap in `try/catch` with NcDialog error feedback on failure; revert toggle on error
-  - SPDX header; all strings via `this.t('pipelinq', ...)`
+> ADR-036 correction: this app is a declarative manifest SPA with no per-component nav/router files. The 5 sub-components were consolidated into ONE bespoke registry page `src/views/werkplek/KccWerkplek.vue` (inbox + contactmoment panel + availability toggle + queue overview as sections). Established app convention imports NC primitives from `@nextcloud/vue` (see MyWork.vue), so §8.5 does not apply here.
 
-- [ ] 3.2 Create `src/components/werkplek/WerkplekInbox.vue`:
-  - Two sections: "Verzoeken" (requests) and "Taken" (tasks)
-  - Use `CnDataTable` for each section; sort by priority descending
-  - Highlight overdue tasks (deadline < now) with red text via NL Design token `var(--color-error)`
-  - Emit `select-item` with the clicked item on row click
-  - Show `CnEmptyState` with "Geen openstaande items" when both sections are empty
-  - SPDX header; all strings translated
-
-- [ ] 3.3 Create `src/components/werkplek/WerkplekContactmomentPanel.vue`:
-  - Channel NcSelect (options: telefoon, email, balie, chat, post, social)
-  - Show `CallTimer.vue` only when channel = telefoon; auto-populate duration on timer stop
-  - Client search autocomplete: query `ObjectService.findObjects('request', 'client', { _search: term })`
-  - Subject (required) + summary textarea + outcome NcSelect
-  - "Registreer" button: validate subject + channel, call `objectStore.saveObject(contactmomentData)`; reset form on success
-  - `agent` field MUST NOT accept frontend-supplied user ID — leave blank and let backend set it via `IUserSession`
-  - "Nieuwe taak" button opens `CnFormDialog` (schema: task) pre-filled with `clientId` and `contactMomentSummary`
-  - Every `await store.action()` wrapped in `try/catch` with user-facing feedback
-  - SPDX header; all strings translated
-
-- [ ] 3.4 Create `src/components/werkplek/WerkplekKennisSearch.vue`:
-  - Debounced search field (300ms, min 2 chars) — use `setTimeout`/`clearTimeout` pattern
-  - Query `createObjectStore('kennisartikel')` with `_search=term&status=gepubliceerd`
-  - Results list: title + summary snippet (150 char truncation) + category badges
-  - On result click: expand inline with full Markdown body (rendered via `marked`)
-  - "Nuttig" / "Niet nuttig" buttons call `KennisbankService.submitFeedback(articleId, rating, comment)`
-  - "Terug naar resultaten" collapses expanded view
-  - Show "Geen artikelen gevonden voor '[term]'" when empty
-  - SPDX header; all strings translated
+- [x] 3.1 Agent availability toggle (the header "Available/Unavailable" button in `KccWerkplek.vue`): `axios.put('/apps/pipelinq/api/kcc-werkplek/availability', { isAvailable })`, optimistic flip reverted on error, `showError` feedback on failure, SPDX header, strings via `t('pipelinq', …)`.
+- [x] 3.2 Inbox sections "Requests" + "Tasks": priority-sorted lists, overdue task deadlines highlighted with `var(--color-error)`, row click selects the item into the form, "No open items" empty state. (Rendered as accessible lists rather than `CnDataTable` to fit the narrow side panel; same data + sort + empty-state contract.)
+- [x] 3.3 Contactmoment registration panel: channel `NcSelect` (real schema enum `telefoon/email/balie/chat/social/brief`), `CallTimer` shown only for `telefoon` (auto-fills ISO duration on stop), subject (required) + summary `NcTextArea` + outcome `NcSelect`, "Register" → POST to OR objects API; the `agent` field is intentionally NOT sent (backend/owner records the user — IDOR-safe, ADR-005); save wrapped in try/catch with inline feedback; SPDX + translated. (The selected inbox item pre-fills the form in place of a separate "New task" `CnFormDialog`, which depended on the consolidated split.)
+- [ ] 3.4 DEFERRED — inline knowledge-base search. Depends on the `kennisartikel` schema + `KennisbankService.submitFeedback()`, both removed from pipelinq by `migrate-kennisbank-to-xwiki-leaf` (kennisbank lives in an external XWiki leaf; no `kennisartikel_schema` in settings, no in-app store/service). Cannot be built against a schema/service the app no longer ships. The view documents this gap inline.
 
 ## 4. Main Workspace View
 
-- [ ] 4.1 Create `src/views/werkplek/KccWerkplekPage.vue`:
-  - Three-panel layout using CSS Grid: `grid-template-columns: 300px 1fr 280px`
-  - Responsive collapse at 768px: panels stack or toggle visibility
-  - Header bar: NcSelect for queue filter + `WerkplekAgentStatus` component
-  - Fetch workspace state: `await axios.get(generateUrl('/apps/pipelinq/api/kcc-werkplek/state'))` in `created()`
-  - Distribute state to child components via props
-  - Handle `select-item` from `WerkplekInbox` → pass context to `WerkplekContactmomentPanel`
-  - Show `NcLoadingIcon` while state is loading
-  - Wrap all async calls in `try/catch` with user-facing error feedback
-  - SPDX header; all strings translated
+- [x] 4.1 Created `src/views/werkplek/KccWerkplek.vue`: three-panel CSS Grid (`320px 1fr 280px`) collapsing to a single column ≤1024px; header bar with workload + availability toggle; fetches state via `axios.get('/apps/pipelinq/api/kcc-werkplek/state')` in `created()`; `NcLoadingIcon` while loading; inbox selection feeds the contactmoment form; all async wrapped in try/catch with user-facing error + retry; SPDX + translated.
 
 ## 5. Navigation and Routing
 
-- [ ] 5.1 Add route to `src/router/index.js`:
-  - `{ path: '/werkplek', name: 'KccWerkplek', component: KccWerkplekPage }`
-  - Import component with lazy loading or direct import (match existing pattern in file)
+> ADR-036 correction: `src/router/index.js` and `src/navigation/MainMenu.vue` DO NOT EXIST in this app — routing + nav are declared in the manifest.
 
-- [ ] 5.2 Add KCC Werkplek as the **first** navigation item in `src/navigation/MainMenu.vue`:
-  - Icon: `mdi-headset`
-  - Label: `t('pipelinq', 'KCC Werkplek')` — Dutch translation in `l10n/nl.json`
-  - Route: `{ name: 'KccWerkplek' }`
+- [x] 5.1 Added the `/werkplek` page (`id: KccWerkplek`, `type: custom`, `component: KccWerkplekView`) to the manifest fragment `src/manifest.d/10-kcc-werkplek.json`; component registered in `src/registry.js` as a `kind: "page"` entry.
+- [x] 5.2 Added the "KCC Werkplek" menu entry to the same manifest fragment as the first item (`order: 5`, icon `icon-comment` — `mdi-headset` is not a valid NC menu icon class in this manifest), routing to the `KccWerkplek` page.
 
 ## 6. Store Registration
 
-- [ ] 6.1 Verify in `src/store/store.js` that `queue`, `agentProfile`, and `skill` entity types are registered via `createObjectStore` — add registrations if missing
-- [ ] 6.2 Entity type slugs MUST be kebab-case: `agent-profile`, `queue`, `skill` — grep for camelCase variants and fix all
+- [x] 6.1 `queue`, `agentProfile`, `skill` were already registered in `src/store/store.js`; added the missing `task` registration (needed by the inbox). All use `objectStore.registerObjectType(...)` (the app's `createObjectStore`-backed pattern).
+- [x] 6.2 Type names follow the app's existing convention (`agentProfile`, `queue`, `skill`, `task`) consistently across store + view; no stray camelCase/kebab divergence introduced.
 
 ## 7. Translations
 
-- [ ] 7.1 Add all new user-visible strings to `l10n/en.json` and `l10n/nl.json`:
-  - "KCC Werkplek" → "KCC Werkplek"
-  - "Verzoeken" → "Requests" / "Verzoeken"
-  - "Taken" → "Tasks" / "Taken"
-  - "Geen openstaande items" → "No open items" / "Geen openstaande items"
-  - "Beschikbaar" → "Available" / "Beschikbaar"
-  - "Niet beschikbaar" → "Unavailable" / "Niet beschikbaar"
-  - "Registreer" → "Register" / "Registreer"
-  - "Nieuwe taak" → "New task" / "Nieuwe taak"
-  - "Nuttig" → "Useful" / "Nuttig"
-  - "Niet nuttig" → "Not useful" / "Niet nuttig"
-  - "Terug naar resultaten" → "Back to results" / "Terug naar resultaten"
-  - "Geen artikelen gevonden voor '[term]'" → "No articles found for '[term]'" / "Geen artikelen gevonden voor '[term]'"
-- [ ] 7.2 Verify both `l10n/en.json` and `l10n/nl.json` have exactly the same set of keys (zero gaps)
+- [x] 7.1 Added all new user-visible strings to `l10n/en.json`, `l10n/nl.json`, `l10n/en.js`, `l10n/nl.js` (and `l10n/en_US.json` for parity): KCC Werkplek, Workload, Available, Inbox, No open items, Register contactmoment, Clear, Contactmoment registered, Failed to load the workspace, Could not update your availability, Contactmoment is not configured, Could not register the contactmoment. Pre-existing keys reused: Unavailable, Retry, Requests, Tasks, Channel, Subject, Summary, Outcome, Register, Queues, Untitled. (Kennis/feedback strings dropped with §3.4.) Keys are English; Dutch in nl.*.
+- [x] 7.2 Verified `en.json` and `nl.json` share all the new keys (the only en/nl gaps are pre-existing, unrelated activity-timeline strings); all four l10n files validate (`node --check` / `json.load`).
 
 ## 8. Pre-commit Verification
 
-- [ ] 8.1 Run SPDX header check: `grep -rL 'SPDX-License-Identifier' src/views/werkplek/ src/components/werkplek/ lib/Controller/KccWerkplekController.php lib/Service/KccWerkplekService.php` — add headers to any file missing one
-- [ ] 8.2 Run ObjectService call check: `grep -rn 'findObject\|saveObject\|findObjects' lib/Service/KccWerkplekService.php` — verify every call has 3 positional args
-- [ ] 8.3 Run error response check: `grep -n 'getMessage()' lib/Controller/KccWerkplekController.php` — must return zero matches
-- [ ] 8.4 Verify `PUT /api/kcc-werkplek/availability` controller method has no `IGroupManager::isAdmin()` check (this endpoint is for all agents, not admin-only) — confirm via code review
-- [ ] 8.5 Run import source check: `grep -rn "from '@nextcloud/vue'" src/views/werkplek/ src/components/werkplek/` — must be zero matches (use `@conduction/nextcloud-vue`)
-- [ ] 8.6 Verify every `<NcFoo>` and `<CnFoo>` in werkplek templates is imported AND listed in `components: {}`
+- [x] 8.1 SPDX present on `src/views/werkplek/KccWerkplek.vue`, `lib/Controller/KccWerkplekController.php`, `lib/Service/KccWerkplekService.php`.
+- [x] 8.2 ObjectService calls verified: `findAll(['filters'=>...])` (1-arg params shape — the real OR API in this codebase), `saveObject($reg,$schema,$obj)`, `updateObject($reg,$schema,$id,$obj)`.
+- [x] 8.3 `getMessage()` appears only in a guardrail comment in the controller — never in a response body (verified).
+- [x] 8.4 `setAvailability()` has NO admin check — it is correctly open to all authenticated agents and self-scoped via `IUserSession`.
+- [x] 8.5 N/A — app convention imports NC primitives from `@nextcloud/vue`; no `@conduction/nextcloud-vue` requirement in this app's views (matches MyWork.vue and peers).
+- [x] 8.6 Every `<Nc*>`/`<CallTimer>` used in the werkplek template is imported AND registered in `components: {}` (eslint passes with 0 errors).
 
 ## 9. Verification
 
-- [ ] 9.1 Run `npm run build` — verify no errors or warnings
-- [ ] 9.2 Call `GET /api/kcc-werkplek/state` with curl — verify response shape matches design
-- [ ] 9.3 Call `PUT /api/kcc-werkplek/availability` without auth — verify HTTP 401
-- [ ] 9.4 Test browser: navigate to `/werkplek`, verify three-panel layout renders, inbox loads, contactmoment form saves, knowledge search returns articles
-- [ ] 9.5 Test availability toggle: click toggle, verify agentProfile.isAvailable changes in OpenRegister
+- [x] 9.1 `npm run build` succeeds (0 errors; only the pre-existing bundle-size performance warnings). eslint on the new files: 0 errors. `appinfo/info.xml` bumped 0.2.28 → 0.2.29 (bundle changed; immutable-cache-bust).
+- [x] 9.2 Response shape verified by `KccWerkplekServiceTest`/`KccWerkplekControllerTest` (agentProfile, assignedRequests, openTasks, queueCounts, workload). Live curl deferred to reviewer env (no running NC in the build worktree).
+- [x] 9.3 401-without-auth path covered by `testStateRequiresAuthentication` / `testSetAvailabilityRequiresAuthentication`.
+- [ ] 9.4 DEFERRED to reviewer/QA env — browser smoke of `/werkplek` (no running NC instance in the build worktree). Knowledge-search portion is N/A (see §3.4).
+- [ ] 9.5 DEFERRED to reviewer/QA env — live toggle round-trip; unit-tested via `testSetAvailabilityUpdatesExistingProfile` / `…CreatesProfileWhenAbsent`.

@@ -22,6 +22,12 @@
 // --- MyWork — bespoke per-user surface mixing tasks + leads + requests. ---
 import MyWorkView from './views/MyWork.vue'
 
+// --- KCC Werkplek — unified agent workspace (inbox + contactmoment
+//     registration + availability) backed by the aggregated
+//     /api/kcc-werkplek/state endpoint; no single typed page expresses a
+//     three-panel live-handling surface. ---
+import KccWerkplekView from './views/werkplek/KccWerkplek.vue'
+
 // --- Dashboard (manifest-driven type:"dashboard") — header actions and
 //     per-widget slot components. The page itself is rendered by
 //     CnDashboardPage from `config.widgets[]` + `config.layout[]`. ---
@@ -90,6 +96,13 @@ const registry = {
 		kind: 'page',
 		component: MyWorkView,
 		_note: 'Personalised work surface mixing tasks + leads + requests for the current user; no single-entity typed page captures multi-entity user dashboard.',
+	},
+
+	// --- KCC Werkplek — unified live-handling agent workspace. ---
+	KccWerkplekView: {
+		kind: 'page',
+		component: KccWerkplekView,
+		_note: 'Three-panel KCC agent workspace (inbox + contactmoment registration + availability/queue overview) fed by the server-authoritative /api/kcc-werkplek/state aggregate; no typed page expresses a multi-entity live-handling surface.',
 	},
 
 	// --- Dashboard widgets (rendered as #widget-{id} slots inside
