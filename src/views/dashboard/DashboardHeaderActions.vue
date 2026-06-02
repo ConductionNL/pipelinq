@@ -50,7 +50,16 @@ import Refresh from 'vue-material-design-icons/Refresh.vue'
 import LeadCreateDialog from '../leads/LeadCreateDialog.vue'
 import RequestCreateDialog from '../requests/RequestCreateDialog.vue'
 import ClientCreateDialog from '../clients/ClientCreateDialog.vue'
-import { invalidateDashboardData } from '../../services/dashboardData.js'
+import {
+	refreshDashboardData,
+	getLeads,
+	getRequests,
+	getPipelines,
+	getComplaints,
+	getClients,
+	getMyLeads,
+	getMyRequests,
+} from '../../services/dashboardData.js'
 
 export default {
 	name: 'DashboardHeaderActions',
@@ -76,14 +85,24 @@ export default {
 		 */
 		async refresh() {
 			this.refreshing = true
-			invalidateDashboardData()
-			// Force every widget to remount by bumping the route key. Cheap
-			// trick — re-pushing the same route after a query bump makes
-			// vue-router rerender the page, which remounts every widget.
-			const q = { ...this.$route.query, _r: Date.now() }
-			await this.$router.replace({ name: this.$route.name, query: q })
-			// brief visual feedback
-			setTimeout(() => { this.refreshing = false }, 400)
+			try {
+				// Drop cached datasets and bump the refresh signal so every
+				// mounted widget re-runs its load(). Then await the shared
+				// fetchers so the spinner reflects the real fetch time —
+				// widgets share these promises, so no duplicate requests.
+				refreshDashboardData()
+				await Promise.allSettled([
+					getLeads(),
+					getRequests(),
+					getPipelines(),
+					getComplaints(),
+					getClients(),
+					getMyLeads(),
+					getMyRequests(),
+				])
+			} finally {
+				this.refreshing = false
+			}
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-2
