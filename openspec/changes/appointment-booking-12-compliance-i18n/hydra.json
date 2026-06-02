@@ -1,0 +1,7 @@
+{
+  "schema_version": 2,
+  "spec_slug": "appointment-booking-12-compliance-i18n",
+  "app": "pipelinq",
+  "kind": "code",
+  "depends_on": ["appointment-booking-11-admin-ui"]
+}
