@@ -23,8 +23,14 @@
 			<span v-if="item.assignee" class="card-assignee">
 				{{ item.assignee }}
 			</span>
-			<span v-if="daysAge > 0" class="aging-badge" :class="agingClass">
-				{{ agingLabel }}
+			<span v-if="isStaleItem" class="stale-badge" :title="t('pipelinq', 'No activity for {days} days', { days: daysAge })">
+				{{ t('pipelinq', '{days}d old', { days: daysAge }) }}
+			</span>
+			<span v-if="daysInStage > 0"
+				class="aging-badge"
+				:class="agingClass"
+				:title="t('pipelinq', '{days} days in current stage', { days: daysInStage })">
+				{{ t('pipelinq', '{days}d in stage', { days: daysInStage }) }}
 			</span>
 			<span v-if="item.expectedCloseDate" class="card-date" :class="{ 'card-date--overdue': isOverdue }">
 				{{ formatDate(item.expectedCloseDate) }}
@@ -55,8 +61,9 @@
 <script>
 import { NcSelect } from '@nextcloud/vue'
 import { getPriorityLabel, getPriorityColor, getStatusLabel } from '../../services/requestStatus.js'
-import { getDaysAge, isStale, getAgingClass, formatAge } from '../../services/pipelineUtils.js'
+import { getDaysAge, getDaysInStage, getAgingClass } from '../../services/pipelineUtils.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import { useSettingsStore } from '../../store/modules/settings.js'
 // eslint-disable-next-line no-unused-vars -- used in template via Options API fallthrough
 import { formatNumber, formatDate as formatLocaleDate } from '../../services/localeUtils.js'
 
@@ -100,6 +107,18 @@ export default {
 		objectStore() {
 			return useObjectStore()
 		},
+		settingsStore() {
+			return useSettingsStore()
+		},
+		/**
+		 * Stale threshold in days, read from app settings (default 14).
+		 *
+		 * @spec openspec/changes/lead-management/tasks.md#2.2
+		 * @return {number} The configured stale threshold.
+		 */
+		staleThreshold() {
+			return this.settingsStore.getLeadStaleThresholdDays
+		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-36
 		 */
@@ -109,9 +128,13 @@ export default {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
 		 */
+		isClosedLead() {
+			return this.entityType === 'lead'
+				&& (this.item.status === 'won' || this.item.status === 'lost')
+		},
 		isOverdue() {
 			if (this.entityType === 'lead') {
-				if (!this.item.expectedCloseDate) return false
+				if (!this.item.expectedCloseDate || this.isClosedLead) return false
 				return new Date(this.item.expectedCloseDate) < new Date()
 			}
 			if (this.entityType === 'request') {
@@ -128,19 +151,31 @@ export default {
 			return getDaysAge(this.item)
 		},
 		/**
+		 * Days the lead has spent in its current stage. Prefers the
+		 * `stageEnteredAt` schema field, falling back to `_dateModified`.
+		 *
+		 * @spec openspec/changes/lead-management/tasks.md#3.1
+		 * @return {number} Days in the current stage.
+		 */
+		daysInStage() {
+			return getDaysInStage(this.item)
+		},
+		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-34
 		 */
 		agingClass() {
-			return getAgingClass(this.daysAge)
+			return getAgingClass(this.daysInStage)
 		},
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-35
+		 * A lead is stale when it has had no activity for at least the
+		 * configured threshold (default 14 days). Only leads can be stale.
+		 *
+		 * @spec openspec/changes/lead-management/tasks.md#2.2
+		 * @return {boolean} Whether the lead is stale.
 		 */
-		agingLabel() {
-			return formatAge(this.daysAge)
-		},
 		isStaleItem() {
-			return isStale(this.item, this.entityType)
+			if (this.entityType !== 'lead' || this.isClosedLead) return false
+			return this.daysAge >= this.staleThreshold
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-46
@@ -159,6 +194,7 @@ export default {
 		currentColumnValue: {
 			immediate: true,
 			/**
+			 * @param val
 			 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
 			 */
 			handler(val) {
@@ -168,6 +204,7 @@ export default {
 		'item.assignee': {
 			immediate: true,
 			/**
+			 * @param val
 			 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
 			 */
 			handler(val) {
@@ -210,6 +247,7 @@ export default {
 		},
 
 		/**
+		 * @param newStage
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-45
 		 */
 		async onStageChange(newStage) {
@@ -227,6 +265,7 @@ export default {
 		},
 
 		/**
+		 * @param newAssignee
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-43
 		 */
 		async onAssignChange(newAssignee) {
@@ -244,6 +283,7 @@ export default {
 		},
 
 		/**
+		 * @param e
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-44
 		 */
 		onDragStart(e) {
@@ -257,6 +297,7 @@ export default {
 		},
 
 		/**
+		 * @param dateStr
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-38
 		 */
 		formatDate(dateStr) {
@@ -354,6 +395,16 @@ export default {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	flex-shrink: 0;
+}
+
+.stale-badge {
+	font-size: 10px;
+	font-weight: 700;
+	padding: 0 4px;
+	border-radius: 3px;
+	flex-shrink: 0;
+	color: #92400e;
+	background: #fef3c7;
 }
 
 .aging-badge {

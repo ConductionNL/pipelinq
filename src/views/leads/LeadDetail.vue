@@ -37,6 +37,11 @@
 			</NcButton>
 		</template>
 
+		<!-- Overdue banner -->
+		<NcNoteCard v-if="isOverdue" type="error" class="lead-overdue-banner">
+			{{ t('pipelinq', '{days} days overdue', { days: overdueDays }) }}
+		</NcNoteCard>
+
 		<!-- Core Info -->
 		<CnDetailCard :title="t('pipelinq', 'Core Info')">
 			<div class="info-grid">
@@ -114,6 +119,9 @@
 					:class="stageClass(stage)">
 					<span class="stage-indicator" />
 					<span class="stage-name">{{ stage.name }}</span>
+					<span v-if="stage.name === leadData.stage" class="stage-aging">
+						{{ t('pipelinq', '{days} days in current stage', { days: daysInStage }) }}
+					</span>
 				</div>
 			</div>
 		</CnDetailCard>
@@ -156,7 +164,7 @@
 </template>
 
 <script>
-import { NcButton, NcDialog } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcNoteCard } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import LeadForm from './LeadForm.vue'
@@ -164,12 +172,14 @@ import LeadProducts from '../../components/LeadProducts.vue'
 import LeadContactRoles from '../../components/LeadContactRoles.vue'
 import ActivityTimeline from '../../components/ActivityTimeline.vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import { getDaysInStage } from '../../services/pipelineUtils.js'
 
 export default {
 	name: 'LeadDetail',
 	components: {
 		NcButton,
 		NcDialog,
+		NcNoteCard,
 		CnDetailPage,
 		CnDetailCard,
 		LeadForm,
@@ -215,6 +225,38 @@ export default {
 		leadData() {
 			if (this.isNew) return {}
 			return this.objectStore.getObject('lead', this.leadId) || {}
+		},
+		/**
+		 * Whether the lead is past its expected close date and still open.
+		 *
+		 * @spec openspec/changes/lead-management/tasks.md#4.2
+		 * @return {boolean} True when overdue.
+		 */
+		isOverdue() {
+			if (this.isNew) return false
+			if (this.leadData.status === 'won' || this.leadData.status === 'lost') return false
+			if (!this.leadData.expectedCloseDate) return false
+			return new Date(this.leadData.expectedCloseDate) < new Date()
+		},
+		/**
+		 * Number of days the lead is past its expected close date.
+		 *
+		 * @spec openspec/changes/lead-management/tasks.md#4.2
+		 * @return {number} Whole days overdue.
+		 */
+		overdueDays() {
+			if (!this.isOverdue) return 0
+			const diff = Date.now() - new Date(this.leadData.expectedCloseDate).getTime()
+			return Math.max(0, Math.floor(diff / 86400000))
+		},
+		/**
+		 * Days the lead has spent in its current pipeline stage.
+		 *
+		 * @spec openspec/changes/lead-management/tasks.md#3.2
+		 * @return {number} Days in current stage.
+		 */
+		daysInStage() {
+			return getDaysInStage(this.leadData)
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-38
@@ -287,6 +329,7 @@ export default {
 			}
 		},
 		/**
+		 * @param stage
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-39
 		 */
 		stageClass(stage) {
@@ -296,6 +339,7 @@ export default {
 			return 'stage-future'
 		},
 		/**
+		 * @param value
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-28
 		 */
 		formatValue(value) {
@@ -303,6 +347,7 @@ export default {
 			return 'EUR ' + Number(value).toLocaleString('nl-NL')
 		},
 		/**
+		 * @param formData
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-34
 		 */
 		async onFormSave(formData) {
@@ -357,6 +402,7 @@ export default {
 			this.valueOverridden = value !== 0 && Math.abs(value - computedTotal) > 0.001
 		},
 		/**
+		 * @param newTotal
 		 * @spec openspec/changes/2026-03-20-lead-product-link/tasks.md#task-3.2
 		 */
 		async onProductValueChanged(newTotal) {
@@ -365,6 +411,7 @@ export default {
 			}
 		},
 		/**
+		 * @param value
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-40
 		 */
 		async syncLeadValue(value) {
@@ -501,6 +548,16 @@ export default {
 
 .stage-name {
 	font-size: 13px;
+}
+
+.stage-aging {
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+	margin-left: 8px;
+}
+
+.lead-overdue-banner {
+	margin: 0 0 16px;
 }
 
 /* Connector line between stages */

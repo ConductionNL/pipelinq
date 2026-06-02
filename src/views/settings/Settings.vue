@@ -89,6 +89,26 @@
 			@remove="removeRequestChannel"
 			@rename="renameRequestChannel" />
 
+		<!-- Lead Settings -->
+		<NcSettingsSection
+			:name="t('pipelinq', 'Lead settings')"
+			:description="t('pipelinq', 'Tune lead lifecycle behaviour such as staleness detection.')">
+			<div class="lead-settings__field">
+				<NcTextField
+					type="number"
+					:label="t('pipelinq', 'Stale after (days)')"
+					:value.sync="leadStaleThresholdDays"
+					:helper-text="t('pipelinq', 'Number of days without activity after which a lead is flagged as stale.')"
+					min="1" />
+			</div>
+			<NcButton
+				type="primary"
+				:disabled="savingLeadSettings"
+				@click="saveLeadSettings">
+				{{ t('pipelinq', 'Save lead settings') }}
+			</NcButton>
+		</NcSettingsSection>
+
 		<!-- Prospect Discovery Settings -->
 		<ProspectSettings v-if="isConfigured" />
 
@@ -104,7 +124,7 @@
 <script>
 import { loadState } from '@nextcloud/initial-state'
 import { CnRegisterMapping, CnVersionInfoCard } from '@conduction/nextcloud-vue'
-import { NcButton, NcLoadingIcon, NcNoteCard, NcSettingsSection } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon, NcNoteCard, NcSettingsSection, NcTextField } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import { useSettingsStore } from '../../store/modules/settings.js'
@@ -128,6 +148,7 @@ export default {
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSettingsSection,
+		NcTextField,
 		Refresh,
 		PipelineManager,
 		ProductCategoryManager,
@@ -143,6 +164,8 @@ export default {
 			appVersion: loadState('pipelinq', 'version', 'Unknown'),
 			reimporting: false,
 			saving: false,
+			savingLeadSettings: false,
+			leadStaleThresholdDays: '14',
 			message: '',
 			messageType: 'success',
 		}
@@ -231,6 +254,9 @@ export default {
 		const config = await this.settingsStore.fetchSettings()
 		if (config) {
 			this.config = config
+			if (config.lead_stale_threshold_days) {
+				this.leadStaleThresholdDays = String(config.lead_stale_threshold_days)
+			}
 		}
 
 		if (this.isConfigured) {
@@ -274,6 +300,7 @@ export default {
 			}
 		},
 		/**
+		 * @param configuration
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-86
 		 */
 		async save(configuration) {
@@ -288,54 +315,96 @@ export default {
 			this.saving = false
 		},
 		/**
+		 * Persist the lead staleness threshold (days) via the settings store.
+		 *
+		 * @spec openspec/changes/lead-management/tasks.md#2.1
+		 * @return {Promise<void>}
+		 */
+		async saveLeadSettings() {
+			this.savingLeadSettings = true
+			this.message = ''
+			const days = parseInt(this.leadStaleThresholdDays, 10)
+			const safeDays = (Number.isNaN(days) || days < 1) ? 14 : days
+			this.leadStaleThresholdDays = String(safeDays)
+			try {
+				const result = await this.settingsStore.saveSettings({
+					...this.config,
+					lead_stale_threshold_days: String(safeDays),
+				})
+				if (result) {
+					this.config = result
+					this.message = t('pipelinq', 'Lead settings saved')
+					this.messageType = 'success'
+				} else {
+					this.message = t('pipelinq', 'Failed to save lead settings')
+					this.messageType = 'error'
+				}
+			} finally {
+				this.savingLeadSettings = false
+			}
+		},
+		/**
+		 * @param name
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-67
 		 */
 		async addLeadSource(name) {
 			await this.leadSourcesStore.addSource(name)
 		},
 		/**
+		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-79
 		 */
 		async removeLeadSource(id) {
 			await this.leadSourcesStore.removeSource(id)
 		},
 		/**
+		 * @param id
+		 * @param name
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-81
 		 */
 		async renameLeadSource(id, name) {
 			await this.leadSourcesStore.renameSource(id, name)
 		},
 		/**
+		 * @param name
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-68
 		 */
 		async addRequestChannel(name) {
 			await this.requestChannelsStore.addChannel(name)
 		},
 		/**
+		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-80
 		 */
 		async removeRequestChannel(id) {
 			await this.requestChannelsStore.removeChannel(id)
 		},
 		/**
+		 * @param id
+		 * @param name
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-82
 		 */
 		async renameRequestChannel(id, name) {
 			await this.requestChannelsStore.renameChannel(id, name)
 		},
 		/**
+		 * @param sourceName
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-69
 		 */
 		async checkLeadSourceUsage(sourceName) {
 			return this.countObjectsWithField('lead', 'source', sourceName)
 		},
 		/**
+		 * @param channelName
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-70
 		 */
 		async checkRequestChannelUsage(channelName) {
 			return this.countObjectsWithField('request', 'channel', channelName)
 		},
 		/**
+		 * @param type
+		 * @param field
+		 * @param value
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-71
 		 */
 		async countObjectsWithField(type, field, value) {

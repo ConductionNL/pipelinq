@@ -29,6 +29,16 @@ export const useSettingsStore = defineStore('settings', {
 			const value = parseInt(state.config[key], 10)
 			return isNaN(value) ? 0 : value
 		},
+		/**
+		 * Number of days without activity after which a lead is flagged as stale.
+		 *
+		 * @param {object} state The store state.
+		 * @return {number} The stale threshold in days (default 14).
+		 */
+		getLeadStaleThresholdDays: (state) => {
+			const value = parseInt(state.config?.lead_stale_threshold_days, 10)
+			return (isNaN(value) || value < 1) ? 14 : value
+		},
 	},
 	actions: {
 		/**

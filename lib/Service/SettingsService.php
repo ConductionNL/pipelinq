@@ -106,6 +106,7 @@ class SettingsService
         'task_escalation.threshold_hours'          => '4',
         'task.business_hour_start'                 => '8',
         'task.business_hour_end'                   => '17',
+        'lead_stale_threshold_days'                => '14',
         'prospect_discovery.cache_ttl_seconds'     => '3600',
         'kvk.api_base_url'                         => 'https://api.kvk.nl/api/v1',
         'opencorporates.api_base_url'              => 'https://api.opencorporates.com/v0.4',

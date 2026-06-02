@@ -6,6 +6,8 @@ import { translate as t } from '@nextcloud/l10n'
 
 /**
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-30
+ * @param {object} item The object with a `_dateModified` timestamp.
+ * @return {number} Whole days since the object was last modified.
  */
 export function getDaysAge(item) {
 	if (!item._dateModified) return 0
@@ -13,11 +15,31 @@ export function getDaysAge(item) {
 }
 
 /**
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-31
+ * Days the lead has spent in its current stage. Prefers the precise
+ * `stageEnteredAt` field; falls back to `_dateModified` as a proxy.
+ *
+ * @spec openspec/changes/lead-management/tasks.md#3.1
+ * @param {object} item The lead object.
+ * @return {number} Whole days in the current stage.
  */
-export function isStale(item, entityType) {
+export function getDaysInStage(item) {
+	const stamp = item.stageEnteredAt || item._dateModified
+	if (!stamp) return 0
+	const parsed = new Date(stamp).getTime()
+	if (Number.isNaN(parsed)) return 0
+	return Math.max(0, Math.floor((Date.now() - parsed) / 86400000))
+}
+
+/**
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-31
+ * @param {object} item The lead object.
+ * @param {string} entityType The entity type (only leads can be stale).
+ * @param {number} threshold Days of inactivity before a lead is stale.
+ * @return {boolean} Whether the lead is stale.
+ */
+export function isStale(item, entityType, threshold = 14) {
 	if (entityType !== 'lead') return false
-	return getDaysAge(item) >= 14
+	return getDaysAge(item) >= threshold
 }
 
 /**
