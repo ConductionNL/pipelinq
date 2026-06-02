@@ -17,6 +17,7 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-39
+ * @spec openspec/changes/contactmomenten/tasks.md#task-1.2
  */
 
 declare(strict_types=1);
@@ -37,6 +38,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Controller for contactmoment API operations.
+ *
+ * @spec openspec/changes/contactmomenten/tasks.md#task-1.2
  */
 class ContactmomentController extends Controller
 {
@@ -71,6 +74,7 @@ class ContactmomentController extends Controller
      * @NoAdminRequired
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-39
+     * @spec openspec/changes/contactmomenten/tasks.md#task-1.2
      */
     public function destroy(string $id): JSONResponse
     {

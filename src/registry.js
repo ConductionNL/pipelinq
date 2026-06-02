@@ -19,6 +19,9 @@
 //   - openspec/changes/pipelinq-manifest-v1/design.md
 //   - hydra/openspec/architecture/adr-036-manifest-v2.md
 
+// --- Contactmomenten detail (custom delete calls permission-checked backend API). ---
+import ContactmomentDetailView from './views/contactmomenten/ContactmomentDetailView.vue'
+
 // --- MyWork — bespoke per-user surface mixing tasks + leads + requests. ---
 import MyWorkView from './views/MyWork.vue'
 
@@ -85,6 +88,13 @@ import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
  * @type {Record<string, { kind: string, component: object, _note?: string }>}
  */
 const registry = {
+	// --- Contactmomenten detail — custom delete calls permission-checked backend API. ---
+	ContactmomentDetailView: {
+		kind: 'page',
+		component: ContactmomentDetailView,
+		_note: 'Custom detail view for contactmomenten; overrides delete to call DELETE /api/contactmomenten/{id} for server-side permission checking (only creating agent or admin may delete).',
+	},
+
 	// --- MyWork — multi-entity user dashboard. ---
 	MyWorkView: {
 		kind: 'page',

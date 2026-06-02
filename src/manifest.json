@@ -545,8 +545,9 @@
 		{
 			"id": "ContactmomentDetail",
 			"route": "/contactmomenten/:id",
-			"type": "detail",
+			"type": "custom",
 			"title": "Contactmoment",
+			"component": "ContactmomentDetailView",
 			"config": {
 				"register": "pipelinq",
 				"schema": "contactmoment",

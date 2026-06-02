@@ -18,6 +18,7 @@
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-39
  * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-40
+ * @spec openspec/changes/contactmomenten/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
@@ -37,6 +38,8 @@ use Psr\Log\LoggerInterface;
  *
  * Handles permission-checked deletion: only the creating agent or a Nextcloud admin
  * may delete a contactmoment.
+ *
+ * @spec openspec/changes/contactmomenten/tasks.md#task-1.1
  */
 class ContactmomentService
 {
