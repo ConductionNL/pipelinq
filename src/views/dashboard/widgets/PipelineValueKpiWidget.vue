@@ -6,7 +6,7 @@
 		:icon="CurrencyEur"
 		variant="success"
 		horizontal
-		:route="{ name: 'Pipeline' }" />
+		:route="{ name: 'Pipelines' }" />
 </template>
 
 <script>
