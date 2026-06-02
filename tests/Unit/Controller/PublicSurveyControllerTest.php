@@ -88,12 +88,12 @@ class PublicSurveyControllerTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->request         = $this->createMock(IRequest::class);
-        $this->session         = $this->createMock(ISession::class);
-        $this->container       = $this->createMock(ContainerInterface::class);
-        $this->appManager      = $this->createMock(IAppManager::class);
-        $this->settingsService = $this->createMock(SettingsService::class);
-        $this->logger          = $this->createMock(LoggerInterface::class);
+        $this->request         = $this->createMock(originalClassName: IRequest::class);
+        $this->session         = $this->createMock(originalClassName: ISession::class);
+        $this->container       = $this->createMock(originalClassName: ContainerInterface::class);
+        $this->appManager      = $this->createMock(originalClassName: IAppManager::class);
+        $this->settingsService = $this->createMock(originalClassName: SettingsService::class);
+        $this->logger          = $this->createMock(originalClassName: LoggerInterface::class);
     }//end setUp()
 
     /**
@@ -122,8 +122,8 @@ class PublicSurveyControllerTest extends TestCase
      */
     private function buildObjectServiceMock(array $items): \OCA\OpenRegister\Service\ObjectService
     {
-        $mock       = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
-        $entityMock = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
+        $mock       = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
+        $entityMock = $this->createMock(originalClassName: \OCA\OpenRegister\Db\ObjectEntity::class);
         $mock->method('findAll')->willReturn(['results' => $items]);
         $mock->method('saveObject')->willReturn($entityMock);
         return $mock;
@@ -140,7 +140,7 @@ class PublicSurveyControllerTest extends TestCase
         $ref        = new \ReflectionMethod($controller, 'isPasswordProtected');
         $ref->setAccessible(true);
 
-        $this->assertFalse($ref->invoke($controller));
+        $this->assertFalse(condition: $ref->invoke($controller));
     }//end testIsPasswordProtectedReturnsFalse()
 
     /**
@@ -154,7 +154,7 @@ class PublicSurveyControllerTest extends TestCase
         $ref        = new \ReflectionMethod($controller, 'isValidToken');
         $ref->setAccessible(true);
 
-        $this->assertTrue($ref->invoke($controller));
+        $this->assertTrue(condition: $ref->invoke($controller));
     }//end testIsValidTokenAlwaysReturnsTrue()
 
     /**
@@ -171,13 +171,13 @@ class PublicSurveyControllerTest extends TestCase
                 ]
                 );
 
-        $objectServiceMock = $this->buildObjectServiceMock([]);
+        $objectServiceMock = $this->buildObjectServiceMock(items: []);
         $this->container->method('get')->willReturn($objectServiceMock);
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
 
         $response = $this->buildController()->show(token: 'bad-token');
 
-        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+        $this->assertSame(expected: Http::STATUS_NOT_FOUND, actual: $response->getStatus());
     }//end testShowReturns404WhenSurveyNotFound()
 
     /**
@@ -195,7 +195,7 @@ class PublicSurveyControllerTest extends TestCase
                 );
 
         $objectServiceMock = $this->buildObjectServiceMock(
-                [
+                items: [
                     ['id' => '1', 'status' => 'closed', 'token' => 'tok'],
                 ]
                 );
@@ -204,7 +204,7 @@ class PublicSurveyControllerTest extends TestCase
 
         $response = $this->buildController()->show(token: 'tok');
 
-        $this->assertSame(Http::STATUS_GONE, $response->getStatus());
+        $this->assertSame(expected: Http::STATUS_GONE, actual: $response->getStatus());
     }//end testShowReturns410ForInactiveSurvey()
 
     /**
@@ -222,7 +222,7 @@ class PublicSurveyControllerTest extends TestCase
                 );
 
         $objectServiceMock = $this->buildObjectServiceMock(
-                [
+                items: [
                     ['id' => '1', 'title' => 'My Survey', 'status' => 'active', 'token' => 'tok'],
                 ]
                 );
@@ -231,8 +231,8 @@ class PublicSurveyControllerTest extends TestCase
 
         $response = $this->buildController()->show(token: 'tok');
 
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $this->assertSame('My Survey', $response->getData()['title']);
+        $this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+        $this->assertSame(expected: 'My Survey', actual: $response->getData()['title']);
     }//end testShowReturnsActiveSurvey()
 
     /**
@@ -251,7 +251,7 @@ class PublicSurveyControllerTest extends TestCase
                 );
 
         $objectServiceMock = $this->buildObjectServiceMock(
-                [
+                items: [
                     ['id' => '1', 'status' => 'active', 'token' => 'tok'],
                 ]
                 );
@@ -262,7 +262,7 @@ class PublicSurveyControllerTest extends TestCase
 
         $response = $this->buildController()->submit(token: 'tok');
 
-        $this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+        $this->assertSame(expected: Http::STATUS_BAD_REQUEST, actual: $response->getStatus());
     }//end testSubmitReturns400WhenAnswersMissing()
 
     /**
@@ -281,7 +281,7 @@ class PublicSurveyControllerTest extends TestCase
                 );
 
         $objectServiceMock = $this->buildObjectServiceMock(
-                [
+                items: [
                     ['id' => '1', 'status' => 'active', 'token' => 'tok'],
                 ]
                 );
@@ -292,7 +292,7 @@ class PublicSurveyControllerTest extends TestCase
 
         $response = $this->buildController()->submit(token: 'tok');
 
-        $this->assertSame(Http::STATUS_SERVICE_UNAVAILABLE, $response->getStatus());
+        $this->assertSame(expected: Http::STATUS_SERVICE_UNAVAILABLE, actual: $response->getStatus());
     }//end testSubmitReturns503WhenNotConfigured()
 
     /**
@@ -331,8 +331,8 @@ class PublicSurveyControllerTest extends TestCase
 
         // Capture the data passed to saveObject so we can assert on it.
         $savedData         = null;
-        $entityMock        = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
-        $objectServiceMock = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $entityMock        = $this->createMock(originalClassName: \OCA\OpenRegister\Db\ObjectEntity::class);
+        $objectServiceMock = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
         $objectServiceMock->method('findAll')->willReturn(['results' => [$survey]]);
         $objectServiceMock->method('saveObject')
             ->willReturnCallback(
@@ -358,15 +358,15 @@ class PublicSurveyControllerTest extends TestCase
 
         $response = $this->buildController()->submit(token: 'tok');
 
-        $this->assertSame(Http::STATUS_CREATED, $response->getStatus());
+        $this->assertSame(expected: Http::STATUS_CREATED, actual: $response->getStatus());
 
         // The saved answers must only contain the two known question IDs.
-        $this->assertIsArray($savedData);
-        $this->assertArrayHasKey('answers', $savedData);
-        $this->assertArrayHasKey($knownId1, $savedData['answers']);
-        $this->assertArrayHasKey($knownId2, $savedData['answers']);
-        $this->assertArrayNotHasKey($unknownId, $savedData['answers'], 'Unknown answer key must be stripped by the allowlist');
-        $this->assertCount(2, $savedData['answers']);
+        $this->assertIsArray(actual: $savedData);
+        $this->assertArrayHasKey(key: 'answers', array: $savedData);
+        $this->assertArrayHasKey(key: $knownId1, array: $savedData['answers']);
+        $this->assertArrayHasKey(key: $knownId2, array: $savedData['answers']);
+        $this->assertArrayNotHasKey(key: $unknownId, array: $savedData['answers'], message: 'Unknown answer key must be stripped by the allowlist');
+        $this->assertCount(expectedCount: 2, haystack: $savedData['answers']);
     }//end testSubmitAllowlistStripsUnknownAnswerKeys()
 
     /**
@@ -398,8 +398,8 @@ class PublicSurveyControllerTest extends TestCase
                 );
 
         $savedData          = null;
-        $entityMock2        = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
-        $objectServiceMock2 = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $entityMock2        = $this->createMock(originalClassName: \OCA\OpenRegister\Db\ObjectEntity::class);
+        $objectServiceMock2 = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
         $objectServiceMock2->method('findAll')->willReturn(['results' => [$survey]]);
         $objectServiceMock2->method('saveObject')
             ->willReturnCallback(
@@ -424,13 +424,13 @@ class PublicSurveyControllerTest extends TestCase
 
         $response = $this->buildController()->submit(token: 'tok');
 
-        $this->assertSame(Http::STATUS_CREATED, $response->getStatus());
+        $this->assertSame(expected: Http::STATUS_CREATED, actual: $response->getStatus());
 
         // All answers must pass through when no question has an id (legacy).
-        $this->assertIsArray($savedData);
-        $this->assertArrayHasKey('answers', $savedData);
-        $this->assertCount(2, $savedData['answers']);
-        $this->assertArrayHasKey('q1', $savedData['answers']);
-        $this->assertArrayHasKey('q2', $savedData['answers']);
+        $this->assertIsArray(actual: $savedData);
+        $this->assertArrayHasKey(key: 'answers', array: $savedData);
+        $this->assertCount(expectedCount: 2, haystack: $savedData['answers']);
+        $this->assertArrayHasKey(key: 'q1', array: $savedData['answers']);
+        $this->assertArrayHasKey(key: 'q2', array: $savedData['answers']);
     }//end testSubmitAllowlistPermissiveForLegacySurveyWithoutQuestionIds()
 }//end class
