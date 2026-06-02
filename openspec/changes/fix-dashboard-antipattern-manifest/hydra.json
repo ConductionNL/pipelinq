@@ -8,7 +8,7 @@
       "cycle": 1,
       "trigger": "orchestrator",
       "started_at": "2026-06-02T14:04:04Z",
-      "ended_at": "2026-06-02T15:12:06Z",
+      "ended_at": "2026-06-02T15:53:59Z",
       "outcome": "done",
       "outcome_reason": "pipeline complete \u2014 reviews passed and applier passed (if run)",
       "pattern_tags": [],
