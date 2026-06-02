@@ -64,6 +64,60 @@ function tryLoadTranslations() {
 const RoutePageRenderer = { ...CnPageRenderer }
 
 /**
+ * Deep-merge an override object onto a base object. Plain objects merge
+ * recursively; arrays concatenate (so fragment `pages`/`menu` entries are
+ * appended to the bundled manifest); scalars from the override win.
+ *
+ * @param {object} base The base object (mutated and returned).
+ * @param {object} override The override object.
+ * @return {object} The merged base.
+ */
+function deepMergeManifest(base, override) {
+	for (const key of Object.keys(override)) {
+		const value = override[key]
+		if (Array.isArray(value)) {
+			base[key] = (Array.isArray(base[key]) ? base[key] : []).concat(value)
+		} else if (value && typeof value === 'object') {
+			base[key] = deepMergeManifest(
+				(base[key] && typeof base[key] === 'object' && !Array.isArray(base[key])) ? base[key] : {},
+				value,
+			)
+		} else {
+			base[key] = value
+		}
+	}
+	return base
+}
+
+/**
+ * Merge modular manifest fragments (src/manifest.d/*.json) onto the bundled
+ * manifest (ADR-037). Fragments let concurrent same-app builds add pages/menu
+ * entries by dropping a new JSON file instead of editing the shared
+ * manifest.json, eliminating merge conflicts. The `require.context` glob is
+ * resolved at build time; a placeholder fragment guarantees ≥1 match.
+ *
+ * @param {object} manifest The bundled manifest.
+ * @return {object} A new manifest with all fragments merged in.
+ */
+function mergeManifestFragments(manifest) {
+	const merged = JSON.parse(JSON.stringify(manifest))
+	try {
+		const context = require.context('./manifest.d', false, /\.json$/)
+		context.keys().sort().forEach((key) => {
+			const fragment = context(key)
+			deepMergeManifest(merged, (fragment && fragment.default) ? fragment.default : fragment)
+		})
+	} catch (e) {
+		// Non-fatal — if the fragment dir is absent the bundled manifest stands.
+		// eslint-disable-next-line no-console
+		console.warn('[pipelinq] manifest fragment merge skipped', e)
+	}
+	return merged
+}
+
+const mergedManifest = mergeManifestFragments(bundledManifest)
+
+/**
  * Build the vue-router config from the manifest. Each manifest page
  * becomes one route; the route's `name` IS `page.id` (per the lib's
  * manifest contract). Routes whose path declares a `:` parameter pass
@@ -88,7 +142,7 @@ function routesFromManifest(manifest) {
 const router = new VueRouter({
 	mode: 'history',
 	base: generateUrl('/apps/pipelinq'),
-	routes: routesFromManifest(bundledManifest),
+	routes: routesFromManifest(mergedManifest),
 })
 
 tryLoadTranslations()
@@ -110,7 +164,7 @@ new Vue({
 	router,
 	render: (h) => h(App, {
 		props: {
-			manifest: bundledManifest,
+			manifest: mergedManifest,
 			registry: registryProp,
 			pageTypes: pageTypesProp,
 		},
