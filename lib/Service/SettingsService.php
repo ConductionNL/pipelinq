@@ -70,6 +70,7 @@ class SettingsService
         'refundReason_schema',
         'posRefund_schema',
         'posRefundLine_schema',
+        'kassakoppelingAuditLog_schema',
         'complaint_sla_service',
         'complaint_sla_product',
         'complaint_sla_communication',

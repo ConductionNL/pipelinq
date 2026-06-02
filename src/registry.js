@@ -68,6 +68,8 @@ import PosTransactionFormView from './views/pos/PosTransactionForm.vue'
 import PosRefundListView from './views/pos/PosRefundList.vue'
 import PosRefundDetailView from './views/pos/PosRefundDetail.vue'
 import PosRefundFormView from './views/pos/PosRefundForm.vue'
+import KassakoppelingAuditListView from './views/kassakoppeling/AuditList.vue'
+import KassakoppelingAuditDetailView from './views/kassakoppeling/AuditDetail.vue'
 
 // --- Product barcode lookup (lib gap: index pages have no server-authoritative
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
@@ -239,6 +241,18 @@ const registry = {
 		kind: 'page',
 		component: PosRefundFormView,
 		_note: 'Bespoke return editor: select original lines with partial quantities, per-line reason + restock toggle and real-time refund totals; lib has no line-selection/refund page type.',
+	},
+
+	// --- Kassakoppeling audit log. ---
+	KassakoppelingAuditListView: {
+		kind: 'page',
+		component: KassakoppelingAuditListView,
+		_note: 'Append-only Kassakoppeling audit list; custom so rows navigate to the audit detail and the manager-only Belastingdienst export (XML/JSON) lives in the header — the lib list page has no signed-ledger export control.',
+	},
+	KassakoppelingAuditDetailView: {
+		kind: 'page',
+		component: KassakoppelingAuditDetailView,
+		_note: 'Audit entry detail with the cryptographic verification badge, hash-chain (signature / currentHash / previousHash) card and manual verify action; the lib detail page cannot express signature verification state.',
 	},
 
 	// --- Product barcode lookup. ---

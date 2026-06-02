@@ -93,6 +93,14 @@
 			"order": 96
 		},
 		{
+			"id": "KassakoppelingAudit",
+			"label": "Kassakoppeling audit",
+			"icon": "icon-category-security",
+			"route": "KassakoppelingAudit",
+			"section": "footer",
+			"order": 165
+		},
+		{
 			"id": "Pipeline",
 			"label": "Pipeline",
 			"icon": "icon-category-organization",
@@ -726,6 +734,28 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "posRefund"
+			}
+		},
+		{
+			"id": "KassakoppelingAudit",
+			"route": "/kassakoppeling/audit",
+			"type": "custom",
+			"title": "Kassakoppeling audit",
+			"component": "KassakoppelingAuditListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "kassakoppelingAuditLog"
+			}
+		},
+		{
+			"id": "KassakoppelingAuditDetail",
+			"route": "/kassakoppeling/audit/:id",
+			"type": "custom",
+			"title": "Audit entry",
+			"component": "KassakoppelingAuditDetailView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "kassakoppelingAuditLog"
 			}
 		},
 		{

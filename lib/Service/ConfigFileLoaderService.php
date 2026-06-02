@@ -29,6 +29,8 @@ use RuntimeException;
 
 /**
  * Service for loading and parsing configuration JSON files.
+ *
+ * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#1.1
  */
 class ConfigFileLoaderService
 {
@@ -128,18 +130,8 @@ class ConfigFileLoaderService
 
         $fragmentBlob = '';
         foreach ($fragmentFiles as $fragmentFile) {
-            $fragmentContent = file_get_contents($fragmentFile);
-            if ($fragmentContent === false) {
-                throw new RuntimeException("Failed to read register fragment: {$fragmentFile}");
-            }
-
-            $fragmentData = json_decode($fragmentContent, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new RuntimeException(
-                    "Invalid JSON in register fragment {$fragmentFile}: ".json_last_error_msg()
-                );
-            }
-
+            $fragmentContent = $this->readFragment(fragmentFile: $fragmentFile);
+            $fragmentData    = $this->decodeFragment(fragmentFile: $fragmentFile, content: $fragmentContent);
             if (is_array($fragmentData) === false) {
                 continue;
             }
@@ -148,18 +140,74 @@ class ConfigFileLoaderService
             $fragmentBlob .= $fragmentContent;
         }//end foreach
 
-        if ($fragmentBlob !== '') {
-            $baseVersion  = ($data['info']['version'] ?? '0.0.0');
-            $fragmentHash = substr(hash('sha256', $fragmentBlob), 0, 8);
-            if (isset($data['info']) === false || is_array($data['info']) === false) {
-                $data['info'] = [];
-            }
-
-            $data['info']['version'] = $baseVersion.'+frag.'.$fragmentHash;
+        if ($fragmentBlob === '') {
+            return $data;
         }
 
-        return $data;
+        return $this->stampFragmentVersion(data: $data, fragmentBlob: $fragmentBlob);
     }//end mergeRegisterFragments()
+
+    /**
+     * Read a register fragment file's raw contents.
+     *
+     * @param string $fragmentFile The absolute fragment path.
+     *
+     * @return string The file contents.
+     *
+     * @throws RuntimeException If the file cannot be read.
+     */
+    private function readFragment(string $fragmentFile): string
+    {
+        $fragmentContent = file_get_contents($fragmentFile);
+        if ($fragmentContent === false) {
+            throw new RuntimeException("Failed to read register fragment: {$fragmentFile}");
+        }
+
+        return $fragmentContent;
+    }//end readFragment()
+
+    /**
+     * Decode a register fragment's JSON contents.
+     *
+     * @param string $fragmentFile The absolute fragment path (for error context).
+     * @param string $content      The raw JSON contents.
+     *
+     * @return mixed The decoded value (an array for a valid fragment).
+     *
+     * @throws RuntimeException If the JSON is invalid.
+     */
+    private function decodeFragment(string $fragmentFile, string $content): mixed
+    {
+        $fragmentData = json_decode($content, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new RuntimeException(
+                "Invalid JSON in register fragment {$fragmentFile}: ".json_last_error_msg()
+            );
+        }
+
+        return $fragmentData;
+    }//end decodeFragment()
+
+    /**
+     * Fold a short hash of all fragment content into info.version (ADR-037).
+     *
+     * @param array  $data         The merged configuration data.
+     * @param string $fragmentBlob The concatenated fragment contents.
+     *
+     * @return array The configuration data with a versioned info block.
+     */
+    private function stampFragmentVersion(array $data, string $fragmentBlob): array
+    {
+        $baseVersion  = ($data['info']['version'] ?? '0.0.0');
+        $fragmentHash = substr(hash('sha256', $fragmentBlob), 0, 8);
+        if (isset($data['info']) === false || is_array($data['info']) === false) {
+            $data['info'] = [];
+        }
+
+        $data['info']['version'] = $baseVersion.'+frag.'.$fragmentHash;
+
+        return $data;
+    }//end stampFragmentVersion()
 
     /**
      * Recursively deep-merge an override array onto a base array.
@@ -208,7 +256,7 @@ class ConfigFileLoaderService
         }
 
         $expectedKey = 0;
-        foreach ($value as $key => $unused) {
+        foreach (array_keys($value) as $key) {
             if ($key !== $expectedKey) {
                 return false;
             }

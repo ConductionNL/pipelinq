@@ -1,0 +1,108 @@
+{
+  "components": {
+    "schemas": {
+      "kassakoppelingAuditLog": {
+        "slug": "kassakoppelingAuditLog",
+        "title": "Kassakoppeling Audit Log",
+        "icon": "ShieldCheck",
+        "version": "1.0.0",
+        "summary": "An append-only, cryptographically signed POS audit entry (Belastingdienst Kassakoppeling).",
+        "description": "Immutable hash-chained ledger of every cash-register action (sale, void, refund, no-sale) for Belastingdienst Kassakoppeling compliance. Each entry carries an HMAC-SHA256 signature over its server-authoritative fields plus a SHA-256 currentHash linking it to the previousHash of the prior entry on the same register, forming a tamper-evident chain. Entries are written once via POST only and are never updated or deleted after creation; the signature, hash chain and timestamp are computed server-side and must never be trusted from the client. Mapped to Schema.org Action.",
+        "@type": "schema:Action",
+        "required": [
+          "operatorId",
+          "registerNumber",
+          "action",
+          "amount",
+          "timestamp",
+          "signature",
+          "previousHash",
+          "currentHash"
+        ],
+        "properties": {
+          "operatorId": {
+            "type": "string",
+            "description": "Nextcloud user UID or external operator identifier of the cashier who performed the action.",
+            "maxLength": 255,
+            "title": "Operator",
+            "facetable": true
+          },
+          "registerNumber": {
+            "type": "string",
+            "description": "POS register / terminal number, e.g. REG-001.",
+            "maxLength": 64,
+            "title": "Register",
+            "facetable": true
+          },
+          "action": {
+            "type": "string",
+            "description": "The cash-register action that was recorded.",
+            "enum": [
+              "sale",
+              "void",
+              "refund",
+              "no-sale"
+            ],
+            "title": "Action",
+            "facetable": true
+          },
+          "amount": {
+            "type": "integer",
+            "description": "Transaction amount in cents (EUR) to avoid floating-point precision loss.",
+            "title": "Amount"
+          },
+          "itemCount": {
+            "type": "integer",
+            "description": "Number of items in the transaction."
+          },
+          "taxAmount": {
+            "type": "integer",
+            "description": "VAT / tax amount in cents (EUR)."
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of the action (server-stamped, immutable).",
+            "format": "date-time",
+            "facetable": true
+          },
+          "transactionUuid": {
+            "type": "string",
+            "description": "Optional UUID reference to a pos-transaction-core transaction for cross-app traceability.",
+            "maxLength": 64,
+            "facetable": true
+          },
+          "signature": {
+            "type": "string",
+            "description": "HMAC-SHA256 hex digest computed server-side over the entry's authoritative fields and the secret key.",
+            "maxLength": 128
+          },
+          "previousHash": {
+            "type": "string",
+            "description": "currentHash of the previous audit entry on the same register, or '0' for the first entry.",
+            "maxLength": 128
+          },
+          "currentHash": {
+            "type": "string",
+            "description": "SHA-256 hex digest of this entry's fields and previousHash, forming the tamper-evident chain link.",
+            "maxLength": 128
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional operator note, e.g. 'void: customer requested refund'.",
+            "maxLength": 512
+          },
+          "verified": {
+            "type": "boolean",
+            "description": "Verification flag set by a signature/hash-chain check. Null means not yet verified.",
+            "facetable": true
+          },
+          "exportedAt": {
+            "type": "string",
+            "description": "ISO 8601 timestamp when the entry was exported to the Belastingdienst.",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}

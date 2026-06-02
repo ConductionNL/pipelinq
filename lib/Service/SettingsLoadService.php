@@ -71,6 +71,7 @@ class SettingsLoadService
         'refundReason',
         'posRefund',
         'posRefundLine',
+        'kassakoppelingAuditLog',
     ];
 
     /**

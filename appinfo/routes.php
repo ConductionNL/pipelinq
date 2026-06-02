@@ -119,6 +119,18 @@ return [
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
 
+        // Kassakoppeling append-only audit log (Belastingdienst compliance).
+        // The append-only ledger has no update/delete CRUD: create is POST-only,
+        // PUT/PATCH/DELETE map to a 405 handler. The static /export route and the
+        // /{id}/verify action must precede the /{id} wildcard.
+        ['name' => 'kassakoppelingAudit#create', 'url' => '/api/kassakoppeling/audit', 'verb' => 'POST'],
+        ['name' => 'kassakoppelingAudit#index',  'url' => '/api/kassakoppeling/audit', 'verb' => 'GET'],
+        ['name' => 'kassakoppelingAudit#exportBelastingdienst', 'url' => '/api/kassakoppeling/audit/export', 'verb' => 'GET'],
+        ['name' => 'kassakoppelingAudit#verify', 'url' => '/api/kassakoppeling/audit/{id}/verify', 'verb' => 'POST'],
+        ['name' => 'kassakoppelingAudit#show',   'url' => '/api/kassakoppeling/audit/{id}', 'verb' => 'GET'],
+        ['name' => 'kassakoppelingAudit#update', 'url' => '/api/kassakoppeling/audit/{id}', 'verb' => 'PUT'],
+        ['name' => 'kassakoppelingAudit#update', 'url' => '/api/kassakoppeling/audit/{id}', 'verb' => 'PATCH'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
