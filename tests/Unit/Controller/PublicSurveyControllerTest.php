@@ -13,6 +13,9 @@
  * @version GIT: <git-id>
  *
  * @link https://pipelinq.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -307,7 +310,8 @@ class PublicSurveyControllerTest extends TestCase
         ]);
 
         // Capture the data passed to saveObject so we can assert on it.
-        $savedData = null;
+        $savedData         = null;
+        $entityMock        = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
         $objectServiceMock = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
         $objectServiceMock->method('findAll')->willReturn(['results' => [$survey]]);
         $objectServiceMock->method('saveObject')
@@ -371,7 +375,8 @@ class PublicSurveyControllerTest extends TestCase
             'surveyResponse_schema' => 'response-schema-id',
         ]);
 
-        $savedData = null;
+        $savedData          = null;
+        $entityMock2        = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
         $objectServiceMock2 = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
         $objectServiceMock2->method('findAll')->willReturn(['results' => [$survey]]);
         $objectServiceMock2->method('saveObject')
