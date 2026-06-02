@@ -1,0 +1,7 @@
+{
+  "schema_version": 2,
+  "spec_slug": "appointment-booking-10-calendar-sync",
+  "app": "pipelinq",
+  "kind": "code",
+  "depends_on": ["appointment-booking-09-walkin-queue"]
+}
