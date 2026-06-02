@@ -235,6 +235,11 @@
 			</div>
 		</CnDetailCard>
 
+		<CommunicationHistory
+			v-if="!isNew && !loading && !editing"
+			entity-type="client"
+			:entity-id="clientId" />
+
 		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Activity')">
 			<ActivityTimeline :entity-type="'client'" :entity-id="clientId" />
 		</CnDetailCard>
@@ -332,6 +337,7 @@ import ClientForm from './ClientForm.vue'
 import ContactRelationships from '../../components/ContactRelationships.vue'
 import ContactmomentQuickLog from '../../components/ContactmomentQuickLog.vue'
 import ActivityTimeline from '../../components/ActivityTimeline.vue'
+import CommunicationHistory from '../../components/CommunicationHistory.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -345,6 +351,7 @@ export default {
 		ContactRelationships,
 		ContactmomentQuickLog,
 		ActivityTimeline,
+		CommunicationHistory,
 	},
 	props: {
 		clientId: {

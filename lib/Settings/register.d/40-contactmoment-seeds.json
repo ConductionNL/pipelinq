@@ -1,0 +1,62 @@
+{
+    "components": {
+        "objects": [
+            {
+                "@self": { "register": "pipelinq", "schema": "contactmoment", "slug": "contactmoment-001" },
+                "subject": "Vraag over status vergunningsaanvraag",
+                "summary": "Mevrouw Bakker belde in over de status van haar omgevingsvergunning. Verwachte afhandeling binnen 3 werkdagen toegezegd.",
+                "channel": "telefoon",
+                "outcome": "Informatie verstrekt",
+                "client": "client-001",
+                "agent": "mvanderberg",
+                "contactedAt": "2026-04-14T09:12:00Z",
+                "duration": "PT7M30S",
+                "channelMetadata": { "direction": "inbound", "phoneNumber": "085-0123456" }
+            },
+            {
+                "@self": { "register": "pipelinq", "schema": "contactmoment", "slug": "contactmoment-002" },
+                "subject": "Klacht over aanslagbiljet gemeentelijke belasting",
+                "summary": "De heer Jansen stuurde een e-mail met bezwaar tegen het aanslagbiljet. Doorverwezen naar de afdeling Belastingen.",
+                "channel": "email",
+                "outcome": "Doorverwezen",
+                "client": "client-001",
+                "agent": "sdejong",
+                "contactedAt": "2026-04-11T14:30:00Z",
+                "channelMetadata": { "emailThreadId": "MSG-20260411-4492", "direction": "inbound" }
+            },
+            {
+                "@self": { "register": "pipelinq", "schema": "contactmoment", "slug": "contactmoment-003" },
+                "subject": "Baliebezoek aanvraag parkeervergunning",
+                "summary": "Meneer Ahmed Hassan bezocht de balie voor een parkeervergunning bewonerszone C. Aanvraagformulier ingevuld en ingediend.",
+                "channel": "balie",
+                "outcome": "Aanvraag ingediend",
+                "client": "client-001",
+                "agent": "lvanhouten",
+                "contactedAt": "2026-04-10T10:45:00Z",
+                "channelMetadata": { "counterLocation": "Balie 3 - Stadhuis" }
+            },
+            {
+                "@self": { "register": "pipelinq", "schema": "contactmoment", "slug": "contactmoment-004" },
+                "subject": "Chatgesprek informatie over WMO-aanvraag",
+                "summary": "Mevrouw Pieterse vroeg via de chat naar de benodigde documenten voor een WMO-aanvraag. Documentenlijst per e-mail verstuurd.",
+                "channel": "chat",
+                "outcome": "Informatie verstrekt",
+                "client": "client-001",
+                "agent": "kbosma",
+                "contactedAt": "2026-04-09T11:20:00Z",
+                "channelMetadata": { "chatSessionId": "CS-20260409-8831" }
+            },
+            {
+                "@self": { "register": "pipelinq", "schema": "contactmoment", "slug": "contactmoment-005" },
+                "subject": "Brief bezwaar bestemmingsplan",
+                "summary": "De stichting Groen Amsterdam diende een formeel bezwaarschrift in per brief tegen het herziene bestemmingsplan Noord. Ontvangst bevestigd.",
+                "channel": "brief",
+                "outcome": "In behandeling",
+                "client": "client-001",
+                "agent": "mvanderberg",
+                "contactedAt": "2026-04-07T08:00:00Z",
+                "channelMetadata": { "letterReference": "BZW-2026-0042" }
+            }
+        ]
+    }
+}

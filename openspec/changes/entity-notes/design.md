@@ -218,15 +218,17 @@ Five contactmoment seed objects (Dutch municipality / non-profit context):
 
 ## Files Changed
 
-### New Files
+### New Files (as built — corrects names per dedup findings)
 - `lib/Controller/ActivityController.php`
-- `lib/Service/ActivityService.php`
+- `lib/Service/EntityActivityService.php` (NOT `ActivityService` — that name is taken by the NC activity-stream publisher; composes `ActivityTimelineService` + `NotesService`)
 - `src/components/CommunicationHistory.vue`
+- `lib/Settings/register.d/40-contactmoment-seeds.json` (ADR-037 fragment, NOT the monolith — carries the 5 contactmoment seeds)
 
 ### Modified Files
-- `appinfo/routes.php` — Add activity API route
-- `src/views/clients/ClientDetail.vue` — Add `CommunicationHistory` section
-- `src/views/contacts/ContactDetail.vue` — Add `CommunicationHistory` section
-- `src/views/leads/LeadDetail.vue` — Add `CommunicationHistory` section
-- `src/views/requests/RequestDetail.vue` — Add `CommunicationHistory` section
-- `lib/Settings/pipelinq_register.json` — Add 5 contactmoment seed objects
+- `appinfo/routes.php` — Add `activity#index` route (before the SPA catch-all)
+- `lib/Service/ConfigFileLoaderService.php` — Add the fleet-standard `components.objects[]` append rule to `deepMergeConfig` (+ pre-existing PHPMD cleanups in touched file)
+- `src/views/{clients,contacts,leads,requests}/*Detail.vue` — Add `CommunicationHistory` section
+- `l10n/{en,nl,en_US}.json` + `l10n/{en,nl}.js` — 4 new keys (en+nl)
+- `tests/Unit/{Controller/ActivityControllerTest,Service/EntityActivityServiceTest,Service/ConfigFileLoaderServiceTest}.php`
+
+> Notes (REQ-ENT-001) need no new code: they are already wired into all four detail views via `CnDetailPage`'s sidebar (`object-type="pipelinq_*"`), backed by the existing `NotesController`/`NotesService` (Nextcloud `ICommentsManager`), not the OpenRegister built-in `notes` field assumed above.

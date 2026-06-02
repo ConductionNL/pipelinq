@@ -246,6 +246,12 @@
 			</div>
 		</CnDetailCard>
 
+		<!-- Communication history -->
+		<CommunicationHistory
+			v-if="!isNew && !loading && !editing"
+			entity-type="request"
+			:entity-id="requestId" />
+
 		<!-- Activity timeline -->
 		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Activity')">
 			<ActivityTimeline :entity-type="'request'" :entity-id="requestId" />
@@ -291,6 +297,7 @@ import RequestForm from './RequestForm.vue'
 import RoutingSuggestionPanel from '../../components/RoutingSuggestionPanel.vue'
 import ContactmomentQuickLog from '../../components/ContactmomentQuickLog.vue'
 import ActivityTimeline from '../../components/ActivityTimeline.vue'
+import CommunicationHistory from '../../components/CommunicationHistory.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useQueuesStore } from '../../store/modules/queues.js'
 import {
@@ -313,6 +320,7 @@ export default {
 		RoutingSuggestionPanel,
 		ContactmomentQuickLog,
 		ActivityTimeline,
+		CommunicationHistory,
 	},
 	props: {
 		requestId: {

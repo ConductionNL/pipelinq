@@ -132,6 +132,12 @@
 				@sync-value="syncLeadValue" />
 		</CnDetailCard>
 
+		<!-- Communication history -->
+		<CommunicationHistory
+			v-if="!isNew && !loading && !editing"
+			entity-type="lead"
+			:entity-id="leadId" />
+
 		<!-- Activity timeline -->
 		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Activity')">
 			<ActivityTimeline :entity-type="'lead'" :entity-id="leadId" />
@@ -163,6 +169,7 @@ import LeadForm from './LeadForm.vue'
 import LeadProducts from '../../components/LeadProducts.vue'
 import LeadContactRoles from '../../components/LeadContactRoles.vue'
 import ActivityTimeline from '../../components/ActivityTimeline.vue'
+import CommunicationHistory from '../../components/CommunicationHistory.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -176,6 +183,7 @@ export default {
 		LeadProducts,
 		LeadContactRoles,
 		ActivityTimeline,
+		CommunicationHistory,
 	},
 	props: {
 		leadId: {

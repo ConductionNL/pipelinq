@@ -76,6 +76,12 @@
 				entity-type="contact"
 				:entity-name="contactData.name || ''" />
 		</CnDetailCard>
+
+		<!-- Communication history -->
+		<CommunicationHistory
+			v-if="!isNew && !loading && !editing"
+			entity-type="contact"
+			:entity-id="contactId" />
 	</CnDetailPage>
 </template>
 
@@ -86,6 +92,7 @@ import { generateUrl } from '@nextcloud/router'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import ContactForm from './ContactForm.vue'
 import ContactRelationships from '../../components/ContactRelationships.vue'
+import CommunicationHistory from '../../components/CommunicationHistory.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -96,6 +103,7 @@ export default {
 		CnDetailCard,
 		ContactForm,
 		ContactRelationships,
+		CommunicationHistory,
 	},
 	props: {
 		contactId: {

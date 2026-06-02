@@ -89,6 +89,9 @@ return [
         ['name' => 'activityTimeline#getWorklog',   'url' => '/api/worklog',  'verb' => 'GET'],
         ['name' => 'activityTimeline#createWorklog','url' => '/api/worklog',  'verb' => 'POST'],
 
+        // Per-entity activity feed (notes + contactmomenten) — static segment, no wildcard collision.
+        ['name' => 'activity#index', 'url' => '/api/activity/{entityType}/{entityId}', 'verb' => 'GET'],
+
         // Skill-based routing suggestions — must precede SPA catch-all.
         ['name' => 'routing#getSuggestions', 'url' => '/api/routing/suggestions', 'verb' => 'GET'],
 

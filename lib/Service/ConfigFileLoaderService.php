@@ -29,6 +29,9 @@ use RuntimeException;
 
 /**
  * Service for loading and parsing configuration JSON files.
+ *
+ * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-10
+ * @spec openspec/changes/entity-notes/tasks.md#task-1
  */
 class ConfigFileLoaderService
 {
@@ -148,25 +151,48 @@ class ConfigFileLoaderService
             $fragmentBlob .= $fragmentContent;
         }//end foreach
 
-        if ($fragmentBlob !== '') {
-            $baseVersion  = ($data['info']['version'] ?? '0.0.0');
-            $fragmentHash = substr(hash('sha256', $fragmentBlob), 0, 8);
-            if (isset($data['info']) === false || is_array($data['info']) === false) {
-                $data['info'] = [];
-            }
+        return $this->stampFragmentVersion(data: $data, fragmentBlob: $fragmentBlob);
+    }//end mergeRegisterFragments()
 
-            $data['info']['version'] = $baseVersion.'+frag.'.$fragmentHash;
+    /**
+     * Fold a short hash of the merged fragment content into `info.version`.
+     *
+     * OpenRegister's import is version-gated, so changing the effective version
+     * whenever any fragment changes forces a re-import (ADR-037). When no
+     * fragment contributed content, the data is returned unchanged.
+     *
+     * @param array  $data         The merged configuration data.
+     * @param string $fragmentBlob The concatenated raw fragment content.
+     *
+     * @return array The data with a fragment-stamped version (when applicable).
+     */
+    private function stampFragmentVersion(array $data, string $fragmentBlob): array
+    {
+        if ($fragmentBlob === '') {
+            return $data;
         }
 
+        if (isset($data['info']) === false || is_array($data['info']) === false) {
+            $data['info'] = [];
+        }
+
+        $baseVersion  = ($data['info']['version'] ?? '0.0.0');
+        $fragmentHash = substr(hash('sha256', $fragmentBlob), 0, 8);
+        $data['info']['version'] = $baseVersion.'+frag.'.$fragmentHash;
+
         return $data;
-    }//end mergeRegisterFragments()
+    }//end stampFragmentVersion()
 
     /**
      * Recursively deep-merge an override array onto a base array.
      *
      * Associative keys are merged recursively; scalar and list values from the
-     * override replace those in the base. This mirrors the fragment-merge
-     * semantics shared across the fleet (ADR-037).
+     * override replace those in the base. The sole exception is the seed
+     * `objects` list: when both the base and the fragment provide a list under
+     * an `objects` key, the two lists are concatenated (`array_merge`) rather
+     * than replaced, so a fragment can contribute additional seed objects
+     * without clobbering the monolith's existing seeds (ADR-037). This mirrors
+     * the fragment-merge semantics shared across the fleet.
      *
      * @param array $base     The base configuration array.
      * @param array $override The fragment to merge on top of the base.
@@ -176,12 +202,14 @@ class ConfigFileLoaderService
     private static function deepMergeConfig(array $base, array $override): array
     {
         foreach ($override as $key => $value) {
-            if (is_array($value) === true
-                && isset($base[$key]) === true
-                && is_array($base[$key]) === true
-                && self::isList(value: $value) === false
-                && self::isList(value: $base[$key]) === false
-            ) {
+            // Seed objects (components.objects[]) are append-only: concatenate
+            // the fragment's seed list onto the base list instead of replacing.
+            if (self::shouldAppendObjects(key: $key, base: $base, value: $value) === true) {
+                $base[$key] = array_merge($base[$key], $value);
+                continue;
+            }
+
+            if (self::shouldMergeRecursively(base: $base, key: $key, value: $value) === true) {
                 $base[$key] = self::deepMergeConfig(base: $base[$key], override: $value);
                 continue;
             }
@@ -191,6 +219,43 @@ class ConfigFileLoaderService
 
         return $base;
     }//end deepMergeConfig()
+
+    /**
+     * Whether a key/value pair is an append-only seed `objects` list.
+     *
+     * @param string $key   The current override key.
+     * @param array  $base  The base array being merged into.
+     * @param mixed  $value The override value.
+     *
+     * @return bool True when both base and override hold an `objects` list.
+     */
+    private static function shouldAppendObjects(string $key, array $base, mixed $value): bool
+    {
+        return $key === 'objects'
+            && is_array($value) === true
+            && self::isList(value: $value) === true
+            && isset($base[$key]) === true
+            && is_array($base[$key]) === true
+            && self::isList(value: $base[$key]) === true;
+    }//end shouldAppendObjects()
+
+    /**
+     * Whether a key/value pair should be merged recursively (both are maps).
+     *
+     * @param array  $base  The base array being merged into.
+     * @param string $key   The current override key.
+     * @param mixed  $value The override value.
+     *
+     * @return bool True when both base and override hold associative arrays.
+     */
+    private static function shouldMergeRecursively(array $base, string $key, mixed $value): bool
+    {
+        return is_array($value) === true
+            && isset($base[$key]) === true
+            && is_array($base[$key]) === true
+            && self::isList(value: $value) === false
+            && self::isList(value: $base[$key]) === false;
+    }//end shouldMergeRecursively()
 
     /**
      * Determine whether an array is a sequential list (zero-indexed, no gaps).
@@ -208,7 +273,7 @@ class ConfigFileLoaderService
         }
 
         $expectedKey = 0;
-        foreach ($value as $key => $unused) {
+        foreach (array_keys($value) as $key) {
             if ($key !== $expectedKey) {
                 return false;
             }
