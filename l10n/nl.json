@@ -1121,7 +1121,21 @@
         "Failed to save refund.": "Opslaan van retour mislukt.",
         "This will reject the refund. Enter a reason for the rejection.": "Hiermee wijs je de retour af. Vul een reden in voor de afwijzing.",
         "Vul een reden in voor de afwijzing": "Vul een reden in voor de afwijzing",
-        "Max {max}": "Max {max}"
+        "Max {max}": "Max {max}",
+        "Billing categories": "Factuurcategorieën",
+        "New category": "Nieuwe categorie",
+        "Billing category": "Factuurcategorie",
+        "Category code": "Categoriecode",
+        "Billable": "Declarabel",
+        "Non-billable": "Niet-declarabel",
+        "Internal": "Intern",
+        "Default category": "Standaardcategorie",
+        "WBSO reference required": "WBSO-referentie verplicht",
+        "DBA contractor hours": "DBA-opdrachturen",
+        "Hours by billing category": "Uren per factuurcategorie",
+        "Uncategorized": "Zonder categorie",
+        "No active billing categories found": "Geen actieve factuurcategorieën gevonden",
+        "Category code {code} is already in use": "Categoriecode {code} is al in gebruik"
     },
     "plurals": {}
 }

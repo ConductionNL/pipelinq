@@ -1135,7 +1135,21 @@ OC.L10N.register(
     "Failed to save refund." : "Failed to save refund.",
     "This will reject the refund. Enter a reason for the rejection." : "This will reject the refund. Enter a reason for the rejection.",
     "Vul een reden in voor de afwijzing" : "Enter a reason for the rejection",
-    "Max {max}" : "Max {max}"
+    "Max {max}" : "Max {max}",
+    "Billing categories" : "Billing categories",
+    "New category" : "New category",
+    "Billing category" : "Billing category",
+    "Category code" : "Category code",
+    "Billable" : "Billable",
+    "Non-billable" : "Non-billable",
+    "Internal" : "Internal",
+    "Default category" : "Default category",
+    "WBSO reference required" : "WBSO reference required",
+    "DBA contractor hours" : "DBA contractor hours",
+    "Hours by billing category" : "Hours by billing category",
+    "Uncategorized" : "Uncategorized",
+    "No active billing categories found" : "No active billing categories found",
+    "Category code {code} is already in use" : "Category code {code} is already in use"
 },
 "nplurals=2; plural=(n != 1);"
 );

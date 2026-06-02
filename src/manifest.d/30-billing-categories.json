@@ -1,0 +1,53 @@
+{
+	"menu": [
+		{
+			"id": "BillingCategories",
+			"label": "Billing categories",
+			"icon": "icon-tag",
+			"route": "BillingCategories",
+			"order": 235
+		}
+	],
+	"pages": [
+		{
+			"id": "BillingCategories",
+			"route": "/billing-categories",
+			"type": "index",
+			"title": "Billing categories",
+			"config": {
+				"register": "pipelinq",
+				"schema": "billingCategory",
+				"columns": [
+					"name",
+					"code",
+					"type",
+					"isDefault",
+					"isActive"
+				],
+				"sort": [
+					{ "field": "type", "direction": "asc" },
+					{ "field": "name", "direction": "asc" }
+				],
+				"facets": [
+					"type",
+					"isActive"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			}
+		},
+		{
+			"id": "BillingCategoryDetail",
+			"route": "/billing-categories/:id",
+			"type": "detail",
+			"title": "Billing category",
+			"config": {
+				"register": "pipelinq",
+				"schema": "billingCategory",
+				"sidebar": true
+			}
+		}
+	]
+}

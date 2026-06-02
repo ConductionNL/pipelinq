@@ -103,4 +103,156 @@ class ConfigFileLoaderServiceTest extends TestCase
 
         $service->loadConfigurationFile();
     }//end testLoadConfigurationFileThrowsOnMissingFile()
+
+    /**
+     * Invoke the private deepMergeConfig via reflection.
+     *
+     * @param array $base     The base configuration array.
+     * @param array $override The fragment to merge on top.
+     *
+     * @return array The merged result.
+     */
+    private function deepMerge(array $base, array $override): array
+    {
+        $method = new \ReflectionMethod(ConfigFileLoaderService::class, 'deepMergeConfig');
+        $method->setAccessible(true);
+
+        return $method->invoke(null, $base, $override);
+    }//end deepMerge()
+
+    /**
+     * Seed/demo objects from a fragment must be appended, not replace the base.
+     *
+     * Guards ADR-037: a fragment that ships its own components.objects[] seeds
+     * must not clobber the monolith's existing seed objects.
+     *
+     * @return void
+     */
+    public function testFragmentObjectsAreAppendedNotReplaced(): void
+    {
+        $base = [
+            'components' => [
+                'objects' => [
+                    ['@self' => ['slug' => 'base-one'], 'name' => 'Base One'],
+                    ['@self' => ['slug' => 'base-two'], 'name' => 'Base Two'],
+                ],
+            ],
+        ];
+
+        $override = [
+            'components' => [
+                'objects' => [
+                    ['@self' => ['slug' => 'frag-one'], 'name' => 'Fragment One'],
+                ],
+            ],
+        ];
+
+        $result = $this->deepMerge($base, $override);
+        $slugs  = array_map(
+            static fn (array $o): string => $o['@self']['slug'],
+            $result['components']['objects']
+        );
+
+        $this->assertCount(3, $result['components']['objects']);
+        $this->assertSame(['base-one', 'base-two', 'frag-one'], $slugs);
+    }//end testFragmentObjectsAreAppendedNotReplaced()
+
+    /**
+     * Re-merging the same fragment object is idempotent (slug de-duplicated).
+     *
+     * @return void
+     */
+    public function testFragmentObjectsAreDeduplicatedBySlug(): void
+    {
+        $base = [
+            'components' => [
+                'objects' => [
+                    ['@self' => ['slug' => 'shared'], 'name' => 'Original'],
+                ],
+            ],
+        ];
+
+        $override = [
+            'components' => [
+                'objects' => [
+                    ['@self' => ['slug' => 'shared'], 'name' => 'Duplicate'],
+                    ['@self' => ['slug' => 'new'], 'name' => 'New'],
+                ],
+            ],
+        ];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertCount(2, $result['components']['objects']);
+        $this->assertSame('Original', $result['components']['objects'][0]['name']);
+        $this->assertSame('new', $result['components']['objects'][1]['@self']['slug']);
+    }//end testFragmentObjectsAreDeduplicatedBySlug()
+
+    /**
+     * A register schema-membership list from a fragment must be appended.
+     *
+     * @return void
+     */
+    public function testRegisterSchemaListIsAppendedNotReplaced(): void
+    {
+        $base = [
+            'components' => [
+                'registers' => [
+                    'pipelinq' => [
+                        'slug'    => 'pipelinq',
+                        'schemas' => ['client', 'contact'],
+                    ],
+                ],
+            ],
+        ];
+
+        $override = [
+            'components' => [
+                'registers' => [
+                    'pipelinq' => [
+                        'schemas' => ['billingCategory'],
+                    ],
+                ],
+            ],
+        ];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(
+            ['client', 'contact', 'billingCategory'],
+            $result['components']['registers']['pipelinq']['schemas']
+        );
+        $this->assertSame('pipelinq', $result['components']['registers']['pipelinq']['slug']);
+    }//end testRegisterSchemaListIsAppendedNotReplaced()
+
+    /**
+     * A duplicate schema slug in the membership list is not added twice.
+     *
+     * @return void
+     */
+    public function testRegisterSchemaListDeduplicates(): void
+    {
+        $base     = ['schemas' => ['client', 'contact']];
+        $override = ['schemas' => ['contact', 'lead']];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(['client', 'contact', 'lead'], $result['schemas']);
+    }//end testRegisterSchemaListDeduplicates()
+
+    /**
+     * Non-append lists (e.g. 'required') keep replace semantics.
+     *
+     * @return void
+     */
+    public function testNonAppendListsAreReplaced(): void
+    {
+        $base     = ['required' => ['name'], 'title' => 'Base'];
+        $override = ['required' => ['code', 'type']];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(['code', 'type'], $result['required']);
+        $this->assertSame('Base', $result['title']);
+    }//end testNonAppendListsAreReplaced()
 }//end class

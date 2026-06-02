@@ -29,6 +29,8 @@ use RuntimeException;
 
 /**
  * Service for loading and parsing configuration JSON files.
+ *
+ * @spec openspec/changes/billable-categories-and-tags/tasks.md#task-5.1
  */
 class ConfigFileLoaderService
 {
@@ -162,11 +164,32 @@ class ConfigFileLoaderService
     }//end mergeRegisterFragments()
 
     /**
+     * Configuration keys whose list values are *appended* (concatenated) across
+     * fragments rather than replaced.
+     *
+     * `objects` holds seed/demo objects and `schemas` holds the per-register
+     * schema-membership list. A fragment that contributes a new schema or seed
+     * object must add to these lists, never overwrite the monolith's existing
+     * entries — replacing them would silently drop every base seed object and
+     * detach every base schema from its register. All other lists keep the
+     * fleet-standard replace semantics (ADR-037).
+     *
+     * @var string[]
+     */
+    private const APPEND_LIST_KEYS = [
+        'objects',
+        'schemas',
+    ];
+
+    /**
      * Recursively deep-merge an override array onto a base array.
      *
-     * Associative keys are merged recursively; scalar and list values from the
-     * override replace those in the base. This mirrors the fragment-merge
-     * semantics shared across the fleet (ADR-037).
+     * Associative keys are merged recursively. List values are normally
+     * replaced by the override, except for the membership lists named in
+     * {@see self::APPEND_LIST_KEYS} ('objects', 'schemas'), which are appended
+     * (de-duplicated) so a fragment can extend rather than clobber the
+     * monolith. This mirrors the fragment-merge semantics shared across the
+     * fleet (ADR-037).
      *
      * @param array $base     The base configuration array.
      * @param array $override The fragment to merge on top of the base.
@@ -176,6 +199,17 @@ class ConfigFileLoaderService
     private static function deepMergeConfig(array $base, array $override): array
     {
         foreach ($override as $key => $value) {
+            if (is_array($value) === true
+                && isset($base[$key]) === true
+                && is_array($base[$key]) === true
+                && self::isList(value: $value) === true
+                && self::isList(value: $base[$key]) === true
+                && in_array($key, self::APPEND_LIST_KEYS, true) === true
+            ) {
+                $base[$key] = self::appendUnique(base: $base[$key], override: $value);
+                continue;
+            }
+
             if (is_array($value) === true
                 && isset($base[$key]) === true
                 && is_array($base[$key]) === true
@@ -191,6 +225,71 @@ class ConfigFileLoaderService
 
         return $base;
     }//end deepMergeConfig()
+
+    /**
+     * Append override list entries onto a base list, skipping duplicates.
+     *
+     * Scalar entries (e.g. schema-membership slugs) are compared by value.
+     * Object entries (e.g. seed objects) are de-duplicated by their
+     * `@self.slug` so re-merging a fragment is idempotent and OpenRegister's
+     * slug-matched, `force: false` import never sees a duplicate.
+     *
+     * @param array $base     The base list.
+     * @param array $override The override list to append.
+     *
+     * @return array The concatenated, de-duplicated list.
+     */
+    private static function appendUnique(array $base, array $override): array
+    {
+        $seenSlugs = [];
+        foreach ($base as $entry) {
+            $slug = self::entrySlug(entry: $entry);
+            if ($slug !== null) {
+                $seenSlugs[$slug] = true;
+            }
+        }
+
+        foreach ($override as $entry) {
+            $slug = self::entrySlug(entry: $entry);
+            if ($slug !== null) {
+                if (isset($seenSlugs[$slug]) === true) {
+                    continue;
+                }
+
+                $seenSlugs[$slug] = true;
+                $base[]           = $entry;
+                continue;
+            }
+
+            if (in_array($entry, $base, true) === true) {
+                continue;
+            }
+
+            $base[] = $entry;
+        }//end foreach
+
+        return $base;
+    }//end appendUnique()
+
+    /**
+     * Extract the `@self.slug` identifier from a list entry, when present.
+     *
+     * @param mixed $entry A list entry (seed object array or scalar slug).
+     *
+     * @return string|null The slug when the entry is an object carrying one,
+     *                     otherwise null.
+     */
+    private static function entrySlug(mixed $entry): ?string
+    {
+        if (is_array($entry) === true
+            && isset($entry['@self']['slug']) === true
+            && is_string($entry['@self']['slug']) === true
+        ) {
+            return $entry['@self']['slug'];
+        }
+
+        return null;
+    }//end entrySlug()
 
     /**
      * Determine whether an array is a sequential list (zero-indexed, no gaps).
