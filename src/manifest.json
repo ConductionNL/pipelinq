@@ -128,6 +128,20 @@
 			"order": 150
 		},
 		{
+			"id": "Analytics",
+			"label": "Analytics",
+			"icon": "icon-category-monitoring",
+			"route": "Analytics",
+			"order": 155
+		},
+		{
+			"id": "PipelineAnalytics",
+			"label": "Pipeline Analytics",
+			"icon": "icon-category-organization",
+			"route": "PipelineAnalytics",
+			"order": 156
+		},
+		{
 			"id": "Documentation",
 			"label": "Documentation",
 			"icon": "icon-info",
@@ -889,6 +903,20 @@
 			"type": "custom",
 			"title": "Agent performance",
 			"component": "AgentPerformanceView"
+		},
+		{
+			"id": "Analytics",
+			"route": "/analytics",
+			"type": "custom",
+			"title": "Analytics",
+			"component": "AnalyticsDashboardView"
+		},
+		{
+			"id": "PipelineAnalytics",
+			"route": "/pipeline-analytics",
+			"type": "custom",
+			"title": "Pipeline Analytics",
+			"component": "PipelineAnalyticsView"
 		},
 		{
 			"id": "Pipeline",

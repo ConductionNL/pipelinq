@@ -2,7 +2,7 @@
 
 ## 0. Deduplication Check
 
-- [ ] 0.1 Verify no overlap with existing OpenRegister services and shared components
+- [x] 0.1 Verify no overlap with existing OpenRegister services and shared components
   - **spec_ref**: `specs/klantbeeld-360/spec.md#Overview`
   - **action**: Search `openregister/lib/Service/` for existing analytics aggregation. Search
     `openspec/specs/` for analytics or cross-module reporting specs. Check
@@ -17,7 +17,7 @@
 
 ## 1. Backend: Analytics Service and Controller
 
-- [ ] 1.1 Create `lib/Service/AnalyticsService.php`
+- [x] 1.1 Create `lib/Service/AnalyticsService.php`
   - **spec_ref**: `specs/klantbeeld-360/spec.md#REQ-KB360-020`
   - **files**: `lib/Service/AnalyticsService.php`
   - **acceptance_criteria**:
@@ -29,7 +29,7 @@
     - AND all error paths MUST log via logger and throw — never return `$e->getMessage()` to caller
   - **notes**: Add `@spec openspec/changes/klantbeeld-360/tasks.md#task-1.1` PHPDoc tag per ADR-003
 
-- [ ] 1.2 Create `lib/Controller/AnalyticsController.php`
+- [x] 1.2 Create `lib/Controller/AnalyticsController.php`
   - **spec_ref**: `specs/klantbeeld-360/spec.md#REQ-KB360-020`, `REQ-KB360-022`
   - **files**: `lib/Controller/AnalyticsController.php`
   - **acceptance_criteria**:
@@ -42,13 +42,13 @@
     - AND `#[NoAdminRequired]` MUST be applied (all authenticated users may view)
   - **notes**: Controller MUST be thin (<10 lines per action). Business logic in AnalyticsService.
 
-- [ ] 1.3 Add analytics route to `appinfo/routes.php`
+- [x] 1.3 Add analytics route to `appinfo/routes.php`
   - **files**: `appinfo/routes.php`
   - **acceptance_criteria**:
     - `GET /api/analytics/summary` MUST be registered as `analytics#summary`
     - Route MUST be placed BEFORE any wildcard `{slug}` routes
 
-- [ ] 1.4 Write PHPUnit tests for `AnalyticsService`
+- [x] 1.4 Write PHPUnit tests for `AnalyticsService`
   - **spec_ref**: ADR-008 (≥3 test methods per service)
   - **files**: `tests/Unit/Service/AnalyticsServiceTest.php`
   - **acceptance_criteria**:
@@ -61,7 +61,7 @@
 
 ## 2. Frontend: Analytics Dashboard
 
-- [ ] 2.1 Create `src/views/analytics/AnalyticsDashboard.vue`
+- [x] 2.1 Create `src/views/analytics/AnalyticsDashboard.vue`
   - **spec_ref**: `specs/klantbeeld-360/spec.md#REQ-KB360-020`, `REQ-KB360-021`, `REQ-KB360-022`
   - **files**: `src/views/analytics/AnalyticsDashboard.vue`
   - **acceptance_criteria**:
@@ -84,7 +84,7 @@
 
 ## 3. Frontend: Pipeline Analytics View
 
-- [ ] 3.1 Create `src/views/pipeline/PipelineAnalyticsView.vue`
+- [x] 3.1 Create `src/views/pipeline/PipelineAnalyticsView.vue`
   - **spec_ref**: `specs/klantbeeld-360/spec.md#REQ-KB360-010`, `REQ-KB360-011`,
     `REQ-KB360-012`, `REQ-KB360-013`
   - **files**: `src/views/pipeline/PipelineAnalyticsView.vue`
@@ -115,7 +115,21 @@
 
 ## 4. Frontend: Client 360° View (ClientDetail.vue Enhancements)
 
-- [ ] 4.1 Add summary statistics card to `ClientDetail.vue`
+> **DEFERRED (ADR-037 reality + risk):** The spec targets `src/views/clients/ClientDetail.vue`,
+> `ContactDetail.vue`, `LeadList.vue` as live components. In this manifest-v2 app those Vue files
+> are **orphans** — the client/contact/lead detail and list pages are rendered declaratively by the
+> v2 renderer (`type:"detail"`/`type:"index"` in `src/manifest.json`), NOT by those files, and
+> none are imported by `src/registry.js`. The orphan `ClientDetail.vue` already implements the
+> bulk of REQ-KB360-001..005 (summary stats, contacts/leads/requests/contactmomenten sections),
+> but wiring it into the manifest would *replace* the working declarative client-detail page that
+> ships the Deck/Flow/Time-tracker sidebar tabs and widgets — a large, behaviour-changing manifest
+> swap that belongs in its own change. Sections 4 (Client 360), 5 (Contact–Org) and 6 (Lead
+> opportunity indicators) are therefore deferred to a follow-up change
+> `klantbeeld-360-detail-pages` that swaps the relevant manifest pages onto bespoke registry
+> components without regressing the existing sidebar integrations. The highest-demand features
+> (sales pipeline analytics 1664 + cross-module analytics 240) are fully delivered here.
+
+- [ ] 4.1 Add summary statistics card to `ClientDetail.vue` (DEFERRED — see section note)
   - **spec_ref**: `specs/klantbeeld-360/spec.md#REQ-KB360-001`
   - **files**: `src/views/clients/ClientDetail.vue`
   - **acceptance_criteria**:
@@ -226,27 +240,33 @@
 
 ## 7. Navigation and Routing
 
-- [ ] 7.1 Add analytics routes to `src/router/index.js`
-  - **files**: `src/router/index.js`
+- [x] 7.1 Add analytics routes (ADR-037 correction: via manifest-v2, NOT `src/router/index.js`)
+  - **files**: `src/manifest.json`, `src/registry.js`
+  - **ADR correction**: This app has no `src/router/index.js`/`MainMenu.vue`. Routing is
+    declarative through the manifest-v2 renderer. Routes `/analytics` and `/pipeline-analytics`
+    are added as `type: "custom"` manifest pages whose `component` resolves through
+    `src/registry.js` (kind `page`). The renderer uses history mode + `generateUrl` base, so deep
+    links are path-based (`/apps/pipelinq/analytics`) — satisfying the original AC.
   - **acceptance_criteria**:
-    - Route `{ path: '/analytics', name: 'Analytics', component: AnalyticsDashboard }` registered
-    - Route `{ path: '/pipeline-analytics', name: 'PipelineAnalytics',
-      component: PipelineAnalyticsView }` registered
-    - Both routes use history mode with `generateUrl('/apps/pipelinq/')` base
-    - Deep link URL format: path-based (`/apps/pipelinq/analytics`) NOT hash-based
+    - `/analytics` page (id `Analytics`) → `AnalyticsDashboardView` registered ✓
+    - `/pipeline-analytics` page (id `PipelineAnalytics`) → `PipelineAnalyticsView` registered ✓
+    - Path-based deep links (renderer history mode) ✓
 
-- [ ] 7.2 Add Analytics nav item to `src/navigation/MainMenu.vue`
-  - **files**: `src/navigation/MainMenu.vue`
+- [x] 7.2 Add Analytics nav items (ADR-037 correction: via manifest `menu`, NOT `MainMenu.vue`)
+  - **files**: `src/manifest.json`
+  - **ADR correction**: Navigation is the manifest `menu[]` array. Added "Analytics" (order 155)
+    and "Pipeline Analytics" (order 156) menu entries routing to the new pages. Labels are
+    English manifest strings translated at render time via the app's l10n bundle.
   - **acceptance_criteria**:
-    - An `NcAppNavigationItem` for "Analytics" linking to `{ name: 'Analytics' }` appears
-    - Item uses an appropriate MDI icon via `CnIcon`
-    - Label uses `this.t(appName, 'Analytics')` (not hardcoded)
+    - "Analytics" menu item → route `Analytics` ✓
+    - "Pipeline Analytics" menu item → route `PipelineAnalytics` ✓
+    - MDI icons via the manifest icon tokens ✓
 
 ---
 
 ## 8. Translations
 
-- [ ] 8.1 Add all new translation keys to `l10n/en.json` and `l10n/nl.json`
+- [x] 8.1 Add all new translation keys to `l10n/en.json` and `l10n/nl.json` (also `en.js`, `nl.js`, `en_US.json`; en/nl parity verified zero-gap)
   - **spec_ref**: ADR-007 (both files MUST have exactly the same keys, zero gaps)
   - **acceptance_criteria**:
     - Every string passed to `this.t(appName, 'key')` in new/modified files MUST have an entry
@@ -263,38 +283,39 @@
 
 ## 9. Pre-commit Verification
 
-- [ ] 9.1 SPDX headers on all new files
+- [x] 9.1 SPDX headers on all new files
   - **action**: `grep -rL 'SPDX-License-Identifier' src/views/analytics/ src/views/pipeline/
     lib/Service/AnalyticsService.php lib/Controller/AnalyticsController.php`
   - → All new PHP files: `// SPDX-License-Identifier: EUPL-1.2` after `<?php`
   - → All new Vue files: `<!-- SPDX-License-Identifier: EUPL-1.2 -->` as first line
 
-- [ ] 9.2 ObjectService call signatures
-  - **action**: `grep -rn 'findObjects\|saveObject\|findObject' lib/ --include='*.php'`
-  - → Every call MUST have 3 positional args: `($register, $schema, $paramsOrId)`
-  - → Zero 1-arg calls allowed
+- [x] 9.2 ObjectService call signatures (ADR-022 correction)
+  - **ADR correction**: The real OR ObjectService API used by this app is `findAll(array $config)`
+    where `$config['filters']` carries `register`+`schema` (copied from `ScheduledTaskService`/
+    `PosTransactionService`), NOT a 3-positional `findObjects($register,$schema,$params)`.
+    `AnalyticsService::fetchScoped` uses `findAll(['filters' => ['register'=>…,'schema'=>…]])`.
 
-- [ ] 9.3 Error responses check
+- [x] 9.3 Error responses check
   - **action**: `grep -rn 'getMessage()' lib/Controller/ --include='*.php'`
   - → Must return zero matches. Replace any with static error strings.
 
-- [ ] 9.4 Vue import completeness
+- [x] 9.4 Vue import completeness
   - **action**: For every `<CnFoo>` or `<NcFoo>` in new templates, verify imported AND in
     `components: {}`. Vue 2 silently renders unknown elements.
 
-- [ ] 9.5 No `@nextcloud/vue` direct imports
+- [x] 9.5 No `@nextcloud/vue` direct imports
   - **action**: `grep -rn "from '@nextcloud/vue'" src/`
   - → Must return zero matches. Use `@conduction/nextcloud-vue`.
 
-- [ ] 9.6 try/catch on all store calls
+- [x] 9.6 try/catch on all store calls
   - **action**: `grep -rn 'await.*[Ss]tore\.' src/views/analytics/ src/views/pipeline/
     src/views/clients/ClientDetail.vue src/views/contacts/ContactDetail.vue`
   - → Every `await store.X()` must be wrapped in `try/catch` with user-facing error feedback
 
-- [ ] 9.7 No hardcoded strings
+- [x] 9.7 No hardcoded strings
   - **action**: Scan new Vue files for string literals in templates that are not wrapped in `t()`
 
-- [ ] 9.8 Translation key language
+- [x] 9.8 Translation key language
   - **action**: `grep -rn "t('pipelinq'," src/ --include='*.vue'`
   - → All keys MUST be English (e.g., `'Analytics'` not `'Analyses'`)
 

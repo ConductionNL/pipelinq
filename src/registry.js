@@ -55,6 +55,11 @@ import RapportageDashboardView from './views/rapportage/RapportageDashboard.vue'
 import ChannelAnalyticsView from './views/rapportage/ChannelAnalytics.vue'
 import AgentPerformanceView from './views/rapportage/AgentPerformance.vue'
 
+// --- Klantbeeld 360 analytics (lib gap: no cross-module KPI dashboard or
+//     per-pipeline funnel page type; both aggregate across schemas). ---
+import AnalyticsDashboardView from './views/analytics/AnalyticsDashboard.vue'
+import PipelineAnalyticsView from './views/pipeline/PipelineAnalyticsView.vue'
+
 // --- Admin managers (lib gap: no pipeline-designer / settings rich-section type). ---
 import PipelineManagerView from './views/settings/PipelineManager.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
@@ -186,6 +191,18 @@ const registry = {
 		kind: 'page',
 		component: AgentPerformanceView,
 		_note: 'Per-agent performance charts with apexcharts; lib gap: no chart-widget page type.',
+	},
+
+	// --- Klantbeeld 360 analytics. ---
+	AnalyticsDashboardView: {
+		kind: 'page',
+		component: AnalyticsDashboardView,
+		_note: 'Cross-module KPI dashboard (CnDashboardPage + CnStatsBlock) reading the server-side /api/analytics/summary aggregation; lib gap: no cross-schema analytics page type.',
+	},
+	PipelineAnalyticsView: {
+		kind: 'page',
+		component: PipelineAnalyticsView,
+		_note: 'Per-pipeline KPI cards + horizontal stage-funnel chart with client-side aggregation; lib gap: no pipeline-funnel page type.',
 	},
 
 	// --- Pipeline board (kanban + list with in-memory search). ---

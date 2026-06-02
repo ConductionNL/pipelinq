@@ -58,6 +58,8 @@ return [
         ['name' => 'reporting#getSla', 'url' => '/api/rapportage/sla', 'verb' => 'GET'],
         ['name' => 'reporting#updateSla', 'url' => '/api/rapportage/sla', 'verb' => 'PUT'],
         ['name' => 'reporting#exportCsv', 'url' => '/api/rapportage/export', 'verb' => 'GET'],
+        // Analytics summary (cross-module KPIs; camelCase slug matches AnalyticsController class name)
+        ['name' => 'analytics#summary', 'url' => '/api/analytics/summary', 'verb' => 'GET'],
         // Public survey endpoints (unauthenticated; camelCase slug matches PublicSurveyController class name)
         ['name' => 'publicSurvey#show', 'url' => '/public/survey/{token}', 'verb' => 'GET'],
         ['name' => 'publicSurvey#submit', 'url' => '/public/survey/{token}/respond', 'verb' => 'POST'],
