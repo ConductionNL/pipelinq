@@ -71,9 +71,16 @@
 
 			<PosTotalsPanel :lines="lines" :price-mode="priceMode" />
 
+			<PaymentMethodSelector
+				:client-selected="!!transaction.client"
+				@change="onPaymentChange" />
+
 			<div class="pos-form__actions">
-				<NcButton type="primary" :disabled="saving" @click="save">
+				<NcButton :disabled="saving" @click="save">
 					{{ t('pipelinq', 'Save') }}
+				</NcButton>
+				<NcButton type="primary" :disabled="saving" @click="saveAndPay">
+					{{ t('pipelinq', 'Confirm') }}
 				</NcButton>
 			</div>
 		</template>
@@ -86,6 +93,8 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import PosLineItemRow from '../../components/pos/PosLineItemRow.vue'
 import PosTotalsPanel from '../../components/pos/PosTotalsPanel.vue'
+import PaymentMethodSelector from '../../components/pos/PaymentMethodSelector.vue'
+import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from '../../store/modules/object.js'
 import { recalculateLine } from '../../services/posTotals.js'
 
@@ -99,6 +108,7 @@ export default {
 		Plus,
 		PosLineItemRow,
 		PosTotalsPanel,
+		PaymentMethodSelector,
 	},
 	props: {
 		posTransactionId: {
@@ -116,6 +126,7 @@ export default {
 			loading: false,
 			saving: false,
 			keyCounter: 0,
+			paymentSelection: { providerName: 'cash', paymentMethod: 'cash' },
 		}
 	},
 	computed: {
@@ -282,6 +293,22 @@ export default {
 		 * + line inputs.
 		 */
 		async save() {
+			const txId = await this.persist()
+			if (txId) {
+				showSuccess(t('pipelinq', 'Transaction saved.'))
+				this.$router.push({ name: 'PosTransactionDetail', params: { id: txId } })
+			}
+		},
+		/**
+		 * Persist the transaction header and its lines, returning the id.
+		 *
+		 * Totals are intentionally NOT sent: the backend recomputes them
+		 * server-side on confirm. Does not navigate, so callers can chain
+		 * confirm / payment actions.
+		 *
+		 * @return {string|null} The saved transaction id, or null on failure.
+		 */
+		async persist() {
 			this.saving = true
 			try {
 				const header = {
@@ -291,7 +318,7 @@ export default {
 				const savedTx = await this.objectStore.saveObject('posTransaction', header)
 				if (!savedTx) {
 					showError(t('pipelinq', 'Failed to save transaction.'))
-					return
+					return null
 				}
 				const txId = savedTx.id || this.transactionId
 
@@ -322,12 +349,124 @@ export default {
 					await this.objectStore.saveObject('posTransactionLine', payload)
 				}
 
-				showSuccess(t('pipelinq', 'Transaction saved.'))
-				this.$router.push({ name: 'PosTransactionDetail', params: { id: txId } })
+				return txId
 			} catch (e) {
 				showError(t('pipelinq', 'Failed to save transaction.'))
+				return null
 			} finally {
 				this.saving = false
+			}
+		},
+		/**
+		 * Record the chosen payment method / provider from the selector.
+		 *
+		 * @param {object} selection The { providerName, paymentMethod } selection.
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
+		 */
+		onPaymentChange(selection) {
+			this.paymentSelection = selection
+		},
+		/**
+		 * Persist, confirm, then — for a card provider — initiate the payment.
+		 *
+		 * Cash / voucher / account are bookkeeping-only and settle on confirm with
+		 * no provider call; a provider selection confirms first, then initiates the
+		 * payment (redirecting to the hosted checkout when the provider returns a
+		 * redirect URL). On a payment error the transaction stays confirmed and the
+		 * cashier can retry from the detail view.
+		 *
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+		 */
+		async saveAndPay() {
+			const txId = await this.persist()
+			if (!txId) {
+				return
+			}
+			if (!(await this.lifecycle(txId, 'confirm'))) {
+				return
+			}
+
+			const builtins = ['cash', 'voucher', 'account']
+			if (builtins.includes(this.paymentSelection.providerName)) {
+				showSuccess(t('pipelinq', 'Transaction confirmed.'))
+				this.$router.push({ name: 'PosTransactionDetail', params: { id: txId } })
+				return
+			}
+
+			const result = await this.initiatePayment(txId)
+			if (result && result.redirectUrl) {
+				window.location.href = result.redirectUrl
+				return
+			}
+			this.$router.push({ name: 'PosTransactionDetail', params: { id: txId } })
+		},
+		/**
+		 * Call a transaction lifecycle endpoint.
+		 *
+		 * @param {string} txId The transaction id.
+		 * @param {string} action The lifecycle action (confirm/settle).
+		 * @return {boolean} Whether the action succeeded.
+		 */
+		async lifecycle(txId, action) {
+			try {
+				const response = await fetch(
+					generateUrl(`/apps/pipelinq/api/pos-transactions/${txId}/${action}`),
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							requesttoken: OC.requestToken,
+							'OCS-APIREQUEST': 'true',
+						},
+						body: '{}',
+					},
+				)
+				const data = await response.json().catch(() => ({}))
+				if (!response.ok) {
+					showError(data.error || t('pipelinq', 'Action failed.'))
+					return false
+				}
+				return true
+			} catch (e) {
+				showError(t('pipelinq', 'Action failed.'))
+				return false
+			}
+		},
+		/**
+		 * Initiate a provider payment for the confirmed transaction.
+		 *
+		 * @param {string} txId The transaction id.
+		 * @return {object|null} The initiation result, or null on error.
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+		 */
+		async initiatePayment(txId) {
+			try {
+				const response = await fetch(
+					generateUrl(`/apps/pipelinq/api/pos-payments/${txId}/initiate`),
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							requesttoken: OC.requestToken,
+							'OCS-APIREQUEST': 'true',
+						},
+						body: JSON.stringify({
+							providerName: this.paymentSelection.providerName,
+							paymentMethod: this.paymentSelection.paymentMethod,
+						}),
+					},
+				)
+				const data = await response.json().catch(() => ({}))
+				const result = data.result || {}
+				if (!response.ok || result.status === 'failed') {
+					showError(result.error || data.error || t('pipelinq', 'Payment could not be started.'))
+					return null
+				}
+				showSuccess(t('pipelinq', 'Payment started.'))
+				return result
+			} catch (e) {
+				showError(t('pipelinq', 'Payment could not be started.'))
+				return null
 			}
 		},
 		/**

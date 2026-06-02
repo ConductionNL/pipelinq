@@ -1,0 +1,20 @@
+{
+	"pages": [
+		{
+			"id": "PaymentSettings",
+			"route": "/settings/payment",
+			"type": "custom",
+			"title": "Payment methods",
+			"component": "PaymentSettingsForm"
+		}
+	],
+	"menu": [
+		{
+			"id": "PaymentSettings",
+			"label": "Payment methods",
+			"icon": "icon-category-customization",
+			"route": "PaymentSettings",
+			"order": 240
+		}
+	]
+}

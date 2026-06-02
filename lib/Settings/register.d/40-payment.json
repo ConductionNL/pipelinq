@@ -1,0 +1,332 @@
+{
+    "x-fragment": {
+        "name": "pos-payment-provider-adapter",
+        "description": "Adds the paymentProvider configuration schema, extends posTransaction with payment-lifecycle fields, and seeds the four provider configurations (Mollie, CCV, Adyen, Stripe) plus payment demo transactions. ADR-037: dropped as a register.d fragment instead of editing the pipelinq_register.json monolith. ADR-005: seed apiKey/apiSecret/webhookSecret values are NON-FUNCTIONAL placeholders only; real credentials are stored encrypted-at-rest in IAppConfig (sensitive flag), never in this fragment.",
+        "spec": "openspec/changes/pos-payment-provider-adapter"
+    },
+    "components": {
+        "registers": {
+            "pipelinq": {
+                "schemas": [
+                    "paymentProvider"
+                ]
+            }
+        },
+        "schemas": {
+            "paymentProvider": {
+                "slug": "paymentProvider",
+                "title": "Payment Provider",
+                "icon": "CreditCardOutline",
+                "version": "1.0.0",
+                "summary": "Configuration for an integrated POS payment provider (Mollie, CCV, Adyen, Stripe)",
+                "description": "Per-provider configuration record for the pluggable POS payment adapter layer. Holds the non-secret routing configuration (which providers are active, environment, type) plus provider-specific public config. Secret credentials (API key, API secret, webhook signing secret) are NEVER stored on this object: they live encrypted-at-rest in IAppConfig (sensitive flag) and are referenced here only by a boolean credentials-present flag. Mapped to Schema.org PaymentService.",
+                "@type": "schema:PaymentService",
+                "required": [
+                    "name",
+                    "displayName",
+                    "type"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Provider identifier: mollie, ccv, adyen, stripe",
+                        "enum": [
+                            "mollie",
+                            "ccv",
+                            "adyen",
+                            "stripe"
+                        ],
+                        "maxLength": 32,
+                        "title": "Provider",
+                        "facetable": true
+                    },
+                    "displayName": {
+                        "type": "string",
+                        "description": "Human-readable provider name",
+                        "maxLength": 64,
+                        "title": "Display name"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Integration type: online (redirect/hosted) or terminal (in-store PIN device)",
+                        "enum": [
+                            "online",
+                            "terminal"
+                        ],
+                        "default": "online",
+                        "title": "Type",
+                        "facetable": true
+                    },
+                    "isActive": {
+                        "type": "boolean",
+                        "description": "Whether this provider is enabled for new transactions",
+                        "default": false,
+                        "title": "Active",
+                        "facetable": true
+                    },
+                    "environment": {
+                        "type": "string",
+                        "description": "Execution environment",
+                        "enum": [
+                            "sandbox",
+                            "live"
+                        ],
+                        "default": "sandbox",
+                        "title": "Environment",
+                        "facetable": true
+                    },
+                    "testMode": {
+                        "type": "boolean",
+                        "description": "When true, connection tests and initiations use the provider's test/dummy flow without charging",
+                        "default": true,
+                        "title": "Test mode"
+                    },
+                    "credentialsConfigured": {
+                        "type": "boolean",
+                        "description": "Read-only flag: true when an API key has been stored (encrypted) in IAppConfig for this provider. The secret itself is never stored on this object.",
+                        "default": false,
+                        "title": "Credentials configured"
+                    },
+                    "config": {
+                        "type": "object",
+                        "description": "Provider-specific non-secret config, e.g. { terminalId, merchantAccount }",
+                        "title": "Configuration"
+                    },
+                    "supportedMethods": {
+                        "type": "array",
+                        "description": "Payment methods this provider offers at checkout (ideal, bancontact, card, ...)",
+                        "items": {
+                            "type": "string"
+                        },
+                        "title": "Supported methods"
+                    },
+                    "lastTestedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Timestamp of the last connection test",
+                        "title": "Last tested"
+                    },
+                    "testResult": {
+                        "type": "object",
+                        "description": "Result of the last connection test: { status: ok|error, message }",
+                        "title": "Test result"
+                    }
+                }
+            },
+            "posTransaction": {
+                "properties": {
+                    "paymentProvider": {
+                        "type": "string",
+                        "description": "Provider that handled this transaction (mollie, ccv, adyen, stripe, cash, voucher, account)",
+                        "maxLength": 32,
+                        "title": "Payment provider",
+                        "facetable": true
+                    },
+                    "paymentSessionId": {
+                        "type": "string",
+                        "description": "External payment session reference from the provider (Mollie order id, Stripe PaymentIntent id, CCV transaction id) used to match settlement webhooks",
+                        "maxLength": 191,
+                        "title": "Payment session"
+                    },
+                    "paymentStatus": {
+                        "type": "string",
+                        "description": "Payment lifecycle: pending, captured, settled, failed, refunded. Null until a payment is initiated.",
+                        "enum": [
+                            "pending",
+                            "captured",
+                            "settled",
+                            "failed",
+                            "refunded"
+                        ],
+                        "title": "Payment status",
+                        "facetable": true
+                    },
+                    "paymentMethod": {
+                        "type": "string",
+                        "description": "Specific method used: ideal, bancontact, card, cash, voucher, account",
+                        "maxLength": 32,
+                        "title": "Payment method",
+                        "facetable": true
+                    },
+                    "paymentEventId": {
+                        "type": "string",
+                        "description": "Last processed provider webhook event id, stored for idempotent webhook handling (a re-delivered event with the same id is a no-op)",
+                        "maxLength": 191,
+                        "title": "Payment event id"
+                    }
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "paymentProvider",
+                    "slug": "provider-mollie"
+                },
+                "name": "mollie",
+                "displayName": "Mollie",
+                "type": "online",
+                "isActive": false,
+                "environment": "sandbox",
+                "testMode": true,
+                "credentialsConfigured": false,
+                "config": {},
+                "supportedMethods": [
+                    "ideal",
+                    "bancontact",
+                    "card"
+                ]
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "paymentProvider",
+                    "slug": "provider-ccv"
+                },
+                "name": "ccv",
+                "displayName": "CCV",
+                "type": "terminal",
+                "isActive": false,
+                "environment": "sandbox",
+                "testMode": true,
+                "credentialsConfigured": false,
+                "config": {
+                    "terminalId": "kassa-01"
+                },
+                "supportedMethods": [
+                    "card"
+                ]
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "paymentProvider",
+                    "slug": "provider-adyen"
+                },
+                "name": "adyen",
+                "displayName": "Adyen",
+                "type": "terminal",
+                "isActive": false,
+                "environment": "sandbox",
+                "testMode": true,
+                "credentialsConfigured": false,
+                "config": {
+                    "merchantAccount": ""
+                },
+                "supportedMethods": [
+                    "card"
+                ]
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "paymentProvider",
+                    "slug": "provider-stripe"
+                },
+                "name": "stripe",
+                "displayName": "Stripe",
+                "type": "online",
+                "isActive": false,
+                "environment": "sandbox",
+                "testMode": true,
+                "credentialsConfigured": false,
+                "config": {},
+                "supportedMethods": [
+                    "card"
+                ]
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "posTransaction",
+                    "slug": "txn-pay-mollie-demo"
+                },
+                "reference": "TXN-2026-0101",
+                "cashier": "admin",
+                "terminalId": "kassa-01",
+                "status": "settled",
+                "priceMode": "incl",
+                "subtotal": 19.75,
+                "discountTotal": 0,
+                "taxBreakdown": [
+                    {
+                        "rate": 9,
+                        "base": 19.75,
+                        "tax": 1.78
+                    }
+                ],
+                "totalTax": 1.78,
+                "total": 21.53,
+                "paymentProvider": "mollie",
+                "paymentSessionId": "tr_WDqYK6vllg",
+                "paymentStatus": "settled",
+                "paymentMethod": "ideal",
+                "confirmedAt": "2026-05-20T09:14:00+02:00",
+                "settledAt": "2026-05-20T09:14:30+02:00",
+                "notes": "Mollie iDEAL betaling"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "posTransaction",
+                    "slug": "txn-pay-ccv-demo"
+                },
+                "reference": "TXN-2026-0103",
+                "cashier": "emma.bakker",
+                "terminalId": "kassa-01",
+                "status": "confirmed",
+                "priceMode": "incl",
+                "subtotal": 80.97,
+                "discountTotal": 9.0,
+                "taxBreakdown": [
+                    {
+                        "rate": 21,
+                        "base": 80.97,
+                        "tax": 17.0
+                    }
+                ],
+                "totalTax": 17.0,
+                "total": 97.97,
+                "paymentProvider": "ccv",
+                "paymentSessionId": "CCV20260520102833001",
+                "paymentStatus": "captured",
+                "paymentMethod": "card",
+                "confirmedAt": "2026-05-20T10:33:00+02:00",
+                "notes": "CCV PIN terminal betaling"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "posTransaction",
+                    "slug": "txn-pay-stripe-demo"
+                },
+                "reference": "TXN-2026-0105",
+                "cashier": "admin",
+                "terminalId": "kassa-01",
+                "status": "refunded",
+                "priceMode": "incl",
+                "subtotal": 703.3,
+                "discountTotal": 0,
+                "taxBreakdown": [
+                    {
+                        "rate": 21,
+                        "base": 703.3,
+                        "tax": 147.69
+                    }
+                ],
+                "totalTax": 147.69,
+                "total": 850.99,
+                "paymentProvider": "stripe",
+                "paymentSessionId": "pi_1ABCDefGHIjklmno",
+                "paymentStatus": "refunded",
+                "paymentMethod": "card",
+                "confirmedAt": "2026-05-19T14:22:00+02:00",
+                "settledAt": "2026-05-19T14:23:00+02:00",
+                "refundedAt": "2026-05-20T09:45:00+02:00",
+                "refundReason": "Artikel beschadigd bij levering -- retour verwerkt",
+                "notes": "Stripe betaling gerefundeerd"
+            }
+        ]
+    }
+}

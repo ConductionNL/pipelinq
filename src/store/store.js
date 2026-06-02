@@ -92,6 +92,9 @@ export async function initializeStores() {
 		if (config.register && config.posRefundLine_schema) {
 			objectStore.registerObjectType('posRefundLine', config.posRefundLine_schema, config.register)
 		}
+		if (config.register && config.paymentProvider_schema) {
+			objectStore.registerObjectType('paymentProvider', config.paymentProvider_schema, config.register)
+		}
 	}
 
 	return { settingsStore, objectStore }

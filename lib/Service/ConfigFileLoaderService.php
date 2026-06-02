@@ -29,6 +29,8 @@ use RuntimeException;
 
 /**
  * Service for loading and parsing configuration JSON files.
+ *
+ * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-002
  */
 class ConfigFileLoaderService
 {
@@ -128,18 +130,8 @@ class ConfigFileLoaderService
 
         $fragmentBlob = '';
         foreach ($fragmentFiles as $fragmentFile) {
-            $fragmentContent = file_get_contents($fragmentFile);
-            if ($fragmentContent === false) {
-                throw new RuntimeException("Failed to read register fragment: {$fragmentFile}");
-            }
-
-            $fragmentData = json_decode($fragmentContent, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new RuntimeException(
-                    "Invalid JSON in register fragment {$fragmentFile}: ".json_last_error_msg()
-                );
-            }
-
+            $fragmentContent = $this->readFragmentFile(fragmentFile: $fragmentFile);
+            $fragmentData    = $this->decodeFragment(fragmentFile: $fragmentFile, content: $fragmentContent);
             if (is_array($fragmentData) === false) {
                 continue;
             }
@@ -148,24 +140,105 @@ class ConfigFileLoaderService
             $fragmentBlob .= $fragmentContent;
         }//end foreach
 
-        if ($fragmentBlob !== '') {
-            $baseVersion  = ($data['info']['version'] ?? '0.0.0');
-            $fragmentHash = substr(hash('sha256', $fragmentBlob), 0, 8);
-            if (isset($data['info']) === false || is_array($data['info']) === false) {
-                $data['info'] = [];
-            }
+        return $this->foldFragmentVersion(data: $data, fragmentBlob: $fragmentBlob);
+    }//end mergeRegisterFragments()
 
-            $data['info']['version'] = $baseVersion.'+frag.'.$fragmentHash;
+    /**
+     * Read a fragment file's raw contents.
+     *
+     * @param string $fragmentFile The fragment file path.
+     *
+     * @return string The file contents.
+     *
+     * @throws RuntimeException If the file cannot be read.
+     */
+    private function readFragmentFile(string $fragmentFile): string
+    {
+        $fragmentContent = file_get_contents($fragmentFile);
+        if ($fragmentContent === false) {
+            throw new RuntimeException("Failed to read register fragment: {$fragmentFile}");
         }
 
+        return $fragmentContent;
+    }//end readFragmentFile()
+
+    /**
+     * Decode a fragment's JSON contents.
+     *
+     * @param string $fragmentFile The fragment file path (for error context).
+     * @param string $content      The raw JSON contents.
+     *
+     * @return mixed The decoded value.
+     *
+     * @throws RuntimeException If the JSON is invalid.
+     */
+    private function decodeFragment(string $fragmentFile, string $content): mixed
+    {
+        $fragmentData = json_decode($content, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new RuntimeException(
+                "Invalid JSON in register fragment {$fragmentFile}: ".json_last_error_msg()
+            );
+        }
+
+        return $fragmentData;
+    }//end decodeFragment()
+
+    /**
+     * Fold a hash of the merged fragment content into `info.version` so
+     * OpenRegister's version-gated import re-runs whenever a fragment changes.
+     *
+     * @param array  $data         The merged configuration data.
+     * @param string $fragmentBlob The concatenated fragment content (empty = no-op).
+     *
+     * @return array The data with a fragment-aware version.
+     */
+    private function foldFragmentVersion(array $data, string $fragmentBlob): array
+    {
+        if ($fragmentBlob === '') {
+            return $data;
+        }
+
+        if (isset($data['info']) === false || is_array($data['info']) === false) {
+            $data['info'] = [];
+        }
+
+        $baseVersion  = ($data['info']['version'] ?? '0.0.0');
+        $fragmentHash = substr(hash('sha256', $fragmentBlob), 0, 8);
+        $data['info']['version'] = $baseVersion.'+frag.'.$fragmentHash;
+
         return $data;
-    }//end mergeRegisterFragments()
+    }//end foldFragmentVersion()
+
+    /**
+     * Keys whose list values are *additively unioned* across fragments rather
+     * than replaced (ADR-037). These are the two OpenRegister membership/seed
+     * lists a feature fragment legitimately extends:
+     *
+     *   - `schemas`  — a register's schema-membership list (list of slugs). A
+     *     fragment that introduces a new schema (e.g. `paymentProvider`) must be
+     *     able to add it to the register's `schemas[]` without dropping the 30+
+     *     schemas the monolith already declares.
+     *   - `objects`  — `components.objects[]`, the seed-object list. A fragment
+     *     seeds its own objects; replacing the list would wipe every seed the
+     *     monolith (and other fragments) contribute.
+     *
+     * For every other list/scalar key the override still *replaces* the base
+     * value, preserving the original fleet semantics for ordinary config.
+     *
+     * @var array<int, string>
+     */
+    private const ADDITIVE_LIST_KEYS = ['schemas', 'objects'];
 
     /**
      * Recursively deep-merge an override array onto a base array.
      *
      * Associative keys are merged recursively; scalar and list values from the
-     * override replace those in the base. This mirrors the fragment-merge
+     * override replace those in the base, EXCEPT for the {@see self::ADDITIVE_LIST_KEYS}
+     * register membership / seed lists, which are additively unioned so a feature
+     * fragment can extend the register's `schemas[]` and add its own
+     * `components.objects[]` seeds without clobbering what the monolith (or a
+     * sibling fragment) already contributes. This mirrors the fragment-merge
      * semantics shared across the fleet (ADR-037).
      *
      * @param array $base     The base configuration array.
@@ -176,13 +249,15 @@ class ConfigFileLoaderService
     private static function deepMergeConfig(array $base, array $override): array
     {
         foreach ($override as $key => $value) {
-            if (is_array($value) === true
-                && isset($base[$key]) === true
-                && is_array($base[$key]) === true
-                && self::isList(value: $value) === false
-                && self::isList(value: $base[$key]) === false
-            ) {
-                $base[$key] = self::deepMergeConfig(base: $base[$key], override: $value);
+            $baseValue = ($base[$key] ?? null);
+
+            if (self::isAssocMerge(baseValue: $baseValue, value: $value) === true) {
+                $base[$key] = self::deepMergeConfig(base: $baseValue, override: $value);
+                continue;
+            }
+
+            if (self::isUnionMerge(key: $key, baseValue: $baseValue, value: $value) === true) {
+                $base[$key] = self::unionList(base: $baseValue, override: $value);
                 continue;
             }
 
@@ -193,9 +268,99 @@ class ConfigFileLoaderService
     }//end deepMergeConfig()
 
     /**
-     * Determine whether an array is a sequential list (zero-indexed, no gaps).
+     * Whether two values should be recursively associative-merged.
      *
-     * Provided for PHP < 8.1 parity where `array_is_list()` is unavailable.
+     * @param mixed $baseValue The current base value at the key.
+     * @param mixed $value     The override value.
+     *
+     * @return bool True when both are associative arrays.
+     */
+    private static function isAssocMerge(mixed $baseValue, mixed $value): bool
+    {
+        return (is_array($value) === true
+            && is_array($baseValue) === true
+            && self::isList(value: $value) === false
+            && self::isList(value: $baseValue) === false);
+    }//end isAssocMerge()
+
+    /**
+     * Whether two list values at a key should be additively unioned (ADR-037).
+     *
+     * @param string $key       The config key.
+     * @param mixed  $baseValue The current base value at the key.
+     * @param mixed  $value     The override value.
+     *
+     * @return bool True when the key is union-eligible and both sides are lists.
+     */
+    private static function isUnionMerge(string $key, mixed $baseValue, mixed $value): bool
+    {
+        return (in_array($key, self::ADDITIVE_LIST_KEYS, true) === true
+            && is_array($value) === true
+            && is_array($baseValue) === true
+            && self::isList(value: $value) === true
+            && self::isList(value: $baseValue) === true);
+    }//end isUnionMerge()
+
+    /**
+     * Additively union two lists, de-duplicating by a stable identity.
+     *
+     * Schema-membership entries are plain strings, deduped by value. Seed
+     * objects are associative arrays, deduped by their `@self.slug` (the
+     * idempotent re-import key) when present, falling back to a JSON hash of the
+     * whole entry. Base entries are kept in order; override entries that are not
+     * already present are appended. This makes a re-import idempotent: dropping
+     * the same fragment twice never duplicates a schema membership or a seed.
+     *
+     * @param array<int, mixed> $base     The base list.
+     * @param array<int, mixed> $override The fragment list.
+     *
+     * @return array<int, mixed> The unioned list.
+     */
+    private static function unionList(array $base, array $override): array
+    {
+        $seen   = [];
+        $result = [];
+
+        foreach (array_merge($base, $override) as $entry) {
+            $identity = self::listEntryIdentity(entry: $entry);
+            if (isset($seen[$identity]) === true) {
+                continue;
+            }
+
+            $seen[$identity] = true;
+            $result[]        = $entry;
+        }
+
+        return $result;
+    }//end unionList()
+
+    /**
+     * Derive a stable identity string for a union-list entry.
+     *
+     * @param mixed $entry The list entry (string slug or seed-object array).
+     *
+     * @return string The identity used for de-duplication.
+     */
+    private static function listEntryIdentity(mixed $entry): string
+    {
+        if (is_string($entry) === true) {
+            return 's:'.$entry;
+        }
+
+        if (is_array($entry) === true) {
+            $slug = ($entry['@self']['slug'] ?? null);
+            if (is_string($slug) === true && $slug !== '') {
+                return 'o:'.$slug;
+            }
+
+            return 'h:'.md5((string) json_encode($entry));
+        }
+
+        return 'v:'.md5((string) json_encode($entry));
+    }//end listEntryIdentity()
+
+    /**
+     * Determine whether an array is a sequential list (zero-indexed, no gaps).
      *
      * @param array $value The array to inspect.
      *
@@ -203,20 +368,7 @@ class ConfigFileLoaderService
      */
     private static function isList(array $value): bool
     {
-        if (function_exists('array_is_list') === true) {
-            return array_is_list($value);
-        }
-
-        $expectedKey = 0;
-        foreach ($value as $key => $unused) {
-            if ($key !== $expectedKey) {
-                return false;
-            }
-
-            $expectedKey++;
-        }
-
-        return true;
+        return array_is_list($value);
     }//end isList()
 
     /**

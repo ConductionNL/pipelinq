@@ -73,6 +73,10 @@ import PosRefundFormView from './views/pos/PosRefundForm.vue'
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
 import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
 
+// --- Payment provider settings (lib gap: no settings rich-section type for
+//     per-provider credential forms with masked secrets + connection test). ---
+import PaymentSettingsForm from './views/settings/PaymentSettingsForm.vue'
+
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
 /**
@@ -246,6 +250,13 @@ const registry = {
 		kind: 'page',
 		component: ProductBarcodeSearchView,
 		_note: 'Scan-to-navigate barcode search; resolves via the server-authoritative scoped barcode-lookup API and routes to the matching product (highlighting a matched variant).',
+	},
+
+	// --- Payment provider settings. ---
+	PaymentSettingsForm: {
+		kind: 'page',
+		component: PaymentSettingsForm,
+		_note: 'Admin payment-provider credential form (Mollie/CCV/Adyen/Stripe) with masked secrets + per-provider connection test; lib has no settings rich-section type for this.',
 	},
 }
 

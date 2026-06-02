@@ -119,6 +119,19 @@ return [
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
 
+        // POS payments (camelCase slug matches PosPaymentController class name).
+        // Cashier-driven payment actions on a transaction (per-object access in the service).
+        ['name' => 'posPayment#initiate', 'url' => '/api/pos-payments/{id}/initiate', 'verb' => 'POST'],
+        ['name' => 'posPayment#capture',  'url' => '/api/pos-payments/{id}/capture',  'verb' => 'POST'],
+        ['name' => 'posPayment#refund',   'url' => '/api/pos-payments/{id}/refund',   'verb' => 'POST'],
+        // Provider config (admin-only by SecurityMiddleware default). The static
+        // collection route MUST precede the {name} wildcard routes.
+        ['name' => 'posPayment#listProviders',  'url' => '/api/payment-providers',          'verb' => 'GET'],
+        ['name' => 'posPayment#test',           'url' => '/api/payment-providers/{name}/test', 'verb' => 'POST'],
+        ['name' => 'posPayment#updateProvider', 'url' => '/api/payment-providers/{name}',   'verb' => 'PUT'],
+        // Provider settlement webhook (public; authenticated by provider signature).
+        ['name' => 'posPayment#webhook', 'url' => '/api/payment-webhook/{provider}', 'verb' => 'POST'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
