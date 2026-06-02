@@ -8,13 +8,15 @@
  * @category BackgroundJob
  * @package  OCA\Pipelinq\BackgroundJob
  *
- * @author    Conduction <info@conduction.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
- * @link https://github.com/ConductionNL/pipelinq
+ * @link https://conduction.nl
+ *
+ * @spec openspec/changes/reverse-2026-05-26-be-background-jobs/tasks.md#task-1
  */
 
 declare(strict_types=1);
