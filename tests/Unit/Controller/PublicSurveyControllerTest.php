@@ -118,9 +118,11 @@ class PublicSurveyControllerTest extends TestCase
      */
     private function buildObjectServiceMock(array $items): \OCA\OpenRegister\Service\ObjectService
     {
-        $mock = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $mock             = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $objectEntityMock = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
+        $objectEntityMock->method('getUuid')->willReturn('new-response-uuid');
         $mock->method('findAll')->willReturn(['results' => $items]);
-        $mock->method('saveObject')->willReturn(['id' => 'new-response-uuid']);
+        $mock->method('saveObject')->willReturn($objectEntityMock);
         return $mock;
     }//end buildObjectServiceMock()
 
@@ -305,14 +307,16 @@ class PublicSurveyControllerTest extends TestCase
         ]);
 
         // Capture the data passed to saveObject so we can assert on it.
-        $savedData = null;
-        $objectServiceMock = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $savedData              = null;
+        $objectServiceMock      = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $createdEntityMock      = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
+        $createdEntityMock->method('getUuid')->willReturn('new-uuid');
         $objectServiceMock->method('findAll')->willReturn(['results' => [$survey]]);
         $objectServiceMock->method('saveObject')
             ->willReturnCallback(
-                function () use (&$savedData) {
+                function () use (&$savedData, $createdEntityMock) {
                     $savedData = func_get_arg(0);
-                    return ['id' => 'new-uuid'];
+                    return $createdEntityMock;
                 }
             );
 
@@ -367,14 +371,16 @@ class PublicSurveyControllerTest extends TestCase
             'surveyResponse_schema' => 'response-schema-id',
         ]);
 
-        $savedData = null;
-        $objectServiceMock2 = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $savedData              = null;
+        $objectServiceMock2     = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $createdEntityMock2     = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
+        $createdEntityMock2->method('getUuid')->willReturn('new-uuid');
         $objectServiceMock2->method('findAll')->willReturn(['results' => [$survey]]);
         $objectServiceMock2->method('saveObject')
             ->willReturnCallback(
-                function () use (&$savedData) {
+                function () use (&$savedData, $createdEntityMock2) {
                     $savedData = func_get_arg(0);
-                    return ['id' => 'new-uuid'];
+                    return $createdEntityMock2;
                 }
             );
 
