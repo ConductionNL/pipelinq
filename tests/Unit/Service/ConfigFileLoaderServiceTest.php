@@ -103,4 +103,136 @@ class ConfigFileLoaderServiceTest extends TestCase
 
         $service->loadConfigurationFile();
     }//end testLoadConfigurationFileThrowsOnMissingFile()
+
+    /**
+     * A fragment's components.objects[] is unioned onto the base, not replacing.
+     *
+     * @return void
+     */
+    public function testMergeUnionsSeedObjects(): void
+    {
+        $base = [
+            'components' => [
+                'objects' => [
+                    ['@self' => ['register' => 'r', 'schema' => 's', 'slug' => 'base-1'], 'v' => 1],
+                ],
+            ],
+        ];
+
+        $fragment = [
+            'components' => [
+                'objects' => [
+                    ['@self' => ['register' => 'r', 'schema' => 's', 'slug' => 'frag-1'], 'v' => 2],
+                ],
+            ],
+        ];
+
+        $merged = ConfigFileLoaderService::mergeConfig($base, $fragment);
+        $slugs  = array_map(
+            static fn (array $o): string => $o['@self']['slug'],
+            $merged['components']['objects']
+        );
+
+        $this->assertContains('base-1', $slugs);
+        $this->assertContains('frag-1', $slugs);
+        $this->assertCount(2, $merged['components']['objects']);
+    }//end testMergeUnionsSeedObjects()
+
+    /**
+     * A fragment re-seeding an existing slug replaces just that object.
+     *
+     * @return void
+     */
+    public function testMergeReseedReplacesBySlug(): void
+    {
+        $base = [
+            'components' => [
+                'objects' => [
+                    ['@self' => ['register' => 'r', 'schema' => 's', 'slug' => 'shared'], 'v' => 1],
+                ],
+            ],
+        ];
+
+        $fragment = [
+            'components' => [
+                'objects' => [
+                    ['@self' => ['register' => 'r', 'schema' => 's', 'slug' => 'shared'], 'v' => 99],
+                ],
+            ],
+        ];
+
+        $merged = ConfigFileLoaderService::mergeConfig($base, $fragment);
+
+        $this->assertCount(1, $merged['components']['objects']);
+        $this->assertSame(99, $merged['components']['objects'][0]['v']);
+    }//end testMergeReseedReplacesBySlug()
+
+    /**
+     * A fragment's register schemas[] membership is unioned, de-duplicated.
+     *
+     * @return void
+     */
+    public function testMergeUnionsRegisterSchemas(): void
+    {
+        $base = [
+            'components' => [
+                'registers' => [
+                    'pipelinq' => ['slug' => 'pipelinq', 'schemas' => ['client', 'contact']],
+                ],
+            ],
+        ];
+
+        $fragment = [
+            'components' => [
+                'registers' => [
+                    'pipelinq' => ['schemas' => ['contact', 'posRole', 'posStaff']],
+                ],
+            ],
+        ];
+
+        $merged  = ConfigFileLoaderService::mergeConfig($base, $fragment);
+        $schemas = $merged['components']['registers']['pipelinq']['schemas'];
+
+        $this->assertSame(['client', 'contact', 'posRole', 'posStaff'], $schemas);
+    }//end testMergeUnionsRegisterSchemas()
+
+    /**
+     * A fragment adds a property to an existing schema without dropping the rest.
+     *
+     * @return void
+     */
+    public function testMergeAddsSchemaPropertyAdditively(): void
+    {
+        $base = [
+            'components' => [
+                'schemas' => [
+                    'posTransaction' => [
+                        'properties' => [
+                            'total' => ['type' => 'number'],
+                            'cashier' => ['type' => 'string'],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $fragment = [
+            'components' => [
+                'schemas' => [
+                    'posTransaction' => [
+                        'properties' => [
+                            'staffMemberId' => ['type' => 'string'],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $merged = ConfigFileLoaderService::mergeConfig($base, $fragment);
+        $props  = $merged['components']['schemas']['posTransaction']['properties'];
+
+        $this->assertArrayHasKey('total', $props);
+        $this->assertArrayHasKey('cashier', $props);
+        $this->assertArrayHasKey('staffMemberId', $props);
+    }//end testMergeAddsSchemaPropertyAdditively()
 }//end class

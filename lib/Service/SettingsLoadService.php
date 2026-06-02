@@ -71,6 +71,8 @@ class SettingsLoadService
         'refundReason',
         'posRefund',
         'posRefundLine',
+        'posRole',
+        'posStaff',
     ];
 
     /**

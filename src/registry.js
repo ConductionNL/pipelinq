@@ -69,6 +69,12 @@ import PosRefundListView from './views/pos/PosRefundList.vue'
 import PosRefundDetailView from './views/pos/PosRefundDetail.vue'
 import PosRefundFormView from './views/pos/PosRefundForm.vue'
 
+// --- POS staff + role admin (lib gap: list needs custom row-to-dialog editing
+//     and the PIN/permission write paths route through dedicated server
+//     endpoints that hash the PIN and strip the hash). ---
+import PosStaffListView from './views/pos/StaffList.vue'
+import PosRoleListView from './views/pos/RoleList.vue'
+
 // --- Product barcode lookup (lib gap: index pages have no server-authoritative
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
 import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
@@ -246,6 +252,18 @@ const registry = {
 		kind: 'page',
 		component: ProductBarcodeSearchView,
 		_note: 'Scan-to-navigate barcode search; resolves via the server-authoritative scoped barcode-lookup API and routes to the matching product (highlighting a matched variant).',
+	},
+
+	// --- POS staff + role admin. ---
+	PosStaffListView: {
+		kind: 'page',
+		component: PosStaffListView,
+		_note: 'POS staff list; rows open a form dialog that posts to the admin-gated /api/pos/staff endpoint (PIN hashed server-side, hash never returned).',
+	},
+	PosRoleListView: {
+		kind: 'page',
+		component: PosRoleListView,
+		_note: 'POS role list with a permission-matrix form dialog; writes route through the admin-gated /api/pos/roles endpoint (discount bound + delete-while-assigned guard server-side).',
 	},
 }
 

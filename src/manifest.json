@@ -93,6 +93,20 @@
 			"order": 96
 		},
 		{
+			"id": "PosStaff",
+			"label": "POS medewerkers",
+			"icon": "icon-user",
+			"route": "PosStaff",
+			"order": 97
+		},
+		{
+			"id": "PosRoles",
+			"label": "POS rollen",
+			"icon": "icon-category-customization",
+			"route": "PosRoles",
+			"order": 98
+		},
+		{
 			"id": "Pipeline",
 			"label": "Pipeline",
 			"icon": "icon-category-organization",
@@ -726,6 +740,28 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "posRefund"
+			}
+		},
+		{
+			"id": "PosStaff",
+			"route": "/pos-staff",
+			"type": "custom",
+			"title": "POS medewerkers",
+			"component": "PosStaffListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posStaff"
+			}
+		},
+		{
+			"id": "PosRoles",
+			"route": "/pos-roles",
+			"type": "custom",
+			"title": "POS rollen",
+			"component": "PosRoleListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posRole"
 			}
 		},
 		{

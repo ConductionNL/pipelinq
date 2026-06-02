@@ -119,6 +119,24 @@ return [
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
 
+        // POS roles (camelCase slug matches PosRoleController). Reads are open to
+        // authenticated users; writes are admin-gated in the controller.
+        ['name' => 'posRole#index',   'url' => '/api/pos/roles',      'verb' => 'GET'],
+        ['name' => 'posRole#create',  'url' => '/api/pos/roles',      'verb' => 'POST'],
+        ['name' => 'posRole#show',    'url' => '/api/pos/roles/{id}', 'verb' => 'GET'],
+        ['name' => 'posRole#update',  'url' => '/api/pos/roles/{id}', 'verb' => 'PUT'],
+        ['name' => 'posRole#destroy', 'url' => '/api/pos/roles/{id}', 'verb' => 'DELETE'],
+
+        // POS staff + PIN authentication (camelCase slug matches PosStaffController).
+        // The static /auth and /reports routes precede the {id} wildcards.
+        ['name' => 'posStaff#authenticate', 'url' => '/api/pos/staff/auth',          'verb' => 'POST'],
+        ['name' => 'posStaffReport#staffSales', 'url' => '/api/pos/reports/staff-sales', 'verb' => 'GET'],
+        ['name' => 'posStaff#index',   'url' => '/api/pos/staff',      'verb' => 'GET'],
+        ['name' => 'posStaff#create',  'url' => '/api/pos/staff',      'verb' => 'POST'],
+        ['name' => 'posStaff#show',    'url' => '/api/pos/staff/{id}', 'verb' => 'GET'],
+        ['name' => 'posStaff#update',  'url' => '/api/pos/staff/{id}', 'verb' => 'PUT'],
+        ['name' => 'posStaff#destroy', 'url' => '/api/pos/staff/{id}', 'verb' => 'DELETE'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],

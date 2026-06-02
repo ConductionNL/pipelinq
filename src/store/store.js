@@ -92,6 +92,12 @@ export async function initializeStores() {
 		if (config.register && config.posRefundLine_schema) {
 			objectStore.registerObjectType('posRefundLine', config.posRefundLine_schema, config.register)
 		}
+		if (config.register && config.posRole_schema) {
+			objectStore.registerObjectType('posRole', config.posRole_schema, config.register)
+		}
+		if (config.register && config.posStaff_schema) {
+			objectStore.registerObjectType('posStaff', config.posStaff_schema, config.register)
+		}
 	}
 
 	return { settingsStore, objectStore }

@@ -855,6 +855,9 @@ class PosTransactionService
                 'transactionId'    => (string) ($transaction['id'] ?? $transaction['uuid'] ?? ''),
                 'reference'        => (string) ($transaction['reference'] ?? ''),
                 'cashier'          => (string) ($transaction['cashier'] ?? ''),
+                // Per-staff attribution for the shillinq commission journal
+                // (pos-staff-pin-permissions REQ-PSP-009).
+                'staffMemberId'    => (string) ($transaction['staffMemberId'] ?? ''),
                 'total'            => (float) ($transaction['total'] ?? 0),
                 'totalTax'         => (float) ($transaction['totalTax'] ?? 0),
                 'priceMode'        => $this->normalizePriceMode(mode: ($transaction['priceMode'] ?? null)),
