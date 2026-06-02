@@ -1,0 +1,7 @@
+{
+  "schema_version": 2,
+  "spec_slug": "marketing-segmentation-and-blast-02-segment-service",
+  "app": "pipelinq",
+  "kind": "code",
+  "depends_on": ["marketing-segmentation-and-blast-01-schema-and-seed-config"]
+}
