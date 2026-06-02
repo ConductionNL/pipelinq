@@ -26,7 +26,7 @@ export const useQueuesStore = defineStore('queues', {
 			this.error = null
 			try {
 				const objectStore = useObjectStore()
-				const result = await objectStore.fetchObjects('queue', { _limit: 100, _order: 'sortOrder' })
+				const result = await objectStore.fetchCollection('queue', { _limit: 100, _order: 'sortOrder' })
 				this.queues = result || []
 			} catch (error) {
 				this.error = error.message
