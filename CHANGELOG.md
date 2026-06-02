@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.29] - 2026-06-02
+
+### Added
+
+- Lead management (lead-management) — pipeline efficiency and analytics layer:
+  - Stale-lead detection with a configurable threshold (`lead_stale_threshold_days`,
+    default 14) surfaced as a "Xd old" badge on kanban cards and a new admin setting.
+  - Lead aging indicator ("Xd in stage") on kanban cards and in the lead detail
+    pipeline-progress section, derived from `stageEnteredAt` / `_dateModified`.
+  - Overdue indicators: red kanban date treatment (closed leads excluded) and an
+    overdue banner on the lead detail view.
+  - Pipeline analytics view ("Pipeline analytics") with a server-side aggregation
+    endpoint (`GET /api/rapportage/pipeline-stats`, non-admin) backing four widgets:
+    pipeline funnel, source performance, lead aging distribution and win/loss
+    analysis (with pipeline and date-range filters).
+  - Lead seed objects (5 Dutch government opportunities) for realistic demo data.
+- Dutch + English translations for all new strings; back-filled six previously
+  missing Dutch keys.
+
+### Verified
+
+- Non-admin pipeline access audit: confirmed lead CRUD and stage transitions are
+  not gated by `IGroupManager::isAdmin()` on the Pipelinq side; admin guards remain
+  only on configuration (lead sources, request channels) and bulk/reassign actions.
+
 ## [0.2.28] - 2026-06-01
 
 ### Security
