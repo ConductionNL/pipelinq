@@ -1,0 +1,65 @@
+{
+  "spec_slug": "2026-03-20-client-management",
+  "title": "Proposal: client-management enhancements",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [],
+  "issue": null,
+  "schema_version": 2,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-05-28T12:53:27Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [
+        "browser-test-nc-setup-failed"
+      ],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "sonnet",
+          "container": "hydra-builder",
+          "started_at": "2026-05-28T12:25:01Z",
+          "ended_at": "2026-05-28T12:53:22Z",
+          "exit_code": 0,
+          "turns_used": 173,
+          "turns_budget": 200,
+          "turns_per_session": [
+            107,
+            66
+          ],
+          "turns_max_session": 107,
+          "sessions_count": 2,
+          "checks_run": [
+            "composer check:strict (phpcs)",
+            "composer test:unit (phpunit)"
+          ],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass",
+          "duration_seconds": 1701
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "runs": 1,
+    "turns_used": 173,
+    "cost_usd": 0.0,
+    "duration_seconds": 1701,
+    "cycles": 1,
+    "by_stage": {
+      "build": {
+        "runs": 1,
+        "turns_used": 173,
+        "cost_usd": 0.0,
+        "duration_seconds": 1701
+      }
+    }
+  }
+}

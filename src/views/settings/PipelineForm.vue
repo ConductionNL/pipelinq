@@ -24,6 +24,7 @@
 						<label>{{ t('pipelinq', 'View') }}</label>
 						<NcSelect v-model="form.viewId"
 							:options="viewOptions"
+							:aria-label-combobox="t('pipelinq', 'View')"
 							:clearable="true"
 							label="label"
 							:reduce="o => o.value"
@@ -161,6 +162,8 @@
 							<NcTextField :value="String(stage.probability ?? '')"
 								:label="t('pipelinq', 'Probability %')"
 								type="number"
+								:error="!!stageErrors[index]?.probability"
+								:helper-text="stageErrors[index]?.probability || ''"
 								class="stage-probability-field"
 								@update:value="v => stage.probability = v === '' ? null : Number(v)" />
 
@@ -255,15 +258,24 @@ export default {
 		isEdit() {
 			return !!this.pipeline
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-43
+		 */
 		viewOptions() {
 			return this.views.map(v => ({
 				value: v.id || v.uuid,
 				label: v.name || v.slug || v.id,
 			}))
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-41
+		 */
 		sortedStages() {
 			return [...this.form.stages].sort((a, b) => a.order - b.order)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-33
+		 */
 		errors() {
 			const errors = {}
 			if (!this.form.title.trim()) {
@@ -275,6 +287,10 @@ export default {
 			}
 			return errors
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-42
+		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-2.2
+		 */
 		stageErrors() {
 			return this.form.stages.map(stage => {
 				const errors = {}
@@ -290,6 +306,9 @@ export default {
 				return Object.keys(errors).length > 0 ? errors : null
 			})
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-34
+		 */
 		isValid() {
 			if (Object.keys(this.errors).length > 0) return false
 			if (this.stageErrors.some(e => e !== null)) return false
@@ -297,6 +316,9 @@ export default {
 			return true
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-32
+	 */
 	async created() {
 		if (this.pipeline) {
 			this.form = {
@@ -313,6 +335,9 @@ export default {
 		await this.loadViews()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-35
+		 */
 		async loadViews() {
 			this.loadingViews = true
 			try {
@@ -323,6 +348,9 @@ export default {
 			this.loadingViews = false
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-30
+		 */
 		addMapping() {
 			this.form.propertyMappings.push({
 				schemaSlug: '',
@@ -331,10 +359,16 @@ export default {
 			})
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-39
+		 */
 		removeMapping(index) {
 			this.form.propertyMappings.splice(index, 1)
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-31
+		 */
 		addStage() {
 			const maxOrder = this.form.stages.reduce((max, s) => Math.max(max, s.order), -1)
 			this.form.stages.push({
@@ -346,6 +380,9 @@ export default {
 				color: null,
 			})
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-40
+		 */
 		removeStage(index) {
 			const sorted = this.sortedStages
 			const stage = sorted[index]
@@ -355,6 +392,9 @@ export default {
 			}
 			this.recomputeOrders()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-36
+		 */
 		moveStage(stage, direction) {
 			const sorted = this.sortedStages
 			const currentIndex = sorted.indexOf(stage)
@@ -367,12 +407,18 @@ export default {
 			stage.order = otherStage.order
 			otherStage.order = tempOrder
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-38
+		 */
 		recomputeOrders() {
 			const sorted = [...this.form.stages].sort((a, b) => a.order - b.order)
 			sorted.forEach((stage, i) => {
 				stage.order = i
 			})
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-37
+		 */
 		onSave() {
 			if (!this.isValid) return
 
@@ -606,7 +652,7 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
-.stage-color-field input[type="color"] {
+.stage-color-field input[type='color'] {
 	width: 32px;
 	height: 32px;
 	padding: 0;

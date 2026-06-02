@@ -15,6 +15,9 @@ export const useSkillsStore = defineStore('skills', {
 		getSkillById: (state) => (id) => state.skills.find(s => s.id === id),
 	},
 	actions: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-46
+		 */
 		async fetchSkills() {
 			this.loading = true
 			this.error = null
@@ -30,6 +33,9 @@ export const useSkillsStore = defineStore('skills', {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-47
+		 */
 		async saveSkill(data) {
 			this.loading = true
 			this.error = null
@@ -49,6 +55,9 @@ export const useSkillsStore = defineStore('skills', {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-45
+		 */
 		async deleteSkill(id) {
 			this.loading = true
 			this.error = null

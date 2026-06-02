@@ -6,6 +6,8 @@ status: implemented
 
 ## Purpose
 
+@e2e exclude backend notification engine — dispatch logic and OR activity stream events are PHP services; covered by PHPUnit
+
 Deliver real-time notifications and a team-visible activity timeline for CRM events so users stay informed about leads, requests, and collaboration actions. This spec covers the notification dispatch logic, activity stream integration, per-category user preferences, notification rendering, and CRM-specific event types including SLA breach warnings, deal won celebrations, and quote lifecycle events.
 
 **Feature tier:** V1 (core notifications), Enterprise (SLA, advanced events)
@@ -13,9 +15,7 @@ Deliver real-time notifications and a team-visible activity timeline for CRM eve
 **Competitor context:** EspoCRM provides granular notification settings per entity type with in-app, email, and webhook channels. Krayin CRM uses Laravel events for notification dispatch with configurable workflows. Twenty CRM has basic in-app notifications without per-category settings. This spec positions Pipelinq to leverage Nextcloud's mature notification and activity infrastructure (OCP APIs) while adding CRM-specific event intelligence.
 
 ---
-
 ## Requirements
-
 ### Requirement: CRM Notifications [V1]
 
 Users MUST receive Nextcloud notifications when CRM actions directly affect them. Notifications are dispatched via `NotificationService.php` using Nextcloud's `OCP\Notification\IManager`.
@@ -326,6 +326,90 @@ The system MUST handle notification volume gracefully to prevent notification fa
 - AND a summary notification SHOULD be sent: "You have {count} new Pipelinq updates"
 
 ---
+
+### Requirement: Activity and notification dispatch — documented operations
+
+The activity publishing and notification delivery implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `publishDealLost`, `notifyDealLost`, `sendNotification`). Each listed method realises an observable part of activity publishing and notification delivery and MUST behave as implemented in the current codebase.
+
+**Feature tier**: V1
+
+#### Scenario: Documented operations are available
+
+- GIVEN the backend service/controller is loaded
+- WHEN a caller invokes one of the documented operations for activity publishing and notification delivery
+- THEN the operation MUST execute and return a result consistent with the current implementation
+
+---
+
+### Requirement: Activity and notification dispatch — results derived from current CRM state
+
+Operations for activity publishing and notification delivery MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
+
+**Feature tier**: V1
+
+#### Scenario: Results reflect live state
+
+- GIVEN CRM data backing activity publishing and notification delivery
+- WHEN a documented operation runs
+- THEN its output MUST be derived from that data
+- AND it MUST change when the underlying data changes
+
+---
+
+### Requirement: Activity and notification dispatch — defensive handling of absent or invalid input
+
+Operations for activity publishing and notification delivery MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
+
+**Feature tier**: V1
+
+#### Scenario: Missing input does not crash the flow
+
+- GIVEN an operation for activity publishing and notification delivery is called with absent or invalid input
+- WHEN it executes
+- THEN it MUST return a safe default or a validation result
+- AND it MUST NOT raise an unhandled exception
+
+### Requirement: Domain event dispatch — documented operations
+
+The object lifecycle event dispatch and deep-link registration implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `handle`, `handle`, `dispatchAssigneeChange`, `dispatchCreated`, `dispatchDealLost`, `dispatchDealWon`). Each listed method realises an observable part of object lifecycle event dispatch and deep-link registration and MUST behave as implemented in the current codebase.
+
+**Feature tier**: V1
+
+#### Scenario: Documented operations are available
+
+- GIVEN the backend service/controller is loaded
+- WHEN a caller invokes one of the documented operations for object lifecycle event dispatch and deep-link registration
+- THEN the operation MUST execute and return a result consistent with the current implementation
+
+---
+
+### Requirement: Domain event dispatch — results derived from current CRM state
+
+Operations for object lifecycle event dispatch and deep-link registration MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
+
+**Feature tier**: V1
+
+#### Scenario: Results reflect live state
+
+- GIVEN CRM data backing object lifecycle event dispatch and deep-link registration
+- WHEN a documented operation runs
+- THEN its output MUST be derived from that data
+- AND it MUST change when the underlying data changes
+
+---
+
+### Requirement: Domain event dispatch — defensive handling of absent or invalid input
+
+Operations for object lifecycle event dispatch and deep-link registration MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
+
+**Feature tier**: V1
+
+#### Scenario: Missing input does not crash the flow
+
+- GIVEN an operation for object lifecycle event dispatch and deep-link registration is called with absent or invalid input
+- WHEN it executes
+- THEN it MUST return a safe default or a validation result
+- AND it MUST NOT raise an unhandled exception
 
 ## Current Implementation Status
 

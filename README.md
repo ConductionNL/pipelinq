@@ -12,12 +12,14 @@
   <a href="https://github.com/ConductionNL/pipelinq/releases"><img src="https://img.shields.io/github/v/release/ConductionNL/pipelinq" alt="Latest release"></a>
   <a href="https://github.com/ConductionNL/pipelinq/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="License"></a>
   <a href="https://github.com/ConductionNL/pipelinq/actions"><img src="https://img.shields.io/github/actions/workflow/status/ConductionNL/pipelinq/code-quality.yml?label=quality" alt="Code quality"></a>
-  <a href="https://pipelinq.app"><img src="https://img.shields.io/badge/docs-pipelinq.app-green" alt="Documentation"></a>
+  <a href="https://pipelinq.conduction.nl"><img src="https://img.shields.io/badge/docs-pipelinq.conduction.nl-green" alt="Documentation"></a>
 </p>
 
 ---
 
 Pipelinq brings CRM capabilities natively into Nextcloud. Track clients and organizations, manage leads through visual kanban pipelines, capture service requests before they become formal cases, and log every interaction — without leaving your Nextcloud workspace.
+
+📚 **[Step-by-step tutorials](https://pipelinq.conduction.nl/docs/category/tutorials)** — user + admin walkthroughs with screenshots, kept in sync with the live UI via the [journeydoc](https://github.com/ConductionNL/hydra/blob/development/openspec/architecture/adr-030-journeydoc-pattern.md) capture spec defined in hydra.
 
 It pairs naturally with [Procest](https://github.com/ConductionNL/procest) to form a complete intake-to-resolution workflow: Pipelinq handles the customer-facing side, Procest handles the internal case processing.
 
@@ -60,6 +62,21 @@ It pairs naturally with [Procest](https://github.com/ConductionNL/procest) to fo
 - **My Work Queue** — Personal dashboard showing all assigned leads, requests, and follow-ups
 - **Activity Feed** — Real-time updates on assignments, stage changes, new notes, and interactions
 - **Contact Moments** — Log calls, emails, visits, and other client interactions with timestamps
+
+### Point of Sale (BTW engine)
+- **Per-item BTW rate** — Each line carries its own Dutch VAT rate; the rate is pre-filled from the
+  product's `btwClass` and may be overridden per line
+- **Per-rate breakdown** — Receipts and the detail view show tax grouped by rate (e.g. "9% BTW: €X",
+  "21% BTW: €Y"); totals are recomputed server-side and never trusted from the client
+- **Inclusive / exclusive pricing** — A transaction's `priceMode` controls whether entered prices
+  already contain BTW (`incl`) or have it added on top (`excl`); the net base is the same either way
+- **GL invoice breakdown** — An `invoiceBreakdown` array (with Dutch descriptions) plus a
+  `GET /api/pos-transactions/tax-report` endpoint give shillinq a per-rate split for GL posting
+
+> **Dutch BTW rates** — `0%` zero-rated/exempt items (vouchers, certain exports), `9%` reduced rate
+> (food, beverages, books), `21%` standard rate (most goods and services). Set a product's
+> `taxRate` / `btwClass` in the catalog so it pre-fills onto POS lines; an unknown class
+> fails closed to the 21% standard rate so BTW is never silently dropped to zero.
 
 ### Integrations
 - **Unified Search** — Deep links for clients, leads, and requests in Nextcloud's global search
@@ -163,12 +180,27 @@ npm run build      # Production build
 composer phpcs          # Check coding standards
 composer cs:fix         # Auto-fix issues
 composer phpmd          # Mess detection
+composer psalm          # Static analysis (Psalm)
+composer phpstan        # Static analysis (PHPStan, level 5)
 composer phpmetrics     # HTML metrics report
+composer check:strict   # Run the full strict gate suite (all of the above + phpunit)
 
 # Frontend
 npm run lint            # ESLint
 npm run stylelint       # CSS linting
 ```
+
+The strict gate suite (PHPCS, PHPMD, Psalm, PHPStan, PHPUnit) runs on **every
+pull request** through the shared `ConductionNL/.github` quality workflow, and a
+**weekly cron** (`code-quality.yml`, Mondays 06:00 UTC) re-runs it against
+`development` to catch drift between PRs.
+
+The one-off legacy quality cleanup (PHPCS/PHPMD/PHPStan burn-down split out of
+`pipelinq-legacy-quality-cleanup` per ADR-032) is **complete**: PHPCS and PHPMD
+are clean with no legacy-debt suppression sections, and PHPStan runs clean at
+level 5. The remaining `phpstan-baseline.neon` entries are intentional,
+documented tracked debt (unread forward-compat DI stubs and one nextcloud/ocp
+stub false-positive) — see the file header and issue #496 before regenerating.
 
 ## Tech Stack
 
@@ -179,7 +211,7 @@ npm run stylelint       # CSS linting
 | Backend | PHP 8.1+, Nextcloud App Framework |
 | Data | OpenRegister (PostgreSQL JSON objects) |
 | UX | @conduction/nextcloud-vue, vue-draggable |
-| Quality | PHPCS, PHPMD, phpmetrics, ESLint, Stylelint |
+| Quality | PHPCS, PHPMD, Psalm, PHPStan, phpmetrics, ESLint, Stylelint |
 
 ## Documentation
 

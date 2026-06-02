@@ -2,6 +2,8 @@
 
 ## Purpose
 
+@e2e exclude backend routing engine — skill matching and advisory routing logic are PHP service operations; covered by PHPUnit
+
 Skill-based routing enables intelligent work distribution by matching requests to agents based on their expertise areas. Skills are defined by admins, assigned to agents via profiles, and matched against request categories to generate advisory routing suggestions. The system is advisory-only (no auto-assignment) to maintain human accountability.
 
 **Standards**: Schema.org (`DefinedTerm` for skills, `Person` for agent profiles)
@@ -30,9 +32,7 @@ Skill-based routing enables intelligent work distribution by matching requests t
 | `isAvailable` | boolean | -- | No | true |
 
 ---
-
 ## Requirements
-
 ### Requirement: Skill Definition Entity [Enterprise]
 
 The system SHALL support defining skills as OpenRegister objects. Skills represent areas of expertise that can be assigned to agents and matched to request categories for routing. Each skill SHALL be stored with `@type` set to `schema:DefinedTerm`.
@@ -169,3 +169,46 @@ The system SHALL create default skills during the repair step to provide an out-
 - **Skill-Based Routing Suggestion:** Implemented in `src/components/RoutingSuggestionPanel.vue`. Uses `findMatchingAgents()`, `filterByCapacity()`, `sortByWorkload()` from `src/services/queueUtils.js`. Integrated into `RequestDetail.vue`.
 - **Workload Calculation:** Implemented in `agentProfiles.js` store via `getWorkload()` method. Counts open requests (non-terminal status) and open leads (status=open).
 - **Default Skills:** Created via `DefaultQueueService::createDefaultSkills()` called from repair step. Creates 5 default skills for Dutch government KCC use cases.
+
+### Requirement: Routing suggestion UI — documented operations
+
+The skill-routing suggestion panel implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `assign`, `category`, `loadSuggestions`, `requestId`, `workloadIcon`, `workloadTitle`). Each listed method realises an observable part of skill-routing suggestion panel and MUST behave as implemented in the current codebase.
+
+**Feature tier**: V1
+
+#### Scenario: Documented operations are available
+
+- GIVEN the frontend component/store is loaded
+- WHEN a caller invokes one of the documented operations for skill-routing suggestion panel
+- THEN the operation MUST execute and return a result consistent with the current implementation
+
+---
+
+### Requirement: Routing suggestion UI — results derived from current CRM state
+
+Operations for skill-routing suggestion panel MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
+
+**Feature tier**: V1
+
+#### Scenario: Results reflect live state
+
+- GIVEN CRM data backing skill-routing suggestion panel
+- WHEN a documented operation runs
+- THEN its output MUST be derived from that data
+- AND it MUST change when the underlying data changes
+
+---
+
+### Requirement: Routing suggestion UI — defensive handling of absent or invalid input
+
+Operations for skill-routing suggestion panel MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
+
+**Feature tier**: V1
+
+#### Scenario: Missing input does not crash the flow
+
+- GIVEN an operation for skill-routing suggestion panel is called with absent or invalid input
+- WHEN it executes
+- THEN it MUST return a safe default or a validation result
+- AND it MUST NOT raise an unhandled exception
+

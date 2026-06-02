@@ -6,7 +6,7 @@
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Controller
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -30,6 +30,7 @@ use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Tests for SettingsController.
@@ -72,6 +73,7 @@ class SettingsControllerTest extends TestCase
         $user->method('getUID')->willReturn('admin');
         $userSession->method('getUser')->willReturn($user);
         $l10n->method('t')->willReturnArgument(0);
+        $logger = $this->createMock(LoggerInterface::class);
 
         $this->controller = new SettingsController(
             $request,
@@ -81,6 +83,7 @@ class SettingsControllerTest extends TestCase
             $this->settingsService,
             $userSession,
             $l10n,
+            $logger,
         );
     }//end setUp()
 

@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-4
  */
 
 declare(strict_types=1);
@@ -51,6 +53,8 @@ class DefaultPipelineService
      * Create default pipelines if none exist.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-4
      */
     public function createDefaultPipelines(): void
     {
@@ -75,9 +79,7 @@ class DefaultPipelineService
                         'title'    => 'Sales Pipeline',
                     ],
                     'limit'   => 1,
-                ],
-                _rbac: false,
-                _multitenancy: false
+                ]
             );
 
             if (empty($existing) === false) {
@@ -127,9 +129,7 @@ class DefaultPipelineService
             [],
             $registerId,
             $schemaId,
-            null,
-            _rbac: false,
-            _multitenancy: false
+            null
         );
 
         $title = $data['title'] ?? 'Unknown';

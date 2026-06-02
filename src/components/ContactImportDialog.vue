@@ -52,6 +52,7 @@
 
 <script>
 import { NcButton, NcDialog, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
 
 export default {
 	name: 'ContactImportDialog',
@@ -82,6 +83,9 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-3
+		 */
 		onSearch(value) {
 			this.query = value
 			clearTimeout(this.searchTimeout)
@@ -94,11 +98,14 @@ export default {
 			}, 300)
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-1
+		 */
 		async doSearch() {
 			this.searching = true
 			try {
 				const response = await fetch(
-					`/apps/pipelinq/api/contacts-sync/search?q=${encodeURIComponent(this.query)}`,
+					generateUrl(`/apps/pipelinq/api/contacts-sync/search?q=${encodeURIComponent(this.query)}`),
 					{
 						headers: {
 							'Content-Type': 'application/json',
@@ -117,6 +124,9 @@ export default {
 			this.searching = false
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-2
+		 */
 		async importContact(contact) {
 			this.importing = contact.uid
 			try {
@@ -129,7 +139,7 @@ export default {
 					body.clientId = this.clientId
 				}
 
-				const response = await fetch('/apps/pipelinq/api/contacts-sync/import', {
+				const response = await fetch(generateUrl('/apps/pipelinq/api/contacts-sync/import'), {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',

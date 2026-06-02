@@ -52,10 +52,8 @@ Request management handles the intake and tracking of requests (verzoeken) — s
 | `converted` | (terminal -- no transitions allowed) |
 
 ---
-
 ## Requirements
-
-### REQ-RM-010: Request CRUD [MVP]
+### Requirement: Request CRUD [MVP]
 
 The system MUST support creating, reading, updating, and deleting request records. Each request MUST have a `title`. The `status` MUST default to `new` when not explicitly provided. The `channel` field MUST be added to the OpenRegister schema to support persistence.
 
@@ -67,68 +65,80 @@ The system MUST support creating, reading, updating, and deleting request record
 - **THEN** `priority` MUST default to `normal`
 
 #### Scenario: Create a request linked to a client
+@e2e exclude requires existing client seed data
 - **WHEN** the user creates a request and selects client "Gemeente Utrecht"
 - **THEN** the request `client` field MUST store a reference to the client object via `schema:customer`
 - **THEN** the request MUST appear in the client's detail view under "Requests"
 
 #### Scenario: Create a request with all optional fields
+@e2e exclude requires seed data
 - **WHEN** user creates a request with title "Website redesign inquiry", description "Client wants a full redesign", priority `high`, category "IT Services", and channel "email"
 - **THEN** the system MUST store all provided fields on the OpenRegister object including channel
 - **THEN** all fields MUST be retrievable via the API
 
 #### Scenario: Validation - title is required
+@e2e exclude server validation; covered by PHPUnit
 - **WHEN** user submits a request without a `title` (empty string or missing)
 - **THEN** the system MUST reject the creation with a validation error
 - **THEN** the error message MUST indicate that `title` is required
 
 #### Scenario: Update request fields
+@e2e exclude requires existing request record
 - **WHEN** the user updates the description, priority, category, or channel of a request with status `new`
 - **THEN** the system MUST persist the changes to the OpenRegister object
 
 #### Scenario: Delete a request
+@e2e exclude requires existing request record
 - **WHEN** the user deletes a request with status `new` or `in_progress`
 - **THEN** the system MUST remove the OpenRegister object
 - **THEN** the request MUST no longer appear in list views
 
 #### Scenario: Delete a converted request is blocked
+@e2e exclude backend referential integrity; covered by PHPUnit
 - **WHEN** the user attempts to delete a request with status `converted` and a `caseReference`
 - **THEN** the system MUST prevent deletion
 - **THEN** the system MUST display an error that converted requests with active case links cannot be deleted
 
 ---
 
-### REQ-RM-020: Request Status Lifecycle [MVP]
+### Requirement: Request Status Lifecycle [MVP]
 
 The system MUST enforce allowed status transitions as defined in the transition table. The frontend MUST present only valid transitions for the current status.
 
 #### Scenario: Valid transition from new to in_progress
+@e2e exclude backend state machine; covered by PHPUnit
 - **WHEN** user changes a request's status from `new` to `in_progress`
 - **THEN** the system MUST update the status
 
 #### Scenario: Valid transition from in_progress to completed
+@e2e exclude backend state machine; covered by PHPUnit
 - **WHEN** user changes a request's status from `in_progress` to `completed`
 - **THEN** the system MUST update the status to `completed` (terminal)
 
 #### Scenario: Valid transition from in_progress to rejected
+@e2e exclude backend state machine; covered by PHPUnit
 - **WHEN** user changes a request's status from `in_progress` to `rejected`
 - **THEN** the system MUST update the status to `rejected` (terminal)
 
 #### Scenario: Invalid transition new to converted
+@e2e exclude backend state machine; covered by PHPUnit
 - **WHEN** user attempts to change a request's status from `new` to `converted`
 - **THEN** the system MUST reject the transition with a validation error listing allowed transitions
 
 #### Scenario: Invalid transition from terminal status
+@e2e exclude backend state machine; covered by PHPUnit
 - **WHEN** user attempts to change a request's status from `completed` to `in_progress`
 - **THEN** the system MUST reject the transition indicating `completed` is terminal
 
 #### Scenario: Quick status change from list view
+@e2e exclude requires existing request data
 - **WHEN** user clicks a status dropdown on a request row in the list view
 - **THEN** the system MUST update the request status without navigating to detail view
 - **THEN** only allowed transitions from the current status MUST be presented
 
 ---
 
-### REQ-RM-030: Request List View [MVP]
+### Requirement: Request List View [MVP]
 
 The system MUST provide a full list view with search, sort, filter, and pagination. The current basic table MUST be enhanced with filtering controls and sortable columns.
 
@@ -138,86 +148,101 @@ The system MUST provide a full list view with search, sort, filter, and paginati
 - **THEN** default sort MUST be `requestedAt` descending
 
 #### Scenario: Filter by status
+@e2e exclude requires test data
 - **WHEN** user filters by status `new`
 - **THEN** only requests with status `new` MUST be shown
 - **THEN** the filter selection MUST persist until cleared
 
 #### Scenario: Filter by priority
+@e2e exclude requires test data
 - **WHEN** user filters by priority `urgent`
 - **THEN** only urgent requests MUST be shown
 
 #### Scenario: Filter by assignee
+@e2e exclude requires test data
 - **WHEN** user filters by assignee "Jan de Vries"
 - **THEN** only requests assigned to Jan MUST be shown
 
 #### Scenario: Filter by channel
+@e2e exclude requires test data
 - **WHEN** user filters by channel `email`
 - **THEN** only email-channel requests MUST be shown
 
 #### Scenario: Combine multiple filters
+@e2e exclude requires test data
 - **WHEN** user applies status `in_progress` AND priority `high`
 - **THEN** only requests matching BOTH criteria MUST be shown
 
 #### Scenario: Search requests by keyword
+@e2e exclude requires test data
 - **WHEN** user searches for "maintenance"
 - **THEN** the system MUST match against both `title` and `description` fields case-insensitively
 
 #### Scenario: Sort by column
+@e2e exclude requires test data
 - **WHEN** user clicks the "Priority" column header
 - **THEN** the list MUST sort by priority (urgent > high > normal > low)
 - **THEN** clicking again MUST reverse the sort order
 
 #### Scenario: Pagination
+@e2e exclude requires sufficient test data
 - **WHEN** user views the list with 50 requests and page size 25
 - **THEN** the system MUST display 25 requests with navigation to page 2
 
 ---
 
-### REQ-RM-040: Request Detail View [MVP]
+### Requirement: Request Detail View [MVP]
 
 The system MUST provide a detail view with proper layout including core info, client link, pipeline position, assignment, and activity timeline. The current basic form MUST be replaced with a structured detail layout.
 
 #### Scenario: View request core information
+@e2e exclude requires existing request record
 - **WHEN** user navigates to a request detail view
 - **THEN** the system MUST display: title, description, status (badge), priority (badge), channel, category, requestedAt, and assignee
 
 #### Scenario: View request with linked client
+@e2e exclude requires linked data
 - **WHEN** user views a request linked to client "Gemeente Utrecht"
 - **THEN** the system MUST display the client name as a clickable link to the client detail view
 - **THEN** the system MUST display available client contact information
 
 #### Scenario: View request pipeline position
+@e2e exclude requires pipeline with request
 - **WHEN** user views a request on the "Service Pipeline" at stage "In Progress"
 - **THEN** the system MUST display the pipeline name and current stage
 - **THEN** the system MUST display a visual stage progression indicator
 - **THEN** the system MUST provide a "Move to next stage" action
 
 #### Scenario: Navigate from detail to related entities
+@e2e exclude requires existing data
 - **WHEN** user clicks the client name on the request detail view
 - **THEN** the system MUST navigate to the client detail view
 - **THEN** there MUST be a way to navigate back to the request detail
 
 ---
 
-### REQ-RM-050: Request Assignment [MVP]
+### Requirement: Request Assignment [MVP]
 
 The system MUST allow assigning a request to a Nextcloud user via a user picker dropdown.
 
 #### Scenario: Assign a request to a user
+@e2e exclude requires Nextcloud users and data
 - **WHEN** user assigns a request to "Jan de Vries" via the user picker
 - **THEN** the `assignedTo` field MUST be set to Jan's Nextcloud user UID
 
 #### Scenario: Reassign a request
+@e2e exclude requires existing assignment
 - **WHEN** user reassigns a request from "Jan de Vries" to "Maria van Dijk"
 - **THEN** the `assignedTo` field MUST be updated to Maria's UID
 
 #### Scenario: Unassign a request
+@e2e exclude requires existing assignment
 - **WHEN** user removes the assignment
 - **THEN** the `assignedTo` field MUST be cleared (null)
 
 ---
 
-### REQ-RM-060: Request Priority [MVP]
+### Requirement: Request Priority [MVP]
 
 The system MUST support four priority levels with visual indicators in all views.
 
@@ -227,6 +252,7 @@ The system MUST support four priority levels with visual indicators in all views
 - **THEN** the priority MUST be visually distinguished with a color-coded badge
 
 #### Scenario: Change priority
+@e2e exclude requires existing request
 - **WHEN** user changes a request's priority from `normal` to `high`
 - **THEN** the system MUST update the priority
 
@@ -238,7 +264,7 @@ The system MUST support four priority levels with visual indicators in all views
 
 ---
 
-### REQ-RM-070: Request Channel Tracking [V1]
+### Requirement: Request Channel Tracking [V1]
 
 The system MUST support tracking the intake channel. Channel values come from SystemTag-based admin settings (already implemented). The `channel` field MUST be added to the OpenRegister schema.
 
@@ -247,32 +273,36 @@ The system MUST support tracking the intake channel. Channel values come from Sy
 - **THEN** the request MUST store `channel` as "phone" in OpenRegister
 
 #### Scenario: Channel dropdown uses admin-configured values
+@e2e exclude requires admin-configured channels
 - **WHEN** user opens the channel dropdown on the request form
 - **THEN** the options MUST come from the request channels store (SystemTag-based)
 
 ---
 
-### REQ-RM-080: Request Category/Product Classification [V1]
+### Requirement: Request Category/Product Classification [V1]
 
 The system SHOULD support categorizing requests by product or service type. Categories are free-text strings that MAY be pre-populated from admin configuration.
 
 #### Scenario: Set category during creation
+@e2e exclude requires category configuration
 - GIVEN a user creating a request
 - WHEN they enter category "IT Services"
 - THEN the request MUST store the category value
 
 #### Scenario: Filter requests by category
+@e2e exclude requires categorized test data
 - GIVEN requests with various categories
 - WHEN the user filters the request list by category "IT Services"
 - THEN only requests with that category MUST be shown
 
 ---
 
-### REQ-RM-090: Request-to-Case Conversion [V1]
+### Requirement: Request-to-Case Conversion [V1]
 
 The system MUST support converting a request to a case in Procest.
 
 #### Scenario: Convert request to case
+@e2e exclude requires Procest integration; covered by PHPUnit
 - **WHEN** user clicks "Convert to case" on a request with status `in_progress`
 - **THEN** the system MUST create a case in Procest with the request title as case title
 - **THEN** the request status MUST change to `converted`
@@ -280,35 +310,41 @@ The system MUST support converting a request to a case in Procest.
 - **THEN** if case creation fails, the request status MUST NOT change
 
 #### Scenario: Conversion displays case link
+@e2e exclude requires Procest integration
 - **WHEN** user views a converted request
 - **THEN** the system MUST display a link to the associated Procest case
 - **THEN** the status MUST show as "Converted to case"
 
 #### Scenario: Convert from invalid status
+@e2e exclude backend state validation; covered by PHPUnit
 - **WHEN** user attempts to convert a request with status `new`
 - **THEN** the system MUST prevent the action indicating conversion is only available from `in_progress`
 
 #### Scenario: Converted request is read-only
+@e2e exclude requires converted request
 - **WHEN** user attempts to edit a request with status `converted`
 - **THEN** the system MUST prevent modification of core fields
 - **THEN** the system MUST display a notice that the request has been converted
 
 ---
 
-### REQ-RM-100: Request on Pipeline [MVP]
+### Requirement: Request on Pipeline [MVP]
 
 A request MAY optionally be placed on a pipeline. When on a pipeline, the request has a `stage`, `stageOrder`, and appears on the kanban board.
 
 #### Scenario: Place request on pipeline
+@e2e exclude requires pipeline with stages
 - **WHEN** user places a request on the "Service Pipeline" at stage "New"
 - **THEN** the request MUST appear as a card on the pipeline kanban board
 
 #### Scenario: Request without pipeline
+@e2e exclude backend field validation
 - **WHEN** user views a request not on any pipeline
 - **THEN** the pipeline section MUST show "Not on pipeline" or be hidden
 - **THEN** the request MUST still be fully functional with status-based workflow
 
 #### Scenario: Request card on mixed pipeline
+@e2e exclude covered by pipeline spec
 - **WHEN** the pipeline kanban board displays a mixed pipeline
 - **THEN** request cards MUST be visually distinguishable from lead cards ([REQ] badge)
 - **THEN** request cards MUST show: title, status, priority, assignee
@@ -316,33 +352,38 @@ A request MAY optionally be placed on a pipeline. When on a pipeline, the reques
 
 ---
 
-### REQ-RM-110: Request Validation Rules [MVP]
+### Requirement: Request Validation Rules [MVP]
 
 The system MUST enforce validation rules for request data integrity.
 
 #### Scenario: Title must not be empty
+@e2e exclude server validation; covered by PHPUnit
 - **WHEN** a request create or update has an empty title
 - **THEN** the system MUST reject with a validation error
 
 #### Scenario: Status must follow transition rules
+@e2e exclude server validation; covered by PHPUnit
 - **WHEN** a status change violates the transition table
 - **THEN** the system MUST reject with specific error listing allowed transitions
 
 #### Scenario: Priority must be a valid value
+@e2e exclude server validation; covered by PHPUnit
 - **WHEN** priority is not one of `low`, `normal`, `high`, `urgent`
 - **THEN** the system MUST reject with a validation error
 
 #### Scenario: Client reference must be valid
+@e2e exclude server validation; covered by PHPUnit
 - **WHEN** a client reference does not exist in OpenRegister
 - **THEN** the system MUST reject with "Referenced client not found"
 
 ---
 
-### REQ-RM-120: Request Queue Assignment [Enterprise]
+### Requirement: Request Queue Assignment [Enterprise]
 
 The request entity SHALL support an optional `queue` reference field linking the request to a queue for workload management.
 
 #### Scenario: Request with queue reference
+@e2e exclude requires queue data
 - **WHEN** a request is assigned to queue "Vergunningen"
 - **THEN** the request's `queue` field SHALL store the queue's UUID
 - **THEN** the request SHALL appear in the queue's item list view
@@ -353,20 +394,65 @@ The request entity SHALL support an optional `queue` reference field linking the
 - **THEN** the request SHALL function normally with its existing status lifecycle and pipeline placement
 
 #### Scenario: Queue field in request list view
+@e2e exclude requires queue data
 - **WHEN** the request list is displayed
 - **THEN** a "Queue" column SHALL be available showing the queue title or "--" if unqueued
 
 #### Scenario: Queue field in request detail view
+@e2e exclude requires queue data
 - **WHEN** the request detail view is displayed for a queued request
 - **THEN** the queue name SHALL be displayed as a link to the queue detail view
 - **THEN** a "Change queue" action SHALL be available
 
 #### Scenario: Assign to queue from request detail
+@e2e exclude requires queue data
 - **WHEN** an agent clicks "Change queue" on a request detail view
 - **THEN** a dropdown SHALL show all active queues
 - **THEN** selecting a queue SHALL update the request's `queue` field
 
 ---
+
+### Requirement: Service request UI — documented operations
+
+The service request list and detail screens implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `objectStore`, `onSave`, `assigneeOption`, `canConvert`, `canDelete`, `confirmDelete`). Each listed method realises an observable part of service request list and detail screens and MUST behave as implemented in the current codebase.
+
+**Feature tier**: V1
+
+#### Scenario: Documented operations are available
+
+- GIVEN the frontend component/store is loaded
+- WHEN a caller invokes one of the documented operations for service request list and detail screens
+- THEN the operation MUST execute and return a result consistent with the current implementation
+
+---
+
+### Requirement: Service request UI — results derived from current CRM state
+
+Operations for service request list and detail screens MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
+
+**Feature tier**: V1
+
+#### Scenario: Results reflect live state
+
+- GIVEN CRM data backing service request list and detail screens
+- WHEN a documented operation runs
+- THEN its output MUST be derived from that data
+- AND it MUST change when the underlying data changes
+
+---
+
+### Requirement: Service request UI — defensive handling of absent or invalid input
+
+Operations for service request list and detail screens MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
+
+**Feature tier**: V1
+
+#### Scenario: Missing input does not crash the flow
+
+- GIVEN an operation for service request list and detail screens is called with absent or invalid input
+- WHEN it executes
+- THEN it MUST return a safe default or a validation result
+- AND it MUST NOT raise an unhandled exception
 
 ## UI Layout Reference
 
@@ -501,7 +587,7 @@ Request management handles the intake and tracking of requests (verzoeken) — s
 
 ## Requirements
 
-### REQ-RM-010: Request CRUD [MVP]
+### Requirement: Request CRUD [MVP]
 
 The system MUST support creating, reading, updating, and deleting request records. Each request MUST have a `title`. The `status` MUST default to `new` when not explicitly provided. All properties defined in the data model MUST be persisted via OpenRegister.
 
@@ -513,68 +599,80 @@ The system MUST support creating, reading, updating, and deleting request record
 - **THEN** `priority` MUST default to `normal`
 
 #### Scenario: Create a request linked to a client
+@e2e exclude requires existing client seed data
 - **WHEN** the user creates a request and selects client "Gemeente Utrecht"
 - **THEN** the request `client` field MUST store a reference to the client object via `schema:customer`
 - **THEN** the request MUST appear in the client's detail view under "Requests"
 
 #### Scenario: Create a request with all optional fields
+@e2e exclude requires seed data
 - **WHEN** user creates a request with title "Website redesign inquiry", description "Client wants a full redesign", priority `high`, category "IT Services", and channel "email"
 - **THEN** the system MUST store all provided fields on the OpenRegister object including channel
 - **THEN** all fields MUST be retrievable via the API
 
 #### Scenario: Validation - title is required
+@e2e exclude server validation; covered by PHPUnit
 - **WHEN** user submits a request without a `title` (empty string or missing)
 - **THEN** the system MUST reject the creation with a validation error
 - **THEN** the error message MUST indicate that `title` is required
 
 #### Scenario: Update request fields
+@e2e exclude requires existing request record
 - **WHEN** the user updates the description, priority, category, or channel of a request with status `new`
 - **THEN** the system MUST persist the changes to the OpenRegister object
 
 #### Scenario: Delete a request
+@e2e exclude requires existing request record
 - **WHEN** the user deletes a request with status `new` or `in_progress`
 - **THEN** the system MUST remove the OpenRegister object
 - **THEN** the request MUST no longer appear in list views
 
 #### Scenario: Delete a converted request is blocked
+@e2e exclude backend referential integrity; covered by PHPUnit
 - **WHEN** the user attempts to delete a request with status `converted` and a `caseReference`
 - **THEN** the system MUST prevent deletion
 - **THEN** the system MUST display an error that converted requests with active case links cannot be deleted
 
 ---
 
-### REQ-RM-020: Request Status Lifecycle [MVP]
+### Requirement: Request Status Lifecycle [MVP]
 
 The system MUST enforce allowed status transitions as defined in the transition table. The frontend MUST present only valid transitions for the current status.
 
 #### Scenario: Valid transition from new to in_progress
+@e2e exclude backend state machine; covered by PHPUnit
 - **WHEN** user changes a request's status from `new` to `in_progress`
 - **THEN** the system MUST update the status
 
 #### Scenario: Valid transition from in_progress to completed
+@e2e exclude backend state machine; covered by PHPUnit
 - **WHEN** user changes a request's status from `in_progress` to `completed`
 - **THEN** the system MUST update the status to `completed` (terminal)
 
 #### Scenario: Valid transition from in_progress to rejected
+@e2e exclude backend state machine; covered by PHPUnit
 - **WHEN** user changes a request's status from `in_progress` to `rejected`
 - **THEN** the system MUST update the status to `rejected` (terminal)
 
 #### Scenario: Invalid transition new to converted
+@e2e exclude backend state machine; covered by PHPUnit
 - **WHEN** user attempts to change a request's status from `new` to `converted`
 - **THEN** the system MUST reject the transition with a validation error listing allowed transitions
 
 #### Scenario: Invalid transition from terminal status
+@e2e exclude backend state machine; covered by PHPUnit
 - **WHEN** user attempts to change a request's status from `completed` to `in_progress`
 - **THEN** the system MUST reject the transition indicating `completed` is terminal
 
 #### Scenario: Quick status change from list view
+@e2e exclude requires existing request data
 - **WHEN** user clicks a status dropdown on a request row in the list view
 - **THEN** the system MUST update the request status without navigating to detail view
 - **THEN** only allowed transitions from the current status MUST be presented
 
 ---
 
-### REQ-RM-030: Request List View [MVP]
+### Requirement: Request List View [MVP]
 
 The system MUST provide a full list view with search, sort, filter, and pagination. The current basic table MUST be enhanced with filtering controls and sortable columns.
 
@@ -584,86 +682,101 @@ The system MUST provide a full list view with search, sort, filter, and paginati
 - **THEN** default sort MUST be `requestedAt` descending
 
 #### Scenario: Filter by status
+@e2e exclude requires test data
 - **WHEN** user filters by status `new`
 - **THEN** only requests with status `new` MUST be shown
 - **THEN** the filter selection MUST persist until cleared
 
 #### Scenario: Filter by priority
+@e2e exclude requires test data
 - **WHEN** user filters by priority `urgent`
 - **THEN** only urgent requests MUST be shown
 
 #### Scenario: Filter by assignee
+@e2e exclude requires test data
 - **WHEN** user filters by assignee "Jan de Vries"
 - **THEN** only requests assigned to Jan MUST be shown
 
 #### Scenario: Filter by channel
+@e2e exclude requires test data
 - **WHEN** user filters by channel `email`
 - **THEN** only email-channel requests MUST be shown
 
 #### Scenario: Combine multiple filters
+@e2e exclude requires test data
 - **WHEN** user applies status `in_progress` AND priority `high`
 - **THEN** only requests matching BOTH criteria MUST be shown
 
 #### Scenario: Search requests by keyword
+@e2e exclude requires test data
 - **WHEN** user searches for "maintenance"
 - **THEN** the system MUST match against both `title` and `description` fields case-insensitively
 
 #### Scenario: Sort by column
+@e2e exclude requires test data
 - **WHEN** user clicks the "Priority" column header
 - **THEN** the list MUST sort by priority (urgent > high > normal > low)
 - **THEN** clicking again MUST reverse the sort order
 
 #### Scenario: Pagination
+@e2e exclude requires sufficient test data
 - **WHEN** user views the list with 50 requests and page size 25
 - **THEN** the system MUST display 25 requests with navigation to page 2
 
 ---
 
-### REQ-RM-040: Request Detail View [MVP]
+### Requirement: Request Detail View [MVP]
 
 The system MUST provide a detail view with proper layout including core info, client link, pipeline position, assignment, and activity timeline. The current basic form MUST be replaced with a structured detail layout.
 
 #### Scenario: View request core information
+@e2e exclude requires existing request record
 - **WHEN** user navigates to a request detail view
 - **THEN** the system MUST display: title, description, status (badge), priority (badge), channel, category, requestedAt, and assignee
 
 #### Scenario: View request with linked client
+@e2e exclude requires linked data
 - **WHEN** user views a request linked to client "Gemeente Utrecht"
 - **THEN** the system MUST display the client name as a clickable link to the client detail view
 - **THEN** the system MUST display available client contact information
 
 #### Scenario: View request pipeline position
+@e2e exclude requires pipeline with request
 - **WHEN** user views a request on the "Service Pipeline" at stage "In Progress"
 - **THEN** the system MUST display the pipeline name and current stage
 - **THEN** the system MUST display a visual stage progression indicator
 - **THEN** the system MUST provide a "Move to next stage" action
 
 #### Scenario: Navigate from detail to related entities
+@e2e exclude requires existing data
 - **WHEN** user clicks the client name on the request detail view
 - **THEN** the system MUST navigate to the client detail view
 - **THEN** there MUST be a way to navigate back to the request detail
 
 ---
 
-### REQ-RM-050: Request Assignment [MVP]
+### Requirement: Request Assignment [MVP]
 
 The system MUST allow assigning a request to a Nextcloud user via a user picker dropdown.
 
 #### Scenario: Assign a request to a user
+@e2e exclude requires Nextcloud users and data
 - **WHEN** user assigns a request to "Jan de Vries" via the user picker
 - **THEN** the `assignedTo` field MUST be set to Jan's Nextcloud user UID
 
 #### Scenario: Reassign a request
+@e2e exclude requires existing assignment
 - **WHEN** user reassigns a request from "Jan de Vries" to "Maria van Dijk"
 - **THEN** the `assignedTo` field MUST be updated to Maria's UID
 
 #### Scenario: Unassign a request
+@e2e exclude requires existing assignment
 - **WHEN** user removes the assignment
 - **THEN** the `assignedTo` field MUST be cleared (null)
 
 ---
 
-### REQ-RM-060: Request Priority [MVP]
+### Requirement: Request Priority [MVP]
 
 The system MUST support four priority levels with visual indicators in all views.
 
@@ -673,6 +786,7 @@ The system MUST support four priority levels with visual indicators in all views
 - **THEN** the priority MUST be visually distinguished with a color-coded badge
 
 #### Scenario: Change priority
+@e2e exclude requires existing request
 - **WHEN** user changes a request's priority from `normal` to `high`
 - **THEN** the system MUST update the priority
 
@@ -684,7 +798,7 @@ The system MUST support four priority levels with visual indicators in all views
 
 ---
 
-### REQ-RM-070: Request Channel Tracking [V1]
+### Requirement: Request Channel Tracking [V1]
 
 The system MUST support tracking the intake channel. Channel values come from SystemTag-based admin settings (already implemented). The `channel` field is present in the OpenRegister schema.
 
@@ -693,32 +807,36 @@ The system MUST support tracking the intake channel. Channel values come from Sy
 - **THEN** the request MUST store `channel` as "phone" in OpenRegister
 
 #### Scenario: Channel dropdown uses admin-configured values
+@e2e exclude requires admin-configured channels
 - **WHEN** user opens the channel dropdown on the request form
 - **THEN** the options MUST come from the request channels store (SystemTag-based)
 
 ---
 
-### REQ-RM-080: Request Category/Product Classification [V1]
+### Requirement: Request Category/Product Classification [V1]
 
 The system MUST support categorizing requests by product or service type. Categories are free-text strings that MAY be pre-populated from admin configuration.
 
 #### Scenario: Set category during creation
+@e2e exclude requires category configuration
 - GIVEN a user creating a request
 - WHEN they enter category "IT Services"
 - THEN the request MUST store the category value
 
 #### Scenario: Filter requests by category
+@e2e exclude requires categorized test data
 - GIVEN requests with various categories
 - WHEN the user filters the request list by category "IT Services"
 - THEN only requests with that category MUST be shown
 
 ---
 
-### REQ-RM-090: Request-to-Case Conversion [V1]
+### Requirement: Request-to-Case Conversion [V1]
 
 The system MUST support converting a request to a case in Procest.
 
 #### Scenario: Convert request to case
+@e2e exclude requires Procest integration; covered by PHPUnit
 - **WHEN** user clicks "Convert to case" on a request with status `in_progress`
 - **THEN** the system MUST create a case in Procest with the request title as case title
 - **THEN** the request status MUST change to `converted`
@@ -726,35 +844,41 @@ The system MUST support converting a request to a case in Procest.
 - **THEN** if case creation fails, the request status MUST NOT change
 
 #### Scenario: Conversion displays case link
+@e2e exclude requires Procest integration
 - **WHEN** user views a converted request
 - **THEN** the system MUST display a link to the associated Procest case
 - **THEN** the status MUST show as "Converted to case"
 
 #### Scenario: Convert from invalid status
+@e2e exclude backend state validation; covered by PHPUnit
 - **WHEN** user attempts to convert a request with status `new`
 - **THEN** the system MUST prevent the action indicating conversion is only available from `in_progress`
 
 #### Scenario: Converted request is read-only
+@e2e exclude requires converted request
 - **WHEN** user attempts to edit a request with status `converted`
 - **THEN** the system MUST prevent modification of core fields
 - **THEN** the system MUST display a notice that the request has been converted
 
 ---
 
-### REQ-RM-100: Request on Pipeline [MVP]
+### Requirement: Request on Pipeline [MVP]
 
 A request MUST be optionally placeable on a pipeline. When on a pipeline, the request has a `stage`, `stageOrder`, and appears on the kanban board.
 
 #### Scenario: Place request on pipeline
+@e2e exclude requires pipeline with stages
 - **WHEN** user places a request on the "Service Pipeline" at stage "New"
 - **THEN** the request MUST appear as a card on the pipeline kanban board
 
 #### Scenario: Request without pipeline
+@e2e exclude backend field validation
 - **WHEN** user views a request not on any pipeline
 - **THEN** the pipeline section MUST show "Not on pipeline" or be hidden
 - **THEN** the request MUST still be fully functional with status-based workflow
 
 #### Scenario: Request card on mixed pipeline
+@e2e exclude covered by pipeline spec
 - **WHEN** the pipeline kanban board displays a mixed pipeline
 - **THEN** request cards MUST be visually distinguishable from lead cards ([REQ] badge)
 - **THEN** request cards MUST show: title, status, priority, assignee
@@ -762,23 +886,27 @@ A request MUST be optionally placeable on a pipeline. When on a pipeline, the re
 
 ---
 
-### REQ-RM-110: Request Validation Rules [MVP]
+### Requirement: Request Validation Rules [MVP]
 
 The system MUST enforce validation rules for request data integrity.
 
 #### Scenario: Title must not be empty
+@e2e exclude server validation; covered by PHPUnit
 - **WHEN** a request create or update has an empty title
 - **THEN** the system MUST reject with a validation error
 
 #### Scenario: Status must follow transition rules
+@e2e exclude server validation; covered by PHPUnit
 - **WHEN** a status change violates the transition table
 - **THEN** the system MUST reject with specific error listing allowed transitions
 
 #### Scenario: Priority must be a valid value
+@e2e exclude server validation; covered by PHPUnit
 - **WHEN** priority is not one of `low`, `normal`, `high`, `urgent`
 - **THEN** the system MUST reject with a validation error
 
 #### Scenario: Client reference must be valid
+@e2e exclude server validation; covered by PHPUnit
 - **WHEN** a client reference does not exist in OpenRegister
 - **THEN** the system MUST reject with "Referenced client not found"
 
@@ -786,29 +914,33 @@ The system MUST enforce validation rules for request data integrity.
 
 ## Requirements
 
-### REQ-RM-120: Request-Contact Linking [MVP]
+### Requirement: Request-Contact Linking [MVP]
 
 The system MUST support linking a request to a specific contact person at the client organization. The `contact` field in the request schema stores a UUID reference to a contact object. When a request is linked to both a client and a contact, the contact MUST belong to that client.
 
 #### Scenario: Link request to a contact person
+@e2e exclude requires client and contact data
 - **GIVEN** a request linked to client "Gemeente Utrecht"
 - **WHEN** the user selects contact person "Jan de Vries" from the contact picker
 - **THEN** the request `contact` field MUST store the UUID reference to Jan's contact object
 - **THEN** the contact person's name, email, and phone MUST be displayed on the request detail view
 
 #### Scenario: Contact picker is filtered by selected client
+@e2e exclude requires linked data
 - **GIVEN** a request form with client "Gemeente Utrecht" selected
 - **WHEN** the user opens the contact person picker
 - **THEN** only contact persons linked to "Gemeente Utrecht" MUST be shown
 - **THEN** if no client is selected, the contact picker MUST be disabled with placeholder "Select a client first"
 
 #### Scenario: Contact is cleared when client changes
+@e2e exclude UI state interaction requiring data
 - **GIVEN** a request linked to client "Gemeente Utrecht" and contact "Jan de Vries"
 - **WHEN** the user changes the client to "Provincie Zuid-Holland"
 - **THEN** the `contact` field MUST be cleared (null)
 - **THEN** the contact picker MUST refresh to show contacts for the new client
 
 #### Scenario: View contact details from request detail
+@e2e exclude requires linked data
 - **GIVEN** a request with a linked contact person
 - **WHEN** user views the request detail
 - **THEN** the contact person's name MUST be displayed as a clickable link to the contact detail view
@@ -816,11 +948,12 @@ The system MUST support linking a request to a specific contact person at the cl
 
 ---
 
-### REQ-RM-130: Request Notes and Activity Timeline [MVP]
+### Requirement: Request Notes and Activity Timeline [MVP]
 
 The system MUST support adding notes to requests via the Nextcloud ICommentsManager and displaying an activity timeline showing status changes, assignment changes, and user notes. This leverages the existing `EntityNotes` component and `ActivityService`.
 
 #### Scenario: Add a note to a request
+@e2e exclude requires existing request and ICommentsManager
 - **GIVEN** a user viewing request "Aanvraag omgevingsvergunning" detail view
 - **WHEN** the user types "Wachten op aanvullende documenten" in the notes textarea and clicks "Add note"
 - **THEN** the note MUST be persisted via the Pipelinq notes API (`/api/notes/pipelinq_request/{id}`)
@@ -828,18 +961,21 @@ The system MUST support adding notes to requests via the Nextcloud ICommentsMana
 - **THEN** the note MUST show a relative timestamp (e.g., "Just now", "5 minutes ago")
 
 #### Scenario: Delete own note
+@e2e exclude requires existing note
 - **GIVEN** a user viewing a request with their own note
 - **WHEN** the user clicks "Delete" on their note
 - **THEN** the note MUST be removed from the notes list
 - **THEN** notes authored by other users MUST NOT show a delete button
 
 #### Scenario: Activity timeline shows status changes
+@e2e exclude backend event; covered by activity-timeline spec exclusion
 - **GIVEN** a request that was changed from `new` to `in_progress` by user "admin"
 - **WHEN** user views the request's activity stream (via Nextcloud Activity app)
 - **THEN** the timeline MUST show an entry: "admin changed status of request 'Title' to In progress"
 - **THEN** the activity event MUST be published via `ActivityService::publishStatusChanged()`
 
 #### Scenario: Activity timeline shows assignment changes
+@e2e exclude backend event; covered by activity-timeline spec exclusion
 - **GIVEN** a request reassigned from "Jan" to "Maria" by user "admin"
 - **WHEN** user views the request's activity stream
 - **THEN** the timeline MUST show: "admin assigned request 'Title' to Maria"
@@ -847,11 +983,12 @@ The system MUST support adding notes to requests via the Nextcloud ICommentsMana
 
 ---
 
-### REQ-RM-140: Request SLA Tracking [Enterprise]
+### Requirement: Request SLA Tracking [Enterprise]
 
 The system SHOULD support tracking service level agreement (SLA) response and resolution times for requests. SLA targets are defined per category or globally and enable monitoring of service quality.
 
 #### Scenario: SLA response time tracking
+@e2e exclude Enterprise feature; not yet implemented
 - **GIVEN** a request created at 2026-03-20 09:00 with SLA response target of 4 business hours
 - **WHEN** the request status changes from `new` to `in_progress` at 2026-03-20 12:30
 - **THEN** the system MUST record the response time as 3.5 hours
@@ -859,6 +996,7 @@ The system SHOULD support tracking service level agreement (SLA) response and re
 - **THEN** the SLA indicator MUST show a green badge
 
 #### Scenario: SLA response time breached
+@e2e exclude Enterprise feature; not yet implemented
 - **GIVEN** a request created at 2026-03-20 09:00 with SLA response target of 4 business hours
 - **WHEN** the request remains in status `new` at 2026-03-20 14:00
 - **THEN** the system MUST flag the request as "SLA breached" with a red indicator
@@ -866,12 +1004,14 @@ The system SHOULD support tracking service level agreement (SLA) response and re
 - **THEN** an overdue notification MUST be sent to the assigned user (if any) and the team lead
 
 #### Scenario: SLA resolution time tracking
+@e2e exclude Enterprise feature; not yet implemented
 - **GIVEN** a request created at 2026-03-20 09:00 with SLA resolution target of 5 business days
 - **WHEN** the request status changes to `completed` at 2026-03-23 16:00
 - **THEN** the system MUST record the total resolution time as approximately 3 business days
 - **THEN** the resolution time MUST be displayed on the request detail view
 
 #### Scenario: SLA targets per category
+@e2e exclude Enterprise feature; not yet implemented
 - **GIVEN** admin has configured SLA targets: "IT Services" = 2h response / 3d resolution, "HR" = 4h response / 5d resolution
 - **WHEN** a request is created with category "IT Services"
 - **THEN** the SLA countdown MUST use the "IT Services" targets (2h/3d)
@@ -879,11 +1019,12 @@ The system SHOULD support tracking service level agreement (SLA) response and re
 
 ---
 
-### REQ-RM-150: Bulk Request Operations [V1]
+### Requirement: Bulk Request Operations [V1]
 
 The system MUST support performing actions on multiple requests at once from the list view. Bulk actions reduce repetitive work for request handlers processing a high volume of incoming requests.
 
 #### Scenario: Select multiple requests for bulk status change
+@e2e exclude requires multiple existing requests
 - **GIVEN** user views the request list with checkboxes enabled (selectable mode)
 - **WHEN** user selects 5 requests with status `new` and clicks "Change status" from the bulk actions bar
 - **THEN** the system MUST display a status picker showing only transitions valid for ALL selected requests
@@ -891,12 +1032,14 @@ The system MUST support performing actions on multiple requests at once from the
 - **THEN** a success notification MUST indicate "5 requests updated"
 
 #### Scenario: Bulk assignment
+@e2e exclude requires multiple existing requests
 - **GIVEN** user selects 3 unassigned requests from the list
 - **WHEN** user clicks "Assign" from the bulk actions bar and selects user "Maria van Dijk"
 - **THEN** all 3 requests MUST have their `assignee` field set to Maria's UID
 - **THEN** Maria MUST receive a single notification summarizing the 3 assigned requests
 
 #### Scenario: Bulk delete
+@e2e exclude requires multiple existing requests
 - **GIVEN** user selects 4 requests, 3 with status `new` and 1 with status `converted`
 - **WHEN** user clicks "Delete" from the bulk actions bar
 - **THEN** the system MUST display a confirmation dialog listing the 3 deletable requests
@@ -912,11 +1055,12 @@ The system MUST support performing actions on multiple requests at once from the
 
 ---
 
-### REQ-RM-160: Request Templates [V1]
+### Requirement: Request Templates [V1]
 
 The system SHOULD support pre-defined request templates to standardize common request types. Templates pre-fill the title, description, category, priority, and optionally the pipeline/stage, reducing data entry time and ensuring consistency.
 
 #### Scenario: Create a request from a template
+@e2e exclude V1 template feature; not yet implemented
 - **GIVEN** admin has configured a template "Melding openbare ruimte" with title pattern "Melding: {locatie}", category "Openbare Ruimte", priority `normal`, channel "website"
 - **WHEN** user clicks "New request" and selects the template "Melding openbare ruimte"
 - **THEN** the request form MUST be pre-filled with the template values
@@ -924,12 +1068,14 @@ The system SHOULD support pre-defined request templates to standardize common re
 - **THEN** the `title` placeholder MUST show "Melding: {locatie}" prompting the user to fill in the location
 
 #### Scenario: Admin manages templates
+@e2e exclude V1 template feature; not yet implemented
 - **GIVEN** admin navigates to Pipelinq settings
 - **WHEN** admin opens the "Request Templates" section
 - **THEN** admin MUST be able to create, edit, and delete templates
 - **THEN** each template MUST define: name (internal label), title (default value or pattern), description, category, priority, channel, and optionally a default pipeline
 
 #### Scenario: Template selection during quick create
+@e2e exclude V1 template feature; not yet implemented
 - **GIVEN** user opens the quick-create request dialog from the pipeline kanban board
 - **WHEN** the dialog loads and templates are available
 - **THEN** a template selector MUST appear at the top of the form
@@ -937,7 +1083,7 @@ The system SHOULD support pre-defined request templates to standardize common re
 
 ---
 
-### REQ-RM-170: Request Reporting and KPIs [V1]
+### Requirement: Request Reporting and KPIs [V1]
 
 The system MUST provide reporting capabilities for request management performance. KPIs include request volume, average handling time, status distribution, and assignment workload. Reports leverage the existing `MetricsRepository` and `MetricsFormatter` services.
 
@@ -948,24 +1094,28 @@ The system MUST provide reporting capabilities for request management performanc
 - **THEN** the chart MUST use the standard status colors (blue, amber, green, red, purple)
 
 #### Scenario: Request volume over time
+@e2e exclude analytics; V1 feature
 - **GIVEN** the system has request data spanning 3 months
 - **WHEN** user views the request reporting section
 - **THEN** the system MUST display a line chart showing new requests created per week
 - **THEN** the chart MUST support toggling between daily, weekly, and monthly intervals
 
 #### Scenario: Average handling time KPI
+@e2e exclude analytics; V1 feature
 - **GIVEN** 20 completed requests exist with varying durations from `new` to `completed`
 - **WHEN** user views the request KPI cards on the dashboard
 - **THEN** the system MUST display the average handling time across all completed requests
 - **THEN** the KPI card MUST show trend direction (improving or declining) compared to the previous period
 
 #### Scenario: Assignment workload distribution
+@e2e exclude analytics; V1 feature
 - **GIVEN** 30 requests are distributed across 5 assignees
 - **WHEN** user views the reporting section
 - **THEN** the system MUST display a bar chart showing open request count per assignee
 - **THEN** unassigned requests MUST appear as a separate bar labeled "Unassigned"
 
 #### Scenario: Prometheus metrics for requests
+@e2e exclude covered by prometheus-metrics spec exclusion
 - **GIVEN** the Prometheus metrics endpoint is queried
 - **WHEN** the `/metrics` endpoint is called
 - **THEN** the system MUST expose `pipelinq_requests_total` gauge with status and pipeline labels
@@ -973,17 +1123,19 @@ The system MUST provide reporting capabilities for request management performanc
 
 ---
 
-### REQ-RM-180: Request Search and Faceted Filtering [MVP]
+### Requirement: Request Search and Faceted Filtering [MVP]
 
 The system MUST support full-text search across request fields and faceted filtering using OpenRegister's `facetable` schema properties. The request schema marks `status`, `priority`, `assignee`, `category`, `channel`, and `stage` as facetable.
 
 #### Scenario: Faceted filter counts
+@e2e exclude requires test data
 - **GIVEN** the request list displays 40 requests
 - **WHEN** the filter sidebar loads
 - **THEN** the system MUST show facet counts for each status value (e.g., "New (12)", "In progress (18)")
 - **THEN** the system MUST show facet counts for priority, channel, and category
 
 #### Scenario: Facet selection narrows results and updates counts
+@e2e exclude requires test data
 - **GIVEN** user views the request list with 40 total requests
 - **WHEN** user clicks the "In progress" facet under Status
 - **THEN** the list MUST filter to show only 18 in-progress requests
@@ -991,12 +1143,14 @@ The system MUST support full-text search across request fields and faceted filte
 - **THEN** the status facet "In progress" MUST show as selected with an option to clear
 
 #### Scenario: Full-text search combined with facets
+@e2e exclude requires test data
 - **GIVEN** user has filtered requests by status "new"
 - **WHEN** user types "vergunning" in the search box
 - **THEN** the results MUST show only `new` requests whose title or description contains "vergunning"
 - **THEN** the result count and facet counts MUST update accordingly
 
 #### Scenario: Clear all filters
+@e2e exclude requires active filters
 - **GIVEN** user has 3 active facet filters and a search term
 - **WHEN** user clicks "Clear all filters"
 - **THEN** all facet selections and the search term MUST be reset
@@ -1004,11 +1158,12 @@ The system MUST support full-text search across request fields and faceted filte
 
 ---
 
-### REQ-RM-190: Request-to-Case Conversion with Data Mapping [V1]
+### Requirement: Request-to-Case Conversion with Data Mapping [V1]
 
 When converting a request to a Procest case, the system MUST map request fields to case fields following the VNG Verzoek-to-Zaak relationship pattern. This extends REQ-RM-090 with detailed field mapping and error handling.
 
 #### Scenario: Field mapping during conversion
+@e2e exclude Procest integration; covered by PHPUnit
 - **GIVEN** a request with title "Aanvraag kapvergunning", description "Boom op Marktplein 5", category "Vergunningen", client "Gemeente Utrecht", contact "Jan de Vries"
 - **WHEN** user clicks "Convert to case"
 - **THEN** the system MUST create a Procest case with:
@@ -1020,6 +1175,7 @@ When converting a request to a Procest case, the system MUST map request fields 
 - **THEN** the Procest case MUST store a back-reference to the originating request ID
 
 #### Scenario: Conversion pre-check dialog
+@e2e exclude requires Procest integration
 - **GIVEN** a request with status `in_progress` and all required fields populated
 - **WHEN** user clicks "Convert to case"
 - **THEN** the system MUST display a confirmation dialog showing the field mapping preview
@@ -1027,12 +1183,14 @@ When converting a request to a Procest case, the system MUST map request fields 
 - **THEN** the user MUST confirm before the case is created
 
 #### Scenario: Conversion fails due to missing Procest app
+@e2e exclude backend dependency check; covered by PHPUnit
 - **GIVEN** the Procest app is not installed or not enabled on the Nextcloud instance
 - **WHEN** user clicks "Convert to case"
 - **THEN** the system MUST display an error: "Procest app is not available. Install and enable Procest to convert requests to cases."
 - **THEN** the request status MUST remain `in_progress`
 
 #### Scenario: View conversion history
+@e2e exclude requires converted request
 - **GIVEN** a converted request with `caseReference` pointing to Procest case #42
 - **WHEN** user views the request detail
 - **THEN** the system MUST display a "Converted Case" card showing the case title, case status, and a clickable link
@@ -1040,11 +1198,12 @@ When converting a request to a Procest case, the system MUST map request fields 
 
 ---
 
-### REQ-RM-200: Request Pipeline Kanban View [MVP]
+### Requirement: Request Pipeline Kanban View [MVP]
 
 Requests placed on a pipeline MUST appear on the kanban board alongside leads. Request-specific kanban interactions include drag-and-drop stage changes, quick status updates, and visual differentiation from leads.
 
 #### Scenario: Drag request card between stages
+@e2e exclude covered by pipeline spec
 - **GIVEN** the "Service Pipeline" kanban board with request "Aanvraag vergunning" at stage "New"
 - **WHEN** user drags the request card to stage "In Progress"
 - **THEN** the request `stage` MUST update to "In Progress"
@@ -1058,12 +1217,14 @@ Requests placed on a pipeline MUST appear on the kanban board alongside leads. R
 - **THEN** the card MUST NOT display a monetary value field (unlike lead cards)
 
 #### Scenario: Quick actions on request kanban card
+@e2e exclude covered by pipeline spec
 - **GIVEN** user hovers over a request card on the kanban board
 - **WHEN** the card action menu appears
 - **THEN** the menu MUST include: "View details", "Change status", "Assign to", "Convert to case" (if status is `in_progress`)
 - **THEN** selecting "Change status" MUST show only valid transitions per the lifecycle rules
 
 #### Scenario: Auto-assign default pipeline on creation
+@e2e exclude backend automation; covered by PHPUnit
 - **GIVEN** a default service pipeline exists with stages "New", "In Progress", "Completed"
 - **WHEN** user creates a new request without selecting a pipeline
 - **THEN** the request MUST be automatically placed on the default pipeline at the first open stage ("New")
@@ -1071,11 +1232,12 @@ Requests placed on a pipeline MUST appear on the kanban board alongside leads. R
 
 ---
 
-### REQ-RM-210: Request Notification and Assignment Alerts [V1]
+### Requirement: Request Notification and Assignment Alerts [V1]
 
 The system MUST send Nextcloud notifications when requests are created, assigned, reassigned, or have their status changed. This leverages the existing `ObjectEventHandlerService`, `ObjectEventDispatcher`, and `NotificationService`.
 
 #### Scenario: Notification on request creation with assignment
+@e2e exclude PHP notification; covered by PHPUnit
 - **GIVEN** user "admin" creates a request "Storing waterleiding" and assigns it to "Jan"
 - **WHEN** the request is saved
 - **THEN** Jan MUST receive a Nextcloud notification: "You have been assigned request 'Storing waterleiding'"
@@ -1083,6 +1245,7 @@ The system MUST send Nextcloud notifications when requests are created, assigned
 - **THEN** an activity event MUST be published: "admin created request 'Storing waterleiding'"
 
 #### Scenario: Notification on reassignment
+@e2e exclude PHP notification; covered by PHPUnit
 - **GIVEN** request "Storing waterleiding" is currently assigned to "Jan"
 - **WHEN** user "admin" reassigns the request to "Maria"
 - **THEN** Maria MUST receive a notification: "You have been assigned request 'Storing waterleiding'"
@@ -1090,12 +1253,14 @@ The system MUST send Nextcloud notifications when requests are created, assigned
 - **THEN** an activity event MUST be published via `ActivityService::publishAssignmentChanged()`
 
 #### Scenario: Notification on status change to terminal
+@e2e exclude PHP notification; covered by PHPUnit
 - **GIVEN** request "Storing waterleiding" is assigned to "Jan" with status `in_progress`
 - **WHEN** user "admin" changes the status to `completed`
 - **THEN** Jan MUST receive a notification: "Request 'Storing waterleiding' has been completed"
 - **THEN** an activity event MUST be published via `ActivityService::publishStatusChanged()`
 
 #### Scenario: Notification suppressed for self-actions
+@e2e exclude backend notification logic; covered by PHPUnit
 - **GIVEN** user "Jan" is assigned to request "Storing waterleiding"
 - **WHEN** Jan changes the request status to `completed` himself
 - **THEN** Jan MUST NOT receive a notification about his own action
@@ -1103,11 +1268,12 @@ The system MUST send Nextcloud notifications when requests are created, assigned
 
 ---
 
-### REQ-RM-220: Request Quick Create from Client Detail [MVP]
+### Requirement: Request Quick Create from Client Detail [MVP]
 
 The system MUST support creating a request directly from a client's detail view, pre-linking the request to that client. This provides a natural workflow where a service agent receiving a call can create a request without leaving the client context.
 
 #### Scenario: Create request from client detail
+@e2e exclude requires existing client data
 - **GIVEN** user views the detail page of client "Gemeente Utrecht"
 - **WHEN** user clicks "New request" in the client's requests section
 - **THEN** the system MUST open the `RequestCreateDialog` overlay
@@ -1115,12 +1281,14 @@ The system MUST support creating a request directly from a client's detail view,
 - **THEN** the contact picker MUST show only contacts belonging to "Gemeente Utrecht"
 
 #### Scenario: Created request appears in client's request list
+@e2e exclude requires existing data
 - **GIVEN** user creates request "Aanvraag vergunning" from client "Gemeente Utrecht" detail view
 - **WHEN** the request is saved successfully
 - **THEN** the request MUST immediately appear in the client's "Requests" section on the detail view
 - **THEN** the system MUST emit the `created` event with the new request ID
 
 #### Scenario: Cancel quick create returns to client detail
+@e2e exclude requires existing client
 - **GIVEN** user opened the request create dialog from client "Gemeente Utrecht" detail view
 - **WHEN** user clicks "Cancel" or closes the dialog
 - **THEN** the dialog MUST close
@@ -1232,6 +1400,7 @@ The system MUST display all contactmomenten linked to a request on the request d
 **Feature tier**: MVP
 
 #### Scenario: Display linked contactmomenten on request detail
+@e2e exclude requires linked data
 
 - GIVEN a request "Bouwvergunning aanvraag" with 3 linked contactmomenten
 - WHEN a user views the request detail
@@ -1240,6 +1409,7 @@ The system MUST display all contactmomenten linked to a request on the request d
 - AND clicking a contactmoment MUST navigate to the contactmoment detail view
 
 #### Scenario: No linked contactmomenten
+@e2e exclude requires existing request
 
 - GIVEN a request "Nieuwe aanvraag" with no linked contactmomenten
 - WHEN a user views the request detail
@@ -1247,6 +1417,7 @@ The system MUST display all contactmomenten linked to a request on the request d
 - AND a "Log contactmoment" button MUST be displayed
 
 #### Scenario: Quick-log contactmoment from request
+@e2e exclude requires existing request
 
 - GIVEN a user is viewing request "Bouwvergunning aanvraag" linked to client "Gemeente Utrecht"
 - WHEN the user clicks "Log contactmoment"

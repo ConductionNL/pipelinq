@@ -6,6 +6,8 @@ status: implemented
 
 ## Purpose
 
+@e2e exclude backend integration — notes use Nextcloud ICommentsManager; entity detail tabs unbuilt as standalone UI surface; covered by PHPUnit
+
 Add internal notes/comments to all Pipelinq entities (clients, contacts, leads, requests) using Nextcloud's ICommentsManager, enabling team collaboration and context tracking. Notes serve as the primary collaboration mechanism for CRM users, supporting categorized note types, rich text, @mentions, attachments, and privacy controls to match the workflows of government KCC and commercial sales teams.
 
 **Standards**: Nextcloud Comments API (`OCP\Comments\ICommentsManager`), Nextcloud Activity API, Nextcloud Notifications API, OpenRegister Object Interactions pattern

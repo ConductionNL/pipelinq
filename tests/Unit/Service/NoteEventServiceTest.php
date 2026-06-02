@@ -6,7 +6,7 @@
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -19,10 +19,13 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OC\Security\CSRF\CsrfTokenManager;
 use OCA\Pipelinq\Service\ActivityService;
 use OCA\Pipelinq\Service\NoteEventService;
 use OCA\Pipelinq\Service\NotificationService;
 use OCA\Pipelinq\Service\SettingsService;
+use OCP\Http\Client\IClientService;
+use OCP\IURLGenerator;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -57,6 +60,9 @@ class NoteEventServiceTest extends TestCase
         $activityService     = $this->createMock(ActivityService::class);
         $settingsService     = $this->createMock(SettingsService::class);
         $userSession         = $this->createMock(IUserSession::class);
+        $urlGenerator        = $this->createMock(IURLGenerator::class);
+        $clientService       = $this->createMock(IClientService::class);
+        $csrfTokenManager    = $this->createMock(CsrfTokenManager::class);
         $this->logger        = $this->createMock(LoggerInterface::class);
 
         $this->service = new NoteEventService(
@@ -64,6 +70,9 @@ class NoteEventServiceTest extends TestCase
             $activityService,
             $settingsService,
             $userSession,
+            $urlGenerator,
+            $clientService,
+            $csrfTokenManager,
             $this->logger,
         );
     }//end setUp()
@@ -84,15 +93,20 @@ class NoteEventServiceTest extends TestCase
     /**
      * Test type map contains expected types.
      *
+     * Each known pipelinq_* objectType should be handled without throwing
+     * and without logging a warning — fetchEntityData returns null when
+     * register/schema settings are empty (the default in this test), and
+     * triggerNoteEvents returns early on null entity data.
+     *
      * @return void
      */
     public function testTypeMapContainsExpectedTypes(): void
     {
-        // Trigger with known type but let it fail gracefully.
-        // The method will try to fetchEntityData which calls OC server,
-        // but it should catch the exception and log a warning.
-        $this->logger->expects($this->once())->method('warning');
+        $this->logger->expects($this->never())->method('warning');
 
-        $this->service->triggerNoteEvents('pipelinq_client', '123');
+        $this->service->triggerNoteEvents(objectType: 'pipelinq_client', objectId: '123');
+        $this->service->triggerNoteEvents(objectType: 'pipelinq_contact', objectId: '123');
+        $this->service->triggerNoteEvents(objectType: 'pipelinq_lead', objectId: '123');
+        $this->service->triggerNoteEvents(objectType: 'pipelinq_request', objectId: '123');
     }//end testTypeMapContainsExpectedTypes()
 }//end class

@@ -8,7 +8,7 @@
  * @category Listener
  * @package  OCA\Pipelinq\Listener
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -41,6 +41,7 @@ class DeepLinkRegistrationListener implements IEventListener
      * @param Event $event The event to handle
      *
      * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-1
      */
     public function handle(Event $event): void
     {

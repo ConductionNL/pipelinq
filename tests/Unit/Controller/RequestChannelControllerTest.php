@@ -6,7 +6,7 @@
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Controller
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -23,7 +23,10 @@ use OCA\Pipelinq\Controller\RequestChannelController;
 use OCA\Pipelinq\Service\SystemTagService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUser;
+use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 /**
  * Tests for RequestChannelController.
@@ -45,16 +48,33 @@ class RequestChannelControllerTest extends TestCase
     private SystemTagService $tagService;
 
     /**
+     * Mock user session.
+     *
+     * @var IUserSession
+     */
+    private IUserSession $userSession;
+
+    /**
      * Set up the test.
      *
      * @return void
      */
     protected function setUp(): void
     {
-        $request          = $this->createMock(IRequest::class);
-        $this->tagService = $this->createMock(SystemTagService::class);
+        $request           = $this->createMock(IRequest::class);
+        $this->tagService  = $this->createMock(SystemTagService::class);
+        $this->userSession = $this->createMock(IUserSession::class);
 
-        $this->controller = new RequestChannelController($request, $this->tagService);
+        $user = $this->createMock(IUser::class);
+        $user->method('getUID')->willReturn('test-user');
+        $this->userSession->method('getUser')->willReturn($user);
+
+        $this->controller = new RequestChannelController(
+            $request,
+            $this->tagService,
+            $this->userSession,
+            $this->createMock(LoggerInterface::class),
+        );
     }//end setUp()
 
     /**
@@ -104,4 +124,5 @@ class RequestChannelControllerTest extends TestCase
 
         $this->assertSame(500, $response->getStatus());
     }//end testDestroyReturnsErrorOnException()
+
 }//end class

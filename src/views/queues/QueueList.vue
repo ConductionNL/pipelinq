@@ -106,15 +106,27 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-19
+		 */
 		queuesStore() {
 			return useQueuesStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-16
+		 */
 		loading() {
 			return this.queuesStore.loading
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-18
+		 */
 		queues() {
 			return this.queuesStore.queues
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-21
+		 */
 		sortedQueues() {
 			return [...this.queues].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
 		},
@@ -123,6 +135,9 @@ export default {
 		this.queuesStore.fetchQueues()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-17
+		 */
 		openQueue(queue) {
 			this.$router.push({ name: 'QueueDetail', params: { id: queue.id } })
 		},
@@ -132,6 +147,9 @@ export default {
 		getAgentCount(queue) {
 			return (queue.assignedAgents || []).length
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-15
+		 */
 		async createQueue() {
 			const categories = this.newQueue.categoriesInput
 				? this.newQueue.categoriesInput.split(',').map(c => c.trim()).filter(Boolean)
@@ -153,6 +171,9 @@ export default {
 				this.resetCreateForm()
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-20
+		 */
 		resetCreateForm() {
 			this.showCreateDialog = false
 			this.newQueue = {

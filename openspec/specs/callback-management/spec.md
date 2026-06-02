@@ -1,5 +1,7 @@
 ## ADDED Requirements
 
+@e2e exclude backend schema/register config — task schema registration is a PHP repair-step; covered by PHPUnit
+
 ### Requirement: Task Schema Registration
 
 The system MUST register a `task` schema in the pipelinq OpenRegister register with properties supporting terugbelverzoeken, opvolgtaken, and informatievragen. The schema maps to VNG `InterneTaak` and Schema.org `Action`.
@@ -278,3 +280,274 @@ The system MUST send Nextcloud notifications for task assignment, completion, an
 - **WHEN** a task is reassigned to a new user
 - **THEN** the new assignee MUST receive a notification about the reassignment
 - AND the notification MUST include the task subject and deadline
+# Delta Spec: callback-management
+
+## ADDED Requirements
+
+### Requirement: Callback Controller API
+
+The system MUST provide a `CallbackController` with endpoints for callback-specific operations: logging callback attempts, claiming group tasks, completing callbacks, and reassigning tasks.
+
+**Feature tier**: MVP
+**Schema.org**: schema:ScheduleAction
+**VNG mapping**: InterneTaak (gevraagdeHandeling, status, toegewezenAanMedewerker)
+
+#### Scenario: Log callback attempt via API
+
+- **WHEN** an agent POSTs to `/api/callbacks/{id}/attempts` with result "niet_bereikbaar" and optional notes
+- **THEN** the controller MUST append an attempt entry to the task's `attempts` array with timestamp, result, and notes
+- AND the response MUST include the updated task object with the new attempt count
+
+#### Scenario: Claim group task via API
+
+- **WHEN** an agent POSTs to `/api/callbacks/{id}/claim`
+- **THEN** the controller MUST set `assigneeUserId` to the current user and clear `assigneeGroupId`
+- AND the task status MUST change to "in_behandeling"
+- AND the response MUST return the updated task
+
+#### Scenario: Complete callback via API
+
+- **WHEN** an agent POSTs to `/api/callbacks/{id}/complete` with a `resultText` body
+- **THEN** the controller MUST set status to "afgerond", `completedAt` to current timestamp, and store the `resultText`
+- AND the controller MUST trigger a notification to the `createdBy` user via NotificationService
+
+#### Scenario: Reassign task via API
+
+- **WHEN** an agent POSTs to `/api/callbacks/{id}/reassign` with `assignee` and `assigneeType` ("user" or "group")
+- **THEN** the controller MUST update the assignment fields and record a "hertoegewezen" attempt entry
+- AND the controller MUST trigger a notification to the new assignee via NotificationService
+
+---
+
+### Requirement: Callback Service
+
+The system MUST provide a `CallbackService` that encapsulates callback business logic: attempt logging, status transitions, claim validation, and attempt threshold checks.
+
+**Feature tier**: MVP
+
+#### Scenario: Add attempt to callback
+
+- **WHEN** `addAttempt()` is called with a task data array, result string, and optional notes
+- **THEN** the service MUST append an entry to the `attempts` array with keys: `timestamp` (ISO 8601), `result`, `notes`, `agentUserId`
+- AND the service MUST return the modified task data array
+
+#### Scenario: Check attempt threshold
+
+- **WHEN** `isAttemptThresholdReached()` is called with a task that has 3 or more unsuccessful attempts
+- **THEN** the service MUST return true
+- AND the controller layer MUST include a `suggestClose: true` flag in the API response
+
+#### Scenario: Validate claim eligibility
+
+- **WHEN** `validateClaim()` is called for a task assigned to a group
+- **THEN** the service MUST verify the current user belongs to the assigned group via IGroupManager
+- AND return `{eligible: true}` if the user is a member, or `{eligible: false, reason: "..."}` otherwise
+
+#### Scenario: Validate status transition
+
+- **WHEN** `validateStatusTransition()` is called with current status "open" and target "afgerond"
+- **THEN** the service MUST reject the transition (open cannot skip to afgerond)
+- AND the allowed transitions MUST be: open->in_behandeling, in_behandeling->afgerond, in_behandeling->verlopen, afgerond->open (reopen), verlopen->open (reopen)
+
+---
+
+### Requirement: Callback Overdue Check Job
+
+The system MUST provide a `CallbackOverdueJob` background job that checks for overdue callbacks and sends reminder notifications.
+
+**Feature tier**: MVP
+
+#### Scenario: Detect overdue callbacks
+
+- **WHEN** the job runs on its 15-minute interval
+- **THEN** it MUST query OpenRegister for tasks with type "terugbelverzoek", status in ["open", "in_behandeling"], and deadline in the past
+- AND for each overdue task, it MUST send a notification to the assignee (or group members) via NotificationService
+
+#### Scenario: Skip already-notified tasks
+
+- **WHEN** the job finds an overdue callback that was already notified in the current 24-hour window
+- **THEN** it MUST NOT send a duplicate notification
+- AND tracking of notification timestamps MUST use IAppConfig with key pattern `callback_notified_{taskId}`
+
+---
+
+### Requirement: Register Schema Update for Callbacks
+
+The system MUST ensure the `task` schema in `pipelinq_register.json` includes all callback-specific properties as defined in the existing callback-management spec.
+
+**Feature tier**: MVP
+
+#### Scenario: Task schema includes callback fields
+
+- **WHEN** the pipelinq register is imported
+- **THEN** the `task` schema MUST include properties: `callbackPhoneNumber` (string, nullable), `preferredTimeSlot` (string, nullable), `attempts` (array, default []), `completedAt` (datetime, nullable), `resultText` (string, nullable)
+- AND existing properties (`type`, `subject`, `status`, `priority`, `deadline`, `assigneeUserId`, `assigneeGroupId`, `clientId`, `requestId`, `contactMomentSummary`, `createdBy`) MUST remain unchanged
+
+---
+
+### Requirement: Citizen Status Notification
+
+The system MUST support notifying citizens about the status of their callback request via configurable outbound channels (email, MijnOverheid). Internal details (agent name, department, priority) MUST be excluded from citizen notifications.
+
+**Feature tier**: V1
+**Source**: Merged from archived terugbel-taakbeheer spec (2026-05-24)
+
+#### Scenario: Notify citizen that callback is scheduled
+
+- **GIVEN** a terugbelverzoek has been created for citizen "Jan de Vries" with a preferred callback time
+- **WHEN** the system is configured to send citizen notifications
+- **THEN** the citizen SHOULD receive a notification (via configured channel: email or MijnOverheid) confirming that a callback is scheduled
+- AND the notification MUST NOT contain internal details (agent name, department, priority)
+- AND the notification MUST include a reference number (task UUID prefix) and expected callback window
+
+#### Scenario: Notify citizen that callback was attempted
+
+- **GIVEN** a backoffice agent attempted to call back but the citizen did not answer
+- **WHEN** the agent logs the attempt and selects "niet_bereikbaar"
+- **THEN** the citizen SHOULD receive a notification that a callback was attempted
+- AND the notification SHOULD include instructions for how to reach the municipality and office hours
+
+#### Scenario: Notify citizen that callback is completed
+
+- **GIVEN** a callback was successfully completed
+- **WHEN** the agent marks the task as "Afgerond"
+- **THEN** the citizen SHOULD receive a satisfaction survey link (if configured)
+- AND the notification MUST include a summary of the resolution without internal details
+
+---
+
+### Requirement: Task Templates
+
+The system MUST support predefined task templates for common callback scenarios. Templates pre-fill the task creation form and MUST be manageable by administrators.
+
+**Feature tier**: V1
+**Source**: Merged from archived terugbel-taakbeheer spec (2026-05-24)
+
+#### Scenario: Use a template for common callback
+
+- **GIVEN** a template "Terugbellen over vergunningsstatus" exists with predefined subject, default priority "Normaal", default assignee group "Afdeling Vergunningen", and deadline "2 werkdagen"
+- **WHEN** an agent selects this template while creating a terugbelverzoek
+- **THEN** the form MUST be pre-filled with the template values
+- AND the agent MUST be able to override any pre-filled field
+- AND the template MUST be stored as an OpenRegister object (schema: `task_template`) in the pipelinq register
+
+#### Scenario: Manage task templates
+
+- **GIVEN** an administrator accesses the task template settings
+- **WHEN** they create a new template with name, default values, and assignee
+- **THEN** the template MUST be available for all KCC agents when creating tasks
+- AND templates MUST be editable and deletable by administrators
+
+#### Scenario: Template usage statistics
+
+- **GIVEN** 5 task templates are configured
+- **WHEN** the administrator views template management
+- **THEN** the system MUST display usage count per template over the past 30 days
+- AND rarely used templates (0 uses in 30 days) MUST be flagged for review
+
+---
+
+### Requirement: Manager Task Search and Dashboard
+
+The system MUST support org-wide task search and a manager dashboard for supervisors overseeing multiple departments. This scope extends the personal `my-work` and `Task List View` REQs with cross-department visibility.
+
+**Feature tier**: V1
+**Source**: Merged from archived terugbel-taakbeheer spec (2026-05-24)
+
+#### Scenario: Search tasks by citizen name
+
+- **GIVEN** 50 open tasks across the organization
+- **WHEN** a manager searches for "de Vries"
+- **THEN** the system MUST display all tasks linked to clients matching "de Vries"
+- AND results MUST show: task type, subject, assignee, deadline, and status
+- AND the search MUST respect the manager's authorization scope (only departments they oversee)
+
+#### Scenario: Filter tasks by department
+
+- **GIVEN** tasks assigned to various Nextcloud groups
+- **WHEN** a manager filters by group "Afdeling Vergunningen"
+- **THEN** only tasks with `assigneeGroupId` matching that group (or tasks claimed by its members) MUST be displayed
+- AND the count per status (open/in_behandeling/afgerond/verlopen) MUST be shown
+
+#### Scenario: Manager task dashboard
+
+- **GIVEN** a KCC manager oversees 3 departments
+- **WHEN** the manager views the task dashboard
+- **THEN** the system MUST display: total open tasks, overdue tasks count, average completion time, and tasks per department
+- AND the dashboard MUST highlight departments with the most overdue tasks
+
+---
+
+### Requirement: Deadline Business Hours and Bulk Reassignment
+
+The system MUST calculate task deadlines respecting business hours and MUST support bulk reassignment of multiple tasks to a single user.
+
+**Feature tier**: V1
+**Source**: Merged from archived terugbel-taakbeheer spec (2026-05-24)
+
+#### Scenario: Deadline business hours calculation
+
+- **GIVEN** an agent creates a task on Friday at 16:00 with a 24-hour deadline
+- **WHEN** the system calculates the deadline
+- **THEN** the deadline MUST be set to Monday 16:00 (skipping weekend)
+- AND configurable business hours (default: Monday-Friday 08:00-17:00) MUST be respected
+- AND national holidays MUST be optionally configurable via IAppConfig
+
+#### Scenario: Priority escalation on approaching deadline
+
+- **GIVEN** a terugbelverzoek with priority "Normaal" and deadline in 2 hours
+- **WHEN** the CallbackOverdueJob detects the approaching deadline
+- **THEN** the task's visual priority MUST be elevated to display as "Hoog" in the inbox
+- AND the original priority value MUST be preserved in the data (visual escalation only, no field mutation)
+- AND the assignee MUST receive a reminder notification
+
+#### Scenario: Bulk reassignment
+
+- **GIVEN** 5 open tasks are assigned to agent "Petra Bakker" who is unexpectedly absent
+- **WHEN** a manager selects all 5 tasks and chooses "Hertoewijzen aan" > "Mark de Groot"
+- **THEN** all 5 tasks MUST be reassigned to Mark de Groot
+- AND Mark MUST receive a single notification summarizing all reassigned tasks
+- AND each task's attempts array MUST record the reassignment with result "hertoegewezen" and an optional reason (e.g., "Afwezigheid collega")
+## Requirements
+### Requirement: Callback UI — documented operations
+
+The callback call-timer component implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `formattedTime`, `isoDuration`, `reset`, `start`, `stop`). Each listed method realises an observable part of callback call-timer component and MUST behave as implemented in the current codebase.
+
+**Feature tier**: V1
+
+#### Scenario: Documented operations are available
+
+- GIVEN the frontend component/store is loaded
+- WHEN a caller invokes one of the documented operations for callback call-timer component
+- THEN the operation MUST execute and return a result consistent with the current implementation
+
+---
+
+### Requirement: Callback UI — results derived from current CRM state
+
+Operations for callback call-timer component MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
+
+**Feature tier**: V1
+
+#### Scenario: Results reflect live state
+
+- GIVEN CRM data backing callback call-timer component
+- WHEN a documented operation runs
+- THEN its output MUST be derived from that data
+- AND it MUST change when the underlying data changes
+
+---
+
+### Requirement: Callback UI — defensive handling of absent or invalid input
+
+Operations for callback call-timer component MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
+
+**Feature tier**: V1
+
+#### Scenario: Missing input does not crash the flow
+
+- GIVEN an operation for callback call-timer component is called with absent or invalid input
+- WHEN it executes
+- THEN it MUST return a safe default or a validation result
+- AND it MUST NOT raise an unhandled exception
+

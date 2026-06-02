@@ -6,6 +6,8 @@ status: draft
 
 ## Purpose
 
+@e2e exclude draft/unbuilt spec — 360-degree customer view aggregation not yet implemented; no UI surface to test
+
 Klantbeeld 360 provides a comprehensive, aggregated view of all interactions, cases, documents, and notes for a single person or business across all channels and systems. This "single pane of glass" is essential for KCC agents and case handlers to deliver consistent, informed service. **83% of klantinteractie-tenders** (43/52) require a 360-degree customer view.
 
 **Standards**: VNG Klantinteracties (`Partij`, `Betrokkene`, `Contactmoment`), Haal Centraal BRP API, KVK API, ZGW Zaken API, AVG (doelbinding)

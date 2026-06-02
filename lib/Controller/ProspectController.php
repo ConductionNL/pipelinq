@@ -8,13 +8,15 @@
  * @category Controller
  * @package  OCA\Pipelinq\Controller
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-34
  */
 
 declare(strict_types=1);
@@ -24,9 +26,12 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ProspectDiscoveryService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
 
 /**
  * Controller for prospect discovery.
@@ -38,12 +43,16 @@ class ProspectController extends Controller
      *
      * @param IRequest                 $request          The request.
      * @param ProspectDiscoveryService $discoveryService The discovery service.
+     * @param IUserSession             $userSession      The user session.
      * @param IL10N                    $l10n             The localization service.
+     * @param LoggerInterface          $logger           The logger.
      */
     public function __construct(
         IRequest $request,
         private ProspectDiscoveryService $discoveryService,
+        private IUserSession $userSession,
         private IL10N $l10n,
+        private LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -54,9 +63,15 @@ class ProspectController extends Controller
      * @return JSONResponse The prospect results.
      *
      * @NoAdminRequired
+     * @spec            openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-1
      */
     public function index(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         $refresh = $this->request->getParam(key: 'refresh', default: 'false') === 'true';
 
         try {
@@ -84,9 +99,16 @@ class ProspectController extends Controller
      * @return JSONResponse The created client and lead.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-34
      */
     public function createLead(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         $data = $this->request->getParams();
 
         if (isset($data['tradeName']) === false || $data['tradeName'] === '') {
@@ -105,8 +127,9 @@ class ProspectController extends Controller
 
             return new JSONResponse(data: $result, statusCode: 201);
         } catch (\Exception $e) {
+            $this->logger->error('ProspectController::createLead failed', ['exception' => $e]);
             return new JSONResponse(
-                data: ['error' => $e->getMessage()],
+                data: ['error' => $this->l10n->t('Operation failed')],
                 statusCode: 500
             );
         }//end try

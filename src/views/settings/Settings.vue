@@ -4,7 +4,7 @@
 		<NcSettingsSection
 			:name="t('pipelinq', 'Pipelinq Settings')"
 			:description="t('pipelinq', 'Configure your Pipelinq installation')"
-			doc-url="https://pipelinq.app" />
+			doc-url="https://pipelinq.conduction.nl/docs/intro" />
 
 		<!-- Version Information -->
 		<CnVersionInfoCard
@@ -102,8 +102,10 @@
 </template>
 
 <script>
+import { loadState } from '@nextcloud/initial-state'
 import { CnRegisterMapping, CnVersionInfoCard } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcNoteCard, NcSettingsSection } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import { useSettingsStore } from '../../store/modules/settings.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
@@ -138,7 +140,7 @@ export default {
 	data() {
 		return {
 			config: {},
-			appVersion: document.getElementById('pipelinq-settings')?.dataset?.version || 'Unknown',
+			appVersion: loadState('pipelinq', 'version', 'Unknown'),
 			reimporting: false,
 			saving: false,
 			message: '',
@@ -146,33 +148,60 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-87
+		 */
 		settingsStore() {
 			return useSettingsStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-74
+		 */
 		leadSourcesStore() {
 			return useLeadSourcesStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-85
+		 */
 		requestChannelsStore() {
 			return useRequestChannelsStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-76
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
 		isConfigured() {
 			return !!this.config.register
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-72
+		 */
 		leadSourceTags() {
 			return this.leadSourcesStore.tags
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-73
+		 */
 		leadSourcesLoading() {
 			return this.leadSourcesStore.loading
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-83
+		 */
 		requestChannelTags() {
 			return this.requestChannelsStore.tags
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-84
+		 */
 		requestChannelsLoading() {
 			return this.requestChannelsStore.loading
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-77
+		 */
 		registerGroups() {
 			return [{
 				name: t('pipelinq', 'Pipelinq Objects'),
@@ -195,6 +224,9 @@ export default {
 			}]
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-75
+	 */
 	async mounted() {
 		const config = await this.settingsStore.fetchSettings()
 		if (config) {
@@ -207,12 +239,15 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-78
+		 */
 		async reimport() {
 			this.reimporting = true
 			this.message = ''
 
 			try {
-				const response = await fetch('/apps/pipelinq/api/settings/reimport', {
+				const response = await fetch(generateUrl('/apps/pipelinq/api/settings/reimport'), {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
@@ -238,6 +273,9 @@ export default {
 				this.reimporting = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-86
+		 */
 		async save(configuration) {
 			this.saving = true
 			this.message = ''
@@ -249,34 +287,61 @@ export default {
 			}
 			this.saving = false
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-67
+		 */
 		async addLeadSource(name) {
 			await this.leadSourcesStore.addSource(name)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-79
+		 */
 		async removeLeadSource(id) {
 			await this.leadSourcesStore.removeSource(id)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-81
+		 */
 		async renameLeadSource(id, name) {
 			await this.leadSourcesStore.renameSource(id, name)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-68
+		 */
 		async addRequestChannel(name) {
 			await this.requestChannelsStore.addChannel(name)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-80
+		 */
 		async removeRequestChannel(id) {
 			await this.requestChannelsStore.removeChannel(id)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-82
+		 */
 		async renameRequestChannel(id, name) {
 			await this.requestChannelsStore.renameChannel(id, name)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-69
+		 */
 		async checkLeadSourceUsage(sourceName) {
 			return this.countObjectsWithField('lead', 'source', sourceName)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-70
+		 */
 		async checkRequestChannelUsage(channelName) {
 			return this.countObjectsWithField('request', 'channel', channelName)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-71
+		 */
 		async countObjectsWithField(type, field, value) {
 			const config = this.objectStore.objectTypeRegistry[type]
 			if (!config) return 0
-			const url = `/apps/openregister/api/objects/${config.register}/${config.schema}?${field}=${encodeURIComponent(value)}&_limit=1`
+			const url = generateUrl(`/apps/openregister/api/objects/${config.register}/${config.schema}?${field}=${encodeURIComponent(value)}&_limit=1`)
 			const response = await fetch(url, {
 				headers: {
 					'Content-Type': 'application/json',

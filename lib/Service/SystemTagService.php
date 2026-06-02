@@ -49,6 +49,7 @@ class SystemTagService
      * @param string $objectType The object type to get tags for.
      *
      * @return array<array{id: int, name: string}> The tags.
+     * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-9
      */
     public function getTags(string $objectType): array
     {
@@ -74,6 +75,7 @@ class SystemTagService
      * @return array{id: int, name: string} The created tag.
      *
      * @throws RuntimeException If tag name already exists for this type.
+     * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-7
      */
     public function addTag(string $objectType, string $name): array
     {
@@ -109,6 +111,7 @@ class SystemTagService
      * @param int    $tagId      The tag ID to remove.
      *
      * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-10
      */
     public function removeTag(string $objectType, int $tagId): void
     {
@@ -130,6 +133,7 @@ class SystemTagService
      * @return array{id: int, name: string} The renamed tag.
      *
      * @throws RuntimeException If new name already exists for this type.
+     * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-11
      */
     public function renameTag(string $objectType, int $tagId, string $newName): array
     {
@@ -164,6 +168,7 @@ class SystemTagService
      * @param string[] $defaults   List of default tag names.
      *
      * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-8
      */
     public function ensureDefaults(string $objectType, array $defaults): void
     {

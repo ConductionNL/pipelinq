@@ -6,6 +6,8 @@ status: draft
 
 ## Purpose
 
+@e2e exclude draft/unbuilt spec — KCC werkplek unified agent screen not yet implemented; no UI surface to test
+
 The KCC werkplek (frontoffice workspace) is the unified agent screen for KCC (Klant Contact Centrum) employees. It combines citizen/business identification, open case visibility, contact moment registration, and backoffice routing into a single interface. This is the most demanded capability in Dutch government CRM tenders: **100% of 52 klantinteractie-tenders** require an integrated KCC workspace.
 
 **Standards**: VNG Klantinteracties (`Contactmoment`, `Klant`, `Medewerker`), Haal Centraal BRP API, KVK API, ZGW Zaken API

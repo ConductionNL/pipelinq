@@ -6,7 +6,7 @@
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -25,7 +25,9 @@ use OCA\Pipelinq\Service\OpenCorporatesApiClient;
 use OCA\Pipelinq\Service\ProspectDiscoveryService;
 use OCA\Pipelinq\Service\ProspectScoringService;
 use OCA\Pipelinq\Service\SettingsService;
+use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -62,6 +64,20 @@ class ProspectDiscoveryServiceTest extends TestCase
         $logger          = $this->createMock(LoggerInterface::class);
 
         $settings->method('getConfigValue')->willReturn('');
+        // createLeadFromProspect calls getObjectStoreConfig() which needs
+        // register + client_schema + lead_schema set, otherwise the method
+        // returns early with ['error' => ...]. Stub a minimal valid config
+        // so the happy-path tests can exercise the leadData/clientData
+        // construction.
+        $settings->method('getSettings')->willReturn([
+            'register'      => 'pipelinq',
+            'client_schema' => 'client',
+            'lead_schema'   => 'lead',
+        ]);
+
+        $container  = $this->createMock(ContainerInterface::class);
+        $appManager = $this->createMock(IAppManager::class);
+        $appManager->method('getInstalledApps')->willReturn([]);
 
         $this->service = new ProspectDiscoveryService(
             $this->icpConfig,
@@ -70,6 +86,8 @@ class ProspectDiscoveryServiceTest extends TestCase
             $scoring,
             $settings,
             $logger,
+            $container,
+            $appManager,
         );
     }//end setUp()
 

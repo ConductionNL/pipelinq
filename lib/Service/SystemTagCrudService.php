@@ -58,6 +58,7 @@ class SystemTagCrudService
      * @param string $objectType The object type.
      *
      * @return array The tag IDs.
+     * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-3
      */
     public function getTagIdsForType(string $objectType): array
     {
@@ -79,6 +80,7 @@ class SystemTagCrudService
      * @param array $tagIds The tag IDs to resolve.
      *
      * @return array The resolved tag data.
+     * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-5
      */
     public function resolveTagData(array $tagIds): array
     {
@@ -101,6 +103,7 @@ class SystemTagCrudService
      * @param string $name The tag name.
      *
      * @return object The system tag.
+     * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-2
      */
     public function createOrReuseSystemTag(string $name): object
     {
@@ -126,6 +129,7 @@ class SystemTagCrudService
      * @param int    $tagId      The tag ID to assign.
      *
      * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-1
      */
     public function assignTag(string $objectType, int $tagId): void
     {
@@ -143,6 +147,7 @@ class SystemTagCrudService
      * @param int    $tagId      The tag ID to remove.
      *
      * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-6
      */
     public function unassignAndCleanup(string $objectType, int $tagId): void
     {
@@ -163,20 +168,33 @@ class SystemTagCrudService
     }//end unassignAndCleanup()
 
     /**
-     * Rename a system tag.
+     * Rename a system tag, preserving the existing userAssignable value.
+     *
+     * The previous implementation hardcoded userAssignable:false on every
+     * rename, permanently locking the tag from the Nextcloud UI regardless of
+     * how it was originally created (issue #605).
      *
      * @param int    $tagId   The tag ID.
      * @param string $newName The new name.
      *
      * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-4
      */
     public function renameSystemTag(int $tagId, string $newName): void
     {
+        // Read existing flags so we do not clobber userAssignable on rename.
+        $existingTags   = $this->tagManager->getTagsByIds([(string) $tagId]);
+        $userAssignable = false;
+        if (empty($existingTags) === false) {
+            $existingTag    = reset($existingTags);
+            $userAssignable = $existingTag->isUserAssignable();
+        }
+
         $this->tagManager->updateTag(
             tagId: (string) $tagId,
             newName: $newName,
             userVisible: true,
-            userAssignable: false,
+            userAssignable: $userAssignable,
             color: null
         );
     }//end renameSystemTag()

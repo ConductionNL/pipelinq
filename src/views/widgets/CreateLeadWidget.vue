@@ -14,6 +14,7 @@
 
 			<NcSelect v-model="form.pipeline"
 				:options="pipelineOptions"
+				:input-label="t('pipelinq', 'Pipeline')"
 				:placeholder="t('pipelinq', 'Pipeline')"
 				label="label"
 				track-by="id"
@@ -26,6 +27,7 @@
 
 			<NcSelect v-model="form.source"
 				:options="sourceOptions"
+				:input-label="t('pipelinq', 'Source')"
 				:placeholder="t('pipelinq', 'Source')"
 				input-id="lead-source" />
 
@@ -50,6 +52,7 @@
 
 <script>
 import { NcTextField, NcButton, NcSelect, NcNoteCard } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
 import ClientAutocomplete from '../../components/widgets/ClientAutocomplete.vue'
 import { initializeStores } from '../../store/store.js'
 
@@ -94,6 +97,9 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-26
+		 */
 		pipelineOptions() {
 			return this.pipelines.map((p) => ({
 				id: p.id,
@@ -102,6 +108,9 @@ export default {
 			}))
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-22
+	 */
 	async mounted() {
 		try {
 			const { objectStore } = await initializeStores()
@@ -112,16 +121,22 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-23
+		 */
 		onClientSelected(client) {
 			this.selectedClient = client
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-20
+		 */
 		async fetchPipelines() {
 			if (!this.config?.pipeline) return
 			try {
 				const typeConfig = this.config.pipeline
-				const url = '/apps/openregister/api/objects/'
+				const url = generateUrl('/apps/openregister/api/objects/'
 					+ typeConfig.register + '/' + typeConfig.schema
-					+ '?_limit=50'
+					+ '?_limit=50')
 
 				const response = await fetch(url, {
 					headers: {
@@ -143,17 +158,26 @@ export default {
 				console.error('Failed to fetch pipelines:', err)
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-21
+		 */
 		getFirstStage(pipeline) {
 			const stages = pipeline?.stages || []
 			if (stages.length === 0) return { name: '', order: 1 }
 			const sorted = [...stages].sort((a, b) => (a.order || 0) - (b.order || 0))
 			return sorted[0]
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-24
+		 */
 		onQuickAdd() {
 			if (this.form.title) {
 				this.onSubmit()
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-25
+		 */
 		async onSubmit() {
 			this.submitted = true
 			if (!this.form.title) {
@@ -192,8 +216,8 @@ export default {
 						: this.form.source
 				}
 
-				const url = '/apps/openregister/api/objects/'
-					+ typeConfig.register + '/' + typeConfig.schema
+				const url = generateUrl('/apps/openregister/api/objects/'
+					+ typeConfig.register + '/' + typeConfig.schema)
 
 				const response = await fetch(url, {
 					method: 'POST',
@@ -208,7 +232,7 @@ export default {
 				if (!response.ok) throw new Error('Failed to create lead')
 				const created = await response.json()
 				const id = created.id || created.uuid
-				this.successLink = '/index.php/apps/pipelinq/leads/' + id
+				this.successLink = generateUrl('/apps/pipelinq/leads/' + id)
 				this.success = true
 			} catch (err) {
 				console.error('CreateLeadWidget create error:', err)
@@ -216,6 +240,9 @@ export default {
 				this.submitting = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-27
+		 */
 		resetForm() {
 			this.form = {
 				title: '',

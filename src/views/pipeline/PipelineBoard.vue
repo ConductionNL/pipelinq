@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2026 Conduction B.V. -->
+
 <template>
 	<div class="pipeline-board">
 		<div class="pipeline-board__header">
@@ -8,8 +11,9 @@
 					:options="pipelineSelectOptions"
 					:clearable="false"
 					label="label"
-					:reduce="o => o.value"
+					:input-label="t('pipelinq', 'Select pipeline')"
 					:placeholder="t('pipelinq', 'Select pipeline')"
+					:reduce="o => o.value"
 					class="pipeline-selector"
 					@input="onPipelineChange" />
 				<NcSelect
@@ -17,10 +21,13 @@
 					v-model="showFilter"
 					:options="showFilterOptions"
 					:clearable="false"
+					:input-label="t('pipelinq', 'Filter by type')"
 					class="show-filter" />
 				<NcTextField
 					:value="searchQuery"
-					:placeholder="t('pipelinq', 'Search items...')"
+					type="search"
+					:placeholder="t('pipelinq', 'Search pipeline...')"
+					:aria-label="t('pipelinq', 'Search pipeline...')"
 					class="pipeline-search"
 					@update:value="v => searchQuery = v" />
 				<div class="view-toggle">
@@ -122,35 +129,35 @@
 					<tr>
 						<th class="sortable" @click="toggleSort('title')">
 							{{ t('pipelinq', 'Title') }}
-							<span v-if="sortBy === 'title'" class="sort-indicator">{{ sortDir === 'asc' ? '\u25B2' : '\u25BC' }}</span>
+							<span v-if="sortBy === 'title'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
 						</th>
 						<th class="sortable" @click="toggleSort('schemaSlug')">
 							{{ t('pipelinq', 'Type') }}
-							<span v-if="sortBy === 'schemaSlug'" class="sort-indicator">{{ sortDir === 'asc' ? '\u25B2' : '\u25BC' }}</span>
+							<span v-if="sortBy === 'schemaSlug'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
 						</th>
 						<th class="sortable" @click="toggleSort('stage')">
 							{{ t('pipelinq', 'Stage') }}
-							<span v-if="sortBy === 'stage'" class="sort-indicator">{{ sortDir === 'asc' ? '\u25B2' : '\u25BC' }}</span>
+							<span v-if="sortBy === 'stage'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
 						</th>
 						<th class="sortable" @click="toggleSort('assignee')">
 							{{ t('pipelinq', 'Assignee') }}
-							<span v-if="sortBy === 'assignee'" class="sort-indicator">{{ sortDir === 'asc' ? '\u25B2' : '\u25BC' }}</span>
+							<span v-if="sortBy === 'assignee'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
 						</th>
 						<th class="sortable" @click="toggleSort('value')">
 							{{ t('pipelinq', 'Value') }}
-							<span v-if="sortBy === 'value'" class="sort-indicator">{{ sortDir === 'asc' ? '\u25B2' : '\u25BC' }}</span>
+							<span v-if="sortBy === 'value'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
 						</th>
 						<th class="sortable" @click="toggleSort('dueDate')">
 							{{ t('pipelinq', 'Due Date') }}
-							<span v-if="sortBy === 'dueDate'" class="sort-indicator">{{ sortDir === 'asc' ? '\u25B2' : '\u25BC' }}</span>
+							<span v-if="sortBy === 'dueDate'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
 						</th>
 						<th class="sortable" @click="toggleSort('priority')">
 							{{ t('pipelinq', 'Priority') }}
-							<span v-if="sortBy === 'priority'" class="sort-indicator">{{ sortDir === 'asc' ? '\u25B2' : '\u25BC' }}</span>
+							<span v-if="sortBy === 'priority'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
 						</th>
 						<th class="sortable" @click="toggleSort('age')">
 							{{ t('pipelinq', 'Age') }}
-							<span v-if="sortBy === 'age'" class="sort-indicator">{{ sortDir === 'asc' ? '\u25B2' : '\u25BC' }}</span>
+							<span v-if="sortBy === 'age'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
 						</th>
 					</tr>
 				</thead>
@@ -173,7 +180,7 @@
 							</span>
 						</td>
 						<td>{{ getItemColumnValue(item) }}</td>
-						<td>{{ item.assignee || '\u2014' }}</td>
+						<td>{{ item.assignee || '—' }}</td>
 						<td>
 							<span v-if="getItemTotalsValue(item) !== null">
 								{{ selectedPipeline.totalsLabel || '' }} {{ Number(getItemTotalsValue(item)).toLocaleString() }}
@@ -210,9 +217,10 @@ import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue
 import Cog from 'vue-material-design-icons/Cog.vue'
 import PipelineCard from './PipelineCard.vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import { useSettingsStore } from '../../store/modules/settings.js'
 import { getPriorityLabel, getPriorityColor } from '../../services/requestStatus.js'
 import { getDaysAge, isStale, getAgingClass, formatAge } from '../../services/pipelineUtils.js'
-import { formatNumber, formatDate } from '../../services/localeUtils.js'
+import { formatDate } from '../../services/localeUtils.js'
 
 export default {
 	name: 'PipelineBoard',
@@ -233,6 +241,9 @@ export default {
 		return {
 			selectedPipelineId: null,
 			showFilter: 'all',
+			/**
+			 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.1
+			 */
 			searchQuery: '',
 			expandedClosed: null,
 			loading: false,
@@ -243,22 +254,43 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-16
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-26
+		 */
+		settingsStore() {
+			return useSettingsStore()
+		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-23
+		 */
 		pipelines() {
 			return this.objectStore.collections.pipeline || []
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-22
+		 */
 		pipelineSelectOptions() {
 			return this.pipelines.map(p => ({
 				value: p.id,
 				label: p.title,
 			}))
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-25
+		 */
 		selectedPipeline() {
 			if (!this.selectedPipelineId) return null
 			return this.pipelines.find(p => p.id === this.selectedPipelineId) || null
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-24
+		 */
 		propertyMappings() {
 			return this.selectedPipeline?.propertyMappings || []
 		},
@@ -268,6 +300,9 @@ export default {
 		hasTotals() {
 			return this.propertyMappings.some(m => m.totalsProperty)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-27
+		 */
 		showFilterOptions() {
 			const options = [{ id: 'all', label: t('pipelinq', 'All') }]
 			for (const mapping of this.propertyMappings) {
@@ -278,30 +313,54 @@ export default {
 			}
 			return options
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-29
+		 */
 		sortedStages() {
 			if (!this.selectedPipeline?.stages) return []
 			return [...this.selectedPipeline.stages].sort((a, b) => a.order - b.order)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-21
+		 */
 		openStages() {
 			return this.sortedStages.filter(s => !s.isClosed)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-3
+		 */
 		closedStages() {
 			return this.sortedStages.filter(s => s.isClosed)
 		},
+		/**
+		 * Schema-filtered merged array of all pipeline items; no search applied.
+		 *
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-1
+		 */
 		allItems() {
 			let result = this.items
 			const filter = this.showFilter?.id || this.showFilter || 'all'
 			if (filter !== 'all') {
 				result = result.filter(i => i._schemaSlug === filter)
 			}
-			if (this.searchQuery.trim()) {
-				const query = this.searchQuery.trim().toLowerCase()
-				result = result.filter(i => (i.title || '').toLowerCase().includes(query))
-			}
 			return result
 		},
+		/**
+		 * allItems filtered by searchQuery (case-insensitive title match).
+		 * Empty searchQuery passes all items through unchanged.
+		 *
+		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.2
+		 */
+		filteredItems() {
+			if (!this.searchQuery.trim()) return this.allItems
+			const query = this.searchQuery.trim().toLowerCase()
+			return this.allItems.filter(i => (i.title || '').toLowerCase().includes(query))
+		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-28
+		 */
 		sortedListItems() {
-			const items = [...this.allItems]
+			const items = [...this.filteredItems]
 			const priorityOrder = { urgent: 0, high: 1, normal: 2, low: 3 }
 			items.sort((a, b) => {
 				let valA, valB
@@ -349,21 +408,28 @@ export default {
 		},
 	},
 	watch: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-25
+		 */
 		selectedPipeline(val) {
 			this.syncSidebarState(val)
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-15
+	 */
 	async mounted() {
-		// Activate pipeline sidebar
 		if (this.pipelineSidebarState) {
 			this.pipelineSidebarState.active = true
 			this.pipelineSidebarState.onSave = this.onSidebarSave
 		}
 
 		this.loading = true
+
+		await this.ensureObjectTypes(['pipeline', 'lead', 'request'])
+
 		await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
 
-		// Auto-select first pipeline
 		if (this.pipelines.length > 0) {
 			const defaultPipeline = this.pipelines.find(p => p.isDefault) || this.pipelines[0]
 			this.selectedPipelineId = defaultPipeline.id
@@ -371,6 +437,9 @@ export default {
 		}
 		this.loading = false
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-2
+	 */
 	beforeDestroy() {
 		if (this.pipelineSidebarState) {
 			this.pipelineSidebarState.active = false
@@ -382,18 +451,49 @@ export default {
 		getPriorityLabel,
 		getPriorityColor,
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-4
+		 */
+		async ensureObjectTypes(slugs) {
+			const registry = this.objectStore.objectTypeRegistry || {}
+			const missing = slugs.filter(s => !registry[s])
+			if (missing.length === 0) return
+
+			let config = this.settingsStore.getConfig
+			if (!config) {
+				config = await this.settingsStore.fetchSettings()
+			}
+			if (!config || !config.register) return
+
+			for (const slug of missing) {
+				const schemaId = config[slug + '_schema']
+				if (schemaId) {
+					this.objectStore.registerObjectType(slug, schemaId, config.register)
+				}
+			}
+		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-30
+		 */
 		syncSidebarState(pipeline) {
 			if (this.pipelineSidebarState) {
 				this.pipelineSidebarState.pipeline = pipeline
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-32
+		 */
 		toggleSidebar() {
 			if (this.pipelineSidebarState) {
 				this.pipelineSidebarState.open = !this.pipelineSidebarState.open
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-19
+		 */
 		async onSidebarSave(pipelineData) {
 			await this.objectStore.saveObject('pipeline', pipelineData)
 			await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
@@ -405,6 +505,9 @@ export default {
 			return this.propertyMappings.find(m => m.schemaSlug === item._schemaSlug) || null
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-10
+		 */
 		getColumnProperty(item) {
 			const mapping = this.getMappingForItem(item)
 			return mapping?.columnProperty || 'stage'
@@ -414,6 +517,9 @@ export default {
 			return item[this.getColumnProperty(item)] || ''
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-11
+		 */
 		getItemTotalsValue(item) {
 			const mapping = this.getMappingForItem(item)
 			if (!mapping?.totalsProperty) return null
@@ -421,18 +527,27 @@ export default {
 			return val !== undefined && val !== null ? val : null
 		},
 
+		/**
+		 * Returns items in the given stage, filtered by searchQuery via filteredItems.
+		 * Empty columns remain visible even when search is active.
+		 *
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-12
+		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.2
+		 */
 		getStageItems(stageName) {
-			return this.allItems
+			return this.filteredItems
 				.filter(item => {
 					const colValue = this.getItemColumnValue(item)
 					if (colValue === stageName) return true
-					// Items with no matching column go to first non-closed stage
 					if (!colValue && this.openStages.length > 0 && this.openStages[0].name === stageName) return true
 					return false
 				})
 				.sort((a, b) => (a.stageOrder || 0) - (b.stageOrder || 0))
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-13
+		 */
 		getStageTotalValue(stageName) {
 			const stageItems = this.getStageItems(stageName)
 			let total = 0
@@ -445,10 +560,20 @@ export default {
 			return total
 		},
 
+		/**
+		 * Fetches items for the selected pipeline and resets the search query.
+		 *
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-18
+		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.1
+		 */
 		async onPipelineChange() {
+			this.searchQuery = ''
 			await this.fetchPipelineItems()
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-7
+		 */
 		async fetchPipelineItems() {
 			if (!this.selectedPipelineId) return
 			this.loading = true
@@ -457,13 +582,15 @@ export default {
 			if (pipeline?.propertyMappings && pipeline.propertyMappings.length > 0) {
 				await this.fetchItemsViaMappings(pipeline)
 			} else {
-				// Legacy fallback for pipelines without propertyMappings
 				await this.fetchItemsLegacy(pipeline)
 			}
 
 			this.loading = false
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-6
+		 */
 		async fetchItemsViaMappings(pipeline) {
 			const mappings = pipeline.propertyMappings || []
 			const promises = mappings.map(async (mapping) => {
@@ -478,8 +605,10 @@ export default {
 			this.items = results.flat()
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-5
+		 */
 		async fetchItemsLegacy(pipeline) {
-			// Fallback for old pipelines with entityType
 			const et = pipeline?.entityType
 			const promises = []
 			let leads = []
@@ -499,6 +628,9 @@ export default {
 			]
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-8
+		 */
 		async fetchSchemaItems(schemaSlug) {
 			const config = this.objectStore.objectTypeRegistry[schemaSlug]
 			if (!config) return []
@@ -520,6 +652,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
+		 */
 		async onDrop(event, targetStage) {
 			try {
 				const data = JSON.parse(event.dataTransfer.getData('application/json'))
@@ -539,10 +674,16 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-31
+		 */
 		toggleClosedStage(stageName) {
 			this.expandedClosed = this.expandedClosed === stageName ? null : stageName
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-33
+		 */
 		toggleSort(column) {
 			if (this.sortBy === column) {
 				this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc'
@@ -552,14 +693,20 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-14
+		 */
 		isItemOverdue(item) {
 			const dateStr = item.expectedCloseDate || item.requestedAt
 			if (!dateStr) return false
 			return new Date(dateStr) < new Date()
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-9
+		 */
 		formatDate(dateStr) {
-			if (!dateStr) return '\u2014'
+			if (!dateStr) return '—'
 			return formatDate(dateStr)
 		},
 
@@ -575,6 +722,9 @@ export default {
 			return formatAge(getDaysAge(item))
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-20
+		 */
 		openItem(item) {
 			if (item._schemaSlug === 'lead') {
 				this.$router.push({ name: 'LeadDetail', params: { id: item.id } })
@@ -633,7 +783,6 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
-/* Kanban styles — dashboard widget container pattern */
 .pipeline-board__columns {
 	display: flex;
 	gap: 12px;
@@ -706,7 +855,6 @@ export default {
 	flex: 1;
 }
 
-/* Closed stages */
 .kanban-closed {
 	display: flex;
 	gap: 8px;
@@ -754,7 +902,6 @@ export default {
 	gap: 1px;
 }
 
-/* List view styles */
 .pipeline-board__list {
 	flex: 1;
 	overflow: auto;

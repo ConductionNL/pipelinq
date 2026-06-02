@@ -6,6 +6,8 @@ status: implemented
 
 ## Purpose
 
+@e2e exclude backend integration foundation — register schema init, Pinia store wiring, and OR API CRUD are PHP/JS infrastructure; covered by PHPUnit and unit tests
+
 Pipelinq stores all data as OpenRegister objects -- it owns no database tables. This specification defines how the register and schemas are initialized, how the frontend and backend interact with the OpenRegister API for CRUD operations, how Pinia stores manage state, how schema validation works, how errors are handled, and how cross-entity references, audit trails, RBAC, pagination, and performance concerns are addressed. OpenRegister is the foundational layer for every Pipelinq feature.
 
 **Standards**: OpenAPI 3.0.0 (schema format), OpenRegister API conventions
@@ -25,7 +27,6 @@ See [ARCHITECTURE.md](../../docs/ARCHITECTURE.md) for full entity definitions. T
 - `leadProduct` -- Line item linking a product to a lead (schema:Offer)
 
 Note: Stages are stored as an embedded array within the `pipeline` schema (`stages: [{ name, order, probability?, isClosed?, isWon?, color? }]`), not as a separate `stage` schema. This simplifies the data model while maintaining all stage configuration capabilities.
-
 ## Requirements
 
 ---
@@ -459,24 +460,24 @@ The frontend MUST interact with OpenRegister's REST API directly for all CRUD op
 
 #### Scenario: Read a single object
 
-- GIVEN an existing client with UUID "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+- GIVEN an existing client with UUID "00000000-0000-0000-0000-000000000000"
 - WHEN the frontend navigates to the client detail view
-- THEN it MUST call `GET /index.php/apps/openregister/api/objects/pipelinq/client/f47ac10b-58cc-4372-a567-0e02b2c3d479`
+- THEN it MUST call `GET /index.php/apps/openregister/api/objects/pipelinq/client/00000000-0000-0000-0000-000000000000`
 - AND the response MUST contain the full client object with all properties
 
 #### Scenario: Update an object
 
-- GIVEN an existing client with UUID "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+- GIVEN an existing client with UUID "00000000-0000-0000-0000-000000000000"
 - WHEN the user updates the email to "info@rivierenland.nl"
-- THEN the frontend MUST call `PUT /index.php/apps/openregister/api/objects/pipelinq/client/f47ac10b-58cc-4372-a567-0e02b2c3d479`
+- THEN the frontend MUST call `PUT /index.php/apps/openregister/api/objects/pipelinq/client/00000000-0000-0000-0000-000000000000`
 - AND the request body MUST contain the updated client object
 - AND the response MUST return the updated object
 
 #### Scenario: Delete an object
 
-- GIVEN an existing client with UUID "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+- GIVEN an existing client with UUID "00000000-0000-0000-0000-000000000000"
 - WHEN the user confirms deletion
-- THEN the frontend MUST call `DELETE /index.php/apps/openregister/api/objects/pipelinq/client/f47ac10b-58cc-4372-a567-0e02b2c3d479`
+- THEN the frontend MUST call `DELETE /index.php/apps/openregister/api/objects/pipelinq/client/00000000-0000-0000-0000-000000000000`
 - AND the response MUST indicate successful deletion
 - AND subsequent GET requests for this UUID MUST return 404
 
@@ -746,7 +747,7 @@ Entities in Pipelinq reference each other via UUID fields stored on the OpenRegi
 
 #### Scenario: Lead references a client
 
-- GIVEN a lead object with `client: "f47ac10b-58cc-4372-a567-0e02b2c3d479"`
+- GIVEN a lead object with `client: "00000000-0000-0000-0000-000000000000"`
 - WHEN the frontend displays the lead detail view
 - THEN it MUST resolve the client UUID to fetch and display the client name
 - AND clicking the client name MUST navigate to the client detail view
@@ -1135,6 +1136,148 @@ The object store MUST support file attachments on OpenRegister objects via the `
 - AND files MUST be stored in the Nextcloud Files folder specified by the register's `folder` property (`"Open Registers/Pipelinq"`)
 
 ---
+
+### Requirement: Application shell — documented operations
+
+The application shell navigation implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `onPipelineSidebarSave`, `permissions`, `provide`, `translateForApp`). Each listed method realises an observable part of application shell navigation and MUST behave as implemented in the current codebase.
+
+**Feature tier**: V1
+
+#### Scenario: Documented operations are available
+
+- GIVEN the frontend component/store is loaded
+- WHEN a caller invokes one of the documented operations for application shell navigation
+- THEN the operation MUST execute and return a result consistent with the current implementation
+
+---
+
+### Requirement: Application shell — results derived from current CRM state
+
+Operations for application shell navigation MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
+
+**Feature tier**: V1
+
+#### Scenario: Results reflect live state
+
+- GIVEN CRM data backing application shell navigation
+- WHEN a documented operation runs
+- THEN its output MUST be derived from that data
+- AND it MUST change when the underlying data changes
+
+---
+
+### Requirement: Application shell — defensive handling of absent or invalid input
+
+Operations for application shell navigation MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
+
+**Feature tier**: V1
+
+#### Scenario: Missing input does not crash the flow
+
+- GIVEN an operation for application shell navigation is called with absent or invalid input
+- WHEN it executes
+- THEN it MUST return a safe default or a validation result
+- AND it MUST NOT raise an unhandled exception
+
+### Requirement: Frontend service layer — documented operations
+
+The frontend API service helpers implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `getAllowedTransitions`, `getCategoryLabel`, `getChannelLabel`, `getPriorityColor`, `getPriorityLabel`, `getSlaColor`). Each listed method realises an observable part of frontend API service helpers and MUST behave as implemented in the current codebase.
+
+**Feature tier**: V1
+
+#### Scenario: Documented operations are available
+
+- GIVEN the frontend component/store is loaded
+- WHEN a caller invokes one of the documented operations for frontend API service helpers
+- THEN the operation MUST execute and return a result consistent with the current implementation
+
+---
+
+### Requirement: Frontend service layer — results derived from current CRM state
+
+Operations for frontend API service helpers MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
+
+**Feature tier**: V1
+
+#### Scenario: Results reflect live state
+
+- GIVEN CRM data backing frontend API service helpers
+- WHEN a documented operation runs
+- THEN its output MUST be derived from that data
+- AND it MUST change when the underlying data changes
+
+---
+
+### Requirement: Frontend service layer — defensive handling of absent or invalid input
+
+Operations for frontend API service helpers MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
+
+**Feature tier**: V1
+
+#### Scenario: Missing input does not crash the flow
+
+- GIVEN an operation for frontend API service helpers is called with absent or invalid input
+- WHEN it executes
+- THEN it MUST return a safe default or a validation result
+- AND it MUST NOT raise an unhandled exception
+
+> UPDATED 2026-06-01: The "Frontend state stores" requirement below originally
+> enumerated the store actions of `src/store/modules/kennisbank.js` (~22 methods)
+> and the automation store alongside the still-present modules. The
+> `kennisbank.js` module has been **removed** (knowledge management migrated to
+> the XWiki leaf — see `migrate-kennisbank-to-xwiki-leaf` and the `kennisbank`
+> spec), and automation migrated to the Flow leaf. The deleted-module methods no
+> longer apply; only the store modules that still exist are in scope.
+
+### Requirement: Frontend state stores — documented operations
+
+The Pinia store actions and getters implemented in this app MUST provide the
+operations of the store modules that currently exist in `src/store/modules/`
+(`agentProfiles.js`, `leadSources.js`, `object.js`, `product.js`, `prospect.js`,
+`queues.js`, `requestChannels.js`, `settings.js`, `skills.js`, `survey.js` — for
+example `_countOpenRequests`, `deleteProfile`, `fetchProfiles`, `getWorkload`,
+`saveProfile`, `_addToRecentlyViewed`). Each listed method realises an observable
+part of Pinia store actions and getters and MUST behave as implemented in the
+current codebase. Methods of removed modules (`kennisbank.js`, automation) are
+out of scope.
+
+**Feature tier**: V1
+
+#### Scenario: Documented operations are available
+
+- GIVEN the frontend component/store is loaded
+- WHEN a caller invokes one of the documented operations for Pinia store actions and getters
+- THEN the operation MUST execute and return a result consistent with the current implementation
+
+---
+
+### Requirement: Frontend state stores — results derived from current CRM state
+
+Operations for Pinia store actions and getters MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
+
+**Feature tier**: V1
+
+#### Scenario: Results reflect live state
+
+- GIVEN CRM data backing Pinia store actions and getters
+- WHEN a documented operation runs
+- THEN its output MUST be derived from that data
+- AND it MUST change when the underlying data changes
+
+---
+
+### Requirement: Frontend state stores — defensive handling of absent or invalid input
+
+Operations for Pinia store actions and getters MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
+
+**Feature tier**: V1
+
+#### Scenario: Missing input does not crash the flow
+
+- GIVEN an operation for Pinia store actions and getters is called with absent or invalid input
+- WHEN it executes
+- THEN it MUST return a safe default or a validation result
+- AND it MUST NOT raise an unhandled exception
 
 ## Requirements
 

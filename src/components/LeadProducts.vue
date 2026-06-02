@@ -23,6 +23,7 @@
 							<th>{{ t('pipelinq', 'Unit Price') }}</th>
 							<th>{{ t('pipelinq', 'Discount') }}</th>
 							<th>{{ t('pipelinq', 'Total') }}</th>
+							<th>{{ t('pipelinq', 'Notes') }}</th>
 							<th />
 						</tr>
 					</thead>
@@ -59,6 +60,14 @@
 								{{ formatCurrency(calculateTotal(item)) }}
 							</td>
 							<td>
+								<input
+									v-model="item.notes"
+									type="text"
+									class="inline-input inline-input--notes"
+									:placeholder="t('pipelinq', 'Notities...')"
+									@change="updateNotes(item)">
+							</td>
+							<td>
 								<NcButton type="tertiary" @click="removeLineItem(item)">
 									{{ t('pipelinq', 'Remove') }}
 								</NcButton>
@@ -73,6 +82,7 @@
 							<td class="total-cell total-cell--grand">
 								{{ formatCurrency(grandTotal) }}
 							</td>
+							<td />
 							<td />
 						</tr>
 					</tfoot>
@@ -106,6 +116,7 @@
 						<NcSelect
 							v-model="addForm.product"
 							:options="productOptions"
+							:aria-label-combobox="t('pipelinq', 'Product')"
 							:placeholder="t('pipelinq', 'Search products...')"
 							label="name"
 							:reduce="opt => opt.id"
@@ -193,15 +204,30 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-17
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+		/**
+		 * @spec openspec/changes/2026-03-20-lead-product-link/tasks.md#task-1.1
+		 */
 		productOptions() {
-			return this.products.map(p => ({ id: p.id, name: p.name || p.id }))
+			return this.products.map(p => ({
+				id: p.id,
+				name: p.sku ? `${p.name || p.id} (${p.sku})` : (p.name || p.id),
+			}))
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-15
+		 */
 		grandTotal() {
 			return this.lineItems.reduce((sum, item) => sum + this.calculateTotal(item), 0)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-16
+		 */
 		hasManualOverride() {
 			if (this.leadValue === null || this.leadValue === undefined) return false
 			if (this.lineItems.length === 0) return false
@@ -212,6 +238,9 @@ export default {
 		await this.fetchData()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-12
+		 */
 		async fetchData() {
 			this.loading = true
 			try {
@@ -231,22 +260,34 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-14
+		 */
 		getProductName(productId) {
 			const product = this.products.find(p => p.id === productId)
 			return product?.name || productId || '-'
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-11
+		 */
 		calculateTotal(item) {
 			const qty = Number(item.quantity) || 0
 			const price = Number(item.unitPrice) || 0
 			const discount = Number(item.discount) || 0
 			return (qty * price) * (1 - discount / 100)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-18
+		 */
 		onProductSelect(productId) {
 			const product = this.products.find(p => p.id === productId)
 			if (product) {
 				this.addForm.unitPrice = Number(product.unitPrice) || 0
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-10
+		 */
 		async addLineItem() {
 			if (!this.addForm.product) return
 
@@ -269,6 +310,9 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to add product'))
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-22
+		 */
 		async updateLineItem(item) {
 			try {
 				const total = this.calculateTotal(item)
@@ -277,6 +321,7 @@ export default {
 					quantity: item.quantity,
 					unitPrice: item.unitPrice,
 					discount: item.discount,
+					notes: item.notes,
 					total,
 				})
 				item.total = total
@@ -285,6 +330,19 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to update line item'))
 			}
 		},
+		/**
+		 * @spec openspec/changes/2026-03-20-lead-product-link/tasks.md#task-2.2
+		 */
+		async updateNotes(item) {
+			try {
+				await this.objectStore.saveObject('leadProduct', { ...item })
+			} catch (e) {
+				showError(e.message || t('pipelinq', 'Failed to update notes'))
+			}
+		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-20
+		 */
 		async removeLineItem(item) {
 			if (!confirm(t('pipelinq', 'Remove this product from the lead?'))) return
 
@@ -296,6 +354,9 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to remove line item'))
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-21
+		 */
 		resetAddForm() {
 			this.addForm = {
 				product: null,
@@ -305,6 +366,9 @@ export default {
 				notes: '',
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-13
+		 */
 		formatCurrency(value) {
 			if (value === null || value === undefined) return '-'
 			return formatLocaleCurrency(value)
@@ -379,6 +443,10 @@ export default {
 .inline-input--price,
 .inline-input--discount {
 	width: 90px;
+}
+
+.inline-input--notes {
+	width: 180px;
 }
 
 .total-cell {

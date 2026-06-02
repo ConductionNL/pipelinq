@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: EUPL-1.2 -->
 <template>
 	<NcSettingsSection
 		:name="t('pipelinq', 'Skills')"
@@ -15,8 +16,12 @@
 						</span>
 					</div>
 					<div class="skill-item__actions">
-						<NcButton @click="startEdit(skill)">{{ t('pipelinq', 'Edit') }}</NcButton>
-						<NcButton type="error" @click="deleteSkill(skill)">{{ t('pipelinq', 'Delete') }}</NcButton>
+						<NcButton @click="startEdit(skill)">
+							{{ t('pipelinq', 'Edit') }}
+						</NcButton>
+						<NcButton type="error" @click="deleteSkill(skill)">
+							{{ t('pipelinq', 'Delete') }}
+						</NcButton>
 					</div>
 				</div>
 
@@ -40,14 +45,20 @@
 						</label>
 					</div>
 					<div class="edit-actions">
-						<NcButton @click="cancelEdit">{{ t('pipelinq', 'Cancel') }}</NcButton>
-						<NcButton type="primary" @click="saveEdit">{{ t('pipelinq', 'Save') }}</NcButton>
+						<NcButton @click="cancelEdit">
+							{{ t('pipelinq', 'Cancel') }}
+						</NcButton>
+						<NcButton type="primary" @click="saveEdit">
+							{{ t('pipelinq', 'Save') }}
+						</NcButton>
 					</div>
 				</div>
 			</div>
 
 			<div class="skill-add">
-				<NcButton @click="addSkill">{{ t('pipelinq', '+ Add Skill') }}</NcButton>
+				<NcButton @click="addSkill">
+					{{ t('pipelinq', '+ Add Skill') }}
+				</NcButton>
 			</div>
 		</div>
 	</NcSettingsSection>
@@ -71,12 +82,21 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-28
+		 */
 		skillsStore() {
 			return useSkillsStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-25
+		 */
 		loading() {
 			return this.skillsStore.loading
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-27
+		 */
 		skills() {
 			return this.skillsStore.skills
 		},
@@ -85,6 +105,9 @@ export default {
 		this.skillsStore.fetchSkills()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-29
+		 */
 		startEdit(skill) {
 			this.editingId = skill.id
 			this.editForm = {
@@ -92,10 +115,16 @@ export default {
 				categoriesInput: (skill.categories || []).join(', '),
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-23
+		 */
 		cancelEdit() {
 			this.editingId = null
 			this.editForm = {}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-26
+		 */
 		async saveEdit() {
 			const data = {
 				...this.editForm,
@@ -107,6 +136,9 @@ export default {
 			await this.skillsStore.saveSkill(data)
 			this.cancelEdit()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-22
+		 */
 		async addSkill() {
 			await this.skillsStore.saveSkill({
 				title: t('pipelinq', 'New Skill'),
@@ -114,6 +146,9 @@ export default {
 				categories: [],
 			})
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-24
+		 */
 		async deleteSkill(skill) {
 			if (confirm(t('pipelinq', 'Delete skill "{title}"?', { title: skill.title }))) {
 				await this.skillsStore.deleteSkill(skill.id)

@@ -17,6 +17,7 @@
 				:error="newClientSubmitted && !newClient.name" />
 			<NcSelect v-model="newClient.type"
 				:options="typeOptions"
+				:input-label="t('pipelinq', 'Type')"
 				:placeholder="t('pipelinq', 'Type')"
 				input-id="new-client-type" />
 			<NcTextField :value.sync="newClient.email"
@@ -88,10 +89,12 @@
 
 		<!-- Empty state -->
 		<div v-else class="empty-state">
-			<p>{{ searchQuery
-				? t('pipelinq', 'No clients found for "{query}"', { query: searchQuery })
-				: t('pipelinq', 'No clients found')
-			}}</p>
+			<p>
+				{{ searchQuery
+					? t('pipelinq', 'No clients found for "{query}"', { query: searchQuery })
+					: t('pipelinq', 'No clients found')
+				}}
+			</p>
 		</div>
 
 		<!-- Inline request/lead creation -->
@@ -129,6 +132,7 @@
 
 <script>
 import { NcTextField, NcButton, NcSelect, NcNoteCard, NcLoadingIcon } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
 import Account from 'vue-material-design-icons/Account.vue'
 import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
@@ -180,6 +184,9 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-40
+		 */
 		filteredClients() {
 			if (!this.searchQuery) return this.clients.slice(0, 20)
 			const query = this.searchQuery.toLowerCase()
@@ -195,6 +202,9 @@ export default {
 		await this.fetchData()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-38
+		 */
 		async fetchData() {
 			this.loading = true
 			try {
@@ -210,6 +220,9 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-39
+		 */
 		async fetchRaw(type, params = {}) {
 			const typeConfig = this.config[type]
 			if (!typeConfig) return []
@@ -220,8 +233,8 @@ export default {
 				queryParams.set(key, value)
 			}
 
-			const url = '/apps/openregister/api/objects/' + typeConfig.register + '/' + typeConfig.schema
-				+ (queryParams.toString() ? '?' + queryParams.toString() : '')
+			const url = generateUrl('/apps/openregister/api/objects/' + typeConfig.register + '/' + typeConfig.schema
+				+ (queryParams.toString() ? '?' + queryParams.toString() : ''))
 
 			const response = await fetch(url, {
 				headers: {
@@ -235,19 +248,31 @@ export default {
 			const data = await response.json()
 			return data.results || data || []
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-42
+		 */
 		viewClient(client) {
-			window.location.href = '/index.php/apps/pipelinq/clients/' + client.id
+			window.location.href = generateUrl('/apps/pipelinq/clients/' + client.id)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-37
+		 */
 		createRequestForClient(client) {
 			this.actionClient = client
 			this.actionType = 'request'
 			this.actionTitle = ''
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-36
+		 */
 		createLeadForClient(client) {
 			this.actionClient = client
 			this.actionType = 'lead'
 			this.actionTitle = ''
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-34
+		 */
 		async copyEmail(client) {
 			try {
 				await navigator.clipboard.writeText(client.email)
@@ -257,11 +282,17 @@ export default {
 				console.error('Failed to copy email:', err)
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-33
+		 */
 		cancelAction() {
 			this.actionClient = null
 			this.actionType = ''
 			this.actionTitle = ''
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-41
+		 */
 		async submitAction() {
 			if (!this.actionTitle || !this.actionClient) return
 
@@ -284,8 +315,8 @@ export default {
 					body.status = 'open'
 				}
 
-				const url = '/apps/openregister/api/objects/'
-					+ typeConfig.register + '/' + typeConfig.schema
+				const url = generateUrl('/apps/openregister/api/objects/'
+					+ typeConfig.register + '/' + typeConfig.schema)
 
 				const response = await fetch(url, {
 					method: 'POST',
@@ -301,13 +332,16 @@ export default {
 				const created = await response.json()
 				const id = created.id || created.uuid
 				const path = type === 'request' ? 'requests' : 'leads'
-				window.location.href = '/index.php/apps/pipelinq/' + path + '/' + id
+				window.location.href = generateUrl('/apps/pipelinq/' + path + '/' + id)
 			} catch (err) {
 				console.error('Action submit error:', err)
 			} finally {
 				this.actionSubmitting = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-35
+		 */
 		async createClient() {
 			this.newClientSubmitted = true
 			if (!this.newClient.name) return
@@ -327,8 +361,8 @@ export default {
 					body.email = this.newClient.email
 				}
 
-				const url = '/apps/openregister/api/objects/'
-					+ typeConfig.register + '/' + typeConfig.schema
+				const url = generateUrl('/apps/openregister/api/objects/'
+					+ typeConfig.register + '/' + typeConfig.schema)
 
 				const response = await fetch(url, {
 					method: 'POST',

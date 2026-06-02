@@ -8,13 +8,15 @@
  * @category Service
  * @package  OCA\Pipelinq\Service
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-35
  */
 
 declare(strict_types=1);
@@ -71,6 +73,7 @@ class IcpConfigService
      * Get all ICP settings.
      *
      * @return array The ICP configuration.
+     * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-9
      */
     public function getSettings(): array
     {
@@ -99,6 +102,7 @@ class IcpConfigService
      * @param array $data The ICP data to save.
      *
      * @return string The ICP hash.
+     * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-11
      */
     public function saveSettings(array $data): string
     {
@@ -114,6 +118,7 @@ class IcpConfigService
      * Check if ICP is configured.
      *
      * @return bool True if at least one ICP criterion is set.
+     * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-10
      */
     public function isConfigured(): bool
     {
@@ -136,6 +141,7 @@ class IcpConfigService
      * Get ICP criteria for scoring.
      *
      * @return array The raw ICP criteria.
+     * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-7
      */
     public function getCriteria(): array
     {
@@ -153,6 +159,7 @@ class IcpConfigService
      * Get the ICP hash for cache invalidation.
      *
      * @return string The hash of current ICP settings.
+     * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-8
      */
     public function getIcpHash(): string
     {
@@ -226,7 +233,9 @@ class IcpConfigService
     private function saveApiKeyField(array $data): void
     {
         if (isset($data['kvkApiKey']) === true && $data['kvkApiKey'] !== '***configured***') {
-            $this->reader->setString(key: 'icp_kvk_api_key', value: (string) $data['kvkApiKey']);
+            // Store the KVK API key as sensitive so it is excluded from
+            // occ config:list output and Nextcloud support archives (issue #599).
+            $this->reader->setSensitiveString(key: 'icp_kvk_api_key', value: (string) $data['kvkApiKey']);
         }
     }//end saveApiKeyField()
 

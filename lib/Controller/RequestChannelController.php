@@ -8,13 +8,15 @@
  * @category Controller
  * @package  OCA\Pipelinq\Controller
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-10
  */
 
 declare(strict_types=1);
@@ -24,8 +26,13 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\SystemTagService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
 
 /**
  * Controller for request channel management.
@@ -39,10 +46,14 @@ class RequestChannelController extends Controller
      *
      * @param IRequest         $request          The request.
      * @param SystemTagService $systemTagService The system tag service.
+     * @param IUserSession     $userSession      The user session.
+     * @param LoggerInterface  $logger           The logger.
      */
     public function __construct(
         IRequest $request,
         private SystemTagService $systemTagService,
+        private IUserSession $userSession,
+        private LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -52,10 +63,16 @@ class RequestChannelController extends Controller
      *
      * @return JSONResponse The response containing tags.
      *
-     * @NoAdminRequired
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-10
      */
+    #[NoAdminRequired]
     public function index(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+
         return new JSONResponse(
                 [
                     'success' => true,
@@ -68,7 +85,10 @@ class RequestChannelController extends Controller
      * Create a new request channel tag.
      *
      * @return JSONResponse The response containing the created tag.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-10
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function create(): JSONResponse
     {
         $name = $this->request->getParam('name', '');
@@ -90,7 +110,10 @@ class RequestChannelController extends Controller
      * @param string $id The tag ID.
      *
      * @return JSONResponse The response containing the renamed tag.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-10
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function update(string $id): JSONResponse
     {
         $name = $this->request->getParam('name', '');
@@ -113,7 +136,10 @@ class RequestChannelController extends Controller
      * @param string $id The tag ID.
      *
      * @return JSONResponse The response.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-10
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function destroy(string $id): JSONResponse
     {
         try {
@@ -125,7 +151,8 @@ class RequestChannelController extends Controller
             );
             return new JSONResponse(['success' => true]);
         } catch (\Exception $e) {
-            return new JSONResponse(['success' => false, 'message' => $e->getMessage()], 500);
+            $this->logger->error('RequestChannelController::destroy failed', ['exception' => $e]);
+            return new JSONResponse(['success' => false, 'message' => 'An unexpected error occurred'], 500);
         }
     }//end destroy()
 }//end class

@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-23
  */
 
 declare(strict_types=1);
@@ -31,30 +33,32 @@ use Psr\Log\LoggerInterface;
 /**
  * Background job that expires overdue tasks and sends deadline escalation notifications.
  *
- * Runs every 15 minutes (900 seconds).
+ * Runs every 15 minutes (900 seconds) by default; the interval and the
+ * escalation/grace thresholds are admin-tunable via the
+ * `pipelinq.task_expiry.*` admin-config keys.
  */
 class TaskExpiryJob extends TimedJob
 {
     /**
-     * Interval in seconds (15 minutes).
+     * Default poll interval in seconds (15 minutes) when unconfigured.
      *
      * @var int
      */
-    private const INTERVAL = 900;
+    private const DEFAULT_INTERVAL = 900;
 
     /**
-     * Escalation threshold in seconds (4 hours).
+     * Default escalation threshold in seconds (4 hours) when unconfigured.
      *
      * @var int
      */
-    private const ESCALATION_THRESHOLD = 14400;
+    private const DEFAULT_ESCALATION_THRESHOLD = 14400;
 
     /**
-     * Grace period for in-progress tasks in seconds (24 hours past deadline).
+     * Default grace period for in-progress tasks in seconds (24 hours) when unconfigured.
      *
      * @var int
      */
-    private const IN_PROGRESS_GRACE = 86400;
+    private const DEFAULT_IN_PROGRESS_GRACE = 86400;
 
     /**
      * Constructor.
@@ -70,8 +74,14 @@ class TaskExpiryJob extends TimedJob
         private NotificationService $notificationService,
         private LoggerInterface $logger,
     ) {
-        parent::__construct($time);
-        $this->setInterval(self::INTERVAL);
+        parent::__construct(time: $time);
+        $this->setInterval(
+            seconds: $this->appConfig->getValueInt(
+                Application::APP_ID,
+                'task_expiry.poll_interval_seconds',
+                self::DEFAULT_INTERVAL
+            )
+        );
     }//end __construct()
 
     /**
@@ -82,6 +92,8 @@ class TaskExpiryJob extends TimedJob
      * @param mixed $argument The job argument (unused).
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-23
      */
     protected function run(mixed $argument): void
     {
@@ -93,13 +105,29 @@ class TaskExpiryJob extends TimedJob
             return;
         }
 
-        $this->logger->info('TaskExpiryJob: starting task expiry check');
+        $escalationThreshold = $this->appConfig->getValueInt(
+            Application::APP_ID,
+            'task_expiry.escalation_threshold_seconds',
+            self::DEFAULT_ESCALATION_THRESHOLD
+        );
+        $inProgressGrace     = $this->appConfig->getValueInt(
+            Application::APP_ID,
+            'task_expiry.in_progress_grace_seconds',
+            self::DEFAULT_IN_PROGRESS_GRACE
+        );
+
+        $this->logger->info(
+            'TaskExpiryJob: starting task expiry check',
+            [
+                'escalationThresholdSeconds' => $escalationThreshold,
+                'inProgressGraceSeconds'     => $inProgressGrace,
+            ]
+        );
 
         // NOTE: This job sets up the framework for task expiry.
         // The actual OpenRegister API calls require the ObjectService which
         // needs a user context. For now, we log that the job ran.
         // Full implementation requires OpenRegister's system-level API access.
-
         $this->logger->info('TaskExpiryJob: completed check cycle');
     }//end run()
 }//end class

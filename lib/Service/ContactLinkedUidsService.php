@@ -49,6 +49,7 @@ class ContactLinkedUidsService
      * Get all contactsUid values from existing Pipelinq clients and contacts.
      *
      * @return array The linked contact UIDs.
+     * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-1
      */
     public function getLinkedContactsUids(): array
     {
@@ -88,9 +89,7 @@ class ContactLinkedUidsService
 
         try {
             $objects = $objectService->findAll(
-                ['filters' => ['register' => $registerId, 'schema' => $schemaId], 'limit' => 500],
-                _rbac: false,
-                _multitenancy: false
+                ['filters' => ['register' => $registerId, 'schema' => $schemaId], 'limit' => 500]
             );
 
             foreach ($objects as $obj) {

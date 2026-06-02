@@ -15,6 +15,7 @@
 
 <script>
 import { NcDashboardWidget, NcEmptyContent } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
 import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import { initializeStores } from '../../store/store.js'
 import { formatDate } from '../../services/localeUtils.js'
@@ -45,6 +46,9 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-45
+		 */
 		items() {
 			const now = new Date()
 			return this.leads.map((lead) => {
@@ -71,9 +75,15 @@ export default {
 		await this.fetchData()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-46
+		 */
 		onShow(item) {
-			window.location.href = '/index.php/apps/pipelinq/leads/' + item.id
+			window.location.href = generateUrl('/apps/pipelinq/leads/' + item.id)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-43
+		 */
 		async fetchData() {
 			this.loading = true
 			try {
@@ -92,6 +102,9 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-44
+		 */
 		async fetchRaw(config, type, params = {}) {
 			const typeConfig = config[type]
 			if (!typeConfig) return []
@@ -102,8 +115,8 @@ export default {
 				queryParams.set(key, value)
 			}
 
-			const url = '/apps/openregister/api/objects/' + typeConfig.register + '/' + typeConfig.schema
-				+ (queryParams.toString() ? '?' + queryParams.toString() : '')
+			const url = generateUrl('/apps/openregister/api/objects/' + typeConfig.register + '/' + typeConfig.schema
+				+ (queryParams.toString() ? '?' + queryParams.toString() : ''))
 
 			const response = await fetch(url, {
 				headers: {

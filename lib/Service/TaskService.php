@@ -15,12 +15,17 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-23
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-24
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\AppInfo\Application;
+use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -66,48 +71,85 @@ class TaskService
     ];
 
     /**
-     * Default business hours start.
+     * Default business hours start when unconfigured.
      *
      * @var int
      */
-    private const BUSINESS_HOUR_START = 8;
+    private const DEFAULT_BUSINESS_HOUR_START = 8;
 
     /**
-     * Default business hours end.
+     * Default business hours end when unconfigured.
      *
      * @var int
      */
-    private const BUSINESS_HOUR_END = 17;
+    private const DEFAULT_BUSINESS_HOUR_END = 17;
 
     /**
      * Constructor.
      *
      * @param IUserSession    $userSession The user session.
+     * @param IAppConfig      $appConfig   The app config.
      * @param LoggerInterface $logger      The logger.
      */
     public function __construct(
         private IUserSession $userSession,
+        private IAppConfig $appConfig,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
 
     /**
+     * Get the admin-configured business-hour start (default 8).
+     *
+     * Tunable via `pipelinq.task.business_hour_start`; the default preserves
+     * the historical 08:00 start so an unconfigured install is unchanged.
+     *
+     * @return int The business-hour start (0-23).
+     */
+    private function getBusinessHourStart(): int
+    {
+        return $this->appConfig->getValueInt(
+            Application::APP_ID,
+            'task.business_hour_start',
+            self::DEFAULT_BUSINESS_HOUR_START
+        );
+    }//end getBusinessHourStart()
+
+    /**
+     * Get the admin-configured business-hour end (default 17).
+     *
+     * Tunable via `pipelinq.task.business_hour_end`; the default preserves the
+     * historical 17:00 end so an unconfigured install is unchanged.
+     *
+     * @return int The business-hour end (0-23).
+     */
+    private function getBusinessHourEnd(): int
+    {
+        return $this->appConfig->getValueInt(
+            Application::APP_ID,
+            'task.business_hour_end',
+            self::DEFAULT_BUSINESS_HOUR_END
+        );
+    }//end getBusinessHourEnd()
+
+    /**
      * Calculate the default deadline (next business day at 17:00).
      *
      * @return string ISO 8601 datetime string.
+     * @spec   openspec/changes/reverse-2026-05-26-be-tasks/tasks.md#task-2
      */
     public function getDefaultDeadline(): string
     {
-        $now = new \DateTime();
+        $now      = new \DateTime();
         $deadline = clone $now;
 
-        // Move to next business day
+        // Move to next business day.
         $deadline->modify('+1 day');
-        while ($this->isWeekend($deadline) === true) {
+        while ($this->isWeekend(date: $deadline) === true) {
             $deadline->modify('+1 day');
         }
 
-        $deadline->setTime(self::BUSINESS_HOUR_END, 0, 0);
+        $deadline->setTime($this->getBusinessHourEnd(), 0, 0);
 
         return $deadline->format(\DateTime::ATOM);
     }//end getDefaultDeadline()
@@ -122,97 +164,30 @@ class TaskService
      * @param int    $businessHours Number of business hours to add.
      *
      * @return string ISO 8601 deadline datetime string.
+     * @spec   openspec/changes/reverse-2026-05-26-be-tasks/tasks.md#task-1
      */
     public function calculateDeadline(string $createdAt, int $businessHours): string
     {
-        $start = new \DateTime($createdAt);
-        $remaining = $businessHours;
+        $start         = new \DateTime($createdAt);
+        $remaining     = $businessHours;
+        $businessStart = $this->getBusinessHourStart();
+        $businessEnd   = $this->getBusinessHourEnd();
 
         while ($remaining > 0) {
             $start->modify('+1 hour');
 
-            if ($this->isWeekend($start) === true) {
+            if ($this->isWeekend(date: $start) === true) {
                 continue;
             }
 
             $hour = (int) $start->format('G');
-            if ($hour >= self::BUSINESS_HOUR_START && $hour < self::BUSINESS_HOUR_END) {
+            if ($hour >= $businessStart && $hour < $businessEnd) {
                 $remaining--;
             }
         }
 
         return $start->format(\DateTime::ATOM);
     }//end calculateDeadline()
-
-    /**
-     * Validate task data.
-     *
-     * @param array<string, mixed> $data The task data to validate.
-     *
-     * @return array{valid: bool, errors: array<string>} Validation result.
-     */
-    public function validateTask(array $data): array
-    {
-        $errors = [];
-
-        if (empty($data['subject']) === true || trim($data['subject']) === '') {
-            $errors[] = 'Subject is required';
-        }
-
-        if (empty($data['type']) === true || in_array($data['type'], self::VALID_TYPES, true) === false) {
-            $errors[] = 'Valid task type is required';
-        }
-
-        if (empty($data['assignee']) === true || trim($data['assignee']) === '') {
-            $errors[] = 'Assignee is required';
-        }
-
-        if (empty($data['assigneeType']) === true || in_array($data['assigneeType'], ['user', 'group'], true) === false) {
-            $errors[] = 'Assignee type must be "user" or "group"';
-        }
-
-        if (isset($data['priority']) === true && in_array($data['priority'], self::VALID_PRIORITIES, true) === false) {
-            $errors[] = 'Invalid priority level';
-        }
-
-        return [
-            'valid' => count($errors) === 0,
-            'errors' => $errors,
-        ];
-    }//end validateTask()
-
-    /**
-     * Check if a deadline is approaching (within threshold hours).
-     *
-     * @param string $deadline       ISO 8601 deadline datetime.
-     * @param int    $thresholdHours Hours before deadline to trigger escalation.
-     *
-     * @return bool True if the deadline is within the threshold.
-     */
-    public function isDeadlineApproaching(string $deadline, int $thresholdHours = 4): bool
-    {
-        $deadlineDate = new \DateTime($deadline);
-        $now = new \DateTime();
-        $threshold = clone $deadlineDate;
-        $threshold->modify("-{$thresholdHours} hours");
-
-        return $now >= $threshold && $now < $deadlineDate;
-    }//end isDeadlineApproaching()
-
-    /**
-     * Check if a deadline has passed.
-     *
-     * @param string $deadline ISO 8601 deadline datetime.
-     *
-     * @return bool True if the deadline has passed.
-     */
-    public function isDeadlinePassed(string $deadline): bool
-    {
-        $deadlineDate = new \DateTime($deadline);
-        $now = new \DateTime();
-
-        return $now > $deadlineDate;
-    }//end isDeadlinePassed()
 
     /**
      * Check if a date is on a weekend.

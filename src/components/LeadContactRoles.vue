@@ -62,6 +62,7 @@
 						<NcSelect
 							v-model="addForm.toContact"
 							:options="contactOptions"
+							:aria-label-combobox="t('pipelinq', 'Contact')"
 							:placeholder="t('pipelinq', 'Search contacts...')"
 							label="name"
 							:reduce="opt => opt.id"
@@ -72,6 +73,7 @@
 						<NcSelect
 							v-model="addForm.type"
 							:options="roleOptions"
+							:aria-label-combobox="t('pipelinq', 'Role')"
 							:placeholder="t('pipelinq', 'Select role...')"
 							label="label"
 							:reduce="opt => opt.value" />
@@ -140,12 +142,21 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-5
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-7
+		 */
 		roleOptions() {
 			return CRM_ROLES
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-9
+		 */
 		sortedContactRoles() {
 			return [...this.contactRoles].sort((a, b) => {
 				const aOrder = CRM_ROLES.find(r => r.value === a.type)?.order || 99
@@ -158,6 +169,9 @@ export default {
 		await this.fetchRoles()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-2
+		 */
 		async fetchRoles() {
 			this.loading = true
 			try {
@@ -178,6 +192,9 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-4
+		 */
 		async loadEntityName(entityId) {
 			try {
 				const entity = await this.objectStore.fetchObject('contact', entityId)
@@ -193,10 +210,16 @@ export default {
 		getEntityName(entityId) {
 			return this.entityNameCache[entityId] || entityId || '-'
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-3
+		 */
 		getRoleLabel(roleType) {
 			const role = CRM_ROLES.find(r => r.value === roleType)
 			return role ? role.label : roleType
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-8
+		 */
 		async searchContacts(query) {
 			if (this.searchTimeout) {
 				clearTimeout(this.searchTimeout)
@@ -214,6 +237,9 @@ export default {
 				}
 			}, 300)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-1
+		 */
 		async addRole() {
 			if (!this.addForm.toContact || !this.addForm.type) {
 				return
@@ -240,6 +266,9 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to add contact role'))
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-6
+		 */
 		async removeRole(role) {
 			if (!confirm(t('pipelinq', 'Remove this contact role from the lead?'))) {
 				return

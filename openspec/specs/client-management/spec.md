@@ -14,7 +14,6 @@ Client management is the core capability of Pipelinq. A client represents a pers
 ## Data Model
 
 See [ARCHITECTURE.md](../../docs/ARCHITECTURE.md) for full entity definitions of Client and Contact Person, including property tables, Schema.org mappings, vCard alignment, and VNG mapping layer.
-
 ## Requirements
 
 ---
@@ -35,6 +34,7 @@ The system MUST support creating client records of type `person` or `organizatio
 - AND the client MUST appear in the client list immediately
 
 #### Scenario: Create an organization client with full fields
+@e2e exclude requires form interaction with test data creation
 
 - GIVEN a user with CRM access
 - WHEN they submit a new client form with name "Gemeente Utrecht", type "organization", email "info@utrecht.nl", telephone "+31 30 286 0000", website "https://www.utrecht.nl", taxID "12345678", and address "Stadsplateau 1, 3521 AZ Utrecht"
@@ -43,6 +43,7 @@ The system MUST support creating client records of type `person` or `organizatio
 - AND the `taxID` field MUST accept KVK-format numbers
 
 #### Scenario: Create a client with only required fields
+@e2e exclude OR write and backend; covered by Newman
 
 - GIVEN a user with CRM access
 - WHEN they submit a new client form with name "Acme B.V." and type "organization" and leave all optional fields empty
@@ -50,6 +51,7 @@ The system MUST support creating client records of type `person` or `organizatio
 - AND optional fields (email, telephone, address, taxID, website, notes) MUST be stored as empty/null
 
 #### Scenario: Fail to create a client without required name
+@e2e exclude server validation; covered by PHPUnit
 
 - GIVEN a user with CRM access
 - WHEN they submit a new client form with type "person" but no name
@@ -58,6 +60,7 @@ The system MUST support creating client records of type `person` or `organizatio
 - AND no OpenRegister object MUST be created
 
 #### Scenario: Fail to create a client without required type
+@e2e exclude server validation; covered by PHPUnit
 
 - GIVEN a user with CRM access
 - WHEN they submit a new client form with name "Jan de Vries" but no type
@@ -65,6 +68,7 @@ The system MUST support creating client records of type `person` or `organizatio
 - AND the error message MUST indicate that type is required
 
 #### Scenario: Fail to create a client with invalid type
+@e2e exclude server validation; covered by PHPUnit
 
 - GIVEN a user with CRM access
 - WHEN they submit a new client form with name "Jan de Vries" and type "government"
@@ -80,6 +84,7 @@ The system MUST support updating all properties of an existing client. Updates M
 **Feature tier**: MVP
 
 #### Scenario: Update a client email
+@e2e exclude requires existing test data
 
 - GIVEN an existing client "Jan de Vries" with no email
 - WHEN the user updates the email to "jan@devries.nl"
@@ -88,6 +93,7 @@ The system MUST support updating all properties of an existing client. Updates M
 - AND the client detail view MUST reflect the updated email
 
 #### Scenario: Update a client type from person to organization
+@e2e exclude requires existing test data
 
 - GIVEN an existing person client "Jan de Vries Consultancy"
 - WHEN the user changes the type to "organization"
@@ -95,6 +101,7 @@ The system MUST support updating all properties of an existing client. Updates M
 - AND existing properties (name, email, telephone) MUST be preserved
 
 #### Scenario: Edit form pre-populates existing values
+@e2e exclude requires existing test data
 
 - GIVEN an existing client "Gemeente Utrecht" is opened for editing
 - WHEN the edit form loads
@@ -102,6 +109,7 @@ The system MUST support updating all properties of an existing client. Updates M
 - AND the user can modify any field and save
 
 #### Scenario: Clear an optional field
+@e2e exclude requires existing test data
 
 - GIVEN an existing client "Gemeente Utrecht" with email "info@utrecht.nl"
 - WHEN the user clears the email field and saves
@@ -117,6 +125,7 @@ The system MUST support deleting client records. Deletion of clients with active
 **Feature tier**: MVP
 
 #### Scenario: Delete a client with no linked entities
+@e2e exclude requires seed data
 
 - GIVEN an existing client "Test B.V." with no linked leads, requests, or contact persons
 - WHEN the user deletes the client
@@ -124,6 +133,7 @@ The system MUST support deleting client records. Deletion of clients with active
 - AND the client MUST no longer appear in the client list
 
 #### Scenario: Delete a client with linked contact persons
+@e2e exclude requires seed data
 
 - GIVEN an existing client "Acme B.V." with two linked contact persons
 - WHEN the user deletes the client
@@ -132,6 +142,7 @@ The system MUST support deleting client records. Deletion of clients with active
 - AND the linked contact persons SHOULD be flagged as orphaned or deleted
 
 #### Scenario: Attempt to delete a client with active leads
+@e2e exclude backend referential integrity; covered by PHPUnit
 
 - GIVEN an existing client "Gemeente Utrecht" with 2 open leads
 - WHEN the user attempts to delete the client
@@ -140,6 +151,7 @@ The system MUST support deleting client records. Deletion of clients with active
 - AND if the user confirms, the leads MUST retain their data but the client reference SHOULD be cleared
 
 #### Scenario: Attempt to delete a client with active requests
+@e2e exclude backend referential integrity; covered by PHPUnit
 
 - GIVEN an existing client "Provincie Noord-Holland" with 1 open request
 - WHEN the user attempts to delete the client
@@ -155,6 +167,7 @@ The system MUST validate client data according to schema rules and field format 
 **Feature tier**: MVP
 
 #### Scenario: Validate email format
+@e2e exclude server-side validation; covered by PHPUnit
 
 - GIVEN a user creating or updating a client
 - WHEN they enter "not-an-email" in the email field
@@ -163,6 +176,7 @@ The system MUST validate client data according to schema rules and field format 
 - AND valid formats such as "info@gemeente-utrecht.nl" MUST be accepted
 
 #### Scenario: Validate telephone format
+@e2e exclude server-side validation; covered by PHPUnit
 
 - GIVEN a user creating or updating a client
 - WHEN they enter a telephone number
@@ -170,6 +184,7 @@ The system MUST validate client data according to schema rules and field format 
 - AND the system SHOULD reject clearly invalid input such as "abc" or "12"
 
 #### Scenario: Validate website URL format
+@e2e exclude server-side validation; covered by PHPUnit
 
 - GIVEN a user creating or updating a client
 - WHEN they enter "not a url" in the website field
@@ -177,6 +192,7 @@ The system MUST validate client data according to schema rules and field format 
 - AND valid formats such as "https://www.utrecht.nl" and "http://acme.nl" MUST be accepted
 
 #### Scenario: Validate name maximum length
+@e2e exclude server-side validation; covered by PHPUnit
 
 - GIVEN a user creating a client
 - WHEN they enter a name exceeding 255 characters
@@ -214,12 +230,14 @@ The system MUST provide a list view of all clients with search, sort, filter, an
 - AND the results MUST NOT include "Jan de Vries" or "Acme B.V."
 
 #### Scenario: Search clients by email
+@e2e exclude requires test data
 
 - GIVEN a client "Acme B.V." with email "info@acme.nl"
 - WHEN the user searches for "acme.nl"
 - THEN the results MUST include "Acme B.V."
 
 #### Scenario: Filter clients by type
+@e2e exclude requires test data
 
 - GIVEN 10 person clients and 5 organization clients
 - WHEN the user filters by type "organization"
@@ -227,12 +245,14 @@ The system MUST provide a list view of all clients with search, sort, filter, an
 - AND the filter MUST be clearable to show all clients again
 
 #### Scenario: Sort clients by name
+@e2e exclude requires test data
 
 - GIVEN clients "Gemeente Utrecht", "Acme B.V.", "Jan de Vries"
 - WHEN the user sorts by name ascending
 - THEN the order MUST be: "Acme B.V.", "Gemeente Utrecht", "Jan de Vries"
 
 #### Scenario: Paginate client list
+@e2e exclude requires sufficient test data
 
 - GIVEN 45 clients and a page size of 20
 - WHEN the user views page 1
@@ -264,6 +284,7 @@ The system MUST provide a detail view for each client showing all properties, su
 - AND the type MUST be displayed as "Organization"
 
 #### Scenario: View person client detail
+@e2e exclude requires existing client record
 
 - GIVEN a person client "Jan de Vries" with email "jan@devries.nl"
 - WHEN the user navigates to the client detail view
@@ -272,6 +293,7 @@ The system MUST provide a detail view for each client showing all properties, su
 - AND the taxID field SHOULD NOT be prominently displayed for person clients
 
 #### Scenario: Display summary statistics
+@e2e exclude requires existing client with linked entities
 
 - GIVEN a client "Acme Corporation" with 2 open leads (total value EUR 25,000), 3 won leads (total value EUR 42,000), and 1 open request
 - WHEN the user views the client detail
@@ -284,6 +306,7 @@ The system MUST provide a detail view for each client showing all properties, su
   - Client since date (creation date)
 
 #### Scenario: Display linked contact persons
+@e2e exclude requires existing data
 
 - GIVEN a client "Acme Corporation" with contact persons "Petra Jansen (Sales Manager)" and "Mark de Groot (CTO)"
 - WHEN the user views the client detail
@@ -292,6 +315,7 @@ The system MUST provide a detail view for each client showing all properties, su
 - AND a button to add a new contact person MUST be visible
 
 #### Scenario: Display linked leads
+@e2e exclude requires existing data
 
 - GIVEN a client "Acme Corporation" with leads "Acme Corp deal (Qualified, EUR 5,000)" and "Acme expansion (New, EUR 20,000)"
 - WHEN the user views the client detail
@@ -300,6 +324,7 @@ The system MUST provide a detail view for each client showing all properties, su
 - AND clicking a lead MUST navigate to the lead detail view
 
 #### Scenario: Display linked requests
+@e2e exclude requires existing data
 
 - GIVEN a client "Acme Corporation" with request "IT Support #42 (In Progress)"
 - WHEN the user views the client detail
@@ -308,6 +333,7 @@ The system MUST provide a detail view for each client showing all properties, su
 - AND clicking a request MUST navigate to the request detail view
 
 #### Scenario: Activity timeline
+@e2e exclude backend event aggregation; covered by activity-timeline spec exclusion
 
 - GIVEN a client "Acme Corporation" with the following history:
   - Jan 15: Client created
@@ -337,6 +363,7 @@ The system MUST support creating contact persons linked to client organizations.
 - AND the contact person MUST appear on the client detail view under "Contact Persons"
 
 #### Scenario: Create a contact person with minimal fields
+@e2e exclude requires OR write
 
 - GIVEN an organization client "Acme B.V."
 - WHEN the user adds a contact person with only name "Petra Jansen" and the client reference
@@ -344,6 +371,7 @@ The system MUST support creating contact persons linked to client organizations.
 - AND optional fields (email, telephone, role, jobTitle) MUST be stored as empty/null
 
 #### Scenario: Fail to create a contact person without a client link
+@e2e exclude server validation; covered by PHPUnit
 
 - GIVEN a new contact person form
 - WHEN the user tries to save with name "Jan Jansen" but without selecting a client
@@ -351,6 +379,7 @@ The system MUST support creating contact persons linked to client organizations.
 - AND the contact person MUST NOT be created
 
 #### Scenario: Fail to create a contact person without a name
+@e2e exclude server validation; covered by PHPUnit
 
 - GIVEN a new contact person form with client "Gemeente Utrecht" selected
 - WHEN the user tries to save without entering a name
@@ -366,6 +395,7 @@ The system MUST support updating and deleting contact persons. Changes MUST be r
 **Feature tier**: MVP
 
 #### Scenario: Update a contact person role
+@e2e exclude requires existing data
 
 - GIVEN a contact person "Jan Jansen" with role "Projectleider" linked to "Gemeente Utrecht"
 - WHEN the user changes the role to "Programmamanager"
@@ -373,6 +403,7 @@ The system MUST support updating and deleting contact persons. Changes MUST be r
 - AND the audit trail MUST record the change
 
 #### Scenario: Delete a contact person
+@e2e exclude requires existing data
 
 - GIVEN a contact person "Petra Jansen" linked to "Acme B.V."
 - WHEN the user deletes the contact person
@@ -381,6 +412,7 @@ The system MUST support updating and deleting contact persons. Changes MUST be r
 - AND leads or requests that reference this contact SHOULD have their contact reference cleared
 
 #### Scenario: Reassign a contact person to a different client
+@e2e exclude requires existing data
 
 - GIVEN a contact person "Mark de Groot" linked to "Acme B.V."
 - WHEN the user changes the client reference to "TechCorp B.V."
@@ -403,6 +435,7 @@ The system MUST provide a way to list and search contact persons across all clie
 - AND the list MUST support pagination
 
 #### Scenario: Search contact persons by name
+@e2e exclude requires test data
 
 - GIVEN contact persons "Jan Jansen", "Petra Jansen", "Mark de Groot"
 - WHEN the user searches for "Jansen"
@@ -424,6 +457,7 @@ The system MUST support linking leads to clients. A lead's `client` property ref
 **Feature tier**: MVP
 
 #### Scenario: Create a lead linked to a client
+@e2e exclude covered by lead-management spec
 
 - GIVEN a client "Gemeente Utrecht"
 - WHEN the user creates a lead with title "Digital Transformation Project" and selects "Gemeente Utrecht" as the client
@@ -431,6 +465,7 @@ The system MUST support linking leads to clients. A lead's `client` property ref
 - AND the lead MUST appear on the "Gemeente Utrecht" client detail under "Leads"
 
 #### Scenario: View all leads for a client
+@e2e exclude requires existing data
 
 - GIVEN a client "Acme B.V." with 3 linked leads
 - WHEN the user views the client detail
@@ -446,6 +481,7 @@ The system MUST support linking requests to clients. A request's `client` proper
 **Feature tier**: MVP
 
 #### Scenario: Create a request linked to a client
+@e2e exclude covered by request-management spec
 
 - GIVEN a client "Provincie Noord-Holland"
 - WHEN the user creates a request with title "ICT Ondersteuning" and selects "Provincie Noord-Holland" as the client
@@ -453,6 +489,7 @@ The system MUST support linking requests to clients. A request's `client` proper
 - AND the request MUST appear on the client detail under "Requests"
 
 #### Scenario: View all requests for a client
+@e2e exclude requires existing data
 
 - GIVEN a client "Gemeente Utrecht" with 2 linked requests
 - WHEN the user views the client detail
@@ -468,6 +505,7 @@ The system MUST sync client data with Nextcloud's built-in Contacts app via `OCP
 **Feature tier**: MVP
 
 #### Scenario: Search existing Nextcloud contacts when creating a client
+@e2e exclude Nextcloud Contacts integration
 
 - GIVEN Nextcloud contacts "Jan de Vries (jan@devries.nl)" and "Maria Garcia" exist in the user's address book
 - WHEN the user creates a new client and types "Jan" in the name field
@@ -476,6 +514,7 @@ The system MUST sync client data with Nextcloud's built-in Contacts app via `OCP
 - AND the user SHOULD be able to import contact data from the match
 
 #### Scenario: Create Nextcloud contact from client
+@e2e exclude covered by contacts-sync spec exclusion
 
 - GIVEN a Pipelinq client "Gemeente Utrecht" with email "info@utrecht.nl" and telephone "+31 30 286 0000" and no linked Nextcloud contact
 - WHEN the user chooses to sync the client to Nextcloud Contacts
@@ -484,6 +523,7 @@ The system MUST sync client data with Nextcloud's built-in Contacts app via `OCP
 - AND subsequent updates to the client SHOULD propagate to the linked vCard
 
 #### Scenario: Link existing Nextcloud contact to client
+@e2e exclude Nextcloud Contacts integration
 
 - GIVEN a Nextcloud contact "Jan de Vries" with UID "abc-123-def"
 - AND a Pipelinq client "Jan de Vries" exists but has no linked contact
@@ -500,6 +540,7 @@ The system MUST detect potential duplicate clients based on name and email match
 **Feature tier**: V1
 
 #### Scenario: Detect duplicate by exact name match
+@e2e exclude backend dedup service; covered by PHPUnit
 
 - GIVEN an existing client "Gemeente Utrecht"
 - WHEN the user creates a new client with name "Gemeente Utrecht"
@@ -508,6 +549,7 @@ The system MUST detect potential duplicate clients based on name and email match
 - AND the user SHOULD be able to proceed with creation or navigate to the existing client
 
 #### Scenario: Detect duplicate by email match
+@e2e exclude backend dedup service; covered by PHPUnit
 
 - GIVEN an existing client "Acme B.V." with email "info@acme.nl"
 - WHEN the user creates a new client with a different name but the same email "info@acme.nl"
@@ -515,6 +557,7 @@ The system MUST detect potential duplicate clients based on name and email match
 - AND the user SHOULD be able to proceed or navigate to the existing client
 
 #### Scenario: Fuzzy name matching
+@e2e exclude backend dedup algorithm; covered by PHPUnit
 
 - GIVEN an existing client "Gemeente Utrecht"
 - WHEN the user creates a client named "Gem. Utrecht" or "gemeente utrecht"
@@ -530,6 +573,7 @@ The system MUST support importing clients from CSV and vCard files.
 **Feature tier**: V1
 
 #### Scenario: Import clients from CSV
+@e2e exclude file upload and backend parser; covered by PHPUnit
 
 - GIVEN a CSV file with columns: name, type, email, telephone
 - AND the file contains 50 rows of client data
@@ -538,6 +582,7 @@ The system MUST support importing clients from CSV and vCard files.
 - AND the system MUST report how many were created, skipped (duplicates), or failed (validation errors)
 
 #### Scenario: Import clients from vCard
+@e2e exclude vCard parser; covered by PHPUnit
 
 - GIVEN a vCard (.vcf) file containing 10 contacts
 - WHEN the user uploads the vCard file
@@ -546,6 +591,7 @@ The system MUST support importing clients from CSV and vCard files.
 - AND map the vCard KIND property to client type (individual -> person, org -> organization)
 
 #### Scenario: Import with validation errors
+@e2e exclude backend validation; covered by PHPUnit
 
 - GIVEN a CSV file where 3 out of 20 rows have missing name fields
 - WHEN the user imports the file
@@ -562,6 +608,7 @@ The system MUST support exporting clients to CSV and vCard formats.
 **Feature tier**: V1
 
 #### Scenario: Export all clients as CSV
+@e2e exclude backend export; covered by Newman
 
 - GIVEN 30 clients exist in the system
 - WHEN the user clicks "Export CSV"
@@ -570,6 +617,7 @@ The system MUST support exporting clients to CSV and vCard formats.
 - AND the file MUST be downloadable
 
 #### Scenario: Export filtered clients as CSV
+@e2e exclude backend export; covered by Newman
 
 - GIVEN the user has filtered the client list to show only organizations
 - WHEN the user clicks "Export CSV"
@@ -577,6 +625,7 @@ The system MUST support exporting clients to CSV and vCard formats.
 - AND the export MUST respect the current filter and search criteria
 
 #### Scenario: Export client as vCard
+@e2e exclude backend export; covered by Newman
 
 - GIVEN a client "Gemeente Utrecht" with all fields populated
 - WHEN the user exports the client as vCard
@@ -584,6 +633,90 @@ The system MUST support exporting clients to CSV and vCard formats.
 - AND the vCard MUST include FN, EMAIL, TEL, ADR, and URL properties
 
 ---
+
+### Requirement: System tag management — documented operations
+
+The system tag CRUD and assignment implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `assignTag`, `createOrReuseSystemTag`, `getTagIdsForType`, `renameSystemTag`, `resolveTagData`, `unassignAndCleanup`). Each listed method realises an observable part of system tag CRUD and assignment and MUST behave as implemented in the current codebase.
+
+**Feature tier**: V1
+
+#### Scenario: Documented operations are available
+
+- GIVEN the backend service/controller is loaded
+- WHEN a caller invokes one of the documented operations for system tag CRUD and assignment
+- THEN the operation MUST execute and return a result consistent with the current implementation
+
+---
+
+### Requirement: System tag management — results derived from current CRM state
+
+Operations for system tag CRUD and assignment MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
+
+**Feature tier**: V1
+
+#### Scenario: Results reflect live state
+
+- GIVEN CRM data backing system tag CRUD and assignment
+- WHEN a documented operation runs
+- THEN its output MUST be derived from that data
+- AND it MUST change when the underlying data changes
+
+---
+
+### Requirement: System tag management — defensive handling of absent or invalid input
+
+Operations for system tag CRUD and assignment MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
+
+**Feature tier**: V1
+
+#### Scenario: Missing input does not crash the flow
+
+- GIVEN an operation for system tag CRUD and assignment is called with absent or invalid input
+- WHEN it executes
+- THEN it MUST return a safe default or a validation result
+- AND it MUST NOT raise an unhandled exception
+
+### Requirement: Client UI — documented operations
+
+The client management screens implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `objectStore`, `onSave`, `addContact`, `clientData`, `confirmDelete`, `createComplaint`). Each listed method realises an observable part of client management screens and MUST behave as implemented in the current codebase.
+
+**Feature tier**: V1
+
+#### Scenario: Documented operations are available
+
+- GIVEN the frontend component/store is loaded
+- WHEN a caller invokes one of the documented operations for client management screens
+- THEN the operation MUST execute and return a result consistent with the current implementation
+
+---
+
+### Requirement: Client UI — results derived from current CRM state
+
+Operations for client management screens MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
+
+**Feature tier**: V1
+
+#### Scenario: Results reflect live state
+
+- GIVEN CRM data backing client management screens
+- WHEN a documented operation runs
+- THEN its output MUST be derived from that data
+- AND it MUST change when the underlying data changes
+
+---
+
+### Requirement: Client UI — defensive handling of absent or invalid input
+
+Operations for client management screens MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
+
+**Feature tier**: V1
+
+#### Scenario: Missing input does not crash the flow
+
+- GIVEN an operation for client management screens is called with absent or invalid input
+- WHEN it executes
+- THEN it MUST return a safe default or a validation result
+- AND it MUST NOT raise an unhandled exception
 
 ## Requirements
 
@@ -596,6 +729,7 @@ The system MUST support looking up Dutch organizations via the KVK (Kamer van Ko
 **Feature tier**: V1
 
 #### Scenario: Auto-complete organization from KVK number
+@e2e exclude KVK API integration; covered by PHPUnit
 
 - GIVEN a user creating a new organization client
 - WHEN they enter KVK number "12345678" in the KVK field
@@ -605,6 +739,7 @@ The system MUST support looking up Dutch organizations via the KVK (Kamer van Ko
 - AND the KVK number MUST be stored on the client object in a `kvkNumber` field
 
 #### Scenario: Search KVK by company name
+@e2e exclude KVK API integration; covered by PHPUnit
 
 - GIVEN a user creating a new organization client
 - WHEN they enter "Conduction" in the company name field and click a "Search KVK" action
@@ -613,6 +748,7 @@ The system MUST support looking up Dutch organizations via the KVK (Kamer van Ko
 - AND the user MUST be able to select a result to auto-populate the client fields
 
 #### Scenario: Validate KVK number format
+@e2e exclude server validation; covered by PHPUnit
 
 - GIVEN a user entering a KVK number on a client
 - WHEN they enter "1234" (fewer than 8 digits) or "ABCDEFGH" (non-numeric)
@@ -620,6 +756,7 @@ The system MUST support looking up Dutch organizations via the KVK (Kamer van Ko
 - AND the error message MUST indicate that a KVK number must be exactly 8 digits
 
 #### Scenario: Store KVK metadata on client
+@e2e exclude OR write operation; covered by PHPUnit
 
 - GIVEN a client "Acme B.V." created from a KVK lookup with KVK number "12345678", SBI code "6201", legal form "Besloten Vennootschap", and registration date "2015-03-01"
 - WHEN the client is saved
@@ -628,6 +765,7 @@ The system MUST support looking up Dutch organizations via the KVK (Kamer van Ko
 - AND the system SHOULD display a "Verified via KVK" badge when the KVK number is present
 
 #### Scenario: Detect duplicate client by KVK number
+@e2e exclude backend dedup; covered by PHPUnit
 
 - GIVEN an existing client "Acme B.V." with KVK number "12345678"
 - WHEN a user attempts to create a new client with the same KVK number "12345678"
@@ -636,6 +774,7 @@ The system MUST support looking up Dutch organizations via the KVK (Kamer van Ko
 - AND the system MUST NOT allow two clients with the same KVK number unless the user explicitly overrides
 
 #### Scenario: KVK API unavailable
+@e2e exclude error handling; covered by PHPUnit
 
 - GIVEN the KVK API key is not configured or the API returns an error
 - WHEN the user attempts to search KVK
@@ -652,6 +791,7 @@ The system MUST handle BSN (Burgerservicenummer) data in compliance with Dutch p
 **Feature tier**: Enterprise
 
 #### Scenario: BSN field restricted to authorized users
+@e2e exclude RBAC; covered by PHPUnit
 
 - GIVEN a person client "Jan de Vries" with a BSN stored
 - WHEN a user without the "bsn_access" permission views the client detail
@@ -661,6 +801,7 @@ The system MUST handle BSN (Burgerservicenummer) data in compliance with Dutch p
 - AND an explicit "Show BSN" action MUST be required to reveal the full number
 
 #### Scenario: BSN validation (elfproef)
+@e2e exclude server validation algorithm; covered by PHPUnit
 
 - GIVEN a user entering a BSN on a person client
 - WHEN they enter "123456789"
@@ -669,6 +810,7 @@ The system MUST handle BSN (Burgerservicenummer) data in compliance with Dutch p
 - AND if validation fails, the system MUST reject with "Invalid BSN"
 
 #### Scenario: BSN access logging
+@e2e exclude audit logging; covered by PHPUnit
 
 - GIVEN a user with "bsn_access" permission views or reveals a BSN
 - WHEN the BSN is accessed
@@ -676,6 +818,7 @@ The system MUST handle BSN (Burgerservicenummer) data in compliance with Dutch p
 - AND the BSN access log MUST be available for compliance auditing
 
 #### Scenario: BSN not stored for organization clients
+@e2e exclude server logic; covered by PHPUnit
 
 - GIVEN a user editing an organization client "Gemeente Utrecht"
 - WHEN the client form is displayed
@@ -683,6 +826,7 @@ The system MUST handle BSN (Burgerservicenummer) data in compliance with Dutch p
 - AND the BSN field MUST only be available on person-type clients
 
 #### Scenario: BSN excluded from standard exports
+@e2e exclude export logic; covered by PHPUnit
 
 - GIVEN 20 person clients, 5 of which have BSN stored
 - WHEN the user exports clients as CSV
@@ -699,6 +843,7 @@ The system MUST support merging duplicate client records into a single consolida
 **Feature tier**: V1
 
 #### Scenario: Identify merge candidates
+@e2e exclude backend algorithm; covered by PHPUnit
 
 - GIVEN existing clients "Gemeente Utrecht" (ID: abc-111, with 3 leads) and "Gem. Utrecht" (ID: abc-222, with 1 lead and 2 contacts)
 - WHEN the user selects both clients in the list view and clicks "Merge"
@@ -709,6 +854,7 @@ The system MUST support merging duplicate client records into a single consolida
   - The target (surviving) client record
 
 #### Scenario: Execute client merge
+@e2e exclude backend merge service; covered by PHPUnit
 
 - GIVEN the user has configured a merge of "Gem. Utrecht" into "Gemeente Utrecht"
 - WHEN the user confirms the merge
@@ -720,6 +866,7 @@ The system MUST support merging duplicate client records into a single consolida
 - AND the audit trail MUST record the merge operation with both client IDs and the user who performed it
 
 #### Scenario: Merge preserves Nextcloud contact link
+@e2e exclude backend service; covered by PHPUnit
 
 - GIVEN client A has a `contactsUid` linking to a Nextcloud vCard and client B does not
 - WHEN client B is merged into client A
@@ -727,6 +874,7 @@ The system MUST support merging duplicate client records into a single consolida
 - AND if both clients had `contactsUid` links, the surviving client MUST keep its own link and the system SHOULD log that the duplicate link was discarded
 
 #### Scenario: Merge from duplicate detection
+@e2e exclude requires seed data and dedup service
 
 - GIVEN the duplicate detection system has flagged "Acme B.V." and "ACME BV" as potential duplicates
 - WHEN the user clicks "Merge" on the duplicate warning
@@ -734,6 +882,7 @@ The system MUST support merging duplicate client records into a single consolida
 - AND the user MUST be able to proceed through the standard merge flow
 
 #### Scenario: Cancel a merge
+@e2e exclude UI flow requiring seed data
 
 - GIVEN the user has opened the merge preview for two clients
 - WHEN the user clicks "Cancel"
@@ -749,6 +898,7 @@ The system MUST support hierarchical organization structures where a client orga
 **Feature tier**: V1
 
 #### Scenario: Set a parent organization
+@e2e exclude requires existing org data
 
 - GIVEN an organization client "Acme Netherlands B.V."
 - AND an organization client "Acme Corporation" (the global holding company)
@@ -758,6 +908,7 @@ The system MUST support hierarchical organization structures where a client orga
 - AND the detail view of "Acme Corporation" MUST display "Acme Netherlands B.V." in a "Subsidiaries" section
 
 #### Scenario: View organization hierarchy tree
+@e2e exclude requires multi-level data
 
 - GIVEN "Acme Corporation" has children "Acme Netherlands B.V." and "Acme Germany GmbH"
 - AND "Acme Netherlands B.V." has child "Acme Utrecht Office"
@@ -770,6 +921,7 @@ The system MUST support hierarchical organization structures where a client orga
 - AND each node in the tree MUST be clickable to navigate to that client's detail view
 
 #### Scenario: Aggregate hierarchy statistics
+@e2e exclude backend aggregation; covered by PHPUnit
 
 - GIVEN a parent organization "Acme Corporation" with 2 subsidiaries
 - AND the subsidiaries collectively have 5 open leads (total EUR 120,000) and 3 requests
@@ -780,6 +932,7 @@ The system MUST support hierarchical organization structures where a client orga
 - AND the consolidated values MUST be clearly labeled as "Including subsidiaries"
 
 #### Scenario: Prevent circular parent references
+@e2e exclude backend validation; covered by PHPUnit
 
 - GIVEN "Acme Netherlands B.V." has parent "Acme Corporation"
 - WHEN the user tries to set the parent of "Acme Corporation" to "Acme Netherlands B.V."
@@ -787,6 +940,7 @@ The system MUST support hierarchical organization structures where a client orga
 - AND the error message MUST indicate that circular parent references are not allowed
 
 #### Scenario: Person client cannot have parent organization
+@e2e exclude server validation; covered by PHPUnit
 
 - GIVEN a person client "Jan de Vries"
 - WHEN the user attempts to set a parent organization on the person client
@@ -810,6 +964,7 @@ The system MUST support tagging and categorizing clients for segmentation purpos
 - AND the tags MUST be visible in the client list view
 
 #### Scenario: Filter clients by tag
+@e2e exclude requires tagged test data
 
 - GIVEN 20 clients, 8 of which have the tag "overheid"
 - WHEN the user filters the client list by tag "overheid"
@@ -817,6 +972,7 @@ The system MUST support tagging and categorizing clients for segmentation purpos
 - AND the filter MUST support multiple tag selection (AND logic: clients must have all selected tags)
 
 #### Scenario: Manage tag vocabulary
+@e2e exclude admin tag management; not separately testable without data
 
 - GIVEN a user with admin access
 - WHEN they navigate to CRM settings
@@ -825,6 +981,7 @@ The system MUST support tagging and categorizing clients for segmentation purpos
 - AND deleting a tag MUST remove it from all clients that have it
 
 #### Scenario: Tag auto-complete on client form
+@e2e exclude requires existing tags
 
 - GIVEN existing tags "overheid", "onderwijs", "zorg", "bedrijfsleven"
 - WHEN the user adds a tag to a client and types "over"
@@ -832,6 +989,7 @@ The system MUST support tagging and categorizing clients for segmentation purpos
 - AND the user MUST be able to select from existing tags or create a new one
 
 #### Scenario: Industry classification
+@e2e exclude metadata field; covered by PHPUnit
 
 - GIVEN the client schema already has an `industry` field (facetable)
 - WHEN the user creates or updates a client
@@ -848,6 +1006,7 @@ The system SHOULD calculate and display a client health score based on relations
 **Feature tier**: Enterprise
 
 #### Scenario: Calculate health score based on activity
+@e2e exclude backend scoring algorithm; covered by PHPUnit
 
 - GIVEN a client "Acme B.V." with the following activity in the last 90 days:
   - 3 leads in active pipeline stages
@@ -860,6 +1019,7 @@ The system SHOULD calculate and display a client health score based on relations
 - AND the score MUST be displayed on the client detail view as a color-coded indicator (green >= 70, yellow 40-69, red < 40)
 
 #### Scenario: Health score displayed in client list
+@e2e exclude requires data with health scores
 
 - GIVEN 20 clients with calculated health scores
 - WHEN the user views the client list
@@ -868,6 +1028,7 @@ The system SHOULD calculate and display a client health score based on relations
 - AND the user MUST be able to filter clients by health range (e.g., "At Risk" = score < 40)
 
 #### Scenario: Health score recalculation
+@e2e exclude backend cron job; covered by PHPUnit
 
 - GIVEN a client "Acme B.V." with health score 75 (green)
 - AND no interaction has occurred for 60 days
@@ -877,6 +1038,7 @@ The system SHOULD calculate and display a client health score based on relations
 - AND the score change MUST be logged in the audit trail
 
 #### Scenario: Health score ignored for new clients
+@e2e exclude backend logic; covered by PHPUnit
 
 - GIVEN a client "NewCo B.V." created 3 days ago with 1 lead created
 - WHEN the system calculates the health score
@@ -892,6 +1054,7 @@ The system SHOULD provide analytics about the client lifecycle, including acquis
 **Feature tier**: Enterprise
 
 #### Scenario: Client acquisition over time
+@e2e exclude analytics; V1 feature
 
 - GIVEN 50 clients created between January and June
 - WHEN the user views the client lifecycle analytics dashboard
@@ -899,6 +1062,7 @@ The system SHOULD provide analytics about the client lifecycle, including acquis
 - AND the chart MUST support drill-down to see which clients were created in each period
 
 #### Scenario: Client revenue contribution
+@e2e exclude analytics; V1 feature
 
 - GIVEN a client "Acme B.V." with leads: 3 won (EUR 42,000), 2 open (EUR 25,000), 1 lost (EUR 10,000)
 - WHEN the user views the client's revenue analytics on the detail page
@@ -910,6 +1074,7 @@ The system SHOULD provide analytics about the client lifecycle, including acquis
 - AND the system SHOULD show a revenue trend chart over time (monthly won revenue)
 
 #### Scenario: Client retention status
+@e2e exclude analytics; V1 feature
 
 - GIVEN clients with the following patterns:
   - "Active Client A": has leads or requests in the last 90 days
@@ -929,6 +1094,7 @@ The system MUST support GDPR (AVG) data subject rights for person-type clients i
 **Feature tier**: V1
 
 #### Scenario: Right to access (inzageverzoek)
+@e2e exclude GDPR backend; covered by PHPUnit
 
 - GIVEN a person client "Jan de Vries" with all CRM data (personal details, linked leads, requests, activity timeline, notes)
 - WHEN an authorized user processes a data access request for "Jan de Vries"
@@ -942,6 +1108,7 @@ The system MUST support GDPR (AVG) data subject rights for person-type clients i
 - AND the export MUST be downloadable as a single file
 
 #### Scenario: Right to erasure (verwijderverzoek)
+@e2e exclude GDPR backend; covered by PHPUnit
 
 - GIVEN a person client "Jan de Vries" with 2 linked leads and 1 request
 - WHEN an authorized user processes a data erasure request
@@ -956,6 +1123,7 @@ The system MUST support GDPR (AVG) data subject rights for person-type clients i
 - AND the erasure MUST NOT be reversible
 
 #### Scenario: Right to rectification (rectificatieverzoek)
+@e2e exclude GDPR backend; covered by PHPUnit
 
 - GIVEN a person client "Jan de Vries" with email "wrong@email.nl"
 - WHEN an authorized user processes a rectification request to update the email to "jan@correct.nl"
@@ -964,6 +1132,7 @@ The system MUST support GDPR (AVG) data subject rights for person-type clients i
 - AND if a Nextcloud contact is linked, the correction MUST propagate to the vCard
 
 #### Scenario: Data processing register entry
+@e2e exclude GDPR backend; covered by PHPUnit
 
 - GIVEN the system processes personal data for person-type clients
 - WHEN an administrator views the GDPR compliance settings
@@ -983,6 +1152,7 @@ The system MUST ensure that client data is isolated per Nextcloud instance and, 
 **Feature tier**: Enterprise
 
 #### Scenario: Client data scoped to OpenRegister instance
+@e2e exclude RBAC; covered by PHPUnit
 
 - GIVEN two Nextcloud users "sales_user_a" and "sales_user_b" both using Pipelinq
 - WHEN "sales_user_a" creates a client "Acme B.V."
@@ -991,6 +1161,7 @@ The system MUST ensure that client data is isolated per Nextcloud instance and, 
 - AND the client data MUST NOT be accessible from other Nextcloud instances
 
 #### Scenario: Team-based client visibility
+@e2e exclude RBAC; covered by PHPUnit
 
 - GIVEN team "Sales Amsterdam" and team "Sales Rotterdam" are configured
 - AND client "Acme Amsterdam B.V." is assigned to team "Sales Amsterdam"
@@ -999,6 +1170,7 @@ The system MUST ensure that client data is isolated per Nextcloud instance and, 
 - AND administrators MUST always see all clients regardless of team assignment
 
 #### Scenario: API access respects authentication scope
+@e2e exclude API auth; covered by Newman
 
 - GIVEN a client "Acme B.V." exists in the Pipelinq register
 - WHEN an unauthenticated API request attempts to fetch the client
@@ -1015,6 +1187,7 @@ The system MUST provide a guided CSV import workflow with column mapping, previe
 **Feature tier**: V1
 
 #### Scenario: Upload and preview CSV
+@e2e exclude file upload UI; requires file fixture
 
 - GIVEN a user with CRM access
 - WHEN they upload a CSV file "clients_export_2025.csv" with 100 rows
@@ -1023,6 +1196,7 @@ The system MUST provide a guided CSV import workflow with column mapping, previe
 - AND the system MUST detect the character encoding (UTF-8, ISO-8859-1)
 
 #### Scenario: Map CSV columns to client fields
+@e2e exclude import wizard; requires file fixture
 
 - GIVEN a CSV with headers: "Bedrijfsnaam", "E-mail", "Telefoon", "Postcode", "Type"
 - WHEN the mapping step is displayed
@@ -1032,6 +1206,7 @@ The system MUST provide a guided CSV import workflow with column mapping, previe
 - AND required fields (name, type) MUST be mapped before import can proceed
 
 #### Scenario: Handle duplicate detection during import
+@e2e exclude backend import logic; covered by PHPUnit
 
 - GIVEN a CSV with 100 rows and 5 rows match existing clients by name or email
 - WHEN the user runs the import
@@ -1040,6 +1215,7 @@ The system MUST provide a guided CSV import workflow with column mapping, previe
 - AND the import summary MUST show: 95 created, 5 duplicates (with chosen action)
 
 #### Scenario: Import progress and error handling
+@e2e exclude requires file fixture
 
 - GIVEN a CSV with 500 rows, 12 of which have validation errors
 - WHEN the import is running
@@ -1057,6 +1233,7 @@ The system MUST support exporting clients in multiple formats with configurable 
 **Feature tier**: V1
 
 #### Scenario: Export with field selection
+@e2e exclude export UI; V1 feature
 
 - GIVEN 50 clients in the system
 - WHEN the user clicks "Export" and selects fields: name, type, email, phone, industry
@@ -1064,6 +1241,7 @@ The system MUST support exporting clients in multiple formats with configurable 
 - AND fields not selected (address, website, notes, contactsUid) MUST be excluded
 
 #### Scenario: Export as Excel (XLSX)
+@e2e exclude backend export; covered by Newman
 
 - GIVEN 50 clients in the system
 - WHEN the user chooses "Export as Excel"
@@ -1072,6 +1250,7 @@ The system MUST support exporting clients in multiple formats with configurable 
 - AND the file MUST be downloadable with a filename pattern: "pipelinq-clients-YYYY-MM-DD.xlsx"
 
 #### Scenario: Bulk export as vCard
+@e2e exclude backend export; covered by Newman
 
 - GIVEN the user has filtered the client list to 15 person clients
 - WHEN the user clicks "Export as vCard"
@@ -1088,6 +1267,7 @@ The system MUST provide a unified interaction timeline on the client detail view
 **Feature tier**: V1
 
 #### Scenario: Timeline aggregates all entity types
+@e2e exclude backend aggregation; covered by activity-timeline spec
 
 - GIVEN a client "Acme B.V." with the following history:
   - Mar 1: Client created by user "admin"
@@ -1107,6 +1287,7 @@ The system MUST provide a unified interaction timeline on the client detail view
 - AND events MUST be visually distinguished by type (create, update, stage change, note, resolution, contactmoment)
 
 #### Scenario: Timeline supports filtering by event type
+@e2e exclude requires timeline data
 
 - GIVEN a client with 50 timeline events of various types
 - WHEN the user filters the timeline by "Leads only"
@@ -1114,6 +1295,7 @@ The system MUST provide a unified interaction timeline on the client detail view
 - AND filter options MUST include: All, Leads, Requests, Contacts, Notes, Contactmomenten, Field changes
 
 #### Scenario: Timeline pagination
+@e2e exclude requires sufficient timeline entries
 
 - GIVEN a client with 200 timeline events
 - WHEN the user views the timeline
@@ -1122,6 +1304,7 @@ The system MUST provide a unified interaction timeline on the client detail view
 - AND the system MUST indicate the total number of events
 
 #### Scenario: Timeline shows linked entity details
+@e2e exclude requires linked data
 
 - GIVEN a timeline event "Lead 'Website Redesign' moved to Qualified"
 - WHEN the user clicks on the lead name in the timeline
@@ -1129,6 +1312,7 @@ The system MUST provide a unified interaction timeline on the client detail view
 - AND the same click-through behavior MUST apply to requests, contacts, contactmomenten, and other referenced entities
 
 #### Scenario: Contactmoment quick-log from timeline
+@e2e exclude requires existing client with timeline
 
 - GIVEN a user is viewing a client's timeline
 - WHEN the user clicks "Log contactmoment" above the timeline
@@ -1144,6 +1328,7 @@ The system MUST support adding custom fields to the client schema to accommodate
 **Feature tier**: V1
 
 #### Scenario: Admin creates a custom text field
+@e2e exclude Enterprise custom fields; not yet implemented
 
 - GIVEN an administrator in the Pipelinq settings
 - WHEN they add a custom field with label "Contract Number", type "text", and maxLength 50
@@ -1153,6 +1338,7 @@ The system MUST support adding custom fields to the client schema to accommodate
 - AND the field MUST be included in CSV exports
 
 #### Scenario: Admin creates a custom dropdown field
+@e2e exclude Enterprise custom fields; not yet implemented
 
 - GIVEN an administrator in the Pipelinq settings
 - WHEN they add a custom field with label "Account Tier", type "enum", and options ["Bronze", "Silver", "Gold", "Platinum"]
@@ -1161,6 +1347,7 @@ The system MUST support adding custom fields to the client schema to accommodate
 - AND the field MUST be sortable
 
 #### Scenario: Admin creates a custom date field
+@e2e exclude Enterprise custom fields; not yet implemented
 
 - GIVEN an administrator in the Pipelinq settings
 - WHEN they add a custom field with label "Contract Expiry", type "date"
@@ -1168,6 +1355,7 @@ The system MUST support adding custom fields to the client schema to accommodate
 - AND the system SHOULD support creating notifications/reminders based on this date (e.g., 30 days before expiry)
 
 #### Scenario: Custom field visible in imports
+@e2e exclude Enterprise; not yet implemented
 
 - GIVEN a custom field "Contract Number" exists on the client schema
 - WHEN the user imports clients from CSV
@@ -1175,6 +1363,7 @@ The system MUST support adding custom fields to the client schema to accommodate
 - AND imported values MUST be validated against the custom field's constraints
 
 #### Scenario: Delete a custom field
+@e2e exclude Enterprise; not yet implemented
 
 - GIVEN a custom field "Legacy ID" exists on 30 clients
 - WHEN the administrator deletes the custom field
@@ -1191,6 +1380,7 @@ The system MUST support converting KVK prospect discovery results directly into 
 **Feature tier**: V1
 
 #### Scenario: Convert prospect to client
+@e2e exclude V1 prospect feature; covered by prospect-discovery spec exclusion
 
 - GIVEN the prospect discovery results include "TechStart B.V." with KVK number "87654321", SBI code "6201", address "Oudegracht 50, 3511 AR Utrecht", and legal form "Besloten Vennootschap"
 - WHEN the user clicks "Create Client" on the prospect card
@@ -1205,6 +1395,7 @@ The system MUST support converting KVK prospect discovery results directly into 
 - AND the prospect MUST be removed from the discovery results
 
 #### Scenario: Convert prospect to client with lead
+@e2e exclude V1 prospect feature
 
 - GIVEN a prospect "TechStart B.V." from the discovery results
 - WHEN the user clicks "Create Client + Lead"
@@ -1213,6 +1404,7 @@ The system MUST support converting KVK prospect discovery results directly into 
 - AND the lead MUST have source set to "prospect_discovery"
 
 #### Scenario: Prospect already exists as client
+@e2e exclude backend dedup; covered by PHPUnit
 
 - GIVEN a prospect "Acme B.V." with KVK number "12345678"
 - AND an existing client "Acme B.V." with the same KVK number

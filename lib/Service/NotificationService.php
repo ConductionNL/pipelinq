@@ -8,13 +8,16 @@
  * @category Service
  * @package  OCA\Pipelinq\Service
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-16
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
  */
 
 declare(strict_types=1);
@@ -29,6 +32,23 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for sending Pipelinq notifications.
+ *
+ * Lifecycle-driven notifications (lead won/lost, task completed/expired,
+ * request completed, complaint resolved) are also declared declaratively as
+ * `x-openregister-notifications` transition triggers in
+ * `lib/Settings/pipelinq_register.json`, keyed on the lifecycle transition
+ * NAMES (`win`, `lose`, `complete`, `expire`, `resolve`) so OpenRegister's
+ * AnnotationNotificationDispatcher matches them against
+ * `ObjectTransitionedEvent::getAction()`. Those annotation rules stay DORMANT
+ * until pipelinq routes its status changes through OpenRegister's
+ * TransitionEngine (today status is written directly via `saveObject`, which
+ * does not dispatch `ObjectTransitionedEvent`). Until that migration lands the
+ * imperative `send()` path below remains the live delivery mechanism and is
+ * retained verbatim to preserve behaviour, including the per-user opt-out
+ * settings in {@see self::SUBJECT_SETTING_MAP} that the annotation runtime does
+ * not yet replicate.
+ *
+ * @spec openspec/changes/pipelinq-or-lifecycle-notification/tasks.md#task-3.1
  */
 class NotificationService
 {
@@ -75,6 +95,8 @@ class NotificationService
      * @param string $author         The author user ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
      */
     public function notifyAssignment(
         string $entityType,
@@ -117,6 +139,8 @@ class NotificationService
      * @param string $author     The user who completed the task.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
      */
     public function notifyTaskCompleted(
         string $title,
@@ -152,6 +176,8 @@ class NotificationService
      * @param string $deadline       The task deadline.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
      */
     public function notifyTaskReassigned(
         string $title,
@@ -186,6 +212,8 @@ class NotificationService
      * @param string $deadline The task deadline.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
      */
     public function notifyTaskExpired(
         string $title,
@@ -215,6 +243,8 @@ class NotificationService
      * @param string $author         The author user ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
      */
     public function notifyStageChange(
         string $title,
@@ -250,6 +280,8 @@ class NotificationService
      * @param string $author         The author user ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
      */
     public function notifyStatusChange(
         string $title,
@@ -285,6 +317,8 @@ class NotificationService
      * @param string $author         The author user ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
      */
     public function notifyNoteAdded(
         string $entityType,
@@ -320,6 +354,8 @@ class NotificationService
      * @param string $author         The author user ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-16
      */
     public function notifyDealWon(
         string $title,
@@ -350,6 +386,7 @@ class NotificationService
      * @param string $author         The author user ID.
      *
      * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-activity-notify/tasks.md#task-2
      */
     public function notifyDealLost(
         string $title,
@@ -372,27 +409,31 @@ class NotificationService
     /**
      * Send a generic notification to a user.
      *
-     * Public method used by background jobs and other services
-     * that need to send notifications with custom subjects.
+     * Wrapper around the internal send() method for custom notification
+     * subjects that do not have a dedicated notifyXxx() helper.
      *
-     * @param string               $userId     The target user ID.
-     * @param string               $subject    The notification subject.
-     * @param array<string, mixed> $parameters The notification parameters.
+     * @param string $userId     The target user ID.
+     * @param string $subject    The notification subject.
+     * @param array  $parameters The notification parameters.
+     * @param string $objectType The object type (optional).
+     * @param string $objectId   The object ID (optional).
      *
      * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-activity-notify/tasks.md#task-3
      */
     public function sendNotification(
         string $userId,
         string $subject,
-        array $parameters=[],
+        array $parameters,
+        string $objectType='',
+        string $objectId=''
     ): void {
-        $objectId = $parameters['articleId'] ?? ($parameters['objectId'] ?? 'unknown');
         $this->send(
             subject: $subject,
             parameters: $parameters,
             userId: $userId,
-            objectType: 'kennisartikel',
-            objectId: $objectId,
+            objectType: $objectType,
+            objectId: $objectId
         );
     }//end sendNotification()
 

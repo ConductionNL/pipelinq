@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
  */
 
 declare(strict_types=1);
@@ -51,6 +53,8 @@ class ContactImportService
      * @param string $uid       The contact UID.
      *
      * @return array The created client object data.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
      */
     public function importAsClient(array $ncContact, string $uid): array
     {
@@ -71,6 +75,8 @@ class ContactImportService
      * @param ?string $clientId  The optional client ID.
      *
      * @return array The created contact object data.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
      */
     public function importAsContact(array $ncContact, string $uid, ?string $clientId): array
     {
@@ -99,12 +105,10 @@ class ContactImportService
 
         $created = $objectService->saveObject(
             $data,
-                [],
-                $registerId,
-                $schemaId,
-                null,
-                _rbac: false,
-                _multitenancy: false
+            [],
+            $registerId,
+            $schemaId,
+            null
         );
 
         return $this->serializeResult(result: $created);

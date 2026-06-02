@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
+import { generateUrl } from '@nextcloud/router'
 
-const API_BASE = '/apps/pipelinq/api/settings/request-channels'
+const API_BASE = generateUrl('/apps/pipelinq/api/settings/request-channels')
 
 const headers = () => ({
 	'Content-Type': 'application/json',
@@ -18,6 +19,9 @@ export const useRequestChannelsStore = defineStore('requestChannels', {
 		channelNames: (state) => state.tags.map((t) => t.name),
 	},
 	actions: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-40
+		 */
 		async fetchChannels() {
 			this.loading = true
 			this.error = null
@@ -34,6 +38,9 @@ export const useRequestChannelsStore = defineStore('requestChannels', {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-39
+		 */
 		async addChannel(name) {
 			try {
 				const response = await fetch(API_BASE, {
@@ -55,6 +62,9 @@ export const useRequestChannelsStore = defineStore('requestChannels', {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-41
+		 */
 		async removeChannel(id) {
 			try {
 				const response = await fetch(`${API_BASE}/${id}`, {
@@ -74,6 +84,9 @@ export const useRequestChannelsStore = defineStore('requestChannels', {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-42
+		 */
 		async renameChannel(id, name) {
 			try {
 				const response = await fetch(`${API_BASE}/${id}`, {

@@ -2,9 +2,8 @@
 	<div class="contact-relationships">
 		<NcLoadingIcon v-if="loading" :size="24" />
 
-		<div v-else-if="relationships.length === 0" class="contact-relationships__empty">
-			<p>{{ t('pipelinq', 'No relationships yet.') }}</p>
-		</div>
+		<NcEmptyContent v-else-if="relationships.length === 0"
+			:description="t('pipelinq', 'No relationships yet.')" />
 
 		<div v-else>
 			<div v-for="group in groupedRelationships" :key="group.category" class="relationship-group">
@@ -74,6 +73,7 @@
 						<NcSelect
 							v-model="addForm.toContact"
 							:options="entityOptions"
+							:aria-label-combobox="t('pipelinq', 'Related entity')"
 							:placeholder="t('pipelinq', 'Search contacts and clients...')"
 							label="name"
 							:reduce="opt => opt.id"
@@ -84,6 +84,7 @@
 						<NcSelect
 							v-model="addForm.type"
 							:options="typeOptions"
+							:aria-label-combobox="t('pipelinq', 'Relationship type')"
 							:placeholder="t('pipelinq', 'Select type...')"
 							label="label"
 							:reduce="opt => opt.value"
@@ -108,6 +109,7 @@
 						<NcSelect
 							v-model="addForm.strength"
 							:options="strengthOptions"
+							:aria-label-combobox="t('pipelinq', 'Strength')"
 							:placeholder="t('pipelinq', 'Select strength...')"
 							label="label"
 							:reduce="opt => opt.value" />
@@ -151,7 +153,7 @@
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { useObjectStore } from '../store/modules/object.js'
 
@@ -176,6 +178,7 @@ export default {
 	components: {
 		NcButton,
 		NcDialog,
+		NcEmptyContent,
 		NcLoadingIcon,
 		NcSelect,
 	},
@@ -216,9 +219,15 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-12
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-18
+		 */
 		typeOptions() {
 			return DEFAULT_RELATIONSHIP_TYPES.map(t => ({
 				value: t.value,
@@ -228,6 +237,9 @@ export default {
 				symmetric: t.symmetric,
 			}))
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-17
+		 */
 		strengthOptions() {
 			return [
 				{ value: 'strong', label: t('pipelinq', 'Strong') },
@@ -235,6 +247,9 @@ export default {
 				{ value: 'weak', label: t('pipelinq', 'Weak') },
 			]
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-8
+		 */
 		groupedRelationships() {
 			const groups = {}
 			for (const rel of this.relationships) {
@@ -259,6 +274,9 @@ export default {
 		await this.fetchRelationships()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-7
+		 */
 		async fetchRelationships() {
 			this.loading = true
 			try {
@@ -279,6 +297,9 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-10
+		 */
 		async loadEntityName(entityId, entityType) {
 			try {
 				const type = entityType === 'client' ? 'client' : 'contact'
@@ -295,16 +316,25 @@ export default {
 		getEntityName(entityId) {
 			return this.entityNameCache[entityId] || entityId || '-'
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-9
+		 */
 		isEnded(rel) {
 			if (!rel.endDate) {
 				return false
 			}
 			return new Date(rel.endDate) < new Date()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-11
+		 */
 		navigateToEntity(rel) {
 			const type = rel.toType === 'client' ? 'ClientDetail' : 'ContactDetail'
 			this.$router.push({ name: type, params: { id: rel.toContact } })
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-13
+		 */
 		onTypeSelect(typeValue) {
 			const typeObj = DEFAULT_RELATIONSHIP_TYPES.find(t => t.value === typeValue)
 			if (typeObj) {
@@ -313,6 +343,9 @@ export default {
 				this.addForm._symmetric = typeObj.symmetric
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-16
+		 */
 		async searchEntities(query) {
 			if (this.searchTimeout) {
 				clearTimeout(this.searchTimeout)
@@ -336,6 +369,9 @@ export default {
 				}
 			}, 300)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-15
+		 */
 		async saveRelationship() {
 			if (!this.addForm.toContact || !this.addForm.type) {
 				return
@@ -423,6 +459,9 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to save relationship'))
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-6
+		 */
 		editRelationship(rel) {
 			this.editingRelationship = { ...rel }
 			// Find the inverse relationship to track it
@@ -443,10 +482,16 @@ export default {
 			}
 			this.showAddDialog = true
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-14
+		 */
 		removeRelationship(rel) {
 			this.deletingRelationship = rel
 			this.showDeleteDialog = true
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-5
+		 */
 		async confirmRemove() {
 			if (!this.deletingRelationship) {
 				return
@@ -474,6 +519,9 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to remove relationship'))
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-4
+		 */
 		closeDialog() {
 			this.showAddDialog = false
 			this.editingRelationship = null
@@ -629,7 +677,7 @@ export default {
 }
 
 .form-group textarea,
-.form-group input[type="date"] {
+.form-group input[type='date'] {
 	width: 100%;
 	padding: 8px;
 	border: 1px solid var(--color-border);

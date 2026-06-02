@@ -1,0 +1,66 @@
+publiccodeYmlVersion: "0.4"
+
+name: Pipelinq
+url: "https://github.com/ConductionNL/pipelinq"
+softwareVersion: "0.2.14"
+releaseDate: "2026-05-26"
+developmentStatus: beta
+softwareType: "standalone/other"
+
+platforms:
+  - nextcloud
+
+categories:
+  - crm
+  - sales-management
+
+description:
+  en:
+    shortDescription: >
+      CRM and sales pipeline management for Nextcloud.
+    longDescription: >
+      Pipelinq is a CRM and sales pipeline management application for Nextcloud.
+      It enables organisations to manage leads, contacts, opportunities, and sales
+      processes within Nextcloud. Built on Open Register, it integrates with
+      Nextcloud's ecosystem and provides a structured approach to managing customer
+      relationships and sales workflows suitable for both government and commercial
+      organisations.
+    features:
+      - Lead and contact management
+      - Sales pipeline tracking
+      - Opportunity management
+      - Customer relationship administration
+
+  nl:
+    shortDescription: >
+      CRM en verkooppipelinebeheer voor Nextcloud.
+    longDescription: >
+      Pipelinq is een CRM- en verkooppipelinebeheertoepassing voor Nextcloud.
+      Het stelt organisaties in staat om leads, contacten, kansen en verkoopprocessen
+      te beheren binnen Nextcloud. Gebouwd op Open Register integreert het met het
+      Nextcloud-ecosysteem en biedt een gestructureerde aanpak voor het beheren van
+      klantrelaties en verkoopworkflows, geschikt voor zowel overheids- als
+      commerciële organisaties.
+    features:
+      - Lead- en contactbeheer
+      - Verkooppipelinebewaking
+      - Kansenbeheer
+      - Klantrelatiebeheer
+
+legal:
+  license: EUPL-1.2
+  mainCopyrightOwner: "Conduction B.V."
+  repoOwner: "Conduction B.V."
+
+maintenance:
+  type: community
+  contacts:
+    - name: Conduction B.V.
+      email: info@conduction.nl
+      affiliation: Conduction B.V.
+
+localisation:
+  localisationReady: true
+  availableLanguages:
+    - nl
+    - en

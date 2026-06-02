@@ -5,6 +5,9 @@ status: draft
 # crm-workflow-automation Specification
 
 ## Purpose
+
+@e2e exclude draft/unbuilt spec — n8n workflow automation UI bridge not yet implemented; no UI surface to test
+
 Expose n8n workflow automation capabilities within the Pipelinq UI. Visual workflow builder for CRM automation: trigger-action workflows, conditional branching, and scheduled actions. Bridges the gap between n8n's powerful backend automation and Pipelinq's user-facing CRM interface.
 
 ## Context
@@ -16,7 +19,29 @@ Built-in automation engines are a standard expectation in modern CRM platforms. 
 
 **Tender relevance:** Workflow/procesautomatisering appears in 38% of government tenders (26/69). The combination of automation with klantinteractie requirements (65% of tenders) makes CRM-specific automation a high-value differentiator.
 
-## ADDED Requirements
+## Automation Engine Provided Via the Flow Leaf
+
+> UPDATED 2026-06-01: The bespoke automation engine that was reverse-spec'd into
+> this capability (`lib/Controller/AutomationController.php`,
+> `lib/Service/AutomationService.php` — `metadata`, `test`, `buildWebhookPayload`,
+> `fireWebhook`, `matchesConditions` — plus `src/views/automations/AutomationBuilder.vue`
+> and the automation rule editor screens) has been **removed** from this app.
+> Automation orchestration is no longer owned by Pipelinq: it is provided through
+> the NC **workflowengine (Flow) leaf** that OpenRegister exposes
+> (`integration-flow`), with n8n as the execution backend. The leaf surfaces wired
+> flow rules + recent fire events on the CRM object (tab + widget); rule authoring
+> lives in NC Flow's admin UI and n8n. See the change
+> `migrate-automation-to-flow-leaf`. The earlier reverse-engineered requirements
+> that named the deleted bespoke backend/Vue methods have been removed from this
+> spec because that code no longer exists.
+>
+> The event-detection / activity / notification infrastructure in the
+> requirements below (`ObjectEventListener`, `ObjectEventHandlerService`,
+> `ActivityService`, `NotificationService`) still lives in the app and fires CRM
+> events; the *automation* of those events (triggers → actions) is delegated to
+> the Flow leaf, not to an app-local automation engine (hydra ADR-022).
+
+## Requirements
 
 ---
 
@@ -491,3 +516,4 @@ NOT implemented:
 - **Resolved**: Error handling is now specified (retry logic, loop detection, failure notifications).
 - **Resolved**: Permissions are now specified (admin-only management, service account execution).
 - **Design decision**: The automation builder is a Pipelinq-native UI that generates n8n workflows, not a wrapper around n8n's workflow editor. This provides a CRM-focused UX while leveraging n8n's execution engine.
+

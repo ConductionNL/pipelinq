@@ -48,6 +48,7 @@
 
 <script>
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
 
 export default {
 	name: 'EntityNotes',
@@ -74,6 +75,9 @@ export default {
 		}
 	},
 	watch: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-14
+		 */
 		objectId() {
 			this.fetchNotes()
 		},
@@ -82,11 +86,14 @@ export default {
 		this.fetchNotes()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-12
+		 */
 		async fetchNotes() {
 			this.loading = true
 			try {
 				const response = await fetch(
-					`/apps/pipelinq/api/notes/${this.objectType}/${this.objectId}`,
+					generateUrl(`/apps/pipelinq/api/notes/${this.objectType}/${this.objectId}`),
 					{
 						headers: {
 							'Content-Type': 'application/json',
@@ -105,12 +112,15 @@ export default {
 			this.loading = false
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-10
+		 */
 		async addNote() {
 			if (this.newMessage.trim() === '') return
 			this.submitting = true
 			try {
 				const response = await fetch(
-					`/apps/pipelinq/api/notes/${this.objectType}/${this.objectId}`,
+					generateUrl(`/apps/pipelinq/api/notes/${this.objectType}/${this.objectId}`),
 					{
 						method: 'POST',
 						headers: {
@@ -131,10 +141,13 @@ export default {
 			this.submitting = false
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-11
+		 */
 		async deleteNote(noteId) {
 			try {
 				const response = await fetch(
-					`/apps/pipelinq/api/notes/single/${noteId}`,
+					generateUrl(`/apps/pipelinq/api/notes/single/${noteId}`),
 					{
 						method: 'DELETE',
 						headers: {
@@ -152,6 +165,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-13
+		 */
 		formatTime(timestamp) {
 			if (!timestamp) return ''
 			const date = new Date(timestamp)
