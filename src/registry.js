@@ -54,6 +54,9 @@ import FormBuilderView from './views/forms/FormBuilder.vue'
 import RapportageDashboardView from './views/rapportage/RapportageDashboard.vue'
 import ChannelAnalyticsView from './views/rapportage/ChannelAnalytics.vue'
 import AgentPerformanceView from './views/rapportage/AgentPerformance.vue'
+// Lead pipeline analytics (sales funnel / source / aging / win-loss) —
+// distinct from the contactmoment SLA reporting dashboards above.
+import LeadAnalyticsView from './views/rapportage/LeadAnalyticsView.vue'
 
 // --- Admin managers (lib gap: no pipeline-designer / settings rich-section type). ---
 import PipelineManagerView from './views/settings/PipelineManager.vue'
@@ -186,6 +189,11 @@ const registry = {
 		kind: 'page',
 		component: AgentPerformanceView,
 		_note: 'Per-agent performance charts with apexcharts; lib gap: no chart-widget page type.',
+	},
+	LeadAnalyticsView: {
+		kind: 'page',
+		component: LeadAnalyticsView,
+		_note: 'Sales pipeline analytics (funnel / source performance / aging / win-loss) backed by the server-side /api/rapportage/pipeline-stats aggregation. Self-contained composition of CnChartWidget / CnTableWidget / CnStatsBlock; lib gap: no multi-widget analytics page type wired to a single aggregation endpoint.',
 	},
 
 	// --- Pipeline board (kanban + list with in-memory search). ---
