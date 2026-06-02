@@ -166,7 +166,9 @@ export default {
 
 			this.error = null
 			try {
-				await this.$emit('add', name)
+				// $emit returns the vm, not the handler's promise, so we invoke the
+				// listener directly to await the action and catch any rejection.
+				await this.$listeners.add?.(name)
 				this.adding = false
 				this.newName = ''
 			} catch (e) {
@@ -210,7 +212,9 @@ export default {
 
 			this.error = null
 			try {
-				await this.$emit('rename', id, name)
+				// $emit returns the vm, not the handler's promise, so we invoke the
+				// listener directly to await the action and catch any rejection.
+				await this.$listeners.rename?.(id, name)
 				this.editingId = null
 				this.editName = ''
 			} catch (e) {
