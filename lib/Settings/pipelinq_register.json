@@ -2751,7 +2751,7 @@
       "posRefund": {
         "slug": "posRefund",
         "title": "POS Refund",
-        "icon": "Cash refund",
+        "icon": "CashRefund",
         "version": "1.0.0",
         "summary": "A refund / return document for a previously settled or confirmed POS transaction",
         "description": "Represents a full or partial refund against a posTransaction. refundAmount and totalTax are server-computed by PosRefundService from the refund lines and the original transaction's persisted, server-authoritative tax data; client-supplied amounts are never trusted. Lifecycle: pending -> completed (manager confirm) or pending -> rejected. Completed and rejected refunds are immutable. Mapped to Schema.org Order (type=refund).",
