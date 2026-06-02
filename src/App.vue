@@ -28,6 +28,7 @@
 	<CnAppRoot
 		:manifest="manifest"
 		:registry="registry"
+		:custom-components="customComponents"
 		:page-types="pageTypes"
 		app-id="pipelinq"
 		:translate="translateForApp"
@@ -144,6 +145,26 @@ export default {
 		 */
 		permissions() {
 			return window.OC?.currentUser?.permissions ?? []
+		},
+		/**
+		 * Flattened `{ name: component }` map derived from the v2 `registry`
+		 * prop, passed to CnAppRoot as the legacy `customComponents` prop.
+		 *
+		 * The monorepo dev build aliases @conduction/nextcloud-vue to the
+		 * local `../nextcloud-vue/src`, which may be an older version that
+		 * predates the ADR-036 v2 `registry` prop and resolves custom page
+		 * components only via `customComponents`. Without this, every
+		 * `type: "custom"` page renders blank ("[CnPageRenderer] Custom
+		 * component X not found in registry"). A v2-capable library still
+		 * prefers `registry` and treats `customComponents` as a fallback,
+		 * so passing both is safe regardless of the resolved lib version.
+		 */
+		customComponents() {
+			return Object.fromEntries(
+				Object.entries(this.registry)
+					.filter(([, entry]) => entry && entry.component)
+					.map(([name, entry]) => [name, entry.component]),
+			)
 		},
 	},
 
