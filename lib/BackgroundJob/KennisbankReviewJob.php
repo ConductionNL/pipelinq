@@ -19,6 +19,9 @@
  *             See openspec/changes/xwiki-integration.
  *
  * @spec openspec/changes/pipelinq-admin-config-magic-numbers/tasks.md#task-7.1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
