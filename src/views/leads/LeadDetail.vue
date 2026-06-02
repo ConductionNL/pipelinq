@@ -37,6 +37,12 @@
 			</NcButton>
 		</template>
 
+		<!-- Overdue banner -->
+		<div v-if="isOverdue" class="lead-overdue-banner" role="alert">
+			<span class="lead-overdue-banner__icon" aria-hidden="true">!</span>
+			{{ t('pipelinq', '{days} days overdue', { days: overdueDays }) }}
+		</div>
+
 		<!-- Core Info -->
 		<CnDetailCard :title="t('pipelinq', 'Core Info')">
 			<div class="info-grid">
@@ -114,6 +120,9 @@
 					:class="stageClass(stage)">
 					<span class="stage-indicator" />
 					<span class="stage-name">{{ stage.name }}</span>
+					<span v-if="stageClass(stage) === 'stage-current' && daysInStage != null" class="stage-age">
+						{{ t('pipelinq', '{days} days in current stage', { days: daysInStage }) }}
+					</span>
 				</div>
 			</div>
 		</CnDetailCard>
@@ -239,6 +248,50 @@ export default {
 			if (p === 'urgent') return 'priority-urgent'
 			if (p === 'high') return 'priority-high'
 			return ''
+		},
+		/**
+		 * Whether the lead is in a closed (won/lost) state.
+		 *
+		 * @return {boolean} True when the lead is closed.
+		 * @spec openspec/changes/lead-management/tasks.md#4.2
+		 */
+		isClosed() {
+			return this.leadData.status === 'won' || this.leadData.status === 'lost'
+		},
+		/**
+		 * Whether the lead is past its expected close date and not closed.
+		 *
+		 * @return {boolean} True when overdue.
+		 * @spec openspec/changes/lead-management/tasks.md#4.2
+		 */
+		isOverdue() {
+			if (this.isClosed || !this.leadData.expectedCloseDate) return false
+			return new Date(this.leadData.expectedCloseDate) < new Date()
+		},
+		/**
+		 * Number of days the lead is past its expected close date.
+		 *
+		 * @return {number} The overdue day count.
+		 * @spec openspec/changes/lead-management/tasks.md#4.2
+		 */
+		overdueDays() {
+			if (!this.isOverdue) return 0
+			return Math.floor((Date.now() - new Date(this.leadData.expectedCloseDate).getTime()) / 86400000)
+		},
+		/**
+		 * Number of days the lead has spent in its current stage. Uses the
+		 * precise `stageEnteredAt` timestamp when present, otherwise the
+		 * OpenRegister `_dateModified` proxy.
+		 *
+		 * @return {number|null} The day count, or null when unknown.
+		 * @spec openspec/changes/lead-management/tasks.md#3.2
+		 */
+		daysInStage() {
+			const ts = this.leadData.stageEnteredAt || this.leadData._dateModified
+			if (!ts) return null
+			const diff = Date.now() - new Date(ts).getTime()
+			if (Number.isNaN(diff) || diff < 0) return 0
+			return Math.floor(diff / 86400000)
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-37
@@ -386,6 +439,38 @@ export default {
 	gap: 16px;
 	margin-bottom: 20px;
 	padding: 20px 20px 0;
+}
+
+.lead-overdue-banner {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 16px;
+	padding: 10px 14px;
+	border-radius: var(--border-radius-large);
+	border-left: 4px solid var(--color-error);
+	background: var(--color-error-hover, rgba(var(--color-error-rgb, 220 0 0), 0.1));
+	color: var(--color-error-text, var(--color-error));
+	font-weight: 600;
+}
+
+.lead-overdue-banner__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background: var(--color-error);
+	color: var(--color-primary-element-text, #fff);
+	font-weight: 700;
+	flex-shrink: 0;
+}
+
+.stage-age {
+	margin-left: 8px;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
 }
 
 .info-grid {

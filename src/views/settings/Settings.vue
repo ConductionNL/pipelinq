@@ -50,6 +50,23 @@
 			@update:configuration="config = $event"
 			@save="save" />
 
+		<!-- Lead Settings -->
+		<NcSettingsSection v-if="isConfigured"
+			:name="t('pipelinq', 'Lead Settings')"
+			:description="t('pipelinq', 'Configure lead pipeline behaviour')">
+			<div class="lead-settings-field">
+				<NcTextField
+					type="number"
+					:label="t('pipelinq', 'Stale after (days)')"
+					:value.sync="staleThresholdInput"
+					min="1"
+					@update:value="onStaleThresholdChange" />
+				<p class="lead-settings-hint">
+					{{ t('pipelinq', 'Leads with no activity for this many days are marked stale.') }}
+				</p>
+			</div>
+		</NcSettingsSection>
+
 		<!-- Pipeline Management -->
 		<PipelineManager v-if="isConfigured" />
 
@@ -104,7 +121,7 @@
 <script>
 import { loadState } from '@nextcloud/initial-state'
 import { CnRegisterMapping, CnVersionInfoCard } from '@conduction/nextcloud-vue'
-import { NcButton, NcLoadingIcon, NcNoteCard, NcSettingsSection } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon, NcNoteCard, NcSettingsSection, NcTextField } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import { useSettingsStore } from '../../store/modules/settings.js'
@@ -128,6 +145,7 @@ export default {
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSettingsSection,
+		NcTextField,
 		Refresh,
 		PipelineManager,
 		ProductCategoryManager,
@@ -145,6 +163,7 @@ export default {
 			saving: false,
 			message: '',
 			messageType: 'success',
+			staleThresholdInput: '14',
 		}
 	},
 	computed: {
@@ -231,6 +250,7 @@ export default {
 		const config = await this.settingsStore.fetchSettings()
 		if (config) {
 			this.config = config
+			this.staleThresholdInput = String(config.lead_stale_threshold_days || '14')
 		}
 
 		if (this.isConfigured) {
@@ -239,6 +259,36 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * Persist the lead stale threshold (days) via the settings API.
+		 *
+		 * @param {string} value The new threshold value.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/lead-management/tasks.md#2.1
+		 */
+		async onStaleThresholdChange(value) {
+			const days = parseInt(value, 10)
+			if (Number.isNaN(days) || days < 1) {
+				return
+			}
+			this.staleThresholdInput = String(days)
+			try {
+				const updated = await this.settingsStore.saveSettings({
+					...this.config,
+					lead_stale_threshold_days: String(days),
+				})
+				if (updated) {
+					this.config = updated
+				} else {
+					this.messageType = 'error'
+					this.message = this.t('pipelinq', 'Failed to save settings. Please try again.')
+				}
+			} catch (e) {
+				this.messageType = 'error'
+				this.message = this.t('pipelinq', 'Failed to save settings. Please try again.')
+				console.error('Pipelinq: failed to save stale threshold', e)
+			}
+		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-78
 		 */

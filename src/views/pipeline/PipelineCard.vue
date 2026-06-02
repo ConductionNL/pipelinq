@@ -23,6 +23,9 @@
 			<span v-if="item.assignee" class="card-assignee">
 				{{ item.assignee }}
 			</span>
+			<span v-if="isStaleItem" class="stale-badge" :title="t('pipelinq', 'No activity for {days} days', { days: daysAge })">
+				{{ t('pipelinq', '{days}d stale', { days: daysAge }) }}
+			</span>
 			<span v-if="daysAge > 0" class="aging-badge" :class="agingClass">
 				{{ agingLabel }}
 			</span>
@@ -57,6 +60,7 @@ import { NcSelect } from '@nextcloud/vue'
 import { getPriorityLabel, getPriorityColor, getStatusLabel } from '../../services/requestStatus.js'
 import { getDaysAge, isStale, getAgingClass, formatAge } from '../../services/pipelineUtils.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import { useSettingsStore } from '../../store/modules/settings.js'
 // eslint-disable-next-line no-unused-vars -- used in template via Options API fallthrough
 import { formatNumber, formatDate as formatLocaleDate } from '../../services/localeUtils.js'
 
@@ -139,8 +143,14 @@ export default {
 		agingLabel() {
 			return formatAge(this.daysAge)
 		},
+		/**
+		 * @spec openspec/changes/lead-management/tasks.md#2.2
+		 */
+		staleThreshold() {
+			return useSettingsStore().leadStaleThresholdDays
+		},
 		isStaleItem() {
-			return isStale(this.item, this.entityType)
+			return isStale(this.item, this.entityType, this.staleThreshold)
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-46
@@ -354,6 +364,16 @@ export default {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	flex-shrink: 0;
+}
+
+.stale-badge {
+	font-size: 10px;
+	font-weight: 700;
+	padding: 0 4px;
+	border-radius: 3px;
+	flex-shrink: 0;
+	color: var(--color-warning-text, #92400e);
+	background: var(--color-warning, #fef3c7);
 }
 
 .aging-badge {

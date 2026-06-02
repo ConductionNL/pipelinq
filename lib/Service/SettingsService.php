@@ -99,6 +99,7 @@ class SettingsService
      * @var array<string, string>
      */
     public const TUNABLE_DEFAULTS = [
+        'lead_stale_threshold_days'                => '14',
         'queue_overflow.poll_interval_seconds'     => '300',
         'task_expiry.poll_interval_seconds'        => '900',
         'task_expiry.escalation_threshold_seconds' => '14400',
