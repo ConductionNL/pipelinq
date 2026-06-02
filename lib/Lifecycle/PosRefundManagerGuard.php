@@ -49,7 +49,7 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the collaborators the cap
  *  check legitimately needs (access policy, OR container, app config, logger).
- * @SuppressWarnings(PHPMD.StaticAccess)            GuardResult exposes only the
+ * @SuppressWarnings(PHPMD.StaticAccess)           GuardResult exposes only the
  *  static allow()/deny() factories mandated by OpenRegister's contract.
  *
  * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.5
