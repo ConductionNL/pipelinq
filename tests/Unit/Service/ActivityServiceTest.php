@@ -13,6 +13,9 @@
  * @version GIT: <git-id>
  *
  * @link https://pipelinq.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -32,6 +35,7 @@ use Psr\Log\LoggerInterface;
  */
 class ActivityServiceTest extends TestCase
 {
+
     /**
      * The service under test.
      *
@@ -67,14 +71,14 @@ class ActivityServiceTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->activityManager = $this->createMock(IManager::class);
-        $this->userSession     = $this->createMock(IUserSession::class);
-        $this->logger          = $this->createMock(LoggerInterface::class);
+        $this->activityManager = $this->createMock(originalClassName: IManager::class);
+        $this->userSession     = $this->createMock(originalClassName: IUserSession::class);
+        $this->logger          = $this->createMock(originalClassName: LoggerInterface::class);
 
         $this->service = new ActivityService(
-            $this->activityManager,
-            $this->userSession,
-            $this->logger,
+            activityManager: $this->activityManager,
+            userSession: $this->userSession,
+            logger: $this->logger,
         );
     }//end setUp()
 
@@ -85,11 +89,11 @@ class ActivityServiceTest extends TestCase
      */
     private function setupEventExpectation(): IEvent
     {
-        $user = $this->createMock(IUser::class);
+        $user = $this->createMock(originalClassName: IUser::class);
         $user->method('getUID')->willReturn('admin');
         $this->userSession->method('getUser')->willReturn($user);
 
-        $event = $this->createMock(IEvent::class);
+        $event = $this->createMock(originalClassName: IEvent::class);
         $event->method('setApp')->willReturnSelf();
         $event->method('setType')->willReturnSelf();
         $event->method('setAuthor')->willReturnSelf();
@@ -157,9 +161,14 @@ class ActivityServiceTest extends TestCase
     {
         $event = $this->setupEventExpectation();
         $event->expects($this->once())->method('setSubject')
-            ->with('lead_stage_changed', $this->callback(function ($params) {
-                return $params['title'] === 'Deal' && $params['stage'] === 'Won';
-            }));
+            ->with(
+                'lead_stage_changed',
+                $this->callback(
+                    callback: function ($params) {
+                        return $params['title'] === 'Deal' && $params['stage'] === 'Won';
+                    }
+                )
+            );
 
         $this->service->publishStageChanged('Deal', 'Won', '123');
     }//end testPublishStageChanged()
@@ -173,9 +182,14 @@ class ActivityServiceTest extends TestCase
     {
         $event = $this->setupEventExpectation();
         $event->expects($this->once())->method('setSubject')
-            ->with('request_status_changed', $this->callback(function ($params) {
-                return $params['status'] === 'completed';
-            }));
+            ->with(
+                'request_status_changed',
+                $this->callback(
+                    callback: function ($params) {
+                        return $params['status'] === 'completed';
+                    }
+                )
+            );
 
         $this->service->publishStatusChanged('Request', 'completed', '456');
     }//end testPublishStatusChanged()
@@ -195,13 +209,37 @@ class ActivityServiceTest extends TestCase
     }//end testPublishNoteAdded()
 
     /**
+     * Test publishDealLost publishes lead_lost event.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/reverse-2026-05-26-be-activity-notify/tasks.md#task-1
+     */
+    public function testPublishDealLost(): void
+    {
+        $event = $this->setupEventExpectation();
+        $event->expects($this->once())->method('setSubject')
+            ->with(
+                'lead_lost',
+                $this->callback(
+                    callback: function ($params) {
+                        return $params['title'] === 'Lost Deal';
+                    }
+                )
+            );
+        $this->activityManager->expects($this->once())->method('publish');
+
+        $this->service->publishDealLost(title: 'Lost Deal', objectId: '42');
+    }//end testPublishDealLost()
+
+    /**
      * Test publish handles exception gracefully.
      *
      * @return void
      */
     public function testPublishHandlesException(): void
     {
-        $user = $this->createMock(IUser::class);
+        $user = $this->createMock(originalClassName: IUser::class);
         $user->method('getUID')->willReturn('admin');
         $this->userSession->method('getUser')->willReturn($user);
 
