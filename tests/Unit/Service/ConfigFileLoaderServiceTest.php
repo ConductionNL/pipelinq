@@ -103,4 +103,153 @@ class ConfigFileLoaderServiceTest extends TestCase
 
         $service->loadConfigurationFile();
     }//end testLoadConfigurationFileThrowsOnMissingFile()
+
+    /**
+     * Invoke the private static deepMergeConfig via reflection.
+     *
+     * @param array $base     The base configuration.
+     * @param array $override The fragment to merge.
+     *
+     * @return array The merged result.
+     */
+    private function deepMerge(array $base, array $override): array
+    {
+        $method = new \ReflectionMethod(ConfigFileLoaderService::class, 'deepMergeConfig');
+        $method->setAccessible(true);
+
+        return $method->invoke(null, $base, $override);
+    }//end deepMerge()
+
+    /**
+     * Seed-object lists (components.objects[]) are additively unioned, not replaced.
+     *
+     * @return void
+     */
+    public function testFragmentObjectsAreUnionedNotReplaced(): void
+    {
+        $base = [
+            'components' => [
+                'objects' => [
+                    ['@self' => ['slug' => 'base-a'], 'name' => 'A'],
+                    ['@self' => ['slug' => 'base-b'], 'name' => 'B'],
+                ],
+            ],
+        ];
+
+        $override = [
+            'components' => [
+                'objects' => [
+                    ['@self' => ['slug' => 'frag-c'], 'name' => 'C'],
+                ],
+            ],
+        ];
+
+        $merged = $this->deepMerge($base, $override);
+        $slugs  = array_map(static fn (array $o): string => $o['@self']['slug'], $merged['components']['objects']);
+
+        $this->assertCount(3, $merged['components']['objects']);
+        $this->assertSame(['base-a', 'base-b', 'frag-c'], $slugs);
+    }//end testFragmentObjectsAreUnionedNotReplaced()
+
+    /**
+     * A fragment seed object with a colliding slug replaces the base entry in place.
+     *
+     * @return void
+     */
+    public function testFragmentObjectSameSlugReplacesInPlace(): void
+    {
+        $base = [
+            'components' => [
+                'objects' => [
+                    ['@self' => ['slug' => 'shared'], 'name' => 'Old'],
+                    ['@self' => ['slug' => 'keep'], 'name' => 'Keep'],
+                ],
+            ],
+        ];
+
+        $override = [
+            'components' => [
+                'objects' => [
+                    ['@self' => ['slug' => 'shared'], 'name' => 'New'],
+                ],
+            ],
+        ];
+
+        $merged = $this->deepMerge($base, $override);
+
+        $this->assertCount(2, $merged['components']['objects']);
+        $bySlug = [];
+        foreach ($merged['components']['objects'] as $object) {
+            $bySlug[$object['@self']['slug']] = $object['name'];
+        }
+
+        $this->assertSame('New', $bySlug['shared']);
+        $this->assertSame('Keep', $bySlug['keep']);
+    }//end testFragmentObjectSameSlugReplacesInPlace()
+
+    /**
+     * Register schema-membership lists (schemas[]) are unioned and de-duplicated.
+     *
+     * @return void
+     */
+    public function testFragmentRegisterSchemasAreUnioned(): void
+    {
+        $base = [
+            'components' => [
+                'registers' => [
+                    'pipelinq' => ['schemas' => ['client', 'lead']],
+                ],
+            ],
+        ];
+
+        $override = [
+            'components' => [
+                'registers' => [
+                    'pipelinq' => ['schemas' => ['lead', 'project', 'projectTask']],
+                ],
+            ],
+        ];
+
+        $merged = $this->deepMerge($base, $override);
+
+        $this->assertSame(
+            ['client', 'lead', 'project', 'projectTask'],
+            $merged['components']['registers']['pipelinq']['schemas']
+        );
+    }//end testFragmentRegisterSchemasAreUnioned()
+
+    /**
+     * Schema definition dicts (components.schemas) still merge recursively, and
+     * other lists still replace, so the union is scoped to the two known paths.
+     *
+     * @return void
+     */
+    public function testSchemaDefinitionsMergeAndOtherListsReplace(): void
+    {
+        $base = [
+            'components' => [
+                'schemas' => [
+                    'client' => ['title' => 'Client'],
+                ],
+            ],
+            'info' => ['tags' => ['old']],
+        ];
+
+        $override = [
+            'components' => [
+                'schemas' => [
+                    'project' => ['title' => 'Project'],
+                ],
+            ],
+            'info' => ['tags' => ['new']],
+        ];
+
+        $merged = $this->deepMerge($base, $override);
+
+        // Schema definitions (assoc) merge: both keys present.
+        $this->assertArrayHasKey('client', $merged['components']['schemas']);
+        $this->assertArrayHasKey('project', $merged['components']['schemas']);
+        // A non-union list (info.tags) is replaced, not unioned.
+        $this->assertSame(['new'], $merged['info']['tags']);
+    }//end testSchemaDefinitionsMergeAndOtherListsReplace()
 }//end class

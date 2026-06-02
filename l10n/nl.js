@@ -1,6 +1,8 @@
 OC.L10N.register(
     "pipelinq",
     {
+    "Authentication required" : "Authenticatie vereist",
+    "An unexpected error occurred" : "Er is een onverwachte fout opgetreden",
     "Print Receipt" : "Bonnetje afdrukken",
     "Email Receipt" : "Bonnetje e-mailen",
     "Receipt Template" : "Bonnetje-sjabloon",

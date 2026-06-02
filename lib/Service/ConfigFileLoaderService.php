@@ -29,6 +29,9 @@ use RuntimeException;
 
 /**
  * Service for loading and parsing configuration JSON files.
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-64
+ * @spec openspec/changes/project-task-hierarchy/specs.md#REQ-PTH-001
  */
 class ConfigFileLoaderService
 {
@@ -148,18 +151,37 @@ class ConfigFileLoaderService
             $fragmentBlob .= $fragmentContent;
         }//end foreach
 
-        if ($fragmentBlob !== '') {
-            $baseVersion  = ($data['info']['version'] ?? '0.0.0');
-            $fragmentHash = substr(hash('sha256', $fragmentBlob), 0, 8);
-            if (isset($data['info']) === false || is_array($data['info']) === false) {
-                $data['info'] = [];
-            }
+        return self::foldFragmentVersion(data: $data, fragmentBlob: $fragmentBlob);
+    }//end mergeRegisterFragments()
 
-            $data['info']['version'] = $baseVersion.'+frag.'.$fragmentHash;
+    /**
+     * Fold a hash of the fragment content into `info.version`.
+     *
+     * OpenRegister's import is version-gated, so a changed fragment set must bump
+     * the reported version to force a re-import (ADR-037). A no-op when no
+     * fragment content was merged.
+     *
+     * @param array  $data         The merged configuration data.
+     * @param string $fragmentBlob The concatenated raw fragment content.
+     *
+     * @return array The data with the version suffix applied.
+     */
+    private static function foldFragmentVersion(array $data, string $fragmentBlob): array
+    {
+        if ($fragmentBlob === '') {
+            return $data;
         }
 
+        if (isset($data['info']) === false || is_array($data['info']) === false) {
+            $data['info'] = [];
+        }
+
+        $baseVersion  = ($data['info']['version'] ?? '0.0.0');
+        $fragmentHash = substr(hash('sha256', $fragmentBlob), 0, 8);
+        $data['info']['version'] = $baseVersion.'+frag.'.$fragmentHash;
+
         return $data;
-    }//end mergeRegisterFragments()
+    }//end foldFragmentVersion()
 
     /**
      * Recursively deep-merge an override array onto a base array.
@@ -168,6 +190,21 @@ class ConfigFileLoaderService
      * override replace those in the base. This mirrors the fragment-merge
      * semantics shared across the fleet (ADR-037).
      *
+     * Two list paths are an intentional exception and are **additively unioned**
+     * rather than replaced, so a fragment can contribute seed objects and
+     * register-schema memberships without clobbering the monolith (or earlier
+     * fragments) — the canonical failure mode of concurrent same-app builds:
+     *
+     *  - the seed-object list `components.objects[]` is unioned, de-duplicated by
+     *    each object's `@self.slug` (fragment wins on a slug clash);
+     *  - any register's `schemas[]` membership list (a list of schema-slug
+     *    strings) is unioned, de-duplicated by value, order-preserving.
+     *
+     * Every other list keeps replace semantics. The union is keyed on the local
+     * key during iteration (`objects` / `schemas`); `components.schemas` is a
+     * dict, never a list, so only a register's membership `schemas[]` list can
+     * reach the union branch.
+     *
      * @param array $base     The base configuration array.
      * @param array $override The fragment to merge on top of the base.
      *
@@ -175,22 +212,136 @@ class ConfigFileLoaderService
      */
     private static function deepMergeConfig(array $base, array $override): array
     {
-        foreach ($override as $key => $value) {
-            if (is_array($value) === true
-                && isset($base[$key]) === true
-                && is_array($base[$key]) === true
-                && self::isList(value: $value) === false
-                && self::isList(value: $base[$key]) === false
-            ) {
-                $base[$key] = self::deepMergeConfig(base: $base[$key], override: $value);
-                continue;
-            }
-
-            $base[$key] = $value;
-        }//end foreach
+        foreach ($override as $childKey => $value) {
+            $base[$childKey] = self::mergeValue(
+                key: (string) $childKey,
+                baseValue: ($base[$childKey] ?? null),
+                overrideValue: $value
+            );
+        }
 
         return $base;
     }//end deepMergeConfig()
+
+    /**
+     * Merge a single override value onto its base counterpart by fragment rules.
+     *
+     * Two assoc arrays merge recursively; the `objects` / `schemas` list paths
+     * are additively unioned; every other value (including other lists) is
+     * replaced by the override.
+     *
+     * @param string $key           The key the values sit under.
+     * @param mixed  $baseValue     The current base value (null when absent).
+     * @param mixed  $overrideValue The fragment value.
+     *
+     * @return mixed The merged value.
+     */
+    private static function mergeValue(string $key, mixed $baseValue, mixed $overrideValue): mixed
+    {
+        if (is_array($overrideValue) === false || is_array($baseValue) === false) {
+            return $overrideValue;
+        }
+
+        $overrideIsList = self::isList(value: $overrideValue);
+        if ($overrideIsList === false && self::isList(value: $baseValue) === false) {
+            return self::deepMergeConfig(base: $baseValue, override: $overrideValue);
+        }
+
+        if ($overrideIsList === true && self::isList(value: $baseValue) === true) {
+            if ($key === 'objects') {
+                return self::unionObjectsBySlug(base: $baseValue, override: $overrideValue);
+            }
+
+            if ($key === 'schemas') {
+                return self::unionScalarList(base: $baseValue, override: $overrideValue);
+            }
+        }
+
+        return $overrideValue;
+    }//end mergeValue()
+
+    /**
+     * Additively union two seed-object lists, de-duplicating by `@self.slug`.
+     *
+     * Objects present only in the base are preserved in order; objects from the
+     * override are appended, and an override object whose `@self.slug` already
+     * exists in the base replaces that base entry in place (fragment wins). Seed
+     * objects without a resolvable slug are always appended (they cannot collide).
+     *
+     * @param array $base     The base seed-object list.
+     * @param array $override The fragment's seed-object list.
+     *
+     * @return array The unioned seed-object list.
+     */
+    private static function unionObjectsBySlug(array $base, array $override): array
+    {
+        $indexBySlug = [];
+        foreach ($base as $position => $object) {
+            $slug = self::extractObjectSlug(object: $object);
+            if ($slug !== null) {
+                $indexBySlug[$slug] = $position;
+            }
+        }
+
+        foreach ($override as $object) {
+            $slug = self::extractObjectSlug(object: $object);
+            if ($slug !== null && isset($indexBySlug[$slug]) === true) {
+                $base[$indexBySlug[$slug]] = $object;
+                continue;
+            }
+
+            $base[]   = $object;
+            $position = (count($base) - 1);
+            if ($slug !== null) {
+                $indexBySlug[$slug] = $position;
+            }
+        }//end foreach
+
+        return array_values($base);
+    }//end unionObjectsBySlug()
+
+    /**
+     * Extract the `@self.slug` of a seed object, or null when absent.
+     *
+     * @param mixed $object The seed object (expected to be an array).
+     *
+     * @return string|null The slug, or null when it cannot be resolved.
+     */
+    private static function extractObjectSlug(mixed $object): ?string
+    {
+        if (is_array($object) === false) {
+            return null;
+        }
+
+        $slug = ($object['@self']['slug'] ?? null);
+        if (is_string($slug) === true && $slug !== '') {
+            return $slug;
+        }
+
+        return null;
+    }//end extractObjectSlug()
+
+    /**
+     * Additively union two scalar lists, de-duplicating by value, order-preserving.
+     *
+     * Used for register `schemas[]` membership: base entries keep their order,
+     * override entries not already present are appended.
+     *
+     * @param array $base     The base scalar list.
+     * @param array $override The fragment's scalar list.
+     *
+     * @return array The unioned scalar list.
+     */
+    private static function unionScalarList(array $base, array $override): array
+    {
+        foreach ($override as $value) {
+            if (in_array($value, $base, true) === false) {
+                $base[] = $value;
+            }
+        }
+
+        return array_values($base);
+    }//end unionScalarList()
 
     /**
      * Determine whether an array is a sequential list (zero-indexed, no gaps).
@@ -208,7 +359,7 @@ class ConfigFileLoaderService
         }
 
         $expectedKey = 0;
-        foreach ($value as $key => $unused) {
+        foreach (array_keys($value) as $key) {
             if ($key !== $expectedKey) {
                 return false;
             }

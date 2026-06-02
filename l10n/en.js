@@ -1,6 +1,8 @@
 OC.L10N.register(
     "pipelinq",
     {
+    "Authentication required" : "Authentication required",
+    "An unexpected error occurred" : "An unexpected error occurred",
     "Print Receipt" : "Print Receipt",
     "Email Receipt" : "Email Receipt",
     "Receipt Template" : "Receipt Template",

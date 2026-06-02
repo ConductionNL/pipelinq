@@ -119,6 +119,12 @@ return [
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
 
+        // Project work-breakdown hierarchy (camelCase slug matches ProjectHierarchyController class name).
+        // project / projectPhase / projectTask / projectActivity CRUD is handled by OpenRegister's
+        // generic object API; these are the server-authoritative WBS summary + cycle-safe validation.
+        ['name' => 'projectHierarchy#validateParent', 'url' => '/api/projects/validate-parent', 'verb' => 'POST'],
+        ['name' => 'projectHierarchy#summary', 'url' => '/api/projects/{projectKey}/summary', 'verb' => 'GET'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],

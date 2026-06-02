@@ -1,5 +1,7 @@
 {
     "translations": {
+        "Authentication required": "Authentication required",
+        "An unexpected error occurred": "An unexpected error occurred",
         "+ Add": "+ Add",
         "+ Add Category": "+ Add Category",
         "+ Add Channel": "+ Add Channel",

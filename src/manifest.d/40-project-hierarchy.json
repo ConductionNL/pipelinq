@@ -1,0 +1,158 @@
+{
+  "pages": [
+    {
+      "id": "Projects",
+      "route": "/projects",
+      "type": "index",
+      "title": "Projecten",
+      "config": {
+        "register": "pipelinq",
+        "schema": "project",
+        "columns": [
+          "name",
+          "client",
+          "status",
+          "billable",
+          "budgetHours",
+          "endDate"
+        ],
+        "sidebar": {
+          "enabled": true,
+          "showMetadata": true
+        }
+      }
+    },
+    {
+      "id": "ProjectDetail",
+      "route": "/projects/:id",
+      "type": "detail",
+      "title": "Project",
+      "config": {
+        "register": "pipelinq",
+        "schema": "project",
+        "sidebar": {
+          "enabled": true,
+          "showMetadata": true
+        }
+      }
+    },
+    {
+      "id": "ProjectPhases",
+      "route": "/project-phases",
+      "type": "index",
+      "title": "Projectfasen",
+      "config": {
+        "register": "pipelinq",
+        "schema": "projectPhase",
+        "columns": [
+          "name",
+          "project",
+          "order",
+          "status",
+          "billable",
+          "budgetHours"
+        ],
+        "sidebar": {
+          "enabled": true,
+          "showMetadata": true
+        }
+      }
+    },
+    {
+      "id": "ProjectPhaseDetail",
+      "route": "/project-phases/:id",
+      "type": "detail",
+      "title": "Projectfase",
+      "config": {
+        "register": "pipelinq",
+        "schema": "projectPhase",
+        "sidebar": {
+          "enabled": true,
+          "showMetadata": true
+        }
+      }
+    },
+    {
+      "id": "ProjectTasks",
+      "route": "/project-tasks",
+      "type": "index",
+      "title": "Projecttaken",
+      "config": {
+        "register": "pipelinq",
+        "schema": "projectTask",
+        "columns": [
+          "name",
+          "phase",
+          "status",
+          "billable",
+          "estimatedHours",
+          "assignee",
+          "deadline"
+        ],
+        "sidebar": {
+          "enabled": true,
+          "showMetadata": true
+        }
+      }
+    },
+    {
+      "id": "ProjectTaskDetail",
+      "route": "/project-tasks/:id",
+      "type": "detail",
+      "title": "Projecttaak",
+      "config": {
+        "register": "pipelinq",
+        "schema": "projectTask",
+        "sidebar": {
+          "enabled": true,
+          "showMetadata": true
+        }
+      }
+    },
+    {
+      "id": "ProjectActivities",
+      "route": "/project-activities",
+      "type": "index",
+      "title": "Tijdregistraties",
+      "config": {
+        "register": "pipelinq",
+        "schema": "projectActivity",
+        "columns": [
+          "date",
+          "user",
+          "task",
+          "description",
+          "durationMinutes",
+          "billable"
+        ],
+        "sidebar": {
+          "enabled": true,
+          "showMetadata": true
+        }
+      }
+    },
+    {
+      "id": "ProjectActivityDetail",
+      "route": "/project-activities/:id",
+      "type": "detail",
+      "title": "Tijdregistratie",
+      "config": {
+        "register": "pipelinq",
+        "schema": "projectActivity",
+        "sidebar": {
+          "enabled": true,
+          "showMetadata": true
+        }
+      }
+    }
+  ],
+  "menu": [
+    {
+      "id": "Projects",
+      "label": "Projecten",
+      "icon": "icon-category-organization",
+      "route": "Projects",
+      "order": 95
+    }
+  ]
+}

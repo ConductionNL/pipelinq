@@ -92,6 +92,18 @@ export async function initializeStores() {
 		if (config.register && config.posRefundLine_schema) {
 			objectStore.registerObjectType('posRefundLine', config.posRefundLine_schema, config.register)
 		}
+		if (config.register && config.project_schema) {
+			objectStore.registerObjectType('project', config.project_schema, config.register)
+		}
+		if (config.register && config.projectPhase_schema) {
+			objectStore.registerObjectType('projectPhase', config.projectPhase_schema, config.register)
+		}
+		if (config.register && config.projectTask_schema) {
+			objectStore.registerObjectType('projectTask', config.projectTask_schema, config.register)
+		}
+		if (config.register && config.projectActivity_schema) {
+			objectStore.registerObjectType('projectActivity', config.projectActivity_schema, config.register)
+		}
 	}
 
 	return { settingsStore, objectStore }
