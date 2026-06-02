@@ -1,0 +1,7 @@
+{
+  "schema_version": 2,
+  "spec_slug": "marketing-segmentation-and-blast-09-unit-integration-tests",
+  "app": "pipelinq",
+  "kind": "code",
+  "depends_on": ["marketing-segmentation-and-blast-08-performance-dashboard"]
+}
