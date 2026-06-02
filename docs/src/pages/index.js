@@ -7,7 +7,7 @@
  *
  * Written as .js (not .mdx) because the docs site has the docs plugin
  * pointed at `path: './'`, and an MDX file in src/pages/ trips the
- * MDX-ESM parser even with the docs plugin's `src/**` exclude — likely
+ * MDX-ESM parser even with the docs plugin's `src/**` exclude, likely
  * a quirk of how mdx-loader's micromark stack reuses parser state
  * across files in this Docusaurus 3.10 + this preset combination.
  * Authoring the page in JSX keeps the same component composition.
@@ -23,7 +23,7 @@ import {
 
 /* Pipeline-spike glyph: same SVG as the connext detail page at
    sites/www/src/pages/apps/pipelinq.mdx. Read as a stylised pipeline
-   trace running through a sales funnel — the spike is the won deal. */
+   trace running through a sales funnel: the spike is the won deal. */
 const PIPELINQ_ICON = (
   <svg viewBox="0 0 24 24">
     <path d="M3 12h4l3-9 4 18 3-9h4" />
