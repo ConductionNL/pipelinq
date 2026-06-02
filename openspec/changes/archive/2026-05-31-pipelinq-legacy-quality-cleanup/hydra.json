@@ -1,0 +1,8 @@
+{
+  "spec_slug": "pipelinq-legacy-quality-cleanup",
+  "title": "Pipelinq Legacy Quality Cleanup",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [],
+  "issue": null
+}

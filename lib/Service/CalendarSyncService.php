@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-60
  */
 
 declare(strict_types=1);
@@ -28,6 +30,8 @@ use Psr\Log\LoggerInterface;
  *
  * Creates calendar events from Pipelinq follow-ups and links
  * Nextcloud Calendar events to CRM entities by attendee matching.
+ *
+ * @spec openspec/changes/pipelinq-or-lifecycle-notification/tasks.md#task-2.2
  */
 class CalendarSyncService
 {
@@ -44,16 +48,18 @@ class CalendarSyncService
     /**
      * Build a CalendarLink data array for OpenRegister storage.
      *
-     * @param string      $eventUid         The calendar event UID.
-     * @param string      $title            The event title.
-     * @param string      $startDate        ISO 8601 start date.
-     * @param string      $endDate          ISO 8601 end date.
-     * @param string      $linkedEntityType The entity type.
-     * @param string      $linkedEntityId   The entity UUID.
-     * @param string      $createdFrom      Where the event was created.
-     * @param array       $attendees        Attendee email addresses.
+     * @param string $eventUid         The calendar event UID.
+     * @param string $title            The event title.
+     * @param string $startDate        ISO 8601 start date.
+     * @param string $endDate          ISO 8601 end date.
+     * @param string $linkedEntityType The entity type.
+     * @param string $linkedEntityId   The entity UUID.
+     * @param string $createdFrom      Where the event was created.
+     * @param array  $attendees        Attendee email addresses.
      *
      * @return array<string, mixed> The CalendarLink data.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-60
      */
     public function buildCalendarLinkData(
         string $eventUid,
@@ -62,19 +68,25 @@ class CalendarSyncService
         string $endDate,
         string $linkedEntityType,
         string $linkedEntityId,
-        string $createdFrom = 'pipelinq',
-        array $attendees = [],
+        string $createdFrom='pipelinq',
+        array $attendees=[],
     ): array {
         return [
-            'eventUid' => $eventUid,
-            'title' => $title,
-            'startDate' => $startDate,
-            'endDate' => $endDate,
-            'attendees' => $attendees,
+            'eventUid'         => $eventUid,
+            'title'            => $title,
+            'startDate'        => $startDate,
+            'endDate'          => $endDate,
+            'attendees'        => $attendees,
             'linkedEntityType' => $linkedEntityType,
-            'linkedEntityId' => $linkedEntityId,
-            'status' => 'scheduled',
-            'createdFrom' => $createdFrom,
+            'linkedEntityId'   => $linkedEntityId,
+            // The `scheduled` literal is the declared lifecycle initial state of
+            // the calendarLink schema (x-openregister-lifecycle.initial). It is
+            // set explicitly here so the creation payload is self-describing even
+            // when the object is persisted without routing through OpenRegister's
+            // lifecycle initial-state listener; subsequent state changes go
+            // through the `complete` / `cancel` lifecycle transitions.
+            'status'           => 'scheduled',
+            'createdFrom'      => $createdFrom,
         ];
     }//end buildCalendarLinkData()
 
@@ -89,21 +101,23 @@ class CalendarSyncService
      * @param array  $attendees   Attendee email addresses.
      *
      * @return string The iCalendar VEVENT string.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-60
      */
     public function generateVEvent(
         string $title,
         string $startDate,
         string $endDate,
-        string $description = '',
-        string $entityUrl = '',
-        array $attendees = [],
+        string $description='',
+        string $entityUrl='',
+        array $attendees=[],
     ): string {
-        $uid = bin2hex(random_bytes(16)) . '@pipelinq';
-        $now = gmdate('Ymd\THis\Z');
+        $uid   = bin2hex(random_bytes(16)).'@pipelinq';
+        $now   = gmdate('Ymd\THis\Z');
         $start = gmdate('Ymd\THis\Z', strtotime($startDate));
-        $end = gmdate('Ymd\THis\Z', strtotime($endDate));
+        $end   = gmdate('Ymd\THis\Z', strtotime($endDate));
 
-        $vcal = "BEGIN:VCALENDAR\r\n";
+        $vcal  = "BEGIN:VCALENDAR\r\n";
         $vcal .= "VERSION:2.0\r\n";
         $vcal .= "PRODID:-//Pipelinq//CRM//NL\r\n";
         $vcal .= "BEGIN:VEVENT\r\n";
@@ -116,8 +130,13 @@ class CalendarSyncService
         if ($description !== '' || $entityUrl !== '') {
             $desc = $description;
             if ($entityUrl !== '') {
-                $desc .= ($desc !== '' ? '\n\n' : '') . 'Pipelinq: ' . $entityUrl;
+                if ($desc !== '') {
+                    $desc .= '\n\n';
+                }
+
+                $desc .= 'Pipelinq: '.$entityUrl;
             }
+
             $vcal .= "DESCRIPTION:{$desc}\r\n";
         }
 
@@ -130,16 +149,4 @@ class CalendarSyncService
 
         return $vcal;
     }//end generateVEvent()
-
-    /**
-     * Determine if a calendar event has passed its end date.
-     *
-     * @param string $endDate ISO 8601 end date.
-     *
-     * @return bool True if the event end date has passed.
-     */
-    public function isEventPassed(string $endDate): bool
-    {
-        return new \DateTime($endDate) < new \DateTime();
-    }//end isEventPassed()
 }//end class

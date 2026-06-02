@@ -8,13 +8,16 @@
  * @category Controller
  * @package  OCA\Pipelinq\Controller
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-27
  */
 
 declare(strict_types=1);
@@ -24,9 +27,12 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ContactSyncService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
 
 /**
  * Controller for contact synchronization.
@@ -38,12 +44,16 @@ class ContactSyncController extends Controller
      *
      * @param IRequest           $request            The request.
      * @param ContactSyncService $contactSyncService The contact sync service.
+     * @param IUserSession       $userSession        The user session.
      * @param IL10N              $l10n               The localization service.
+     * @param LoggerInterface    $logger             The logger.
      */
     public function __construct(
         IRequest $request,
         private ContactSyncService $contactSyncService,
+        private IUserSession $userSession,
         private IL10N $l10n,
+        private LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -54,9 +64,16 @@ class ContactSyncController extends Controller
      * @return JSONResponse The search results.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
      */
     public function search(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         $query = $this->request->getParam('q', '');
         if (trim($query) === '') {
             return new JSONResponse(['results' => []]);
@@ -66,10 +83,9 @@ class ContactSyncController extends Controller
             $results = $this->contactSyncService->searchContacts($query);
             return new JSONResponse(['results' => $results]);
         } catch (\Exception $e) {
+            $this->logger->error('ContactSyncController::search failed', ['exception' => $e]);
             return new JSONResponse(
-                    [
-                        'error' => $e->getMessage(),
-                    ],
+                    ['error' => $this->l10n->t('An unexpected error occurred')],
                     500
                     );
         }
@@ -81,9 +97,16 @@ class ContactSyncController extends Controller
      * @return JSONResponse The import result.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
      */
     public function import(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         $uid            = $this->request->getParam('uid', '');
         $addressBookKey = $this->request->getParam('addressBookKey', '');
         $type           = $this->request->getParam('type', 'client');
@@ -107,10 +130,9 @@ class ContactSyncController extends Controller
                     ]
                     );
         } catch (\Exception $e) {
+            $this->logger->error('ContactSyncController::import failed', ['exception' => $e]);
             return new JSONResponse(
-                    [
-                        'error' => $e->getMessage(),
-                    ],
+                    ['error' => $this->l10n->t('An unexpected error occurred')],
                     500
                     );
         }//end try
@@ -122,9 +144,16 @@ class ContactSyncController extends Controller
      * @return JSONResponse The sync result.
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-27
      */
     public function writeBack(): JSONResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
         $objectType = $this->request->getParam('objectType', '');
         $objectId   = $this->request->getParam('objectId', '');
 
@@ -148,10 +177,9 @@ class ContactSyncController extends Controller
                     ]
                     );
         } catch (\Exception $e) {
+            $this->logger->error('ContactSyncController::writeBack failed', ['exception' => $e]);
             return new JSONResponse(
-                    [
-                        'error' => $e->getMessage(),
-                    ],
+                    ['error' => $this->l10n->t('An unexpected error occurred')],
                     500
                     );
         }

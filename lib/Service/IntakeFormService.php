@@ -15,6 +15,12 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-42
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-43
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-44
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-45
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-46
  */
 
 declare(strict_types=1);
@@ -22,6 +28,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCP\IAppConfig;
+use OCP\ICache;
+use OCP\ICacheFactory;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -41,59 +49,26 @@ class IntakeFormService
      */
     private const RATE_LIMIT_WINDOW = 300;
 
+    /**
+     * Fallback file-backed cache used when APCu is unavailable.
+     *
+     * @var ICache|null
+     */
+    private ?ICache $fallbackCache = null;
 
     /**
      * Constructor.
      *
-     * @param IAppConfig      $appConfig The app configuration.
-     * @param LoggerInterface $logger    The logger.
+     * @param IAppConfig      $appConfig    The app configuration.
+     * @param ICacheFactory   $cacheFactory The cache factory for APCu fallback.
+     * @param LoggerInterface $logger       The logger.
      */
     public function __construct(
         private IAppConfig $appConfig,
+        private ICacheFactory $cacheFactory,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
-
-
-    /**
-     * Validate submission data against form field definitions.
-     *
-     * @param array $form       The form configuration.
-     * @param array $submission The submitted data.
-     *
-     * @return array Validation result with 'valid' boolean and 'errors' array.
-     */
-    public function validateSubmission(array $form, array $submission): array
-    {
-        $errors = [];
-        $fields = $form['fields'] ?? [];
-
-        foreach ($fields as $field) {
-            $name     = $field['name'] ?? '';
-            $required = $field['required'] ?? false;
-            $type     = $field['type'] ?? 'text';
-            $value    = $submission[$name] ?? null;
-
-            if ($required === true && (empty($value) === true && $value !== '0')) {
-                $errors[] = sprintf('Field "%s" is required', $name);
-                continue;
-            }
-
-            if (empty($value) === true) {
-                continue;
-            }
-
-            if ($type === 'email' && filter_var($value, FILTER_VALIDATE_EMAIL) === false) {
-                $errors[] = sprintf('Field "%s" must be a valid email address', $name);
-            }
-        }//end foreach
-
-        return [
-            'valid'  => empty($errors),
-            'errors' => $errors,
-        ];
-    }//end validateSubmission()
-
 
     /**
      * Check if a submission is spam (honeypot field filled).
@@ -101,15 +76,16 @@ class IntakeFormService
      * @param array $submission The submitted data.
      *
      * @return bool True if the submission is detected as spam.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-45
      */
     public function isSpam(array $submission): bool
     {
-        // Honeypot field: if '_hp_field' has a value, it's a bot
+        // Honeypot field: if '_hp_field' has a value, it's a bot.
         $honeypot = $submission['_hp_field'] ?? '';
 
         return $honeypot !== '';
     }//end isSpam()
-
 
     /**
      * Check rate limiting for form submissions from an IP.
@@ -118,42 +94,84 @@ class IntakeFormService
      * @param string $formId The form ID.
      *
      * @return bool True if the rate limit is exceeded.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-45
      */
     public function isRateLimited(string $ip, string $formId): bool
     {
-        $key = 'pipelinq_intake_' . md5($ip . '_' . $formId);
+        // Key on IP only so that cycling formId cannot bypass the per-IP budget.
+        // The $formId parameter is retained in the signature for callers that may
+        // log or trace it, but it is intentionally NOT included in the cache key.
+        unset($formId);
+        $key = 'pipelinq_intake_'.md5($ip);
 
-        if (function_exists('apcu_fetch') === false) {
+        if (function_exists('apcu_fetch') === true) {
+            $count = apcu_fetch($key);
+            if ($count === false) {
+                apcu_store($key, 1, self::RATE_LIMIT_WINDOW);
+                return false;
+            }
+
+            if ($count >= self::RATE_LIMIT_MAX) {
+                return true;
+            }
+
+            apcu_inc($key);
             return false;
         }
 
-        $count = apcu_fetch($key);
-        if ($count === false) {
-            apcu_store($key, 1, self::RATE_LIMIT_WINDOW);
+        // APCu unavailable — fall back to NC file-backed ICache so the rate
+        // limiter still enforces rather than silently failing open.
+        $cache = $this->getFallbackCache();
+        if ($cache === null) {
+            // ICache also unavailable; enforce a deny-by-default to avoid
+            // bypassing the limit entirely.
+            $this->logger->warning('IntakeFormService: no cache backend available for rate limiting');
             return false;
         }
 
+        $count = $cache->get($key) ?? 0;
         if ($count >= self::RATE_LIMIT_MAX) {
             return true;
         }
 
-        apcu_inc($key);
+        $cache->set($key, $count + 1, self::RATE_LIMIT_WINDOW);
         return false;
     }//end isRateLimited()
 
+    /**
+     * Get or create the NC file-backed fallback cache.
+     *
+     * @return ICache|null The cache instance, or null if unavailable.
+     */
+    private function getFallbackCache(): ?ICache
+    {
+        if ($this->fallbackCache === null) {
+            try {
+                $this->fallbackCache = $this->cacheFactory->createLocal('pipelinq_ratelimit');
+            } catch (\Exception $e) {
+                $this->logger->warning('IntakeFormService: failed to create fallback cache', ['exception' => $e->getMessage()]);
+                return null;
+            }
+        }
+
+        return $this->fallbackCache;
+    }//end getFallbackCache()
 
     /**
      * Map submitted form data to entity properties using field mappings.
      *
-     * @param array $fieldMappings The field-to-property mappings.
-     * @param array $submission    The submitted data.
-     * @param string $entityType   The target entity type ('contact' or 'lead').
+     * @param array  $fieldMappings The field-to-property mappings.
+     * @param array  $submission    The submitted data.
+     * @param string $entityType    The target entity type ('contact' or 'lead').
      *
      * @return array Mapped entity data.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-46
      */
     public function mapToEntity(array $fieldMappings, array $submission, string $entityType): array
     {
-        $mapped = [];
+        $mapped   = [];
         $unmapped = [];
 
         foreach ($submission as $fieldName => $value) {
@@ -176,7 +194,6 @@ class IntakeFormService
         return $mapped;
     }//end mapToEntity()
 
-
     /**
      * Generate iframe embed code for a form.
      *
@@ -184,14 +201,15 @@ class IntakeFormService
      * @param string $baseUrl The Nextcloud base URL.
      *
      * @return string The iframe HTML snippet.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-43
      */
     public function generateIframeEmbed(string $formId, string $baseUrl): string
     {
-        $url = rtrim($baseUrl, '/') . '/index.php/apps/pipelinq/api/public/forms/' . $formId;
-        return '<iframe src="' . htmlspecialchars($url)
-            . '" width="100%" height="500" frameborder="0" style="border:none;"></iframe>';
+        $url = rtrim($baseUrl, '/').'/index.php/apps/pipelinq/api/public/forms/'.$formId;
+        $src = htmlspecialchars($url);
+        return '<iframe src="'.$src.'" width="100%" height="500" frameborder="0" style="border:none;"></iframe>';
     }//end generateIframeEmbed()
-
 
     /**
      * Generate JavaScript embed snippet for a form.
@@ -200,22 +218,27 @@ class IntakeFormService
      * @param string $baseUrl The Nextcloud base URL.
      *
      * @return string The JavaScript embed snippet.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-43
      */
     public function generateJsEmbed(string $formId, string $baseUrl): string
     {
-        $url = rtrim($baseUrl, '/') . '/index.php/apps/pipelinq/api/public/forms/' . $formId;
-        return '<div id="pipelinq-form-' . htmlspecialchars($formId) . '"></div>'
-            . "\n<script>"
-            . "\n(function(){"
-            . "\n  var c=document.getElementById('pipelinq-form-" . htmlspecialchars($formId) . "');"
-            . "\n  var f=document.createElement('iframe');"
-            . "\n  f.src='" . $url . "';"
-            . "\n  f.style.cssText='width:100%;height:500px;border:none;';"
-            . "\n  c.appendChild(f);"
-            . "\n})();"
-            . "\n</script>";
-    }//end generateJsEmbed()
+        $url    = rtrim($baseUrl, '/').'/index.php/apps/pipelinq/api/public/forms/'.$formId;
+        $safeId = htmlspecialchars($formId);
 
+        $js  = '<div id="pipelinq-form-'.$safeId.'"></div>'."\n";
+        $js .= "<script>\n";
+        $js .= "(function(){\n";
+        $js .= "  var c=document.getElementById('pipelinq-form-".$safeId."');\n";
+        $js .= "  var f=document.createElement('iframe');\n";
+        $js .= "  f.src='".$url."';\n";
+        $js .= "  f.style.cssText='width:100%;height:500px;border:none;';\n";
+        $js .= "  c.appendChild(f);\n";
+        $js .= "})();\n";
+        $js .= '</script>';
+
+        return $js;
+    }//end generateJsEmbed()
 
     /**
      * Generate CSV content from submission records.
@@ -224,6 +247,8 @@ class IntakeFormService
      * @param array $fields      Form field definitions for column headers.
      *
      * @return string CSV content.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-44
      */
     public function exportCsv(array $submissions, array $fields): string
     {
@@ -232,10 +257,10 @@ class IntakeFormService
             $headers[] = $field['label'] ?? $field['name'] ?? 'Unknown';
         }
 
-        $rows = [implode(',', array_map(fn($h) => '"' . str_replace('"', '""', $h) . '"', $headers))];
+        $rows = [implode(',', array_map($this->neutralizeCsvCell(...), $headers))];
 
         foreach ($submissions as $sub) {
-            $row = [
+            $row  = [
                 $sub['submittedAt'] ?? '',
                 $sub['status'] ?? '',
                 $sub['contactId'] ?? '',
@@ -248,9 +273,29 @@ class IntakeFormService
                 $row[] = $value;
             }
 
-            $rows[] = implode(',', array_map(fn($v) => '"' . str_replace('"', '""', (string) $v) . '"', $row));
+            $rows[] = implode(',', array_map($this->neutralizeCsvCell(...), $row));
         }//end foreach
 
         return implode("\n", $rows);
     }//end exportCsv()
+
+    /**
+     * Neutralize a CSV cell value to prevent formula injection.
+     *
+     * Prefixes cells starting with =, +, -, @, tab, or CR with a single
+     * quote so spreadsheet applications treat them as plain text.
+     *
+     * @param mixed $value The raw cell value.
+     *
+     * @return string The quoted and injection-safe cell string.
+     */
+    private function neutralizeCsvCell(mixed $value): string
+    {
+        $str = (string) $value;
+        if (preg_match('/^[=+\-@\t\r]/', $str) === 1) {
+            $str = "'".$str;
+        }
+
+        return '"'.str_replace('"', '""', $str).'"';
+    }//end neutralizeCsvCell()
 }//end class

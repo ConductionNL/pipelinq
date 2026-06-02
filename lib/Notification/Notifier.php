@@ -8,13 +8,15 @@
  * @category Notification
  * @package  OCA\Pipelinq\Notification
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-18
  */
 
 declare(strict_types=1);
@@ -72,6 +74,8 @@ class Notifier implements INotifier
      * @param string        $languageCode The language code.
      *
      * @return INotification The prepared notification.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-18
      */
     public function prepare(INotification $notification, string $languageCode): INotification
     {

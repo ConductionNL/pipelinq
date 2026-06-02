@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-62
  */
 
 declare(strict_types=1);
@@ -28,6 +30,8 @@ use Psr\Container\ContainerInterface;
 
 /**
  * Service for loading and importing Pipelinq configuration.
+ *
+ * @spec openspec/changes/migrate-kennisbank-to-xwiki-leaf/tasks.md#task-1.2
  */
 class SettingsLoadService
 {
@@ -52,9 +56,6 @@ class SettingsLoadService
         'automationLog',
         'contactmoment',
         'task',
-        'kennisartikel',
-        'kenniscategorie',
-        'kennisfeedback',
         'emailLink',
         'calendarLink',
         'relationship',
@@ -63,6 +64,13 @@ class SettingsLoadService
         'queue',
         'skill',
         'agentProfile',
+        'posTransaction',
+        'posTransactionLine',
+        'receiptTemplate',
+        'receiptPrintLog',
+        'refundReason',
+        'posRefund',
+        'posRefundLine',
     ];
 
     /**
@@ -91,6 +99,8 @@ class SettingsLoadService
      * @return array The import result.
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag) — $force is a simple re-import toggle
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-62
      */
     public function loadSettings(bool $force=false): array
     {

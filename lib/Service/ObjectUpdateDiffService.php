@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-48
  */
 
 declare(strict_types=1);
@@ -23,6 +25,8 @@ namespace OCA\Pipelinq\Service;
 
 /**
  * Service for detecting field changes between old and new object data.
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 class ObjectUpdateDiffService
 {
@@ -37,6 +41,8 @@ class ObjectUpdateDiffService
      * @param ObjectEventDispatcher $dispatcher The event dispatcher.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-48
      */
     public function dispatchAssigneeChangeIfNeeded(
         array $oldData,
@@ -70,6 +76,8 @@ class ObjectUpdateDiffService
      * @param ObjectEventDispatcher $dispatcher The event dispatcher.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-48
      */
     public function dispatchStageChangeIfNeeded(
         array $newData,
@@ -86,8 +94,8 @@ class ObjectUpdateDiffService
         }
 
         // Detect deal won or lost based on stage name.
-        $wonNames  = ['won', 'gewonnen', 'closed won'];
-        $lostNames = ['lost', 'verloren', 'closed lost'];
+        $wonNames   = ['won', 'gewonnen', 'closed won'];
+        $lostNames  = ['lost', 'verloren', 'closed lost'];
         $stageLower = strtolower($newStage);
 
         if (in_array($stageLower, $wonNames, true) === true) {
@@ -118,6 +126,30 @@ class ObjectUpdateDiffService
     }//end dispatchStageChangeIfNeeded()
 
     /**
+     * Check if the lead value has genuinely changed.
+     *
+     * Both sides are cast to float before comparison to prevent a spurious
+     * `lead_value_changed` event when JSON deserialisation returns `100` (int)
+     * for a value that was stored as `100.0` (float).
+     *
+     * @param array $newData The new object data.
+     * @param array $oldData The old object data.
+     *
+     * @return bool True when the value changed by more than epsilon.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-48
+     */
+    public function hasValueChanged(array $newData, array $oldData): bool
+    {
+        $newValue = (float) ($newData['value'] ?? 0);
+        $oldValue = (float) ($oldData['value'] ?? 0);
+
+        // Use a small epsilon to avoid float rounding noise; CRM values are
+        // currency amounts so 0.0001 is well below any meaningful delta.
+        return abs($newValue - $oldValue) >= 0.0001;
+    }//end hasValueChanged()
+
+    /**
      * Check if the status has changed and dispatch if so.
      *
      * @param array                 $newData    The new object data.
@@ -128,6 +160,8 @@ class ObjectUpdateDiffService
      * @param ObjectEventDispatcher $dispatcher The event dispatcher.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-48
      */
     public function dispatchStatusChangeIfNeeded(
         array $newData,

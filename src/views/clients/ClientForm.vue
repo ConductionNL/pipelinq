@@ -1,5 +1,5 @@
 <template>
-	<div class="client-form">
+	<div class="client-form" data-testid="client-form">
 		<div class="form-group">
 			<label for="client-name">{{ t('pipelinq', 'Name') }} *</label>
 			<NcTextField
@@ -8,6 +8,7 @@
 				:error="!!errors.name"
 				:helper-text="errors.name"
 				:maxlength="255"
+				data-testid="client-name-input"
 				@update:value="v => { form.name = v; validateField('name') }" />
 		</div>
 
@@ -17,8 +18,10 @@
 				<NcSelect
 					v-model="form.type"
 					input-id="client-type"
+					:aria-label-combobox="t('pipelinq', 'Type')"
 					:options="typeOptions"
 					:placeholder="t('pipelinq', 'Select type')"
+					data-testid="client-type-select"
 					@input="validateField('type')" />
 				<p v-if="errors.type" class="field-error">
 					{{ errors.type }}
@@ -32,6 +35,7 @@
 					:error="!!errors.email"
 					:helper-text="errors.email"
 					type="email"
+					data-testid="client-email-input"
 					@update:value="v => { form.email = v; validateField('email') }" />
 			</div>
 		</div>
@@ -44,6 +48,7 @@
 					:value="form.phone"
 					:error="!!errors.phone"
 					:helper-text="errors.phone"
+					data-testid="client-phone-input"
 					@update:value="v => { form.phone = v; validateField('phone') }" />
 			</div>
 			<div class="form-group">
@@ -53,6 +58,7 @@
 					:value="form.website"
 					:error="!!errors.website"
 					:helper-text="errors.website"
+					data-testid="client-website-input"
 					@update:value="v => { form.website = v; validateField('website') }" />
 			</div>
 		</div>
@@ -62,19 +68,26 @@
 			<NcTextField
 				id="client-address"
 				:value="form.address"
+				data-testid="client-address-input"
 				@update:value="v => form.address = v" />
 		</div>
 
 		<div class="form-group">
 			<label for="client-notes">{{ t('pipelinq', 'Notes') }}</label>
-			<textarea id="client-notes" v-model="form.notes" rows="3" />
+			<textarea id="client-notes"
+				v-model="form.notes"
+				rows="3"
+				data-testid="client-notes-input" />
 		</div>
 
 		<div class="client-form__actions">
-			<NcButton type="primary" :disabled="!isValid" @click="onSave">
+			<NcButton type="primary"
+				:disabled="!isValid"
+				data-testid="client-form-save"
+				@click="onSave">
 				{{ t('pipelinq', 'Save') }}
 			</NcButton>
-			<NcButton @click="$emit('cancel')">
+			<NcButton data-testid="client-form-cancel" @click="$emit('cancel')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 		</div>
@@ -87,6 +100,14 @@ import { NcButton, NcTextField, NcSelect } from '@nextcloud/vue'
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_REGEX = /^[+]?[\d\s\-().]{7,20}$/
 const URL_REGEX = /^https?:\/\/.+\..+/
+
+/**
+ * @spec openspec/changes/2026-03-20-client-management/tasks.md#task-3.1
+ */
+const TYPE_MAPPING = {
+	person: 'schema:Person',
+	organization: 'schema:Organization',
+}
 
 export default {
 	name: 'ClientForm',
@@ -123,6 +144,9 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-27
+		 */
 		isValid() {
 			const hasName = this.form.name.trim().length > 0
 			const hasType = !!this.form.type
@@ -133,6 +157,9 @@ export default {
 	watch: {
 		client: {
 			immediate: true,
+			/**
+			 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-26
+			 */
 			handler(val) {
 				if (val && Object.keys(val).length > 0) {
 					this.populateForm(val)
@@ -141,6 +168,9 @@ export default {
 		},
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-29
+		 */
 		populateForm(data) {
 			this.form = {
 				name: data.name || '',
@@ -154,6 +184,9 @@ export default {
 			// Clear errors when populating
 			this.errors = { name: '', type: '', email: '', phone: '', website: '' }
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
+		 */
 		validateField(field) {
 			switch (field) {
 			case 'name':
@@ -195,6 +228,9 @@ export default {
 				break
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-30
+		 */
 		validateAll() {
 			this.validateField('name')
 			this.validateField('type')
@@ -203,6 +239,10 @@ export default {
 			this.validateField('website')
 			return this.isValid
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-28
+		 * @spec openspec/changes/2026-03-20-client-management/tasks.md#task-3.1
+		 */
 		onSave() {
 			if (!this.validateAll()) {
 				return
@@ -211,12 +251,7 @@ export default {
 			if (this.client?.id) {
 				data.id = this.client.id
 			}
-			// Set Schema.org @type based on client type
-			if (data.type === 'organization') {
-				data['@type'] = 'schema:Organization'
-			} else {
-				data['@type'] = 'schema:Person'
-			}
+			data['@type'] = TYPE_MAPPING[data.type] ?? 'schema:Person'
 			this.$emit('save', data)
 		},
 	},

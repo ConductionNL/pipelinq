@@ -8,13 +8,16 @@
  * @category Controller
  * @package  OCA\Pipelinq\Controller
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-8
  */
 
 declare(strict_types=1);
@@ -25,12 +28,16 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -58,6 +65,7 @@ class SettingsController extends Controller
      * @param SettingsService    $settingsService The settings service.
      * @param IUserSession       $userSession     The user session.
      * @param IL10N              $l10n            The localization service.
+     * @param LoggerInterface    $logger          The logger.
      */
     public function __construct(
         IRequest $request,
@@ -67,6 +75,7 @@ class SettingsController extends Controller
         private SettingsService $settingsService,
         private IUserSession $userSession,
         private IL10N $l10n,
+        private LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -76,6 +85,7 @@ class SettingsController extends Controller
      *
      * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service if available, null otherwise.
      * @throws \RuntimeException If the service is not available.
+     * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-6
      */
     public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
@@ -93,6 +103,7 @@ class SettingsController extends Controller
      *
      * @return \OCA\OpenRegister\Service\ConfigurationService|null The Configuration service if available, null otherwise.
      * @throws \RuntimeException If the service is not available.
+     * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-5
      */
     public function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService
     {
@@ -110,8 +121,9 @@ class SettingsController extends Controller
      *
      * @return JSONResponse The settings response.
      *
-     * @NoAdminRequired
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
      */
+    #[NoAdminRequired]
     public function index(): JSONResponse
     {
         $user    = $this->userSession->getUser();
@@ -130,12 +142,14 @@ class SettingsController extends Controller
     /**
      * Update Pipelinq settings.
      *
-     * Admin-only: no @NoAdminRequired annotation, so Nextcloud
-     * enforces admin privileges. The index() method is intentionally
-     * marked @NoAdminRequired so non-admin users can read settings.
+     * Admin-only endpoint (requires admin settings permission). The index()
+     * method carries the read permission so non-admin users can read settings.
      *
      * @return JSONResponse The updated settings response.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function create(): JSONResponse
     {
         $data   = $this->request->getParams();
@@ -153,7 +167,10 @@ class SettingsController extends Controller
      * Re-import the Pipelinq configuration from the JSON file.
      *
      * @return JSONResponse The re-import result.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-8
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function reimport(): JSONResponse
     {
         try {
@@ -171,10 +188,11 @@ class SettingsController extends Controller
                     ]
                     );
         } catch (\Exception $e) {
+            $this->logger->error('SettingsController::reimport failed', ['exception' => $e]);
             return new JSONResponse(
                     [
                         'success' => false,
-                        'message' => $e->getMessage(),
+                        'message' => $this->l10n->t('An unexpected error occurred'),
                     ],
                     500
                     );
@@ -186,14 +204,18 @@ class SettingsController extends Controller
      *
      * @return JSONResponse The user settings response.
      *
-     * @NoAdminRequired
+     * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-7
      */
+    #[NoAdminRequired]
     public function getUserSettings(): JSONResponse
     {
-        $userId = $this->userSession->getUser()->getUID();
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
+        }
 
         return new JSONResponse(
-            data: $this->settingsService->getUserSettings(userId: $userId)
+            data: $this->settingsService->getUserSettings(userId: $user->getUID())
         );
     }//end getUserSettings()
 
@@ -202,15 +224,20 @@ class SettingsController extends Controller
      *
      * @return JSONResponse The updated user settings response.
      *
-     * @NoAdminRequired
+     * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-8
      */
+    #[NoAdminRequired]
     public function updateUserSettings(): JSONResponse
     {
-        $userId = $this->userSession->getUser()->getUID();
-        $data   = $this->request->getParams();
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
+        }
+
+        $data = $this->request->getParams();
 
         return new JSONResponse(
-            data: $this->settingsService->updateUserSettings(userId: $userId, data: $data)
+            data: $this->settingsService->updateUserSettings(userId: $user->getUID(), data: $data)
         );
     }//end updateUserSettings()
 }//end class

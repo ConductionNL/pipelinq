@@ -19,7 +19,27 @@ Knowledge base articles are stored as OpenRegister objects in the `pipelinq` reg
 - **Category (kenniscategorie)**: name, slug, parent (UUID reference for hierarchy), description, order, icon
 - **Feedback (kennisfeedback)**: article (UUID reference), rating (nuttig/niet_nuttig), comment, agent (Nextcloud UID), timestamp
 
-## ADDED Requirements
+## Capability Provided Via the XWiki Leaf
+
+> UPDATED 2026-06-01: The bespoke in-app kennisbank (the `src/views/kennisbank/`
+> and `src/components/kennisbank/` Vue components — `ArticleDetail.vue`,
+> category tree/manager, feedback widgets — and the `kennisbank.js` store) has
+> been **removed** from this app. Knowledge management is no longer a Pipelinq
+> core competency: the knowledge-base capability is now provided through the
+> **XWiki leaf integration** that OpenRegister exposes (`integration-xwiki`),
+> surfaced on CRM objects via the leaf's tab + widget + reference-property chip.
+> See the change `migrate-kennisbank-to-xwiki-leaf` (and the superseded
+> `xwiki-integration` proposal). The earlier reverse-engineered requirements
+> that named the deleted bespoke Vue components/methods (`fetchArticle`,
+> `renderedBody`, `submitRating`, `submitSuggestion`, …) have been removed from
+> this spec because the code they documented no longer exists.
+>
+> The requirements below describe the knowledge-base *capability*. Where that
+> capability is delivered, it is delivered by the XWiki leaf rather than by
+> app-local controllers/components. No bespoke kennisbank UI or store is to be
+> re-introduced in this app (hydra ADR-022: consume the OR abstraction).
+
+## Requirements
 
 ---
 
@@ -30,6 +50,7 @@ The system MUST support creating, editing, publishing, and archiving knowledge b
 **Feature tier**: V1
 
 #### Scenario: Create a new article
+@e2e exclude requires article creation form (draft feature)
 
 - GIVEN a kennisbank editor with appropriate permissions (Nextcloud group "kennisbank-editors")
 - WHEN they create an article with title "Hoe vraag ik een paspoort aan?", category "Burgerzaken", body content with formatted text and links, and visibility "Openbaar"
@@ -39,6 +60,7 @@ The system MUST support creating, editing, publishing, and archiving knowledge b
 - AND a version number of 1 MUST be assigned
 
 #### Scenario: Publish an article
+@e2e exclude requires existing draft article
 
 - GIVEN a draft article "Hoe vraag ik een paspoort aan?"
 - WHEN an editor changes the status to "Gepubliceerd"
@@ -47,6 +69,7 @@ The system MUST support creating, editing, publishing, and archiving knowledge b
 - AND if the article is marked "Openbaar", it MUST also be available for citizen-facing channels via a public API endpoint
 
 #### Scenario: Edit a published article (versioning)
+@e2e exclude requires existing published article
 
 - GIVEN a published article "Hoe vraag ik een paspoort aan?" at version 1
 - WHEN an editor modifies the body text and saves
@@ -56,6 +79,7 @@ The system MUST support creating, editing, publishing, and archiving knowledge b
 - AND the `lastUpdatedBy` field MUST record the editor's Nextcloud user UID
 
 #### Scenario: Archive an obsolete article
+@e2e exclude requires existing article
 
 - GIVEN a published article "Oud beleid afvalscheiding" that is no longer relevant
 - WHEN an editor sets the status to "Gearchiveerd"
@@ -64,6 +88,7 @@ The system MUST support creating, editing, publishing, and archiving knowledge b
 - AND links to this article from other articles MUST show a "Gearchiveerd" badge with strikethrough styling
 
 #### Scenario: Prevent duplicate article titles
+@e2e exclude server validation; covered by PHPUnit
 
 - GIVEN a published article "Hoe vraag ik een paspoort aan?" already exists
 - WHEN an editor creates a new article with the same title
@@ -79,6 +104,7 @@ The system MUST provide a rich text editor for article content that supports for
 **Feature tier**: V1
 
 #### Scenario: Edit article with rich text
+@e2e exclude requires existing article and rich text editor
 
 - GIVEN an editor is creating or editing an article
 - WHEN they use the article body editor
@@ -87,6 +113,7 @@ The system MUST provide a rich text editor for article content that supports for
 - AND the editor MUST provide a live preview alongside the editing pane
 
 #### Scenario: Insert link to another article
+@e2e exclude requires multiple existing articles
 
 - GIVEN an editor is writing article "Paspoort aanvragen"
 - WHEN the editor inserts an internal link
@@ -95,6 +122,7 @@ The system MUST provide a rich text editor for article content that supports for
 - AND if the linked article is later archived, the link MUST show a visual warning
 
 #### Scenario: Insert image
+@e2e exclude requires file upload capability
 
 - GIVEN an editor wants to add an instructional image to an article
 - WHEN the editor clicks "Afbeelding invoegen"
@@ -119,6 +147,7 @@ The system MUST provide fast, full-text search across all published articles to 
 - AND results MUST display: title, category, relevance indicator, and a text snippet (max 200 chars) with highlighted matches
 
 #### Scenario: Search with zero results
+@e2e exclude requires search and known-empty result state
 
 - GIVEN an agent searches for "kwarktaart recept"
 - WHEN no articles match the query
@@ -126,6 +155,7 @@ The system MUST provide fast, full-text search across all published articles to 
 - AND the system MUST suggest: "Probeer andere zoektermen" or show the most popular categories as browsing alternatives
 
 #### Scenario: Search during active contact
+@e2e exclude requires KCC werkplek context
 
 - GIVEN an agent is handling a phone call in the KCC werkplek
 - WHEN the agent types a search query in the kennisbank search panel
@@ -134,6 +164,7 @@ The system MUST provide fast, full-text search across all published articles to 
 - AND the search MUST use OpenRegister's full-text search capability with `_search` parameter
 
 #### Scenario: Search autocomplete
+@e2e exclude requires article data for autocomplete
 
 - GIVEN an agent starts typing "pas" in the kennisbank search
 - WHEN at least 3 characters have been entered
@@ -142,6 +173,7 @@ The system MUST provide fast, full-text search across all published articles to 
 - AND the autocomplete dropdown MUST show max 5 suggestions with category labels
 
 #### Scenario: Recently viewed articles
+@e2e exclude requires article view history
 
 - GIVEN an agent has viewed 10 articles today
 - WHEN the agent opens the kennisbank without entering a search query
@@ -166,6 +198,7 @@ The system MUST support hierarchical categories for organizing articles and enab
 - AND each category MUST show the article count in parentheses
 
 #### Scenario: Article in multiple categories
+@e2e exclude requires articles with categories
 
 - GIVEN an article "Verhuizing doorgeven" relevant to both "Burgerzaken" and "Belastingen"
 - WHEN an editor assigns both categories via the tags array
@@ -173,6 +206,7 @@ The system MUST support hierarchical categories for organizing articles and enab
 - AND removing from one category MUST NOT affect the other
 
 #### Scenario: Category management
+@e2e exclude admin feature; not separately testable without data
 
 - GIVEN an administrator manages the kennisbank taxonomy
 - WHEN they create a new category "Duurzaamheid" under root with order 5
@@ -181,6 +215,7 @@ The system MUST support hierarchical categories for organizing articles and enab
 - AND categories MUST support up to 3 levels of hierarchy (root > level1 > level2)
 
 #### Scenario: Empty category indication
+@e2e exclude requires empty category
 
 - GIVEN category "Vergunningen > Evenementen" has no published articles
 - WHEN an agent browses the category tree
@@ -197,6 +232,7 @@ The system MUST support linking articles to specific zaaktypen, so agents handli
 **Feature tier**: V1
 
 #### Scenario: Link article to zaaktype
+@e2e exclude ZGW integration; V1 feature
 
 - GIVEN an article "Procedure bouwvergunning" and zaaktype "Omgevingsvergunning bouwen"
 - WHEN an editor links the article to the zaaktype via the `zaaktypeLinks` array property
@@ -204,6 +240,7 @@ The system MUST support linking articles to specific zaaktypen, so agents handli
 - AND the link MUST be stored on the article as a zaaktype reference (UUID or identifier)
 
 #### Scenario: View related articles from a case
+@e2e exclude requires Procest integration
 
 - GIVEN an agent is viewing zaak "Bouwvergunning #2024-001" of type "Omgevingsvergunning bouwen"
 - AND 3 kennisbank articles are linked to this zaaktype
@@ -212,6 +249,7 @@ The system MUST support linking articles to specific zaaktypen, so agents handli
 - AND the articles MUST be displayed in a dropdown or side panel
 
 #### Scenario: Suggest articles during contact registration
+@e2e exclude KCC werkplek feature; draft
 
 - GIVEN an agent is registering a contactmoment with subject category "Vergunningen"
 - WHEN the agent selects the subject category
@@ -227,6 +265,7 @@ The system MUST allow agents to rate articles for usefulness and suggest improve
 **Feature tier**: V1
 
 #### Scenario: Rate article usefulness
+@e2e exclude requires existing article
 
 - GIVEN an agent reads article "Hoe vraag ik een paspoort aan?" to answer a citizen question
 - WHEN the agent clicks "Nuttig" (thumbs up) or "Niet nuttig" (thumbs down)
@@ -235,6 +274,7 @@ The system MUST allow agents to rate articles for usefulness and suggest improve
 - AND the score MUST influence search result ranking (articles with higher scores rank higher)
 
 #### Scenario: Suggest article improvement
+@e2e exclude requires existing article
 
 - GIVEN an agent finds that article "Tarieven rijbewijs" contains outdated pricing
 - WHEN the agent clicks "Suggestie" and enters "Tarieven zijn per 2024 gewijzigd, huidige prijzen kloppen niet"
@@ -243,6 +283,7 @@ The system MUST allow agents to rate articles for usefulness and suggest improve
 - AND the feedback item MUST track status: nieuw, in behandeling, verwerkt
 
 #### Scenario: View article feedback summary
+@e2e exclude requires feedback data
 
 - GIVEN article "Paspoort aanvragen" has 45 "nuttig" ratings and 5 "niet nuttig" ratings over the past month
 - WHEN an editor views the article management page
@@ -250,6 +291,7 @@ The system MUST allow agents to rate articles for usefulness and suggest improve
 - AND articles with satisfaction rate below 70% MUST be flagged for review
 
 #### Scenario: Feedback-driven review workflow
+@e2e exclude V1 workflow; not yet implemented
 
 - GIVEN 3 improvement suggestions have been submitted for article "Tarieven rijbewijs" in the past week
 - WHEN an editor views the article
@@ -266,6 +308,7 @@ The system MUST distinguish between articles visible only to agents (internal) a
 **Feature tier**: V1
 
 #### Scenario: Internal-only article
+@e2e exclude requires articles with visibility settings
 
 - GIVEN an article "Escalatieprotocol agressieve burgers" with visibility "Intern"
 - WHEN a citizen accesses the public knowledge base API
@@ -273,6 +316,7 @@ The system MUST distinguish between articles visible only to agents (internal) a
 - AND the article MUST only be visible to authenticated Nextcloud users with KCC role
 
 #### Scenario: Public article via API
+@e2e exclude API endpoint; covered by Newman
 
 - GIVEN an article "Hoe vraag ik een paspoort aan?" with visibility "Openbaar"
 - WHEN a citizen-facing application queries the public kennisbank API
@@ -280,6 +324,7 @@ The system MUST distinguish between articles visible only to agents (internal) a
 - AND internal-only fields (author UID, feedback data, zaaktype links) MUST NOT be included in the public response
 
 #### Scenario: Mixed visibility in agent view
+@e2e exclude requires articles with different visibility
 
 - GIVEN an agent searches the kennisbank and results include both public and internal articles
 - WHEN the results are displayed
@@ -295,6 +340,7 @@ The system MUST notify relevant users about article lifecycle events to ensure k
 **Feature tier**: V1
 
 #### Scenario: Review reminder for aging articles
+@e2e exclude background job; covered by PHPUnit
 
 - GIVEN a published article "Tarieven afvalstoffenheffing" was last updated 180 days ago
 - AND the configured review interval is 180 days
@@ -303,6 +349,7 @@ The system MUST notify relevant users about article lifecycle events to ensure k
 - AND the article MUST show a "Review nodig" badge in the article list
 
 #### Scenario: Notification on article archive
+@e2e exclude PHP notification; covered by PHPUnit
 
 - GIVEN article "Oud parkeerbeleid" is archived by an editor
 - AND 3 other articles link to "Oud parkeerbeleid"
@@ -311,6 +358,7 @@ The system MUST notify relevant users about article lifecycle events to ensure k
 - AND the linking articles MUST show a warning about the broken link
 
 #### Scenario: New article notification to team
+@e2e exclude PHP notification; covered by PHPUnit
 
 - GIVEN a new article "Nieuwe regels energielabel" is published in category "Vergunningen"
 - WHEN the article status changes to "Gepubliceerd"
@@ -326,6 +374,7 @@ The system MUST track article usage to help editors understand which articles ar
 **Feature tier**: Enterprise
 
 #### Scenario: Most-viewed articles report
+@e2e exclude V1 analytics; not yet implemented
 
 - GIVEN the kennisbank has been active for 3 months
 - WHEN an editor views the analytics dashboard
@@ -333,6 +382,7 @@ The system MUST track article usage to help editors understand which articles ar
 - AND articles with declining views MUST be highlighted
 
 #### Scenario: Search terms without results report
+@e2e exclude V1 analytics; not yet implemented
 
 - GIVEN agents have searched for 50 unique terms this month
 - WHEN an editor views the "Ontbrekende kennis" report
@@ -341,6 +391,7 @@ The system MUST track article usage to help editors understand which articles ar
 - AND the editor MUST be able to click a term to create a new article pre-filled with the search term as title
 
 #### Scenario: Article coverage by zaaktype
+@e2e exclude ZGW integration analytics; V1 feature
 
 - GIVEN 20 zaaktypen are configured in the system
 - WHEN an editor views the coverage report
@@ -431,3 +482,4 @@ The system MUST provide a dedicated navigation section for the kennisbank within
   - Should the kennisbank be a module within Pipelinq (recommended) or a separate Nextcloud app? Recommendation: module within Pipelinq, as it shares the register and is tightly coupled to KCC workflows.
   - How does the 500ms search performance requirement scale beyond 500 articles? Recommendation: OpenRegister search is sufficient for <1000 articles; Full Text Search app for larger deployments.
   - Should article content support embedded videos (e.g., instructional videos)? Recommendation: support YouTube/Vimeo embeds in Markdown via iframe syntax.
+

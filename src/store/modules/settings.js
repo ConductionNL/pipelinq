@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { generateUrl } from '@nextcloud/router'
 
 export const useSettingsStore = defineStore('settings', {
 	state: () => ({
@@ -30,12 +31,15 @@ export const useSettingsStore = defineStore('settings', {
 		},
 	},
 	actions: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-43
+		 */
 		async fetchSettings() {
 			this.loading = true
 			this.error = null
 
 			try {
-				const response = await fetch('/apps/pipelinq/api/settings', {
+				const response = await fetch(generateUrl('/apps/pipelinq/api/settings'), {
 					method: 'GET',
 					headers: {
 						'Content-Type': 'application/json',
@@ -64,12 +68,15 @@ export const useSettingsStore = defineStore('settings', {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-44
+		 */
 		async saveSettings(settingsData) {
 			this.loading = true
 			this.error = null
 
 			try {
-				const response = await fetch('/apps/pipelinq/api/settings', {
+				const response = await fetch(generateUrl('/apps/pipelinq/api/settings'), {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',

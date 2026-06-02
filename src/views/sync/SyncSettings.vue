@@ -85,9 +85,15 @@ export default {
 		this.loadSettings()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-sync-ui/tasks.md#task-1
+		 */
 		async loadSettings() {
 			// Load from user config
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-sync-ui/tasks.md#task-4
+		 */
 		async updateSyncEnabled() {
 			try {
 				showSuccess(
@@ -99,9 +105,15 @@ export default {
 				showError(t('pipelinq', 'Failed to update sync settings'))
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-sync-ui/tasks.md#task-2
+		 */
 		async updateAccounts() {
 			// Save selected accounts
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-sync-ui/tasks.md#task-3
+		 */
 		async updateCalendarSync() {
 			try {
 				showSuccess(
@@ -119,16 +131,28 @@ export default {
 
 <style scoped>
 .sync-settings { padding: 20px; max-width: 700px; margin: 0 auto; }
+
 .sync-settings__section { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--color-border); }
+
 .sync-settings__description { color: var(--color-text-lighter); margin-bottom: 16px; }
+
 .toggle-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; font-weight: 600; cursor: pointer; }
+
 .sync-settings__accounts { margin-top: 16px; }
+
 .account-row { padding: 6px 0; }
+
 .account-row label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+
 .sync-settings__status { margin-top: 16px; }
+
 .status-info { display: flex; gap: 24px; font-size: 0.9em; color: var(--color-text-lighter); }
+
 .sync-settings__privacy { margin-top: 16px; }
+
 .privacy-notice { font-size: 0.85em; color: var(--color-text-lighter); background: var(--color-background-dark); padding: 12px; border-radius: var(--border-radius); }
+
 .empty-hint { font-size: 0.9em; color: var(--color-text-lighter); font-style: italic; }
+
 .sync-settings__calendar-info { margin-top: 12px; font-size: 0.9em; color: var(--color-text-lighter); }
 </style>

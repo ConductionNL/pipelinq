@@ -6,7 +6,7 @@
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Controller
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -22,9 +22,14 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\Pipelinq\Controller\NotesController;
 use OCA\Pipelinq\Service\NoteEventService;
 use OCA\Pipelinq\Service\NotesService;
+use OCA\Pipelinq\Service\SettingsService;
+use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUser;
+use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 
 /**
  * Tests for NotesController.
@@ -55,14 +60,46 @@ class NotesControllerTest extends TestCase
         $request            = $this->createMock(IRequest::class);
         $this->notesService = $this->createMock(NotesService::class);
         $noteEventService   = $this->createMock(NoteEventService::class);
+        $userSession        = $this->createMock(IUserSession::class);
+        $user               = $this->createMock(IUser::class);
+        $user->method('getUID')->willReturn('test-user');
+        $userSession->method('getUser')->willReturn($user);
         $l10n               = $this->createMock(IL10N::class);
         $l10n->method('t')->willReturnArgument(0);
+        $logger             = $this->createMock(\Psr\Log\LoggerInterface::class);
+
+        // Provide a settings service that returns valid register + schema IDs
+        // so objectExists() can scope the OR lookup to the correct entity.
+        $settingsService = $this->createMock(SettingsService::class);
+        $settingsService->method('getSettings')->willReturn([
+            'register'       => 'reg-123',
+            'client_schema'  => 'schema-client',
+            'contact_schema' => 'schema-contact',
+            'lead_schema'    => 'schema-lead',
+            'request_schema' => 'schema-request',
+        ]);
+
+        // Object service mock: find() returns a non-null array for any scoped lookup,
+        // which makes objectExists() return true so subsequent controller logic runs.
+        $objectServiceMock = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $objectServiceMock->method('find')->willReturn(['id' => 'object-uuid']);
+
+        $container = $this->createMock(ContainerInterface::class);
+        $container->method('get')->willReturn($objectServiceMock);
+
+        $groupManager = $this->createMock(IGroupManager::class);
+        $groupManager->method('isAdmin')->willReturn(true);
 
         $this->controller = new NotesController(
             $request,
             $this->notesService,
             $noteEventService,
+            $userSession,
             $l10n,
+            $logger,
+            $container,
+            $groupManager,
+            $settingsService,
         );
     }//end setUp()
 

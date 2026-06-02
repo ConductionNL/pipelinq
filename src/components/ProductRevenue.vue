@@ -27,6 +27,7 @@
 
 <script>
 import { NcLoadingIcon } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from '../store/modules/object.js'
 import { formatCurrency as formatLocaleCurrency } from '../services/localeUtils.js'
 
@@ -42,6 +43,9 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-3
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
@@ -50,6 +54,9 @@ export default {
 		await this.fetchData()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-1
+		 */
 		async fetchData() {
 			this.loading = true
 			try {
@@ -60,7 +67,7 @@ export default {
 				}
 
 				// Fetch all lead products
-				const lpUrl = `/apps/openregister/api/objects/${config.leadProduct.register}/${config.leadProduct.schema}?_limit=500`
+				const lpUrl = generateUrl(`/apps/openregister/api/objects/${config.leadProduct.register}/${config.leadProduct.schema}?_limit=500`)
 				const lpResponse = await fetch(lpUrl, {
 					headers: {
 						'Content-Type': 'application/json',
@@ -123,6 +130,9 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-2
+		 */
 		formatCurrency(value) {
 			return formatLocaleCurrency(value)
 		},

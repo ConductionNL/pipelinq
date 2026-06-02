@@ -2,6 +2,7 @@
  * Queues store for Pipelinq — manages queue CRUD via OpenRegister API.
  */
 import { defineStore } from 'pinia'
+import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from './object.js'
 
 export const useQueuesStore = defineStore('queues', {
@@ -17,6 +18,9 @@ export const useQueuesStore = defineStore('queues', {
 		getQueueById: (state) => (id) => state.queues.find(q => q.id === id),
 	},
 	actions: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-37
+		 */
 		async fetchQueues() {
 			this.loading = true
 			this.error = null
@@ -32,6 +36,9 @@ export const useQueuesStore = defineStore('queues', {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-35
+		 */
 		async fetchQueue(id) {
 			this.loading = true
 			this.error = null
@@ -49,6 +56,9 @@ export const useQueuesStore = defineStore('queues', {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-38
+		 */
 		async saveQueue(data) {
 			this.loading = true
 			this.error = null
@@ -68,6 +78,9 @@ export const useQueuesStore = defineStore('queues', {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-34
+		 */
 		async deleteQueue(id) {
 			this.loading = true
 			this.error = null
@@ -87,6 +100,9 @@ export const useQueuesStore = defineStore('queues', {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-36
+		 */
 		async fetchQueueItems(queueId) {
 			this.loading = true
 			this.error = null
@@ -98,7 +114,7 @@ export const useQueuesStore = defineStore('queues', {
 					return []
 				}
 
-				const url = `/apps/openregister/api/objects/${config.register}/${config.schema}?queue=${queueId}&_limit=200`
+				const url = generateUrl(`/apps/openregister/api/objects/${config.register}/${config.schema}?queue=${queueId}&_limit=200`)
 				const response = await fetch(url, {
 					headers: {
 						'Content-Type': 'application/json',

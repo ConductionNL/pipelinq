@@ -6,7 +6,7 @@
 			</NcButton>
 			<h2>{{ queue ? queue.title : t('pipelinq', 'Queue') }}</h2>
 			<div v-if="queue" class="queue-detail__actions">
-				<NcButton type="primary" @click="pickNext" :disabled="!nextItem">
+				<NcButton type="primary" :disabled="!nextItem" @click="pickNext">
 					{{ t('pipelinq', 'Pick next') }}
 				</NcButton>
 			</div>
@@ -58,7 +58,9 @@
 								{{ getPriorityLabel(item.priority) }}
 							</span>
 						</div>
-						<div class="queue-item__title">{{ item.title }}</div>
+						<div class="queue-item__title">
+							{{ item.title }}
+						</div>
 						<div class="queue-item__meta">
 							<span v-if="item.category" class="meta-tag">{{ item.category }}</span>
 							<span class="meta-waiting">{{ getWaitingTime(item.requestedAt || item.dateCreated) }}</span>
@@ -115,31 +117,58 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-12
+		 */
 		queuesStore() {
 			return useQueuesStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-8
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-5
+		 */
 		loading() {
 			return this.queuesStore.loading
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-11
+		 */
 		queue() {
 			return this.queuesStore.currentQueue
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-4
+		 */
 		items() {
 			return this.queuesStore.queueItems
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-13
+		 */
 		sortedItems() {
 			return [...this.items].sort(prioritySortComparator)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-7
+		 */
 		nextItem() {
 			return this.sortedItems.find(item => !item.assignee) || null
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-1
+		 */
 		agentCount() {
 			return (this.queue?.assignedAgents || []).length
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-6
+	 */
 	async mounted() {
 		await this.queuesStore.fetchQueue(this.queueId)
 		await this.queuesStore.fetchQueueItems(this.queueId)
@@ -149,10 +178,16 @@ export default {
 		getPriorityColor,
 		getWaitingTime,
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-9
+		 */
 		openItem(item) {
 			this.$router.push({ name: 'RequestDetail', params: { id: item.id } })
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-14
+		 */
 		toggleSelect(id) {
 			if (this.selectedIds.has(id)) {
 				this.selectedIds.delete(id)
@@ -161,6 +196,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-2
+		 */
 		async assignToMe(item) {
 			await this.objectStore.saveObject('request', {
 				...item,
@@ -169,11 +207,17 @@ export default {
 			await this.queuesStore.fetchQueueItems(this.queueId)
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-10
+		 */
 		async pickNext() {
 			if (!this.nextItem) return
 			await this.assignToMe(this.nextItem)
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-3
+		 */
 		async bulkAssignToMe() {
 			const promises = this.sortedItems
 				.filter(item => this.selectedIds.has(item.id))

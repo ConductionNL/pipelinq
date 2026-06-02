@@ -8,13 +8,15 @@
  * @category Service
  * @package  OCA\Pipelinq\Service
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-37
  */
 
 declare(strict_types=1);
@@ -32,6 +34,7 @@ class OpenCorporatesResultMapper
      * @param array $company The raw company data.
      *
      * @return array|null The mapped result or null.
+     * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-13
      */
     public function mapResult(array $company): ?array
     {

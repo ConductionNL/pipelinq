@@ -14,16 +14,19 @@
 
 			<NcSelect v-model="form.category"
 				:options="categoryOptions"
+				:input-label="t('pipelinq', 'Category')"
 				:placeholder="t('pipelinq', 'Category')"
 				input-id="request-category" />
 
 			<NcSelect v-model="form.priority"
 				:options="priorityOptions"
+				:input-label="t('pipelinq', 'Priority')"
 				:placeholder="t('pipelinq', 'Priority')"
 				input-id="request-priority" />
 
 			<NcSelect v-model="form.channel"
 				:options="channelOptions"
+				:input-label="t('pipelinq', 'Channel')"
 				:placeholder="t('pipelinq', 'Channel')"
 				input-id="request-channel" />
 
@@ -48,7 +51,7 @@
 			<h4>{{ t('pipelinq', 'Recent requests') }}</h4>
 			<ul>
 				<li v-for="req in recentRequests" :key="req.id">
-					<a :href="'/index.php/apps/pipelinq/requests/' + req.id">
+					<a :href="generateUrl('/apps/pipelinq/requests/' + req.id)">
 						{{ req.title || t('pipelinq', 'Untitled') }}
 					</a>
 					<span class="recent-status">{{ req.status }}</span>
@@ -60,6 +63,7 @@
 
 <script>
 import { NcTextField, NcButton, NcSelect, NcNoteCard } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
 import ClientAutocomplete from '../../components/widgets/ClientAutocomplete.vue'
 import { initializeStores } from '../../store/store.js'
 
@@ -113,6 +117,9 @@ export default {
 			],
 		}
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-53
+	 */
 	async mounted() {
 		try {
 			const { objectStore } = await initializeStores()
@@ -123,9 +130,16 @@ export default {
 		}
 	},
 	methods: {
+		generateUrl,
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-54
+		 */
 		onClientSelected(client) {
 			this.selectedClient = client
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-55
+		 */
 		async onSubmit() {
 			this.submitted = true
 			if (!this.form.title) {
@@ -162,8 +176,8 @@ export default {
 						: this.form.channel
 				}
 
-				const url = '/apps/openregister/api/objects/'
-					+ typeConfig.register + '/' + typeConfig.schema
+				const url = generateUrl('/apps/openregister/api/objects/'
+					+ typeConfig.register + '/' + typeConfig.schema)
 
 				const response = await fetch(url, {
 					method: 'POST',
@@ -178,7 +192,7 @@ export default {
 				if (!response.ok) throw new Error('Failed to create request')
 				const created = await response.json()
 				const id = created.id || created.uuid
-				this.successLink = '/index.php/apps/pipelinq/requests/' + id
+				this.successLink = generateUrl('/apps/pipelinq/requests/' + id)
 				this.success = true
 			} catch (err) {
 				console.error('StartRequestWidget create error:', err)
@@ -186,6 +200,9 @@ export default {
 				this.submitting = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-56
+		 */
 		resetForm() {
 			this.form = { title: '', category: null, priority: 'normal', channel: null }
 			this.selectedClient = null
@@ -194,14 +211,17 @@ export default {
 			this.successLink = ''
 			this.fetchRecentRequests()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-52
+		 */
 		async fetchRecentRequests() {
 			if (!this.config?.request) return
 			try {
 				const typeConfig = this.config.request
 				const params = new URLSearchParams({ _limit: '3', _order: 'desc' })
-				const url = '/apps/openregister/api/objects/'
+				const url = generateUrl('/apps/openregister/api/objects/'
 					+ typeConfig.register + '/' + typeConfig.schema
-					+ '?' + params.toString()
+					+ '?' + params.toString())
 
 				const response = await fetch(url, {
 					headers: {

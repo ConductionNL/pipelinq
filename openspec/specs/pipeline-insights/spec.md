@@ -27,18 +27,21 @@ Each kanban column header MUST display the total EUR value of leads in that stag
 - AND stages with zero total value MUST show "EUR 0" (or equivalent with configured label)
 
 #### Scenario: Requests do not contribute to stage value
+@e2e exclude backend calculation; covered by PHPUnit
 - GIVEN a mixed pipeline has both leads and requests in a stage
 - WHEN the stage revenue is calculated
 - THEN only entities with a configured `totalsProperty` in `propertyMappings` MUST be summed
 - AND entities without a totalsProperty (e.g., requests) MUST contribute EUR 0
 
 #### Scenario: List view shows value column
+@e2e exclude requires pipeline with stages and lead data
 - GIVEN the pipeline is in list view mode
 - THEN the Value column MUST be present and show individual item values
 - AND leads without a value MUST show an em-dash
 - AND the value MUST be sortable by clicking the column header
 
 #### Scenario: Value includes product-calculated totals
+@e2e exclude requires lead-product data
 - GIVEN a lead with a value auto-calculated from LeadProduct line items
 - WHEN the stage revenue is computed
 - THEN the lead's current value (whether manual or product-calculated) MUST be included in the stage total
@@ -50,25 +53,30 @@ Each kanban column header MUST display the total EUR value of leads in that stag
 Leads that have not been modified for 14 or more days MUST be visually flagged as stale.
 
 #### Scenario: Stale badge on kanban card
+@e2e exclude requires stale lead data
 - GIVEN a lead's `_dateModified` is 14 or more days ago
 - WHEN the kanban board is displayed
 - THEN the lead card MUST show a "Stale" badge with an amber/orange color
 - AND the badge text MUST be "Stale"
 
 #### Scenario: Stale badge in list view
+@e2e exclude requires stale lead data
 - GIVEN a lead is stale (14+ days since modification)
 - WHEN the list view is displayed
 - THEN the lead row MUST show a "Stale" badge inline with the title
 
 #### Scenario: Non-stale items show no badge
+@e2e exclude requires data with known staleness state
 - GIVEN a lead was modified less than 14 days ago
 - THEN no stale indicator MUST be shown
 
 #### Scenario: Only leads can be stale
+@e2e exclude backend data model rule; covered by PHPUnit
 - GIVEN a request has not been modified for 14+ days
 - THEN no stale badge MUST be shown (stale detection is lead-only, enforced by `isStale()` in `pipelineUtils.js`)
 
 #### Scenario: Stale threshold configurability
+@e2e exclude admin config; covered by admin-settings spec
 - GIVEN the admin settings for Pipelinq
 - THEN the stale threshold (default: 14 days) SHOULD be configurable per pipeline
 - AND changing the threshold MUST immediately affect which leads appear as stale
@@ -80,6 +88,7 @@ Leads that have not been modified for 14 or more days MUST be visually flagged a
 Pipeline cards MUST show how many days the item has been in its current stage (approximated by days since last modification).
 
 #### Scenario: Days-in-stage badge on kanban card
+@e2e exclude requires leads with stage history
 - GIVEN an item is on the pipeline board
 - WHEN the card is displayed
 - THEN a days indicator MUST show using the format:
@@ -88,17 +97,20 @@ Pipeline cards MUST show how many days the item has been in its current stage (a
   - Modified N days ago: "Nd"
 
 #### Scenario: Aging in list view
+@e2e exclude requires leads with stage history
 - GIVEN the pipeline is in list view mode
 - THEN an "Age" column MUST be present showing days since modification
 - AND the column MUST be sortable
 
 #### Scenario: Aging color coding
+@e2e exclude requires controlled aging data
 - GIVEN an item has been in stage for 7+ days
 - THEN the aging indicator MUST use the `aging-warning` class (amber styling)
 - AND items in stage for 14+ days MUST use the `aging-alert` class (red styling)
 - AND items younger than 7 days MUST use the default neutral styling
 
 #### Scenario: Aging color coding accessibility
+@e2e exclude WCAG color check; covered by accessibility tooling
 - GIVEN aging indicators use color to convey urgency
 - THEN the indicator MUST also include text (the day count) to meet WCAG AA requirements
 - AND color alone MUST NOT be the sole means of conveying aging status
@@ -110,12 +122,14 @@ Pipeline cards MUST show how many days the item has been in its current stage (a
 Overdue items MUST be visually prominent across all views.
 
 #### Scenario: Overdue card styling on kanban board
+@e2e exclude requires overdue items
 - GIVEN a lead's `expectedCloseDate` has passed, or a request's `requestedAt` is more than 30 days ago
 - WHEN the item is displayed on the kanban board
 - THEN the card MUST have a red left border (via `pipeline-card--overdue` class)
 - AND the date MUST be shown in red (via `card-date--overdue` class)
 
 #### Scenario: Overdue highlighting in list view
+@e2e exclude requires overdue items
 - GIVEN an item is overdue in list view
 - THEN the row MUST have a subtle red background tint (via `list-row--overdue` class)
 - AND the due date cell MUST be shown in red text (via `overdue-date` class)
@@ -127,11 +141,13 @@ Overdue items MUST be visually prominent across all views.
 - AND the overdue count MUST be shown in the dashboard KPI widget
 
 #### Scenario: Closed/terminal items are not overdue
+@e2e exclude backend logic; covered by PHPUnit
 - GIVEN a lead is in a closed pipeline stage (where `stage.isClosed === true`)
 - THEN the item MUST NOT be shown as overdue regardless of dates
 - AND requests with terminal status (completed, rejected, converted) MUST NOT be shown as overdue
 
 #### Scenario: Overdue request calculation
+@e2e exclude backend date calculation; covered by PHPUnit
 - GIVEN a request with `requestedAt` field
 - WHEN the current date is more than 30 days after `requestedAt`
 - AND the request status is "new" or "in_progress"
@@ -144,6 +160,7 @@ Overdue items MUST be visually prominent across all views.
 The system MUST provide stage-by-stage conversion rate metrics to identify pipeline bottlenecks.
 
 #### Scenario: Stage conversion funnel
+@e2e exclude V1 analytics; not yet implemented
 - GIVEN a pipeline with stages: Prospect -> Qualified -> Proposal -> Won
 - WHEN the user views the pipeline analytics
 - THEN a conversion funnel MUST display:
@@ -153,12 +170,14 @@ The system MUST provide stage-by-stage conversion rate metrics to identify pipel
 - AND the funnel MUST be filterable by date range (this month, this quarter, this year, custom)
 
 #### Scenario: Stage average duration
+@e2e exclude V1 analytics; not yet implemented
 - GIVEN leads moving through pipeline stages
 - WHEN the analytics view calculates stage metrics
 - THEN each stage MUST show the average number of days leads spend in that stage
 - AND stages where the average exceeds the aging warning threshold (7 days) MUST be highlighted
 
 #### Scenario: Win/loss analysis
+@e2e exclude V1 analytics; not yet implemented
 - GIVEN a pipeline with Won and Lost closed stages
 - WHEN the analytics view is loaded
 - THEN the system MUST display:
@@ -169,6 +188,7 @@ The system MUST provide stage-by-stage conversion rate metrics to identify pipel
 - AND the metrics MUST be comparable across time periods (this month vs last month)
 
 #### Scenario: Bottleneck detection
+@e2e exclude V1 analytics; not yet implemented
 - GIVEN stage conversion rates are calculated
 - WHEN a stage has a conversion rate below 30%
 - THEN the system SHOULD flag this stage as a potential bottleneck
@@ -188,6 +208,7 @@ The system MUST provide stage-by-stage conversion rate metrics to identify pipel
 The system MUST provide weighted revenue forecasting based on pipeline stage probabilities.
 
 #### Scenario: Weighted pipeline value
+@e2e exclude V1 analytics; not yet implemented
 - GIVEN a pipeline where stages have probability values:
   - Prospect: 10%, Qualified: 25%, Proposal: 50%, Negotiation: 75%, Won: 100%
 - WHEN the forecast widget is displayed
@@ -196,6 +217,7 @@ The system MUST provide weighted revenue forecasting based on pipeline stage pro
 - AND the forecast MUST show both the unweighted total and the weighted (expected) total
 
 #### Scenario: Monthly revenue projection
+@e2e exclude Enterprise forecasting; not yet implemented
 - GIVEN leads with `expectedCloseDate` values distributed across future months
 - WHEN the forecast view is loaded
 - THEN the system MUST display projected revenue per month
@@ -203,12 +225,14 @@ The system MUST provide weighted revenue forecasting based on pipeline stage pro
 - AND past months MUST show actual closed-won revenue for comparison
 
 #### Scenario: Forecast accuracy tracking
+@e2e exclude Enterprise forecasting; not yet implemented
 - GIVEN previous months' forecasts and actual results
 - WHEN the analytics view is loaded
 - THEN the system SHOULD display forecast accuracy: (actual won / forecasted) * 100%
 - AND trends in accuracy SHOULD be visible over time
 
 #### Scenario: Pipeline stage probability configuration
+@e2e exclude admin config; covered by admin-settings spec
 - GIVEN the pipeline settings sidebar
 - WHEN the admin configures a pipeline's stages
 - THEN each stage MUST have an optional probability field (0-100%)
@@ -227,24 +251,28 @@ The system MUST provide dashboard widgets for pipeline performance metrics.
 - AND clicking it MUST navigate to the Pipeline view
 
 #### Scenario: Won deals trend widget
+@e2e exclude V1 widget; not yet implemented
 - GIVEN the dashboard
 - THEN a "Won This Month" widget SHOULD be available
 - AND it MUST show the count and total value of leads moved to Won stage this month
 - AND it SHOULD include a trend indicator (up/down vs previous month)
 
 #### Scenario: Forecast widget
+@e2e exclude Enterprise widget; not yet implemented
 - GIVEN weighted pipeline forecasting is configured
 - THEN a "Revenue Forecast" widget SHOULD be available on the dashboard
 - AND it MUST show the weighted expected revenue for the current quarter
 - AND clicking it MUST navigate to the pipeline analytics view
 
 #### Scenario: Sales velocity widget
+@e2e exclude V1 widget; not yet implemented
 - GIVEN sufficient historical data (at least 10 won deals)
 - THEN a "Sales Velocity" widget SHOULD be available
 - AND it MUST calculate: (number of deals * average deal value * win rate) / average sales cycle length
 - AND the metric MUST be expressed as EUR/day
 
 #### Scenario: Top performers widget
+@e2e exclude Enterprise widget; not yet implemented
 - GIVEN leads are assigned to multiple users
 - THEN a "Top Performers" widget SHOULD be available showing:
   - User name
@@ -259,6 +287,7 @@ The system MUST provide dashboard widgets for pipeline performance metrics.
 The pipeline view MUST provide access to a chronological activity feed showing all pipeline-related actions.
 
 #### Scenario: Recent pipeline activity
+@e2e exclude requires activity data
 - GIVEN the pipeline board view
 - WHEN the user opens the pipeline sidebar or activity tab
 - THEN a chronological list of recent pipeline activities MUST be displayed:
@@ -269,12 +298,14 @@ The pipeline view MUST provide access to a chronological activity feed showing a
 - AND each activity MUST show: timestamp, user, action description
 
 #### Scenario: Stage change history for a lead
+@e2e exclude requires lead with stage history
 - GIVEN a lead has moved through stages: Prospect -> Qualified -> Proposal -> Qualified (moved back)
 - WHEN the user views the lead's activity in the sidebar
 - THEN all stage transitions MUST be visible in chronological order
 - AND moving backwards MUST be clearly indicated
 
 #### Scenario: Activity filtering by entity type
+@e2e exclude requires activity data
 - GIVEN the pipeline shows both leads and requests
 - WHEN the user views the activity feed
 - THEN the user MUST be able to filter activities by entity type (lead, request, all)
@@ -286,6 +317,7 @@ The pipeline view MUST provide access to a chronological activity feed showing a
 The system MUST support exporting pipeline data for external reporting.
 
 #### Scenario: Export pipeline data to CSV
+@e2e exclude V1 export; covered by Newman
 - GIVEN the pipeline list view with sorted/filtered data
 - WHEN the user clicks "Exporteren"
 - THEN a CSV file MUST be generated containing all visible columns
@@ -293,6 +325,7 @@ The system MUST support exporting pipeline data for external reporting.
 - AND the file MUST use UTF-8 encoding with BOM for Excel compatibility
 
 #### Scenario: Export analytics report
+@e2e exclude V1 export; not yet implemented
 - GIVEN the pipeline analytics view with conversion metrics
 - WHEN the user clicks "Rapport exporteren"
 - THEN a PDF or CSV report MUST be generated containing:
@@ -302,6 +335,7 @@ The system MUST support exporting pipeline data for external reporting.
   - Date range of the report
 
 #### Scenario: Scheduled report delivery
+@e2e exclude Enterprise feature; not yet implemented
 - GIVEN the admin settings
 - WHEN the admin configures a weekly pipeline report
 - THEN the system SHOULD generate the report automatically
@@ -314,6 +348,7 @@ The system MUST support exporting pipeline data for external reporting.
 The system MUST support comparing performance across multiple pipelines.
 
 #### Scenario: Multi-pipeline overview
+@e2e exclude V1 analytics; not yet implemented
 - GIVEN the organization has 3 pipelines: "Gemeenten", "Provincies", "Waterschappen"
 - WHEN the user views the analytics overview
 - THEN a summary table MUST show per pipeline:
@@ -322,6 +357,7 @@ The system MUST support comparing performance across multiple pipelines.
   - Average cycle time
 
 #### Scenario: Pipeline switching in analytics
+@e2e exclude V1 analytics; not yet implemented
 - GIVEN the analytics view
 - WHEN the user selects a different pipeline from the dropdown
 - THEN all analytics metrics MUST update to reflect the selected pipeline
@@ -377,3 +413,46 @@ The system MUST support comparing performance across multiple pipelines.
 - **Resolved:** Closed items should be excluded from overdue on kanban (gap identified).
 - **Open question:** Should aging track actual stage entry date (requires new field) or continue using `_dateModified`?
 - **Open question:** Should conversion analytics use OpenRegister audit logs or a separate events table for historical tracking?
+## Requirements
+### Requirement: Dashboard and pipeline aggregation — documented operations
+
+The dashboard page render and pipeline stage aggregation implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `page`, `getSalesPipelineData`, `getServiceRequestsPipelineData`). Each listed method realises an observable part of dashboard page render and pipeline stage aggregation and MUST behave as implemented in the current codebase.
+
+**Feature tier**: V1
+
+#### Scenario: Documented operations are available
+
+- GIVEN the backend service/controller is loaded
+- WHEN a caller invokes one of the documented operations for dashboard page render and pipeline stage aggregation
+- THEN the operation MUST execute and return a result consistent with the current implementation
+
+---
+
+### Requirement: Dashboard and pipeline aggregation — results derived from current CRM state
+
+Operations for dashboard page render and pipeline stage aggregation MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
+
+**Feature tier**: V1
+
+#### Scenario: Results reflect live state
+
+- GIVEN CRM data backing dashboard page render and pipeline stage aggregation
+- WHEN a documented operation runs
+- THEN its output MUST be derived from that data
+- AND it MUST change when the underlying data changes
+
+---
+
+### Requirement: Dashboard and pipeline aggregation — defensive handling of absent or invalid input
+
+Operations for dashboard page render and pipeline stage aggregation MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
+
+**Feature tier**: V1
+
+#### Scenario: Missing input does not crash the flow
+
+- GIVEN an operation for dashboard page render and pipeline stage aggregation is called with absent or invalid input
+- WHEN it executes
+- THEN it MUST return a safe default or a validation result
+- AND it MUST NOT raise an unhandled exception
+

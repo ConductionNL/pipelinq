@@ -1,6 +1,9 @@
 import { useObjectStore } from './modules/object.js'
 import { useSettingsStore } from './modules/settings.js'
 
+/**
+ * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-60
+ */
 export async function initializeStores() {
 	const settingsStore = useSettingsStore()
 	const objectStore = useObjectStore()
@@ -56,15 +59,6 @@ export async function initializeStores() {
 		if (config.register && config.agentProfile_schema) {
 			objectStore.registerObjectType('agentProfile', config.agentProfile_schema, config.register)
 		}
-		if (config.register && config.kennisartikel_schema) {
-			objectStore.registerObjectType('kennisartikel', config.kennisartikel_schema, config.register)
-		}
-		if (config.register && config.kenniscategorie_schema) {
-			objectStore.registerObjectType('kenniscategorie', config.kenniscategorie_schema, config.register)
-		}
-		if (config.register && config.kennisfeedback_schema) {
-			objectStore.registerObjectType('kennisfeedback', config.kennisfeedback_schema, config.register)
-		}
 		if (config.register && config.contactmoment_schema) {
 			objectStore.registerObjectType('contactmoment', config.contactmoment_schema, config.register)
 		}
@@ -76,6 +70,27 @@ export async function initializeStores() {
 		}
 		if (config.register && config.complaint_schema) {
 			objectStore.registerObjectType('complaint', config.complaint_schema, config.register)
+		}
+		if (config.register && config.posTransaction_schema) {
+			objectStore.registerObjectType('posTransaction', config.posTransaction_schema, config.register)
+		}
+		if (config.register && config.posTransactionLine_schema) {
+			objectStore.registerObjectType('posTransactionLine', config.posTransactionLine_schema, config.register)
+		}
+		if (config.register && config.receiptTemplate_schema) {
+			objectStore.registerObjectType('receiptTemplate', config.receiptTemplate_schema, config.register)
+		}
+		if (config.register && config.receiptPrintLog_schema) {
+			objectStore.registerObjectType('receiptPrintLog', config.receiptPrintLog_schema, config.register)
+		}
+		if (config.register && config.refundReason_schema) {
+			objectStore.registerObjectType('refundReason', config.refundReason_schema, config.register)
+		}
+		if (config.register && config.posRefund_schema) {
+			objectStore.registerObjectType('posRefund', config.posRefund_schema, config.register)
+		}
+		if (config.register && config.posRefundLine_schema) {
+			objectStore.registerObjectType('posRefundLine', config.posRefundLine_schema, config.register)
 		}
 	}
 

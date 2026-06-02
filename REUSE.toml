@@ -1,0 +1,16 @@
+version = 1
+
+[[annotations]]
+path = "**/*.php"
+SPDX-FileCopyrightText = "2026 Conduction B.V. <info@conduction.nl>"
+SPDX-License-Identifier = "EUPL-1.2"
+
+[[annotations]]
+path = ["**/*.vue", "**/*.js", "**/*.ts", "**/*.css", "**/*.scss", "**/*.sh"]
+SPDX-FileCopyrightText = "2026 Conduction B.V. <info@conduction.nl>"
+SPDX-License-Identifier = "EUPL-1.2"
+
+[[annotations]]
+path = ["**/*.json", "**/*.yml", "**/*.yaml", "**/*.xml", "**/*.md", "img/**", "l10n/**", "composer.lock", "package-lock.json"]
+SPDX-FileCopyrightText = "2026 Conduction B.V. <info@conduction.nl>"
+SPDX-License-Identifier = "CC0-1.0"

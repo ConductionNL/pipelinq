@@ -15,6 +15,10 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-50
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-51
  */
 
 declare(strict_types=1);
@@ -39,9 +43,9 @@ class ReportingService
      */
     private const DEFAULT_SLA_TARGETS = [
         'telefoon' => ['wait_seconds' => 30, 'target_percent' => 90, 'handle_minutes' => 5],
-        'email' => ['response_hours' => 8, 'target_percent' => 90, 'resolution_hours' => 24],
-        'balie' => ['wait_minutes' => 5, 'target_percent' => 90, 'handle_minutes' => 10],
-        'chat' => ['response_seconds' => 30, 'target_percent' => 90, 'handle_minutes' => 10],
+        'email'    => ['response_hours' => 8, 'target_percent' => 90, 'resolution_hours' => 24],
+        'balie'    => ['wait_minutes' => 5, 'target_percent' => 90, 'handle_minutes' => 10],
+        'chat'     => ['response_seconds' => 30, 'target_percent' => 90, 'handle_minutes' => 10],
     ];
 
     /**
@@ -63,6 +67,8 @@ class ReportingService
      * @param int $resolvedContacts Contacts resolved without backoffice routing.
      *
      * @return float FCR as a percentage (0-100).
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-51
      */
     public function calculateFcr(int $totalContacts, int $resolvedContacts): float
     {
@@ -76,33 +82,37 @@ class ReportingService
     /**
      * Calculate SLA compliance for a channel.
      *
-     * @param string $channel        The channel type.
-     * @param int    $totalContacts  Total contacts for the channel.
-     * @param int    $withinSla      Contacts handled within SLA target.
+     * @param string $channel       The channel type.
+     * @param int    $totalContacts Total contacts for the channel.
+     * @param int    $withinSla     Contacts handled within SLA target.
      *
      * @return array{compliance: float, target: float, status: string} SLA data.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
      */
     public function calculateSlaCompliance(
         string $channel,
         int $totalContacts,
         int $withinSla,
     ): array {
-        $target = $this->getSlaTarget($channel);
-        $compliance = $totalContacts > 0
-            ? round(($withinSla / $totalContacts) * 100, 1)
-            : 0.0;
+        $target = $this->getSlaTarget(channel: $channel);
+        if ($totalContacts > 0) {
+            $compliance = round(($withinSla / $totalContacts) * 100, 1);
+        } else {
+            $compliance = 0.0;
+        }
 
         $status = 'green';
         if ($compliance < $target - 5) {
             $status = 'red';
-        } elseif ($compliance < $target) {
+        } else if ($compliance < $target) {
             $status = 'orange';
         }
 
         return [
             'compliance' => $compliance,
-            'target' => $target,
-            'status' => $status,
+            'target'     => $target,
+            'status'     => $status,
         ];
     }//end calculateSlaCompliance()
 
@@ -112,10 +122,12 @@ class ReportingService
      * @param string $channel The channel type.
      *
      * @return float The target percentage.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
      */
     public function getSlaTarget(string $channel): float
     {
-        $key = 'sla_' . $channel . '_target_percent';
+        $key     = 'sla_'.$channel.'_target_percent';
         $default = self::DEFAULT_SLA_TARGETS[$channel]['target_percent'] ?? 90;
 
         return (float) $this->appConfig->getValueString(
@@ -129,6 +141,8 @@ class ReportingService
      * Get all SLA configuration.
      *
      * @return array<string, array<string, mixed>> SLA targets per channel.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
      */
     public function getAllSlaTargets(): array
     {
@@ -137,7 +151,7 @@ class ReportingService
         foreach (self::DEFAULT_SLA_TARGETS as $channel => $defaults) {
             $targets[$channel] = [];
             foreach ($defaults as $metric => $default) {
-                $key = 'sla_' . $channel . '_' . $metric;
+                $key = 'sla_'.$channel.'_'.$metric;
                 $targets[$channel][$metric] = $this->appConfig->getValueString(
                     'pipelinq',
                     $key,
@@ -152,16 +166,33 @@ class ReportingService
     /**
      * Update SLA target for a channel.
      *
+     * Validates that channel and metric are in the DEFAULT_SLA_TARGETS allowlist
+     * before constructing the appconfig key, preventing arbitrary key injection
+     * into oc_appconfig (issue #606).
+     *
      * @param string $channel The channel type.
      * @param string $metric  The metric name.
      * @param string $value   The target value.
      *
-     * @return void
+     * @return bool False when channel or metric is not in the allowlist.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
      */
-    public function setSlaTarget(string $channel, string $metric, string $value): void
+    public function setSlaTarget(string $channel, string $metric, string $value): bool
     {
-        $key = 'sla_' . $channel . '_' . $metric;
+        // Validate channel against the allowlist.
+        if (isset(self::DEFAULT_SLA_TARGETS[$channel]) === false) {
+            return false;
+        }
+
+        // Validate metric against the allowed metrics for this channel.
+        if (array_key_exists($metric, self::DEFAULT_SLA_TARGETS[$channel]) === false) {
+            return false;
+        }
+
+        $key = 'sla_'.$channel.'_'.$metric;
         $this->appConfig->setValueString('pipelinq', $key, $value);
+        return true;
     }//end setSlaTarget()
 
     /**
@@ -173,21 +204,43 @@ class ReportingService
      * @param array<array<string>> $rows    The data rows.
      *
      * @return string The CSV content.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-50
      */
     public function generateCsv(array $headers, array $rows): string
     {
-        $bom = "\xEF\xBB\xBF";
-        $output = $bom . implode(';', $headers) . "\n";
+        $bom    = "\xEF\xBB\xBF";
+        $output = $bom.implode(';', array_map($this->neutralizeCsvCell(...), $headers))."\n";
 
         foreach ($rows as $row) {
-            $output .= implode(';', array_map(
-                static fn($v) => '"' . str_replace('"', '""', (string) $v) . '"',
-                $row,
-            )) . "\n";
+            $output .= implode(
+                    ';',
+                    array_map($this->neutralizeCsvCell(...), $row)
+                    )."\n";
         }
 
         return $output;
     }//end generateCsv()
+
+    /**
+     * Neutralize a CSV cell value to prevent formula injection.
+     *
+     * Prefixes cells starting with =, +, -, @, tab, or CR with a single
+     * quote so spreadsheet applications treat them as plain text.
+     *
+     * @param mixed $value The raw cell value.
+     *
+     * @return string The quoted and injection-safe cell string.
+     */
+    private function neutralizeCsvCell(mixed $value): string
+    {
+        $str = (string) $value;
+        if (preg_match('/^[=+\-@\t\r]/', $str) === 1) {
+            $str = "'".$str;
+        }
+
+        return '"'.str_replace('"', '""', $str).'"';
+    }//end neutralizeCsvCell()
 
     /**
      * Calculate average handling time from durations.
@@ -195,6 +248,8 @@ class ReportingService
      * @param array<string> $durations ISO 8601 duration strings.
      *
      * @return string Formatted average duration (MM:SS).
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-51
      */
     public function calculateAverageHandlingTime(array $durations): string
     {
@@ -205,7 +260,7 @@ class ReportingService
         $totalSeconds = 0;
         foreach ($durations as $duration) {
             try {
-                $interval = new \DateInterval($duration);
+                $interval      = new \DateInterval($duration);
                 $totalSeconds += ($interval->i * 60) + $interval->s;
             } catch (\Exception $e) {
                 // Skip invalid durations.
@@ -214,9 +269,9 @@ class ReportingService
         }
 
         $avgSeconds = (int) ($totalSeconds / count($durations));
-        $minutes = (int) ($avgSeconds / 60);
-        $seconds = $avgSeconds % 60;
+        $minutes    = (int) ($avgSeconds / 60);
+        $seconds    = $avgSeconds % 60;
 
-        return $minutes . ':' . str_pad((string) $seconds, 2, '0', STR_PAD_LEFT);
+        return $minutes.':'.str_pad((string) $seconds, 2, '0', STR_PAD_LEFT);
     }//end calculateAverageHandlingTime()
 }//end class

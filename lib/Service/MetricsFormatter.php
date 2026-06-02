@@ -8,13 +8,18 @@
  * @category Service
  * @package  OCA\Pipelinq\Service
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-54
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-55
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-56
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-57
  */
 
 declare(strict_types=1);
@@ -33,6 +38,8 @@ class MetricsFormatter
      * @param string $phpVersion The PHP version.
      *
      * @return array The formatted metric lines.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-55
      */
     public function formatAppInfo(string $version, string $phpVersion): array
     {
@@ -54,6 +61,8 @@ class MetricsFormatter
      * @param array $leadCounts The lead count data rows.
      *
      * @return array The formatted metric lines.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-54
      */
     public function formatLeadCounts(array $leadCounts): array
     {
@@ -79,6 +88,8 @@ class MetricsFormatter
      * @param array $valueCounts The lead value data rows.
      *
      * @return array The formatted metric lines.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-56
      */
     public function formatLeadValues(array $valueCounts): array
     {
@@ -105,6 +116,8 @@ class MetricsFormatter
      * @param int    $value The metric value.
      *
      * @return array The formatted metric lines.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-57
      */
     public function formatGauge(string $name, string $help, int $value): array
     {
@@ -122,6 +135,8 @@ class MetricsFormatter
      * @param array $requestCounts The request count data rows.
      *
      * @return array The formatted metric lines.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-54
      */
     public function formatRequestCounts(array $requestCounts): array
     {

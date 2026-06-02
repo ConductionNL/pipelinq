@@ -6,7 +6,7 @@
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Controller
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -23,7 +23,10 @@ use OCA\Pipelinq\Controller\ContactSyncController;
 use OCA\Pipelinq\Service\ContactSyncService;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUser;
+use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 /**
  * Tests for ContactSyncController.
@@ -60,13 +63,20 @@ class ContactSyncControllerTest extends TestCase
     {
         $this->request     = $this->createMock(IRequest::class);
         $this->syncService = $this->createMock(ContactSyncService::class);
+        $userSession       = $this->createMock(IUserSession::class);
+        $user              = $this->createMock(IUser::class);
+        $user->method('getUID')->willReturn('test-user');
+        $userSession->method('getUser')->willReturn($user);
         $l10n              = $this->createMock(IL10N::class);
         $l10n->method('t')->willReturnArgument(0);
+        $logger            = $this->createMock(LoggerInterface::class);
 
         $this->controller = new ContactSyncController(
             $this->request,
             $this->syncService,
+            $userSession,
             $l10n,
+            $logger,
         );
     }//end setUp()
 

@@ -28,7 +28,7 @@
 		object-type="pipelinq_lead"
 		:object-id="leadId"
 		:sidebar-props="sidebarProps">
-		<template #header-actions>
+		<template #actions>
 			<NcButton type="primary" @click="editing = true">
 				{{ t('pipelinq', 'Edit') }}
 			</NcButton>
@@ -132,6 +132,11 @@
 				@sync-value="syncLeadValue" />
 		</CnDetailCard>
 
+		<!-- Activity timeline -->
+		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Activity')">
+			<ActivityTimeline :entity-type="'lead'" :entity-id="leadId" />
+		</CnDetailCard>
+
 		<!-- Delete dialog -->
 		<NcDialog
 			v-if="showDeleteDialog"
@@ -157,6 +162,7 @@ import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import LeadForm from './LeadForm.vue'
 import LeadProducts from '../../components/LeadProducts.vue'
 import LeadContactRoles from '../../components/LeadContactRoles.vue'
+import ActivityTimeline from '../../components/ActivityTimeline.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -169,6 +175,7 @@ export default {
 		LeadForm,
 		LeadProducts,
 		LeadContactRoles,
+		ActivityTimeline,
 	},
 	props: {
 		leadId: {
@@ -183,37 +190,59 @@ export default {
 			clientData: null,
 			contactData: null,
 			pipelineData: null,
+			valueOverridden: false,
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-32
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
 		isNew() {
 			return !this.leadId || this.leadId === 'new'
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-30
+		 */
 		loading() {
 			return this.objectStore.loading.lead || false
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-29
+		 */
 		leadData() {
 			if (this.isNew) return {}
 			return this.objectStore.getObject('lead', this.leadId) || {}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-38
+		 */
 		sortedStages() {
 			if (!this.pipelineData?.stages) return []
 			return [...this.pipelineData.stages].sort((a, b) => a.order - b.order)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-26
+		 */
 		currentStageOrder() {
 			if (!this.leadData.stage || !this.sortedStages.length) return -1
 			const stage = this.sortedStages.find(s => s.name === this.leadData.stage)
 			return stage ? stage.order : -1
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-36
+		 */
 		priorityClass() {
 			const p = this.leadData.priority
 			if (p === 'urgent') return 'priority-urgent'
 			if (p === 'high') return 'priority-high'
 			return ''
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-37
+		 */
 		sidebarProps() {
 			const config = this.objectStore.objectTypeRegistry.lead || {}
 			return {
@@ -224,13 +253,20 @@ export default {
 			}
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-31
+	 */
 	async mounted() {
 		if (!this.isNew) {
 			await this.objectStore.fetchObject('lead', this.leadId)
 			await this.fetchRelated()
+			await this._computeValueOverride()
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-27
+		 */
 		async fetchRelated() {
 			// Fetch client
 			if (this.leadData.client) {
@@ -250,16 +286,25 @@ export default {
 				this.pipelineData = pipeline || null
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-39
+		 */
 		stageClass(stage) {
 			if (this.currentStageOrder < 0) return ''
 			if (stage.order < this.currentStageOrder) return 'stage-completed'
 			if (stage.order === this.currentStageOrder) return 'stage-current'
 			return 'stage-future'
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-28
+		 */
 		formatValue(value) {
 			if (value === null || value === undefined) return '-'
 			return 'EUR ' + Number(value).toLocaleString('nl-NL')
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-34
+		 */
 		async onFormSave(formData) {
 			const result = await this.objectStore.saveObject('lead', formData)
 			if (result) {
@@ -268,6 +313,7 @@ export default {
 				} else {
 					await this.objectStore.fetchObject('lead', this.leadId)
 					await this.fetchRelated()
+					await this._computeValueOverride()
 					this.editing = false
 				}
 			} else {
@@ -275,6 +321,9 @@ export default {
 				showError(error?.message || t('pipelinq', 'Failed to save lead. Please try again.'))
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-33
+		 */
 		onFormCancel() {
 			if (this.isNew) {
 				this.$router.push({ name: 'Leads' })
@@ -282,6 +331,9 @@ export default {
 				this.editing = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-25
+		 */
 		async confirmDelete() {
 			this.showDeleteDialog = false
 			const success = await this.objectStore.deleteObject('lead', this.leadId)
@@ -292,21 +344,36 @@ export default {
 				showError(error?.message || t('pipelinq', 'Failed to delete lead.'))
 			}
 		},
+		/**
+		 * @spec openspec/changes/2026-03-20-lead-product-link/tasks.md#task-3.1
+		 */
+		async _computeValueOverride() {
+			const items = await this.objectStore.fetchCollection('leadProduct', {
+				_limit: 100,
+				lead: this.leadId,
+			})
+			const computedTotal = (items || []).reduce((sum, lp) => sum + (Number(lp.total) || 0), 0)
+			const value = Number(this.leadData.value) || 0
+			this.valueOverridden = value !== 0 && Math.abs(value - computedTotal) > 0.001
+		},
+		/**
+		 * @spec openspec/changes/2026-03-20-lead-product-link/tasks.md#task-3.2
+		 */
 		async onProductValueChanged(newTotal) {
-			// Auto-recalculate lead value from product line items (per spec).
-			// Only skip if the user has explicitly set a manual override.
-			const currentValue = Number(this.leadData.value) || 0
-			const hasLineItems = newTotal > 0
-			if (hasLineItems) {
+			if (!this.valueOverridden) {
 				await this.syncLeadValue(newTotal)
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-40
+		 */
 		async syncLeadValue(value) {
 			await this.objectStore.saveObject('lead', {
 				id: this.leadId,
 				value,
 			})
 			await this.objectStore.fetchObject('lead', this.leadId)
+			this.valueOverridden = false
 		},
 	},
 }

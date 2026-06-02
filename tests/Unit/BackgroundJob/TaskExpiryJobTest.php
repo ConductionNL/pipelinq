@@ -6,7 +6,7 @@
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\BackgroundJob
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -33,18 +33,6 @@ use Psr\Log\LoggerInterface;
  */
 class TaskExpiryJobTest extends TestCase
 {
-    /** @var ITimeFactory&MockObject */
-    private ITimeFactory $timeFactory;
-
-    /** @var IAppConfig&MockObject */
-    private IAppConfig $appConfig;
-
-    /** @var NotificationService&MockObject */
-    private NotificationService $notificationService;
-
-    /** @var LoggerInterface&MockObject */
-    private LoggerInterface $logger;
-
     /**
      * The time factory mock.
      *

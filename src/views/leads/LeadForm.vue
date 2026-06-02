@@ -42,6 +42,7 @@
 				<label>{{ t('pipelinq', 'Source') }}</label>
 				<NcSelect v-model="form.source"
 					:options="sourceOptions"
+					:aria-label-combobox="t('pipelinq', 'Source')"
 					:clearable="true"
 					:placeholder="t('pipelinq', 'Select source')" />
 			</div>
@@ -49,6 +50,7 @@
 				<label>{{ t('pipelinq', 'Priority') }}</label>
 				<NcSelect v-model="form.priority"
 					:options="priorityOptions"
+					:aria-label-combobox="t('pipelinq', 'Priority')"
 					:clearable="false"
 					:placeholder="t('pipelinq', 'Select priority')" />
 			</div>
@@ -67,6 +69,7 @@
 			<label>{{ t('pipelinq', 'Client') }}</label>
 			<NcSelect v-model="form.client"
 				:options="clientOptions"
+				:aria-label-combobox="t('pipelinq', 'Client')"
 				:clearable="true"
 				label="label"
 				:reduce="o => o.value"
@@ -79,6 +82,7 @@
 				<label>{{ t('pipelinq', 'Pipeline') }}</label>
 				<NcSelect v-model="form.pipeline"
 					:options="pipelineOptions"
+					:aria-label-combobox="t('pipelinq', 'Pipeline')"
 					:clearable="true"
 					label="label"
 					:reduce="o => o.value"
@@ -89,6 +93,7 @@
 				<label>{{ t('pipelinq', 'Stage') }}</label>
 				<NcSelect v-model="form.stage"
 					:options="stageOptions"
+					:aria-label-combobox="t('pipelinq', 'Stage')"
 					:clearable="true"
 					:disabled="!form.pipeline"
 					:placeholder="form.pipeline ? t('pipelinq', 'Select stage') : t('pipelinq', 'Select pipeline first')" />
@@ -143,51 +148,84 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-48
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-47
+		 */
 		leadSourcesStore() {
 			return useLeadSourcesStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-54
+		 */
 		sourceOptions() {
 			return this.leadSourcesStore.sourceNames
 		},
 		isEdit() {
 			return !!this.lead?.id
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-52
+		 */
 		pipelines() {
 			return this.objectStore.collections.pipeline || []
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-46
+		 */
 		leadPipelines() {
 			return this.pipelines.filter(p =>
 				p.entityType === 'lead' || p.entityType === 'both',
 			)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-51
+		 */
 		pipelineOptions() {
 			return this.leadPipelines.map(p => ({
 				value: p.id,
 				label: p.title,
 			}))
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-53
+		 */
 		selectedPipeline() {
 			if (!this.form.pipeline) return null
 			return this.pipelines.find(p => p.id === this.form.pipeline) || null
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-55
+		 */
 		stageOptions() {
 			if (!this.selectedPipeline?.stages) return []
 			return [...this.selectedPipeline.stages]
 				.sort((a, b) => a.order - b.order)
 				.map(s => s.name)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-43
+		 */
 		clients() {
 			return this.objectStore.collections.client || []
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-42
+		 */
 		clientOptions() {
 			return this.clients.map(c => ({
 				value: c.id,
 				label: c.name || c.id,
 			}))
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-45
+		 */
 		errors() {
 			const errors = {}
 			if (!this.form.title || !this.form.title.trim()) {
@@ -205,6 +243,9 @@ export default {
 			return Object.keys(this.errors).length === 0 && this.form.title?.trim()
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-44
+	 */
 	async created() {
 		// Load pipelines, clients, and lead sources for dropdowns
 		await Promise.all([
@@ -234,6 +275,9 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-41
+		 */
 		autoAssignDefaultPipeline() {
 			const defaultPipeline = this.leadPipelines.find(p => p.isDefault)
 			if (defaultPipeline) {
@@ -245,6 +289,9 @@ export default {
 				}
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-49
+		 */
 		onPipelineChange() {
 			// Reset stage when pipeline changes
 			this.form.stage = null
@@ -257,6 +304,9 @@ export default {
 				}
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-50
+		 */
 		onSave() {
 			if (!this.isValid) return
 

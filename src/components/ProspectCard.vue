@@ -1,5 +1,9 @@
 <template>
-	<div class="prospect-card" tabindex="0" @keyup.enter="$emit('create-lead', prospect)">
+	<div
+		class="prospect-card"
+		:data-testid="`prospect-card-${prospect.kvkNumber}`"
+		tabindex="0"
+		@keyup.enter="$emit('create-lead', prospect)">
 		<div class="prospect-card__header">
 			<span class="prospect-card__name">{{ prospect.tradeName }}</span>
 			<span class="prospect-card__score" :class="scoreClass">
@@ -28,7 +32,7 @@
 
 		<div class="prospect-card__footer">
 			<span class="prospect-card__source">{{ prospect.source }}</span>
-			<NcButton type="primary" @click="$emit('create-lead', prospect)">
+			<NcButton type="primary" data-testid="prospect-create-lead" @click="$emit('create-lead', prospect)">
 				{{ t('pipelinq', 'Create Lead') }}
 			</NcButton>
 		</div>
@@ -51,6 +55,9 @@ export default {
 	},
 	emits: ['create-lead'],
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-prospect-ui/tasks.md#task-1
+		 */
 		scoreClass() {
 			const score = this.prospect.fitScore || 0
 			if (score > 70) return 'score--high'

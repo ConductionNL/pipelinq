@@ -1,6 +1,9 @@
 # Klachtenregistratie (Complaint Registration) — Delta Spec
 
 ## Purpose
+
+@e2e exclude backend delta spec — complaint schema and SLA logic are OR-object CRUD and PHP service; covered by PHPUnit
+
 Add complaint registration and tracking to Pipelinq, enabling KCC agents and CRM users to register, categorize, follow up on, and resolve customer complaints. Complaints are linked to contacts and organizations with SLA-based deadline tracking and full audit trail.
 
 **Main spec ref**: [client-management/spec.md](../../../../specs/client-management/spec.md)
@@ -9,10 +12,8 @@ Add complaint registration and tracking to Pipelinq, enabling KCC agents and CRM
 **VNG mapping**: Klacht (no formal ZGW standard yet; modeled after Verzoek pattern)
 
 ---
-
 ## Requirements
-
-### REQ-KL-001: Complaint Schema in Register
+### Requirement: Complaint Schema in Register
 
 The system MUST define a `complaint` schema in the Pipelinq register configuration with all required fields for complaint registration.
 
@@ -43,7 +44,7 @@ The system MUST define a `complaint` schema in the Pipelinq register configurati
 
 ---
 
-### REQ-KL-002: Complaint Registration Form
+### Requirement: Complaint Registration Form
 
 The system MUST provide a complaint form for creating and editing complaints with validation.
 
@@ -77,7 +78,7 @@ The system MUST provide a complaint form for creating and editing complaints wit
 
 ---
 
-### REQ-KL-003: Complaint List View
+### Requirement: Complaint List View
 
 The complaint list MUST support search, filtering by status/category/priority, sorting, and pagination.
 
@@ -129,7 +130,7 @@ The complaint list MUST support search, filtering by status/category/priority, s
 
 ---
 
-### REQ-KL-004: Complaint Detail View
+### Requirement: Complaint Detail View
 
 The complaint detail view MUST show all complaint information, linked entities, status timeline, and resolution fields.
 
@@ -171,7 +172,7 @@ The complaint detail view MUST show all complaint information, linked entities, 
 
 ---
 
-### REQ-KL-005: Complaint Audit Trail
+### Requirement: Complaint Audit Trail
 
 The system MUST maintain a full audit trail of all complaint status changes visible on the complaint detail.
 
@@ -194,7 +195,7 @@ The system MUST maintain a full audit trail of all complaint status changes visi
 
 ---
 
-### REQ-KL-006: Complaint Dashboard Widget
+### Requirement: Complaint Dashboard Widget
 
 The dashboard MUST include a complaints widget showing key metrics.
 
@@ -210,7 +211,7 @@ The dashboard MUST include a complaints widget showing key metrics.
 
 ---
 
-### REQ-KL-007: Complaints on Client Detail
+### Requirement: Complaints on Client Detail
 
 Complaints linked to a client MUST be visible on the client detail view.
 
@@ -225,7 +226,7 @@ Complaints linked to a client MUST be visible on the client detail view.
 
 ---
 
-### REQ-KL-008: SLA Configuration
+### Requirement: SLA Configuration
 
 The admin settings MUST allow configuring SLA response times per complaint category.
 
@@ -240,3 +241,131 @@ The admin settings MUST allow configuring SLA response times per complaint categ
 - GIVEN no SLA is configured for category "other"
 - WHEN a complaint with category "other" is created
 - THEN no `slaDeadline` MUST be set (no deadline tracking)
+
+---
+
+### Requirement: Backend SLA Deadline Service
+
+A PHP service MUST calculate SLA deadlines and provide SLA configuration helpers for backend use.
+
+#### Scenario: Calculate deadline from category config
+
+- GIVEN category "service" has 48 SLA hours configured
+- WHEN `calculateDeadline('service')` is called
+- THEN a DateTimeImmutable 48 hours from now MUST be returned
+
+#### Scenario: No deadline for unconfigured category
+
+- GIVEN category "other" has no SLA hours configured
+- WHEN `calculateDeadline('other')` is called
+- THEN null MUST be returned
+
+#### Scenario: Overdue detection
+
+- GIVEN an open complaint with slaDeadline in the past
+- WHEN `isOverdue()` is called
+- THEN true MUST be returned
+- AND for resolved/rejected complaints, false MUST be returned regardless of deadline
+
+---
+
+### Requirement: Background Job for SLA Monitoring
+
+A timed background job MUST periodically check for overdue complaints and log warnings.
+
+#### Scenario: Job runs when configured
+
+- GIVEN register and complaint_schema are configured
+- WHEN the ComplaintSlaJob runs
+- THEN it MUST log start and completion messages
+
+#### Scenario: Job skips when not configured
+
+- GIVEN register or complaint_schema is empty
+- WHEN the ComplaintSlaJob runs
+- THEN it MUST skip processing with a debug log message
+
+### Requirement: Complaint SLA computation — documented operations
+
+The complaint SLA deadline computation implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `calculateDeadline`, `getSlaHoursForCategory`, `isOverdue`). Each listed method realises an observable part of complaint SLA deadline computation and MUST behave as implemented in the current codebase.
+
+**Feature tier**: V1
+
+#### Scenario: Documented operations are available
+
+- GIVEN the backend service/controller is loaded
+- WHEN a caller invokes one of the documented operations for complaint SLA deadline computation
+- THEN the operation MUST execute and return a result consistent with the current implementation
+
+---
+
+### Requirement: Complaint SLA computation — results derived from current CRM state
+
+Operations for complaint SLA deadline computation MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
+
+**Feature tier**: V1
+
+#### Scenario: Results reflect live state
+
+- GIVEN CRM data backing complaint SLA deadline computation
+- WHEN a documented operation runs
+- THEN its output MUST be derived from that data
+- AND it MUST change when the underlying data changes
+
+---
+
+### Requirement: Complaint SLA computation — defensive handling of absent or invalid input
+
+Operations for complaint SLA deadline computation MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
+
+**Feature tier**: V1
+
+#### Scenario: Missing input does not crash the flow
+
+- GIVEN an operation for complaint SLA deadline computation is called with absent or invalid input
+- WHEN it executes
+- THEN it MUST return a safe default or a validation result
+- AND it MUST NOT raise an unhandled exception
+
+### Requirement: Complaint UI — documented operations
+
+The complaint registration screens implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `objectStore`, `onSave`, `applyStatusChange`, `assigneeOption`, `buildStatusHistory`, `complaintData`). Each listed method realises an observable part of complaint registration screens and MUST behave as implemented in the current codebase.
+
+**Feature tier**: V1
+
+#### Scenario: Documented operations are available
+
+- GIVEN the frontend component/store is loaded
+- WHEN a caller invokes one of the documented operations for complaint registration screens
+- THEN the operation MUST execute and return a result consistent with the current implementation
+
+---
+
+### Requirement: Complaint UI — results derived from current CRM state
+
+Operations for complaint registration screens MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
+
+**Feature tier**: V1
+
+#### Scenario: Results reflect live state
+
+- GIVEN CRM data backing complaint registration screens
+- WHEN a documented operation runs
+- THEN its output MUST be derived from that data
+- AND it MUST change when the underlying data changes
+
+---
+
+### Requirement: Complaint UI — defensive handling of absent or invalid input
+
+Operations for complaint registration screens MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
+
+**Feature tier**: V1
+
+#### Scenario: Missing input does not crash the flow
+
+- GIVEN an operation for complaint registration screens is called with absent or invalid input
+- WHEN it executes
+- THEN it MUST return a safe default or a validation result
+- AND it MUST NOT raise an unhandled exception
+

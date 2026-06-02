@@ -15,6 +15,9 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-6
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-7
  */
 
 declare(strict_types=1);
@@ -28,6 +31,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for creating default queues and skills.
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-7
  */
 class DefaultQueueService
 {
@@ -101,14 +106,16 @@ class DefaultQueueService
     /**
      * Constructor.
      *
-     * @param IAppConfig         $appConfig The app config.
-     * @param ContainerInterface $container The container.
-     * @param LoggerInterface    $logger    The logger.
+     * @param IAppConfig              $appConfig        The app config.
+     * @param ContainerInterface      $container        The container.
+     * @param LoggerInterface         $logger           The logger.
+     * @param RegisterResolverService $registerResolver The register resolver.
      */
     public function __construct(
         private IAppConfig $appConfig,
         private ContainerInterface $container,
         private LoggerInterface $logger,
+        private RegisterResolverService $registerResolver,
     ) {
     }//end __construct()
 
@@ -116,10 +123,12 @@ class DefaultQueueService
      * Create default queues if none exist.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-7
      */
     public function createDefaultQueues(): void
     {
-        $registerId    = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $registerId    = $this->registerResolver->resolve('queue');
         $queueSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'queue_schema', '');
 
         if ($registerId === '' || $queueSchemaId === '') {
@@ -139,9 +148,7 @@ class DefaultQueueService
                         'schema'   => $queueSchemaId,
                     ],
                     'limit'   => 1,
-                ],
-                _rbac: false,
-                _multitenancy: false
+                ]
             );
 
             if (empty($existing) === false) {
@@ -155,9 +162,7 @@ class DefaultQueueService
                     [],
                     $registerId,
                     $queueSchemaId,
-                    null,
-                    _rbac: false,
-                    _multitenancy: false
+                    null
                 );
                 $this->logger->info("Pipelinq: Created default queue '{$queueData['title']}'");
             }
@@ -173,10 +178,12 @@ class DefaultQueueService
      * Create default skills if none exist.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-6
      */
     public function createDefaultSkills(): void
     {
-        $registerId    = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $registerId    = $this->registerResolver->resolve('queue');
         $skillSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'skill_schema', '');
 
         if ($registerId === '' || $skillSchemaId === '') {
@@ -196,9 +203,7 @@ class DefaultQueueService
                         'schema'   => $skillSchemaId,
                     ],
                     'limit'   => 1,
-                ],
-                _rbac: false,
-                _multitenancy: false
+                ]
             );
 
             if (empty($existing) === false) {
@@ -212,9 +217,7 @@ class DefaultQueueService
                     [],
                     $registerId,
                     $skillSchemaId,
-                    null,
-                    _rbac: false,
-                    _multitenancy: false
+                    null
                 );
                 $this->logger->info("Pipelinq: Created default skill '{$skillData['title']}'");
             }

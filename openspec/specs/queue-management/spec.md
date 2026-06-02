@@ -2,6 +2,8 @@
 
 ## Purpose
 
+@e2e exclude backend data model — queue entity CRUD and routing logic are OR-object/PHP service; covered by PHPUnit
+
 Queue management provides priority-ordered work queues for organizing requests. Queues enable workload distribution across teams, ensuring urgent items are handled first and work is routed to the right agents. Queues are independent from pipelines: a request can be in a queue (waiting for pickup) AND on a pipeline (tracking progress).
 
 **Standards**: Schema.org (`ItemList`)
@@ -24,9 +26,7 @@ Queue management provides priority-ordered work queues for organizing requests. 
 | `assignedAgents` | array of string | -- | No | [] |
 
 ---
-
 ## Requirements
-
 ### Requirement: Queue Entity CRUD [Enterprise]
 
 The system SHALL support creating, reading, updating, and deleting queue entities. A queue is a named container for organizing work items (requests and leads) with priority-based ordering. Each queue SHALL be stored as an OpenRegister object with `@type` set to `schema:ItemList`.
@@ -206,3 +206,88 @@ The system SHALL create default queues during the repair step to provide an out-
 - **Queue Detail View:** Implemented in `src/views/queues/QueueDetail.vue`. Shows items sorted by priority then age with entity badge, priority badge, waiting time, assignee. "Pick next" and bulk assign implemented.
 - **Queue Navigation:** "Queues" item added to `src/navigation/MainMenu.vue` with InboxMultiple icon. Routes registered at `/queues` and `/queues/:id`.
 - **Default Queues:** Created via `DefaultQueueService::createDefaultQueues()` called from repair step. Creates "Algemeen", "Vergunningen", "Klachten" if none exist.
+
+### Requirement: Queue depth and overflow — documented operations
+
+The queue depth, capacity and overflow handling implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `getQueueDepth`, `isAtCapacity`, `processOverflow`). Each listed method realises an observable part of queue depth, capacity and overflow handling and MUST behave as implemented in the current codebase.
+
+**Feature tier**: V1
+
+#### Scenario: Documented operations are available
+
+- GIVEN the backend service/controller is loaded
+- WHEN a caller invokes one of the documented operations for queue depth, capacity and overflow handling
+- THEN the operation MUST execute and return a result consistent with the current implementation
+
+---
+
+### Requirement: Queue depth and overflow — results derived from current CRM state
+
+Operations for queue depth, capacity and overflow handling MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
+
+**Feature tier**: V1
+
+#### Scenario: Results reflect live state
+
+- GIVEN CRM data backing queue depth, capacity and overflow handling
+- WHEN a documented operation runs
+- THEN its output MUST be derived from that data
+- AND it MUST change when the underlying data changes
+
+---
+
+### Requirement: Queue depth and overflow — defensive handling of absent or invalid input
+
+Operations for queue depth, capacity and overflow handling MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
+
+**Feature tier**: V1
+
+#### Scenario: Missing input does not crash the flow
+
+- GIVEN an operation for queue depth, capacity and overflow handling is called with absent or invalid input
+- WHEN it executes
+- THEN it MUST return a safe default or a validation result
+- AND it MUST NOT raise an unhandled exception
+
+### Requirement: Queue UI — documented operations
+
+The queue management screens implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `agentCount`, `assignToMe`, `bulkAssignToMe`, `items`, `loading`, `mounted`). Each listed method realises an observable part of queue management screens and MUST behave as implemented in the current codebase.
+
+**Feature tier**: V1
+
+#### Scenario: Documented operations are available
+
+- GIVEN the frontend component/store is loaded
+- WHEN a caller invokes one of the documented operations for queue management screens
+- THEN the operation MUST execute and return a result consistent with the current implementation
+
+---
+
+### Requirement: Queue UI — results derived from current CRM state
+
+Operations for queue management screens MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
+
+**Feature tier**: V1
+
+#### Scenario: Results reflect live state
+
+- GIVEN CRM data backing queue management screens
+- WHEN a documented operation runs
+- THEN its output MUST be derived from that data
+- AND it MUST change when the underlying data changes
+
+---
+
+### Requirement: Queue UI — defensive handling of absent or invalid input
+
+Operations for queue management screens MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
+
+**Feature tier**: V1
+
+#### Scenario: Missing input does not crash the flow
+
+- GIVEN an operation for queue management screens is called with absent or invalid input
+- WHEN it executes
+- THEN it MUST return a safe default or a validation result
+- AND it MUST NOT raise an unhandled exception
+

@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-61
  */
 
 declare(strict_types=1);
@@ -33,33 +35,6 @@ use Psr\Log\LoggerInterface;
 class EmailSyncService
 {
     /**
-     * Common public email domains that should not be matched to organizations.
-     *
-     * @var array<string>
-     */
-    private const PUBLIC_DOMAINS = [
-        'gmail.com',
-        'outlook.com',
-        'hotmail.com',
-        'yahoo.com',
-        'icloud.com',
-        'live.com',
-        'msn.com',
-        'aol.com',
-        'protonmail.com',
-        'mail.com',
-        'zoho.com',
-        'yandex.com',
-        'gmx.com',
-        'gmx.net',
-        'web.de',
-        'ziggo.nl',
-        'kpnmail.nl',
-        'xs4all.nl',
-        'hetnet.nl',
-    ];
-
-    /**
      * Constructor.
      *
      * @param IConfig         $config The user config.
@@ -77,6 +52,7 @@ class EmailSyncService
      * @param string $email The email address.
      *
      * @return string|null The domain, or null if invalid.
+     * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-4
      */
     public function extractDomain(string $email): ?string
     {
@@ -89,40 +65,12 @@ class EmailSyncService
     }//end extractDomain()
 
     /**
-     * Check if a domain is a common public email provider.
-     *
-     * @param string $domain The domain to check.
-     *
-     * @return bool True if the domain is a public provider.
-     */
-    public function isPublicDomain(string $domain): bool
-    {
-        return in_array(strtolower($domain), self::PUBLIC_DOMAINS, true);
-    }//end isPublicDomain()
-
-    /**
-     * Check if email sync is enabled for a user.
-     *
-     * @param string $userId The user ID.
-     *
-     * @return bool True if sync is enabled.
-     */
-    public function isSyncEnabled(string $userId): bool
-    {
-        return $this->config->getUserValue(
-            $userId,
-            'pipelinq',
-            'email_sync_enabled',
-            'false',
-        ) === 'true';
-    }//end isSyncEnabled()
-
-    /**
      * Get the mail accounts configured for sync by a user.
      *
      * @param string $userId The user ID.
      *
      * @return array<int> Array of mail account IDs.
+     * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-6
      */
     public function getSyncAccounts(string $userId): array
     {
@@ -135,7 +83,11 @@ class EmailSyncService
 
         $accounts = json_decode($value, true);
 
-        return is_array($accounts) ? $accounts : [];
+        if (is_array($accounts) === true) {
+            return $accounts;
+        }
+
+        return [];
     }//end getSyncAccounts()
 
     /**
@@ -145,24 +97,32 @@ class EmailSyncService
      * @param bool   $enabled Whether sync is enabled.
      *
      * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-9
      */
     public function setSyncEnabled(string $userId, bool $enabled): void
     {
+        if ($enabled === true) {
+            $value = 'true';
+        } else {
+            $value = 'false';
+        }
+
         $this->config->setUserValue(
             $userId,
             'pipelinq',
             'email_sync_enabled',
-            $enabled ? 'true' : 'false',
+            $value,
         );
     }//end setSyncEnabled()
 
     /**
      * Set the mail accounts to sync for a user.
      *
-     * @param string    $userId   The user ID.
+     * @param string     $userId   The user ID.
      * @param array<int> $accounts Array of mail account IDs.
      *
      * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-8
      */
     public function setSyncAccounts(string $userId, array $accounts): void
     {
@@ -180,6 +140,7 @@ class EmailSyncService
      * @param string $userId The user ID.
      *
      * @return string|null ISO 8601 timestamp of last sync, or null.
+     * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-5
      */
     public function getLastSyncTime(string $userId): ?string
     {
@@ -190,7 +151,11 @@ class EmailSyncService
             '',
         );
 
-        return $value !== '' ? $value : null;
+        if ($value !== '') {
+            return $value;
+        }
+
+        return null;
     }//end getLastSyncTime()
 
     /**
@@ -199,6 +164,7 @@ class EmailSyncService
      * @param string $userId The user ID.
      *
      * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-10
      */
     public function updateLastSyncTime(string $userId): void
     {
@@ -225,6 +191,7 @@ class EmailSyncService
      * @param string|null $syncSource       The mail account ID.
      *
      * @return array<string, mixed> The EmailLink data.
+     * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-3
      */
     public function buildEmailLinkData(
         string $messageId,
@@ -235,22 +202,22 @@ class EmailSyncService
         string $linkedEntityType,
         string $linkedEntityId,
         string $direction,
-        ?string $threadId = null,
-        ?string $syncSource = null,
+        ?string $threadId=null,
+        ?string $syncSource=null,
     ): array {
         return [
-            'messageId' => $messageId,
-            'subject' => $subject,
-            'sender' => $sender,
-            'recipients' => $recipients,
-            'date' => $date,
-            'threadId' => $threadId,
+            'messageId'        => $messageId,
+            'subject'          => $subject,
+            'sender'           => $sender,
+            'recipients'       => $recipients,
+            'date'             => $date,
+            'threadId'         => $threadId,
             'linkedEntityType' => $linkedEntityType,
-            'linkedEntityId' => $linkedEntityId,
-            'direction' => $direction,
-            'syncSource' => $syncSource,
-            'excluded' => false,
-            'deleted' => false,
+            'linkedEntityId'   => $linkedEntityId,
+            'direction'        => $direction,
+            'syncSource'       => $syncSource,
+            'excluded'         => false,
+            'deleted'          => false,
         ];
     }//end buildEmailLinkData()
 }//end class

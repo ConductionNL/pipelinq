@@ -66,6 +66,7 @@ const VALID_CHANNELS = ['phone', 'email', 'web', 'counter', 'letter', 'other']
  *
  * @param {string} currentStatus
  * @return {string[]}
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-1
  */
 export function getAllowedTransitions(currentStatus) {
 	return STATUS_TRANSITIONS[currentStatus] || []
@@ -77,6 +78,7 @@ export function getAllowedTransitions(currentStatus) {
  * @param {string} from Current status
  * @param {string} to Target status
  * @return {boolean}
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-12
  */
 export function isValidTransition(from, to) {
 	if (from === to) return true
@@ -88,6 +90,7 @@ export function isValidTransition(from, to) {
  *
  * @param {string} status
  * @return {boolean}
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-10
  */
 export function isTerminalStatus(status) {
 	return getAllowedTransitions(status).length === 0
@@ -98,6 +101,7 @@ export function isTerminalStatus(status) {
  *
  * @param {string} targetStatus
  * @return {boolean}
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-13
  */
 export function requiresResolution(targetStatus) {
 	return targetStatus === 'resolved' || targetStatus === 'rejected'
@@ -108,6 +112,7 @@ export function requiresResolution(targetStatus) {
  *
  * @param {string} status
  * @return {string}
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-9
  */
 export function getStatusLabel(status) {
 	return STATUS_LABELS[status] || status
@@ -118,6 +123,7 @@ export function getStatusLabel(status) {
  *
  * @param {string} status
  * @return {string}
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-8
  */
 export function getStatusColor(status) {
 	return STATUS_COLORS[status] || '#999'
@@ -128,6 +134,7 @@ export function getStatusColor(status) {
  *
  * @param {string} priority
  * @return {string}
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-5
  */
 export function getPriorityLabel(priority) {
 	return PRIORITY_LABELS[priority] || priority
@@ -138,6 +145,7 @@ export function getPriorityLabel(priority) {
  *
  * @param {string} priority
  * @return {string}
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-4
  */
 export function getPriorityColor(priority) {
 	return PRIORITY_COLORS[priority] || 'var(--color-text-maxcontrast)'
@@ -148,6 +156,7 @@ export function getPriorityColor(priority) {
  *
  * @param {string} category
  * @return {string}
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-2
  */
 export function getCategoryLabel(category) {
 	return CATEGORY_LABELS[category] || category
@@ -158,6 +167,7 @@ export function getCategoryLabel(category) {
  *
  * @param {string} channel
  * @return {string}
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-3
  */
 export function getChannelLabel(channel) {
 	return CHANNEL_LABELS[channel] || channel
@@ -168,6 +178,7 @@ export function getChannelLabel(channel) {
  *
  * @param {string} priority
  * @return {boolean}
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-11
  */
 export function isValidPriority(priority) {
 	return VALID_PRIORITIES.includes(priority)
@@ -179,6 +190,7 @@ export function isValidPriority(priority) {
  * @param {string|null} slaDeadline ISO 8601 deadline
  * @param {string} status Current complaint status
  * @return {'met'|'on_track'|'approaching'|'overdue'|null}
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-7
  */
 export function getSlaIndicator(slaDeadline, status) {
 	if (!slaDeadline) return null
@@ -208,6 +220,7 @@ export function getSlaIndicator(slaDeadline, status) {
  *
  * @param {'met'|'on_track'|'approaching'|'overdue'|null} indicator
  * @return {string}
+  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-6
  */
 export function getSlaColor(indicator) {
 	switch (indicator) {
