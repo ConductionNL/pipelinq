@@ -71,6 +71,10 @@ class SettingsLoadService
         'refundReason',
         'posRefund',
         'posRefundLine',
+        'cashShift',
+        'cashDrop',
+        'cashCount',
+        'cashDiff',
     ];
 
     /**

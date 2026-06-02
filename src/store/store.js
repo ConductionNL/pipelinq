@@ -92,6 +92,18 @@ export async function initializeStores() {
 		if (config.register && config.posRefundLine_schema) {
 			objectStore.registerObjectType('posRefundLine', config.posRefundLine_schema, config.register)
 		}
+		if (config.register && config.cashShift_schema) {
+			objectStore.registerObjectType('cashShift', config.cashShift_schema, config.register)
+		}
+		if (config.register && config.cashDrop_schema) {
+			objectStore.registerObjectType('cashDrop', config.cashDrop_schema, config.register)
+		}
+		if (config.register && config.cashCount_schema) {
+			objectStore.registerObjectType('cashCount', config.cashCount_schema, config.register)
+		}
+		if (config.register && config.cashDiff_schema) {
+			objectStore.registerObjectType('cashDiff', config.cashDiff_schema, config.register)
+		}
 	}
 
 	return { settingsStore, objectStore }

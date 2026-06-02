@@ -128,18 +128,8 @@ class ConfigFileLoaderService
 
         $fragmentBlob = '';
         foreach ($fragmentFiles as $fragmentFile) {
-            $fragmentContent = file_get_contents($fragmentFile);
-            if ($fragmentContent === false) {
-                throw new RuntimeException("Failed to read register fragment: {$fragmentFile}");
-            }
-
-            $fragmentData = json_decode($fragmentContent, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new RuntimeException(
-                    "Invalid JSON in register fragment {$fragmentFile}: ".json_last_error_msg()
-                );
-            }
-
+            $fragmentContent = $this->readFragmentFile(fragmentFile: $fragmentFile);
+            $fragmentData    = $this->decodeFragment(fragmentFile: $fragmentFile, content: $fragmentContent);
             if (is_array($fragmentData) === false) {
                 continue;
             }
@@ -162,11 +152,59 @@ class ConfigFileLoaderService
     }//end mergeRegisterFragments()
 
     /**
+     * Read a register fragment file, throwing on an unreadable file.
+     *
+     * @param string $fragmentFile The absolute fragment path.
+     *
+     * @return string The raw file contents.
+     *
+     * @throws RuntimeException If the file cannot be read.
+     */
+    private function readFragmentFile(string $fragmentFile): string
+    {
+        $fragmentContent = file_get_contents($fragmentFile);
+        if ($fragmentContent === false) {
+            throw new RuntimeException("Failed to read register fragment: {$fragmentFile}");
+        }
+
+        return $fragmentContent;
+    }//end readFragmentFile()
+
+    /**
+     * Decode a register fragment's JSON, throwing on malformed JSON.
+     *
+     * @param string $fragmentFile The fragment path (for the error message).
+     * @param string $content      The raw JSON content.
+     *
+     * @return mixed The decoded value (an array for a valid fragment).
+     *
+     * @throws RuntimeException If the JSON is invalid.
+     */
+    private function decodeFragment(string $fragmentFile, string $content): mixed
+    {
+        $fragmentData = json_decode($content, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new RuntimeException(
+                "Invalid JSON in register fragment {$fragmentFile}: ".json_last_error_msg()
+            );
+        }
+
+        return $fragmentData;
+    }//end decodeFragment()
+
+    /**
      * Recursively deep-merge an override array onto a base array.
      *
-     * Associative keys are merged recursively; scalar and list values from the
-     * override replace those in the base. This mirrors the fragment-merge
-     * semantics shared across the fleet (ADR-037).
+     * Associative keys are merged recursively; scalar values and most list
+     * values from the override replace those in the base (the documented
+     * ADR-037 register-fragment semantics). The single, deliberate exception is
+     * a seed-object list under the `objects` key: when both base and override
+     * provide an `objects` list it is **concatenated**, so a fragment can append
+     * its own seed objects to `components.objects[]` without clobbering the seed
+     * objects contributed by the monolith or by earlier fragments. Every other
+     * list (e.g. a register's `schemas` membership array) keeps the replace
+     * semantics — a fragment that needs to extend such a list must supply it in
+     * full.
      *
      * @param array $base     The base configuration array.
      * @param array $override The fragment to merge on top of the base.
@@ -176,13 +214,15 @@ class ConfigFileLoaderService
     private static function deepMergeConfig(array $base, array $override): array
     {
         foreach ($override as $key => $value) {
-            if (is_array($value) === true
-                && isset($base[$key]) === true
-                && is_array($base[$key]) === true
-                && self::isList(value: $value) === false
-                && self::isList(value: $base[$key]) === false
-            ) {
+            if (self::isAssociativeMerge(key: $key, value: $value, base: $base) === true) {
                 $base[$key] = self::deepMergeConfig(base: $base[$key], override: $value);
+                continue;
+            }
+
+            // Append-merge the seed-object list so a fragment can add its own
+            // `components.objects[]` seeds without replacing the existing seeds.
+            if (self::isSeedObjectAppend(key: $key, value: $value, base: $base) === true) {
+                $base[$key] = array_merge($base[$key], $value);
                 continue;
             }
 
@@ -191,6 +231,43 @@ class ConfigFileLoaderService
 
         return $base;
     }//end deepMergeConfig()
+
+    /**
+     * Whether an override key should be recursively merged as an associative map.
+     *
+     * @param int|string           $key   The override key.
+     * @param mixed                $value The override value.
+     * @param array<string, mixed> $base  The base array.
+     *
+     * @return bool True when both sides are associative arrays to deep-merge.
+     */
+    private static function isAssociativeMerge(int|string $key, mixed $value, array $base): bool
+    {
+        return is_array($value) === true
+            && isset($base[$key]) === true
+            && is_array($base[$key]) === true
+            && self::isList(value: $value) === false
+            && self::isList(value: $base[$key]) === false;
+    }//end isAssociativeMerge()
+
+    /**
+     * Whether an override key is the seed-object list to append rather than replace.
+     *
+     * @param int|string           $key   The override key.
+     * @param mixed                $value The override value.
+     * @param array<string, mixed> $base  The base array.
+     *
+     * @return bool True when both sides are sequential `objects` seed lists.
+     */
+    private static function isSeedObjectAppend(int|string $key, mixed $value, array $base): bool
+    {
+        return $key === 'objects'
+            && is_array($value) === true
+            && isset($base[$key]) === true
+            && is_array($base[$key]) === true
+            && self::isList(value: $value) === true
+            && self::isList(value: $base[$key]) === true;
+    }//end isSeedObjectAppend()
 
     /**
      * Determine whether an array is a sequential list (zero-indexed, no gaps).
@@ -208,7 +285,7 @@ class ConfigFileLoaderService
         }
 
         $expectedKey = 0;
-        foreach ($value as $key => $unused) {
+        foreach (array_keys($value) as $key) {
             if ($key !== $expectedKey) {
                 return false;
             }

@@ -111,6 +111,44 @@ class RegisterFragmentMergeTest extends TestCase
     }//end testListValuesAreReplaced()
 
     /**
+     * The `objects` seed list is concatenated, not replaced, so a fragment can
+     * append its own seed objects without dropping the monolith's seeds.
+     *
+     * @return void
+     */
+    public function testObjectsSeedListIsConcatenated(): void
+    {
+        $base     = ['components' => ['objects' => [['slug' => 'a'], ['slug' => 'b']]]];
+        $override = ['components' => ['objects' => [['slug' => 'c']]]];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(
+            [['slug' => 'a'], ['slug' => 'b'], ['slug' => 'c']],
+            $result['components']['objects']
+        );
+    }//end testObjectsSeedListIsConcatenated()
+
+    /**
+     * A non-`objects` list (e.g. a register's schema membership) is still
+     * replaced wholesale — only the seed-object list concatenates.
+     *
+     * @return void
+     */
+    public function testNonObjectsListStillReplaced(): void
+    {
+        $base     = ['components' => ['registers' => ['pipelinq' => ['schemas' => ['client', 'lead']]]]];
+        $override = ['components' => ['registers' => ['pipelinq' => ['schemas' => ['client', 'lead', 'cashShift']]]]];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(
+            ['client', 'lead', 'cashShift'],
+            $result['components']['registers']['pipelinq']['schemas']
+        );
+    }//end testNonObjectsListStillReplaced()
+
+    /**
      * isList() distinguishes sequential lists from associative maps.
      *
      * @return void
