@@ -1,3 +1,5 @@
+> SUPERSEDED 2026-06-02 (ADR-032): decomposed into the chain marketing-segmentation-and-blast-01..11 (see openspec/changes/).
+
 # Proposal: Marketing Segmentation and Blast
 
 ## Summary
