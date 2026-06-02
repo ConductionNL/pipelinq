@@ -103,4 +103,72 @@ class ConfigFileLoaderServiceTest extends TestCase
 
         $service->loadConfigurationFile();
     }//end testLoadConfigurationFileThrowsOnMissingFile()
+
+    /**
+     * Test that a register schemas[] membership list is concatenated and deduplicated.
+     *
+     * @return void
+     */
+    public function testMergeFragmentUnionsSchemaMembership(): void
+    {
+        $base     = ['components' => ['registers' => ['pipelinq' => ['schemas' => ['client', 'product']]]]];
+        $override = ['components' => ['registers' => ['pipelinq' => ['schemas' => ['product', 'loyaltyProgramme']]]]];
+
+        $result = $this->service->mergeFragment($base, $override);
+
+        $this->assertSame(
+            ['client', 'product', 'loyaltyProgramme'],
+            $result['components']['registers']['pipelinq']['schemas']
+        );
+    }//end testMergeFragmentUnionsSchemaMembership()
+
+    /**
+     * Test that components.objects[] seed lists are concatenated by slug.
+     *
+     * @return void
+     */
+    public function testMergeFragmentAppendsSeedObjects(): void
+    {
+        $base     = ['components' => ['objects' => [['@self' => ['slug' => 'a'], 'v' => 1]]]];
+        $override = ['components' => ['objects' => [['@self' => ['slug' => 'b'], 'v' => 2]]]];
+
+        $result  = $this->service->mergeFragment($base, $override);
+        $objects = $result['components']['objects'];
+
+        $this->assertCount(2, $objects);
+        $this->assertSame('a', $objects[0]['@self']['slug']);
+        $this->assertSame('b', $objects[1]['@self']['slug']);
+    }//end testMergeFragmentAppendsSeedObjects()
+
+    /**
+     * Test that re-merging the same seed object by slug is idempotent (replace in place).
+     *
+     * @return void
+     */
+    public function testMergeFragmentSeedObjectsIdempotentBySlug(): void
+    {
+        $base     = ['components' => ['objects' => [['@self' => ['slug' => 'a'], 'v' => 1]]]];
+        $override = ['components' => ['objects' => [['@self' => ['slug' => 'a'], 'v' => 2]]]];
+
+        $result  = $this->service->mergeFragment($base, $override);
+        $objects = $result['components']['objects'];
+
+        $this->assertCount(1, $objects);
+        $this->assertSame(2, $objects[0]['v']);
+    }//end testMergeFragmentSeedObjectsIdempotentBySlug()
+
+    /**
+     * Test that non-membership, non-seed lists keep replace semantics.
+     *
+     * @return void
+     */
+    public function testMergeFragmentReplacesOtherLists(): void
+    {
+        $base     = ['components' => ['schemas' => ['x' => ['required' => ['a', 'b']]]]];
+        $override = ['components' => ['schemas' => ['x' => ['required' => ['c']]]]];
+
+        $result = $this->service->mergeFragment($base, $override);
+
+        $this->assertSame(['c'], $result['components']['schemas']['x']['required']);
+    }//end testMergeFragmentReplacesOtherLists()
 }//end class

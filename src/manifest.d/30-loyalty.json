@@ -1,0 +1,322 @@
+{
+    "pages": [
+        {
+            "id": "LoyaltyProgrammes",
+            "route": "/loyalty/programmes",
+            "type": "index",
+            "title": "Loyalty programmes",
+            "config": {
+                "register": "pipelinq",
+                "schema": "loyaltyProgramme",
+                "columns": [
+                    "naam",
+                    "merk",
+                    "status",
+                    "startdatum",
+                    "valuta"
+                ],
+                "sidebar": {
+                    "enabled": true,
+                    "showMetadata": true
+                }
+            }
+        },
+        {
+            "id": "LoyaltyProgrammeDetail",
+            "route": "/loyalty/programmes/:id",
+            "type": "detail",
+            "title": "Loyalty programme",
+            "config": {
+                "register": "pipelinq",
+                "schema": "loyaltyProgramme",
+                "sidebar": true
+            }
+        },
+        {
+            "id": "PointsRules",
+            "route": "/loyalty/points-rules",
+            "type": "index",
+            "title": "Points rules",
+            "config": {
+                "register": "pipelinq",
+                "schema": "pointsRule",
+                "columns": [
+                    "naam",
+                    "programmeId",
+                    "trigger",
+                    "prioriteit"
+                ],
+                "sidebar": {
+                    "enabled": true,
+                    "showMetadata": true
+                }
+            }
+        },
+        {
+            "id": "PointsRuleDetail",
+            "route": "/loyalty/points-rules/:id",
+            "type": "detail",
+            "title": "Points rule",
+            "config": {
+                "register": "pipelinq",
+                "schema": "pointsRule",
+                "sidebar": true
+            }
+        },
+        {
+            "id": "TierRules",
+            "route": "/loyalty/tiers",
+            "type": "index",
+            "title": "Tiers",
+            "config": {
+                "register": "pipelinq",
+                "schema": "tierRule",
+                "columns": [
+                    "naam",
+                    "programmeId",
+                    "sequence",
+                    "drempelType",
+                    "drempelWaarde"
+                ],
+                "sidebar": {
+                    "enabled": true,
+                    "showMetadata": true
+                }
+            }
+        },
+        {
+            "id": "TierRuleDetail",
+            "route": "/loyalty/tiers/:id",
+            "type": "detail",
+            "title": "Tier",
+            "config": {
+                "register": "pipelinq",
+                "schema": "tierRule",
+                "sidebar": true
+            }
+        },
+        {
+            "id": "LoyaltyAccounts",
+            "route": "/loyalty/accounts",
+            "type": "index",
+            "title": "Loyalty accounts",
+            "config": {
+                "register": "pipelinq",
+                "schema": "klantLoyaltyAccount",
+                "columns": [
+                    "klantId",
+                    "programmeId",
+                    "currentBalance",
+                    "lifetimePoints",
+                    "status"
+                ],
+                "sidebar": {
+                    "enabled": true,
+                    "showMetadata": true
+                }
+            }
+        },
+        {
+            "id": "LoyaltyAccountDetail",
+            "route": "/loyalty/accounts/:id",
+            "type": "detail",
+            "title": "Loyalty account",
+            "config": {
+                "register": "pipelinq",
+                "schema": "klantLoyaltyAccount",
+                "sidebar": true
+            }
+        },
+        {
+            "id": "PointsLedger",
+            "route": "/loyalty/ledger",
+            "type": "index",
+            "title": "Points ledger",
+            "config": {
+                "register": "pipelinq",
+                "schema": "pointsLedgerEntry",
+                "columns": [
+                    "accountId",
+                    "type",
+                    "aantal",
+                    "balansNa",
+                    "timestamp"
+                ],
+                "sidebar": {
+                    "enabled": true,
+                    "showMetadata": true
+                }
+            }
+        },
+        {
+            "id": "RedemptionOptions",
+            "route": "/loyalty/redemption-options",
+            "type": "index",
+            "title": "Redemption options",
+            "config": {
+                "register": "pipelinq",
+                "schema": "redemptionOption",
+                "columns": [
+                    "naam",
+                    "programmeId",
+                    "kostenInPunten",
+                    "beloningType"
+                ],
+                "sidebar": {
+                    "enabled": true,
+                    "showMetadata": true
+                }
+            }
+        },
+        {
+            "id": "RedemptionOptionDetail",
+            "route": "/loyalty/redemption-options/:id",
+            "type": "detail",
+            "title": "Redemption option",
+            "config": {
+                "register": "pipelinq",
+                "schema": "redemptionOption",
+                "sidebar": true
+            }
+        },
+        {
+            "id": "Redemptions",
+            "route": "/loyalty/redemptions",
+            "type": "index",
+            "title": "Redemptions",
+            "config": {
+                "register": "pipelinq",
+                "schema": "redemption",
+                "columns": [
+                    "accountId",
+                    "optionId",
+                    "puntenBesteed",
+                    "status",
+                    "aangemaaktOp"
+                ],
+                "sidebar": {
+                    "enabled": true,
+                    "showMetadata": true
+                }
+            }
+        },
+        {
+            "id": "GiftCards",
+            "route": "/loyalty/gift-cards",
+            "type": "index",
+            "title": "Gift cards",
+            "config": {
+                "register": "pipelinq",
+                "schema": "giftCard",
+                "columns": [
+                    "serial",
+                    "currentBalans",
+                    "valuta",
+                    "status",
+                    "vervaltOp"
+                ],
+                "sidebar": {
+                    "enabled": true,
+                    "showMetadata": true
+                }
+            }
+        },
+        {
+            "id": "GiftCardDetail",
+            "route": "/loyalty/gift-cards/:id",
+            "type": "detail",
+            "title": "Gift card",
+            "config": {
+                "register": "pipelinq",
+                "schema": "giftCard",
+                "sidebar": true
+            }
+        },
+        {
+            "id": "GiftCardTransactions",
+            "route": "/loyalty/gift-card-transactions",
+            "type": "index",
+            "title": "Gift card transactions",
+            "config": {
+                "register": "pipelinq",
+                "schema": "giftCardTransaction",
+                "columns": [
+                    "giftCardId",
+                    "type",
+                    "bedrag",
+                    "balansNa",
+                    "timestamp"
+                ],
+                "sidebar": {
+                    "enabled": true,
+                    "showMetadata": true
+                }
+            }
+        }
+    ],
+    "menu": [
+        {
+            "id": "LoyaltyProgrammes",
+            "label": "Loyalty programmes",
+            "icon": "icon-category-organization",
+            "route": "LoyaltyProgrammes",
+            "order": 110
+        },
+        {
+            "id": "PointsRules",
+            "label": "Points rules",
+            "icon": "icon-category-customization",
+            "route": "PointsRules",
+            "order": 111
+        },
+        {
+            "id": "TierRules",
+            "label": "Tiers",
+            "icon": "icon-category-auth",
+            "route": "TierRules",
+            "order": 112
+        },
+        {
+            "id": "LoyaltyAccounts",
+            "label": "Loyalty accounts",
+            "icon": "icon-user",
+            "route": "LoyaltyAccounts",
+            "order": 113
+        },
+        {
+            "id": "PointsLedger",
+            "label": "Points ledger",
+            "icon": "icon-history",
+            "route": "PointsLedger",
+            "order": 114
+        },
+        {
+            "id": "RedemptionOptions",
+            "label": "Redemption options",
+            "icon": "icon-category-office",
+            "route": "RedemptionOptions",
+            "order": 115
+        },
+        {
+            "id": "Redemptions",
+            "label": "Redemptions",
+            "icon": "icon-checkmark",
+            "route": "Redemptions",
+            "order": 116
+        },
+        {
+            "id": "GiftCards",
+            "label": "Gift cards",
+            "icon": "icon-category-files",
+            "route": "GiftCards",
+            "order": 117
+        },
+        {
+            "id": "GiftCardTransactions",
+            "label": "Gift card transactions",
+            "icon": "icon-history",
+            "route": "GiftCardTransactions",
+            "order": 118
+        }
+    ]
+}

@@ -1,24 +1,53 @@
 # Tasks: Loyalty Program
 
+> **Implementation note (build handoff).** This change was built per the
+> `design.md` reuse analysis ("No custom PHP services are required ... Frontend
+> uses standard OpenRegister CRUD flows") and the project ADRs, which override
+> the literal task transcription below:
+>
+> - **ADR-037**: the 9 schemas, register membership and seed objects live in the
+>   modular fragment `lib/Settings/register.d/30-loyalty.json` — the monolith
+>   `pipelinq_register.json` is NOT edited. The loader
+>   (`ConfigFileLoaderService::deepMergeConfig`) was enhanced to additively
+>   union the register `schemas[]` membership and the `components.objects[]`
+>   seed list (dedup by `@self.slug`, idempotent) so concurrent fragments and
+>   re-imports do not clobber each other; all other lists keep replace
+>   semantics. Covered by new unit tests.
+> - **ADR-016**: customer/admin-facing CRUD is delivered declaratively via the
+>   manifest fragment `src/manifest.d/30-loyalty.json` (index/detail pages +
+>   menu) plus additive nl+en i18n — no bespoke Vue, no custom controllers.
+> - **Deferred (documented):** the server-authoritative point-mutation engine
+>   and its cross-app wiring (POS purchase hook, redemption/gift-card POS
+>   endpoints, tier/expiry batch jobs, reporting, GDPR export, notifications)
+>   depend on `pos-transaction-core` events, `klantbeeld-360`, `financeq`,
+>   `openconnector` and `mydash` integration surfaces that are not yet on
+>   `development`. Per the build guardrails these are deferred rather than built
+>   against not-yet-merged dependencies; the data model, seeds and CRUD UI that
+>   they will build on are shipped here.
+
 ## 0. Deduplication Check
 
-- [ ] 0.1 Search for existing loyalty/points tracking capabilities
+- [x] 0.1 Search for existing loyalty/points tracking capabilities
   - Search `pipelinq/src/`, `pipelinq/app/`, and `openregister/lib/` for "loyalty", "points", "tier",
     "redemption", "gift-card"
   - Check if any prior app (openklant, openzaak, valtimo) has reward/loyalty features
   - Verify no overlapping Open APIs (Gegevensmagazijn, etc.) define loyalty models
-  - **Finding**: [Document findings — no overlap found / minor overlap with X / requires coordination]
+  - **Finding**: No existing loyalty/points capability in pipelinq. The append-only
+    `receiptPrintLog` schema is the closest precedent for an immutable audit log and
+    its conventions were mirrored for `pointsLedgerEntry`/`giftCardTransaction`.
 
-- [ ] 0.2 Check OpenRegister platform for reusable transaction/ledger patterns
+- [x] 0.2 Check OpenRegister platform for reusable transaction/ledger patterns
   - Search `ObjectService`, `AuditTrailService`, `TransactionService` for append-only ledger support
   - Verify immutability patterns are available for PointsLedgerEntry
   - Confirm relation linking (accountId → customerId → contact) is supported
-  - **Finding**: [Document what platform provides vs. what must be built]
+  - **Finding**: OpenRegister `ObjectService` (find/findAll/saveObject/...) + AuditTrail
+    + UUID relation references provide the generic store. Append-only semantics are
+    expressed via schema descriptions + lifecycle guards (no platform "immutable" flag).
 
 ## 1. Schema Design & Migrations
 
-- [ ] 1.1 Create OpenRegister schemas for 9 entities
-  - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
+- [x] 1.1 Create OpenRegister schemas for 9 entities
+  - **files**: `pipelinq/lib/Settings/register.d/30-loyalty.json` (ADR-037 fragment — NOT the monolith)
   - **spec_ref**: REQ-LOY-001 through REQ-LOY-010
   - Create schemas with all properties from context-brief.md:
     - LoyaltyProgramme (programmeId, naam, merk, status, startdatum, valuta, etc.)
@@ -452,8 +481,11 @@
     - Exports contain expected data
     - Mobile responsive (if applicable)
 
-- [ ] 9.4 Verify seed data loads correctly
-  - **files**: `pipelinq/lib/Settings/pipelinq_register.json` (seed data section)
+- [x] 9.4 Verify seed data loads correctly
+  - **files**: `pipelinq/lib/Settings/register.d/30-loyalty.json` (`components.objects[]` — ADR-037 fragment)
+  - Seed objects (2 programmes, 3 points rules, 3 tiers, 2 redemption options, 2 accounts,
+    2 ledger entries, 1 redemption, 1 gift card, 2 gift-card transactions) ship in the fragment.
+    Loader unit tests prove the additive+dedup merge keeps seeds idempotent across re-imports.
   - **spec_ref**: ADR-001 (seed data requirement)
   - On app install:
     - Run `ConfigurationService::importFromApp('pipelinq', data, version)`

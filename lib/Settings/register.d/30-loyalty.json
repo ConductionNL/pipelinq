@@ -1,0 +1,945 @@
+{
+    "components": {
+        "registers": {
+            "pipelinq": {
+                "schemas": [
+                    "loyaltyProgramme",
+                    "pointsRule",
+                    "tierRule",
+                    "klantLoyaltyAccount",
+                    "pointsLedgerEntry",
+                    "redemptionOption",
+                    "redemption",
+                    "giftCard",
+                    "giftCardTransaction"
+                ]
+            }
+        },
+        "schemas": {
+            "loyaltyProgramme": {
+                "slug": "loyaltyProgramme",
+                "title": "Loyalty Programme",
+                "icon": "CardAccountDetailsStar",
+                "version": "1.0.0",
+                "summary": "A loyalty programme definition (points, tiers, redemption) for a brand or retailer",
+                "description": "Defines a native loyalty programme: its brand, lifecycle status, currency and terms. Each programme owns its own points rules, tier rules and redemption options, so a holding with multiple brands can run independent programme economics. Mapped to Schema.org LoyaltyProgram.",
+                "@type": "schema:LoyaltyProgram",
+                "required": [
+                    "naam",
+                    "status"
+                ],
+                "properties": {
+                    "naam": {
+                        "type": "string",
+                        "description": "Programme name (schema:name)",
+                        "maxLength": 255,
+                        "minLength": 1,
+                        "title": "Name",
+                        "facetable": true
+                    },
+                    "merk": {
+                        "type": "string",
+                        "description": "Brand the programme belongs to",
+                        "maxLength": 255,
+                        "facetable": true
+                    },
+                    "beschrijving": {
+                        "type": "string",
+                        "description": "Programme description shown to participants"
+                    },
+                    "startdatum": {
+                        "type": "string",
+                        "description": "ISO 8601 date the programme starts",
+                        "format": "date"
+                    },
+                    "einddatum": {
+                        "type": "string",
+                        "description": "ISO 8601 date the programme ends (empty for open-ended)",
+                        "format": "date"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Programme lifecycle status",
+                        "enum": [
+                            "concept",
+                            "actief",
+                            "gepauzeerd",
+                            "beeindigd"
+                        ],
+                        "default": "concept",
+                        "title": "Status",
+                        "facetable": true
+                    },
+                    "valuta": {
+                        "type": "string",
+                        "description": "ISO 4217 currency code for monetary rewards",
+                        "maxLength": 3,
+                        "default": "EUR"
+                    },
+                    "taal": {
+                        "type": "string",
+                        "description": "Default communication language (ISO 639-1)",
+                        "maxLength": 5,
+                        "default": "nl"
+                    },
+                    "termsUrl": {
+                        "type": "string",
+                        "description": "URL of the programme terms and conditions",
+                        "maxLength": 1024
+                    },
+                    "puntwaarde": {
+                        "type": "number",
+                        "description": "Estimated monetary value of one point, used for outstanding-points liability reporting (IFRS 15 / RJ 270)",
+                        "default": 0.02
+                    },
+                    "brandingProfileId": {
+                        "type": "string",
+                        "description": "Optional reference to a branding profile for receipts and emails",
+                        "maxLength": 255
+                    }
+                }
+            },
+            "pointsRule": {
+                "slug": "pointsRule",
+                "title": "Points Rule",
+                "icon": "Calculator",
+                "version": "1.0.0",
+                "summary": "A rule that awards points for a trigger within a loyalty programme",
+                "description": "Defines how points are earned: a trigger (purchase, signup, birthday, review, referral, visit, manual), an optional JSON condition (category, segment, day/time, channel) and a formula (fixed, percentage, stepped). Rules are evaluated in priority order and the highest-priority match wins (non-cumulative). Points are awarded server-side; the client never asserts an awarded amount.",
+                "@type": "schema:Action",
+                "required": [
+                    "programmeId",
+                    "naam",
+                    "trigger",
+                    "formule"
+                ],
+                "properties": {
+                    "programmeId": {
+                        "type": "string",
+                        "description": "UUID reference to the owning loyaltyProgramme",
+                        "facetable": true
+                    },
+                    "naam": {
+                        "type": "string",
+                        "description": "Human-readable rule name",
+                        "maxLength": 255,
+                        "minLength": 1,
+                        "title": "Name"
+                    },
+                    "trigger": {
+                        "type": "string",
+                        "description": "Event that fires this rule",
+                        "enum": [
+                            "purchase",
+                            "signup",
+                            "birthday",
+                            "review",
+                            "referral",
+                            "visit",
+                            "manual"
+                        ],
+                        "default": "purchase",
+                        "title": "Trigger",
+                        "facetable": true
+                    },
+                    "conditie": {
+                        "type": "object",
+                        "description": "JSON condition filtering when the rule applies, e.g. {\"excludeCategory\":[\"gift-card\"]}, {\"dayOfWeek\":\"tuesday\"}, {\"channel\":\"online\"}"
+                    },
+                    "formule": {
+                        "type": "object",
+                        "description": "JSON formula computing the points, e.g. {\"type\":\"fixed\",\"value\":50}, {\"type\":\"percentage\",\"value\":1}, {\"type\":\"stepped\",\"brackets\":[]}"
+                    },
+                    "maxPerKlantPerPeriode": {
+                        "type": "integer",
+                        "description": "Maximum points awardable per customer per period for this rule (empty for unlimited)"
+                    },
+                    "geldigVan": {
+                        "type": "string",
+                        "description": "ISO 8601 date the rule becomes valid",
+                        "format": "date"
+                    },
+                    "geldigTot": {
+                        "type": "string",
+                        "description": "ISO 8601 date the rule stops being valid (empty for open-ended)",
+                        "format": "date"
+                    },
+                    "prioriteit": {
+                        "type": "integer",
+                        "description": "Evaluation priority; the lowest number is evaluated first and the highest-priority match wins",
+                        "default": 1,
+                        "facetable": true
+                    }
+                }
+            },
+            "tierRule": {
+                "slug": "tierRule",
+                "title": "Tier Rule",
+                "icon": "Medal",
+                "version": "1.0.0",
+                "summary": "A recognition tier with a threshold and benefits within a loyalty programme",
+                "description": "Defines a tier (e.g. Zilver, Goud, Platina): the threshold type and value that qualifies a customer, the benefits granted, and the upgrade/downgrade policy. Tier classification is computed server-side from the customer's lifetime points or spend; the client never asserts a tier.",
+                "@type": "schema:Rating",
+                "required": [
+                    "programmeId",
+                    "naam",
+                    "drempelType",
+                    "drempelWaarde"
+                ],
+                "properties": {
+                    "programmeId": {
+                        "type": "string",
+                        "description": "UUID reference to the owning loyaltyProgramme",
+                        "facetable": true
+                    },
+                    "naam": {
+                        "type": "string",
+                        "description": "Tier name",
+                        "maxLength": 255,
+                        "minLength": 1,
+                        "title": "Name",
+                        "facetable": true
+                    },
+                    "sequence": {
+                        "type": "integer",
+                        "description": "Ordering of this tier within the programme (lowest first)",
+                        "default": 1
+                    },
+                    "drempelType": {
+                        "type": "string",
+                        "description": "Metric the threshold is measured against",
+                        "enum": [
+                            "lifetimePoints",
+                            "rollingPoints12m",
+                            "jaarlijkseSpend"
+                        ],
+                        "default": "lifetimePoints",
+                        "title": "Threshold type",
+                        "facetable": true
+                    },
+                    "drempelWaarde": {
+                        "type": "integer",
+                        "description": "Threshold value a customer must reach to qualify for this tier",
+                        "default": 0
+                    },
+                    "benefits": {
+                        "type": "object",
+                        "description": "JSON benefits, e.g. {\"pointsMultiplier\":1.25,\"exclusiveOffers\":true,\"freeShipping\":true}"
+                    },
+                    "upgradeBeleid": {
+                        "type": "string",
+                        "description": "When an upgrade takes effect",
+                        "enum": [
+                            "immediate",
+                            "end_of_period"
+                        ],
+                        "default": "immediate",
+                        "title": "Upgrade policy"
+                    },
+                    "downgradeBeleid": {
+                        "type": "string",
+                        "description": "When a downgrade takes effect (empty for never)",
+                        "maxLength": 64
+                    }
+                }
+            },
+            "klantLoyaltyAccount": {
+                "slug": "klantLoyaltyAccount",
+                "title": "Customer Loyalty Account",
+                "icon": "AccountStar",
+                "version": "1.0.0",
+                "summary": "A customer's enrolment in one loyalty programme with balance and tier",
+                "description": "Links one customer (klantId, FK to klantbeeld-360) to one programme. currentBalance and lifetimePoints are server-maintained denormalisations of the append-only points ledger and must never be trusted from the client. status governs whether the account can earn or redeem. Mapped to Schema.org ProgramMembership.",
+                "@type": "schema:ProgramMembership",
+                "required": [
+                    "klantId",
+                    "programmeId",
+                    "status"
+                ],
+                "properties": {
+                    "klantId": {
+                        "type": "string",
+                        "description": "UUID reference to the customer (klantbeeld-360)",
+                        "facetable": true
+                    },
+                    "programmeId": {
+                        "type": "string",
+                        "description": "UUID reference to the loyaltyProgramme",
+                        "facetable": true
+                    },
+                    "currentBalance": {
+                        "type": "integer",
+                        "description": "Current spendable points balance; server-maintained from the points ledger",
+                        "default": 0
+                    },
+                    "lifetimePoints": {
+                        "type": "integer",
+                        "description": "Total points ever earned; drives tier classification; server-maintained",
+                        "default": 0
+                    },
+                    "currentTierId": {
+                        "type": "string",
+                        "description": "UUID reference to the customer's current tierRule"
+                    },
+                    "tierBehaaldOp": {
+                        "type": "string",
+                        "description": "ISO 8601 date the current tier was reached",
+                        "format": "date"
+                    },
+                    "tierGeldigTot": {
+                        "type": "string",
+                        "description": "ISO 8601 date the current tier is guaranteed until (drives scheduled downgrade)",
+                        "format": "date"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Account status",
+                        "enum": [
+                            "actief",
+                            "geblokkeerd",
+                            "opgezegd"
+                        ],
+                        "default": "actief",
+                        "title": "Status",
+                        "facetable": true
+                    },
+                    "aangemaaktOp": {
+                        "type": "string",
+                        "description": "ISO 8601 date the account was created",
+                        "format": "date"
+                    }
+                }
+            },
+            "pointsLedgerEntry": {
+                "slug": "pointsLedgerEntry",
+                "title": "Points Ledger Entry",
+                "icon": "BookOpenVariant",
+                "version": "1.0.0",
+                "summary": "An append-only points movement (credit, debit, expiry, adjustment)",
+                "description": "Immutable, append-only ledger of every point movement for a loyalty account. Each entry records the signed amount, the running balance after the movement, and the source document. Entries are written server-side and are never updated or deleted after creation, providing a complete financial audit trail; account balances are derived from this ledger. Mapped to Schema.org MoneyTransfer.",
+                "@type": "schema:MoneyTransfer",
+                "required": [
+                    "accountId",
+                    "type",
+                    "aantal"
+                ],
+                "properties": {
+                    "accountId": {
+                        "type": "string",
+                        "description": "UUID reference to the klantLoyaltyAccount",
+                        "facetable": true
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Kind of movement",
+                        "enum": [
+                            "credit",
+                            "debit",
+                            "expiry",
+                            "adjustment",
+                            "transfer"
+                        ],
+                        "title": "Type",
+                        "facetable": true
+                    },
+                    "aantal": {
+                        "type": "integer",
+                        "description": "Signed number of points moved by this entry"
+                    },
+                    "balansNa": {
+                        "type": "integer",
+                        "description": "Running points balance immediately after this entry, recorded for audit"
+                    },
+                    "brondocument": {
+                        "type": "object",
+                        "description": "JSON source reference, e.g. {\"transactionId\":\"...\"}, {\"giftCardId\":\"...\"}, {\"manualReason\":\"...\"}"
+                    },
+                    "regelId": {
+                        "type": "string",
+                        "description": "UUID reference to the pointsRule that produced a credit (empty otherwise)"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "description": "ISO 8601 timestamp of the movement",
+                        "format": "date-time"
+                    },
+                    "verwerktDoor": {
+                        "type": "string",
+                        "description": "Actor that produced the entry (terminal id, user uid or system job)",
+                        "maxLength": 255
+                    }
+                }
+            },
+            "redemptionOption": {
+                "slug": "redemptionOption",
+                "title": "Redemption Option",
+                "icon": "Gift",
+                "version": "1.0.0",
+                "summary": "A reward a customer can redeem points for within a programme",
+                "description": "Defines a reward (discount, free product, gift card or partner voucher) and the points it costs. Optional stock, validity window and per-customer limit constrain redemption. Eligibility and balance checks are enforced server-side at redemption time.",
+                "@type": "schema:Offer",
+                "required": [
+                    "programmeId",
+                    "naam",
+                    "kostenInPunten",
+                    "beloningType"
+                ],
+                "properties": {
+                    "programmeId": {
+                        "type": "string",
+                        "description": "UUID reference to the owning loyaltyProgramme",
+                        "facetable": true
+                    },
+                    "naam": {
+                        "type": "string",
+                        "description": "Reward name shown to the customer",
+                        "maxLength": 255,
+                        "minLength": 1,
+                        "title": "Name"
+                    },
+                    "kostenInPunten": {
+                        "type": "integer",
+                        "description": "Points required to redeem this option"
+                    },
+                    "beloningType": {
+                        "type": "string",
+                        "description": "Kind of reward granted",
+                        "enum": [
+                            "discount",
+                            "free_product",
+                            "gift_card",
+                            "partner_voucher"
+                        ],
+                        "title": "Reward type",
+                        "facetable": true
+                    },
+                    "beloningWaarde": {
+                        "type": "string",
+                        "description": "Reward value (monetary amount, product name or voucher reference depending on type)",
+                        "maxLength": 255
+                    },
+                    "voorraad": {
+                        "type": "integer",
+                        "description": "Remaining stock (empty for unlimited)"
+                    },
+                    "geldigVan": {
+                        "type": "string",
+                        "description": "ISO 8601 date the option becomes redeemable",
+                        "format": "date"
+                    },
+                    "geldigTot": {
+                        "type": "string",
+                        "description": "ISO 8601 date the option stops being redeemable (empty for open-ended)",
+                        "format": "date"
+                    },
+                    "perKlantLimiet": {
+                        "type": "integer",
+                        "description": "Maximum redemptions of this option per customer (empty for unlimited)"
+                    }
+                }
+            },
+            "redemption": {
+                "slug": "redemption",
+                "title": "Redemption",
+                "icon": "TicketConfirmation",
+                "version": "1.0.0",
+                "summary": "A customer's redemption of points for a reward option",
+                "description": "Records a customer redeeming points for a redemptionOption. The points are debited via an append-only ledger entry when the redemption is reserved; the unique reward code is generated server-side. Status moves reserved -> used (or cancelled/expired). Balance, validity and per-customer-limit checks are server-authoritative.",
+                "@type": "schema:Order",
+                "required": [
+                    "accountId",
+                    "optionId",
+                    "puntenBesteed",
+                    "status"
+                ],
+                "properties": {
+                    "accountId": {
+                        "type": "string",
+                        "description": "UUID reference to the klantLoyaltyAccount",
+                        "facetable": true
+                    },
+                    "optionId": {
+                        "type": "string",
+                        "description": "UUID reference to the redeemed redemptionOption",
+                        "facetable": true
+                    },
+                    "transactionId": {
+                        "type": "string",
+                        "description": "UUID reference to the POS transaction the reward was applied in (empty until used)"
+                    },
+                    "puntenBesteed": {
+                        "type": "integer",
+                        "description": "Number of points spent on this redemption"
+                    },
+                    "beloningCode": {
+                        "type": "string",
+                        "description": "Unique server-generated reward code presented at the POS",
+                        "maxLength": 64,
+                        "facetable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Redemption status",
+                        "enum": [
+                            "gereserveerd",
+                            "gebruikt",
+                            "vervallen",
+                            "geannuleerd"
+                        ],
+                        "default": "gereserveerd",
+                        "title": "Status",
+                        "facetable": true
+                    },
+                    "aangemaaktOp": {
+                        "type": "string",
+                        "description": "ISO 8601 timestamp the redemption was reserved",
+                        "format": "date-time"
+                    },
+                    "gebruiktOp": {
+                        "type": "string",
+                        "description": "ISO 8601 timestamp the redemption was used",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "giftCard": {
+                "slug": "giftCard",
+                "title": "Gift Card",
+                "icon": "CardGiftcard",
+                "version": "1.0.0",
+                "summary": "A gift card with serial, hashed PIN, balance and expiry",
+                "description": "A gift card sold or issued promotionally. Only the serial and a hashed PIN are stored (no clear card number), meeting PCI-DSS expectations. currentBalans is server-maintained from gift-card transactions; status moves issued -> active -> depleted/blocked/expired. The card is activated only once the issuing POS transaction settles, to prevent fraudulent refund issuance. Mapped to Schema.org GiftCard.",
+                "@type": "schema:GiftCard",
+                "required": [
+                    "serial",
+                    "status"
+                ],
+                "properties": {
+                    "programmeId": {
+                        "type": "string",
+                        "description": "UUID reference to the associated loyaltyProgramme (optional)",
+                        "facetable": true
+                    },
+                    "serial": {
+                        "type": "string",
+                        "description": "Globally unique gift-card serial number",
+                        "maxLength": 64,
+                        "minLength": 1,
+                        "title": "Serial",
+                        "facetable": true
+                    },
+                    "pin": {
+                        "type": "string",
+                        "description": "Hashed PIN (bcrypt). Never stored or returned in clear text.",
+                        "maxLength": 255
+                    },
+                    "initialeBalans": {
+                        "type": "number",
+                        "description": "Monetary balance the card was issued with"
+                    },
+                    "currentBalans": {
+                        "type": "number",
+                        "description": "Remaining monetary balance; server-maintained from gift-card transactions"
+                    },
+                    "valuta": {
+                        "type": "string",
+                        "description": "ISO 4217 currency code",
+                        "maxLength": 3,
+                        "default": "EUR"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Gift-card lifecycle status",
+                        "enum": [
+                            "issued",
+                            "active",
+                            "depleted",
+                            "expired",
+                            "blocked"
+                        ],
+                        "default": "issued",
+                        "title": "Status",
+                        "facetable": true
+                    },
+                    "uitgegevenOp": {
+                        "type": "string",
+                        "description": "ISO 8601 date the card was issued",
+                        "format": "date"
+                    },
+                    "uitgegevenAan": {
+                        "type": "string",
+                        "description": "Recipient label (name or reference) the card was issued to",
+                        "maxLength": 255
+                    },
+                    "vervaltOp": {
+                        "type": "string",
+                        "description": "ISO 8601 date the card expires",
+                        "format": "date"
+                    },
+                    "kanaal": {
+                        "type": "string",
+                        "description": "How the card was issued",
+                        "enum": [
+                            "purchased",
+                            "promotional",
+                            "refund"
+                        ],
+                        "default": "purchased",
+                        "title": "Channel",
+                        "facetable": true
+                    }
+                }
+            },
+            "giftCardTransaction": {
+                "slug": "giftCardTransaction",
+                "title": "Gift Card Transaction",
+                "icon": "SwapHorizontal",
+                "version": "1.0.0",
+                "summary": "An append-only movement against a gift card balance",
+                "description": "Immutable, append-only record of every gift-card operation (issue, redeem, partial_redeem, refund, top_up, block) with the amount and the resulting balance. Written server-side and never updated, providing the audit trail for gift-card balances. Mapped to Schema.org MoneyTransfer.",
+                "@type": "schema:MoneyTransfer",
+                "required": [
+                    "giftCardId",
+                    "type"
+                ],
+                "properties": {
+                    "giftCardId": {
+                        "type": "string",
+                        "description": "UUID reference to the giftCard",
+                        "facetable": true
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Kind of gift-card operation",
+                        "enum": [
+                            "issue",
+                            "redeem",
+                            "partial_redeem",
+                            "refund",
+                            "top_up",
+                            "block"
+                        ],
+                        "title": "Type",
+                        "facetable": true
+                    },
+                    "bedrag": {
+                        "type": "number",
+                        "description": "Signed monetary amount moved by this transaction"
+                    },
+                    "balansNa": {
+                        "type": "number",
+                        "description": "Gift-card balance immediately after this transaction"
+                    },
+                    "posTransactionId": {
+                        "type": "string",
+                        "description": "UUID reference to the POS transaction this movement settled in (optional)"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "description": "ISO 8601 timestamp of the movement",
+                        "format": "date-time"
+                    },
+                    "verwerktDoor": {
+                        "type": "string",
+                        "description": "Actor that produced the entry (terminal id, user uid or system job)",
+                        "maxLength": 255
+                    }
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "loyaltyProgramme",
+                    "slug": "programma-premium-grocer"
+                },
+                "naam": "Premium Rewards",
+                "merk": "De Groene Grocer",
+                "beschrijving": "Spaar punten bij elke aankoop en wissel ze in voor korting, cadeaus of speciale aanbiedingen.",
+                "startdatum": "2026-01-01",
+                "status": "actief",
+                "valuta": "EUR",
+                "taal": "nl",
+                "termsUrl": "https://example.com/loyalty-terms",
+                "puntwaarde": 0.02
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "loyaltyProgramme",
+                    "slug": "programma-pizzeria-marco"
+                },
+                "naam": "Marco's Loyalty",
+                "merk": "Pizzeria Marco",
+                "beschrijving": "Bestel een pizza, verdien punten. 10 punten is een gratis pizza.",
+                "startdatum": "2025-06-01",
+                "status": "actief",
+                "valuta": "EUR",
+                "taal": "nl",
+                "termsUrl": "https://example.com/marco-terms",
+                "puntwaarde": 0.05
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "pointsRule",
+                    "slug": "rule-purchase-standard"
+                },
+                "programmeId": "programma-premium-grocer",
+                "naam": "Standaard aankoop",
+                "trigger": "purchase",
+                "conditie": {
+                    "excludeCategory": [
+                        "gift-card"
+                    ]
+                },
+                "formule": {
+                    "type": "percentage",
+                    "value": 1
+                },
+                "geldigVan": "2026-01-01",
+                "prioriteit": 1
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "pointsRule",
+                    "slug": "rule-tuesday-bonus"
+                },
+                "programmeId": "programma-premium-grocer",
+                "naam": "Dubbele punten dinsdag",
+                "trigger": "purchase",
+                "conditie": {
+                    "dayOfWeek": "tuesday"
+                },
+                "formule": {
+                    "type": "percentage",
+                    "value": 2
+                },
+                "maxPerKlantPerPeriode": 100,
+                "geldigVan": "2026-01-01",
+                "prioriteit": 2
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "pointsRule",
+                    "slug": "rule-pizza-loyalty"
+                },
+                "programmeId": "programma-pizzeria-marco",
+                "naam": "Punt per pizza",
+                "trigger": "purchase",
+                "formule": {
+                    "type": "fixed",
+                    "value": 10
+                },
+                "geldigVan": "2025-06-01",
+                "prioriteit": 1
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "tierRule",
+                    "slug": "tier-zilver"
+                },
+                "programmeId": "programma-premium-grocer",
+                "naam": "Zilver",
+                "sequence": 1,
+                "drempelType": "lifetimePoints",
+                "drempelWaarde": 0,
+                "benefits": {
+                    "pointsMultiplier": 1.0,
+                    "exclusiveOffers": false
+                },
+                "upgradeBeleid": "immediate"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "tierRule",
+                    "slug": "tier-goud"
+                },
+                "programmeId": "programma-premium-grocer",
+                "naam": "Goud",
+                "sequence": 2,
+                "drempelType": "lifetimePoints",
+                "drempelWaarde": 500,
+                "benefits": {
+                    "pointsMultiplier": 1.25,
+                    "exclusiveOffers": true,
+                    "freeShipping": true
+                },
+                "upgradeBeleid": "immediate",
+                "downgradeBeleid": "end_of_year"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "tierRule",
+                    "slug": "tier-platina"
+                },
+                "programmeId": "programma-premium-grocer",
+                "naam": "Platina",
+                "sequence": 3,
+                "drempelType": "lifetimePoints",
+                "drempelWaarde": 2000,
+                "benefits": {
+                    "pointsMultiplier": 1.5,
+                    "exclusiveOffers": true,
+                    "freeShipping": true
+                },
+                "upgradeBeleid": "immediate",
+                "downgradeBeleid": "end_of_year"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "redemptionOption",
+                    "slug": "option-discount-5eur"
+                },
+                "programmeId": "programma-premium-grocer",
+                "naam": "5 euro korting",
+                "kostenInPunten": 250,
+                "beloningType": "discount",
+                "beloningWaarde": "5.00",
+                "geldigVan": "2026-01-01",
+                "perKlantLimiet": 1
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "redemptionOption",
+                    "slug": "option-free-pizza"
+                },
+                "programmeId": "programma-pizzeria-marco",
+                "naam": "Gratis Margherita pizza",
+                "kostenInPunten": 100,
+                "beloningType": "free_product",
+                "beloningWaarde": "Margherita Pizza",
+                "geldigVan": "2025-06-01"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "klantLoyaltyAccount",
+                    "slug": "account-anna-premium"
+                },
+                "klantId": "klant-anna",
+                "programmeId": "programma-premium-grocer",
+                "currentBalance": 1250,
+                "lifetimePoints": 2500,
+                "currentTierId": "tier-platina",
+                "tierBehaaldOp": "2026-02-15",
+                "tierGeldigTot": "2026-12-31",
+                "status": "actief",
+                "aangemaaktOp": "2025-06-01"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "klantLoyaltyAccount",
+                    "slug": "account-mario-marco"
+                },
+                "klantId": "klant-mario",
+                "programmeId": "programma-pizzeria-marco",
+                "currentBalance": 45,
+                "lifetimePoints": 95,
+                "status": "actief",
+                "aangemaaktOp": "2025-08-01"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "pointsLedgerEntry",
+                    "slug": "ledger-anna-credit-001"
+                },
+                "accountId": "account-anna-premium",
+                "type": "credit",
+                "aantal": 150,
+                "balansNa": 1250,
+                "brondocument": {
+                    "transactionId": "txn-2026-0001"
+                },
+                "regelId": "rule-purchase-standard",
+                "timestamp": "2026-05-20T14:32:00Z",
+                "verwerktDoor": "kassa-01"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "pointsLedgerEntry",
+                    "slug": "ledger-mario-credit-001"
+                },
+                "accountId": "account-mario-marco",
+                "type": "credit",
+                "aantal": 10,
+                "balansNa": 45,
+                "brondocument": {
+                    "transactionId": "txn-2025-0420"
+                },
+                "regelId": "rule-pizza-loyalty",
+                "timestamp": "2025-08-01T18:05:00Z",
+                "verwerktDoor": "kassa-02"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "redemption",
+                    "slug": "redemption-anna-001"
+                },
+                "accountId": "account-anna-premium",
+                "optionId": "option-discount-5eur",
+                "puntenBesteed": 250,
+                "beloningCode": "LOY-5EUR-A1B2C3",
+                "status": "gebruikt",
+                "aangemaaktOp": "2026-05-10T11:00:00Z",
+                "gebruiktOp": "2026-05-10T11:04:00Z"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "giftCard",
+                    "slug": "gc-premium-0001"
+                },
+                "programmeId": "programma-premium-grocer",
+                "serial": "GC-00000001",
+                "initialeBalans": 50.00,
+                "currentBalans": 23.50,
+                "valuta": "EUR",
+                "status": "active",
+                "uitgegevenOp": "2026-01-15",
+                "uitgegevenAan": "Bedrijfsadministrator",
+                "vervaltOp": "2027-01-15",
+                "kanaal": "purchased"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "giftCardTransaction",
+                    "slug": "gctx-premium-0001-issue"
+                },
+                "giftCardId": "gc-premium-0001",
+                "type": "issue",
+                "bedrag": 50.00,
+                "balansNa": 50.00,
+                "timestamp": "2026-01-15T09:00:00Z",
+                "verwerktDoor": "kassa-01"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "giftCardTransaction",
+                    "slug": "gctx-premium-0001-redeem"
+                },
+                "giftCardId": "gc-premium-0001",
+                "type": "partial_redeem",
+                "bedrag": -26.50,
+                "balansNa": 23.50,
+                "posTransactionId": "txn-2026-0099",
+                "timestamp": "2026-03-02T16:20:00Z",
+                "verwerktDoor": "kassa-01"
+            }
+        ]
+    }
+}

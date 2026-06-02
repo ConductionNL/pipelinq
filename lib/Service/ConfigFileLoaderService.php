@@ -29,6 +29,8 @@ use RuntimeException;
 
 /**
  * Service for loading and parsing configuration JSON files.
+ *
+ * @spec openspec/changes/loyalty-program/tasks.md#task-1.1
  */
 class ConfigFileLoaderService
 {
@@ -148,25 +150,69 @@ class ConfigFileLoaderService
             $fragmentBlob .= $fragmentContent;
         }//end foreach
 
-        if ($fragmentBlob !== '') {
-            $baseVersion  = ($data['info']['version'] ?? '0.0.0');
-            $fragmentHash = substr(hash('sha256', $fragmentBlob), 0, 8);
-            if (isset($data['info']) === false || is_array($data['info']) === false) {
-                $data['info'] = [];
-            }
+        return self::foldFragmentVersion(data: $data, fragmentBlob: $fragmentBlob);
+    }//end mergeRegisterFragments()
 
-            $data['info']['version'] = $baseVersion.'+frag.'.$fragmentHash;
+    /**
+     * Fold a short hash of the merged fragment content into `info.version`.
+     *
+     * This makes OpenRegister's version-gated import re-run whenever any
+     * fragment changes (ADR-037). When no fragment content was merged the data
+     * is returned unchanged.
+     *
+     * @param array  $data         The merged configuration data.
+     * @param string $fragmentBlob Concatenated raw fragment content.
+     *
+     * @return array The data with `info.version` updated when applicable.
+     */
+    private static function foldFragmentVersion(array $data, string $fragmentBlob): array
+    {
+        if ($fragmentBlob === '') {
+            return $data;
         }
 
+        if (isset($data['info']) === false || is_array($data['info']) === false) {
+            $data['info'] = [];
+        }
+
+        $baseVersion  = ($data['info']['version'] ?? '0.0.0');
+        $fragmentHash = substr(hash('sha256', $fragmentBlob), 0, 8);
+        $data['info']['version'] = $baseVersion.'+frag.'.$fragmentHash;
+
         return $data;
-    }//end mergeRegisterFragments()
+    }//end foldFragmentVersion()
+
+    /**
+     * Deep-merge a single fragment onto a base configuration array.
+     *
+     * Thin public wrapper around {@see self::deepMergeConfig()} exposing the
+     * fleet-standard fragment-merge semantics (recursive object merge, additive
+     * `schemas[]` membership and `components.objects[]` seed lists, replace for
+     * all other lists/scalars) for direct testing and reuse.
+     *
+     * @param array $base     The base configuration array.
+     * @param array $override The fragment to merge on top of the base.
+     *
+     * @return array The deep-merged result.
+     *
+     * @spec openspec/changes/loyalty-program/tasks.md#task-1.1
+     */
+    public function mergeFragment(array $base, array $override): array
+    {
+        return self::deepMergeConfig(base: $base, override: $override);
+    }//end mergeFragment()
 
     /**
      * Recursively deep-merge an override array onto a base array.
      *
-     * Associative keys are merged recursively; scalar and list values from the
-     * override replace those in the base. This mirrors the fragment-merge
-     * semantics shared across the fleet (ADR-037).
+     * Associative keys are merged recursively. Two membership/seed lists are
+     * additive (ADR-037): the register's `schemas[]` membership list and the
+     * top-level `components.objects[]` seed list are concatenated and
+     * deduplicated rather than replaced, so a fragment can register new schemas
+     * and ship new seed objects without clobbering those contributed by the
+     * monolith or by other fragments. All other list values from the override
+     * replace those in the base, mirroring the fragment-merge semantics shared
+     * across the fleet.
      *
      * @param array $base     The base configuration array.
      * @param array $override The fragment to merge on top of the base.
@@ -176,21 +222,139 @@ class ConfigFileLoaderService
     private static function deepMergeConfig(array $base, array $override): array
     {
         foreach ($override as $key => $value) {
-            if (is_array($value) === true
-                && isset($base[$key]) === true
-                && is_array($base[$key]) === true
-                && self::isList(value: $value) === false
-                && self::isList(value: $base[$key]) === false
-            ) {
-                $base[$key] = self::deepMergeConfig(base: $base[$key], override: $value);
-                continue;
-            }
-
-            $base[$key] = $value;
+            $base[$key] = self::mergeValue(
+                key: $key,
+                baseValue: ($base[$key] ?? null),
+                hasBase: array_key_exists($key, $base),
+                overrideValue: $value
+            );
         }//end foreach
 
         return $base;
     }//end deepMergeConfig()
+
+    /**
+     * Resolve the merged value for a single key during a deep merge.
+     *
+     * Associative arrays merge recursively; the additive membership/seed lists
+     * (`schemas[]`, `objects[]`) are unioned; everything else takes the override
+     * value (replace semantics).
+     *
+     * @param string|int $key           The key being merged.
+     * @param mixed      $baseValue     The base value for the key (null when absent).
+     * @param bool       $hasBase       Whether the base actually holds this key.
+     * @param mixed      $overrideValue The override value for the key.
+     *
+     * @return mixed The merged value.
+     */
+    private static function mergeValue(string | int $key, mixed $baseValue, bool $hasBase, mixed $overrideValue): mixed
+    {
+        if (is_array($overrideValue) === false || $hasBase === false || is_array($baseValue) === false) {
+            return $overrideValue;
+        }
+
+        $overrideIsList = self::isList(value: $overrideValue);
+        $baseIsList     = self::isList(value: $baseValue);
+
+        if ($overrideIsList === false && $baseIsList === false) {
+            return self::deepMergeConfig(base: $baseValue, override: $overrideValue);
+        }
+
+        if ($overrideIsList === true && $baseIsList === true) {
+            return match ($key) {
+                'schemas' => self::mergeSchemaMembership(base: $baseValue, override: $overrideValue),
+                'objects' => self::mergeSeedObjects(base: $baseValue, override: $overrideValue),
+                default => $overrideValue,
+            };
+        }
+
+        return $overrideValue;
+    }//end mergeValue()
+
+    /**
+     * Concatenate and deduplicate a register `schemas[]` membership list.
+     *
+     * Membership entries are schema-slug strings. Override entries are appended
+     * to the base in order, skipping slugs already present, yielding an
+     * idempotent union (ADR-037).
+     *
+     * @param array $base     The base membership list (schema-slug strings).
+     * @param array $override The fragment membership list to fold in.
+     *
+     * @return array The deduplicated union of both lists.
+     */
+    private static function mergeSchemaMembership(array $base, array $override): array
+    {
+        $merged = $base;
+        foreach ($override as $slug) {
+            if (in_array($slug, $merged, true) === false) {
+                $merged[] = $slug;
+            }
+        }
+
+        return $merged;
+    }//end mergeSchemaMembership()
+
+    /**
+     * Concatenate and deduplicate a `components.objects[]` seed list.
+     *
+     * Seed objects are deduplicated by their `@self.slug`; an override object
+     * sharing a slug with a base object replaces that base entry in place, so
+     * re-importing the same fragment is idempotent. Objects without a resolvable
+     * slug are always appended (never silently dropped).
+     *
+     * @param array $base     The base seed-object list.
+     * @param array $override The fragment seed-object list to fold in.
+     *
+     * @return array The deduplicated union of both lists.
+     */
+    private static function mergeSeedObjects(array $base, array $override): array
+    {
+        $indexBySlug = [];
+        foreach ($base as $index => $object) {
+            $slug = self::objectSlug(object: $object);
+            if ($slug !== null) {
+                $indexBySlug[$slug] = $index;
+            }
+        }
+
+        $merged = $base;
+        foreach ($override as $object) {
+            $slug = self::objectSlug(object: $object);
+            if ($slug !== null && isset($indexBySlug[$slug]) === true) {
+                $merged[$indexBySlug[$slug]] = $object;
+                continue;
+            }
+
+            $merged[] = $object;
+            if ($slug !== null) {
+                $indexBySlug[$slug] = (array_key_last($merged));
+            }
+        }
+
+        return array_values($merged);
+    }//end mergeSeedObjects()
+
+    /**
+     * Resolve the `@self.slug` identity of a seed object.
+     *
+     * @param mixed $object A candidate seed-object value.
+     *
+     * @return string|null The slug when present and non-empty, otherwise null.
+     */
+    private static function objectSlug(mixed $object): ?string
+    {
+        if (is_array($object) === false) {
+            return null;
+        }
+
+        $slug = ($object['@self']['slug'] ?? null);
+        if (is_string($slug) === true && $slug !== '') {
+            return $slug;
+        }
+
+        return null;
+    }//end objectSlug()
 
     /**
      * Determine whether an array is a sequential list (zero-indexed, no gaps).
@@ -208,7 +372,7 @@ class ConfigFileLoaderService
         }
 
         $expectedKey = 0;
-        foreach ($value as $key => $unused) {
+        foreach (array_keys($value) as $key) {
             if ($key !== $expectedKey) {
                 return false;
             }

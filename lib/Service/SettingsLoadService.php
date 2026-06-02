@@ -71,6 +71,15 @@ class SettingsLoadService
         'refundReason',
         'posRefund',
         'posRefundLine',
+        'loyaltyProgramme',
+        'pointsRule',
+        'tierRule',
+        'klantLoyaltyAccount',
+        'pointsLedgerEntry',
+        'redemptionOption',
+        'redemption',
+        'giftCard',
+        'giftCardTransaction',
     ];
 
     /**
