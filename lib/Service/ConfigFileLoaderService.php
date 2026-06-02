@@ -29,6 +29,8 @@ use RuntimeException;
 
 /**
  * Service for loading and parsing configuration JSON files.
+ *
+ * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-10
  */
 class ConfigFileLoaderService
 {
@@ -54,10 +56,12 @@ class ConfigFileLoaderService
     /**
      * Constructor.
      *
-     * @param IAppManager $appManager The app manager.
+     * @param IAppManager            $appManager The app manager.
+     * @param RegisterFragmentMerger $merger     The ADR-037 fragment merger.
      */
     public function __construct(
         private IAppManager $appManager,
+        private RegisterFragmentMerger $merger=new RegisterFragmentMerger(),
     ) {
     }//end __construct()
 
@@ -97,13 +101,9 @@ class ConfigFileLoaderService
      * Deep-merge modular register fragments onto the monolith configuration.
      *
      * Reads every `*.json` file under {@see self::REGISTER_FRAGMENT_DIR} in a
-     * stable (sorted) order and deep-merges each onto the base configuration via
-     * {@see self::deepMergeConfig()}. A short hash derived from the merged
-     * fragment content is folded into `info.version` so OpenRegister's
-     * version-gated import re-runs whenever a fragment changes (ADR-037).
-     *
-     * When the fragment directory is absent or empty, the monolith data is
-     * returned unchanged.
+     * stable (sorted) order and delegates the additive ADR-037 merge to
+     * {@see RegisterFragmentMerger}. When the fragment directory is absent or
+     * empty, the monolith data is returned unchanged.
      *
      * @param array  $data    The parsed monolith configuration data.
      * @param string $appPath The absolute app root path.
@@ -126,6 +126,7 @@ class ConfigFileLoaderService
 
         sort($fragmentFiles);
 
+        $fragments    = [];
         $fragmentBlob = '';
         foreach ($fragmentFiles as $fragmentFile) {
             $fragmentContent = file_get_contents($fragmentFile);
@@ -133,91 +134,12 @@ class ConfigFileLoaderService
                 throw new RuntimeException("Failed to read register fragment: {$fragmentFile}");
             }
 
-            $fragmentData = json_decode($fragmentContent, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new RuntimeException(
-                    "Invalid JSON in register fragment {$fragmentFile}: ".json_last_error_msg()
-                );
-            }
-
-            if (is_array($fragmentData) === false) {
-                continue;
-            }
-
-            $data          = self::deepMergeConfig(base: $data, override: $fragmentData);
+            $fragments[]   = $this->merger->decode(fragmentFile: $fragmentFile, fragmentContent: $fragmentContent);
             $fragmentBlob .= $fragmentContent;
-        }//end foreach
-
-        if ($fragmentBlob !== '') {
-            $baseVersion  = ($data['info']['version'] ?? '0.0.0');
-            $fragmentHash = substr(hash('sha256', $fragmentBlob), 0, 8);
-            if (isset($data['info']) === false || is_array($data['info']) === false) {
-                $data['info'] = [];
-            }
-
-            $data['info']['version'] = $baseVersion.'+frag.'.$fragmentHash;
         }
 
-        return $data;
+        return $this->merger->merge(base: $data, fragments: $fragments, fragmentBlob: $fragmentBlob);
     }//end mergeRegisterFragments()
-
-    /**
-     * Recursively deep-merge an override array onto a base array.
-     *
-     * Associative keys are merged recursively; scalar and list values from the
-     * override replace those in the base. This mirrors the fragment-merge
-     * semantics shared across the fleet (ADR-037).
-     *
-     * @param array $base     The base configuration array.
-     * @param array $override The fragment to merge on top of the base.
-     *
-     * @return array The deep-merged result.
-     */
-    private static function deepMergeConfig(array $base, array $override): array
-    {
-        foreach ($override as $key => $value) {
-            if (is_array($value) === true
-                && isset($base[$key]) === true
-                && is_array($base[$key]) === true
-                && self::isList(value: $value) === false
-                && self::isList(value: $base[$key]) === false
-            ) {
-                $base[$key] = self::deepMergeConfig(base: $base[$key], override: $value);
-                continue;
-            }
-
-            $base[$key] = $value;
-        }//end foreach
-
-        return $base;
-    }//end deepMergeConfig()
-
-    /**
-     * Determine whether an array is a sequential list (zero-indexed, no gaps).
-     *
-     * Provided for PHP < 8.1 parity where `array_is_list()` is unavailable.
-     *
-     * @param array $value The array to inspect.
-     *
-     * @return bool True when the array is a sequential list.
-     */
-    private static function isList(array $value): bool
-    {
-        if (function_exists('array_is_list') === true) {
-            return array_is_list($value);
-        }
-
-        $expectedKey = 0;
-        foreach ($value as $key => $unused) {
-            if ($key !== $expectedKey) {
-                return false;
-            }
-
-            $expectedKey++;
-        }
-
-        return true;
-    }//end isList()
 
     /**
      * Ensure the x-openregister sourceType is set on configuration data.

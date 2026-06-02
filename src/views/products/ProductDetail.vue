@@ -111,17 +111,17 @@
 				@saved="onPanelSaved" />
 		</CnDetailCard>
 
-		<CnDetailCard :title="t('pipelinq', 'Linked Leads')">
+		<CnDetailCard :title="t('pipelinq', 'Linked Leads ({count})', { count: linkedLeads.length })">
 			<div v-if="linkedLeads.length === 0" class="section-empty">
-				<p>{{ t('pipelinq', 'No leads linked to this product') }}</p>
+				<p>{{ t('pipelinq', 'No leads are using this product yet.') }}</p>
 			</div>
 			<div v-else class="viewTableContainer">
 				<table class="viewTable">
 					<thead>
 						<tr>
 							<th>{{ t('pipelinq', 'Lead') }}</th>
+							<th>{{ t('pipelinq', 'Stage') }}</th>
 							<th>{{ t('pipelinq', 'Quantity') }}</th>
-							<th>{{ t('pipelinq', 'Unit Price') }}</th>
 							<th>{{ t('pipelinq', 'Total') }}</th>
 						</tr>
 					</thead>
@@ -131,9 +131,13 @@
 							:key="item.id"
 							class="viewTableRow"
 							@click="openLead(item)">
-							<td>{{ item.leadTitle || item.lead }}</td>
+							<td>
+								<a href="#" class="lead-link" @click.prevent.stop="openLead(item)">
+									{{ item.leadTitle || item.lead }}
+								</a>
+							</td>
+							<td>{{ item.leadStage || '-' }}</td>
 							<td>{{ item.quantity }}</td>
-							<td>{{ formatCurrency(item.unitPrice) }}</td>
 							<td>{{ formatCurrency(item.total) }}</td>
 						</tr>
 					</tbody>
@@ -318,7 +322,7 @@ export default {
 					_limit: 50,
 					product: this.productId,
 				})
-				this.linkedLeads = leadProducts || []
+				this.linkedLeads = await this.resolveLinkedLeads(leadProducts || [])
 			} catch {
 				this.linkedLeads = []
 			}
@@ -331,6 +335,50 @@ export default {
 					this.categoryName = ''
 				}
 			}
+		},
+		/**
+		 * Resolve each LeadProduct's parent lead for display: attach the lead
+		 * title and stage, then sort newest first by creation date.
+		 *
+		 * @param {Array<object>} leadProducts The raw LeadProduct line items.
+		 *
+		 * @return {Promise<Array<object>>} The enriched, sorted list.
+		 *
+		 * @spec openspec/changes/lead-product-link/tasks.md#task-5.2
+		 */
+		async resolveLinkedLeads(leadProducts) {
+			const uniqueLeadIds = [...new Set(leadProducts.map(lp => lp.lead).filter(Boolean))]
+			const leadsById = {}
+			await Promise.all(uniqueLeadIds.map(async (leadId) => {
+				try {
+					const lead = await this.objectStore.fetchObject('lead', leadId)
+					if (lead) leadsById[leadId] = lead
+				} catch {
+					// Orphaned reference — leave unresolved.
+				}
+			}))
+
+			return leadProducts
+				.map(lp => ({
+					...lp,
+					leadTitle: leadsById[lp.lead]?.title || '',
+					leadStage: leadsById[lp.lead]?.stage || '',
+				}))
+				.sort((a, b) => this.creationTime(b) - this.creationTime(a))
+		},
+		/**
+		 * Extract a comparable creation timestamp from an object's metadata.
+		 *
+		 * @param {object} item The object.
+		 *
+		 * @return {number} The epoch millisecond timestamp (0 when unknown).
+		 *
+		 * @spec openspec/changes/lead-product-link/tasks.md#task-5.3
+		 */
+		creationTime(item) {
+			const created = item?.['@self']?.created || item?.created || ''
+			const time = Date.parse(created)
+			return Number.isNaN(time) ? 0 : time
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-11
@@ -442,6 +490,15 @@ export default {
 
 .viewTableRow:hover {
 	background: var(--color-background-hover);
+}
+
+.lead-link {
+	color: var(--color-primary-element);
+	font-weight: 600;
+}
+
+.lead-link:hover {
+	text-decoration: underline;
 }
 
 .section-empty {

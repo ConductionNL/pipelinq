@@ -1126,7 +1126,14 @@
         "Failed to save refund.": "Failed to save refund.",
         "This will reject the refund. Enter a reason for the rejection.": "This will reject the refund. Enter a reason for the rejection.",
         "Vul een reden in voor de afwijzing": "Enter a reason for the rejection",
-        "Max {max}": "Max {max}"
+        "Max {max}": "Max {max}",
+        "Product breakdown": "Product breakdown",
+        "Show product breakdown for {stage}": "Show product breakdown for {stage}",
+        "Top products in {stage}": "Top products in {stage}",
+        "No product breakdown available for this stage": "No product breakdown available for this stage",
+        "and {count} more": "and {count} more",
+        "Linked Leads ({count})": "Linked Leads ({count})",
+        "No leads are using this product yet.": "No leads are using this product yet."
     },
     "plurals": {}
 }

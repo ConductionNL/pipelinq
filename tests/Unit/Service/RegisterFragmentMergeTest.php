@@ -3,7 +3,7 @@
 /**
  * Unit tests for the ADR-037 modular register-fragment deep-merge.
  *
- * Exercises the private static ConfigFileLoaderService::deepMergeConfig()
+ * Exercises the private static RegisterFragmentMerger::deepMergeConfig()
  * (and its isList() helper) via reflection — the merge semantics that let
  * concurrent same-app builds extend the register without touching the shared
  * pipelinq_register.json monolith.
@@ -24,12 +24,12 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
-use OCA\Pipelinq\Service\ConfigFileLoaderService;
+use OCA\Pipelinq\Service\RegisterFragmentMerger;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
 /**
- * Tests for ConfigFileLoaderService::deepMergeConfig().
+ * Tests for RegisterFragmentMerger::deepMergeConfig().
  */
 class RegisterFragmentMergeTest extends TestCase
 {
@@ -43,7 +43,7 @@ class RegisterFragmentMergeTest extends TestCase
      */
     private function deepMerge(array $base, array $override): array
     {
-        $method = new ReflectionMethod(ConfigFileLoaderService::class, 'deepMergeConfig');
+        $method = new ReflectionMethod(RegisterFragmentMerger::class, 'deepMergeConfig');
         $method->setAccessible(true);
 
         return $method->invoke(null, $base, $override);
@@ -117,7 +117,7 @@ class RegisterFragmentMergeTest extends TestCase
      */
     public function testIsListHelper(): void
     {
-        $method = new ReflectionMethod(ConfigFileLoaderService::class, 'isList');
+        $method = new ReflectionMethod(RegisterFragmentMerger::class, 'isList');
         $method->setAccessible(true);
 
         $this->assertTrue($method->invoke(null, [0, 1, 2]));

@@ -81,6 +81,33 @@
 					<span v-if="hasTotals" class="column-value">
 						{{ selectedPipeline.totalsLabel || '' }} {{ getStageTotalValue(stage.name).toLocaleString() }}
 					</span>
+					<NcPopover v-if="showProductBreakdown" :focus-trap="false">
+						<template #trigger>
+							<button
+								type="button"
+								class="stage-breakdown-trigger"
+								:aria-label="t('pipelinq', 'Show product breakdown for {stage}', { stage: stage.name })">
+								{{ t('pipelinq', 'Product breakdown') }}
+							</button>
+						</template>
+						<div class="stage-breakdown">
+							<h4 class="stage-breakdown__title">
+								{{ t('pipelinq', 'Top products in {stage}', { stage: stage.name }) }}
+							</h4>
+							<p v-if="getStageProductBreakdown(stage.name).items.length === 0" class="stage-breakdown__empty">
+								{{ t('pipelinq', 'No product breakdown available for this stage') }}
+							</p>
+							<ul v-else class="stage-breakdown__list">
+								<li v-for="entry in getStageProductBreakdown(stage.name).items" :key="entry.product" class="stage-breakdown__item">
+									<span class="stage-breakdown__name">{{ entry.count }}&times; {{ entry.name }}</span>
+									<span class="stage-breakdown__total">{{ formatCurrency(entry.total) }}</span>
+								</li>
+							</ul>
+							<p v-if="getStageProductBreakdown(stage.name).overflow > 0" class="stage-breakdown__more">
+								{{ t('pipelinq', 'and {count} more', { count: getStageProductBreakdown(stage.name).overflow }) }}
+							</p>
+						</div>
+					</NcPopover>
 				</div>
 				<div class="kanban-column__body">
 					<PipelineCard
@@ -211,7 +238,7 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon, NcPopover, NcSelect, NcTextField } from '@nextcloud/vue'
 import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
 import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
@@ -220,13 +247,14 @@ import { useObjectStore } from '../../store/modules/object.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
 import { getPriorityLabel, getPriorityColor } from '../../services/requestStatus.js'
 import { getDaysAge, isStale, getAgingClass, formatAge } from '../../services/pipelineUtils.js'
-import { formatDate } from '../../services/localeUtils.js'
+import { formatDate, formatCurrency } from '../../services/localeUtils.js'
 
 export default {
 	name: 'PipelineBoard',
 	components: {
 		NcButton,
 		NcLoadingIcon,
+		NcPopover,
 		NcSelect,
 		NcTextField,
 		PipelineCard,
@@ -251,6 +279,18 @@ export default {
 			viewMode: 'kanban',
 			sortBy: 'title',
 			sortDir: 'asc',
+			/**
+			 * LeadProduct line items grouped by their parent lead id.
+			 *
+			 * @spec openspec/changes/lead-product-link/tasks.md#task-4.1
+			 */
+			leadProductsByLead: {},
+			/**
+			 * Product id -> product name lookup for breakdown labels.
+			 *
+			 * @spec openspec/changes/lead-product-link/tasks.md#task-4.2
+			 */
+			productNames: {},
 		}
 	},
 	computed: {
@@ -331,6 +371,15 @@ export default {
 		 */
 		closedStages() {
 			return this.sortedStages.filter(s => s.isClosed)
+		},
+		/**
+		 * Whether any visible pipeline item is a lead — product breakdowns only
+		 * apply to lead items, which carry LeadProduct line items.
+		 *
+		 * @spec openspec/changes/lead-product-link/tasks.md#task-4.3
+		 */
+		showProductBreakdown() {
+			return this.items.some(i => i._schemaSlug === 'lead')
 		},
 		/**
 		 * Schema-filtered merged array of all pipeline items; no search applied.
@@ -585,7 +634,113 @@ export default {
 				await this.fetchItemsLegacy(pipeline)
 			}
 
+			await this.fetchLeadProductBreakdown()
+
 			this.loading = false
+		},
+
+		/**
+		 * Batch-fetch LeadProduct line items for every lead currently on the
+		 * board and group them by parent lead id. Also caches product names for
+		 * the breakdown labels. A single collection fetch keeps overhead low and
+		 * avoids a bespoke backend endpoint (ADR-022 — generic OR object store).
+		 *
+		 * @return {Promise<void>} Resolves when the breakdown data is ready.
+		 *
+		 * @spec openspec/changes/lead-product-link/tasks.md#task-4.1
+		 */
+		async fetchLeadProductBreakdown() {
+			this.leadProductsByLead = {}
+			this.productNames = {}
+
+			const leadIds = this.items
+				.filter(i => i._schemaSlug === 'lead')
+				.map(i => i.id)
+			if (leadIds.length === 0) return
+
+			await this.ensureObjectTypes(['leadProduct', 'product'])
+
+			let lineItems = []
+			let products = []
+			try {
+				[lineItems, products] = await Promise.all([
+					this.objectStore.fetchCollection('leadProduct', { _limit: 1000 }),
+					this.objectStore.fetchCollection('product', { _limit: 500 }),
+				])
+			} catch {
+				return
+			}
+
+			const leadIdSet = new Set(leadIds)
+			const grouped = {}
+			for (const item of (lineItems || [])) {
+				if (!leadIdSet.has(item.lead)) continue
+				if (!grouped[item.lead]) grouped[item.lead] = []
+				grouped[item.lead].push(item)
+			}
+			this.leadProductsByLead = grouped
+
+			const names = {}
+			for (const product of (products || [])) {
+				names[product.id] = product.name || product.id
+			}
+			this.productNames = names
+		},
+
+		/**
+		 * Aggregate the product-value breakdown for a single stage.
+		 *
+		 * Groups every LeadProduct line item belonging to leads in the stage by
+		 * product, summing `total` and counting occurrences. Returns the top 5
+		 * products by aggregate value (descending) plus an overflow count.
+		 *
+		 * @param {string} stageName The stage to aggregate.
+		 *
+		 * @return {{items: Array<{product: string, name: string, count: number, total: number}>, overflow: number}}
+		 *   The breakdown.
+		 *
+		 * @spec openspec/changes/lead-product-link/tasks.md#task-4.2
+		 */
+		getStageProductBreakdown(stageName) {
+			const stageLeads = this.getStageItems(stageName).filter(i => i._schemaSlug === 'lead')
+			const aggregate = {}
+
+			for (const lead of stageLeads) {
+				const lineItems = this.leadProductsByLead[lead.id] || []
+				for (const lineItem of lineItems) {
+					const key = lineItem.product
+					if (!key) continue
+					if (!aggregate[key]) {
+						aggregate[key] = {
+							product: key,
+							name: this.productNames[key] || key,
+							count: 0,
+							total: 0,
+						}
+					}
+					aggregate[key].count += 1
+					aggregate[key].total += Number(lineItem.total) || 0
+				}
+			}
+
+			const sorted = Object.values(aggregate).sort((a, b) => b.total - a.total)
+			return {
+				items: sorted.slice(0, 5),
+				overflow: Math.max(0, sorted.length - 5),
+			}
+		},
+
+		/**
+		 * Format a currency value for the breakdown labels.
+		 *
+		 * @param {number} value The value.
+		 *
+		 * @return {string} The formatted currency string.
+		 *
+		 * @spec openspec/changes/lead-product-link/tasks.md#task-4.3
+		 */
+		formatCurrency(value) {
+			return formatCurrency(value || 0)
 		},
 
 		/**
@@ -844,6 +999,65 @@ export default {
 	font-weight: 600;
 	color: var(--color-text-maxcontrast);
 	margin-top: 2px;
+}
+
+.stage-breakdown-trigger {
+	background: none;
+	border: none;
+	padding: 0;
+	margin-top: 4px;
+	font-size: 12px;
+	color: var(--color-primary-element);
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+.stage-breakdown {
+	padding: 12px;
+	min-width: 240px;
+	max-width: 320px;
+}
+
+.stage-breakdown__title {
+	margin: 0 0 8px;
+	font-size: 13px;
+	font-weight: 700;
+}
+
+.stage-breakdown__empty {
+	margin: 0;
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
+}
+
+.stage-breakdown__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.stage-breakdown__item {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 4px 0;
+	font-size: 13px;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.stage-breakdown__item:last-child {
+	border-bottom: none;
+}
+
+.stage-breakdown__total {
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.stage-breakdown__more {
+	margin: 8px 0 0;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
 }
 
 .kanban-column__body {

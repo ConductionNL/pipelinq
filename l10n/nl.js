@@ -1136,7 +1136,14 @@ OC.L10N.register(
     "Failed to save refund." : "Opslaan van retour mislukt.",
     "This will reject the refund. Enter a reason for the rejection." : "Hiermee wijs je de retour af. Vul een reden in voor de afwijzing.",
     "Vul een reden in voor de afwijzing" : "Vul een reden in voor de afwijzing",
-    "Max {max}" : "Max {max}"
+    "Max {max}" : "Max {max}",
+    "Product breakdown" : "Productverdeling",
+    "Show product breakdown for {stage}" : "Toon productverdeling voor {stage}",
+    "Top products in {stage}" : "Topproducten in {stage}",
+    "No product breakdown available for this stage" : "Geen productverdeling beschikbaar voor deze fase",
+    "and {count} more" : "en {count} meer",
+    "Linked Leads ({count})" : "Gekoppelde leads ({count})",
+    "No leads are using this product yet." : "Nog geen leads gebruiken dit product."
 },
 "nplurals=2; plural=(n != 1);"
 );

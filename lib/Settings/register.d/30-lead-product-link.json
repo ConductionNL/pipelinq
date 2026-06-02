@@ -1,0 +1,201 @@
+{
+    "components": {
+        "registers": {
+            "pipelinq": {
+                "slug": "pipelinq",
+                "schemas": [
+                    "lead",
+                    "product",
+                    "productCategory",
+                    "leadProduct"
+                ]
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "productCategory",
+                    "slug": "product-category-implementatie"
+                },
+                "name": "Implementatie",
+                "description": "Implementatiediensten voor softwareoplossingen bij overheidsorganisaties",
+                "order": 1
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "productCategory",
+                    "slug": "product-category-training"
+                },
+                "name": "Training",
+                "description": "Opleidingen en trainingsprogramma's voor beheerders en eindgebruikers",
+                "order": 2
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "productCategory",
+                    "slug": "product-category-support"
+                },
+                "name": "Support & Onderhoud",
+                "description": "Beheer, onderhoud en SLA-contracten voor doorlopende dienstverlening",
+                "order": 3
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "product",
+                    "slug": "product-openregister-implementatie"
+                },
+                "name": "OpenRegister Implementatie",
+                "description": "Volledige implementatie van OpenRegister inclusief configuratie, migratie en acceptatietest",
+                "sku": "ORI-001",
+                "unitPrice": 12500.00,
+                "cost": 8000.00,
+                "category": "product-category-implementatie",
+                "type": "service",
+                "status": "active",
+                "unit": "project",
+                "taxRate": 21
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "product",
+                    "slug": "product-training-beheerders"
+                },
+                "name": "Training Beheerders",
+                "description": "Tweedaagse training voor systeembeheerders en functioneel beheerders van Nextcloud-omgevingen",
+                "sku": "TRN-002",
+                "unitPrice": 1850.00,
+                "cost": 950.00,
+                "category": "product-category-training",
+                "type": "service",
+                "status": "active",
+                "unit": "dag",
+                "taxRate": 21
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "product",
+                    "slug": "product-support-pakket-basis"
+                },
+                "name": "Support Pakket Basis",
+                "description": "Maandelijks SLA-contract met 8x5 ondersteuning en maximaal 4 uur responstijd bij storingen",
+                "sku": "SUP-003",
+                "unitPrice": 450.00,
+                "cost": 200.00,
+                "category": "product-category-support",
+                "type": "service",
+                "status": "active",
+                "unit": "maand",
+                "taxRate": 21
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "product",
+                    "slug": "product-pipelinq-licentie"
+                },
+                "name": "Pipelinq Licentie",
+                "description": "Jaarlijkse gebruikerslicentie voor Pipelinq CRM inclusief updates en basishulp",
+                "sku": "LIC-004",
+                "unitPrice": 240.00,
+                "cost": 80.00,
+                "category": "product-category-support",
+                "type": "service",
+                "status": "active",
+                "unit": "gebruiker/jaar",
+                "taxRate": 21
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "lead",
+                    "slug": "lead-gemeente-amsterdam-crm"
+                },
+                "title": "Gemeente Amsterdam - CRM implementatie",
+                "source": "tender",
+                "value": 15830.00,
+                "probability": 60,
+                "priority": "high",
+                "stage": "Voorstel",
+                "status": "open",
+                "description": "Implementatie van Pipelinq CRM en OpenRegister voor de afdeling burgerzaken, inclusief training."
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "lead",
+                    "slug": "lead-gemeente-utrecht-digitalisering"
+                },
+                "title": "Gemeente Utrecht - Digitaliseringstraject",
+                "source": "referral",
+                "value": 10500.00,
+                "probability": 40,
+                "priority": "normal",
+                "stage": "Kwalificatie",
+                "status": "open",
+                "description": "Meerjarig digitaliseringstraject met licenties en doorlopend onderhoud."
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "leadProduct",
+                    "slug": "leadproduct-amsterdam-ori"
+                },
+                "lead": "lead-gemeente-amsterdam-crm",
+                "product": "product-openregister-implementatie",
+                "quantity": 1,
+                "unitPrice": 12500.00,
+                "discount": 0,
+                "total": 12500.00,
+                "notes": "Inclusief datamigratie vanuit legacy zaaksysteem"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "leadProduct",
+                    "slug": "leadproduct-amsterdam-training"
+                },
+                "lead": "lead-gemeente-amsterdam-crm",
+                "product": "product-training-beheerders",
+                "quantity": 2,
+                "unitPrice": 1850.00,
+                "discount": 10,
+                "total": 3330.00,
+                "notes": "2 trainingsdagen voor team burgerzaken en KCC"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "leadProduct",
+                    "slug": "leadproduct-utrecht-licentie"
+                },
+                "lead": "lead-gemeente-utrecht-digitalisering",
+                "product": "product-pipelinq-licentie",
+                "quantity": 25,
+                "unitPrice": 240.00,
+                "discount": 15,
+                "total": 5100.00,
+                "notes": "25 gebruikerslicenties, jaarcontract met volumekorting"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "leadProduct",
+                    "slug": "leadproduct-utrecht-support"
+                },
+                "lead": "lead-gemeente-utrecht-digitalisering",
+                "product": "product-support-pakket-basis",
+                "quantity": 12,
+                "unitPrice": 450.00,
+                "discount": 0,
+                "total": 5400.00,
+                "notes": "12 maanden SLA Basis, ingangsdatum bij go-live"
+            }
+        ]
+    }
+}
