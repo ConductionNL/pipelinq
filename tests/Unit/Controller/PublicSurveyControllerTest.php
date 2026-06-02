@@ -120,7 +120,7 @@ class PublicSurveyControllerTest extends TestCase
     {
         $mock = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
         $mock->method('findAll')->willReturn(['results' => $items]);
-        $mock->method('saveObject')->willReturn(['id' => 'new-response-uuid']);
+        $mock->method('saveObject')->willReturn($this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class));
         return $mock;
     }//end buildObjectServiceMock()
 
@@ -306,13 +306,14 @@ class PublicSurveyControllerTest extends TestCase
 
         // Capture the data passed to saveObject so we can assert on it.
         $savedData = null;
+        $entityMock = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
         $objectServiceMock = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
         $objectServiceMock->method('findAll')->willReturn(['results' => [$survey]]);
         $objectServiceMock->method('saveObject')
             ->willReturnCallback(
-                function () use (&$savedData) {
+                function () use (&$savedData, $entityMock) {
                     $savedData = func_get_arg(0);
-                    return ['id' => 'new-uuid'];
+                    return $entityMock;
                 }
             );
 
@@ -368,13 +369,14 @@ class PublicSurveyControllerTest extends TestCase
         ]);
 
         $savedData = null;
+        $entityMock2 = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
         $objectServiceMock2 = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
         $objectServiceMock2->method('findAll')->willReturn(['results' => [$survey]]);
         $objectServiceMock2->method('saveObject')
             ->willReturnCallback(
-                function () use (&$savedData) {
+                function () use (&$savedData, $entityMock2) {
                     $savedData = func_get_arg(0);
-                    return ['id' => 'new-uuid'];
+                    return $entityMock2;
                 }
             );
 
