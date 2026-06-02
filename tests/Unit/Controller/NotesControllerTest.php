@@ -13,6 +13,9 @@
  * @version GIT: <git-id>
  *
  * @link https://pipelinq.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -79,10 +82,11 @@ class NotesControllerTest extends TestCase
             'request_schema' => 'schema-request',
         ]);
 
-        // Object service mock: find() returns a non-null array for any scoped lookup,
-        // which makes objectExists() return true so subsequent controller logic runs.
+        // Object service mock: find() returns a non-null ObjectEntity for any scoped
+        // lookup, which makes objectExists() return true so subsequent controller logic runs.
         $objectServiceMock = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
-        $objectServiceMock->method('find')->willReturn(['id' => 'object-uuid']);
+        $entityMock        = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
+        $objectServiceMock->method('find')->willReturn($entityMock);
 
         $container = $this->createMock(ContainerInterface::class);
         $container->method('get')->willReturn($objectServiceMock);
