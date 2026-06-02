@@ -1,3 +1,5 @@
+> SUPERSEDED 2026-06-02 (ADR-032): decomposed into the chain appointment-booking-01..12 (see openspec/changes/).
+
 # Proposal: Appointment Booking
 
 ## Summary
