@@ -386,7 +386,8 @@ class NotificationService
      * @param string $author         The author user ID.
      *
      * @return void
-     * @spec   openspec/changes/reverse-2026-05-26-be-activity-notify/tasks.md#task-2
+     *
+     * @spec openspec/changes/reverse-2026-05-26-be-activity-notify/tasks.md#task-2
      */
     public function notifyDealLost(
         string $title,
@@ -419,7 +420,8 @@ class NotificationService
      * @param string $objectId   The object ID (optional).
      *
      * @return void
-     * @spec   openspec/changes/reverse-2026-05-26-be-activity-notify/tasks.md#task-3
+     *
+     * @spec openspec/changes/reverse-2026-05-26-be-activity-notify/tasks.md#task-3
      */
     public function sendNotification(
         string $userId,
