@@ -1,0 +1,13 @@
+{
+	"menu": [
+		{ "id": "Automations", "label": "Automations", "icon": "icon-toggle", "route": "Automations", "order": 110 },
+		{ "id": "Webhooks", "label": "Webhooks", "icon": "icon-category-monitoring", "route": "Webhooks", "order": 111 }
+	],
+	"pages": [
+		{ "id": "Automations", "route": "/automations", "type": "custom", "title": "Automations", "component": "AutomationListView", "config": { "register": "pipelinq", "schema": "automation" } },
+		{ "id": "AutomationNew", "route": "/automations/new", "type": "custom", "title": "New automation", "component": "AutomationBuilderView", "config": { "register": "pipelinq", "schema": "automation" } },
+		{ "id": "AutomationEdit", "route": "/automations/:id/edit", "type": "custom", "title": "Edit automation", "component": "AutomationBuilderView", "config": { "register": "pipelinq", "schema": "automation" } },
+		{ "id": "AutomationDetail", "route": "/automations/:id", "type": "custom", "title": "Automation", "component": "AutomationDetailView", "config": { "register": "pipelinq", "schema": "automation" } },
+		{ "id": "Webhooks", "route": "/webhooks", "type": "custom", "title": "Webhooks", "component": "WebhookListView", "config": { "register": "pipelinq", "schema": "automation" } }
+	]
+}

@@ -23,6 +23,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\BackgroundJob\AutomationDispatchJob;
+use OCP\BackgroundJob\IJobList;
+use Psr\Log\LoggerInterface;
+
 /**
  * Service for handling object event business logic.
  *
@@ -31,18 +35,78 @@ namespace OCA\Pipelinq\Service;
 class ObjectEventHandlerService
 {
     /**
+     * Maps a relevant entity type to its automation trigger on create.
+     *
+     * @var array<string, string>
+     */
+    private const CREATE_TRIGGERS = [
+        'lead'    => 'lead_created',
+        'contact' => 'contact_created',
+        'request' => 'request_created',
+    ];
+
+    /**
+     * Maps a relevant entity type to its automation trigger on update.
+     *
+     * @var array<string, string>
+     */
+    private const UPDATE_TRIGGERS = [
+        'lead'    => 'lead_stage_changed',
+        'request' => 'request_status_changed',
+    ];
+
+    /**
      * Constructor.
      *
      * @param SchemaMapService        $schemaMapService The schema map service.
      * @param ObjectEventDispatcher   $dispatcher       The event dispatcher.
      * @param ObjectUpdateDiffService $diffService      The update diff service.
+     * @param IJobList                $jobList          The background job list.
+     * @param LoggerInterface         $logger           The logger.
      */
     public function __construct(
         private SchemaMapService $schemaMapService,
         private ObjectEventDispatcher $dispatcher,
         private ObjectUpdateDiffService $diffService,
+        private IJobList $jobList,
+        private LoggerInterface $logger,
     ) {
     }//end __construct()
+
+    /**
+     * Queue automation execution for a fired CRM trigger (REQ-NFR-001).
+     *
+     * The matching automations are NOT run synchronously: a one-shot
+     * AutomationDispatchJob is enqueued so the originating entity save is never
+     * delayed by automation execution. Enqueue failures are logged and
+     * swallowed so a queue hiccup never breaks the save path.
+     *
+     * @param string               $trigger    The fired trigger type.
+     * @param string               $entityId   The triggering entity UUID.
+     * @param array<string, mixed> $entityData The triggering entity's data.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/crm-workflow-automation/tasks.md#task-4.1
+     */
+    private function dispatchAutomations(string $trigger, string $entityId, array $entityData): void
+    {
+        try {
+            $this->jobList->add(
+                AutomationDispatchJob::class,
+                [
+                    'trigger'    => $trigger,
+                    'entityId'   => $entityId,
+                    'entityData' => $entityData,
+                ]
+            );
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'Pipelinq: failed to enqueue automation dispatch',
+                ['trigger' => $trigger, 'exception' => $e->getMessage()]
+            );
+        }//end try
+    }//end dispatchAutomations()
 
     /**
      * Handle a newly created object.
@@ -69,6 +133,11 @@ class ObjectEventHandlerService
             objectId: $objectId,
             assignee: ($data['assignee'] ?? '')
         );
+
+        $trigger = (self::CREATE_TRIGGERS[$entityType] ?? '');
+        if ($trigger !== '') {
+            $this->dispatchAutomations(trigger: $trigger, entityId: $objectId, entityData: $data);
+        }
     }//end handleCreated()
 
     /**
@@ -123,6 +192,11 @@ class ObjectEventHandlerService
                 assignee: $assignee,
                 dispatcher: $this->dispatcher
             );
+        }
+
+        $trigger = (self::UPDATE_TRIGGERS[$entityType] ?? '');
+        if ($trigger !== '') {
+            $this->dispatchAutomations(trigger: $trigger, entityId: $objectId, entityData: $newData);
         }
     }//end handleUpdated()
 

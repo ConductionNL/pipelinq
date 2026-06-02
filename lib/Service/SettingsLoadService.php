@@ -54,6 +54,7 @@ class SettingsLoadService
         'intakeSubmission',
         'automation',
         'automationLog',
+        'decisionTable',
         'contactmoment',
         'task',
         'emailLink',

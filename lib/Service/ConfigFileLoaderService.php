@@ -111,6 +111,12 @@ class ConfigFileLoaderService
      * @return array The merged configuration data.
      *
      * @throws RuntimeException If a fragment file cannot be read or parsed.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) The branches are the
+     *  fragment-directory guard, the per-file read/parse guards and the version
+     *  hash fold; each is a single trivial step in the fragment-load contract.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Same: the path count is the
+     *  product of the independent per-fragment guards, not nested logic.
      */
     private function mergeRegisterFragments(array $data, string $appPath): array
     {
@@ -164,14 +170,23 @@ class ConfigFileLoaderService
     /**
      * Recursively deep-merge an override array onto a base array.
      *
-     * Associative keys are merged recursively; scalar and list values from the
-     * override replace those in the base. This mirrors the fragment-merge
-     * semantics shared across the fleet (ADR-037).
+     * Associative keys are merged recursively; scalar values from the override
+     * replace those in the base. Seed-object lists (the `objects` key) are
+     * CONCATENATED so a fragment can add seed objects without discarding the
+     * monolith's objects — mirroring the manifest-fragment concat semantics for
+     * `pages`/`menu`. Every other list value from the override replaces the base
+     * list. This mirrors the fragment-merge semantics shared across the fleet
+     * (ADR-037).
      *
      * @param array $base     The base configuration array.
      * @param array $override The fragment to merge on top of the base.
      *
      * @return array The deep-merged result.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) The branches are the three
+     *  mutually-exclusive merge modes (recursive object merge, object-list
+     *  concat, scalar/list replace); each is a single trivial step in the
+     *  fragment-merge contract.
      */
     private static function deepMergeConfig(array $base, array $override): array
     {
@@ -183,6 +198,20 @@ class ConfigFileLoaderService
                 && self::isList(value: $base[$key]) === false
             ) {
                 $base[$key] = self::deepMergeConfig(base: $base[$key], override: $value);
+                continue;
+            }
+
+            // Seed-object lists concatenate so a fragment adds its objects
+            // without clobbering the monolith's. Two lists are concatenated
+            // only for the `objects` key; any other list replaces the base.
+            if ($key === 'objects'
+                && is_array($value) === true
+                && self::isList(value: $value) === true
+                && isset($base[$key]) === true
+                && is_array($base[$key]) === true
+                && self::isList(value: $base[$key]) === true
+            ) {
+                $base[$key] = array_merge($base[$key], $value);
                 continue;
             }
 
@@ -208,7 +237,7 @@ class ConfigFileLoaderService
         }
 
         $expectedKey = 0;
-        foreach ($value as $key => $unused) {
+        foreach (array_keys($value) as $key) {
             if ($key !== $expectedKey) {
                 return false;
             }

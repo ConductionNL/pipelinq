@@ -7,14 +7,35 @@
   "auth": {
     "type": "basic",
     "basic": [
-      { "key": "username", "value": "{{username}}", "type": "string" },
-      { "key": "password", "value": "{{password}}", "type": "string" }
+      {
+        "key": "username",
+        "value": "{{username}}",
+        "type": "string"
+      },
+      {
+        "key": "password",
+        "value": "{{password}}",
+        "type": "string"
+      }
     ]
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:8080" },
-    { "key": "username", "value": "admin" },
-    { "key": "password", "value": "admin" }
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "username",
+      "value": "admin"
+    },
+    {
+      "key": "password",
+      "value": "admin"
+    },
+    {
+      "key": "automationId",
+      "value": ""
+    }
   ],
   "item": [
     {
@@ -59,7 +80,10 @@
             "method": "GET",
             "url": "{{baseUrl}}/index.php/apps/pipelinq/api/settings",
             "header": [
-              { "key": "OCS-APIREQUEST", "value": "true" }
+              {
+                "key": "OCS-APIREQUEST",
+                "value": "true"
+              }
             ]
           },
           "event": [
@@ -90,8 +114,14 @@
             "method": "POST",
             "url": "{{baseUrl}}/index.php/apps/pipelinq/api/settings",
             "header": [
-              { "key": "OCS-APIREQUEST", "value": "true" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "OCS-APIREQUEST",
+                "value": "true"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -127,7 +157,10 @@
             "method": "GET",
             "url": "{{baseUrl}}/index.php/apps/pipelinq/api/lead-sources",
             "header": [
-              { "key": "OCS-APIREQUEST", "value": "true" }
+              {
+                "key": "OCS-APIREQUEST",
+                "value": "true"
+              }
             ]
           },
           "event": [
@@ -159,7 +192,10 @@
             "method": "GET",
             "url": "{{baseUrl}}/index.php/apps/pipelinq/api/request-channels",
             "header": [
-              { "key": "OCS-APIREQUEST", "value": "true" }
+              {
+                "key": "OCS-APIREQUEST",
+                "value": "true"
+              }
             ]
           },
           "event": [
@@ -191,7 +227,10 @@
             "method": "GET",
             "url": "{{baseUrl}}/index.php/apps/pipelinq/api/prospects",
             "header": [
-              { "key": "OCS-APIREQUEST", "value": "true" }
+              {
+                "key": "OCS-APIREQUEST",
+                "value": "true"
+              }
             ]
           },
           "event": [
@@ -222,7 +261,10 @@
             "method": "GET",
             "url": "{{baseUrl}}/index.php/apps/pipelinq/api/prospect-settings",
             "header": [
-              { "key": "OCS-APIREQUEST", "value": "true" }
+              {
+                "key": "OCS-APIREQUEST",
+                "value": "true"
+              }
             ]
           },
           "event": [
@@ -285,7 +327,10 @@
             "method": "GET",
             "url": "{{baseUrl}}/index.php/apps/pipelinq/api/notes/invalid_type/123",
             "header": [
-              { "key": "OCS-APIREQUEST", "value": "true" }
+              {
+                "key": "OCS-APIREQUEST",
+                "value": "true"
+              }
             ]
           },
           "event": [
@@ -313,7 +358,10 @@
             "method": "GET",
             "url": "{{baseUrl}}/index.php/apps/pipelinq/api/settings/user",
             "header": [
-              { "key": "OCS-APIREQUEST", "value": "true" }
+              {
+                "key": "OCS-APIREQUEST",
+                "value": "true"
+              }
             ]
           },
           "event": [
@@ -330,6 +378,210 @@
                   "});"
                 ],
                 "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CRM Workflow Automation",
+      "item": [
+        {
+          "name": "GET /automations",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/automations",
+            "header": [
+              {
+                "key": "OCS-APIREQUEST",
+                "value": "true"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Has pagination fields', function () {",
+                  "  var j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('total');",
+                  "  pm.expect(j).to.have.property('page');",
+                  "  pm.expect(j).to.have.property('pages');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /automations (admin creates)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/automations",
+            "header": [
+              {
+                "key": "OCS-APIREQUEST",
+                "value": "true"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Newman test automation\", \"trigger\": \"lead_created\", \"isActive\": false, \"triggerConditions\": {}, \"actions\": [{\"type\": \"add_note\"}]}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Admin create returns 201', function () { pm.response.to.have.status(201); });",
+                  "var j = pm.response.json();",
+                  "if (j.automation && j.automation.id) { pm.collectionVariables.set('automationId', j.automation.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /automations/runtime",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/automations/runtime",
+            "header": [
+              {
+                "key": "OCS-APIREQUEST",
+                "value": "true"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Runtime list requires auth and returns 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Runtime list paginated', function () {",
+                  "  var j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('results');",
+                  "  pm.expect(j).to.have.property('total');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /automations/{id} (cleanup)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/automations/{{automationId}}",
+            "header": [
+              {
+                "key": "OCS-APIREQUEST",
+                "value": "true"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Delete returns 200', function () {",
+                  "  if (pm.collectionVariables.get('automationId')) { pm.response.to.have.status(200); }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /webhooks",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/webhooks",
+            "header": [
+              {
+                "key": "OCS-APIREQUEST",
+                "value": "true"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Has results array', function () {",
+                  "  var j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('results');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /dmn/evaluate (invalid table -> 400)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/dmn/evaluate",
+            "header": [
+              {
+                "key": "OCS-APIREQUEST",
+                "value": "true"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"decisionTableId\": \"does-not-exist\", \"inputData\": {\"score\": 10}}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Invalid decisionTableId returns 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Static message field present', function () {",
+                  "  var j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('message');",
+                  "});"
+                ]
               }
             }
           ]

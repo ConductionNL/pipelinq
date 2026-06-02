@@ -1,0 +1,366 @@
+{
+	"components": {
+		"schemas": {
+			"automation": {
+				"slug": "automation",
+				"title": "Automation",
+				"icon": "Robot",
+				"version": "1.0.0",
+				"summary": "A trigger-action automation for CRM events.",
+				"description": "Represents a trigger-action automation for CRM events. When the trigger fires and all conditions match, the configured actions execute in sequence. Optionally evaluates a DMN decision table or fires an external webhook.",
+				"@type": "schema:Action",
+				"required": [
+					"name",
+					"trigger"
+				],
+				"properties": {
+					"name": {
+						"type": "string",
+						"description": "Human-readable automation name",
+						"maxLength": 255,
+						"minLength": 1,
+						"title": "Name"
+					},
+					"trigger": {
+						"type": "string",
+						"description": "The CRM event that activates this automation",
+						"enum": [
+							"lead_created",
+							"lead_stage_changed",
+							"lead_assigned",
+							"contact_created",
+							"request_created",
+							"request_status_changed",
+							"marketing_segment_match"
+						],
+						"title": "Trigger",
+						"facetable": true
+					},
+					"triggerConditions": {
+						"type": "object",
+						"description": "Filter conditions for the trigger (e.g. stage, pipeline, value threshold, segment). All conditions must match (AND logic).",
+						"title": "Trigger conditions"
+					},
+					"actions": {
+						"type": "array",
+						"description": "Ordered list of actions to execute when the automation fires",
+						"title": "Actions",
+						"items": {
+							"type": "object"
+						}
+					},
+					"isActive": {
+						"type": "boolean",
+						"description": "Whether the automation is enabled",
+						"default": false,
+						"title": "Active",
+						"facetable": true
+					},
+					"lastRun": {
+						"type": "string",
+						"description": "ISO 8601 timestamp of the last execution",
+						"format": "date-time",
+						"title": "Last run"
+					},
+					"runCount": {
+						"type": "integer",
+						"description": "Total number of times this automation has executed",
+						"default": 0,
+						"title": "Run count"
+					},
+					"webhookUrl": {
+						"type": "string",
+						"description": "Optional external (n8n) webhook URL fired by a fire_webhook action",
+						"maxLength": 2048,
+						"title": "Webhook URL"
+					},
+					"n8nWorkflowId": {
+						"type": "string",
+						"description": "Optional reference to an n8n workflow id",
+						"maxLength": 128,
+						"title": "n8n workflow id"
+					}
+				}
+			},
+			"automationLog": {
+				"slug": "automationLog",
+				"title": "Automation Log",
+				"icon": "History",
+				"version": "1.0.0",
+				"summary": "An execution record for an automation run.",
+				"description": "Append-only execution record written every time an automation fires. Captures which actions ran, their results, the triggering entity and the overall outcome.",
+				"@type": "schema:Action",
+				"required": [
+					"automation",
+					"triggeredAt",
+					"status"
+				],
+				"properties": {
+					"automation": {
+						"type": "string",
+						"description": "UUID reference to the automation that executed",
+						"maxLength": 64,
+						"title": "Automation",
+						"facetable": true
+					},
+					"triggeredAt": {
+						"type": "string",
+						"description": "When the automation was triggered (ISO 8601)",
+						"format": "date-time",
+						"title": "Triggered at"
+					},
+					"triggerEntity": {
+						"type": "string",
+						"description": "UUID of the entity that triggered the automation",
+						"maxLength": 64,
+						"title": "Trigger entity"
+					},
+					"triggerData": {
+						"type": "object",
+						"description": "Snapshot of the triggering entity's properties at execution time",
+						"title": "Trigger data"
+					},
+					"actionsExecuted": {
+						"type": "array",
+						"description": "List of actions executed and their results",
+						"title": "Actions executed",
+						"items": {
+							"type": "object"
+						}
+					},
+					"status": {
+						"type": "string",
+						"description": "Execution outcome",
+						"enum": [
+							"success",
+							"failure"
+						],
+						"title": "Status",
+						"facetable": true
+					},
+					"error": {
+						"type": "string",
+						"description": "Error message if execution failed",
+						"maxLength": 1024,
+						"title": "Error"
+					}
+				}
+			},
+			"decisionTable": {
+				"slug": "decisionTable",
+				"title": "Decision Table",
+				"icon": "TableLarge",
+				"version": "1.0.0",
+				"summary": "A DMN-style decision table evaluated server-side.",
+				"description": "A Decision Model and Notation (DMN) style decision table. Each rule maps a set of input conditions to a set of output values. Evaluated server-side by DmnDecisionService against CRM entity data for lead scoring, SLA tiering, routing and eligibility rules.",
+				"@type": "schema:Action",
+				"required": [
+					"name",
+					"hitPolicy"
+				],
+				"properties": {
+					"name": {
+						"type": "string",
+						"description": "Human-readable decision table name",
+						"maxLength": 255,
+						"minLength": 1,
+						"title": "Name"
+					},
+					"description": {
+						"type": "string",
+						"description": "What this decision table decides",
+						"maxLength": 1024,
+						"title": "Description"
+					},
+					"hitPolicy": {
+						"type": "string",
+						"description": "How matching rules are combined: FIRST returns the first matching rule's output; COLLECT returns all matching outputs",
+						"enum": [
+							"FIRST",
+							"COLLECT"
+						],
+						"default": "FIRST",
+						"title": "Hit policy"
+					},
+					"inputs": {
+						"type": "array",
+						"description": "Input column definitions (the entity fields read as decision inputs)",
+						"title": "Inputs",
+						"items": {
+							"type": "object"
+						}
+					},
+					"outputs": {
+						"type": "array",
+						"description": "Output column definitions (the result fields produced)",
+						"title": "Outputs",
+						"items": {
+							"type": "object"
+						}
+					},
+					"rules": {
+						"type": "array",
+						"description": "Ordered decision rules; each rule has a 'when' condition map and a 'then' output map",
+						"title": "Rules",
+						"items": {
+							"type": "object"
+						}
+					}
+				}
+			}
+		},
+		"objects": [
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "automation",
+					"slug": "automation-lead-hoog-waarde"
+				},
+				"name": "Nieuwe lead met hoge waarde toewijzen",
+				"trigger": "lead_created",
+				"triggerConditions": { "value": { "gte": 10000 } },
+				"actions": [
+					{ "type": "assign_lead", "assignee": "senior-verkoop" },
+					{ "type": "send_notification", "message": "Nieuwe lead boven 10.000 euro ontvangen" }
+				],
+				"isActive": true,
+				"lastRun": "2026-04-10T09:15:00+00:00",
+				"runCount": 12
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "automation",
+					"slug": "automation-lead-fase-offerte"
+				},
+				"name": "Lead naar Offerte fase - webhook n8n",
+				"trigger": "lead_stage_changed",
+				"triggerConditions": { "stage": "Offerte" },
+				"actions": [
+					{ "type": "fire_webhook", "url": "https://n8n.intern.gemeente.nl/webhook/offerte-trigger" },
+					{ "type": "add_note", "text": "Offerte fase bereikt - extern systeem geinformeerd" }
+				],
+				"isActive": true,
+				"lastRun": "2026-04-14T13:42:00+00:00",
+				"runCount": 7,
+				"webhookUrl": "https://n8n.intern.gemeente.nl/webhook/offerte-trigger",
+				"n8nWorkflowId": "wf-offerte-pipeline-001"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "automation",
+					"slug": "automation-contact-nieuw-welkom"
+				},
+				"name": "Nieuw contact - welkomsttaak aanmaken",
+				"trigger": "contact_created",
+				"triggerConditions": {},
+				"actions": [
+					{ "type": "send_notification", "message": "Nieuw contact aangemaakt - maak kennis!" },
+					{ "type": "update_tag", "tag": "nieuw-contact" }
+				],
+				"isActive": false,
+				"runCount": 0
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "automation",
+					"slug": "automation-marketing-gemeente"
+				},
+				"name": "Marketing - gemeenten nieuwsbrief sequence",
+				"trigger": "marketing_segment_match",
+				"triggerConditions": { "industry": "Gemeente", "source": "website" },
+				"actions": [
+					{ "type": "update_tag", "tag": "nieuwsbrief" },
+					{ "type": "send_notification", "message": "Nieuwe gemeente-prospect toegevoegd aan nieuwsbrief sequence" },
+					{ "type": "add_note", "text": "Marketing sequence gestart" }
+				],
+				"isActive": true,
+				"lastRun": "2026-04-16T08:00:00+00:00",
+				"runCount": 3
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "automationLog",
+					"slug": "log-lead-hoog-waarde-001"
+				},
+				"automation": "automation-lead-hoog-waarde",
+				"triggeredAt": "2026-04-10T09:15:00+00:00",
+				"triggerEntity": "lead-renovatie-stadhuis",
+				"actionsExecuted": [
+					{ "type": "assign_lead", "result": "success", "assignee": "senior-verkoop" },
+					{ "type": "send_notification", "result": "success" }
+				],
+				"status": "success"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "automationLog",
+					"slug": "log-offerte-fase-001"
+				},
+				"automation": "automation-lead-fase-offerte",
+				"triggeredAt": "2026-04-14T13:42:00+00:00",
+				"triggerEntity": "lead-ict-infra-2026",
+				"actionsExecuted": [
+					{ "type": "fire_webhook", "result": "success", "httpStatus": 200 },
+					{ "type": "add_note", "result": "success" }
+				],
+				"status": "success"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "automationLog",
+					"slug": "log-offerte-fase-002"
+				},
+				"automation": "automation-lead-fase-offerte",
+				"triggeredAt": "2026-04-12T16:05:00+00:00",
+				"triggerEntity": "lead-zorg-inkoop-q2",
+				"actionsExecuted": [
+					{ "type": "fire_webhook", "result": "failure", "httpStatus": 503, "error": "Upstream unavailable" }
+				],
+				"status": "failure",
+				"error": "Webhook endpoint returned HTTP 503"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "decisionTable",
+					"slug": "decision-sla-tier"
+				},
+				"name": "SLA-tier bepaling",
+				"description": "Bepaalt het SLA-niveau op basis van leadwaarde en industrie.",
+				"hitPolicy": "FIRST",
+				"inputs": [
+					{ "field": "value", "label": "Leadwaarde" },
+					{ "field": "industry", "label": "Industrie" }
+				],
+				"outputs": [
+					{ "field": "sla_tier", "label": "SLA-niveau" },
+					{ "field": "assignee_pool", "label": "Toewijzingspool" }
+				],
+				"rules": [
+					{
+						"when": { "value": { "gte": 50000 } },
+						"then": { "sla_tier": "high", "assignee_pool": "senior-verkoop" }
+					},
+					{
+						"when": { "industry": "Gemeente" },
+						"then": { "sla_tier": "high", "assignee_pool": "publieke-sector" }
+					},
+					{
+						"when": { "value": { "gte": 10000 } },
+						"then": { "sla_tier": "medium", "assignee_pool": "verkoop" }
+					},
+					{
+						"when": {},
+						"then": { "sla_tier": "standard", "assignee_pool": "verkoop" }
+					}
+				]
+			}
+		]
+	}
+}

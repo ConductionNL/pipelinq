@@ -23,6 +23,8 @@ use OCA\Pipelinq\Service\ObjectEventDispatcher;
 use OCA\Pipelinq\Service\ObjectEventHandlerService;
 use OCA\Pipelinq\Service\ObjectUpdateDiffService;
 use OCA\Pipelinq\Service\SchemaMapService;
+use OCP\BackgroundJob\IJobList;
+use Psr\Log\LoggerInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -61,11 +63,15 @@ class ObjectEventHandlerServiceTest extends TestCase
         $this->schemaMapService = $this->createMock(SchemaMapService::class);
         $this->dispatcher       = $this->createMock(ObjectEventDispatcher::class);
         $diffService            = new ObjectUpdateDiffService();
+        $jobList                = $this->createMock(IJobList::class);
+        $logger                 = $this->createMock(LoggerInterface::class);
 
         $this->service = new ObjectEventHandlerService(
             $this->schemaMapService,
             $this->dispatcher,
             $diffService,
+            $jobList,
+            $logger,
         );
     }//end setUp()
 

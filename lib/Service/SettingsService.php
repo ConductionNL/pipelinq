@@ -53,6 +53,7 @@ class SettingsService
         'intakeSubmission_schema',
         'automation_schema',
         'automationLog_schema',
+        'decisionTable_schema',
         'contactmoment_schema',
         'task_schema',
         'emailLink_schema',

@@ -119,6 +119,31 @@ return [
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
 
+        // CRM workflow automations (camelCase slug matches AutomationController class name).
+        // Specific routes precede the {id} wildcards (ADR-016).
+        ['name' => 'automationVariable#runtime',   'url' => '/api/automations/runtime', 'verb' => 'GET'],
+        ['name' => 'automation#index',             'url' => '/api/automations', 'verb' => 'GET'],
+        ['name' => 'automation#create',            'url' => '/api/automations', 'verb' => 'POST'],
+        ['name' => 'automation#history',           'url' => '/api/automations/{id}/history', 'verb' => 'GET'],
+        ['name' => 'automationVariable#variables', 'url' => '/api/automations/{id}/variables', 'verb' => 'GET'],
+        ['name' => 'automation#activate',          'url' => '/api/automations/{id}/activate', 'verb' => 'PUT'],
+        ['name' => 'automation#deactivate',        'url' => '/api/automations/{id}/deactivate', 'verb' => 'PUT'],
+        ['name' => 'automation#show',              'url' => '/api/automations/{id}', 'verb' => 'GET'],
+        ['name' => 'automation#update',            'url' => '/api/automations/{id}', 'verb' => 'PUT'],
+        ['name' => 'automation#destroy',           'url' => '/api/automations/{id}', 'verb' => 'DELETE'],
+
+        // Webhook subscriptions (delegates to OpenRegister's webhook engine).
+        ['name' => 'webhook#events',  'url' => '/api/webhooks/events', 'verb' => 'GET'],
+        ['name' => 'webhook#index',   'url' => '/api/webhooks', 'verb' => 'GET'],
+        ['name' => 'webhook#create',  'url' => '/api/webhooks', 'verb' => 'POST'],
+        ['name' => 'webhook#test',    'url' => '/api/webhooks/{id}/test', 'verb' => 'POST'],
+        ['name' => 'webhook#update',  'url' => '/api/webhooks/{id}', 'verb' => 'PUT'],
+        ['name' => 'webhook#destroy', 'url' => '/api/webhooks/{id}', 'verb' => 'DELETE'],
+
+        // DMN decision evaluation (admin only).
+        ['name' => 'dmn#tables',   'url' => '/api/dmn/tables', 'verb' => 'GET'],
+        ['name' => 'dmn#evaluate', 'url' => '/api/dmn/evaluate', 'verb' => 'POST'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],

@@ -73,6 +73,15 @@ import PosRefundFormView from './views/pos/PosRefundForm.vue'
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
 import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
 
+// --- CRM workflow automations (custom list/detail with status badges +
+//     lifecycle actions, a bespoke builder, and a webhook manager that fires
+//     the scoped test API; lib pages cannot express the automation builder /
+//     webhook test surface). ---
+import AutomationListView from './views/automations/AutomationList.vue'
+import AutomationDetailView from './views/automations/AutomationDetail.vue'
+import AutomationBuilderView from './views/automations/AutomationBuilder.vue'
+import WebhookListView from './views/webhooks/WebhookList.vue'
+
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
 /**
@@ -246,6 +255,28 @@ const registry = {
 		kind: 'page',
 		component: ProductBarcodeSearchView,
 		_note: 'Scan-to-navigate barcode search; resolves via the server-authoritative scoped barcode-lookup API and routes to the matching product (highlighting a matched variant).',
+	},
+
+	// --- CRM workflow automations. ---
+	AutomationListView: {
+		kind: 'page',
+		component: AutomationListView,
+		_note: 'Automation list; custom so rows navigate to the detail and the empty state offers "New automation".',
+	},
+	AutomationDetailView: {
+		kind: 'page',
+		component: AutomationDetailView,
+		_note: 'Automation detail with activate/deactivate/delete actions, condition + action summaries, an optional webhook card and a linked automationLog execution-history table; lib detail page cannot express the automation lifecycle.',
+	},
+	AutomationBuilderView: {
+		kind: 'page',
+		component: AutomationBuilderView,
+		_note: 'Bespoke create/edit builder: trigger dropdown, repeatable condition rows and an ordered action-type list; lib has no automation-builder page type.',
+	},
+	WebhookListView: {
+		kind: 'page',
+		component: WebhookListView,
+		_note: 'Webhook subscription manager; custom so each row can fire the scoped test API and show the delivery result in a dialog (delegates persistence to OpenRegister webhooks).',
 	},
 }
 
