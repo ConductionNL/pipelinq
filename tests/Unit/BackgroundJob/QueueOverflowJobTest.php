@@ -13,6 +13,8 @@
  * @version GIT: <git-id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/reverse-2026-05-26-be-background-jobs/tasks.md#task-2
  */
 
 declare(strict_types=1);
