@@ -11,9 +11,9 @@
       "cycle": 1,
       "trigger": "build:queued",
       "started_at": "2026-06-01T09:41:36Z",
-      "ended_at": null,
-      "outcome": "in-flight",
-      "outcome_reason": null,
+      "ended_at": "2026-06-02T16:10:29Z",
+      "outcome": "done",
+      "outcome_reason": "pipeline complete \u2014 reviews passed and applier passed (if run)",
       "pattern_tags": [
         "browser-test-nc-setup-failed"
       ],
