@@ -122,9 +122,10 @@ class PublicSurveyControllerTest extends TestCase
      */
     private function buildObjectServiceMock(array $items): \OCA\OpenRegister\Service\ObjectService
     {
-        $mock = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $mock       = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $entityMock = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
         $mock->method('findAll')->willReturn(['results' => $items]);
-        $mock->method('saveObject')->willReturn($this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class));
+        $mock->method('saveObject')->willReturn($entityMock);
         return $mock;
     }//end buildObjectServiceMock()
 
