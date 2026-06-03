@@ -9,7 +9,11 @@
 		@back="goBack">
 		<template #header>
 			<CnStatusBadge :status="badgeStatus" :label="statusLabel" />
-			<NcButton v-if="canRetry" type="primary" :disabled="busy" @click="retry">
+			<NcButton
+				v-if="canRetry"
+				type="primary"
+				:disabled="busy"
+				@click="retry">
 				{{ t('pipelinq', 'Retry') }}
 			</NcButton>
 		</template>

@@ -48,11 +48,18 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 		<form @submit.prevent="submit">
 			<div class="portal-field">
 				<label for="portal-subject">{{ t('pipelinq', 'Subject') }}</label>
-				<input id="portal-subject" v-model="form.subject" type="text" required>
+				<input
+					id="portal-subject"
+					v-model="form.subject"
+					type="text"
+					required>
 			</div>
 			<div class="portal-field">
 				<label for="portal-body">{{ t('pipelinq', 'Message') }}</label>
-				<textarea id="portal-body" v-model="form.body" required />
+				<textarea
+					id="portal-body"
+					v-model="form.body"
+					required />
 			</div>
 			<p v-if="submitMessage" role="alert" class="portal-success">{{ submitMessage }}</p>
 			<button type="submit" :disabled="submitting" class="portal-button-primary">
