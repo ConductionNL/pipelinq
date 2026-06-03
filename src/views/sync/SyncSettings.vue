@@ -1,128 +1,168 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
-	<div class="sync-settings">
-		<h2>{{ t('pipelinq', 'Email & Calendar Sync') }}</h2>
+	<NcSettingsSection :name="t('pipelinq', 'Email & Calendar Sync')"
+		:description="t('pipelinq', 'Automatically link emails to your CRM contacts and clients. Emails are matched by address and shown on the Email tab of each record. Calendar events are linked through the Calendar integration on each record.')">
+		<div class="sync-settings">
+			<NcCheckboxRadioSwitch type="switch"
+				:checked.sync="enabled"
+				@update:checked="onToggle">
+				{{ t('pipelinq', 'Enable email matching') }}
+			</NcCheckboxRadioSwitch>
 
-		<div class="sync-settings__section">
-			<h3>{{ t('pipelinq', 'Email Sync') }}</h3>
-			<p class="sync-settings__description">
-				{{ t('pipelinq', 'When enabled, emails from selected accounts are automatically linked to CRM contacts by matching email addresses.') }}
-			</p>
-
-			<label class="toggle-row">
-				<input v-model="emailSyncEnabled" type="checkbox" @change="updateSyncEnabled">
-				{{ t('pipelinq', 'Enable email sync') }}
-			</label>
-
-			<template v-if="emailSyncEnabled">
-				<div class="sync-settings__accounts">
-					<h4>{{ t('pipelinq', 'Mail accounts to sync') }}</h4>
-					<p v-if="mailAccounts.length === 0" class="empty-hint">
-						{{ t('pipelinq', 'No mail accounts found. Configure email accounts in Nextcloud Mail first.') }}
+			<template v-if="enabled">
+				<div class="sync-settings__field">
+					<NcSelect v-model="account"
+						:options="accountOptions"
+						:input-label="t('pipelinq', 'Mail account to index')"
+						:placeholder="t('pipelinq', 'Select a mail account')"
+						label="label"
+						track-by="id" />
+					<p v-if="accountOptions.length === 0" class="sync-settings__hint">
+						{{ t('pipelinq', 'No mail accounts found. Configure an account in Nextcloud Mail first.') }}
 					</p>
-					<div v-for="account in mailAccounts" :key="account.id" class="account-row">
-						<label>
-							<input
-								v-model="selectedAccounts"
-								type="checkbox"
-								:value="account.id"
-								@change="updateAccounts">
-							{{ account.name }} ({{ account.email }})
-						</label>
-					</div>
+				</div>
+
+				<div class="sync-settings__field">
+					<NcTextArea :value.sync="excludedText"
+						:label="t('pipelinq', 'Excluded addresses (one per line)')"
+						placeholder="noreply@example.com" />
+				</div>
+
+				<div class="sync-settings__actions">
+					<NcButton type="primary" :disabled="saving" @click="save">
+						{{ t('pipelinq', 'Save') }}
+					</NcButton>
+					<NcButton type="secondary" :disabled="syncing" @click="syncNow">
+						<template #icon>
+							<NcLoadingIcon v-if="syncing" :size="20" />
+						</template>
+						{{ t('pipelinq', 'Sync now') }}
+					</NcButton>
 				</div>
 
 				<div class="sync-settings__status">
-					<h4>{{ t('pipelinq', 'Sync Status') }}</h4>
-					<div class="status-info">
-						<span>{{ t('pipelinq', 'Last synced') }}: {{ lastSyncTime || t('pipelinq', 'Never') }}</span>
-						<span>{{ t('pipelinq', 'Emails linked') }}: {{ emailsLinked }}</span>
-					</div>
-				</div>
-
-				<div class="sync-settings__privacy">
-					<h4>{{ t('pipelinq', 'Privacy') }}</h4>
-					<p class="privacy-notice">
-						{{ t('pipelinq', 'Email metadata (subject, sender, date) is stored in the CRM. Full email content is accessed on-demand from Nextcloud Mail and is only visible to the syncing user by default.') }}
+					<h4>{{ t('pipelinq', 'Sync status') }}</h4>
+					<p>
+						{{ t('pipelinq', 'Last synced') }}:
+						<strong>{{ lastRunLabel }}</strong>
 					</p>
+					<p>
+						{{ t('pipelinq', 'Emails linked') }}:
+						<strong>{{ status.linked }}</strong>
+					</p>
+					<NcNoteCard v-if="status.error" type="error">
+						{{ status.error }}
+					</NcNoteCard>
 				</div>
 			</template>
 		</div>
-
-		<div class="sync-settings__section">
-			<h3>{{ t('pipelinq', 'Calendar Sync') }}</h3>
-			<p class="sync-settings__description">
-				{{ t('pipelinq', 'Follow-ups and meetings created in Pipelinq appear in your Nextcloud Calendar. Calendar events with known contacts are linked to their CRM profile.') }}
-			</p>
-
-			<label class="toggle-row">
-				<input v-model="calendarSyncEnabled" type="checkbox" @change="updateCalendarSync">
-				{{ t('pipelinq', 'Enable calendar sync') }}
-			</label>
-
-			<div v-if="calendarSyncEnabled" class="sync-settings__calendar-info">
-				<p>{{ t('pipelinq', 'Events will be created in a dedicated "Pipelinq" calendar in your Nextcloud Calendar.') }}</p>
-			</div>
-		</div>
-	</div>
+	</NcSettingsSection>
 </template>
 
 <script>
+import { NcSettingsSection, NcCheckboxRadioSwitch, NcSelect, NcTextArea, NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
+import axios from '@nextcloud/axios'
 import { showSuccess, showError } from '@nextcloud/dialogs'
 
 export default {
 	name: 'SyncSettings',
+	components: {
+		NcSettingsSection,
+		NcCheckboxRadioSwitch,
+		NcSelect,
+		NcTextArea,
+		NcButton,
+		NcLoadingIcon,
+		NcNoteCard,
+	},
 	data() {
 		return {
-			emailSyncEnabled: false,
-			calendarSyncEnabled: false,
-			selectedAccounts: [],
-			mailAccounts: [],
-			lastSyncTime: null,
-			emailsLinked: 0,
+			enabled: false,
+			account: null,
+			accountOptions: [],
+			excludedText: '',
+			saving: false,
+			syncing: false,
+			status: {
+				lastRun: null,
+				linked: 0,
+				error: null,
+			},
 		}
 	},
-	mounted() {
+	computed: {
+		lastRunLabel() {
+			if (!this.status.lastRun) {
+				return this.t('pipelinq', 'Never')
+			}
+			return new Date(this.status.lastRun).toLocaleString()
+		},
+	},
+	created() {
 		this.loadSettings()
+		this.loadStatus()
 	},
 	methods: {
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-sync-ui/tasks.md#task-1
-		 */
 		async loadSettings() {
-			// Load from user config
-		},
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-sync-ui/tasks.md#task-4
-		 */
-		async updateSyncEnabled() {
 			try {
-				showSuccess(
-					this.emailSyncEnabled
-						? t('pipelinq', 'Email sync enabled')
-						: t('pipelinq', 'Email sync disabled'),
-				)
+				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/sync/email/settings'))
+				this.enabled = data.enabled === true
+				this.account = this.accountFromId(data.account)
+				this.excludedText = (data.excludedAddresses || []).join('\n')
 			} catch (error) {
-				showError(t('pipelinq', 'Failed to update sync settings'))
+				showError(this.t('pipelinq', 'Could not load sync settings'))
 			}
 		},
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-sync-ui/tasks.md#task-2
-		 */
-		async updateAccounts() {
-			// Save selected accounts
-		},
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-sync-ui/tasks.md#task-3
-		 */
-		async updateCalendarSync() {
+		async loadStatus() {
 			try {
-				showSuccess(
-					this.calendarSyncEnabled
-						? t('pipelinq', 'Calendar sync enabled')
-						: t('pipelinq', 'Calendar sync disabled'),
-				)
+				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/sync/email/status'))
+				this.status = data
 			} catch (error) {
-				showError(t('pipelinq', 'Failed to update sync settings'))
+				// Status is non-critical; leave defaults.
+			}
+		},
+		accountFromId(id) {
+			if (id === null || id === undefined) {
+				return null
+			}
+			return this.accountOptions.find(option => option.id === id) || { id, label: String(id) }
+		},
+		onToggle(value) {
+			this.enabled = value
+		},
+		async save() {
+			this.saving = true
+			try {
+				const excludedAddresses = this.excludedText
+					.split('\n')
+					.map(line => line.trim())
+					.filter(line => line.length > 0)
+				await axios.post(generateUrl('/apps/pipelinq/api/sync/email/settings'), {
+					enabled: this.enabled,
+					account: this.account ? this.account.id : null,
+					excludedAddresses,
+				})
+				showSuccess(this.t('pipelinq', 'Sync settings saved'))
+			} catch (error) {
+				showError(this.t('pipelinq', 'Could not save sync settings'))
+			} finally {
+				this.saving = false
+			}
+		},
+		async syncNow() {
+			this.syncing = true
+			try {
+				const { data } = await axios.post(generateUrl('/apps/pipelinq/api/sync/email/trigger'))
+				this.status = data
+				showSuccess(this.t('pipelinq', 'Sync started'))
+			} catch (error) {
+				showError(this.t('pipelinq', 'Could not run the sync'))
+			} finally {
+				this.syncing = false
 			}
 		},
 	},
@@ -130,29 +170,31 @@ export default {
 </script>
 
 <style scoped>
-.sync-settings { padding: 20px; max-width: 700px; margin: 0 auto; }
+.sync-settings__field {
+	margin: 16px 0;
+	max-width: 480px;
+}
 
-.sync-settings__section { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--color-border); }
+.sync-settings__hint {
+	margin-top: 4px;
+	color: var(--color-text-maxcontrast);
+	font-size: 0.9em;
+}
 
-.sync-settings__description { color: var(--color-text-lighter); margin-bottom: 16px; }
+.sync-settings__actions {
+	display: flex;
+	gap: 8px;
+	margin: 16px 0;
+}
 
-.toggle-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; font-weight: 600; cursor: pointer; }
+.sync-settings__status {
+	margin-top: 24px;
+	padding-top: 16px;
+	border-top: 1px solid var(--color-border);
+}
 
-.sync-settings__accounts { margin-top: 16px; }
-
-.account-row { padding: 6px 0; }
-
-.account-row label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-
-.sync-settings__status { margin-top: 16px; }
-
-.status-info { display: flex; gap: 24px; font-size: 0.9em; color: var(--color-text-lighter); }
-
-.sync-settings__privacy { margin-top: 16px; }
-
-.privacy-notice { font-size: 0.85em; color: var(--color-text-lighter); background: var(--color-background-dark); padding: 12px; border-radius: var(--border-radius); }
-
-.empty-hint { font-size: 0.9em; color: var(--color-text-lighter); font-style: italic; }
-
-.sync-settings__calendar-info { margin-top: 12px; font-size: 0.9em; color: var(--color-text-lighter); }
+.sync-settings__status h4 {
+	margin-bottom: 8px;
+	font-weight: 600;
+}
 </style>

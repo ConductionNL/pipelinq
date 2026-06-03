@@ -103,4 +103,102 @@ class ConfigFileLoaderServiceTest extends TestCase
 
         $service->loadConfigurationFile();
     }//end testLoadConfigurationFileThrowsOnMissingFile()
+
+    /**
+     * Invoke the private deepMergeConfig method via reflection.
+     *
+     * @param array $base     The base configuration.
+     * @param array $override The fragment override.
+     *
+     * @return array The merged result.
+     */
+    private function deepMerge(array $base, array $override): array
+    {
+        $method = new \ReflectionMethod(ConfigFileLoaderService::class, 'deepMergeConfig');
+        $method->setAccessible(true);
+
+        return $method->invoke(null, $base, $override);
+    }//end deepMerge()
+
+    /**
+     * A fragment's components.objects[] seeds MUST be appended to the base
+     * seeds, never replace them (ADR-037 additive union).
+     *
+     * @return void
+     */
+    public function testFragmentObjectsAreUnionedNotReplaced(): void
+    {
+        $base = [
+            'components' => [
+                'objects' => [
+                    ['@self' => ['slug' => 'base-seed-1']],
+                    ['@self' => ['slug' => 'base-seed-2']],
+                ],
+            ],
+        ];
+
+        $fragment = [
+            'components' => [
+                'objects' => [
+                    ['@self' => ['slug' => 'frag-seed-1']],
+                ],
+            ],
+        ];
+
+        $merged = $this->deepMerge($base, $fragment);
+        $slugs  = array_column(
+            array_column($merged['components']['objects'], '@self'),
+            'slug'
+        );
+
+        $this->assertSame(['base-seed-1', 'base-seed-2', 'frag-seed-1'], $slugs);
+    }//end testFragmentObjectsAreUnionedNotReplaced()
+
+    /**
+     * A fragment's register schemas[] membership MUST union with the base
+     * membership and de-duplicate string slugs (ADR-037).
+     *
+     * @return void
+     */
+    public function testFragmentSchemaMembershipIsUnionedAndDeduplicated(): void
+    {
+        $base = [
+            'components' => [
+                'registers' => [
+                    'pipelinq' => ['schemas' => ['client', 'contact']],
+                ],
+            ],
+        ];
+
+        $fragment = [
+            'components' => [
+                'registers' => [
+                    'pipelinq' => ['schemas' => ['contact', 'syncMapping']],
+                ],
+            ],
+        ];
+
+        $merged = $this->deepMerge($base, $fragment);
+
+        $this->assertSame(
+            ['client', 'contact', 'syncMapping'],
+            $merged['components']['registers']['pipelinq']['schemas']
+        );
+    }//end testFragmentSchemaMembershipIsUnionedAndDeduplicated()
+
+    /**
+     * Non-union list keys (e.g. a schema's `required` array) keep
+     * last-fragment-wins replace semantics.
+     *
+     * @return void
+     */
+    public function testNonUnionListsAreStillReplaced(): void
+    {
+        $base     = ['components' => ['schemas' => ['client' => ['required' => ['name']]]]];
+        $fragment = ['components' => ['schemas' => ['client' => ['required' => ['email']]]]];
+
+        $merged = $this->deepMerge($base, $fragment);
+
+        $this->assertSame(['email'], $merged['components']['schemas']['client']['required']);
+    }//end testNonUnionListsAreStillReplaced()
 }//end class

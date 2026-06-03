@@ -27,6 +27,12 @@ return [
         ['name' => 'contactSync#import', 'url' => '/api/contacts-sync/import', 'verb' => 'POST'],
         ['name' => 'contactSync#writeBack', 'url' => '/api/contacts-sync/write-back', 'verb' => 'POST'],
 
+        // Email matching-job settings (camelCase slug matches EmailSyncController class name)
+        ['name' => 'emailSync#getSettings', 'url' => '/api/sync/email/settings', 'verb' => 'GET'],
+        ['name' => 'emailSync#saveSettings', 'url' => '/api/sync/email/settings', 'verb' => 'POST'],
+        ['name' => 'emailSync#trigger', 'url' => '/api/sync/email/trigger', 'verb' => 'POST'],
+        ['name' => 'emailSync#status', 'url' => '/api/sync/email/status', 'verb' => 'GET'],
+
         // Entity notes
         ['name' => 'notes#list', 'url' => '/api/notes/{objectType}/{objectId}', 'verb' => 'GET'],
         ['name' => 'notes#create', 'url' => '/api/notes/{objectType}/{objectId}', 'verb' => 'POST'],

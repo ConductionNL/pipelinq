@@ -108,6 +108,18 @@ class Application extends App implements IBootstrap
             PipelinqToolProvider::class
         );
 
+        // Email-calendar-sync (ADR-022 leaf-first): the matching job depends on
+        // two seams — the candidate-message provider and the OR email-leaf link
+        // adapter — bound here to their concrete implementations.
+        $context->registerServiceAlias(
+            \OCA\Pipelinq\Service\MailMessageProvider::class,
+            \OCA\Pipelinq\Service\NcMailMessageProvider::class
+        );
+        $context->registerServiceAlias(
+            \OCA\Pipelinq\Service\EmailLeafLinkAdapter::class,
+            \OCA\Pipelinq\Service\OpenRegisterEmailLeafLinkAdapter::class
+        );
+
         $this->registerPosLifecycleGuards(context: $context);
     }//end register()
 
