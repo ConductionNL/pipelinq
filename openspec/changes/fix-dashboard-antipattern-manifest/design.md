@@ -1,3 +1,7 @@
+---
+status: pr-created
+---
+
 # Design: Fix dashboard-in-widget anti-pattern across Pipelinq manifest
 
 ## Affected entries
