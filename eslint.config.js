@@ -22,7 +22,7 @@ module.exports = defineConfig([{
 			alias: {
 				map: [
 					['@', './src'],
-					['@conduction/nextcloud-vue', '../nextcloud-vue/src'],
+					['@conduction/nextcloud-vue', './stubs/nextcloud-vue'],
 				],
 				extensions: ['.js', '.ts', '.vue', '.json', '.css'],
 			},
