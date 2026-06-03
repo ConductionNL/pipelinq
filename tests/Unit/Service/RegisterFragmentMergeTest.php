@@ -111,6 +111,69 @@ class RegisterFragmentMergeTest extends TestCase
     }//end testListValuesAreReplaced()
 
     /**
+     * Register `schemas` slug membership is additively unioned, not replaced,
+     * so a fragment adding its own schema never drops the base membership.
+     *
+     * @return void
+     */
+    public function testRegisterSchemasMembershipIsUnioned(): void
+    {
+        $base     = ['components' => ['registers' => ['pipelinq' => ['schemas' => ['client', 'contact']]]]];
+        $override = ['components' => ['registers' => ['pipelinq' => ['schemas' => ['contact', 'posCustomerLink']]]]];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(
+            ['client', 'contact', 'posCustomerLink'],
+            $result['components']['registers']['pipelinq']['schemas']
+        );
+    }//end testRegisterSchemasMembershipIsUnioned()
+
+    /**
+     * Seed `objects` lists are additively unioned so a fragment's seeds are
+     * appended to (never replace) the monolith / earlier-fragment seeds.
+     *
+     * @return void
+     */
+    public function testSeedObjectsAreUnioned(): void
+    {
+        $base     = ['components' => ['objects' => [['slug' => 'a'], ['slug' => 'b']]]];
+        $override = ['components' => ['objects' => [['slug' => 'c']]]];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(
+            [['slug' => 'a'], ['slug' => 'b'], ['slug' => 'c']],
+            $result['components']['objects']
+        );
+    }//end testSeedObjectsAreUnioned()
+
+    /**
+     * Unioning a `schemas` list de-duplicates scalar slugs already present.
+     *
+     * @return void
+     */
+    public function testUnionDeduplicatesScalarMembers(): void
+    {
+        $result = $this->deepMerge(['schemas' => ['a', 'b']], ['schemas' => ['a']]);
+
+        $this->assertSame(['a', 'b'], $result['schemas']);
+    }//end testUnionDeduplicatesScalarMembers()
+
+    /**
+     * A non-union list key (e.g. `tags`) is still replaced wholesale.
+     *
+     * @return void
+     */
+    public function testNonUnionListStillReplaced(): void
+    {
+        $result = $this->deepMerge(['schemas' => ['a'], 'tags' => ['x', 'y']], ['tags' => ['z']]);
+
+        $this->assertSame(['z'], $result['tags']);
+        $this->assertSame(['a'], $result['schemas']);
+    }//end testNonUnionListStillReplaced()
+
+    /**
      * isList() distinguishes sequential lists from associative maps.
      *
      * @return void

@@ -118,6 +118,9 @@ class SettingsService
         'receipt_printer_host'                     => '',
         'receipt_printer_port'                     => '9100',
         'receipt_default_template'                 => '',
+        'pos_sync_marketing_consent'               => 'true',
+        'pos_require_customer_on_account'          => 'true',
+        'pos_customer_history_depth'               => '10',
     ];
 
     /**

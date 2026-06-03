@@ -102,6 +102,13 @@ return [
         ['name' => 'posTransaction#park',    'url' => '/api/pos-transactions/{id}/park',    'verb' => 'POST'],
         ['name' => 'posTransaction#resume',  'url' => '/api/pos-transactions/{id}/resume',  'verb' => 'POST'],
 
+        // POS customer link — tenant-scoped contact lookup, purchase history and
+        // customer attachment. The static lookup / history routes precede the
+        // {id} attach wildcard so they are not shadowed.
+        ['name' => 'posCustomer#search',  'url' => '/api/pos-customers/search', 'verb' => 'GET'],
+        ['name' => 'posCustomer#history', 'url' => '/api/pos-customers/{customerId}/history', 'verb' => 'GET'],
+        ['name' => 'posCustomer#attach',  'url' => '/api/pos-transactions/{id}/customer', 'verb' => 'POST'],
+
         // POS product catalogue resolution (barcode lookup + server-authoritative price).
         ['name' => 'productCatalog#lookupBarcode', 'url' => '/api/products/barcode-lookup', 'verb' => 'POST'],
         ['name' => 'productCatalog#resolvePrice',  'url' => '/api/products/resolve-price',  'verb' => 'POST'],

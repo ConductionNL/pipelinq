@@ -1,8 +1,34 @@
 # Tasks: POS Attach Customer to Ticket
 
+> **Implementation note (ADR corrections).** The spec was authored against a
+> standalone `pos/` micro-app talking to Pipelinq over HTTP with a
+> `PIPELINQ_SERVICE_TOKEN`. In the real `pipelinq` app the POS module and the
+> CRM contacts live in the **same** OpenRegister register, so the build was
+> corrected to:
+> - search/link contacts via the OR `ObjectService` (find/findAll/saveObject)
+>   scoped to this app's register — no external HTTP, no service token, no
+>   cross-tenant leakage (ADR-022, ADR-005);
+> - extend `posTransaction` (`customer`, `marketingConsent`, `tenderType`) and
+>   `contact` (`marketingConsent`, `doNotContact`) via an **ADR-037 register
+>   fragment** (`lib/Settings/register.d/30-pos-customer-link.json`), never the
+>   monolith. The fragment merger gained a fleet-standard additive-union rule for
+>   register `schemas[]` + seed `objects[]` (+ unit tests);
+> - reuse `PosAccessPolicy` (isPosUser / canAccessTransaction) for an IDOR-safe,
+>   server-authoritative link; consent + on-account + history are computed/enforced
+>   server-side;
+> - surface admin settings through the existing admin-gated `SettingsService`
+>   tunables (no new settings controller/UI);
+> - frontend via Options API + `useObjectStore`, a modal in `src/modals/`, and the
+>   existing `PosTransactionForm` (no `router/index.js`, no `MainMenu.vue`).
+>
+> Tasks below are ticked against the corrected implementation; file paths in the
+> original acceptance criteria map to `lib/...` / `src/...` in this repo.
+
 ## Deduplication Check
 
-- [ ] DC-1: Verify no overlap with existing POS or Pipelinq specs
+- [x] DC-1: Verify no overlap with existing POS or Pipelinq specs (no prior
+  POS-Pipelinq customer-link spec; `posTransaction.client` is the account/company
+  reference, this change adds the distinct `customer` person reference)
   - Search `openspec/specs/` for any existing customer-link or debtor-tracking specs
   - Search `openspec/changes/` for completed pos-customer or pipelinq-contact-link changes
   - Confirm this is the first implementation of POS-Pipelinq customer linking
@@ -12,7 +38,7 @@
 
 ## 1. Backend: Transaction Schema Extension
 
-- [ ] 1.1 Extend posTransaction schema with customer fields
+- [x] 1.1 Extend posTransaction schema with customer fields
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-002`
   - **files**: `pos/lib/Db/Transaction.php`, `pos/openregister/pipelinq_pos_register.json` (or equivalent schema definition)
   - **acceptance_criteria**:
@@ -23,7 +49,7 @@
     - Schema must validate on-account tender requires non-null customer
     - Existing transactions without customer continue to work (backward compatible)
 
-- [ ] 1.2 Create database migration (if applicable)
+- [~] 1.2 (DEFERRED) Create database migration (if applicable)
   - **files**: `pos/lib/Migration/` (or equivalent migration directory)
   - **acceptance_criteria**:
     - Migration adds `customer` column (VARCHAR UUID, nullable)
@@ -32,7 +58,7 @@
     - Migration is reversible (down() method exists)
     - Migration runs without errors on fresh and existing databases
 
-- [ ] 1.3 Update TransactionController to handle customer and consent
+- [x] 1.3 Update TransactionController to handle customer and consent
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-002, REQ-PCL-004`
   - **files**: `pos/lib/Controller/TransactionController.php`
   - **acceptance_criteria**:
@@ -43,7 +69,7 @@
     - Transaction is saved to database with customer and consent fields
     - Response includes customer and consent fields in JSON
 
-- [ ] 1.4 Add Pipelinq consent sync service
+- [x] 1.4 Add Pipelinq consent sync service
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-004 Scenario 2`
   - **files**: `pos/lib/Service/PipelinqConsentService.php` (new)
   - **acceptance_criteria**:
@@ -55,7 +81,7 @@
     - Includes timeout (5 seconds) to prevent checkout slowdown
     - Catches and handles network errors without raising exceptions
 
-- [ ] 1.5 Integrate consent sync into transaction save
+- [x] 1.5 Integrate consent sync into transaction save
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-004 Scenario 5`
   - **files**: `pos/lib/Controller/TransactionController.php`, `pos/lib/Service/PipelinqConsentService.php`
   - **acceptance_criteria**:
@@ -68,7 +94,7 @@
 
 ## 2. Backend: Customer Lookup API
 
-- [ ] 2.1 Create Pipelinq search proxy service
+- [x] 2.1 Create Pipelinq search proxy service
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-001`
   - **files**: `pos/lib/Service/PipelinqSearchService.php` (new)
   - **acceptance_criteria**:
@@ -80,7 +106,7 @@
     - Implements 5-second timeout (prevent long checkout waits)
     - Filters results by admin-configured search fields (name, email, phone)
 
-- [ ] 2.2 Create search endpoint in TransactionController
+- [x] 2.2 Create search endpoint in TransactionController
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-001`
   - **files**: `pos/lib/Controller/TransactionController.php`
   - **acceptance_criteria**:
@@ -91,7 +117,7 @@
     - Returns 200 on success, 500 on Pipelinq API error (with error message)
     - Query parameter validation: query must be 2+ characters, limit 1-100
 
-- [ ] 2.3 Fetch transaction history for customer
+- [x] 2.3 Fetch transaction history for customer
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-003`
   - **files**: `pos/lib/Controller/TransactionController.php`
   - **acceptance_criteria**:
@@ -106,7 +132,7 @@
 
 ## 3. Frontend: Customer Lookup Modal
 
-- [ ] 3.1 Create CustomerLookupModal.vue component
+- [x] 3.1 Create CustomerLookupModal.vue component
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-001`
   - **files**: `pos/src/components/CustomerLookupModal.vue` (new)
   - **acceptance_criteria**:
@@ -123,7 +149,7 @@
     - Implements error handling: shows error message if API fails, includes Retry button
     - Component is keyboard accessible (WCAG AA): Enter to select, Esc to cancel
 
-- [ ] 3.2 Add accessibility to modal results
+- [x] 3.2 Add accessibility to modal results
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-001 (accessibility implicit)`
   - **files**: `pos/src/components/CustomerLookupModal.vue`
   - **acceptance_criteria**:
@@ -136,7 +162,7 @@
 
 ## 4. Frontend: Checkout View Enhancement
 
-- [ ] 4.1 Add customer lookup button to CheckoutView.vue
+- [x] 4.1 Add customer lookup button to CheckoutView.vue
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-002, REQ-PCL-003`
   - **files**: `pos/src/views/CheckoutView.vue`
   - **acceptance_criteria**:
@@ -145,7 +171,7 @@
     - Button is disabled during transaction save (loading state)
     - Button text/icon clearly conveys "add customer" action
 
-- [ ] 4.2 Display selected customer in checkout form
+- [x] 4.2 Display selected customer in checkout form
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-002`
   - **files**: `pos/src/views/CheckoutView.vue`
   - **acceptance_criteria**:
@@ -154,7 +180,7 @@
     - Clicking "X" clears `selectedCustomer` and hides purchase history panel
     - Selected customer is retained during checkout (survives component re-renders)
 
-- [ ] 4.3 Integrate PurchaseHistory.vue component
+- [x] 4.3 Integrate PurchaseHistory.vue component
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-003`
   - **files**: `pos/src/views/CheckoutView.vue`, `pos/src/components/PurchaseHistory.vue` (new)
   - **acceptance_criteria**:
@@ -165,7 +191,7 @@
     - Panel is collapsible (toggle on header click)
     - Each transaction shows: date, item count, total, tender type
 
-- [ ] 4.4 Add marketing consent checkbox
+- [x] 4.4 Add marketing consent checkbox
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-004`
   - **files**: `pos/src/views/CheckoutView.vue`
   - **acceptance_criteria**:
@@ -175,7 +201,7 @@
     - Tooltip (when disabled): "Selecteer eerst een klant"
     - Checkbox value (true/false) is bound to component data and sent with transaction
 
-- [ ] 4.5 Extend tender type dropdown with "Op rekening"
+- [x] 4.5 Extend tender type dropdown with "Op rekening"
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-005`
   - **files**: `pos/src/views/CheckoutView.vue` (or CheckoutSummary component)
   - **acceptance_criteria**:
@@ -185,7 +211,7 @@
     - If on-account is selected without customer, "Afrekenen" button is disabled
     - Error message displays: "Klant is verplicht voor 'op rekening' transacties"
 
-- [ ] 4.6 Add validation for on-account + customer requirement
+- [x] 4.6 Add validation for on-account + customer requirement
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-005 Scenario 2`
   - **files**: `pos/src/views/CheckoutView.vue`
   - **acceptance_criteria**:
@@ -198,7 +224,7 @@
 
 ## 5. Frontend: Customer Lookup Service
 
-- [ ] 5.1 Create customerService.js API client
+- [x] 5.1 Create customerService.js API client
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-001, REQ-PCL-003`
   - **files**: `pos/src/services/customerService.js` (new)
   - **acceptance_criteria**:
@@ -212,7 +238,7 @@
 
 ## 6. Backend: Admin Settings
 
-- [ ] 6.1 Create admin settings for customer lookup configuration
+- [x] 6.1 Create admin settings for customer lookup configuration
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-006`
   - **files**: `pos/lib/Controller/SettingsController.php`, `pos/openregister/pipelinq_pos_register.json` (or similar)
   - **acceptance_criteria**:
@@ -226,7 +252,7 @@
     - Admin can update settings via `POST /api/admin/settings` with JSON body
     - Settings changes take effect immediately (no restart required)
 
-- [ ] 6.2 Create admin settings UI component
+- [~] 6.2 (DEFERRED) Create admin settings UI component
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-006`
   - **files**: `pos/src/views/settings/CustomerSettings.vue` (new)
   - **acceptance_criteria**:
@@ -244,7 +270,7 @@
 
 ## 7. Backend: Privacy & Compliance
 
-- [ ] 7.1 Add privacy flag decoration to search results
+- [x] 7.1 Add privacy flag decoration to search results
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-007`
   - **files**: `pos/lib/Service/PipelinqSearchService.php`
   - **acceptance_criteria**:
@@ -252,7 +278,7 @@
     - If contact has "do not contact" flag, results include `doNotContact: true`
     - Frontend decorates such results with visual indicator (icon or badge)
 
-- [ ] 7.2 Block consent sync if do-not-contact flag is set
+- [x] 7.2 Block consent sync if do-not-contact flag is set
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-007 Scenario 2`
   - **files**: `pos/lib/Service/PipelinqConsentService.php`
   - **acceptance_criteria**:
@@ -260,7 +286,7 @@
     - If flag is set, skip PATCH request (do not override customer's privacy preference)
     - Log this action: "Consent sync skipped for contact {uuid}: do not contact flag set"
 
-- [ ] 7.3 Add audit logging for customer lookups and consent
+- [~] 7.3 (DEFERRED) Add audit logging for customer lookups and consent
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-007 Scenario 3`
   - **files**: `pos/lib/Service/AuditLogService.php` (extend if exists)
   - **acceptance_criteria**:
@@ -275,7 +301,7 @@
 
 ## 8. Testing & Verification
 
-- [ ] 8.1 Unit tests: PipelinqSearchService
+- [x] 8.1 Unit tests: PipelinqSearchService
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-001`
   - **files**: `pos/tests/Unit/Service/PipelinqSearchServiceTest.php`
   - **acceptance_criteria**:
@@ -285,7 +311,7 @@
     - Test: API timeout (>5s) returns empty array
     - Test: Results are filtered by admin-configured search fields
 
-- [ ] 8.2 Unit tests: PipelinqConsentService
+- [x] 8.2 Unit tests: PipelinqConsentService
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-004`
   - **files**: `pos/tests/Unit/Service/PipelinqConsentServiceTest.php`
   - **acceptance_criteria**:
@@ -295,7 +321,7 @@
     - Test: Skip sync if contact has do-not-contact flag
     - Test: Logs sync attempts and failures
 
-- [ ] 8.3 Integration tests: Transaction save with customer + consent
+- [x] 8.3 Integration tests: Transaction save with customer + consent
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-002, REQ-PCL-004`
   - **files**: `pos/tests/Integration/TransactionWithCustomerTest.php`
   - **acceptance_criteria**:
@@ -305,7 +331,7 @@
     - Test: Transaction without customer succeeds (backward compatibility)
     - Test: Transaction response includes customer and marketingConsent fields
 
-- [ ] 8.4 Frontend component tests: CustomerLookupModal
+- [~] 8.4 (DEFERRED) Frontend component tests: CustomerLookupModal
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-001`
   - **files**: `pos/tests/Unit/components/CustomerLookupModal.spec.js` (or .vue test)
   - **acceptance_criteria**:
@@ -316,7 +342,7 @@
     - Test: @select event emitted when row is clicked
     - Test: @cancel event emitted on modal close
 
-- [ ] 8.5 Frontend component tests: CheckoutView customer integration
+- [~] 8.5 (DEFERRED) Frontend component tests: CheckoutView customer integration
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-002, REQ-PCL-003, REQ-PCL-004, REQ-PCL-005`
   - **files**: `pos/tests/Unit/views/CheckoutView.spec.js`
   - **acceptance_criteria**:
@@ -328,7 +354,7 @@
     - Test: On-account validation disables Checkout button without customer
     - Test: Marketing consent is included in transaction payload
 
-- [ ] 8.6 Manual testing: E2E checkout flow
+- [~] 8.6 (DEFERRED) Manual testing: E2E checkout flow
   - **spec_ref**: All requirements
   - **files**: N/A (manual testing checklist)
   - **acceptance_criteria**:
@@ -351,7 +377,7 @@
 
 ## 9. Documentation & Translation
 
-- [ ] 9.1 Add UI translations (Dutch)
+- [x] 9.1 Add UI translations (Dutch)
   - **files**: `pos/l10n/nl.json`
   - **acceptance_criteria**:
     - "Voeg klant toe" — Add customer button label
@@ -367,7 +393,7 @@
     - "Klant is verplicht voor 'op rekening' transacties" — On-account validation error
     - All admin settings labels and help text
 
-- [ ] 9.2 Update developer documentation
+- [~] 9.2 (DEFERRED) Update developer documentation
   - **files**: `.claude/openspec/pos-customer-link-notes.md` (optional) or main README
   - **acceptance_criteria**:
     - Document Pipelinq service account token setup (PIPELINQ_SERVICE_TOKEN env var)
@@ -380,7 +406,7 @@
 
 ## 10. Cross-App Coordination
 
-- [ ] 10.1 Coordinate Pipelinq contact schema (verify compatibility)
+- [x] 10.1 Coordinate Pipelinq contact schema (verify compatibility)
   - **spec_ref**: All requirements
   - **files**: Pipelinq data model review
   - **acceptance_criteria**:
@@ -390,7 +416,7 @@
     - Confirm Pipelinq REST API full-text search works on name, email, phone
     - If any fields/endpoints are missing, coordinate with Pipelinq team
 
-- [ ] 10.2 Set up service-to-service authentication
+- [~] 10.2 (DEFERRED) Set up service-to-service authentication
   - **spec_ref**: All backend integration
   - **files**: `.env` configuration, documentation
   - **acceptance_criteria**:
@@ -400,7 +426,7 @@
     - Test service account can search contacts and update consent
     - Document token rotation procedure
 
-- [ ] 10.3 Define transaction event for Pipelinq (future integration point)
+- [~] 10.3 (DEFERRED) Define transaction event for Pipelinq (future integration point)
   - **spec_ref**: Design section "Cross-App Integration: POS ↔ Pipelinq ↔ Shillinq"
   - **files**: `pos/lib/Events/TransactionSavedEvent.php` (new)
   - **acceptance_criteria**:

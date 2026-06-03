@@ -1,0 +1,47 @@
+{
+  "components": {
+    "schemas": {
+      "posTransaction": {
+        "properties": {
+          "customer": {
+            "type": "string",
+            "title": "Customer",
+            "description": "Optional UUID reference to a Pipelinq contact (the natural person at the till). Distinct from the optional client (account) reference. Required when tenderType is 'onAccount' so the sale can be tracked as a debtor entry.",
+            "format": "uuid",
+            "facetable": true
+          },
+          "marketingConsent": {
+            "type": "boolean",
+            "title": "Marketing consent",
+            "description": "Whether the customer opted in to marketing at the point of sale. Captured per transaction and, when sync is enabled, mirrored onto the linked contact. Never overrides a contact flagged do-not-contact.",
+            "default": false
+          },
+          "tenderType": {
+            "type": "string",
+            "title": "Tender type",
+            "description": "How the transaction was paid. 'onAccount' (op rekening) defers payment to a debtor ledger and requires a customer.",
+            "enum": ["cash", "card", "onAccount"],
+            "facetable": true
+          }
+        }
+      },
+      "contact": {
+        "properties": {
+          "marketingConsent": {
+            "type": "boolean",
+            "title": "Marketing consent",
+            "description": "Whether this contact opted in to receiving offers and updates. Set from the POS consent checkbox when Pipelinq sync is enabled.",
+            "default": false
+          },
+          "doNotContact": {
+            "type": "boolean",
+            "title": "Do not contact",
+            "description": "Privacy flag. When true the contact must not be approached for marketing; POS search marks the contact and consent sync is skipped.",
+            "default": false,
+            "facetable": true
+          }
+        }
+      }
+    }
+  }
+}
