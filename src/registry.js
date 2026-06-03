@@ -55,6 +55,11 @@ import RapportageDashboardView from './views/rapportage/RapportageDashboard.vue'
 import ChannelAnalyticsView from './views/rapportage/ChannelAnalytics.vue'
 import AgentPerformanceView from './views/rapportage/AgentPerformance.vue'
 
+// --- Forecast roll-up (lib gap: no forecast/quota/override page type). ---
+import ForecastDashboardView from './views/forecast/ForecastDashboard.vue'
+import ForecastTrendView from './views/forecast/ForecastTrend.vue'
+import LeadForecastTab from './views/leads/LeadForecastTab.vue'
+
 // --- Admin managers (lib gap: no pipeline-designer / settings rich-section type). ---
 import PipelineManagerView from './views/settings/PipelineManager.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
@@ -205,6 +210,23 @@ const registry = {
 		kind: 'page',
 		component: PipelineBoardView,
 		_note: 'Pipeline kanban/list board with in-memory title search (REQ-PIPE-022). Restored after migrate-pipeline-to-deck-leaf; coexists with Deck integration.',
+	},
+
+	// --- Forecast roll-up dashboards. ---
+	ForecastDashboardView: {
+		kind: 'page',
+		component: ForecastDashboardView,
+		_note: 'Manager forecast view: hierarchy/level selector, quota progress bar, at-risk banner, per-owner table with manager-override badges; lib gap: no forecast/quota page type. All amounts are server-computed.',
+	},
+	ForecastTrendView: {
+		kind: 'page',
+		component: ForecastTrendView,
+		_note: 'Forecast trend (inline SVG sparkline of commit/best-case/pipeline), week-over-week delta panel and accuracy table with colour bands; lib gap: no chart-widget page type.',
+	},
+	LeadForecastTab: {
+		kind: 'tab',
+		component: LeadForecastTab,
+		_note: 'Lead-detail sidebar tab: forecast-category selector with closed-deal lock indicator, large-commit justification modal and category history. Server-side DealUpdatedListener is the authoritative enforcer; this tab is the UX. Wiring into LeadDetail.config.sidebar.tabs is a monolith manifest.json edit deferred under ADR-037 (do not edit the monolith from a feature build).',
 	},
 
 	// --- Admin managers. ---

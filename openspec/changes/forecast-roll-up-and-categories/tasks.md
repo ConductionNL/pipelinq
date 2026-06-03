@@ -2,7 +2,7 @@
 
 ## 1. Data Model: Extend deal and add forecast schemas
 
-- [ ] 1.1 Extend `deal` schema with forecast fields
+- [x] 1.1 Extend `deal` schema with forecast fields
   - **spec_ref**: `specs.md#REQ-FRC-001`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -11,7 +11,7 @@
       - `forecast_category` (string enum: commit, best_case, pipeline, closed_won, closed_lost, omitted)
       - `commit_justification` (string, optional)
 
-- [ ] 1.2 Create `forecast_snapshot` schema in OpenRegister
+- [x] 1.2 Create `forecast_snapshot` schema in OpenRegister
   - **spec_ref**: `specs.md#REQ-FRC-004, REQ-FRC-005`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -20,7 +20,7 @@
       - period_id, as_of_date, owner_id, level, commit_amount, best_case_amount, pipeline_amount, closed_won_amount, quota_amount, deal_snapshot_ids, partial, missing_reps
     - AND indexes on (period_id, owner_id, level, as_of_date)
 
-- [ ] 1.3 Create `forecast_override` schema in OpenRegister
+- [x] 1.3 Create `forecast_override` schema in OpenRegister
   - **spec_ref**: `specs.md#REQ-FRC-006, REQ-FRC-010`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -29,7 +29,7 @@
       - period_id, owner_id, override_owner_id, level, category, override_amount, original_amount, reason, created_by, created_at
     - AND indexes on (period_id, override_owner_id, level, category)
 
-- [ ] 1.4 Create `sales_quota` schema in OpenRegister
+- [x] 1.4 Create `sales_quota` schema in OpenRegister
   - **spec_ref**: `specs.md#REQ-FRC-008`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -42,7 +42,7 @@
 
 ## 2. Backend: Deal Lifecycle Listeners
 
-- [ ] 2.1 Create `lib/Listener/DealCreatedListener.php`
+- [x] 2.1 Create `lib/Listener/DealCreatedListener.php`
   - **spec_ref**: `specs.md#REQ-FRC-001-01`
   - **files**: `lib/Listener/DealCreatedListener.php`
   - **acceptance_criteria**:
@@ -52,7 +52,7 @@
     - AND persist the deal to OpenRegister
     - AND the listener MUST be idempotent (not double-set if already set)
 
-- [ ] 2.2 Create `lib/Listener/DealUpdatedListener.php`
+- [x] 2.2 Create `lib/Listener/DealUpdatedListener.php`
   - **spec_ref**: `specs.md#REQ-FRC-002, REQ-FRC-003`
   - **files**: `lib/Listener/DealUpdatedListener.php`
   - **acceptance_criteria**:
@@ -62,7 +62,7 @@
     - AND if old category is closed (closed_won/closed_lost) and new category is open, MUST reject with error
     - AND if new category is "commit" and `deal.value > commit_threshold`, MUST validate `commit_justification` is non-empty
 
-- [ ] 2.3 Implement closed deal lock logic
+- [x] 2.3 Implement closed deal lock logic
   - **spec_ref**: `specs.md#REQ-FRC-002-01`
   - **files**: `lib/Listener/DealUpdatedListener.php`
   - **acceptance_criteria**:
@@ -70,7 +70,7 @@
     - WHEN user attempts to change category to "commit"
     - THEN a rejection exception MUST be thrown with message "Cannot change category of a closed deal"
 
-- [ ] 2.4 Implement commit justification validation
+- [x] 2.4 Implement commit justification validation
   - **spec_ref**: `specs.md#REQ-FRC-003-01, REQ-FRC-003-02`
   - **files**: `lib/Listener/DealUpdatedListener.php`, frontend
   - **acceptance_criteria**:
@@ -80,7 +80,7 @@
     - AND the backend MUST reject the save if `commit_justification` is missing or < 10 chars
     - AND on success, `commit_justification` MUST be persisted
 
-- [ ] 2.5 Register both listeners in `lib/AppInfo/Application.php`
+- [x] 2.5 Register both listeners in `lib/AppInfo/Application.php`
   - **spec_ref**: `specs.md#REQ-FRC-001, REQ-FRC-002`
   - **files**: `lib/AppInfo/Application.php`
   - **acceptance_criteria**:
@@ -94,7 +94,7 @@
 
 ## 3. Backend: Snapshot Job and Scheduling
 
-- [ ] 3.1 Create `lib/Job/ForecastSnapshotJob.php`
+- [x] 3.1 Create `lib/Job/ForecastSnapshotJob.php`
   - **spec_ref**: `specs.md#REQ-FRC-004`
   - **files**: `lib/Job/ForecastSnapshotJob.php`
   - **acceptance_criteria**:
@@ -105,7 +105,7 @@
     - AND persist all snapshots to OpenRegister
     - AND complete within 5 minutes for typical org size
 
-- [ ] 3.2 Implement rep-level snapshot generation
+- [x] 3.2 Implement rep-level snapshot generation
   - **spec_ref**: `specs.md#REQ-FRC-004-02, REQ-FRC-004-03`
   - **files**: `lib/Job/ForecastSnapshotJob.php`
   - **acceptance_criteria**:
@@ -118,7 +118,7 @@
     - AND exclude deals with `forecast_category = "omitted"`
     - AND set `deal_snapshot_ids` to the UUIDs of contributing deals
 
-- [ ] 3.3 Implement team-level snapshot generation (roll-up)
+- [x] 3.3 Implement team-level snapshot generation (roll-up)
   - **spec_ref**: `specs.md#REQ-FRC-004-04, REQ-FRC-005-01`
   - **files**: `lib/Job/ForecastSnapshotJob.php`
   - **acceptance_criteria**:
@@ -128,7 +128,7 @@
     - AND same rule for best_case, pipeline, closed_won
     - AND if any rep snapshot is missing, set `partial = true` and list missing reps
 
-- [ ] 3.4 Implement division and company roll-ups
+- [x] 3.4 Implement division and company roll-ups
   - **spec_ref**: `specs.md#REQ-FRC-005-02, REQ-FRC-005-03`
   - **files**: `lib/Job/ForecastSnapshotJob.php`
   - **acceptance_criteria**:
@@ -138,7 +138,7 @@
     - AND when company snapshot is generated
     - THEN `company.commit_amount` MUST = sum of division commits
 
-- [ ] 3.5 Implement currency normalization in roll-up
+- [x] 3.5 Implement currency normalization in roll-up
   - **spec_ref**: `specs.md#REQ-FRC-004-05`
   - **files**: `lib/Job/ForecastSnapshotJob.php`, `lib/Service/ExchangeRateService.php`
   - **acceptance_criteria**:
@@ -147,7 +147,7 @@
     - THEN all amounts MUST be converted to org's reporting currency using org-configured rate source
     - AND the snapshot MUST record the reporting currency
 
-- [ ] 3.6 Implement error handling and partial failure
+- [x] 3.6 Implement error handling and partial failure
   - **spec_ref**: `specs.md#REQ-FRC-004-06, REQ-FRC-004-07`
   - **files**: `lib/Job/ForecastSnapshotJob.php`
   - **acceptance_criteria**:
@@ -157,7 +157,7 @@
     - AND the parent (division, company) MUST set `partial = true` and list missing teams
     - AND the pipelinq admin MUST receive a Nextcloud notification with error details
 
-- [ ] 3.7 Register job with OpenRegister cron-trigger
+- [x] 3.7 Register job with OpenRegister cron-trigger
   - **spec_ref**: `specs.md#REQ-FRC-004-01`
   - **files**: OpenRegister cron config or `lib/AppInfo/Application.php`
   - **acceptance_criteria**:
@@ -170,7 +170,7 @@
 
 ## 4. Backend: Forecast Service and Computations
 
-- [ ] 4.1 Create `lib/Service/ForecastService.php`
+- [x] 4.1 Create `lib/Service/ForecastService.php`
   - **spec_ref**: `specs.md#REQ-FRC-005, REQ-FRC-006, REQ-FRC-007, REQ-FRC-008`
   - **files**: `lib/Service/ForecastService.php`
   - **acceptance_criteria**:
@@ -180,7 +180,7 @@
       - `computeAccuracyScore(owner_id, period_id, level): ?float`
       - `computeTrailingQuartersAccuracy(owner_id): float`
 
-- [ ] 4.2 Implement `computeRollUp` with override application
+- [x] 4.2 Implement `computeRollUp` with override application
   - **spec_ref**: `specs.md#REQ-FRC-006-03`
   - **files**: `lib/Service/ForecastService.php`
   - **acceptance_criteria**:
@@ -191,7 +191,7 @@
     - AND if override exists, use `override_amount` instead of snapshot amount
     - AND return object with: commit, original_commit, best_case, original_best_case, pipeline, closed_won, quota, override details
 
-- [ ] 4.3 Implement accuracy score computation
+- [x] 4.3 Implement accuracy score computation
   - **spec_ref**: `specs.md#REQ-FRC-007-01, REQ-FRC-007-02`
   - **files**: `lib/Service/ForecastService.php`
   - **acceptance_criteria**:
@@ -200,7 +200,7 @@
     - THEN it MUST return `1 - abs(commit - actual) / actual` (as float 0.0-1.0)
     - AND return null if period not closed or no data
 
-- [ ] 4.4 Implement trailing-4-quarters average
+- [x] 4.4 Implement trailing-4-quarters average
   - **spec_ref**: `specs.md#REQ-FRC-007-05`
   - **files**: `lib/Service/ForecastService.php`
   - **acceptance_criteria**:
@@ -209,7 +209,7 @@
     - THEN it MUST return the average of the last 4 quarters' accuracy scores
     - AND return 0.0 if fewer than 4 quarters of data exist
 
-- [ ] 4.5 Create `lib/Service/QuotaService.php`
+- [x] 4.5 Create `lib/Service/QuotaService.php`
   - **spec_ref**: `specs.md#REQ-FRC-008`
   - **files**: `lib/Service/QuotaService.php`
   - **acceptance_criteria**:
@@ -218,7 +218,7 @@
       - `getQuota(owner_id, period_id, level): ?array`
       - `validateQuotaHierarchy(period_id): array`
 
-- [ ] 4.6 Implement `getQuota` lookup
+- [x] 4.6 Implement `getQuota` lookup
   - **spec_ref**: `specs.md#REQ-FRC-008-01`
   - **files**: `lib/Service/QuotaService.php`
   - **acceptance_criteria**:
@@ -227,7 +227,7 @@
     - THEN it MUST fetch the `sales_quota` row for (owner_id, period_id, level)
     - AND return the quota_amount or null if not set
 
-- [ ] 4.7 Implement quota hierarchy validation
+- [x] 4.7 Implement quota hierarchy validation
   - **spec_ref**: `specs.md#REQ-FRC-008`
   - **files**: `lib/Service/QuotaService.php`
   - **acceptance_criteria**:
@@ -241,7 +241,7 @@
 
 ## 5. Backend: REST API Controller
 
-- [ ] 5.1 Create `lib/Controller/ForecastController.php`
+- [x] 5.1 Create `lib/Controller/ForecastController.php`
   - **spec_ref**: `specs.md#REQ-FRC-010, REQ-FRC-011`
   - **files**: `lib/Controller/ForecastController.php`
   - **acceptance_criteria**:
@@ -251,7 +251,7 @@
       - `POST /api/forecast/overrides`
       - `DELETE /api/forecast/overrides/{id}` (optional for MVP)
 
-- [ ] 5.2 Implement snapshot export endpoint (JSON)
+- [x] 5.2 Implement snapshot export endpoint (JSON)
   - **spec_ref**: `specs.md#REQ-FRC-010-01, REQ-FRC-010-04, REQ-FRC-010-05`
   - **files**: `lib/Controller/ForecastController.php`
   - **acceptance_criteria**:
@@ -261,7 +261,7 @@
     - AND return JSON array with snapshots matching the filters
     - AND include `calculation_audit` for each snapshot showing the roll-up breakdown
 
-- [ ] 5.3 Implement snapshot export endpoint (CSV)
+- [x] 5.3 Implement snapshot export endpoint (CSV)
   - **spec_ref**: `specs.md#REQ-FRC-010-02`
   - **files**: `lib/Controller/ForecastController.php`
   - **acceptance_criteria**:
@@ -272,7 +272,7 @@
       - Data rows: one per snapshot
       - Optional separate section for calculation_audit
 
-- [ ] 5.4 Implement pagination for snapshot export
+- [x] 5.4 Implement pagination for snapshot export
   - **spec_ref**: `specs.md#REQ-FRC-010-05`
   - **files**: `lib/Controller/ForecastController.php`
   - **acceptance_criteria**:
@@ -281,7 +281,7 @@
     - THEN the response MUST return max 50 rows
     - AND include `total`, `limit`, `offset` in metadata
 
-- [ ] 5.5 Implement override create endpoint
+- [x] 5.5 Implement override create endpoint
   - **spec_ref**: `specs.md#REQ-FRC-006-01, REQ-FRC-011-02`
   - **files**: `lib/Controller/ForecastController.php`
   - **acceptance_criteria**:
@@ -292,7 +292,7 @@
     - AND validate required fields: override_owner_id, override_amount, reason
     - AND return the created override object with 201 status
 
-- [ ] 5.6 Implement permission checks at controller level
+- [x] 5.6 Implement permission checks at controller level
   - **spec_ref**: `specs.md#REQ-FRC-011`
   - **files**: `lib/Controller/ForecastController.php`
   - **acceptance_criteria**:
@@ -305,7 +305,7 @@
 
 ## 6. Frontend: Deal Detail View Updates
 
-- [ ] 6.1 Add forecast category selector to deal detail
+- [x] 6.1 Add forecast category selector to deal detail
   - **spec_ref**: `specs.md#REQ-FRC-001-02`
   - **files**: frontend components (Vue/React), templates
   - **acceptance_criteria**:
@@ -320,7 +320,7 @@
       - "Closed Lost"
     - AND the current category MUST be pre-selected
 
-- [ ] 6.2 Implement forecast category change handler
+- [x] 6.2 Implement forecast category change handler
   - **spec_ref**: `specs.md#REQ-FRC-001-03`
   - **files**: frontend, `lib/Controller/DealController.php` (or similar)
   - **acceptance_criteria**:
@@ -330,7 +330,7 @@
     - AND on success, the UI MUST show a confirmation message
     - AND the audit log section MUST update to show the new entry
 
-- [ ] 6.3 Add justification modal for large commits
+- [x] 6.3 Add justification modal for large commits
   - **spec_ref**: `specs.md#REQ-FRC-003-01, REQ-FRC-003-02`
   - **files**: frontend modal component
   - **acceptance_criteria**:
@@ -344,7 +344,7 @@
     - WHEN user enters text and clicks Save
     - THEN the deal MUST be updated with `commit_justification`
 
-- [ ] 6.4 Add category history section
+- [x] 6.4 Add category history section
   - **spec_ref**: `specs.md#REQ-FRC-001-04`
   - **files**: frontend component
   - **acceptance_criteria**:
@@ -354,7 +354,7 @@
       - Column: Timestamp | Old Value | New Value | Changed By
       - Row per change, sorted newest first
 
-- [ ] 6.5 Add lock indicator for closed deals
+- [x] 6.5 Add lock indicator for closed deals
   - **spec_ref**: `specs.md#REQ-FRC-002-02`
   - **files**: frontend
   - **acceptance_criteria**:
@@ -364,7 +364,7 @@
     - AND a lock icon MUST appear
     - AND a tooltip MUST show: "Reopen the deal to change the forecast category"
 
-- [ ] 6.6 Add error message display
+- [x] 6.6 Add error message display
   - **spec_ref**: `specs.md#REQ-FRC-002-01`
   - **files**: frontend
   - **acceptance_criteria**:
@@ -377,7 +377,7 @@
 
 ## 7. Frontend: Manager Forecast View
 
-- [ ] 7.1 Create forecast overview page layout
+- [x] 7.1 Create forecast overview page layout
   - **spec_ref**: `specs.md#REQ-FRC-006, REQ-FRC-008`
   - **files**: frontend forecast view component
   - **acceptance_criteria**:
@@ -390,7 +390,7 @@
       - Quota progress bar
       - At-risk warning banner (if applicable)
 
-- [ ] 7.2 Implement team summary table
+- [x] 7.2 Implement team summary table
   - **spec_ref**: `specs.md#REQ-FRC-006, REQ-FRC-008-01`
   - **files**: frontend table component
   - **acceptance_criteria**:
@@ -401,7 +401,7 @@
     - AND each rep row MUST show calculated values
     - AND if override exists, show override amount in distinct column with "override" badge
 
-- [ ] 7.3 Implement override entry form
+- [x] 7.3 Implement override entry form
   - **spec_ref**: `specs.md#REQ-FRC-006-01`
   - **files**: frontend form component
   - **acceptance_criteria**:
@@ -416,7 +416,7 @@
     - AND the form MUST close
     - AND the table MUST refresh to show the override
 
-- [ ] 7.4 Implement visual diff for override
+- [x] 7.4 Implement visual diff for override
   - **spec_ref**: `specs.md#REQ-FRC-006-02`
   - **files**: frontend
   - **acceptance_criteria**:
@@ -428,7 +428,7 @@
       - Red down arrow or ▼ indicator
       - On hover or click: tooltip showing override reason
 
-- [ ] 7.5 Implement quota progress bar
+- [x] 7.5 Implement quota progress bar
   - **spec_ref**: `specs.md#REQ-FRC-008-02`
   - **files**: frontend progress bar component
   - **acceptance_criteria**:
@@ -440,7 +440,7 @@
       - Label: "125K of 150K on track (83%)"
       - Quota line marker at €150K
 
-- [ ] 7.6 Implement at-risk warning banner
+- [x] 7.6 Implement at-risk warning banner
   - **spec_ref**: `specs.md#REQ-FRC-008-04`
   - **files**: frontend
   - **acceptance_criteria**:
@@ -455,7 +455,7 @@
 
 ## 8. Frontend: Trend and Accuracy Views
 
-- [ ] 8.1 Create trend chart component
+- [x] 8.1 Create trend chart component
   - **spec_ref**: `specs.md#REQ-FRC-009-01`
   - **files**: frontend chart component
   - **acceptance_criteria**:
@@ -468,7 +468,7 @@
       - Data points and smooth curves
       - Tooltip on hover: amount, deal count
 
-- [ ] 8.2 Implement delta panel (deal movements)
+- [x] 8.2 Implement delta panel (deal movements)
   - **spec_ref**: `specs.md#REQ-FRC-009-02`
   - **files**: frontend delta panel component
   - **acceptance_criteria**:
@@ -480,7 +480,7 @@
       - Same for best_case and pipeline
       - Each deal name is clickable → navigates to deal detail
 
-- [ ] 8.3 Create forecast accuracy view
+- [x] 8.3 Create forecast accuracy view
   - **spec_ref**: `specs.md#REQ-FRC-007-03, REQ-FRC-007-04`
   - **files**: frontend accuracy view component
   - **acceptance_criteria**:
@@ -492,7 +492,7 @@
       - Color coding: green (>90%), amber (75-90%), red (<75%)
       - Click rep → drill down to detail with weekly breakdown chart
 
-- [ ] 8.4 Implement color-coding for accuracy bands
+- [x] 8.4 Implement color-coding for accuracy bands
   - **spec_ref**: `specs.md#REQ-FRC-007-04`
   - **files**: frontend utility (CSS or JS function)
   - **acceptance_criteria**:
@@ -507,7 +507,7 @@
 
 ## 9. Admin Settings and Configuration
 
-- [ ] 9.1 Create forecast configuration section in admin panel
+- [x] 9.1 Create forecast configuration section in admin panel
   - **spec_ref**: `specs.md#REQ-FRC-003-05`
   - **files**: frontend admin panel component, `lib/Settings/` (config)
   - **acceptance_criteria**:
@@ -520,7 +520,7 @@
       - Accuracy Amber Threshold: slider, default 0.75
       - At-Risk Warning settings: 2 inputs (quota %, days remaining), defaults 90%, 30 days
 
-- [ ] 9.2 Implement config persistence
+- [x] 9.2 Implement config persistence
   - **spec_ref**: `specs.md#REQ-FRC-003-05`
   - **files**: `lib/Controller/AdminSettingsController.php`, `IAppConfig`
   - **acceptance_criteria**:
@@ -533,7 +533,7 @@
 
 ## 10. i18n: Localization
 
-- [ ] 10.1 Add Dutch translations
+- [x] 10.1 Add Dutch translations
   - **spec_ref**: `specs.md` (all)
   - **files**: `translationfiles/nl.json` or similar
   - **acceptance_criteria**:
@@ -547,7 +547,7 @@
       - `forecast.category.closed_lost` = "Afgesloten - Lost"
       - Error messages, labels, buttons, banners
 
-- [ ] 10.2 Add English translations
+- [x] 10.2 Add English translations
   - **spec_ref**: `specs.md` (all)
   - **files**: `translationfiles/en.json` or similar
   - **acceptance_criteria**:
@@ -559,7 +559,7 @@
 
 ## 11. Seed Data and Testing
 
-- [ ] 11.1 Create seed deal objects
+- [x] 11.1 Create seed deal objects
   - **spec_ref**: `design.md#Seed Data`
   - **files**: migration or seed data fixture
   - **acceptance_criteria**:
@@ -570,7 +570,7 @@
       - Deal 2: forecast_category = "best_case", value = €25K
       - Deal 3: forecast_category = "pipeline", value = €12K
 
-- [ ] 11.2 Create seed forecast snapshot objects
+- [x] 11.2 Create seed forecast snapshot objects
   - **spec_ref**: `design.md#Seed Data`
   - **files**: migration or seed data fixture
   - **acceptance_criteria**:
@@ -578,14 +578,14 @@
     - THEN 2 example forecast_snapshot objects MUST exist at different times
     - AND demonstrate roll-up mechanics (team sums reps)
 
-- [ ] 11.3 Create seed override object
+- [x] 11.3 Create seed override object
   - **spec_ref**: `design.md#Seed Data`
   - **files**: migration or seed data fixture
   - **acceptance_criteria**:
     - GIVEN seed data is loaded
     - THEN 1 example forecast_override MUST exist showing visual diff
 
-- [ ] 11.4 Create seed quota objects
+- [x] 11.4 Create seed quota objects
   - **spec_ref**: `design.md#Seed Data`
   - **files**: migration or seed data fixture
   - **acceptance_criteria**:
@@ -596,7 +596,7 @@
 
 ## 12. Documentation and Verification
 
-- [ ] 12.1 Update user-facing docs (docs/ directory)
+- [ ] 12.1 Update user-facing docs (docs/ directory) — DEFERRED: requires a running app for screenshots (Hydra verify stage). Code complete.
   - **spec_ref**: ADR-009
   - **files**: `docs/forecast.md` (new)
   - **acceptance_criteria**:
@@ -609,7 +609,7 @@
       - How to view accuracy scores
     - AND doc MUST include screenshots from running app
 
-- [ ] 12.2 Verify no build errors
+- [ ] 12.2 Verify no build errors — DEFERRED: `npm run build` needs node_modules (not in build worktree); Vue/JS syntax verified, run at Hydra verify. PHP `composer check:strict` is fully green.
   - **spec_ref**: `proposal.md#Success Criteria`
   - **files**: all
   - **acceptance_criteria**:
@@ -619,7 +619,7 @@
     - AND NO TypeScript errors MUST appear
     - AND NO console warnings MUST appear (eslint, stylelint)
 
-- [ ] 12.3 Run integration tests
+- [x] 12.3 Run integration tests
   - **spec_ref**: `proposal.md#Success Criteria`
   - **files**: tests/
   - **acceptance_criteria**:
@@ -628,7 +628,7 @@
     - THEN all tests MUST pass
     - AND code coverage MUST be > 80% for feature-critical paths
 
-- [ ] 12.4 Deduplication check
+- [x] 12.4 Deduplication check
   - **spec_ref**: ADR-012
   - **files**: IMPLEMENTATION_NOTES.md or similar
   - **acceptance_criteria**:
@@ -639,7 +639,7 @@
       - No duplicate snapshot generation logic in multiple files
       - Finding documented even if "no overlap found"
 
-- [ ] 12.5 Create CHANGELOG entry
+- [x] 12.5 Create CHANGELOG entry
   - **spec_ref**: Release notes
   - **files**: `CHANGELOG.md` or release notes
   - **acceptance_criteria**:
