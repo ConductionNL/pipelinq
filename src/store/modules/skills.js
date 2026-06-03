@@ -23,7 +23,7 @@ export const useSkillsStore = defineStore('skills', {
 			this.error = null
 			try {
 				const objectStore = useObjectStore()
-				const result = await objectStore.fetchObjects('skill', { _limit: 100 })
+				const result = await objectStore.fetchCollection('skill', { _limit: 100 })
 				this.skills = result || []
 			} catch (error) {
 				this.error = error.message

@@ -16,9 +16,11 @@ import pinia from './pinia.js'
 import App from './App.vue'
 import bundledManifest from './manifest.json'
 import registry from './registry.js'
+import appIcons from './icons.js'
 import { initializeStores } from './store/store.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
+// eslint-disable-next-line import/no-unresolved -- CSS subpath resolved by webpack alias, not ESLint's resolver
 import '@conduction/nextcloud-vue/css/index.css'
 import './assets/app.css'
 
@@ -26,8 +28,10 @@ Vue.mixin({ methods: { t, n } })
 Vue.use(PiniaVuePlugin)
 Vue.use(VueRouter)
 
-// Register library-side icon set + lib translations once at bootstrap.
-registerIcons()
+// Register the app's schema icons + lib translations once at bootstrap.
+// Without this every schema `icon` name fails the CnIcon registry lookup
+// and falls back to a help-circle (page headers, empty states).
+registerIcons(appIcons)
 try {
 	registerTranslations()
 } catch (e) {

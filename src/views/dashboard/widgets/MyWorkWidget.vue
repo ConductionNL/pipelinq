@@ -38,6 +38,7 @@ import { NcButton } from '@nextcloud/vue'
 import { getMyLeads, getMyRequests, getPipelines, getClosedStageNames } from '../../../services/dashboardData.js'
 import { getStatusLabel } from '../../../services/requestStatus.js'
 import { formatDate } from '../../../services/localeUtils.js'
+import dashboardRefreshMixin from './dashboardRefreshMixin.js'
 
 const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 }
 
@@ -46,6 +47,7 @@ export default {
 	components: {
 		NcButton,
 	},
+	mixins: [dashboardRefreshMixin],
 	data() {
 		return {
 			loaded: false,
@@ -117,25 +119,25 @@ export default {
 			return this.allItems.slice(0, 5)
 		},
 	},
-	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-10
-	 */
-	async mounted() {
-		try {
-			const [myLeads, myRequests, pipelines] = await Promise.all([
-				getMyLeads(), getMyRequests(), getPipelines(),
-			])
-			this.myLeads = myLeads
-			this.myRequests = myRequests
-			this.pipelines = pipelines
-		} catch (err) {
-			console.error('MyWorkWidget fetch error:', err)
-		} finally {
-			this.loaded = true
-		}
-	},
 	methods: {
 		formatDate,
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-10
+		 */
+		async load() {
+			try {
+				const [myLeads, myRequests, pipelines] = await Promise.all([
+					getMyLeads(), getMyRequests(), getPipelines(),
+				])
+				this.myLeads = myLeads
+				this.myRequests = myRequests
+				this.pipelines = pipelines
+			} catch (err) {
+				console.error('MyWorkWidget fetch error:', err)
+			} finally {
+				this.loaded = true
+			}
+		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-11
 		 */

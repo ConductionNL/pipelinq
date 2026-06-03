@@ -1,0 +1,334 @@
+<!--
+  - SPDX-License-Identifier: EUPL-1.2
+  - SPDX-FileCopyrightText: 2024 Conduction B.V.
+-->
+<template>
+	<CnDetailPage
+		:title="isEdit ? t('pipelinq', 'Edit export job') : t('pipelinq', 'New export job')"
+		:loading="loading"
+		@back="goBack">
+		<CnDetailCard :title="t('pipelinq', 'Export job')">
+			<div class="export-form">
+				<NcTextField
+					:value.sync="model.name"
+					:label="t('pipelinq', 'Name')" />
+				<NcTextField
+					:value.sync="model.description"
+					:label="t('pipelinq', 'Description')" />
+				<NcSelect
+					:value="selectedSchemas"
+					:options="schemaOptions"
+					:input-label="t('pipelinq', 'Source schemas')"
+					:placeholder="t('pipelinq', 'Choose schemas to export…')"
+					label="label"
+					:multiple="true"
+					@input="onSchemasSelect" />
+				<NcSelect
+					:value="selectedDestination"
+					:options="destinationOptions"
+					:input-label="t('pipelinq', 'Destination')"
+					:placeholder="t('pipelinq', 'Choose a destination…')"
+					label="label"
+					:clearable="false"
+					@input="(o) => model.destinationId = o ? o.id : ''" />
+				<NcSelect
+					:value="selectedFormat"
+					:options="formatOptions"
+					:input-label="t('pipelinq', 'Format')"
+					label="label"
+					:clearable="false"
+					@input="(o) => model.format = o ? o.id : 'csv'" />
+				<NcSelect
+					:value="selectedMode"
+					:options="modeOptions"
+					:input-label="t('pipelinq', 'Mode')"
+					label="label"
+					:clearable="false"
+					@input="(o) => model.mode = o ? o.id : 'full'" />
+				<NcTextField
+					v-if="model.mode === 'incremental'"
+					:value.sync="model.incrementalWatermarkColumn"
+					:label="t('pipelinq', 'Watermark column')"
+					:helper-text="t('pipelinq', 'Column used to detect changed rows (e.g. updatedAt)')" />
+				<NcTextField
+					:value.sync="model.scheduleCron"
+					:label="t('pipelinq', 'Schedule (cron)')"
+					:placeholder="'0 2 * * *'" />
+				<NcTextField
+					:value.sync="model.rowFilterExpression"
+					:label="t('pipelinq', 'Row filter (optional)')"
+					placeholder="status = 'open'" />
+				<NcTextField
+					:value.sync="allowlistText"
+					:label="t('pipelinq', 'Column allowlist (optional, comma-separated)')"
+					:helper-text="t('pipelinq', 'Limit exported columns to minimise PII; leave empty to export all columns')" />
+			</div>
+
+			<template #actions>
+				<NcButton
+					v-if="isEdit"
+					type="tertiary"
+					:disabled="busy"
+					@click="testRun">
+					{{ t('pipelinq', 'Test run') }}
+				</NcButton>
+				<NcButton type="primary" :disabled="busy || !model.name" @click="save">
+					{{ t('pipelinq', 'Save') }}
+				</NcButton>
+				<NcButton type="secondary" @click="goBack">
+					{{ t('pipelinq', 'Cancel') }}
+				</NcButton>
+			</template>
+		</CnDetailCard>
+	</CnDetailPage>
+</template>
+
+<script>
+import { NcButton, NcTextField, NcSelect } from '@nextcloud/vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
+import { useObjectStore } from '../../store/modules/object.js'
+import { exportApi } from '../../services/exportApi.js'
+
+// The pipelinq schemas the export pipeline may read.
+const EXPORTABLE_SCHEMAS = ['client', 'contact', 'lead', 'request', 'task', 'contactmoment', 'complaint', 'product']
+const FORMATS = ['csv', 'parquet', 'jsonl']
+const MODES = ['full', 'incremental']
+
+export default {
+	name: 'ExportJobForm',
+	components: {
+		NcButton,
+		NcTextField,
+		NcSelect,
+		CnDetailPage,
+		CnDetailCard,
+	},
+	props: {
+		exportJobId: {
+			type: String,
+			default: null,
+		},
+		id: {
+			type: String,
+			default: null,
+		},
+	},
+	setup() {
+		return { objectStore: useObjectStore() }
+	},
+	data() {
+		return {
+			loading: false,
+			busy: false,
+			destinations: [],
+			allowlistText: '',
+			model: {
+				name: '',
+				description: '',
+				sourceSchemas: [],
+				destinationId: '',
+				format: 'csv',
+				mode: 'full',
+				incrementalWatermarkColumn: '',
+				scheduleCron: '0 2 * * *',
+				rowFilterExpression: '',
+				columnAllowlist: [],
+				enabled: false,
+			},
+		}
+	},
+	computed: {
+		/**
+		 * The resolved job id from either prop name.
+		 *
+		 * @return {string|null} The job UUID.
+		 */
+		jobId() {
+			return this.exportJobId || this.id || this.$route?.params?.id || null
+		},
+		/**
+		 * Whether the form is editing an existing job.
+		 *
+		 * @return {boolean} True when editing.
+		 */
+		isEdit() {
+			return !!this.jobId
+		},
+		/**
+		 * Source schema options.
+		 *
+		 * @return {Array<object>} The options.
+		 */
+		schemaOptions() {
+			return EXPORTABLE_SCHEMAS.map((id) => ({ id, label: id }))
+		},
+		/**
+		 * The currently selected schema options.
+		 *
+		 * @return {Array<object>} The selected options.
+		 */
+		selectedSchemas() {
+			return this.schemaOptions.filter((o) => (this.model.sourceSchemas || []).includes(o.id))
+		},
+		/**
+		 * Destination dropdown options.
+		 *
+		 * @return {Array<object>} The options.
+		 */
+		destinationOptions() {
+			return this.destinations.map((d) => ({
+				id: d.id,
+				label: d.validationStatus === 'valid' ? `${d.name} (${d.type})` : `${d.name} (${d.type} — ${this.t('pipelinq', 'unverified')})`,
+			}))
+		},
+		/**
+		 * The selected destination option.
+		 *
+		 * @return {object|null} The option.
+		 */
+		selectedDestination() {
+			return this.destinationOptions.find((o) => o.id === this.model.destinationId) || null
+		},
+		/**
+		 * Format options.
+		 *
+		 * @return {Array<object>} The options.
+		 */
+		formatOptions() {
+			return FORMATS.map((id) => ({ id, label: id }))
+		},
+		/**
+		 * The selected format option.
+		 *
+		 * @return {object|null} The option.
+		 */
+		selectedFormat() {
+			return this.formatOptions.find((o) => o.id === this.model.format) || null
+		},
+		/**
+		 * Mode options.
+		 *
+		 * @return {Array<object>} The options.
+		 */
+		modeOptions() {
+			return MODES.map((id) => ({ id, label: this.t('pipelinq', id === 'full' ? 'Full refresh' : 'Incremental') }))
+		},
+		/**
+		 * The selected mode option.
+		 *
+		 * @return {object|null} The option.
+		 */
+		selectedMode() {
+			return this.modeOptions.find((o) => o.id === this.model.mode) || null
+		},
+	},
+	async mounted() {
+		await this.loadDestinations()
+		if (this.isEdit) {
+			await this.load()
+		}
+	},
+	methods: {
+		/**
+		 * Load destinations for the dropdown.
+		 */
+		async loadDestinations() {
+			try {
+				await this.objectStore.fetchCollection('exportDestination', { _limit: 200 })
+				this.destinations = this.objectStore.getCollection('exportDestination')?.results || []
+			} catch (e) {
+				this.destinations = []
+			}
+		},
+		/**
+		 * Load the job for editing.
+		 */
+		async load() {
+			this.loading = true
+			try {
+				const existing = await this.objectStore.fetchObject('exportJob', this.jobId)
+				if (existing) {
+					this.model = { ...this.model, ...existing }
+					this.allowlistText = (this.model.columnAllowlist || []).join(', ')
+				}
+			} catch (e) {
+				showError(this.t('pipelinq', 'Could not load the job'))
+			} finally {
+				this.loading = false
+			}
+		},
+		/**
+		 * Track the multi-select schema choice.
+		 *
+		 * @param {Array<object>} options The selected options.
+		 */
+		onSchemasSelect(options) {
+			this.model.sourceSchemas = (options || []).map((o) => o.id)
+		},
+		/**
+		 * Parse the comma-separated allowlist text into an array.
+		 *
+		 * @return {Array<string>} The allowlist columns.
+		 */
+		parsedAllowlist() {
+			return this.allowlistText
+				.split(',')
+				.map((s) => s.trim())
+				.filter((s) => s.length > 0)
+		},
+		/**
+		 * Persist the job via the shared object store.
+		 */
+		async save() {
+			this.busy = true
+			try {
+				const payload = { ...this.model, columnAllowlist: this.parsedAllowlist() }
+				if (this.isEdit) {
+					payload.id = this.jobId
+				}
+				await this.objectStore.saveObject('exportJob', payload)
+				showSuccess(this.t('pipelinq', 'Export job saved'))
+				this.$router.push({ name: 'ExportJobs' })
+			} catch (e) {
+				showError(this.t('pipelinq', 'Could not save the job'))
+			} finally {
+				this.busy = false
+			}
+		},
+		/**
+		 * Trigger a non-destructive test run.
+		 */
+		async testRun() {
+			this.busy = true
+			try {
+				const result = await exportApi.testRun(this.jobId)
+				if (result.success) {
+					showSuccess(this.t('pipelinq', 'Test run succeeded ({rows} sample rows)', { rows: result.sample_rows }))
+				} else {
+					showError(this.t('pipelinq', 'Test run failed: {error}', { error: (result.errors || []).join('; ') }))
+				}
+			} catch (e) {
+				showError(e.message || this.t('pipelinq', 'Test run failed'))
+			} finally {
+				this.busy = false
+			}
+		},
+		/**
+		 * Navigate back to the job list.
+		 */
+		goBack() {
+			this.$router.push({ name: 'ExportJobs' })
+		},
+	},
+}
+</script>
+
+<style scoped>
+.export-form {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	max-width: 560px;
+}
+</style>
