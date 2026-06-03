@@ -335,6 +335,185 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Rapportage (Reporting)",
+      "item": [
+        {
+          "name": "GET /rapportage/kpis — happy path",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/rapportage/kpis?from=2026-04-01&to=2026-04-30",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has KPI fields', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('total');",
+                  "  pm.expect(json).to.have.property('fcrRate');",
+                  "  pm.expect(json).to.have.property('avgHandlingTime');",
+                  "  pm.expect(json).to.have.property('slaCompliance');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /rapportage/kpis — invalid date → 400",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/rapportage/kpis?from=not-a-date&to=also-not",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Response has message field', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /rapportage/channels — happy path",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/rapportage/channels?from=2026-04-01&to=2026-04-30",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has distribution and trend fields', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('distribution');",
+                  "  pm.expect(json).to.have.property('trend');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /rapportage/agents — happy path",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/rapportage/agents?from=2026-04-01&to=2026-04-30",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has agents field', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('agents');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /rapportage/sla — happy path",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/rapportage/sla",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has targets field', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('targets');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /rapportage/sla — non-admin → 403",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/rapportage/sla",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{nonAdminUsername}}", "type": "string" },
+                { "key": "password", "value": "{{nonAdminPassword}}", "type": "string" }
+              ]
+            },
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"targets\": {\"telefoon\": {\"target_percent\": \"95\"}}}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 403 for non-admin', function () {",
+                  "  pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

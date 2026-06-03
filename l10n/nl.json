@@ -1120,6 +1120,24 @@
         "This will reject the refund. Enter a reason for the rejection.": "Hiermee wijs je de retour af. Vul een reden in voor de afwijzing.",
         "Vul een reden in voor de afwijzing": "Vul een reden in voor de afwijzing",
         "Max {max}": "Max {max}",
+<<<<<<< HEAD
+        "Total Contacts": "Totaal contacten",
+        "FCR %": "ECO %",
+        "Avg Handling Time": "Gemiddelde afhandeltijd",
+        "SLA Compliance": "SLA-naleving",
+        "Channel Analytics": "Kanaalanalyse",
+        "Agent Performance": "Agentprestaties",
+        "This week": "Deze week",
+        "This month": "Deze maand",
+        "Custom": "Aangepast",
+        "Reporting Dashboard": "Rapportagedashboard",
+        "Back to Dashboard": "Terug naar dashboard",
+        "Channel Comparison": "Kanaalvergelijking",
+        "Team Summary": "Teamsamenvatting",
+        "Failed to load reporting data": "Laden van rapportagegegevens mislukt",
+        "Failed to load channel data": "Laden van kanaalgegevens mislukt",
+        "Failed to load agent data": "Laden van agentgegevens mislukt"
+=======
         "app-availability.title": "Vereiste applicatie niet beschikbaar",
         "app-availability.description": "Deze applicatie vereist dat OpenRegister is geïnstalleerd en ingeschakeld.",
         "app-availability.action": "OpenRegister installeren",
@@ -1286,6 +1304,7 @@
         "Test run failed": "Testuitvoering mislukt",
         "Test run failed: {error}": "Testuitvoering mislukt: {error}",
         "Test run succeeded ({rows} sample rows)": "Testuitvoering geslaagd ({rows} voorbeeldrijen)"
+>>>>>>> origin/development
     },
     "plurals": {},
     "pluralForm": "nplurals=2; plural=(n != 1);"
