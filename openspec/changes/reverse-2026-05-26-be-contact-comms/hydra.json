@@ -8,9 +8,9 @@
       "cycle": 1,
       "trigger": "orchestrator",
       "started_at": "2026-06-03T13:58:36Z",
-      "ended_at": null,
-      "outcome": "in-flight",
-      "outcome_reason": null,
+      "ended_at": "2026-06-03T16:58:23Z",
+      "outcome": "done",
+      "outcome_reason": "pipeline complete \u2014 reviews passed and applier passed (if run)",
       "pattern_tags": [],
       "stages": [
         {
