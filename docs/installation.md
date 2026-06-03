@@ -8,9 +8,9 @@ description: Install Pipelinq on Nextcloud 29+ from the app store. OpenRegister 
 
 ## Prerequisites
 
-- **Nextcloud 29 or later** — Pipelinq requires Nextcloud 29+.
-- **OpenRegister app** — Pipelinq stores all CRM data via OpenRegister. Install it first from the Nextcloud App Store or your admin's app repository.
-- **Admin access** — You need Nextcloud admin rights to install and configure apps.
+- **Nextcloud 29 or later**: Pipelinq requires Nextcloud 29+.
+- **OpenRegister app**: Pipelinq stores all CRM data via OpenRegister. Install it first from the Nextcloud App Store or your admin's app repository.
+- **Admin access**: You need Nextcloud admin rights to install and configure apps.
 
 ## Install from the App Store
 
