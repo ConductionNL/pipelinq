@@ -124,6 +124,7 @@ export default {
 		articleId: {
 			immediate: true,
 			/**
+			 * @param id
 			 * @spec openspec/changes/reverse-2026-05-26-fe-kennisbank-ui/tasks.md#task-1
 			 */
 			async handler(id) {
@@ -205,7 +206,9 @@ export default {
 }
 
 .article-detail__body :deep(img) { max-width: 100%; }
+
 .article-detail__body :deep(code) { background: var(--color-background-dark); padding: 2px 6px; border-radius: 4px; }
+
 .article-detail__body :deep(pre) { background: var(--color-background-dark); padding: 12px; border-radius: var(--border-radius); overflow-x: auto; }
 
 .status-badge {
@@ -217,7 +220,9 @@ export default {
 }
 
 .status-badge--concept { background: var(--color-warning); color: #000; }
+
 .status-badge--gepubliceerd { background: var(--color-success); color: #fff; }
+
 .status-badge--gearchiveerd { background: var(--color-text-lighter); color: #fff; }
 
 .visibility-badge {
@@ -227,5 +232,6 @@ export default {
 }
 
 .visibility-badge--openbaar { background: var(--color-primary-element-light); }
+
 .visibility-badge--intern { background: var(--color-background-dark); }
 </style>

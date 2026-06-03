@@ -75,6 +75,7 @@ export default {
 	},
 	watch: {
 		/**
+		 * @param newVal
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-14
 		 */
 		value(newVal) {
@@ -144,6 +145,7 @@ export default {
 			}
 		},
 		/**
+		 * @param client
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-13
 		 */
 		selectClient(client) {

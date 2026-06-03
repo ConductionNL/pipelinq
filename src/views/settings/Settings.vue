@@ -279,6 +279,7 @@ export default {
 			}
 		},
 		/**
+		 * @param configuration
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-86
 		 */
 		async save(configuration) {
@@ -293,54 +294,67 @@ export default {
 			this.saving = false
 		},
 		/**
+		 * @param name
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-67
 		 */
 		async addLeadSource(name) {
 			await this.leadSourcesStore.addSource(name)
 		},
 		/**
+		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-79
 		 */
 		async removeLeadSource(id) {
 			await this.leadSourcesStore.removeSource(id)
 		},
 		/**
+		 * @param id
+		 * @param name
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-81
 		 */
 		async renameLeadSource(id, name) {
 			await this.leadSourcesStore.renameSource(id, name)
 		},
 		/**
+		 * @param name
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-68
 		 */
 		async addRequestChannel(name) {
 			await this.requestChannelsStore.addChannel(name)
 		},
 		/**
+		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-80
 		 */
 		async removeRequestChannel(id) {
 			await this.requestChannelsStore.removeChannel(id)
 		},
 		/**
+		 * @param id
+		 * @param name
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-82
 		 */
 		async renameRequestChannel(id, name) {
 			await this.requestChannelsStore.renameChannel(id, name)
 		},
 		/**
+		 * @param sourceName
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-69
 		 */
 		async checkLeadSourceUsage(sourceName) {
 			return this.countObjectsWithField('lead', 'source', sourceName)
 		},
 		/**
+		 * @param channelName
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-70
 		 */
 		async checkRequestChannelUsage(channelName) {
 			return this.countObjectsWithField('request', 'channel', channelName)
 		},
 		/**
+		 * @param type
+		 * @param field
+		 * @param value
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-71
 		 */
 		async countObjectsWithField(type, field, value) {

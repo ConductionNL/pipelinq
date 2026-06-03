@@ -18,8 +18,11 @@
 		<template v-else>
 			<section v-if="series.length >= 1" class="forecast-trend__chart">
 				<h3>{{ t('pipelinq', 'Commit / best-case / pipeline over time') }}</h3>
-				<svg class="forecast-trend__svg" viewBox="0 0 600 200" preserveAspectRatio="none"
-					role="img" :aria-label="t('pipelinq', 'Forecast trend chart')">
+				<svg class="forecast-trend__svg"
+					viewBox="0 0 600 200"
+					preserveAspectRatio="none"
+					role="img"
+					:aria-label="t('pipelinq', 'Forecast trend chart')">
 					<polyline class="line line--commit" :points="line('commit')" />
 					<polyline class="line line--bestcase" :points="line('best_case')" />
 					<polyline class="line line--pipeline" :points="line('pipeline')" />
@@ -63,7 +66,8 @@
 						</tr>
 					</tbody>
 				</table>
-				<NcEmptyContent v-else :name="t('pipelinq', 'No closed periods yet')"
+				<NcEmptyContent v-else
+					:name="t('pipelinq', 'No closed periods yet')"
 					:description="t('pipelinq', 'Accuracy is computed once a fiscal period closes.')" />
 			</section>
 		</template>
@@ -158,21 +162,38 @@ export default {
 
 <style scoped>
 .forecast-trend { padding: 20px; max-width: 1000px; margin: 0 auto; }
+
 .forecast-trend__header { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+
 .forecast-trend__svg { width: 100%; height: 200px; background: var(--color-background-hover); border-radius: 8px; }
+
 .line { fill: none; stroke-width: 2; }
+
 .line--commit { stroke: var(--color-primary-element); }
+
 .line--bestcase { stroke: #f59e0b; }
+
 .line--pipeline { stroke: var(--color-text-maxcontrast); }
+
 .forecast-trend__legend { display: flex; gap: 16px; margin-top: 8px; }
+
 .legend::before { content: '■ '; }
+
 .legend--commit::before { color: var(--color-primary-element); }
+
 .legend--bestcase::before { color: #f59e0b; }
+
 .legend--pipeline::before { color: var(--color-text-maxcontrast); }
+
 .forecast-trend__delta, .forecast-trend__accuracy { margin-top: 24px; }
+
 .accuracy-table { width: 100%; border-collapse: collapse; }
+
 .accuracy-table th, .accuracy-table td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--color-border); }
+
 .accuracy--green { color: var(--color-success); font-weight: 600; }
+
 .accuracy--amber { color: #f59e0b; font-weight: 600; }
+
 .accuracy--red { color: var(--color-error); font-weight: 600; }
 </style>

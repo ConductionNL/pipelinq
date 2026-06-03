@@ -69,6 +69,7 @@ export const useSettingsStore = defineStore('settings', {
 		},
 
 		/**
+		 * @param settingsData
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-44
 		 */
 		async saveSettings(settingsData) {

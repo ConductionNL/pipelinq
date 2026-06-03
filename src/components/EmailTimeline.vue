@@ -72,6 +72,7 @@ export default {
 			try { this.emails = [] } finally { this.loading = false }
 		},
 		/**
+		 * @param dateStr
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-28
 		 */
 		formatDate(dateStr) {

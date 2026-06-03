@@ -1,6 +1,8 @@
 <template>
 	<div v-if="totalCount > 0" class="feedback-summary">
-		<h4 class="feedback-summary__title">{{ t('pipelinq', 'Feedback') }}</h4>
+		<h4 class="feedback-summary__title">
+			{{ t('pipelinq', 'Feedback') }}
+		</h4>
 		<div class="feedback-summary__stats">
 			<div class="feedback-summary__stat">
 				<span class="feedback-summary__label">{{ t('pipelinq', 'Helpful') }}</span>
@@ -111,7 +113,9 @@ export default {
 }
 
 .feedback-summary__value--positive { color: var(--color-success); }
+
 .feedback-summary__value--negative { color: var(--color-error); }
+
 .feedback-summary__value--warning { color: var(--color-warning); }
 
 .feedback-summary__warning {

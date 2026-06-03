@@ -48,7 +48,9 @@
 				<div class="form-col">
 					<label>{{ t('pipelinq', 'Category') }}</label>
 					<select v-model="form.category" class="form-select">
-						<option :value="null">{{ t('pipelinq', 'No category') }}</option>
+						<option :value="null">
+							{{ t('pipelinq', 'No category') }}
+						</option>
 						<option
 							v-for="cat in categories"
 							:key="cat.id"
@@ -60,8 +62,12 @@
 				<div class="form-col">
 					<label>{{ t('pipelinq', 'Visibility') }}</label>
 					<select v-model="form.visibility" class="form-select">
-						<option value="intern">{{ t('pipelinq', 'Internal (agents only)') }}</option>
-						<option value="openbaar">{{ t('pipelinq', 'Public (citizen-facing)') }}</option>
+						<option value="intern">
+							{{ t('pipelinq', 'Internal (agents only)') }}
+						</option>
+						<option value="openbaar">
+							{{ t('pipelinq', 'Public (citizen-facing)') }}
+						</option>
 					</select>
 				</div>
 			</div>
