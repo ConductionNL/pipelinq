@@ -12,6 +12,18 @@ return [
         ['name' => 'settings#getUserSettings', 'url' => '/api/settings/user', 'verb' => 'GET'],
         ['name' => 'settings#updateUserSettings', 'url' => '/api/settings/user', 'verb' => 'PUT'],
 
+        // Admin — Objects API access control (per-schema group restrictions; ADR-005 / admin-settings spec).
+        ['name' => 'settings#saveObjectenAccess', 'url' => '/api/settings/objecten-access', 'verb' => 'POST'],
+
+        // Admin — REST API token management.
+        ['name' => 'settings#listTokens', 'url' => '/api/settings/api-tokens', 'verb' => 'GET'],
+        ['name' => 'settings#generateToken', 'url' => '/api/settings/api-tokens', 'verb' => 'POST'],
+        ['name' => 'settings#revokeToken', 'url' => '/api/settings/api-tokens/{id}', 'verb' => 'DELETE'],
+
+        // Admin — OAuth 2.0 and MCP server configuration.
+        ['name' => 'settings#saveOAuth', 'url' => '/api/settings/oauth', 'verb' => 'POST'],
+        ['name' => 'settings#saveMcp', 'url' => '/api/settings/mcp', 'verb' => 'POST'],
+
         // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g. CnSupportDialog)
         ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
         ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
