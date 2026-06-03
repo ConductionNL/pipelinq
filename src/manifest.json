@@ -214,6 +214,16 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "client",
+				"showViewAction": false,
+				"actions": [
+					{
+						"id": "view",
+						"label": "View",
+						"icon": "Eye",
+						"handler": "navigate",
+						"route": "ClientDetail"
+					}
+				],
 				"columns": [
 					"name",
 					"type",
@@ -283,6 +293,16 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "request",
+				"showViewAction": false,
+				"actions": [
+					{
+						"id": "view",
+						"label": "View",
+						"icon": "Eye",
+						"handler": "navigate",
+						"route": "RequestDetail"
+					}
+				],
 				"columns": [
 					"title",
 					"status",
@@ -368,6 +388,16 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "complaint",
+				"showViewAction": false,
+				"actions": [
+					{
+						"id": "view",
+						"label": "View",
+						"icon": "Eye",
+						"handler": "navigate",
+						"route": "ComplaintDetail"
+					}
+				],
 				"columns": [
 					"title",
 					"status",
@@ -401,6 +431,16 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "contact",
+				"showViewAction": false,
+				"actions": [
+					{
+						"id": "view",
+						"label": "View",
+						"icon": "Eye",
+						"handler": "navigate",
+						"route": "ContactDetail"
+					}
+				],
 				"columns": [
 					"name",
 					"email",
@@ -432,6 +472,16 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "lead",
+				"showViewAction": false,
+				"actions": [
+					{
+						"id": "view",
+						"label": "View",
+						"icon": "Eye",
+						"handler": "navigate",
+						"route": "LeadDetail"
+					}
+				],
 				"columns": [
 					"title",
 					"stage",
@@ -518,6 +568,16 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "contactmoment",
+				"showViewAction": false,
+				"actions": [
+					{
+						"id": "view",
+						"label": "View",
+						"icon": "Eye",
+						"handler": "navigate",
+						"route": "ContactmomentDetail"
+					}
+				],
 				"columns": [
 					"channel",
 					"subject",
@@ -561,6 +621,16 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "task",
+				"showViewAction": false,
+				"actions": [
+					{
+						"id": "view",
+						"label": "View",
+						"icon": "Eye",
+						"handler": "navigate",
+						"route": "TaskDetail"
+					}
+				],
 				"columns": [
 					"title",
 					"type",
@@ -605,6 +675,16 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "product",
+				"showViewAction": false,
+				"actions": [
+					{
+						"id": "view",
+						"label": "View",
+						"icon": "Eye",
+						"handler": "navigate",
+						"route": "ProductDetail"
+					}
+				],
 				"columns": [
 					"name",
 					"category",
@@ -747,6 +827,16 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "queue",
+				"showViewAction": false,
+				"actions": [
+					{
+						"id": "view",
+						"label": "View",
+						"icon": "Eye",
+						"handler": "navigate",
+						"route": "QueueDetail"
+					}
+				],
 				"columns": [
 					"title",
 					"description",
@@ -778,6 +868,16 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "survey",
+				"showViewAction": false,
+				"actions": [
+					{
+						"id": "view",
+						"label": "View",
+						"icon": "Eye",
+						"handler": "navigate",
+						"route": "SurveyDetail"
+					}
+				],
 				"columns": [
 					"title",
 					"status",
@@ -905,6 +1005,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "pipeline",
+				"showViewAction": false,
 				"columns": [
 					"title",
 					"description",
@@ -925,6 +1026,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "intakeForm",
+				"showViewAction": false,
 				"columns": [
 					"name",
 					"isActive",
@@ -933,9 +1035,16 @@
 				],
 				"actions": [
 					{
+						"id": "view",
+						"label": "View",
+						"icon": "Eye",
+						"handler": "navigate",
+						"route": "FormDetail"
+					},
+					{
 						"id": "submissions",
 						"label": "View submissions",
-						"icon": "format-list-bulleted",
+						"icon": "FormatListBulleted",
 						"handler": "navigate",
 						"route": "FormSubmissions"
 					}
@@ -982,6 +1091,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "intakeSubmission",
+				"showViewAction": false,
 				"filter": {
 					"form": "@route.id"
 				},

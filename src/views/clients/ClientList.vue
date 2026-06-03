@@ -15,6 +15,7 @@
 			@refresh="refresh"
 			@sort="onSort"
 			@row-click="openClient"
+			@view="openClient"
 			@page-changed="onPageChange" />
 	</div>
 </template>
