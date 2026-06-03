@@ -90,3 +90,14 @@ if (interface_exists(\OCA\OpenRegister\Lifecycle\LifecycleGuardInterface::class)
 if (class_exists(\OCA\OpenRegister\Service\Lifecycle\TransitionEngine::class) === false) {
     require_once __DIR__ . '/Stubs/Service/Lifecycle/TransitionEngine.php';
 }
+
+// Portal test helpers live in the Tests namespace, which has no PSR-4 mapping
+// in autoload-dev; load the in-memory repository double explicitly so the
+// portal service tests can use it without a composer.json change.
+if (file_exists(__DIR__ . '/Unit/Service/Portal/FakePortalObjectRepository.php') === true) {
+    require_once __DIR__ . '/Unit/Service/Portal/FakePortalObjectRepository.php';
+}
+
+if (file_exists(__DIR__ . '/Unit/Service/Portal/FakeMainRegisterReader.php') === true) {
+    require_once __DIR__ . '/Unit/Service/Portal/FakeMainRegisterReader.php';
+}
