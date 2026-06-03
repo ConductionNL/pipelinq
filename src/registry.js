@@ -90,6 +90,11 @@ import PosRefundFormView from './views/pos/PosRefundForm.vue'
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
 import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
 
+// --- Automation rule builder (lib gap: no automation-rule editor page type;
+//     the visual condition + action builder cannot be expressed as a declarative
+//     type:"detail" because it drives a bespoke condition-row + action-row UX). ---
+import AutomationBuilderView from './views/automations/AutomationBuilder.vue'
+
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
 /**
@@ -280,6 +285,13 @@ const registry = {
 		kind: 'page',
 		component: ProductBarcodeSearchView,
 		_note: 'Scan-to-navigate barcode search; resolves via the server-authoritative scoped barcode-lookup API and routes to the matching product (highlighting a matched variant).',
+	},
+
+	// --- Automation rule builder. ---
+	AutomationBuilderView: {
+		kind: 'page',
+		component: AutomationBuilderView,
+		_note: 'Visual automation-rule editor with condition-row + action-row builder; lib gap: no automation-rule editor page type.',
 	},
 
 	// --- BI export + data-warehouse sink. ---
