@@ -16,6 +16,7 @@ export const useProspectStore = defineStore('prospect', {
 	}),
 	actions: {
 		/**
+		 * @param refresh
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-33
 		 */
 		async fetchProspects(refresh = false) {
@@ -55,6 +56,7 @@ export const useProspectStore = defineStore('prospect', {
 		},
 
 		/**
+		 * @param prospectData
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-32
 		 */
 		async createLeadFromProspect(prospectData) {

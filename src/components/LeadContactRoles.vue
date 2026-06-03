@@ -193,6 +193,7 @@ export default {
 			}
 		},
 		/**
+		 * @param entityId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-4
 		 */
 		async loadEntityName(entityId) {
@@ -211,6 +212,7 @@ export default {
 			return this.entityNameCache[entityId] || entityId || '-'
 		},
 		/**
+		 * @param roleType
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-3
 		 */
 		getRoleLabel(roleType) {
@@ -218,6 +220,7 @@ export default {
 			return role ? role.label : roleType
 		},
 		/**
+		 * @param query
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-8
 		 */
 		async searchContacts(query) {
@@ -267,6 +270,7 @@ export default {
 			}
 		},
 		/**
+		 * @param role
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-6
 		 */
 		async removeRole(role) {

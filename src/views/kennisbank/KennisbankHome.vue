@@ -60,7 +60,9 @@
 
 				<div v-else>
 					<div v-if="recentlyViewed.length > 0 && !selectedCategory" class="recent-section">
-						<h3 class="section-title">{{ t('pipelinq', 'Recently viewed') }}</h3>
+						<h3 class="section-title">
+							{{ t('pipelinq', 'Recently viewed') }}
+						</h3>
 						<div
 							v-for="item in recentlyViewed"
 							:key="item.id"

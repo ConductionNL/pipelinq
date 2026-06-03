@@ -132,6 +132,7 @@ export default {
 	methods: {
 		generateUrl,
 		/**
+		 * @param client
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-54
 		 */
 		onClientSelected(client) {

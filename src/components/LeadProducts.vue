@@ -261,6 +261,7 @@ export default {
 			}
 		},
 		/**
+		 * @param productId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-14
 		 */
 		getProductName(productId) {
@@ -268,6 +269,7 @@ export default {
 			return product?.name || productId || '-'
 		},
 		/**
+		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-11
 		 */
 		calculateTotal(item) {
@@ -277,6 +279,7 @@ export default {
 			return (qty * price) * (1 - discount / 100)
 		},
 		/**
+		 * @param productId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-18
 		 */
 		onProductSelect(productId) {
@@ -311,6 +314,7 @@ export default {
 			}
 		},
 		/**
+		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-22
 		 */
 		async updateLineItem(item) {
@@ -331,6 +335,7 @@ export default {
 			}
 		},
 		/**
+		 * @param item
 		 * @spec openspec/changes/2026-03-20-lead-product-link/tasks.md#task-2.2
 		 */
 		async updateNotes(item) {
@@ -341,6 +346,7 @@ export default {
 			}
 		},
 		/**
+		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-20
 		 */
 		async removeLineItem(item) {
@@ -367,6 +373,7 @@ export default {
 			}
 		},
 		/**
+		 * @param value
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-13
 		 */
 		formatCurrency(value) {

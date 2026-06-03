@@ -298,6 +298,8 @@ export default {
 			}
 		},
 		/**
+		 * @param entityId
+		 * @param entityType
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-10
 		 */
 		async loadEntityName(entityId, entityType) {
@@ -317,6 +319,7 @@ export default {
 			return this.entityNameCache[entityId] || entityId || '-'
 		},
 		/**
+		 * @param rel
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-9
 		 */
 		isEnded(rel) {
@@ -326,6 +329,7 @@ export default {
 			return new Date(rel.endDate) < new Date()
 		},
 		/**
+		 * @param rel
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-11
 		 */
 		navigateToEntity(rel) {
@@ -333,6 +337,7 @@ export default {
 			this.$router.push({ name: type, params: { id: rel.toContact } })
 		},
 		/**
+		 * @param typeValue
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-13
 		 */
 		onTypeSelect(typeValue) {
@@ -344,6 +349,7 @@ export default {
 			}
 		},
 		/**
+		 * @param query
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-16
 		 */
 		async searchEntities(query) {
@@ -460,6 +466,7 @@ export default {
 			}
 		},
 		/**
+		 * @param rel
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-6
 		 */
 		editRelationship(rel) {
@@ -483,6 +490,7 @@ export default {
 			this.showAddDialog = true
 		},
 		/**
+		 * @param rel
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-14
 		 */
 		removeRelationship(rel) {

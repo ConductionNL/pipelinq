@@ -105,6 +105,7 @@ export default {
 			}
 		},
 		/**
+		 * @param leadId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-2
 		 */
 		onLeadCreated(leadId) {
@@ -112,6 +113,7 @@ export default {
 			this.$router.push({ name: 'LeadDetail', params: { id: leadId } })
 		},
 		/**
+		 * @param requestId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-3
 		 */
 		onRequestCreated(requestId) {
@@ -119,6 +121,7 @@ export default {
 			this.$router.push({ name: 'RequestDetail', params: { id: requestId } })
 		},
 		/**
+		 * @param clientId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-1
 		 */
 		onClientCreated(clientId) {
