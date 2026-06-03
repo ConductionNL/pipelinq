@@ -1,16 +1,13 @@
 {
-  "spec": "openspec/changes/2026-03-20-pipeline",
+  "spec": "openspec/changes/pipelinq-manifest-i18n-tenant",
   "verified": [
-    {"task": "1.1", "file": "src/views/pipeline/PipelineBoard.vue", "ok": true},
-    {"task": "1.2", "file": "src/views/pipeline/PipelineBoard.vue", "ok": true},
-    {"task": "1.3", "file": "src/views/pipeline/PipelineBoard.vue", "ok": true},
-    {"task": "1.4", "file": "l10n/en.json", "ok": true},
-    {"task": "1.4", "file": "l10n/nl.json", "ok": true},
-    {"task": "2.1", "file": "src/views/settings/PipelineForm.vue", "ok": true},
-    {"task": "2.2", "file": "src/views/settings/PipelineForm.vue", "ok": true},
-    {"task": "2.3", "file": "src/views/settings/PipelineForm.vue", "ok": true},
-    {"task": "2.4", "file": "src/views/settings/PipelineForm.vue", "ok": true},
-    {"task": "2.5", "file": "l10n/en.json", "ok": true}
+    {"task": "8.1", "file": "openspec/manifest.yaml", "ok": true, "note": "tier:3, dependencies:[openregister], all required consumes entries present"},
+    {"task": "8.2", "file": "openspec/manifest.yaml", "ok": true, "note": "openregister.min-version: 1.0.2 (includes contacts-actions)"},
+    {"task": "8.3", "file": "openspec/manifest.yaml", "ok": true, "note": "pipelinq.role: object-store-exemplar declared"},
+    {"task": "8.4", "file": null, "ok": null, "note": "PENDING: Hydra manifest schema not yet shipped — explicitly conditional"},
+    {"task": "9.1", "file": "src/store/modules/object.js", "ok": true, "note": "useTenantContext dependency explicitly declared in JSDoc + commented-out factory option"},
+    {"task": "9.2", "file": "lib/Settings/pipelinq_register.json", "ok": true, "note": "translatable:true added to kennisartikel title/body/summary, lead title/description, task subject/description"},
+    {"task": "9.3", "file": "lib/Service/ScheduledTaskService.php", "ok": true, "note": "applyAcceptLanguage() forwards Accept-Language to OR LanguageService; wired in CallbackController and SchedulesController"}
   ],
   "stubs": [],
   "missing_routes": []

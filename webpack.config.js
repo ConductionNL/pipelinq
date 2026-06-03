@@ -8,6 +8,20 @@ const buildMode = process.env.NODE_ENV
 const isDev = buildMode === 'development'
 webpackConfig.devtool = isDev ? 'cheap-source-map' : 'source-map'
 
+// The base @nextcloud/webpack-vue-config hardcodes
+//   output.publicPath = '/apps/<appName>/js/'
+// which is wrong when the app lives in `apps-extra/`. The entry scripts are
+// injected by PHP (Util::addScript) with the correct `/apps-extra/pipelinq/js/`
+// webroot, but webpack's runtime loader uses output.publicPath for dynamically
+// imported chunks (gridstack, apexcharts inside @conduction/nextcloud-vue), so
+// those 404 against `/apps/pipelinq/js/`. 'auto' makes webpack derive the public
+// path from the URL of the executing entry script at runtime, so lazy chunks
+// load from wherever the app is actually mounted.
+webpackConfig.output = {
+	...webpackConfig.output,
+	publicPath: 'auto',
+}
+
 webpackConfig.stats = {
 	colors: true,
 	modules: false,
@@ -46,6 +60,10 @@ webpackConfig.entry = {
 	createLeadWidget: {
 		import: path.join(__dirname, 'src', 'createLeadWidget.js'),
 		filename: appId + '-createLeadWidget.js',
+	},
+	portal: {
+		import: path.join(__dirname, 'src', 'portal.js'),
+		filename: appId + '-portal.js',
 	},
 }
 
