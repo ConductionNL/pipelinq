@@ -31,6 +31,8 @@ use Psr\Log\LoggerInterface;
  *
  * Matches emails to contacts, organizations, and other entities
  * based on email address and domain.
+ *
+ * @spec openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-3
  */
 class EmailSyncService
 {
@@ -89,6 +91,26 @@ class EmailSyncService
 
         return [];
     }//end getSyncAccounts()
+
+    /**
+     * Check whether email sync is enabled for a user.
+     *
+     * @param string $userId The user ID.
+     *
+     * @return bool True if sync is enabled.
+     * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-7
+     */
+    public function isSyncEnabled(string $userId): bool
+    {
+        $value = $this->config->getUserValue(
+            $userId,
+            'pipelinq',
+            'email_sync_enabled',
+            'false',
+        );
+
+        return $value === 'true';
+    }//end isSyncEnabled()
 
     /**
      * Set email sync enabled/disabled for a user.
