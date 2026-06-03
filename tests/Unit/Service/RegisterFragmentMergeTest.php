@@ -6,7 +6,10 @@
  * Exercises the private static ConfigFileLoaderService::deepMergeConfig()
  * (and its isList() helper) via reflection — the merge semantics that let
  * concurrent same-app builds extend the register without touching the shared
- * pipelinq_register.json monolith.
+ * pipelinq_register.json monolith. The BI-export fragment relies on the
+ * additive union of the register `schemas[]` membership list and the
+ * `components.objects[]` seed list (matched by dot-path, not bare key name) so
+ * it can add its four export schemas without dropping the monolith's slugs.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service
@@ -36,17 +39,18 @@ class RegisterFragmentMergeTest extends TestCase
     /**
      * Invoke the private static deepMergeConfig() via reflection.
      *
-     * @param array $base     The base configuration.
-     * @param array $override The fragment to merge on top.
+     * @param array  $base     The base configuration.
+     * @param array  $override The fragment to merge on top.
+     * @param string $path     The dot-path of the node being merged (root '').
      *
      * @return array The merged result.
      */
-    private function deepMerge(array $base, array $override): array
+    private function deepMerge(array $base, array $override, string $path=''): array
     {
         $method = new ReflectionMethod(ConfigFileLoaderService::class, 'deepMergeConfig');
         $method->setAccessible(true);
 
-        return $method->invoke(null, $base, $override);
+        return $method->invoke(null, $base, $override, $path);
     }//end deepMerge()
 
     /**
@@ -99,7 +103,7 @@ class RegisterFragmentMergeTest extends TestCase
     }//end testScalarOverrideReplacesBase()
 
     /**
-     * List (sequential) values are replaced wholesale, not deep-merged.
+     * A non-membership list value is replaced wholesale, not deep-merged.
      *
      * @return void
      */
@@ -109,6 +113,98 @@ class RegisterFragmentMergeTest extends TestCase
 
         $this->assertSame(['c'], $result['tags']);
     }//end testListValuesAreReplaced()
+
+    /**
+     * The register `schemas[]` membership list is unioned (not replaced) at its
+     * dot-path, so a fragment can add schema slugs without dropping the
+     * monolith's slugs (ADR-037, BI-export fragment).
+     *
+     * @return void
+     */
+    public function testRegisterSchemasMembershipIsUnioned(): void
+    {
+        $base = [
+            'components' => [
+                'registers' => [
+                    'pipelinq' => ['schemas' => ['client', 'contact', 'lead']],
+                ],
+            ],
+        ];
+        $override = [
+            'components' => [
+                'registers' => [
+                    'pipelinq' => ['schemas' => ['exportJob', 'exportRun']],
+                ],
+            ],
+        ];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(
+            ['client', 'contact', 'lead', 'exportJob', 'exportRun'],
+            $result['components']['registers']['pipelinq']['schemas']
+        );
+    }//end testRegisterSchemasMembershipIsUnioned()
+
+    /**
+     * Re-merging a fragment whose membership overlaps the base does not
+     * duplicate already-present members (idempotent import).
+     *
+     * @return void
+     */
+    public function testSchemasUnionDeduplicates(): void
+    {
+        $base = [
+            'components' => [
+                'registers' => [
+                    'pipelinq' => ['schemas' => ['client', 'lead']],
+                ],
+            ],
+        ];
+        $override = [
+            'components' => [
+                'registers' => [
+                    'pipelinq' => ['schemas' => ['lead', 'exportJob']],
+                ],
+            ],
+        ];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(
+            ['client', 'lead', 'exportJob'],
+            $result['components']['registers']['pipelinq']['schemas']
+        );
+    }//end testSchemasUnionDeduplicates()
+
+    /**
+     * The `components.objects[]` seed list is likewise unioned additively at its
+     * dot-path.
+     *
+     * @return void
+     */
+    public function testObjectsSeedListIsUnioned(): void
+    {
+        $base     = ['components' => ['objects' => ['a', 'b']]];
+        $override = ['components' => ['objects' => ['c']]];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(['a', 'b', 'c'], $result['components']['objects']);
+    }//end testObjectsSeedListIsUnioned()
+
+    /**
+     * A `schemas` list NOT under the additive register dot-path keeps the
+     * default replace semantics — only the configured membership paths union.
+     *
+     * @return void
+     */
+    public function testBareSchemasKeyOutsidePathIsReplaced(): void
+    {
+        $result = $this->deepMerge(['schemas' => ['client', 'lead']], ['schemas' => ['exportJob']]);
+
+        $this->assertSame(['exportJob'], $result['schemas']);
+    }//end testBareSchemasKeyOutsidePathIsReplaced()
 
     /**
      * isList() distinguishes sequential lists from associative maps.

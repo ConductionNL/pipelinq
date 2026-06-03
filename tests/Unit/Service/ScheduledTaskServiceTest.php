@@ -382,7 +382,7 @@ class ScheduledTaskServiceTest extends TestCase
 
         // findAll is called twice: once for getOverdueTasks (returns our task),
         // once for getPendingTasks (returns empty, all future).
-        $callCount = 0;
+        $callCount           = 0;
         $stub->findAllReturn = [];
 
         // We override findAll via a custom anonymous class to handle two calls.
@@ -395,17 +395,22 @@ class ScheduledTaskServiceTest extends TestCase
         ];
 
         $stub2 = new class($overdueTask) {
-            public array $lastSaveArgs = [];
-            public mixed $saveReturn   = [];
 
-            /** @var array<string, mixed> */
+            public array $lastSaveArgs = [];
+
+            public mixed $saveReturn = [];
+
+            /**
+             * @var array<string, mixed>
+             */
             private array $overdueTask;
+
             private int $callCount = 0;
 
             public function __construct(array $overdueTask)
             {
                 $this->overdueTask = $overdueTask;
-            }
+            }//end __construct()
 
             /**
              * @param  array<string, mixed> $config
@@ -472,4 +477,99 @@ class ScheduledTaskServiceTest extends TestCase
         $this->assertNotEmpty($stub2->lastSaveArgs, 'saveObject was not called for the overdue task');
         $this->assertSame('verlopen', $stub2->lastSaveArgs['object']['status']);
     }//end testProcessScheduledTasksTransitionsOverdueTaskToVerlopen()
+
+    /**
+     * applyAcceptLanguage no-ops on an empty header (container is never queried).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/pipelinq-manifest-i18n-tenant/tasks.md#task-9.3
+     */
+    public function testApplyAcceptLanguageNoOpsOnEmptyHeader(): void
+    {
+        $this->container->expects($this->never())->method('get');
+
+        $service = $this->makeService();
+        $service->applyAcceptLanguage(acceptLanguage: '');
+    }//end testApplyAcceptLanguageNoOpsOnEmptyHeader()
+
+    /**
+     * applyAcceptLanguage sets the first tag from a complex Accept-Language value.
+     *
+     * "nl-NL,nl;q=0.9,en;q=0.8" → LanguageService receives "nl-NL".
+     *
+     * @return void
+     *
+     * @spec openspec/changes/pipelinq-manifest-i18n-tenant/tasks.md#task-9.3
+     */
+    public function testApplyAcceptLanguageForwardsPreferredTagToOrLanguageService(): void
+    {
+        $capturedLang = null;
+
+        $languageServiceStub = new class($capturedLang) {
+
+            public ?string $capturedLanguage = null;
+
+            public function setPreferredLanguage(string $language): void
+            {
+                $this->capturedLanguage = $language;
+            }//end setPreferredLanguage()
+        };
+
+        $this->container->method('get')->willReturn($languageServiceStub);
+
+        $service = $this->makeService();
+        $service->applyAcceptLanguage(acceptLanguage: 'nl-NL,nl;q=0.9,en;q=0.8');
+
+        $this->assertSame('nl-NL', $languageServiceStub->capturedLanguage);
+    }//end testApplyAcceptLanguageForwardsPreferredTagToOrLanguageService()
+
+    /**
+     * applyAcceptLanguage strips the q-weight from a single-entry header.
+     *
+     * "en-US;q=0.9" → LanguageService receives "en-US".
+     *
+     * @return void
+     *
+     * @spec openspec/changes/pipelinq-manifest-i18n-tenant/tasks.md#task-9.3
+     */
+    public function testApplyAcceptLanguageStripsQWeightFromSingleEntry(): void
+    {
+        $languageServiceStub = new class {
+
+            public ?string $capturedLanguage = null;
+
+            public function setPreferredLanguage(string $language): void
+            {
+                $this->capturedLanguage = $language;
+            }//end setPreferredLanguage()
+        };
+
+        $this->container->method('get')->willReturn($languageServiceStub);
+
+        $service = $this->makeService();
+        $service->applyAcceptLanguage(acceptLanguage: 'en-US;q=0.9');
+
+        $this->assertSame('en-US', $languageServiceStub->capturedLanguage);
+    }//end testApplyAcceptLanguageStripsQWeightFromSingleEntry()
+
+    /**
+     * applyAcceptLanguage silently swallows exceptions from the container.
+     *
+     * OR's LanguageService may not be available on environments that do not
+     * have OpenRegister installed. The controller must not 500.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/pipelinq-manifest-i18n-tenant/tasks.md#task-9.3
+     */
+    public function testApplyAcceptLanguageSwallowsContainerException(): void
+    {
+        $this->container->method('get')->willThrowException(new \RuntimeException('OR not installed'));
+        $this->logger->expects($this->once())->method('debug');
+
+        $service = $this->makeService();
+        // Must not throw.
+        $service->applyAcceptLanguage(acceptLanguage: 'nl');
+    }//end testApplyAcceptLanguageSwallowsContainerException()
 }//end class

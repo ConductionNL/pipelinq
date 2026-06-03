@@ -17,10 +17,10 @@ return [
         ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
 
         // Lead sources (camelCase slug matches LeadSourceController class name)
-        ['name' => 'leadSource#index', 'url' => '/api/lead-sources', 'verb' => 'GET'],
-        ['name' => 'leadSource#create', 'url' => '/api/lead-sources', 'verb' => 'POST'],
-        ['name' => 'leadSource#update', 'url' => '/api/lead-sources/{id}', 'verb' => 'PUT'],
-        ['name' => 'leadSource#destroy', 'url' => '/api/lead-sources/{id}', 'verb' => 'DELETE'],
+        ['name' => 'leadSource#index', 'url' => '/api/settings/lead-sources', 'verb' => 'GET'],
+        ['name' => 'leadSource#create', 'url' => '/api/settings/lead-sources', 'verb' => 'POST'],
+        ['name' => 'leadSource#update', 'url' => '/api/settings/lead-sources/{id}', 'verb' => 'PUT'],
+        ['name' => 'leadSource#destroy', 'url' => '/api/settings/lead-sources/{id}', 'verb' => 'DELETE'],
 
         // Contacts sync (camelCase slug matches ContactSyncController class name)
         ['name' => 'contactSync#search', 'url' => '/api/contacts-sync/search', 'verb' => 'GET'],
@@ -34,10 +34,10 @@ return [
         ['name' => 'notes#deleteSingle', 'url' => '/api/notes/single/{noteId}', 'verb' => 'DELETE'],
 
         // Request channels (camelCase slug matches RequestChannelController class name)
-        ['name' => 'requestChannel#index', 'url' => '/api/request-channels', 'verb' => 'GET'],
-        ['name' => 'requestChannel#create', 'url' => '/api/request-channels', 'verb' => 'POST'],
-        ['name' => 'requestChannel#update', 'url' => '/api/request-channels/{id}', 'verb' => 'PUT'],
-        ['name' => 'requestChannel#destroy', 'url' => '/api/request-channels/{id}', 'verb' => 'DELETE'],
+        ['name' => 'requestChannel#index', 'url' => '/api/settings/request-channels', 'verb' => 'GET'],
+        ['name' => 'requestChannel#create', 'url' => '/api/settings/request-channels', 'verb' => 'POST'],
+        ['name' => 'requestChannel#update', 'url' => '/api/settings/request-channels/{id}', 'verb' => 'PUT'],
+        ['name' => 'requestChannel#destroy', 'url' => '/api/settings/request-channels/{id}', 'verb' => 'DELETE'],
 
         // Prospect discovery
         ['name' => 'prospect#index', 'url' => '/api/prospects', 'verb' => 'GET'],
@@ -118,6 +118,95 @@ return [
         // object API; these are the manager-gated confirm/reject lifecycle actions.
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
+
+        // ---------------------------------------------------------------------
+        // Customer portal (separate auth domain — ADR-005). All /portal/api/*
+        // endpoints are #[PublicPage]; the portal session bearer token (not a
+        // Nextcloud user) authenticates each request inside the controller via
+        // PortalRequestGuard. Static routes precede {id} wildcards (ADR-016).
+        // ---------------------------------------------------------------------
+
+        // Public (pre-login) tenant branding.
+        ['name' => 'portalTenant#config', 'url' => '/portal/api/tenant-config', 'verb' => 'GET'],
+
+        // Auth (unauthenticated entry / token-authenticated session actions).
+        ['name' => 'portalAuth#login',                'url' => '/portal/api/auth/login',                  'verb' => 'POST'],
+        ['name' => 'portalAuth#logout',               'url' => '/portal/api/auth/logout',                 'verb' => 'POST'],
+        ['name' => 'portalAuth#extendSession',         'url' => '/portal/api/auth/extend-session',         'verb' => 'POST'],
+        ['name' => 'portalAuth#passwordResetRequest',  'url' => '/portal/api/auth/password-reset-request', 'verb' => 'POST'],
+        ['name' => 'portalAuth#passwordReset',         'url' => '/portal/api/auth/password-reset',         'verb' => 'POST'],
+        ['name' => 'portalAuth#mfaEnroll',             'url' => '/portal/api/auth/mfa-enroll',             'verb' => 'POST'],
+        ['name' => 'portalAuth#mfaVerify',             'url' => '/portal/api/auth/mfa-verify',             'verb' => 'POST'],
+
+        // Profile + account lifecycle.
+        ['name' => 'portalAccount#profile',        'url' => '/portal/api/accounts/profile',       'verb' => 'GET'],
+        ['name' => 'portalAccount#updateProfile',  'url' => '/portal/api/accounts/profile',       'verb' => 'PUT'],
+        ['name' => 'portalAccount#verifyEmail',    'url' => '/portal/api/accounts/verify-email',  'verb' => 'POST'],
+        ['name' => 'portalAccount#requestExport',  'url' => '/portal/api/exports',                'verb' => 'POST'],
+        ['name' => 'portalAccount#requestClose',   'url' => '/portal/api/accounts/close',         'verb' => 'POST'],
+        ['name' => 'portalAccount#confirmClose',   'url' => '/portal/api/accounts/close/confirm', 'verb' => 'POST'],
+
+        // Own audit trail.
+        ['name' => 'portalAudit#index', 'url' => '/portal/api/audit-events', 'verb' => 'GET'],
+
+        // Delegations (B2B). Static before {id}.
+        ['name' => 'portalDelegation#index',   'url' => '/portal/api/delegations',      'verb' => 'GET'],
+        ['name' => 'portalDelegation#create',  'url' => '/portal/api/delegations',      'verb' => 'POST'],
+        ['name' => 'portalDelegation#destroy', 'url' => '/portal/api/delegations/{id}', 'verb' => 'DELETE'],
+
+        // Documents (signed-URL proxy). Static sign route before the token route.
+        ['name' => 'portalDocument#sign',     'url' => '/portal/api/documents/sign',              'verb' => 'POST'],
+        ['name' => 'portalDocument#download', 'url' => '/portal/api/documents/{token}/download',  'verb' => 'GET'],
+
+        // Requests. Static create/list before {id} detail/reply.
+        ['name' => 'portalRequest#index',  'url' => '/portal/api/requests',           'verb' => 'GET'],
+        ['name' => 'portalRequest#create', 'url' => '/portal/api/requests',           'verb' => 'POST'],
+        ['name' => 'portalRequest#show',   'url' => '/portal/api/requests/{id}',       'verb' => 'GET'],
+        ['name' => 'portalRequest#reply',  'url' => '/portal/api/requests/{id}/reply', 'verb' => 'POST'],
+
+        // Invoices / contracts / orders. Static list before {id} detail.
+        ['name' => 'portalData#invoices',  'url' => '/portal/api/invoices',       'verb' => 'GET'],
+        ['name' => 'portalData#invoice',   'url' => '/portal/api/invoices/{id}',  'verb' => 'GET'],
+        ['name' => 'portalData#contracts', 'url' => '/portal/api/contracts',      'verb' => 'GET'],
+        ['name' => 'portalData#contract',  'url' => '/portal/api/contracts/{id}', 'verb' => 'GET'],
+        ['name' => 'portalData#orders',    'url' => '/portal/api/orders',         'verb' => 'GET'],
+        ['name' => 'portalData#order',     'url' => '/portal/api/orders/{id}',    'verb' => 'GET'],
+
+        // Admin / DPO (Nextcloud admin only; no #[PublicPage] — admin-default).
+        ['name' => 'portalAdmin#saveConfig',   'url' => '/portal/api/admin/tenant-config', 'verb' => 'POST'],
+        ['name' => 'portalAdmin#accounts',     'url' => '/portal/api/admin/accounts',      'verb' => 'GET'],
+        ['name' => 'portalAdmin#auditEvents',  'url' => '/portal/api/admin/audit-events',  'verb' => 'GET'],
+
+        // Public portal SPA shell. Registered AFTER all /portal/api/* routes so
+        // the API wins, and BEFORE the main-app catch-all so /portal serves the
+        // isolated portal bundle rather than the Nextcloud-authenticated app.
+        ['name' => 'portalPage#index', 'url' => '/portal', 'verb' => 'GET'],
+        ['name' => 'portalPage#subpath', 'url' => '/portal/{path}', 'verb' => 'GET', 'requirements' => ['path' => '^(?!api/).*'], 'defaults' => ['path' => '']],
+
+        // BI export + data-warehouse sink (camelCase slugs match the controller class names).
+        // exportDestination / exportJob / exportRun / exportSchemaSnapshot object CRUD is handled
+        // by OpenRegister's generic object API; these are the validation, test, scheduling,
+        // history-filter and retry actions the generic API cannot express (REQ-BIE-001/002/003/011).
+        // Static collection + action routes are declared before the {id} member routes so the
+        // router never mistakes "test-run" or "destinations" for an {id} (ADR-016).
+        ['name' => 'exportJob#listDestinations',  'url' => '/api/export/destinations',          'verb' => 'GET'],
+        ['name' => 'exportJob#createDestination', 'url' => '/api/export/destinations',          'verb' => 'POST'],
+        ['name' => 'exportJob#updateDestination', 'url' => '/api/export/destinations/{id}',      'verb' => 'PUT'],
+        ['name' => 'exportJob#deleteDestination', 'url' => '/api/export/destinations/{id}',      'verb' => 'DELETE'],
+        ['name' => 'exportJob#testDestination',   'url' => '/api/export/destinations/{id}/test', 'verb' => 'POST'],
+
+        ['name' => 'exportJob#listJobs',   'url' => '/api/export/jobs',              'verb' => 'GET'],
+        ['name' => 'exportJob#createJob',  'url' => '/api/export/jobs',              'verb' => 'POST'],
+        ['name' => 'exportJob#showJob',    'url' => '/api/export/jobs/{id}',         'verb' => 'GET'],
+        ['name' => 'exportJob#updateJob',  'url' => '/api/export/jobs/{id}',         'verb' => 'PUT'],
+        ['name' => 'exportJob#deleteJob',  'url' => '/api/export/jobs/{id}',         'verb' => 'DELETE'],
+        ['name' => 'exportJob#testRun',    'url' => '/api/export/jobs/{id}/test-run', 'verb' => 'POST'],
+        ['name' => 'exportJob#enableJob',  'url' => '/api/export/jobs/{id}/enable',   'verb' => 'POST'],
+        ['name' => 'exportJob#disableJob', 'url' => '/api/export/jobs/{id}/disable',  'verb' => 'POST'],
+
+        ['name' => 'exportRun#listRuns', 'url' => '/api/export/runs',           'verb' => 'GET'],
+        ['name' => 'exportRun#showRun',  'url' => '/api/export/runs/{id}',       'verb' => 'GET'],
+        ['name' => 'exportRun#retryRun', 'url' => '/api/export/runs/{id}/retry', 'verb' => 'POST'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
