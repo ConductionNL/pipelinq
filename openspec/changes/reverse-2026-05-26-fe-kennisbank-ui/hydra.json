@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "spec_slug": "reverse-2026-05-26-fe-kennisbank-ui",
+  "repo": "https://codeberg.org/Conduction/pipelinq",
+  "issue": 42,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-06-03T16:14:02Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [],
+      "stages": []
+    }
+  ]
+}
