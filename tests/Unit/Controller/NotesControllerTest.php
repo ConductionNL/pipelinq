@@ -13,6 +13,9 @@
  * @version GIT: <git-id>
  *
  * @link https://pipelinq.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -36,6 +39,7 @@ use Psr\Container\ContainerInterface;
  */
 class NotesControllerTest extends TestCase
 {
+
     /**
      * The controller under test.
      *
@@ -61,28 +65,31 @@ class NotesControllerTest extends TestCase
         $this->notesService = $this->createMock(NotesService::class);
         $noteEventService   = $this->createMock(NoteEventService::class);
         $userSession        = $this->createMock(IUserSession::class);
-        $user               = $this->createMock(IUser::class);
+        $user = $this->createMock(IUser::class);
         $user->method('getUID')->willReturn('test-user');
         $userSession->method('getUser')->willReturn($user);
-        $l10n               = $this->createMock(IL10N::class);
+        $l10n = $this->createMock(IL10N::class);
         $l10n->method('t')->willReturnArgument(0);
-        $logger             = $this->createMock(\Psr\Log\LoggerInterface::class);
+        $logger = $this->createMock(\Psr\Log\LoggerInterface::class);
 
         // Provide a settings service that returns valid register + schema IDs
         // so objectExists() can scope the OR lookup to the correct entity.
         $settingsService = $this->createMock(SettingsService::class);
-        $settingsService->method('getSettings')->willReturn([
-            'register'       => 'reg-123',
-            'client_schema'  => 'schema-client',
-            'contact_schema' => 'schema-contact',
-            'lead_schema'    => 'schema-lead',
-            'request_schema' => 'schema-request',
-        ]);
+        $settingsService->method('getSettings')->willReturn(
+                [
+                    'register'       => 'reg-123',
+                    'client_schema'  => 'schema-client',
+                    'contact_schema' => 'schema-contact',
+                    'lead_schema'    => 'schema-lead',
+                    'request_schema' => 'schema-request',
+                ]
+                );
 
-        // Object service mock: find() returns a non-null array for any scoped lookup,
-        // which makes objectExists() return true so subsequent controller logic runs.
+        // Object service mock: find() returns a non-null ObjectEntity for any scoped
+        // lookup, which makes objectExists() return true so subsequent controller logic runs.
         $objectServiceMock = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
-        $objectServiceMock->method('find')->willReturn(['id' => 'object-uuid']);
+        $entityMock        = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
+        $objectServiceMock->method('find')->willReturn($entityMock);
 
         $container = $this->createMock(ContainerInterface::class);
         $container->method('get')->willReturn($objectServiceMock);
@@ -122,9 +129,11 @@ class NotesControllerTest extends TestCase
      */
     public function testListReturnsNotes(): void
     {
-        $this->notesService->method('getNotes')->willReturn([
-            ['id' => '1', 'message' => 'Test note'],
-        ]);
+        $this->notesService->method('getNotes')->willReturn(
+                [
+                    ['id' => '1', 'message' => 'Test note'],
+                ]
+                );
 
         $response = $this->controller->list('pipelinq_client', '123');
 
