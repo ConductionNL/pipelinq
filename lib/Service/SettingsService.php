@@ -20,6 +20,9 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-4
  * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-5
  * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-6
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
