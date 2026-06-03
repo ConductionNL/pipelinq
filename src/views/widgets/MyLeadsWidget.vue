@@ -76,6 +76,7 @@ export default {
 	},
 	methods: {
 		/**
+		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-46
 		 */
 		onShow(item) {
@@ -103,6 +104,9 @@ export default {
 			}
 		},
 		/**
+		 * @param config
+		 * @param type
+		 * @param params
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-44
 		 */
 		async fetchRaw(config, type, params = {}) {

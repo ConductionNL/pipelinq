@@ -263,6 +263,7 @@ export default {
 	},
 	methods: {
 		/**
+		 * @param formData
 		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-10
 		 */
 		async onFormSave(formData) {
@@ -333,6 +334,7 @@ export default {
 			}
 		},
 		/**
+		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-11
 		 */
 		openLead(item) {
@@ -341,6 +343,7 @@ export default {
 			}
 		},
 		/**
+		 * @param value
 		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-5
 		 */
 		formatCurrency(value) {

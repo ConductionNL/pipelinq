@@ -6,15 +6,25 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 	<div class="portal-delegations">
 		<h1>{{ t('pipelinq', 'Shared access') }}</h1>
 
-		<p v-if="error" role="alert" class="portal-error">{{ error }}</p>
+		<p v-if="error" role="alert" class="portal-error">
+			{{ error }}
+		</p>
 
 		<table v-if="delegations.length" class="portal-table" role="grid">
 			<thead>
 				<tr>
-					<th scope="col">{{ t('pipelinq', 'Colleague') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Scopes') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Valid until') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Action') }}</th>
+					<th scope="col">
+						{{ t('pipelinq', 'Colleague') }}
+					</th>
+					<th scope="col">
+						{{ t('pipelinq', 'Scopes') }}
+					</th>
+					<th scope="col">
+						{{ t('pipelinq', 'Valid until') }}
+					</th>
+					<th scope="col">
+						{{ t('pipelinq', 'Action') }}
+					</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -23,7 +33,9 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 					<td>{{ (d.scopes || []).join(', ') }}</td>
 					<td>{{ d.validUntil || t('pipelinq', 'No end date') }}</td>
 					<td>
-						<button class="portal-button-link" @click="revoke(d)">{{ t('pipelinq', 'Revoke') }}</button>
+						<button class="portal-button-link" @click="revoke(d)">
+							{{ t('pipelinq', 'Revoke') }}
+						</button>
 					</td>
 				</tr>
 			</tbody>
@@ -33,7 +45,10 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 		<form @submit.prevent="grant">
 			<div class="portal-field">
 				<label for="portal-grantee">{{ t('pipelinq', 'Colleague email') }}</label>
-				<input id="portal-grantee" v-model="form.granteeEmail" type="email" required>
+				<input id="portal-grantee"
+					v-model="form.granteeEmail"
+					type="email"
+					required>
 			</div>
 			<fieldset>
 				<legend>{{ t('pipelinq', 'Scopes') }}</legend>
@@ -45,8 +60,12 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 				<label for="portal-validuntil">{{ t('pipelinq', 'Valid until') }}</label>
 				<input id="portal-validuntil" v-model="form.validUntil" type="date">
 			</div>
-			<p v-if="message" role="alert" class="portal-success">{{ message }}</p>
-			<button type="submit" class="portal-button-primary">{{ t('pipelinq', 'Grant access') }}</button>
+			<p v-if="message" role="alert" class="portal-success">
+				{{ message }}
+			</p>
+			<button type="submit" class="portal-button-primary">
+				{{ t('pipelinq', 'Grant access') }}
+			</button>
 		</form>
 	</div>
 </template>

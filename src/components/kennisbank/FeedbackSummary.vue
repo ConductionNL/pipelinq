@@ -1,6 +1,8 @@
 <template>
 	<div v-if="totalCount > 0" class="feedback-summary">
-		<h4 class="feedback-summary__title">{{ t('pipelinq', 'Feedback') }}</h4>
+		<h4 class="feedback-summary__title">
+			{{ t('pipelinq', 'Feedback') }}
+		</h4>
 		<div class="feedback-summary__stats">
 			<div class="feedback-summary__stat">
 				<span class="feedback-summary__label">{{ t('pipelinq', 'Helpful') }}</span>

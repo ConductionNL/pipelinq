@@ -7,12 +7,24 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 		<header v-if="!embedded && authenticated" class="portal-header">
 			<span class="portal-brand">{{ branding.displayName }}</span>
 			<nav class="portal-nav" :aria-label="t('pipelinq', 'Portal navigation')">
-				<router-link to="/dashboard">{{ t('pipelinq', 'Documents') }}</router-link>
-				<router-link to="/requests">{{ t('pipelinq', 'Requests') }}</router-link>
-				<router-link to="/profile">{{ t('pipelinq', 'My details') }}</router-link>
-				<router-link v-if="isB2b" to="/delegations">{{ t('pipelinq', 'Shared access') }}</router-link>
-				<router-link to="/export">{{ t('pipelinq', 'Privacy') }}</router-link>
-				<button class="portal-button-link" @click="logout">{{ t('pipelinq', 'Log out') }}</button>
+				<router-link to="/dashboard">
+					{{ t('pipelinq', 'Documents') }}
+				</router-link>
+				<router-link to="/requests">
+					{{ t('pipelinq', 'Requests') }}
+				</router-link>
+				<router-link to="/profile">
+					{{ t('pipelinq', 'My details') }}
+				</router-link>
+				<router-link v-if="isB2b" to="/delegations">
+					{{ t('pipelinq', 'Shared access') }}
+				</router-link>
+				<router-link to="/export">
+					{{ t('pipelinq', 'Privacy') }}
+				</router-link>
+				<button class="portal-button-link" @click="logout">
+					{{ t('pipelinq', 'Log out') }}
+				</button>
 			</nav>
 		</header>
 		<main class="portal-main">
@@ -84,13 +96,14 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .portal-app {
 	max-width: 960px;
 	margin: 0 auto;
 	padding: 1rem;
 	color: var(--color-main-text, #222);
 }
+
 .portal-header {
 	display: flex;
 	justify-content: space-between;
@@ -99,15 +112,18 @@ export default {
 	padding-bottom: .5rem;
 	margin-bottom: 1rem;
 }
+
 .portal-nav a,
 .portal-nav button {
 	margin-left: 1rem;
 }
+
 .portal-field {
 	margin-bottom: 1rem;
 	display: flex;
 	flex-direction: column;
 }
+
 .portal-field input,
 .portal-field select,
 .portal-field textarea {
@@ -115,16 +131,19 @@ export default {
 	border: 1px solid var(--color-border, #999);
 	border-radius: 4px;
 }
+
 .portal-table {
 	width: 100%;
 	border-collapse: collapse;
 }
+
 .portal-table th,
 .portal-table td {
 	text-align: left;
 	padding: .5rem;
 	border-bottom: 1px solid var(--color-border, #ddd);
 }
+
 .portal-button-primary {
 	background: var(--portal-brand-primary, #21468B);
 	color: #fff;
@@ -133,6 +152,7 @@ export default {
 	padding: .5rem 1rem;
 	cursor: pointer;
 }
+
 .portal-button-danger {
 	background: #b00020;
 	color: #fff;
@@ -141,6 +161,7 @@ export default {
 	padding: .5rem 1rem;
 	cursor: pointer;
 }
+
 .portal-button-link {
 	background: none;
 	border: none;
@@ -149,8 +170,11 @@ export default {
 	cursor: pointer;
 	padding: 0;
 }
+
 .portal-error { color: #b00020; }
+
 .portal-success { color: #1a7f37; }
+
 .portal-session-warning {
 	position: fixed;
 	bottom: 1rem;
@@ -162,9 +186,11 @@ export default {
 	padding: 1rem;
 	box-shadow: 0 2px 8px rgba(0,0,0,.2);
 }
+
 .portal-app :focus {
 	outline: 2px solid var(--portal-brand-primary, #21468B);
 	outline-offset: 2px;
 }
+
 .portal-app--embedded .portal-header { display: none; }
 </style>

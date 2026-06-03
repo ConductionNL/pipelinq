@@ -32,7 +32,10 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 					autocomplete="one-time-code"
 					maxlength="6">
 			</div>
-			<p v-if="error" id="portal-login-error" role="alert" class="portal-error">
+			<p v-if="error"
+				id="portal-login-error"
+				role="alert"
+				class="portal-error">
 				{{ error }}
 			</p>
 			<button type="submit" :disabled="loading" class="portal-button-primary">

@@ -409,6 +409,7 @@ export default {
 	},
 	watch: {
 		/**
+		 * @param val
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-25
 		 */
 		selectedPipeline(val) {
@@ -452,6 +453,7 @@ export default {
 		getPriorityColor,
 
 		/**
+		 * @param slugs
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-4
 		 */
 		async ensureObjectTypes(slugs) {
@@ -474,6 +476,7 @@ export default {
 		},
 
 		/**
+		 * @param pipeline
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-30
 		 */
 		syncSidebarState(pipeline) {
@@ -492,6 +495,7 @@ export default {
 		},
 
 		/**
+		 * @param pipelineData
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-19
 		 */
 		async onSidebarSave(pipelineData) {
@@ -506,6 +510,7 @@ export default {
 		},
 
 		/**
+		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-10
 		 */
 		getColumnProperty(item) {
@@ -518,6 +523,7 @@ export default {
 		},
 
 		/**
+		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-11
 		 */
 		getItemTotalsValue(item) {
@@ -531,6 +537,7 @@ export default {
 		 * Returns items in the given stage, filtered by searchQuery via filteredItems.
 		 * Empty columns remain visible even when search is active.
 		 *
+		 * @param stageName
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-12
 		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.2
 		 */
@@ -546,6 +553,7 @@ export default {
 		},
 
 		/**
+		 * @param stageName
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-13
 		 */
 		getStageTotalValue(stageName) {
@@ -589,6 +597,7 @@ export default {
 		},
 
 		/**
+		 * @param pipeline
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-6
 		 */
 		async fetchItemsViaMappings(pipeline) {
@@ -606,6 +615,7 @@ export default {
 		},
 
 		/**
+		 * @param pipeline
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-5
 		 */
 		async fetchItemsLegacy(pipeline) {
@@ -629,6 +639,7 @@ export default {
 		},
 
 		/**
+		 * @param schemaSlug
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-8
 		 */
 		async fetchSchemaItems(schemaSlug) {
@@ -653,6 +664,8 @@ export default {
 		},
 
 		/**
+		 * @param event
+		 * @param targetStage
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
 		 */
 		async onDrop(event, targetStage) {
@@ -675,6 +688,7 @@ export default {
 		},
 
 		/**
+		 * @param stageName
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-31
 		 */
 		toggleClosedStage(stageName) {
@@ -682,6 +696,7 @@ export default {
 		},
 
 		/**
+		 * @param column
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-33
 		 */
 		toggleSort(column) {
@@ -694,6 +709,7 @@ export default {
 		},
 
 		/**
+		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-14
 		 */
 		isItemOverdue(item) {
@@ -703,6 +719,7 @@ export default {
 		},
 
 		/**
+		 * @param dateStr
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-9
 		 */
 		formatDate(dateStr) {
@@ -723,6 +740,7 @@ export default {
 		},
 
 		/**
+		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-20
 		 */
 		openItem(item) {

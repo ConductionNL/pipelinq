@@ -111,6 +111,7 @@ export default {
 	margin-bottom: 12px;
 	color: var(--color-text-maxcontrast);
 }
+
 .forecast-override__error {
 	margin-top: 8px;
 	color: var(--color-error);

@@ -221,6 +221,8 @@ export default {
 			}
 		},
 		/**
+		 * @param type
+		 * @param params
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-39
 		 */
 		async fetchRaw(type, params = {}) {
@@ -249,12 +251,14 @@ export default {
 			return data.results || data || []
 		},
 		/**
+		 * @param client
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-42
 		 */
 		viewClient(client) {
 			window.location.href = generateUrl('/apps/pipelinq/clients/' + client.id)
 		},
 		/**
+		 * @param client
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-37
 		 */
 		createRequestForClient(client) {
@@ -263,6 +267,7 @@ export default {
 			this.actionTitle = ''
 		},
 		/**
+		 * @param client
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-36
 		 */
 		createLeadForClient(client) {
@@ -271,6 +276,7 @@ export default {
 			this.actionTitle = ''
 		},
 		/**
+		 * @param client
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-34
 		 */
 		async copyEmail(client) {

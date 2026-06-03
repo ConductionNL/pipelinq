@@ -152,6 +152,7 @@ export default {
 			this.fetchPage(1)
 		},
 		/**
+		 * @param value
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-7
 		 */
 		setFilter(value) {
@@ -162,6 +163,7 @@ export default {
 			this.reload()
 		},
 		/**
+		 * @param page
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-1
 		 */
 		async fetchPage(page) {
@@ -205,6 +207,7 @@ export default {
 			}
 		},
 		/**
+		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-4
 		 */
 		iconFor(item) {
@@ -233,6 +236,7 @@ export default {
 			return Message
 		},
 		/**
+		 * @param type
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-9
 		 */
 		typeLabel(type) {
@@ -246,6 +250,7 @@ export default {
 			}
 		},
 		/**
+		 * @param text
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-8
 		 */
 		truncate(text) {
@@ -254,6 +259,7 @@ export default {
 			return text.length > max ? text.substring(0, max) + '...' : text
 		},
 		/**
+		 * @param dateStr
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-3
 		 */
 		formatDate(dateStr) {
