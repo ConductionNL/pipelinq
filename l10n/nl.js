@@ -1136,7 +1136,10 @@ OC.L10N.register(
     "Failed to save refund." : "Opslaan van retour mislukt.",
     "This will reject the refund. Enter a reason for the rejection." : "Hiermee wijs je de retour af. Vul een reden in voor de afwijzing.",
     "Vul een reden in voor de afwijzing" : "Vul een reden in voor de afwijzing",
-    "Max {max}" : "Max {max}"
+    "Max {max}" : "Max {max}",
+    "app-availability.title" : "Vereiste applicatie niet beschikbaar",
+    "app-availability.description" : "Deze applicatie vereist dat OpenRegister is geïnstalleerd en ingeschakeld.",
+    "app-availability.action" : "OpenRegister installeren"
 },
 "nplurals=2; plural=(n != 1);"
 );
