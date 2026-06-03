@@ -24,7 +24,7 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 			this.error = null
 			try {
 				const objectStore = useObjectStore()
-				const result = await objectStore.fetchObjects('agentProfile', { _limit: 200 })
+				const result = await objectStore.fetchCollection('agentProfile', { _limit: 200 })
 				this.profiles = result || []
 			} catch (error) {
 				this.error = error.message
