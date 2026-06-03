@@ -7,12 +7,24 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 		<header v-if="!embedded && authenticated" class="portal-header">
 			<span class="portal-brand">{{ branding.displayName }}</span>
 			<nav class="portal-nav" :aria-label="t('pipelinq', 'Portal navigation')">
-				<router-link to="/dashboard">{{ t('pipelinq', 'Documents') }}</router-link>
-				<router-link to="/requests">{{ t('pipelinq', 'Requests') }}</router-link>
-				<router-link to="/profile">{{ t('pipelinq', 'My details') }}</router-link>
-				<router-link v-if="isB2b" to="/delegations">{{ t('pipelinq', 'Shared access') }}</router-link>
-				<router-link to="/export">{{ t('pipelinq', 'Privacy') }}</router-link>
-				<button class="portal-button-link" @click="logout">{{ t('pipelinq', 'Log out') }}</button>
+				<router-link to="/dashboard">
+					{{ t('pipelinq', 'Documents') }}
+				</router-link>
+				<router-link to="/requests">
+					{{ t('pipelinq', 'Requests') }}
+				</router-link>
+				<router-link to="/profile">
+					{{ t('pipelinq', 'My details') }}
+				</router-link>
+				<router-link v-if="isB2b" to="/delegations">
+					{{ t('pipelinq', 'Shared access') }}
+				</router-link>
+				<router-link to="/export">
+					{{ t('pipelinq', 'Privacy') }}
+				</router-link>
+				<button class="portal-button-link" @click="logout">
+					{{ t('pipelinq', 'Log out') }}
+				</button>
 			</nav>
 		</header>
 		<main class="portal-main">
@@ -84,7 +96,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .portal-app {
 	max-width: 960px;
 	margin: 0 auto;

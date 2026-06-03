@@ -104,7 +104,7 @@ export async function portalFetch(method, path, body = null) {
 	}
 
 	if (!response.ok) {
-		throw { status: response.status, ...payload }
+		throw Object.assign(new Error(`HTTP ${response.status}`), { status: response.status, ...payload })
 	}
 	return payload
 }
