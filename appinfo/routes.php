@@ -119,6 +119,70 @@ return [
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
 
+        // ---------------------------------------------------------------------
+        // Customer portal (separate auth domain — ADR-005). All /portal/api/*
+        // endpoints are #[PublicPage]; the portal session bearer token (not a
+        // Nextcloud user) authenticates each request inside the controller via
+        // PortalRequestGuard. Static routes precede {id} wildcards (ADR-016).
+        // ---------------------------------------------------------------------
+
+        // Public (pre-login) tenant branding.
+        ['name' => 'portalTenant#config', 'url' => '/portal/api/tenant-config', 'verb' => 'GET'],
+
+        // Auth (unauthenticated entry / token-authenticated session actions).
+        ['name' => 'portalAuth#login',                'url' => '/portal/api/auth/login',                  'verb' => 'POST'],
+        ['name' => 'portalAuth#logout',               'url' => '/portal/api/auth/logout',                 'verb' => 'POST'],
+        ['name' => 'portalAuth#extendSession',         'url' => '/portal/api/auth/extend-session',         'verb' => 'POST'],
+        ['name' => 'portalAuth#passwordResetRequest',  'url' => '/portal/api/auth/password-reset-request', 'verb' => 'POST'],
+        ['name' => 'portalAuth#passwordReset',         'url' => '/portal/api/auth/password-reset',         'verb' => 'POST'],
+        ['name' => 'portalAuth#mfaEnroll',             'url' => '/portal/api/auth/mfa-enroll',             'verb' => 'POST'],
+        ['name' => 'portalAuth#mfaVerify',             'url' => '/portal/api/auth/mfa-verify',             'verb' => 'POST'],
+
+        // Profile + account lifecycle.
+        ['name' => 'portalAccount#profile',        'url' => '/portal/api/accounts/profile',       'verb' => 'GET'],
+        ['name' => 'portalAccount#updateProfile',  'url' => '/portal/api/accounts/profile',       'verb' => 'PUT'],
+        ['name' => 'portalAccount#verifyEmail',    'url' => '/portal/api/accounts/verify-email',  'verb' => 'POST'],
+        ['name' => 'portalAccount#requestExport',  'url' => '/portal/api/exports',                'verb' => 'POST'],
+        ['name' => 'portalAccount#requestClose',   'url' => '/portal/api/accounts/close',         'verb' => 'POST'],
+        ['name' => 'portalAccount#confirmClose',   'url' => '/portal/api/accounts/close/confirm', 'verb' => 'POST'],
+
+        // Own audit trail.
+        ['name' => 'portalAudit#index', 'url' => '/portal/api/audit-events', 'verb' => 'GET'],
+
+        // Delegations (B2B). Static before {id}.
+        ['name' => 'portalDelegation#index',   'url' => '/portal/api/delegations',      'verb' => 'GET'],
+        ['name' => 'portalDelegation#create',  'url' => '/portal/api/delegations',      'verb' => 'POST'],
+        ['name' => 'portalDelegation#destroy', 'url' => '/portal/api/delegations/{id}', 'verb' => 'DELETE'],
+
+        // Documents (signed-URL proxy). Static sign route before the token route.
+        ['name' => 'portalDocument#sign',     'url' => '/portal/api/documents/sign',              'verb' => 'POST'],
+        ['name' => 'portalDocument#download', 'url' => '/portal/api/documents/{token}/download',  'verb' => 'GET'],
+
+        // Requests. Static create/list before {id} detail/reply.
+        ['name' => 'portalRequest#index',  'url' => '/portal/api/requests',           'verb' => 'GET'],
+        ['name' => 'portalRequest#create', 'url' => '/portal/api/requests',           'verb' => 'POST'],
+        ['name' => 'portalRequest#show',   'url' => '/portal/api/requests/{id}',       'verb' => 'GET'],
+        ['name' => 'portalRequest#reply',  'url' => '/portal/api/requests/{id}/reply', 'verb' => 'POST'],
+
+        // Invoices / contracts / orders. Static list before {id} detail.
+        ['name' => 'portalData#invoices',  'url' => '/portal/api/invoices',       'verb' => 'GET'],
+        ['name' => 'portalData#invoice',   'url' => '/portal/api/invoices/{id}',  'verb' => 'GET'],
+        ['name' => 'portalData#contracts', 'url' => '/portal/api/contracts',      'verb' => 'GET'],
+        ['name' => 'portalData#contract',  'url' => '/portal/api/contracts/{id}', 'verb' => 'GET'],
+        ['name' => 'portalData#orders',    'url' => '/portal/api/orders',         'verb' => 'GET'],
+        ['name' => 'portalData#order',     'url' => '/portal/api/orders/{id}',    'verb' => 'GET'],
+
+        // Admin / DPO (Nextcloud admin only; no #[PublicPage] — admin-default).
+        ['name' => 'portalAdmin#saveConfig',   'url' => '/portal/api/admin/tenant-config', 'verb' => 'POST'],
+        ['name' => 'portalAdmin#accounts',     'url' => '/portal/api/admin/accounts',      'verb' => 'GET'],
+        ['name' => 'portalAdmin#auditEvents',  'url' => '/portal/api/admin/audit-events',  'verb' => 'GET'],
+
+        // Public portal SPA shell. Registered AFTER all /portal/api/* routes so
+        // the API wins, and BEFORE the main-app catch-all so /portal serves the
+        // isolated portal bundle rather than the Nextcloud-authenticated app.
+        ['name' => 'portalPage#index', 'url' => '/portal', 'verb' => 'GET'],
+        ['name' => 'portalPage#subpath', 'url' => '/portal/{path}', 'verb' => 'GET', 'requirements' => ['path' => '^(?!api/).*'], 'defaults' => ['path' => '']],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
