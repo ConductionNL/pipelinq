@@ -457,6 +457,7 @@ export default {
 	},
 	methods: {
 		/**
+		 * @param formData
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-16
 		 */
 		async onFormSave(formData) {
@@ -475,6 +476,7 @@ export default {
 			}
 		},
 		/**
+		 * @param objectId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-22
 		 */
 		async syncToContacts(objectId) {
@@ -570,6 +572,7 @@ export default {
 			}
 		},
 		/**
+		 * @param dateStr
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-10
 		 */
 		formatDate(dateStr) {
@@ -609,6 +612,7 @@ export default {
 			return lead.status === 'won' || lead.status === 'lost'
 		},
 		/**
+		 * @param value
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-9
 		 */
 		formatCurrency(value) {

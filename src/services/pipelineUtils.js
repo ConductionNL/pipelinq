@@ -5,6 +5,7 @@
 import { translate as t } from '@nextcloud/l10n'
 
 /**
+ * @param item
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-30
  */
 export function getDaysAge(item) {
@@ -13,6 +14,8 @@ export function getDaysAge(item) {
 }
 
 /**
+ * @param item
+ * @param entityType
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-31
  */
 export function isStale(item, entityType) {
@@ -21,6 +24,7 @@ export function isStale(item, entityType) {
 }
 
 /**
+ * @param days
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-29
  */
 export function getAgingClass(days) {
@@ -30,6 +34,7 @@ export function getAgingClass(days) {
 }
 
 /**
+ * @param days
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-28
  */
 export function formatAge(days) {

@@ -54,7 +54,9 @@
 			<div class="form-row">
 				<label>{{ t('pipelinq', 'Parent category') }}</label>
 				<select v-model="formData.parent" class="form-select">
-					<option :value="null">{{ t('pipelinq', 'None (root level)') }}</option>
+					<option :value="null">
+						{{ t('pipelinq', 'None (root level)') }}
+					</option>
 					<option
 						v-for="cat in availableParents"
 						:key="cat.id"

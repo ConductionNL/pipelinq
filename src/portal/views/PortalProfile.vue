@@ -25,10 +25,18 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 			<div class="portal-field">
 				<label for="portal-locale">{{ t('pipelinq', 'Language') }}</label>
 				<select id="portal-locale" v-model="form.locale">
-					<option value="nl">Nederlands</option>
-					<option value="en">English</option>
-					<option value="de">Deutsch</option>
-					<option value="fr">Français</option>
+					<option value="nl">
+						Nederlands
+					</option>
+					<option value="en">
+						English
+					</option>
+					<option value="de">
+						Deutsch
+					</option>
+					<option value="fr">
+						Français
+					</option>
 				</select>
 			</div>
 			<div class="portal-field">
@@ -36,9 +44,15 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 				<input id="portal-change-email" v-model="form.email" type="email">
 				<small v-if="pendingEmail">{{ t('pipelinq', 'A verification link has been sent to {email}.', { email: pendingEmail }) }}</small>
 			</div>
-			<p v-if="message" role="alert" class="portal-success">{{ message }}</p>
-			<p v-if="error" role="alert" class="portal-error">{{ error }}</p>
-			<button type="submit" class="portal-button-primary">{{ t('pipelinq', 'Save') }}</button>
+			<p v-if="message" role="alert" class="portal-success">
+				{{ message }}
+			</p>
+			<p v-if="error" role="alert" class="portal-error">
+				{{ error }}
+			</p>
+			<button type="submit" class="portal-button-primary">
+				{{ t('pipelinq', 'Save') }}
+			</button>
 		</form>
 	</div>
 </template>

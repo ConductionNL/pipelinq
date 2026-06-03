@@ -228,6 +228,7 @@ export default {
 		product: {
 			immediate: true,
 			/**
+			 * @param val
 			 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-16
 			 */
 			handler(val) {
@@ -242,6 +243,7 @@ export default {
 	},
 	methods: {
 		/**
+		 * @param data
 		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-20
 		 */
 		populateForm(data) {
@@ -271,6 +273,7 @@ export default {
 			}
 		},
 		/**
+		 * @param field
 		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-22
 		 */
 		validateField(field) {

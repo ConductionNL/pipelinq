@@ -16,17 +16,31 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 			</button>
 		</div>
 
-		<p v-if="error" role="alert" class="portal-error">{{ error }}</p>
-		<p v-if="loading">{{ t('pipelinq', 'Loading…') }}</p>
+		<p v-if="error" role="alert" class="portal-error">
+			{{ error }}
+		</p>
+		<p v-if="loading">
+			{{ t('pipelinq', 'Loading…') }}
+		</p>
 
 		<table v-else-if="rows.length" class="portal-table" role="grid">
 			<thead>
 				<tr>
-					<th scope="col">{{ t('pipelinq', 'Number') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Date') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Amount') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Status') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Action') }}</th>
+					<th scope="col">
+						{{ t('pipelinq', 'Number') }}
+					</th>
+					<th scope="col">
+						{{ t('pipelinq', 'Date') }}
+					</th>
+					<th scope="col">
+						{{ t('pipelinq', 'Amount') }}
+					</th>
+					<th scope="col">
+						{{ t('pipelinq', 'Status') }}
+					</th>
+					<th scope="col">
+						{{ t('pipelinq', 'Action') }}
+					</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -45,7 +59,9 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 				</tr>
 			</tbody>
 		</table>
-		<p v-else>{{ t('pipelinq', 'Nothing to show yet.') }}</p>
+		<p v-else>
+			{{ t('pipelinq', 'Nothing to show yet.') }}
+		</p>
 	</div>
 </template>
 

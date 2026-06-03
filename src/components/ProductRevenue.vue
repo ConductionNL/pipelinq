@@ -131,6 +131,7 @@ export default {
 			}
 		},
 		/**
+		 * @param value
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-2
 		 */
 		formatCurrency(value) {
