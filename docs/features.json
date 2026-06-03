@@ -74,7 +74,7 @@
   {
     "slug": "product-catalog",
     "title": "Product Catalog",
-    "summary": "The product catalog allows Pipelinq users to manage the products and services their organization sells. Products are central to accurate pipeline valuation — instead of manually estimating lead values, sales reps attach specific products (with quantities and prices) to leads. Product categories provide hierarchical grouping for organization and reporting.",
+    "summary": "The product catalog allows Pipelinq users to manage the products and services their organization sells. Products are central to accurate pipeline valuation: instead of manually estimating lead values, sales reps attach specific products (with quantities and prices) to leads. Product categories provide hierarchical grouping for organization and reporting.",
     "docsUrl": "openspec/specs/product-catalog/spec.md"
   },
   {
@@ -104,7 +104,7 @@
   {
     "slug": "request-management",
     "title": "Request Management",
-    "summary": "Request management handles the intake and tracking of requests (verzoeken) — service inquiries that come in before they become formal cases. Requests are the bridge between Pipelinq (CRM) and Procest (case management). A request flows through a status lifecycle from intake to resolution or conversion, can optionally be placed on a pipeline alongside leads, and can be converted into a Procest case.",
+    "summary": "Request management handles the intake and tracking of requests (verzoeken), service inquiries that come in before they become formal cases. Requests are the bridge between Pipelinq (CRM) and Procest (case management). A request flows through a status lifecycle from intake to resolution or conversion, can optionally be placed on a pipeline alongside leads, and can be converted into a Procest case.",
     "docsUrl": "openspec/specs/request-management/spec.md"
   }
 ]

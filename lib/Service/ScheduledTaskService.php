@@ -806,6 +806,40 @@ class ScheduledTaskService
     }//end getRegisterAndSchema()
 
     /**
+     * Forward the Accept-Language header to OpenRegister's LanguageService.
+     *
+     * Parses the highest-priority BCP-47 tag from the raw header value and
+     * sets it on OR's request-scoped LanguageService so that ObjectService
+     * calls return translated field values when the preferred language is
+     * available (ADR-025, task 9.3).
+     *
+     * No-ops silently when OR's LanguageService is unavailable (pre-ship).
+     *
+     * @param string $acceptLanguage The raw Accept-Language header value.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/pipelinq-manifest-i18n-tenant/tasks.md#task-9.3
+     */
+    public function applyAcceptLanguage(string $acceptLanguage): void
+    {
+        if ($acceptLanguage === '') {
+            return;
+        }
+
+        try {
+            $languageService = $this->container->get('OCA\OpenRegister\Service\LanguageService');
+            $lang            = $this->parsePreferredLanguage(headerValue: $acceptLanguage);
+            $languageService->setPreferredLanguage(language: $lang);
+        } catch (\Throwable $e) {
+            $this->logger->debug(
+                message: 'applyAcceptLanguage: OR LanguageService unavailable.',
+                context: ['exception' => $e->getMessage()]
+            );
+        }
+    }//end applyAcceptLanguage()
+
+    /**
      * Lazy ObjectService resolver to avoid a hard dependency on OpenRegister.
      *
      * @return object The OpenRegister ObjectService instance.
@@ -814,6 +848,27 @@ class ScheduledTaskService
     {
         return $this->container->get('OCA\OpenRegister\Service\ObjectService');
     }//end getObjectService()
+
+    /**
+     * Extract the highest-priority BCP-47 tag from an Accept-Language header.
+     *
+     * Parses "nl-NL,nl;q=0.9,en;q=0.8" → "nl-NL".
+     *
+     * @param string $headerValue The raw Accept-Language header value.
+     *
+     * @return string The preferred language tag (e.g. "nl" or "en-US").
+     */
+    private function parsePreferredLanguage(string $headerValue): string
+    {
+        $parts = explode(separator: ',', string: $headerValue);
+        $first = trim(string: explode(separator: ';', string: $parts[0])[0]);
+
+        if ($first !== '') {
+            return $first;
+        }
+
+        return 'nl';
+    }//end parsePreferredLanguage()
 
     /**
      * Normalise an ObjectEntity-or-array to a plain array.

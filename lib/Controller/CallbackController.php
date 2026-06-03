@@ -89,6 +89,10 @@ class CallbackController extends Controller
             return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
         }
 
+        $this->scheduledTaskService->applyAcceptLanguage(
+            acceptLanguage: $this->request->getHeader('Accept-Language')
+        );
+
         $result = $this->request->getParam('result', '');
         $notes  = $this->request->getParam('notes', '');
 
@@ -150,6 +154,10 @@ class CallbackController extends Controller
             return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
         }
 
+        $this->scheduledTaskService->applyAcceptLanguage(
+            acceptLanguage: $this->request->getHeader('Accept-Language')
+        );
+
         try {
             $taskData = $this->fetchTask(id: $id);
             if ($taskData === null) {
@@ -196,6 +204,10 @@ class CallbackController extends Controller
         if ($user === null) {
             return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
         }
+
+        $this->scheduledTaskService->applyAcceptLanguage(
+            acceptLanguage: $this->request->getHeader('Accept-Language')
+        );
 
         $resultText = $this->request->getParam('resultText', '');
 

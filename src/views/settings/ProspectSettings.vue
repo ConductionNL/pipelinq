@@ -1,10 +1,7 @@
 <template>
-	<div class="prospect-settings">
-		<h3>{{ t('pipelinq', 'Prospect Discovery') }}</h3>
-		<p class="prospect-settings__desc">
-			{{ t('pipelinq', 'Configure your Ideal Customer Profile (ICP) to discover potential leads.') }}
-		</p>
-
+	<CnSettingsSection
+		:name="t('pipelinq', 'Prospect Discovery')"
+		:description="t('pipelinq', 'Configure your Ideal Customer Profile (ICP) to discover potential leads.')">
 		<NcLoadingIcon v-if="loading" :size="24" />
 
 		<div v-else class="prospect-settings__form">
@@ -114,16 +111,18 @@
 				{{ message }}
 			</NcNoteCard>
 		</div>
-	</div>
+	</CnSettingsSection>
 </template>
 
 <script>
+import { CnSettingsSection } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
 
 export default {
 	name: 'ProspectSettings',
 	components: {
+		CnSettingsSection,
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,
@@ -243,15 +242,6 @@ export default {
 </script>
 
 <style scoped>
-.prospect-settings {
-	margin-bottom: 24px;
-}
-
-.prospect-settings__desc {
-	color: var(--color-text-maxcontrast);
-	margin-bottom: 16px;
-}
-
 .prospect-settings__form {
 	max-width: 600px;
 }
