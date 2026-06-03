@@ -265,13 +265,13 @@ const registry = {
 		_note: 'Scan-to-navigate barcode search; resolves via the server-authoritative scoped barcode-lookup API and routes to the matching product (highlighting a matched variant).',
 	},
 
-<<<<<<< HEAD
 	// --- Automation rule builder. ---
 	AutomationBuilderView: {
 		kind: 'page',
 		component: AutomationBuilderView,
 		_note: 'Visual automation-rule editor with condition-row + action-row builder; lib gap: no automation-rule editor page type.',
-=======
+	},
+
 	// --- BI export + data-warehouse sink. ---
 	ExportJobsView: {
 		kind: 'page',
@@ -302,7 +302,6 @@ const registry = {
 		kind: 'page',
 		component: ExportRunDetailView,
 		_note: 'Export-run detail: file manifest, schema snapshots with detected drift, error log and a Retry action; fetched via the export run-detail endpoint.',
->>>>>>> origin/development
 	},
 }
 
