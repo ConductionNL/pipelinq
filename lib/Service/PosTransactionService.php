@@ -97,15 +97,17 @@ class PosTransactionService
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container The DI container.
-     * @param IAppConfig         $appConfig The app config.
-     * @param PosAccessPolicy    $policy    The shared POS access policy.
-     * @param LoggerInterface    $logger    The logger.
+     * @param ContainerInterface $container      The DI container.
+     * @param IAppConfig         $appConfig      The app config.
+     * @param PosAccessPolicy    $policy         The shared POS access policy.
+     * @param PosPaymentService  $paymentService The multi-tender payment service.
+     * @param LoggerInterface    $logger         The logger.
      */
     public function __construct(
         private ContainerInterface $container,
         private IAppConfig $appConfig,
         private PosAccessPolicy $policy,
+        private PosPaymentService $paymentService,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -573,25 +575,84 @@ class PosTransactionService
      *
      * @return array<string, mixed> The settled transaction.
      *
+     * Server-authoritative tender gate (pos-split-tender): before the settle
+     * transition, the sum of the transaction's persisted tenders MUST reconcile
+     * to its server-computed total. A short payment, or an over-payment that
+     * cannot be returned as cash change, blocks settlement with a precise
+     * variance message; the transaction stays `confirmed`. When reconciled, any
+     * cash change due is recorded on the transaction and, after the transition,
+     * one GL CloudEvent is emitted per tender (fire-and-forget).
+     *
      * @throws OCSNotFoundException   If the transaction does not exist.
      * @throws OCSForbiddenException  If the caller may not access the transaction.
-     * @throws OCSBadRequestException If the transaction is not confirmed.
+     * @throws OCSBadRequestException If the transaction is not confirmed or the tenders do not reconcile.
      *
      * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
      * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
+     * @spec openspec/changes/pos-split-tender/tasks.md#3.2
      */
     public function settleTransaction(string $id, string $userId): array
     {
         $transaction = $this->fetchTransaction(id: $id);
+
+        // Server-authoritative reconciliation: tenders must cover the total.
+        $reconciliation = $this->paymentService->validateTenderSum(transactionId: $id);
+        if ($reconciliation['reconciled'] === false) {
+            throw new OCSBadRequestException($this->buildTenderVarianceMessage(reconciliation: $reconciliation));
+        }
+
         $transaction['settledAt'] = $this->now();
+        if ($reconciliation['changeDue'] > 0.0) {
+            $transaction['changeDue'] = $reconciliation['changeDue'];
+        }
+
         $this->saveTransaction(id: $id, transaction: $transaction);
 
         $saved = $this->transitionObject(id: $id, action: 'settle');
+
+        // Post each tender to its GL account (fire-and-forget per tender).
+        $this->paymentService->emitTenderPostedEvents(transaction: $saved);
 
         $this->logger->info('Pipelinq: POS transaction settled', ['id' => $id, 'userId' => $userId]);
 
         return $saved;
     }//end settleTransaction()
+
+    /**
+     * Build the precise Dutch settlement-blocked message from a reconciliation.
+     *
+     * Distinguishes an under-payment (variance > 0) from an over-payment that
+     * cannot be given as change (variance < 0, no change-allowing cash tender).
+     *
+     * @param array<string, mixed> $reconciliation The validateTenderSum result.
+     *
+     * @return string The error message.
+     *
+     * @spec openspec/changes/pos-split-tender/tasks.md#3.2
+     */
+    private function buildTenderVarianceMessage(array $reconciliation): string
+    {
+        $tenderSum = (float) ($reconciliation['tenderSum'] ?? 0);
+        $total     = (float) ($reconciliation['transactionTotal'] ?? 0);
+        $variance  = (float) ($reconciliation['variance'] ?? 0);
+
+        if ($variance > 0.0) {
+            return sprintf(
+                'Betaalsaldo (€ %.2f) is niet gelijk aan het transactietotaal (€ %.2f). Te weinig betaald: € %.2f.',
+                $tenderSum,
+                $total,
+                $variance
+            );
+        }
+
+        return sprintf(
+            'Betaalsaldo (€ %.2f) overschrijdt het transactietotaal (€ %.2f). Te veel betaald: € %.2f zonder '
+            .'contante betaling voor wisselgeld.',
+            $tenderSum,
+            $total,
+            abs($variance)
+        );
+    }//end buildTenderVarianceMessage()
 
     /**
      * Refund / void a confirmed or settled transaction (manager only).

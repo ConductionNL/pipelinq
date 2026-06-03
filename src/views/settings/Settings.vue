@@ -56,6 +56,9 @@
 		<!-- Product Categories -->
 		<ProductCategoryManager v-if="isConfigured" />
 
+		<!-- POS Tender Types -->
+		<TenderTypeManager v-if="isConfigured" />
+
 		<!-- Queue Management -->
 		<QueueSettings v-if="isConfigured" />
 
@@ -118,6 +121,7 @@ import TagManager from './TagManager.vue'
 import QueueSettings from '../../components/admin/QueueSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
 import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
+import TenderTypeManager from '../../components/admin/TenderTypeManager.vue'
 
 export default {
 	name: 'Settings',
@@ -136,6 +140,7 @@ export default {
 		QueueSettings,
 		SkillSettings,
 		AgentProfileSettings,
+		TenderTypeManager,
 	},
 	data() {
 		return {

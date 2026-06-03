@@ -29,6 +29,13 @@ use RuntimeException;
 
 /**
  * Service for loading and parsing configuration JSON files.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The class is a small, cohesive
+ *  config loader plus the ADR-037 fragment deep-merge / additive-union rule; the
+ *  union helpers are deliberately defensive (each branch handles one malformed-
+ *  fragment shape), which raises the aggregate count without tangling logic.
+ *
+ * @spec openspec/changes/pos-split-tender/tasks.md#1.1
  */
 class ConfigFileLoaderService
 {
@@ -111,6 +118,12 @@ class ConfigFileLoaderService
      * @return array The merged configuration data.
      *
      * @throws RuntimeException If a fragment file cannot be read or parsed.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Each branch handles one
+     *  defensive case in the fragment sweep (missing dir, glob failure, read
+     *  failure, JSON failure, non-array fragment, version stamping); collapsing
+     *  them would hide the per-failure handling.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Same defensive-sweep rationale.
      */
     private function mergeRegisterFragments(array $data, string $appPath): array
     {
@@ -144,7 +157,11 @@ class ConfigFileLoaderService
                 continue;
             }
 
+            // Snapshot the additive set-lists BEFORE the deep merge replaces them,
+            // then re-union the fragment's additions back in afterwards (ADR-037).
+            $preMerge      = $data;
             $data          = self::deepMergeConfig(base: $data, override: $fragmentData);
+            $data          = self::unionAdditiveLists(base: $data, preMerge: $preMerge, override: $fragmentData);
             $fragmentBlob .= $fragmentContent;
         }//end foreach
 
@@ -193,6 +210,164 @@ class ConfigFileLoaderService
     }//end deepMergeConfig()
 
     /**
+     * Additively union the register lists that are semantically sets (ADR-037).
+     *
+     * {@see self::deepMergeConfig()} treats every JSON list as a replace (per the
+     * documented fragment merge semantics). Two register paths, however, are
+     * conceptually *sets* a fragment must EXTEND rather than overwrite, or one
+     * feature build's fragment would silently drop every schema/seed contributed
+     * by the base monolith (and by earlier fragments):
+     *
+     *   - `components.objects[]` — the seed objects. Deduped by `@self.slug`; a
+     *     fragment object with a slug that already exists replaces that one entry
+     *     (so a fragment can still correct a base seed) while leaving the rest.
+     *   - `components.registers.<slug>.schemas[]` — a register's schema
+     *     membership. Deduped by value (the schema slug string), order-preserving.
+     *
+     * This is the fleet-standard additive-union rule: it runs AFTER the deep
+     * merge (which has, at this point, already replaced these two lists with the
+     * fragment's partial list). The pre-merge snapshot supplies the base side of
+     * the union so neither side is lost.
+     *
+     * @param array $base     The post-deep-merge configuration (fragment lists won).
+     * @param array $preMerge The configuration snapshot taken before the deep merge.
+     * @param array $override The raw fragment that contributed the additive lists.
+     *
+     * @return array The configuration with the additive lists unioned back in.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Each branch guards one shape
+     *  the additive union must tolerate (missing/non-list objects, missing/non-
+     *  array registers, missing/non-list schema membership) before unioning.
+     *
+     * @spec openspec/changes/pos-split-tender/tasks.md#1.1
+     */
+    private static function unionAdditiveLists(array $base, array $preMerge, array $override): array
+    {
+        // Union the seed objects (components.objects[]), deduped by @self.slug.
+        $overrideObjects = ($override['components']['objects'] ?? null);
+        if (is_array($overrideObjects) === true && self::isList(value: $overrideObjects) === true) {
+            $baseObjects = ($preMerge['components']['objects'] ?? []);
+            if (is_array($baseObjects) === false) {
+                $baseObjects = [];
+            }
+
+            $base['components']['objects'] = self::unionObjectsBySlug(
+                base: $baseObjects,
+                additions: $overrideObjects
+            );
+        }
+
+        // Union each register's schema membership list, deduped by value.
+        $overrideRegisters = ($override['components']['registers'] ?? null);
+        if (is_array($overrideRegisters) === true) {
+            foreach ($overrideRegisters as $registerSlug => $registerData) {
+                if (is_array($registerData) === false) {
+                    continue;
+                }
+
+                $additionSchemas = ($registerData['schemas'] ?? null);
+                if (is_array($additionSchemas) === false || self::isList(value: $additionSchemas) === false) {
+                    continue;
+                }
+
+                $baseSchemas = ($preMerge['components']['registers'][$registerSlug]['schemas'] ?? []);
+                if (is_array($baseSchemas) === false) {
+                    $baseSchemas = [];
+                }
+
+                $base['components']['registers'][$registerSlug]['schemas'] = self::unionScalarList(
+                    base: $baseSchemas,
+                    additions: $additionSchemas
+                );
+            }//end foreach
+        }//end if
+
+        return $base;
+    }//end unionAdditiveLists()
+
+    /**
+     * Union two seed-object lists, deduping by `@self.slug`.
+     *
+     * Base objects keep their position; an addition whose slug already exists
+     * replaces that base entry in place (last-writer-wins for a colliding slug),
+     * and a slug-less or new-slug addition is appended.
+     *
+     * @param array<int, mixed> $base      The base seed objects.
+     * @param array<int, mixed> $additions The fragment's seed objects.
+     *
+     * @return array<int, mixed> The unioned seed objects.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) The slug index build + the
+     *  replace-in-place vs append decision each branch on the slug's presence;
+     *  splitting would scatter the one dedup-by-slug rule.
+     */
+    private static function unionObjectsBySlug(array $base, array $additions): array
+    {
+        $indexBySlug = [];
+        foreach ($base as $index => $object) {
+            $slug = self::objectSlug(object: $object);
+            if (is_string($slug) === true && $slug !== '') {
+                $indexBySlug[$slug] = $index;
+            }
+        }
+
+        foreach ($additions as $object) {
+            $slug = self::objectSlug(object: $object);
+            if (is_string($slug) === true && $slug !== '' && isset($indexBySlug[$slug]) === true) {
+                $base[$indexBySlug[$slug]] = $object;
+                continue;
+            }
+
+            $base[] = $object;
+            if (is_string($slug) === true && $slug !== '') {
+                $indexBySlug[$slug] = array_key_last($base);
+            }
+        }
+
+        return array_values($base);
+    }//end unionObjectsBySlug()
+
+    /**
+     * Extract the `@self.slug` from a seed object, or null when absent.
+     *
+     * @param mixed $object The candidate seed object.
+     *
+     * @return string|null The slug, or null when the object has none.
+     */
+    private static function objectSlug(mixed $object): ?string
+    {
+        if (is_array($object) === false) {
+            return null;
+        }
+
+        $slug = ($object['@self']['slug'] ?? null);
+        if (is_string($slug) === true) {
+            return $slug;
+        }
+
+        return null;
+    }//end objectSlug()
+
+    /**
+     * Union two scalar lists, preserving base order and appending new values.
+     *
+     * @param array<int, mixed> $base      The base list.
+     * @param array<int, mixed> $additions The values to union in.
+     *
+     * @return array<int, mixed> The deduped union (base order first).
+     */
+    private static function unionScalarList(array $base, array $additions): array
+    {
+        foreach ($additions as $value) {
+            if (in_array($value, $base, true) === false) {
+                $base[] = $value;
+            }
+        }
+
+        return array_values($base);
+    }//end unionScalarList()
+
+    /**
      * Determine whether an array is a sequential list (zero-indexed, no gaps).
      *
      * Provided for PHP < 8.1 parity where `array_is_list()` is unavailable.
@@ -208,7 +383,7 @@ class ConfigFileLoaderService
         }
 
         $expectedKey = 0;
-        foreach ($value as $key => $unused) {
+        foreach (array_keys($value) as $key) {
             if ($key !== $expectedKey) {
                 return false;
             }

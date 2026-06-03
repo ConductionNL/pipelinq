@@ -152,6 +152,32 @@
 			<PosTotalsPanel :lines="lines" :price-mode="priceMode" />
 		</CnDetailCard>
 
+		<CnDetailCard :title="t('pipelinq', 'Tenders')">
+			<template #actions>
+				<NcButton v-if="canAddTender"
+					type="secondary"
+					:disabled="busy"
+					@click="showAddTender = true">
+					{{ t('pipelinq', 'Add Tender') }}
+				</NcButton>
+			</template>
+			<TendersCard
+				:tenders="tenders"
+				:tender-types="tenderTypes"
+				:reconciliation="reconciliation"
+				:transaction-total="transactionTotal"
+				:can-remove="canRemoveTender"
+				@remove="removeTender" />
+		</CnDetailCard>
+
+		<AddTenderModal
+			v-if="showAddTender"
+			:transaction-id="transactionId"
+			:transaction-total="transactionTotal"
+			:current-tender-sum="reconciliation.tenderSum || 0"
+			@close="showAddTender = false"
+			@added="onTenderAdded" />
+
 		<PosRefundDialog
 			v-if="showRefund"
 			:submitting="busy"
@@ -181,7 +207,9 @@ import { generateUrl } from '@nextcloud/router'
 import { CnDetailPage, CnDetailCard, CnStatusBadge } from '@conduction/nextcloud-vue'
 import PosTotalsPanel from '../../components/pos/PosTotalsPanel.vue'
 import TaxBreakdownCard from '../../components/pos/TaxBreakdownCard.vue'
+import TendersCard from '../../components/pos/TendersCard.vue'
 import PosRefundDialog from '../../modals/PosRefundDialog.vue'
+import AddTenderModal from '../../modals/AddTenderModal.vue'
 import PrintReceiptModal from '../../modals/PrintReceiptModal.vue'
 import EmailReceiptModal from '../../modals/EmailReceiptModal.vue'
 import { useObjectStore } from '../../store/modules/object.js'
@@ -204,7 +232,9 @@ export default {
 		CnStatusBadge,
 		PosTotalsPanel,
 		TaxBreakdownCard,
+		TendersCard,
 		PosRefundDialog,
+		AddTenderModal,
 		PrintReceiptModal,
 		EmailReceiptModal,
 	},
@@ -223,7 +253,11 @@ export default {
 			showRefund: false,
 			showPrint: false,
 			showEmail: false,
+			showAddTender: false,
 			receiptTemplates: [],
+			tenders: [],
+			tenderTypes: [],
+			reconciliation: {},
 		}
 	},
 	computed: {
@@ -306,6 +340,30 @@ export default {
 		canSettle() {
 			return this.status === 'confirmed'
 		},
+		/**
+		 * The transaction's server-computed total.
+		 *
+		 * @return {number} The total.
+		 */
+		transactionTotal() {
+			return parseFloat(this.transaction.total) || 0
+		},
+		/**
+		 * Whether tenders may still be added (anything but a settled/refunded sale).
+		 *
+		 * @return {boolean} Whether to show the add-tender action.
+		 */
+		canAddTender() {
+			return ['draft', 'parked', 'confirmed'].includes(this.status)
+		},
+		/**
+		 * Whether tenders may be removed (only before settlement).
+		 *
+		 * @return {boolean} Whether the remove control is enabled.
+		 */
+		canRemoveTender() {
+			return ['draft', 'parked', 'confirmed'].includes(this.status)
+		},
 		canRefund() {
 			return ['confirmed', 'settled'].includes(this.status) && this.isManager
 		},
@@ -357,8 +415,82 @@ export default {
 					.filter(l => l.transaction === this.transactionId)
 					.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
 				await this.loadReceiptTemplates()
+				await this.loadTenders()
 			} finally {
 				this.loading = false
+			}
+		},
+		/**
+		 * Load the tenders and server reconciliation for this transaction, plus
+		 * the active tender types (used to resolve display names in the table).
+		 */
+		async loadTenders() {
+			try {
+				const response = await fetch(
+					generateUrl(`/apps/pipelinq/api/pos-transactions/${this.transactionId}/tenders`),
+					{ headers: { requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' } },
+				)
+				const data = await response.json().catch(() => ({}))
+				this.tenders = Array.isArray(data.tenders) ? data.tenders : []
+				this.reconciliation = data.reconciliation || {}
+			} catch (e) {
+				this.tenders = []
+				this.reconciliation = {}
+			}
+			await this.loadTenderTypes()
+		},
+		/**
+		 * Load the active tender types for display-name resolution.
+		 */
+		async loadTenderTypes() {
+			try {
+				const response = await fetch(
+					generateUrl('/apps/pipelinq/api/pos/tender-types'),
+					{ headers: { requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' } },
+				)
+				const data = await response.json().catch(() => ({}))
+				this.tenderTypes = Array.isArray(data.tenderTypes) ? data.tenderTypes : []
+			} catch (e) {
+				this.tenderTypes = []
+			}
+		},
+		/**
+		 * Refresh the tenders after one is added in the modal.
+		 */
+		async onTenderAdded() {
+			this.showAddTender = false
+			showSuccess(t('pipelinq', 'Tender added.'))
+			await this.loadTenders()
+		},
+		/**
+		 * Remove a tender after confirmation.
+		 *
+		 * @param {object} tender The tender to remove.
+		 */
+		async removeTender(tender) {
+			if (!window.confirm(t('pipelinq', 'Remove this tender?'))) {
+				return
+			}
+			this.busy = true
+			try {
+				const response = await fetch(
+					generateUrl(`/apps/pipelinq/api/pos-transactions/${this.transactionId}/tenders/${tender.id}`),
+					{
+						method: 'DELETE',
+						headers: { requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' },
+					},
+				)
+				if (!response.ok) {
+					const data = await response.json().catch(() => ({}))
+					showError(data.error || t('pipelinq', 'Could not remove the tender.'))
+					return
+				}
+				showSuccess(t('pipelinq', 'Tender removed.'))
+				await this.loadTenders()
+			} catch (e) {
+				showError(t('pipelinq', 'Could not remove the tender.'))
+			} finally {
+				this.busy = false
 			}
 		},
 		/**

@@ -119,6 +119,22 @@ return [
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
 
+        // POS multi-tender payment (camelCase slug matches PosPaymentController class name).
+        // posTenderType / posTender CRUD beyond these validated endpoints is handled by
+        // OpenRegister's generic object API; reads are open to authenticated POS users,
+        // tender-type writes are admin-gated, tenders are per-transaction IDOR-guarded.
+        // Specific tender-type routes precede the {id} wildcard ones.
+        ['name' => 'posPayment#tenderTypes',       'url' => '/api/pos/tender-types',      'verb' => 'GET'],
+        ['name' => 'posPayment#createTenderType',  'url' => '/api/pos/tender-types',      'verb' => 'POST'],
+        ['name' => 'posPayment#showTenderType',    'url' => '/api/pos/tender-types/{id}', 'verb' => 'GET'],
+        ['name' => 'posPayment#updateTenderType',  'url' => '/api/pos/tender-types/{id}', 'verb' => 'PUT'],
+        ['name' => 'posPayment#destroyTenderType', 'url' => '/api/pos/tender-types/{id}', 'verb' => 'DELETE'],
+
+        // Per-transaction tenders (add / list / remove).
+        ['name' => 'posPayment#tenders',      'url' => '/api/pos-transactions/{transactionId}/tenders',            'verb' => 'GET'],
+        ['name' => 'posPayment#addTender',    'url' => '/api/pos-transactions/{transactionId}/tenders',            'verb' => 'POST'],
+        ['name' => 'posPayment#removeTender', 'url' => '/api/pos-transactions/{transactionId}/tenders/{tenderId}', 'verb' => 'DELETE'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],

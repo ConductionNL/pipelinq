@@ -1,0 +1,303 @@
+{
+    "info": {
+        "title": "Pipelinq POS split-tender register fragment",
+        "version": "1.0.0",
+        "description": "ADR-037 modular fragment adding the posTenderType and posTender schemas (multi-tender POS payment: cash + card + voucher), their register membership, and seed data. Deep-merged onto pipelinq_register.json by ConfigFileLoaderService; the components.objects[] seeds and the pipelinq register schemas[] membership are additively unioned (never replaced)."
+    },
+    "components": {
+        "registers": {
+            "pipelinq": {
+                "schemas": [
+                    "posTenderType",
+                    "posTender"
+                ]
+            }
+        },
+        "schemas": {
+            "posTransaction": {
+                "properties": {
+                    "changeDue": {
+                        "type": "number",
+                        "description": "Cash change due to the customer on settlement, server-computed from the tenders when a change-allowing cash tender overpays the total (pos-split-tender). Zero/absent when the payment was exact.",
+                        "minimum": 0,
+                        "default": 0,
+                        "title": "Change due"
+                    }
+                }
+            },
+            "posTenderType": {
+                "slug": "posTenderType",
+                "title": "POS Tender Type",
+                "icon": "CreditCardOutline",
+                "version": "1.0.0",
+                "summary": "A configurable payment method (tender type) available at the POS checkout",
+                "description": "Defines an available tender method (Contant/Cash, Betaalpas/Card, Cadeaubon/Voucher, Rekening/Account, or an integrated provider). Each type carries the GL posting account in shillinq that its tenders settle to, plus capability flags (requiresReference, requiresPin, allowsChange). Configured per register by an administrator. Mapped to Schema.org PaymentMethod.",
+                "@type": "schema:PaymentMethod",
+                "required": [
+                    "name",
+                    "code",
+                    "glAccount"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Display name shown at checkout, e.g. Contant, Betaalpas, Cadeaubon",
+                        "maxLength": 64,
+                        "title": "Name",
+                        "facetable": true
+                    },
+                    "code": {
+                        "type": "string",
+                        "description": "Stable constant identifier for this tender method",
+                        "maxLength": 32,
+                        "enum": [
+                            "CASH",
+                            "CARD",
+                            "VOUCHER",
+                            "ACCOUNT",
+                            "MOLLIE",
+                            "STRIPE",
+                            "SUM_UP"
+                        ],
+                        "title": "Code",
+                        "facetable": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Optional description of this tender type",
+                        "maxLength": 255,
+                        "title": "Description"
+                    },
+                    "glAccount": {
+                        "type": "string",
+                        "description": "GL account number in shillinq this tender posts to (e.g. 1100 kas, 1200 bank, 2100 cadeaubonnen)",
+                        "maxLength": 16,
+                        "title": "GL account",
+                        "facetable": true
+                    },
+                    "requiresReference": {
+                        "type": "boolean",
+                        "description": "Whether a tender of this type requires an external reference (card auth code, voucher serial)",
+                        "default": false,
+                        "title": "Requires reference"
+                    },
+                    "requiresPin": {
+                        "type": "boolean",
+                        "description": "Whether PIN verification is required (typically CARD only)",
+                        "default": false,
+                        "title": "Requires PIN"
+                    },
+                    "allowsChange": {
+                        "type": "boolean",
+                        "description": "Whether change is calculated for overpayment with this tender (typically CASH only)",
+                        "default": false,
+                        "title": "Allows change"
+                    },
+                    "isActive": {
+                        "type": "boolean",
+                        "description": "Whether this tender type is offered for new sales",
+                        "default": true,
+                        "title": "Active",
+                        "facetable": true
+                    },
+                    "sortOrder": {
+                        "type": "integer",
+                        "description": "Display order in the tender selection UI (ascending)",
+                        "default": 0,
+                        "title": "Sort order"
+                    }
+                }
+            },
+            "posTender": {
+                "slug": "posTender",
+                "title": "POS Tender",
+                "icon": "Cash",
+                "version": "1.0.0",
+                "summary": "A single payment (tender) applied to a POS transaction",
+                "description": "Represents one payment method instance on a posTransaction (e.g. EUR 60 cash, EUR 66.06 card). The sum of all posTender.amount on a transaction MUST reconcile to posTransaction.total before the transaction may settle; this is enforced server-side by PosPaymentService::validateTenderSum (cash overpayment is allowed as change when the tender type allowsChange). glAccount is copied server-side from the tenderType at add time; client-supplied glAccount is never trusted. Mapped to Schema.org PaymentChargeSpecification.",
+                "@type": "schema:PaymentChargeSpecification",
+                "required": [
+                    "transaction",
+                    "tenderType",
+                    "amount"
+                ],
+                "properties": {
+                    "transaction": {
+                        "type": "string",
+                        "description": "UUID reference to the parent posTransaction",
+                        "format": "uuid",
+                        "title": "Transaction",
+                        "facetable": true
+                    },
+                    "tenderType": {
+                        "type": "string",
+                        "description": "UUID reference to the posTenderType used for this payment",
+                        "format": "uuid",
+                        "title": "Tender type",
+                        "facetable": true
+                    },
+                    "amount": {
+                        "type": "number",
+                        "description": "Amount paid with this tender in EUR (server-validated >= 0.01)",
+                        "minimum": 0,
+                        "default": 0,
+                        "title": "Amount"
+                    },
+                    "reference": {
+                        "type": "string",
+                        "description": "External reference (card auth code, voucher serial) when the tender type requires one",
+                        "maxLength": 128,
+                        "title": "Reference"
+                    },
+                    "glAccount": {
+                        "type": "string",
+                        "description": "GL account this tender posts to, copied server-side from the tender type at add time",
+                        "maxLength": 16,
+                        "title": "GL account"
+                    },
+                    "notes": {
+                        "type": "string",
+                        "description": "Optional notes (e.g. partial voucher, retry after decline)",
+                        "maxLength": 255,
+                        "title": "Notes"
+                    },
+                    "sortOrder": {
+                        "type": "integer",
+                        "description": "Display order in the tender list (ascending)",
+                        "default": 0,
+                        "title": "Sort order"
+                    },
+                    "glPosted": {
+                        "type": "boolean",
+                        "description": "Whether this tender's GL CloudEvent has been emitted (set true on settlement; the retry job re-emits when false)",
+                        "default": false,
+                        "title": "GL posted"
+                    },
+                    "glPostAttempts": {
+                        "type": "integer",
+                        "description": "Number of GL CloudEvent emission attempts; the retry job soft-fails after the configured cap",
+                        "default": 0,
+                        "title": "GL post attempts"
+                    }
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "posTenderType",
+                    "slug": "tender-cash"
+                },
+                "name": "Contant",
+                "code": "CASH",
+                "description": "Contante betaling uit de kassalade",
+                "glAccount": "1100",
+                "requiresReference": false,
+                "requiresPin": false,
+                "allowsChange": true,
+                "isActive": true,
+                "sortOrder": 1
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "posTenderType",
+                    "slug": "tender-card"
+                },
+                "name": "Betaalpas",
+                "code": "CARD",
+                "description": "PIN-betaling via betaalterminal (CCV/Worldline)",
+                "glAccount": "1200",
+                "requiresReference": true,
+                "requiresPin": true,
+                "allowsChange": false,
+                "isActive": true,
+                "sortOrder": 2
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "posTenderType",
+                    "slug": "tender-voucher"
+                },
+                "name": "Cadeaubon",
+                "code": "VOUCHER",
+                "description": "Inwisseling van een cadeaubon op serienummer",
+                "glAccount": "2100",
+                "requiresReference": true,
+                "requiresPin": false,
+                "allowsChange": false,
+                "isActive": true,
+                "sortOrder": 3
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "posTender",
+                    "slug": "tender-txn-0001-cash"
+                },
+                "transaction": "txn-2026-0001",
+                "tenderType": "tender-cash",
+                "amount": 27.59,
+                "glAccount": "1100",
+                "notes": "Volledig contant betaald",
+                "sortOrder": 1
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "posTender",
+                    "slug": "tender-txn-0003-partial-cash"
+                },
+                "transaction": "txn-2026-0003",
+                "tenderType": "tender-cash",
+                "amount": 60.00,
+                "glAccount": "1100",
+                "notes": "Contante deelbetaling",
+                "sortOrder": 1
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "posTender",
+                    "slug": "tender-txn-0003-card"
+                },
+                "transaction": "txn-2026-0003",
+                "tenderType": "tender-card",
+                "amount": 66.06,
+                "reference": "AUTH123456",
+                "glAccount": "1200",
+                "notes": "Restant op betaalpas",
+                "sortOrder": 2
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "posTender",
+                    "slug": "tender-txn-0004-cash-with-change"
+                },
+                "transaction": "txn-2026-0004",
+                "tenderType": "tender-cash",
+                "amount": 50.00,
+                "glAccount": "1100",
+                "notes": "Betaald met 50 euro; wisselgeld EUR 25.05",
+                "sortOrder": 1
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "posTender",
+                    "slug": "tender-txn-0005-voucher"
+                },
+                "transaction": "txn-2026-0005",
+                "tenderType": "tender-voucher",
+                "amount": 867.34,
+                "reference": "VOC-2024-987654",
+                "glAccount": "2100",
+                "notes": "Volledig met cadeaubon voldaan",
+                "sortOrder": 1
+            }
+        ]
+    }
+}

@@ -28,7 +28,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Service\PosPaymentService;
 use OCA\Pipelinq\Service\PosTransactionService;
+use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use PHPUnit\Framework\TestCase;
@@ -36,7 +38,41 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
+ * A fake TransitionEngine for the posTransaction settle path: it flips
+ * status confirmed→settled in the in-memory store and returns the row, so the
+ * service's post-transition GL emission and change recording are exercised.
+ */
+class FakeSettleTransitionEngine
+{
+    /**
+     * @param FakePaymentObjectService $objects The in-memory object store.
+     */
+    public function __construct(private FakePaymentObjectService $objects)
+    {
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function transition(string $objectId, string $action): array
+    {
+        $txn = $this->objects->store['posTransaction_schema'][$objectId] ?? null;
+        if ($txn === null) {
+            throw new \RuntimeException(sprintf('Object "%s" not found.', $objectId));
+        }
+
+        $txn['status'] = 'settled';
+        $this->objects->store['posTransaction_schema'][$objectId] = $txn;
+
+        return $txn;
+    }
+}
+
+/**
  * Tests for PosTransactionService.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the fakes the settle gate
+ *  legitimately exercises in addition to the pure-calc collaborators.
  */
 class PosTransactionServiceTest extends TestCase
 {
@@ -62,26 +98,73 @@ class PosTransactionServiceTest extends TestCase
     private IAppConfig $appConfig;
 
     /**
+     * In-memory object store shared with the payment service / settle engine.
+     *
+     * @var FakePaymentObjectService
+     */
+    private FakePaymentObjectService $objects;
+
+    /**
+     * Captures GL CloudEvents emitted on settlement.
+     *
+     * @var FakePaymentWebhookService
+     */
+    private FakePaymentWebhookService $webhooks;
+
+    /**
      * Set up the test.
      *
      * @return void
      */
     protected function setUp(): void
     {
-        $container          = $this->createMock(ContainerInterface::class);
+        $this->objects      = new FakePaymentObjectService();
+        $this->webhooks     = new FakePaymentWebhookService();
         $this->appConfig    = $this->createMock(IAppConfig::class);
         $this->groupManager = $this->createMock(IGroupManager::class);
         $logger             = $this->createMock(LoggerInterface::class);
+
+        $this->appConfig->method('getValueString')->willReturnCallback(
+            static function (string $app, string $key, string $default = '') {
+                if ($key === 'register') {
+                    return 'reg';
+                }
+                if ($key === 'pos_group') {
+                    return 'pos';
+                }
+                return $key;
+            }
+        );
+        $this->groupManager->method('isAdmin')->willReturn(false);
+        $this->groupManager->method('isInGroup')->willReturn(false);
 
         $policy = new PosAccessPolicy(
             appConfig: $this->appConfig,
             groupManager: $this->groupManager,
         );
 
+        $engine    = new FakeSettleTransitionEngine($this->objects);
+        $container = $this->createMock(ContainerInterface::class);
+        $container->method('get')->willReturnCallback(function (string $id) use ($engine) {
+            if ($id === 'OCA\OpenRegister\Service\ObjectService') {
+                return $this->objects;
+            }
+            if ($id === 'OCA\OpenRegister\Service\WebhookService') {
+                return $this->webhooks;
+            }
+            if ($id === 'OCA\OpenRegister\Service\Lifecycle\TransitionEngine') {
+                return $engine;
+            }
+            throw new \RuntimeException('unknown service '.$id);
+        });
+
+        $paymentService = new PosPaymentService($container, $this->appConfig, $policy, $logger);
+
         $this->service = new PosTransactionService(
             $container,
             $this->appConfig,
             $policy,
+            $paymentService,
             $logger,
         );
     }//end setUp()
@@ -443,7 +526,20 @@ class PosTransactionServiceTest extends TestCase
      */
     public function testEmitConfirmedEventNoOpWithoutConsumer(): void
     {
-        $eventId = $this->service->emitConfirmedEvent([
+        // Build a service whose container has NO WebhookService so the
+        // fire-and-forget path is exercised honestly (the shared setUp wires a
+        // fake WebhookService for the settle GL tests, which would otherwise
+        // succeed and return an id).
+        $container = $this->createMock(ContainerInterface::class);
+        $container->method('get')->willReturnCallback(static function (string $id): void {
+            throw new \RuntimeException('no consumer for '.$id);
+        });
+        $policy  = new PosAccessPolicy(appConfig: $this->appConfig, groupManager: $this->groupManager);
+        $logger  = $this->createMock(LoggerInterface::class);
+        $payment = new PosPaymentService($container, $this->appConfig, $policy, $logger);
+        $service = new PosTransactionService($container, $this->appConfig, $policy, $payment, $logger);
+
+        $eventId = $service->emitConfirmedEvent([
             'id'           => 'txn-1',
             'reference'    => 'TXN-2026-0001',
             'cashier'      => 'admin',
@@ -455,4 +551,118 @@ class PosTransactionServiceTest extends TestCase
 
         $this->assertSame('', $eventId);
     }//end testEmitConfirmedEventNoOpWithoutConsumer()
+
+    /**
+     * Seed a confirmed transaction owned by the cashier plus a CASH tender type.
+     *
+     * @param float $total The transaction total.
+     *
+     * @return void
+     */
+    private function seedSettleable(float $total): void
+    {
+        $this->objects->store['posTransaction_schema']['txn-1'] = [
+            'id'        => 'txn-1',
+            'reference' => 'TXN-2026-0009',
+            'cashier'   => 'cashier-1',
+            'status'    => 'confirmed',
+            'total'     => $total,
+        ];
+        $this->objects->store['posTenderType_schema']['type-cash'] = [
+            'id'           => 'type-cash',
+            'code'         => 'CASH',
+            'glAccount'    => '1100',
+            'allowsChange' => true,
+            'isActive'     => true,
+        ];
+    }//end seedSettleable()
+
+    /**
+     * Settlement is blocked when the tenders under-pay the total; the
+     * transaction stays confirmed and no GL events are emitted.
+     *
+     * @return void
+     */
+    public function testSettleBlockedOnUnderpayment(): void
+    {
+        $this->seedSettleable(total: 97.97);
+        $this->objects->store['posTender_schema']['t1'] = [
+            'id' => 't1', 'transaction' => 'txn-1', 'tenderType' => 'type-cash', 'amount' => 50.00,
+        ];
+
+        try {
+            $this->service->settleTransaction(id: 'txn-1', userId: 'cashier-1');
+            $this->fail('Expected OCSBadRequestException');
+        } catch (OCSBadRequestException $e) {
+            $this->assertStringContainsString('Te weinig betaald', $e->getMessage());
+        }
+
+        $this->assertSame('confirmed', $this->objects->store['posTransaction_schema']['txn-1']['status']);
+        $this->assertCount(0, $this->webhooks->events);
+    }//end testSettleBlockedOnUnderpayment()
+
+    /**
+     * Settlement is blocked on a card over-payment (no cash change tender).
+     *
+     * @return void
+     */
+    public function testSettleBlockedOnCardOverpayment(): void
+    {
+        $this->seedSettleable(total: 97.97);
+        $this->objects->store['posTenderType_schema']['type-card'] = [
+            'id' => 'type-card', 'code' => 'CARD', 'glAccount' => '1200', 'allowsChange' => false, 'isActive' => true,
+        ];
+        $this->objects->store['posTender_schema']['t1'] = [
+            'id' => 't1', 'transaction' => 'txn-1', 'tenderType' => 'type-card', 'amount' => 100.00,
+        ];
+
+        $this->expectException(OCSBadRequestException::class);
+        $this->expectExceptionMessage('Te veel betaald');
+        $this->service->settleTransaction(id: 'txn-1', userId: 'cashier-1');
+    }//end testSettleBlockedOnCardOverpayment()
+
+    /**
+     * Settlement succeeds on an exact tender sum: status flips to settled and one
+     * GL CloudEvent is emitted per tender.
+     *
+     * @return void
+     */
+    public function testSettleSucceedsOnExactTenderAndEmitsGlEvents(): void
+    {
+        $this->seedSettleable(total: 97.97);
+        $this->objects->store['posTenderType_schema']['type-card'] = [
+            'id' => 'type-card', 'code' => 'CARD', 'glAccount' => '1200', 'allowsChange' => false, 'isActive' => true,
+        ];
+        $this->objects->store['posTender_schema']['t1'] = [
+            'id' => 't1', 'transaction' => 'txn-1', 'tenderType' => 'type-cash', 'amount' => 50.00, 'glAccount' => '1100',
+        ];
+        $this->objects->store['posTender_schema']['t2'] = [
+            'id' => 't2', 'transaction' => 'txn-1', 'tenderType' => 'type-card', 'amount' => 47.97, 'glAccount' => '1200',
+        ];
+
+        $saved = $this->service->settleTransaction(id: 'txn-1', userId: 'cashier-1');
+
+        $this->assertSame('settled', $saved['status']);
+        $this->assertCount(2, $this->webhooks->events);
+        $this->assertSame('nl.pipelinq.pos.tender.posted', $this->webhooks->events[0]['eventName']);
+    }//end testSettleSucceedsOnExactTenderAndEmitsGlEvents()
+
+    /**
+     * Settlement succeeds when a cash over-tender yields change; the change due
+     * is recorded server-side on the settled transaction.
+     *
+     * @return void
+     */
+    public function testSettleRecordsChangeDueOnCashOverpayment(): void
+    {
+        $this->seedSettleable(total: 27.20);
+        $this->objects->store['posTender_schema']['t1'] = [
+            'id' => 't1', 'transaction' => 'txn-1', 'tenderType' => 'type-cash', 'amount' => 50.00, 'glAccount' => '1100',
+        ];
+
+        $saved = $this->service->settleTransaction(id: 'txn-1', userId: 'cashier-1');
+
+        $this->assertSame('settled', $saved['status']);
+        $this->assertSame(22.80, $this->objects->store['posTransaction_schema']['txn-1']['changeDue']);
+    }//end testSettleRecordsChangeDueOnCashOverpayment()
 }//end class
