@@ -354,8 +354,9 @@ class KassakoppelingAuditService
             );
         }
 
-        $amount = $data['amount'];
-        if (is_int($amount) === false && (ctype_digit((string) $amount) === false)) {
+        $amount       = $data['amount'];
+        $isValidAmount = (is_int($amount) && $amount >= 0) || ctype_digit((string) $amount);
+        if ($isValidAmount === false) {
             throw new OCSBadRequestException("Field 'amount' must be a non-negative integer (cents).");
         }
     }//end validateRequiredFields()
