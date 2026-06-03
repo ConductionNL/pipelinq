@@ -20,6 +20,7 @@ import appIcons from './icons.js'
 import { initializeStores } from './store/store.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
+// eslint-disable-next-line import/no-unresolved
 import '@conduction/nextcloud-vue/css/index.css'
 import './assets/app.css'
 
