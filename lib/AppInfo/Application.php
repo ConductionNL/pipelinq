@@ -24,6 +24,16 @@ namespace OCA\Pipelinq\AppInfo;
 use OCA\OpenRegister\Event\DeepLinkRegistrationEvent;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Event\SchemaUpdatedEvent;
+use OCA\Pipelinq\Adapter\AzureDataLakeExportAdapter;
+use OCA\Pipelinq\Adapter\BigQueryExportAdapter;
+use OCA\Pipelinq\Adapter\ExportSinkRegistry;
+use OCA\Pipelinq\Adapter\GcsExportAdapter;
+use OCA\Pipelinq\Adapter\PostgresExportAdapter;
+use OCA\Pipelinq\Adapter\S3ExportAdapter;
+use OCA\Pipelinq\Adapter\SftpExportAdapter;
+use OCA\Pipelinq\Adapter\SnowflakeExportAdapter;
+use OCA\Pipelinq\Listener\SchemaChangeListener;
 use OCA\Pipelinq\Dashboard\CreateLeadWidget;
 use OCA\Pipelinq\Dashboard\DealsOverviewWidget;
 use OCA\Pipelinq\Dashboard\FindClientWidget;
@@ -109,7 +119,47 @@ class Application extends App implements IBootstrap
         );
 
         $this->registerPosLifecycleGuards(context: $context);
+        $this->registerExportServices(context: $context);
     }//end register()
+
+    /**
+     * Register the BI-export sink registry and the schema-change listener.
+     *
+     * The {@see ExportSinkRegistry} is wired with every concrete sink adapter
+     * so {@see \OCA\Pipelinq\Service\Export\ExportUploadService} stays decoupled
+     * from the warehouse transports. The {@see SchemaChangeListener} records
+     * column drift on pipelinq schemas for the export audit (ADR-009).
+     *
+     * @param IRegistrationContext $context The registration context.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008
+     */
+    private function registerExportServices(IRegistrationContext $context): void
+    {
+        $context->registerService(
+            ExportSinkRegistry::class,
+            static function ($c): ExportSinkRegistry {
+                return new ExportSinkRegistry(
+                    sinks: [
+                        $c->get(S3ExportAdapter::class),
+                        $c->get(BigQueryExportAdapter::class),
+                        $c->get(SnowflakeExportAdapter::class),
+                        $c->get(PostgresExportAdapter::class),
+                        $c->get(AzureDataLakeExportAdapter::class),
+                        $c->get(GcsExportAdapter::class),
+                        $c->get(SftpExportAdapter::class),
+                    ]
+                );
+            }
+        );
+
+        $context->registerEventListener(
+            event: SchemaUpdatedEvent::class,
+            listener: SchemaChangeListener::class
+        );
+    }//end registerExportServices()
 
     /**
      * Register the POS lifecycle guards keyed by the FQCN tag the

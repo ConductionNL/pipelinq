@@ -70,7 +70,25 @@ class SettingsLoadService
         'refundReason',
         'posRefund',
         'posRefundLine',
+        // Customer portal schemas (live in the separate pipelinq-portal register).
+        'portalAccount',
+        'portalSession',
+        'portalDelegation',
+        'portalAuditEvent',
+        'portalTenantConfig',
+        // BI export + data-warehouse sink schemas.
+        'exportDestination',
+        'exportJob',
+        'exportRun',
+        'exportSchemaSnapshot',
     ];
+
+    /**
+     * Slug of the separate auth-domain portal register (ADR-005).
+     *
+     * @var string
+     */
+    private const PORTAL_REGISTER_SLUG = 'pipelinq-portal';
 
     /**
      * Constructor.
@@ -142,6 +160,14 @@ class SettingsLoadService
             $this->appConfig->setValueString(Application::APP_ID, 'register', (string) $registerId);
         }
 
+        $portalRegisterId = $this->resolveRegisterIdBySlug(
+            registers: ($importResult['registers'] ?? []),
+            slug: self::PORTAL_REGISTER_SLUG
+        );
+        if ($portalRegisterId !== null) {
+            $this->appConfig->setValueString(Application::APP_ID, 'portal_register', (string) $portalRegisterId);
+        }
+
         foreach (self::SCHEMA_SLUGS as $slug) {
             if (isset($schemaMap[$slug]) === true && $schemaMap[$slug] !== null) {
                 $this->appConfig->setValueString(Application::APP_ID, "{$slug}_schema", (string) $schemaMap[$slug]);
@@ -156,6 +182,46 @@ class SettingsLoadService
             $this->appConfig->setValueString(Application::APP_ID, 'default_view', (string) $defaultViewId);
         }
     }//end updateObjectTypeConfiguration()
+
+    /**
+     * Resolve an imported register id by its slug.
+     *
+     * Mirrors {@see SettingsMapBuilder::findRegisterIdBySlug()} but for an
+     * arbitrary slug, so the separate portal register id can be stored under
+     * its own app-config key without coupling the map builder to the portal.
+     *
+     * @param array  $registers The imported registers (array or entity shape).
+     * @param string $slug      The register slug to match.
+     *
+     * @return string|null The register id, or null when not present.
+     */
+    private function resolveRegisterIdBySlug(array $registers, string $slug): ?string
+    {
+        foreach ($registers as $register) {
+            $registerArray = $register;
+            if (is_object($register) === true && method_exists($register, 'jsonSerialize') === true) {
+                $serialized = $register->jsonSerialize();
+                if (is_array($serialized) === true) {
+                    $registerArray = $serialized;
+                }
+            }
+
+            if (is_array($registerArray) === false) {
+                continue;
+            }
+
+            if (($registerArray['slug'] ?? null) !== $slug) {
+                continue;
+            }
+
+            $id = ($registerArray['id'] ?? $registerArray['uuid'] ?? null);
+            if ($id !== null) {
+                return (string) $id;
+            }
+        }//end foreach
+
+        return null;
+    }//end resolveRegisterIdBySlug()
 
     /**
      * Get the OpenRegister ConfigurationService via the container.

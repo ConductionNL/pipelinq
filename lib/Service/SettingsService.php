@@ -69,11 +69,22 @@ class SettingsService
         'refundReason_schema',
         'posRefund_schema',
         'posRefundLine_schema',
+        'exportDestination_schema',
+        'exportJob_schema',
+        'exportRun_schema',
+        'exportSchemaSnapshot_schema',
         'complaint_sla_service',
         'complaint_sla_product',
         'complaint_sla_communication',
         'complaint_sla_billing',
         'complaint_sla_other',
+        // Customer portal (separate auth-domain register; ADR-005 / ADR-037).
+        'portal_register',
+        'portalAccount_schema',
+        'portalSession_schema',
+        'portalDelegation_schema',
+        'portalAuditEvent_schema',
+        'portalTenantConfig_schema',
     ];
 
     /**

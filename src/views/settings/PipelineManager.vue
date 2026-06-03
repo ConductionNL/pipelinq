@@ -1,14 +1,13 @@
 <template>
-	<div class="pipeline-manager">
-		<div class="pipeline-header">
-			<h3>{{ t('pipelinq', 'Pipelines') }}</h3>
+	<CnSettingsSection :name="t('pipelinq', 'Pipelines')">
+		<template #actions>
 			<NcButton type="primary" @click="showForm = true; editingPipeline = null">
 				<template #icon>
 					<Plus :size="20" />
 				</template>
 				{{ t('pipelinq', 'Add pipeline') }}
 			</NcButton>
-		</div>
+		</template>
 
 		<NcLoadingIcon v-if="loading" />
 
@@ -64,10 +63,11 @@
 			:affected-count="deleteAffectedCount"
 			@cancel="deletingPipeline = null"
 			@confirm="onDeleteConfirm" />
-	</div>
+	</CnSettingsSection>
 </template>
 
 <script>
+import { CnSettingsSection } from '@conduction/nextcloud-vue'
 import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
@@ -83,6 +83,7 @@ import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
 export default {
 	name: 'PipelineManager',
 	components: {
+		CnSettingsSection,
 		NcButton,
 		NcEmptyContent,
 		NcLoadingIcon,
@@ -281,21 +282,6 @@ export default {
 </script>
 
 <style scoped>
-.pipeline-manager {
-	margin-top: 24px;
-}
-
-.pipeline-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 16px;
-}
-
-.pipeline-header h3 {
-	margin: 0;
-}
-
 .pipeline-list {
 	display: flex;
 	flex-direction: column;

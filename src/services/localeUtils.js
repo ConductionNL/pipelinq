@@ -84,3 +84,34 @@ export function formatDate(dateStr, options = { month: 'short', day: 'numeric' }
 export function formatDateFull(dateStr) {
 	return formatDate(dateStr, { month: 'short', day: 'numeric', year: 'numeric' })
 }
+
+/**
+ * Parse a stored date string (ISO or YYYY-MM-DD) into a local Date for
+ * NcDateTimePickerNative's `value` prop. Builds the Date from local parts so
+ * the day doesn't shift across timezones (unlike `new Date('YYYY-MM-DD')`,
+ * which parses as UTC midnight).
+ *
+ * @param {string|null} dateStr Stored date string, or empty/null.
+ * @return {Date|null} Local Date, or null when empty/invalid.
+ */
+export function toDateObject(dateStr) {
+	if (!dateStr) return null
+	const [y, m, d] = String(dateStr).slice(0, 10).split('-').map(Number)
+	if (!y || !m || !d) return null
+	return new Date(y, m - 1, d)
+}
+
+/**
+ * Format a Date from NcDateTimePickerNative back to a YYYY-MM-DD string for
+ * storage, using local date parts so the day matches what the user picked.
+ *
+ * @param {Date|null} date Date from the picker, or null.
+ * @return {string|null} YYYY-MM-DD string, or null when empty/invalid.
+ */
+export function toDateInputString(date) {
+	if (!(date instanceof Date) || isNaN(date.getTime())) return null
+	const y = date.getFullYear()
+	const m = String(date.getMonth() + 1).padStart(2, '0')
+	const d = String(date.getDate()).padStart(2, '0')
+	return `${y}-${m}-${d}`
+}
