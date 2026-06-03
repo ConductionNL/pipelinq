@@ -1,16 +1,14 @@
 {
-  "spec": "openspec/changes/2026-03-20-pipeline",
+  "spec": "openspec/changes/migrate-automation-to-flow-leaf",
   "verified": [
-    {"task": "1.1", "file": "src/views/pipeline/PipelineBoard.vue", "ok": true},
-    {"task": "1.2", "file": "src/views/pipeline/PipelineBoard.vue", "ok": true},
-    {"task": "1.3", "file": "src/views/pipeline/PipelineBoard.vue", "ok": true},
-    {"task": "1.4", "file": "l10n/en.json", "ok": true},
-    {"task": "1.4", "file": "l10n/nl.json", "ok": true},
-    {"task": "2.1", "file": "src/views/settings/PipelineForm.vue", "ok": true},
-    {"task": "2.2", "file": "src/views/settings/PipelineForm.vue", "ok": true},
-    {"task": "2.3", "file": "src/views/settings/PipelineForm.vue", "ok": true},
-    {"task": "2.4", "file": "src/views/settings/PipelineForm.vue", "ok": true},
-    {"task": "2.5", "file": "l10n/en.json", "ok": true}
+    {"task": "0.1", "file": "package.json", "ok": true, "note": "Flow leaf via @conduction/nextcloud-vue; key=flow, required app=workflowengine"},
+    {"task": "1.1", "file": "lib/Service/SettingsService.php", "ok": true, "note": "automation_schema/automationLog_schema removed from CONFIG_KEYS"},
+    {"task": "1.1", "file": "lib/Service/SettingsLoadService.php", "ok": true, "note": "automation/automationLog removed from SCHEMA_SLUGS"},
+    {"task": "1.1", "file": "src/store/store.js", "ok": true, "note": "registerObjectType blocks for automation/automationLog removed"},
+    {"task": "1.2", "file": "lib/Settings/pipelinq_register.json", "ok": true, "note": "automation/automationLog schemas already absent from register"},
+    {"task": "2.1", "file": "lib/Settings/pipelinq_register.json", "ok": true, "note": "flow already in linkedTypes for client, lead, request"},
+    {"task": "3.1", "file": "src/manifest.json", "ok": true, "note": "workflowengine in deps; CnFlowTab+CnFlowCard on lead/request/client detail pages"},
+    {"task": "4.1", "file": "openspec/changes/migrate-automation-to-flow-leaf/tasks.md", "ok": true, "note": "Follow-up recorded in PR body and issue #144 comment"}
   ],
   "stubs": [],
   "missing_routes": []
