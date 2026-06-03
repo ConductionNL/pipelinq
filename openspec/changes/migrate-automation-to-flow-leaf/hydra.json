@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "spec_slug": "migrate-automation-to-flow-leaf",
+  "repo": "https://codeberg.org/Conduction/pipelinq",
+  "issue": 144,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-06-03T14:20:02Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [],
+      "stages": []
+    }
+  ]
+}
