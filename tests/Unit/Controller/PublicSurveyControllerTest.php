@@ -195,7 +195,7 @@ class PublicSurveyControllerTest extends TestCase
                 );
 
         $objectServiceMock = $this->buildObjectServiceMock(
-                [
+                items: [
                     ['id' => '1', 'status' => 'closed', 'token' => 'tok'],
                 ]
                 );
@@ -222,7 +222,7 @@ class PublicSurveyControllerTest extends TestCase
                 );
 
         $objectServiceMock = $this->buildObjectServiceMock(
-                [
+                items: [
                     ['id' => '1', 'title' => 'My Survey', 'status' => 'active', 'token' => 'tok'],
                 ]
                 );
@@ -251,7 +251,7 @@ class PublicSurveyControllerTest extends TestCase
                 );
 
         $objectServiceMock = $this->buildObjectServiceMock(
-                [
+                items: [
                     ['id' => '1', 'status' => 'active', 'token' => 'tok'],
                 ]
                 );
@@ -281,7 +281,7 @@ class PublicSurveyControllerTest extends TestCase
                 );
 
         $objectServiceMock = $this->buildObjectServiceMock(
-                [
+                items: [
                     ['id' => '1', 'status' => 'active', 'token' => 'tok'],
                 ]
                 );
