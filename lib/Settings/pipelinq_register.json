@@ -550,7 +550,8 @@
             "type": "string",
             "description": "Lead title / opportunity name (schema:name)",
             "maxLength": 255,
-            "minLength": 1
+            "minLength": 1,
+            "translatable": true
           },
           "client": {
             "type": "string",
@@ -641,7 +642,8 @@
           "description": {
             "type": "string",
             "description": "Free-text description of the opportunity (used by the qualification-score calculation: presence is worth +5 points)",
-            "visible": false
+            "visible": false,
+            "translatable": true
           },
           "stageEnteredAt": {
             "type": "string",
@@ -1856,12 +1858,14 @@
             "type": "string",
             "description": "Task subject line (VNG gevraagdeHandeling / schema:name)",
             "maxLength": 255,
-            "minLength": 1
+            "minLength": 1,
+            "translatable": true
           },
           "description": {
             "type": "string",
             "description": "Detailed task description (VNG toelichting / schema:description)",
-            "visible": false
+            "visible": false,
+            "translatable": true
           },
           "status": {
             "type": "string",
@@ -2045,17 +2049,23 @@
             "type": "string",
             "description": "Article title (schema:headline)",
             "maxLength": 255,
-            "minLength": 1
+            "minLength": 1,
+            "translatable": true,
+            "sourceLanguage": "nl"
           },
           "body": {
             "type": "string",
             "description": "Article content in Markdown format (schema:articleBody)",
-            "visible": false
+            "visible": false,
+            "translatable": true,
+            "sourceLanguage": "nl"
           },
           "summary": {
             "type": "string",
             "description": "Short summary for search result snippets (schema:abstract)",
-            "maxLength": 500
+            "maxLength": 500,
+            "translatable": true,
+            "sourceLanguage": "nl"
           },
           "status": {
             "type": "string",
@@ -3251,7 +3261,7 @@
       "posRefund": {
         "slug": "posRefund",
         "title": "POS Refund",
-        "icon": "Cash refund",
+        "icon": "CashRefund",
         "version": "1.0.0",
         "summary": "A refund / return document for a previously settled or confirmed POS transaction",
         "description": "Represents a full or partial refund against a posTransaction. refundAmount and totalTax are server-computed by PosRefundService from the refund lines and the original transaction's persisted, server-authoritative tax data; client-supplied amounts are never trusted. Lifecycle: pending -> completed (manager confirm) or pending -> rejected. Completed and rejected refunds are immutable. Mapped to Schema.org Order (type=refund).",
@@ -3620,11 +3630,15 @@
     },
     "objects": [
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posTransaction",
           "slug": "txn-2026-0001"
         },
+=======
+        "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0001", "id": "2c46f6e5-ee99-4dea-97ea-19d7efbf3e33" },
+>>>>>>> origin/development
         "reference": "TXN-2026-0001",
         "cashier": "admin",
         "terminalId": "kassa-01",
@@ -3665,11 +3679,15 @@
         "notes": "Contante betaling -- koffie, broodje en notitieboek"
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posTransaction",
           "slug": "txn-2026-0002"
         },
+=======
+        "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0002", "id": "635e3bb9-d4d1-463d-96c7-4bc0b20baa64" },
+>>>>>>> origin/development
         "reference": "TXN-2026-0002",
         "cashier": "jan.smit",
         "terminalId": "kassa-02",
@@ -3681,11 +3699,15 @@
         "total": 0
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posTransaction",
           "slug": "txn-2026-0003"
         },
+=======
+        "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0003", "id": "f838244c-2939-44c1-aa23-549dea3682bc" },
+>>>>>>> origin/development
         "reference": "TXN-2026-0003",
         "cashier": "emma.bakker",
         "terminalId": "kassa-01",
@@ -3736,11 +3758,15 @@
         "notes": "Zakelijke aankoop -- factuur gevraagd (gemengd 0%/9%/21%)"
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posTransaction",
           "slug": "txn-2026-0004"
         },
+=======
+        "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0004", "id": "da250c00-0537-4839-a546-429fe21c37ef" },
+>>>>>>> origin/development
         "reference": "TXN-2026-0004",
         "cashier": "jan.smit",
         "terminalId": "kassa-03",
@@ -3769,11 +3795,15 @@
         "notes": "Klant even weg -- terugkomen (prijzen incl. BTW)"
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posTransaction",
           "slug": "txn-2026-0005"
         },
+=======
+        "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0005", "id": "abb458c8-dc02-43a1-b37f-b142b6b94484" },
+>>>>>>> origin/development
         "reference": "TXN-2026-0005",
         "cashier": "admin",
         "terminalId": "kassa-01",
@@ -3815,12 +3845,17 @@
         "refundReason": "Artikel beschadigd bij levering -- retour verwerkt"
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posTransactionLine",
           "slug": "txnline-0001-koffie"
         },
         "transaction": "txn-2026-0001",
+=======
+        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0001-koffie", "id": "d517eb58-0fb9-499f-b020-0be7e0b87ad9" },
+        "transaction": "2c46f6e5-ee99-4dea-97ea-19d7efbf3e33",
+>>>>>>> origin/development
         "description": "Americano koffie",
         "quantity": 2,
         "unitPrice": 2.95,
@@ -3831,12 +3866,17 @@
         "sortOrder": 1
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posTransactionLine",
           "slug": "txnline-0001-broodje"
         },
         "transaction": "txn-2026-0001",
+=======
+        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0001-broodje", "id": "bef900ff-6641-41b4-b9dd-b3d5e994d09e" },
+        "transaction": "2c46f6e5-ee99-4dea-97ea-19d7efbf3e33",
+>>>>>>> origin/development
         "description": "Broodje kaas",
         "quantity": 3,
         "unitPrice": 4.25,
@@ -3847,12 +3887,17 @@
         "sortOrder": 2
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posTransactionLine",
           "slug": "txnline-0001-notitieboek"
         },
         "transaction": "txn-2026-0001",
+=======
+        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0001-notitieboek", "id": "1f9fa333-492f-4983-a4db-b97d970dc3f3" },
+        "transaction": "2c46f6e5-ee99-4dea-97ea-19d7efbf3e33",
+>>>>>>> origin/development
         "description": "Notitieboek A5 gelinieerd",
         "quantity": 1,
         "unitPrice": 6.0,
@@ -3863,12 +3908,17 @@
         "sortOrder": 3
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posTransactionLine",
           "slug": "txnline-0003-sleeve"
         },
         "transaction": "txn-2026-0003",
+=======
+        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0003-sleeve", "id": "eda509f6-8297-4de7-b142-5d7415a72f28" },
+        "transaction": "f838244c-2939-44c1-aa23-549dea3682bc",
+>>>>>>> origin/development
         "description": "Laptoptas 15,6 inch zwart",
         "quantity": 1,
         "unitPrice": 39.99,
@@ -3879,12 +3929,17 @@
         "sortOrder": 1
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posTransactionLine",
           "slug": "txnline-0003-hub"
         },
         "transaction": "txn-2026-0003",
+=======
+        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0003-hub", "id": "09eb0355-e7a2-4464-8e2a-db5624f49ab3" },
+        "transaction": "f838244c-2939-44c1-aa23-549dea3682bc",
+>>>>>>> origin/development
         "description": "USB-C hub 7-poorts",
         "quantity": 1,
         "unitPrice": 54.98,
@@ -3895,12 +3950,17 @@
         "sortOrder": 2
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posTransactionLine",
           "slug": "txnline-0003-koffiebonen"
         },
         "transaction": "txn-2026-0003",
+=======
+        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0003-koffiebonen", "id": "58cd1434-e7be-432d-9a10-c6b55966d2a5" },
+        "transaction": "f838244c-2939-44c1-aa23-549dea3682bc",
+>>>>>>> origin/development
         "description": "Koffiebonen 250g (espresso)",
         "quantity": 1,
         "unitPrice": 8.49,
@@ -3911,12 +3971,17 @@
         "sortOrder": 3
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posTransactionLine",
           "slug": "txnline-0003-cadeaubon"
         },
         "transaction": "txn-2026-0003",
+=======
+        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0003-cadeaubon", "id": "a2c207a4-bbd7-46e5-88b8-5b2ebc46325d" },
+        "transaction": "f838244c-2939-44c1-aa23-549dea3682bc",
+>>>>>>> origin/development
         "description": "Cadeaubon (waardebon)",
         "quantity": 1,
         "unitPrice": 10.0,
@@ -3928,12 +3993,17 @@
         "notes": "Vrijgesteld -- waardebon, geen BTW"
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posTransactionLine",
           "slug": "txnline-0005-laptop"
         },
         "transaction": "txn-2026-0005",
+=======
+        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0005-laptop", "id": "ca693b38-040a-462d-bd00-f6931e4772e7" },
+        "transaction": "abb458c8-dc02-43a1-b37f-b142b6b94484",
+>>>>>>> origin/development
         "description": "Laptop 14 inch (refurbished)",
         "quantity": 1,
         "unitPrice": 703.3,
@@ -3945,12 +4015,17 @@
         "notes": "Serienummer: NB-4821-X"
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posTransactionLine",
           "slug": "txnline-0005-laptophoes"
         },
         "transaction": "txn-2026-0005",
+=======
+        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0005-laptophoes", "id": "b3c1f6bc-823c-495f-8acc-646ec7973c48" },
+        "transaction": "abb458c8-dc02-43a1-b37f-b142b6b94484",
+>>>>>>> origin/development
         "description": "Laptophoes vilt 14 inch",
         "quantity": 1,
         "unitPrice": 15.0,
@@ -4430,13 +4505,17 @@
         "isActive": true
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posRefund",
           "slug": "ref-2026-0001"
         },
+=======
+        "@self": { "register": "pipelinq", "schema": "posRefund", "slug": "ref-2026-0001", "id": "85877d34-126d-4fc4-b9cd-dc6e17a36c50" },
+>>>>>>> origin/development
         "reference": "RET-2026-0001",
-        "originalTransaction": "txn-2026-0001",
+        "originalTransaction": "2c46f6e5-ee99-4dea-97ea-19d7efbf3e33",
         "cashier": "admin",
         "status": "completed",
         "refundReason": "reason-damaged",
@@ -4448,13 +4527,17 @@
         "notes": "Klant zei dat kopje beschadigd was"
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posRefund",
           "slug": "ref-2026-0002"
         },
+=======
+        "@self": { "register": "pipelinq", "schema": "posRefund", "slug": "ref-2026-0002", "id": "72094134-5bbd-443a-a0c2-fc738e1032bf" },
+>>>>>>> origin/development
         "reference": "RET-2026-0002",
-        "originalTransaction": "txn-2026-0003",
+        "originalTransaction": "f838244c-2939-44c1-aa23-549dea3682bc",
         "cashier": "emma.bakker",
         "status": "pending",
         "refundReason": "reason-wrong-item",
@@ -4465,13 +4548,17 @@
         "notes": "Klant wil USB-C hub niet — vervanging besteld"
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posRefund",
           "slug": "ref-2026-0003"
         },
+=======
+        "@self": { "register": "pipelinq", "schema": "posRefund", "slug": "ref-2026-0003", "id": "05eca375-47da-4542-8775-1327c8213305" },
+>>>>>>> origin/development
         "reference": "RET-2026-0003",
-        "originalTransaction": "txn-2026-0005",
+        "originalTransaction": "abb458c8-dc02-43a1-b37f-b142b6b94484",
         "cashier": "admin",
         "status": "completed",
         "refundReason": "reason-damaged",
@@ -4483,13 +4570,17 @@
         "notes": "Laptop volledig retour na verzendschade. Klant is tevreden met volledige terugbetaling."
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posRefund",
           "slug": "ref-2026-0004"
         },
+=======
+        "@self": { "register": "pipelinq", "schema": "posRefund", "slug": "ref-2026-0004", "id": "adfbbd1e-407f-4374-8eff-c5f0589bf280" },
+>>>>>>> origin/development
         "reference": "RET-2026-0004",
-        "originalTransaction": "txn-2026-0003",
+        "originalTransaction": "f838244c-2939-44c1-aa23-549dea3682bc",
         "cashier": "jan.smit",
         "status": "rejected",
         "refundReason": "reason-unwanted",
@@ -4500,6 +4591,7 @@
         "rejectionReason": "Retourperiode verstreken (product gekocht 45 dagen geleden)"
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posRefundLine",
@@ -4507,6 +4599,11 @@
         },
         "refund": "ref-2026-0001",
         "originalLine": "txnline-0001-koffie",
+=======
+        "@self": { "register": "pipelinq", "schema": "posRefundLine", "slug": "refline-0001-koffie" },
+        "refund": "85877d34-126d-4fc4-b9cd-dc6e17a36c50",
+        "originalLine": "d517eb58-0fb9-499f-b020-0be7e0b87ad9",
+>>>>>>> origin/development
         "returnedQuantity": 1,
         "returnReason": "reason-damaged",
         "restock": false,
@@ -4515,6 +4612,7 @@
         "notes": "Kopje had scheurtje in handvat"
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posRefundLine",
@@ -4522,6 +4620,11 @@
         },
         "refund": "ref-2026-0002",
         "originalLine": "txnline-0003-hub",
+=======
+        "@self": { "register": "pipelinq", "schema": "posRefundLine", "slug": "refline-0002-hub" },
+        "refund": "72094134-5bbd-443a-a0c2-fc738e1032bf",
+        "originalLine": "09eb0355-e7a2-4464-8e2a-db5624f49ab3",
+>>>>>>> origin/development
         "returnedQuantity": 1,
         "returnReason": "reason-wrong-item",
         "restock": true,
@@ -4530,6 +4633,7 @@
         "notes": "Klant had 5-poorts hub nodig, niet 7-poorts"
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posRefundLine",
@@ -4537,6 +4641,11 @@
         },
         "refund": "ref-2026-0003",
         "originalLine": "txnline-0005-laptop",
+=======
+        "@self": { "register": "pipelinq", "schema": "posRefundLine", "slug": "refline-0003-laptop" },
+        "refund": "05eca375-47da-4542-8775-1327c8213305",
+        "originalLine": "ca693b38-040a-462d-bd00-f6931e4772e7",
+>>>>>>> origin/development
         "returnedQuantity": 1,
         "returnReason": "reason-damaged",
         "restock": false,
@@ -4545,6 +4654,7 @@
         "notes": "Verzendschade — groot gat in scherm"
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posRefundLine",
@@ -4552,6 +4662,11 @@
         },
         "refund": "ref-2026-0004",
         "originalLine": "txnline-0003-sleeve",
+=======
+        "@self": { "register": "pipelinq", "schema": "posRefundLine", "slug": "refline-0004-sleeve" },
+        "refund": "adfbbd1e-407f-4374-8eff-c5f0589bf280",
+        "originalLine": "eda509f6-8297-4de7-b142-5d7415a72f28",
+>>>>>>> origin/development
         "returnedQuantity": 1,
         "returnReason": "reason-unwanted",
         "restock": false,
@@ -4560,6 +4675,7 @@
         "notes": "Nooit gebruikt; kleur past niet"
       },
       {
+<<<<<<< HEAD
         "@self": {
           "register": "pipelinq",
           "schema": "posRefundLine",
@@ -4567,6 +4683,11 @@
         },
         "refund": "ref-2026-0002",
         "originalLine": "txnline-0001-broodje",
+=======
+        "@self": { "register": "pipelinq", "schema": "posRefundLine", "slug": "refline-0005-broodje-partial" },
+        "refund": "72094134-5bbd-443a-a0c2-fc738e1032bf",
+        "originalLine": "bef900ff-6641-41b4-b9dd-b3d5e994d09e",
+>>>>>>> origin/development
         "returnedQuantity": 1,
         "returnReason": "reason-error",
         "restock": true,

@@ -153,7 +153,7 @@ Pipelinq's workflow triggers and notifications can be demoed locally against the
 bash ../openregister/docker/mail/seed-mail.sh
 ```
 
-This sends 11 realistic Dutch case-management emails (omgevingsvergunning, kapvergunning, welstandsadvies, klachten, deadline-herinneringen) across 5 auto-created accounts — all explicitly tagged as procest/pipelinq-relevant scenarios.
+This sends 11 realistic Dutch case-management emails (omgevingsvergunning, kapvergunning, welstandsadvies, klachten, deadline-herinneringen) across 5 auto-created accounts, all explicitly tagged as procest/pipelinq-relevant scenarios.
 
 **Configure the Nextcloud Mail app** (Settings → Mail → Add account → Manual):
 
