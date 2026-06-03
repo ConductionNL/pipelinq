@@ -235,6 +235,17 @@ class Notifier implements INotifier
                 );
                 break;
 
+            case 'forecast_snapshot_partial_failure':
+                $period = (string) ($params['period'] ?? '');
+                $errors = (string) ($params['errors'] ?? '');
+                $notification->setParsedSubject(
+                    $l->t('Forecast snapshot job — partial failure for %1$s', [$period])
+                );
+                $notification->setParsedMessage(
+                    $l->t('Some forecast snapshots could not be generated: %1$s', [$errors])
+                );
+                break;
+
             default:
                 throw new UnknownNotificationException();
         }//end switch
