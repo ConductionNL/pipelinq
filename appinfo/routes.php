@@ -183,6 +183,31 @@ return [
         ['name' => 'portalPage#index', 'url' => '/portal', 'verb' => 'GET'],
         ['name' => 'portalPage#subpath', 'url' => '/portal/{path}', 'verb' => 'GET', 'requirements' => ['path' => '^(?!api/).*'], 'defaults' => ['path' => '']],
 
+        // BI export + data-warehouse sink (camelCase slugs match the controller class names).
+        // exportDestination / exportJob / exportRun / exportSchemaSnapshot object CRUD is handled
+        // by OpenRegister's generic object API; these are the validation, test, scheduling,
+        // history-filter and retry actions the generic API cannot express (REQ-BIE-001/002/003/011).
+        // Static collection + action routes are declared before the {id} member routes so the
+        // router never mistakes "test-run" or "destinations" for an {id} (ADR-016).
+        ['name' => 'exportJob#listDestinations',  'url' => '/api/export/destinations',          'verb' => 'GET'],
+        ['name' => 'exportJob#createDestination', 'url' => '/api/export/destinations',          'verb' => 'POST'],
+        ['name' => 'exportJob#updateDestination', 'url' => '/api/export/destinations/{id}',      'verb' => 'PUT'],
+        ['name' => 'exportJob#deleteDestination', 'url' => '/api/export/destinations/{id}',      'verb' => 'DELETE'],
+        ['name' => 'exportJob#testDestination',   'url' => '/api/export/destinations/{id}/test', 'verb' => 'POST'],
+
+        ['name' => 'exportJob#listJobs',   'url' => '/api/export/jobs',              'verb' => 'GET'],
+        ['name' => 'exportJob#createJob',  'url' => '/api/export/jobs',              'verb' => 'POST'],
+        ['name' => 'exportJob#showJob',    'url' => '/api/export/jobs/{id}',         'verb' => 'GET'],
+        ['name' => 'exportJob#updateJob',  'url' => '/api/export/jobs/{id}',         'verb' => 'PUT'],
+        ['name' => 'exportJob#deleteJob',  'url' => '/api/export/jobs/{id}',         'verb' => 'DELETE'],
+        ['name' => 'exportJob#testRun',    'url' => '/api/export/jobs/{id}/test-run', 'verb' => 'POST'],
+        ['name' => 'exportJob#enableJob',  'url' => '/api/export/jobs/{id}/enable',   'verb' => 'POST'],
+        ['name' => 'exportJob#disableJob', 'url' => '/api/export/jobs/{id}/disable',  'verb' => 'POST'],
+
+        ['name' => 'exportRun#listRuns', 'url' => '/api/export/runs',           'verb' => 'GET'],
+        ['name' => 'exportRun#showRun',  'url' => '/api/export/runs/{id}',       'verb' => 'GET'],
+        ['name' => 'exportRun#retryRun', 'url' => '/api/export/runs/{id}/retry', 'verb' => 'POST'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
