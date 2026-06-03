@@ -157,7 +157,7 @@ class QueueServiceTest extends TestCase
      */
     public function testGetQueueDepthReturnsItemCount(): void
     {
-        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
+        $this->markTestSkipped(message: 'See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
 
         $this->configureAppConfig();
 
@@ -249,7 +249,7 @@ class QueueServiceTest extends TestCase
      */
     public function testAssignToQueueUpdatesSaveObject(): void
     {
-        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
+        $this->markTestSkipped(message: 'See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
 
         $this->configureAppConfig();
 
@@ -279,7 +279,7 @@ class QueueServiceTest extends TestCase
      */
     public function testRemoveFromQueueClearsQueueField(): void
     {
-        $this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
+        $this->markTestSkipped(message: 'See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
 
         $this->configureAppConfig();
 
