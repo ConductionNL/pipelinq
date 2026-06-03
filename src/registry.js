@@ -73,6 +73,13 @@ import PosRefundFormView from './views/pos/PosRefundForm.vue'
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
 import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
 
+// --- AVG (GDPR data-subject request) workflow (lib gap: list needs deadline
+//     colour-coding + masked names; detail needs the tabbed evidence/redaction/
+//     bundle/denial lifecycle; intake needs article classification). ---
+import AvgDashboardView from './views/avg/AvgDashboard.vue'
+import AvgRequestDetailView from './views/avg/AvgRequestDetail.vue'
+import AvgIntakeView from './views/avg/AvgIntakeView.vue'
+
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
 /**
@@ -246,6 +253,23 @@ const registry = {
 		kind: 'page',
 		component: ProductBarcodeSearchView,
 		_note: 'Scan-to-navigate barcode search; resolves via the server-authoritative scoped barcode-lookup API and routes to the matching product (highlighting a matched variant).',
+	},
+
+	// --- AVG (GDPR data-subject request) workflow. ---
+	AvgDashboardView: {
+		kind: 'page',
+		component: AvgDashboardView,
+		_note: 'AVG request dashboard; custom so rows carry deadline colour-coding, masked subject names and a DPIA badge, and the empty state offers "New AVG request".',
+	},
+	AvgRequestDetailView: {
+		kind: 'page',
+		component: AvgRequestDetailView,
+		_note: 'AVG request detail with the tabbed lifecycle (intake/evidence/redaction/bundle/denial), a live deadline counter and the 60-day extension action; lib detail page cannot express the GDPR request lifecycle.',
+	},
+	AvgIntakeView: {
+		kind: 'page',
+		component: AvgIntakeView,
+		_note: 'AVG intake form with article classification + BSN elfproef validation; lib has no classification/intake page type.',
 	},
 }
 

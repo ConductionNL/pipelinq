@@ -70,6 +70,12 @@ class SettingsService
         'refundReason_schema',
         'posRefund_schema',
         'posRefundLine_schema',
+        'avgVerzoek_schema',
+        'termijnEvent_schema',
+        'bewijsItem_schema',
+        'exportBundle_schema',
+        'weigering_schema',
+        'redactieActie_schema',
         'complaint_sla_service',
         'complaint_sla_product',
         'complaint_sla_communication',
@@ -118,6 +124,16 @@ class SettingsService
         'receipt_printer_host'                     => '',
         'receipt_printer_port'                     => '9100',
         'receipt_default_template'                 => '',
+        // AVG (GDPR data-subject request) workflow tunables.
+        'avg_dpia_threshold'                       => '10',
+        'avg_evidence_retention_days'              => '30',
+        'avg_download_validity_days'               => '30',
+        'avg_pki_cert_path'                        => '',
+        'avg_evidence_sources'                     => '',
+        'avg_dpia_auto_procest'                    => 'no',
+        'avg_handler_group'                        => '',
+        'avg_teamlead_group'                       => '',
+        'avg_dpo_group'                            => '',
     ];
 
     /**

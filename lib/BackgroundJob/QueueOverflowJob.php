@@ -8,18 +8,13 @@
  * @category BackgroundJob
  * @package  OCA\Pipelinq\BackgroundJob
  *
- * @author    Conduction Development Team <info@conduction.nl>
+ * @author    Conduction <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
- * @link https://conduction.nl
- *
- * @spec openspec/changes/reverse-2026-05-26-be-background-jobs/tasks.md#task-2
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
+ * @link https://github.com/ConductionNL/pipelinq
  */
 
 declare(strict_types=1);
@@ -37,8 +32,6 @@ use Psr\Log\LoggerInterface;
  *
  * Runs every 5 minutes (300 seconds) by default; the interval is admin-tunable
  * via `pipelinq.queue_overflow.poll_interval_seconds`.
- *
- * @spec openspec/changes/reverse-2026-05-26-be-background-jobs/tasks.md#task-2
  */
 class QueueOverflowJob extends TimedJob
 {
