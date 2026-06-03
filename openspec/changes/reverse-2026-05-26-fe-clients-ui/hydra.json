@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "spec_slug": "reverse-2026-05-26-fe-clients-ui",
+  "repo": "https://codeberg.org/Conduction/pipelinq",
+  "issue": 160,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-06-03T15:11:35Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [],
+      "stages": []
+    }
+  ]
+}
