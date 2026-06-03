@@ -1,6 +1,11 @@
 OC.L10N.register(
     "pipelinq",
     {
+    "Message budget threshold reached for provider %s" : "Message budget threshold reached for provider %s",
+    "Message budget exceeded for provider %s — sends are blocked" : "Message budget exceeded for provider %s — sends are blocked",
+    "WhatsApp template rejected: %s" : "WhatsApp template rejected: %s",
+    "WhatsApp template disabled: %s" : "WhatsApp template disabled: %s",
+    "SMS delivery failed on all providers for %s" : "SMS delivery failed on all providers for %s",
     "Print Receipt" : "Print Receipt",
     "Email Receipt" : "Email Receipt",
     "Receipt Template" : "Receipt Template",

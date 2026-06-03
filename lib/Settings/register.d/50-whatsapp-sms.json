@@ -1,0 +1,562 @@
+{
+    "components": {
+        "registers": {
+            "pipelinq": {
+                "schemas": [
+                    "channelProvider",
+                    "messageTemplate",
+                    "consentRecord",
+                    "messageSendBudget"
+                ]
+            }
+        },
+        "schemas": {
+            "contactmoment": {
+                "properties": {
+                    "channel": {
+                        "type": "string",
+                        "description": "Communication channel used (schema:instrument / Contactmoment.kanaal)",
+                        "enum": [
+                            "telefoon",
+                            "email",
+                            "balie",
+                            "chat",
+                            "social",
+                            "brief",
+                            "whatsapp",
+                            "sms"
+                        ],
+                        "title": "Channel",
+                        "facetable": true
+                    },
+                    "providerId": {
+                        "type": "string",
+                        "description": "UUID of the channelProvider that handled this message",
+                        "maxLength": 255,
+                        "visible": false
+                    },
+                    "direction": {
+                        "type": "string",
+                        "description": "Message direction relative to the organisation",
+                        "enum": [
+                            "inbound",
+                            "outbound"
+                        ],
+                        "facetable": true,
+                        "visible": false
+                    },
+                    "externalMessageId": {
+                        "type": "string",
+                        "description": "The provider's unique message identifier",
+                        "maxLength": 255,
+                        "visible": false
+                    },
+                    "fromAddress": {
+                        "type": "string",
+                        "description": "Sender address in E.164 format (or raw if unparseable)",
+                        "maxLength": 64,
+                        "visible": false
+                    },
+                    "toAddress": {
+                        "type": "string",
+                        "description": "Recipient address in E.164 format (or raw if unparseable)",
+                        "maxLength": 64,
+                        "visible": false
+                    },
+                    "templateId": {
+                        "type": "string",
+                        "description": "UUID of the messageTemplate used for an outbound HSM send",
+                        "maxLength": 255,
+                        "visible": false
+                    },
+                    "deliveryStatus": {
+                        "type": "string",
+                        "description": "Provider delivery status of an outbound message",
+                        "enum": [
+                            "queued",
+                            "sent",
+                            "delivered",
+                            "read",
+                            "failed",
+                            "expired"
+                        ],
+                        "facetable": true,
+                        "visible": false
+                    },
+                    "windowExpiresAt": {
+                        "type": "string",
+                        "description": "When the WhatsApp 24-hour customer-service window expires for free-form sends (ISO 8601)",
+                        "format": "date-time",
+                        "visible": false
+                    },
+                    "costEur": {
+                        "type": "number",
+                        "description": "Captured or estimated send cost in EUR",
+                        "visible": false
+                    },
+                    "mediaFileId": {
+                        "type": "string",
+                        "description": "Nextcloud Files node id of an attached media item",
+                        "maxLength": 64,
+                        "visible": false
+                    }
+                }
+            },
+            "channelProvider": {
+                "slug": "channelProvider",
+                "title": "Channel Provider",
+                "icon": "MessageProcessing",
+                "version": "1.0.0",
+                "summary": "A configured WhatsApp or SMS messaging provider for a tenant",
+                "description": "Connection configuration for an outbound/inbound messaging provider (Meta WhatsApp Cloud API, a WhatsApp BSP, or an SMS provider). Secrets (API tokens, webhook signing secrets) are NEVER stored here; this object only holds a credentialRef pointing at an app-config/vault entry (ADR-005).",
+                "@type": "schema:SoftwareApplication",
+                "required": [
+                    "kind",
+                    "vendor",
+                    "displayName"
+                ],
+                "properties": {
+                    "kind": {
+                        "type": "string",
+                        "description": "The transport kind this provider implements",
+                        "enum": [
+                            "whatsapp-cloud-api",
+                            "whatsapp-bsp",
+                            "sms"
+                        ],
+                        "title": "Kind",
+                        "facetable": true
+                    },
+                    "vendor": {
+                        "type": "string",
+                        "description": "The concrete vendor implementation",
+                        "enum": [
+                            "meta",
+                            "twilio",
+                            "messagebird",
+                            "cm-com",
+                            "360dialog"
+                        ],
+                        "title": "Vendor",
+                        "facetable": true
+                    },
+                    "displayName": {
+                        "type": "string",
+                        "description": "Human-readable name shown to administrators",
+                        "maxLength": 255,
+                        "minLength": 1
+                    },
+                    "phoneNumber": {
+                        "type": "string",
+                        "description": "The sender phone number in E.164 (or vendor account id for some SMS vendors)",
+                        "maxLength": 64
+                    },
+                    "credentialRef": {
+                        "type": "string",
+                        "description": "Opaque reference to the app-config/vault entry holding this provider's secrets. The secret bytes are never stored on or returned from this object (ADR-005).",
+                        "maxLength": 255
+                    },
+                    "active": {
+                        "type": "boolean",
+                        "description": "Whether this provider is available for send/receive",
+                        "default": false,
+                        "facetable": true
+                    },
+                    "sandbox": {
+                        "type": "boolean",
+                        "description": "Whether the provider runs against a sandbox/test endpoint",
+                        "default": false
+                    },
+                    "priority": {
+                        "type": "integer",
+                        "description": "Failover priority within the same kind (1 = highest)",
+                        "default": 1
+                    }
+                }
+            },
+            "messageTemplate": {
+                "slug": "messageTemplate",
+                "title": "Message Template",
+                "icon": "MessageText",
+                "version": "1.0.0",
+                "summary": "A WhatsApp HSM (Highly Structured Message) template with approval lifecycle",
+                "description": "A provider-approved template message used for outbound sends outside the 24-hour session window. Approval state is synced from the provider (Meta / BSP).",
+                "@type": "schema:Message",
+                "required": [
+                    "providerId",
+                    "externalId",
+                    "language",
+                    "category",
+                    "status",
+                    "body"
+                ],
+                "properties": {
+                    "providerId": {
+                        "type": "string",
+                        "description": "UUID of the channelProvider that owns this template",
+                        "maxLength": 255
+                    },
+                    "externalId": {
+                        "type": "string",
+                        "description": "The provider's template name/identifier",
+                        "maxLength": 255
+                    },
+                    "language": {
+                        "type": "string",
+                        "description": "BCP-47 language tag of the template body",
+                        "maxLength": 16
+                    },
+                    "category": {
+                        "type": "string",
+                        "description": "Meta template category",
+                        "enum": [
+                            "marketing",
+                            "utility",
+                            "authentication"
+                        ],
+                        "facetable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Local mirror of the provider approval state",
+                        "enum": [
+                            "pending",
+                            "approved",
+                            "rejected",
+                            "disabled"
+                        ],
+                        "facetable": true
+                    },
+                    "body": {
+                        "type": "string",
+                        "description": "Template body with {{N}} positional placeholders"
+                    },
+                    "header": {
+                        "type": "string",
+                        "description": "Optional header text"
+                    },
+                    "buttons": {
+                        "type": "array",
+                        "description": "Optional quick-reply / call-to-action buttons",
+                        "items": {
+                            "type": "object"
+                        }
+                    },
+                    "lastSyncedAt": {
+                        "type": "string",
+                        "description": "When the approval state was last synced from the provider (ISO 8601)",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "consentRecord": {
+                "slug": "consentRecord",
+                "title": "Consent Record",
+                "icon": "ShieldCheck",
+                "version": "1.0.0",
+                "summary": "An append-only opt-in/opt-out consent audit record for a contact and channel",
+                "description": "GDPR/AVG Art. 6 legal basis + Art. 7 evidence for messaging consent. Records are append-only (never overwritten) so the consent history of a contact is fully auditable. Deleted together with the contact on erasure.",
+                "@type": "schema:Action",
+                "required": [
+                    "contactId",
+                    "channel",
+                    "state",
+                    "source",
+                    "recordedAt"
+                ],
+                "properties": {
+                    "contactId": {
+                        "type": "string",
+                        "description": "UUID of the contact this consent applies to",
+                        "maxLength": 255
+                    },
+                    "channel": {
+                        "type": "string",
+                        "description": "The channel this consent governs",
+                        "enum": [
+                            "whatsapp",
+                            "sms"
+                        ],
+                        "facetable": true
+                    },
+                    "state": {
+                        "type": "string",
+                        "description": "The consent state recorded by this event",
+                        "enum": [
+                            "opted-in",
+                            "opted-out",
+                            "unknown"
+                        ],
+                        "facetable": true
+                    },
+                    "source": {
+                        "type": "string",
+                        "description": "How this consent state was captured",
+                        "enum": [
+                            "webform",
+                            "chat-reply",
+                            "import",
+                            "admin-override",
+                            "keyword-stop"
+                        ],
+                        "facetable": true
+                    },
+                    "recordedAt": {
+                        "type": "string",
+                        "description": "When the consent state was recorded (ISO 8601)",
+                        "format": "date-time"
+                    },
+                    "evidence": {
+                        "type": "string",
+                        "description": "Free-text evidence backing this consent record (Art. 7)"
+                    },
+                    "legalBasis": {
+                        "type": "string",
+                        "description": "GDPR/AVG Art. 6 legal basis",
+                        "enum": [
+                            "consent",
+                            "contract",
+                            "legitimate-interest"
+                        ],
+                        "facetable": true
+                    }
+                }
+            },
+            "messageSendBudget": {
+                "slug": "messageSendBudget",
+                "title": "Message Send Budget",
+                "icon": "Wallet",
+                "version": "1.0.0",
+                "summary": "A per-tenant, per-provider cap on message volume and/or cost",
+                "description": "Hard-stop or alert-only budget enforced before each outbound send, with a period counter reset by a background job.",
+                "@type": "schema:MonetaryAmount",
+                "required": [
+                    "providerId",
+                    "period",
+                    "periodResetAt"
+                ],
+                "properties": {
+                    "tenantId": {
+                        "type": "string",
+                        "description": "Tenant identifier this budget applies to",
+                        "maxLength": 255
+                    },
+                    "providerId": {
+                        "type": "string",
+                        "description": "UUID of the channelProvider this budget caps",
+                        "maxLength": 255
+                    },
+                    "period": {
+                        "type": "string",
+                        "description": "Budget period granularity",
+                        "enum": [
+                            "monthly",
+                            "weekly",
+                            "daily"
+                        ],
+                        "facetable": true
+                    },
+                    "maxMessages": {
+                        "type": "integer",
+                        "description": "Maximum messages allowed in the period (0 = no message cap)"
+                    },
+                    "maxCostEur": {
+                        "type": "number",
+                        "description": "Maximum spend in EUR allowed in the period (0 = no cost cap)"
+                    },
+                    "alertThresholdPct": {
+                        "type": "number",
+                        "description": "Fraction of the cap at which an alert fires (0..1)"
+                    },
+                    "hardStop": {
+                        "type": "boolean",
+                        "description": "When true, sends that breach the cap are refused; when false, they proceed but alert",
+                        "default": false
+                    },
+                    "currentPeriodMessages": {
+                        "type": "integer",
+                        "description": "Messages sent so far in the current period",
+                        "default": 0
+                    },
+                    "currentPeriodCostEur": {
+                        "type": "number",
+                        "description": "Spend so far in the current period (EUR)",
+                        "default": 0
+                    },
+                    "periodResetAt": {
+                        "type": "string",
+                        "description": "When the current period ends and counters reset (ISO 8601)",
+                        "format": "date-time"
+                    },
+                    "alertedAt": {
+                        "type": "string",
+                        "description": "When the soft-limit alert last fired for the current period (ISO 8601); cleared on reset",
+                        "format": "date-time",
+                        "visible": false
+                    }
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "channelProvider",
+                    "slug": "wp-meta-prod"
+                },
+                "kind": "whatsapp-cloud-api",
+                "vendor": "meta",
+                "displayName": "WhatsApp Cloud API Productie",
+                "phoneNumber": "+31612345678",
+                "credentialRef": "channel_provider_wp_meta_prod",
+                "active": true,
+                "sandbox": false,
+                "priority": 1
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "channelProvider",
+                    "slug": "wp-twilio-fallback"
+                },
+                "kind": "whatsapp-bsp",
+                "vendor": "twilio",
+                "displayName": "Twilio WhatsApp Fallback",
+                "phoneNumber": "+31612345678",
+                "credentialRef": "channel_provider_wp_twilio_fallback",
+                "active": true,
+                "sandbox": false,
+                "priority": 2
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "channelProvider",
+                    "slug": "sms-messagebird"
+                },
+                "kind": "sms",
+                "vendor": "messagebird",
+                "displayName": "MessageBird SMS Productie",
+                "phoneNumber": "+31612345678",
+                "credentialRef": "channel_provider_sms_messagebird",
+                "active": true,
+                "sandbox": false,
+                "priority": 1
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "channelProvider",
+                    "slug": "sms-twilio"
+                },
+                "kind": "sms",
+                "vendor": "twilio",
+                "displayName": "Twilio SMS Fallback",
+                "phoneNumber": "+31612345678",
+                "credentialRef": "channel_provider_sms_twilio",
+                "active": true,
+                "sandbox": false,
+                "priority": 2
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "channelProvider",
+                    "slug": "sms-cmcom"
+                },
+                "kind": "sms",
+                "vendor": "cm-com",
+                "displayName": "CM.com SMS",
+                "phoneNumber": "cm-com-account-id",
+                "credentialRef": "channel_provider_sms_cmcom",
+                "active": false,
+                "sandbox": false,
+                "priority": 3
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "messageTemplate",
+                    "slug": "tpl-afspraak-bevestiging-nl"
+                },
+                "providerId": "wp-meta-prod",
+                "externalId": "afspraak_bevestiging_nl",
+                "language": "nl",
+                "category": "utility",
+                "status": "approved",
+                "body": "Beste {{1}}, uw afspraak op {{2}} om {{3}} is bevestigd. Antwoord J voor bevestiging.",
+                "buttons": [
+                    { "type": "quick-reply", "text": "J" },
+                    { "type": "quick-reply", "text": "N" }
+                ],
+                "lastSyncedAt": "2026-05-22T14:30:00Z"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "messageTemplate",
+                    "slug": "tpl-opt-in-request-nl"
+                },
+                "providerId": "wp-meta-prod",
+                "externalId": "opt_in_request_nl",
+                "language": "nl",
+                "category": "marketing",
+                "status": "pending",
+                "body": "Mag ik je op de hoogte houden van aanbiedingen en nieuws? Antwoord JA of NEE.",
+                "buttons": [
+                    { "type": "quick-reply", "text": "JA" },
+                    { "type": "quick-reply", "text": "NEE" }
+                ],
+                "lastSyncedAt": "2026-05-22T14:00:00Z"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "messageTemplate",
+                    "slug": "tpl-opt-out-ack-nl"
+                },
+                "providerId": "wp-meta-prod",
+                "externalId": "opt_out_bevestiging_nl",
+                "language": "nl",
+                "category": "utility",
+                "status": "approved",
+                "body": "U bent uitgeschreven en ontvangt geen berichten meer. Antwoord START om u opnieuw aan te melden.",
+                "lastSyncedAt": "2026-05-22T14:30:00Z"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "messageSendBudget",
+                    "slug": "budget-whatsapp-monthly"
+                },
+                "tenantId": "tenant-12345",
+                "providerId": "wp-meta-prod",
+                "period": "monthly",
+                "maxMessages": 10000,
+                "maxCostEur": 2500,
+                "alertThresholdPct": 0.8,
+                "hardStop": false,
+                "currentPeriodMessages": 3200,
+                "currentPeriodCostEur": 420.5,
+                "periodResetAt": "2026-07-01T00:00:00Z"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "messageSendBudget",
+                    "slug": "budget-sms-monthly"
+                },
+                "tenantId": "tenant-12345",
+                "providerId": "sms-messagebird",
+                "period": "monthly",
+                "maxMessages": 5000,
+                "maxCostEur": 500,
+                "alertThresholdPct": 0.9,
+                "hardStop": true,
+                "currentPeriodMessages": 4500,
+                "currentPeriodCostEur": 450,
+                "periodResetAt": "2026-07-01T00:00:00Z"
+            }
+        ]
+    }
+}

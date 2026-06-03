@@ -235,10 +235,58 @@ class Notifier implements INotifier
                 );
                 break;
 
+            case 'budget_alert':
+                $notification->setParsedSubject(
+                    $l->t('Message budget threshold reached for provider %s', [$this->subjectParam(params: $params, key: 'providerId')])
+                );
+                break;
+
+            case 'budget_exceeded':
+                $notification->setParsedSubject(
+                    $l->t('Message budget exceeded for provider %s — sends are blocked', [$this->subjectParam(params: $params, key: 'providerId')])
+                );
+                break;
+
+            case 'template_rejected':
+                $notification->setParsedSubject(
+                    $l->t('WhatsApp template rejected: %s', [$this->subjectParam(params: $params, key: 'externalId')])
+                );
+                break;
+
+            case 'template_disabled':
+                $notification->setParsedSubject(
+                    $l->t('WhatsApp template disabled: %s', [$this->subjectParam(params: $params, key: 'externalId')])
+                );
+                break;
+
+            case 'sms_all_providers_failed':
+                $notification->setParsedSubject(
+                    $l->t('SMS delivery failed on all providers for %s', [$this->subjectParam(params: $params, key: 'to')])
+                );
+                break;
+
             default:
                 throw new UnknownNotificationException();
         }//end switch
     }//end applyNotificationSubject()
+
+    /**
+     * Read a non-empty string subject parameter, defaulting to a placeholder.
+     *
+     * @param array  $params The subject parameters.
+     * @param string $key    The parameter key.
+     *
+     * @return string The parameter value, or a generic placeholder.
+     */
+    private function subjectParam(array $params, string $key): string
+    {
+        $value = (string) ($params[$key] ?? '');
+        if ($value === '') {
+            return '—';
+        }
+
+        return $value;
+    }//end subjectParam()
 
     /**
      * Build rich parameters for a notification.

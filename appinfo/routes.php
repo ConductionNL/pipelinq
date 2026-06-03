@@ -119,6 +119,15 @@ return [
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
 
+        // WhatsApp / SMS channel adapter (camelCase slug matches MessagingController class name).
+        // Send endpoints require an authenticated agent; consent/budget gating is server-side.
+        // The inbound webhook is public but adapter-signature-verified (ADR-005); it must precede
+        // the SPA catch-all and the {providerId} wildcard follows the static send routes.
+        ['name' => 'messaging#sendWhatsAppTemplate', 'url' => '/api/messaging/whatsapp/template',   'verb' => 'POST'],
+        ['name' => 'messaging#sendWhatsAppMessage',  'url' => '/api/messaging/whatsapp/message',    'verb' => 'POST'],
+        ['name' => 'messaging#sendSms',              'url' => '/api/messaging/sms/message',         'verb' => 'POST'],
+        ['name' => 'messaging#webhook',              'url' => '/api/messaging/webhook/{providerId}','verb' => 'POST'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
