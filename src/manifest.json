@@ -182,7 +182,8 @@
 					{ "id": "requests-by-status", "type": "custom", "title": "Requests by Status" },
 					{ "id": "complaints",         "type": "custom", "title": "Complaints" },
 					{ "id": "my-work",            "type": "custom", "title": "My Work" },
-					{ "id": "client-overview",    "type": "custom", "title": "Client Overview" }
+					{ "id": "client-overview",    "type": "custom", "title": "Client Overview" },
+					{ "id": "today-hours",        "type": "custom", "title": "Today's Hours" }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "open-leads",         "gridX": 0, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
@@ -192,7 +193,8 @@
 					{ "id": "5", "widgetId": "requests-by-status", "gridX": 0, "gridY": 2, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "6", "widgetId": "complaints",         "gridX": 6, "gridY": 2, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "7", "widgetId": "my-work",            "gridX": 0, "gridY": 6, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "8", "widgetId": "client-overview",    "gridX": 6, "gridY": 6, "gridWidth": 6, "gridHeight": 4 }
+					{ "id": "8", "widgetId": "client-overview",    "gridX": 6, "gridY": 6, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "9", "widgetId": "today-hours",        "gridX": 0, "gridY": 10, "gridWidth": 6, "gridHeight": 3, "showTitle": true }
 				]
 			},
 			"slots": {
@@ -203,7 +205,8 @@
 				"widget-requests-by-status": "RequestsByStatusWidget",
 				"widget-complaints": "ComplaintsWidget",
 				"widget-my-work": "MyWorkWidget",
-				"widget-client-overview": "ClientOverviewWidget"
+				"widget-client-overview": "ClientOverviewWidget",
+				"widget-today-hours": "CnTimeTrackerCard"
 			}
 		},
 		{
