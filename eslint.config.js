@@ -1,3 +1,6 @@
+const fs = require('fs')
+const path = require('path')
+
 const {
 	defineConfig,
 } = require('@eslint/config-helpers')
@@ -14,16 +17,22 @@ const compat = new FlatCompat({
 	allConfig: js.configs.all,
 })
 
+// Mirror webpack.config.js: alias the local monorepo source when present.
+const localLibPath = path.resolve(__dirname, '../nextcloud-vue/src')
+const localLibExists = fs.existsSync(localLibPath)
+
+const aliasMap = [['@', './src']]
+if (localLibExists) {
+	aliasMap.push(['@conduction/nextcloud-vue', '../nextcloud-vue/src'])
+}
+
 module.exports = defineConfig([{
 	extends: compat.extends('@nextcloud'),
 
 	settings: {
 		'import/resolver': {
 			alias: {
-				map: [
-					['@', './src'],
-					['@conduction/nextcloud-vue', '../nextcloud-vue/src'],
-				],
+				map: aliasMap,
 				extensions: ['.js', '.ts', '.vue', '.json', '.css'],
 			},
 		},
@@ -40,5 +49,9 @@ module.exports = defineConfig([{
 		'import/default': 'off',
 		'import/no-named-as-default': 'off',
 		'import/no-named-as-default-member': 'off',
+		// @conduction/* packages are resolved via webpack alias (local monorepo
+		// or npm fallback) — the ESLint alias resolver cannot follow them when
+		// the local path is absent, so suppress the unresolved error here.
+		'import/no-unresolved': ['error', { ignore: ['^@conduction/'] }],
 	},
 }])
