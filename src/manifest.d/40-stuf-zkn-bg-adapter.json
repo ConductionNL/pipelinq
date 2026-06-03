@@ -1,0 +1,95 @@
+{
+    "pages": [
+        {
+            "id": "StufEndpoints",
+            "route": "/stuf/endpoints",
+            "type": "index",
+            "title": "StUF Endpoints",
+            "config": {
+                "register": "pipelinq",
+                "schema": "stufEndpoint",
+                "columns": [
+                    "naam",
+                    "gemeenteCode",
+                    "soapVersion",
+                    "sectormodel",
+                    "zaakIdentificatieStrategie",
+                    "actief"
+                ],
+                "sidebar": {
+                    "enabled": true,
+                    "showMetadata": true
+                }
+            }
+        },
+        {
+            "id": "StufEndpointDetail",
+            "route": "/stuf/endpoints/:id",
+            "type": "detail",
+            "title": "StUF Endpoint",
+            "config": {
+                "register": "pipelinq",
+                "schema": "stufEndpoint",
+                "sidebar": {
+                    "enabled": true,
+                    "showMetadata": true
+                }
+            }
+        },
+        {
+            "id": "StufAuditLog",
+            "route": "/stuf/audit-log",
+            "type": "index",
+            "title": "StUF Audit Log",
+            "config": {
+                "register": "pipelinq",
+                "schema": "stufMessage",
+                "columns": [
+                    "verzondenOp",
+                    "richting",
+                    "berichtSoort",
+                    "functie",
+                    "status",
+                    "httpStatus",
+                    "duurMs"
+                ],
+                "sidebar": {
+                    "enabled": true,
+                    "showMetadata": true
+                }
+            }
+        },
+        {
+            "id": "StufMessageDetail",
+            "route": "/stuf/audit-log/:id",
+            "type": "detail",
+            "title": "StUF Message",
+            "config": {
+                "register": "pipelinq",
+                "schema": "stufMessage",
+                "sidebar": {
+                    "enabled": true,
+                    "showMetadata": true
+                }
+            }
+        }
+    ],
+    "menu": [
+        {
+            "id": "StufEndpointsMenu",
+            "label": "StUF Endpoints",
+            "icon": "icon-category-integration",
+            "route": "StufEndpoints",
+            "section": "footer",
+            "order": 240
+        },
+        {
+            "id": "StufAuditLogMenu",
+            "label": "StUF Audit Log",
+            "icon": "icon-category-monitoring",
+            "route": "StufAuditLog",
+            "section": "footer",
+            "order": 250
+        }
+    ]
+}

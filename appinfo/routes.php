@@ -119,6 +119,14 @@ return [
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
 
+        // StUF ZKN/BG adapter (camelCase slug matches StufController class name).
+        // Static paths only — all defined before the SPA catch-all wildcard below.
+        // /api/stuf/inkomend is #[PublicPage] but verifies a shared secret (ADR-005).
+        ['name' => 'stuf#outbound',  'url' => '/api/stuf/outbound',  'verb' => 'POST'],
+        ['name' => 'stuf#inkomend',  'url' => '/api/stuf/inkomend',  'verb' => 'POST'],
+        ['name' => 'stuf#endpoints', 'url' => '/api/stuf/endpoints', 'verb' => 'GET'],
+        ['name' => 'stuf#messages',  'url' => '/api/stuf/messages',  'verb' => 'GET'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],

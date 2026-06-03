@@ -108,6 +108,14 @@ class Application extends App implements IBootstrap
             PipelinqToolProvider::class
         );
 
+        // Bind the StUF SOAP transport seam to its HTTP implementation. Services
+        // depend on the interface so tests can inject an in-memory fake; no live
+        // zaaksysteem endpoint is ever required (ADR-005 external abstraction).
+        $context->registerServiceAlias(
+            \OCA\Pipelinq\Service\Stuf\StufTransportInterface::class,
+            \OCA\Pipelinq\Service\Stuf\StufHttpClient::class
+        );
+
         $this->registerPosLifecycleGuards(context: $context);
     }//end register()
 

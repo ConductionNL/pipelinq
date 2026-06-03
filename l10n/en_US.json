@@ -464,6 +464,10 @@
         "Geparkeerd": "Geparkeerd",
         "Bevestigd": "Bevestigd",
         "Afgerekend": "Afgerekend",
-        "Teruggeboekt": "Teruggeboekt"
+        "Teruggeboekt": "Teruggeboekt",
+        "StUF Endpoints": "StUF Endpoints",
+        "StUF Endpoint": "StUF Endpoint",
+        "StUF Audit Log": "StUF Audit Log",
+        "StUF Message": "StUF Message"
     }
 }

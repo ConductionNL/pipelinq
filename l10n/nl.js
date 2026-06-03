@@ -1136,7 +1136,11 @@ OC.L10N.register(
     "Failed to save refund." : "Opslaan van retour mislukt.",
     "This will reject the refund. Enter a reason for the rejection." : "Hiermee wijs je de retour af. Vul een reden in voor de afwijzing.",
     "Vul een reden in voor de afwijzing" : "Vul een reden in voor de afwijzing",
-    "Max {max}" : "Max {max}"
+    "Max {max}" : "Max {max}",
+    "StUF Endpoints" : "StUF-eindpunten",
+    "StUF Endpoint" : "StUF-eindpunt",
+    "StUF Audit Log" : "StUF-auditlog",
+    "StUF Message" : "StUF-bericht"
 },
 "nplurals=2; plural=(n != 1);"
 );

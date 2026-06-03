@@ -76,7 +76,7 @@
         "Select BTW class": "Kies BTW-klasse",
         "SKU {sku} is already used by another variant": "SKU {sku} is al in gebruik door een andere variant",
         "Submit barcode": "Barcode versturen",
-        "Unit price": "Stuksprijs",
+        "Unit price": "Eenheidsprijs",
         "Variant name": "Variantnaam",
         "Variants": "Varianten",
         "Variants saved": "Varianten opgeslagen",
@@ -1014,7 +1014,6 @@
         "Tax rate (%)": "Belastingtarief (%)",
         "Team summary": "Teamoverzicht",
         "Top products by pipeline value": "Topproducten per pipeline waarde",
-        "Unit price": "Eenheidsprijs",
         "Version information": "Versie informatie",
         "Avg rating": "Gem. beoordeling",
         "Avg time": "Gem. tijd",
@@ -1099,7 +1098,6 @@
         "Returned qty": "Geretourneerd aantal",
         "Returned quantity": "Geretourneerd aantal",
         "Return reason": "Retourreden",
-        "Refund reason": "Reden terugboeking",
         "Restock": "Terug naar voorraad",
         "Payment method": "Betaalmethode",
         "Confirmed at": "Bevestigd op",
@@ -1121,7 +1119,11 @@
         "Failed to save refund.": "Opslaan van retour mislukt.",
         "This will reject the refund. Enter a reason for the rejection.": "Hiermee wijs je de retour af. Vul een reden in voor de afwijzing.",
         "Vul een reden in voor de afwijzing": "Vul een reden in voor de afwijzing",
-        "Max {max}": "Max {max}"
+        "Max {max}": "Max {max}",
+        "StUF Endpoints": "StUF-eindpunten",
+        "StUF Endpoint": "StUF-eindpunt",
+        "StUF Audit Log": "StUF-auditlog",
+        "StUF Message": "StUF-bericht"
     },
     "plurals": {}
 }

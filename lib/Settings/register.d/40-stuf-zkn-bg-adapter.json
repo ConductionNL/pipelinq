@@ -1,0 +1,500 @@
+{
+    "components": {
+        "registers": {
+            "pipelinq": {
+                "schemas": [
+                    "stufEndpoint",
+                    "stufMessage",
+                    "zaaksysteemMapping"
+                ]
+            }
+        },
+        "schemas": {
+            "stufEndpoint": {
+                "slug": "stufEndpoint",
+                "title": "StUF Endpoint",
+                "icon": "ServerNetwork",
+                "version": "1.0.0",
+                "summary": "Connection profile for one zaaksysteem reached over StUF 0310 SOAP",
+                "description": "Configuration profile for a single legacy zaaksysteem (case management system) integration over StUF-ZKN/BG 0310 SOAP-over-HTTP. Holds the SOAP endpoint URL, sender/receiver stuurgegevens, authentication references (WSSE UsernameToken + mutual TLS, secrets held in the vault, never inline) and the zaak-identificatie allocation strategy. Multiple endpoints can coexist per gemeente during a system transition.",
+                "@type": "schema:WebAPI",
+                "required": [
+                    "naam",
+                    "gemeenteCode",
+                    "ontvangerApplicatie",
+                    "ontvangerOrganisatie",
+                    "ontvangerGebruiker",
+                    "zenderApplicatie",
+                    "zenderOrganisatie",
+                    "endpointUrl",
+                    "soapVersion",
+                    "stufVersion",
+                    "sectormodel",
+                    "authenticatie"
+                ],
+                "properties": {
+                    "naam": {
+                        "type": "string",
+                        "description": "Human-readable endpoint name (e.g. Gemeente Amersfoort - Centric Key2Zaken)",
+                        "maxLength": 255,
+                        "minLength": 1,
+                        "title": "Naam"
+                    },
+                    "gemeenteCode": {
+                        "type": "string",
+                        "description": "Four-digit CBS gemeente code (e.g. 0307 for Amersfoort)",
+                        "maxLength": 4,
+                        "minLength": 4,
+                        "title": "Gemeentecode",
+                        "facetable": true
+                    },
+                    "ontvangerApplicatie": {
+                        "type": "string",
+                        "description": "Target zaaksysteem application name (stuurgegevens.ontvanger.applicatie)",
+                        "maxLength": 255
+                    },
+                    "ontvangerOrganisatie": {
+                        "type": "string",
+                        "description": "Target organization (stuurgegevens.ontvanger.organisatie)",
+                        "maxLength": 255
+                    },
+                    "ontvangerGebruiker": {
+                        "type": "string",
+                        "description": "Target system user identifier (stuurgegevens.ontvanger.gebruiker)",
+                        "maxLength": 255
+                    },
+                    "zenderApplicatie": {
+                        "type": "string",
+                        "description": "Pipelinq sender application identifier (stuurgegevens.zender.applicatie)",
+                        "maxLength": 255
+                    },
+                    "zenderOrganisatie": {
+                        "type": "string",
+                        "description": "Sending organization (stuurgegevens.zender.organisatie)",
+                        "maxLength": 255
+                    },
+                    "endpointUrl": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "SOAP endpoint URL (e.g. https://stuf.gemeente.nl/CGS/StUFZKN/2.04/OntvangAsynchroon)",
+                        "maxLength": 2048
+                    },
+                    "soapVersion": {
+                        "type": "string",
+                        "description": "SOAP envelope version",
+                        "enum": ["1.1", "1.2"],
+                        "default": "1.1",
+                        "title": "SOAP-versie",
+                        "facetable": true
+                    },
+                    "stufVersion": {
+                        "type": "string",
+                        "description": "StUF version (0310 only in this release)",
+                        "enum": ["0310"],
+                        "default": "0310"
+                    },
+                    "sectormodel": {
+                        "type": "string",
+                        "description": "StUF sectormodel (ZKN for cases)",
+                        "enum": ["ZKN"],
+                        "default": "ZKN",
+                        "facetable": true
+                    },
+                    "authenticatie": {
+                        "type": "object",
+                        "description": "Authentication configuration; secrets are vault references resolved at send time, never plaintext",
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "description": "Authentication scheme",
+                                "enum": ["wsse-usernametoken"],
+                                "default": "wsse-usernametoken"
+                            },
+                            "gebruikersnaam": {
+                                "type": "string",
+                                "description": "WSSE UsernameToken username",
+                                "maxLength": 255
+                            },
+                            "wachtwoordKluisRef": {
+                                "type": "string",
+                                "description": "Vault reference (vault://...) for the WSSE password; resolved at send time",
+                                "maxLength": 512
+                            }
+                        }
+                    },
+                    "tlsClientCertRef": {
+                        "type": "string",
+                        "description": "Vault reference for the mutual-TLS client certificate (vault://pki/...)",
+                        "maxLength": 512
+                    },
+                    "zaakIdentificatieStrategie": {
+                        "type": "string",
+                        "description": "Zaak ID allocation strategy: vooraf (pre-allocated via Du01) or achteraf (server-assigned in Bv01)",
+                        "enum": ["vooraf", "achteraf"],
+                        "default": "achteraf",
+                        "facetable": true
+                    },
+                    "zaaktypeMappings": {
+                        "type": "object",
+                        "description": "Map of pipelinq request type to zkn:zaaktype omschrijving; validated before envelope build",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "vrijeBerichten": {
+                        "type": "object",
+                        "description": "Registered vrijBericht templates keyed by name; each lists required payload field names",
+                        "additionalProperties": {
+                            "type": "object"
+                        }
+                    },
+                    "actief": {
+                        "type": "boolean",
+                        "description": "Whether this endpoint is active",
+                        "default": true,
+                        "facetable": true
+                    },
+                    "aangemaakt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Timestamp when the endpoint was created"
+                    }
+                }
+            },
+            "stufMessage": {
+                "slug": "stufMessage",
+                "title": "StUF Message",
+                "icon": "Email",
+                "version": "1.0.0",
+                "summary": "Append-only audit record of one SOAP envelope sent or received",
+                "description": "Per-call audit log entry for every StUF SOAP envelope sent or received (ADR-026, AVG accountability). Captures the full request/response XML, HTTP status, wall-clock duration, referentienummer/crossRefnummer correlation, retry history and the cross-reference to the related pipelinq Request or Contact. Rows survive deletion of their mapping for GDPR traceability.",
+                "@type": "schema:Message",
+                "required": [
+                    "endpointId",
+                    "richting",
+                    "berichtSoort",
+                    "envelopeXml",
+                    "verzondenOp"
+                ],
+                "properties": {
+                    "endpointId": {
+                        "type": "string",
+                        "description": "Reference to the StufEndpoint used",
+                        "maxLength": 255,
+                        "facetable": true
+                    },
+                    "richting": {
+                        "type": "string",
+                        "description": "Message direction",
+                        "enum": ["uitgaand", "inkomend"],
+                        "facetable": true
+                    },
+                    "berichtSoort": {
+                        "type": "string",
+                        "description": "StUF message type code",
+                        "enum": ["Lk01", "Lk02", "Lk03", "Bv01", "Lv01", "La01", "Du01", "Fo02"],
+                        "facetable": true
+                    },
+                    "entiteittype": {
+                        "type": "string",
+                        "description": "StUF entity type (ZAK case, NPS natural person, NNP organization)",
+                        "enum": ["ZAK", "NPS", "NNP"],
+                        "facetable": true
+                    },
+                    "functie": {
+                        "type": "string",
+                        "description": "Operation (creeerZaak, actualiseerZaak, geefZaakDetails, zetStatus, ...)",
+                        "maxLength": 255,
+                        "facetable": true
+                    },
+                    "referentienummer": {
+                        "type": "string",
+                        "description": "Outbound referentienummer (unique per envelope, ULID)",
+                        "maxLength": 64
+                    },
+                    "crossRefnummer": {
+                        "type": "string",
+                        "description": "Inbound crossRefnummer matching a prior outbound referentienummer",
+                        "maxLength": 64
+                    },
+                    "zaakIdentificatie": {
+                        "type": "string",
+                        "description": "Zaak identificatie if known",
+                        "maxLength": 255
+                    },
+                    "envelopeXml": {
+                        "type": "string",
+                        "description": "Full SOAP request envelope XML"
+                    },
+                    "responseEnvelopeXml": {
+                        "type": "string",
+                        "description": "Full SOAP response envelope XML"
+                    },
+                    "httpStatus": {
+                        "type": "integer",
+                        "description": "HTTP response status code"
+                    },
+                    "duurMs": {
+                        "type": "integer",
+                        "description": "Wall-clock duration in milliseconds"
+                    },
+                    "fout": {
+                        "type": "object",
+                        "description": "Error details if failed",
+                        "properties": {
+                            "code": {"type": "string"},
+                            "omschrijving": {"type": "string"},
+                            "details": {"type": "string"},
+                            "transient": {"type": "boolean"}
+                        }
+                    },
+                    "verzondenOp": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "When the message was sent"
+                    },
+                    "ontvangenOp": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "When the response was received"
+                    },
+                    "gerelateerdeRequestId": {
+                        "type": "string",
+                        "description": "UUID of the related pipelinq Request, if applicable",
+                        "maxLength": 255
+                    },
+                    "gerelateerdeContactId": {
+                        "type": "string",
+                        "description": "UUID of the related pipelinq Contact, if applicable",
+                        "maxLength": 255
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Message lifecycle status",
+                        "enum": ["verzonden", "bevestigd", "fout"],
+                        "default": "verzonden",
+                        "facetable": true
+                    },
+                    "retries": {
+                        "type": "array",
+                        "description": "Retry history; one entry per attempt",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "poging": {"type": "integer"},
+                                "timestamp": {"type": "string", "format": "date-time"},
+                                "httpStatus": {"type": "integer"},
+                                "fout": {"type": "object"}
+                            }
+                        }
+                    }
+                }
+            },
+            "zaaksysteemMapping": {
+                "slug": "zaaksysteemMapping",
+                "title": "Zaaksysteem Mapping",
+                "icon": "LinkVariant",
+                "version": "1.0.0",
+                "summary": "Bidirectional link between a pipelinq entity and a zaaksysteem identifier",
+                "description": "Authoritative bidirectional mapping between a pipelinq Request or Contact and its zaaksysteem counterpart (ZAK case, NPS natural person, NNP organization). Survives across updates and is the source of truth for the external identifier, enabling betrokkene de-duplication (query-before-create) and idempotent zaak synchronisation.",
+                "@type": "schema:PropertyValue",
+                "required": [
+                    "pipelinqEntiteit",
+                    "pipelinqId",
+                    "externEntiteit",
+                    "externIdentificatie",
+                    "endpointId"
+                ],
+                "properties": {
+                    "pipelinqEntiteit": {
+                        "type": "string",
+                        "description": "Type of pipelinq entity",
+                        "enum": ["request", "contact"],
+                        "facetable": true
+                    },
+                    "pipelinqId": {
+                        "type": "string",
+                        "description": "UUID of the pipelinq entity",
+                        "maxLength": 255
+                    },
+                    "externEntiteit": {
+                        "type": "string",
+                        "description": "External entity type (ZAK zaak, NPS natuurlijk persoon, NNP niet-natuurlijk persoon)",
+                        "enum": ["ZAK", "NPS", "NNP"],
+                        "facetable": true
+                    },
+                    "externIdentificatie": {
+                        "type": "string",
+                        "description": "External identifier (zaak ID or betrokkene ID)",
+                        "maxLength": 255
+                    },
+                    "endpointId": {
+                        "type": "string",
+                        "description": "Reference to the StufEndpoint used",
+                        "maxLength": 255,
+                        "facetable": true
+                    },
+                    "laatsteSynchronisatie": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Timestamp of the last successful synchronisation"
+                    },
+                    "synchronisatieStatus": {
+                        "type": "string",
+                        "description": "Synchronisation status",
+                        "enum": ["in_sync", "fout", "geannuleerd"],
+                        "default": "in_sync",
+                        "facetable": true
+                    },
+                    "openstaandeWijzigingen": {
+                        "type": "array",
+                        "description": "Pending changes not yet sent to the zaaksysteem",
+                        "items": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "stufEndpoint",
+                    "slug": "amersfoort-key2zaken"
+                },
+                "naam": "Gemeente Amersfoort - Centric Key2Zaken",
+                "gemeenteCode": "0307",
+                "ontvangerApplicatie": "Key2Zaken",
+                "ontvangerOrganisatie": "Gemeente Amersfoort",
+                "ontvangerGebruiker": "pipelinq",
+                "zenderApplicatie": "Pipelinq",
+                "zenderOrganisatie": "Gemeente Amersfoort",
+                "endpointUrl": "https://stuf.amersfoort.nl/CGS/StUFZKN/2.04/OntvangAsynchroon",
+                "soapVersion": "1.1",
+                "stufVersion": "0310",
+                "sectormodel": "ZKN",
+                "authenticatie": {
+                    "type": "wsse-usernametoken",
+                    "gebruikersnaam": "pipelinq_amersfoort",
+                    "wachtwoordKluisRef": "vault://stuf/amersfoort/key2zaken"
+                },
+                "tlsClientCertRef": "vault://pki/pipelinq-amersfoort.pem",
+                "zaakIdentificatieStrategie": "achteraf",
+                "zaaktypeMappings": {
+                    "evenementenvergunning": "Evenementenvergunning",
+                    "klacht": "Klacht"
+                },
+                "vrijeBerichten": {
+                    "zetStatus": {
+                        "verplicht": ["zaakIdentificatie", "statusType", "datumStatusGezet"]
+                    }
+                },
+                "actief": true,
+                "aangemaakt": "2026-04-12T09:14:00+02:00"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "stufEndpoint",
+                    "slug": "rotterdam-pinkroccade"
+                },
+                "naam": "Gemeente Rotterdam - Atos PinkRoccade",
+                "gemeenteCode": "0599",
+                "ontvangerApplicatie": "PinkRoccade",
+                "ontvangerOrganisatie": "Gemeente Rotterdam",
+                "ontvangerGebruiker": "pipelinq_rotterdam",
+                "zenderApplicatie": "Pipelinq",
+                "zenderOrganisatie": "Gemeente Rotterdam",
+                "endpointUrl": "https://zaak.rotterdam.nl/StUFZKN/0310/Asynchroon",
+                "soapVersion": "1.1",
+                "stufVersion": "0310",
+                "sectormodel": "ZKN",
+                "authenticatie": {
+                    "type": "wsse-usernametoken",
+                    "gebruikersnaam": "pipelinq",
+                    "wachtwoordKluisRef": "vault://stuf/rotterdam/pinkroccade"
+                },
+                "zaakIdentificatieStrategie": "vooraf",
+                "zaaktypeMappings": {
+                    "evenementenvergunning": "Evenementenvergunning"
+                },
+                "actief": true,
+                "aangemaakt": "2026-04-15T14:22:00+02:00"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "stufMessage",
+                    "slug": "msg-evenement-tour-20260521-084412"
+                },
+                "endpointId": "amersfoort-key2zaken",
+                "richting": "uitgaand",
+                "berichtSoort": "Lk01",
+                "entiteittype": "ZAK",
+                "functie": "creeerZaak",
+                "referentienummer": "01HXR8Z9Q1V7K2M4N6P8S0T2W4",
+                "zaakIdentificatie": "ZAAK-2026-0008812",
+                "envelopeXml": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"><soapenv:Body><ZKN:zakLk01/></soapenv:Body></soapenv:Envelope>",
+                "responseEnvelopeXml": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"><soapenv:Body><ZKN:zakLk01_Bv01/></soapenv:Body></soapenv:Envelope>",
+                "httpStatus": 200,
+                "duurMs": 1240,
+                "verzondenOp": "2026-05-21T08:44:12+02:00",
+                "ontvangenOp": "2026-05-21T08:44:13+02:00",
+                "gerelateerdeRequestId": "req-2026-aanvraag-evenementenvergunning-0123",
+                "status": "bevestigd"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "stufMessage",
+                    "slug": "msg-contact-sync-20260521-150305"
+                },
+                "endpointId": "rotterdam-pinkroccade",
+                "richting": "inkomend",
+                "berichtSoort": "Lk02",
+                "entiteittype": "ZAK",
+                "functie": "actualiseerZaak",
+                "crossRefnummer": "01HYR8Z9Q1V7K2M4N6P8S0T2W4",
+                "zaakIdentificatie": "ZAAK-2026-0012340",
+                "envelopeXml": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"><soapenv:Body><ZKN:zakLk02/></soapenv:Body></soapenv:Envelope>",
+                "responseEnvelopeXml": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"><soapenv:Body><StUF:Bv01Bericht/></soapenv:Body></soapenv:Envelope>",
+                "httpStatus": 200,
+                "verzondenOp": "2026-05-21T15:03:05+02:00",
+                "ontvangenOp": "2026-05-21T15:03:05+02:00",
+                "gerelateerdeRequestId": "req-2026-aanvraag-vergunning-5678",
+                "status": "bevestigd"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "zaaksysteemMapping",
+                    "slug": "map-request-evenement-tour"
+                },
+                "pipelinqEntiteit": "request",
+                "pipelinqId": "req-2026-aanvraag-evenementenvergunning-0123",
+                "externEntiteit": "ZAK",
+                "externIdentificatie": "ZAAK-2026-0008812",
+                "endpointId": "amersfoort-key2zaken",
+                "laatsteSynchronisatie": "2026-05-21T08:44:13+02:00",
+                "synchronisatieStatus": "in_sync",
+                "openstaandeWijzigingen": []
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "zaaksysteemMapping",
+                    "slug": "map-contact-jeroen-vandermeer"
+                },
+                "pipelinqEntiteit": "contact",
+                "pipelinqId": "contact-jeroen-vandermeer-uuid",
+                "externEntiteit": "NPS",
+                "externIdentificatie": "987654321",
+                "endpointId": "amersfoort-key2zaken",
+                "laatsteSynchronisatie": "2026-05-21T08:44:13+02:00",
+                "synchronisatieStatus": "in_sync",
+                "openstaandeWijzigingen": []
+            }
+        ]
+    }
+}

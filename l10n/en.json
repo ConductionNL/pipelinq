@@ -931,7 +931,6 @@
         "Unassigned": "Unassigned",
         "Unavailable": "Unavailable",
         "Unit": "Unit",
-        "Unit price": "Unit price",
         "Unit price must be 0 or greater": "Unit price must be 0 or greater",
         "Unknown": "Unknown",
         "Unknown Product": "Unknown Product",
@@ -1126,7 +1125,11 @@
         "Failed to save refund.": "Failed to save refund.",
         "This will reject the refund. Enter a reason for the rejection.": "This will reject the refund. Enter a reason for the rejection.",
         "Vul een reden in voor de afwijzing": "Enter a reason for the rejection",
-        "Max {max}": "Max {max}"
+        "Max {max}": "Max {max}",
+        "StUF Endpoints": "StUF Endpoints",
+        "StUF Endpoint": "StUF Endpoint",
+        "StUF Audit Log": "StUF Audit Log",
+        "StUF Message": "StUF Message"
     },
     "plurals": {}
 }

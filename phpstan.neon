@@ -57,3 +57,7 @@ parameters:
         - '#Call to an undefined method OCP\\IRequest::setParameter\(\)#'
         - '#Call to an undefined method OCP\\Mail\\IMessage::attachFile\(\)#'
         - '#Call to an undefined method OCP\\AppFramework\\Db\\Entity::jsonSerialize#'
+        # AuthorizedAdminSetting(APP_ID) — the nextcloud/ocp stub mistypes $settings as
+        # class-string<IDelegatedSettings>; passing the app-id string is the documented,
+        # correct usage at runtime (same false positive already carried in the baseline).
+        - '#Parameter \#1 \$settings of attribute class OCP\\AppFramework\\Http\\Attribute\\AuthorizedAdminSetting constructor expects class-string<OCP\\Settings\\IDelegatedSettings>, string given\.#'

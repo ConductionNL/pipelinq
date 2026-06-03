@@ -1135,7 +1135,11 @@ OC.L10N.register(
     "Failed to save refund." : "Failed to save refund.",
     "This will reject the refund. Enter a reason for the rejection." : "This will reject the refund. Enter a reason for the rejection.",
     "Vul een reden in voor de afwijzing" : "Enter a reason for the rejection",
-    "Max {max}" : "Max {max}"
+    "Max {max}" : "Max {max}",
+    "StUF Endpoints" : "StUF Endpoints",
+    "StUF Endpoint" : "StUF Endpoint",
+    "StUF Audit Log" : "StUF Audit Log",
+    "StUF Message" : "StUF Message"
 },
 "nplurals=2; plural=(n != 1);"
 );
