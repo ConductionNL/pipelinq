@@ -32,7 +32,8 @@
 		:page-types="pageTypes"
 		app-id="pipelinq"
 		:translate="translateForApp"
-		:permissions="permissions">
+		:permissions="permissions"
+		:requires-apps="[]">
 		<template #sidebar>
 			<!--
 				When active, this renders CnObjectSidebar's default tabs (Files,
