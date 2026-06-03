@@ -65,7 +65,10 @@
         "summary": "A client (person or organization) in the CRM",
         "description": "Represents a client entity — either a natural person or an organization. Mapped to Schema.org Person/Organization and vCard (RFC 6350) field conventions. Clients are the primary relationship entity in Pipelinq.",
         "@type": "schema:Person",
-        "linkedTypes": ["flow", "time-tracker"],
+        "linkedTypes": [
+          "flow",
+          "time-tracker"
+        ],
         "required": [
           "name",
           "type"
@@ -130,11 +133,20 @@
         "slug": "contact",
         "x-openregister-notifications": {
           "newContact": {
-            "trigger": { "type": "created" },
+            "trigger": {
+              "type": "created"
+            },
             "enabled": true,
-            "channels": ["nc-notification"],
+            "channels": [
+              "nc-notification"
+            ],
             "recipients": [
-              { "kind": "groups", "groups": ["sales"] }
+              {
+                "kind": "groups",
+                "groups": [
+                  "sales"
+                ]
+              }
             ],
             "subject": {
               "nl": "Nieuw contact: {{name}}",
@@ -189,12 +201,24 @@
         "slug": "lead",
         "x-openregister-notifications": {
           "newLead": {
-            "trigger": { "type": "created" },
+            "trigger": {
+              "type": "created"
+            },
             "enabled": true,
-            "channels": ["nc-notification"],
+            "channels": [
+              "nc-notification"
+            ],
             "recipients": [
-              { "kind": "groups", "groups": ["sales"] },
-              { "kind": "field", "field": "assignee" }
+              {
+                "kind": "groups",
+                "groups": [
+                  "sales"
+                ]
+              },
+              {
+                "kind": "field",
+                "field": "assignee"
+              }
             ],
             "subject": {
               "nl": "Nieuwe lead: {{title}}",
@@ -202,12 +226,25 @@
             }
           },
           "leadWon": {
-            "trigger": { "type": "transition", "action": "win" },
+            "trigger": {
+              "type": "transition",
+              "action": "win"
+            },
             "enabled": true,
-            "channels": ["nc-notification"],
+            "channels": [
+              "nc-notification"
+            ],
             "recipients": [
-              { "kind": "groups", "groups": ["sales"] },
-              { "kind": "field", "field": "assignee" }
+              {
+                "kind": "groups",
+                "groups": [
+                  "sales"
+                ]
+              },
+              {
+                "kind": "field",
+                "field": "assignee"
+              }
             ],
             "subject": {
               "nl": "Lead gewonnen: {{title}}",
@@ -215,11 +252,19 @@
             }
           },
           "leadLost": {
-            "trigger": { "type": "transition", "action": "lose" },
+            "trigger": {
+              "type": "transition",
+              "action": "lose"
+            },
             "enabled": true,
-            "channels": ["nc-notification"],
+            "channels": [
+              "nc-notification"
+            ],
             "recipients": [
-              { "kind": "field", "field": "assignee" }
+              {
+                "kind": "field",
+                "field": "assignee"
+              }
             ],
             "subject": {
               "nl": "Lead verloren: {{title}}",
@@ -233,7 +278,11 @@
         "summary": "A sales lead or business opportunity",
         "description": "Represents a sales lead — a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.",
         "@type": "schema:Demand",
-        "linkedTypes": ["deck", "flow", "time-tracker"],
+        "linkedTypes": [
+          "deck",
+          "flow",
+          "time-tracker"
+        ],
         "configuration": {
           "x-openregister-relations": [
             {
@@ -249,10 +298,37 @@
           "x-openregister-lifecycle": {
             "field": "status",
             "initial": "open",
-            "final": ["won", "lost"],
+            "final": [
+              "won",
+              "lost"
+            ],
             "transitions": {
-              "win":  { "from": ["open"], "to": "won",  "description": "Close the lead as won. Authorization: assignee or a member of the sales group.", "authorization": { "field": "assignee", "groups": ["sales"] } },
-              "lose": { "from": ["open"], "to": "lost", "description": "Close the lead as lost. Authorization: assignee or a member of the sales group.", "authorization": { "field": "assignee", "groups": ["sales"] } }
+              "win": {
+                "from": [
+                  "open"
+                ],
+                "to": "won",
+                "description": "Close the lead as won. Authorization: assignee or a member of the sales group.",
+                "authorization": {
+                  "field": "assignee",
+                  "groups": [
+                    "sales"
+                  ]
+                }
+              },
+              "lose": {
+                "from": [
+                  "open"
+                ],
+                "to": "lost",
+                "description": "Close the lead as lost. Authorization: assignee or a member of the sales group.",
+                "authorization": {
+                  "field": "assignee",
+                  "groups": [
+                    "sales"
+                  ]
+                }
+              }
             }
           },
           "x-openregister-calculations": {
@@ -261,7 +337,13 @@
               "materialise": false,
               "description": "Staleness — days since the lead was last touched. Derived from @self.updated (the object's last save) so it is always fresh on read; lead-management spec staleness scenario (Scenario 49). A consumer flags the lead as stale when this exceeds the configured threshold.",
               "expression": {
-                "dateDiff": { "from": { "prop": "@self.updated" }, "to": "now", "unit": "days" }
+                "dateDiff": {
+                  "from": {
+                    "prop": "@self.updated"
+                  },
+                  "to": "now",
+                  "unit": "days"
+                }
               }
             },
             "daysInStage": {
@@ -270,7 +352,24 @@
               "description": "Aging — days the lead has spent in its current pipeline stage. Diffs stageEnteredAt against now; falls back to @self.created when the stage-change writer has not yet populated stageEnteredAt (lead-management spec Aging Indicator, Scenario 50/51).",
               "expression": {
                 "dateDiff": {
-                  "from": { "if": [ { "ne": [ { "prop": "stageEnteredAt" }, null ] }, { "prop": "stageEnteredAt" }, { "prop": "@self.created" } ] },
+                  "from": {
+                    "if": [
+                      {
+                        "ne": [
+                          {
+                            "prop": "stageEnteredAt"
+                          },
+                          null
+                        ]
+                      },
+                      {
+                        "prop": "stageEnteredAt"
+                      },
+                      {
+                        "prop": "@self.created"
+                      }
+                    ]
+                  },
                   "to": "now",
                   "unit": "days"
                 }
@@ -281,7 +380,19 @@
               "materialise": false,
               "description": "Probability-weighted lead value (value * probability / 100). Single-object derived figure feeding the Pipeline Value KPI. NOTE: the lead-management spec's 'lead value from line items' sum (Scenario: Calculate lead value from line items) is a cross-schema aggregation over leadProduct rows and is NOT expressible as a single-object calculation — it remains a service/frontend concern per ADR-031 exception (2).",
               "expression": {
-                "/": [ { "*": [ { "prop": "value" }, { "prop": "probability" } ] }, 100 ]
+                "/": [
+                  {
+                    "*": [
+                      {
+                        "prop": "value"
+                      },
+                      {
+                        "prop": "probability"
+                      }
+                    ]
+                  },
+                  100
+                ]
               }
             },
             "qualificationScore": {
@@ -290,14 +401,142 @@
               "description": "Backend qualification score (0-100), materialised on every save. Resolves the lead-management spec 'frontend vs backend qualification score' open question: the score is a backend calculation; the frontend reads it. Point weights mirror the spec's default scoring criteria (Scenario: Auto-calculate qualification score on lead save): value present +10, value above EUR 10000 +20, client linked +15, contact linked +10, source referral/partner +15, expectedCloseDate set +10, priority high/urgent +10, description present +5.",
               "expression": {
                 "+": [
-                  { "if": [ { "gt": [ { "prop": "value" }, 0 ] }, 10, 0 ] },
-                  { "if": [ { "gt": [ { "prop": "value" }, 10000 ] }, 20, 0 ] },
-                  { "if": [ { "ne": [ { "prop": "client" }, null ] }, 15, 0 ] },
-                  { "if": [ { "ne": [ { "prop": "contact" }, null ] }, 10, 0 ] },
-                  { "if": [ { "or": [ { "eq": [ { "prop": "source" }, "referral" ] }, { "eq": [ { "prop": "source" }, "partner" ] } ] }, 15, 0 ] },
-                  { "if": [ { "ne": [ { "prop": "expectedCloseDate" }, null ] }, 10, 0 ] },
-                  { "if": [ { "or": [ { "eq": [ { "prop": "priority" }, "high" ] }, { "eq": [ { "prop": "priority" }, "urgent" ] } ] }, 10, 0 ] },
-                  { "if": [ { "ne": [ { "prop": "description" }, null ] }, 5, 0 ] }
+                  {
+                    "if": [
+                      {
+                        "gt": [
+                          {
+                            "prop": "value"
+                          },
+                          0
+                        ]
+                      },
+                      10,
+                      0
+                    ]
+                  },
+                  {
+                    "if": [
+                      {
+                        "gt": [
+                          {
+                            "prop": "value"
+                          },
+                          10000
+                        ]
+                      },
+                      20,
+                      0
+                    ]
+                  },
+                  {
+                    "if": [
+                      {
+                        "ne": [
+                          {
+                            "prop": "client"
+                          },
+                          null
+                        ]
+                      },
+                      15,
+                      0
+                    ]
+                  },
+                  {
+                    "if": [
+                      {
+                        "ne": [
+                          {
+                            "prop": "contact"
+                          },
+                          null
+                        ]
+                      },
+                      10,
+                      0
+                    ]
+                  },
+                  {
+                    "if": [
+                      {
+                        "or": [
+                          {
+                            "eq": [
+                              {
+                                "prop": "source"
+                              },
+                              "referral"
+                            ]
+                          },
+                          {
+                            "eq": [
+                              {
+                                "prop": "source"
+                              },
+                              "partner"
+                            ]
+                          }
+                        ]
+                      },
+                      15,
+                      0
+                    ]
+                  },
+                  {
+                    "if": [
+                      {
+                        "ne": [
+                          {
+                            "prop": "expectedCloseDate"
+                          },
+                          null
+                        ]
+                      },
+                      10,
+                      0
+                    ]
+                  },
+                  {
+                    "if": [
+                      {
+                        "or": [
+                          {
+                            "eq": [
+                              {
+                                "prop": "priority"
+                              },
+                              "high"
+                            ]
+                          },
+                          {
+                            "eq": [
+                              {
+                                "prop": "priority"
+                              },
+                              "urgent"
+                            ]
+                          }
+                        ]
+                      },
+                      10,
+                      0
+                    ]
+                  },
+                  {
+                    "if": [
+                      {
+                        "ne": [
+                          {
+                            "prop": "description"
+                          },
+                          null
+                        ]
+                      },
+                      5,
+                      0
+                    ]
+                  }
                 ]
               }
             }
@@ -425,11 +664,19 @@
         "slug": "request",
         "x-openregister-notifications": {
           "requestCompleted": {
-            "trigger": { "type": "transition", "action": "complete" },
+            "trigger": {
+              "type": "transition",
+              "action": "complete"
+            },
             "enabled": true,
-            "channels": ["nc-notification"],
+            "channels": [
+              "nc-notification"
+            ],
             "recipients": [
-              { "kind": "field", "field": "assignee" }
+              {
+                "kind": "field",
+                "field": "assignee"
+              }
             ],
             "subject": {
               "nl": "Verzoek afgehandeld: {{title}}",
@@ -443,7 +690,11 @@
         "summary": "A service request (verzoek) — the pre-state of a case",
         "description": "Represents a client service request that may be converted to a case in Procest. Tracks status lifecycle, priority, assignment, and optional pipeline placement.",
         "@type": "schema:Demand",
-        "linkedTypes": ["deck", "flow", "time-tracker"],
+        "linkedTypes": [
+          "deck",
+          "flow",
+          "time-tracker"
+        ],
         "configuration": {
           "x-openregister-relations": [
             {
@@ -459,12 +710,59 @@
           "x-openregister-lifecycle": {
             "field": "status",
             "initial": "new",
-            "final": ["completed", "rejected", "converted"],
+            "final": [
+              "completed",
+              "rejected",
+              "converted"
+            ],
             "transitions": {
-              "start":    { "from": ["new"], "to": "in_progress", "description": "Pick up the request for handling. Authorization: the assignee or a member of the sales group.", "authorization": { "field": "assignee", "groups": ["sales"] } },
-              "complete": { "from": ["in_progress"], "to": "completed", "description": "Resolve the request successfully. Authorization: the assignee.", "authorization": { "field": "assignee" } },
-              "reject":   { "from": ["new", "in_progress"], "to": "rejected", "description": "Reject the request. Authorization: the assignee or a member of the sales group.", "authorization": { "field": "assignee", "groups": ["sales"] } },
-              "convert":  { "from": ["in_progress"], "to": "converted", "description": "Convert the request into a case (Procest). Authorization: the assignee.", "authorization": { "field": "assignee" } }
+              "start": {
+                "from": [
+                  "new"
+                ],
+                "to": "in_progress",
+                "description": "Pick up the request for handling. Authorization: the assignee or a member of the sales group.",
+                "authorization": {
+                  "field": "assignee",
+                  "groups": [
+                    "sales"
+                  ]
+                }
+              },
+              "complete": {
+                "from": [
+                  "in_progress"
+                ],
+                "to": "completed",
+                "description": "Resolve the request successfully. Authorization: the assignee.",
+                "authorization": {
+                  "field": "assignee"
+                }
+              },
+              "reject": {
+                "from": [
+                  "new",
+                  "in_progress"
+                ],
+                "to": "rejected",
+                "description": "Reject the request. Authorization: the assignee or a member of the sales group.",
+                "authorization": {
+                  "field": "assignee",
+                  "groups": [
+                    "sales"
+                  ]
+                }
+              },
+              "convert": {
+                "from": [
+                  "in_progress"
+                ],
+                "to": "converted",
+                "description": "Convert the request into a case (Procest). Authorization: the assignee.",
+                "authorization": {
+                  "field": "assignee"
+                }
+              }
             }
           }
         },
@@ -579,11 +877,19 @@
         "slug": "complaint",
         "x-openregister-notifications": {
           "complaintResolved": {
-            "trigger": { "type": "transition", "action": "resolve" },
+            "trigger": {
+              "type": "transition",
+              "action": "resolve"
+            },
             "enabled": true,
-            "channels": ["nc-notification"],
+            "channels": [
+              "nc-notification"
+            ],
             "recipients": [
-              { "kind": "field", "field": "assignee" }
+              {
+                "kind": "field",
+                "field": "assignee"
+              }
             ],
             "subject": {
               "nl": "Klacht opgelost: {{title}}",
@@ -601,11 +907,48 @@
           "x-openregister-lifecycle": {
             "field": "status",
             "initial": "new",
-            "final": ["resolved", "rejected"],
+            "final": [
+              "resolved",
+              "rejected"
+            ],
             "transitions": {
-              "start":   { "from": ["new"], "to": "in_progress", "description": "Begin handling the complaint. Authorization: the assignee or a member of the sales group.", "authorization": { "field": "assignee", "groups": ["sales"] } },
-              "resolve": { "from": ["in_progress"], "to": "resolved", "description": "Resolve the complaint to the customer's satisfaction. Authorization: the assignee.", "authorization": { "field": "assignee" } },
-              "reject":  { "from": ["new", "in_progress"], "to": "rejected", "description": "Reject the complaint as unfounded or out of scope. Authorization: the assignee or a member of the sales group.", "authorization": { "field": "assignee", "groups": ["sales"] } }
+              "start": {
+                "from": [
+                  "new"
+                ],
+                "to": "in_progress",
+                "description": "Begin handling the complaint. Authorization: the assignee or a member of the sales group.",
+                "authorization": {
+                  "field": "assignee",
+                  "groups": [
+                    "sales"
+                  ]
+                }
+              },
+              "resolve": {
+                "from": [
+                  "in_progress"
+                ],
+                "to": "resolved",
+                "description": "Resolve the complaint to the customer's satisfaction. Authorization: the assignee.",
+                "authorization": {
+                  "field": "assignee"
+                }
+              },
+              "reject": {
+                "from": [
+                  "new",
+                  "in_progress"
+                ],
+                "to": "rejected",
+                "description": "Reject the complaint as unfounded or out of scope. Authorization: the assignee or a member of the sales group.",
+                "authorization": {
+                  "field": "assignee",
+                  "groups": [
+                    "sales"
+                  ]
+                }
+              }
             }
           }
         },
@@ -1394,11 +1737,19 @@
         "slug": "task",
         "x-openregister-notifications": {
           "taskCompleted": {
-            "trigger": { "type": "transition", "action": "complete" },
+            "trigger": {
+              "type": "transition",
+              "action": "complete"
+            },
             "enabled": true,
-            "channels": ["nc-notification"],
+            "channels": [
+              "nc-notification"
+            ],
             "recipients": [
-              { "kind": "field", "field": "assignee" }
+              {
+                "kind": "field",
+                "field": "assignee"
+              }
             ],
             "subject": {
               "nl": "Taak afgerond: {{subject}}",
@@ -1406,11 +1757,19 @@
             }
           },
           "taskExpired": {
-            "trigger": { "type": "transition", "action": "expire" },
+            "trigger": {
+              "type": "transition",
+              "action": "expire"
+            },
             "enabled": true,
-            "channels": ["nc-notification"],
+            "channels": [
+              "nc-notification"
+            ],
             "recipients": [
-              { "kind": "field", "field": "assignee" }
+              {
+                "kind": "field",
+                "field": "assignee"
+              }
             ],
             "subject": {
               "nl": "Taak verlopen: {{subject}}",
@@ -1430,10 +1789,35 @@
             "initial": "open",
             "final": [],
             "transitions": {
-              "claim":    { "from": ["open"],           "to": "in_behandeling", "description": "Pick up the task: caller becomes the assignee." },
-              "complete": { "from": ["in_behandeling"], "to": "afgerond",       "description": "Mark the task as completed." },
-              "expire":   { "from": ["in_behandeling"], "to": "verlopen",       "description": "Mark the task as expired (deadline passed)." },
-              "reopen":   { "from": ["afgerond", "verlopen"], "to": "open",     "description": "Re-open a closed or expired task." }
+              "claim": {
+                "from": [
+                  "open"
+                ],
+                "to": "in_behandeling",
+                "description": "Pick up the task: caller becomes the assignee."
+              },
+              "complete": {
+                "from": [
+                  "in_behandeling"
+                ],
+                "to": "afgerond",
+                "description": "Mark the task as completed."
+              },
+              "expire": {
+                "from": [
+                  "in_behandeling"
+                ],
+                "to": "verlopen",
+                "description": "Mark the task as expired (deadline passed)."
+              },
+              "reopen": {
+                "from": [
+                  "afgerond",
+                  "verlopen"
+                ],
+                "to": "open",
+                "description": "Re-open a closed or expired task."
+              }
             }
           },
           "x-openregister-archival": {
@@ -1601,9 +1985,38 @@
             "initial": "concept",
             "final": [],
             "transitions": {
-              "publish":  { "from": ["concept", "gearchiveerd"], "to": "gepubliceerd", "description": "Publish the article so it becomes available to agents (intern) and, when visibility is openbaar, to citizens. Authorization: author or a knowledge editor.", "authorization": { "field": "author" } },
-              "archive":  { "from": ["gepubliceerd", "concept"], "to": "gearchiveerd", "description": "Withdraw the article from publication and archive it. Authorization: author or a knowledge editor.", "authorization": { "field": "author" } },
-              "reopen":   { "from": ["gearchiveerd"], "to": "concept", "description": "Move an archived article back to concept for further editing. Authorization: author or a knowledge editor.", "authorization": { "field": "author" } }
+              "publish": {
+                "from": [
+                  "concept",
+                  "gearchiveerd"
+                ],
+                "to": "gepubliceerd",
+                "description": "Publish the article so it becomes available to agents (intern) and, when visibility is openbaar, to citizens. Authorization: author or a knowledge editor.",
+                "authorization": {
+                  "field": "author"
+                }
+              },
+              "archive": {
+                "from": [
+                  "gepubliceerd",
+                  "concept"
+                ],
+                "to": "gearchiveerd",
+                "description": "Withdraw the article from publication and archive it. Authorization: author or a knowledge editor.",
+                "authorization": {
+                  "field": "author"
+                }
+              },
+              "reopen": {
+                "from": [
+                  "gearchiveerd"
+                ],
+                "to": "concept",
+                "description": "Move an archived article back to concept for further editing. Authorization: author or a knowledge editor.",
+                "authorization": {
+                  "field": "author"
+                }
+              }
             }
           },
           "x-openregister-archival": {
@@ -1945,10 +2358,31 @@
           "x-openregister-lifecycle": {
             "field": "status",
             "initial": "scheduled",
-            "final": ["completed", "cancelled"],
+            "final": [
+              "completed",
+              "cancelled"
+            ],
             "transitions": {
-              "complete": { "from": ["scheduled"], "to": "completed", "description": "Mark the linked calendar event as completed (the meeting took place). Authorization: the event owner or the entity assignee.", "authorization": { "field": "createdFrom" } },
-              "cancel":   { "from": ["scheduled"], "to": "cancelled", "description": "Cancel the linked calendar event. Authorization: the event owner or the entity assignee.", "authorization": { "field": "createdFrom" } }
+              "complete": {
+                "from": [
+                  "scheduled"
+                ],
+                "to": "completed",
+                "description": "Mark the linked calendar event as completed (the meeting took place). Authorization: the event owner or the entity assignee.",
+                "authorization": {
+                  "field": "createdFrom"
+                }
+              },
+              "cancel": {
+                "from": [
+                  "scheduled"
+                ],
+                "to": "cancelled",
+                "description": "Cancel the linked calendar event. Authorization: the event owner or the entity assignee.",
+                "authorization": {
+                  "field": "createdFrom"
+                }
+              }
             }
           }
         },
@@ -2485,11 +2919,77 @@
             "field": "status",
             "initial": "draft",
             "transitions": {
-              "confirm": { "from": ["draft", "parked"], "to": "confirmed", "description": "Confirm a draft or parked cart. Authorization: the cashier who owns the transaction, a member of the POS group, or an admin. The server recomputes totals and rejects an empty cart.", "authorization": { "field": "cashier", "groups": ["pos"] }, "requires": "OCA\\Pipelinq\\Lifecycle\\PosTransactionConfirmGuard" },
-              "settle":  { "from": ["confirmed"], "to": "settled", "description": "Mark a confirmed transaction as paid. Authorization: the cashier, a POS-group member, or an admin.", "authorization": { "field": "cashier", "groups": ["pos"] }, "requires": "OCA\\Pipelinq\\Lifecycle\\PosTransactionAccessGuard" },
-              "park":    { "from": ["draft"], "to": "parked", "description": "Park a draft cart for later. Authorization: the cashier, a POS-group member, or an admin.", "authorization": { "field": "cashier", "groups": ["pos"] }, "requires": "OCA\\Pipelinq\\Lifecycle\\PosTransactionAccessGuard" },
-              "resume":  { "from": ["parked"], "to": "draft", "description": "Resume a parked cart to draft. Authorization: the cashier, a POS-group member, or an admin.", "authorization": { "field": "cashier", "groups": ["pos"] }, "requires": "OCA\\Pipelinq\\Lifecycle\\PosTransactionAccessGuard" },
-              "refund":  { "from": ["confirmed", "settled"], "to": "refunded", "description": "Refund / void a confirmed or settled transaction. Authorization: a POS manager (member of the configured manager group) or an admin only.", "authorization": { "groups": ["pos_managers"] }, "requires": "OCA\\Pipelinq\\Lifecycle\\PosTransactionRefundGuard" }
+              "confirm": {
+                "from": [
+                  "draft",
+                  "parked"
+                ],
+                "to": "confirmed",
+                "description": "Confirm a draft or parked cart. Authorization: the cashier who owns the transaction, a member of the POS group, or an admin. The server recomputes totals and rejects an empty cart.",
+                "authorization": {
+                  "field": "cashier",
+                  "groups": [
+                    "pos"
+                  ]
+                },
+                "requires": "OCA\\Pipelinq\\Lifecycle\\PosTransactionConfirmGuard"
+              },
+              "settle": {
+                "from": [
+                  "confirmed"
+                ],
+                "to": "settled",
+                "description": "Mark a confirmed transaction as paid. Authorization: the cashier, a POS-group member, or an admin.",
+                "authorization": {
+                  "field": "cashier",
+                  "groups": [
+                    "pos"
+                  ]
+                },
+                "requires": "OCA\\Pipelinq\\Lifecycle\\PosTransactionAccessGuard"
+              },
+              "park": {
+                "from": [
+                  "draft"
+                ],
+                "to": "parked",
+                "description": "Park a draft cart for later. Authorization: the cashier, a POS-group member, or an admin.",
+                "authorization": {
+                  "field": "cashier",
+                  "groups": [
+                    "pos"
+                  ]
+                },
+                "requires": "OCA\\Pipelinq\\Lifecycle\\PosTransactionAccessGuard"
+              },
+              "resume": {
+                "from": [
+                  "parked"
+                ],
+                "to": "draft",
+                "description": "Resume a parked cart to draft. Authorization: the cashier, a POS-group member, or an admin.",
+                "authorization": {
+                  "field": "cashier",
+                  "groups": [
+                    "pos"
+                  ]
+                },
+                "requires": "OCA\\Pipelinq\\Lifecycle\\PosTransactionAccessGuard"
+              },
+              "refund": {
+                "from": [
+                  "confirmed",
+                  "settled"
+                ],
+                "to": "refunded",
+                "description": "Refund / void a confirmed or settled transaction. Authorization: a POS manager (member of the configured manager group) or an admin only.",
+                "authorization": {
+                  "groups": [
+                    "pos_managers"
+                  ]
+                },
+                "requires": "OCA\\Pipelinq\\Lifecycle\\PosTransactionRefundGuard"
+              }
             }
           }
         },
@@ -2770,10 +3270,37 @@
           "x-openregister-lifecycle": {
             "field": "status",
             "initial": "pending",
-            "final": ["completed", "rejected"],
+            "final": [
+              "completed",
+              "rejected"
+            ],
             "transitions": {
-              "complete": { "from": ["pending"], "to": "completed", "description": "Confirm a pending refund (emits reversal + stock events). Authorization: a POS manager or admin only. The cumulative over-refund cap is enforced and amounts are recomputed server-side.", "authorization": { "groups": ["pos_managers"] }, "requires": "OCA\\Pipelinq\\Lifecycle\\PosRefundManagerGuard" },
-              "reject":   { "from": ["pending"], "to": "rejected", "description": "Reject a pending refund. Authorization: a POS manager or admin only.", "authorization": { "groups": ["pos_managers"] }, "requires": "OCA\\Pipelinq\\Lifecycle\\PosRefundManagerGuard" }
+              "complete": {
+                "from": [
+                  "pending"
+                ],
+                "to": "completed",
+                "description": "Confirm a pending refund (emits reversal + stock events). Authorization: a POS manager or admin only. The cumulative over-refund cap is enforced and amounts are recomputed server-side.",
+                "authorization": {
+                  "groups": [
+                    "pos_managers"
+                  ]
+                },
+                "requires": "OCA\\Pipelinq\\Lifecycle\\PosRefundManagerGuard"
+              },
+              "reject": {
+                "from": [
+                  "pending"
+                ],
+                "to": "rejected",
+                "description": "Reject a pending refund. Authorization: a POS manager or admin only.",
+                "authorization": {
+                  "groups": [
+                    "pos_managers"
+                  ]
+                },
+                "requires": "OCA\\Pipelinq\\Lifecycle\\PosRefundManagerGuard"
+              }
             }
           }
         },
@@ -3112,12 +3639,30 @@
         "subtotal": 24.65,
         "discountTotal": 0,
         "taxBreakdown": [
-          { "rate": 9, "base": 18.65, "tax": 1.68 },
-          { "rate": 21, "base": 6.00, "tax": 1.26 }
+          {
+            "rate": 9,
+            "base": 18.65,
+            "tax": 1.68
+          },
+          {
+            "rate": 21,
+            "base": 6.0,
+            "tax": 1.26
+          }
         ],
         "invoiceBreakdown": [
-          { "rate": 9, "base": 18.65, "tax": 1.68, "description": "Verlaagd tarief (9%)" },
-          { "rate": 21, "base": 6.00, "tax": 1.26, "description": "Standaardtarief (21%)" }
+          {
+            "rate": 9,
+            "base": 18.65,
+            "tax": 1.68,
+            "description": "Verlaagd tarief (9%)"
+          },
+          {
+            "rate": 21,
+            "base": 6.0,
+            "tax": 1.26,
+            "description": "Standaardtarief (21%)"
+          }
         ],
         "totalTax": 2.94,
         "total": 27.59,
@@ -3145,18 +3690,45 @@
         "status": "confirmed",
         "priceMode": "excl",
         "subtotal": 107.96,
-        "discountTotal": 5.50,
+        "discountTotal": 5.5,
         "taxBreakdown": [
-          { "rate": 0, "base": 10.00, "tax": 0 },
-          { "rate": 9, "base": 8.49, "tax": 0.76 },
-          { "rate": 21, "base": 89.47, "tax": 17.34 }
+          {
+            "rate": 0,
+            "base": 10.0,
+            "tax": 0
+          },
+          {
+            "rate": 9,
+            "base": 8.49,
+            "tax": 0.76
+          },
+          {
+            "rate": 21,
+            "base": 89.47,
+            "tax": 17.34
+          }
         ],
         "invoiceBreakdown": [
-          { "rate": 0, "base": 10.00, "tax": 0, "description": "Nultarief (0%)" },
-          { "rate": 9, "base": 8.49, "tax": 0.76, "description": "Verlaagd tarief (9%)" },
-          { "rate": 21, "base": 89.47, "tax": 17.34, "description": "Standaardtarief (21%)" }
+          {
+            "rate": 0,
+            "base": 10.0,
+            "tax": 0,
+            "description": "Nultarief (0%)"
+          },
+          {
+            "rate": 9,
+            "base": 8.49,
+            "tax": 0.76,
+            "description": "Verlaagd tarief (9%)"
+          },
+          {
+            "rate": 21,
+            "base": 89.47,
+            "tax": 17.34,
+            "description": "Standaardtarief (21%)"
+          }
         ],
-        "totalTax": 18.10,
+        "totalTax": 18.1,
         "total": 126.06,
         "confirmedAt": "2026-05-20T10:33:00+02:00",
         "notes": "Zakelijke aankoop -- factuur gevraagd (gemengd 0%/9%/21%)"
@@ -3170,9 +3742,20 @@
         "priceMode": "incl",
         "subtotal": 22.89,
         "discountTotal": 0,
-        "taxBreakdown": [{ "rate": 9, "base": 22.89, "tax": 2.06 }],
+        "taxBreakdown": [
+          {
+            "rate": 9,
+            "base": 22.89,
+            "tax": 2.06
+          }
+        ],
         "invoiceBreakdown": [
-          { "rate": 9, "base": 22.89, "tax": 2.06, "description": "Verlaagd tarief (9%)" }
+          {
+            "rate": 9,
+            "base": 22.89,
+            "tax": 2.06,
+            "description": "Verlaagd tarief (9%)"
+          }
         ],
         "totalTax": 2.06,
         "total": 24.95,
@@ -3186,15 +3769,33 @@
         "terminalId": "kassa-01",
         "status": "refunded",
         "priceMode": "excl",
-        "subtotal": 718.30,
+        "subtotal": 718.3,
         "discountTotal": 0,
         "taxBreakdown": [
-          { "rate": 9, "base": 15.00, "tax": 1.35 },
-          { "rate": 21, "base": 703.30, "tax": 147.69 }
+          {
+            "rate": 9,
+            "base": 15.0,
+            "tax": 1.35
+          },
+          {
+            "rate": 21,
+            "base": 703.3,
+            "tax": 147.69
+          }
         ],
         "invoiceBreakdown": [
-          { "rate": 9, "base": 15.00, "tax": 1.35, "description": "Verlaagd tarief (9%)" },
-          { "rate": 21, "base": 703.30, "tax": 147.69, "description": "Standaardtarief (21%)" }
+          {
+            "rate": 9,
+            "base": 15.0,
+            "tax": 1.35,
+            "description": "Verlaagd tarief (9%)"
+          },
+          {
+            "rate": 21,
+            "base": 703.3,
+            "tax": 147.69,
+            "description": "Standaardtarief (21%)"
+          }
         ],
         "totalTax": 149.04,
         "total": 867.34,
@@ -3224,7 +3825,7 @@
         "discount": 0,
         "taxRate": 9,
         "taxAmount": 1.15,
-        "lineTotal": 13.90,
+        "lineTotal": 13.9,
         "sortOrder": 2
       },
       {
@@ -3232,7 +3833,7 @@
         "transaction": "2c46f6e5-ee99-4dea-97ea-19d7efbf3e33",
         "description": "Notitieboek A5 gelinieerd",
         "quantity": 1,
-        "unitPrice": 6.00,
+        "unitPrice": 6.0,
         "discount": 0,
         "taxRate": 21,
         "taxAmount": 1.26,
@@ -3280,11 +3881,11 @@
         "transaction": "f838244c-2939-44c1-aa23-549dea3682bc",
         "description": "Cadeaubon (waardebon)",
         "quantity": 1,
-        "unitPrice": 10.00,
+        "unitPrice": 10.0,
         "discount": 0,
         "taxRate": 0,
         "taxAmount": 0,
-        "lineTotal": 10.00,
+        "lineTotal": 10.0,
         "sortOrder": 4,
         "notes": "Vrijgesteld -- waardebon, geen BTW"
       },
@@ -3293,7 +3894,7 @@
         "transaction": "abb458c8-dc02-43a1-b37f-b142b6b94484",
         "description": "Laptop 14 inch (refurbished)",
         "quantity": 1,
-        "unitPrice": 703.30,
+        "unitPrice": 703.3,
         "discount": 0,
         "taxRate": 21,
         "taxAmount": 147.69,
@@ -3306,7 +3907,7 @@
         "transaction": "abb458c8-dc02-43a1-b37f-b142b6b94484",
         "description": "Laptophoes vilt 14 inch",
         "quantity": 1,
-        "unitPrice": 15.00,
+        "unitPrice": 15.0,
         "discount": 0,
         "taxRate": 9,
         "taxAmount": 1.35,
@@ -3314,12 +3915,16 @@
         "sortOrder": 2
       },
       {
-        "@self": { "register": "pipelinq", "schema": "product", "slug": "product-cappuccino" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "product",
+          "slug": "product-cappuccino"
+        },
         "name": "Cappuccino",
         "description": "Verse espresso met opgeklopte melk",
         "sku": "DRK-001",
         "barcode": "8714100838623",
-        "unitPrice": 3.50,
+        "unitPrice": 3.5,
         "type": "product",
         "status": "active",
         "unit": "stuk",
@@ -3333,10 +3938,22 @@
             "min": 0,
             "max": 1,
             "options": [
-              { "name": "Volle melk", "priceAdjustment": 0 },
-              { "name": "Halfvolle melk", "priceAdjustment": 0 },
-              { "name": "Havermelk", "priceAdjustment": 0.60 },
-              { "name": "Amandelmelk", "priceAdjustment": 0.60 }
+              {
+                "name": "Volle melk",
+                "priceAdjustment": 0
+              },
+              {
+                "name": "Halfvolle melk",
+                "priceAdjustment": 0
+              },
+              {
+                "name": "Havermelk",
+                "priceAdjustment": 0.6
+              },
+              {
+                "name": "Amandelmelk",
+                "priceAdjustment": 0.6
+              }
             ]
           },
           {
@@ -3346,14 +3963,24 @@
             "min": 1,
             "max": 1,
             "options": [
-              { "name": "Klein (150ml)", "priceAdjustment": 0 },
-              { "name": "Groot (250ml)", "priceAdjustment": 0.80 }
+              {
+                "name": "Klein (150ml)",
+                "priceAdjustment": 0
+              },
+              {
+                "name": "Groot (250ml)",
+                "priceAdjustment": 0.8
+              }
             ]
           }
         ]
       },
       {
-        "@self": { "register": "pipelinq", "schema": "product", "slug": "product-tshirt-conduction" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "product",
+          "slug": "product-tshirt-conduction"
+        },
         "name": "T-shirt Conduction",
         "description": "Unisex katoenen T-shirt met Conduction logo",
         "sku": "KLD-TSH-001",
@@ -3365,16 +3992,80 @@
         "taxRate": 21,
         "btwClass": "hoog",
         "variants": [
-          { "sku": "TSH-S-WIT", "name": "S — Wit", "attributes": { "maat": "S", "kleur": "Wit" }, "unitPrice": 19.95, "barcode": "8712345600002", "status": "active" },
-          { "sku": "TSH-M-WIT", "name": "M — Wit", "attributes": { "maat": "M", "kleur": "Wit" }, "unitPrice": 19.95, "barcode": "8712345600003", "status": "active" },
-          { "sku": "TSH-L-WIT", "name": "L — Wit", "attributes": { "maat": "L", "kleur": "Wit" }, "unitPrice": 19.95, "barcode": "8712345600004", "status": "active" },
-          { "sku": "TSH-S-ZWA", "name": "S — Zwart", "attributes": { "maat": "S", "kleur": "Zwart" }, "unitPrice": 19.95, "barcode": "8712345600005", "status": "active" },
-          { "sku": "TSH-M-ZWA", "name": "M — Zwart", "attributes": { "maat": "M", "kleur": "Zwart" }, "unitPrice": 19.95, "barcode": "8712345600006", "status": "active" },
-          { "sku": "TSH-L-ZWA", "name": "L — Zwart", "attributes": { "maat": "L", "kleur": "Zwart" }, "unitPrice": 21.95, "barcode": "8712345600007", "status": "active" }
+          {
+            "sku": "TSH-S-WIT",
+            "name": "S — Wit",
+            "attributes": {
+              "maat": "S",
+              "kleur": "Wit"
+            },
+            "unitPrice": 19.95,
+            "barcode": "8712345600002",
+            "status": "active"
+          },
+          {
+            "sku": "TSH-M-WIT",
+            "name": "M — Wit",
+            "attributes": {
+              "maat": "M",
+              "kleur": "Wit"
+            },
+            "unitPrice": 19.95,
+            "barcode": "8712345600003",
+            "status": "active"
+          },
+          {
+            "sku": "TSH-L-WIT",
+            "name": "L — Wit",
+            "attributes": {
+              "maat": "L",
+              "kleur": "Wit"
+            },
+            "unitPrice": 19.95,
+            "barcode": "8712345600004",
+            "status": "active"
+          },
+          {
+            "sku": "TSH-S-ZWA",
+            "name": "S — Zwart",
+            "attributes": {
+              "maat": "S",
+              "kleur": "Zwart"
+            },
+            "unitPrice": 19.95,
+            "barcode": "8712345600005",
+            "status": "active"
+          },
+          {
+            "sku": "TSH-M-ZWA",
+            "name": "M — Zwart",
+            "attributes": {
+              "maat": "M",
+              "kleur": "Zwart"
+            },
+            "unitPrice": 19.95,
+            "barcode": "8712345600006",
+            "status": "active"
+          },
+          {
+            "sku": "TSH-L-ZWA",
+            "name": "L — Zwart",
+            "attributes": {
+              "maat": "L",
+              "kleur": "Zwart"
+            },
+            "unitPrice": 21.95,
+            "barcode": "8712345600007",
+            "status": "active"
+          }
         ]
       },
       {
-        "@self": { "register": "pipelinq", "schema": "product", "slug": "product-a4-papier-500vel" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "product",
+          "slug": "product-a4-papier-500vel"
+        },
         "name": "A4 Papier 500 vel",
         "description": "Wit kopieerpapier 80 g/m², pak van 500 vel",
         "sku": "KAN-PAP-001",
@@ -3386,17 +4077,33 @@
         "taxRate": 21,
         "btwClass": "hoog",
         "priceTiers": [
-          { "minQuantity": 1, "unitPrice": 5.49, "label": "Losse verpakking" },
-          { "minQuantity": 5, "unitPrice": 4.75, "label": "Doos (5 pakken)" },
-          { "minQuantity": 10, "unitPrice": 4.25, "label": "Pallet (10+ pakken)" }
+          {
+            "minQuantity": 1,
+            "unitPrice": 5.49,
+            "label": "Losse verpakking"
+          },
+          {
+            "minQuantity": 5,
+            "unitPrice": 4.75,
+            "label": "Doos (5 pakken)"
+          },
+          {
+            "minQuantity": 10,
+            "unitPrice": 4.25,
+            "label": "Pallet (10+ pakken)"
+          }
         ]
       },
       {
-        "@self": { "register": "pipelinq", "schema": "product", "slug": "product-knippen-fohnen" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "product",
+          "slug": "product-knippen-fohnen"
+        },
         "name": "Knippen en Föhnen",
         "description": "Wassen, knippen en föhnen bij de kapper",
         "sku": "SRV-KAP-001",
-        "unitPrice": 42.50,
+        "unitPrice": 42.5,
         "type": "service",
         "status": "active",
         "unit": "behandeling",
@@ -3411,19 +4118,32 @@
             "min": 0,
             "max": 3,
             "options": [
-              { "name": "Kleur bijwerken", "priceAdjustment": 25.00 },
-              { "name": "Voedingsmasker", "priceAdjustment": 12.50 },
-              { "name": "Hoofdmassage", "priceAdjustment": 8.00 }
+              {
+                "name": "Kleur bijwerken",
+                "priceAdjustment": 25.0
+              },
+              {
+                "name": "Voedingsmasker",
+                "priceAdjustment": 12.5
+              },
+              {
+                "name": "Hoofdmassage",
+                "priceAdjustment": 8.0
+              }
             ]
           }
         ]
       },
       {
-        "@self": { "register": "pipelinq", "schema": "product", "slug": "product-adviesgesprek" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "product",
+          "slug": "product-adviesgesprek"
+        },
         "name": "Adviesgesprek",
         "description": "Persoonlijk adviesgesprek met een gecertificeerd consultant",
         "sku": "SRV-ADV-001",
-        "unitPrice": 125.00,
+        "unitPrice": 125.0,
         "type": "service",
         "status": "active",
         "unit": "uur",
@@ -3431,13 +4151,29 @@
         "btwClass": "vrijgesteld",
         "duration": 60,
         "priceTiers": [
-          { "minQuantity": 1, "unitPrice": 125.00, "label": "Enkel gesprek" },
-          { "minQuantity": 4, "unitPrice": 110.00, "label": "Pakket 4 gesprekken" },
-          { "minQuantity": 10, "unitPrice": 95.00, "label": "Jaarprogramma (10+)" }
+          {
+            "minQuantity": 1,
+            "unitPrice": 125.0,
+            "label": "Enkel gesprek"
+          },
+          {
+            "minQuantity": 4,
+            "unitPrice": 110.0,
+            "label": "Pakket 4 gesprekken"
+          },
+          {
+            "minQuantity": 10,
+            "unitPrice": 95.0,
+            "label": "Jaarprogramma (10+)"
+          }
         ]
       },
       {
-        "@self": { "register": "pipelinq", "schema": "product", "slug": "product-shampoo-keratine" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "product",
+          "slug": "product-shampoo-keratine"
+        },
         "name": "Shampoo Keratine",
         "description": "Voedende keratineshampoo voor beschadigd haar, 250 ml",
         "sku": "HAR-SHA-001",
@@ -3450,7 +4186,11 @@
         "btwClass": "hoog"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "product", "slug": "product-haargel-flex-hold" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "product",
+          "slug": "product-haargel-flex-hold"
+        },
         "name": "Haargel Flex Hold",
         "description": "Stijlvaste haargel met flexibele hold, zonder uitdrogen",
         "sku": "HAR-GEL-002",
@@ -3462,31 +4202,93 @@
         "taxRate": 21,
         "btwClass": "hoog",
         "variants": [
-          { "sku": "HAR-GEL-002-75", "name": "75 ml", "attributes": { "inhoud": "75 ml" }, "unitPrice": 5.95, "barcode": "8714100247038", "status": "active" },
-          { "sku": "HAR-GEL-002-150", "name": "150 ml", "attributes": { "inhoud": "150 ml" }, "unitPrice": 8.95, "barcode": "8714100247045", "status": "active" },
-          { "sku": "HAR-GEL-002-300", "name": "300 ml", "attributes": { "inhoud": "300 ml" }, "unitPrice": 14.50, "barcode": "8714100247052", "status": "active" }
+          {
+            "sku": "HAR-GEL-002-75",
+            "name": "75 ml",
+            "attributes": {
+              "inhoud": "75 ml"
+            },
+            "unitPrice": 5.95,
+            "barcode": "8714100247038",
+            "status": "active"
+          },
+          {
+            "sku": "HAR-GEL-002-150",
+            "name": "150 ml",
+            "attributes": {
+              "inhoud": "150 ml"
+            },
+            "unitPrice": 8.95,
+            "barcode": "8714100247045",
+            "status": "active"
+          },
+          {
+            "sku": "HAR-GEL-002-300",
+            "name": "300 ml",
+            "attributes": {
+              "inhoud": "300 ml"
+            },
+            "unitPrice": 14.5,
+            "barcode": "8714100247052",
+            "status": "active"
+          }
         ]
       },
       {
-        "@self": { "register": "pipelinq", "schema": "product", "slug": "product-nagellak-set" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "product",
+          "slug": "product-nagellak-set"
+        },
         "name": "Nagellak Essie",
         "description": "Professionele nagellak, langhoudend, 13.5 ml",
         "sku": "NAG-LAK-001",
         "barcode": "30008361",
-        "unitPrice": 10.50,
+        "unitPrice": 10.5,
         "type": "product",
         "status": "active",
         "unit": "flesje",
         "taxRate": 21,
         "btwClass": "hoog",
         "variants": [
-          { "sku": "NAG-LAK-001-RED", "name": "Ballet Slippers (roze)", "attributes": { "kleur": "Ballet Slippers" }, "unitPrice": 10.50, "barcode": "30008362", "status": "active" },
-          { "sku": "NAG-LAK-001-BLU", "name": "Lapiz of Luxury (blauw)", "attributes": { "kleur": "Lapiz of Luxury" }, "unitPrice": 10.50, "barcode": "30008363", "status": "active" },
-          { "sku": "NAG-LAK-001-NUD", "name": "Vanity Fairest (nude)", "attributes": { "kleur": "Vanity Fairest" }, "unitPrice": 10.50, "barcode": "30008364", "status": "active" }
+          {
+            "sku": "NAG-LAK-001-RED",
+            "name": "Ballet Slippers (roze)",
+            "attributes": {
+              "kleur": "Ballet Slippers"
+            },
+            "unitPrice": 10.5,
+            "barcode": "30008362",
+            "status": "active"
+          },
+          {
+            "sku": "NAG-LAK-001-BLU",
+            "name": "Lapiz of Luxury (blauw)",
+            "attributes": {
+              "kleur": "Lapiz of Luxury"
+            },
+            "unitPrice": 10.5,
+            "barcode": "30008363",
+            "status": "active"
+          },
+          {
+            "sku": "NAG-LAK-001-NUD",
+            "name": "Vanity Fairest (nude)",
+            "attributes": {
+              "kleur": "Vanity Fairest"
+            },
+            "unitPrice": 10.5,
+            "barcode": "30008364",
+            "status": "active"
+          }
         ]
       },
       {
-        "@self": { "register": "pipelinq", "schema": "product", "slug": "product-conditioner-hydra" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "product",
+          "slug": "product-conditioner-hydra"
+        },
         "name": "Conditioner Hydra Boost",
         "description": "Intensieve herstelconditioner met hyaluronzuur, 300 ml",
         "sku": "HAR-CON-003",
@@ -3499,12 +4301,16 @@
         "btwClass": "laag"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "product", "slug": "product-kleurenkaart-salontester" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "product",
+          "slug": "product-kleurenkaart-salontester"
+        },
         "name": "Kleurenkaart Salontester",
         "description": "Haar-kleurenkaart voor gebruik in de salonruimte — niet voor verkoop",
         "sku": "SLN-TST-001",
         "barcode": "8720608999001",
-        "unitPrice": 0.00,
+        "unitPrice": 0.0,
         "type": "product",
         "status": "active",
         "unit": "stuk",
@@ -3512,42 +4318,66 @@
         "btwClass": "hoog"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "refundReason", "slug": "reason-damaged" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "refundReason",
+          "slug": "reason-damaged"
+        },
         "code": "DAMAGED",
         "label": "Artikel beschadigd",
         "description": "Goederen ontvangen in beschadigde staat",
         "isActive": true
       },
       {
-        "@self": { "register": "pipelinq", "schema": "refundReason", "slug": "reason-unwanted" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "refundReason",
+          "slug": "reason-unwanted"
+        },
         "code": "UNWANTED",
         "label": "Klant wil terug",
         "description": "Klant is van gedachten veranderd",
         "isActive": true
       },
       {
-        "@self": { "register": "pipelinq", "schema": "refundReason", "slug": "reason-wrong-item" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "refundReason",
+          "slug": "reason-wrong-item"
+        },
         "code": "WRONG",
         "label": "Verkeerd artikel",
         "description": "Verkeerde artikel gegeven of besteld",
         "isActive": true
       },
       {
-        "@self": { "register": "pipelinq", "schema": "refundReason", "slug": "reason-expired" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "refundReason",
+          "slug": "reason-expired"
+        },
         "code": "EXPIRED",
         "label": "Verlopen product",
         "description": "Goederen zijn verlopen",
         "isActive": true
       },
       {
-        "@self": { "register": "pipelinq", "schema": "refundReason", "slug": "reason-error" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "refundReason",
+          "slug": "reason-error"
+        },
         "code": "ERROR",
         "label": "Kassa-fout",
         "description": "Fout gemaakt bij invoering of betaling",
         "isActive": true
       },
       {
-        "@self": { "register": "pipelinq", "schema": "refundReason", "slug": "reason-other" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "refundReason",
+          "slug": "reason-other"
+        },
         "code": "OTHER",
         "label": "Overig",
         "description": "Andere reden",
@@ -3589,7 +4419,7 @@
         "refundReason": "reason-damaged",
         "paymentMethod": "card_mastercard",
         "paymentReference": "MC-9012",
-        "refundAmount": 703.30,
+        "refundAmount": 703.3,
         "totalTax": 147.69,
         "confirmedAt": "2026-05-20T10:00:00+02:00",
         "notes": "Laptop volledig retour na verzendschade. Klant is tevreden met volledige terugbetaling."
@@ -3626,7 +4456,7 @@
         "returnReason": "reason-wrong-item",
         "restock": true,
         "taxAmount": 6.95,
-        "lineTotal": 49.80,
+        "lineTotal": 49.8,
         "notes": "Klant had 5-poorts hub nodig, niet 7-poorts"
       },
       {
@@ -3637,7 +4467,7 @@
         "returnReason": "reason-damaged",
         "restock": false,
         "taxAmount": 147.69,
-        "lineTotal": 851.00,
+        "lineTotal": 851.0,
         "notes": "Verzendschade — groot gat in scherm"
       },
       {
@@ -3661,6 +4491,86 @@
         "taxAmount": 0.38,
         "lineTotal": 4.63,
         "notes": "Een broodje te veel gegeven op kassamachine"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "contactmoment",
+          "slug": "contactmoment-rapportage-seed-1"
+        },
+        "subject": "Vraag over parkeervergunning",
+        "channel": "telefoon",
+        "agent": "uid:agent.bakker",
+        "outcome": "opgelost",
+        "contactedAt": "2026-04-14T09:15:00Z",
+        "duration": "PT4M30S",
+        "channelMetadata": {
+          "waitTime": 25
+        }
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "contactmoment",
+          "slug": "contactmoment-rapportage-seed-2"
+        },
+        "subject": "Status aanvraag omgevingsvergunning",
+        "channel": "email",
+        "agent": "uid:agent.jansen",
+        "outcome": "opgelost",
+        "contactedAt": "2026-04-14T10:30:00Z",
+        "duration": "PT2M00S",
+        "channelMetadata": {
+          "responseTimeHours": 6
+        }
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "contactmoment",
+          "slug": "contactmoment-rapportage-seed-3"
+        },
+        "subject": "Afvalophaal gemist op Keizersgracht",
+        "channel": "balie",
+        "agent": "uid:agent.de_vries",
+        "outcome": "doorverwezen",
+        "contactedAt": "2026-04-14T11:00:00Z",
+        "duration": "PT8M15S",
+        "channelMetadata": {
+          "waitTime": 420
+        }
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "contactmoment",
+          "slug": "contactmoment-rapportage-seed-4"
+        },
+        "subject": "Klacht over wegenonderhoud Lijnbaansgracht",
+        "channel": "chat",
+        "agent": "uid:agent.bakker",
+        "outcome": "opgelost",
+        "contactedAt": "2026-04-14T13:45:00Z",
+        "duration": "PT6M00S",
+        "channelMetadata": {
+          "waitTime": 45
+        }
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "contactmoment",
+          "slug": "contactmoment-rapportage-seed-5"
+        },
+        "subject": "Vraag over bijstandsuitkering",
+        "channel": "telefoon",
+        "agent": "uid:agent.jansen",
+        "outcome": "opgelost",
+        "contactedAt": "2026-04-15T14:20:00Z",
+        "duration": "PT9M45S",
+        "channelMetadata": {
+          "waitTime": 28
+        }
       }
     ]
   }
