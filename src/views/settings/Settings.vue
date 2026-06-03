@@ -117,6 +117,7 @@
 						</td>
 						<td>
 							<NcSelect v-model="entry.selectedGroups"
+								:input-label="t('pipelinq', 'Allowed Groups')"
 								:options="groupOptions"
 								:multiple="true"
 								:searchable="true"
@@ -193,42 +194,9 @@
 					{{ t('pipelinq', 'No tokens generated yet.') }}
 				</p>
 
-				<!-- Generate Token Dialog -->
-				<NcDialog v-if="showGenerateTokenDialog"
-					:name="t('pipelinq', 'Generate API Token')"
-					@closing="closeGenerateTokenDialog">
-					<template #default>
-						<div v-if="!newToken">
-							<NcTextField v-model="newTokenLabel"
-								:label="t('pipelinq', 'Token Label')"
-								:placeholder="t('pipelinq', 'e.g. External ERP integration')" />
-						</div>
-						<div v-else class="token-display">
-							<p>{{ t('pipelinq', 'Copy this token now — it will not be shown again.') }}</p>
-							<NcTextField :value="newToken.token"
-								:label="t('pipelinq', 'API Token')"
-								readonly
-								@focus="$event.target.select()" />
-							<NcButton @click="copyToken">
-								{{ t('pipelinq', 'Copy to clipboard') }}
-							</NcButton>
-						</div>
-					</template>
-					<template #actions>
-						<NcButton v-if="!newToken"
-							type="primary"
-							:disabled="!newTokenLabel || generatingToken"
-							@click="generateToken">
-							<template #icon>
-								<NcLoadingIcon v-if="generatingToken" :size="16" />
-							</template>
-							{{ t('pipelinq', 'Generate') }}
-						</NcButton>
-						<NcButton @click="closeGenerateTokenDialog">
-							{{ newToken ? t('pipelinq', 'Done') : t('pipelinq', 'Cancel') }}
-						</NcButton>
-					</template>
-				</NcDialog>
+				<GenerateTokenDialog v-if="showGenerateTokenDialog"
+					@close="showGenerateTokenDialog = false"
+					@generated="onTokenGenerated" />
 			</div>
 
 			<!-- OAuth 2.0 tab -->
@@ -271,6 +239,7 @@
 				:label="t('pipelinq', 'Endpoint URL')"
 				:placeholder="t('pipelinq', 'https://mcp.example.com')" />
 			<NcSelect v-model="mcpForm.mcp_auth_mode"
+				:input-label="t('pipelinq', 'Authentication Mode')"
 				:options="mcpAuthModeOptions"
 				label="label"
 				track-by="value"
@@ -313,7 +282,8 @@
 <script>
 import { loadState } from '@nextcloud/initial-state'
 import { CnRegisterMapping, CnVersionInfoCard } from '@conduction/nextcloud-vue'
-import { NcButton, NcCheckboxRadioSwitch, NcDialog, NcLoadingIcon, NcNoteCard, NcSelect, NcSettingsSection, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcNoteCard, NcSelect, NcSettingsSection, NcTextField } from '@nextcloud/vue'
+import GenerateTokenDialog from '../../dialogs/GenerateTokenDialog.vue'
 import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
@@ -337,8 +307,8 @@ export default {
 		CnVersionInfoCard,
 		NcButton,
 		NcCheckboxRadioSwitch,
-		NcDialog,
 		NcLoadingIcon,
+		GenerateTokenDialog,
 		NcNoteCard,
 		NcSelect,
 		NcSettingsSection,
@@ -372,9 +342,6 @@ export default {
 			apiTokens: [],
 			authTab: 'tokens',
 			showGenerateTokenDialog: false,
-			newTokenLabel: '',
-			newToken: null,
-			generatingToken: false,
 			revokingToken: null,
 			// OAuth.
 			oauthConfig: {},
@@ -662,19 +629,8 @@ export default {
 		/**
 		 * @spec openspec/changes/admin-settings/tasks.md#task-5.2
 		 */
-		async generateToken() {
-			this.generatingToken = true
-			try {
-				const { data } = await axios.post(generateUrl('/apps/pipelinq/api/settings/api-tokens'), {
-					label: this.newTokenLabel,
-				})
-				this.newToken = data.token
-				this.apiTokens = [...this.apiTokens, { id: data.token.id, label: data.token.label, created: data.token.created, lastUsed: null }]
-			} catch (e) {
-				alert(e.response?.data?.message || t('pipelinq', 'Failed to generate token.'))
-			} finally {
-				this.generatingToken = false
-			}
+		onTokenGenerated(token) {
+			this.apiTokens = [...this.apiTokens, { id: token.id, label: token.label, created: token.created, lastUsed: null }]
 		},
 		/**
 		 * @spec openspec/changes/admin-settings/tasks.md#task-5.2
@@ -688,22 +644,6 @@ export default {
 				alert(e.response?.data?.message || t('pipelinq', 'Failed to revoke token.'))
 			} finally {
 				this.revokingToken = null
-			}
-		},
-		/**
-		 * @spec openspec/changes/admin-settings/tasks.md#task-5.2
-		 */
-		closeGenerateTokenDialog() {
-			this.showGenerateTokenDialog = false
-			this.newTokenLabel = ''
-			this.newToken = null
-		},
-		/**
-		 * @spec openspec/changes/admin-settings/tasks.md#task-5.2
-		 */
-		copyToken() {
-			if (this.newToken) {
-				navigator.clipboard.writeText(this.newToken.token)
 			}
 		},
 		/**

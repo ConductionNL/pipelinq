@@ -1358,7 +1358,8 @@
         "OAuth Client Secret": "OAuth Client Secret",
         "Save MCP Configuration": "Save MCP Configuration",
         "MCP configuration saved.": "MCP configuration saved.",
-        "Failed to save MCP configuration.": "Failed to save MCP configuration."
+        "Failed to save MCP configuration.": "Failed to save MCP configuration.",
+        "Authentication Mode": "Authentication Mode"
     },
     "plurals": {}
 }

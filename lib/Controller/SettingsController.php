@@ -159,6 +159,51 @@ class SettingsController extends Controller
     }//end index()
 
     /**
+     * Get the full Objects API access map and check the current user's access to a schema.
+     *
+     * Returns the full map for admins; for non-admins returns only the access check result
+     * for the requested schema.
+     *
+     * @return JSONResponse The access map or per-schema access check result.
+     *
+     * @spec openspec/changes/admin-settings/tasks.md#task-3.1
+     */
+    #[NoAdminRequired]
+    public function getObjectenAccess(): JSONResponse
+    {
+        $schemaSlug = $this->request->getParam('schema', '');
+        $user       = $this->userSession->getUser();
+        $isAdmin    = $user !== null && $this->groupManager->isAdmin($user->getUID());
+
+        if ($isAdmin === true) {
+            return new JSONResponse(
+                data: [
+                    'success'        => true,
+                    'objectenAccess' => $this->objectenAccessService->getAccessMap(),
+                ]
+            );
+        }
+
+        if ($schemaSlug === '' || $user === null) {
+            return new JSONResponse(data: ['message' => 'schema parameter is required'], statusCode: Http::STATUS_BAD_REQUEST);
+        }
+
+        $allowed = $this->objectenAccessService->isAllowed(
+            schemaSlug: $schemaSlug,
+            userId: $user->getUID()
+        );
+
+        return new JSONResponse(
+            data: [
+                'success' => true,
+                'allowed' => $allowed,
+                'schema'  => $schemaSlug,
+            ]
+        );
+
+    }//end getObjectenAccess()
+
+    /**
      * Save per-schema Objects API access groups.
      *
      * @return JSONResponse The updated access map.
