@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Sales forecast roll-up and categories (forecast-roll-up-and-categories) —
+  category-driven forecasting that aggregates existing lead/pipeline data
+  (ADR-022) into server-authoritative roll-ups (ADR-005):
+  - **Forecast category on deals:** the `lead` schema gains `forecast_category`
+    (commit, best_case, pipeline, closed_won, closed_lost, omitted) and
+    `commit_justification`. `DealCreatedListener` defaults new leads to
+    `pipeline`; `DealUpdatedListener` rejects reopening a closed deal's
+    category and enforces a justification (min length) on large commits.
+  - **Schemas:** new `forecastSnapshot`, `forecastOverride` and `salesQuota`
+    schemas plus seed objects, all shipped as the `register.d/50-forecast.json`
+    fragment (ADR-037).
+  - **Weekly snapshots:** `ForecastSnapshotJob` generates immutable rep -> team
+    -> division -> company snapshots for the open fiscal period, with currency
+    normalization, partial-failure tracking and an admin notification on error.
+  - **Roll-up math:** `ForecastService`/`ForecastRollupService` compute
+    override-applied roll-ups, accuracy scores and trailing-four-quarter
+    averages; `QuotaService` resolves quotas and validates the quota hierarchy.
+  - **Manager overrides:** managers may override a rep/team/division commit or
+    best-case with an audited reason; `ForecastAccessPolicy` gates reads,
+    overrides and quota changes (IDOR-safe, manager-group scoped).
+  - **REST API:** `GET /api/forecast/snapshots` (JSON/CSV export with
+    calculation audit + pagination), `POST`/`DELETE /api/forecast/overrides`,
+    and admin-only `GET`/`PUT /api/settings/forecast`.
+  - **Frontend (manifest v2):** forecast dashboard, trend view, lead forecast
+    tab, and the commit-justification and override modals (in `src/modals/`).
+  - **i18n:** Dutch and English translations for all forecast strings.
+
 ## [0.2.28] - 2026-06-01
 
 ### Security
