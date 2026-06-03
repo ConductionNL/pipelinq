@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- BSN validation + BRP person lookup (bsn-validatie-en-brp-lookup):
+  - New OpenRegister schemas (ADR-037 fragment, additively merged):
+    `bsnValidatie`, `brpLookupVerzoek`, `brpPersoon`, `bsnAuditRecord`,
+    `optOutVlag`, plus three new `contact` fields (`verifiedBSN`,
+    `brpPersoonId`, `geheimhouding`).
+  - RvIG 11-proef BSN validation — server-authoritative (`BsnValidationService`)
+    with a matching client-side check for instant UX feedback.
+  - HaalCentraal Personen v2.0 REST client (OAuth2 client-credentials + mTLS),
+    behind a `BrpClientInterface` abstraction so it can be mocked in tests.
+  - Response caching with a configurable TTL (default 24h) and HMAC-signed
+    mutation-webhook invalidation.
+  - Immutable, BSN-masked audit trail (`BsnAuditService`) with a 5-year
+    retention horizon per RvIG guidance.
+  - Geheimhouding (protected-citizen) handling: address suppression and an
+    opt-out flag derived from the BRP response (`OptOutService`).
+  - Configurable retention with a daily cleanup job and AVG art. 17
+    (right-to-be-forgotten) pseudonymisation of audit records.
+  - Doelbinding-gated lookup endpoint (role-restricted to
+    behandelaar-burgerzaken / behandelaar-avg) with a doelbinding modal in the
+    contact detail view and a resolved Persoon panel.
+  - Admin BRP-Monitor settings tile (24h lookups, cache-hit ratio, error rate,
+    average response time, mTLS certificate expiry) plus a BRP configuration
+    form (secrets encrypted at rest via `ICrypto`).
+  - i18n: Dutch + English.
+  - ADR-005: the BSN is never logged, returned in errors, or placed in a URL;
+    it travels in request bodies only and is masked (`***45678*`) everywhere.
+
 ## [0.2.28] - 2026-06-01
 
 ### Security

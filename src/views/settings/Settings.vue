@@ -92,6 +92,12 @@
 		<!-- Prospect Discovery Settings -->
 		<ProspectSettings v-if="isConfigured" />
 
+		<!-- BRP Configuration (HaalCentraal Personen) -->
+		<BrpConfigSettings v-if="isConfigured" />
+
+		<!-- BRP Monitor -->
+		<BrpMonitorSettings v-if="isConfigured" />
+
 		<!-- Re-import Status -->
 		<div v-if="message" class="actions-section">
 			<NcNoteCard :type="messageType">
@@ -118,6 +124,8 @@ import TagManager from './TagManager.vue'
 import QueueSettings from '../../components/admin/QueueSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
 import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
+import BrpConfigSettings from '../../components/admin/BrpConfigSettings.vue'
+import BrpMonitorSettings from '../../components/admin/BrpMonitorSettings.vue'
 
 export default {
 	name: 'Settings',
@@ -136,6 +144,8 @@ export default {
 		QueueSettings,
 		SkillSettings,
 		AgentProfileSettings,
+		BrpConfigSettings,
+		BrpMonitorSettings,
 	},
 	data() {
 		return {

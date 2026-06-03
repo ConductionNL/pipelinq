@@ -109,6 +109,14 @@ class Application extends App implements IBootstrap
         );
 
         $this->registerPosLifecycleGuards(context: $context);
+
+        // Bind the BRP client abstraction to the HaalCentraal implementation so
+        // BrpLookupService depends only on the interface (ADR-019); a test swaps
+        // in a fake without a live RvIG / Haal-Centraal credential (ADR-005).
+        $context->registerServiceAlias(
+            \OCA\Pipelinq\Service\Bsn\BrpClientInterface::class,
+            \OCA\Pipelinq\Service\HaalCentraalClient::class
+        );
     }//end register()
 
     /**

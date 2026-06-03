@@ -1,0 +1,637 @@
+{
+    "components": {
+        "registers": {
+            "pipelinq": {
+                "schemas": [
+                    "bsnValidatie",
+                    "brpLookupVerzoek",
+                    "brpPersoon",
+                    "bsnAuditRecord",
+                    "optOutVlag"
+                ]
+            }
+        },
+        "schemas": {
+            "contact": {
+                "properties": {
+                    "verifiedBSN": {
+                        "type": "boolean",
+                        "title": "Geverifieerd BSN",
+                        "description": "True na een succesvolle BRP-lookup; wordt false gezet bij retentie-expiratie of verwijdering van het gekoppelde BrpPersoon-record.",
+                        "default": false,
+                        "facetable": true
+                    },
+                    "brpPersoonId": {
+                        "type": "string",
+                        "title": "BRP Persoon",
+                        "description": "UUID-referentie naar het laatste geldige BrpPersoon-record voor dit contact. Bevat nooit het BSN.",
+                        "maxLength": 64
+                    },
+                    "geheimhouding": {
+                        "type": "boolean",
+                        "title": "Geheimhouding",
+                        "description": "Afgeleid van een actieve OptOutVlag; true rendert het rode geheimhoudings-icoon in alle contact-views.",
+                        "default": false,
+                        "facetable": true
+                    }
+                }
+            },
+            "bsnValidatie": {
+                "slug": "bsnValidatie",
+                "title": "BSN Validatie",
+                "icon": "CheckDecagramOutline",
+                "version": "1.0.0",
+                "summary": "Resultaat van een client-side 11-proef BSN-formatcontrole.",
+                "description": "Uitkomst van een deterministische 11-proef (RvIG). Bevat geen volledig BSN in plain-text: alleen een gemaskeerde weergave wordt bewaard (ADR-005). Eenmalig aangemaakt, nooit gewijzigd, geen externe call.",
+                "@type": "schema:Action",
+                "required": [
+                    "bsnGemaskeerd",
+                    "isFormeelGeldig",
+                    "validatieTijdstip"
+                ],
+                "properties": {
+                    "bsnGemaskeerd": {
+                        "type": "string",
+                        "title": "BSN (gemaskeerd)",
+                        "description": "Gemaskeerde BSN-weergave (***45678*). Het volledige BSN wordt hier nooit opgeslagen.",
+                        "maxLength": 16
+                    },
+                    "isFormeelGeldig": {
+                        "type": "boolean",
+                        "title": "Formeel geldig",
+                        "description": "Of de invoer de 11-proef doorstaat en exact 9 cijfers telt.",
+                        "facetable": true
+                    },
+                    "validatieTijdstip": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Validatietijdstip"
+                    },
+                    "geinitieerdDoor": {
+                        "type": "string",
+                        "title": "Geïnitieerd door",
+                        "description": "Nextcloud user-UID die de validatie uitvoerde.",
+                        "maxLength": 128
+                    },
+                    "context": {
+                        "type": "string",
+                        "title": "Context",
+                        "description": "Waar de validatie plaatsvond (contact-aanmaken, avg-verzoek, vog-screening).",
+                        "maxLength": 64,
+                        "facetable": true
+                    },
+                    "verzoekId": {
+                        "type": "string",
+                        "title": "Gekoppeld verzoek",
+                        "maxLength": 64
+                    }
+                }
+            },
+            "brpLookupVerzoek": {
+                "slug": "brpLookupVerzoek",
+                "title": "BRP Lookup Verzoek",
+                "icon": "AccountSearchOutline",
+                "version": "1.0.0",
+                "summary": "Een BRP-bevragingsverzoek met verplichte doelbinding en grondslag.",
+                "description": "Persistent verzoek-record voor de audit-trail. Het bsn-veld bevat uitsluitend een gemaskeerde weergave; het volledige BSN verlaat de server nooit via dit object (ADR-005, AVG art. 5).",
+                "@type": "schema:Action",
+                "required": [
+                    "bsnGemaskeerd",
+                    "verzoekreden",
+                    "doelbinding",
+                    "grondslag",
+                    "aangevraagdDoor",
+                    "verzoekTijdstip",
+                    "responseStatus"
+                ],
+                "properties": {
+                    "bsnGemaskeerd": {
+                        "type": "string",
+                        "title": "BSN (gemaskeerd)",
+                        "description": "Gemaskeerde BSN-weergave (***45678*).",
+                        "maxLength": 16
+                    },
+                    "verzoekreden": {
+                        "type": "string",
+                        "title": "Verzoekreden",
+                        "description": "Standaardkeuze of vrije onderbouwing (AVG-artikel, VOG, overig).",
+                        "maxLength": 512,
+                        "facetable": true
+                    },
+                    "doelbinding": {
+                        "type": "string",
+                        "title": "Doelbinding",
+                        "description": "Wettelijke grondslag (AVG art. 6, Wet BRP art. 3.3, etc.).",
+                        "maxLength": 256,
+                        "facetable": true
+                    },
+                    "grondslag": {
+                        "type": "string",
+                        "title": "Grondslag",
+                        "description": "Publieke taak, rechtsplicht, gerechtvaardigd belang, etc.",
+                        "maxLength": 256,
+                        "facetable": true
+                    },
+                    "aangevraagdDoor": {
+                        "type": "string",
+                        "title": "Aangevraagd door",
+                        "maxLength": 128
+                    },
+                    "aangevraagdNamens": {
+                        "type": "string",
+                        "title": "Aangevraagd namens",
+                        "maxLength": 128
+                    },
+                    "verzoekTijdstip": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Verzoektijdstip"
+                    },
+                    "gekoppeldVerzoek": {
+                        "type": "string",
+                        "title": "Gekoppeld verzoek",
+                        "maxLength": 64
+                    },
+                    "gekoppeldContact": {
+                        "type": "string",
+                        "title": "Gekoppeld contact",
+                        "maxLength": 64
+                    },
+                    "responseStatus": {
+                        "type": "string",
+                        "title": "Response-status",
+                        "description": "geslaagd, niet-gevonden, fout, geweigerd-onbevoegd.",
+                        "maxLength": 32,
+                        "facetable": true
+                    },
+                    "responseTijdstip": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Response-tijdstip"
+                    },
+                    "responseDuurMs": {
+                        "type": "integer",
+                        "title": "Responsetijd (ms)"
+                    },
+                    "haalcentraalCorrelationId": {
+                        "type": "string",
+                        "title": "HaalCentraal correlation-id",
+                        "maxLength": 128
+                    },
+                    "responseBevatGeheimhouding": {
+                        "type": "boolean",
+                        "title": "Bevat geheimhouding",
+                        "default": false
+                    },
+                    "responseInCache": {
+                        "type": "boolean",
+                        "title": "Uit cache",
+                        "default": false
+                    },
+                    "cacheVerlooptOp": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Cache verloopt op"
+                    }
+                }
+            },
+            "brpPersoon": {
+                "slug": "brpPersoon",
+                "title": "BRP Persoon",
+                "icon": "AccountOutline",
+                "version": "1.0.0",
+                "summary": "Genormaliseerde persoon uit een HaalCentraal BRP-bevraging, gekoppeld aan een Contact.",
+                "description": "Versleuteld at-rest via Nextcloud-encryptie. Bevat een time-to-live (retentieTot) waarna de retentie-job het record wist. Het bsn-veld wordt uitsluitend gemaskeerd weergegeven (ADR-005).",
+                "@type": "schema:Person",
+                "required": [
+                    "bsnGemaskeerd",
+                    "voornamen",
+                    "geslachtsnaam",
+                    "geboortedatum",
+                    "geslacht",
+                    "indicatieGeheim",
+                    "opgehaaldOp",
+                    "bronsysteem",
+                    "lookupVerzoekId",
+                    "gekoppeldContact",
+                    "retentieTot"
+                ],
+                "properties": {
+                    "bsnGemaskeerd": {
+                        "type": "string",
+                        "title": "BSN (gemaskeerd)",
+                        "maxLength": 16
+                    },
+                    "voornamen": {
+                        "type": "string",
+                        "title": "Voornamen",
+                        "maxLength": 200
+                    },
+                    "voorletters": {
+                        "type": "string",
+                        "title": "Voorletters",
+                        "maxLength": 32
+                    },
+                    "voorvoegsel": {
+                        "type": "string",
+                        "title": "Voorvoegsel",
+                        "maxLength": 32
+                    },
+                    "geslachtsnaam": {
+                        "type": "string",
+                        "title": "Geslachtsnaam",
+                        "maxLength": 200
+                    },
+                    "adellijkeTitel": {
+                        "type": "string",
+                        "title": "Adellijke titel",
+                        "maxLength": 64
+                    },
+                    "geboortedatum": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Geboortedatum"
+                    },
+                    "geboorteplaats": {
+                        "type": "string",
+                        "title": "Geboorteplaats",
+                        "maxLength": 128
+                    },
+                    "geboorteland": {
+                        "type": "string",
+                        "title": "Geboorteland",
+                        "maxLength": 64
+                    },
+                    "geslacht": {
+                        "type": "string",
+                        "title": "Geslacht",
+                        "description": "man, vrouw, onbekend.",
+                        "maxLength": 16,
+                        "facetable": true
+                    },
+                    "verblijfplaats": {
+                        "type": "object",
+                        "title": "Verblijfplaats",
+                        "description": "Adresgegevens; afgeschermd in standaard-views bij geheimhouding."
+                    },
+                    "indicatieGeheim": {
+                        "type": "string",
+                        "title": "Indicatie geheim",
+                        "description": "\"0\" geen geheimhouding, \"1\" geheimhouding gemeente.",
+                        "maxLength": 1,
+                        "facetable": true
+                    },
+                    "opgehaaldOp": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Opgehaald op"
+                    },
+                    "bronsysteem": {
+                        "type": "string",
+                        "title": "Bronsysteem",
+                        "maxLength": 64
+                    },
+                    "lookupVerzoekId": {
+                        "type": "string",
+                        "title": "Lookup-verzoek",
+                        "maxLength": 64
+                    },
+                    "gekoppeldContact": {
+                        "type": "string",
+                        "title": "Gekoppeld contact",
+                        "maxLength": 64
+                    },
+                    "retentieTot": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Retentie tot",
+                        "description": "Tijdstip waarna de retentie-job dit record wist."
+                    }
+                }
+            },
+            "bsnAuditRecord": {
+                "slug": "bsnAuditRecord",
+                "title": "BSN Audit Record",
+                "icon": "ShieldLockOutline",
+                "version": "1.0.0",
+                "summary": "Onveranderlijke audit-regel voor elke BSN-bevraging.",
+                "description": "Append-only auditlogboek (AVG art. 30). Het bsn-veld bevat uitsluitend een gemaskeerde of gepseudonimiseerde (SHA-256) weergave; nooit een plain-text BSN (ADR-005). Vijf jaar bewaard per RvIG-richtlijn.",
+                "@type": "schema:Action",
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "vastgelegd",
+                        "final": [
+                            "vastgelegd"
+                        ],
+                        "transitions": {}
+                    }
+                },
+                "required": [
+                    "actie",
+                    "bsnGemaskeerd",
+                    "actor",
+                    "tijdstip",
+                    "uitkomst",
+                    "bewaartot"
+                ],
+                "properties": {
+                    "actie": {
+                        "type": "string",
+                        "title": "Actie",
+                        "description": "brp-lookup-uitgevoerd, brp-lookup-mislukt, brp-lookup-geweigerd, brp-adres-getoond.",
+                        "maxLength": 64,
+                        "facetable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Lifecycle-status; altijd 'vastgelegd' (geen verdere transitions = onveranderlijk).",
+                        "default": "vastgelegd",
+                        "maxLength": 32
+                    },
+                    "bsnGemaskeerd": {
+                        "type": "string",
+                        "title": "BSN (gemaskeerd/gehasht)",
+                        "description": "Gemaskeerde weergave (***45678*) of SHA-256-hash na pseudonimisering.",
+                        "maxLength": 80
+                    },
+                    "actor": {
+                        "type": "string",
+                        "title": "Actor",
+                        "maxLength": 128,
+                        "facetable": true
+                    },
+                    "actorRol": {
+                        "type": "string",
+                        "title": "Rol",
+                        "maxLength": 64,
+                        "facetable": true
+                    },
+                    "tijdstip": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Tijdstip"
+                    },
+                    "verzoekreden": {
+                        "type": "string",
+                        "title": "Verzoekreden",
+                        "maxLength": 512
+                    },
+                    "doelbinding": {
+                        "type": "string",
+                        "title": "Doelbinding",
+                        "maxLength": 256
+                    },
+                    "uitkomst": {
+                        "type": "string",
+                        "title": "Uitkomst",
+                        "description": "geslaagd, niet-gevonden, fout, geweigerd-onbevoegd.",
+                        "maxLength": 32,
+                        "facetable": true
+                    },
+                    "responseCode": {
+                        "type": "integer",
+                        "title": "Response-code"
+                    },
+                    "ipAdres": {
+                        "type": "string",
+                        "title": "IP-adres",
+                        "maxLength": 64
+                    },
+                    "userAgent": {
+                        "type": "string",
+                        "title": "User-agent",
+                        "maxLength": 128
+                    },
+                    "haalcentraalCorrelationId": {
+                        "type": "string",
+                        "title": "HaalCentraal correlation-id",
+                        "maxLength": 128
+                    },
+                    "gekoppeldVerzoek": {
+                        "type": "string",
+                        "title": "Gekoppeld verzoek",
+                        "maxLength": 64
+                    },
+                    "vogScreening": {
+                        "type": "boolean",
+                        "title": "VOG-screening",
+                        "default": false,
+                        "facetable": true
+                    },
+                    "responseInCache": {
+                        "type": "boolean",
+                        "title": "Uit cache",
+                        "description": "Of deze bevraging uit de cache werd beantwoord (voor de BRP-monitor).",
+                        "default": false
+                    },
+                    "responseDuurMs": {
+                        "type": "integer",
+                        "title": "Responsetijd (ms)",
+                        "description": "Responstijd in milliseconden (voor de BRP-monitor)."
+                    },
+                    "bewaartot": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Bewaren tot"
+                    }
+                }
+            },
+            "optOutVlag": {
+                "slug": "optOutVlag",
+                "title": "Opt-out Vlag",
+                "icon": "EyeOffOutline",
+                "version": "1.0.0",
+                "summary": "Per-BSN bekende geheimhouding of opt-out.",
+                "description": "Overgenomen uit een BRP-response of lokaal opgevoerd. Het bsn-veld bevat uitsluitend een gemaskeerde weergave (ADR-005).",
+                "@type": "schema:DefinedTerm",
+                "required": [
+                    "bsnGemaskeerd",
+                    "type",
+                    "bron",
+                    "ingangsdatum"
+                ],
+                "properties": {
+                    "bsnGemaskeerd": {
+                        "type": "string",
+                        "title": "BSN (gemaskeerd)",
+                        "maxLength": 16
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Type",
+                        "description": "geheimhouding-gemeente, geheimhouding-brp, lokale-contact-opt-out.",
+                        "maxLength": 32,
+                        "facetable": true
+                    },
+                    "bron": {
+                        "type": "string",
+                        "title": "Bron",
+                        "description": "BRP, lokaal.",
+                        "maxLength": 16,
+                        "facetable": true
+                    },
+                    "ingangsdatum": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Ingangsdatum"
+                    },
+                    "einddatum": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Einddatum"
+                    },
+                    "beperkt": {
+                        "type": "array",
+                        "title": "Beperkt voor",
+                        "description": "Restricties: commerciele-derden, kerkgenootschappen, derdeportalen."
+                    },
+                    "lokaalOpgevoerdDoor": {
+                        "type": "string",
+                        "title": "Lokaal opgevoerd door",
+                        "maxLength": 128
+                    },
+                    "notitie": {
+                        "type": "string",
+                        "title": "Notitie",
+                        "maxLength": 512
+                    }
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "schema": "brpLookupVerzoek",
+                    "register": "pipelinq",
+                    "slug": "brp-lookup-seed-1"
+                },
+                "bsnGemaskeerd": "***45678*",
+                "verzoekreden": "Behandeling AVG-inzageverzoek artikel 15",
+                "doelbinding": "Uitvoering wettelijke taak — Wet BRP art. 3.3 lid 1",
+                "grondslag": "Publieke taak (AVG art. 6 lid 1 sub e)",
+                "aangevraagdDoor": "medewerker:m.devries@gemeente-zeist.nl",
+                "aangevraagdNamens": "afdeling:Burgerzaken",
+                "verzoekTijdstip": "2026-08-14T09:23:45+02:00",
+                "gekoppeldVerzoek": "verzoek-2026-08-14-1043",
+                "gekoppeldContact": "contact-mvr-2026-002",
+                "responseStatus": "geslaagd",
+                "responseTijdstip": "2026-08-14T09:23:46+02:00",
+                "responseDuurMs": 412,
+                "haalcentraalCorrelationId": "hc-corr-7f3a9b2e",
+                "responseBevatGeheimhouding": false,
+                "responseInCache": false,
+                "cacheVerlooptOp": "2026-08-15T09:23:46+02:00"
+            },
+            {
+                "@self": {
+                    "schema": "brpLookupVerzoek",
+                    "register": "pipelinq",
+                    "slug": "brp-lookup-seed-2"
+                },
+                "bsnGemaskeerd": "***78901*",
+                "verzoekreden": "Reguliere verzoekbehandeling",
+                "doelbinding": "Publieke taak (AVG art. 6 lid 1 sub e)",
+                "grondslag": "Publieke taak",
+                "aangevraagdDoor": "medewerker:j.smith@gemeente-arnhem.nl",
+                "aangevraagdNamens": "afdeling:Burgerzaken",
+                "verzoekTijdstip": "2026-08-14T10:15:22+02:00",
+                "gekoppeldVerzoek": "verzoek-2026-08-14-2156",
+                "responseStatus": "niet-gevonden",
+                "responseTijdstip": "2026-08-14T10:15:23+02:00",
+                "responseDuurMs": 388,
+                "haalcentraalCorrelationId": "hc-corr-9e2b4c1f",
+                "responseBevatGeheimhouding": false,
+                "responseInCache": false
+            },
+            {
+                "@self": {
+                    "schema": "brpPersoon",
+                    "register": "pipelinq",
+                    "slug": "brp-persoon-seed-1"
+                },
+                "bsnGemaskeerd": "***45678*",
+                "voornamen": "Maria Wilhelmina",
+                "voorletters": "M.W.",
+                "voorvoegsel": "van der",
+                "geslachtsnaam": "Berg",
+                "geboortedatum": "1978-03-22",
+                "geboorteplaats": "Utrecht",
+                "geboorteland": "Nederland",
+                "geslacht": "vrouw",
+                "verblijfplaats": {
+                    "straat": "Lange Voorhout",
+                    "huisnummer": 14,
+                    "huisletter": "H",
+                    "postcode": "2514 EA",
+                    "woonplaats": "'s-Gravenhage",
+                    "land": "Nederland"
+                },
+                "indicatieGeheim": "0",
+                "opgehaaldOp": "2026-08-14T09:23:46+02:00",
+                "bronsysteem": "HaalCentraal-BRP-v2.0",
+                "lookupVerzoekId": "brp-lookup-2026-08-14-9bd1",
+                "gekoppeldContact": "contact-mvr-2026-002",
+                "retentieTot": "2026-08-21T09:23:46+02:00"
+            },
+            {
+                "@self": {
+                    "schema": "bsnAuditRecord",
+                    "register": "pipelinq",
+                    "slug": "bsn-audit-seed-1"
+                },
+                "actie": "brp-lookup-uitgevoerd",
+                "status": "vastgelegd",
+                "bsnGemaskeerd": "***45678*",
+                "actor": "medewerker:m.devries@gemeente-zeist.nl",
+                "actorRol": "behandelaar-burgerzaken",
+                "tijdstip": "2026-08-14T09:23:46+02:00",
+                "verzoekreden": "Behandeling AVG-inzageverzoek artikel 15",
+                "doelbinding": "Uitvoering wettelijke taak — Wet BRP art. 3.3 lid 1",
+                "uitkomst": "geslaagd",
+                "responseCode": 200,
+                "haalcentraalCorrelationId": "hc-corr-7f3a9b2e",
+                "gekoppeldVerzoek": "verzoek-2026-08-14-1043",
+                "vogScreening": false,
+                "bewaartot": "2031-08-14T09:23:46+02:00"
+            },
+            {
+                "@self": {
+                    "schema": "bsnAuditRecord",
+                    "register": "pipelinq",
+                    "slug": "bsn-audit-seed-2"
+                },
+                "actie": "brp-lookup-uitgevoerd",
+                "status": "vastgelegd",
+                "bsnGemaskeerd": "***78901*",
+                "actor": "medewerker:j.smith@gemeente-arnhem.nl",
+                "actorRol": "behandelaar-burgerzaken",
+                "tijdstip": "2026-08-14T10:15:22+02:00",
+                "verzoekreden": "Reguliere verzoekbehandeling",
+                "doelbinding": "Publieke taak (AVG art. 6 lid 1 sub e)",
+                "uitkomst": "niet-gevonden",
+                "responseCode": 404,
+                "haalcentraalCorrelationId": "hc-corr-9e2b4c1f",
+                "gekoppeldVerzoek": "verzoek-2026-08-14-2156",
+                "vogScreening": false,
+                "bewaartot": "2031-08-14T10:15:22+02:00"
+            },
+            {
+                "@self": {
+                    "schema": "optOutVlag",
+                    "register": "pipelinq",
+                    "slug": "optout-seed-1"
+                },
+                "bsnGemaskeerd": "***45678*",
+                "type": "geheimhouding-gemeente",
+                "bron": "BRP",
+                "ingangsdatum": "2024-11-01",
+                "beperkt": [
+                    "commerciele-derden",
+                    "kerkgenootschappen"
+                ]
+            }
+        ]
+    }
+}

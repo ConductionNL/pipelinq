@@ -162,27 +162,65 @@ class ConfigFileLoaderService
     }//end mergeRegisterFragments()
 
     /**
+     * Dot-paths whose list values are additively unioned (not replaced) when a
+     * fragment contributes them.
+     *
+     * The fleet-standard ADR-037 rule: a fragment that adds a new schema to the
+     * register's membership list, or contributes seed objects, must *extend* the
+     * monolith's list rather than replace it — otherwise dropping one fragment
+     * would silently drop every schema/seed the monolith (or an earlier fragment)
+     * already declared. `*` matches a single path segment (the register key).
+     *
+     * @var string[]
+     */
+    private const UNION_LIST_PATHS = [
+        'components.registers.*.schemas',
+        'components.objects',
+    ];
+
+    /**
      * Recursively deep-merge an override array onto a base array.
      *
-     * Associative keys are merged recursively; scalar and list values from the
-     * override replace those in the base. This mirrors the fragment-merge
+     * Associative keys are merged recursively; scalar values and most list
+     * values from the override replace those in the base. The exception is the
+     * ADR-037 union paths (register `schemas[]` membership and `components.objects[]`
+     * seeds), whose lists are additively unioned (de-duplicated) so concurrent
+     * fragments and the monolith all contribute. This mirrors the fragment-merge
      * semantics shared across the fleet (ADR-037).
      *
-     * @param array $base     The base configuration array.
-     * @param array $override The fragment to merge on top of the base.
+     * @param array  $base     The base configuration array.
+     * @param array  $override The fragment to merge on top of the base.
+     * @param string $path     The dot-path of the current node (internal).
      *
      * @return array The deep-merged result.
      */
-    private static function deepMergeConfig(array $base, array $override): array
+    private static function deepMergeConfig(array $base, array $override, string $path=''): array
     {
         foreach ($override as $key => $value) {
+            if ($path === '') {
+                $childPath = (string) $key;
+            } else {
+                $childPath = $path.'.'.$key;
+            }
+
+            if (is_array($value) === true
+                && isset($base[$key]) === true
+                && is_array($base[$key]) === true
+                && self::isList(value: $value) === true
+                && self::isList(value: $base[$key]) === true
+                && self::isUnionListPath(path: $childPath) === true
+            ) {
+                $base[$key] = self::unionLists(base: $base[$key], override: $value);
+                continue;
+            }
+
             if (is_array($value) === true
                 && isset($base[$key]) === true
                 && is_array($base[$key]) === true
                 && self::isList(value: $value) === false
                 && self::isList(value: $base[$key]) === false
             ) {
-                $base[$key] = self::deepMergeConfig(base: $base[$key], override: $value);
+                $base[$key] = self::deepMergeConfig(base: $base[$key], override: $value, path: $childPath);
                 continue;
             }
 
@@ -191,6 +229,97 @@ class ConfigFileLoaderService
 
         return $base;
     }//end deepMergeConfig()
+
+    /**
+     * Determine whether a concrete dot-path matches a configured union-list path.
+     *
+     * A single `*` segment in the pattern matches exactly one path segment (the
+     * register key), so `components.registers.pipelinq.schemas` matches the
+     * `components.registers.*.schemas` pattern.
+     *
+     * @param string $path The concrete dot-path to test.
+     *
+     * @return bool True when the path is an additive-union list path.
+     */
+    private static function isUnionListPath(string $path): bool
+    {
+        $parts = explode('.', $path);
+        foreach (self::UNION_LIST_PATHS as $pattern) {
+            $patternParts = explode('.', $pattern);
+            if (count($patternParts) !== count($parts)) {
+                continue;
+            }
+
+            $matches = true;
+            foreach ($patternParts as $index => $patternPart) {
+                if ($patternPart !== '*' && $patternPart !== $parts[$index]) {
+                    $matches = false;
+                    break;
+                }
+            }
+
+            if ($matches === true) {
+                return true;
+            }
+        }//end foreach
+
+        return false;
+    }//end isUnionListPath()
+
+    /**
+     * Additively union two lists, de-duplicating by value.
+     *
+     * Scalar members are compared directly; associative members (e.g. seed
+     * objects) are compared by their canonical JSON encoding so an identical seed
+     * present in both the monolith and a fragment is not duplicated. Order is
+     * stable: base members first, then new override members.
+     *
+     * @param array $base     The base list.
+     * @param array $override The override list to union in.
+     *
+     * @return array The de-duplicated union.
+     */
+    private static function unionLists(array $base, array $override): array
+    {
+        $result = $base;
+        $seen   = [];
+        foreach ($base as $member) {
+            $seen[self::memberKey(member: $member)] = true;
+        }
+
+        foreach ($override as $member) {
+            $memberKey = self::memberKey(member: $member);
+            if (isset($seen[$memberKey]) === true) {
+                continue;
+            }
+
+            $seen[$memberKey] = true;
+            $result[]         = $member;
+        }
+
+        return $result;
+    }//end unionLists()
+
+    /**
+     * Build a stable de-duplication key for a list member.
+     *
+     * @param mixed $member The list member (scalar or array).
+     *
+     * @return string The canonical key.
+     */
+    private static function memberKey(mixed $member): string
+    {
+        if (is_scalar($member) === true) {
+            return (string) $member;
+        }
+
+        $encoded = json_encode($member);
+        if ($encoded === false) {
+            return serialize($member);
+        }
+
+        return $encoded;
+    }//end memberKey()
 
     /**
      * Determine whether an array is a sequential list (zero-indexed, no gaps).

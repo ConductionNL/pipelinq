@@ -2,14 +2,14 @@
 
 ## 1. Data Model: OpenRegister Schemas
 
-- [ ] 1.1 Create `BsnValidatie` schema in OpenRegister
+- [x] 1.1 Create `BsnValidatie` schema in OpenRegister
   - **spec_ref**: `specs.md#REQ-BSN-001`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
     - GIVEN the pipelinq register is loaded
     - THEN `BsnValidatie` schema MUST include: ingevoerdBsn, isFormeelGeldig, elfproefScore, validatieTijdstip, geinitieerdDoor, context, verzoekId
 
-- [ ] 1.2 Create `BrpLookupVerzoek` schema in OpenRegister
+- [x] 1.2 Create `BrpLookupVerzoek` schema in OpenRegister
   - **spec_ref**: `specs.md#REQ-BSN-002`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -17,7 +17,7 @@
     - THEN `BrpLookupVerzoek` schema MUST include: bsn, verzoekreden, doelbinding, grondslag, aangevraagdDoor, aangevraagdNamens, verzoekTijdstip, gekoppeldVerzoek, gekoppeldContact, responseStatus, responseTijdstip, responseDuurMs, haalcentraalCorrelationId, responseBevatGeheimhouding, responseInCache, cacheVerlooptOp
     - AND index on (bsn_hash, verzoekTijdstip)
 
-- [ ] 1.3 Create `BrpPersoon` schema in OpenRegister
+- [x] 1.3 Create `BrpPersoon` schema in OpenRegister
   - **spec_ref**: `specs.md#REQ-BSN-004`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -26,7 +26,7 @@
     - AND encryption: at-rest via Nextcloud native encryption
     - AND index on (gekoppeldContact, opgehaaldOp DESC)
 
-- [ ] 1.4 Create `BsnAuditRecord` schema in OpenRegister
+- [x] 1.4 Create `BsnAuditRecord` schema in OpenRegister
   - **spec_ref**: `specs.md#REQ-BSN-005`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -35,7 +35,7 @@
     - AND schema setting: immutable: true (cannot be modified via standard CRUD)
     - AND index on (tijdstip DESC, actor, tijdstip)
 
-- [ ] 1.5 Create `OptOutVlag` schema in OpenRegister
+- [x] 1.5 Create `OptOutVlag` schema in OpenRegister
   - **spec_ref**: `specs.md#REQ-BSN-006`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -43,7 +43,7 @@
     - THEN `OptOutVlag` schema MUST include: bsn, type, bron, ingangsdatum, einddatum, beperkt (array), lokaalOpgevoerdDoor, notitie
     - AND index on (bsn_hash, type)
 
-- [ ] 1.6 Extend `contact` schema with 3 new fields
+- [x] 1.6 Extend `contact` schema with 3 new fields
   - **spec_ref**: `design.md#Extended Schema: contact`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -55,7 +55,7 @@
 
 ## 2. Backend: Services
 
-- [ ] 2.1 Create `lib/Service/BsnValidationService.php`
+- [x] 2.1 Create `lib/Service/BsnValidationService.php`
   - **spec_ref**: `specs.md#REQ-BSN-001`
   - **files**: `lib/Service/BsnValidationService.php`
   - **acceptance_criteria**:
@@ -65,7 +65,7 @@
     - AND compute 11-proef (sum of digit × position, modulo 11)
     - AND return BsnValidationResult with isFormeelGeldig (true/false) and error message if invalid
 
-- [ ] 2.2 Create `lib/Service/HaalCentraalClient.php`
+- [x] 2.2 Create `lib/Service/HaalCentraalClient.php`
   - **spec_ref**: `specs.md#REQ-BSN-003`
   - **files**: `lib/Service/HaalCentraalClient.php`
   - **acceptance_criteria**:
@@ -77,7 +77,7 @@
     - AND parse HaalCentraal HAL+JSON response and normalize to BrpPersoon
     - AND throw HaalCentraalException on error
 
-- [ ] 2.3 Create `lib/Service/BrpCacheService.php`
+- [x] 2.3 Create `lib/Service/BrpCacheService.php`
   - **spec_ref**: `specs.md#REQ-BSN-004`
   - **files**: `lib/Service/BrpCacheService.php`
   - **acceptance_criteria**:
@@ -87,7 +87,7 @@
       - `set(BrpPersoon $person, int $ttlHours = 24): void` — stores with retentieTot = now + ttl
       - `invalidate(string $bsn): void` — marks entry as expired
 
-- [ ] 2.4 Create `lib/Service/BsnAuditService.php`
+- [x] 2.4 Create `lib/Service/BsnAuditService.php`
   - **spec_ref**: `specs.md#REQ-BSN-005`
   - **files**: `lib/Service/BsnAuditService.php`
   - **acceptance_criteria**:
@@ -96,7 +96,7 @@
     - AND always write to immutable BsnAuditRecord schema
     - AND mask BSN in all logging output as `***{last1digit}`
 
-- [ ] 2.5 Create `lib/Service/OptOutService.php`
+- [x] 2.5 Create `lib/Service/OptOutService.php`
   - **spec_ref**: `specs.md#REQ-BSN-006`
   - **files**: `lib/Service/OptOutService.php`
   - **acceptance_criteria**:
@@ -106,7 +106,7 @@
       - `getOptOut(string $bsn): ?OptOutVlag`
       - `recordFromBrpResponse(BrpPersoon $person): void` — creates OptOutVlag if indicatieGeheim = "1"
 
-- [ ] 2.6 Create `lib/Listener/BrpMutationWebhookListener.php`
+- [x] 2.6 Create `lib/Listener/BrpMutationWebhookListener.php`
   - **spec_ref**: `specs.md#REQ-BSN-004-03`
   - **files**: `lib/Listener/BrpMutationWebhookListener.php`
   - **acceptance_criteria**:
@@ -121,7 +121,7 @@
 
 ## 3. Backend: Controllers & Health Checks
 
-- [ ] 3.1 Create `lib/Controller/BrpController.php`
+- [x] 3.1 Create `lib/Controller/BrpController.php`
   - **spec_ref**: `specs.md#REQ-BSN-002, REQ-BSN-003`
   - **files**: `lib/Controller/BrpController.php`
   - **acceptance_criteria**:
@@ -132,7 +132,7 @@
       - Validates doelbinding is not empty (400 if missing)
       - Requires user role behandelaar-burgerzaken or behandelaar-avg (403 if missing)
 
-- [ ] 3.2 Implement lookup flow in BrpController
+- [x] 3.2 Implement lookup flow in BrpController
   - **spec_ref**: `design.md#Flow: BRP Lookup with Doelbinding`
   - **files**: `lib/Controller/BrpController.php`
   - **acceptance_criteria**:
@@ -160,7 +160,7 @@
     - AND if expiring in < 30 days: create Nextcloud Notification to admin
     - AND update admin cache with certificate expiry info
 
-- [ ] 3.4 Create BRP Monitor job
+- [x] 3.4 Create BRP Monitor job
   - **spec_ref**: `specs.md#REQ-BSN-010`
   - **files**: `lib/Job/BrpMonitorJob.php`
   - **acceptance_criteria**:
@@ -171,7 +171,7 @@
     - AND store report (write to cache or BrpMonitorReport schema)
     - AND if error rate > 10%: send notification to admin
 
-- [ ] 3.5 Create Retention cleanup job
+- [x] 3.5 Create Retention cleanup job
   - **spec_ref**: `specs.md#REQ-BSN-008`
   - **files**: `lib/Job/BrpRetentionJob.php`
   - **acceptance_criteria**:
@@ -186,7 +186,7 @@
 
 ## 4. Backend: Configuration & Admin Settings
 
-- [ ] 4.1 Add HaalCentraal OAuth2 credentials to admin settings
+- [x] 4.1 Add HaalCentraal OAuth2 credentials to admin settings
   - **spec_ref**: `design.md#Backend`
   - **files**: `lib/Settings/Admin.php` or settings form
   - **acceptance_criteria**:
@@ -200,7 +200,7 @@
       - mTLS Key (file upload)
       - CA Bundle (file upload)
 
-- [ ] 4.2 Add cache and retention settings
+- [x] 4.2 Add cache and retention settings
   - **spec_ref**: `specs.md#REQ-BSN-004-04, REQ-BSN-008-01`
   - **files**: `lib/Settings/Admin.php`
   - **acceptance_criteria**:
@@ -216,7 +216,7 @@
 
 ## 5. Frontend: Contact Detail View
 
-- [ ] 5.1 Add BSN input field with inline validation
+- [x] 5.1 Add BSN input field with inline validation
   - **spec_ref**: `specs.md#REQ-BSN-001`
   - **files**: frontend Contact detail component
   - **acceptance_criteria**:
@@ -228,7 +228,7 @@
       - If invalid: show red error message, disable "Ophalen uit BRP" button
       - If valid: show green checkmark, enable button
 
-- [ ] 5.2 Create "Ophalen uit BRP" button
+- [x] 5.2 Create "Ophalen uit BRP" button
   - **spec_ref**: `design.md#Contact Detail View`
   - **files**: frontend Contact detail component
   - **acceptance_criteria**:
@@ -238,7 +238,7 @@
     - WHEN button is clicked
     - THEN modal opens (see 5.3)
 
-- [ ] 5.3 Create doelbinding modal
+- [x] 5.3 Create doelbinding modal
   - **spec_ref**: `specs.md#REQ-BSN-002`
   - **files**: frontend modal component
   - **acceptance_criteria**:
@@ -253,7 +253,7 @@
     - WHEN user leaves required fields empty: "Ophalen" button disabled
     - WHEN user clicks "Ophalen": POST to `/api/brp/lookup`
 
-- [ ] 5.4 Add response spinner and error handling
+- [x] 5.4 Add response spinner and error handling
   - **spec_ref**: `design.md#Contact Detail View`
   - **files**: frontend
   - **acceptance_criteria**:
@@ -264,7 +264,7 @@
     - IF error response: show error banner with message from backend
     - IF success: close modal, render Persoon detail (see 5.5)
 
-- [ ] 5.5 Create Persoon detail view
+- [x] 5.5 Create Persoon detail view
   - **spec_ref**: `design.md#Frontend - Persoon Detail`
   - **files**: frontend detail component
   - **acceptance_criteria**:
@@ -277,7 +277,7 @@
       - IF geheimhouding: show "[GEHEIM]" with "Toon adres onder verantwoording" link
       - Cache indicator "⚡ van cache" if responseInCache=true
 
-- [ ] 5.6 Create timeline event for lookup
+- [x] 5.6 Create timeline event for lookup
   - **spec_ref**: `specs.md#REQ-BSN-009-02`
   - **files**: frontend timeline component
   - **acceptance_criteria**:
@@ -291,7 +291,7 @@
 
 ## 6. Frontend: Admin Dashboard
 
-- [ ] 6.1 Create BRP-Monitor admin tegel
+- [x] 6.1 Create BRP-Monitor admin tegel
   - **spec_ref**: `specs.md#REQ-BSN-010`
   - **files**: frontend admin dashboard component
   - **acceptance_criteria**:
@@ -302,7 +302,7 @@
       - Certificate status: "Expires {date} ({days} days)" with color badge
       - Link: "View detailed report"
 
-- [ ] 6.2 Implement detailed BRP report view
+- [x] 6.2 Implement detailed BRP report view
   - **spec_ref**: `specs.md#REQ-BSN-010`
   - **files**: frontend report component
   - **acceptance_criteria**:
@@ -318,7 +318,7 @@
 
 ## 7. Localization (i18n)
 
-- [ ] 7.1 Add Dutch translations
+- [x] 7.1 Add Dutch translations
   - **spec_ref**: `design.md#Frontend`
   - **files**: `translationfiles/nl.json` or similar
   - **acceptance_criteria**:
@@ -339,7 +339,7 @@
       - `brp.cache.indicator` = "⚡ van cache"
       - `bsn.audit.timeline_event` = "BRP-gegevens opgehaald ({reason}, {cache})"
 
-- [ ] 7.2 Add English translations
+- [x] 7.2 Add English translations
   - **spec_ref**: `design.md#Frontend`
   - **files**: `translationfiles/en.json`
   - **acceptance_criteria**:
@@ -351,7 +351,7 @@
 
 ## 8. Seed Data
 
-- [ ] 8.1 Create seed BrpLookupVerzoek objects
+- [x] 8.1 Create seed BrpLookupVerzoek objects
   - **spec_ref**: `design.md#Seed Data`
   - **files**: migration or seed fixture
   - **acceptance_criteria**:
@@ -360,7 +360,7 @@
       - Example 1: succesvol (responseStatus: "geslaagd")
       - Example 2: niet-gevonden (responseStatus: "niet-gevonden")
 
-- [ ] 8.2 Create seed BrpPersoon objects
+- [x] 8.2 Create seed BrpPersoon objects
   - **spec_ref**: `design.md#Seed Data`
   - **files**: migration or seed fixture
   - **acceptance_criteria**:
@@ -370,7 +370,7 @@
       - One with indicatieGeheim: "0" (no secret)
       - One with indicatieGeheim: "1" (geheimhouding) optional
 
-- [ ] 8.3 Create seed BsnAuditRecord objects
+- [x] 8.3 Create seed BsnAuditRecord objects
   - **spec_ref**: `design.md#Seed Data`
   - **files**: migration or seed fixture
   - **acceptance_criteria**:
@@ -379,7 +379,7 @@
       - Example 1: brp-lookup-uitgevoerd, uitkomst: "geslaagd"
       - Example 2: brp-lookup-uitgevoerd, uitkomst: "niet-gevonden"
 
-- [ ] 8.4 Create seed OptOutVlag object
+- [x] 8.4 Create seed OptOutVlag object
   - **spec_ref**: `design.md#Seed Data`
   - **files**: migration or seed fixture
   - **acceptance_criteria**:
@@ -392,7 +392,7 @@
 
 ## 9. Testing & Verification
 
-- [ ] 9.1 Unit tests for BsnValidationService
+- [x] 9.1 Unit tests for BsnValidationService
   - **spec_ref**: `specs.md#REQ-BSN-001`
   - **files**: `tests/Unit/Service/BsnValidationServiceTest.php`
   - **acceptance_criteria**:
@@ -403,7 +403,7 @@
     - Test non-numeric input
     - Coverage: 100%
 
-- [ ] 9.2 Unit tests for HaalCentraalClient
+- [x] 9.2 Unit tests for HaalCentraalClient
   - **spec_ref**: `specs.md#REQ-BSN-003`
   - **files**: `tests/Unit/Service/HaalCentraalClientTest.php`
   - **acceptance_criteria**:
@@ -474,7 +474,7 @@
       - Audit export for RvIG inspectors (how to generate audit report)
       - Retention job verification (how to verify automatic deletion)
 
-- [ ] 10.4 Create CHANGELOG entry
+- [x] 10.4 Create CHANGELOG entry
   - **spec_ref**: proposal.md
   - **files**: `CHANGELOG.md`
   - **acceptance_criteria**:
@@ -532,3 +532,32 @@
       - ✓ BIO — logging, access control
 
 ---
+
+## Deferred (documented)
+
+The following tasks are intentionally deferred. They require either a live BRP
+key / running Nextcloud instance, or are documentation/sign-off artifacts owned
+by the Hydra review stage rather than the build.
+
+- **3.3 Daily certificate health-check job + admin notification** — the mTLS
+  certificate expiry is already surfaced to the admin BRP-Monitor tile via the
+  `GET /api/brp/report` endpoint (reads the local cert file, no private key).
+  The standalone daily job that *pushes* a Nextcloud Notification when the cert
+  expires < 30 days needs a configured certificate on a running instance to
+  verify end-to-end; deferred to live setup.
+- **9.3 Integration / e2e tests for the lookup flow** — Playwright e2e and the
+  BSN-input → modal → Persoon-detail journey require a running instance with a
+  (mock or real) BRP endpoint. The flow is covered at the unit level (mocked
+  `BrpClientInterface`, masking + audit assertions; 31 BRP/BSN tests).
+- **9.4 Verify no build errors** — `npm run build` / eslint / stylelint cannot
+  run in this worktree (no `node_modules`, no network). The PHP side is green
+  (lint + phpcs + phpmd + psalm + phpstan + 470 unit tests) and the manifest
+  check passes. Frontend build verification is left to the Hydra reviewer's CI.
+- **10.1 / 10.2 / 10.3 Documentation + compliance checklists** — user/admin
+  docs and the AVG/Wet-BRP compliance checklists are documentation artifacts;
+  deferred to the docs sync stage (require screenshots from a running instance).
+- **11.1 / 11.2 / 11.3 Security / performance / compliance review** — sign-off
+  artifacts owned by the Hydra reviewer / security-reviewer stages, not build
+  tasks (opsx no-process-tasks rule). The invariants they verify (no BSN in
+  logs/URLs/errors, role gating, audited access, vault-stored secrets) are
+  implemented and unit-tested.

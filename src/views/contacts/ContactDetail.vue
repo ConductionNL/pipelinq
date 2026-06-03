@@ -69,6 +69,11 @@
 			</div>
 		</CnDetailCard>
 
+		<!-- BSN validation + BRP lookup -->
+		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'BSN verification (BRP)')">
+			<BrpLookupCard :contact-id="contactId" @timeline-event="onTimelineEvent" />
+		</CnDetailCard>
+
 		<!-- Relationships -->
 		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Relationships')">
 			<ContactRelationships
@@ -81,11 +86,12 @@
 
 <script>
 import { NcButton } from '@nextcloud/vue'
-import { showError } from '@nextcloud/dialogs'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import ContactForm from './ContactForm.vue'
 import ContactRelationships from '../../components/ContactRelationships.vue'
+import BrpLookupCard from '../../components/BrpLookupCard.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -96,6 +102,7 @@ export default {
 		CnDetailCard,
 		ContactForm,
 		ContactRelationships,
+		BrpLookupCard,
 	},
 	props: {
 		contactId: {
@@ -210,6 +217,21 @@ export default {
 				})
 			} catch {
 				// Sync failure is non-blocking
+			}
+		},
+		/**
+		 * Surface a successful BRP lookup and refresh the contact so the
+		 * server-written verifiedBSN/geheimhouding flags and the audit-backed
+		 * timeline are reflected. The event text never contains the BSN.
+		 *
+		 * @param {object} event The timeline event ({ action, text }).
+		 *
+		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.6
+		 */
+		async onTimelineEvent(event) {
+			showSuccess(event.text)
+			if (!this.isNew) {
+				await this.objectStore.fetchObject('contact', this.contactId)
 			}
 		},
 		/**

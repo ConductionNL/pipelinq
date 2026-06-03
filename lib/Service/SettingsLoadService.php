@@ -71,6 +71,11 @@ class SettingsLoadService
         'refundReason',
         'posRefund',
         'posRefundLine',
+        'bsnValidatie',
+        'brpLookupVerzoek',
+        'brpPersoon',
+        'bsnAuditRecord',
+        'optOutVlag',
     ];
 
     /**

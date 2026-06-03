@@ -125,4 +125,75 @@ class RegisterFragmentMergeTest extends TestCase
         $this->assertFalse($method->invoke(null, ['a' => 1]));
         $this->assertFalse($method->invoke(null, [1 => 'a', 2 => 'b']));
     }//end testIsListHelper()
+
+    /**
+     * The register's schema-membership list is additively unioned (ADR-037), so
+     * a fragment adding one schema never drops the schemas the monolith declared.
+     *
+     * @return void
+     */
+    public function testRegisterSchemasMembershipIsUnioned(): void
+    {
+        $base = [
+            'components' => [
+                'registers' => [
+                    'pipelinq' => ['schemas' => ['contact', 'request']],
+                ],
+            ],
+        ];
+        $override = [
+            'components' => [
+                'registers' => [
+                    'pipelinq' => ['schemas' => ['brpPersoon', 'bsnAuditRecord']],
+                ],
+            ],
+        ];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(
+            ['contact', 'request', 'brpPersoon', 'bsnAuditRecord'],
+            $result['components']['registers']['pipelinq']['schemas']
+        );
+    }//end testRegisterSchemasMembershipIsUnioned()
+
+    /**
+     * components.objects[] seeds from a fragment extend the monolith's seeds and
+     * are de-duplicated by their canonical encoding (ADR-037).
+     *
+     * @return void
+     */
+    public function testSeedObjectsAreUnionedAndDeduplicated(): void
+    {
+        $shared   = ['slug' => 'contact', 'name' => 'Shared seed'];
+        $base     = ['components' => ['objects' => [$shared, ['slug' => 'request', 'name' => 'A']]]];
+        $override = ['components' => ['objects' => [$shared, ['slug' => 'brpPersoon', 'name' => 'B']]]];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(
+            [
+                ['slug' => 'contact', 'name' => 'Shared seed'],
+                ['slug' => 'request', 'name' => 'A'],
+                ['slug' => 'brpPersoon', 'name' => 'B'],
+            ],
+            $result['components']['objects']
+        );
+    }//end testSeedObjectsAreUnionedAndDeduplicated()
+
+    /**
+     * A list at a non-union dot-path is still replaced wholesale (the union rule
+     * is path-scoped, not a blanket list-merge).
+     *
+     * @return void
+     */
+    public function testNonUnionListStillReplaced(): void
+    {
+        $base     = ['components' => ['views' => ['a', 'b']]];
+        $override = ['components' => ['views' => ['c']]];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(['c'], $result['components']['views']);
+    }//end testNonUnionListStillReplaced()
 }//end class
