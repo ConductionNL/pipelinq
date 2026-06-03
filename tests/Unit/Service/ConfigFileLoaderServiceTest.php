@@ -103,4 +103,122 @@ class ConfigFileLoaderServiceTest extends TestCase
 
         $service->loadConfigurationFile();
     }//end testLoadConfigurationFileThrowsOnMissingFile()
+
+    /**
+     * Invoke the private static deepMergeConfig() via reflection.
+     *
+     * @param array $base     The base configuration.
+     * @param array $override The fragment to merge on top.
+     *
+     * @return array The merged result.
+     */
+    private function deepMerge(array $base, array $override): array
+    {
+        $method = new \ReflectionMethod(ConfigFileLoaderService::class, 'deepMergeConfig');
+        $method->setAccessible(true);
+
+        return $method->invoke(null, $base, $override, '');
+    }//end deepMerge()
+
+    /**
+     * Schema-membership lists on a register MUST be unioned, not replaced (ADR-037).
+     *
+     * A sibling feature fragment that adds its own schemas to the pipelinq
+     * register must not drop the monolith's existing schema membership.
+     *
+     * @return void
+     */
+    public function testRegisterSchemasMembershipIsUnioned(): void
+    {
+        $base     = [
+            'components' => [
+                'registers' => [
+                    'pipelinq' => ['schemas' => ['client', 'contact', 'request']],
+                ],
+            ],
+        ];
+        $override = [
+            'components' => [
+                'registers' => [
+                    'pipelinq' => ['schemas' => ['zgwEndpoint', 'zgwClient']],
+                ],
+            ],
+        ];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(
+            ['client', 'contact', 'request', 'zgwEndpoint', 'zgwClient'],
+            $result['components']['registers']['pipelinq']['schemas']
+        );
+    }//end testRegisterSchemasMembershipIsUnioned()
+
+    /**
+     * Duplicate schema-membership slugs are deduplicated on union.
+     *
+     * @return void
+     */
+    public function testRegisterSchemasMembershipDeduplicates(): void
+    {
+        $base     = ['components' => ['registers' => ['pipelinq' => ['schemas' => ['client', 'request']]]]];
+        $override = ['components' => ['registers' => ['pipelinq' => ['schemas' => ['request', 'zgwEndpoint']]]]];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(
+            ['client', 'request', 'zgwEndpoint'],
+            $result['components']['registers']['pipelinq']['schemas']
+        );
+    }//end testRegisterSchemasMembershipDeduplicates()
+
+    /**
+     * Seed-object lists MUST be unioned by @self.slug, not replaced (ADR-037).
+     *
+     * A fragment contributing its own seed objects must preserve the monolith's
+     * 39 existing seeds; matching slugs replace in place.
+     *
+     * @return void
+     */
+    public function testSeedObjectsAreUnionedBySlug(): void
+    {
+        $base     = [
+            'components' => [
+                'objects' => [
+                    ['@self' => ['register' => 'pipelinq', 'schema' => 'request', 'slug' => 'req-1'], 'naam' => 'A'],
+                ],
+            ],
+        ];
+        $override = [
+            'components' => [
+                'objects' => [
+                    ['@self' => ['register' => 'pipelinq', 'schema' => 'zgwEndpoint', 'slug' => 'zgw-ep-1'], 'naam' => 'B'],
+                    ['@self' => ['register' => 'pipelinq', 'schema' => 'request', 'slug' => 'req-1'], 'naam' => 'A2'],
+                ],
+            ],
+        ];
+
+        $result  = $this->deepMerge($base, $override);
+        $objects = $result['components']['objects'];
+
+        $this->assertCount(2, $objects);
+        $slugs = array_map(static fn(array $o): string => $o['@self']['slug'], $objects);
+        $this->assertSame(['req-1', 'zgw-ep-1'], $slugs);
+        // Matching slug replaced in place (override wins).
+        $this->assertSame('A2', $objects[0]['naam']);
+    }//end testSeedObjectsAreUnionedBySlug()
+
+    /**
+     * Non-union lists (e.g. a schema's required[] array) still replace.
+     *
+     * @return void
+     */
+    public function testNonUnionListsStillReplace(): void
+    {
+        $base     = ['components' => ['schemas' => ['request' => ['required' => ['a', 'b']]]]];
+        $override = ['components' => ['schemas' => ['request' => ['required' => ['c']]]]];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(['c'], $result['components']['schemas']['request']['required']);
+    }//end testNonUnionListsStillReplace()
 }//end class

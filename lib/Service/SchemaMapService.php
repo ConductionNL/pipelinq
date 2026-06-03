@@ -36,18 +36,22 @@ class SchemaMapService
      * @var array<string, string>
      */
     private const SCHEMA_MAPPING = [
-        'client_schema'         => 'client',
-        'contact_schema'        => 'contact',
-        'lead_schema'           => 'lead',
-        'request_schema'        => 'request',
-        'pipeline_schema'       => 'pipeline',
-        'queue_schema'          => 'queue',
-        'skill_schema'          => 'skill',
-        'agentProfile_schema'   => 'agentProfile',
-        'task_schema'           => 'task',
-        'contactmoment_schema'  => 'contactmoment',
-        'survey_schema'         => 'survey',
-        'surveyResponse_schema' => 'surveyResponse',
+        'client_schema'             => 'client',
+        'contact_schema'            => 'contact',
+        'lead_schema'               => 'lead',
+        'request_schema'            => 'request',
+        'pipeline_schema'           => 'pipeline',
+        'queue_schema'              => 'queue',
+        'skill_schema'              => 'skill',
+        'agentProfile_schema'       => 'agentProfile',
+        'task_schema'               => 'task',
+        'contactmoment_schema'      => 'contactmoment',
+        'survey_schema'             => 'survey',
+        'surveyResponse_schema'     => 'surveyResponse',
+        'zgwEndpoint_schema'        => 'zgwEndpoint',
+        'zgwClient_schema'          => 'zgwClient',
+        'nrcAbonnement_schema'      => 'nrcAbonnement',
+        'zgwResourceMapping_schema' => 'zgwResourceMapping',
     ];
 
     /**

@@ -62,6 +62,11 @@ return [
         ['name' => 'publicSurvey#show', 'url' => '/public/survey/{token}', 'verb' => 'GET'],
         ['name' => 'publicSurvey#submit', 'url' => '/public/survey/{token}/respond', 'verb' => 'POST'],
 
+        // ZGW NRC notifications inbox (public page; per-abonnement Bearer-token verified
+        // in the controller — never an open endpoint. camelCase slug matches
+        // ZgwNotificationController class name)
+        ['name' => 'zgwNotification#inbox', 'url' => '/api/zgw/notificaties/inbox', 'verb' => 'POST'],
+
         // Contactmomenten (permission-checked delete)
         ['name' => 'contactmoment#destroy', 'url' => '/api/contactmomenten/{id}', 'verb' => 'DELETE'],
 
