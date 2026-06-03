@@ -32,7 +32,8 @@
 		:page-types="pageTypes"
 		app-id="pipelinq"
 		:translate="translateForApp"
-		:permissions="permissions">
+		:permissions="permissions"
+		:requires-apps="[]">
 		<template #sidebar>
 			<CnObjectSidebar
 				v-if="objectSidebarState.active"
