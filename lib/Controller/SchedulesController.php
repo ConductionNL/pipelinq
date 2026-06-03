@@ -88,6 +88,10 @@ class SchedulesController extends Controller
             return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
         }
 
+        $this->scheduledTaskService->applyAcceptLanguage(
+            acceptLanguage: $this->request->getHeader('Accept-Language')
+        );
+
         try {
             $userId  = $user->getUID();
             $isAdmin = $this->groupManager->isAdmin($userId);
@@ -331,6 +335,10 @@ class SchedulesController extends Controller
         if ($user === null) {
             return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
         }
+
+        $this->scheduledTaskService->applyAcceptLanguage(
+            acceptLanguage: $this->request->getHeader('Accept-Language')
+        );
 
         try {
             $task = $this->scheduledTaskService->getScheduledTask($id);

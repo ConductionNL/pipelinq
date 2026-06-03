@@ -28,6 +28,8 @@ use RuntimeException;
 /**
  * Generic service for managing SystemTag-based configurable lists.
  * Used for lead sources and request channels.
+ *
+ * @spec openspec/changes/reverse-2026-05-26-be-tags/tasks.md
  */
 class SystemTagService
 {
