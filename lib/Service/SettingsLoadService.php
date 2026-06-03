@@ -71,6 +71,12 @@ class SettingsLoadService
         'refundReason',
         'posRefund',
         'posRefundLine',
+        'avgVerzoek',
+        'termijnEvent',
+        'bewijsItem',
+        'exportBundle',
+        'weigering',
+        'redactieActie',
     ];
 
     /**

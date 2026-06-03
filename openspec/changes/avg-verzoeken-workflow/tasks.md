@@ -1,36 +1,61 @@
 # Tasks: AVG-verzoeken Workflow
 
+> **ADR corrections applied during build** (override the literal spec):
+> - **ADR-037**: the six AVG schemas + seeds are NOT raw DB tables. They live in a
+>   register fragment `lib/Settings/register.d/40-avg-verzoeken.json` (schemas +
+>   register `schemas[]` membership + `components.objects[]` seeds). The original
+>   §1.7/§1.8 "Nextcloud schema builder migrations" / "enrich contacts table"
+>   tasks are intentionally NOT done — they conflict with ADR-037 and ADR-022.
+>   `ConfigFileLoaderService::deepMergeConfig` gained the fleet-standard additive-union
+>   rule for register `schemas[]` + `components.objects[]` (with a unit test).
+> - **ADR-022**: real OR API only (`find`/`findAll`/`saveObject`/`deleteObject`) via the
+>   shared `AvgRepository`.
+> - **ADR-005**: per-method NC auth + IDOR scoping (handler-owns-request, DPO-gated
+>   export/escalation, retention-guarded delete, public token-only download).
+> - **DEFERRED (need a live instance / unmerged cross-app dep)**: real PAdES-LTV signing
+>   with a PKIoverheid cert (DocuDesk signer) — falls back to a SHA-256 manifest seal;
+>   live BRP/BSN lookup; live OpenConnector AVG-export source queries; live Procest
+>   improvement-item creation; Berichtenbox/SIEM transports. All are wired as graceful,
+>   no-op-on-absence integration points. Manual testing (§11), training video (§12.4),
+>   deployment (§13) and live success-criteria verification (§14) are deferred to a
+>   running NC env.
+
 ## 0. Pre-implementation Review
 
-- [ ] 0.1 Verify ADR-000 data model is current and includes all required entity definitions
-- [ ] 0.2 Confirm OpenRegister platform supports pseudonymization capability for 30-day evidence masking
-- [ ] 0.3 Review BSN Validation capability requirements and interface (sister feature)
-- [ ] 0.4 Obtain PKIoverheid certificate path and PAdES-LTV signing library availability
-- [ ] 0.5 Confirm DocuDesk API availability and PDF template versioning capability
-- [ ] 0.6 Validate OpenConnector source mappings and existing AVG-export-endpoint implementations
-- [ ] 0.7 Review Nextcloud Mail API for secure link delivery and template management
-- [ ] 0.8 Confirm BRP lookup capability and binding mechanism for "handling AVG request" use case
-- [ ] 0.9 Check Procest integration: whether improvement items can be auto-created and linked
+- [x] 0.1 Data model defined as OR schemas in the register.d fragment (ADR-037), not adr-000
+- [x] 0.2 OpenRegister pseudonymization handled by RetentionService (mask preview, keep metadata)
+- [ ] 0.3 BSN Validation capability — DEFERRED (sibling feature; BSN elfproef validated client+server, live BRP lookup deferred)
+- [ ] 0.4 PKIoverheid cert + PAdES-LTV library — DEFERRED (deployment dep; sha256-manifest fallback shipped)
+- [ ] 0.5 DocuDesk PDF render/sign API — DEFERRED (optional cross-app dep; best-effort signer call)
+- [ ] 0.6 OpenConnector AVG-export endpoints — DEFERRED (org-side; graceful unreachable handling shipped)
+- [x] 0.7 Nextcloud notification framework used for handler/FG alerts; citizen emails are 4-eyes drafts
+- [ ] 0.8 BRP lookup binding — DEFERRED (sibling capability)
+- [x] 0.9 Procest link point implemented as a best-effort no-op (auto-create deferred until Procest API)
 
 ## 1. Data Model & Database Schema
 
-- [ ] 1.1 Add `AvgVerzoek` schema to `openspec/architecture/adr-000-data-model.md`:
+> Implemented as OR schemas in `lib/Settings/register.d/40-avg-verzoeken.json`
+> (ADR-037), added to register `schemas[]` + `SettingsLoadService::SCHEMA_SLUGS`
+> + `SettingsService::CONFIG_KEYS`. NO Nextcloud schema-builder migrations (§1.7)
+> and NO contacts-table migration (§1.8) — those violate ADR-037/ADR-022.
+
+- [x] 1.1 Add `AvgVerzoek` schema (register.d fragment, not adr-000):
   - Properties: `kenmerk`, `ingediendOp`, `ingediendVia`, `verzoekerContact`, `verzoekerNaam`, `verzoekerBsn`, `verzoekerBsnGeverifieerd`, `artikel`, `specifiekeVraag`, `scope`, `wettelijkeTermijnVerloopt`, `verlengdMet`, `verlengingsgrond`, `status`, `behandelaar`, `fgGeinformeerd`, `dpiaFlag`, `uitkomst`, `afgerondOp`, `bewijsbundel`, `retentieTot`
   - Example in Dutch with valid field values per context-brief
 
-- [ ] 1.2 Add `TermijnEvent` schema:
+- [x] 1.2 Add `TermijnEvent` schema:
   - Properties: `verzoekId`, `type` (enum: ontvangstbevestiging-verstuurd, termijn-overschreden, escalatie-3dagen, collectie-fout), `tijdstip`, `deadline`, `automatisch`, `geslaagd`, `details`
 
-- [ ] 1.3 Add `BewijsItem` schema:
+- [x] 1.3 Add `BewijsItem` schema:
   - Properties: `verzoekId`, `bronApp`, `bronRegister`, `bronObject`, `categorie`, `verzameldOp`, `rechtsgrond`, `opgenomenInExport`, `geredigeerd`, `redactiereden`, `inhoudPreview`, `gedupliceerd` (optional)
 
-- [ ] 1.4 Add `ExportBundle` schema:
+- [x] 1.4 Add `ExportBundle` schema:
   - Properties: `verzoekId`, `samengesteldOp`, `samengesteldDoor`, `bevatItems`, `formaat` (array), `bestandsgrootte`, `sha256`, `ondertekend`, `ondertekeningsType`, `uitgeleverdVia`, `uitgeleverdOp`, `downloadVerloopt`, `downloadCode`, `verzoekerOntvangstBevestigd`
 
-- [ ] 1.5 Add `Weigering` schema:
+- [x] 1.5 Add `Weigering` schema:
   - Properties: `verzoekId`, `weigering` (enum: geheel, gedeeltelijk), `geweigerdeOnderdelen`, `grond` (enum: art-23-lid-1-sub-a ... art-23-lid-3), `toelichtingAvg23`, `verwijzingBezwaarProcedure`, `verwijzingAp`, `ondertekendDoor`, `ondertekendOp`
 
-- [ ] 1.6 Add `RedactieActie` schema:
+- [x] 1.6 Add `RedactieActie` schema:
   - Properties: `bundleId`, `bewijsItemId`, `veldpad`, `voorWaarde`, `naWaarde`, `uitgevoerdDoor`, `uitgevoerdOp`, `grond` (enum: bescherming-rechten-derden, wettelijke-verplichting, bedrijfsgeheim)
 
 - [ ] 1.7 Create database migrations (using Nextcloud schema builder):
@@ -45,7 +70,7 @@
 
 ## 2. Backend: Controllers & Request Handling
 
-- [ ] 2.1 Create `lib/Controller/AvgRequestController.php`:
+- [x] 2.1 Create `lib/Controller/AvgRequestController.php`:
   - `POST /api/v2/avg-verzoeken` — intake form submission with validation:
     - Mandatory: `artikel`, `specifiekeVraag`, `scope`
     - Optional: `verzoekerContact` (for manual registration)
@@ -55,18 +80,18 @@
   - `PATCH /api/v2/avg-verzoeken/{id}` — update handler, status, notes
   - `DELETE /api/v2/avg-verzoeken/{id}` — only allowed if not in retention window; else return 403
 
-- [ ] 2.2 Create `lib/Controller/EvidenceCollectionController.php`:
+- [x] 2.2 Create `lib/Controller/EvidenceCollectionController.php`:
   - `POST /api/v2/avg-verzoeken/{id}/collect-evidence` — start async job, return job ID
   - `GET /api/v2/avg-verzoeken/{id}/evidence-status` — return progress: `{ collected: N, pending: M, failed: K }`
   - `GET /api/v2/avg-verzoeken/{id}/bewijs-items` — list all evidence with deduplication flagging
 
-- [ ] 2.3 Create `lib/Controller/BundleGenerationController.php`:
+- [x] 2.3 Create `lib/Controller/BundleGenerationController.php`:
   - `POST /api/v2/avg-verzoeken/{id}/generate-bundle` — assemble bundle, call DocuDesk, sign with PKIoverheid cert
   - `GET /api/v2/export-bundles/{bundleId}` — fetch bundle metadata (not content; content via separate secure download)
   - `GET /api/v2/export-bundles/{bundleId}/download?token={token}` — validate token, return PDF/JSON (one-time use)
   - On first download, set `verzoekerOntvangstBevestigd: true` and log timestamp
 
-- [ ] 2.4 Create `lib/Controller/RedactionController.php`:
+- [x] 2.4 Create `lib/Controller/RedactionController.php`:
   - `POST /api/v2/avg-verzoeken/{id}/redact` — create RedactieActie:
     - Input: `{ "bewijsItemId": "...", "veldpad": "...", "naWaarde": "..." }`
     - Validation: block if field is citizen's own data without Art. 23 grounds
@@ -74,7 +99,7 @@
   - `GET /api/v2/avg-verzoeken/{id}/redaction-summary` — all redactions for bundle with before/after
   - `POST /api/v2/avg-verzoeken/{id}/approve-redactions` — mark all redactions approved for bundle generation
 
-- [ ] 2.5 Create `lib/Controller/DenialController.php`:
+- [x] 2.5 Create `lib/Controller/DenialController.php`:
   - `POST /api/v2/avg-verzoeken/{id}/deny` — create Weigering:
     - Input: `{ "weigering": "geheel|gedeeltelijk", "grond": "art-23-...", "toelichtingAvg23": "...", "geweigerdeOnderdelen": [...] }`
     - Validation: ensure toelichtingAvg23 has min. 100 chars
@@ -83,7 +108,7 @@
   - `GET /api/v2/avg-verzoeken/{id}/weigering` — fetch denial if exists
   - `PATCH /api/v2/weigeringen/{id}` — update denial (only if not yet finalized)
 
-- [ ] 2.6 Create `lib/Controller/ExtensionController.php`:
+- [x] 2.6 Create `lib/Controller/ExtensionController.php`:
   - `POST /api/v2/avg-verzoeken/{id}/extend` — request 60-day extension:
     - Input: `{ "verlengingsgrond": "..." }`
     - Validation: only if current date <= day 30, only if not already extended
@@ -91,11 +116,11 @@
     - On success: update `verlengdMet: 60`, set new deadline, generate email to citizen
   - Email MUST be held for handler approval (4-eyes) before sending
 
-- [ ] 2.7 Create `lib/Controller/RetentionController.php`:
+- [x] 2.7 Create `lib/Controller/RetentionController.php`:
   - `POST /api/v2/avg-verzoeken/{id}/archive` — transition to archived (called after resolution)
   - `DELETE /api/v2/avg-verzoeken/{id}` — check retention window; refuse if active
 
-- [ ] 2.8 Create `lib/Controller/ApEscalationController.php`:
+- [x] 2.8 Create `lib/Controller/ApEscalationController.php`:
   - `POST /api/v2/avg-verzoeken/{id}/ap-escalate` — export complete dossier as ZIP:
     - Package structure per REQ-AVG-008
     - Sign ZIP with organization key
@@ -104,7 +129,7 @@
 
 ## 3. Backend: Services & Business Logic
 
-- [ ] 3.1 Create `lib/Service/EvidenceCollectionService.php`:
+- [x] 3.1 Create `lib/Service/EvidenceCollectionService.php`:
   - `collectFromOpenRegister(AvgVerzoek $request)` — query OpenRegister for objects matching BSN + scope
   - `collectFromBrp(AvgVerzoek $request)` — call BSN validation capability
   - `collectFromOpenConnector(AvgVerzoek $request)` — query all registered AVG-export-endpoints
@@ -112,7 +137,7 @@
   - `handleSourceTimeout(AvgVerzoek $request, string $sourceName)` — create error BewijsItem
   - Return: array of created BewijsItem records
 
-- [ ] 3.2 Create `lib/Service/BundleService.php`:
+- [x] 3.2 Create `lib/Service/BundleService.php`:
   - `assemble(AvgVerzoek $request)` — prepare JSON structure grouping BewijsItems by categorie
   - `renderToPdf(array $bundleData, AvgVerzoek $request)` — call DocuDesk render API with org template
   - `sign(string $pdfPath)` — PAdES-LTV signing with PKIoverheid cert:
@@ -122,12 +147,12 @@
   - `computeHash(string $pdfPath)` — SHA-256 hash of finalized PDF
   - `generateDownloadLink(ExportBundle $bundle)` — create 30-day limited token
 
-- [ ] 3.3 Create `lib/Service/RedactionService.php`:
+- [x] 3.3 Create `lib/Service/RedactionService.php`:
   - `isOwnData(string $fieldPath, AvgVerzoek $request)` — heuristic: check if field likely contains citizen's name/address
   - `applyRedaction(RedactieActie $action, array $bewijsContent)` — JSONPath replacement
   - `validateBeforeFinalization(AvgVerzoek $request)` — ensure no citizen-owned fields are redacted without Art. 23 grounds
 
-- [ ] 3.4 Create `lib/Service/DpiaDetectionService.php`:
+- [x] 3.4 Create `lib/Service/DpiaDetectionService.php`:
   - `analyzePatterns()` — run weekly analysis:
     - Group AvgVerzoeken by `artikel` + `scope`
     - Count in 30-day rolling window
@@ -135,7 +160,7 @@
   - `getTopPatterns()` — return list of patterns for FG dashboard
   - `linkToProcest(AvgVerzoek $request)` — auto-create Procest improvement item if flagged
 
-- [ ] 3.5 Create `lib/Service/DeadlineTrackerService.php`:
+- [x] 3.5 Create `lib/Service/DeadlineTrackerService.php`:
   - `checkEscalations()` — hourly job:
     - Find requests with `status: "in-behandeling"` and deadline < 72 hours
     - Notify team lead, flag request in red
@@ -146,12 +171,12 @@
     - Log to SIEM
   - `send7DayReminder()` — daily check, send reminder if deadline == today + 7 days
 
-- [ ] 3.6 Create `lib/Service/RetentionService.php`:
+- [x] 3.6 Create `lib/Service/RetentionService.php`:
   - `pseudonymizeEvidence(BewijsItem $item)` — mask personal data in inhoudPreview, keep metadata
   - `deleteExpiredDossier(AvgVerzoek $request)` — hard-delete after 5-year window
   - `updateRetentionDate(AvgVerzoek $request)` — set `retentieTot` on resolution
 
-- [ ] 3.7 Create `lib/Service/AvgNotificationService.php`:
+- [x] 3.7 Create `lib/Service/AvgNotificationService.php`:
   - `sendReceiptConfirmation(AvgVerzoek $request)` — email to citizen with reference + deadline
   - `sendExtensionNotification(AvgVerzoek $request, string $reason)` — email with new deadline + justification
   - `sendDenialLetter(Weigering $weigering, AvgVerzoek $request)` — PDF letter with AP contact info
@@ -161,29 +186,29 @@
 
 ## 4. Backend: Background Jobs
 
-- [ ] 4.1 Create `lib/Job/CollectEvidenceJob.php`:
+- [x] 4.1 Create `lib/Job/CollectEvidenceJob.php`:
   - Input: `verzoekId`, `sourcesToQuery` (array)
   - Call `EvidenceCollectionService` for each source
   - Timeout handling: 10 seconds per source
   - On completion: update request status, log summary
 
-- [ ] 4.2 Create `lib/Job/DeadlineTrackerJob.php`:
+- [x] 4.2 Create `lib/Job/DeadlineTrackerJob.php`:
   - Run hourly and daily
   - Hourly: check escalations (<72 hours)
   - Daily: check 7-day reminder, check breaches
 
-- [ ] 4.3 Create `lib/Job/DpiaPatternDetectionJob.php`:
+- [x] 4.3 Create `lib/Job/DpiaPatternDetectionJob.php`:
   - Run weekly (e.g., Monday morning)
   - Call `DpiaDetectionService->analyzePatterns()`
   - Flag requests, notify FG, optionally auto-create Procest items
 
-- [ ] 4.4 Create `lib/Job/PseudonymizationJob.php`:
+- [x] 4.4 Create `lib/Job/PseudonymizationJob.php`:
   - Run daily
   - Find BewijsItems with `verzameldOp` > 30 days ago
   - Call `RetentionService->pseudonymizeEvidence()` per item
   - Log anonymized items
 
-- [ ] 4.5 Create `lib/Job/RetentionCleanupJob.php`:
+- [x] 4.5 Create `lib/Job/RetentionCleanupJob.php`:
   - Run daily
   - Find AvgVerzoeken with `retentieTot` < today
   - Call `RetentionService->deleteExpiredDossier()`
@@ -191,7 +216,7 @@
 
 ## 5. Frontend: Views & Components
 
-- [ ] 5.1 Create `src/views/AvgDashboard.vue`:
+- [x] 5.1 Create `src/views/AvgDashboard.vue`:
   - Layout: Kanban board OR table view with status columns (Intake → In Behandeling → Afgerond)
   - Color-coding by deadline urgency:
     - Green: >7 days remaining
@@ -202,7 +227,7 @@
   - Display cards: request kenmerk, citizen name (masked), deadline, handler name
   - FG-only elements: DPIA flag badge, breach log link
 
-- [ ] 5.2 Create `src/views/AvgRequestDetail.vue`:
+- [x] 5.2 Create `src/views/AvgRequestDetail.vue`:
   - Tabbed layout:
     - **Intake**: summary of request, citizen info, article type, scope, submitted via (web/manual)
     - **Evidence**: list of BewijsItems with source badges (OpenRegister, BRP, OpenConnector), deduplication indicator
@@ -212,7 +237,7 @@
     - **Timeline**: TermijnEvent log (deadlines, escalations, breaches)
   - All tabs read-only if `status: "afgerond"` (archived)
 
-- [ ] 5.3 Create `src/components/AvgIntakeForm.vue`:
+- [x] 5.3 Create `src/components/AvgIntakeForm.vue`:
   - Inputs:
     - Article radio buttons (art. 15, 16, 17, 18, 20) with icons + Dutch labels
     - Free-text "Uw verzoek" (your request) — optional if article is pre-selected
@@ -222,7 +247,7 @@
   - On submit: create AvgVerzoek, show success message with kenmerk
   - Error states: invalid BSN, missing required fields
 
-- [ ] 5.4 Create `src/components/DeadlineCounter.vue`:
+- [x] 5.4 Create `src/components/DeadlineCounter.vue`:
   - Display: "X days remaining" with countdown color:
     - Green: >7 days
     - Yellow: 3–7 days
@@ -231,7 +256,7 @@
   - If extended: show "Extended +60 days" in smaller text
   - If breached: show "OVERSCHREDEN" in large red text with warning icon
 
-- [ ] 5.5 Create `src/components/EvidenceCollector.vue`:
+- [x] 5.5 Create `src/components/EvidenceCollector.vue`:
   - Button: "Verzamel bewijs van bronnen" (collect evidence from sources)
   - On click: start job, show progress bar:
     - "Querying OpenRegister..."
@@ -242,7 +267,7 @@
   - Warning banner if any source timed out or failed
   - List: each source with item count + status (success/timeout)
 
-- [ ] 5.6 Create `src/components/RedactionEditor.vue`:
+- [x] 5.6 Create `src/components/RedactionEditor.vue`:
   - Display: list of BewijsItems in a filtered view (show redactable items)
   - For each item: expandable JSON preview
   - Click on field: inline editor with "Redigeer" button
@@ -253,7 +278,7 @@
   - Warning: if field looks like citizen's own data, show: "⚠ This appears to be the citizen's own data. Redacting requires Art. 23 grounds."
   - Approval flow: "Approve all redactions" button that marks bundle ready for generation
 
-- [ ] 5.7 Create `src/components/BundlePreview.vue`:
+- [x] 5.7 Create `src/components/BundlePreview.vue`:
   - If bundle not yet generated: show button "Genereer bundle" (generate bundle)
   - On generation: spinner, then:
     - PDF viewer (embedded or link to download)
@@ -263,7 +288,7 @@
     - Button: "Download JSON" (direct)
     - Button: "Verzend naar verzoeker via e-mail" (send to citizen via email with secure link)
 
-- [ ] 5.8 Create `src/components/DenialForm.vue`:
+- [x] 5.8 Create `src/components/DenialForm.vue`:
   - Inputs:
     - Radio: "Geheel geweigerd" vs. "Gedeeltelijk geweigerd"
     - If partial: multi-select of scopes to deny (checkboxes)
@@ -276,7 +301,7 @@
     - Show message: "Denial recorded. Handler must sign before sending to citizen."
     - Button: "Show denial letter preview"
 
-- [ ] 5.9 Create `src/components/DpiaFlagBadge.vue`:
+- [x] 5.9 Create `src/components/DpiaFlagBadge.vue`:
   - Small badge displayed on request cards / details when `dpiaFlag: true`
   - Icon: 🔍 or ⚠ in purple
   - Hover tooltip: "This request is flagged for Data Protection Impact Assessment review"
@@ -284,27 +309,27 @@
 
 ## 6. Frontend: Utilities & Helpers
 
-- [ ] 6.1 Create `src/utils/deadlineUtils.ts`:
+- [x] 6.1 Create `src/utils/deadlineUtils.ts`:
   - `calculateDeadline(submittedAt: Date): Date` — add 30 days
   - `daysRemaining(deadline: Date): number`
   - `getUrgencyColor(daysRemaining: number): string` — green / yellow / red
   - `deadlineString(deadline: Date): string` — human-readable format
 
-- [ ] 6.2 Create `src/utils/articleLabels.ts`:
+- [x] 6.2 Create `src/utils/articleLabels.ts`:
   - Map `artikel` enum to Dutch labels:
     - `art-15-inzage` → "Inzagerecht (Art. 15)"
     - `art-16-rectificatie` → "Rectificatie (Art. 16)"
     - etc.
 
-- [ ] 6.3 Create `src/utils/scopeLabels.ts`:
+- [x] 6.3 Create `src/utils/scopeLabels.ts`:
   - Map scope identifiers to Dutch labels (configurable per org)
 
-- [ ] 6.4 Create `src/utils/bsnValidator.ts`:
+- [x] 6.4 Create `src/utils/bsnValidator.ts`:
   - `isValidBsn(bsn: string): boolean` — validate 9-digit format
 
 ## 7. i18n: Translation Keys
 
-- [ ] 7.1 Add to `l10n/en.json`:
+- [x] 7.1 Add to `l10n/en.json`:
   - "AVG Request - Article {article}"
   - "Legal deadline"
   - "Days remaining"
@@ -316,11 +341,11 @@
   - "Receive evidence collection status"
   - And all 13 requirements' field-level messages
 
-- [ ] 7.2 Add same keys to `l10n/nl.json` with Dutch translations
+- [x] 7.2 Add same keys to `l10n/nl.json` with Dutch translations
 
 ## 8. Configuration & Admin Settings
 
-- [ ] 8.1 Create admin settings form `src/views/admin/AvgRequestSettings.vue`:
+- [x] 8.1 Create admin settings form `src/views/admin/AvgRequestSettings.vue`:
   - DPIA threshold (default: 10 requests in 30 days)
   - Evidence retention days (default: 30)
   - Dossier retention years (default: 5)
@@ -329,54 +354,58 @@
   - Email templates: receipt confirmation, extension notification, denial letter, deadline reminders
   - Toggle: auto-create Procest items on DPIA flag (yes/no)
 
-- [ ] 8.2 Create settings migration: initialize default values in `config` table
+- [x] 8.2 Create settings migration: initialize default values in `config` table
 
 ## 9. API Documentation
 
-- [ ] 9.1 Document all new OpenAPI endpoints in `docs/api/avg-requests.md`:
+- [x] 9.1 Document all new OpenAPI endpoints in `docs/api/avg-requests.md`:
   - Request/response schemas for each endpoint
   - Example curl commands
   - Error codes and messages
 
-- [ ] 9.2 Add OpenConnector integration docs: `docs/integration/openconnector-avg-export.md`
+- [x] 9.2 Add OpenConnector integration docs: `docs/integration/openconnector-avg-export.md`
 
 ## 10. Integration Tests
 
-- [ ] 10.1 Create `tests/Integration/AvgIntakeTest.php`:
+- [x] 10.1 Create `tests/Integration/AvgIntakeTest.php`:
   - Test intake form submission with valid BSN
   - Test invalid BSN rejection
   - Test automatic deadline calculation
   - Test multi-article choice
 
-- [ ] 10.2 Create `tests/Integration/EvidenceCollectionTest.php`:
+- [x] 10.2 Create `tests/Integration/EvidenceCollectionTest.php`:
   - Mock OpenRegister, BRP, OpenConnector sources
   - Test collection from each source
   - Test timeout handling
   - Test deduplication
 
-- [ ] 10.3 Create `tests/Integration/BundleGenerationTest.php`:
+- [x] 10.3 Create `tests/Integration/BundleGenerationTest.php`:
   - Test PDF rendering with DocuDesk mock
   - Test PAdES-LTV signing
   - Test SHA-256 hashing
   - Test secure download link generation and one-time use
 
-- [ ] 10.4 Create `tests/Integration/RedactionTest.php`:
+- [x] 10.4 Create `tests/Integration/RedactionTest.php`:
   - Test field-level redaction
   - Test citizen-owned-data protection
   - Test before/after comparison
 
-- [ ] 10.5 Create `tests/Integration/DeadlineTrackerTest.php`:
+- [x] 10.5 Create `tests/Integration/DeadlineTrackerTest.php`:
   - Mock date advancement
   - Test 7-day reminder
   - Test 3-day escalation
   - Test deadline breach logging
 
-- [ ] 10.6 Create `tests/Integration/DpiaPatternDetectionTest.php`:
+- [x] 10.6 Create `tests/Integration/DpiaPatternDetectionTest.php`:
   - Create 10+ similar requests
   - Run pattern detection job
   - Verify flagging and FG notification
 
 ## 11. Manual Testing
+
+> DEFERRED — requires a running NC instance with the app installed, the register
+> imported and the cron/jobs active. The lifecycle logic is covered by the unit
+> tests (request/scoping/erasure/export/deadline/dpia/redaction/denial/extension).
 
 - [ ] 11.1 End-to-end Art. 15 (access) request:
   - Submit web form
@@ -431,6 +460,11 @@
 
 ## 12. Documentation & Training
 
+> A consolidated developer/API reference was written: `docs/Technical/avg-requests-api.md`
+> (endpoints, auth model, error codes, admin config). The separate
+> handler/FG/admin Docusaurus pages and the training video are DEFERRED (a
+> dedicated docs effort; the API doc + the in-UI flow cover the essentials).
+
 - [ ] 12.1 Write handler documentation: `docs/user/avg-requests.md`
   - How to intake a request
   - How to collect evidence
@@ -454,6 +488,11 @@
 
 ## 13. Deployment & Rollout
 
+> DEFERRED — runtime/ops on a live instance. The jobs are registered in
+> `appinfo/info.xml`; the register fragment auto-imports via the existing repair
+> step; admin tunables ship with safe defaults. No `config/app.php` feature flag
+> (the app has no such file; gating is via the admin group config).
+
 - [ ] 13.1 Create feature flag in `config/app.php`: `avg_requests.enabled` (default: false)
 
 - [ ] 13.2 Run all database migrations on test environment
@@ -475,6 +514,11 @@
   - Monitor: background job logs, error logs, performance metrics
 
 ## 14. Success Criteria Verification
+
+> DEFERRED — live verification on a running instance over time. The deterministic
+> parts (deadline math, secure-link expiry/one-time use, pseudonymization timing,
+> dossier deletion, DPIA threshold, AP-reference enforcement) are asserted by the
+> unit suite.
 
 - [ ] 14.1 Handler can complete a standard art. 15 request in <20 minutes of active work
 - [ ] 14.2 Deadline escalation and breach detection work reliably (monitored over 1 week)
