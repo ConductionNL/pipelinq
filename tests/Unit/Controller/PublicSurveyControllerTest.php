@@ -38,6 +38,7 @@ use Psr\Log\LoggerInterface;
  */
 class PublicSurveyControllerTest extends TestCase
 {
+
     /**
      * The request mock.
      *
@@ -163,10 +164,12 @@ class PublicSurveyControllerTest extends TestCase
      */
     public function testShowReturns404WhenSurveyNotFound(): void
     {
-        $this->settingsService->method('getSettings')->willReturn([
-            'register'      => 'reg-id',
-            'survey_schema' => 'schema-id',
-        ]);
+        $this->settingsService->method('getSettings')->willReturn(
+                [
+                    'register'      => 'reg-id',
+                    'survey_schema' => 'schema-id',
+                ]
+                );
 
         $objectServiceMock = $this->buildObjectServiceMock([]);
         $this->container->method('get')->willReturn($objectServiceMock);
@@ -184,14 +187,18 @@ class PublicSurveyControllerTest extends TestCase
      */
     public function testShowReturns410ForInactiveSurvey(): void
     {
-        $this->settingsService->method('getSettings')->willReturn([
-            'register'      => 'reg-id',
-            'survey_schema' => 'schema-id',
-        ]);
+        $this->settingsService->method('getSettings')->willReturn(
+                [
+                    'register'      => 'reg-id',
+                    'survey_schema' => 'schema-id',
+                ]
+                );
 
-        $objectServiceMock = $this->buildObjectServiceMock([
-            ['id' => '1', 'status' => 'closed', 'token' => 'tok'],
-        ]);
+        $objectServiceMock = $this->buildObjectServiceMock(
+                [
+                    ['id' => '1', 'status' => 'closed', 'token' => 'tok'],
+                ]
+                );
         $this->container->method('get')->willReturn($objectServiceMock);
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
 
@@ -207,14 +214,18 @@ class PublicSurveyControllerTest extends TestCase
      */
     public function testShowReturnsActiveSurvey(): void
     {
-        $this->settingsService->method('getSettings')->willReturn([
-            'register'      => 'reg-id',
-            'survey_schema' => 'schema-id',
-        ]);
+        $this->settingsService->method('getSettings')->willReturn(
+                [
+                    'register'      => 'reg-id',
+                    'survey_schema' => 'schema-id',
+                ]
+                );
 
-        $objectServiceMock = $this->buildObjectServiceMock([
-            ['id' => '1', 'title' => 'My Survey', 'status' => 'active', 'token' => 'tok'],
-        ]);
+        $objectServiceMock = $this->buildObjectServiceMock(
+                [
+                    ['id' => '1', 'title' => 'My Survey', 'status' => 'active', 'token' => 'tok'],
+                ]
+                );
         $this->container->method('get')->willReturn($objectServiceMock);
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
 
@@ -231,15 +242,19 @@ class PublicSurveyControllerTest extends TestCase
      */
     public function testSubmitReturns400WhenAnswersMissing(): void
     {
-        $this->settingsService->method('getSettings')->willReturn([
-            'register'                => 'reg-id',
-            'survey_schema'           => 'schema-id',
-            'surveyResponse_schema'   => 'response-schema-id',
-        ]);
+        $this->settingsService->method('getSettings')->willReturn(
+                [
+                    'register'              => 'reg-id',
+                    'survey_schema'         => 'schema-id',
+                    'surveyResponse_schema' => 'response-schema-id',
+                ]
+                );
 
-        $objectServiceMock = $this->buildObjectServiceMock([
-            ['id' => '1', 'status' => 'active', 'token' => 'tok'],
-        ]);
+        $objectServiceMock = $this->buildObjectServiceMock(
+                [
+                    ['id' => '1', 'status' => 'active', 'token' => 'tok'],
+                ]
+                );
         $this->container->method('get')->willReturn($objectServiceMock);
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
 
@@ -258,14 +273,18 @@ class PublicSurveyControllerTest extends TestCase
     public function testSubmitReturns503WhenNotConfigured(): void
     {
         // Survey found but no surveyResponse_schema configured.
-        $this->settingsService->method('getSettings')->willReturn([
-            'register'      => 'reg-id',
-            'survey_schema' => 'schema-id',
-        ]);
+        $this->settingsService->method('getSettings')->willReturn(
+                [
+                    'register'      => 'reg-id',
+                    'survey_schema' => 'schema-id',
+                ]
+                );
 
-        $objectServiceMock = $this->buildObjectServiceMock([
-            ['id' => '1', 'status' => 'active', 'token' => 'tok'],
-        ]);
+        $objectServiceMock = $this->buildObjectServiceMock(
+                [
+                    ['id' => '1', 'status' => 'active', 'token' => 'tok'],
+                ]
+                );
         $this->container->method('get')->willReturn($objectServiceMock);
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
         $this->request->method('getParams')->willReturn(['answers' => ['some-uuid' => 'yes']]);
@@ -288,8 +307,8 @@ class PublicSurveyControllerTest extends TestCase
      */
     public function testSubmitAllowlistStripsUnknownAnswerKeys(): void
     {
-        $knownId1 = '11111111-1111-1111-1111-111111111111';
-        $knownId2 = '22222222-2222-2222-2222-222222222222';
+        $knownId1  = '11111111-1111-1111-1111-111111111111';
+        $knownId2  = '22222222-2222-2222-2222-222222222222';
         $unknownId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 
         $survey = [
@@ -302,11 +321,13 @@ class PublicSurveyControllerTest extends TestCase
             ],
         ];
 
-        $this->settingsService->method('getSettings')->willReturn([
-            'register'              => 'reg-id',
-            'survey_schema'         => 'schema-id',
-            'surveyResponse_schema' => 'response-schema-id',
-        ]);
+        $this->settingsService->method('getSettings')->willReturn(
+                [
+                    'register'              => 'reg-id',
+                    'survey_schema'         => 'schema-id',
+                    'surveyResponse_schema' => 'response-schema-id',
+                ]
+                );
 
         // Capture the data passed to saveObject so we can assert on it.
         $savedData         = null;
@@ -325,13 +346,15 @@ class PublicSurveyControllerTest extends TestCase
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
 
         $this->request->method('getRemoteAddress')->willReturn('127.0.0.1');
-        $this->request->method('getParams')->willReturn([
-            'answers' => [
-                $knownId1  => '4',
-                $knownId2  => 'Great service!',
-                $unknownId => 'injected',
-            ],
-        ]);
+        $this->request->method('getParams')->willReturn(
+                [
+                    'answers' => [
+                        $knownId1  => '4',
+                        $knownId2  => 'Great service!',
+                        $unknownId => 'injected',
+                    ],
+                ]
+                );
 
         $response = $this->buildController()->submit(token: 'tok');
 
@@ -366,11 +389,13 @@ class PublicSurveyControllerTest extends TestCase
             ],
         ];
 
-        $this->settingsService->method('getSettings')->willReturn([
-            'register'              => 'reg-id',
-            'survey_schema'         => 'schema-id',
-            'surveyResponse_schema' => 'response-schema-id',
-        ]);
+        $this->settingsService->method('getSettings')->willReturn(
+                [
+                    'register'              => 'reg-id',
+                    'survey_schema'         => 'schema-id',
+                    'surveyResponse_schema' => 'response-schema-id',
+                ]
+                );
 
         $savedData          = null;
         $entityMock2        = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
@@ -388,12 +413,14 @@ class PublicSurveyControllerTest extends TestCase
         $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
 
         $this->request->method('getRemoteAddress')->willReturn('127.0.0.1');
-        $this->request->method('getParams')->willReturn([
-            'answers' => [
-                'q1' => '4',
-                'q2' => 'Great service!',
-            ],
-        ]);
+        $this->request->method('getParams')->willReturn(
+                [
+                    'answers' => [
+                        'q1' => '4',
+                        'q2' => 'Great service!',
+                    ],
+                ]
+                );
 
         $response = $this->buildController()->submit(token: 'tok');
 
