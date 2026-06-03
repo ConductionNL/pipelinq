@@ -13,6 +13,7 @@ return [
         ['name' => 'settings#updateUserSettings', 'url' => '/api/settings/user', 'verb' => 'PUT'],
 
         // Admin — Objects API access control (per-schema group restrictions; ADR-005 / admin-settings spec).
+        ['name' => 'settings#getObjectenAccess', 'url' => '/api/settings/objecten-access', 'verb' => 'GET'],
         ['name' => 'settings#saveObjectenAccess', 'url' => '/api/settings/objecten-access', 'verb' => 'POST'],
 
         // Admin — REST API token management.
