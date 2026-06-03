@@ -47,7 +47,11 @@
 			</div>
 
 			<template #actions>
-				<NcButton v-if="isEdit" type="tertiary" :disabled="busy" @click="testConnection">
+				<NcButton
+					v-if="isEdit"
+					type="tertiary"
+					:disabled="busy"
+					@click="testConnection">
 					{{ t('pipelinq', 'Test connection') }}
 				</NcButton>
 				<NcButton type="primary" :disabled="busy || !model.name" @click="save">

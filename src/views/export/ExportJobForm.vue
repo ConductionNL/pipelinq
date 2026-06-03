@@ -57,7 +57,7 @@
 				<NcTextField
 					:value.sync="model.rowFilterExpression"
 					:label="t('pipelinq', 'Row filter (optional)')"
-					:placeholder="\"status = 'open'\"" />
+					placeholder="status = 'open'" />
 				<NcTextField
 					:value.sync="allowlistText"
 					:label="t('pipelinq', 'Column allowlist (optional, comma-separated)')"
@@ -65,7 +65,11 @@
 			</div>
 
 			<template #actions>
-				<NcButton v-if="isEdit" type="tertiary" :disabled="busy" @click="testRun">
+				<NcButton
+					v-if="isEdit"
+					type="tertiary"
+					:disabled="busy"
+					@click="testRun">
 					{{ t('pipelinq', 'Test run') }}
 				</NcButton>
 				<NcButton type="primary" :disabled="busy || !model.name" @click="save">
