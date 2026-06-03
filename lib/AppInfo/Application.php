@@ -45,6 +45,8 @@ use OCA\Pipelinq\Lifecycle\PosRefundManagerGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionAccessGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
+use OCA\Pipelinq\Listener\DealCreatedListener;
+use OCA\Pipelinq\Listener\DealUpdatedListener;
 use OCA\Pipelinq\Listener\DeepLinkRegistrationListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCA\Pipelinq\Mcp\PipelinqToolProvider;
@@ -99,6 +101,14 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(
             event: ObjectUpdatedEvent::class,
             listener: ObjectEventListener::class
+        );
+        $context->registerEventListener(
+            event: ObjectCreatedEvent::class,
+            listener: DealCreatedListener::class
+        );
+        $context->registerEventListener(
+            event: ObjectUpdatedEvent::class,
+            listener: DealUpdatedListener::class
         );
 
         $context->registerDashboardWidget(DealsOverviewWidget::class);

@@ -1,0 +1,29 @@
+{
+	"menu": [
+		{
+			"id": "Forecast",
+			"label": "Forecast",
+			"icon": "icon-category-monitoring",
+			"route": "Forecast",
+			"order": 95
+		}
+	],
+	"pages": [
+		{
+			"id": "Forecast",
+			"route": "/forecast",
+			"type": "custom",
+			"title": "Forecast",
+			"component": "ForecastDashboardView",
+			"config": { "register": "pipelinq", "schema": "forecastSnapshot" }
+		},
+		{
+			"id": "ForecastTrend",
+			"route": "/forecast/trend",
+			"type": "custom",
+			"title": "Forecast trend",
+			"component": "ForecastTrendView",
+			"config": { "register": "pipelinq", "schema": "forecastSnapshot" }
+		}
+	]
+}

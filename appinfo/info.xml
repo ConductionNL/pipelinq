@@ -90,6 +90,7 @@ Vrij en open source onder de AGPL-licentie.
         <job>OCA\Pipelinq\BackgroundJob\PortalCleanupJob</job>
         <job>OCA\Pipelinq\BackgroundJob\ExportSchedulerJob</job>
         <job>OCA\Pipelinq\BackgroundJob\ExportWorkerJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\ForecastSnapshotJob</job>
     </background-jobs>
 
     <navigations>
