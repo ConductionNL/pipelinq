@@ -75,6 +75,13 @@ class SettingsService
         'complaint_sla_communication',
         'complaint_sla_billing',
         'complaint_sla_other',
+        // Customer portal (separate auth-domain register; ADR-005 / ADR-037).
+        'portal_register',
+        'portalAccount_schema',
+        'portalSession_schema',
+        'portalDelegation_schema',
+        'portalAuditEvent_schema',
+        'portalTenantConfig_schema',
     ];
 
     /**
