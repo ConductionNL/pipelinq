@@ -182,7 +182,10 @@
 					{ "id": "requests-by-status", "type": "custom", "title": "Requests by Status" },
 					{ "id": "complaints",         "type": "custom", "title": "Complaints" },
 					{ "id": "my-work",            "type": "custom", "title": "My Work" },
-					{ "id": "client-overview",    "type": "custom", "title": "Client Overview" }
+					{ "id": "client-overview",    "type": "custom", "title": "Client Overview" },
+						{ "id": "unified-analytics",  "type": "custom", "title": "Analytics" },
+						{ "id": "navi-analytics",     "type": "custom", "title": "Navi" },
+						{ "id": "report-export",      "type": "custom", "title": "Report Export" }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "open-leads",         "gridX": 0, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
@@ -192,7 +195,10 @@
 					{ "id": "5", "widgetId": "requests-by-status", "gridX": 0, "gridY": 2, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "6", "widgetId": "complaints",         "gridX": 6, "gridY": 2, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "7", "widgetId": "my-work",            "gridX": 0, "gridY": 6, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "8", "widgetId": "client-overview",    "gridX": 6, "gridY": 6, "gridWidth": 6, "gridHeight": 4 }
+					{ "id": "8", "widgetId": "client-overview",    "gridX": 6, "gridY": 6, "gridWidth": 6, "gridHeight": 4 },
+						{ "id": "9", "widgetId": "unified-analytics",  "gridX": 0, "gridY": 10, "gridWidth": 12, "gridHeight": 5 },
+						{ "id": "10", "widgetId": "navi-analytics",    "gridX": 0, "gridY": 15, "gridWidth": 12, "gridHeight": 6 },
+						{ "id": "11", "widgetId": "report-export",     "gridX": 0, "gridY": 21, "gridWidth": 12, "gridHeight": 3 }
 				]
 			},
 			"slots": {
@@ -203,7 +209,10 @@
 				"widget-requests-by-status": "RequestsByStatusWidget",
 				"widget-complaints": "ComplaintsWidget",
 				"widget-my-work": "MyWorkWidget",
-				"widget-client-overview": "ClientOverviewWidget"
+				"widget-client-overview": "ClientOverviewWidget",
+					"widget-unified-analytics": "AnalyticsDashboard",
+					"widget-navi-analytics": "NaviAnalyticsWidget",
+					"widget-report-export": "ReportExportPanel"
 			}
 		},
 		{

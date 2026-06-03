@@ -1,0 +1,126 @@
+{
+  "info": {
+    "name": "Pipelinq Navi Analytics API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Newman integration tests for the Navi conversational analytics endpoint (POST /api/navi/query). Credentials are supplied via the Newman environment (baseUrl, username, password) — no defaults are baked into this collection."
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "" },
+    { "key": "username", "value": "" },
+    { "key": "password", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "POST /api/navi/query — authenticated happy path",
+      "request": {
+        "method": "POST",
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{username}}", "type": "string" },
+            { "key": "password", "value": "{{password}}", "type": "string" }
+          ]
+        },
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "OCS-APIREQUEST", "value": "true" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"query\": \"Hoeveel leads zijn er deze maand gewonnen?\" }"
+        },
+        "url": "{{baseUrl}}/index.php/apps/pipelinq/api/navi/query"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Response has resultType', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json).to.have.property('resultType');",
+              "  pm.expect(['chart', 'table', 'text']).to.include(json.resultType);",
+              "});",
+              "pm.test('Response has suggestedFollowUps array (max 3)', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json.suggestedFollowUps).to.be.an('array');",
+              "  pm.expect(json.suggestedFollowUps.length).to.be.at.most(3);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST /api/navi/query — unauthenticated returns 401",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "OCS-APIREQUEST", "value": "true" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"query\": \"Hoeveel leads?\" }"
+        },
+        "url": "{{baseUrl}}/index.php/apps/pipelinq/api/navi/query"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 401', function () {",
+              "  pm.response.to.have.status(401);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST /api/navi/query — missing query returns 400",
+      "request": {
+        "method": "POST",
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{username}}", "type": "string" },
+            { "key": "password", "value": "{{password}}", "type": "string" }
+          ]
+        },
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "OCS-APIREQUEST", "value": "true" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": "{{baseUrl}}/index.php/apps/pipelinq/api/navi/query"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 400', function () {",
+              "  pm.response.to.have.status(400);",
+              "});",
+              "pm.test('Error message is present and static', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json.message).to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

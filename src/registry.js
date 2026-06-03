@@ -35,6 +35,14 @@ import ComplaintsWidget from './views/dashboard/widgets/ComplaintsWidget.vue'
 import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
 import ClientOverviewWidget from './views/dashboard/widgets/ClientOverviewWidget.vue'
 
+// --- Dashboard analytics (Navi AI + unified analytics + report export).
+//     Server-side aggregation via /api/analytics + /api/navi; rendering reuses
+//     CnChartWidget / CnTableWidget / CnStatsBlock / CnKpiGrid / CnMassExportDialog.
+//     See openspec/changes/dashboard/design.md. ---
+import AnalyticsDashboard from './views/dashboard/widgets/AnalyticsDashboard.vue'
+import NaviAnalyticsWidget from './views/dashboard/widgets/NaviAnalyticsWidget.vue'
+import ReportExportPanel from './views/dashboard/widgets/ReportExportPanel.vue'
+
 // Bespoke kanban board with in-memory search (REQ-PIPE-022).
 // See openspec/changes/2026-03-20-pipeline/design.md.
 import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
@@ -143,6 +151,21 @@ const registry = {
 		kind: 'widget',
 		component: ClientOverviewWidget,
 		_note: 'Top-5 recent clients with a view-all link to ClientList.',
+	},
+	AnalyticsDashboard: {
+		kind: 'widget',
+		component: AnalyticsDashboard,
+		_note: 'Unified cross-module analytics: KPI cards (CnStatsBlock/CnKpiGrid) + trend charts (CnChartWidget) from the server-aggregated /api/analytics endpoints. Period selector in its own toolbar (CnDashboardPage slots have no per-widget header-actions).',
+	},
+	NaviAnalyticsWidget: {
+		kind: 'widget',
+		component: NaviAnalyticsWidget,
+		_note: 'Navi conversational analytics: natural-language queries answered server-side by /api/navi/query, results rendered inline as CnChartWidget / CnTableWidget / text with follow-up suggestion chips.',
+	},
+	ReportExportPanel: {
+		kind: 'widget',
+		component: ReportExportPanel,
+		_note: 'Collapsible funder-reporting export panel. Entity + period picker; download delegated to the OpenRegister export endpoint via CnMassExportDialog (no custom export controller).',
 	},
 
 	// --- Queues / routing rules. ---

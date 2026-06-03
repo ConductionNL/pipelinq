@@ -1,0 +1,166 @@
+{
+  "info": {
+    "name": "Pipelinq Unified Analytics API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Newman integration tests for the unified analytics endpoints (GET /api/analytics/overview, /trends, /funnels). Credentials are supplied via the Newman environment (baseUrl, username, password) — no defaults are baked into this collection."
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "" },
+    { "key": "username", "value": "" },
+    { "key": "password", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "GET /api/analytics/overview — authenticated",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{username}}", "type": "string" },
+            { "key": "password", "value": "{{password}}", "type": "string" }
+          ]
+        },
+        "header": [
+          { "key": "OCS-APIREQUEST", "value": "true" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/index.php/apps/pipelinq/api/analytics/overview?period=month",
+          "host": ["{{baseUrl}}"],
+          "path": ["index.php", "apps", "pipelinq", "api", "analytics", "overview"],
+          "query": [{ "key": "period", "value": "month" }]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Response has all KPI fields', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json).to.have.property('leadConversionRate');",
+              "  pm.expect(json).to.have.property('avgRequestResolutionTime');",
+              "  pm.expect(json).to.have.property('contactMomentVolume');",
+              "  pm.expect(json).to.have.property('customerSatisfactionScore');",
+              "  pm.expect(json).to.have.property('period');",
+              "  pm.expect(json).to.have.property('previousPeriod');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /api/analytics/trends — leads (authenticated)",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{username}}", "type": "string" },
+            { "key": "password", "value": "{{password}}", "type": "string" }
+          ]
+        },
+        "header": [
+          { "key": "OCS-APIREQUEST", "value": "true" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/index.php/apps/pipelinq/api/analytics/trends?metric=leads&period=month",
+          "host": ["{{baseUrl}}"],
+          "path": ["index.php", "apps", "pipelinq", "api", "analytics", "trends"],
+          "query": [
+            { "key": "metric", "value": "leads" },
+            { "key": "period", "value": "month" }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Response has series array', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json.metric).to.eql('leads');",
+              "  pm.expect(json.series).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /api/analytics/trends — unsupported metric returns 400",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{username}}", "type": "string" },
+            { "key": "password", "value": "{{password}}", "type": "string" }
+          ]
+        },
+        "header": [
+          { "key": "OCS-APIREQUEST", "value": "true" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/index.php/apps/pipelinq/api/analytics/trends?metric=unknown&period=month",
+          "host": ["{{baseUrl}}"],
+          "path": ["index.php", "apps", "pipelinq", "api", "analytics", "trends"],
+          "query": [
+            { "key": "metric", "value": "unknown" },
+            { "key": "period", "value": "month" }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 400', function () {",
+              "  pm.response.to.have.status(400);",
+              "});",
+              "pm.test('Static error message', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json.message).to.eql('Unsupported metric');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /api/analytics/overview — unauthenticated returns 401",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "OCS-APIREQUEST", "value": "true" }
+        ],
+        "url": "{{baseUrl}}/index.php/apps/pipelinq/api/analytics/overview"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 401', function () {",
+              "  pm.response.to.have.status(401);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -119,6 +119,14 @@ return [
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
 
+        // Navi conversational analytics agent (camelCase slug matches NaviController class name).
+        ['name' => 'navi#query', 'url' => '/api/navi/query', 'verb' => 'POST'],
+
+        // Unified cross-module analytics (camelCase slug matches AnalyticsController class name).
+        ['name' => 'analytics#overview', 'url' => '/api/analytics/overview', 'verb' => 'GET'],
+        ['name' => 'analytics#trends',   'url' => '/api/analytics/trends',   'verb' => 'GET'],
+        ['name' => 'analytics#funnels',  'url' => '/api/analytics/funnels',  'verb' => 'GET'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
