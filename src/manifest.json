@@ -67,7 +67,7 @@
 		{
 			"id": "Products",
 			"label": "Products",
-			"icon": "icon-files",
+			"icon": "icon-category-app-bundles",
 			"route": "Products",
 			"order": 90
 		},
@@ -109,7 +109,7 @@
 		{
 			"id": "Queues",
 			"label": "Queues",
-			"icon": "icon-files",
+			"icon": "icon-category-workflow",
 			"route": "Queues",
 			"order": 120
 		},

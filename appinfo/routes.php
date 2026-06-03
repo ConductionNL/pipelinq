@@ -17,10 +17,10 @@ return [
         ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
 
         // Lead sources (camelCase slug matches LeadSourceController class name)
-        ['name' => 'leadSource#index', 'url' => '/api/lead-sources', 'verb' => 'GET'],
-        ['name' => 'leadSource#create', 'url' => '/api/lead-sources', 'verb' => 'POST'],
-        ['name' => 'leadSource#update', 'url' => '/api/lead-sources/{id}', 'verb' => 'PUT'],
-        ['name' => 'leadSource#destroy', 'url' => '/api/lead-sources/{id}', 'verb' => 'DELETE'],
+        ['name' => 'leadSource#index', 'url' => '/api/settings/lead-sources', 'verb' => 'GET'],
+        ['name' => 'leadSource#create', 'url' => '/api/settings/lead-sources', 'verb' => 'POST'],
+        ['name' => 'leadSource#update', 'url' => '/api/settings/lead-sources/{id}', 'verb' => 'PUT'],
+        ['name' => 'leadSource#destroy', 'url' => '/api/settings/lead-sources/{id}', 'verb' => 'DELETE'],
 
         // Contacts sync (camelCase slug matches ContactSyncController class name)
         ['name' => 'contactSync#search', 'url' => '/api/contacts-sync/search', 'verb' => 'GET'],
@@ -34,10 +34,10 @@ return [
         ['name' => 'notes#deleteSingle', 'url' => '/api/notes/single/{noteId}', 'verb' => 'DELETE'],
 
         // Request channels (camelCase slug matches RequestChannelController class name)
-        ['name' => 'requestChannel#index', 'url' => '/api/request-channels', 'verb' => 'GET'],
-        ['name' => 'requestChannel#create', 'url' => '/api/request-channels', 'verb' => 'POST'],
-        ['name' => 'requestChannel#update', 'url' => '/api/request-channels/{id}', 'verb' => 'PUT'],
-        ['name' => 'requestChannel#destroy', 'url' => '/api/request-channels/{id}', 'verb' => 'DELETE'],
+        ['name' => 'requestChannel#index', 'url' => '/api/settings/request-channels', 'verb' => 'GET'],
+        ['name' => 'requestChannel#create', 'url' => '/api/settings/request-channels', 'verb' => 'POST'],
+        ['name' => 'requestChannel#update', 'url' => '/api/settings/request-channels/{id}', 'verb' => 'PUT'],
+        ['name' => 'requestChannel#destroy', 'url' => '/api/settings/request-channels/{id}', 'verb' => 'DELETE'],
 
         // Prospect discovery
         ['name' => 'prospect#index', 'url' => '/api/prospects', 'verb' => 'GET'],

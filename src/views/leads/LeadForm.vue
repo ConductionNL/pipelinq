@@ -58,10 +58,11 @@
 
 		<!-- Expected Close Date -->
 		<div class="form-group">
-			<NcTextField :value="form.expectedCloseDate || ''"
+			<NcDateTimePickerNative
+				:value="expectedCloseDateObj"
 				:label="t('pipelinq', 'Expected close date')"
 				type="date"
-				@update:value="v => form.expectedCloseDate = v || null" />
+				@input="expectedCloseDateObj = $event" />
 		</div>
 
 		<!-- Client -->
@@ -113,14 +114,16 @@
 </template>
 
 <script>
-import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcDateTimePickerNative, NcSelect, NcTextField } from '@nextcloud/vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
+import { toDateObject, toDateInputString } from '../../services/localeUtils.js'
 
 export default {
 	name: 'LeadForm',
 	components: {
 		NcButton,
+		NcDateTimePickerNative,
 		NcSelect,
 		NcTextField,
 	},
@@ -148,6 +151,18 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * Bridge the stored `expectedCloseDate` string to
+		 * NcDateTimePickerNative, which works with Date objects.
+		 */
+		expectedCloseDateObj: {
+			get() {
+				return toDateObject(this.form.expectedCloseDate)
+			},
+			set(date) {
+				this.form.expectedCloseDate = toDateInputString(date)
+			},
+		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-48
 		 */

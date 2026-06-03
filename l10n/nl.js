@@ -1121,6 +1121,9 @@ OC.L10N.register(
     "This will reject the refund. Enter a reason for the rejection." : "Hiermee wijs je de retour af. Vul een reden in voor de afwijzing.",
     "Vul een reden in voor de afwijzing" : "Vul een reden in voor de afwijzing",
     "Max {max}" : "Max {max}",
+    "app-availability.title" : "Vereiste applicatie niet beschikbaar",
+    "app-availability.description" : "Deze applicatie vereist dat OpenRegister is geïnstalleerd en ingeschakeld.",
+    "app-availability.action" : "OpenRegister installeren"
     "Sign in to the portal" : "Inloggen op het portaal",
     "Password" : "Wachtwoord",
     "Verification code" : "Verificatiecode",
