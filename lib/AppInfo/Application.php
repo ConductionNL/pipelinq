@@ -37,6 +37,7 @@ use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
 use OCA\Pipelinq\Listener\DeepLinkRegistrationListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
+use OCA\Pipelinq\Listener\SourceRecordChangedListener;
 use OCA\Pipelinq\Mcp\PipelinqToolProvider;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -89,6 +90,17 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(
             event: ObjectUpdatedEvent::class,
             listener: ObjectEventListener::class
+        );
+
+        // MDM: recompute a Master Entity's golden record when a linked
+        // source-record is created or updated (REQ-MDM-001).
+        $context->registerEventListener(
+            event: ObjectCreatedEvent::class,
+            listener: SourceRecordChangedListener::class
+        );
+        $context->registerEventListener(
+            event: ObjectUpdatedEvent::class,
+            listener: SourceRecordChangedListener::class
         );
 
         $context->registerDashboardWidget(DealsOverviewWidget::class);

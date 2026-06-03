@@ -71,6 +71,11 @@ class SettingsLoadService
         'refundReason',
         'posRefund',
         'posRefundLine',
+        'masterEntity',
+        'sourceRecord',
+        'trustConfiguration',
+        'mergeOperation',
+        'syncQueueItem',
     ];
 
     /**

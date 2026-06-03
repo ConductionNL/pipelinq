@@ -73,6 +73,13 @@ import PosRefundFormView from './views/pos/PosRefundForm.vue'
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
 import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
 
+// --- Master Data Management (MDM) bespoke steward views. ---
+import MdmMasterEntityListView from './views/mdm/MdmMasterEntityListView.vue'
+import MdmMasterEntityDetailView from './views/mdm/MdmMasterEntityDetailView.vue'
+import MdmDataQualityDashboard from './views/mdm/MdmDataQualityDashboard.vue'
+import MdmDuplicateCandidatesDashboard from './views/mdm/MdmDuplicateCandidatesDashboard.vue'
+import MdmSyncQueueAdmin from './views/mdm/MdmSyncQueueAdmin.vue'
+
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
 /**
@@ -246,6 +253,36 @@ const registry = {
 		kind: 'page',
 		component: ProductBarcodeSearchView,
 		_note: 'Scan-to-navigate barcode search; resolves via the server-authoritative scoped barcode-lookup API and routes to the matching product (highlighting a matched variant).',
+	},
+
+	// --- Master Data Management (MDM) steward surfaces. The list/detail,
+	//     duplicate-candidates and data-quality dashboards aggregate across
+	//     master-entity + source-record + sync-queue reads that the declarative
+	//     typed pages cannot express, so they ship as bespoke views. ---
+	MdmMasterEntityListView: {
+		kind: 'page',
+		component: MdmMasterEntityListView,
+		_note: 'Master entity list with entityType + low-quality filters and a data-quality badge per row.',
+	},
+	MdmMasterEntityDetailView: {
+		kind: 'page',
+		component: MdmMasterEntityDetailView,
+		_note: 'Golden record + source-record lineage + per-attribute provenance, with the conflict-resolution modal.',
+	},
+	MdmDataQualityDashboard: {
+		kind: 'page',
+		component: MdmDataQualityDashboard,
+		_note: 'Aggregate quality buckets, worst-entity table and sync-queue health with dead-letter retry.',
+	},
+	MdmDuplicateCandidatesDashboard: {
+		kind: 'page',
+		component: MdmDuplicateCandidatesDashboard,
+		_note: 'Deterministic + probabilistic duplicate candidates with the merge wizard modal.',
+	},
+	MdmSyncQueueAdmin: {
+		kind: 'page',
+		component: MdmSyncQueueAdmin,
+		_note: 'Outbound sync queue with status filter and manual retry of failed / dead-letter items.',
 	},
 }
 

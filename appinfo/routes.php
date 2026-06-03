@@ -119,6 +119,38 @@ return [
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
 
+        // Master Data Management — read-API (downstream apps; session/bearer auth).
+        // Static /api/mdm/master MUST precede the /{id} wildcard (ADR-016).
+        ['name' => 'mdmApi#queryByNaturalKey', 'url' => '/api/mdm/master', 'verb' => 'GET'],
+        ['name' => 'mdmApi#show',              'url' => '/api/mdm/master/{id}', 'verb' => 'GET'],
+
+        // MDM — Master Entity steward views + data-quality dashboard.
+        ['name' => 'mdmMasterEntity#index',     'url' => '/api/mdm/entities', 'verb' => 'GET'],
+        ['name' => 'mdmMasterEntity#dashboard', 'url' => '/api/mdm/dashboard', 'verb' => 'GET'],
+        ['name' => 'mdmMasterEntity#show',      'url' => '/api/mdm/entities/{id}', 'verb' => 'GET'],
+
+        // MDM — merge tooling (preview/candidates authed; execute/reverse admin).
+        ['name' => 'mdmMerge#candidates', 'url' => '/api/mdm/duplicates/{entityType}', 'verb' => 'GET'],
+        ['name' => 'mdmMerge#preview',    'url' => '/api/mdm/merge/preview', 'verb' => 'POST'],
+        ['name' => 'mdmMerge#execute',    'url' => '/api/mdm/merge/execute', 'verb' => 'POST'],
+        ['name' => 'mdmMerge#reverse',    'url' => '/api/mdm/merge/{mergeOperationId}/reverse', 'verb' => 'POST'],
+
+        // MDM — trust configuration (list authed; mutate admin).
+        ['name' => 'mdmTrustConfig#index',   'url' => '/api/mdm/trust-config', 'verb' => 'GET'],
+        ['name' => 'mdmTrustConfig#save',    'url' => '/api/mdm/trust-config', 'verb' => 'POST'],
+        ['name' => 'mdmTrustConfig#save',    'url' => '/api/mdm/trust-config/{id}', 'verb' => 'PUT', 'postfix' => 'update'],
+        ['name' => 'mdmTrustConfig#destroy', 'url' => '/api/mdm/trust-config/{id}', 'verb' => 'DELETE'],
+
+        // MDM — sync queue administration (list authed; retry admin).
+        ['name' => 'mdmSyncQueue#index', 'url' => '/api/mdm/sync-queue', 'verb' => 'GET'],
+        ['name' => 'mdmSyncQueue#retry', 'url' => '/api/mdm/sync-queue/{itemId}/retry', 'verb' => 'POST'],
+
+        // MDM — AVG right-of-deletion workflow (admin only).
+        ['name' => 'mdmAvgWorkflow#candidates',        'url' => '/api/mdm/avg-workflow/candidates', 'verb' => 'GET'],
+        ['name' => 'mdmAvgWorkflow#initiate',          'url' => '/api/mdm/avg-workflow/initiate', 'verb' => 'POST'],
+        ['name' => 'mdmAvgWorkflow#approve',           'url' => '/api/mdm/avg-workflow/approve', 'verb' => 'POST'],
+        ['name' => 'mdmAvgWorkflow#confirmHardDelete', 'url' => '/api/mdm/avg-workflow/{masterEntityId}/hard-delete', 'verb' => 'POST'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
