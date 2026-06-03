@@ -17,6 +17,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/reverse-2026-05-26-be-background-jobs/tasks.md#task-2
+ * @spec openspec/changes/queue-management/tasks.md#task-1.2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2

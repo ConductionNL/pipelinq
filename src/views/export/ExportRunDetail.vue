@@ -9,7 +9,11 @@
 		@back="goBack">
 		<template #header>
 			<CnStatusBadge :status="badgeStatus" :label="statusLabel" />
-			<NcButton v-if="canRetry" type="primary" :disabled="busy" @click="retry">
+			<NcButton
+				v-if="canRetry"
+				type="primary"
+				:disabled="busy"
+				@click="retry">
 				{{ t('pipelinq', 'Retry') }}
 			</NcButton>
 		</template>
@@ -52,7 +56,9 @@
 						<td>{{ file.path }}</td>
 						<td>{{ file.size_bytes }}</td>
 						<td>{{ file.rows_in_file }}</td>
-						<td class="run-hash">{{ file.sha256 }}</td>
+						<td class="run-hash">
+							{{ file.sha256 }}
+						</td>
 						<td>{{ file.upload_status }}</td>
 					</tr>
 				</tbody>
