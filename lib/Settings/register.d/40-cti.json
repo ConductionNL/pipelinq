@@ -1,0 +1,468 @@
+{
+    "components": {
+        "registers": {
+            "pipelinq": {
+                "schemas": [
+                    "ctiAdapterConfig",
+                    "ctiEventLog",
+                    "ctiAgentPresence"
+                ]
+            }
+        },
+        "schemas": {
+            "contactmoment": {
+                "properties": {
+                    "channel": {
+                        "type": "string",
+                        "description": "Communication channel used (schema:instrument / Contactmoment.kanaal)",
+                        "enum": [
+                            "telefoon",
+                            "telephony",
+                            "email",
+                            "balie",
+                            "chat",
+                            "social",
+                            "brief"
+                        ],
+                        "title": "Channel",
+                        "facetable": true
+                    },
+                    "telephonyPlatform": {
+                        "type": "string",
+                        "description": "Telephony platform that handled the call",
+                        "enum": [
+                            "callvoip",
+                            "ringcentral",
+                            "asterisk",
+                            "other"
+                        ],
+                        "facetable": true,
+                        "visible": false
+                    },
+                    "externalCallId": {
+                        "type": "string",
+                        "description": "The telephony platform's unique call identifier",
+                        "maxLength": 255,
+                        "visible": false
+                    },
+                    "direction": {
+                        "type": "string",
+                        "description": "Call direction",
+                        "enum": [
+                            "inbound",
+                            "outbound"
+                        ],
+                        "facetable": true,
+                        "visible": false
+                    },
+                    "fromNumber": {
+                        "type": "string",
+                        "description": "Calling party number in E.164 format (or raw if unparseable)",
+                        "maxLength": 64,
+                        "visible": false
+                    },
+                    "toNumber": {
+                        "type": "string",
+                        "description": "Called party number in E.164 format (or raw if unparseable)",
+                        "maxLength": 64,
+                        "visible": false
+                    },
+                    "startedAt": {
+                        "type": "string",
+                        "description": "When the call was initiated (ISO 8601)",
+                        "format": "date-time",
+                        "visible": false
+                    },
+                    "answeredAt": {
+                        "type": "string",
+                        "description": "When the call was answered (ISO 8601, null if unanswered)",
+                        "format": "date-time",
+                        "visible": false
+                    },
+                    "endedAt": {
+                        "type": "string",
+                        "description": "When the call ended (ISO 8601)",
+                        "format": "date-time",
+                        "visible": false
+                    },
+                    "durationSeconds": {
+                        "type": "integer",
+                        "description": "Call duration in seconds, computed on call end",
+                        "visible": false
+                    },
+                    "queueName": {
+                        "type": "string",
+                        "description": "Queue the call was routed through",
+                        "maxLength": 255,
+                        "facetable": true,
+                        "visible": false
+                    },
+                    "agentSkill": {
+                        "type": "string",
+                        "description": "Agent skill the call was matched to",
+                        "maxLength": 255,
+                        "visible": false
+                    },
+                    "callStatus": {
+                        "type": "string",
+                        "description": "Lifecycle state of the telephony contactmoment",
+                        "enum": [
+                            "pending",
+                            "disposition-pending",
+                            "completed"
+                        ],
+                        "facetable": true,
+                        "visible": false
+                    },
+                    "dispositionSubject": {
+                        "type": "string",
+                        "description": "Agent-entered subject summarising the call",
+                        "maxLength": 255,
+                        "visible": false
+                    },
+                    "dispositionOutcome": {
+                        "type": "string",
+                        "description": "Agent-selected call outcome driving downstream workflow",
+                        "enum": [
+                            "resolved",
+                            "callback",
+                            "escalated",
+                            "wrong-number",
+                            "no-answer",
+                            "abandoned"
+                        ],
+                        "facetable": true,
+                        "visible": false
+                    },
+                    "dispositionNotes": {
+                        "type": "string",
+                        "description": "Free-text agent notes captured after the call",
+                        "visible": false
+                    },
+                    "recordingUrl": {
+                        "type": "string",
+                        "description": "Deep link to the platform-hosted call recording (metadata only; audio is never stored in Pipelinq)",
+                        "format": "uri",
+                        "visible": false
+                    },
+                    "recordingRetentionExpiresAt": {
+                        "type": "string",
+                        "description": "When the platform will delete the recording (ISO 8601)",
+                        "format": "date-time",
+                        "visible": false
+                    }
+                }
+            },
+            "ctiAdapterConfig": {
+                "slug": "ctiAdapterConfig",
+                "title": "CTI Adapter Config",
+                "icon": "PhoneSettings",
+                "version": "1.0.0",
+                "summary": "Per-organisation Computer Telephony Integration platform configuration",
+                "description": "Singleton-per-org configuration for the CTI adapter: which telephony platform is in use, how inbound webhooks are authenticated, and screen-pop / click-to-dial behaviour. Credentials are never stored here; credentialsRef points to an OpenConnector source.",
+                "@type": "schema:Thing",
+                "required": [
+                    "platform"
+                ],
+                "properties": {
+                    "platform": {
+                        "type": "string",
+                        "description": "Configured telephony platform",
+                        "enum": [
+                            "callvoip",
+                            "ringcentral",
+                            "asterisk",
+                            "other"
+                        ],
+                        "title": "Platform",
+                        "facetable": true
+                    },
+                    "apiBaseUrl": {
+                        "type": "string",
+                        "description": "Base URL of the telephony platform API",
+                        "format": "uri"
+                    },
+                    "authMethod": {
+                        "type": "string",
+                        "description": "Authentication method used for webhooks and outbound API calls",
+                        "enum": [
+                            "basic",
+                            "oauth",
+                            "api_key",
+                            "webhook-secret"
+                        ]
+                    },
+                    "credentialsRef": {
+                        "type": "string",
+                        "description": "Pointer to the OpenConnector source holding platform credentials (never stored in Pipelinq)"
+                    },
+                    "screenPopEnabled": {
+                        "type": "boolean",
+                        "description": "Whether inbound screen-pop navigation is enabled",
+                        "default": true
+                    },
+                    "screenPopDelayMs": {
+                        "type": "integer",
+                        "description": "Delay before the agent browser navigates on screen-pop (lets the agent hear the greeting first)",
+                        "default": 0
+                    },
+                    "clickToDialEnabled": {
+                        "type": "boolean",
+                        "description": "Whether click-to-dial origination is enabled",
+                        "default": true
+                    },
+                    "defaultOutboundCallerId": {
+                        "type": "string",
+                        "description": "Caller ID used for outbound calls when the contact has no preferred caller ID",
+                        "maxLength": 64
+                    },
+                    "webhookSecretRef": {
+                        "type": "string",
+                        "description": "App-config key under which the inbound webhook shared secret is stored (the secret itself lives in app config, never in this object)"
+                    }
+                }
+            },
+            "ctiEventLog": {
+                "slug": "ctiEventLog",
+                "title": "CTI Event Log",
+                "icon": "History",
+                "version": "1.0.0",
+                "summary": "Raw inbound telephony webhook payloads, retained 30 days for debugging",
+                "description": "Append-only debugging log of inbound webhook events received from telephony platforms. Retained 30 days, then cleaned up by a scheduled job.",
+                "@type": "schema:Action",
+                "required": [
+                    "platform",
+                    "eventType"
+                ],
+                "properties": {
+                    "receivedAt": {
+                        "type": "string",
+                        "description": "When the webhook was received (ISO 8601)",
+                        "format": "date-time"
+                    },
+                    "platform": {
+                        "type": "string",
+                        "description": "Platform that sent the webhook",
+                        "facetable": true,
+                        "maxLength": 64
+                    },
+                    "eventType": {
+                        "type": "string",
+                        "description": "Event type (ringing|answered|ended|abandoned|transferred|presence_changed|recording_ready)",
+                        "facetable": true,
+                        "maxLength": 64
+                    },
+                    "externalCallId": {
+                        "type": "string",
+                        "description": "Platform call identifier the event relates to",
+                        "maxLength": 255
+                    },
+                    "payloadJson": {
+                        "type": "string",
+                        "description": "Full webhook body as received (JSON-encoded string)"
+                    },
+                    "processedAt": {
+                        "type": "string",
+                        "description": "When processing finished (ISO 8601)",
+                        "format": "date-time"
+                    },
+                    "processingError": {
+                        "type": "string",
+                        "description": "Processing error code, or null on success",
+                        "maxLength": 255
+                    }
+                }
+            },
+            "ctiAgentPresence": {
+                "slug": "ctiAgentPresence",
+                "title": "CTI Agent Presence",
+                "icon": "AccountVoice",
+                "version": "1.0.0",
+                "summary": "Per-agent telephony availability state",
+                "description": "Tracks which Pipelinq user is logged into the telephony platform, on which extension, and their current availability. One record per agent, upserted on presence webhooks.",
+                "@type": "schema:Thing",
+                "required": [
+                    "userId"
+                ],
+                "properties": {
+                    "userId": {
+                        "type": "string",
+                        "description": "Nextcloud user UID of the agent",
+                        "facetable": true,
+                        "maxLength": 255
+                    },
+                    "extension": {
+                        "type": "string",
+                        "description": "Telephony extension assigned to the agent",
+                        "maxLength": 64
+                    },
+                    "presenceState": {
+                        "type": "string",
+                        "description": "Current availability state",
+                        "enum": [
+                            "available",
+                            "on-call",
+                            "wrap-up",
+                            "away",
+                            "offline"
+                        ],
+                        "facetable": true
+                    },
+                    "lastUpdatedAt": {
+                        "type": "string",
+                        "description": "When presence was last updated (ISO 8601)",
+                        "format": "date-time"
+                    },
+                    "platform": {
+                        "type": "string",
+                        "description": "Platform reporting the presence",
+                        "maxLength": 64
+                    }
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "ctiAdapterConfig",
+                    "slug": "cti-config-default"
+                },
+                "platform": "callvoip",
+                "apiBaseUrl": "https://api.callvoip.example/v2",
+                "authMethod": "webhook-secret",
+                "credentialsRef": "openconnector-source-callvoip-demo",
+                "screenPopEnabled": true,
+                "screenPopDelayMs": 0,
+                "clickToDialEnabled": true,
+                "defaultOutboundCallerId": "+31303033000",
+                "webhookSecretRef": "cti_webhook_secret_callvoip"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "contactmoment",
+                    "slug": "cti-cm-inbound-resolved"
+                },
+                "subject": "Vraag over vervangingsdocument",
+                "channel": "telephony",
+                "telephonyPlatform": "callvoip",
+                "externalCallId": "call-uuid-12345-abc",
+                "direction": "inbound",
+                "fromNumber": "+31612345678",
+                "toNumber": "+31303033000",
+                "startedAt": "2026-05-22T09:15:30+00:00",
+                "answeredAt": "2026-05-22T09:16:45+00:00",
+                "endedAt": "2026-05-22T09:21:12+00:00",
+                "durationSeconds": 327,
+                "queueName": "Algemeen",
+                "agentSkill": "Document requests",
+                "callStatus": "completed",
+                "dispositionSubject": "Document request for employee ID card",
+                "dispositionOutcome": "resolved",
+                "dispositionNotes": "Sent replacement request form via email, SLA 10 days",
+                "recordingUrl": "https://callvoip.example/recordings/call-uuid-12345-abc",
+                "recordingRetentionExpiresAt": "2026-08-20T23:59:59+00:00"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "contactmoment",
+                    "slug": "cti-cm-outbound-callback"
+                },
+                "subject": "Terugbelverzoek - latefee uitleg",
+                "channel": "telephony",
+                "telephonyPlatform": "callvoip",
+                "externalCallId": "call-uuid-67890-def",
+                "direction": "outbound",
+                "fromNumber": "+31303033000",
+                "toNumber": "+31612987654",
+                "startedAt": "2026-05-22T14:22:00+00:00",
+                "answeredAt": "2026-05-22T14:22:18+00:00",
+                "endedAt": "2026-05-22T14:28:45+00:00",
+                "durationSeconds": 387,
+                "queueName": "Collections",
+                "agentSkill": "Late fees",
+                "callStatus": "completed",
+                "dispositionSubject": "Late fee explanation - client confused about charge",
+                "dispositionOutcome": "callback",
+                "dispositionNotes": "Client agreed to pay by Friday; scheduled callback for Thursday 10:00"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "contactmoment",
+                    "slug": "cti-cm-outbound-no-answer"
+                },
+                "subject": "Geen antwoord - vervolg contact nodig",
+                "channel": "telephony",
+                "telephonyPlatform": "callvoip",
+                "externalCallId": "call-uuid-no-answer-01",
+                "direction": "outbound",
+                "fromNumber": "+31303033000",
+                "toNumber": "+31612111111",
+                "startedAt": "2026-05-22T10:15:00+00:00",
+                "endedAt": "2026-05-22T10:15:45+00:00",
+                "durationSeconds": 0,
+                "queueName": "Follow-up",
+                "agentSkill": "Collections",
+                "callStatus": "completed",
+                "dispositionSubject": "Outbound follow-up - no answer",
+                "dispositionOutcome": "no-answer",
+                "dispositionNotes": "Voicemail left; will retry tomorrow"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "ctiEventLog",
+                    "slug": "cti-event-answered-01"
+                },
+                "receivedAt": "2026-05-22T09:16:45+00:00",
+                "platform": "callvoip",
+                "eventType": "answered",
+                "externalCallId": "call-uuid-12345-abc",
+                "payloadJson": "{\"event\":\"answered\",\"callId\":\"call-uuid-12345-abc\",\"extension\":\"101\",\"from\":\"+31612345678\"}",
+                "processedAt": "2026-05-22T09:16:45+00:00",
+                "processingError": null
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "ctiEventLog",
+                    "slug": "cti-event-ended-01"
+                },
+                "receivedAt": "2026-05-22T09:21:12+00:00",
+                "platform": "callvoip",
+                "eventType": "ended",
+                "externalCallId": "call-uuid-12345-abc",
+                "payloadJson": "{\"event\":\"ended\",\"callId\":\"call-uuid-12345-abc\",\"duration\":327}",
+                "processedAt": "2026-05-22T09:21:12+00:00",
+                "processingError": null
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "ctiAgentPresence",
+                    "slug": "cti-presence-marieke"
+                },
+                "userId": "marieke",
+                "extension": "101",
+                "presenceState": "available",
+                "lastUpdatedAt": "2026-05-22T14:35:00+00:00",
+                "platform": "callvoip"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "ctiAgentPresence",
+                    "slug": "cti-presence-hans"
+                },
+                "userId": "hans",
+                "extension": "102",
+                "presenceState": "on-call",
+                "lastUpdatedAt": "2026-05-22T14:28:15+00:00",
+                "platform": "callvoip"
+            }
+        ]
+    }
+}

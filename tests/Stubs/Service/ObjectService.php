@@ -108,6 +108,19 @@ if (class_exists(ObjectService::class) === false) {
         }//end setSchema()
 
         /**
+         * Update an existing object by UUID (fluent register/schema must be set).
+         *
+         * @param string                      $uuid   The object UUID.
+         * @param array<string, mixed>|object $object The updated data.
+         *
+         * @return array<string, mixed>|object
+         */
+        public function updateObject(string $uuid, array|object $object): array|object
+        {
+            return [];
+        }//end updateObject()
+
+        /**
          * Delete an object by UUID.
          *
          * @param string      $uuid     The object UUID.

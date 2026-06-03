@@ -119,6 +119,16 @@ return [
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
 
+        // Computer Telephony Integration (CTI). The inbound webhook is public but
+        // adapter-signature-verified (ADR-005); all other routes are session-auth.
+        // Specific paths precede the {id} disposition wildcard (ADR-016).
+        ['name' => 'cti#webhook',     'url' => '/api/cti/webhook/{platform}',             'verb' => 'POST'],
+        ['name' => 'cti#screenPop',   'url' => '/api/cti/screen-pop',                     'verb' => 'POST'],
+        ['name' => 'cti#clickToDial', 'url' => '/api/cti/click-to-dial',                  'verb' => 'POST'],
+        ['name' => 'cti#getConfig',   'url' => '/api/cti/config',                         'verb' => 'GET'],
+        ['name' => 'cti#eventLog',    'url' => '/api/cti/event-log',                      'verb' => 'GET'],
+        ['name' => 'cti#disposition', 'url' => '/api/cti/contactmoment/{id}/disposition', 'verb' => 'POST'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],

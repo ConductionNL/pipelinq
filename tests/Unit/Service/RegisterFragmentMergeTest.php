@@ -125,4 +125,119 @@ class RegisterFragmentMergeTest extends TestCase
         $this->assertFalse($method->invoke(null, ['a' => 1]));
         $this->assertFalse($method->invoke(null, [1 => 'a', 2 => 'b']));
     }//end testIsListHelper()
+
+    /**
+     * A register's schema-membership list is unioned, not replaced (ADR-037).
+     *
+     * Without the union rule a fragment adding three schemas would silently drop
+     * the monolith's existing schema memberships.
+     *
+     * @return void
+     */
+    public function testRegisterSchemaMembershipIsUnioned(): void
+    {
+        $base = [
+            'components' => [
+                'registers' => [
+                    'pipelinq' => ['schemas' => ['client', 'contact', 'lead']],
+                ],
+            ],
+        ];
+
+        $override = [
+            'components' => [
+                'registers' => [
+                    'pipelinq' => ['schemas' => ['ctiAdapterConfig', 'ctiEventLog']],
+                ],
+            ],
+        ];
+
+        $result  = $this->deepMerge($base, $override);
+        $schemas = $result['components']['registers']['pipelinq']['schemas'];
+
+        $this->assertSame(
+            ['client', 'contact', 'lead', 'ctiAdapterConfig', 'ctiEventLog'],
+            $schemas
+        );
+    }//end testRegisterSchemaMembershipIsUnioned()
+
+    /**
+     * Union of schema membership deduplicates overlapping slugs.
+     *
+     * @return void
+     */
+    public function testRegisterSchemaMembershipDeduplicates(): void
+    {
+        $base     = ['components' => ['registers' => ['pipelinq' => ['schemas' => ['client', 'contact']]]]];
+        $override = ['components' => ['registers' => ['pipelinq' => ['schemas' => ['contact', 'lead']]]]];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(
+            ['client', 'contact', 'lead'],
+            $result['components']['registers']['pipelinq']['schemas']
+        );
+    }//end testRegisterSchemaMembershipDeduplicates()
+
+    /**
+     * Seed objects under components.objects are unioned, keyed by @self.slug.
+     *
+     * @return void
+     */
+    public function testSeedObjectsAreUnionedBySlug(): void
+    {
+        $base = [
+            'components' => [
+                'objects' => [
+                    ['@self' => ['slug' => 'txn-1'], 'total' => 10],
+                ],
+            ],
+        ];
+
+        $override = [
+            'components' => [
+                'objects' => [
+                    ['@self' => ['slug' => 'cti-config-default'], 'platform' => 'callvoip'],
+                ],
+            ],
+        ];
+
+        $result  = $this->deepMerge($base, $override);
+        $objects = $result['components']['objects'];
+
+        $this->assertCount(2, $objects);
+        $slugs = array_map(static fn(array $o): string => $o['@self']['slug'], $objects);
+        $this->assertSame(['txn-1', 'cti-config-default'], $slugs);
+    }//end testSeedObjectsAreUnionedBySlug()
+
+    /**
+     * A seed object with a colliding @self.slug replaces the base entry in place.
+     *
+     * @return void
+     */
+    public function testSeedObjectCollisionReplacesInPlace(): void
+    {
+        $base     = ['components' => ['objects' => [['@self' => ['slug' => 's1'], 'v' => 'old']]]];
+        $override = ['components' => ['objects' => [['@self' => ['slug' => 's1'], 'v' => 'new']]]];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertCount(1, $result['components']['objects']);
+        $this->assertSame('new', $result['components']['objects'][0]['v']);
+    }//end testSeedObjectCollisionReplacesInPlace()
+
+    /**
+     * Lists at non-union paths still replace wholesale (regression guard).
+     *
+     * @return void
+     */
+    public function testNonUnionListsStillReplace(): void
+    {
+        $base     = ['components' => ['schemas' => ['contactmoment' => ['required' => ['a', 'b']]]]];
+        $override = ['components' => ['schemas' => ['contactmoment' => ['required' => ['c']]]]];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(['c'], $result['components']['schemas']['contactmoment']['required']);
+    }//end testNonUnionListsStillReplace()
 }//end class

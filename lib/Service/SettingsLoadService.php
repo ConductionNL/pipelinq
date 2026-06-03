@@ -71,6 +71,9 @@ class SettingsLoadService
         'refundReason',
         'posRefund',
         'posRefundLine',
+        'ctiAdapterConfig',
+        'ctiEventLog',
+        'ctiAgentPresence',
     ];
 
     /**
