@@ -142,6 +142,7 @@ export default {
 		},
 
 		/**
+		 * @param noteId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-11
 		 */
 		async deleteNote(noteId) {
@@ -166,6 +167,7 @@ export default {
 		},
 
 		/**
+		 * @param timestamp
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-13
 		 */
 		formatTime(timestamp) {

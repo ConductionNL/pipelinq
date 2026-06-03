@@ -75,7 +75,8 @@
 							<span :class="{ 'forecast-table__overridden': hasOverride(row) }">
 								{{ formatMoney(row.commit) }}
 							</span>
-							<span v-if="hasOverride(row)" class="forecast-table__badge"
+							<span v-if="hasOverride(row)"
+								class="forecast-table__badge"
 								:title="overrideTitle(row)">
 								▼ {{ t('pipelinq', 'override') }}
 							</span>
@@ -93,7 +94,8 @@
 				</tbody>
 			</table>
 
-			<NcEmptyContent v-else :name="t('pipelinq', 'No snapshots yet')"
+			<NcEmptyContent v-else
+				:name="t('pipelinq', 'No snapshots yet')"
 				:description="t('pipelinq', 'Forecast snapshots are generated every Monday. Check back after the next run.')" />
 		</template>
 

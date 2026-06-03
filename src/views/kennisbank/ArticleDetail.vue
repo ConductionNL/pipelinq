@@ -124,6 +124,7 @@ export default {
 		articleId: {
 			immediate: true,
 			/**
+			 * @param id
 			 * @spec openspec/changes/reverse-2026-05-26-fe-kennisbank-ui/tasks.md#task-1
 			 */
 			async handler(id) {

@@ -134,6 +134,7 @@ export default {
 		contact: {
 			immediate: true,
 			/**
+			 * @param val
 			 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-42
 			 */
 			handler(val) {
@@ -143,6 +144,7 @@ export default {
 			},
 		},
 		/**
+		 * @param val
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-50
 		 */
 		selectedClient(val) {
@@ -161,6 +163,7 @@ export default {
 	},
 	methods: {
 		/**
+		 * @param data
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-48
 		 */
 		populateForm(data) {
@@ -185,6 +188,7 @@ export default {
 			this.clientOptions = (clients || []).map(c => ({ id: c.id, name: c.name || c.id }))
 		},
 		/**
+		 * @param clientId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-41
 		 */
 		async ensureClientInOptions(clientId) {
@@ -200,6 +204,7 @@ export default {
 			}
 		},
 		/**
+		 * @param query
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-49
 		 */
 		searchClients(query) {
@@ -217,6 +222,7 @@ export default {
 			}, 300)
 		},
 		/**
+		 * @param field
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-52
 		 */
 		validateField(field) {

@@ -357,6 +357,10 @@ export default {
 		getPriorityColor,
 
 		/**
+		 * @param due
+		 * @param now
+		 * @param weekEnd
+		 * @param isClosed
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-3
 		 */
 		computeGroup(due, now, weekEnd, isClosed) {
@@ -407,6 +411,8 @@ export default {
 		},
 
 		/**
+		 * @param type
+		 * @param params
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-7
 		 */
 		async fetchRaw(type, params = {}) {
@@ -436,6 +442,7 @@ export default {
 		},
 
 		/**
+		 * @param dateStr
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-9
 		 */
 		formatDate(dateStr) {
@@ -448,6 +455,7 @@ export default {
 		},
 
 		/**
+		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-13
 		 */
 		openItem(item) {

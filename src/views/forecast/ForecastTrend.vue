@@ -18,8 +18,11 @@
 		<template v-else>
 			<section v-if="series.length >= 1" class="forecast-trend__chart">
 				<h3>{{ t('pipelinq', 'Commit / best-case / pipeline over time') }}</h3>
-				<svg class="forecast-trend__svg" viewBox="0 0 600 200" preserveAspectRatio="none"
-					role="img" :aria-label="t('pipelinq', 'Forecast trend chart')">
+				<svg class="forecast-trend__svg"
+					viewBox="0 0 600 200"
+					preserveAspectRatio="none"
+					role="img"
+					:aria-label="t('pipelinq', 'Forecast trend chart')">
 					<polyline class="line line--commit" :points="line('commit')" />
 					<polyline class="line line--bestcase" :points="line('best_case')" />
 					<polyline class="line line--pipeline" :points="line('pipeline')" />
@@ -63,7 +66,8 @@
 						</tr>
 					</tbody>
 				</table>
-				<NcEmptyContent v-else :name="t('pipelinq', 'No closed periods yet')"
+				<NcEmptyContent v-else
+					:name="t('pipelinq', 'No closed periods yet')"
 					:description="t('pipelinq', 'Accuracy is computed once a fiscal period closes.')" />
 			</section>
 		</template>
