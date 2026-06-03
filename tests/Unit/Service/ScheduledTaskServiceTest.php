@@ -382,7 +382,7 @@ class ScheduledTaskServiceTest extends TestCase
 
         // findAll is called twice: once for getOverdueTasks (returns our task),
         // once for getPendingTasks (returns empty, all future).
-        $callCount = 0;
+        $callCount           = 0;
         $stub->findAllReturn = [];
 
         // We override findAll via a custom anonymous class to handle two calls.
@@ -395,17 +395,22 @@ class ScheduledTaskServiceTest extends TestCase
         ];
 
         $stub2 = new class($overdueTask) {
-            public array $lastSaveArgs = [];
-            public mixed $saveReturn   = [];
 
-            /** @var array<string, mixed> */
+            public array $lastSaveArgs = [];
+
+            public mixed $saveReturn = [];
+
+            /**
+             * @var array<string, mixed>
+             */
             private array $overdueTask;
+
             private int $callCount = 0;
 
             public function __construct(array $overdueTask)
             {
                 $this->overdueTask = $overdueTask;
-            }
+            }//end __construct()
 
             /**
              * @param  array<string, mixed> $config
@@ -502,12 +507,13 @@ class ScheduledTaskServiceTest extends TestCase
         $capturedLang = null;
 
         $languageServiceStub = new class($capturedLang) {
+
             public ?string $capturedLanguage = null;
 
             public function setPreferredLanguage(string $language): void
             {
                 $this->capturedLanguage = $language;
-            }
+            }//end setPreferredLanguage()
         };
 
         $this->container->method('get')->willReturn($languageServiceStub);
@@ -530,12 +536,13 @@ class ScheduledTaskServiceTest extends TestCase
     public function testApplyAcceptLanguageStripsQWeightFromSingleEntry(): void
     {
         $languageServiceStub = new class {
+
             public ?string $capturedLanguage = null;
 
             public function setPreferredLanguage(string $language): void
             {
                 $this->capturedLanguage = $language;
-            }
+            }//end setPreferredLanguage()
         };
 
         $this->container->method('get')->willReturn($languageServiceStub);
