@@ -1,0 +1,54 @@
+volumes:
+  nextcloud:
+  db:
+
+networks:
+  default:
+    name: pipelinq-network
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    restart: always
+    container_name: pipelinq-postgres
+    volumes:
+      - db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=nextcloud
+      - POSTGRES_USER=nextcloud
+      - POSTGRES_PASSWORD=!ChangeMe!
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nextcloud -d nextcloud"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nextcloud:
+    user: root
+    container_name: pipelinq-nextcloud
+    image: nextcloud:32
+    restart: always
+    entrypoint: /bin/bash -c "chown www-data:www-data /var/www/html/custom_apps && exec /entrypoint.sh apache2-foreground"
+    ports:
+      - 8080:80
+    links:
+      - db
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - nextcloud:/var/www/html:rw
+      - ./custom_apps:/var/www/html/custom_apps
+      - .:/var/www/html/custom_apps/pipelinq
+    environment:
+      - POSTGRES_DB=nextcloud
+      - POSTGRES_USER=nextcloud
+      - POSTGRES_PASSWORD=!ChangeMe!
+      - POSTGRES_HOST=db
+      - TZ=Europe/Amsterdam
+      - NEXTCLOUD_ADMIN_USER=admin
+      - NEXTCLOUD_ADMIN_PASSWORD=admin
+      - PHP_MEMORY_LIMIT=512M
+      - PHP_UPLOAD_LIMIT=512M

@@ -26,11 +26,13 @@
 <script>
 import { getRequests } from '../../../services/dashboardData.js'
 import { getStatusLabel, getStatusColor } from '../../../services/requestStatus.js'
+import dashboardRefreshMixin from './dashboardRefreshMixin.js'
 
 const STATUS_KEYS = ['new', 'in_progress', 'completed', 'rejected', 'converted']
 
 export default {
 	name: 'RequestsByStatusWidget',
+	mixins: [dashboardRefreshMixin],
 	data() {
 		return {
 			loaded: false,
@@ -59,17 +61,19 @@ export default {
 				}))
 		},
 	},
-	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-17
-	 */
-	async mounted() {
-		try {
-			this.requests = await getRequests()
-		} catch (err) {
-			console.error('RequestsByStatusWidget fetch error:', err)
-		} finally {
-			this.loaded = true
-		}
+	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-17
+		 */
+		async load() {
+			try {
+				this.requests = await getRequests()
+			} catch (err) {
+				console.error('RequestsByStatusWidget fetch error:', err)
+			} finally {
+				this.loaded = true
+			}
+		},
 	},
 }
 </script>
