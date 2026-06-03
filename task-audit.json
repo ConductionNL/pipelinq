@@ -1,16 +1,48 @@
 {
-  "spec": "openspec/changes/2026-03-20-pipeline",
+  "spec": "openspec/changes/time-entry-core",
   "verified": [
-    {"task": "1.1", "file": "src/views/pipeline/PipelineBoard.vue", "ok": true},
-    {"task": "1.2", "file": "src/views/pipeline/PipelineBoard.vue", "ok": true},
-    {"task": "1.3", "file": "src/views/pipeline/PipelineBoard.vue", "ok": true},
-    {"task": "1.4", "file": "l10n/en.json", "ok": true},
-    {"task": "1.4", "file": "l10n/nl.json", "ok": true},
-    {"task": "2.1", "file": "src/views/settings/PipelineForm.vue", "ok": true},
-    {"task": "2.2", "file": "src/views/settings/PipelineForm.vue", "ok": true},
-    {"task": "2.3", "file": "src/views/settings/PipelineForm.vue", "ok": true},
-    {"task": "2.4", "file": "src/views/settings/PipelineForm.vue", "ok": true},
-    {"task": "2.5", "file": "l10n/en.json", "ok": true}
+    {
+      "task": "0.1",
+      "file": "openspec/changes/time-entry-core/tasks.md",
+      "ok": true,
+      "note": "Leaf key time-tracker confirmed; NC dep timemanager; no bespoke time subsystem in lib/ or src/"
+    },
+    {
+      "task": "1.1",
+      "file": "lib/Settings/pipelinq_register.json",
+      "ok": true,
+      "note": "client/lead/request have time-tracker in linkedTypes; lookup/config schemas do not"
+    },
+    {
+      "task": "2.1",
+      "file": "src/manifest.json",
+      "ok": true,
+      "note": "ClientDetail/LeadDetail/RequestDetail pages have CnTimeTrackerTab + CnTimeTrackerCard"
+    },
+    {
+      "task": "2.2",
+      "file": "src/manifest.json",
+      "ok": true,
+      "note": "Dashboard today-hours widget added (CnTimeTrackerCard at grid 0,10)"
+    },
+    {
+      "task": "2.3",
+      "file": "src/manifest.json",
+      "ok": true,
+      "note": "dependencies[] contains openregister and timemanager"
+    },
+    {
+      "task": "3.1",
+      "file": "src/manifest.json",
+      "ok": true,
+      "note": "npm run check:manifest PASS: v1.0.0 | 49 pages | 22 menu items | deps: openregister, deck, workflowengine, timemanager"
+    },
+    {
+      "task": "3.4",
+      "file": "lib/",
+      "ok": true,
+      "note": "grep: no timeEntry schema, TimerController, TimeEntryService, or bespoke time views found"
+    }
   ],
   "stubs": [],
   "missing_routes": []
