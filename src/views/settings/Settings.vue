@@ -65,6 +65,9 @@
 		<!-- Agent Profile Management -->
 		<AgentProfileSettings v-if="isConfigured" />
 
+		<!-- Forecast Configuration -->
+		<ForecastSettings v-if="isConfigured" />
+
 		<!-- Lead Sources -->
 		<TagManager v-if="isConfigured"
 			:title="t('pipelinq', 'Lead Sources')"
@@ -118,6 +121,7 @@ import TagManager from './TagManager.vue'
 import QueueSettings from '../../components/admin/QueueSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
 import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
+import ForecastSettings from '../../components/admin/ForecastSettings.vue'
 
 export default {
 	name: 'Settings',
@@ -136,6 +140,7 @@ export default {
 		QueueSettings,
 		SkillSettings,
 		AgentProfileSettings,
+		ForecastSettings,
 	},
 	data() {
 		return {

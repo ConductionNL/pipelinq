@@ -175,6 +175,17 @@ return [
         ['name' => 'portalData#orders',    'url' => '/portal/api/orders',         'verb' => 'GET'],
         ['name' => 'portalData#order',     'url' => '/portal/api/orders/{id}',    'verb' => 'GET'],
 
+        // Forecast roll-up API (snapshot export + manager overrides). Static
+        // paths precede the {id} wildcard (ADR-016); all are #[NoAdminRequired]
+        // with per-action scope enforced in ForecastAccessPolicy (ADR-005).
+        ['name' => 'forecast#snapshots',      'url' => '/api/forecast/snapshots',     'verb' => 'GET'],
+        ['name' => 'forecast#createOverride', 'url' => '/api/forecast/overrides',     'verb' => 'POST'],
+        ['name' => 'forecast#deleteOverride', 'url' => '/api/forecast/overrides/{id}', 'verb' => 'DELETE'],
+
+        // Forecast admin configuration (Nextcloud admin only; #[AuthorizedAdminSetting]).
+        ['name' => 'forecastSettings#index',  'url' => '/api/settings/forecast', 'verb' => 'GET'],
+        ['name' => 'forecastSettings#update', 'url' => '/api/settings/forecast', 'verb' => 'PUT'],
+
         // Admin / DPO (Nextcloud admin only; no #[PublicPage] — admin-default).
         ['name' => 'portalAdmin#saveConfig',   'url' => '/portal/api/admin/tenant-config', 'verb' => 'POST'],
         ['name' => 'portalAdmin#accounts',     'url' => '/portal/api/admin/accounts',      'verb' => 'GET'],
