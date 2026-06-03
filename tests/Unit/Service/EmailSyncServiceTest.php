@@ -38,6 +38,7 @@ use Psr\Log\LoggerInterface;
  */
 class EmailSyncServiceTest extends TestCase
 {
+
     /**
      * The service under test.
      *
@@ -66,9 +67,9 @@ class EmailSyncServiceTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->config  = $this->createMock(IConfig::class);
-        $this->logger  = $this->createMock(LoggerInterface::class);
-        $this->service = new EmailSyncService($this->config, $this->logger);
+        $this->config  = $this->createMock(originalClassName: IConfig::class);
+        $this->logger  = $this->createMock(originalClassName: LoggerInterface::class);
+        $this->service = new EmailSyncService(config: $this->config, logger: $this->logger);
     }//end setUp()
 
     /**
@@ -78,8 +79,8 @@ class EmailSyncServiceTest extends TestCase
      */
     public function testExtractDomainReturnsLowercaseDomain(): void
     {
-        $result = $this->service->extractDomain('User@Example.COM');
-        $this->assertSame('example.com', $result);
+        $result = $this->service->extractDomain(email: 'User@Example.COM');
+        $this->assertSame(expected: 'example.com', actual: $result);
     }//end testExtractDomainReturnsLowercaseDomain()
 
     /**
@@ -89,8 +90,8 @@ class EmailSyncServiceTest extends TestCase
      */
     public function testExtractDomainReturnsNullForInvalidEmail(): void
     {
-        $result = $this->service->extractDomain('not-an-email');
-        $this->assertNull($result);
+        $result = $this->service->extractDomain(email: 'not-an-email');
+        $this->assertNull(actual: $result);
     }//end testExtractDomainReturnsNullForInvalidEmail()
 
     /**
@@ -105,7 +106,7 @@ class EmailSyncServiceTest extends TestCase
             ->willReturn('[1,2,3]');
 
         $result = $this->service->getSyncAccounts(userId: 'user1');
-        $this->assertSame([1, 2, 3], $result);
+        $this->assertSame(expected: [1, 2, 3], actual: $result);
     }//end testGetSyncAccountsReturnsStoredIds()
 
     /**
@@ -120,7 +121,7 @@ class EmailSyncServiceTest extends TestCase
             ->willReturn('[]');
 
         $result = $this->service->getSyncAccounts(userId: 'user1');
-        $this->assertSame([], $result);
+        $this->assertSame(expected: [], actual: $result);
     }//end testGetSyncAccountsReturnsEmptyWhenNotSet()
 
     /**
@@ -134,7 +135,7 @@ class EmailSyncServiceTest extends TestCase
             ->with('user1', 'pipelinq', 'email_sync_enabled', 'false')
             ->willReturn('true');
 
-        $this->assertTrue($this->service->isSyncEnabled(userId: 'user1'));
+        $this->assertTrue(condition: $this->service->isSyncEnabled(userId: 'user1'));
     }//end testIsSyncEnabledReturnsTrueWhenEnabled()
 
     /**
@@ -148,7 +149,7 @@ class EmailSyncServiceTest extends TestCase
             ->with('user1', 'pipelinq', 'email_sync_enabled', 'false')
             ->willReturn('false');
 
-        $this->assertFalse($this->service->isSyncEnabled(userId: 'user1'));
+        $this->assertFalse(condition: $this->service->isSyncEnabled(userId: 'user1'));
     }//end testIsSyncEnabledReturnsFalseWhenDisabled()
 
     /**
@@ -162,7 +163,7 @@ class EmailSyncServiceTest extends TestCase
             ->with('user2', 'pipelinq', 'email_sync_enabled', 'false')
             ->willReturn('false');
 
-        $this->assertFalse($this->service->isSyncEnabled(userId: 'user2'));
+        $this->assertFalse(condition: $this->service->isSyncEnabled(userId: 'user2'));
     }//end testIsSyncEnabledDefaultsToFalse()
 
     /**
@@ -219,7 +220,7 @@ class EmailSyncServiceTest extends TestCase
             ->willReturn('2026-01-01T12:00:00+00:00');
 
         $result = $this->service->getLastSyncTime(userId: 'user1');
-        $this->assertSame('2026-01-01T12:00:00+00:00', $result);
+        $this->assertSame(expected: '2026-01-01T12:00:00+00:00', actual: $result);
     }//end testGetLastSyncTimeReturnsStoredValue()
 
     /**
@@ -234,7 +235,7 @@ class EmailSyncServiceTest extends TestCase
             ->willReturn('');
 
         $result = $this->service->getLastSyncTime(userId: 'user1');
-        $this->assertNull($result);
+        $this->assertNull(actual: $result);
     }//end testGetLastSyncTimeReturnsNullWhenEmpty()
 
     /**
@@ -250,7 +251,7 @@ class EmailSyncServiceTest extends TestCase
                 'user1',
                 'pipelinq',
                 'email_sync_last',
-                $this->matchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]/')
+                $this->matchesRegularExpression(pattern: '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]/')
             );
 
         $this->service->updateLastSyncTime(userId: 'user1');
@@ -276,18 +277,18 @@ class EmailSyncServiceTest extends TestCase
             syncSource: 'account-1',
         );
 
-        $this->assertSame('msg-1', $result['messageId']);
-        $this->assertSame('Hello', $result['subject']);
-        $this->assertSame('sender@example.com', $result['sender']);
-        $this->assertSame(['r@example.com'], $result['recipients']);
-        $this->assertSame('2026-01-01', $result['date']);
-        $this->assertSame('contact', $result['linkedEntityType']);
-        $this->assertSame('uuid-1', $result['linkedEntityId']);
-        $this->assertSame('inbound', $result['direction']);
-        $this->assertSame('thread-1', $result['threadId']);
-        $this->assertSame('account-1', $result['syncSource']);
-        $this->assertFalse($result['excluded']);
-        $this->assertFalse($result['deleted']);
+        $this->assertSame(expected: 'msg-1', actual: $result['messageId']);
+        $this->assertSame(expected: 'Hello', actual: $result['subject']);
+        $this->assertSame(expected: 'sender@example.com', actual: $result['sender']);
+        $this->assertSame(expected: ['r@example.com'], actual: $result['recipients']);
+        $this->assertSame(expected: '2026-01-01', actual: $result['date']);
+        $this->assertSame(expected: 'contact', actual: $result['linkedEntityType']);
+        $this->assertSame(expected: 'uuid-1', actual: $result['linkedEntityId']);
+        $this->assertSame(expected: 'inbound', actual: $result['direction']);
+        $this->assertSame(expected: 'thread-1', actual: $result['threadId']);
+        $this->assertSame(expected: 'account-1', actual: $result['syncSource']);
+        $this->assertFalse(condition: $result['excluded']);
+        $this->assertFalse(condition: $result['deleted']);
     }//end testBuildEmailLinkDataReturnsCorrectShape()
 
     /**
@@ -308,7 +309,7 @@ class EmailSyncServiceTest extends TestCase
             direction: 'outbound',
         );
 
-        $this->assertNull($result['threadId']);
-        $this->assertNull($result['syncSource']);
+        $this->assertNull(actual: $result['threadId']);
+        $this->assertNull(actual: $result['syncSource']);
     }//end testBuildEmailLinkDataHandlesNullOptionals()
 }//end class

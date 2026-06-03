@@ -71,10 +71,10 @@ class EmailSyncJobTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->timeFactory      = $this->createMock(ITimeFactory::class);
-        $this->emailSyncService = $this->createMock(EmailSyncService::class);
-        $this->userManager      = $this->createMock(IUserManager::class);
-        $this->logger           = $this->createMock(LoggerInterface::class);
+        $this->timeFactory      = $this->createMock(originalClassName: ITimeFactory::class);
+        $this->emailSyncService = $this->createMock(originalClassName: EmailSyncService::class);
+        $this->userManager      = $this->createMock(originalClassName: IUserManager::class);
+        $this->logger           = $this->createMock(originalClassName: LoggerInterface::class);
     }//end setUp()
 
     /**
@@ -99,7 +99,7 @@ class EmailSyncJobTest extends TestCase
      */
     public function testSkipsUsersWithSyncDisabled(): void
     {
-        $user = $this->createMock(IUser::class);
+        $user = $this->createMock(originalClassName: IUser::class);
         $user->method('getUID')->willReturn('user1');
 
         $this->userManager->method('callForAllUsers')
@@ -129,7 +129,7 @@ class EmailSyncJobTest extends TestCase
      */
     public function testSkipsUsersWithNoAccounts(): void
     {
-        $user = $this->createMock(IUser::class);
+        $user = $this->createMock(originalClassName: IUser::class);
         $user->method('getUID')->willReturn('user1');
 
         $this->userManager->method('callForAllUsers')
@@ -161,7 +161,7 @@ class EmailSyncJobTest extends TestCase
      */
     public function testUpdatesSyncTimeForEnabledUser(): void
     {
-        $user = $this->createMock(IUser::class);
+        $user = $this->createMock(originalClassName: IUser::class);
         $user->method('getUID')->willReturn('user1');
 
         $this->userManager->method('callForAllUsers')
