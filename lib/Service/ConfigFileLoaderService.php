@@ -148,25 +148,71 @@ class ConfigFileLoaderService
             $fragmentBlob .= $fragmentContent;
         }//end foreach
 
-        if ($fragmentBlob !== '') {
-            $baseVersion  = ($data['info']['version'] ?? '0.0.0');
-            $fragmentHash = substr(hash('sha256', $fragmentBlob), 0, 8);
-            if (isset($data['info']) === false || is_array($data['info']) === false) {
-                $data['info'] = [];
-            }
+        return self::foldFragmentVersion(data: $data, fragmentBlob: $fragmentBlob);
+    }//end mergeRegisterFragments()
 
-            $data['info']['version'] = $baseVersion.'+frag.'.$fragmentHash;
+    /**
+     * Fold a content-derived fragment hash into `info.version` (ADR-037).
+     *
+     * The suffix makes OpenRegister's version-gated import re-run whenever any
+     * fragment's bytes change. A no-op when no fragment contributed content.
+     *
+     * @param array  $data         The merged configuration data.
+     * @param string $fragmentBlob The concatenated raw fragment contents.
+     *
+     * @return array The data with a fragment-stamped version, when applicable.
+     */
+    private static function foldFragmentVersion(array $data, string $fragmentBlob): array
+    {
+        if ($fragmentBlob === '') {
+            return $data;
         }
 
+        if (isset($data['info']) === false || is_array($data['info']) === false) {
+            $data['info'] = [];
+        }
+
+        $baseVersion  = ($data['info']['version'] ?? '0.0.0');
+        $fragmentHash = substr(hash('sha256', $fragmentBlob), 0, 8);
+        $data['info']['version'] = $baseVersion.'+frag.'.$fragmentHash;
+
         return $data;
-    }//end mergeRegisterFragments()
+    }//end foldFragmentVersion()
+
+    /**
+     * Keys whose LIST values are additively unioned (not replaced) when a
+     * fragment merges onto the base (ADR-037).
+     *
+     * The default deep-merge replaces list values wholesale. For two structural
+     * keys that express *membership* this is wrong: a fragment that contributes a
+     * new schema must be able to register that schema on the existing register
+     * (`components.registers.<reg>.schemas[]`) and ship its seed objects
+     * (`components.objects[]`) without clobbering the schemas/objects already
+     * declared by the monolith or by an earlier fragment. For those keys the
+     * fragment's list is appended to the base list:
+     *
+     * - `schemas`  — scalar slugs; de-duplicated so re-importing a fragment does
+     *                not produce duplicate register membership entries.
+     * - `objects`  — seed object maps; appended (OpenRegister's importFromApp is
+     *                itself idempotent-by-slug, so append is safe and ordering of
+     *                fragments is preserved).
+     *
+     * @var array<int, string>
+     */
+    private const ADDITIVE_LIST_KEYS = [
+        'schemas',
+        'objects',
+    ];
 
     /**
      * Recursively deep-merge an override array onto a base array.
      *
-     * Associative keys are merged recursively; scalar and list values from the
-     * override replace those in the base. This mirrors the fragment-merge
-     * semantics shared across the fleet (ADR-037).
+     * Associative keys are merged recursively. List values are normally replaced
+     * by the override, EXCEPT for the additive membership keys in
+     * {@see self::ADDITIVE_LIST_KEYS} (register `schemas[]` membership and the
+     * top-level `components.objects[]` seed list), which are unioned so a
+     * fragment can extend the register without clobbering the base. This mirrors
+     * the fragment-merge semantics shared across the fleet (ADR-037).
      *
      * @param array $base     The base configuration array.
      * @param array $override The fragment to merge on top of the base.
@@ -176,12 +222,17 @@ class ConfigFileLoaderService
     private static function deepMergeConfig(array $base, array $override): array
     {
         foreach ($override as $key => $value) {
-            if (is_array($value) === true
-                && isset($base[$key]) === true
-                && is_array($base[$key]) === true
-                && self::isList(value: $value) === false
-                && self::isList(value: $base[$key]) === false
-            ) {
+            if (is_array($value) === false || isset($base[$key]) === false || is_array($base[$key]) === false) {
+                $base[$key] = $value;
+                continue;
+            }
+
+            if (self::isAdditiveListPair(key: (string) $key, override: $value, base: $base[$key]) === true) {
+                $base[$key] = self::unionLists(base: $base[$key], override: $value);
+                continue;
+            }
+
+            if (self::isList(value: $value) === false && self::isList(value: $base[$key]) === false) {
                 $base[$key] = self::deepMergeConfig(base: $base[$key], override: $value);
                 continue;
             }
@@ -193,9 +244,49 @@ class ConfigFileLoaderService
     }//end deepMergeConfig()
 
     /**
-     * Determine whether an array is a sequential list (zero-indexed, no gaps).
+     * Whether a key holds an additive-membership list on both sides of a merge.
      *
-     * Provided for PHP < 8.1 parity where `array_is_list()` is unavailable.
+     * @param string $key      The map key being merged.
+     * @param array  $override The override (fragment) value.
+     * @param array  $base     The base value.
+     *
+     * @return bool True when both values are lists and the key is additive.
+     */
+    private static function isAdditiveListPair(string $key, array $override, array $base): bool
+    {
+        return in_array($key, self::ADDITIVE_LIST_KEYS, true) === true
+            && self::isList(value: $override) === true
+            && self::isList(value: $base) === true;
+    }//end isAdditiveListPair()
+
+    /**
+     * Additively union two lists, de-duplicating scalar members.
+     *
+     * Scalar members (e.g. schema slugs) already present in the base are not
+     * appended again, so re-importing a fragment never duplicates register
+     * membership. Non-scalar members (e.g. seed object maps) are always
+     * appended; OpenRegister's slug-based import dedupes them downstream.
+     *
+     * @param array $base     The base list.
+     * @param array $override The fragment list to union onto the base.
+     *
+     * @return array The unioned list.
+     */
+    private static function unionLists(array $base, array $override): array
+    {
+        foreach ($override as $member) {
+            if (is_scalar($member) === true && in_array($member, $base, true) === true) {
+                continue;
+            }
+
+            $base[] = $member;
+        }
+
+        return array_values($base);
+    }//end unionLists()
+
+    /**
+     * Determine whether an array is a sequential list (zero-indexed, no gaps).
      *
      * @param array $value The array to inspect.
      *
@@ -203,20 +294,7 @@ class ConfigFileLoaderService
      */
     private static function isList(array $value): bool
     {
-        if (function_exists('array_is_list') === true) {
-            return array_is_list($value);
-        }
-
-        $expectedKey = 0;
-        foreach ($value as $key => $unused) {
-            if ($key !== $expectedKey) {
-                return false;
-            }
-
-            $expectedKey++;
-        }
-
-        return true;
+        return array_is_list($value);
     }//end isList()
 
     /**

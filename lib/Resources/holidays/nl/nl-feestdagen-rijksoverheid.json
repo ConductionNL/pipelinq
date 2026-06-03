@@ -1,0 +1,70 @@
+{
+    "name": "nl-feestdagen-rijksoverheid",
+    "locale": "nl",
+    "description": "Nederlandse nationale feestdagen (Rijksoverheid). Vaste feestdagen zijn jaarlijks terugkerend; Pasen-afgeleide en Koningsdag-verschoven data zijn per jaar opgesomd.",
+    "recurringFixed": [
+        { "month": 1, "day": 1, "name": "Nieuwjaarsdag" },
+        { "month": 12, "day": 25, "name": "Eerste Kerstdag" },
+        { "month": 12, "day": 26, "name": "Tweede Kerstdag" }
+    ],
+    "lustrum": [
+        { "month": 5, "day": 5, "name": "Bevrijdingsdag", "note": "Officiele vrije dag in lustrumjaren (deelbaar door 5)." }
+    ],
+    "dates": [
+        { "date": "2024-03-29", "name": "Goede Vrijdag" },
+        { "date": "2024-03-31", "name": "Eerste Paasdag" },
+        { "date": "2024-04-01", "name": "Tweede Paasdag" },
+        { "date": "2024-04-27", "name": "Koningsdag" },
+        { "date": "2024-05-09", "name": "Hemelvaartsdag" },
+        { "date": "2024-05-19", "name": "Eerste Pinksterdag" },
+        { "date": "2024-05-20", "name": "Tweede Pinksterdag" },
+
+        { "date": "2025-04-18", "name": "Goede Vrijdag" },
+        { "date": "2025-04-20", "name": "Eerste Paasdag" },
+        { "date": "2025-04-21", "name": "Tweede Paasdag" },
+        { "date": "2025-04-26", "name": "Koningsdag" },
+        { "date": "2025-05-29", "name": "Hemelvaartsdag" },
+        { "date": "2025-06-08", "name": "Eerste Pinksterdag" },
+        { "date": "2025-06-09", "name": "Tweede Pinksterdag" },
+
+        { "date": "2026-04-03", "name": "Goede Vrijdag" },
+        { "date": "2026-04-05", "name": "Eerste Paasdag" },
+        { "date": "2026-04-06", "name": "Tweede Paasdag" },
+        { "date": "2026-04-27", "name": "Koningsdag" },
+        { "date": "2026-05-14", "name": "Hemelvaartsdag" },
+        { "date": "2026-05-24", "name": "Eerste Pinksterdag" },
+        { "date": "2026-05-25", "name": "Tweede Pinksterdag" },
+
+        { "date": "2027-03-26", "name": "Goede Vrijdag" },
+        { "date": "2027-03-28", "name": "Eerste Paasdag" },
+        { "date": "2027-03-29", "name": "Tweede Paasdag" },
+        { "date": "2027-04-27", "name": "Koningsdag" },
+        { "date": "2027-05-06", "name": "Hemelvaartsdag" },
+        { "date": "2027-05-16", "name": "Eerste Pinksterdag" },
+        { "date": "2027-05-17", "name": "Tweede Pinksterdag" },
+
+        { "date": "2028-04-14", "name": "Goede Vrijdag" },
+        { "date": "2028-04-16", "name": "Eerste Paasdag" },
+        { "date": "2028-04-17", "name": "Tweede Paasdag" },
+        { "date": "2028-04-27", "name": "Koningsdag" },
+        { "date": "2028-05-25", "name": "Hemelvaartsdag" },
+        { "date": "2028-06-04", "name": "Eerste Pinksterdag" },
+        { "date": "2028-06-05", "name": "Tweede Pinksterdag" },
+
+        { "date": "2029-03-30", "name": "Goede Vrijdag" },
+        { "date": "2029-04-01", "name": "Eerste Paasdag" },
+        { "date": "2029-04-02", "name": "Tweede Paasdag" },
+        { "date": "2029-04-27", "name": "Koningsdag" },
+        { "date": "2029-05-10", "name": "Hemelvaartsdag" },
+        { "date": "2029-05-20", "name": "Eerste Pinksterdag" },
+        { "date": "2029-05-21", "name": "Tweede Pinksterdag" },
+
+        { "date": "2030-04-19", "name": "Goede Vrijdag" },
+        { "date": "2030-04-21", "name": "Eerste Paasdag" },
+        { "date": "2030-04-22", "name": "Tweede Paasdag" },
+        { "date": "2030-04-27", "name": "Koningsdag" },
+        { "date": "2030-05-30", "name": "Hemelvaartsdag" },
+        { "date": "2030-06-09", "name": "Eerste Pinksterdag" },
+        { "date": "2030-06-10", "name": "Tweede Pinksterdag" }
+    ]
+}

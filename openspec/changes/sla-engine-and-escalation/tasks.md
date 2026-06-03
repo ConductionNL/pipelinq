@@ -2,37 +2,47 @@
 
 ## 0. Deduplication Check
 
-- [ ] 0.1 Verify OpenRegister `ObjectService`, `WebhookService`, and event dispatcher are available.
+- [x] 0.1 Verify OpenRegister `ObjectService`, `WebhookService`, and event dispatcher are available.
   - Check: `grep -r "class ObjectService\|interface WebhookService\|EventDispatcher" vendor/nextcloud/openregister lib/`
   - If not found, block this change until OpenRegister base services are in place.
   
-- [ ] 0.2 Verify that target apps (`request-management`, `complaint-management`, `callback-management`) have OpenRegister schema definitions and emit `ObjectCreatedEvent` / `ObjectUpdatedEvent`.
+- [x] 0.2 Verify that target apps (`request-management`, `complaint-management`, `callback-management`) have OpenRegister schema definitions and emit `ObjectCreatedEvent` / `ObjectUpdatedEvent`.
   - Check: `find . -name "*_register.json" -exec grep -l "request\|klacht\|callback" {} \;`
   - Check: `grep -r "ObjectCreatedEvent\|ObjectUpdatedEvent" lib/Listener/`
   - If events are not available, block this change.
 
-- [ ] 0.3 Search for any existing SLA or escalation engine implementation.
+- [x] 0.3 Search for any existing SLA or escalation engine implementation.
   - `grep -r "sla\|escalat\|deadline.*target\|breach.*event" lib/ src/ openspec/specs/`
   - If similar capability exists, document overlap. If it's from a merged change, propose extending it instead of starting fresh.
 
-- [ ] 0.4 Confirm that the OpenRegister `importFromApp()` pipeline supports seed data loading.
+- [x] 0.4 Confirm that the OpenRegister `importFromApp()` pipeline supports seed data loading.
   - Check: `grep -r "importFromApp\|components.objects" lib/ openregister/`
   - Verify that `@self` envelope and idempotent re-import by slug are supported.
 
-- [ ] 0.5 Verify that Nextcloud background job framework (`IJobList`) is available for `SlaDeadlineSweepJob`.
+- [x] 0.5 Verify that Nextcloud background job framework (`IJobList`) is available for `SlaDeadlineSweepJob`.
   - Check: `grep -r "IJobList\|registerJob" lib/`
 
-- [ ] 0.6 Search for any existing holiday-calendar or date-calculation library in the codebase.
+- [x] 0.6 Search for any existing holiday-calendar or date-calculation library in the codebase.
   - `grep -r "holiday\|RRULE\|Feestdag" lib/ vendor/`
   - If a library like `nesbot/carbon` or custom holiday logic exists, reuse it instead of reinventing.
 
-  **Findings:** _(document here after running checks)_
+  **Findings:** OpenRegister `ObjectService` is resolved lazily from the container
+  (`OCA\OpenRegister\Service\ObjectService`) — real find/findAll/saveObject API used
+  (ADR-022). Object create/update events are bridged through the existing
+  `ObjectEventHandlerService` (no new event classes). `IJobList`/`TimedJob` available.
+  No pre-existing SLA engine; the legacy `ComplaintSlaService`/`ComplaintSlaJob` are a
+  narrow complaint-only helper and are left untouched (not generalised here).
+  `importFromApp()` seed pipeline is driven by `ConfigFileLoaderService` register.d
+  fragment merge (ADR-037). No bundled holiday library existed → bundled JSON calendars
+  added under `lib/Resources/holidays/`. There is **no standalone `callback` schema** in
+  pipelinq, so task 2.3 is N/A; `request` + `complaint` are the real tracked types
+  (matching the `sla_tracked_types` default).
 
 ---
 
 ## 1. Schema: Create `sla_policy` and `sla_breach_event` schemas
 
-- [ ] 1.1 Create `lib/Settings/sla-engine_register.json` with OpenRegister template
+- [x] 1.1 Create `lib/Settings/sla-engine_register.json` with OpenRegister template
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md#REQ-001`
   - **files**: `lib/Settings/sla-engine_register.json`
   - **tier**: P0-must
@@ -46,7 +56,7 @@
     - All enums properly defined with allowed values
     - Schema version >= 1; version increments on changes
 
-- [ ] 1.2 Create seed data in `lib/Settings/sla-engine_register.json`
+- [x] 1.2 Create seed data in `lib/Settings/sla-engine_register.json`
   - **spec_ref**: Company ADR-001 (seed data requirement)
   - **files**: `lib/Settings/sla-engine_register.json`
   - **tier**: P0-must
@@ -62,7 +72,7 @@
 
 ## 2. Schema: Add `slaStatus` JSON column to tracked types
 
-- [ ] 2.1 Extend `request` schema with `slaStatus` JSON column
+- [x] 2.1 Extend `request` schema with `slaStatus` JSON column
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md#REQ-001`, `REQ-002`, `REQ-003`
   - **files**: `lib/Settings/pipelinq_register.json` (or appropriate register for requests)
   - **tier**: P0-must
@@ -72,14 +82,18 @@
     - Migration handles existing requests (set `slaStatus: null` for pre-existing, will be populated on next update or by sweep job)
     - Register version incremented
 
-- [ ] 2.2 Extend `klacht` (complaint) schema with `slaStatus` JSON column
+- [x] 2.2 Extend `klacht` (complaint) schema with `slaStatus` JSON column
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md`
   - **files**: Complaint register (path TBD)
   - **tier**: P0-must
   - **acceptance_criteria**:
     - Same `slaStatus` JSON schema as request
 
-- [ ] 2.3 Extend `callback` schema with `slaStatus` JSON column
+- [~] 2.3 Extend `callback` schema with `slaStatus` JSON column — **N/A**: pipelinq has no
+  standalone `callback` schema (callbacks are not a register schema here). The two real
+  tracked types (`request`, `complaint`) both carry `slaStatus`; `callback` is supported
+  as a `targets[].kind` and as an `appliesTo` enum value on policies. Re-scope to a real
+  callback schema if/when one is introduced.
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md`
   - **files**: Callback register (path TBD)
   - **tier**: P0-must
@@ -91,7 +105,7 @@
 
 ## 3. Backend: Core SLA engine service
 
-- [ ] 3.1 Create `lib/Service/SlaEngineService.php`
+- [x] 3.1 Create `lib/Service/SlaEngineService.php`
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md#REQ-001`, `REQ-002`, `REQ-003`, `REQ-004`, `REQ-006`
   - **files**: `lib/Service/SlaEngineService.php`
   - **tier**: P0-must
@@ -131,7 +145,7 @@
       - Clear `pausedAt`
       - Return updated `slaStatus`
 
-- [ ] 3.2 Create `lib/Service/HolidayCalendarService.php`
+- [x] 3.2 Create `lib/Service/HolidayCalendarService.php`
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md#REQ-010`
   - **files**: `lib/Service/HolidayCalendarService.php`
   - **tier**: P0-must
@@ -148,7 +162,7 @@
     - **Method: `compositeCalendar(array $calendarNames): array`**
       - Union of multiple calendars (e.g., `["nl-feestdagen-rijksoverheid", "be-feestdagen"]`)
 
-- [ ] 3.3 Create `lib/Service/BusinessHoursCalculator.php`
+- [x] 3.3 Create `lib/Service/BusinessHoursCalculator.php`
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md#REQ-002`
   - **files**: `lib/Service/BusinessHoursCalculator.php`
   - **tier**: P0-must
@@ -168,7 +182,7 @@
 
 ## 4. Backend: Event listeners
 
-- [ ] 4.1 Create `lib/Listener/ObjectCreatedListener.php`
+- [x] 4.1 Create `lib/Listener/ObjectCreatedListener.php`
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md#REQ-001`, `REQ-007`
   - **files**: `lib/Listener/ObjectCreatedListener.php`
   - **tier**: P0-must
@@ -184,7 +198,7 @@
         - Calls `ObjectService::saveObject()` with updated object (before API response)
       - On exception: log error, do NOT throw (fail-safe; REQ-007: listener failure is non-blocking)
 
-- [ ] 4.2 Create `lib/Listener/ObjectUpdatedListener.php`
+- [x] 4.2 Create `lib/Listener/ObjectUpdatedListener.php`
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md#REQ-003`, `REQ-004`, `REQ-007`
   - **files**: `lib/Listener/ObjectUpdatedListener.php`
   - **tier**: P0-must
@@ -202,7 +216,7 @@
       - Call `ObjectService::saveObject()` with updated `slaStatus`
       - On exception: log, do NOT throw (fail-safe)
 
-- [ ] 4.3 Register event listeners in `lib/AppInfo/Application.php`
+- [x] 4.3 Register event listeners in `lib/AppInfo/Application.php`
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md#REQ-007`
   - **files**: `lib/AppInfo/Application.php`
   - **tier**: P0-must
@@ -216,7 +230,7 @@
 
 ## 5. Backend: Scheduled deadline sweep job
 
-- [ ] 5.1 Create `lib/Job/SlaDeadlineSweepJob.php`
+- [x] 5.1 Create `lib/Job/SlaDeadlineSweepJob.php`
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md#REQ-008`
   - **files**: `lib/Job/SlaDeadlineSweepJob.php`
   - **tier**: P0-must
@@ -236,7 +250,7 @@
       - On partial failure: log failures, allow job to exit gracefully (retry on next run)
       - Idempotent: escalations already recorded in `sla_breach_event` will not duplicate (checked by escalation level tracking)
 
-- [ ] 5.2 Register sweep job schedule in `lib/AppInfo/Application.php`
+- [x] 5.2 Register sweep job schedule in `lib/AppInfo/Application.php`
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md#REQ-008`
   - **files**: `lib/AppInfo/Application.php`
   - **tier**: P0-must
@@ -248,7 +262,7 @@
 
 ## 6. Backend: Admin settings
 
-- [ ] 6.1 Create or extend admin settings panel
+- [x] 6.1 Create or extend admin settings panel
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md#REQ-008`, `REQ-010`
   - **files**: `lib/Settings/Admin.php`, admin template Vue component
   - **tier**: P0-must
@@ -267,7 +281,7 @@
 
 ## 7. Backend: i18n
 
-- [ ] 7.1 Add i18n keys for SLA engine
+- [x] 7.1 Add i18n keys for SLA engine
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md` (all REQs reference user-visible strings)
   - **files**: `l10n/en.json`, `l10n/nl.json`
   - **tier**: P0-must
@@ -282,7 +296,7 @@
 
 ## 8. Frontend: SLA policy CRUD UI
 
-- [ ] 8.1 Add policy list view (standard `CnIndexPage`)
+- [x] 8.1 Add policy list view (standard `CnIndexPage`)
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md#REQ-005`, `REQ-009`
   - **files**: Vue component for policy list (path TBD based on app structure)
   - **tier**: P0-must
@@ -291,7 +305,7 @@
     - Filter sidebar: by `appliesTo`, `status`, `active`
     - Columns sortable by `name`, `priority`, `status`
 
-- [ ] 8.2 Add policy detail / edit view
+- [x] 8.2 Add policy detail / edit view
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md#REQ-009`
   - **files**: Vue component for policy detail (path TBD)
   - **tier**: P0-must
@@ -305,6 +319,14 @@
 ---
 
 ## 9. Frontend: Customer tier assignment
+
+> **DEFERRED (live-instance UI integration).** Sections 9-11 wire SLA widgets into the
+> per-object request/complaint/client detail and list Vue components. The backend engine,
+> the `slaTier`/`slaStatus` schema fields, the policy-CRUD pages, and the attainment view
+> are all in place; these tasks are the remaining manifest-driven SPA wiring, which must
+> be authored and verified against a running Nextcloud instance (manifest renderer +
+> live data). Tracked for a follow-up UI pass — the engine is fully usable via the API
+> and the schema-driven policy/attainment views today.
 
 - [ ] 9.1 Add tier selector to organisation detail
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md#REQ-005`
@@ -400,7 +422,7 @@
 
 ## 12. Frontend: Attainment dashboard widget
 
-- [ ] 12.1 Create attainment dashboard endpoint
+- [x] 12.1 Create attainment dashboard endpoint
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md#REQ-006`
   - **files**: `lib/Controller/SlaAttainmentController.php`
   - **tier**: P0-must
@@ -448,7 +470,7 @@
       - Separate in-flight (still open) vs. closed breached
       - Per-target accounting: a request that met acknowledgement but breached resolution counts as met (1.0) for acknowledgement, breached (0.0) for resolution
 
-- [ ] 12.2 Create attainment dashboard Vue widget
+- [x] 12.2 Create attainment dashboard Vue widget
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md#REQ-006`
   - **files**: Vue component for mydash or standalone dashboard
   - **tier**: P0-must
@@ -464,7 +486,15 @@
 
 ## 13. Testing and validation
 
-- [ ] 13.1 Unit tests: `SlaEngineService`
+> **Unit tests (13.1, 13.2) DONE and passing** (real tests, mocked OR ObjectService):
+> `SlaEngineServiceTest`, `HolidayCalendarServiceTest`, `BusinessHoursCalculatorTest`,
+> `SlaTrackingServiceTest`, `SlaAttainmentServiceTest`, `SlaDeadlineSweepJobTest`,
+> `RegisterFragmentMergeTest`. Full suite: 490 tests / 1625 assertions green.
+> **Integration + E2E (13.3-13.6) DEFERRED** — they require a running Nextcloud +
+> OpenRegister instance (real event dispatch, repair-step execution, browser); not
+> runnable in the static gate environment.
+
+- [x] 13.1 Unit tests: `SlaEngineService`
   - **spec_ref**: All REQs
   - **files**: `tests/Unit/Service/SlaEngineServiceTest.php`
   - **tier**: P0-must
@@ -476,7 +506,7 @@
     - PHPUnit with mocked `ObjectService`, `HolidayCalendarService`, `BusinessHoursCalculator`
     - Coverage: >90% of SlaEngineService
 
-- [ ] 13.2 Unit tests: `HolidayCalendarService` and `BusinessHoursCalculator`
+- [x] 13.2 Unit tests: `HolidayCalendarService` and `BusinessHoursCalculator`
   - **spec_ref**: REQ-002, REQ-010
   - **files**: `tests/Unit/Service/HolidayCalendarServiceTest.php`, `tests/Unit/Service/BusinessHoursCalculatorTest.php`
   - **tier**: P0-must
@@ -553,7 +583,7 @@
 
 ## 15. Deployment and rollout
 
-- [ ] 15.1 Migration: create repair step to initialize `slaStatus` on existing objects
+- [x] 15.1 Migration: create repair step to initialize `slaStatus` on existing objects
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md#REQ-001`
   - **files**: `lib/Migration/InitSlaStatus.php` (implement `IRepairStep`)
   - **tier**: P0-must
@@ -565,7 +595,7 @@
     - Logs completion stats (objects initialized, policies resolved)
     - Idempotent: running twice does not duplicate or overwrite
 
-- [ ] 15.2 Seed data import
+- [x] 15.2 Seed data import
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md`
   - **files**: Repair step or `SettingsLoadService` integration
   - **tier**: P0-must
@@ -578,7 +608,15 @@
 
 ## 16. Final validation
 
-- [ ] 16.1 Code review checklist
+> **16.1 + 16.2 DONE**: `composer check:strict` fully green — lint, phpcs (0 errors),
+> phpmd (0), psalm (No errors), phpstan (No errors), 490 unit tests pass. All SLA classes
+> carry `@spec` tags; user-facing strings via `t()`/`IL10N`; CRUD via OR ObjectService;
+> escalation driven by events + the sweep job (no polling); new endpoints auth-gated
+> (`#[AuthorizedAdminSetting]` for admin config, `#[NoAdminRequired]` + authed-user guard
+> for the aggregate-only attainment read — no per-object IDOR surface).
+> **16.3 (smoke) + 16.4 (perf) DEFERRED** — require a running instance + seeded data.
+
+- [x] 16.1 Code review checklist
   - **spec_ref**: All
   - **acceptance_criteria**:
     - All classes have `@spec` PHPDoc tags linking to openspec/changes/sla-engine-and-escalation/specs.md
@@ -588,7 +626,7 @@
     - All public methods documented
     - No secrets in logs
 
-- [ ] 16.2 Automated test suite passes
+- [x] 16.2 Automated test suite passes
   - **spec_ref**: All
   - **acceptance_criteria**:
     - `npm run test` (or `phpunit`) returns exit code 0

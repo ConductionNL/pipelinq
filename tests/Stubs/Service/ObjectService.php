@@ -39,14 +39,25 @@ if (class_exists(ObjectService::class) === false) {
         /**
          * Find a single object by ID.
          *
-         * @param string $id       The object UUID.
-         * @param string $register Register slug or ID.
-         * @param string $schema   Schema slug or ID.
+         * Mirrors the real OpenRegister ObjectService::find() signature
+         * (id, extend, files, register, schema) so callers that pass the
+         * register/schema scope positionally type-check correctly.
+         *
+         * @param string            $id       The object UUID.
+         * @param array<int,string> $extend   Relations to expand.
+         * @param bool              $files    Whether to include files.
+         * @param string|int|null   $register Register slug or ID.
+         * @param string|int|null   $schema   Schema slug or ID.
          *
          * @return array<string, mixed>|object|null
          */
-        public function find(string $id, string $register = '', string $schema = ''): array|object|null
-        {
+        public function find(
+            string $id,
+            array $extend = [],
+            bool $files = false,
+            string|int|null $register = null,
+            string|int|null $schema = null,
+        ): array|object|null {
             return null;
         }//end find()
 

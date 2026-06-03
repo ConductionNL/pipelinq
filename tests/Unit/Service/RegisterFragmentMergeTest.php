@@ -111,6 +111,96 @@ class RegisterFragmentMergeTest extends TestCase
     }//end testListValuesAreReplaced()
 
     /**
+     * Register `schemas[]` membership is unioned, not replaced (ADR-037).
+     *
+     * A fragment that contributes new schemas must register them on the
+     * existing register without clobbering the schemas the monolith already
+     * declared.
+     *
+     * @return void
+     */
+    public function testRegisterSchemasMembershipIsUnioned(): void
+    {
+        $base = [
+            'components' => [
+                'registers' => [
+                    'pipelinq' => ['schemas' => ['request', 'complaint']],
+                ],
+            ],
+        ];
+        $override = [
+            'components' => [
+                'registers' => [
+                    'pipelinq' => ['schemas' => ['slaPolicy', 'slaBreachEvent']],
+                ],
+            ],
+        ];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(
+            ['request', 'complaint', 'slaPolicy', 'slaBreachEvent'],
+            $result['components']['registers']['pipelinq']['schemas']
+        );
+    }//end testRegisterSchemasMembershipIsUnioned()
+
+    /**
+     * Duplicate schema slugs in a fragment do not duplicate membership.
+     *
+     * @return void
+     */
+    public function testRegisterSchemasMembershipDeDuplicates(): void
+    {
+        $base     = ['schemas' => ['request', 'complaint']];
+        $override = ['schemas' => ['complaint', 'slaPolicy']];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(['request', 'complaint', 'slaPolicy'], $result['schemas']);
+    }//end testRegisterSchemasMembershipDeDuplicates()
+
+    /**
+     * The `components.objects[]` seed list is appended, not replaced (ADR-037).
+     *
+     * @return void
+     */
+    public function testComponentsObjectsSeedListIsUnioned(): void
+    {
+        $base = [
+            'components' => [
+                'objects' => [
+                    ['@self' => ['schema' => 'posTransaction', 'slug' => 'txn-1']],
+                ],
+            ],
+        ];
+        $override = [
+            'components' => [
+                'objects' => [
+                    ['@self' => ['schema' => 'slaPolicy', 'slug' => 'policy-standaard-request']],
+                ],
+            ],
+        ];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertCount(2, $result['components']['objects']);
+        $this->assertSame('txn-1', $result['components']['objects'][0]['@self']['slug']);
+        $this->assertSame('policy-standaard-request', $result['components']['objects'][1]['@self']['slug']);
+    }//end testComponentsObjectsSeedListIsUnioned()
+
+    /**
+     * Lists under non-additive keys are still replaced wholesale.
+     *
+     * @return void
+     */
+    public function testNonAdditiveListsStillReplaced(): void
+    {
+        $result = $this->deepMerge(['required' => ['a', 'b']], ['required' => ['c']]);
+
+        $this->assertSame(['c'], $result['required']);
+    }//end testNonAdditiveListsStillReplaced()
+
+    /**
      * isList() distinguishes sequential lists from associative maps.
      *
      * @return void

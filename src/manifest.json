@@ -219,7 +219,8 @@
 					"type",
 					"industry",
 					"email",
-					"phone"
+					"phone",
+					"slaTier"
 				],
 				"sidebar": {
 					"enabled": true,
@@ -288,7 +289,11 @@
 					"status",
 					"priority",
 					"channel",
-					"requestedAt"
+					"requestedAt",
+					"slaStatus"
+				],
+				"facets": [
+					"slaStatus"
 				],
 				"sidebar": {
 					"enabled": true,
@@ -374,7 +379,11 @@
 					"priority",
 					"category",
 					"channel",
-					"_dateCreated"
+					"_dateCreated",
+					"slaStatus"
+				],
+				"facets": [
+					"slaStatus"
 				],
 				"sidebar": {
 					"enabled": true,

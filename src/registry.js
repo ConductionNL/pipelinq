@@ -54,6 +54,7 @@ import FormBuilderView from './views/forms/FormBuilder.vue'
 import RapportageDashboardView from './views/rapportage/RapportageDashboard.vue'
 import ChannelAnalyticsView from './views/rapportage/ChannelAnalytics.vue'
 import AgentPerformanceView from './views/rapportage/AgentPerformance.vue'
+import SlaAttainmentView from './views/sla/SlaAttainment.vue'
 
 // --- Admin managers (lib gap: no pipeline-designer / settings rich-section type). ---
 import PipelineManagerView from './views/settings/PipelineManager.vue'
@@ -186,6 +187,13 @@ const registry = {
 		kind: 'page',
 		component: AgentPerformanceView,
 		_note: 'Per-agent performance charts with apexcharts; lib gap: no chart-widget page type.',
+	},
+
+	// --- SLA attainment dashboard (server-authoritative aggregation). ---
+	SlaAttainmentView: {
+		kind: 'page',
+		component: SlaAttainmentView,
+		_note: 'SLA attainment KPI + per-group drilldown from /api/sla/attainment; lib gap: no aggregation-dashboard page type.',
 	},
 
 	// --- Pipeline board (kanban + list with in-memory search). ---

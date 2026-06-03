@@ -119,6 +119,12 @@ return [
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
 
+        // SLA engine: attainment reporting (read) and admin configuration.
+        // Static routes — declared before the SPA catch-all wildcard.
+        ['name' => 'slaAttainment#attainment', 'url' => '/api/sla/attainment', 'verb' => 'GET'],
+        ['name' => 'slaAdmin#getConfig',       'url' => '/api/sla/config',      'verb' => 'GET'],
+        ['name' => 'slaAdmin#setConfig',       'url' => '/api/sla/config',      'verb' => 'PUT'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],

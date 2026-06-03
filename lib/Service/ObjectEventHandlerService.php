@@ -36,11 +36,13 @@ class ObjectEventHandlerService
      * @param SchemaMapService        $schemaMapService The schema map service.
      * @param ObjectEventDispatcher   $dispatcher       The event dispatcher.
      * @param ObjectUpdateDiffService $diffService      The update diff service.
+     * @param SlaTrackingService      $slaTracking      The SLA tracking orchestrator.
      */
     public function __construct(
         private SchemaMapService $schemaMapService,
         private ObjectEventDispatcher $dispatcher,
         private ObjectUpdateDiffService $diffService,
+        private SlaTrackingService $slaTracking,
     ) {
     }//end __construct()
 
@@ -56,12 +58,22 @@ class ObjectEventHandlerService
     public function handleCreated(object $objectEntity): void
     {
         $entityType = $this->schemaMapService->resolveEntityType(schemaId: $objectEntity->getSchema());
-        if ($this->isRelevantEntityType(entityType: $entityType) === false) {
+        if ($entityType === null) {
             return;
         }
 
         $data     = $objectEntity->getObject();
         $objectId = (string) $objectEntity->getId();
+
+        // SLA engine: initialise slaStatus on tracked types (REQ-001/REQ-007).
+        // Fail-safe inside SlaTrackingService; never blocks the create.
+        if ($this->slaTracking->isTracked(objectType: $entityType) === true) {
+            $this->slaTracking->onCreated(objectType: $entityType, objectId: $objectId, data: $data);
+        }
+
+        if ($this->isRelevantEntityType(entityType: $entityType) === false) {
+            return;
+        }
 
         $this->dispatcher->dispatchCreated(
             entityType: $entityType,
@@ -84,7 +96,7 @@ class ObjectEventHandlerService
     public function handleUpdated(object $newObject, ?object $oldObject): void
     {
         $entityType = $this->schemaMapService->resolveEntityType(schemaId: $newObject->getSchema());
-        if ($this->isRelevantEntityType(entityType: $entityType) === false) {
+        if ($entityType === null) {
             return;
         }
 
@@ -93,6 +105,16 @@ class ObjectEventHandlerService
         $title    = $newData['title'] ?? '';
         $objectId = (string) $newObject->getId();
         $assignee = $newData['assignee'] ?? '';
+
+        // SLA engine: pause/resume, re-evaluate and escalate on tracked types
+        // (REQ-003/REQ-004/REQ-007). Fail-safe; never blocks the update.
+        if ($this->slaTracking->isTracked(objectType: $entityType) === true) {
+            $this->slaTracking->onUpdated(objectType: $entityType, objectId: $objectId, newData: $newData, oldData: $oldData);
+        }
+
+        if ($this->isRelevantEntityType(entityType: $entityType) === false) {
+            return;
+        }
 
         $this->diffService->dispatchAssigneeChangeIfNeeded(
             oldData: $oldData,

@@ -1,0 +1,112 @@
+{
+    "pages": [
+        {
+            "id": "SlaPolicies",
+            "route": "/sla/policies",
+            "type": "index",
+            "title": "SLA policies",
+            "config": {
+                "register": "pipelinq",
+                "schema": "slaPolicy",
+                "columns": [
+                    "name",
+                    "appliesTo",
+                    "customerTier",
+                    "priority",
+                    "status",
+                    "validFrom",
+                    "validUntil"
+                ],
+                "filters": [
+                    "appliesTo",
+                    "status",
+                    "active"
+                ],
+                "sort": {
+                    "field": "priority",
+                    "direction": "asc"
+                },
+                "sidebar": {
+                    "enabled": true,
+                    "showMetadata": true,
+                    "showAuditTrail": true
+                },
+                "form": {
+                    "required": [
+                        "name",
+                        "appliesTo",
+                        "customerTier",
+                        "targets",
+                        "justification"
+                    ]
+                }
+            }
+        },
+        {
+            "id": "SlaBreachEvents",
+            "route": "/sla/breach-events",
+            "type": "index",
+            "title": "SLA breach events",
+            "config": {
+                "register": "pipelinq",
+                "schema": "slaBreachEvent",
+                "columns": [
+                    "targetObjectType",
+                    "targetKind",
+                    "escalationLevel",
+                    "breachedAt",
+                    "consumedPercentage",
+                    "acknowledged"
+                ],
+                "filters": [
+                    "targetObjectType",
+                    "targetKind",
+                    "acknowledged"
+                ],
+                "sort": {
+                    "field": "breachedAt",
+                    "direction": "desc"
+                },
+                "sidebar": {
+                    "enabled": true,
+                    "showMetadata": true
+                }
+            }
+        },
+        {
+            "id": "SlaAttainment",
+            "route": "/sla/attainment",
+            "type": "custom",
+            "title": "SLA attainment",
+            "component": "SlaAttainmentView",
+            "config": {
+                "endpoint": "/apps/pipelinq/api/sla/attainment",
+                "defaultBucket": "quarter",
+                "defaultGroupBy": "policy"
+            }
+        }
+    ],
+    "menu": [
+        {
+            "id": "SlaPolicies",
+            "label": "SLA policies",
+            "icon": "icon-category-customization",
+            "route": "SlaPolicies",
+            "order": 110
+        },
+        {
+            "id": "SlaAttainment",
+            "label": "SLA attainment",
+            "icon": "icon-category-monitoring",
+            "route": "SlaAttainment",
+            "order": 111
+        },
+        {
+            "id": "SlaBreachEvents",
+            "label": "SLA breach events",
+            "icon": "icon-category-monitoring",
+            "route": "SlaBreachEvents",
+            "order": 112
+        }
+    ]
+}

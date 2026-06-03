@@ -61,11 +61,15 @@ class ObjectEventHandlerServiceTest extends TestCase
         $this->schemaMapService = $this->createMock(SchemaMapService::class);
         $this->dispatcher       = $this->createMock(ObjectEventDispatcher::class);
         $diffService            = new ObjectUpdateDiffService();
+        $slaTracking            = $this->createMock(\OCA\Pipelinq\Service\SlaTrackingService::class);
+        // Not SLA-tracked by default in these handler tests.
+        $slaTracking->method('isTracked')->willReturn(false);
 
         $this->service = new ObjectEventHandlerService(
             $this->schemaMapService,
             $this->dispatcher,
             $diffService,
+            $slaTracking,
         );
     }//end setUp()
 
