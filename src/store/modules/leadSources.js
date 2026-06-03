@@ -28,6 +28,9 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 
 			try {
 				const response = await fetch(API_BASE, { headers: headers() })
+				if (!response.ok) {
+					throw new Error(`Failed to fetch lead sources (${response.status})`)
+				}
 				const data = await response.json()
 				this.tags = data.tags || []
 			} catch (error) {
@@ -48,6 +51,9 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 					headers: headers(),
 					body: JSON.stringify({ name }),
 				})
+				if (!response.ok) {
+					throw new Error(`Failed to add source (${response.status})`)
+				}
 				const data = await response.json()
 
 				if (!data.success) {
@@ -71,6 +77,9 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 					method: 'DELETE',
 					headers: headers(),
 				})
+				if (!response.ok) {
+					throw new Error(`Failed to remove source (${response.status})`)
+				}
 				const data = await response.json()
 
 				if (!data.success) {
@@ -94,6 +103,9 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 					headers: headers(),
 					body: JSON.stringify({ name }),
 				})
+				if (!response.ok) {
+					throw new Error(`Failed to rename source (${response.status})`)
+				}
 				const data = await response.json()
 
 				if (!data.success) {

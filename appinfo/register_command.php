@@ -1,0 +1,21 @@
+<?php
+
+/**
+ * Pipelinq console command registration.
+ *
+ * Registers the app's occ console commands. Nextcloud loads this file when
+ * building the console application.
+ *
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @copyright 2026 Conduction B.V.
+ */
+
+declare(strict_types=1);
+
+use OCA\Pipelinq\Command\PortalCleanupCommand;
+use OCP\Server;
+
+/*
+ * @var \Symfony\Component\Console\Application $application
+ */
+$application->add(Server::get(PortalCleanupCommand::class));

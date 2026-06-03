@@ -61,11 +61,11 @@
 
 		<!-- Requested at -->
 		<div class="form-group">
-			<NcTextField
-				:value="form.requestedAt || ''"
+			<NcDateTimePickerNative
+				:value="requestedAtDate"
 				:label="t('pipelinq', 'Requested at')"
 				type="date"
-				@update:value="v => form.requestedAt = v || null" />
+				@input="requestedAtDate = $event" />
 		</div>
 
 		<!-- Client -->
@@ -120,15 +120,17 @@
 </template>
 
 <script>
-import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcDateTimePickerNative, NcSelect, NcTextField } from '@nextcloud/vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
 import { getAllowedTransitions } from '../../services/requestStatus.js'
+import { toDateObject, toDateInputString } from '../../services/localeUtils.js'
 
 export default {
 	name: 'RequestForm',
 	components: {
 		NcButton,
+		NcDateTimePickerNative,
 		NcSelect,
 		NcTextField,
 	},
@@ -160,6 +162,18 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * Bridge the stored `requestedAt` string to NcDateTimePickerNative,
+		 * which works with Date objects.
+		 */
+		requestedAtDate: {
+			get() {
+				return toDateObject(this.form.requestedAt)
+			},
+			set(date) {
+				this.form.requestedAt = toDateInputString(date)
+			},
+		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-44
 		 */

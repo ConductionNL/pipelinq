@@ -62,6 +62,18 @@ import AgentPerformanceView from './views/rapportage/AgentPerformance.vue'
 import PipelineManagerView from './views/settings/PipelineManager.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
 
+// --- BI export + data-warehouse sink (lib gap: declarative index/detail pages
+//     cannot express the bespoke test-connection / test-run / enable / retry
+//     actions on the export controllers, nor the run-detail manifest +
+//     schema-snapshot drill-down). Object CRUD still flows through the shared
+//     object store; these views add the action surface. ---
+import ExportJobsView from './views/export/ExportJobs.vue'
+import ExportJobFormView from './views/export/ExportJobForm.vue'
+import ExportDestinationsView from './views/export/ExportDestinations.vue'
+import ExportDestinationFormView from './views/export/ExportDestinationForm.vue'
+import ExportRunsView from './views/export/ExportRuns.vue'
+import ExportRunDetailView from './views/export/ExportRunDetail.vue'
+
 // --- POS transactions (lib gap: list needs custom row navigation to the cart
 //     editor; detail needs lifecycle action buttons + tax breakdown; form is a
 //     bespoke cart editor with real-time totals). ---
@@ -256,6 +268,38 @@ const registry = {
 		kind: 'page',
 		component: ProductBarcodeSearchView,
 		_note: 'Scan-to-navigate barcode search; resolves via the server-authoritative scoped barcode-lookup API and routes to the matching product (highlighting a matched variant).',
+	},
+
+	// --- BI export + data-warehouse sink. ---
+	ExportJobsView: {
+		kind: 'page',
+		component: ExportJobsView,
+		_note: 'Export-job list with per-row Test-run + Enable/Disable actions calling the export controller; declarative index cannot trigger the test/enable endpoints.',
+	},
+	ExportJobFormView: {
+		kind: 'page',
+		component: ExportJobFormView,
+		_note: 'Export-job create/edit form (schemas multi-select, destination, format/mode, watermark, cron, row filter, PII column allowlist) with an inline Test-run action.',
+	},
+	ExportDestinationsView: {
+		kind: 'page',
+		component: ExportDestinationsView,
+		_note: 'Export-destination list with a per-row Test-connection action calling the export controller.',
+	},
+	ExportDestinationFormView: {
+		kind: 'page',
+		component: ExportDestinationFormView,
+		_note: 'Export-destination create/edit form (type, OpenConnector source, path template, compression, encryption) with an inline Test-connection action.',
+	},
+	ExportRunsView: {
+		kind: 'page',
+		component: ExportRunsView,
+		_note: 'Export-run history list with a per-row Retry action for failed/partial runs.',
+	},
+	ExportRunDetailView: {
+		kind: 'page',
+		component: ExportRunDetailView,
+		_note: 'Export-run detail: file manifest, schema snapshots with detected drift, error log and a Retry action; fetched via the export run-detail endpoint.',
 	},
 }
 

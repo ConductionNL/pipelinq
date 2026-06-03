@@ -67,7 +67,7 @@
 		{
 			"id": "Products",
 			"label": "Products",
-			"icon": "icon-files",
+			"icon": "icon-category-app-bundles",
 			"route": "Products",
 			"order": 90
 		},
@@ -109,7 +109,7 @@
 		{
 			"id": "Queues",
 			"label": "Queues",
-			"icon": "icon-files",
+			"icon": "icon-category-workflow",
 			"route": "Queues",
 			"order": 120
 		},
@@ -148,6 +148,13 @@
 			"icon": "icon-file",
 			"route": "Forms",
 			"order": 210
+		},
+		{
+			"id": "ExportJobs",
+			"label": "BI export",
+			"icon": "icon-category-integration",
+			"route": "ExportJobs",
+			"order": 215
 		},
 		{
 			"id": "FeaturesRoadmapMenu",
@@ -1010,6 +1017,94 @@
 			"title": "Features & roadmap",
 			"config": {
 				"documentationUrl": "https://pipelinq.conduction.nl"
+			}
+		},
+		{
+			"id": "ExportJobs",
+			"route": "/export/jobs",
+			"type": "custom",
+			"title": "BI export jobs",
+			"component": "ExportJobsView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "exportJob"
+			}
+		},
+		{
+			"id": "ExportJobNew",
+			"route": "/export/jobs/new",
+			"type": "custom",
+			"title": "New export job",
+			"component": "ExportJobFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "exportJob"
+			}
+		},
+		{
+			"id": "ExportJobDetail",
+			"route": "/export/jobs/:id",
+			"type": "custom",
+			"title": "Export job",
+			"component": "ExportJobFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "exportJob"
+			}
+		},
+		{
+			"id": "ExportDestinations",
+			"route": "/export/destinations",
+			"type": "custom",
+			"title": "Export destinations",
+			"component": "ExportDestinationsView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "exportDestination"
+			}
+		},
+		{
+			"id": "ExportDestinationNew",
+			"route": "/export/destinations/new",
+			"type": "custom",
+			"title": "New export destination",
+			"component": "ExportDestinationFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "exportDestination"
+			}
+		},
+		{
+			"id": "ExportDestinationDetail",
+			"route": "/export/destinations/:id",
+			"type": "custom",
+			"title": "Export destination",
+			"component": "ExportDestinationFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "exportDestination"
+			}
+		},
+		{
+			"id": "ExportRuns",
+			"route": "/export/runs",
+			"type": "custom",
+			"title": "Export runs",
+			"component": "ExportRunsView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "exportRun"
+			}
+		},
+		{
+			"id": "ExportRunDetail",
+			"route": "/export/runs/:id",
+			"type": "custom",
+			"title": "Export run",
+			"component": "ExportRunDetailView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "exportRun"
 			}
 		}
 	]

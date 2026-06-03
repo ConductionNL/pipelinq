@@ -2,7 +2,7 @@
 
 ## 0. Deduplication Check
 
-- [ ] 0.1 Search for existing portal or auth-domain patterns in Nextcloud and Pipelinq
+- [x] 0.1 Search for existing portal or auth-domain patterns in Nextcloud and Pipelinq
   - **spec_ref**: ADR-012-deduplication
   - **files**: `lib/Service/`, `appinfo/`
   - **acceptance_criteria**:
@@ -10,7 +10,7 @@
     - THEN document findings: no existing `*Portal*` or `*CustomerAuth*` service classes found (or list any overlap)
     - AND if overlap exists, confirm reuse plan with team before proceeding
 
-- [ ] 0.2 Verify no Nextcloud user-account-as-customer patterns exist in codebase
+- [x] 0.2 Verify no Nextcloud user-account-as-customer patterns exist in codebase
   - **spec_ref**: REQ-001
   - **files**: `lib/`, `tests/`
   - **acceptance_criteria**:
@@ -22,7 +22,7 @@
 
 ## 1. Backend — Core Auth Services
 
-- [ ] 1.1 Create `PortalAuthService.php`
+- [x] 1.1 Create `PortalAuthService.php`
   - **spec_ref**: REQ-001
   - **files**: `lib/Service/PortalAuthService.php`
   - **acceptance_criteria**:
@@ -34,7 +34,7 @@
     - AND on failure, increment `failedLoginAttempts` and log `portal_audit_event` with `eventType: login-failure`
     - AND after 5 failed attempts in 15 minutes, return HTTP 429 Too Many Requests
 
-- [ ] 1.2 Create `PortalSessionManager.php`
+- [x] 1.2 Create `PortalSessionManager.php`
   - **spec_ref**: REQ-001
   - **files**: `lib/Service/PortalSessionManager.php`
   - **acceptance_criteria**:
@@ -46,7 +46,7 @@
     - AND `validateSession($tokenHash)` MUST verify token exists, is not revoked, and not expired
     - AND `revokeSession($sessionId, $reason)` MUST set `revoked: true`, `revokedAt`, `revokedReason`
 
-- [ ] 1.3 Create `PortalMfaService.php`
+- [x] 1.3 Create `PortalMfaService.php`
   - **spec_ref**: REQ-001
   - **files**: `lib/Service/PortalMfaService.php`
   - **acceptance_criteria**:
@@ -58,7 +58,7 @@
     - AND `verifyMfaCode($accountId, $code)` MUST validate TOTP code against stored secret
     - AND `disableMfa($accountId)` MUST clear `mfaSecret` and reset `mfaEnforced`
 
-- [ ] 1.4 Create `PasswordResetService.php`
+- [x] 1.4 Create `PasswordResetService.php`
   - **spec_ref**: REQ-001, REQ-007
   - **files**: `lib/Service/PasswordResetService.php`
   - **acceptance_criteria**:
@@ -78,7 +78,7 @@
 
 ## 2. Backend — Multi-Tenant & Request Resolution
 
-- [ ] 2.1 Create `TenantResolverMiddleware.php`
+- [x] 2.1 Create `TenantResolverMiddleware.php`
   - **spec_ref**: REQ-002
   - **files**: `lib/Middleware/TenantResolverMiddleware.php`
   - **acceptance_criteria**:
@@ -93,7 +93,7 @@
     - AND set `$request->tenantId` for the request lifecycle
     - AND validate widget origins if applicable
 
-- [ ] 2.2 Create `PortalAuthMiddleware.php`
+- [x] 2.2 Create `PortalAuthMiddleware.php`
   - **spec_ref**: REQ-001
   - **files**: `lib/Middleware/PortalAuthMiddleware.php`
   - **acceptance_criteria**:
@@ -110,7 +110,7 @@
 
 ## 3. Backend — Data Access Services (Read Facades)
 
-- [ ] 3.1 Create `PortalInvoiceService.php`
+- [x] 3.1 Create `PortalInvoiceService.php`
   - **spec_ref**: REQ-003, REQ-005
   - **files**: `lib/Service/PortalInvoiceService.php`
   - **acceptance_criteria**:
@@ -125,7 +125,7 @@
     - AND order by date descending
     - AND log each access in `portal_audit_event` with `eventType: invoices-listed`
 
-- [ ] 3.2 Create `PortalContractService.php`
+- [x] 3.2 Create `PortalContractService.php`
   - **spec_ref**: REQ-003
   - **files**: `lib/Service/PortalContractService.php`
   - **acceptance_criteria**:
@@ -134,7 +134,7 @@
     - THEN query client-management register for contracts linked to account's contact/organisation
     - AND return paginated array of contracts with: `{contractNumber, startDate, endDate, value, status, ...}`
 
-- [ ] 3.3 Create `PortalOrderService.php`
+- [x] 3.3 Create `PortalOrderService.php`
   - **spec_ref**: REQ-003
   - **files**: `lib/Service/PortalOrderService.php`
   - **acceptance_criteria**:
@@ -143,7 +143,7 @@
     - THEN query product-catalog-quoting register for orders linked to account's organisation
     - AND return paginated array of orders with: `{orderNumber, date, items, total, status, eta, ...}`
 
-- [ ] 3.4 Create `PortalRequestService.php`
+- [x] 3.4 Create `PortalRequestService.php`
   - **spec_ref**: REQ-004, REQ-006
   - **files**: `lib/Service/PortalRequestService.php`
   - **acceptance_criteria**:
@@ -163,7 +163,7 @@
 
 ## 4. Backend — Profile & Delegation Services
 
-- [ ] 4.1 Create `PortalProfileService.php`
+- [x] 4.1 Create `PortalProfileService.php`
   - **spec_ref**: REQ-007
   - **files**: `lib/Service/PortalProfileService.php`
   - **acceptance_criteria**:
@@ -175,7 +175,7 @@
     - AND create `portal_audit_event` records for each field changed: `{fieldName, previousValue, newValue}`
     - AND return updated account object
 
-- [ ] 4.2 Create `PortalDelegationService.php`
+- [x] 4.2 Create `PortalDelegationService.php`
   - **spec_ref**: REQ-003
   - **files**: `lib/Service/PortalDelegationService.php`
   - **acceptance_criteria**:
@@ -194,7 +194,7 @@
 
 ## 5. Backend — Document & Audit Services
 
-- [ ] 5.1 Create `DocumentSigningService.php`
+- [x] 5.1 Create `DocumentSigningService.php`
   - **spec_ref**: REQ-005
   - **files**: `lib/Service/DocumentSigningService.php`
   - **acceptance_criteria**:
@@ -208,7 +208,7 @@
     - AND return `{objectId, objectType, expiresAt}` if valid
     - AND return null if invalid or expired
 
-- [ ] 5.2 Create `PortalAuditService.php`
+- [x] 5.2 Create `PortalAuditService.php`
   - **spec_ref**: REQ-007, REQ-010
   - **files**: `lib/Service/PortalAuditService.php`
   - **acceptance_criteria**:
@@ -225,7 +225,7 @@
 
 ## 6. Backend — Tenant Configuration
 
-- [ ] 6.1 Create `PortalTenantService.php`
+- [x] 6.1 Create `PortalTenantService.php`
   - **spec_ref**: REQ-002, REQ-009
   - **files**: `lib/Service/PortalTenantService.php`
   - **acceptance_criteria**:
@@ -238,7 +238,7 @@
     - AND persist config to register
     - AND return updated config object
 
-- [ ] 6.2 Create `ContrastRatioCalculator.php`
+- [x] 6.2 Create `ContrastRatioCalculator.php`
   - **spec_ref**: REQ-009
   - **files**: `lib/Util/ContrastRatioCalculator.php`
   - **acceptance_criteria**:
@@ -252,7 +252,7 @@
 
 ## 7. Backend — AVG Compliance
 
-- [ ] 7.1 Create `PortalExportService.php`
+- [x] 7.1 Create `PortalExportService.php`
   - **spec_ref**: REQ-010
   - **files**: `lib/Service/PortalExportService.php`
   - **acceptance_criteria**:
@@ -267,7 +267,7 @@
     - AND return `{downloadUrl, expiresAt}`
     - AND send email to user with download link
 
-- [ ] 7.2 Create `PortalAccountService.php` (account closure)
+- [x] 7.2 Create `PortalAccountService.php` (account closure)
   - **spec_ref**: REQ-010
   - **files**: `lib/Service/PortalAccountService.php`
   - **acceptance_criteria**:
@@ -280,7 +280,7 @@
     - AND log `portal_audit_event` with `eventType: account-close`, `outcome: success`
     - AND send confirmation email to user
 
-- [ ] 7.3 Create `PortalCleanupCommand.php` (nightly cleanup)
+- [x] 7.3 Create `PortalCleanupCommand.php` (nightly cleanup)
   - **spec_ref**: REQ-010
   - **files**: `lib/Command/PortalCleanupCommand.php`
   - **acceptance_criteria**:
@@ -298,7 +298,7 @@
 
 ## 8. Backend — Controllers & Routes
 
-- [ ] 8.1 Create `PortalAuthController.php`
+- [x] 8.1 Create `PortalAuthController.php`
   - **spec_ref**: REQ-001
   - **files**: `lib/Controller/PortalAuthController.php`
   - **acceptance_criteria**:
@@ -312,7 +312,7 @@
       - `POST /portal/api/auth/extend-session` — extend session TTL
     - All responses MUST handle rate limiting (HTTP 429 if exceeded)
 
-- [ ] 8.2 Create `PortalAccountController.php`
+- [x] 8.2 Create `PortalAccountController.php`
   - **spec_ref**: REQ-007
   - **files**: `lib/Controller/PortalAccountController.php`
   - **acceptance_criteria**:
@@ -322,7 +322,7 @@
       - `POST /portal/api/accounts/verify-email` — verify email change with token
     - All actions log `portal_audit_event`
 
-- [ ] 8.3 Create `PortalInvoiceController.php` through `PortalDelegationController.php`
+- [x] 8.3 Create `PortalInvoiceController.php` through `PortalDelegationController.php`
   - **spec_ref**: REQ-003 through REQ-008
   - **files**: `lib/Controller/Portal{Invoice,Contract,Order,Request,Document,Delegation,Tenant}Controller.php`
   - **acceptance_criteria**:
@@ -349,7 +349,7 @@
     - Tenant controller:
       - `GET /portal/api/tenant-config` — get tenant branding (public)
 
-- [ ] 8.4 Create `PortalAdminController.php`
+- [x] 8.4 Create `PortalAdminController.php`
   - **spec_ref**: REQ-002
   - **files**: `lib/Controller/PortalAdminController.php`
   - **acceptance_criteria**:
@@ -358,7 +358,7 @@
       - `GET /portal/api/admin/audit-events` — list all tenant audit events
       - `GET /portal/api/admin/accounts` — list all tenant portal accounts
 
-- [ ] 8.5 Create `PortalExportController.php`
+- [x] 8.5 Create `PortalExportController.php`
   - **spec_ref**: REQ-010
   - **files**: `lib/Controller/PortalExportController.php`
   - **acceptance_criteria**:
@@ -366,7 +366,7 @@
       - `POST /portal/api/exports` — request AVG data export
       - `PUT /portal/api/accounts/close` — request account closure with email confirmation
 
-- [ ] 8.6 Create `PortalAuditController.php`
+- [x] 8.6 Create `PortalAuditController.php`
   - **spec_ref**: REQ-010
   - **files**: `lib/Controller/PortalAuditController.php`
   - **acceptance_criteria**:
@@ -374,7 +374,7 @@
       - `GET /portal/api/audit-events` — list own audit events (paginated)
       - `GET /portal/api/audit-events?tenantId=...` — list all tenant events (admin/DPO only)
 
-- [ ] 8.7 Register all routes in `appinfo/routes.php`
+- [x] 8.7 Register all routes in `appinfo/routes.php`
   - **spec_ref**: ADR-002-api
   - **files**: `appinfo/routes.php`
   - **acceptance_criteria**:
@@ -387,7 +387,7 @@
 
 ## 9. Frontend — Core Pages
 
-- [ ] 9.1 Create `PortalLogin.vue`
+- [x] 9.1 Create `PortalLogin.vue`
   - **spec_ref**: REQ-001
   - **files**: `src/views/portal/PortalLogin.vue`
   - **acceptance_criteria**:
@@ -398,7 +398,7 @@
     - Password reset link: `<a href="/portal/password-reset">Wachtwoord vergeten?</a>`
     - WCAG 2.2 AA: labels, ARIA, focus management, error association
 
-- [ ] 9.2 Create `PortalDashboard.vue`
+- [x] 9.2 Create `PortalDashboard.vue`
   - **spec_ref**: REQ-003
   - **files**: `src/views/portal/PortalDashboard.vue`
   - **acceptance_criteria**:
@@ -409,7 +409,7 @@
     - Delegation marker: "delegatedFrom" entries tagged with grantee account name
     - WCAG 2.2 AA: table semantics, row focus, screen-reader announcement
 
-- [ ] 9.3 Create `PortalRequests.vue`
+- [x] 9.3 Create `PortalRequests.vue`
   - **spec_ref**: REQ-004, REQ-006
   - **files**: `src/views/portal/PortalRequests.vue`
   - **acceptance_criteria**:
@@ -420,7 +420,7 @@
     - On submit success: show "Request submitted" message with request ID and ETA
     - Rate limit: if limit exceeded, show message "Wacht alstublieft 60 minuten..."
 
-- [ ] 9.4 Create `PortalProfile.vue`
+- [x] 9.4 Create `PortalProfile.vue`
   - **spec_ref**: REQ-007
   - **files**: `src/views/portal/PortalProfile.vue`
   - **acceptance_criteria**:
@@ -431,7 +431,7 @@
     - Language change: reload page to apply locale
     - WCAG 2.2 AA: labels, error messages
 
-- [ ] 9.5 Create `PortalDelegations.vue` (B2B only)
+- [x] 9.5 Create `PortalDelegations.vue` (B2B only)
   - **spec_ref**: REQ-003
   - **files**: `src/views/portal/PortalDelegations.vue`
   - **acceptance_criteria**:
@@ -442,7 +442,7 @@
     - On revoke: call `DELETE /portal/api/delegations/{id}` with confirmation
     - WCAG 2.2 AA
 
-- [ ] 9.6 Create `PortalExport.vue`
+- [x] 9.6 Create `PortalExport.vue`
   - **spec_ref**: REQ-010
   - **files**: `src/views/portal/PortalExport.vue`
   - **acceptance_criteria**:
@@ -456,7 +456,7 @@
 
 ## 10. Frontend — Admin Configuration
 
-- [ ] 10.1 Create `PortalAdminConfig.vue`
+- [x] 10.1 Create `PortalAdminConfig.vue`
   - **spec_ref**: REQ-002, REQ-009
   - **files**: `src/views/admin/PortalAdminConfig.vue`
   - **acceptance_criteria**:
@@ -472,7 +472,7 @@
     - On error (e.g. contrast too low): show error with details
     - On success: show toast "Configuratie opgeslagen"
 
-- [ ] 10.2 Create `PortalAdminAudit.vue`
+- [x] 10.2 Create `PortalAdminAudit.vue`
   - **spec_ref**: REQ-010
   - **files**: `src/views/admin/PortalAdminAudit.vue`
   - **acceptance_criteria**:
@@ -486,7 +486,7 @@
 
 ## 11. Frontend — Widget Variant
 
-- [ ] 11.1 Create `PortalWidget.vue`
+- [x] 11.1 Create `PortalWidget.vue`
   - **spec_ref**: REQ-008
   - **files**: `src/views/portal/PortalWidget.vue`
   - **acceptance_criteria**:
@@ -501,7 +501,7 @@
 
 ## 12. Frontend — Session Timeout Warning
 
-- [ ] 12.1 Update main layout to include session timeout warning
+- [x] 12.1 Update main layout to include session timeout warning
   - **spec_ref**: REQ-001, REQ-009
   - **files**: `src/components/PortalSessionWarning.vue`
   - **acceptance_criteria**:
@@ -516,7 +516,7 @@
 
 ## 13. Frontend — i18n Translations
 
-- [ ] 13.1 Add all portal UI strings to i18n files
+- [x] 13.1 Add all portal UI strings to i18n files
   - **spec_ref**: REQ-001
   - **files**: `l10n/en.json`, `l10n/nl.json`, `l10n/de.json`, `l10n/fr.json`
   - **acceptance_criteria**:
@@ -534,7 +534,7 @@
 
 ## 14. Routing & Navigation
 
-- [ ] 14.1 Create `portalRoutes.js`
+- [x] 14.1 Create `portalRoutes.js`
   - **spec_ref**: REQ-001
   - **files**: `src/router/portalRoutes.js`
   - **acceptance_criteria**:
@@ -551,7 +551,7 @@
       - `/portal/widget` → PortalWidget.vue (widget mode)
     - Navigation guards: check auth token in sessionStorage, redirect to login if missing/expired
 
-- [ ] 14.2 Update main navigation menu
+- [x] 14.2 Update main navigation menu
   - **spec_ref**: REQ-001
   - **files**: `src/navigation/MainMenu.vue`
   - **acceptance_criteria**:
@@ -562,7 +562,7 @@
 
 ## 15. Testing & Verification
 
-- [ ] 15.1 Create unit tests for auth services
+- [x] 15.1 Create unit tests for auth services
   - **spec_ref**: REQ-001
   - **files**: `tests/Unit/Service/PortalAuthServiceTest.php`
   - **acceptance_criteria**:
@@ -570,7 +570,7 @@
     - Test MFA enrollment and verification
     - Test password reset flow
 
-- [ ] 15.2 Create unit tests for multi-tenant isolation
+- [x] 15.2 Create unit tests for multi-tenant isolation
   - **spec_ref**: REQ-002
   - **files**: `tests/Unit/Middleware/TenantResolverMiddlewareTest.php`
   - **acceptance_criteria**:
@@ -578,14 +578,14 @@
     - Test cross-tenant data rejection (404 not 403)
     - Test widget origin validation
 
-- [ ] 15.3 Create integration tests for data access services
+- [x] 15.3 Create integration tests for data access services
   - **spec_ref**: REQ-003
   - **files**: `tests/Integration/Service/PortalInvoiceServiceTest.php`
   - **acceptance_criteria**:
     - Test invoice list retrieval, filtering by contact/organisation, delegation scoping
     - Test pagination, ordering by date
 
-- [ ] 15.4 Create API integration tests
+- [x] 15.4 Create API integration tests
   - **spec_ref**: REQ-001 through REQ-010
   - **files**: `tests/Integration/Api/PortalApiTest.php`
   - **acceptance_criteria**:
@@ -597,7 +597,7 @@
     - Test B2B delegation grant/revoke
     - Test AVG export and account closure
 
-- [ ] 15.5 Create frontend component tests
+- [x] 15.5 Create frontend component tests
   - **spec_ref**: REQ-001 through REQ-008
   - **files**: `tests/Frontend/PortalLogin.spec.js`, `tests/Frontend/PortalDashboard.spec.js`, etc.
   - **acceptance_criteria**:
@@ -607,7 +607,12 @@
     - Test session timeout warning display and actions
     - Test WCAG 2.2 AA compliance (keyboard nav, ARIA labels, focus indicators)
 
-- [ ] 15.6 WCAG 2.2 AA compliance audit
+- [ ] 15.6 WCAG 2.2 AA compliance audit — DEFERRED (needs a running browser +
+      live instance to run axe-core). Build-time AA guarantees ARE in place:
+      brand-colour contrast is validated server-side at save (ContrastRatioCalculator,
+      unit-tested), and the Vue components ship semantic tables, label/aria-describedby
+      error association, a `role="alert" aria-live="polite"` session-timeout region and
+      a visible focus indicator. The live axe-core sweep is for the deploy/QA step.
   - **spec_ref**: REQ-009
   - **files**: All portal Vue components
   - **acceptance_criteria**:
@@ -622,7 +627,7 @@
 
 ## 16. Documentation & Deployment
 
-- [ ] 16.1 Create admin documentation
+- [x] 16.1 Create admin documentation
   - **spec_ref**: REQ-002
   - **files**: `docs/admin/portal-setup.md`
   - **acceptance_criteria**:
@@ -632,7 +637,7 @@
     - How to view audit logs (DPO workflow)
     - How to handle AVG data export and account closure requests
 
-- [ ] 16.2 Create user documentation (customer-facing)
+- [x] 16.2 Create user documentation (customer-facing)
   - **spec_ref**: REQ-001 through REQ-008
   - **files**: `docs/user/portal-guide.md`
   - **acceptance_criteria**:
@@ -644,7 +649,7 @@
     - Downloading documents
     - Requesting data export and closing account
 
-- [ ] 16.3 Create developer documentation
+- [x] 16.3 Create developer documentation
   - **spec_ref**: REQ-001
   - **files**: `docs/developer/portal-architecture.md`
   - **acceptance_criteria**:
@@ -656,7 +661,7 @@
     - Audit trail design
     - WCAG 2.2 AA implementation notes
 
-- [ ] 16.4 Migration / Deployment checklist
+- [x] 16.4 Migration / Deployment checklist
   - **spec_ref**: REQ-001
   - **files**: DEPLOYMENT.md in change directory
   - **acceptance_criteria**:
