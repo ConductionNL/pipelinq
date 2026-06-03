@@ -323,17 +323,12 @@ test.describe('docs: admin track', () => {
 
 	test('A4 configure CRM workflows and automation', async ({ page }) => {
 		// docs/tutorials/admin/04-configure-automation.md
+		// Automation authoring now lives in NC Flow admin / n8n (migrate-automation-to-flow-leaf).
 		await page.goto('/index.php/settings/admin/pipelinq')
 		await page.waitForLoadState('networkidle').catch(() => {})
 		await dismissOverlays(page)
 		await page.waitForTimeout(900)
 		await shoot(page, 'admin', '04-admin-settings.png')
-		await go(page, '/automations')
-		await shoot(page, 'admin', '04-states.png')
-		const had = await captureCreateDialog(page, 'admin', '04-rule.png')
-		if (!had) {
-			await shoot(page, 'admin', '04-rule.png')
-		}
 	})
 
 	test('A5 connect contacts and calendar sync', async ({ page }) => {

@@ -35,6 +35,7 @@ use Psr\Log\LoggerInterface;
  * Service for managing Pipelinq settings.
  *
  * @spec openspec/changes/migrate-kennisbank-to-xwiki-leaf/tasks.md#task-1.2
+ * @spec openspec/changes/migrate-automation-to-flow-leaf/tasks.md#task-1.1
  */
 class SettingsService
 {
@@ -51,8 +52,6 @@ class SettingsService
         'leadProduct_schema',
         'intakeForm_schema',
         'intakeSubmission_schema',
-        'automation_schema',
-        'automationLog_schema',
         'contactmoment_schema',
         'task_schema',
         'emailLink_schema',

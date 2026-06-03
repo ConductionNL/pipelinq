@@ -32,6 +32,7 @@ use Psr\Container\ContainerInterface;
  * Service for loading and importing Pipelinq configuration.
  *
  * @spec openspec/changes/migrate-kennisbank-to-xwiki-leaf/tasks.md#task-1.2
+ * @spec openspec/changes/migrate-automation-to-flow-leaf/tasks.md#task-1.1
  */
 class SettingsLoadService
 {
@@ -52,8 +53,6 @@ class SettingsLoadService
         'leadProduct',
         'intakeForm',
         'intakeSubmission',
-        'automation',
-        'automationLog',
         'contactmoment',
         'task',
         'emailLink',
