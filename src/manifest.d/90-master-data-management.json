@@ -1,0 +1,70 @@
+{
+  "menu": [
+    {
+      "id": "MdmMasterEntities",
+      "label": "Master data",
+      "icon": "icon-category-organization",
+      "route": "MdmMasterEntities",
+      "order": 140
+    },
+    {
+      "id": "MdmDataQuality",
+      "label": "Data quality",
+      "icon": "icon-category-monitoring",
+      "route": "MdmDataQuality",
+      "order": 141
+    },
+    {
+      "id": "MdmDuplicates",
+      "label": "Duplicates",
+      "icon": "icon-category-search",
+      "route": "MdmDuplicates",
+      "order": 142
+    }
+  ],
+  "pages": [
+    {
+      "id": "MdmMasterEntities",
+      "route": "/mdm/master-entities",
+      "type": "custom",
+      "title": "Master entities",
+      "component": "MdmMasterEntityListView"
+    },
+    {
+      "id": "MdmMasterEntityDetail",
+      "route": "/mdm/master-entities/:id",
+      "type": "custom",
+      "title": "Master entity",
+      "component": "MdmMasterEntityDetailView"
+    },
+    {
+      "id": "MdmDataQuality",
+      "route": "/mdm/data-quality",
+      "type": "custom",
+      "title": "Data quality",
+      "component": "MdmDataQualityDashboard"
+    },
+    {
+      "id": "MdmDuplicates",
+      "route": "/mdm/duplicates",
+      "type": "custom",
+      "title": "Duplicate candidates",
+      "component": "MdmDuplicateCandidatesDashboard"
+    },
+    {
+      "id": "MdmTrustConfig",
+      "route": "/mdm/trust-config",
+      "type": "list",
+      "title": "Trust configuration",
+      "register": "pipelinq",
+      "schema": "trustConfiguration"
+    },
+    {
+      "id": "MdmSyncQueue",
+      "route": "/mdm/sync-queue",
+      "type": "custom",
+      "title": "Sync queue",
+      "component": "MdmSyncQueueAdmin"
+    }
+  ]
+}
