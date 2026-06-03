@@ -21,7 +21,11 @@
 			@row-click="openRun"
 			@page-changed="onPageChange">
 			<template #actions="{ row }">
-				<NcButton v-if="canRetry(row)" type="tertiary" :disabled="busyId === row.id" @click.stop="retry(row)">
+				<NcButton
+					v-if="canRetry(row)"
+					type="tertiary"
+					:disabled="busyId === row.id"
+					@click.stop="retry(row)">
 					{{ t('pipelinq', 'Retry') }}
 				</NcButton>
 			</template>
