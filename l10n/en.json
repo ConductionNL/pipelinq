@@ -1126,7 +1126,10 @@
         "Failed to save refund.": "Failed to save refund.",
         "This will reject the refund. Enter a reason for the rejection.": "This will reject the refund. Enter a reason for the rejection.",
         "Vul een reden in voor de afwijzing": "Enter a reason for the rejection",
-        "Max {max}": "Max {max}"
+        "Max {max}": "Max {max}",
+        "app-availability.title": "Required application unavailable",
+        "app-availability.description": "This application requires OpenRegister to be installed and enabled.",
+        "app-availability.action": "Install OpenRegister"
     },
     "plurals": {}
 }
