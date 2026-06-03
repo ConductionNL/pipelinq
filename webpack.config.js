@@ -61,6 +61,10 @@ webpackConfig.entry = {
 		import: path.join(__dirname, 'src', 'createLeadWidget.js'),
 		filename: appId + '-createLeadWidget.js',
 	},
+	portal: {
+		import: path.join(__dirname, 'src', 'portal.js'),
+		filename: appId + '-portal.js',
+	},
 }
 
 // Use local source when available (monorepo dev), otherwise fall back to npm package
