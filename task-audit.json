@@ -1,13 +1,14 @@
 {
-  "spec": "openspec/changes/pipelinq-manifest-i18n-tenant",
+  "spec": "openspec/changes/migrate-kennisbank-to-xwiki-leaf",
   "verified": [
-    {"task": "8.1", "file": "openspec/manifest.yaml", "ok": true, "note": "tier:3, dependencies:[openregister], all required consumes entries present"},
-    {"task": "8.2", "file": "openspec/manifest.yaml", "ok": true, "note": "openregister.min-version: 1.0.2 (includes contacts-actions)"},
-    {"task": "8.3", "file": "openspec/manifest.yaml", "ok": true, "note": "pipelinq.role: object-store-exemplar declared"},
-    {"task": "8.4", "file": null, "ok": null, "note": "PENDING: Hydra manifest schema not yet shipped — explicitly conditional"},
-    {"task": "9.1", "file": "src/store/modules/object.js", "ok": true, "note": "useTenantContext dependency explicitly declared in JSDoc + commented-out factory option"},
-    {"task": "9.2", "file": "lib/Settings/pipelinq_register.json", "ok": true, "note": "translatable:true added to kennisartikel title/body/summary, lead title/description, task subject/description"},
-    {"task": "9.3", "file": "lib/Service/ScheduledTaskService.php", "ok": true, "note": "applyAcceptLanguage() forwards Accept-Language to OR LanguageService; wired in CallbackController and SchedulesController"}
+    {"task": "0.1", "file": "docs/Integrations/xwiki-openconnector-source.yaml", "ok": true, "note": "xwiki OpenConnector source template already present"},
+    {"task": "1.1", "file": "src/views/kennisbank/", "ok": true, "note": "Directory removed; no remaining kennisbank views"},
+    {"task": "1.1", "file": "src/components/kennisbank/", "ok": true, "note": "Directory removed; no remaining kennisbank components"},
+    {"task": "1.2", "file": "lib/Settings/pipelinq_register.json", "ok": true, "note": "kennisartikel, kenniscategorie, kennisfeedback removed from schemas list and definitions"},
+    {"task": "1.3", "file": "lib/", "ok": true, "note": "No XWikiController, XWikiWidget, or XWikiSidebarTab present"},
+    {"task": "2.1", "file": "lib/Settings/pipelinq_register.json", "ok": true, "note": "xwiki added to linkedTypes on client, lead, request"},
+    {"task": "3.1", "file": "src/manifest.json", "ok": true, "note": "openconnector in dependencies; CnXwikiTab and CnXwikiWidget added to ClientDetail/LeadDetail/RequestDetail"},
+    {"task": "4.1", "file": "openspec/changes/migrate-kennisbank-to-xwiki-leaf/tasks.md", "ok": true, "note": "Follow-up migration documented; maintainer must open tracking issue"}
   ],
   "stubs": [],
   "missing_routes": []
