@@ -111,6 +111,68 @@ class RegisterFragmentMergeTest extends TestCase
     }//end testListValuesAreReplaced()
 
     /**
+     * The register 'schemas[]' membership list is union-merged, not replaced.
+     *
+     * A fragment that contributes its own schema slugs must extend the
+     * monolith's register membership, never clobber it (ADR-037).
+     *
+     * @return void
+     */
+    public function testRegisterSchemasListIsUnioned(): void
+    {
+        $base = [
+            'components' => [
+                'registers' => ['pipelinq' => ['schemas' => ['client', 'contact']]],
+            ],
+        ];
+        $override = [
+            'components' => [
+                'registers' => ['pipelinq' => ['schemas' => ['berichtenboxMessage', 'contact']]],
+            ],
+        ];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(
+            ['client', 'contact', 'berichtenboxMessage'],
+            $result['components']['registers']['pipelinq']['schemas']
+        );
+    }//end testRegisterSchemasListIsUnioned()
+
+    /**
+     * The seed 'components.objects[]' list is union-merged (appended).
+     *
+     * @return void
+     */
+    public function testSeedObjectsListIsUnioned(): void
+    {
+        $base     = ['components' => ['objects' => [['slug' => 'a']]]];
+        $override = ['components' => ['objects' => [['slug' => 'b']]]];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(
+            [['slug' => 'a'], ['slug' => 'b']],
+            $result['components']['objects']
+        );
+    }//end testSeedObjectsListIsUnioned()
+
+    /**
+     * Non-union list keys (e.g. 'required') are still replaced wholesale.
+     *
+     * @return void
+     */
+    public function testNonUnionListStillReplaced(): void
+    {
+        $base     = ['required' => ['a', 'b']];
+        $override = ['required' => ['c']];
+
+        $result = $this->deepMerge($base, $override);
+
+        $this->assertSame(['c'], $result['required']);
+    }//end testNonUnionListStillReplaced()
+
+    /**
      * isList() distinguishes sequential lists from associative maps.
      *
      * @return void

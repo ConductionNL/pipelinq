@@ -51,16 +51,34 @@ if (class_exists(ObjectService::class) === false) {
         }//end find()
 
         /**
-         * Find all objects matching the given filters.
+         * Find all objects matching the given filters/config.
          *
-         * @param array<string, mixed> $filters Search filters and options.
+         * The parameter is named `config` to match the real OpenRegister
+         * ObjectService signature so callers using the `findAll(config: ...)`
+         * named-argument form resolve correctly in unit tests.
+         *
+         * @param array<string, mixed> $config Search filters and options.
          *
          * @return array<string, mixed>
          */
-        public function findAll(array $filters = []): array
+        public function findAll(array $config = []): array
         {
             return [];
         }//end findAll()
+
+        /**
+         * Create a new object from a data array (matches the real OR signature).
+         *
+         * @param array<string, mixed> $data          The data to persist.
+         * @param bool                 $_rbac         RBAC flag.
+         * @param bool                 $_multitenancy Multitenancy flag.
+         *
+         * @return array<string, mixed>|object
+         */
+        public function createObject(array $data = [], bool $_rbac = true, bool $_multitenancy = true): array|object
+        {
+            return [];
+        }//end createObject()
 
         /**
          * Save (create or update) an object.
@@ -74,10 +92,10 @@ if (class_exists(ObjectService::class) === false) {
          * @return array<string, mixed>|object
          */
         public function saveObject(
-            array|object $objectOrArray,
-            array $extend = [],
-            string $register = '',
-            string $schema = '',
+            array|object $object,
+            ?array $extend = [],
+            string|int|null $register = null,
+            string|int|null $schema = null,
             ?string $uuid = null,
         ): array|object {
             return [];

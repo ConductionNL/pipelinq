@@ -52,6 +52,24 @@ class ConfigFileLoaderService
     private const REGISTER_FRAGMENT_DIR = '/lib/Settings/register.d';
 
     /**
+     * Configuration list keys that fragments contribute to *additively*.
+     *
+     * The default merge semantics replace a list value wholesale (ADR-037), but
+     * a register's `schemas[]` membership list and the top-level seed
+     * `components.objects[]` list are *collections* that every fragment extends.
+     * Replacing them would drop the monolith's own schemas/seed objects (and any
+     * earlier fragment's contributions) the moment a single fragment touched the
+     * key. These keys are therefore union-merged: the fragment's entries are
+     * appended to the base, with scalar membership entries de-duplicated.
+     *
+     * @var array<int, string>
+     */
+    private const MERGE_UNION_LIST_KEYS = [
+        'schemas',
+        'objects',
+    ];
+
+    /**
      * Constructor.
      *
      * @param IAppManager $appManager The app manager.
@@ -111,6 +129,9 @@ class ConfigFileLoaderService
      * @return array The merged configuration data.
      *
      * @throws RuntimeException If a fragment file cannot be read or parsed.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     private function mergeRegisterFragments(array $data, string $appPath): array
     {
@@ -176,21 +197,77 @@ class ConfigFileLoaderService
     private static function deepMergeConfig(array $base, array $override): array
     {
         foreach ($override as $key => $value) {
-            if (is_array($value) === true
-                && isset($base[$key]) === true
-                && is_array($base[$key]) === true
-                && self::isList(value: $value) === false
-                && self::isList(value: $base[$key]) === false
-            ) {
-                $base[$key] = self::deepMergeConfig(base: $base[$key], override: $value);
-                continue;
-            }
-
-            $base[$key] = $value;
-        }//end foreach
+            $base[$key] = self::mergeValue(
+                key: $key,
+                value: $value,
+                base: ($base[$key] ?? null)
+            );
+        }
 
         return $base;
     }//end deepMergeConfig()
+
+    /**
+     * Resolve the merged value for a single key.
+     *
+     * Two nested arrays are union-merged when the key is a recognised collection
+     * list (register schemas[] membership, seed components.objects[]) so that
+     * fragments append rather than replace (ADR-037); two associative arrays are
+     * deep-merged recursively; anything else takes the override value.
+     *
+     * @param string $key   The configuration key.
+     * @param mixed  $value The override value for the key.
+     * @param mixed  $base  The existing base value (or null when absent).
+     *
+     * @return mixed The merged value.
+     */
+    private static function mergeValue(string $key, mixed $value, mixed $base): mixed
+    {
+        if (is_array($value) === false || is_array($base) === false) {
+            return $value;
+        }
+
+        $valueIsList = self::isList(value: $value);
+        if ($valueIsList !== self::isList(value: $base)) {
+            return $value;
+        }
+
+        if ($valueIsList === true) {
+            if (in_array($key, self::MERGE_UNION_LIST_KEYS, true) === true) {
+                return self::unionLists(base: $base, override: $value);
+            }
+
+            return $value;
+        }
+
+        return self::deepMergeConfig(base: $base, override: $value);
+    }//end mergeValue()
+
+    /**
+     * Append override list entries to a base list, de-duplicating scalars.
+     *
+     * Scalar entries (e.g. schema-slug membership strings) are appended only
+     * when not already present, so a fragment re-declaring an existing schema
+     * slug does not create a duplicate. Non-scalar entries (e.g. seed object
+     * arrays) are always appended, since they are distinct records.
+     *
+     * @param array $base     The base list.
+     * @param array $override The fragment list to union onto the base.
+     *
+     * @return array The unioned list.
+     */
+    private static function unionLists(array $base, array $override): array
+    {
+        foreach ($override as $entry) {
+            if (is_scalar($entry) === true && in_array($entry, $base, true) === true) {
+                continue;
+            }
+
+            $base[] = $entry;
+        }
+
+        return array_values($base);
+    }//end unionLists()
 
     /**
      * Determine whether an array is a sequential list (zero-indexed, no gaps).
@@ -208,7 +285,7 @@ class ConfigFileLoaderService
         }
 
         $expectedKey = 0;
-        foreach ($value as $key => $unused) {
+        foreach (array_keys($value) as $key) {
             if ($key !== $expectedKey) {
                 return false;
             }

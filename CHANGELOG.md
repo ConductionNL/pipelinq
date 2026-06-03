@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.29] - 2026-06-03
+
+### Added
+
+- **MijnOverheid Berichtenbox bridge** (burgerportaal-mijnoverheid-bridge) — a
+  two-way integration between Pipelinq zaken/contactmomenten and the Dutch
+  government MijnOverheid Berichtenbox via the Logius BBK 1.7 koppelvlak:
+  - Outbound status push on zaak transition, rendered from per-zaaktype-per-status
+    templates (server-side XHTML validation, 200-char subject cap).
+  - Inbound reply ingestion via a signature-verified Logius webhook, creating a
+    new contactmoment on the same zaak (reply scoped to its parent — IDOR-safe).
+  - BSN → mailbox resolution with a 24-hour TTL cache keyed by an HMAC hash.
+  - 5-Dutch-working-day unread email fallback (weekends + official holidays,
+    incl. Easter-derived dates, excluded) per BBK 1.7 Art. 3.5.
+  - Append-only, Archiefwet-retained delivery audit log with SHA-256 payload
+    integrity hashing.
+  - AES-256-GCM BSN encryption at rest with key rotation and AVG Art. 17
+    crypto-shredding; BSNs masked in logs, never stored or logged in plaintext.
+  - Logius credentials and the PKIoverheid signing key are read from the
+    app-config vault (ADR-005) — never hardcoded.
+  - Five OpenRegister entities shipped as an additive `register.d/` fragment
+    (ADR-037), with the config-loader extended to union-merge register
+    `schemas[]` membership and seed `components.objects[]`.
+
 ## [0.2.28] - 2026-06-01
 
 ### Security

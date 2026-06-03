@@ -71,6 +71,11 @@ class SettingsLoadService
         'refundReason',
         'posRefund',
         'posRefundLine',
+        'berichtenboxMessage',
+        'berichtenboxReply',
+        'berichtenboxTemplate',
+        'mailboxResolution',
+        'deliveryAuditLog',
     ];
 
     /**

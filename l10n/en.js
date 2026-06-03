@@ -1135,7 +1135,8 @@ OC.L10N.register(
     "Failed to save refund." : "Failed to save refund.",
     "This will reject the refund. Enter a reason for the rejection." : "This will reject the refund. Enter a reason for the rejection.",
     "Vul een reden in voor de afwijzing" : "Enter a reason for the rejection",
-    "Max {max}" : "Max {max}"
+    "Max {max}" : "Max {max}",
+    "This message is also available in your MijnOverheid Berichtenbox." : "This message is also available in your MijnOverheid Berichtenbox."
 },
 "nplurals=2; plural=(n != 1);"
 );

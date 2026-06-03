@@ -1,0 +1,401 @@
+{
+    "components": {
+        "registers": {
+            "pipelinq": {
+                "schemas": [
+                    "berichtenboxMessage",
+                    "berichtenboxReply",
+                    "berichtenboxTemplate",
+                    "mailboxResolution",
+                    "deliveryAuditLog"
+                ]
+            }
+        },
+        "schemas": {
+            "berichtenboxMessage": {
+                "slug": "berichtenboxMessage",
+                "title": "Berichtenbox Message",
+                "icon": "EmailArrowRight",
+                "version": "1.0.0",
+                "summary": "An outbound MijnOverheid Berichtenbox message",
+                "description": "Tracks an outbound status message delivered to a citizen's MijnOverheid Berichtenbox via the Logius BBK 1.7 koppelvlak, including delivery state, read receipts, and the 5-working-day email fallback. The citizen's BSN is stored encrypted (AES-256-GCM) and indexed only by a keyed hash; the plaintext BSN is never stored or logged.",
+                "@type": "Message",
+                "required": [
+                    "subject",
+                    "body",
+                    "templateId",
+                    "deliveryStatus"
+                ],
+                "properties": {
+                    "bsn": {
+                        "type": "string",
+                        "title": "BSN (encrypted)",
+                        "description": "AES-256-GCM ciphertext of the citizen's BSN. Never plaintext."
+                    },
+                    "bsnHash": {
+                        "type": "string",
+                        "title": "BSN hash",
+                        "description": "HMAC-SHA256 of the BSN used for index lookups."
+                    },
+                    "mailboxResolvedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Mailbox resolved at"
+                    },
+                    "mailboxAvailable": {
+                        "type": "boolean",
+                        "title": "Mailbox available"
+                    },
+                    "contactmomentId": {
+                        "type": "string",
+                        "title": "Contactmoment ID"
+                    },
+                    "zaakId": {
+                        "type": "string",
+                        "title": "Zaak ID"
+                    },
+                    "subject": {
+                        "type": "string",
+                        "maxLength": 200,
+                        "title": "Subject"
+                    },
+                    "body": {
+                        "type": "string",
+                        "title": "Body (XHTML strict)"
+                    },
+                    "templateId": {
+                        "type": "string",
+                        "title": "Template ID"
+                    },
+                    "attachments": {
+                        "type": "array",
+                        "title": "Attachments",
+                        "items": {
+                            "type": "object"
+                        }
+                    },
+                    "sentToBerichtenboxAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Sent to Berichtenbox at"
+                    },
+                    "logiusMessageId": {
+                        "type": "string",
+                        "title": "Logius message ID"
+                    },
+                    "deliveryStatus": {
+                        "type": "string",
+                        "title": "Delivery status",
+                        "enum": [
+                            "queued",
+                            "sent",
+                            "read",
+                            "fallback-emailed",
+                            "failed",
+                            "opted-out"
+                        ],
+                        "default": "queued"
+                    },
+                    "readAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Read at"
+                    },
+                    "fallbackTriggeredAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Fallback triggered at"
+                    },
+                    "fallbackEmail": {
+                        "type": "string",
+                        "title": "Fallback email"
+                    },
+                    "fallbackSentAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Fallback sent at"
+                    },
+                    "failureReason": {
+                        "type": "string",
+                        "title": "Failure reason"
+                    },
+                    "retryCount": {
+                        "type": "integer",
+                        "title": "Retry count",
+                        "default": 0
+                    },
+                    "nextRetryAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Next retry at"
+                    }
+                }
+            },
+            "berichtenboxReply": {
+                "slug": "berichtenboxReply",
+                "title": "Berichtenbox Reply",
+                "icon": "EmailArrowLeft",
+                "version": "1.0.0",
+                "summary": "An inbound MijnOverheid Berichtenbox reply",
+                "description": "Tracks a citizen reply received via the Logius inbound webhook. Each reply spawns a new Contactmoment on the same zaak, routed to the original handling ambtenaar. BSN is stored encrypted as on the parent message.",
+                "@type": "Message",
+                "required": [
+                    "parentMessageId",
+                    "logiusReplyId",
+                    "receivedAt",
+                    "bodyText"
+                ],
+                "properties": {
+                    "parentMessageId": {
+                        "type": "string",
+                        "title": "Parent message ID"
+                    },
+                    "logiusReplyId": {
+                        "type": "string",
+                        "title": "Logius reply ID"
+                    },
+                    "receivedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Received at"
+                    },
+                    "bsn": {
+                        "type": "string",
+                        "title": "BSN (encrypted)"
+                    },
+                    "bsnHash": {
+                        "type": "string",
+                        "title": "BSN hash"
+                    },
+                    "bodyText": {
+                        "type": "string",
+                        "title": "Body text"
+                    },
+                    "attachments": {
+                        "type": "array",
+                        "title": "Attachments",
+                        "items": {
+                            "type": "object"
+                        }
+                    },
+                    "processedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Processed at"
+                    },
+                    "createdContactmomentId": {
+                        "type": "string",
+                        "title": "Created contactmoment ID"
+                    },
+                    "processingError": {
+                        "type": "string",
+                        "title": "Processing error"
+                    }
+                }
+            },
+            "berichtenboxTemplate": {
+                "slug": "berichtenboxTemplate",
+                "title": "Berichtenbox Template",
+                "icon": "FileDocumentEdit",
+                "version": "1.0.0",
+                "summary": "A per-zaaktype-per-status message template",
+                "description": "Mustache message template keyed by zaaktype + status + language. Renders the subject and XHTML-strict body for Berichtenbox messages.",
+                "@type": "CreativeWork",
+                "required": [
+                    "zaaktype",
+                    "status",
+                    "language",
+                    "subject",
+                    "body"
+                ],
+                "properties": {
+                    "zaaktype": {
+                        "type": "string",
+                        "title": "Zaaktype"
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "enum": [
+                            "received",
+                            "in-behandeling",
+                            "meer-info-nodig",
+                            "afgehandeld",
+                            "afgewezen"
+                        ]
+                    },
+                    "language": {
+                        "type": "string",
+                        "title": "Language",
+                        "enum": [
+                            "nl",
+                            "fy",
+                            "en"
+                        ],
+                        "default": "nl"
+                    },
+                    "subject": {
+                        "type": "string",
+                        "title": "Subject template"
+                    },
+                    "body": {
+                        "type": "string",
+                        "title": "Body template (XHTML strict)"
+                    },
+                    "requiresDeepLink": {
+                        "type": "boolean",
+                        "title": "Requires deep link",
+                        "default": false
+                    },
+                    "deepLinkBase": {
+                        "type": "string",
+                        "title": "Deep link base URL"
+                    }
+                }
+            },
+            "mailboxResolution": {
+                "slug": "mailboxResolution",
+                "title": "Mailbox Resolution",
+                "icon": "MailboxOpen",
+                "version": "1.0.0",
+                "summary": "A cached BSN to mailbox-availability lookup",
+                "description": "Caches the result of a Logius mailbox-check lookup, keyed by the BSN hash, with a 24-hour TTL per the Logius SLA. Used to avoid a Logius round-trip on every dispatch.",
+                "@type": "Thing",
+                "required": [
+                    "bsnHash",
+                    "mailboxAvailable",
+                    "resolvedAt",
+                    "expiresAt"
+                ],
+                "properties": {
+                    "bsn": {
+                        "type": "string",
+                        "title": "BSN (encrypted)"
+                    },
+                    "bsnHash": {
+                        "type": "string",
+                        "title": "BSN hash"
+                    },
+                    "mailboxAvailable": {
+                        "type": "boolean",
+                        "title": "Mailbox available"
+                    },
+                    "resolvedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Resolved at"
+                    },
+                    "expiresAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Expires at"
+                    },
+                    "optedOut": {
+                        "type": "boolean",
+                        "title": "Opted out",
+                        "default": false
+                    }
+                }
+            },
+            "deliveryAuditLog": {
+                "slug": "deliveryAuditLog",
+                "title": "Delivery Audit Log",
+                "icon": "ClipboardTextClock",
+                "version": "1.0.0",
+                "summary": "An append-only delivery audit entry",
+                "description": "Immutable archiefwet-retained audit record of every delivery lifecycle event (queued, sent, read, fallback, failed, reply-received, processing-error). Never updated or deleted by application code; retained per the zaak selectielijst class.",
+                "@type": "Action",
+                "required": [
+                    "messageId",
+                    "event",
+                    "eventAt",
+                    "actor",
+                    "payloadHash",
+                    "retentionUntil"
+                ],
+                "properties": {
+                    "messageId": {
+                        "type": "string",
+                        "title": "Message ID"
+                    },
+                    "event": {
+                        "type": "string",
+                        "title": "Event",
+                        "enum": [
+                            "queued",
+                            "sent",
+                            "read",
+                            "fallback",
+                            "failed",
+                            "opted-out",
+                            "reply-received",
+                            "processing-error"
+                        ]
+                    },
+                    "eventAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Event at"
+                    },
+                    "actor": {
+                        "type": "string",
+                        "title": "Actor"
+                    },
+                    "payloadHash": {
+                        "type": "string",
+                        "title": "Payload hash (SHA-256)"
+                    },
+                    "retentionUntil": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Retention until"
+                    }
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "berichtenboxTemplate",
+                    "slug": "tmpl-paspoort-afgehandeld-nl"
+                },
+                "zaaktype": "paspoortaanvraag",
+                "status": "afgehandeld",
+                "language": "nl",
+                "subject": "Uw paspoort is gereed — zaak {{zaakId}}",
+                "body": "<html><body><p>Geachte burger,</p><p>Uw paspoortaanvraag (zaak {{zaakId}}) is afgehandeld. U kunt uw paspoort ophalen bij het gemeentehuis.</p><p><a href=\"{{deepLink}}\">Bekijk de status in uw MijnOverheid Berichtenbox</a></p></body></html>",
+                "requiresDeepLink": true,
+                "deepLinkBase": "https://burgerportaal.gemeente.nl/zaak?id="
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "berichtenboxTemplate",
+                    "slug": "tmpl-rijbewijs-afgehandeld-nl"
+                },
+                "zaaktype": "rijbewijsaanvraag",
+                "status": "afgehandeld",
+                "language": "nl",
+                "subject": "Uw rijbewijs is gereed — zaak {{zaakId}}",
+                "body": "<html><body><p>Geachte burger,</p><p>Uw rijbewijsaanvraag (zaak {{zaakId}}) is afgehandeld. U kunt uw rijbewijs ophalen bij het gemeentehuis.</p><p><a href=\"{{deepLink}}\">Bekijk de status in uw MijnOverheid Berichtenbox</a></p></body></html>",
+                "requiresDeepLink": true,
+                "deepLinkBase": "https://burgerportaal.gemeente.nl/zaak?id="
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "berichtenboxTemplate",
+                    "slug": "tmpl-avg-inzage-meer-info-nl"
+                },
+                "zaaktype": "avg-inzageverzoek",
+                "status": "meer-info-nodig",
+                "language": "nl",
+                "subject": "Uw AVG-inzageverzoek: aanvullende informatie nodig",
+                "body": "<html><body><p>Geachte burger,</p><p>Voor uw inzageverzoek (zaak {{zaakId}}) hebben wij aanvullende informatie nodig.</p><p><strong>Wettelijke termijn:</strong> {{deadline}}</p><p><a href=\"{{deepLink}}\">Upload documenten in uw burgerportaal</a></p><p><strong>Grondslag:</strong> AVG Art. 15</p></body></html>",
+                "requiresDeepLink": true,
+                "deepLinkBase": "https://burgerportaal.gemeente.nl/zaak?id="
+            }
+        ]
+    }
+}

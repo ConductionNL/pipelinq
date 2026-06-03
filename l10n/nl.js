@@ -1136,7 +1136,8 @@ OC.L10N.register(
     "Failed to save refund." : "Opslaan van retour mislukt.",
     "This will reject the refund. Enter a reason for the rejection." : "Hiermee wijs je de retour af. Vul een reden in voor de afwijzing.",
     "Vul een reden in voor de afwijzing" : "Vul een reden in voor de afwijzing",
-    "Max {max}" : "Max {max}"
+    "Max {max}" : "Max {max}",
+    "This message is also available in your MijnOverheid Berichtenbox." : "Dit bericht is ook beschikbaar in uw MijnOverheid Berichtenbox."
 },
 "nplurals=2; plural=(n != 1);"
 );
