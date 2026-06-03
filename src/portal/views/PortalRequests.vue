@@ -6,22 +6,34 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 	<div class="portal-requests">
 		<h1>{{ t('pipelinq', 'My requests') }}</h1>
 
-		<p v-if="error" role="alert" class="portal-error">{{ error }}</p>
+		<p v-if="error" role="alert" class="portal-error">
+			{{ error }}
+		</p>
 
 		<table v-if="rows.length" class="portal-table" role="grid">
 			<thead>
 				<tr>
-					<th scope="col">{{ t('pipelinq', 'Number') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Subject') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Status') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Date') }}</th>
+					<th scope="col">
+						{{ t('pipelinq', 'Number') }}
+					</th>
+					<th scope="col">
+						{{ t('pipelinq', 'Subject') }}
+					</th>
+					<th scope="col">
+						{{ t('pipelinq', 'Status') }}
+					</th>
+					<th scope="col">
+						{{ t('pipelinq', 'Date') }}
+					</th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr v-for="row in rows" :key="row.id">
 					<td>{{ row.number }}</td>
 					<td>
-						<button class="portal-button-link" @click="open(row.id)">{{ row.subject }}</button>
+						<button class="portal-button-link" @click="open(row.id)">
+							{{ row.subject }}
+						</button>
 					</td>
 					<td>{{ row.status }}</td>
 					<td>{{ row.date }}</td>
@@ -40,7 +52,9 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 			<form v-if="detail.canReply" @submit.prevent="sendReply">
 				<label for="portal-reply">{{ t('pipelinq', 'Your reply') }}</label>
 				<textarea id="portal-reply" v-model="replyText" required />
-				<button type="submit" class="portal-button-primary">{{ t('pipelinq', 'Send reply') }}</button>
+				<button type="submit" class="portal-button-primary">
+					{{ t('pipelinq', 'Send reply') }}
+				</button>
 			</form>
 		</section>
 
@@ -61,7 +75,9 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 					v-model="form.body"
 					required />
 			</div>
-			<p v-if="submitMessage" role="alert" class="portal-success">{{ submitMessage }}</p>
+			<p v-if="submitMessage" role="alert" class="portal-success">
+				{{ submitMessage }}
+			</p>
 			<button type="submit" :disabled="submitting" class="portal-button-primary">
 				{{ t('pipelinq', 'Submit request') }}
 			</button>
