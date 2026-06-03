@@ -246,43 +246,9 @@
 				"register": "pipelinq",
 				"schema": "client",
 				"sidebar": {
-					"enabled": true,
-					"showMetadata": true,
-					"tabs": [
-						{
-							"id": "flow",
-							"label": "Flow",
-							"component": "CnFlowTab",
-							"config": {
-								"linkedType": "flow"
-							}
-						},
-						{
-							"id": "time-tracker",
-							"label": "Time",
-							"component": "CnTimeTrackerTab",
-							"config": {
-								"linkedType": "time-tracker"
-							}
-						}
-					]
-				},
-				"widgets": [
-					{
-						"id": "client-flow-card",
-						"component": "CnFlowCard",
-						"config": {
-							"linkedType": "flow"
-						}
-					},
-					{
-						"id": "client-time-card",
-						"component": "CnTimeTrackerCard",
-						"config": {
-							"linkedType": "time-tracker"
-						}
-					}
-				]
+					"enabled": false,
+					"showMetadata": true
+				}
 			}
 		},
 		{
@@ -325,59 +291,9 @@
 				"register": "pipelinq",
 				"schema": "request",
 				"sidebar": {
-					"enabled": true,
-					"showMetadata": true,
-					"tabs": [
-						{
-							"id": "deck",
-							"label": "Deck",
-							"component": "CnDeckTab",
-							"config": {
-								"linkedType": "deck"
-							}
-						},
-						{
-							"id": "flow",
-							"label": "Flow",
-							"component": "CnFlowTab",
-							"config": {
-								"linkedType": "flow"
-							}
-						},
-						{
-							"id": "time-tracker",
-							"label": "Time",
-							"component": "CnTimeTrackerTab",
-							"config": {
-								"linkedType": "time-tracker"
-							}
-						}
-					]
-				},
-				"widgets": [
-					{
-						"id": "request-deck-kanban",
-						"component": "CnDeckCard",
-						"config": {
-							"view": "mini-kanban",
-							"linkedType": "deck"
-						}
-					},
-					{
-						"id": "request-flow-card",
-						"component": "CnFlowCard",
-						"config": {
-							"linkedType": "flow"
-						}
-					},
-					{
-						"id": "request-time-card",
-						"component": "CnTimeTrackerCard",
-						"config": {
-							"linkedType": "time-tracker"
-						}
-					}
-				]
+					"enabled": false,
+					"showMetadata": true
+				}
 			}
 		},
 		{
@@ -505,59 +421,9 @@
 				"register": "pipelinq",
 				"schema": "lead",
 				"sidebar": {
-					"enabled": true,
-					"showMetadata": true,
-					"tabs": [
-						{
-							"id": "deck",
-							"label": "Deck",
-							"component": "CnDeckTab",
-							"config": {
-								"linkedType": "deck"
-							}
-						},
-						{
-							"id": "flow",
-							"label": "Flow",
-							"component": "CnFlowTab",
-							"config": {
-								"linkedType": "flow"
-							}
-						},
-						{
-							"id": "time-tracker",
-							"label": "Time",
-							"component": "CnTimeTrackerTab",
-							"config": {
-								"linkedType": "time-tracker"
-							}
-						}
-					]
-				},
-				"widgets": [
-					{
-						"id": "lead-deck-kanban",
-						"component": "CnDeckCard",
-						"config": {
-							"view": "mini-kanban",
-							"linkedType": "deck"
-						}
-					},
-					{
-						"id": "lead-flow-card",
-						"component": "CnFlowCard",
-						"config": {
-							"linkedType": "flow"
-						}
-					},
-					{
-						"id": "lead-time-card",
-						"component": "CnTimeTrackerCard",
-						"config": {
-							"linkedType": "time-tracker"
-						}
-					}
-				]
+					"enabled": false,
+					"showMetadata": true
+				}
 			}
 		},
 		{

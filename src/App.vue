@@ -34,6 +34,27 @@
 		:translate="translateForApp"
 		:permissions="permissions">
 		<template #sidebar>
+			<!--
+				When active, this renders CnObjectSidebar's default tabs (Files,
+				Notes, Tags, Tasks, Audit trail). The detail pages ClientDetail,
+				RequestDetail and LeadDetail previously declared Flow/Deck/Time-tracker
+				sidebar tabs + body cards in the manifest (component:
+				"CnFlowTab"/"CnDeckTab"/"CnTimeTrackerTab" + matching *Card widgets).
+				Those were removed because the components do not exist: they are meant
+				to be OpenRegister integration "leaf" components surfaced via the
+				pluggable integration registry, but the leaf code — and even
+				registerLeafIntegrations — was never implemented in any repo, so they
+				rendered iconless tabs with empty panels. With the custom tabs gone,
+				the default tabs aren't wanted there either, so those three pages now
+				set config.sidebar.enabled: false (no sidebar at all).
+				To bring the integrations back once the leaves ship: re-enable the
+				sidebar, register the integrations on window.OCA.OpenRegister.integrations,
+				and set :use-registry="true" here (NOT the manifest `component:` string
+				path). See openspec/changes/migrate-automation-to-flow-leaf,
+				migrate-pipeline-to-deck-leaf, and archive/2026-05-31-time-entry-core.
+				Verified absent on the development branch of pipelinq, openregister,
+				and @conduction/nextcloud-vue (2026-06-03).
+			-->
 			<CnObjectSidebar
 				v-if="objectSidebarState.active"
 				:title="objectSidebarState.title"
