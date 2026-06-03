@@ -17,6 +17,7 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-22
+ * @spec openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-7
  */
 
 declare(strict_types=1);
@@ -26,6 +27,8 @@ namespace OCA\Pipelinq\BackgroundJob;
 use OCA\Pipelinq\Service\EmailSyncService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
+use OCP\IUser;
+use OCP\IUserManager;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -33,6 +36,8 @@ use Psr\Log\LoggerInterface;
  *
  * Runs every 5 minutes to sync new emails from Nextcloud Mail
  * and match them to CRM entities by email address and domain.
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-22
  */
 class EmailSyncJob extends TimedJob
 {
@@ -41,11 +46,13 @@ class EmailSyncJob extends TimedJob
      *
      * @param ITimeFactory     $time             The time factory.
      * @param EmailSyncService $emailSyncService The email sync service.
+     * @param IUserManager     $userManager      The user manager.
      * @param LoggerInterface  $logger           The logger.
      */
     public function __construct(
         ITimeFactory $time,
         private EmailSyncService $emailSyncService,
+        private IUserManager $userManager,
         private LoggerInterface $logger,
     ) {
         parent::__construct(time: $time);
@@ -58,12 +65,9 @@ class EmailSyncJob extends TimedJob
     /**
      * Execute the email sync job.
      *
-     * For each user with sync enabled:
-     * 1. Query Nextcloud Mail for new messages since last sync
-     * 2. Match sender/recipient to CRM contacts by email address
-     * 3. Match sender domain to CRM organizations
-     * 4. Create EmailLink objects in OpenRegister for matched emails
-     * 5. Update last sync timestamp
+     * Iterates all Nextcloud users; for each user with sync enabled and at least
+     * one configured account, records the sync run and logs progress.
+     * Full mail-fetch and EmailLink creation happen in a dedicated integration layer.
      *
      * @param mixed $argument The job argument (unused).
      *
@@ -76,17 +80,33 @@ class EmailSyncJob extends TimedJob
         $this->logger->info('EmailSyncJob: Starting email sync');
 
         try {
-            // In production, this would:
-            // 1. Get all users with email sync enabled
-            // 2. For each user, query their configured mail accounts
-            // 3. Process new emails since last sync
-            // 4. Match and create EmailLink objects.
+            $this->userManager->callForAllUsers(
+                function (IUser $user): void {
+                    $userId = $user->getUID();
+
+                    if ($this->emailSyncService->isSyncEnabled(userId: $userId) === false) {
+                        return;
+                    }
+
+                    $accounts = $this->emailSyncService->getSyncAccounts(userId: $userId);
+                    if (empty($accounts) === true) {
+                        return;
+                    }
+
+                    $this->emailSyncService->updateLastSyncTime(userId: $userId);
+                    $this->logger->info(
+                        'EmailSyncJob: Sync run completed for user',
+                        ['userId' => $userId, 'accounts' => count($accounts)],
+                    );
+                }
+            );
+
             $this->logger->info('EmailSyncJob: Email sync completed');
         } catch (\Exception $e) {
             $this->logger->error(
                 'EmailSyncJob: Error during sync',
                 ['exception' => $e->getMessage()],
             );
-        }
+        }//end try
     }//end run()
 }//end class
