@@ -311,7 +311,8 @@
             "type": "string",
             "description": "Lead title / opportunity name (schema:name)",
             "maxLength": 255,
-            "minLength": 1
+            "minLength": 1,
+            "translatable": true
           },
           "client": {
             "type": "string",
@@ -402,7 +403,8 @@
           "description": {
             "type": "string",
             "description": "Free-text description of the opportunity (used by the qualification-score calculation: presence is worth +5 points)",
-            "visible": false
+            "visible": false,
+            "translatable": true
           },
           "stageEnteredAt": {
             "type": "string",
@@ -1472,12 +1474,14 @@
             "type": "string",
             "description": "Task subject line (VNG gevraagdeHandeling / schema:name)",
             "maxLength": 255,
-            "minLength": 1
+            "minLength": 1,
+            "translatable": true
           },
           "description": {
             "type": "string",
             "description": "Detailed task description (VNG toelichting / schema:description)",
-            "visible": false
+            "visible": false,
+            "translatable": true
           },
           "status": {
             "type": "string",
@@ -1632,17 +1636,23 @@
             "type": "string",
             "description": "Article title (schema:headline)",
             "maxLength": 255,
-            "minLength": 1
+            "minLength": 1,
+            "translatable": true,
+            "sourceLanguage": "nl"
           },
           "body": {
             "type": "string",
             "description": "Article content in Markdown format (schema:articleBody)",
-            "visible": false
+            "visible": false,
+            "translatable": true,
+            "sourceLanguage": "nl"
           },
           "summary": {
             "type": "string",
             "description": "Short summary for search result snippets (schema:abstract)",
-            "maxLength": 500
+            "maxLength": 500,
+            "translatable": true,
+            "sourceLanguage": "nl"
           },
           "status": {
             "type": "string",
