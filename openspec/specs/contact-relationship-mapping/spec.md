@@ -18,6 +18,8 @@ Understanding how contacts relate to each other is essential for both government
 
 ---
 
+@e2e exclude Contact↔organization relationship graph data + API — verified by PHPUnit/Newman, no dedicated browser view.
+
 ## Requirements
 
 ### Requirement: Relationship entity [V1]

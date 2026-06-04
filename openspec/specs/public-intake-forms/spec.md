@@ -14,6 +14,8 @@ Organizations need to capture leads from their website without requiring visitor
 
 **Tender relevance:** Formulieren/intake appears in 61% of government tenders (42/69). The combination with klantinteractie (65%) makes public intake a critical entry point for citizen service workflows.
 
+@e2e exclude Public intake form builder, submission + spam/validation API and embed/CORS endpoints — verified by Newman API + PHPUnit; the anonymous public form endpoints are not in the authenticated pipelinq e2e suite.
+
 ## ADDED Requirements
 
 ---

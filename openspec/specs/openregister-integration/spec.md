@@ -26,6 +26,8 @@ See [ARCHITECTURE.md](../../docs/ARCHITECTURE.md) for full entity definitions. T
 
 Note: Stages are stored as an embedded array within the `pipeline` schema (`stages: [{ name, order, probability?, isClosed?, isWon?, color? }]`), not as a separate `stage` schema. This simplifies the data model while maintaining all stage configuration capabilities.
 
+@e2e exclude OpenRegister CRUD/store/validation/RBAC/repair-step plumbing — exercised via PHPUnit + Newman API tests and OpenRegister data assertions, not browser UI.
+
 ## Requirements
 
 ---

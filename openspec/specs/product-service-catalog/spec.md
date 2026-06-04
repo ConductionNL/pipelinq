@@ -13,6 +13,8 @@ Implement a government product and service catalog (PDC - Producten- en Diensten
 
 **Tender demand**: 65% of analyzed government tenders require a product and service catalog for citizen-facing portals, KCC werkplek integration, and omnichannel service delivery.
 
+@e2e exclude Product/service catalog (PDC) schema, UPL/IPDC/SDG taxonomy, pricing, multilingual content and public read-only API — verified by PHPUnit/Newman; product browser flows are covered by the product-catalog e2e tests.
+
 ## Requirements
 
 ### Requirement: Products MUST be stored as register objects with IPDC/UPL-compliant schema

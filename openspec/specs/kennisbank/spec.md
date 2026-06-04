@@ -19,6 +19,8 @@ Knowledge base articles are stored as OpenRegister objects in the `pipelinq` reg
 - **Category (kenniscategorie)**: name, slug, parent (UUID reference for hierarchy), description, order, icon
 - **Feedback (kennisfeedback)**: article (UUID reference), rating (nuttig/niet_nuttig), comment, agent (Nextcloud UID), timestamp
 
+@e2e exclude Knowledge-base article CRUD/search API — verified by PHPUnit/Newman; the in-app Kennisbank widgets are not yet functional (render 'Widget not available'), so no browser-UI assertion is possible.
+
 ## ADDED Requirements
 
 ---

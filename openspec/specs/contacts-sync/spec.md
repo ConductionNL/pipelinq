@@ -8,6 +8,8 @@ status: implemented
 
 Sync Pipelinq clients and contacts with Nextcloud Contacts via IManager to eliminate duplicate data entry and keep address books current.
 
+@e2e exclude Nextcloud Contacts (IContactsManager) bidirectional sync service — vCard write-back, search, and import verified by PHPUnit against the contacts backend, with no dedicated browser UI beyond the import dialog.
+
 ## Requirements
 
 ### Requirement: Write-Back Sync [MVP]

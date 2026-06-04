@@ -5,6 +5,8 @@
 
 ---
 
+@e2e exclude Documentation product-page conformance assertions — verified by the docs build + markdown conformance checks, not application browser e2e.
+
 ## Requirements
 
 ### Requirement: Canonical folder taxonomy

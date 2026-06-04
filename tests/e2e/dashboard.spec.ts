@@ -1,10 +1,25 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Pipelinq Contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * Dashboard — rewritten for the manifest-driven app shell (#392).
+ *
+ * Gate-19 @e2e traceability:
+ *   @e2e dashboard::quick-action-buttons-in-header
+ *   @e2e dashboard::display-open-leads-count
+ *   @e2e dashboard::display-open-requests-count
+ *   @e2e dashboard::display-pipeline-total-value
+ *   @e2e dashboard::display-overdue-items-count
+ *   @e2e dashboard::render-status-distribution-bars
+ *   @e2e dashboard::display-assigned-items
+ */
 import { test, expect } from '@playwright/test'
+import { openApp } from './helpers/nav'
 
-test.describe.skip('Dashboard', () => {  // TODO(#392): rewrite for manifest-driven app shell
+test.describe('Dashboard', () => {
 
 	test.beforeEach(async ({ page }) => {
-		await page.goto('/apps/pipelinq/')
-		await expect(page.getByRole('heading', { name: 'Dashboard', level: 2 })).toBeVisible({ timeout: 10000 })
+		await openApp(page)
 	})
 
 	test('shows quick-create action buttons', async ({ page }) => {
@@ -26,9 +41,15 @@ test.describe.skip('Dashboard', () => {  // TODO(#392): rewrite for manifest-dri
 		await expect(page.getByRole('link', { name: /Overdue/ })).toHaveAttribute('href', /leads\?overdue=true/)
 	})
 
-	test('shows dashboard sections', async ({ page }) => {
+	test('shows dashboard section panels', async ({ page }) => {
 		await expect(page.getByRole('heading', { name: 'Requests by Status', level: 3 })).toBeVisible()
 		await expect(page.getByRole('heading', { name: 'My Work', level: 3 })).toBeVisible()
 		await expect(page.getByRole('heading', { name: 'Client Overview', level: 3 })).toBeVisible()
+	})
+
+	test('a KPI card navigates to its filtered view', async ({ page }) => {
+		await page.getByRole('link', { name: /Open Leads/ }).click()
+		await expect(page).toHaveURL(/\/apps\/pipelinq\/leads\?status=open/)
+		await expect(page.getByRole('heading', { name: 'Leads', level: 2 })).toBeVisible({ timeout: 20000 })
 	})
 })

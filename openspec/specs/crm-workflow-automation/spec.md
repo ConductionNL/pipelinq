@@ -16,6 +16,8 @@ Built-in automation engines are a standard expectation in modern CRM platforms. 
 
 **Tender relevance:** Workflow/procesautomatisering appears in 38% of government tenders (26/69). The combination of automation with klantinteractie requirements (65% of tenders) makes CRM-specific automation a high-value differentiator.
 
+@e2e exclude CRM workflow/automation rule engine (triggers, conditions, actions, n8n webhook bridge, SLA/email sequences) — verified by PHPUnit/Newman; the admin Automations builder is out of core browser-e2e scope.
+
 ## ADDED Requirements
 
 ---

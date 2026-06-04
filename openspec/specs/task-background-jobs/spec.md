@@ -1,5 +1,7 @@
 ## ADDED Requirements
 
+@e2e exclude TimedJob cron handlers (task auto-expiry + deadline escalation notifications) — verified by PHPUnit job invocation, no browser UI.
+
 ### Requirement: Task Expiry Background Job
 
 The system MUST run a periodic background job that detects tasks past their deadline and updates their status to "verlopen".

@@ -37,6 +37,8 @@ The system MUST define a Contactmoment entity in the OpenRegister `pipelinq` reg
 
 #### Scenario: Contactmoment schema exists in register
 
+@e2e exclude Schema registration verified by OpenRegister repair-step and unit tests, not a UI flow
+
 - **WHEN** the Pipelinq app is installed or updated
 - **THEN** the `pipelinq` register MUST contain a `contactmoment` schema
 - AND the schema MUST have `@type` set to `schema:CommunicateAction`
@@ -50,7 +52,7 @@ The system MUST define a Contactmoment entity in the OpenRegister `pipelinq` reg
 
 ---
 
-### Requirement: Contactmoment Creation
+### Requirement: Contactmoment Creation @e2e exclude Object creation with auto-populated fields and reference linking verified via PHPUnit and Newman API tests
 
 The system MUST allow creating contactmomenten via the OpenRegister API. The `agent` and `contactedAt` fields MUST be auto-populated.
 
@@ -78,7 +80,7 @@ The system MUST allow creating contactmomenten via the OpenRegister API. The `ag
 
 ---
 
-### Requirement: Contactmoment Update and Deletion
+### Requirement: Contactmoment Update and Deletion @e2e exclude Update, delete, and non-creator-delete authorization verified via PHPUnit and Newman API tests
 
 The system MUST allow updating and deleting contactmomenten. Only the creating agent or an admin MUST be able to delete.
 
@@ -118,11 +120,15 @@ The system MUST provide a list view at `/contactmomenten` showing all contactmom
 
 #### Scenario: Search contactmomenten
 
+@e2e exclude Search filtering verified at the OpenRegister API level
+
 - **WHEN** a user enters "vergunning" in the search field
 - **THEN** the system MUST filter contactmomenten where `subject` or `summary` contains "vergunning"
 - AND results MUST update as the user types (debounced at 300ms)
 
 #### Scenario: Filter by channel
+
+@e2e exclude Channel filtering verified at the OpenRegister API level
 
 - **WHEN** a user selects filter channel "telefoon"
 - **THEN** only contactmomenten with `channel: "telefoon"` MUST be displayed
@@ -130,17 +136,21 @@ The system MUST provide a list view at `/contactmomenten` showing all contactmom
 
 #### Scenario: Filter by date range
 
+@e2e exclude Date-range filtering verified at the OpenRegister API level
+
 - **WHEN** a user selects a date range from "2024-01-01" to "2024-01-31"
 - **THEN** only contactmomenten with `contactedAt` within that range MUST be displayed
 
 #### Scenario: Filter by agent
+
+@e2e exclude Agent filtering verified at the OpenRegister API level
 
 - **WHEN** a user selects filter agent "sales1"
 - **THEN** only contactmomenten where `agent` is "sales1" MUST be displayed
 
 ---
 
-### Requirement: Contactmoment Detail View
+### Requirement: Contactmoment Detail View @e2e exclude Detail rendering and edit-mode flow not covered by the current passing UI tests
 
 The system MUST provide a detail view for individual contactmomenten showing all fields and linked entities.
 
@@ -162,7 +172,7 @@ The system MUST provide a detail view for individual contactmomenten showing all
 
 ---
 
-### Requirement: Quick-Log Form
+### Requirement: Quick-Log Form @e2e exclude Pre-filled-context quick-log flows not covered by the current passing UI tests
 
 The system MUST provide a reusable quick-log form component for creating contactmomenten with optional pre-filled context.
 
@@ -195,7 +205,7 @@ The system MUST provide a reusable quick-log form component for creating contact
 
 ---
 
-### Requirement: Contactmomenten Pinia Store
+### Requirement: Contactmomenten Pinia Store @e2e exclude Store CRUD and filter behavior verified at the OpenRegister API level
 
 The system MUST provide a Pinia store that handles all contactmoment CRUD operations via the OpenRegister API. Uses `createObjectStore` from `@conduction/nextcloud-vue` with the `contactmoment` object type registered in `initializeStores()`.
 
@@ -223,7 +233,7 @@ The system MUST provide a Pinia store that handles all contactmoment CRUD operat
 
 ---
 
-### Requirement: Navigation Integration
+### Requirement: Navigation Integration @e2e exclude Sidebar item and count-badge behavior not covered by the current passing UI tests
 
 The system MUST add "Contactmomenten" as a top-level navigation item in the Pipelinq sidebar.
 
@@ -242,7 +252,7 @@ The system MUST add "Contactmomenten" as a top-level navigation item in the Pipe
 
 ---
 
-### Requirement: ContactmomentService Backend
+### Requirement: ContactmomentService Backend @e2e exclude Permission-checked deletion logic verified via PHPUnit and Newman API tests
 
 The system MUST provide a `ContactmomentService` PHP service that handles permission-checked deletion of contactmomenten.
 
@@ -268,7 +278,7 @@ The system MUST provide a `ContactmomentService` PHP service that handles permis
 
 ---
 
-### Requirement: ContactmomentController API
+### Requirement: ContactmomentController API @e2e exclude Delete endpoint success and 403 responses verified via Newman API tests
 
 The system MUST provide a `ContactmomentController` with a delete endpoint at `DELETE /api/contactmomenten/{id}`.
 

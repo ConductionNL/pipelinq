@@ -15,6 +15,8 @@ Provide a chronological activity feed per contact, organization, and pipeline it
 
 Activity timelines are the single most requested CRM feature and are implemented in nearly all modern CRM platforms -- they answer "what happened with this contact?" without searching through multiple views. Common approaches include audit-log-style timelines, journal-style activity tracking, and chronological task linking.
 
+@e2e exclude Activity timeline event emission + retrieval API — verified by PHPUnit/Newman; the timeline renders inside entity detail panels covered by the entity suites.
+
 ## Requirements
 
 ### Requirement: Every entity MUST have a timeline view

@@ -23,6 +23,8 @@ Email and calendar sync metadata is stored as OpenRegister objects in the `pipel
 
 ## ADDED Requirements
 
+@e2e exclude IMAP/Nextcloud Mail + CalDAV calendar sync integration — email-to-contact matching, EmailLink/CalendarLink creation, and ITimedJob sync cycles verified by PHPUnit/integration tests against the Mail and DAV backends, no browser UI surface.
+
 ---
 
 ### Requirement: Emails MUST be automatically linked to CRM contacts

@@ -18,6 +18,8 @@ The existing product-catalog spec covers product entities and categories. This s
 
 ---
 
+@e2e exclude Quote generation + BTW/pricing calculation engine, lifecycle state machine and Docudesk PDF proposal output — verified by PHPUnit/Newman; a computational backend with no dedicated browser view of its own.
+
 ## ADDED Requirements
 
 ### Requirement: Quote entity [Enterprise]

@@ -31,6 +31,8 @@ Skill-based routing enables intelligent work distribution by matching requests t
 
 ---
 
+@e2e exclude Skill-based agent routing algorithm — verified by PHPUnit unit tests over the routing engine, no browser UI.
+
 ## Requirements
 
 ### Requirement: Skill Definition Entity [Enterprise]

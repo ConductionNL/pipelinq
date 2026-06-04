@@ -12,7 +12,7 @@ Add complaint registration and tracking to Pipelinq, enabling KCC agents and CRM
 
 ## Requirements
 
-### Requirement: Complaint Schema in Register
+### Requirement: Complaint Schema in Register @e2e exclude Schema definition and store initialization are verified by OpenRegister repair-step and unit tests, not browser e2e
 
 The system MUST define a `complaint` schema in the Pipelinq register configuration with all required fields for complaint registration.
 
@@ -62,6 +62,8 @@ The system MUST provide a complaint form for creating and editing complaints wit
 
 #### Scenario: Link complaint to existing client
 
+@e2e exclude Client search and linking exercises the client API and reference resolution, covered by API tests
+
 - GIVEN the complaint form is open
 - WHEN the agent searches for a client in the client selector
 - THEN matching clients MUST appear as suggestions
@@ -69,6 +71,8 @@ The system MUST provide a complaint form for creating and editing complaints wit
 - AND optionally, the agent can select a contact person belonging to that client
 
 #### Scenario: Edit existing complaint
+
+@e2e exclude Pre-population and field updates exercise the object update API, covered by API tests
 
 - GIVEN an existing complaint "Onjuiste factuur" with status "new"
 - WHEN the agent opens the edit form
@@ -90,11 +94,15 @@ The complaint list MUST support search, filtering by status/category/priority, s
 
 #### Scenario: Filter by category
 
+@e2e exclude Category filtering exercises the list query API, covered by API tests
+
 - GIVEN complaints across multiple categories
 - WHEN the user selects "service" from the category filter
 - THEN only service complaints MUST be shown
 
 #### Scenario: Search by title or description
+
+@e2e exclude Search querying and debounce exercise the search API, covered by API tests
 
 - GIVEN complaints "Onjuiste factuur" and "Levertijd te lang"
 - WHEN the user types "factuur" in the search box
@@ -103,6 +111,8 @@ The complaint list MUST support search, filtering by status/category/priority, s
 
 #### Scenario: Sort by date or priority
 
+@e2e exclude Sort ordering is computed logic, covered by unit tests
+
 - GIVEN the complaint list
 - WHEN the user clicks the date column header
 - THEN complaints MUST sort by creation date descending (newest first)
@@ -110,11 +120,15 @@ The complaint list MUST support search, filtering by status/category/priority, s
 
 #### Scenario: Visual SLA overdue indicator
 
+@e2e exclude Overdue indicator derives from computed SLA logic, covered by unit tests
+
 - GIVEN a complaint with `slaDeadline` in the past and status not resolved/rejected
 - WHEN the user views the complaint list
 - THEN the complaint row MUST display a visual overdue indicator (red badge or icon)
 
 #### Scenario: Empty state
+
+@e2e exclude Empty-state rendering depends on a seeded-empty dataset, covered by the list-controls render test and unit tests
 
 - GIVEN no complaints exist
 - WHEN the user views the complaint list
@@ -123,13 +137,15 @@ The complaint list MUST support search, filtering by status/category/priority, s
 
 #### Scenario: Pagination
 
+@e2e exclude Pagination math and page-window queries are covered by the list query API and unit tests
+
 - GIVEN 45 complaints with page size 20
 - THEN page navigation MUST show current page, total pages, and total count
 - AND prev/next buttons MUST be functional
 
 ---
 
-### Requirement: Complaint Detail View
+### Requirement: Complaint Detail View @e2e exclude Detail fields, SLA indicators, status transitions and resolution exercise computed logic and the object/transition API, covered by unit and API tests
 
 The complaint detail view MUST show all complaint information, linked entities, status timeline, and resolution fields.
 
@@ -171,7 +187,7 @@ The complaint detail view MUST show all complaint information, linked entities, 
 
 ---
 
-### Requirement: Complaint Audit Trail
+### Requirement: Complaint Audit Trail @e2e exclude Audit-entry creation and chronological ordering are server-side, covered by API tests
 
 The system MUST maintain a full audit trail of all complaint status changes visible on the complaint detail.
 
@@ -194,7 +210,7 @@ The system MUST maintain a full audit trail of all complaint status changes visi
 
 ---
 
-### Requirement: Complaint Dashboard Widget
+### Requirement: Complaint Dashboard Widget @e2e exclude Widget counts derive from computed aggregates over the list query API, covered by unit and API tests
 
 The dashboard MUST include a complaints widget showing key metrics.
 
@@ -210,7 +226,7 @@ The dashboard MUST include a complaints widget showing key metrics.
 
 ---
 
-### Requirement: Complaints on Client Detail
+### Requirement: Complaints on Client Detail @e2e exclude The client-linked complaints section relies on the client-filtered list API, covered by API tests
 
 Complaints linked to a client MUST be visible on the client detail view.
 
@@ -225,7 +241,7 @@ Complaints linked to a client MUST be visible on the client detail view.
 
 ---
 
-### Requirement: SLA Configuration
+### Requirement: SLA Configuration @e2e exclude SLA-per-category config and deadline derivation are computed logic, covered by unit tests
 
 The admin settings MUST allow configuring SLA response times per complaint category.
 
@@ -243,7 +259,7 @@ The admin settings MUST allow configuring SLA response times per complaint categ
 
 ---
 
-### Requirement: Backend SLA Deadline Service
+### Requirement: Backend SLA Deadline Service @e2e exclude Deadline calculation and overdue detection are pure PHP service logic, covered by unit tests
 
 A PHP service MUST calculate SLA deadlines and provide SLA configuration helpers for backend use.
 
@@ -268,7 +284,7 @@ A PHP service MUST calculate SLA deadlines and provide SLA configuration helpers
 
 ---
 
-### Requirement: Background Job for SLA Monitoring
+### Requirement: Background Job for SLA Monitoring @e2e exclude The timed SLA-monitoring job runs server-side off-request, covered by unit tests
 
 A timed background job MUST periodically check for overdue complaints and log warnings.
 

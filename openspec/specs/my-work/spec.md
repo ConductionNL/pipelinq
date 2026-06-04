@@ -27,6 +27,8 @@ The system MUST provide a "My Work" view showing all leads and requests assigned
 - AND lead items MUST also show pipeline value (if set)
 
 #### Scenario: Only open items by default
+
+@e2e exclude open-vs-closed item filtering is data-state logic verified by component/unit tests, not the filter-controls render test
 - WHEN the user views My Work
 - THEN only leads in non-closed stages and requests with non-terminal statuses MUST be shown
 - AND closed/completed/rejected/converted items MUST NOT appear by default
@@ -41,12 +43,14 @@ The system MUST provide a "My Work" view showing all leads and requests assigned
 - THEN the header MUST display the total count and breakdown (e.g., "Leads (5) · Requests (3) — 8 items total")
 
 #### Scenario: Empty workload
+
+@e2e exclude empty-state messaging is best asserted by component tests with no assigned items, not the filter-controls render test
 - WHEN the current user has no assigned items
 - THEN the system MUST display "No items assigned to you"
 
 ---
 
-### Requirement: Sorting [MVP]
+### Requirement: Sorting [MVP] @e2e exclude priority/due-date sort order within groups is deterministic ordering logic verified by unit tests
 
 Within each temporal group, items MUST be sorted by priority first, then by due date ascending.
 
@@ -60,7 +64,7 @@ Within each temporal group, items MUST be sorted by priority first, then by due 
 
 ---
 
-### Requirement: Temporal Grouping [MVP]
+### Requirement: Temporal Grouping [MVP] @e2e exclude overdue/this-week/upcoming/no-due-date bucketing is due-date math verified by unit tests
 
 Items MUST be organized into four temporal groups displayed top to bottom: Overdue, Due This Week, Upcoming, No Due Date. Empty groups MUST be hidden.
 
@@ -90,7 +94,7 @@ Items MUST be organized into four temporal groups displayed top to bottom: Overd
 
 ---
 
-### Requirement: Filtering [MVP]
+### Requirement: Filtering [MVP] @e2e exclude entity-type filter result-set computation is filtering logic verified by component/unit tests
 
 The system MUST allow filtering by entity type: All (default), Leads, Requests.
 
@@ -106,7 +110,7 @@ The system MUST allow filtering by entity type: All (default), Leads, Requests.
 
 ---
 
-### Requirement: Overdue Item Highlighting [MVP]
+### Requirement: Overdue Item Highlighting [MVP] @e2e exclude overdue detection and "N days overdue" text are due-date math verified by unit tests
 
 Overdue items MUST be visually distinct with red indicators and "N days overdue" text.
 
@@ -121,7 +125,7 @@ Overdue items MUST be visually distinct with red indicators and "N days overdue"
 
 ---
 
-### Requirement: Item Navigation [MVP]
+### Requirement: Item Navigation [MVP] @e2e exclude card-to-detail navigation requires seeded items and is covered by component/router tests
 
 Each item MUST be clickable, navigating to the full detail view.
 
@@ -131,7 +135,7 @@ Each item MUST be clickable, navigating to the full detail view.
 
 ---
 
-### Requirement: Cross-App Workload [V1]
+### Requirement: Cross-App Workload [V1] @e2e exclude cross-app Procest aggregation is integration-level behavior verified by Newman/API tests
 
 The system SHOULD include items from Procest (cases and tasks assigned to the current user) in the My Work view.
 
@@ -157,7 +161,7 @@ The system SHOULD include items from Procest (cases and tasks assigned to the cu
 
 ---
 
-### Requirement: Item Card Layout [MVP]
+### Requirement: Item Card Layout [MVP] @e2e exclude per-entity card field rendering requires seeded data and is covered by component tests
 
 Each item MUST follow a consistent card layout showing entity badge, title, stage/status, pipeline, value (leads), due date, and priority.
 
@@ -171,7 +175,7 @@ Each item MUST follow a consistent card layout showing entity badge, title, stag
 
 ---
 
-### Requirement: Queue-Based Work Section [Enterprise]
+### Requirement: Queue-Based Work Section [Enterprise] @e2e exclude queue assignment, pick, and grouping require seeded queues and are covered by API/Newman tests
 
 The My Work view SHALL include a "My Queues" tab showing items from queues the current user is assigned to, providing a queue-centric view of incoming work alongside the existing time-based grouping.
 
@@ -284,7 +288,7 @@ The design follows the wireframe in DESIGN-REFERENCES.md section 3.5.
 
 ## Requirements
 
-### Requirement: Personal Workload View [MVP]
+### Requirement: Personal Workload View [MVP] @e2e exclude duplicate task-inclusive workload variant; the canonical render is covered by the first Personal Workload View requirement plus component/unit tests for task aggregation
 
 The system MUST provide a "My Work" view showing all leads, requests, and tasks assigned to the current user. Only open items are shown by default, with a toggle to include completed items. Tasks assigned to Nextcloud groups the user belongs to MUST also appear.
 
@@ -316,7 +320,7 @@ The system MUST provide a "My Work" view showing all leads, requests, and tasks 
 
 ---
 
-### Requirement: Sorting [MVP]
+### Requirement: Sorting [MVP] @e2e exclude priority/due-date sort order within groups is deterministic ordering logic verified by unit tests
 
 Within each temporal group, items MUST be sorted by priority first, then by due date ascending.
 
@@ -330,7 +334,7 @@ Within each temporal group, items MUST be sorted by priority first, then by due 
 
 ---
 
-### Requirement: Temporal Grouping [MVP]
+### Requirement: Temporal Grouping [MVP] @e2e exclude overdue/this-week/upcoming/no-due-date bucketing is due-date math verified by unit tests
 
 Items MUST be organized into four temporal groups displayed top to bottom: Overdue, Due This Week, Upcoming, No Due Date. Empty groups MUST be hidden.
 
@@ -360,7 +364,7 @@ Items MUST be organized into four temporal groups displayed top to bottom: Overd
 
 ---
 
-### Requirement: Filtering [MVP]
+### Requirement: Filtering [MVP] @e2e exclude entity-type filter result-set computation is filtering logic verified by component/unit tests
 
 The system MUST allow filtering by entity type: All (default), Leads, Requests, Tasks.
 
@@ -376,7 +380,7 @@ The system MUST allow filtering by entity type: All (default), Leads, Requests, 
 
 ---
 
-### Requirement: Overdue Item Highlighting [MVP]
+### Requirement: Overdue Item Highlighting [MVP] @e2e exclude overdue detection and "N days overdue" text are due-date math verified by unit tests
 
 Overdue items MUST be visually distinct with red indicators and "N days overdue" text.
 
@@ -391,7 +395,7 @@ Overdue items MUST be visually distinct with red indicators and "N days overdue"
 
 ---
 
-### Requirement: Item Navigation [MVP]
+### Requirement: Item Navigation [MVP] @e2e exclude card-to-detail navigation requires seeded items and is covered by component/router tests
 
 Each item MUST be clickable, navigating to the full detail view.
 
@@ -401,7 +405,7 @@ Each item MUST be clickable, navigating to the full detail view.
 
 ---
 
-### Requirement: Cross-App Workload [V1]
+### Requirement: Cross-App Workload [V1] @e2e exclude cross-app Procest aggregation is integration-level behavior verified by Newman/API tests
 
 The system MUST include items from Procest (cases and tasks assigned to the current user) in the My Work view.
 
@@ -427,7 +431,7 @@ The system MUST include items from Procest (cases and tasks assigned to the curr
 
 ---
 
-### Requirement: Item Card Layout [MVP]
+### Requirement: Item Card Layout [MVP] @e2e exclude per-entity card field rendering (incl. task sub-labels) requires seeded data and is covered by component tests
 
 Each item MUST follow a consistent card layout showing entity badge, title, stage/status, pipeline, value (leads), due date, and priority.
 
@@ -449,7 +453,7 @@ Each item MUST follow a consistent card layout showing entity badge, title, stag
 
 ## Requirements
 
-### Requirement: KPI Summary Widgets [V1]
+### Requirement: KPI Summary Widgets [V1] @e2e exclude KPI tile counts/sums are aggregation math over seeded data verified by component/unit tests
 
 The My Work view MUST display a row of key performance indicator (KPI) summary tiles at the top, giving the user an at-a-glance overview of their personal workload metrics. These tiles are scoped to the current user's assigned items only (not the team or organization totals shown on the Dashboard).
 
@@ -476,7 +480,7 @@ The My Work view MUST display a row of key performance indicator (KPI) summary t
 
 ---
 
-### Requirement: Quick Actions [V1]
+### Requirement: Quick Actions [V1] @e2e exclude create-dialog flows mutate state and are covered by API/Newman tests
 
 The My Work view MUST provide quick action buttons that allow the user to create new items directly from the workspace without navigating away.
 
@@ -507,7 +511,7 @@ The My Work view MUST provide quick action buttons that allow the user to create
 
 ---
 
-### Requirement: Recent Activity Feed [V1]
+### Requirement: Recent Activity Feed [V1] @e2e exclude activity-feed contents, relative timestamps, and collapse persistence require seeded data and are covered by component tests
 
 The My Work view MUST include a collapsible recent activity feed showing the latest changes to items assigned to the current user, providing context on what has happened since their last visit.
 
@@ -535,7 +539,7 @@ The My Work view MUST include a collapsible recent activity feed showing the lat
 
 ---
 
-### Requirement: Upcoming Follow-Ups [V1]
+### Requirement: Upcoming Follow-Ups [V1] @e2e exclude follow-up date sorting and relative-day indicators are due-date math verified by unit tests
 
 The My Work view MUST display upcoming follow-up actions scheduled for the current user, drawn from lead follow-up dates and request scheduled callback dates.
 
@@ -563,7 +567,7 @@ The My Work view MUST display upcoming follow-up actions scheduled for the curre
 
 ---
 
-### Requirement: Calendar Integration [V1]
+### Requirement: Calendar Integration [V1] @e2e exclude CalDAV event fetching and entity-link resolution are backend integration verified by Newman/API tests
 
 The My Work view SHOULD display upcoming meetings and calendar events from the user's Nextcloud Calendar that are linked to CRM entities (clients, contacts, leads).
 
@@ -592,7 +596,7 @@ The My Work view SHOULD display upcoming meetings and calendar events from the u
 
 ---
 
-### Requirement: Notification Inbox Summary [V1]
+### Requirement: Notification Inbox Summary [V1] @e2e exclude notification counts and mark-as-read flows are backed by the NC Notifications API and covered by Newman/API tests
 
 The My Work view MUST display a summary of unread Pipelinq notifications, providing quick access to assignment changes, stage/status updates, and note additions.
 
@@ -620,7 +624,7 @@ The My Work view MUST display a summary of unread Pipelinq notifications, provid
 
 ---
 
-### Requirement: Saved Filters [Enterprise]
+### Requirement: Saved Filters [Enterprise] @e2e exclude preset save/apply/delete persistence is backed by the user settings API and covered by Newman/API tests
 
 The system MUST allow users to save and recall filter combinations for the My Work view, enabling quick access to frequently used workload slices.
 
@@ -650,7 +654,7 @@ The system MUST allow users to save and recall filter combinations for the My Wo
 
 ---
 
-### Requirement: Customizable Layout [Enterprise]
+### Requirement: Customizable Layout [Enterprise] @e2e exclude section visibility/reorder persistence is backed by the user settings API and covered by Newman/API tests
 
 The My Work view MUST allow users to customize which sections are visible and their display order, enabling personalization of the workspace.
 
@@ -674,7 +678,7 @@ The My Work view MUST allow users to customize which sections are visible and th
 
 ---
 
-### Requirement: Responsive Mobile View [MVP]
+### Requirement: Responsive Mobile View [MVP] @e2e exclude viewport-breakpoint layout, touch-target sizing, and sticky headers are responsive-CSS behavior verified by component/visual tests
 
 The My Work view MUST be fully usable on mobile devices with screen widths down to 320px, following progressive disclosure patterns to optimize for small screens.
 
@@ -705,7 +709,7 @@ The My Work view MUST be fully usable on mobile devices with screen widths down 
 
 ---
 
-### Requirement: Role-Based Content [V1]
+### Requirement: Role-Based Content [V1] @e2e exclude role/team/admin scoping requires seeded group membership and is covered by API/Newman tests
 
 The My Work view MUST adapt its content and available actions based on the user's role, distinguishing between KCC agents, team managers, and administrators.
 
@@ -739,7 +743,7 @@ The My Work view MUST adapt its content and available actions based on the user'
 
 ---
 
-### Requirement: Auto-Refresh and Real-Time Updates [V1]
+### Requirement: Auto-Refresh and Real-Time Updates [V1] @e2e exclude timer-driven refresh and stale-data thresholds are time-dependent behavior verified by component/unit tests
 
 The My Work view MUST keep data current through periodic auto-refresh, ensuring the user always sees their latest workload state.
 
@@ -764,7 +768,7 @@ The My Work view MUST keep data current through periodic auto-refresh, ensuring 
 
 ---
 
-### Requirement: Priority and Pipeline Filter Extensions [V1]
+### Requirement: Priority and Pipeline Filter Extensions [V1] @e2e exclude multi-select priority/pipeline filter computation is filtering logic verified by component/unit tests
 
 The My Work view MUST extend the basic entity type filter with additional filter dimensions for priority level and pipeline, enabling more precise workload slicing.
 

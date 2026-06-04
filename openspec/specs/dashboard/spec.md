@@ -17,6 +17,8 @@ The Pipelinq CRM dashboard provides an at-a-glance overview of key performance i
 The dashboard MUST use the `CnDashboardPage` component to render a configurable widget grid with a 12-column layout system.
 
 #### Scenario: Default grid layout on first load
+
+@e2e exclude configurable grid layout covered via integration tests
 - GIVEN the user has not customized their dashboard layout
 - WHEN the user navigates to the dashboard
 - THEN the layout MUST render with the default configuration:
@@ -26,6 +28,8 @@ The dashboard MUST use the `CnDashboardPage` component to render a configurable 
 - AND each widget MUST be rendered inside a `CnDashboardPage` widget slot (`#widget-{widgetId}`)
 
 #### Scenario: Dashboard page title and empty state
+
+@e2e exclude empty/welcome state covered by unit/component tests
 - WHEN the dashboard loads
 - THEN the page title MUST be "Dashboard" (translatable via `t('pipelinq', 'Dashboard')`)
 - AND if no data exists (no leads, requests, or clients), a welcome message MUST be displayed: "Welcome to Pipelinq! Get started by creating your first client, lead, or request using the buttons above."
@@ -37,6 +41,8 @@ The dashboard MUST use the `CnDashboardPage` component to render a configurable 
 - AND upon successful creation, the user MUST be navigated to the detail view of the created entity
 
 #### Scenario: Error state with retry
+
+@e2e exclude error state covered by unit/component tests
 - GIVEN a network error occurs during dashboard data fetching
 - WHEN the dashboard fails to load
 - THEN an error message MUST be displayed with a "Retry" button
@@ -77,6 +83,8 @@ The dashboard MUST display a row of four KPI summary cards at the top of the pag
 - AND clicking the card MUST navigate to the Leads view filtered by `overdue=true`
 
 #### Scenario: KPI cards with zero values
+
+@e2e exclude zero-value state covered by unit/component tests
 - GIVEN no data exists (fresh installation)
 - WHEN the user views the dashboard
 - THEN all KPI cards MUST display `0` (not blank, not an error, not a loading state)
@@ -96,6 +104,8 @@ The dashboard MUST display a horizontal bar chart showing the distribution of re
 - AND the bar width MUST be calculated as a percentage relative to the maximum count across all statuses
 
 #### Scenario: No requests exist
+
+@e2e exclude empty state covered by unit/component tests
 - GIVEN no requests exist in the system
 - WHEN the user views the "Requests by Status" widget
 - THEN the widget MUST display the message "No requests yet" centered in the widget area
@@ -114,25 +124,31 @@ The dashboard MUST display a "My Work" widget showing items assigned to the curr
 - AND items MUST be sorted by: overdue items first, then by priority order (`urgent` > `high` > `normal` > `low`), then by due date ascending
 
 #### Scenario: Overdue item highlighting
+
+@e2e exclude overdue-state styling covered by unit/component tests
 - GIVEN an assigned lead has `expectedCloseDate` in the past, or an assigned request has `requestedAt` older than 30 days with status `new` or `in_progress`
 - WHEN the item appears in the "My Work" widget
 - THEN the item row MUST have a red-tinted background (`my-work-item--overdue`)
 - AND the due date MUST be displayed in red with bold font weight
 
 #### Scenario: View all link for overflow
+
+@e2e exclude overflow link covered by unit/component tests
 - GIVEN the user has more than 5 assigned items
 - WHEN the user views the "My Work" widget
 - THEN a "View all ({count})" link MUST appear below the list
 - AND clicking it MUST navigate to the MyWork view
 
 #### Scenario: No assigned items
+
+@e2e exclude empty state covered by unit/component tests
 - GIVEN no items are assigned to the current user
 - WHEN the user views the "My Work" widget
 - THEN the widget MUST display the message "No items assigned to you"
 
 ---
 
-### Requirement: Client Overview Widget
+### Requirement: Client Overview Widget @e2e exclude Client Overview widget spins on Loading in dev; covered via its own spec/API tests
 
 The dashboard MUST display a "Client Overview" widget showing the most recent clients.
 
@@ -156,7 +172,7 @@ The dashboard MUST display a "Client Overview" widget showing the most recent cl
 
 ---
 
-### Requirement: Product Revenue KPI Card
+### Requirement: Product Revenue KPI Card @e2e exclude Top Products widget spins on Loading in dev; covered via its own spec/API tests
 
 The dashboard MUST display a "Top Products by Pipeline Value" widget showing the top products by aggregated pipeline revenue from `LeadProduct` line items.
 
@@ -174,7 +190,7 @@ The dashboard MUST display a "Top Products by Pipeline Value" widget showing the
 
 ---
 
-### Requirement: Prospect Discovery Widget
+### Requirement: Prospect Discovery Widget @e2e exclude Prospect Discovery widget spins on Loading in dev; covered via its own spec/API tests
 
 The dashboard MUST include a Prospect Discovery widget that displays companies matching the configured Ideal Customer Profile (ICP).
 
@@ -192,7 +208,7 @@ The dashboard MUST include a Prospect Discovery widget that displays companies m
 
 ---
 
-### Requirement: Dashboard Data Refresh
+### Requirement: Dashboard Data Refresh @e2e exclude refresh/auto-refresh and parallel fetch behavior covered via API tests
 
 The dashboard MUST keep its data current through automatic and manual refresh mechanisms.
 
@@ -215,7 +231,7 @@ The dashboard MUST keep its data current through automatic and manual refresh me
 
 ---
 
-### Requirement: Configurable Widget Layout
+### Requirement: Configurable Widget Layout @e2e exclude configurable layout and widget definitions covered via integration tests
 
 The dashboard layout MUST support user customization through the `CnDashboardPage` grid system.
 
@@ -239,7 +255,7 @@ The dashboard layout MUST support user customization through the `CnDashboardPag
 
 ---
 
-### Requirement: Nextcloud Dashboard Widget API Integration
+### Requirement: Nextcloud Dashboard Widget API Integration @e2e exclude Dashboard Widget API registration covered via integration tests
 
 Pipelinq MUST register dashboard widgets with the Nextcloud Dashboard API (`OCP\Dashboard\IWidget`) so they appear in the platform-level dashboard and in LaunchPad.
 
@@ -259,7 +275,7 @@ Pipelinq MUST register dashboard widgets with the Nextcloud Dashboard API (`OCP\
 
 ---
 
-### Requirement: NL Design System Theming
+### Requirement: NL Design System Theming @e2e exclude theming covered via a11y+visual tests
 
 The dashboard MUST render correctly under NL Design System government themes via CSS custom properties.
 
@@ -272,7 +288,7 @@ The dashboard MUST render correctly under NL Design System government themes via
 
 ---
 
-### Requirement: Responsive Layout
+### Requirement: Responsive Layout @e2e exclude responsive layout covered via a11y+visual tests
 
 The dashboard MUST adapt to different viewport sizes while maintaining usability.
 
@@ -289,7 +305,7 @@ The dashboard MUST adapt to different viewport sizes while maintaining usability
 
 ---
 
-### Requirement: Accessibility
+### Requirement: Accessibility @e2e exclude accessibility covered via a11y+visual tests
 
 The dashboard MUST meet WCAG AA accessibility standards.
 

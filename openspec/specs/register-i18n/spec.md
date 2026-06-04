@@ -7,6 +7,8 @@ status: implemented
 ## Purpose
 Enable multi-language support for Pipelinq's register objects, allowing users to view and manage CRM and pipeline content in their preferred language. Built on OpenRegister's register-i18n foundation (see `openregister/openspec/specs/register-i18n/spec.md`). This spec covers both data-level i18n for translatable register content (pipeline names, product descriptions) and app UI string translations via Nextcloud's `IL10N` / `t()` system per ADR-005.
 
+@e2e exclude Translation catalogue / i18n string coverage (l10n/*.json parity, translatable-field plumbing, IL10N message resolution) — verified by l10n lint + unit tests, not browser e2e.
+
 ## Requirements
 
 ### REQ-I18N-001: Language-Tagged Fields

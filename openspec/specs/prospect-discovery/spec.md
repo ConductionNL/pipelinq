@@ -10,6 +10,8 @@ The prospect discovery capability enables sales teams to find new potential clie
 
 **Feature tier**: V1
 
+@e2e exclude Prospect ingestion/scoring pipeline + KVK/OpenCorporates API integration — exercised via Newman API + PHPUnit and OpenRegister mock-register assertions; the UI surfaces only through the dashboard prospect widget (covered separately).
+
 ---
 
 ## Requirements

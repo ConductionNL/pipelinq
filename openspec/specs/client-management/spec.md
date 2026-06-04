@@ -27,6 +27,8 @@ The system MUST support creating client records of type `person` or `organizatio
 
 #### Scenario: Create a person client with minimal fields
 
+@e2e exclude person-client persistence + schema:Person @type mapping verified via OpenRegister API/PHPUnit; the create-modal browser flow asserts only the disabled-until-valid guard
+
 - GIVEN a user with CRM access
 - WHEN they submit a new client form with name "Jan de Vries" and type "person"
 - THEN the system MUST create an OpenRegister object in the `pipelinq` register with the `client` schema
@@ -36,6 +38,8 @@ The system MUST support creating client records of type `person` or `organizatio
 
 #### Scenario: Create an organization client with full fields
 
+@e2e exclude full organization-field storage + schema:Organization @type + KVK-format taxID verified via OpenRegister API/PHPUnit, not driven through the browser
+
 - GIVEN a user with CRM access
 - WHEN they submit a new client form with name "Gemeente Utrecht", type "organization", email "info@utrecht.nl", telephone "+31 30 286 0000", website "https://www.utrecht.nl", taxID "12345678", and address "Stadsplateau 1, 3521 AZ Utrecht"
 - THEN the system MUST create an OpenRegister object with `@type` set to `schema:Organization`
@@ -43,6 +47,8 @@ The system MUST support creating client records of type `person` or `organizatio
 - AND the `taxID` field MUST accept KVK-format numbers
 
 #### Scenario: Create a client with only required fields
+
+@e2e exclude required-only create with empty/null optional fields verified via OpenRegister API/PHPUnit; not a distinct browser journey
 
 - GIVEN a user with CRM access
 - WHEN they submit a new client form with name "Acme B.V." and type "organization" and leave all optional fields empty
@@ -59,12 +65,16 @@ The system MUST support creating client records of type `person` or `organizatio
 
 #### Scenario: Fail to create a client without required type
 
+@e2e exclude missing-type rejection enforced by JSON-schema validation — verified via OpenRegister API/PHPUnit; the browser modal covers the name-required guard instead
+
 - GIVEN a user with CRM access
 - WHEN they submit a new client form with name "Jan de Vries" but no type
 - THEN the system MUST reject the request with a validation error
 - AND the error message MUST indicate that type is required
 
 #### Scenario: Fail to create a client with invalid type
+
+@e2e exclude enum-constraint rejection (type must be person/organization) enforced by JSON-schema validation — verified via OpenRegister API/PHPUnit, not a browser flow
 
 - GIVEN a user with CRM access
 - WHEN they submit a new client form with name "Jan de Vries" and type "government"
@@ -73,7 +83,7 @@ The system MUST support creating client records of type `person` or `organizatio
 
 ---
 
-### Requirement: Client Update
+### Requirement: Client Update @e2e exclude client edit/PUT persistence and audit-trail recording verified via OpenRegister API + PHPUnit; no standalone browser flow asserted
 
 The system MUST support updating all properties of an existing client. Updates MUST be recorded in the audit trail.
 
@@ -110,7 +120,7 @@ The system MUST support updating all properties of an existing client. Updates M
 
 ---
 
-### Requirement: Client Deletion
+### Requirement: Client Deletion @e2e exclude deletion safety + linked-entity warning logic covered by PHPUnit and Newman API tests; destructive flow not driven in headless browser
 
 The system MUST support deleting client records. Deletion of clients with active relationships MUST be handled safely.
 
@@ -148,7 +158,7 @@ The system MUST support deleting client records. Deletion of clients with active
 
 ---
 
-### Requirement: Client Validation
+### Requirement: Client Validation @e2e exclude field-format validation (email/telephone/URL/name-length regex, inline errors) verified by ClientForm.vue unit tests; the create-modal smoke test covers the disabled-save guard under Client Creation
 
 The system MUST validate client data according to schema rules and field format constraints.
 
@@ -208,6 +218,8 @@ The system MUST provide a list view of all clients with search, sort, filter, an
 
 #### Scenario: Search clients by name
 
+@e2e exclude name search delegates to OpenRegister's query API — match correctness verified by Newman/API tests; needs seeded multi-client fixtures absent from the smoke run
+
 - GIVEN clients "Jan de Vries", "Gemeente Utrecht", "Gemeente Amsterdam", "Acme B.V."
 - WHEN the user searches for "Gemeente"
 - THEN the results MUST include "Gemeente Utrecht" and "Gemeente Amsterdam"
@@ -215,11 +227,15 @@ The system MUST provide a list view of all clients with search, sort, filter, an
 
 #### Scenario: Search clients by email
 
+@e2e exclude email search delegates to OpenRegister's query API — match correctness verified by Newman/API tests, not browser-driven
+
 - GIVEN a client "Acme B.V." with email "info@acme.nl"
 - WHEN the user searches for "acme.nl"
 - THEN the results MUST include "Acme B.V."
 
 #### Scenario: Filter clients by type
+
+@e2e exclude type filtering delegates to OpenRegister's facet/query API — result correctness verified by Newman/API tests; requires seeded mixed-type fixtures
 
 - GIVEN 10 person clients and 5 organization clients
 - WHEN the user filters by type "organization"
@@ -228,11 +244,15 @@ The system MUST provide a list view of all clients with search, sort, filter, an
 
 #### Scenario: Sort clients by name
 
+@e2e exclude name sorting delegates to OpenRegister's order API — ordering correctness verified by Newman/API tests, not browser-driven
+
 - GIVEN clients "Gemeente Utrecht", "Acme B.V.", "Jan de Vries"
 - WHEN the user sorts by name ascending
 - THEN the order MUST be: "Acme B.V.", "Gemeente Utrecht", "Jan de Vries"
 
 #### Scenario: Paginate client list
+
+@e2e exclude pagination delegates to OpenRegister's page/limit API — page-boundary correctness verified by Newman/API tests; needs 45 seeded clients absent from the smoke run
 
 - GIVEN 45 clients and a page size of 20
 - WHEN the user views page 1
@@ -243,6 +263,8 @@ The system MUST provide a list view of all clients with search, sort, filter, an
 
 #### Scenario: Empty client list
 
+@e2e exclude empty-state rendering requires a zero-client instance that conflicts with the shared seeded fixtures the smoke suite relies on; covered by component unit test
+
 - GIVEN no clients exist in the system
 - WHEN the user navigates to the client list
 - THEN the system MUST display an empty state message
@@ -250,7 +272,7 @@ The system MUST provide a list view of all clients with search, sort, filter, an
 
 ---
 
-### Requirement: Client Detail View
+### Requirement: Client Detail View @e2e exclude detail-view aggregation (summary stats, linked leads/requests/contacts, activity timeline) verified within the detail panel via unit tests; requires seeded relational fixtures unavailable to the smoke suite
 
 The system MUST provide a detail view for each client showing all properties, summary statistics, linked entities (contact persons, leads, requests), and an activity timeline.
 
@@ -322,7 +344,7 @@ The system MUST provide a detail view for each client showing all properties, su
 
 ---
 
-### Requirement: Contact Person Creation
+### Requirement: Contact Person Creation @e2e exclude contact-person create + worksFor linking persisted via OpenRegister API — verified by PHPUnit/Newman, not a core client browser flow
 
 The system MUST support creating contact persons linked to client organizations. A contact person MUST have a name and a client reference.
 
@@ -359,7 +381,7 @@ The system MUST support creating contact persons linked to client organizations.
 
 ---
 
-### Requirement: Contact Person Update and Deletion
+### Requirement: Contact Person Update and Deletion @e2e exclude contact-person update/delete/reassign + audit recording verified via OpenRegister API and PHPUnit; no dedicated browser journey
 
 The system MUST support updating and deleting contact persons. Changes MUST be recorded in the audit trail.
 
@@ -389,7 +411,7 @@ The system MUST support updating and deleting contact persons. Changes MUST be r
 
 ---
 
-### Requirement: Contact Person List and Search
+### Requirement: Contact Person List and Search @e2e exclude contact-person cross-client list/search/navigation backed by OpenRegister query API — covered by API + unit tests; the Contacts list has its own smoke test outside this spec
 
 The system MUST provide a way to list and search contact persons across all clients.
 
@@ -417,7 +439,7 @@ The system MUST provide a way to list and search contact persons across all clie
 
 ---
 
-### Requirement: Client-to-Lead Relationship
+### Requirement: Client-to-Lead Relationship @e2e exclude lead-to-client UUID linking and reverse aggregation persisted/queried via OpenRegister API — verified by PHPUnit/Newman, no isolated browser flow
 
 The system MUST support linking leads to clients. A lead's `client` property references a client UUID.
 
@@ -439,7 +461,7 @@ The system MUST support linking leads to clients. A lead's `client` property ref
 
 ---
 
-### Requirement: Client-to-Request Relationship
+### Requirement: Client-to-Request Relationship @e2e exclude request-to-client UUID linking and reverse aggregation persisted/queried via OpenRegister API — verified by PHPUnit/Newman, no isolated browser flow
 
 The system MUST support linking requests to clients. A request's `client` property references a client UUID.
 
@@ -461,7 +483,7 @@ The system MUST support linking requests to clients. A request's `client` proper
 
 ---
 
-### Requirement: Nextcloud Contacts Sync
+### Requirement: Nextcloud Contacts Sync @e2e exclude Nextcloud Contacts sync via OCP\Contacts\IManager (search/createOrUpdate/UID linking) exercised by PHPUnit against the Contacts backend; no browser path
 
 The system MUST sync client data with Nextcloud's built-in Contacts app via `OCP\Contacts\IManager`. This avoids duplicate contact entry and leverages Nextcloud's native CardDAV infrastructure.
 
@@ -493,7 +515,7 @@ The system MUST sync client data with Nextcloud's built-in Contacts app via `OCP
 
 ---
 
-### Requirement: Duplicate Detection
+### Requirement: Duplicate Detection @e2e exclude V1 duplicate-detection (exact/email/fuzzy name matching) not yet implemented; matching logic to be covered by unit tests when built
 
 The system MUST detect potential duplicate clients based on name and email matching.
 
@@ -523,7 +545,7 @@ The system MUST detect potential duplicate clients based on name and email match
 
 ---
 
-### Requirement: Client Import
+### Requirement: Client Import @e2e exclude V1 CSV/vCard import not yet implemented; parsing + bulk-create logic to be covered by unit + API tests when built
 
 The system MUST support importing clients from CSV and vCard files.
 
@@ -555,7 +577,7 @@ The system MUST support importing clients from CSV and vCard files.
 
 ---
 
-### Requirement: Client Export
+### Requirement: Client Export @e2e exclude V1 CSV/vCard export not yet implemented; file-generation + RFC 6350 output to be covered by unit tests when built
 
 The system MUST support exporting clients to CSV and vCard formats.
 
@@ -589,7 +611,7 @@ The system MUST support exporting clients to CSV and vCard formats.
 
 ---
 
-### Requirement: KVK Integration for Dutch Businesses
+### Requirement: KVK Integration for Dutch Businesses @e2e exclude KVK Handelsregister API lookup/enrichment + 8-digit validation covered by KvkApiClient unit tests against a mocked API; external HTTP not driven in headless browser
 
 The system MUST support looking up Dutch organizations via the KVK (Kamer van Koophandel) Handelsregister API to auto-populate client data and ensure accurate business registration details. The KVK API integration already exists in `KvkApiClient` and `KvkResultMapper` for prospect discovery; this requirement extends it to client creation and enrichment.
 
@@ -645,7 +667,7 @@ The system MUST support looking up Dutch organizations via the KVK (Kamer van Ko
 
 ---
 
-### Requirement: BSN Handling Compliance
+### Requirement: BSN Handling Compliance @e2e exclude Enterprise BSN handling (elfproef, masking, access logging) is privacy-sensitive and unimplemented; validation + access-control logic to be covered by unit tests, never seeded in a browser run
 
 The system MUST handle BSN (Burgerservicenummer) data in compliance with Dutch privacy law (Wet algemene bepalingen burgerservicenummer). BSN is a sensitive personal identifier that may only be processed when there is a legal basis, and MUST be stored and transmitted with appropriate safeguards.
 
@@ -692,7 +714,7 @@ The system MUST handle BSN (Burgerservicenummer) data in compliance with Dutch p
 
 ---
 
-### Requirement: Client Deduplication and Merge
+### Requirement: Client Deduplication and Merge @e2e exclude V1 merge (entity re-linking, contactsUid retention, audit) not yet implemented; transactional re-link logic to be covered by API + unit tests when built
 
 The system MUST support merging duplicate client records into a single consolidated record, transferring all linked entities (contact persons, leads, requests) and preserving the full audit history.
 
@@ -742,7 +764,7 @@ The system MUST support merging duplicate client records into a single consolida
 
 ---
 
-### Requirement: Client Hierarchy (Parent/Child Organizations)
+### Requirement: Client Hierarchy (Parent/Child Organizations) @e2e exclude V1 hierarchy (parentOrganization refs, tree rendering, circular-ref guard, consolidated stats) unimplemented — no schema field yet; logic to be covered by unit tests when built
 
 The system MUST support hierarchical organization structures where a client organization can have a parent organization and child organizations. This enables representing corporate groups, holding companies, and franchise networks.
 
@@ -795,7 +817,7 @@ The system MUST support hierarchical organization structures where a client orga
 
 ---
 
-### Requirement: Client Segmentation and Tagging
+### Requirement: Client Segmentation and Tagging @e2e exclude V1 tagging/segmentation unimplemented — no tags schema field yet; tag storage, filter, and vocabulary logic to be covered by unit + API tests when built
 
 The system MUST support tagging and categorizing clients for segmentation purposes. Tags enable grouping clients for targeted actions, filtering, and reporting.
 
@@ -841,7 +863,7 @@ The system MUST support tagging and categorizing clients for segmentation purpos
 
 ---
 
-### Requirement: Client Health Scoring
+### Requirement: Client Health Scoring @e2e exclude Enterprise health scoring (weighted formula, decay, recalculation cron) unimplemented; deterministic scoring math to be covered by unit tests, not browser-driven
 
 The system SHOULD calculate and display a client health score based on relationship activity metrics. The health score helps sales teams prioritize follow-ups and identify at-risk client relationships.
 
@@ -885,7 +907,7 @@ The system SHOULD calculate and display a client health score based on relations
 
 ---
 
-### Requirement: Client Lifecycle Analytics
+### Requirement: Client Lifecycle Analytics @e2e exclude Enterprise lifecycle analytics (acquisition charts, revenue contribution, retention buckets) unimplemented; aggregation math to be covered by unit tests when built
 
 The system SHOULD provide analytics about the client lifecycle, including acquisition rates, retention metrics, and revenue trends per client.
 
@@ -922,7 +944,7 @@ The system SHOULD provide analytics about the client lifecycle, including acquis
 
 ---
 
-### Requirement: GDPR Data Subject Rights
+### Requirement: GDPR Data Subject Rights @e2e exclude V1 GDPR/AVG rights (access export, erasure, rectification, processing register) unimplemented and irreversible; export + anonymization logic to be covered by API + unit tests when built
 
 The system MUST support GDPR (AVG) data subject rights for person-type clients in compliance with EU General Data Protection Regulation. Organization clients are not data subjects under GDPR.
 
@@ -976,7 +998,7 @@ The system MUST support GDPR (AVG) data subject rights for person-type clients i
 
 ---
 
-### Requirement: Multi-Tenancy Client Isolation
+### Requirement: Multi-Tenancy Client Isolation @e2e exclude Enterprise isolation delegates to OpenRegister's permission model (401 on anon, group scoping); auth boundaries verified by Newman API tests, not a single-user browser session
 
 The system MUST ensure that client data is isolated per Nextcloud instance and, within shared Nextcloud instances, per authorized group or user scope. This prevents unauthorized cross-tenant data access.
 
@@ -1008,7 +1030,7 @@ The system MUST ensure that client data is isolated per Nextcloud instance and, 
 
 ---
 
-### Requirement: Client Import from CSV with Column Mapping
+### Requirement: Client Import from CSV with Column Mapping @e2e exclude V1 guided CSV import (delimiter/encoding detection, mapping, duplicate handling, progress) unimplemented; parsing + mapping logic to be covered by unit + API tests when built
 
 The system MUST provide a guided CSV import workflow with column mapping, preview, validation feedback, and duplicate handling.
 
@@ -1050,7 +1072,7 @@ The system MUST provide a guided CSV import workflow with column mapping, previe
 
 ---
 
-### Requirement: Client Export with Format Options
+### Requirement: Client Export with Format Options @e2e exclude V1 multi-format export (field selection, XLSX, bulk vCard) unimplemented; file-generation correctness to be covered by unit tests when built
 
 The system MUST support exporting clients in multiple formats with configurable field selection.
 
@@ -1081,7 +1103,7 @@ The system MUST support exporting clients in multiple formats with configurable 
 
 ---
 
-### Requirement: Client Timeline (All Interactions)
+### Requirement: Client Timeline (All Interactions) @e2e exclude V1 unified interaction timeline (multi-entity aggregation, filtering, pagination, quick-log) unimplemented beyond the OpenRegister audit sidebar; aggregation logic to be covered by unit tests when built
 
 The system MUST provide a unified interaction timeline on the client detail view that aggregates all CRM activity types into a single chronological feed.
 
@@ -1137,7 +1159,7 @@ The system MUST provide a unified interaction timeline on the client detail view
 
 ---
 
-### Requirement: Client Custom Fields
+### Requirement: Client Custom Fields @e2e exclude V1 custom fields (schema extension, dynamic form/detail rendering, import mapping) unimplemented; requires OpenRegister schema-extension support — to be covered by API + unit tests when built
 
 The system MUST support adding custom fields to the client schema to accommodate organization-specific data requirements without code changes. Custom fields are stored as additional properties on the OpenRegister client object.
 
@@ -1184,7 +1206,7 @@ The system MUST support adding custom fields to the client schema to accommodate
 
 ---
 
-### Requirement: Client Prospect Conversion
+### Requirement: Client Prospect Conversion @e2e exclude V1 prospect-to-client conversion only partially stubbed in ProspectDiscoveryService (returns data, creates no objects); conversion + KVK-metadata mapping to be covered by unit + API tests when completed
 
 The system MUST support converting KVK prospect discovery results directly into client records, linking the prospect origin data (KVK number, SBI codes, legal form) to the newly created client. The `ProspectDiscoveryService` and `ProspectController` already support this flow partially; this requirement formalizes the full conversion path.
 

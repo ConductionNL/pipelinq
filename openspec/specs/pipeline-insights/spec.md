@@ -14,6 +14,8 @@ Add temporal, financial, and analytical context to pipeline views so users can s
 
 ---
 
+@e2e exclude Pipeline analytics/forecasting computations — verified by PHPUnit/Newman over aggregation queries; surfaced as read-only figures within dashboard/reporting covered separately.
+
 ## ADDED Requirements
 
 ### Requirement: Stage Revenue Summary [V1]

@@ -14,6 +14,8 @@ Deliver real-time notifications and a team-visible activity timeline for CRM eve
 
 ---
 
+@e2e exclude Notification dispatch (NotificationService/IManager) and Activity stream emission — delivered through the Nextcloud notifications bell and Activity app, not a pipelinq view; verified by PHPUnit + Newman, not browser e2e.
+
 ## Requirements
 
 ### Requirement: CRM Notifications [V1]

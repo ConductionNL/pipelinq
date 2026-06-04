@@ -19,6 +19,8 @@ The contactmoment entity is extended with a flexible metadata structure per chan
 - **Channel envelope**: channel type + channel-specific metadata object
 - **Channel metadata examples**: call duration (telefoon), email thread ID (e-mail), ticket number (balie), chat transcript link (chat)
 
+@e2e exclude Omnichannel contact registration + routing backend (email/phone/chat/web ingestion) — verified by PHPUnit/Newman, no single browser flow.
+
 ## Requirements
 
 ---

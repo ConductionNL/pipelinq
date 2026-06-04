@@ -77,10 +77,22 @@ async function globalSetup(config: FullConfig): Promise<void> {
 	await page.goto('/index.php/login')
 	await page.locator('input[name="user"]').fill(user)
 	await page.locator('input[name="password"]').fill(password)
-	await page.locator('button[type="submit"], input[type="submit"]').first().click()
+	// Submit via the form rather than a button click: on a slow/loaded
+	// instance the themed submit button's click can be swallowed by an
+	// overlay/animation and never navigate. Fall back to a button click.
+	await page.evaluate(() => {
+		const form = document.querySelector('form[name="login"], form') as HTMLFormElement | null
+		if (form && typeof form.requestSubmit === 'function') {
+			form.requestSubmit()
+		} else if (form) {
+			form.submit()
+		} else {
+			document.querySelector<HTMLButtonElement>('button[type="submit"], input[type="submit"]')?.click()
+		}
+	})
 	// Nextcloud bounces to /apps/dashboard/ on success. Wait for the
 	// global header, which only renders on authenticated pages.
-	await page.waitForSelector('#header, header.header', { timeout: 30_000 })
+	await page.waitForSelector('#header, header.header', { timeout: 45_000 })
 	const currentUrl = page.url()
 	if (/\/login(\?|$|\/)/.test(currentUrl)) {
 		throw new Error(

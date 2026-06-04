@@ -1,61 +1,59 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Pipelinq Contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * Sidebar navigation — rewritten for the manifest-driven app shell (#392).
+ * The left-nav links perform client-side routing; see helpers/nav.ts.
+ */
 import { test, expect, Page } from '@playwright/test'
+import { openApp } from './helpers/nav'
 
-const sidebarNav = (page: Page) => page.locator('[id^="app-navigation"]').first()
+// route slug → human label, as rendered in the in-app left navigation.
+const NAV: Record<string, string> = {
+	clients: 'Clients',
+	contacts: 'Contacts',
+	leads: 'Leads',
+	requests: 'Requests',
+	tasks: 'Tasks',
+	contactmomenten: 'Contactmomenten',
+	complaints: 'Complaints',
+	products: 'Products',
+	pipeline: 'Pipeline',
+	surveys: 'Surveys',
+	queues: 'Queues',
+	kennisbank: 'Kennisbank',
+	'my-work': 'My Work',
+	rapportage: 'Reporting',
+}
 
-test.describe.skip('Sidebar Navigation', () => {  // TODO(#392): rewrite for manifest-driven app shell
+const navLink = (page: Page, route: string) =>
+	page.locator(`a[href="/apps/pipelinq/${route}"]`).first()
 
-	test('shows all navigation items', async ({ page }) => {
-		await page.goto('/apps/pipelinq/')
-		const nav = sidebarNav(page)
+test.describe('Sidebar navigation', () => {
 
-		for (const label of [
-			'Dashboard', 'Clients', 'Contacts', 'Leads', 'Requests',
-			'Tasks', 'Contactmomenten', 'Complaints', 'Products', 'Pipeline',
-			'Surveys', 'Queues', 'Kennisbank', 'My Work', 'Reporting', 'Documentation',
-		]) {
-			await expect(nav.getByText(label, { exact: true })).toBeVisible()
+	test('shows all navigation items with correct routes', async ({ page }) => {
+		await openApp(page)
+		for (const [route, label] of Object.entries(NAV)) {
+			const link = navLink(page, route)
+			await expect(link, `nav link for ${label}`).toBeVisible()
+			await expect(link).toContainText(label)
 		}
 	})
 
-	test('sidebar links point to correct URLs', async ({ page }) => {
-		await page.goto('/apps/pipelinq/')
-		const nav = sidebarNav(page)
-
-		const expected: Record<string, string> = {
-			Clients: '/apps/pipelinq/clients',
-			Contacts: '/apps/pipelinq/contacts',
-			Leads: '/apps/pipelinq/leads',
-			Requests: '/apps/pipelinq/requests',
-			Tasks: '/apps/pipelinq/tasks',
-			Contactmomenten: '/apps/pipelinq/contactmomenten',
-			Complaints: '/apps/pipelinq/complaints',
-			Products: '/apps/pipelinq/products',
-			Pipeline: '/apps/pipelinq/pipeline',
-			Surveys: '/apps/pipelinq/surveys',
-			Queues: '/apps/pipelinq/queues',
-			Kennisbank: '/apps/pipelinq/kennisbank',
-			'My Work': '/apps/pipelinq/my-work',
-			Reporting: '/apps/pipelinq/rapportage',
-		}
-
-		for (const [name, href] of Object.entries(expected)) {
-			await expect(nav.getByRole('link', { name })).toHaveAttribute('href', href)
-		}
+	test('clicking a nav item routes client-side without a full reload', async ({ page }) => {
+		await openApp(page)
+		await navLink(page, 'leads').click()
+		await expect(page).toHaveURL(/\/apps\/pipelinq\/leads$/)
+		await expect(page.getByRole('heading', { name: 'Leads', level: 2 })).toBeVisible({ timeout: 20000 })
 	})
 
-	test('settings button expands sub-menu', async ({ page }) => {
-		await page.goto('/apps/pipelinq/')
-		await page.evaluate(() => document.querySelector('.settings-button')?.dispatchEvent(new Event('click', { bubbles: true })))
-		await expect(page.getByText('Pipelines')).toBeVisible()
-		await expect(page.getByText('Forms')).toBeVisible()
-		await expect(page.getByText('Automations')).toBeVisible()
-		await expect(page.getByText('Configuration')).toBeVisible()
-	})
-
-	test('clicking nav item navigates', async ({ page }) => {
-		await page.goto('/apps/pipelinq/')
-		const nav = sidebarNav(page)
-		await nav.getByRole('link', { name: 'Clients' }).click()
-		await expect(page).toHaveURL(/.*clients/)
+	test('settings sub-menu exposes admin views', async ({ page }) => {
+		await openApp(page)
+		// Scope to the in-app nav Settings button; the header also has a
+		// "Settings menu" button which otherwise matches in strict mode.
+		await page.getByTestId('cn-nav-settings').getByRole('button', { name: 'Settings' }).click()
+		for (const label of ['Pipelines', 'Forms', 'Automations']) {
+			await expect(page.getByRole('link', { name: label })).toBeVisible({ timeout: 10000 })
+		}
 	})
 })

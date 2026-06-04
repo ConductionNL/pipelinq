@@ -41,7 +41,7 @@ See [ARCHITECTURE.md](../../../docs/ARCHITECTURE.md) for the full Lead entity de
 
 ## Requirements
 
-### Requirement: Lead CRUD [MVP]
+### Requirement: Lead CRUD [MVP] @e2e exclude CRUD persistence and audit-trail effects are verified by PHPUnit against the OpenRegister object store, not the browser UI.
 
 The system MUST support creating, reading, updating, and deleting lead records. Each lead MUST have a `title`. All leads are stored as OpenRegister objects in the `pipelinq` register using the `lead` schema.
 
@@ -117,6 +117,8 @@ The system MUST enforce validation rules on lead properties to maintain data int
 
 #### Scenario 8: Reject negative value
 
+@e2e exclude Numeric range validation is exercised by PHPUnit schema-validation tests.
+
 - GIVEN a user creating or editing a lead
 - WHEN they enter a value of -5000
 - THEN the system MUST reject the request with validation error "Value must be non-negative"
@@ -124,11 +126,15 @@ The system MUST enforce validation rules on lead properties to maintain data int
 
 #### Scenario 9: Reject out-of-range probability
 
+@e2e exclude Numeric range validation is exercised by PHPUnit schema-validation tests.
+
 - GIVEN a user creating or editing a lead
 - WHEN they enter probability of 150
 - THEN the system MUST reject the request with validation error "Probability must be between 0 and 100"
 
 #### Scenario 10: Warn on past expected close date
+
+@e2e exclude Date-warning logic is verified by PHPUnit unit tests on the validation helper.
 
 - GIVEN a user creating a new lead
 - WHEN they set expectedCloseDate to "2025-01-15" (a date in the past)
@@ -136,6 +142,8 @@ The system MUST enforce validation rules on lead properties to maintain data int
 - BUT the system MUST still allow saving (existing leads may legitimately have past dates after import)
 
 #### Scenario 11: Reject assignment to non-existent user
+
+@e2e exclude User-existence validation against IUserManager is verified by PHPUnit.
 
 - GIVEN a user editing a lead
 - WHEN they attempt to assign the lead to user UID "nonexistent_user"
@@ -158,6 +166,8 @@ The system MUST provide a list view of all leads with search, sort, and filter c
 
 #### Scenario 13: Search leads by title and description
 
+@e2e exclude Search query semantics are verified by Newman API tests against the OpenRegister query endpoint.
+
 - GIVEN leads titled "Gemeente ABC deal" (description: "Digital transformation consulting") and "TechCorp website" (description: "New corporate website")
 - WHEN the user types "digital" in the search box
 - THEN the results MUST include "Gemeente ABC deal" (matches description)
@@ -166,12 +176,16 @@ The system MUST provide a list view of all leads with search, sort, and filter c
 
 #### Scenario 14: Filter leads by source
 
+@e2e exclude Filter result-set correctness is verified by Newman API tests against the query endpoint.
+
 - GIVEN 10 leads: 4 from "website", 3 from "referral", 2 from "phone", 1 from "email"
 - WHEN the user applies the filter source = "referral"
 - THEN exactly 3 leads MUST be shown
 - AND the filter state MUST be visually indicated (e.g., badge on filter button)
 
 #### Scenario 15: Filter leads by stage
+
+@e2e exclude Filter result-set correctness is verified by Newman API tests against the query endpoint.
 
 - GIVEN leads distributed across stages New (3), Contacted (2), Qualified (4), Won (1), Lost (2)
 - WHEN the user filters by stage "Qualified"
@@ -180,6 +194,8 @@ The system MUST provide a list view of all leads with search, sort, and filter c
 
 #### Scenario 16: Filter leads by assignee
 
+@e2e exclude Filter result-set correctness is verified by Newman API tests against the query endpoint.
+
 - GIVEN leads assigned to "jan" (5 leads), "maria" (3 leads), and unassigned (2 leads)
 - WHEN the user filters by assignee = "jan"
 - THEN exactly 5 leads MUST be shown
@@ -187,17 +203,23 @@ The system MUST provide a list view of all leads with search, sort, and filter c
 
 #### Scenario 17: Sort leads by value descending
 
+@e2e exclude Sort ordering including null placement is verified by Newman API tests against the query endpoint.
+
 - GIVEN leads with values EUR 5,000 / EUR 25,000 / EUR 12,000 / null
 - WHEN the user sorts by value descending
 - THEN leads MUST appear in order: EUR 25,000, EUR 12,000, EUR 5,000, and leads with null value SHOULD appear last
 
 #### Scenario 18: Sort leads by expected close date
 
+@e2e exclude Sort ordering including null placement is verified by Newman API tests against the query endpoint.
+
 - GIVEN leads with close dates 2026-03-01, 2026-06-15, 2026-02-20, and one with no close date
 - WHEN the user sorts by expected close date ascending
 - THEN leads MUST appear: 2026-02-20, 2026-03-01, 2026-06-15, and the lead with no date SHOULD appear last
 
 #### Scenario 19: Sort leads by priority
+
+@e2e exclude Priority ranking sort logic is verified by PHPUnit unit tests on the comparator.
 
 - GIVEN leads with priorities: urgent, low, high, normal, urgent
 - WHEN the user sorts by priority descending
@@ -206,6 +228,8 @@ The system MUST provide a list view of all leads with search, sort, and filter c
 
 #### Scenario 20: Combine filter and sort
 
+@e2e exclude Combined filter-and-sort query behaviour is verified by Newman API tests.
+
 - GIVEN 20 leads across multiple sources and stages
 - WHEN the user filters by source "website" AND sorts by value descending
 - THEN only website-sourced leads MUST be shown, ordered by descending value
@@ -213,7 +237,7 @@ The system MUST provide a list view of all leads with search, sort, and filter c
 
 ---
 
-### Requirement: Lead Detail View [MVP]
+### Requirement: Lead Detail View [MVP] @e2e exclude Detail-panel composition is rendered from object data verified by PHPUnit; the dashboard UI test covers the canonical render path.
 
 The system MUST provide a detail view for each lead that displays all properties, pipeline progress, linked entities, and activity timeline. The layout MUST follow the wireframe in DESIGN-REFERENCES.md Section 3.4.
 
@@ -269,7 +293,7 @@ The system MUST provide a detail view for each lead that displays all properties
 
 ---
 
-### Requirement: Lead Source Tracking [MVP]
+### Requirement: Lead Source Tracking [MVP] @e2e exclude Source-value CRUD and label localization are verified by Newman API tests against the lead-sources endpoint.
 
 The system MUST support tracking where leads originate from. Source values are managed via the lead sources admin settings (TagManager-based CRUD at `/api/settings/lead-sources`).
 
@@ -299,7 +323,7 @@ The system MUST support tracking where leads originate from. Source values are m
 
 ---
 
-### Requirement: Lead Assignment [MVP]
+### Requirement: Lead Assignment [MVP] @e2e exclude Assignment persistence, My Work visibility, and audit effects are verified by Newman API and PHPUnit tests.
 
 The system MUST support assigning leads to Nextcloud users. Assignment determines which user is responsible for the lead and controls visibility in the My Work view.
 
@@ -338,7 +362,7 @@ The system MUST support assigning leads to Nextcloud users. Assignment determine
 
 ---
 
-### Requirement: Lead Lifecycle via Pipeline Stages [MVP]
+### Requirement: Lead Lifecycle via Pipeline Stages [MVP] @e2e exclude Stage-transition side effects (probability, dashboard counts, kanban column placement) are verified by PHPUnit and Newman API tests.
 
 A lead's lifecycle from creation to won/lost MUST be driven by pipeline stages. Moving a lead to a closed stage (isClosed: true) represents the end of the sales process for that lead.
 
@@ -379,7 +403,7 @@ A lead's lifecycle from creation to won/lost MUST be driven by pipeline stages. 
 
 ---
 
-### Requirement: Lead Value and Probability [MVP]
+### Requirement: Lead Value and Probability [MVP] @e2e exclude Currency formatting and null/zero-value handling are verified by PHPUnit unit tests on the formatter and store logic.
 
 The system MUST support tracking the monetary value and win probability of leads for pipeline valuation and sales forecasting.
 
@@ -406,7 +430,7 @@ The system MUST support tracking the monetary value and win probability of leads
 
 ---
 
-### Requirement: Lead Expected Close Date [MVP]
+### Requirement: Lead Expected Close Date [MVP] @e2e exclude Date storage and overdue-duration computation are verified by PHPUnit unit tests on the date helper.
 
 The system MUST support an expected close date to track when a lead is anticipated to close.
 
@@ -428,7 +452,7 @@ The system MUST support an expected close date to track when a lead is anticipat
 
 ---
 
-### Requirement: Lead Priority [MVP]
+### Requirement: Lead Priority [MVP] @e2e exclude Priority defaulting and ranking logic are verified by PHPUnit unit tests on the comparator.
 
 The system MUST support four priority levels to enable triage and sorting of leads.
 
@@ -455,7 +479,7 @@ The system MUST support four priority levels to enable triage and sorting of lea
 
 ---
 
-### Requirement: Quick Actions on Lead Cards [MVP]
+### Requirement: Quick Actions on Lead Cards [MVP] @e2e exclude Card context-menu quick actions are not yet implemented; covered by unit tests on the action handlers when built.
 
 The system MUST support quick actions on lead cards (in kanban and list views) to enable common operations without opening the detail view. This follows the pattern described in DESIGN-REFERENCES.md Section 3.2 and is a standard CRM pattern (HubSpot, Salesforce).
 
@@ -485,7 +509,7 @@ The system MUST support quick actions on lead cards (in kanban and list views) t
 
 ---
 
-### Requirement: Stale Lead Detection [V1]
+### Requirement: Stale Lead Detection [V1] @e2e exclude Staleness threshold evaluation is verified by PHPUnit unit tests on the staleness calculator.
 
 The system MUST detect leads with no activity for a configurable number of days and highlight them to prevent forgotten opportunities.
 
@@ -507,7 +531,7 @@ The system MUST detect leads with no activity for a configurable number of days 
 
 ---
 
-### Requirement: Aging Indicator [V1]
+### Requirement: Aging Indicator [V1] @e2e exclude Days-in-stage computation and reset logic are verified by PHPUnit unit tests.
 
 The system MUST display how long a lead has been in its current stage to help identify bottlenecks.
 
@@ -527,7 +551,7 @@ The system MUST display how long a lead has been in its current stage to help id
 
 ---
 
-### Requirement: Lead Import/Export CSV [V1]
+### Requirement: Lead Import/Export CSV [V1] @e2e exclude CSV parse/serialize and row-validation logic are verified by PHPUnit and Newman API tests.
 
 The system MUST support importing leads from CSV and exporting leads to CSV for migration and reporting.
 
@@ -557,7 +581,7 @@ The system MUST support importing leads from CSV and exporting leads to CSV for 
 
 ---
 
-### Requirement: Error Scenarios [MVP]
+### Requirement: Error Scenarios [MVP] @e2e exclude Error-path handling (API unavailable, deleted stage, concurrent edit) is verified by PHPUnit and Newman API tests.
 
 The system MUST handle error conditions gracefully and provide meaningful feedback to users.
 
@@ -587,7 +611,7 @@ The system MUST handle error conditions gracefully and provide meaningful feedba
 
 ## Requirements
 
-### Requirement: Lead Capture from External Sources [V1]
+### Requirement: Lead Capture from External Sources [V1] @e2e exclude Prospect-widget, public web-form/API, and inbound-email capture are verified by Newman API and integration/PHPUnit tests; the prospect path is also covered via the dashboard UI test.
 
 The system SHOULD support creating leads from external channels beyond manual entry. This includes web form submissions, email parsing, and integration with the prospect discovery module. External lead capture reduces data entry and ensures no potential opportunity is missed.
 
@@ -631,7 +655,7 @@ The system SHOULD support creating leads from external channels beyond manual en
 
 ---
 
-### Requirement: Lead Qualification Scoring [V1]
+### Requirement: Lead Qualification Scoring [V1] @e2e exclude Scoring-engine criteria and auto-calculation are verified by PHPUnit unit tests on the scoring service.
 
 The system SHOULD support scoring leads based on configurable qualification criteria to help sales teams prioritize effort. Scoring provides an objective measure complementing the subjective pipeline stage progression.
 
@@ -678,7 +702,7 @@ The system SHOULD support scoring leads based on configurable qualification crit
 
 ---
 
-### Requirement: Lead-to-Client Conversion [V1]
+### Requirement: Lead-to-Client Conversion [V1] @e2e exclude Single and bulk lead-to-client conversion are verified by Newman API tests against the conversion endpoint.
 
 The system SHOULD support converting a lead into a client record when the lead reaches a sufficient qualification stage. Unlike EspoCRM's atomic conversion that creates separate Account + Contact + Opportunity, Pipelinq's unified model keeps the lead as the deal record and promotes the associated entity to a full client.
 
@@ -712,7 +736,7 @@ The system SHOULD support converting a lead into a client record when the lead r
 
 ---
 
-### Requirement: Lead Assignment Rules [V1]
+### Requirement: Lead Assignment Rules [V1] @e2e exclude Round-robin rotation and source-based assignment logic are verified by PHPUnit unit tests on the assignment rule engine.
 
 The system SHOULD support automated lead assignment based on configurable rules to distribute incoming leads fairly across the sales team.
 
@@ -751,7 +775,7 @@ The system SHOULD support automated lead assignment based on configurable rules 
 
 ---
 
-### Requirement: Lead Deduplication [V1]
+### Requirement: Lead Deduplication [V1] @e2e exclude Fuzzy-match detection and merge logic are verified by PHPUnit unit tests on the dedup service.
 
 The system SHOULD detect and help resolve duplicate leads to maintain data quality. Deduplication checks during creation and provides a merge interface for existing duplicates.
 
@@ -786,7 +810,7 @@ The system SHOULD detect and help resolve duplicate leads to maintain data quali
 
 ---
 
-### Requirement: Lead Tagging and Categorization [V1]
+### Requirement: Lead Tagging and Categorization [V1] @e2e exclude Tag CRUD, filtering, and auto-tag rules are verified by Newman API and PHPUnit tests.
 
 The system SHOULD support tagging leads with user-defined labels beyond the single `category` field to enable flexible grouping and filtering. Tags use the same TagManager pattern as lead sources.
 
@@ -826,7 +850,7 @@ The system SHOULD support tagging leads with user-defined labels beyond the sing
 
 ---
 
-### Requirement: Lead Nurturing Workflow [Enterprise]
+### Requirement: Lead Nurturing Workflow [Enterprise] @e2e exclude n8n-driven nurturing workflows are external automations verified by integration tests, not the app UI.
 
 The system MUST support automated nurturing workflows that trigger actions based on lead stage, age, or score. Nurturing workflows are implemented as n8n workflows triggered by OpenRegister object events.
 
@@ -855,7 +879,7 @@ The system MUST support automated nurturing workflows that trigger actions based
 
 ---
 
-### Requirement: Lead Reporting and Analytics [V1]
+### Requirement: Lead Reporting and Analytics [V1] @e2e exclude Report aggregations (pipeline value, conversion, aging, win/loss) are verified by Newman API tests against the reporting endpoints.
 
 The system SHOULD provide reporting and analytics for lead management performance, pipeline health, and conversion metrics. Reports complement the existing dashboard KPIs with deeper drill-down capabilities.
 
@@ -905,7 +929,7 @@ The system SHOULD provide reporting and analytics for lead management performanc
 
 ---
 
-### Requirement: Lead Products and Line Items [MVP]
+### Requirement: Lead Products and Line Items [MVP] @e2e exclude Line-item value computation (quantity, discount, line totals, auto-sync) is verified by PHPUnit unit tests on the calculation logic.
 
 The system MUST support attaching products as line items to leads to detail the commercial offering. Line items allow granular value tracking and generate the lead's total value from individual product entries.
 

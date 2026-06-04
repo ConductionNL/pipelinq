@@ -14,6 +14,8 @@ The admin settings page provides a Nextcloud admin panel for configuring Pipelin
 
 ---
 
+@e2e exclude Admin configuration settings (register mapping, pipeline/stage CRUD, default pipeline, lead sources, request channels, prospect ICP) persisted via API and the Nextcloud admin settings framework — exercised by PHPUnit/Newman; admin settings forms are out of the core browser-e2e scope.
+
 ## Requirements
 
 ### Requirement: Nextcloud Admin Panel Registration [MVP]

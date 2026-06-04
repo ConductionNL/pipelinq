@@ -55,7 +55,7 @@ Request management handles the intake and tracking of requests (verzoeken) — s
 
 ## Requirements
 
-### Requirement: Request CRUD [MVP]
+### Requirement: Request CRUD [MVP] @e2e exclude CRUD persistence verified via Newman API and PHPUnit OpenRegister object tests
 
 The system MUST support creating, reading, updating, and deleting request records. Each request MUST have a `title`. The `status` MUST default to `new` when not explicitly provided. The `channel` field MUST be added to the OpenRegister schema to support persistence.
 
@@ -97,7 +97,7 @@ The system MUST support creating, reading, updating, and deleting request record
 
 ---
 
-### Requirement: Request Status Lifecycle [MVP]
+### Requirement: Request Status Lifecycle [MVP] @e2e exclude status transition rules verified by PHPUnit state machine tests
 
 The system MUST enforce allowed status transitions as defined in the transition table. The frontend MUST present only valid transitions for the current status.
 
@@ -138,42 +138,50 @@ The system MUST provide a full list view with search, sort, filter, and paginati
 - **THEN** default sort MUST be `requestedAt` descending
 
 #### Scenario: Filter by status
+@e2e exclude filtering verified via Newman API facet queries
 - **WHEN** user filters by status `new`
 - **THEN** only requests with status `new` MUST be shown
 - **THEN** the filter selection MUST persist until cleared
 
 #### Scenario: Filter by priority
+@e2e exclude filtering verified via Newman API facet queries
 - **WHEN** user filters by priority `urgent`
 - **THEN** only urgent requests MUST be shown
 
 #### Scenario: Filter by assignee
+@e2e exclude filtering verified via Newman API facet queries
 - **WHEN** user filters by assignee "Jan de Vries"
 - **THEN** only requests assigned to Jan MUST be shown
 
 #### Scenario: Filter by channel
+@e2e exclude filtering verified via Newman API facet queries
 - **WHEN** user filters by channel `email`
 - **THEN** only email-channel requests MUST be shown
 
 #### Scenario: Combine multiple filters
+@e2e exclude filtering verified via Newman API facet queries
 - **WHEN** user applies status `in_progress` AND priority `high`
 - **THEN** only requests matching BOTH criteria MUST be shown
 
 #### Scenario: Search requests by keyword
+@e2e exclude search verified via Newman API query
 - **WHEN** user searches for "maintenance"
 - **THEN** the system MUST match against both `title` and `description` fields case-insensitively
 
 #### Scenario: Sort by column
+@e2e exclude sorting verified via Newman API query
 - **WHEN** user clicks the "Priority" column header
 - **THEN** the list MUST sort by priority (urgent > high > normal > low)
 - **THEN** clicking again MUST reverse the sort order
 
 #### Scenario: Pagination
+@e2e exclude pagination verified via Newman API query
 - **WHEN** user views the list with 50 requests and page size 25
 - **THEN** the system MUST display 25 requests with navigation to page 2
 
 ---
 
-### Requirement: Request Detail View [MVP]
+### Requirement: Request Detail View [MVP] @e2e exclude detail-view rendering covered in detail panel via component tests
 
 The system MUST provide a detail view with proper layout including core info, client link, pipeline position, assignment, and activity timeline. The current basic form MUST be replaced with a structured detail layout.
 
@@ -199,7 +207,7 @@ The system MUST provide a detail view with proper layout including core info, cl
 
 ---
 
-### Requirement: Request Assignment [MVP]
+### Requirement: Request Assignment [MVP] @e2e exclude assignment verified via API and unit tests on assignedTo field
 
 The system MUST allow assigning a request to a Nextcloud user via a user picker dropdown.
 
@@ -217,7 +225,7 @@ The system MUST allow assigning a request to a Nextcloud user via a user picker 
 
 ---
 
-### Requirement: Request Priority [MVP]
+### Requirement: Request Priority [MVP] @e2e exclude priority levels verified via API and unit tests
 
 The system MUST support four priority levels with visual indicators in all views.
 
@@ -238,7 +246,7 @@ The system MUST support four priority levels with visual indicators in all views
 
 ---
 
-### Requirement: Request Channel Tracking [V1]
+### Requirement: Request Channel Tracking [V1] @e2e exclude channel tracking verified via API tests
 
 The system MUST support tracking the intake channel. Channel values come from SystemTag-based admin settings (already implemented). The `channel` field MUST be added to the OpenRegister schema.
 
@@ -252,7 +260,7 @@ The system MUST support tracking the intake channel. Channel values come from Sy
 
 ---
 
-### Requirement: Request Category/Product Classification [V1]
+### Requirement: Request Category/Product Classification [V1] @e2e exclude categorisation verified via API tests
 
 The system SHOULD support categorizing requests by product or service type. Categories are free-text strings that MAY be pre-populated from admin configuration.
 
@@ -268,7 +276,7 @@ The system SHOULD support categorizing requests by product or service type. Cate
 
 ---
 
-### Requirement: Request-to-Case Conversion [V1]
+### Requirement: Request-to-Case Conversion [V1] @e2e exclude conversion verified via API tests
 
 The system MUST support converting a request to a case in Procest.
 
@@ -295,7 +303,7 @@ The system MUST support converting a request to a case in Procest.
 
 ---
 
-### Requirement: Request on Pipeline [MVP]
+### Requirement: Request on Pipeline [MVP] @e2e exclude pipeline placement verified via API tests
 
 A request MAY optionally be placed on a pipeline. When on a pipeline, the request has a `stage`, `stageOrder`, and appears on the kanban board.
 
@@ -325,20 +333,23 @@ The system MUST enforce validation rules for request data integrity.
 - **THEN** the system MUST reject with a validation error
 
 #### Scenario: Status must follow transition rules
+@e2e exclude transition rules verified by PHPUnit state machine tests
 - **WHEN** a status change violates the transition table
 - **THEN** the system MUST reject with specific error listing allowed transitions
 
 #### Scenario: Priority must be a valid value
+@e2e exclude priority validation verified via API and unit tests
 - **WHEN** priority is not one of `low`, `normal`, `high`, `urgent`
 - **THEN** the system MUST reject with a validation error
 
 #### Scenario: Client reference must be valid
+@e2e exclude reference validation verified via API tests
 - **WHEN** a client reference does not exist in OpenRegister
 - **THEN** the system MUST reject with "Referenced client not found"
 
 ---
 
-### Requirement: Request Queue Assignment [Enterprise]
+### Requirement: Request Queue Assignment [Enterprise] @e2e exclude queue assignment verified via API and unit tests
 
 The request entity SHALL support an optional `queue` reference field linking the request to a queue for workload management.
 
@@ -501,7 +512,7 @@ Request management handles the intake and tracking of requests (verzoeken) — s
 
 ## Requirements
 
-### Requirement: Request CRUD [MVP]
+### Requirement: Request CRUD [MVP] @e2e exclude CRUD persistence verified via Newman API and PHPUnit OpenRegister object tests
 
 The system MUST support creating, reading, updating, and deleting request records. Each request MUST have a `title`. The `status` MUST default to `new` when not explicitly provided. All properties defined in the data model MUST be persisted via OpenRegister.
 
@@ -543,7 +554,7 @@ The system MUST support creating, reading, updating, and deleting request record
 
 ---
 
-### Requirement: Request Status Lifecycle [MVP]
+### Requirement: Request Status Lifecycle [MVP] @e2e exclude status transition rules verified by PHPUnit state machine tests
 
 The system MUST enforce allowed status transitions as defined in the transition table. The frontend MUST present only valid transitions for the current status.
 
@@ -584,42 +595,50 @@ The system MUST provide a full list view with search, sort, filter, and paginati
 - **THEN** default sort MUST be `requestedAt` descending
 
 #### Scenario: Filter by status
+@e2e exclude filtering verified via Newman API facet queries
 - **WHEN** user filters by status `new`
 - **THEN** only requests with status `new` MUST be shown
 - **THEN** the filter selection MUST persist until cleared
 
 #### Scenario: Filter by priority
+@e2e exclude filtering verified via Newman API facet queries
 - **WHEN** user filters by priority `urgent`
 - **THEN** only urgent requests MUST be shown
 
 #### Scenario: Filter by assignee
+@e2e exclude filtering verified via Newman API facet queries
 - **WHEN** user filters by assignee "Jan de Vries"
 - **THEN** only requests assigned to Jan MUST be shown
 
 #### Scenario: Filter by channel
+@e2e exclude filtering verified via Newman API facet queries
 - **WHEN** user filters by channel `email`
 - **THEN** only email-channel requests MUST be shown
 
 #### Scenario: Combine multiple filters
+@e2e exclude filtering verified via Newman API facet queries
 - **WHEN** user applies status `in_progress` AND priority `high`
 - **THEN** only requests matching BOTH criteria MUST be shown
 
 #### Scenario: Search requests by keyword
+@e2e exclude search verified via Newman API query
 - **WHEN** user searches for "maintenance"
 - **THEN** the system MUST match against both `title` and `description` fields case-insensitively
 
 #### Scenario: Sort by column
+@e2e exclude sorting verified via Newman API query
 - **WHEN** user clicks the "Priority" column header
 - **THEN** the list MUST sort by priority (urgent > high > normal > low)
 - **THEN** clicking again MUST reverse the sort order
 
 #### Scenario: Pagination
+@e2e exclude pagination verified via Newman API query
 - **WHEN** user views the list with 50 requests and page size 25
 - **THEN** the system MUST display 25 requests with navigation to page 2
 
 ---
 
-### Requirement: Request Detail View [MVP]
+### Requirement: Request Detail View [MVP] @e2e exclude detail-view rendering covered in detail panel via component tests
 
 The system MUST provide a detail view with proper layout including core info, client link, pipeline position, assignment, and activity timeline. The current basic form MUST be replaced with a structured detail layout.
 
@@ -645,7 +664,7 @@ The system MUST provide a detail view with proper layout including core info, cl
 
 ---
 
-### Requirement: Request Assignment [MVP]
+### Requirement: Request Assignment [MVP] @e2e exclude assignment verified via API and unit tests on assignedTo field
 
 The system MUST allow assigning a request to a Nextcloud user via a user picker dropdown.
 
@@ -663,7 +682,7 @@ The system MUST allow assigning a request to a Nextcloud user via a user picker 
 
 ---
 
-### Requirement: Request Priority [MVP]
+### Requirement: Request Priority [MVP] @e2e exclude priority levels verified via API and unit tests
 
 The system MUST support four priority levels with visual indicators in all views.
 
@@ -684,7 +703,7 @@ The system MUST support four priority levels with visual indicators in all views
 
 ---
 
-### Requirement: Request Channel Tracking [V1]
+### Requirement: Request Channel Tracking [V1] @e2e exclude channel tracking verified via API tests
 
 The system MUST support tracking the intake channel. Channel values come from SystemTag-based admin settings (already implemented). The `channel` field is present in the OpenRegister schema.
 
@@ -698,7 +717,7 @@ The system MUST support tracking the intake channel. Channel values come from Sy
 
 ---
 
-### Requirement: Request Category/Product Classification [V1]
+### Requirement: Request Category/Product Classification [V1] @e2e exclude categorisation verified via API tests
 
 The system MUST support categorizing requests by product or service type. Categories are free-text strings that MAY be pre-populated from admin configuration.
 
@@ -714,7 +733,7 @@ The system MUST support categorizing requests by product or service type. Catego
 
 ---
 
-### Requirement: Request-to-Case Conversion [V1]
+### Requirement: Request-to-Case Conversion [V1] @e2e exclude conversion verified via API tests
 
 The system MUST support converting a request to a case in Procest.
 
@@ -741,7 +760,7 @@ The system MUST support converting a request to a case in Procest.
 
 ---
 
-### Requirement: Request on Pipeline [MVP]
+### Requirement: Request on Pipeline [MVP] @e2e exclude pipeline placement verified via API tests
 
 A request MUST be optionally placeable on a pipeline. When on a pipeline, the request has a `stage`, `stageOrder`, and appears on the kanban board.
 
@@ -771,14 +790,17 @@ The system MUST enforce validation rules for request data integrity.
 - **THEN** the system MUST reject with a validation error
 
 #### Scenario: Status must follow transition rules
+@e2e exclude transition rules verified by PHPUnit state machine tests
 - **WHEN** a status change violates the transition table
 - **THEN** the system MUST reject with specific error listing allowed transitions
 
 #### Scenario: Priority must be a valid value
+@e2e exclude priority validation verified via API and unit tests
 - **WHEN** priority is not one of `low`, `normal`, `high`, `urgent`
 - **THEN** the system MUST reject with a validation error
 
 #### Scenario: Client reference must be valid
+@e2e exclude reference validation verified via API tests
 - **WHEN** a client reference does not exist in OpenRegister
 - **THEN** the system MUST reject with "Referenced client not found"
 
@@ -786,7 +808,7 @@ The system MUST enforce validation rules for request data integrity.
 
 ## Requirements
 
-### Requirement: Request-Contact Linking [MVP]
+### Requirement: Request-Contact Linking [MVP] @e2e exclude contact linking verified via API tests
 
 The system MUST support linking a request to a specific contact person at the client organization. The `contact` field in the request schema stores a UUID reference to a contact object. When a request is linked to both a client and a contact, the contact MUST belong to that client.
 
@@ -816,7 +838,7 @@ The system MUST support linking a request to a specific contact person at the cl
 
 ---
 
-### Requirement: Request Notes and Activity Timeline [MVP]
+### Requirement: Request Notes and Activity Timeline [MVP] @e2e exclude notes and timeline covered in detail panel via component tests
 
 The system MUST support adding notes to requests via the Nextcloud ICommentsManager and displaying an activity timeline showing status changes, assignment changes, and user notes. This leverages the existing `EntityNotes` component and `ActivityService`.
 
@@ -847,7 +869,7 @@ The system MUST support adding notes to requests via the Nextcloud ICommentsMana
 
 ---
 
-### Requirement: Request SLA Tracking [Enterprise]
+### Requirement: Request SLA Tracking [Enterprise] @e2e exclude SLA tracking verified via API and unit tests
 
 The system SHOULD support tracking service level agreement (SLA) response and resolution times for requests. SLA targets are defined per category or globally and enable monitoring of service quality.
 
@@ -879,7 +901,7 @@ The system SHOULD support tracking service level agreement (SLA) response and re
 
 ---
 
-### Requirement: Bulk Request Operations [V1]
+### Requirement: Bulk Request Operations [V1] @e2e exclude bulk operations verified via API tests
 
 The system MUST support performing actions on multiple requests at once from the list view. Bulk actions reduce repetitive work for request handlers processing a high volume of incoming requests.
 
@@ -912,7 +934,7 @@ The system MUST support performing actions on multiple requests at once from the
 
 ---
 
-### Requirement: Request Templates [V1]
+### Requirement: Request Templates [V1] @e2e exclude templates verified via API tests
 
 The system SHOULD support pre-defined request templates to standardize common request types. Templates pre-fill the title, description, category, priority, and optionally the pipeline/stage, reducing data entry time and ensuring consistency.
 
@@ -937,7 +959,7 @@ The system SHOULD support pre-defined request templates to standardize common re
 
 ---
 
-### Requirement: Request Reporting and KPIs [V1]
+### Requirement: Request Reporting and KPIs [V1] @e2e exclude reporting and KPIs covered via reporting tests
 
 The system MUST provide reporting capabilities for request management performance. KPIs include request volume, average handling time, status distribution, and assignment workload. Reports leverage the existing `MetricsRepository` and `MetricsFormatter` services.
 
@@ -973,7 +995,7 @@ The system MUST provide reporting capabilities for request management performanc
 
 ---
 
-### Requirement: Request Search and Faceted Filtering [MVP]
+### Requirement: Request Search and Faceted Filtering [MVP] @e2e exclude search and faceted filtering verified via Newman API tests
 
 The system MUST support full-text search across request fields and faceted filtering using OpenRegister's `facetable` schema properties. The request schema marks `status`, `priority`, `assignee`, `category`, `channel`, and `stage` as facetable.
 
@@ -1004,7 +1026,7 @@ The system MUST support full-text search across request fields and faceted filte
 
 ---
 
-### Requirement: Request-to-Case Conversion with Data Mapping [V1]
+### Requirement: Request-to-Case Conversion with Data Mapping [V1] @e2e exclude conversion field mapping verified via API tests
 
 When converting a request to a Procest case, the system MUST map request fields to case fields following the VNG Verzoek-to-Zaak relationship pattern. This extends REQ-RM-090 with detailed field mapping and error handling.
 
@@ -1040,7 +1062,7 @@ When converting a request to a Procest case, the system MUST map request fields 
 
 ---
 
-### Requirement: Request Pipeline Kanban View [MVP]
+### Requirement: Request Pipeline Kanban View [MVP] @e2e exclude pipeline placement verified via API tests
 
 Requests placed on a pipeline MUST appear on the kanban board alongside leads. Request-specific kanban interactions include drag-and-drop stage changes, quick status updates, and visual differentiation from leads.
 
@@ -1071,7 +1093,7 @@ Requests placed on a pipeline MUST appear on the kanban board alongside leads. R
 
 ---
 
-### Requirement: Request Notification and Assignment Alerts [V1]
+### Requirement: Request Notification and Assignment Alerts [V1] @e2e exclude notifications verified via API and unit tests
 
 The system MUST send Nextcloud notifications when requests are created, assigned, reassigned, or have their status changed. This leverages the existing `ObjectEventHandlerService`, `ObjectEventDispatcher`, and `NotificationService`.
 
@@ -1103,7 +1125,7 @@ The system MUST send Nextcloud notifications when requests are created, assigned
 
 ---
 
-### Requirement: Request Quick Create from Client Detail [MVP]
+### Requirement: Request Quick Create from Client Detail [MVP] @e2e exclude quick-create covered in detail panel via component tests
 
 The system MUST support creating a request directly from a client's detail view, pre-linking the request to that client. This provides a natural workflow where a service agent receiving a call can create a request without leaving the client context.
 
@@ -1225,7 +1247,7 @@ Overdue warning (if applicable)
 
 ---
 
-### Requirement: Request Linked Contactmomenten
+### Requirement: Request Linked Contactmomenten @e2e exclude linked contactmomenten covered in detail panel via component tests
 
 The system MUST display all contactmomenten linked to a request on the request detail view, and allow logging new contactmomenten from the request context.
 

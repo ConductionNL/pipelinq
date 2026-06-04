@@ -13,6 +13,8 @@ Add internal notes/comments to all Pipelinq entities (clients, contacts, leads, 
 
 ---
 
+@e2e exclude Entity notes CRUD + threading API — verified by PHPUnit/Newman, surfaced inside detail panels, no standalone view.
+
 ## Requirements
 
 ### Requirement: Notes CRUD on All Entity Types [MVP]

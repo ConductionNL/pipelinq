@@ -45,6 +45,8 @@ The system MUST provide a real-time dashboard showing key performance indicators
 
 #### Scenario: Display first-call resolution rate
 
+@e2e exclude FCR rate is a computed/unit-tested calculation (resolved-without-backoffice ratio, excluding informatief), not a UI assertion
+
 - GIVEN 150 contactmomenten today, of which 112 were resolved without routing to backoffice
 - WHEN the KCC manager views the dashboard
 - THEN the system MUST display first-call resolution rate as 74.7%
@@ -62,6 +64,8 @@ The system MUST provide a real-time dashboard showing key performance indicators
 
 #### Scenario: Dashboard auto-refresh
 
+@e2e exclude Timed 60-second auto-refresh and flicker-free re-render are component-level behaviours, not covered by the static dashboard render test
+
 - GIVEN the KCC manager has the rapportage dashboard open
 - WHEN 60 seconds have elapsed since the last refresh
 - THEN the dashboard MUST automatically fetch updated data from the OpenRegister API
@@ -69,6 +73,8 @@ The system MUST provide a real-time dashboard showing key performance indicators
 - AND a "Last updated" timestamp MUST be displayed
 
 #### Scenario: Dashboard empty state
+
+@e2e exclude Empty-state messaging and zero-value placeholders are component-level rendering, not exercised by the populated-dashboard render test
 
 - GIVEN no contactmomenten have been registered today
 - WHEN a KCC manager opens the rapportage dashboard
@@ -78,7 +84,7 @@ The system MUST provide a real-time dashboard showing key performance indicators
 
 ---
 
-### Requirement: Channel Analytics
+### Requirement: Channel Analytics @e2e exclude Channel distribution/comparison/shift analytics are driven by the aggregation API and validated there, not via the dashboard render test
 
 The system MUST provide detailed analytics per contact channel, enabling managers to understand channel distribution and trends.
 
@@ -110,7 +116,7 @@ The system MUST provide detailed analytics per contact channel, enabling manager
 
 ---
 
-### Requirement: Wait Time Monitoring
+### Requirement: Wait Time Monitoring @e2e exclude Queue statistics, historical wait-time reports, and SLA-breach alerts are backend/Newman-verified (PBX-sourced data), outside the dashboard render test scope
 
 The system MUST track and report on wait times (wachttijden) for incoming contacts, particularly phone and queue-based channels.
 
@@ -143,7 +149,7 @@ The system MUST track and report on wait times (wachttijden) for incoming contac
 
 ---
 
-### Requirement: Agent Performance
+### Requirement: Agent Performance @e2e exclude Individual and team agent statistics are sourced and computed via the API, not asserted by the Agent Performance tab render in the dashboard test
 
 The system MUST provide per-agent statistics to support team management and coaching.
 
@@ -182,7 +188,7 @@ The system MUST provide per-agent statistics to support team management and coac
 
 ---
 
-### Requirement: Trend Reporting
+### Requirement: Trend Reporting @e2e exclude Monthly/peak-hours/subject trend reports are API-driven aggregations verified at the data layer, not by the dashboard render test
 
 The system MUST provide trend reports over configurable time periods, enabling managers to identify patterns and plan capacity.
 
@@ -214,7 +220,7 @@ The system MUST provide trend reports over configurable time periods, enabling m
 
 ---
 
-### Requirement: Export and BI Integration
+### Requirement: Export and BI Integration @e2e exclude CSV/PDF generation, scheduled delivery, and BI API extraction are backend/Newman-verified; only the Export CSV button presence is covered by the dashboard render test
 
 The system MUST support exporting report data for use in external BI tools and management presentations.
 
@@ -255,7 +261,7 @@ The system MUST support exporting report data for use in external BI tools and m
 
 ---
 
-### Requirement: SLA Configuration
+### Requirement: SLA Configuration @e2e exclude Per-channel SLA target and warning-threshold persistence via IAppConfig is backend/Newman-verified, not exercised by the dashboard render test
 
 The system MUST allow administrators to configure SLA targets per channel and contact type.
 
@@ -286,7 +292,7 @@ The system MUST allow administrators to configure SLA targets per channel and co
 
 ---
 
-### Requirement: WOO/Open Data Reporting
+### Requirement: WOO/Open Data Reporting @e2e exclude WOO/annual/benchmark report generation is API-driven and verified at the data layer, not by the dashboard render test
 
 The system MUST support generating reports compliant with WOO (Wet open overheid) requirements for public transparency on service levels.
 
@@ -317,7 +323,7 @@ The system MUST support generating reports compliant with WOO (Wet open overheid
 
 ---
 
-### Requirement: Contact Moment Duration Tracking
+### Requirement: Contact Moment Duration Tracking @e2e exclude Auto-timer, manual duration entry, and audited duration correction are registration-form component behaviours, outside the reporting dashboard render test
 
 The system MUST accurately track the duration of each contact moment to enable meaningful handling time analytics.
 
@@ -347,7 +353,7 @@ The system MUST accurately track the duration of each contact moment to enable m
 
 ---
 
-### Requirement: Contact Moment Categorization
+### Requirement: Contact Moment Categorization @e2e exclude Subject selection, subject analytics, and trend alerts are SystemTag/API-driven and component-level, not exercised by the dashboard render test
 
 The system MUST support categorizing contact moments by subject to enable topic-based analytics.
 

@@ -5,8 +5,8 @@ const STORAGE_STATE = path.join(__dirname, 'tests/e2e/.auth/user.json')
 
 export default defineConfig({
 	testDir: './tests/e2e',
-	timeout: 30000,
-	expect: { timeout: 10000 },
+	timeout: 90000,
+	expect: { timeout: 15000 },
 	fullyParallel: false,
 	retries: 1,
 	workers: 1,
@@ -22,6 +22,9 @@ export default defineConfig({
 		storageState: STORAGE_STATE,
 		trace: 'on-first-retry',
 		screenshot: 'only-on-failure',
+		// The dev instance is slow; give navigation and actions headroom.
+		navigationTimeout: 60000,
+		actionTimeout: 20000,
 	},
 
 	projects: [

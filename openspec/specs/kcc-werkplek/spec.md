@@ -22,6 +22,8 @@ The KCC werkplek is a composite view that orchestrates data from multiple source
 - **Kennisartikel**: OpenRegister object in the `pipelinq` register using the `kennisartikel` schema (see kennisbank spec)
 - **Taak/Terugbelverzoek**: OpenRegister object for backoffice routing and callback requests
 
+@e2e exclude Contact-center (KCC) workplace orchestration + routing API — verified by PHPUnit/Newman/integration tests, not a standalone browser flow.
+
 ## ADDED Requirements
 
 ---

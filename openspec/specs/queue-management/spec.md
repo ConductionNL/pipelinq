@@ -32,22 +32,30 @@ Queue management provides priority-ordered work queues for organizing requests. 
 The system SHALL support creating, reading, updating, and deleting queue entities. A queue is a named container for organizing work items (requests and leads) with priority-based ordering. Each queue SHALL be stored as an OpenRegister object with `@type` set to `schema:ItemList`.
 
 #### Scenario: Create a queue with minimal fields
+
+@e2e exclude queue persistence verified via OpenRegister API tests
 - **WHEN** an admin creates a queue with title "Algemene Zaken"
 - **THEN** the system SHALL create an OpenRegister object with `@type` set to `schema:ItemList`
 - **THEN** the queue SHALL have `isActive` set to `true` by default
 - **THEN** the queue SHALL have `sortOrder` set to `0` by default
 
 #### Scenario: Create a queue with all fields
+
+@e2e exclude queue persistence verified via OpenRegister API tests
 - **WHEN** an admin creates a queue with title "Vergunningen", description "Alle vergunningsaanvragen", categories ["vergunningen", "omgevingsrecht"], and maxCapacity 50
 - **THEN** the system SHALL store all provided fields on the OpenRegister object
 - **THEN** the categories SHALL be used for automatic routing suggestions
 
 #### Scenario: Update a queue
+
+@e2e exclude queue update verified via OpenRegister API tests
 - **WHEN** an admin updates the title of queue "Algemene Zaken" to "Algemene Dienstverlening"
 - **THEN** the system SHALL persist the change
 - **THEN** existing items in the queue SHALL remain assigned to it
 
 #### Scenario: Delete a queue
+
+@e2e exclude queue deletion and item unqueue verified via OpenRegister API tests
 - **WHEN** an admin deletes queue "Oude Wachtrij" that contains 3 items
 - **THEN** the system SHALL remove the queue object
 - **THEN** all items in the queue SHALL have their `queue` reference cleared (unqueued)
@@ -58,7 +66,7 @@ The system SHALL support creating, reading, updating, and deleting queue entitie
 
 ---
 
-### Requirement: Queue Data Model [Enterprise]
+### Requirement: Queue Data Model [Enterprise] @e2e exclude schema registration verified via repair-step/unit tests, not UI
 
 The system SHALL define a `queue` schema in the OpenRegister pipelinq register with the properties listed in the Data Model section above.
 
@@ -70,7 +78,7 @@ The system SHALL define a `queue` schema in the OpenRegister pipelinq register w
 
 ---
 
-### Requirement: Queue Item Membership [Enterprise]
+### Requirement: Queue Item Membership [Enterprise] @e2e exclude item membership/move/remove verified via OpenRegister API tests
 
 Requests and leads SHALL be assignable to exactly one queue at a time. The queue reference is stored on the item (request or lead) via its `queue` field.
 
@@ -97,7 +105,7 @@ Requests and leads SHALL be assignable to exactly one queue at a time. The queue
 
 ---
 
-### Requirement: Priority-Based Queue Ordering [Enterprise]
+### Requirement: Priority-Based Queue Ordering [Enterprise] @e2e exclude priority ordering verified via unit tests of prioritySortComparator
 
 Items within a queue SHALL be automatically ordered by priority (urgent > high > normal > low), then by age (oldest `requestedAt` or `dateCreated` first within the same priority level). This ensures the most critical and longest-waiting items are served first.
 
@@ -126,23 +134,29 @@ The system SHALL provide a queue list view showing all queues with their current
 - **THEN** each queue SHALL show: title, item count (depth), oldest item waiting time, number of assigned agents
 
 #### Scenario: Queue depth indicator
+
+@e2e exclude depth/capacity computation verified via unit tests
 - **WHEN** queue "Vergunningen" contains 12 items
 - **THEN** the queue card SHALL display "12 items" as the depth
 - **THEN** if maxCapacity is 50, it SHALL also show "12/50"
 
 #### Scenario: Empty queue display
+
+@e2e exclude empty-state rendering verified via unit tests
 - **WHEN** queue "Klachten" has 0 items
 - **THEN** the queue SHALL display "Empty" or "0 items"
 - **THEN** the queue SHALL still be visible in the list (not hidden)
 
 #### Scenario: Inactive queue visual treatment
+
+@e2e exclude inactive styling verified via unit tests
 - **WHEN** a queue has `isActive` set to `false`
 - **THEN** the queue SHALL be visually muted (reduced opacity)
 - **THEN** the queue SHALL display an "Inactive" badge
 
 ---
 
-### Requirement: Queue Detail View [Enterprise]
+### Requirement: Queue Detail View [Enterprise] @e2e exclude covered in detail/navigation flows
 
 The system SHALL provide a queue detail view showing all items in the queue with priority-based ordering, along with queue metadata and agent assignments.
 
@@ -163,7 +177,7 @@ The system SHALL provide a queue detail view showing all items in the queue with
 
 ---
 
-### Requirement: Queue Navigation [Enterprise]
+### Requirement: Queue Navigation [Enterprise] @e2e exclude covered in navigation smoke tests
 
 The system SHALL add a "Queues" entry to the Pipelinq main navigation menu.
 
@@ -178,7 +192,7 @@ The system SHALL add a "Queues" entry to the Pipelinq main navigation menu.
 
 ---
 
-### Requirement: Default Queues [Enterprise]
+### Requirement: Default Queues [Enterprise] @e2e exclude default queue seeding verified via repair-step/unit tests
 
 The system SHALL create default queues during the repair step to provide an out-of-box experience.
 

@@ -39,30 +39,35 @@ The system MUST provide a Product entity stored as an OpenRegister object in the
 - AND the product MUST appear in the product list
 
 #### Scenario: Product with all fields
+@e2e exclude full-field persistence verified via API + unit tests, not UI e2e
 - GIVEN the user creates a product with all fields populated
 - WHEN the product is saved
 - THEN all fields MUST be persisted including sku, cost, category, unit, taxRate, and image
 - AND the product detail view MUST display all populated fields
 
 #### Scenario: Product status filter
+@e2e exclude status default-filter logic covered via API + unit tests
 - GIVEN products exist with both `active` and `inactive` status
 - WHEN the user views the product list
 - THEN only `active` products MUST be shown by default
 - AND the user MUST be able to toggle to see inactive products
 
 #### Scenario: Edit a product
+@e2e exclude update persistence verified via API + unit tests
 - GIVEN an existing product
 - WHEN the user modifies any field and saves
 - THEN the updated values MUST be persisted
 - AND the product list MUST reflect the changes
 
 #### Scenario: Delete a product
+@e2e exclude delete behaviour verified via API + unit tests
 - GIVEN an existing product that is not linked to any leads
 - WHEN the user deletes the product
 - THEN the product MUST be removed from the register
 - AND the product MUST no longer appear in the product list
 
 #### Scenario: Delete a product linked to leads
+@e2e exclude in-use guard + set-inactive fallback verified via API + unit tests
 - GIVEN a product that is linked to one or more leads via LeadProduct line items
 - WHEN the user attempts to delete the product
 - THEN the system MUST show a warning that the product is in use
@@ -70,7 +75,7 @@ The system MUST provide a Product entity stored as an OpenRegister object in the
 
 ---
 
-### Requirement: Product Category Entity
+### Requirement: Product Category Entity @e2e exclude category hierarchy CRUD verified via API + unit tests
 
 The system MUST provide a ProductCategory entity for hierarchical grouping of products, stored as an OpenRegister object using the `schema:DefinedTermSet` type annotation.
 
@@ -119,15 +124,18 @@ The system MUST provide a list view for browsing and managing products, followin
 - AND the list MUST show a "New Product" action button
 
 #### Scenario: Product list search
+@e2e exclude search filtering covered via API + unit tests
 - GIVEN multiple products exist
 - WHEN the user types in the search field
 - THEN the list MUST filter products by name or SKU containing the search term
 
 #### Scenario: Product list sorting
+@e2e exclude column sort behaviour covered via API + unit tests
 - WHEN the user clicks a column header
 - THEN the list MUST sort by that column (ascending, then descending on second click)
 
 #### Scenario: Product list filtering
+@e2e exclude combinable filter logic covered via API + unit tests
 - GIVEN products with different types, categories, and statuses
 - WHEN the user applies filters
 - THEN the list MUST support filtering by: type (product/service), category, status (active/inactive)
@@ -135,7 +143,7 @@ The system MUST provide a list view for browsing and managing products, followin
 
 ---
 
-### Requirement: Product Detail View
+### Requirement: Product Detail View @e2e exclude detail rendering + margin display verified via API + unit tests
 
 The system MUST provide a detail view for viewing and editing a single product, following the same patterns as existing entity detail views.
 
@@ -154,7 +162,7 @@ The system MUST provide a detail view for viewing and editing a single product, 
 
 ---
 
-### Requirement: Product Admin Settings
+### Requirement: Product Admin Settings @e2e exclude admin category management + default tax rate verified via API + unit tests
 
 The system MUST provide admin settings for managing the product catalog configuration.
 
@@ -171,7 +179,7 @@ The system MUST provide admin settings for managing the product catalog configur
 
 ---
 
-### Requirement: Product Pricing and Discounts
+### Requirement: Product Pricing and Discounts @e2e exclude pricing/discount/margin calculations verified via calc engine PHPUnit tests
 
 The system MUST support flexible pricing on product line items (LeadProduct), including per-line discounts, price overrides, and automatic total calculation. This mirrors the Krayin CRM pattern where each lead-product association carries its own pricing context.
 
@@ -207,7 +215,7 @@ The system MUST support flexible pricing on product line items (LeadProduct), in
 
 ---
 
-### Requirement: Product-Lead Linking via LeadProduct
+### Requirement: Product-Lead Linking via LeadProduct @e2e exclude lead-linking line-item behaviour covered in lead detail e2e + calc engine PHPUnit tests
 
 The system MUST support a many-to-many relationship between products and leads through the LeadProduct entity (schema:Offer). Each LeadProduct represents a line item with deal-specific quantity, pricing, and notes.
 
@@ -249,7 +257,7 @@ The system MUST support a many-to-many relationship between products and leads t
 
 ---
 
-### Requirement: Product Search and Selection
+### Requirement: Product Search and Selection @e2e exclude name/SKU search filtering covered via API + unit tests
 
 The system MUST provide efficient product search for both the product list view and the lead product selection dialog. Products MUST be searchable by name and SKU to support quick lookup during sales conversations.
 
@@ -279,7 +287,7 @@ The system MUST provide efficient product search for both the product list view 
 
 ---
 
-### Requirement: Product Image Management
+### Requirement: Product Image Management @e2e exclude image upload/storage verified via API tests
 
 The system MUST support associating an image with each product for visual identification in list views and detail pages. Images are stored via the Nextcloud Files API and referenced by URL in the product's `image` field.
 
@@ -308,7 +316,7 @@ The system MUST support associating an image with each product for visual identi
 
 ---
 
-### Requirement: Product Availability Status
+### Requirement: Product Availability Status @e2e exclude status lifecycle + dropdown filtering covered via API + unit tests
 
 The system MUST support product lifecycle management through the `status` field, allowing organizations to maintain products that are no longer sold while preserving historical data on linked leads.
 
@@ -339,7 +347,7 @@ The system MUST support product lifecycle management through the `status` field,
 
 ---
 
-### Requirement: Product Import and Export
+### Requirement: Product Import and Export @e2e exclude CSV import/export verified via API + unit tests
 
 The system MUST support bulk import and export of products via CSV to facilitate initial catalog setup and data exchange. This follows the pattern used by Krayin CRM's mass-operations approach.
 
@@ -375,7 +383,7 @@ The system MUST support bulk import and export of products via CSV to facilitate
 
 ---
 
-### Requirement: Product Reporting and Analytics
+### Requirement: Product Reporting and Analytics @e2e exclude product analytics covered via reporting e2e + unit tests
 
 The system MUST provide reporting on product performance to help sales teams understand which products drive the most pipeline value. The ProductRevenue component provides the foundation for this.
 
@@ -406,7 +414,7 @@ The system MUST provide reporting on product performance to help sales teams und
 
 ---
 
-### Requirement: Product Bundling
+### Requirement: Product Bundling @e2e exclude bundle composition + expansion verified via API + unit tests
 
 The system MUST support defining product bundles — predefined combinations of products that are commonly sold together. Bundles simplify the sales process by allowing reps to add a set of products to a lead in one action.
 
@@ -434,7 +442,7 @@ The system MUST support defining product bundles — predefined combinations of 
 
 ---
 
-### Requirement: Product Versioning and Audit Trail
+### Requirement: Product Versioning and Audit Trail @e2e exclude audit trail / price-change history verified via API + unit tests
 
 The system MUST maintain an audit trail of product changes, leveraging the OpenRegister audit log and Nextcloud Activity system. This ensures that historical pricing on leads remains accurate even when catalog prices change.
 
@@ -455,7 +463,7 @@ The system MUST maintain an audit trail of product changes, leveraging the OpenR
 
 ---
 
-### Requirement: Multi-Currency Display
+### Requirement: Multi-Currency Display @e2e exclude Dutch locale currency formatting verified via Newman + unit tests
 
 The system MUST support displaying product prices with proper currency formatting for the Dutch market. While the system stores prices in EUR as the base currency, display formatting MUST follow Dutch locale conventions.
 
@@ -480,7 +488,7 @@ The system MUST support displaying product prices with proper currency formattin
 
 ---
 
-### Requirement: Product API for External Access
+### Requirement: Product API for External Access @e2e exclude external API + webhook access verified via Newman tests
 
 The system MUST expose product catalog data through the standard OpenRegister API, enabling external systems (e.g., website product listings, e-commerce integrations, or n8n workflows) to query and manage products programmatically.
 

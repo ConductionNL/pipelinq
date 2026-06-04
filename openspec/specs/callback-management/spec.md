@@ -1,5 +1,7 @@
 ## ADDED Requirements
 
+@e2e exclude Callback/terugbelverzoek task scheduling, claim/reassign/complete APIs, attempt logging, and overdue reminder background jobs (CallbackOverdueJob) — verified by PHPUnit/Newman against the OpenRegister task schema, not browser UI.
+
 ### Requirement: Task Schema Registration
 
 The system MUST register a `task` schema in the pipelinq OpenRegister register with properties supporting terugbelverzoeken, opvolgtaken, and informatievragen. The schema maps to VNG `InterneTaak` and Schema.org `Action`.

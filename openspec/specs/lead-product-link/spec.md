@@ -14,6 +14,8 @@ The lead-product link enables sales reps to attach specific products (with quant
 
 ---
 
+@e2e exclude Lead↔product line-item association, value auto-calculation and pricing/discount math — verified by PHPUnit/Newman; surfaced inside the lead detail view with no standalone browser route of its own.
+
 ## Requirements
 
 ### Requirement: LeadProduct Entity [V1]
