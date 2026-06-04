@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-47
  */
 
 declare(strict_types=1);
@@ -23,6 +25,8 @@ namespace OCA\Pipelinq\Service;
 
 /**
  * Service for handling object event business logic.
+ *
+ * @spec openspec/changes/migrate-automation-to-flow-leaf/tasks.md#task-1.1
  */
 class ObjectEventHandlerService
 {
@@ -46,6 +50,8 @@ class ObjectEventHandlerService
      * @param object $objectEntity The created object entity.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-47
      */
     public function handleCreated(object $objectEntity): void
     {
@@ -72,6 +78,8 @@ class ObjectEventHandlerService
      * @param ?object $oldObject The old object entity or null.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-47
      */
     public function handleUpdated(object $newObject, ?object $oldObject): void
     {
@@ -131,7 +139,7 @@ class ObjectEventHandlerService
             return false;
         }
 
-        return in_array($entityType, ['lead', 'request'], true);
+        return in_array($entityType, ['lead', 'request', 'contact'], true);
     }//end isRelevantEntityType()
 
     /**

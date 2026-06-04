@@ -27,6 +27,7 @@
 				<NcSelect
 					v-model="form.type"
 					input-id="product-type"
+					:aria-label-combobox="t('pipelinq', 'Type')"
 					:options="typeOptions"
 					:placeholder="t('pipelinq', 'Select type')"
 					@input="validateField('type')" />
@@ -39,6 +40,7 @@
 				<NcSelect
 					v-model="form.status"
 					input-id="product-status"
+					:aria-label-combobox="t('pipelinq', 'Status')"
 					:options="statusOptions"
 					:placeholder="t('pipelinq', 'Select status')" />
 			</div>
@@ -79,9 +81,44 @@
 				<NcTextField
 					id="product-taxRate"
 					:value="form.taxRate"
+					:disabled="!!form.btwClass"
+					:helper-text="form.btwClass ? t('pipelinq', 'Derived from the selected BTW class') : ''"
 					type="number"
 					@update:value="v => form.taxRate = v" />
 			</div>
+		</div>
+
+		<div class="form-row">
+			<div class="form-group">
+				<label for="product-btwClass">{{ t('pipelinq', 'BTW Class') }}</label>
+				<NcSelect
+					v-model="form.btwClass"
+					input-id="product-btwClass"
+					:input-label="t('pipelinq', 'BTW Class')"
+					:aria-label-combobox="t('pipelinq', 'BTW Class')"
+					:options="btwClassOptions"
+					:placeholder="t('pipelinq', 'Select BTW class')"
+					label="label"
+					:reduce="opt => opt.id"
+					@input="onBtwClassChange" />
+			</div>
+			<div class="form-group">
+				<label for="product-barcode">{{ t('pipelinq', 'Barcode (EAN/UPC)') }}</label>
+				<NcTextField
+					id="product-barcode"
+					:value="form.barcode"
+					:maxlength="64"
+					@update:value="v => form.barcode = v" />
+			</div>
+		</div>
+
+		<div v-if="form.type === 'service'" class="form-group">
+			<label for="product-duration">{{ t('pipelinq', 'Duration (minutes)') }}</label>
+			<NcTextField
+				id="product-duration"
+				:value="form.duration"
+				type="number"
+				@update:value="v => form.duration = v" />
 		</div>
 
 		<div class="form-group">
@@ -89,6 +126,7 @@
 			<NcSelect
 				v-model="form.category"
 				input-id="product-category"
+				:aria-label-combobox="t('pipelinq', 'Category')"
 				:options="categoryOptions"
 				:placeholder="t('pipelinq', 'Select category')"
 				label="name"
@@ -141,6 +179,9 @@ export default {
 				status: 'active',
 				unit: '',
 				taxRate: '21',
+				btwClass: null,
+				barcode: '',
+				duration: '',
 			},
 			errors: {
 				name: '',
@@ -149,13 +190,26 @@ export default {
 			},
 			typeOptions: ['product', 'service'],
 			statusOptions: ['active', 'inactive'],
+			btwClassOptions: [
+				{ id: 'hoog', label: t('pipelinq', 'Hoog (21%)') },
+				{ id: 'laag', label: t('pipelinq', 'Laag (9%)') },
+				{ id: 'nul', label: t('pipelinq', 'Nul (0%)') },
+				{ id: 'vrijgesteld', label: t('pipelinq', 'Vrijgesteld') },
+			],
+			btwRateMap: { hoog: 21, laag: 9, nul: 0, vrijgesteld: 0 },
 			categories: [],
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-18
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-17
+		 */
 		isValid() {
 			const hasName = this.form.name.trim().length > 0
 			const hasType = !!this.form.type
@@ -163,6 +217,9 @@ export default {
 			const noErrors = Object.values(this.errors).every(e => !e)
 			return hasName && hasType && hasPrice && noErrors
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-14
+		 */
 		categoryOptions() {
 			return this.categories.map(c => ({ id: c.id, name: c.name }))
 		},
@@ -170,6 +227,10 @@ export default {
 	watch: {
 		product: {
 			immediate: true,
+			/**
+			 * @param val
+			 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-16
+			 */
 			handler(val) {
 				if (val && Object.keys(val).length > 0) {
 					this.populateForm(val)
@@ -181,6 +242,10 @@ export default {
 		await this.fetchCategories()
 	},
 	methods: {
+		/**
+		 * @param data
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-20
+		 */
 		populateForm(data) {
 			this.form = {
 				name: data.name || '',
@@ -193,9 +258,24 @@ export default {
 				status: data.status || 'active',
 				unit: data.unit || '',
 				taxRate: data.taxRate !== undefined ? String(data.taxRate) : '21',
+				btwClass: data.btwClass || null,
+				barcode: data.barcode || '',
+				duration: data.duration !== undefined && data.duration !== null ? String(data.duration) : '',
 			}
 			this.errors = { name: '', type: '', unitPrice: '' }
 		},
+		/**
+		 * Sync taxRate from the selected BTW class (server re-derives on lookup).
+		 */
+		onBtwClassChange() {
+			if (this.form.btwClass && this.btwRateMap[this.form.btwClass] !== undefined) {
+				this.form.taxRate = String(this.btwRateMap[this.form.btwClass])
+			}
+		},
+		/**
+		 * @param field
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-22
+		 */
 		validateField(field) {
 			switch (field) {
 			case 'name':
@@ -221,12 +301,18 @@ export default {
 				break
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-21
+		 */
 		validateAll() {
 			this.validateField('name')
 			this.validateField('type')
 			this.validateField('unitPrice')
 			return this.isValid
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-19
+		 */
 		onSave() {
 			if (!this.validateAll()) {
 				return
@@ -236,12 +322,20 @@ export default {
 				unitPrice: Number(this.form.unitPrice),
 				cost: this.form.cost ? Number(this.form.cost) : null,
 				taxRate: this.form.taxRate ? Number(this.form.taxRate) : 21,
+				btwClass: this.form.btwClass || null,
+				barcode: this.form.barcode || '',
+				duration: this.form.type === 'service' && this.form.duration !== ''
+					? Number(this.form.duration)
+					: null,
 			}
 			if (this.product?.id) {
 				data.id = this.product.id
 			}
 			this.$emit('save', data)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-15
+		 */
 		async fetchCategories() {
 			try {
 				const results = await this.objectStore.fetchCollection('productCategory', { _limit: 100 })

@@ -1,0 +1,126 @@
+{
+  "spec_slug": "2026-03-20-lead-product-link",
+  "title": "Proposal: lead-product-link",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [],
+  "issue": null,
+  "pipeline": {
+    "code_review": {
+      "pass": null,
+      "fixes_applied": [],
+      "unfixed": []
+    },
+    "security_review": {
+      "pass": null,
+      "fixes_applied": [],
+      "unfixed": []
+    },
+    "applier": {
+      "ran": false,
+      "pass": null,
+      "blocking": []
+    },
+    "build_count": 1,
+    "findings_fixed": 0,
+    "findings_open": 0,
+    "suggestions_open": 0,
+    "total_cost_usd": 1.7069,
+    "total_cost_eur": 1.57,
+    "total_turns": 63,
+    "last_code_review_pass": null,
+    "last_security_review_pass": null
+  },
+  "schema_version": 2,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-05-28T05:14:51Z",
+      "ended_at": "2026-05-28T11:39:47Z",
+      "outcome": "needs-input",
+      "outcome_reason": "applier returned fail verdict",
+      "pattern_tags": [
+        "browser-test-nc-setup-failed"
+      ],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "sonnet",
+          "container": "hydra-builder",
+          "started_at": "2026-05-28T04:49:05Z",
+          "ended_at": "2026-05-28T05:14:47Z",
+          "exit_code": 0,
+          "turns_used": 215,
+          "turns_budget": 200,
+          "turns_per_session": [
+            110,
+            105
+          ],
+          "turns_max_session": 110,
+          "sessions_count": 2,
+          "checks_run": [
+            "composer check:strict (phpcs)",
+            "composer test:unit (phpunit)"
+          ],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass",
+          "duration_seconds": 1542
+        },
+        {
+          "stage": "applier",
+          "persona": "Axel Pli\u00e9r",
+          "model": "sonnet",
+          "container": "hydra-applier",
+          "started_at": "2026-05-28T11:37:10Z",
+          "ended_at": "2026-05-28T11:39:34Z",
+          "exit_code": 1,
+          "turns_used": 15,
+          "turns_budget": 20,
+          "checks_run": [
+            "hydra.json-consumer"
+          ],
+          "checks_skipped": [],
+          "findings": [
+            {
+              "id": "applier-fail",
+              "severity": "CRITICAL",
+              "gate": "applier",
+              "rule": "applier returned fail verdict",
+              "status": "open",
+              "note": "Applier blocking items should be captured in hydra.json pipeline.applier.blocking[] by the container itself. See logs/pipeline-*/applier.jsonl for detail.",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "fail",
+          "duration_seconds": 144
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "runs": 2,
+    "turns_used": 230,
+    "cost_usd": 0.0,
+    "duration_seconds": 1686,
+    "cycles": 1,
+    "by_stage": {
+      "build": {
+        "runs": 1,
+        "turns_used": 215,
+        "cost_usd": 0.0,
+        "duration_seconds": 1542
+      },
+      "applier": {
+        "runs": 1,
+        "turns_used": 15,
+        "cost_usd": 0.0,
+        "duration_seconds": 144
+      }
+    }
+  }
+}

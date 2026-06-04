@@ -8,13 +8,15 @@
  * @category Controller
  * @package  OCA\Pipelinq\Controller
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-58
  */
 
 declare(strict_types=1);
@@ -24,6 +26,8 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IDBConnection;
 use OCP\IRequest;
@@ -57,10 +61,12 @@ class HealthController extends Controller
     /**
      * Health check endpoint.
      *
-     * @NoCSRFRequired
-     *
      * @return JSONResponse Health status
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-58
      */
+    #[PublicPage]
+    #[NoAdminRequired]
     public function index(): JSONResponse
     {
         $checks = [];
@@ -97,6 +103,8 @@ class HealthController extends Controller
      * Check database connectivity.
      *
      * @return string 'ok' or error message
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-58
      */
     private function checkDatabase(): string
     {
@@ -117,6 +125,8 @@ class HealthController extends Controller
      * Check filesystem access.
      *
      * @return string 'ok' or error message
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-58
      */
     private function checkFilesystem(): string
     {

@@ -1,0 +1,7 @@
+{
+  "schema_version": 2,
+  "spec_slug": "marketing-segmentation-and-blast-06-rest-controllers",
+  "app": "pipelinq",
+  "kind": "code",
+  "depends_on": ["marketing-segmentation-and-blast-05-jobs-and-webhooks"]
+}

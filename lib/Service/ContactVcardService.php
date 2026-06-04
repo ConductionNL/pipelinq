@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-28
  */
 
 declare(strict_types=1);
@@ -29,18 +31,31 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for syncing Pipelinq objects to Nextcloud Contacts as vCards.
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-28
  */
 class ContactVcardService
 {
     /**
+     * Allowed object types for vCard sync.
+     *
+     * Only these values may be used to construct an IAppConfig key, preventing
+     * an unvalidated caller-supplied $objectType from reaching arbitrary keys.
+     *
+     * @var string[]
+     */
+    private const ALLOWED_OBJECT_TYPES = ['client', 'contact'];
+
+    /**
      * Constructor.
      *
-     * @param IContactsManager            $contactsManager The contacts manager.
-     * @param IAppConfig                  $appConfig       The app config.
-     * @param ContainerInterface          $container       The container.
-     * @param ContactVcardWriterService   $writerService   The vCard writer.
-     * @param ContactVcardPropertyBuilder $propBuilder     The property builder.
-     * @param LoggerInterface             $logger          The logger.
+     * @param IContactsManager            $contactsManager  The contacts manager.
+     * @param IAppConfig                  $appConfig        The app config.
+     * @param ContainerInterface          $container        The container.
+     * @param ContactVcardWriterService   $writerService    The vCard writer.
+     * @param ContactVcardPropertyBuilder $propBuilder      The property builder.
+     * @param LoggerInterface             $logger           The logger.
+     * @param RegisterResolverService     $registerResolver The register resolver.
      */
     public function __construct(
         private IContactsManager $contactsManager,
@@ -49,6 +64,7 @@ class ContactVcardService
         private ContactVcardWriterService $writerService,
         private ContactVcardPropertyBuilder $propBuilder,
         private LoggerInterface $logger,
+        private RegisterResolverService $registerResolver,
     ) {
     }//end __construct()
 
@@ -59,6 +75,8 @@ class ContactVcardService
      * @param string $objectId   The object ID.
      *
      * @return ?string The contacts UID or null.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-28
      */
     public function syncToContacts(string $objectType, string $objectId): ?string
     {
@@ -98,8 +116,13 @@ class ContactVcardService
      */
     private function fetchPipelinqObject(string $objectType, string $objectId): ?array
     {
+        if (in_array($objectType, self::ALLOWED_OBJECT_TYPES, true) === false) {
+            $this->logger->warning('ContactVcardService: invalid objectType', ['objectType' => $objectType]);
+            return null;
+        }
+
         $objectService = $this->getObjectService();
-        $registerId    = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $registerId    = $this->registerResolver->resolve('contact');
         $schemaId      = $this->appConfig->getValueString(Application::APP_ID, "{$objectType}_schema", '');
 
         if ($registerId === '' || $schemaId === '') {
@@ -108,12 +131,12 @@ class ContactVcardService
         }
 
         try {
-            $object = $objectService->findObject(
+            $object = $objectService->find(
                 $objectId,
-                    $registerId,
-                    $schemaId,
-                    _rbac: false,
-                    _multitenancy: false
+                [],
+                false,
+                $registerId,
+                $schemaId
             );
         } catch (\Exception $e) {
             $this->logger->error('Pipelinq: Failed to fetch object for sync', ['exception' => $e->getMessage()]);

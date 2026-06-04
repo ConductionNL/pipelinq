@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-65
  */
 
 declare(strict_types=1);
@@ -32,6 +34,7 @@ class PipelineStageData
      * @param ?string $viewId The view ID to associate with the pipeline.
      *
      * @return array The sales pipeline object data.
+     * @spec   openspec/changes/reverse-2026-05-26-be-dashboard-pipeline/tasks.md#task-2
      */
     public function getSalesPipelineData(?string $viewId=null): array
     {
@@ -55,6 +58,7 @@ class PipelineStageData
      * @param ?string $viewId The view ID to associate with the pipeline.
      *
      * @return array The service requests pipeline object data.
+     * @spec   openspec/changes/reverse-2026-05-26-be-dashboard-pipeline/tasks.md#task-3
      */
     public function getServiceRequestsPipelineData(?string $viewId=null): array
     {

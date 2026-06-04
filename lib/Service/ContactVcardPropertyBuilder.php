@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-28
  */
 
 declare(strict_types=1);
@@ -49,6 +51,8 @@ class ContactVcardPropertyBuilder
      * @param string $objectType The object type (client or contact).
      *
      * @return array The vCard properties.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-28
      */
     public function buildProperties(array $objData, string $objectType): array
     {
@@ -153,12 +157,12 @@ class ContactVcardPropertyBuilder
         }
 
         try {
-            $client = $objectService->findObject(
+            $client = $objectService->find(
                 $clientId,
-                    $registerId,
-                    $schemaId,
-                    _rbac: false,
-                    _multitenancy: false
+                [],
+                false,
+                $registerId,
+                $schemaId
             );
             $data   = $this->serializeResult(result: $client);
             return $data['name'] ?? null;

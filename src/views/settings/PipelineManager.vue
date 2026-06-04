@@ -1,14 +1,13 @@
 <template>
-	<div class="pipeline-manager">
-		<div class="pipeline-header">
-			<h3>{{ t('pipelinq', 'Pipelines') }}</h3>
+	<CnSettingsSection :name="t('pipelinq', 'Pipelines')">
+		<template #actions>
 			<NcButton type="primary" @click="showForm = true; editingPipeline = null">
 				<template #icon>
 					<Plus :size="20" />
 				</template>
 				{{ t('pipelinq', 'Add pipeline') }}
 			</NcButton>
-		</div>
+		</template>
 
 		<NcLoadingIcon v-if="loading" />
 
@@ -59,33 +58,22 @@
 			@save="onSave"
 			@cancel="showForm = false; editingPipeline = null" />
 
-		<NcDialog v-if="deletingPipeline"
-			:name="t('pipelinq', 'Delete pipeline')"
-			@closing="deletingPipeline = null">
-			<p>{{ t('pipelinq', 'Are you sure you want to delete "{title}"?', { title: deletingPipeline.title }) }}</p>
-			<p v-if="deleteAffectedCount > 0" class="delete-warning">
-				{{ t('pipelinq', '{count} leads/requests are on this pipeline. They will be removed from the pipeline but not deleted.', { count: deleteAffectedCount }) }}
-			</p>
-			<p v-if="deletingPipeline.stages && deletingPipeline.stages.length > 0" class="delete-warning">
-				{{ t('pipelinq', 'This pipeline has {count} stages. All stage configuration will be lost.', { count: deletingPipeline.stages.length }) }}
-			</p>
-			<template #actions>
-				<NcButton type="tertiary" @click="deletingPipeline = null">
-					{{ t('pipelinq', 'Cancel') }}
-				</NcButton>
-				<NcButton type="error" @click="onDeleteConfirm">
-					{{ t('pipelinq', 'Delete') }}
-				</NcButton>
-			</template>
-		</NcDialog>
-	</div>
+		<DeletePipelineDialog v-if="deletingPipeline"
+			:pipeline="deletingPipeline"
+			:affected-count="deleteAffectedCount"
+			@cancel="deletingPipeline = null"
+			@confirm="onDeleteConfirm" />
+	</CnSettingsSection>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
+import { CnSettingsSection } from '@conduction/nextcloud-vue'
+import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from '../../store/modules/object.js'
 import PipelineForm from './PipelineForm.vue'
+import DeletePipelineDialog from '../../dialogs/DeletePipelineDialog.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
@@ -95,11 +83,12 @@ import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
 export default {
 	name: 'PipelineManager',
 	components: {
+		CnSettingsSection,
 		NcButton,
-		NcDialog,
 		NcEmptyContent,
 		NcLoadingIcon,
 		PipelineForm,
+		DeletePipelineDialog,
 		Delete,
 		Pencil,
 		Plus,
@@ -115,12 +104,21 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-46
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-51
+		 */
 		pipelines() {
 			return this.objectStore.collections.pipeline || []
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-45
+		 */
 		loading() {
 			return this.objectStore.loading.pipeline || false
 		},
@@ -129,6 +127,10 @@ export default {
 		await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
 	},
 	methods: {
+		/**
+		 * @param pipeline
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-52
+		 */
 		schemaLabel(pipeline) {
 			const mappings = pipeline.propertyMappings
 			if (mappings && mappings.length > 0) {
@@ -142,10 +144,18 @@ export default {
 			}
 			return labels[pipeline.entityType] || pipeline.entityType || ''
 		},
+		/**
+		 * @param pipeline
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-53
+		 */
 		stageCount(pipeline) {
 			const count = (pipeline.stages || []).length
 			return n('pipelinq', '%n stage', '%n stages', count)
 		},
+		/**
+		 * @param pipeline
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-54
+		 */
 		stagePreview(pipeline) {
 			const stages = pipeline.stages || []
 			if (stages.length === 0) return t('pipelinq', 'No stages')
@@ -157,10 +167,18 @@ export default {
 			const last = sorted.slice(-2).map(s => s.name)
 			return [...first, '...', ...last].join(' → ')
 		},
+		/**
+		 * @param pipeline
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-49
+		 */
 		onEdit(pipeline) {
 			this.editingPipeline = pipeline
 			this.showForm = true
 		},
+		/**
+		 * @param pipeline
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-47
+		 */
 		async onDeleteClick(pipeline) {
 			// W1: Prevent deleting the default pipeline
 			if (pipeline.isDefault) {
@@ -179,6 +197,9 @@ export default {
 
 			this.deletingPipeline = pipeline
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-48
+		 */
 		async onDeleteConfirm() {
 			const id = this.deletingPipeline.id
 			this.deletingPipeline = null
@@ -186,6 +207,10 @@ export default {
 			await this.objectStore.deleteObject('pipeline', id)
 			await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
 		},
+		/**
+		 * @param pipelineData
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-50
+		 */
 		async onSave(pipelineData) {
 			// W5: Auto-set first pipeline as default
 			const isFirstPipeline = this.pipelines.length === 0
@@ -223,6 +248,10 @@ export default {
 			this.editingPipeline = null
 			await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
 		},
+		/**
+		 * @param pipelineId
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-44
+		 */
 		async countAffectedItems(pipelineId) {
 			const headers = {
 				'Content-Type': 'application/json',
@@ -242,7 +271,7 @@ export default {
 				const config = this.objectStore.objectTypeRegistry[slug]
 				if (!config) continue
 				try {
-					const url = `/apps/openregister/api/objects/${config.register}/${config.schema}?pipeline=${pipelineId}&_limit=1`
+					const url = generateUrl(`/apps/openregister/api/objects/${config.register}/${config.schema}?pipeline=${pipelineId}&_limit=1`)
 					const resp = await fetch(url, { headers })
 					if (resp.ok) {
 						const data = await resp.json()
@@ -260,21 +289,6 @@ export default {
 </script>
 
 <style scoped>
-.pipeline-manager {
-	margin-top: 24px;
-}
-
-.pipeline-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 16px;
-}
-
-.pipeline-header h3 {
-	margin: 0;
-}
-
 .pipeline-list {
 	display: flex;
 	flex-direction: column;

@@ -1,0 +1,1110 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"version": "1.0.0",
+	"dependencies": [
+		"openregister",
+		"deck",
+		"workflowengine",
+		"timemanager"
+	],
+	"menu": [
+		{
+			"id": "Dashboard",
+			"label": "Dashboard",
+			"icon": "icon-category-dashboard",
+			"route": "Dashboard",
+			"order": 10
+		},
+		{
+			"id": "Clients",
+			"label": "Clients",
+			"icon": "icon-group",
+			"route": "Clients",
+			"order": 20
+		},
+		{
+			"id": "Contacts",
+			"label": "Contacts",
+			"icon": "icon-user",
+			"route": "Contacts",
+			"order": 30
+		},
+		{
+			"id": "Leads",
+			"label": "Leads",
+			"icon": "icon-checkmark",
+			"route": "Leads",
+			"order": 40
+		},
+		{
+			"id": "Requests",
+			"label": "Requests",
+			"icon": "icon-file",
+			"route": "Requests",
+			"order": 50
+		},
+		{
+			"id": "Tasks",
+			"label": "Tasks",
+			"icon": "icon-checkmark",
+			"route": "Tasks",
+			"order": 60
+		},
+		{
+			"id": "Contactmomenten",
+			"label": "Contactmomenten",
+			"icon": "icon-comment",
+			"route": "Contactmomenten",
+			"order": 70
+		},
+		{
+			"id": "Complaints",
+			"label": "Complaints",
+			"icon": "icon-error",
+			"route": "Complaints",
+			"order": 80
+		},
+		{
+			"id": "Products",
+			"label": "Products",
+			"icon": "icon-category-app-bundles",
+			"route": "Products",
+			"order": 90
+		},
+		{
+			"id": "ProductBarcodeSearch",
+			"label": "Barcode lookup",
+			"icon": "icon-search",
+			"route": "ProductBarcodeSearch",
+			"order": 91
+		},
+		{
+			"id": "PosTransactions",
+			"label": "Kassabon",
+			"icon": "icon-category-monitoring",
+			"route": "PosTransactions",
+			"order": 95
+		},
+		{
+			"id": "PosRefunds",
+			"label": "Retouren",
+			"icon": "icon-history",
+			"route": "PosRefunds",
+			"order": 96
+		},
+		{
+			"id": "Pipeline",
+			"label": "Pipeline",
+			"icon": "icon-category-organization",
+			"route": "Pipeline",
+			"order": 100
+		},
+		{
+			"id": "Surveys",
+			"label": "Surveys",
+			"icon": "icon-comment",
+			"route": "Surveys",
+			"order": 110
+		},
+		{
+			"id": "Queues",
+			"label": "Queues",
+			"icon": "icon-category-workflow",
+			"route": "Queues",
+			"order": 120
+		},
+		{
+			"id": "MyWork",
+			"label": "My Work",
+			"icon": "icon-user",
+			"route": "MyWork",
+			"order": 140
+		},
+		{
+			"id": "Rapportage",
+			"label": "Reporting",
+			"icon": "icon-category-monitoring",
+			"route": "Rapportage",
+			"order": 150
+		},
+		{
+			"id": "Documentation",
+			"label": "Documentation",
+			"icon": "icon-info",
+			"href": "https://pipelinq.conduction.nl/",
+			"section": "footer",
+			"order": 160
+		},
+		{
+			"id": "Pipelines",
+			"label": "Pipelines",
+			"icon": "icon-category-organization",
+			"route": "Pipelines",
+			"order": 200
+		},
+		{
+			"id": "Forms",
+			"label": "Forms",
+			"icon": "icon-file",
+			"route": "Forms",
+			"order": 210
+		},
+		{
+			"id": "ExportJobs",
+			"label": "BI export",
+			"icon": "icon-category-integration",
+			"route": "ExportJobs",
+			"order": 215
+		},
+		{
+			"id": "FeaturesRoadmapMenu",
+			"label": "Features & roadmap",
+			"icon": "icon-toggle",
+			"route": "FeaturesRoadmap",
+			"section": "footer",
+			"order": 230
+		},
+		{
+			"id": "BillingApproval",
+			"label": "Timesheet approval & billing",
+			"icon": "icon-category-monitoring",
+			"href": "/index.php/apps/shillinq/",
+			"section": "footer",
+			"order": 220
+		}
+	],
+	"pages": [
+		{
+			"id": "Dashboard",
+			"route": "/",
+			"type": "dashboard",
+			"title": "Dashboard",
+			"actionsComponent": "DashboardHeaderActions",
+			"config": {
+				"widgets": [
+					{ "id": "open-leads",         "type": "custom", "title": "Open Leads" },
+					{ "id": "open-requests",      "type": "custom", "title": "Open Requests" },
+					{ "id": "pipeline-value",     "type": "custom", "title": "Pipeline Value" },
+					{ "id": "overdue",            "type": "custom", "title": "Overdue" },
+					{ "id": "requests-by-status", "type": "custom", "title": "Requests by Status" },
+					{ "id": "complaints",         "type": "custom", "title": "Complaints" },
+					{ "id": "my-work",            "type": "custom", "title": "My Work" },
+					{ "id": "client-overview",    "type": "custom", "title": "Client Overview" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "open-leads",         "gridX": 0, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": "2", "widgetId": "open-requests",      "gridX": 3, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": "3", "widgetId": "pipeline-value",     "gridX": 6, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": "4", "widgetId": "overdue",            "gridX": 9, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": "5", "widgetId": "requests-by-status", "gridX": 0, "gridY": 2, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "6", "widgetId": "complaints",         "gridX": 6, "gridY": 2, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "7", "widgetId": "my-work",            "gridX": 0, "gridY": 6, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "8", "widgetId": "client-overview",    "gridX": 6, "gridY": 6, "gridWidth": 6, "gridHeight": 4 }
+				]
+			},
+			"slots": {
+				"widget-open-leads": "OpenLeadsKpiWidget",
+				"widget-open-requests": "OpenRequestsKpiWidget",
+				"widget-pipeline-value": "PipelineValueKpiWidget",
+				"widget-overdue": "OverdueKpiWidget",
+				"widget-requests-by-status": "RequestsByStatusWidget",
+				"widget-complaints": "ComplaintsWidget",
+				"widget-my-work": "MyWorkWidget",
+				"widget-client-overview": "ClientOverviewWidget"
+			}
+		},
+		{
+			"id": "Clients",
+			"route": "/clients",
+			"type": "index",
+			"title": "Clients",
+			"config": {
+				"register": "pipelinq",
+				"schema": "client",
+				"columns": [
+					"name",
+					"type",
+					"industry",
+					"email",
+					"phone"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			}
+		},
+		{
+			"id": "ClientDetail",
+			"route": "/clients/:id",
+			"type": "detail",
+			"title": "Client",
+			"config": {
+				"register": "pipelinq",
+				"schema": "client",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "flow",
+							"label": "Flow",
+							"component": "CnFlowTab",
+							"config": {
+								"linkedType": "flow"
+							}
+						},
+						{
+							"id": "time-tracker",
+							"label": "Time",
+							"component": "CnTimeTrackerTab",
+							"config": {
+								"linkedType": "time-tracker"
+							}
+						}
+					]
+				},
+				"widgets": [
+					{
+						"id": "client-flow-card",
+						"component": "CnFlowCard",
+						"config": {
+							"linkedType": "flow"
+						}
+					},
+					{
+						"id": "client-time-card",
+						"component": "CnTimeTrackerCard",
+						"config": {
+							"linkedType": "time-tracker"
+						}
+					}
+				]
+			}
+		},
+		{
+			"id": "Requests",
+			"route": "/requests",
+			"type": "index",
+			"title": "Requests",
+			"config": {
+				"register": "pipelinq",
+				"schema": "request",
+				"columns": [
+					"title",
+					"status",
+					"priority",
+					"channel",
+					"requestedAt"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			}
+		},
+		{
+			"id": "RequestDetail",
+			"route": "/requests/:id",
+			"type": "detail",
+			"title": "Request",
+			"config": {
+				"register": "pipelinq",
+				"schema": "request",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "deck",
+							"label": "Deck",
+							"component": "CnDeckTab",
+							"config": {
+								"linkedType": "deck"
+							}
+						},
+						{
+							"id": "flow",
+							"label": "Flow",
+							"component": "CnFlowTab",
+							"config": {
+								"linkedType": "flow"
+							}
+						},
+						{
+							"id": "time-tracker",
+							"label": "Time",
+							"component": "CnTimeTrackerTab",
+							"config": {
+								"linkedType": "time-tracker"
+							}
+						}
+					]
+				},
+				"widgets": [
+					{
+						"id": "request-deck-kanban",
+						"component": "CnDeckCard",
+						"config": {
+							"view": "mini-kanban",
+							"linkedType": "deck"
+						}
+					},
+					{
+						"id": "request-flow-card",
+						"component": "CnFlowCard",
+						"config": {
+							"linkedType": "flow"
+						}
+					},
+					{
+						"id": "request-time-card",
+						"component": "CnTimeTrackerCard",
+						"config": {
+							"linkedType": "time-tracker"
+						}
+					}
+				]
+			}
+		},
+		{
+			"id": "Complaints",
+			"route": "/complaints",
+			"type": "index",
+			"title": "Complaints",
+			"config": {
+				"register": "pipelinq",
+				"schema": "complaint",
+				"columns": [
+					"title",
+					"status",
+					"priority",
+					"category",
+					"channel",
+					"_dateCreated"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			}
+		},
+		{
+			"id": "ComplaintDetail",
+			"route": "/complaints/:id",
+			"type": "detail",
+			"title": "Complaint",
+			"config": {
+				"register": "pipelinq",
+				"schema": "complaint",
+				"sidebar": true
+			}
+		},
+		{
+			"id": "Contacts",
+			"route": "/contacts",
+			"type": "index",
+			"title": "Contacts",
+			"config": {
+				"register": "pipelinq",
+				"schema": "contact",
+				"columns": [
+					"name",
+					"email",
+					"phone",
+					"role"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			}
+		},
+		{
+			"id": "ContactDetail",
+			"route": "/contacts/:id",
+			"type": "detail",
+			"title": "Contact",
+			"config": {
+				"register": "pipelinq",
+				"schema": "contact",
+				"sidebar": true
+			}
+		},
+		{
+			"id": "Leads",
+			"route": "/leads",
+			"type": "index",
+			"title": "Leads",
+			"config": {
+				"register": "pipelinq",
+				"schema": "lead",
+				"columns": [
+					"title",
+					"stage",
+					"status",
+					"priority",
+					"value",
+					"expectedCloseDate"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			}
+		},
+		{
+			"id": "LeadDetail",
+			"route": "/leads/:id",
+			"type": "detail",
+			"title": "Lead",
+			"config": {
+				"register": "pipelinq",
+				"schema": "lead",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "deck",
+							"label": "Deck",
+							"component": "CnDeckTab",
+							"config": {
+								"linkedType": "deck"
+							}
+						},
+						{
+							"id": "flow",
+							"label": "Flow",
+							"component": "CnFlowTab",
+							"config": {
+								"linkedType": "flow"
+							}
+						},
+						{
+							"id": "time-tracker",
+							"label": "Time",
+							"component": "CnTimeTrackerTab",
+							"config": {
+								"linkedType": "time-tracker"
+							}
+						}
+					]
+				},
+				"widgets": [
+					{
+						"id": "lead-deck-kanban",
+						"component": "CnDeckCard",
+						"config": {
+							"view": "mini-kanban",
+							"linkedType": "deck"
+						}
+					},
+					{
+						"id": "lead-flow-card",
+						"component": "CnFlowCard",
+						"config": {
+							"linkedType": "flow"
+						}
+					},
+					{
+						"id": "lead-time-card",
+						"component": "CnTimeTrackerCard",
+						"config": {
+							"linkedType": "time-tracker"
+						}
+					}
+				]
+			}
+		},
+		{
+			"id": "Contactmomenten",
+			"route": "/contactmomenten",
+			"type": "index",
+			"title": "Contactmomenten",
+			"config": {
+				"register": "pipelinq",
+				"schema": "contactmoment",
+				"columns": [
+					"channel",
+					"subject",
+					"client",
+					"agent",
+					"occurredAt"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			}
+		},
+		{
+			"id": "ContactmomentNew",
+			"route": "/contactmomenten/new",
+			"type": "custom",
+			"title": "New contactmoment",
+			"component": "CnWizardDialog",
+			"config": {
+				"register": "pipelinq",
+				"schema": "contactmoment"
+			}
+		},
+		{
+			"id": "ContactmomentDetail",
+			"route": "/contactmomenten/:id",
+			"type": "detail",
+			"title": "Contactmoment",
+			"config": {
+				"register": "pipelinq",
+				"schema": "contactmoment",
+				"sidebar": true
+			}
+		},
+		{
+			"id": "Tasks",
+			"route": "/tasks",
+			"type": "index",
+			"title": "Tasks",
+			"config": {
+				"register": "pipelinq",
+				"schema": "task",
+				"columns": [
+					"title",
+					"type",
+					"status",
+					"priority",
+					"assignee",
+					"dueDate"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			}
+		},
+		{
+			"id": "TaskNew",
+			"route": "/tasks/new",
+			"type": "custom",
+			"title": "New task",
+			"component": "CnWizardDialog",
+			"config": {
+				"register": "pipelinq",
+				"schema": "task"
+			}
+		},
+		{
+			"id": "TaskDetail",
+			"route": "/tasks/:id",
+			"type": "detail",
+			"title": "Task",
+			"config": {
+				"register": "pipelinq",
+				"schema": "task",
+				"sidebar": true
+			}
+		},
+		{
+			"id": "Products",
+			"route": "/products",
+			"type": "index",
+			"title": "Products",
+			"config": {
+				"register": "pipelinq",
+				"schema": "product",
+				"columns": [
+					"name",
+					"category",
+					"type",
+					"status",
+					"price"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			}
+		},
+		{
+			"id": "ProductBarcodeSearch",
+			"route": "/products-barcode",
+			"type": "custom",
+			"title": "Barcode lookup",
+			"component": "ProductBarcodeSearchView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "product"
+			}
+		},
+		{
+			"id": "ProductDetail",
+			"route": "/products/:id",
+			"type": "detail",
+			"title": "Product",
+			"config": {
+				"register": "pipelinq",
+				"schema": "product",
+				"sidebar": true
+			}
+		},
+		{
+			"id": "PosTransactions",
+			"route": "/pos",
+			"type": "custom",
+			"title": "Kassabon",
+			"component": "PosTransactionListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posTransaction"
+			}
+		},
+		{
+			"id": "PosTransactionNew",
+			"route": "/pos/new",
+			"type": "custom",
+			"title": "Nieuwe transactie",
+			"component": "PosTransactionFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posTransaction"
+			}
+		},
+		{
+			"id": "PosTransactionEdit",
+			"route": "/pos/:id/edit",
+			"type": "custom",
+			"title": "Transactie bewerken",
+			"component": "PosTransactionFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posTransaction"
+			}
+		},
+		{
+			"id": "PosRefunds",
+			"route": "/pos/refunds",
+			"type": "custom",
+			"title": "Retouren",
+			"component": "PosRefundListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posRefund"
+			}
+		},
+		{
+			"id": "PosRefundNewFromTransaction",
+			"route": "/pos/refunds/new/:transactionId",
+			"type": "custom",
+			"title": "Nieuwe retour",
+			"component": "PosRefundFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posRefund"
+			}
+		},
+		{
+			"id": "PosRefundNew",
+			"route": "/pos/refunds/new",
+			"type": "custom",
+			"title": "Nieuwe retour",
+			"component": "PosRefundFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posRefund"
+			}
+		},
+		{
+			"id": "PosRefundEdit",
+			"route": "/pos/refunds/:id/edit",
+			"type": "custom",
+			"title": "Retour bewerken",
+			"component": "PosRefundFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posRefund"
+			}
+		},
+		{
+			"id": "PosRefundDetail",
+			"route": "/pos/refunds/:id",
+			"type": "custom",
+			"title": "Retour",
+			"component": "PosRefundDetailView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posRefund"
+			}
+		},
+		{
+			"id": "PosTransactionDetail",
+			"route": "/pos/:id",
+			"type": "custom",
+			"title": "Transactie",
+			"component": "PosTransactionDetailView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posTransaction"
+			}
+		},
+		{
+			"id": "Queues",
+			"route": "/queues",
+			"type": "index",
+			"title": "Queues",
+			"config": {
+				"register": "pipelinq",
+				"schema": "queue",
+				"columns": [
+					"title",
+					"description",
+					"isActive",
+					"sortOrder"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			}
+		},
+		{
+			"id": "QueueDetail",
+			"route": "/queues/:id",
+			"type": "detail",
+			"title": "Queue",
+			"config": {
+				"register": "pipelinq",
+				"schema": "queue",
+				"sidebar": true
+			}
+		},
+		{
+			"id": "Surveys",
+			"route": "/surveys",
+			"type": "index",
+			"title": "Surveys",
+			"config": {
+				"register": "pipelinq",
+				"schema": "survey",
+				"columns": [
+					"title",
+					"status",
+					"responseCount",
+					"_dateCreated"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			}
+		},
+		{
+			"id": "SurveyCreate",
+			"route": "/surveys/new",
+			"type": "custom",
+			"title": "New survey",
+			"component": "CnFormBuilder",
+			"config": {
+				"register": "pipelinq",
+				"schema": "survey"
+			}
+		},
+		{
+			"id": "SurveyDetail",
+			"route": "/surveys/:id",
+			"type": "detail",
+			"title": "Survey",
+			"config": {
+				"register": "pipelinq",
+				"schema": "survey",
+				"sidebar": true
+			}
+		},
+		{
+			"id": "SurveyEdit",
+			"route": "/surveys/:id/edit",
+			"type": "custom",
+			"title": "Edit survey",
+			"component": "CnFormBuilder",
+			"config": {
+				"register": "pipelinq",
+				"schema": "survey"
+			}
+		},
+		{
+			"id": "SurveyAnalyticsView",
+			"route": "/surveys/:id/analytics",
+			"type": "custom",
+			"title": "Survey analytics",
+			"component": "SurveyAnalyticsView"
+		},
+		{
+			"id": "PublicSurvey",
+			"route": "/public/survey/:token",
+			"type": "form",
+			"title": "Survey",
+			"config": {
+				"register": "pipelinq",
+				"schema": "surveyResponse",
+				"mode": "public",
+				"token": "@route.token",
+				"submitEndpoint": "/index.php/apps/pipelinq/api/public/surveys/:token/responses",
+				"submitMethod": "POST"
+			}
+		},
+		{
+			"id": "MyWork",
+			"route": "/my-work",
+			"type": "custom",
+			"title": "My Work",
+			"component": "MyWorkView"
+		},
+		{
+			"id": "SyncSettings",
+			"route": "/sync-settings",
+			"type": "settings",
+			"title": "Sync settings",
+			"config": {
+				"sections": [
+					{
+						"id": "sync",
+						"title": "Integrations",
+						"component": "SyncSettingsView"
+					}
+				]
+			},
+			"slots": {
+				"section-sync": "SyncSettingsView"
+			}
+		},
+		{
+			"id": "Rapportage",
+			"route": "/rapportage",
+			"type": "custom",
+			"title": "Reporting",
+			"component": "RapportageDashboardView"
+		},
+		{
+			"id": "ChannelAnalyticsView",
+			"route": "/rapportage/channels",
+			"type": "custom",
+			"title": "Channel analytics",
+			"component": "ChannelAnalyticsView"
+		},
+		{
+			"id": "AgentPerformanceView",
+			"route": "/rapportage/agents",
+			"type": "custom",
+			"title": "Agent performance",
+			"component": "AgentPerformanceView"
+		},
+		{
+			"id": "Pipeline",
+			"route": "/pipeline",
+			"type": "custom",
+			"title": "Pipeline",
+			"component": "PipelineBoardView"
+		},
+		{
+			"id": "Pipelines",
+			"route": "/pipelines",
+			"type": "index",
+			"title": "Pipelines",
+			"config": {
+				"register": "pipelinq",
+				"schema": "pipeline",
+				"columns": [
+					"title",
+					"description",
+					"isDefault",
+					"_dateCreated"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			}
+		},
+		{
+			"id": "Forms",
+			"route": "/forms",
+			"type": "index",
+			"title": "Forms",
+			"config": {
+				"register": "pipelinq",
+				"schema": "intakeForm",
+				"columns": [
+					"name",
+					"isActive",
+					"submitCount",
+					"targetPipeline"
+				],
+				"actions": [
+					{
+						"id": "submissions",
+						"label": "View submissions",
+						"icon": "format-list-bulleted",
+						"handler": "navigate",
+						"route": "FormSubmissions"
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			}
+		},
+		{
+			"id": "FormNew",
+			"route": "/forms/new",
+			"type": "detail",
+			"title": "New form",
+			"config": {
+				"register": "pipelinq",
+				"schema": "intakeForm",
+				"sidebar": true
+			},
+			"slots": {
+				"default": "FormBuilderView"
+			}
+		},
+		{
+			"id": "FormDetail",
+			"route": "/forms/:id",
+			"type": "detail",
+			"title": "Form",
+			"config": {
+				"register": "pipelinq",
+				"schema": "intakeForm",
+				"sidebar": true
+			},
+			"slots": {
+				"default": "FormBuilderView"
+			}
+		},
+		{
+			"id": "FormSubmissions",
+			"route": "/forms/:id/submissions",
+			"type": "index",
+			"title": "Form submissions",
+			"config": {
+				"register": "pipelinq",
+				"schema": "intakeSubmission",
+				"filter": {
+					"form": "@route.id"
+				},
+				"sortKey": "submittedAt",
+				"sortOrder": "desc",
+				"columns": [
+					"submittedAt",
+					"status",
+					"contactId",
+					"leadId"
+				],
+				"emptyText": "No submissions yet",
+				"showAdd": false,
+				"showFormDialog": false,
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			}
+		},
+		{
+			"id": "FeaturesRoadmap",
+			"route": "/features-roadmap",
+			"type": "roadmap",
+			"title": "Features & roadmap",
+			"config": {
+				"documentationUrl": "https://pipelinq.conduction.nl"
+			}
+		},
+		{
+			"id": "ExportJobs",
+			"route": "/export/jobs",
+			"type": "custom",
+			"title": "BI export jobs",
+			"component": "ExportJobsView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "exportJob"
+			}
+		},
+		{
+			"id": "ExportJobNew",
+			"route": "/export/jobs/new",
+			"type": "custom",
+			"title": "New export job",
+			"component": "ExportJobFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "exportJob"
+			}
+		},
+		{
+			"id": "ExportJobDetail",
+			"route": "/export/jobs/:id",
+			"type": "custom",
+			"title": "Export job",
+			"component": "ExportJobFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "exportJob"
+			}
+		},
+		{
+			"id": "ExportDestinations",
+			"route": "/export/destinations",
+			"type": "custom",
+			"title": "Export destinations",
+			"component": "ExportDestinationsView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "exportDestination"
+			}
+		},
+		{
+			"id": "ExportDestinationNew",
+			"route": "/export/destinations/new",
+			"type": "custom",
+			"title": "New export destination",
+			"component": "ExportDestinationFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "exportDestination"
+			}
+		},
+		{
+			"id": "ExportDestinationDetail",
+			"route": "/export/destinations/:id",
+			"type": "custom",
+			"title": "Export destination",
+			"component": "ExportDestinationFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "exportDestination"
+			}
+		},
+		{
+			"id": "ExportRuns",
+			"route": "/export/runs",
+			"type": "custom",
+			"title": "Export runs",
+			"component": "ExportRunsView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "exportRun"
+			}
+		},
+		{
+			"id": "ExportRunDetail",
+			"route": "/export/runs/:id",
+			"type": "custom",
+			"title": "Export run",
+			"component": "ExportRunDetailView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "exportRun"
+			}
+		}
+	]
+}

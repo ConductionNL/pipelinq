@@ -1,0 +1,200 @@
+<?php
+
+/**
+ * Unit tests for NotesController.
+ *
+ * @category Test
+ * @package  OCA\Pipelinq\Tests\Unit\Controller
+ *
+ * @author    Conduction Development Team <info@conduction.nl>
+ * @copyright 2024 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * @version GIT: <git-id>
+ *
+ * @link https://pipelinq.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Pipelinq\Tests\Unit\Controller;
+
+use OCA\Pipelinq\Controller\NotesController;
+use OCA\Pipelinq\Service\NoteEventService;
+use OCA\Pipelinq\Service\NotesService;
+use OCA\Pipelinq\Service\SettingsService;
+use OCP\IGroupManager;
+use OCP\IL10N;
+use OCP\IRequest;
+use OCP\IUser;
+use OCP\IUserSession;
+use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
+
+/**
+ * Tests for NotesController.
+ */
+class NotesControllerTest extends TestCase
+{
+
+    /**
+     * The controller under test.
+     *
+     * @var NotesController
+     */
+    private NotesController $controller;
+
+    /**
+     * Mock notes service.
+     *
+     * @var NotesService
+     */
+    private NotesService $notesService;
+
+    /**
+     * Set up the test.
+     *
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        $request            = $this->createMock(IRequest::class);
+        $this->notesService = $this->createMock(NotesService::class);
+        $noteEventService   = $this->createMock(NoteEventService::class);
+        $userSession        = $this->createMock(IUserSession::class);
+        $user = $this->createMock(IUser::class);
+        $user->method('getUID')->willReturn('test-user');
+        $userSession->method('getUser')->willReturn($user);
+        $l10n = $this->createMock(IL10N::class);
+        $l10n->method('t')->willReturnArgument(0);
+        $logger = $this->createMock(\Psr\Log\LoggerInterface::class);
+
+        // Provide a settings service that returns valid register + schema IDs
+        // so objectExists() can scope the OR lookup to the correct entity.
+        $settingsService = $this->createMock(SettingsService::class);
+        $settingsService->method('getSettings')->willReturn(
+                [
+                    'register'       => 'reg-123',
+                    'client_schema'  => 'schema-client',
+                    'contact_schema' => 'schema-contact',
+                    'lead_schema'    => 'schema-lead',
+                    'request_schema' => 'schema-request',
+                ]
+                );
+
+        // Object service mock: find() returns a non-null ObjectEntity for any scoped
+        // lookup, which makes objectExists() return true so subsequent controller logic runs.
+        $objectServiceMock = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $entityMock        = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
+        $objectServiceMock->method('find')->willReturn($entityMock);
+
+        $container = $this->createMock(ContainerInterface::class);
+        $container->method('get')->willReturn($objectServiceMock);
+
+        $groupManager = $this->createMock(IGroupManager::class);
+        $groupManager->method('isAdmin')->willReturn(true);
+
+        $this->controller = new NotesController(
+            $request,
+            $this->notesService,
+            $noteEventService,
+            $userSession,
+            $l10n,
+            $logger,
+            $container,
+            $groupManager,
+            $settingsService,
+        );
+    }//end setUp()
+
+    /**
+     * Test list returns 400 for invalid type.
+     *
+     * @return void
+     */
+    public function testListReturns400ForInvalidType(): void
+    {
+        $response = $this->controller->list('invalid_type', '123');
+
+        $this->assertSame(400, $response->getStatus());
+    }//end testListReturns400ForInvalidType()
+
+    /**
+     * Test list returns notes for valid type.
+     *
+     * @return void
+     */
+    public function testListReturnsNotes(): void
+    {
+        $this->notesService->method('getNotes')->willReturn(
+                [
+                    ['id' => '1', 'message' => 'Test note'],
+                ]
+                );
+
+        $response = $this->controller->list('pipelinq_client', '123');
+
+        $data = $response->getData();
+        $this->assertCount(1, $data['notes']);
+    }//end testListReturnsNotes()
+
+    /**
+     * Test deleteAll returns 400 for invalid type.
+     *
+     * @return void
+     */
+    public function testDeleteAllReturns400ForInvalidType(): void
+    {
+        $response = $this->controller->deleteAll('bad_type', '123');
+
+        $this->assertSame(400, $response->getStatus());
+    }//end testDeleteAllReturns400ForInvalidType()
+
+    /**
+     * Test deleteAll returns success.
+     *
+     * @return void
+     */
+    public function testDeleteAllReturnsSuccess(): void
+    {
+        $this->notesService->expects($this->once())->method('deleteAllNotes');
+
+        $response = $this->controller->deleteAll('pipelinq_lead', '456');
+
+        $data = $response->getData();
+        $this->assertTrue($data['success']);
+    }//end testDeleteAllReturnsSuccess()
+
+    /**
+     * Test deleteSingle returns success.
+     *
+     * @return void
+     */
+    public function testDeleteSingleReturnsSuccess(): void
+    {
+        $this->notesService->expects($this->once())->method('deleteNote');
+
+        $response = $this->controller->deleteSingle(1);
+
+        $data = $response->getData();
+        $this->assertTrue($data['success']);
+    }//end testDeleteSingleReturnsSuccess()
+
+    /**
+     * Test deleteSingle returns 403 on permission error.
+     *
+     * @return void
+     */
+    public function testDeleteSingleReturns403OnPermissionError(): void
+    {
+        $this->notesService->method('deleteNote')
+            ->willThrowException(new \RuntimeException('You can only delete your own notes'));
+
+        $response = $this->controller->deleteSingle(1);
+
+        $this->assertSame(403, $response->getStatus());
+    }//end testDeleteSingleReturns403OnPermissionError()
+}//end class

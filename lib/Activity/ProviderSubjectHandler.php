@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-19
  */
 
 declare(strict_types=1);
@@ -37,6 +39,7 @@ class ProviderSubjectHandler
         'lead_created'    => ['Lead created: %s', 'Lead created: {title}'],
         'lead_assigned'   => ['Lead assigned: %s', 'Lead assigned: {title}'],
         'request_created' => ['Request created: %s', 'Request created: {title}'],
+        'lead_lost'       => ['Deal lost: %s', 'Deal lost: {title}'],
     ];
 
     /**
@@ -47,6 +50,8 @@ class ProviderSubjectHandler
      * @param array  $params The subject parameters.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-19
      */
     public function applySubjectText(IEvent $event, object $l, array $params): void
     {
@@ -88,6 +93,16 @@ class ProviderSubjectHandler
                 title: $title,
                 status: ($params['status'] ?? ''),
                 richParams: $richParams
+            );
+            return;
+        }
+
+        if ($subject === 'lead_won') {
+            $value = $params['value'] ?? '';
+            $event->setParsedSubject($l->t('Deal won: %1$s (EUR %2$s)', [$title, $value]));
+            $event->setRichSubject(
+                subject: $l->t('Deal won: {title} (EUR %1$s)', [$value]),
+                parameters: $richParams
             );
             return;
         }

@@ -8,13 +8,16 @@
  * @category Service
  * @package  OCA\Pipelinq\Service
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-16
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
  */
 
 declare(strict_types=1);
@@ -29,6 +32,23 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for sending Pipelinq notifications.
+ *
+ * Lifecycle-driven notifications (lead won/lost, task completed/expired,
+ * request completed, complaint resolved) are also declared declaratively as
+ * `x-openregister-notifications` transition triggers in
+ * `lib/Settings/pipelinq_register.json`, keyed on the lifecycle transition
+ * NAMES (`win`, `lose`, `complete`, `expire`, `resolve`) so OpenRegister's
+ * AnnotationNotificationDispatcher matches them against
+ * `ObjectTransitionedEvent::getAction()`. Those annotation rules stay DORMANT
+ * until pipelinq routes its status changes through OpenRegister's
+ * TransitionEngine (today status is written directly via `saveObject`, which
+ * does not dispatch `ObjectTransitionedEvent`). Until that migration lands the
+ * imperative `send()` path below remains the live delivery mechanism and is
+ * retained verbatim to preserve behaviour, including the per-user opt-out
+ * settings in {@see self::SUBJECT_SETTING_MAP} that the annotation runtime does
+ * not yet replicate.
+ *
+ * @spec openspec/changes/pipelinq-or-lifecycle-notification/tasks.md#task-3.1
  */
 class NotificationService
 {
@@ -40,9 +60,15 @@ class NotificationService
     private const SUBJECT_SETTING_MAP = [
         'lead_assigned'          => 'notify_assignments',
         'request_assigned'       => 'notify_assignments',
+        'task_assigned'          => 'notify_assignments',
+        'task_reassigned'        => 'notify_assignments',
         'lead_stage_changed'     => 'notify_stage_status',
         'request_status_changed' => 'notify_stage_status',
+        'task_completed'         => 'notify_stage_status',
+        'task_expired'           => 'notify_stage_status',
         'note_added'             => 'notify_notes',
+        'lead_won'               => 'notify_deals',
+        'lead_lost'              => 'notify_deals',
     ];
 
     /**
@@ -69,6 +95,8 @@ class NotificationService
      * @param string $author         The author user ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
      */
     public function notifyAssignment(
         string $entityType,
@@ -84,6 +112,8 @@ class NotificationService
         $subject = 'lead_assigned';
         if ($entityType === 'request') {
             $subject = 'request_assigned';
+        } else if ($entityType === 'task') {
+            $subject = 'task_assigned';
         }
 
         $this->send(
@@ -100,6 +130,110 @@ class NotificationService
     }//end notifyAssignment()
 
     /**
+     * Notify a user about a task completion.
+     *
+     * @param string $title      The task subject.
+     * @param string $resultText The completion result text.
+     * @param string $userId     The user to notify (typically the creator).
+     * @param string $objectId   The task object ID.
+     * @param string $author     The user who completed the task.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
+     */
+    public function notifyTaskCompleted(
+        string $title,
+        string $resultText,
+        string $userId,
+        string $objectId,
+        string $author
+    ): void {
+        if ($author === $userId) {
+            return;
+        }
+
+        $this->send(
+            subject: 'task_completed',
+            parameters: [
+                'title'      => $title,
+                'resultText' => $resultText,
+                'author'     => $author,
+            ],
+            userId: $userId,
+            objectType: 'task',
+            objectId: $objectId
+        );
+    }//end notifyTaskCompleted()
+
+    /**
+     * Notify a user about a task reassignment.
+     *
+     * @param string $title          The task subject.
+     * @param string $assigneeUserId The new assignee user ID.
+     * @param string $objectId       The task object ID.
+     * @param string $author         The user who reassigned.
+     * @param string $deadline       The task deadline.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
+     */
+    public function notifyTaskReassigned(
+        string $title,
+        string $assigneeUserId,
+        string $objectId,
+        string $author,
+        string $deadline=''
+    ): void {
+        if ($author === $assigneeUserId) {
+            return;
+        }
+
+        $this->send(
+            subject: 'task_reassigned',
+            parameters: [
+                'title'    => $title,
+                'author'   => $author,
+                'deadline' => $deadline,
+            ],
+            userId: $assigneeUserId,
+            objectType: 'task',
+            objectId: $objectId
+        );
+    }//end notifyTaskReassigned()
+
+    /**
+     * Notify users about a task expiry or approaching deadline.
+     *
+     * @param string $title    The task subject.
+     * @param string $userId   The user to notify.
+     * @param string $objectId The task object ID.
+     * @param string $deadline The task deadline.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
+     */
+    public function notifyTaskExpired(
+        string $title,
+        string $userId,
+        string $objectId,
+        string $deadline=''
+    ): void {
+        $this->send(
+            subject: 'task_expired',
+            parameters: [
+                'title'    => $title,
+                'deadline' => $deadline,
+            ],
+            userId: $userId,
+            objectType: 'task',
+            objectId: $objectId
+        );
+    }//end notifyTaskExpired()
+
+    /**
      * Notify a user about a lead stage change.
      *
      * @param string $title          The entity title.
@@ -109,6 +243,8 @@ class NotificationService
      * @param string $author         The author user ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
      */
     public function notifyStageChange(
         string $title,
@@ -144,6 +280,8 @@ class NotificationService
      * @param string $author         The author user ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
      */
     public function notifyStatusChange(
         string $title,
@@ -179,6 +317,8 @@ class NotificationService
      * @param string $author         The author user ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
      */
     public function notifyNoteAdded(
         string $entityType,
@@ -203,6 +343,101 @@ class NotificationService
             objectId: $objectId
         );
     }//end notifyNoteAdded()
+
+    /**
+     * Notify a user about a deal being won.
+     *
+     * @param string $title          The lead title.
+     * @param string $value          The deal value.
+     * @param string $assigneeUserId The assignee user ID.
+     * @param string $objectId       The object ID.
+     * @param string $author         The author user ID.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-16
+     */
+    public function notifyDealWon(
+        string $title,
+        string $value,
+        string $assigneeUserId,
+        string $objectId,
+        string $author
+    ): void {
+        $this->send(
+            subject: 'lead_won',
+            parameters: [
+                'title'  => $title,
+                'value'  => $value,
+                'author' => $author,
+            ],
+            userId: $assigneeUserId,
+            objectType: 'lead',
+            objectId: $objectId
+        );
+    }//end notifyDealWon()
+
+    /**
+     * Notify a user about a deal being lost.
+     *
+     * @param string $title          The lead title.
+     * @param string $assigneeUserId The assignee user ID.
+     * @param string $objectId       The object ID.
+     * @param string $author         The author user ID.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/reverse-2026-05-26-be-activity-notify/tasks.md#task-2
+     */
+    public function notifyDealLost(
+        string $title,
+        string $assigneeUserId,
+        string $objectId,
+        string $author
+    ): void {
+        $this->send(
+            subject: 'lead_lost',
+            parameters: [
+                'title'  => $title,
+                'author' => $author,
+            ],
+            userId: $assigneeUserId,
+            objectType: 'lead',
+            objectId: $objectId
+        );
+    }//end notifyDealLost()
+
+    /**
+     * Send a generic notification to a user.
+     *
+     * Wrapper around the internal send() method for custom notification
+     * subjects that do not have a dedicated notifyXxx() helper.
+     *
+     * @param string $userId     The target user ID.
+     * @param string $subject    The notification subject.
+     * @param array  $parameters The notification parameters.
+     * @param string $objectType The object type (optional).
+     * @param string $objectId   The object ID (optional).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/reverse-2026-05-26-be-activity-notify/tasks.md#task-3
+     */
+    public function sendNotification(
+        string $userId,
+        string $subject,
+        array $parameters,
+        string $objectType='',
+        string $objectId=''
+    ): void {
+        $this->send(
+            subject: $subject,
+            parameters: $parameters,
+            userId: $userId,
+            objectType: $objectType,
+            objectId: $objectId
+        );
+    }//end sendNotification()
 
     /**
      * Send a notification to a user.

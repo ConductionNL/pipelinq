@@ -8,13 +8,15 @@
  * @category Notification
  * @package  OCA\Pipelinq\Notification
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-18
  */
 
 declare(strict_types=1);
@@ -72,6 +74,8 @@ class Notifier implements INotifier
      * @param string        $languageCode The language code.
      *
      * @return INotification The prepared notification.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-18
      */
     public function prepare(INotification $notification, string $languageCode): INotification
     {
@@ -110,6 +114,8 @@ class Notifier implements INotifier
      * @return void
      *
      * @throws UnknownNotificationException If the subject is not recognized.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) — switch handles all notification types
      */
     private function applyNotificationSubject(INotification $notification, object $l, array $params): void
     {
@@ -142,6 +148,46 @@ class Notifier implements INotifier
                 );
                 break;
 
+            case 'task_assigned':
+                $this->applySimpleSubject(
+                    notification: $notification,
+                    l: $l,
+                    parsedKey: 'Task assigned: %s',
+                    richKey: 'Task assigned: {title}',
+                    title: $title,
+                    richParams: $richParams
+                );
+                break;
+
+            case 'task_completed':
+                $resultText = $params['resultText'] ?? '';
+                $notification->setParsedSubject($l->t('Task completed: %1$s — %2$s', [$title, $resultText]));
+                $notification->setRichSubject(
+                        subject: $l->t('Task completed: {title}'),
+                        parameters: $richParams
+                        );
+                break;
+
+            case 'task_reassigned':
+                $this->applySimpleSubject(
+                    notification: $notification,
+                    l: $l,
+                    parsedKey: 'Task reassigned to you: %s',
+                    richKey: 'Task reassigned to you: {title}',
+                    title: $title,
+                    richParams: $richParams
+                );
+                break;
+
+            case 'task_expired':
+                $deadline = $params['deadline'] ?? '';
+                $notification->setParsedSubject($l->t('Task expired: %1$s (deadline: %2$s)', [$title, $deadline]));
+                $notification->setRichSubject(
+                        subject: $l->t('Task expired: {title}'),
+                        parameters: $richParams
+                        );
+                break;
+
             case 'lead_stage_changed':
                 $stage = $params['stage'] ?? '';
                 $notification->setParsedSubject($l->t('Lead %1$s moved to %2$s', [$title, $stage]));
@@ -167,6 +213,37 @@ class Notifier implements INotifier
                         subject: $l->t('New note on %1$s: {title}', [$entityType]),
                         parameters: $richParams
                         );
+                break;
+
+            case 'lead_won':
+                $value = $params['value'] ?? '';
+                $notification->setParsedSubject($l->t('Deal won: %1$s (EUR %2$s)', [$title, $value]));
+                $notification->setRichSubject(
+                        subject: $l->t('Deal won: {title} (EUR %1$s)', [$value]),
+                        parameters: $richParams
+                        );
+                break;
+
+            case 'lead_lost':
+                $this->applySimpleSubject(
+                    notification: $notification,
+                    l: $l,
+                    parsedKey: 'Deal lost: %s',
+                    richKey: 'Deal lost: {title}',
+                    title: $title,
+                    richParams: $richParams
+                );
+                break;
+
+            case 'forecast_snapshot_partial_failure':
+                $period = (string) ($params['period'] ?? '');
+                $errors = (string) ($params['errors'] ?? '');
+                $notification->setParsedSubject(
+                    $l->t('Forecast snapshot job — partial failure for %1$s', [$period])
+                );
+                $notification->setParsedMessage(
+                    $l->t('Some forecast snapshots could not be generated: %1$s', [$errors])
+                );
                 break;
 
             default:

@@ -1,0 +1,11 @@
+{
+  "label": "User guide",
+  "position": 2,
+  "collapsible": true,
+  "collapsed": false,
+  "link": {
+    "type": "generated-index",
+    "title": "Pipelinq user guide",
+    "description": "Step-by-step walkthroughs for everyday Pipelinq tasks. The user track covers individual CRM workflows; the admin track covers org-wide configuration."
+  }
+}

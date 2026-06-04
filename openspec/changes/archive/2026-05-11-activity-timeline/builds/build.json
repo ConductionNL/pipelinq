@@ -1,0 +1,17 @@
+{
+  "phase": "build",
+  "timestamp": "2026-04-20T19:10:58.536327+00:00",
+  "pr": 181,
+  "commit": "d028f28",
+  "turns": 103,
+  "cost_usd": 1.0967,
+  "tokens": {
+    "input": 786,
+    "output": 28551,
+    "cache_read": 8166101,
+    "cache_create": 109232
+  },
+  "model": "claude-haiku-4-5-20251001",
+  "maxed_out": false,
+  "cost_eur": 1.009
+}

@@ -8,7 +8,7 @@
  * @category AppInfo
  * @package  OCA\Pipelinq\AppInfo
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -24,17 +24,42 @@ namespace OCA\Pipelinq\AppInfo;
 use OCA\OpenRegister\Event\DeepLinkRegistrationEvent;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\Pipelinq\Dashboard\ClientSearchWidget;
+use OCA\OpenRegister\Event\SchemaUpdatedEvent;
+use OCA\Pipelinq\Adapter\AzureDataLakeExportAdapter;
+use OCA\Pipelinq\Adapter\BigQueryExportAdapter;
+use OCA\Pipelinq\Adapter\ExportSinkRegistry;
+use OCA\Pipelinq\Adapter\GcsExportAdapter;
+use OCA\Pipelinq\Adapter\PostgresExportAdapter;
+use OCA\Pipelinq\Adapter\S3ExportAdapter;
+use OCA\Pipelinq\Adapter\SftpExportAdapter;
+use OCA\Pipelinq\Adapter\SnowflakeExportAdapter;
+use OCA\Pipelinq\Listener\SchemaChangeListener;
+use OCA\Pipelinq\Dashboard\CreateLeadWidget;
 use OCA\Pipelinq\Dashboard\DealsOverviewWidget;
+use OCA\Pipelinq\Dashboard\FindClientWidget;
 use OCA\Pipelinq\Dashboard\MyLeadsWidget;
 use OCA\Pipelinq\Dashboard\RecentActivitiesWidget;
+use OCA\Pipelinq\Dashboard\StartRequestWidget;
+use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Lifecycle\PosRefundManagerGuard;
+use OCA\Pipelinq\Lifecycle\PosTransactionAccessGuard;
+use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
+use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
+use OCA\Pipelinq\Listener\DealCreatedListener;
+use OCA\Pipelinq\Listener\DealUpdatedListener;
 use OCA\Pipelinq\Listener\DeepLinkRegistrationListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
+use OCA\Pipelinq\Mcp\PipelinqToolProvider;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\AppFramework\Services\IInitialState;
 use OCP\Comments\ICommentsManager;
+use OCP\IAppConfig;
+use OCP\IGroupManager;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Main application class for the Pipelinq client and request management app.
@@ -77,12 +102,140 @@ class Application extends App implements IBootstrap
             event: ObjectUpdatedEvent::class,
             listener: ObjectEventListener::class
         );
+        $context->registerEventListener(
+            event: ObjectCreatedEvent::class,
+            listener: DealCreatedListener::class
+        );
+        $context->registerEventListener(
+            event: ObjectUpdatedEvent::class,
+            listener: DealUpdatedListener::class
+        );
 
         $context->registerDashboardWidget(DealsOverviewWidget::class);
         $context->registerDashboardWidget(MyLeadsWidget::class);
         $context->registerDashboardWidget(RecentActivitiesWidget::class);
-        $context->registerDashboardWidget(ClientSearchWidget::class);
+        $context->registerDashboardWidget(FindClientWidget::class);
+        $context->registerDashboardWidget(StartRequestWidget::class);
+        $context->registerDashboardWidget(CreateLeadWidget::class);
+
+        // Register PipelinqToolProvider as the MCP tool provider for the AI Chat Companion.
+        // The alias key 'OCA\OpenRegister\Mcp\IMcpToolProvider::pipelinq' is the format
+        // that OR's McpToolsService enumerates to discover per-app providers (design D3).
+        // The interface ships in openregister PR #1466 (ai-chat-companion-orchestrator);
+        // until then this app implements the tests/Stubs/Mcp/IMcpToolProvider.php stub.
+        $context->registerServiceAlias(
+            'OCA\\OpenRegister\\Mcp\\IMcpToolProvider::pipelinq',
+            PipelinqToolProvider::class
+        );
+
+        $this->registerPosLifecycleGuards(context: $context);
+        $this->registerExportServices(context: $context);
     }//end register()
+
+    /**
+     * Register the BI-export sink registry and the schema-change listener.
+     *
+     * The {@see ExportSinkRegistry} is wired with every concrete sink adapter
+     * so {@see \OCA\Pipelinq\Service\Export\ExportUploadService} stays decoupled
+     * from the warehouse transports. The {@see SchemaChangeListener} records
+     * column drift on pipelinq schemas for the export audit (ADR-009).
+     *
+     * @param IRegistrationContext $context The registration context.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008
+     */
+    private function registerExportServices(IRegistrationContext $context): void
+    {
+        $context->registerService(
+            ExportSinkRegistry::class,
+            static function ($c): ExportSinkRegistry {
+                return new ExportSinkRegistry(
+                    sinks: [
+                        $c->get(S3ExportAdapter::class),
+                        $c->get(BigQueryExportAdapter::class),
+                        $c->get(SnowflakeExportAdapter::class),
+                        $c->get(PostgresExportAdapter::class),
+                        $c->get(AzureDataLakeExportAdapter::class),
+                        $c->get(GcsExportAdapter::class),
+                        $c->get(SftpExportAdapter::class),
+                    ]
+                );
+            }
+        );
+
+        $context->registerEventListener(
+            event: SchemaUpdatedEvent::class,
+            listener: SchemaChangeListener::class
+        );
+    }//end registerExportServices()
+
+    /**
+     * Register the POS lifecycle guards keyed by the FQCN tag the
+     * posTransaction / posRefund schemas reference in their
+     * x-openregister-lifecycle.transitions[*].requires.
+     *
+     * OpenRegister's LifecycleGuardRegistry resolves the `requires` tag to a
+     * concrete LifecycleGuardInterface instance via the app container (with the
+     * NC server container as FQCN fallback). The registry is fail-closed: a
+     * transition that references an unregistered guard tag cannot proceed, so
+     * these registrations are load-bearing for the POS lifecycle.
+     *
+     * @param IRegistrationContext $context The registration context.
+     *
+     * @return void
+     */
+    private function registerPosLifecycleGuards(IRegistrationContext $context): void
+    {
+        $context->registerService(
+            PosAccessPolicy::class,
+            static function ($c): PosAccessPolicy {
+                return new PosAccessPolicy(
+                    appConfig: $c->get(IAppConfig::class),
+                    groupManager: $c->get(IGroupManager::class),
+                );
+            }
+        );
+
+        $context->registerService(
+            PosTransactionAccessGuard::class,
+            static function ($c): PosTransactionAccessGuard {
+                return new PosTransactionAccessGuard(policy: $c->get(PosAccessPolicy::class));
+            }
+        );
+
+        $context->registerService(
+            PosTransactionConfirmGuard::class,
+            static function ($c): PosTransactionConfirmGuard {
+                return new PosTransactionConfirmGuard(
+                    policy: $c->get(PosAccessPolicy::class),
+                    container: $c->get(ContainerInterface::class),
+                    appConfig: $c->get(IAppConfig::class),
+                    logger: $c->get(LoggerInterface::class),
+                );
+            }
+        );
+
+        $context->registerService(
+            PosTransactionRefundGuard::class,
+            static function ($c): PosTransactionRefundGuard {
+                return new PosTransactionRefundGuard(policy: $c->get(PosAccessPolicy::class));
+            }
+        );
+
+        $context->registerService(
+            PosRefundManagerGuard::class,
+            static function ($c): PosRefundManagerGuard {
+                return new PosRefundManagerGuard(
+                    policy: $c->get(PosAccessPolicy::class),
+                    container: $c->get(ContainerInterface::class),
+                    appConfig: $c->get(IAppConfig::class),
+                    logger: $c->get(LoggerInterface::class),
+                );
+            }
+        );
+    }//end registerPosLifecycleGuards()
 
     /**
      * Boot the application and register comment display name resolvers.
@@ -94,6 +247,27 @@ class Application extends App implements IBootstrap
     public function boot(IBootContext $context): void
     {
         $server = $context->getServerContainer();
+
+        // Hand the Features & Roadmap surface its build-time feature list.
+        // docs/features.json is regenerated from openspec/specs/ by the
+        // org-wide Features Extract workflow stage (.github/workflows/quality.yml).
+        // Pull IInitialState from the per-app container so the serialized key
+        // is correctly namespaced as `initial-state-pipelinq-<key>`.
+        try {
+            $initialState = $this->getContainer()->get(IInitialState::class);
+            $featuresPath = __DIR__.'/../../docs/features.json';
+            $features     = [];
+            if (is_file($featuresPath) === true) {
+                $decoded = json_decode((string) file_get_contents($featuresPath), associative: true);
+                if (is_array($decoded) === true) {
+                    $features = $decoded;
+                }
+            }
+
+            $initialState->provideInitialState('features_roadmap_features', $features);
+        } catch (\Exception $e) {
+            // Initial state unavailable — Features tab will fall back to [].
+        }
 
         try {
             $commentsManager = $server->get(ICommentsManager::class);

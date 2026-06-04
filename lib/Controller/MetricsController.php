@@ -8,13 +8,16 @@
  * @category Controller
  * @package  OCA\Pipelinq\Controller
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-53
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-54
  */
 
 declare(strict_types=1);
@@ -25,6 +28,8 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\MetricsFormatter;
 use OCA\Pipelinq\Service\MetricsRepository;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\TextPlainResponse;
 use OCP\IRequest;
 use OCP\App\IAppManager;
@@ -56,10 +61,12 @@ class MetricsController extends Controller
     /**
      * Return Prometheus metrics in text exposition format.
      *
-     * @NoCSRFRequired
-     *
      * @return TextPlainResponse Prometheus-formatted metrics.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-53
      */
+    #[PublicPage]
+    #[NoAdminRequired]
     public function index(): TextPlainResponse
     {
         $metrics  = $this->collectMetrics();
@@ -73,6 +80,8 @@ class MetricsController extends Controller
      * Collect all metrics and format as Prometheus text.
      *
      * @return string Prometheus exposition format text.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-54
      */
     private function collectMetrics(): string
     {

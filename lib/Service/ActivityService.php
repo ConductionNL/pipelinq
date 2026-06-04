@@ -8,13 +8,16 @@
  * @category Service
  * @package  OCA\Pipelinq\Service
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-15
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-16
  */
 
 declare(strict_types=1);
@@ -28,6 +31,17 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for publishing Pipelinq activity events.
+ *
+ * The `setSubject()` call in {@see self::publish()} writes to the Nextcloud
+ * Activity stream (`OCP\Activity\IManager`/`IEvent`), which is a distinct
+ * surface from notifications. It is intentionally NOT migrated to
+ * `x-openregister-notifications`: the annotation runtime emits
+ * `nc-notification` channel notifications and does not feed the Activity
+ * stream, so replacing this call would silently drop the activity feed.
+ * Notification-channel delivery for lifecycle transitions is covered
+ * declaratively by the schema annotations (see {@see NotificationService}).
+ *
+ * @spec openspec/changes/pipelinq-or-lifecycle-notification/tasks.md#task-3.2
  */
 class ActivityService
 {
@@ -54,6 +68,8 @@ class ActivityService
      * @param ?string $affectedUser The affected user or null.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-15
      */
     public function publishCreated(
         string $entityType,
@@ -88,6 +104,8 @@ class ActivityService
      * @param string $objectId    The object ID.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-15
      */
     public function publishAssigned(
         string $entityType,
@@ -123,6 +141,8 @@ class ActivityService
      * @param ?string $affectedUser The affected user or null.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-15
      */
     public function publishStageChanged(
         string $title,
@@ -152,6 +172,8 @@ class ActivityService
      * @param ?string $affectedUser The affected user or null.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-15
      */
     public function publishStatusChanged(
         string $title,
@@ -181,6 +203,8 @@ class ActivityService
      * @param ?string $affectedUser The affected user or null.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-15
      */
     public function publishNoteAdded(
         string $entityType,
@@ -200,6 +224,65 @@ class ActivityService
             affectedUser: $affectedUser
         );
     }//end publishNoteAdded()
+
+    /**
+     * Publish a deal won event.
+     *
+     * @param string  $title        The lead title.
+     * @param string  $value        The deal value.
+     * @param string  $objectId     The object ID.
+     * @param ?string $affectedUser The affected user or null.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-16
+     */
+    public function publishDealWon(
+        string $title,
+        string $value,
+        string $objectId,
+        ?string $affectedUser=null
+    ): void {
+        $this->publish(
+            subject: 'lead_won',
+            type: 'pipelinq_deals',
+            parameters: [
+                'title' => $title,
+                'value' => $value,
+            ],
+            objectType: 'lead',
+            objectId: $objectId,
+            affectedUser: $affectedUser
+        );
+    }//end publishDealWon()
+
+    /**
+     * Publish a deal lost event.
+     *
+     * @param string  $title        The lead title.
+     * @param string  $objectId     The object ID.
+     * @param ?string $affectedUser The affected user or null.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/reverse-2026-05-26-be-activity-notify/tasks.md#task-1
+     */
+    public function publishDealLost(
+        string $title,
+        string $objectId,
+        ?string $affectedUser=null
+    ): void {
+        $this->publish(
+            subject: 'lead_lost',
+            type: 'pipelinq_deals',
+            parameters: [
+                'title' => $title,
+            ],
+            objectType: 'lead',
+            objectId: $objectId,
+            affectedUser: $affectedUser
+        );
+    }//end publishDealLost()
 
     /**
      * Publish an activity event.

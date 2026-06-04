@@ -8,13 +8,15 @@
  * @category Service
  * @package  OCA\Pipelinq\Service
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-38
  */
 
 declare(strict_types=1);
@@ -40,6 +42,8 @@ class ProspectScoringService
      * @param array $criteria The ICP criteria.
      *
      * @return array The prospect with fitScore and fitBreakdown added.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-38
      */
     public function score(array $prospect, array $criteria): array
     {
@@ -97,6 +101,8 @@ class ProspectScoringService
      * @param array $criteria  The ICP criteria.
      *
      * @return array The scored and sorted prospects.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-38
      */
     public function scoreAll(array $prospects, array $criteria): array
     {
