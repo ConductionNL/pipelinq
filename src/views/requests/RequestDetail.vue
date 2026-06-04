@@ -518,6 +518,7 @@ export default {
 			}
 		},
 		/**
+		 * @param dateStr
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-12
 		 */
 		formatDatetime(dateStr) {
@@ -565,6 +566,7 @@ export default {
 		},
 
 		/**
+		 * @param stage
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-32
 		 */
 		stageClass(stage) {
@@ -575,6 +577,7 @@ export default {
 		},
 
 		/**
+		 * @param option
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-24
 		 */
 		async onStatusChange(option) {
@@ -588,6 +591,7 @@ export default {
 		},
 
 		/**
+		 * @param queueId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-22
 		 */
 		async onQueueChange(queueId) {
@@ -605,6 +609,7 @@ export default {
 		},
 
 		/**
+		 * @param userId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-23
 		 */
 		async onRoutingAssign(userId) {
@@ -616,6 +621,7 @@ export default {
 		},
 
 		/**
+		 * @param userId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-18
 		 */
 		async onAssigneeChange(userId) {
@@ -670,6 +676,7 @@ export default {
 		},
 
 		/**
+		 * @param formData
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-21
 		 */
 		async onFormSave(formData) {
@@ -714,6 +721,7 @@ export default {
 		},
 
 		/**
+		 * @param dateStr
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-11
 		 */
 		formatDate(dateStr) {

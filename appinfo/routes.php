@@ -12,6 +12,19 @@ return [
         ['name' => 'settings#getUserSettings', 'url' => '/api/settings/user', 'verb' => 'GET'],
         ['name' => 'settings#updateUserSettings', 'url' => '/api/settings/user', 'verb' => 'PUT'],
 
+        // Admin — Objects API access control (per-schema group restrictions; ADR-005 / admin-settings spec).
+        ['name' => 'settings#getObjectenAccess', 'url' => '/api/settings/objecten-access', 'verb' => 'GET'],
+        ['name' => 'settings#saveObjectenAccess', 'url' => '/api/settings/objecten-access', 'verb' => 'POST'],
+
+        // Admin — REST API token management.
+        ['name' => 'settings#listTokens', 'url' => '/api/settings/api-tokens', 'verb' => 'GET'],
+        ['name' => 'settings#generateToken', 'url' => '/api/settings/api-tokens', 'verb' => 'POST'],
+        ['name' => 'settings#revokeToken', 'url' => '/api/settings/api-tokens/{id}', 'verb' => 'DELETE'],
+
+        // Admin — OAuth 2.0 and MCP server configuration.
+        ['name' => 'settings#saveOAuth', 'url' => '/api/settings/oauth', 'verb' => 'POST'],
+        ['name' => 'settings#saveMcp', 'url' => '/api/settings/mcp', 'verb' => 'POST'],
+
         // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g. CnSupportDialog)
         ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
         ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
@@ -54,10 +67,13 @@ return [
         // Intake form management (authenticated; camelCase slug matches IntakeFormController class name)
         ['name' => 'intakeForm#embed', 'url' => '/api/forms/{id}/embed', 'verb' => 'GET'],
         ['name' => 'intakeForm#export', 'url' => '/api/forms/{id}/submissions/export', 'verb' => 'GET'],
-        // Rapportage / reporting
-        ['name' => 'reporting#getSla', 'url' => '/api/rapportage/sla', 'verb' => 'GET'],
-        ['name' => 'reporting#updateSla', 'url' => '/api/rapportage/sla', 'verb' => 'PUT'],
-        ['name' => 'reporting#exportCsv', 'url' => '/api/rapportage/export', 'verb' => 'GET'],
+        // Rapportage / reporting — specific routes before wildcard catch-all.
+        ['name' => 'reporting#getKpis',     'url' => '/api/rapportage/kpis',     'verb' => 'GET'],
+        ['name' => 'reporting#getChannels', 'url' => '/api/rapportage/channels', 'verb' => 'GET'],
+        ['name' => 'reporting#getAgents',   'url' => '/api/rapportage/agents',   'verb' => 'GET'],
+        ['name' => 'reporting#getSla',      'url' => '/api/rapportage/sla',      'verb' => 'GET'],
+        ['name' => 'reporting#updateSla',   'url' => '/api/rapportage/sla',      'verb' => 'PUT'],
+        ['name' => 'reporting#exportCsv',   'url' => '/api/rapportage/export',   'verb' => 'GET'],
         // Public survey endpoints (unauthenticated; camelCase slug matches PublicSurveyController class name)
         ['name' => 'publicSurvey#show', 'url' => '/public/survey/{token}', 'verb' => 'GET'],
         ['name' => 'publicSurvey#submit', 'url' => '/public/survey/{token}/respond', 'verb' => 'POST'],
@@ -172,6 +188,17 @@ return [
         ['name' => 'portalData#orders',    'url' => '/portal/api/orders',         'verb' => 'GET'],
         ['name' => 'portalData#order',     'url' => '/portal/api/orders/{id}',    'verb' => 'GET'],
 
+        // Forecast roll-up API (snapshot export + manager overrides). Static
+        // paths precede the {id} wildcard (ADR-016); all are #[NoAdminRequired]
+        // with per-action scope enforced in ForecastAccessPolicy (ADR-005).
+        ['name' => 'forecast#snapshots',      'url' => '/api/forecast/snapshots',     'verb' => 'GET'],
+        ['name' => 'forecast#createOverride', 'url' => '/api/forecast/overrides',     'verb' => 'POST'],
+        ['name' => 'forecast#deleteOverride', 'url' => '/api/forecast/overrides/{id}', 'verb' => 'DELETE'],
+
+        // Forecast admin configuration (Nextcloud admin only; #[AuthorizedAdminSetting]).
+        ['name' => 'forecastSettings#index',  'url' => '/api/settings/forecast', 'verb' => 'GET'],
+        ['name' => 'forecastSettings#update', 'url' => '/api/settings/forecast', 'verb' => 'PUT'],
+
         // Admin / DPO (Nextcloud admin only; no #[PublicPage] — admin-default).
         ['name' => 'portalAdmin#saveConfig',   'url' => '/portal/api/admin/tenant-config', 'verb' => 'POST'],
         ['name' => 'portalAdmin#accounts',     'url' => '/portal/api/admin/accounts',      'verb' => 'GET'],
@@ -182,6 +209,31 @@ return [
         // isolated portal bundle rather than the Nextcloud-authenticated app.
         ['name' => 'portalPage#index', 'url' => '/portal', 'verb' => 'GET'],
         ['name' => 'portalPage#subpath', 'url' => '/portal/{path}', 'verb' => 'GET', 'requirements' => ['path' => '^(?!api/).*'], 'defaults' => ['path' => '']],
+
+        // BI export + data-warehouse sink (camelCase slugs match the controller class names).
+        // exportDestination / exportJob / exportRun / exportSchemaSnapshot object CRUD is handled
+        // by OpenRegister's generic object API; these are the validation, test, scheduling,
+        // history-filter and retry actions the generic API cannot express (REQ-BIE-001/002/003/011).
+        // Static collection + action routes are declared before the {id} member routes so the
+        // router never mistakes "test-run" or "destinations" for an {id} (ADR-016).
+        ['name' => 'exportJob#listDestinations',  'url' => '/api/export/destinations',          'verb' => 'GET'],
+        ['name' => 'exportJob#createDestination', 'url' => '/api/export/destinations',          'verb' => 'POST'],
+        ['name' => 'exportJob#updateDestination', 'url' => '/api/export/destinations/{id}',      'verb' => 'PUT'],
+        ['name' => 'exportJob#deleteDestination', 'url' => '/api/export/destinations/{id}',      'verb' => 'DELETE'],
+        ['name' => 'exportJob#testDestination',   'url' => '/api/export/destinations/{id}/test', 'verb' => 'POST'],
+
+        ['name' => 'exportJob#listJobs',   'url' => '/api/export/jobs',              'verb' => 'GET'],
+        ['name' => 'exportJob#createJob',  'url' => '/api/export/jobs',              'verb' => 'POST'],
+        ['name' => 'exportJob#showJob',    'url' => '/api/export/jobs/{id}',         'verb' => 'GET'],
+        ['name' => 'exportJob#updateJob',  'url' => '/api/export/jobs/{id}',         'verb' => 'PUT'],
+        ['name' => 'exportJob#deleteJob',  'url' => '/api/export/jobs/{id}',         'verb' => 'DELETE'],
+        ['name' => 'exportJob#testRun',    'url' => '/api/export/jobs/{id}/test-run', 'verb' => 'POST'],
+        ['name' => 'exportJob#enableJob',  'url' => '/api/export/jobs/{id}/enable',   'verb' => 'POST'],
+        ['name' => 'exportJob#disableJob', 'url' => '/api/export/jobs/{id}/disable',  'verb' => 'POST'],
+
+        ['name' => 'exportRun#listRuns', 'url' => '/api/export/runs',           'verb' => 'GET'],
+        ['name' => 'exportRun#showRun',  'url' => '/api/export/runs/{id}',       'verb' => 'GET'],
+        ['name' => 'exportRun#retryRun', 'url' => '/api/export/runs/{id}/retry', 'verb' => 'POST'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],

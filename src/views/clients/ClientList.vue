@@ -42,6 +42,7 @@ export default {
 
 	methods: {
 		/**
+		 * @param row
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-33
 		 */
 		openClient(row) {

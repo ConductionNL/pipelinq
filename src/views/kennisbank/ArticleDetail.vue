@@ -110,6 +110,9 @@ export default {
 		loading() {
 			return this.store.loading
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-kennisbank-ui/tasks.md#task-2
+		 */
 		renderedBody() {
 			if (!this.article || !this.article.body) {
 				return ''
@@ -120,6 +123,10 @@ export default {
 	watch: {
 		articleId: {
 			immediate: true,
+			/**
+			 * @param id
+			 * @spec openspec/changes/reverse-2026-05-26-fe-kennisbank-ui/tasks.md#task-1
+			 */
 			async handler(id) {
 				if (id && id !== 'new') {
 					await this.store.fetchArticle(id)

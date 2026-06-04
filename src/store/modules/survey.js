@@ -6,6 +6,7 @@ export const useSurveyStore = defineStore('survey', {
 	state: () => ({ surveys: [], currentSurvey: null, responses: [], surveyLoading: false, responsesLoading: false }),
 	getters: {
 		/**
+		 * @param state
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-55
 		 */
 		npsScore(state) {
@@ -18,6 +19,7 @@ export const useSurveyStore = defineStore('survey', {
 			return Math.round(((vals.filter(v => v >= 9).length - vals.filter(v => v <= 6).length) / vals.length) * 100)
 		},
 		/**
+		 * @param state
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-57
 		 */
 		satisfactionAverage(state) {
@@ -30,10 +32,12 @@ export const useSurveyStore = defineStore('survey', {
 			return Math.round((vals.reduce((s, v) => s + v, 0) / vals.length) * 10) / 10
 		},
 		/**
+		 * @param state
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-56
 		 */
 		responseCount(state) { return state.responses.length },
 		/**
+		 * @param state
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-49
 		 */
 		completionRate(state) {
@@ -47,6 +51,8 @@ export const useSurveyStore = defineStore('survey', {
 	},
 	actions: {
 		/**
+		 * @param type
+		 * @param params
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-48
 		 */
 		async _fetch(type, params = {}) {
@@ -61,30 +67,40 @@ export const useSurveyStore = defineStore('survey', {
 			return d.results || d || []
 		},
 		/**
+		 * @param params
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-54
 		 */
 		async fetchSurveys(params = {}) { this.surveyLoading = true; try { this.surveys = await this._fetch('survey', params); return this.surveys } finally { this.surveyLoading = false } },
 		/**
+		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-53
 		 */
 		async fetchSurvey(id) { this.surveyLoading = true; try { const cfg = useObjectStore().objectTypeRegistry.survey; const r = await fetch(generateUrl('/apps/openregister/api/objects/' + cfg.register + '/' + cfg.schema + '/' + id), { headers: { 'Content-Type': 'application/json', requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' } }); if (!r.ok) throw new Error('Fetch failed'); this.currentSurvey = await r.json(); return this.currentSurvey } finally { this.surveyLoading = false } },
 		/**
+		 * @param data
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-50
 		 */
 		async createSurvey(data) { const cfg = useObjectStore().objectTypeRegistry.survey; const r = await fetch(generateUrl('/apps/openregister/api/objects/' + cfg.register + '/' + cfg.schema), { method: 'POST', headers: { 'Content-Type': 'application/json', requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' }, body: JSON.stringify(data) }); if (!r.ok) throw new Error('Create failed'); const c = await r.json(); this.surveys.unshift(c); return c },
 		/**
+		 * @param id
+		 * @param data
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-59
 		 */
 		async updateSurvey(id, data) { const cfg = useObjectStore().objectTypeRegistry.survey; const r = await fetch(generateUrl('/apps/openregister/api/objects/' + cfg.register + '/' + cfg.schema + '/' + id), { method: 'PUT', headers: { 'Content-Type': 'application/json', requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' }, body: JSON.stringify(data) }); if (!r.ok) throw new Error('Update failed'); const u = await r.json(); const i = this.surveys.findIndex(s => s.id === id); if (i !== -1) this.surveys.splice(i, 1, u); if (this.currentSurvey?.id === id) this.currentSurvey = u; return u },
 		/**
+		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-51
 		 */
 		async deleteSurvey(id) { const cfg = useObjectStore().objectTypeRegistry.survey; await fetch(generateUrl('/apps/openregister/api/objects/' + cfg.register + '/' + cfg.schema + '/' + id), { method: 'DELETE', headers: { requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' } }); this.surveys = this.surveys.filter(s => s.id !== id); if (this.currentSurvey?.id === id) this.currentSurvey = null },
 		/**
+		 * @param surveyId
+		 * @param params
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-52
 		 */
 		async fetchResponses(surveyId, params = {}) { this.responsesLoading = true; try { this.responses = await this._fetch('surveyResponse', { surveyId, ...params }); return this.responses } finally { this.responsesLoading = false } },
 		/**
+		 * @param token
+		 * @param data
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-58
 		 */
 		async submitPublicResponse(token, data) { const r = await fetch(generateUrl('/apps/pipelinq/public/survey/' + token + '/respond'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || 'Submit failed') } return r.json() },

@@ -9,9 +9,14 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 		<form v-if="!token" @submit.prevent="requestReset">
 			<div class="portal-field">
 				<label for="portal-reset-email">{{ t('pipelinq', 'Email address') }}</label>
-				<input id="portal-reset-email" v-model="email" type="email" required>
+				<input id="portal-reset-email"
+					v-model="email"
+					type="email"
+					required>
 			</div>
-			<button type="submit" class="portal-button-primary">{{ t('pipelinq', 'Send reset link') }}</button>
+			<button type="submit" class="portal-button-primary">
+				{{ t('pipelinq', 'Send reset link') }}
+			</button>
 		</form>
 
 		<form v-else @submit.prevent="doReset">
@@ -25,11 +30,20 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 					required
 					:aria-describedby="error ? 'portal-reset-error' : null">
 			</div>
-			<button type="submit" class="portal-button-primary">{{ t('pipelinq', 'Set new password') }}</button>
+			<button type="submit" class="portal-button-primary">
+				{{ t('pipelinq', 'Set new password') }}
+			</button>
 		</form>
 
-		<p v-if="message" role="alert" class="portal-success">{{ message }}</p>
-		<p v-if="error" id="portal-reset-error" role="alert" class="portal-error">{{ error }}</p>
+		<p v-if="message" role="alert" class="portal-success">
+			{{ message }}
+		</p>
+		<p v-if="error"
+			id="portal-reset-error"
+			role="alert"
+			class="portal-error">
+			{{ error }}
+		</p>
 	</div>
 </template>
 

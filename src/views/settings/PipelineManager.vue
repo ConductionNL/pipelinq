@@ -128,6 +128,7 @@ export default {
 	},
 	methods: {
 		/**
+		 * @param pipeline
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-52
 		 */
 		schemaLabel(pipeline) {
@@ -144,6 +145,7 @@ export default {
 			return labels[pipeline.entityType] || pipeline.entityType || ''
 		},
 		/**
+		 * @param pipeline
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-53
 		 */
 		stageCount(pipeline) {
@@ -151,6 +153,7 @@ export default {
 			return n('pipelinq', '%n stage', '%n stages', count)
 		},
 		/**
+		 * @param pipeline
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-54
 		 */
 		stagePreview(pipeline) {
@@ -165,6 +168,7 @@ export default {
 			return [...first, '...', ...last].join(' → ')
 		},
 		/**
+		 * @param pipeline
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-49
 		 */
 		onEdit(pipeline) {
@@ -172,6 +176,7 @@ export default {
 			this.showForm = true
 		},
 		/**
+		 * @param pipeline
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-47
 		 */
 		async onDeleteClick(pipeline) {
@@ -203,6 +208,7 @@ export default {
 			await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
 		},
 		/**
+		 * @param pipelineData
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-50
 		 */
 		async onSave(pipelineData) {
@@ -243,6 +249,7 @@ export default {
 			await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
 		},
 		/**
+		 * @param pipelineId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-44
 		 */
 		async countAffectedItems(pipelineId) {
