@@ -32,6 +32,8 @@ use OCP\EventDispatcher\IEventListener;
  * (clients, leads, requests, contacts) will link directly to Pipelinq's detail views.
  *
  * @implements IEventListener<Event>
+ *
+ * @spec openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-1
  */
 class DeepLinkRegistrationListener implements IEventListener
 {
