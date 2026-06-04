@@ -64,7 +64,7 @@
 									v-model="item.notes"
 									type="text"
 									class="inline-input inline-input--notes"
-									:placeholder="t('pipelinq', 'Notities...')"
+									:placeholder="t('pipelinq', 'Notes...')"
 									@change="updateNotes(item)">
 							</td>
 							<td>

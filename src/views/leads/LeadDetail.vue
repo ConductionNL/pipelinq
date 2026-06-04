@@ -357,7 +357,7 @@ export default {
 			})
 			const computedTotal = (items || []).reduce((sum, lp) => sum + (Number(lp.total) || 0), 0)
 			const value = Number(this.leadData.value) || 0
-			this.valueOverridden = value !== 0 && Math.abs(value - computedTotal) > 0.001
+			this.valueOverridden = value !== 0 && Math.abs(value - computedTotal) > 0.01
 		},
 		/**
 		 * @param newTotal

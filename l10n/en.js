@@ -773,6 +773,7 @@ OC.L10N.register(
     "Not reached" : "Not reached",
     "Note content" : "Note content",
     "Notes" : "Notes",
+    "Notes..." : "Notes...",
     "Notes & comments" : "Notes & comments",
     "Notes / summary" : "Notes / summary",
     "Notification message" : "Notification message",

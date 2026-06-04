@@ -654,6 +654,7 @@ OC.L10N.register(
     "Not reached" : "Niet bereikt",
     "Note content" : "Notitie-inhoud",
     "Notes" : "Notities",
+    "Notes..." : "Notities...",
     "Notes & comments" : "Notities & opmerkingen",
     "Notes / summary" : "Notities / samenvatting",
     "Notification message" : "Notificatiebericht",
