@@ -31,6 +31,8 @@ use OCP\EventDispatcher\IEventListener;
  * Listener for OpenRegister object create/update events.
  *
  * @implements IEventListener<Event>
+ *
+ * @spec openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-2
  */
 class ObjectEventListener implements IEventListener
 {
