@@ -8,13 +8,15 @@
  * @category Settings
  * @package  OCA\Pipelinq\Settings
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-1
  */
 
 declare(strict_types=1);
@@ -25,6 +27,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\AppFramework\Services\IInitialState;
 use OCP\Settings\ISettings;
 
 /**
@@ -37,10 +40,12 @@ class AdminSettings implements ISettings
      *
      * @param SettingsService $settingsService The settings service.
      * @param IAppManager     $appManager      The app manager.
+     * @param IInitialState   $initialState    The initial state service.
      */
     public function __construct(
         private SettingsService $settingsService,
         private IAppManager $appManager,
+        private IInitialState $initialState,
     ) {
     }//end __construct()
 
@@ -48,18 +53,21 @@ class AdminSettings implements ISettings
      * Get the admin settings form.
      *
      * @return TemplateResponse The settings form template.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-1
      */
     public function getForm(): TemplateResponse
     {
         $config  = $this->settingsService->getSettings();
         $version = $this->appManager->getAppVersion(appId: Application::APP_ID);
 
+        $this->initialState->provideInitialState('version', $version);
+
         return new TemplateResponse(
                 Application::APP_ID,
                 'settings/admin',
                 [
-                    'config'  => json_encode($config),
-                    'version' => $version,
+                    'config' => json_encode($config),
                 ]
                 );
     }//end getForm()

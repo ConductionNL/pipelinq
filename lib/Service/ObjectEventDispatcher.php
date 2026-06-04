@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-47
  */
 
 declare(strict_types=1);
@@ -51,6 +53,7 @@ class ObjectEventDispatcher
      * @param string $assignee   The assignee user ID.
      *
      * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-4
      */
     public function dispatchCreated(string $entityType, string $title, string $objectId, string $assignee): void
     {
@@ -82,6 +85,7 @@ class ObjectEventDispatcher
      * @param string $assignee   The new assignee user ID.
      *
      * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-3
      */
     public function dispatchAssigneeChange(
         string $entityType,
@@ -113,6 +117,7 @@ class ObjectEventDispatcher
      * @param string $assignee The current assignee.
      *
      * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-7
      */
     public function dispatchStageChange(string $title, string $objectId, string $newStage, string $assignee): void
     {
@@ -143,6 +148,7 @@ class ObjectEventDispatcher
      * @param string $assignee  The current assignee.
      *
      * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-8
      */
     public function dispatchStatusChange(string $title, string $objectId, string $newStatus, string $assignee): void
     {
@@ -163,6 +169,65 @@ class ObjectEventDispatcher
             );
         }
     }//end dispatchStatusChange()
+
+    /**
+     * Dispatch deal won events for a lead.
+     *
+     * @param string $title    The lead title.
+     * @param string $value    The deal value.
+     * @param string $objectId The object ID.
+     * @param string $assignee The current assignee.
+     *
+     * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-6
+     */
+    public function dispatchDealWon(string $title, string $value, string $objectId, string $assignee): void
+    {
+        $this->activityService->publishDealWon(
+            title: $title,
+            value: $value,
+            objectId: $objectId,
+            affectedUser: $this->nullIfEmpty(value: $assignee)
+        );
+
+        if ($assignee !== '') {
+            $this->notifyService->notifyDealWon(
+                title: $title,
+                value: $value,
+                assigneeUserId: $assignee,
+                objectId: $objectId,
+                author: $this->getCurrentUser()
+            );
+        }
+    }//end dispatchDealWon()
+
+    /**
+     * Dispatch deal lost events for a lead.
+     *
+     * @param string $title    The lead title.
+     * @param string $objectId The object ID.
+     * @param string $assignee The current assignee.
+     *
+     * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-5
+     */
+    public function dispatchDealLost(string $title, string $objectId, string $assignee): void
+    {
+        $this->activityService->publishDealLost(
+            title: $title,
+            objectId: $objectId,
+            affectedUser: $this->nullIfEmpty(value: $assignee)
+        );
+
+        if ($assignee !== '') {
+            $this->notifyService->notifyDealLost(
+                title: $title,
+                assigneeUserId: $assignee,
+                objectId: $objectId,
+                author: $this->getCurrentUser()
+            );
+        }
+    }//end dispatchDealLost()
 
     /**
      * Return null if the value is empty, otherwise return the value.

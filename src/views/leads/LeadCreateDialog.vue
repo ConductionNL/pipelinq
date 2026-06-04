@@ -29,11 +29,18 @@ export default {
 	},
 	emits: ['created', 'close'],
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-23
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
 	},
 	methods: {
+		/**
+		 * @param formData
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-24
+		 */
 		async onSave(formData) {
 			const result = await this.objectStore.saveObject('lead', formData)
 			if (result) {

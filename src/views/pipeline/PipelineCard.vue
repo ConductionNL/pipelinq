@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2026 Conduction B.V. -->
+
 <template>
 	<div
 		class="pipeline-card"
@@ -15,7 +18,7 @@
 			</span>
 			<span v-if="item.priority && item.priority !== 'normal'" class="priority-indicator" :class="'priority--' + item.priority" />
 			<span v-if="item.value" class="card-meta">
-				{{ Number(item.value).toLocaleString('nl-NL') }}
+				{{ formatNumber(item.value) }}
 			</span>
 			<span v-if="item.assignee" class="card-assignee">
 				{{ item.assignee }}
@@ -34,6 +37,7 @@
 				:options="stageOptions"
 				:clearable="false"
 				:placeholder="t('pipelinq', 'Stage')"
+				:input-label="t('pipelinq', 'Stage')"
 				class="quick-select"
 				@input="onStageChange" />
 			<NcSelect
@@ -41,6 +45,7 @@
 				:options="userOptions"
 				:clearable="true"
 				:placeholder="t('pipelinq', 'Assign')"
+				:input-label="t('pipelinq', 'Assign')"
 				class="quick-select"
 				@input="onAssignChange" />
 		</div>
@@ -52,6 +57,8 @@ import { NcSelect } from '@nextcloud/vue'
 import { getPriorityLabel, getPriorityColor, getStatusLabel } from '../../services/requestStatus.js'
 import { getDaysAge, isStale, getAgingClass, formatAge } from '../../services/pipelineUtils.js'
 import { useObjectStore } from '../../store/modules/object.js'
+// eslint-disable-next-line no-unused-vars -- used in template via Options API fallthrough
+import { formatNumber, formatDate as formatLocaleDate } from '../../services/localeUtils.js'
 
 // Module-level user cache shared across all PipelineCard instances
 let usersCache = null
@@ -87,12 +94,21 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-42
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-36
+		 */
 		currentColumnValue() {
 			return this.item[this.columnProperty] || ''
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
+		 */
 		isOverdue() {
 			if (this.entityType === 'lead') {
 				if (!this.item.expectedCloseDate) return false
@@ -105,21 +121,36 @@ export default {
 			}
 			return false
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-37
+		 */
 		daysAge() {
 			return getDaysAge(this.item)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-34
+		 */
 		agingClass() {
 			return getAgingClass(this.daysAge)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-35
+		 */
 		agingLabel() {
 			return formatAge(this.daysAge)
 		},
 		isStaleItem() {
 			return isStale(this.item, this.entityType)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-46
+		 */
 		stageOptions() {
 			return this.stages.map(s => s.name)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-47
+		 */
 		userOptions() {
 			return this.users
 		},
@@ -127,12 +158,20 @@ export default {
 	watch: {
 		currentColumnValue: {
 			immediate: true,
+			/**
+			 * @param val
+			 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
+			 */
 			handler(val) {
 				this.selectedStage = val || null
 			},
 		},
 		'item.assignee': {
 			immediate: true,
+			/**
+			 * @param val
+			 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
+			 */
 			handler(val) {
 				this.selectedAssignee = val || null
 			},
@@ -142,10 +181,14 @@ export default {
 		await this.loadUsers()
 	},
 	methods: {
+		formatNumber,
 		getPriorityLabel,
 		getPriorityColor,
 		getStatusLabel,
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-41
+		 */
 		async loadUsers() {
 			if (usersCache) {
 				this.users = usersCache
@@ -168,6 +211,10 @@ export default {
 			}
 		},
 
+		/**
+		 * @param newStage
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-45
+		 */
 		async onStageChange(newStage) {
 			if (!newStage || newStage === this.currentColumnValue) return
 			try {
@@ -178,11 +225,14 @@ export default {
 				await this.objectStore.saveObject(this.entityType, updated)
 				this.$emit('refresh')
 			} catch {
-				// Revert on failure
 				this.selectedStage = this.currentColumnValue
 			}
 		},
 
+		/**
+		 * @param newAssignee
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-43
+		 */
 		async onAssignChange(newAssignee) {
 			if (newAssignee === this.item.assignee) return
 			try {
@@ -193,11 +243,14 @@ export default {
 				await this.objectStore.saveObject(this.entityType, updated)
 				this.$emit('refresh')
 			} catch {
-				// Revert on failure
 				this.selectedAssignee = this.item.assignee
 			}
 		},
 
+		/**
+		 * @param e
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-44
+		 */
 		onDragStart(e) {
 			const data = {
 				id: this.item.id,
@@ -208,13 +261,12 @@ export default {
 			e.dataTransfer.effectAllowed = 'move'
 		},
 
+		/**
+		 * @param dateStr
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-38
+		 */
 		formatDate(dateStr) {
-			if (!dateStr) return ''
-			try {
-				return new Date(dateStr).toLocaleDateString('nl-NL', { month: 'short', day: 'numeric' })
-			} catch {
-				return dateStr
-			}
+			return formatLocaleDate(dateStr)
 		},
 	},
 }
@@ -237,7 +289,6 @@ export default {
 	border-left: 3px solid var(--color-error);
 }
 
-/* Compact flex-row: badge → title → meta → age/date */
 .pipeline-card__row {
 	display: flex;
 	align-items: center;
@@ -343,7 +394,6 @@ export default {
 	font-weight: 600;
 }
 
-/* Quick actions row */
 .pipeline-card__actions {
 	display: flex;
 	gap: 4px;

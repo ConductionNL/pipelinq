@@ -1,0 +1,21 @@
+{
+  "spec_slug": "contactmomenten-rapportage",
+  "title": "Contactmomenten Rapportage",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [],
+  "issue": null,
+  "schema_version": 2,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "retry:queued",
+      "started_at": "2026-06-01T19:04:28Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [],
+      "stages": []
+    }
+  ]
+}

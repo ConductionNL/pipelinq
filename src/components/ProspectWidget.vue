@@ -86,6 +86,9 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-6
+		 */
 		prospectStore() {
 			return useProspectStore()
 		},
@@ -94,9 +97,16 @@ export default {
 		this.prospectStore.fetchProspects()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-7
+		 */
 		async refresh() {
 			await this.prospectStore.fetchProspects(true)
 		},
+		/**
+		 * @param prospect
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-5
+		 */
 		async onCreateLead(prospect) {
 			const result = await this.prospectStore.createLeadFromProspect(prospect)
 			if (result.error) {
@@ -108,6 +118,10 @@ export default {
 				}
 			}
 		},
+		/**
+		 * @param dateStr
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-4
+		 */
 		formatTime(dateStr) {
 			if (!dateStr) return ''
 			try {

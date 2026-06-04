@@ -1,10 +1,7 @@
 <template>
-	<div class="prospect-settings">
-		<h3>{{ t('pipelinq', 'Prospect Discovery') }}</h3>
-		<p class="prospect-settings__desc">
-			{{ t('pipelinq', 'Configure your Ideal Customer Profile (ICP) to discover potential leads.') }}
-		</p>
-
+	<CnSettingsSection
+		:name="t('pipelinq', 'Prospect Discovery')"
+		:description="t('pipelinq', 'Configure your Ideal Customer Profile (ICP) to discover potential leads.')">
 		<NcLoadingIcon v-if="loading" :size="24" />
 
 		<div v-else class="prospect-settings__form">
@@ -44,6 +41,7 @@
 				<NcSelect
 					v-model="form.provinces"
 					:options="provinceOptions"
+					:aria-label-combobox="t('pipelinq', 'Provinces')"
 					:multiple="true"
 					:placeholder="t('pipelinq', 'Select provinces')" />
 			</div>
@@ -54,6 +52,7 @@
 				<NcSelect
 					v-model="form.legalForms"
 					:options="legalFormOptions"
+					:aria-label-combobox="t('pipelinq', 'Legal Forms')"
 					:multiple="true"
 					:placeholder="t('pipelinq', 'Select legal forms')" />
 			</div>
@@ -112,15 +111,18 @@
 				{{ message }}
 			</NcNoteCard>
 		</div>
-	</div>
+	</CnSettingsSection>
 </template>
 
 <script>
+import { CnSettingsSection } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
 
 export default {
 	name: 'ProspectSettings',
 	components: {
+		CnSettingsSection,
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,
@@ -159,10 +161,13 @@ export default {
 		await this.fetchSettings()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-65
+		 */
 		async fetchSettings() {
 			this.loading = true
 			try {
-				const response = await fetch('/apps/pipelinq/api/prospects/settings', {
+				const response = await fetch(generateUrl('/apps/pipelinq/api/prospects/settings'), {
 					headers: {
 						'Content-Type': 'application/json',
 						requesttoken: OC.requestToken,
@@ -189,6 +194,9 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-66
+		 */
 		async save() {
 			this.saving = true
 			this.message = ''
@@ -205,7 +213,7 @@ export default {
 			}
 
 			try {
-				const response = await fetch('/apps/pipelinq/api/prospects/settings', {
+				const response = await fetch(generateUrl('/apps/pipelinq/api/prospects/settings'), {
 					method: 'PUT',
 					headers: {
 						'Content-Type': 'application/json',
@@ -234,15 +242,6 @@ export default {
 </script>
 
 <style scoped>
-.prospect-settings {
-	margin-bottom: 24px;
-}
-
-.prospect-settings__desc {
-	color: var(--color-text-maxcontrast);
-	margin-bottom: 16px;
-}
-
 .prospect-settings__form {
 	max-width: 600px;
 }

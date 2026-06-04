@@ -8,13 +8,15 @@
  * @category Controller
  * @package  OCA\Pipelinq\Controller
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-35
  */
 
 declare(strict_types=1);
@@ -25,6 +27,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\IcpConfigService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
@@ -65,6 +68,7 @@ class ProspectSettingsController extends Controller
      *
      * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service if available, null otherwise.
      * @throws \RuntimeException If the service is not available.
+     * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-4
      */
     public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
@@ -82,6 +86,7 @@ class ProspectSettingsController extends Controller
      *
      * @return \OCA\OpenRegister\Service\ConfigurationService|null The Configuration service if available, null otherwise.
      * @throws \RuntimeException If the service is not available.
+     * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-3
      */
     public function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService
     {
@@ -97,10 +102,13 @@ class ProspectSettingsController extends Controller
     /**
      * Get current ICP configuration.
      *
-     * Admin-only: no @NoAdminRequired annotation.
+     * Admin-only endpoint (requires admin settings permission).
      *
      * @return JSONResponse The ICP settings.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-35
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function index(): JSONResponse
     {
         return new JSONResponse(data: $this->icpConfig->getSettings());
@@ -109,10 +117,13 @@ class ProspectSettingsController extends Controller
     /**
      * Save ICP configuration.
      *
-     * Admin-only: no @NoAdminRequired annotation.
+     * Admin-only endpoint (requires admin settings permission).
      *
      * @return JSONResponse The save result.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-35
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function update(): JSONResponse
     {
         $data = $this->request->getParams();

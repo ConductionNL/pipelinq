@@ -1,8 +1,9 @@
 <template>
-	<div class="pipeline-form-overlay">
+	<NcDialog
+		size="large"
+		:name="isEdit ? t('pipelinq', 'Edit pipeline') : t('pipelinq', 'New pipeline')"
+		@closing="$emit('cancel')">
 		<div class="pipeline-form">
-			<h3>{{ isEdit ? t('pipelinq', 'Edit pipeline') : t('pipelinq', 'New pipeline') }}</h3>
-
 			<!-- Pipeline properties -->
 			<div class="form-section">
 				<div class="form-group">
@@ -24,6 +25,7 @@
 						<label>{{ t('pipelinq', 'View') }}</label>
 						<NcSelect v-model="form.viewId"
 							:options="viewOptions"
+							:aria-label-combobox="t('pipelinq', 'View')"
 							:clearable="true"
 							label="label"
 							:reduce="o => o.value"
@@ -161,6 +163,8 @@
 							<NcTextField :value="String(stage.probability ?? '')"
 								:label="t('pipelinq', 'Probability %')"
 								type="number"
+								:error="!!stageErrors[index]?.probability"
+								:helper-text="stageErrors[index]?.probability || ''"
 								class="stage-probability-field"
 								@update:value="v => stage.probability = v === '' ? null : Number(v)" />
 
@@ -194,22 +198,21 @@
 					</div>
 				</draggable>
 			</div>
-
-			<!-- Actions -->
-			<div class="form-actions">
-				<NcButton type="tertiary" @click="$emit('cancel')">
-					{{ t('pipelinq', 'Cancel') }}
-				</NcButton>
-				<NcButton type="primary" :disabled="!isValid" @click="onSave">
-					{{ isEdit ? t('pipelinq', 'Save') : t('pipelinq', 'Create') }}
-				</NcButton>
-			</div>
 		</div>
-	</div>
+
+		<template #actions>
+			<NcButton type="tertiary" @click="$emit('cancel')">
+				{{ t('pipelinq', 'Cancel') }}
+			</NcButton>
+			<NcButton type="primary" :disabled="!isValid" @click="onSave">
+				{{ isEdit ? t('pipelinq', 'Save') : t('pipelinq', 'Create') }}
+			</NcButton>
+		</template>
+	</NcDialog>
 </template>
 
 <script>
-import { NcButton, NcCheckboxRadioSwitch, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcCheckboxRadioSwitch, NcDialog, NcSelect, NcTextField } from '@nextcloud/vue'
 import draggable from 'vuedraggable'
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue'
@@ -222,6 +225,7 @@ export default {
 	components: {
 		NcButton,
 		NcCheckboxRadioSwitch,
+		NcDialog,
 		NcSelect,
 		NcTextField,
 		draggable,
@@ -255,15 +259,24 @@ export default {
 		isEdit() {
 			return !!this.pipeline
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-43
+		 */
 		viewOptions() {
 			return this.views.map(v => ({
 				value: v.id || v.uuid,
 				label: v.name || v.slug || v.id,
 			}))
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-41
+		 */
 		sortedStages() {
 			return [...this.form.stages].sort((a, b) => a.order - b.order)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-33
+		 */
 		errors() {
 			const errors = {}
 			if (!this.form.title.trim()) {
@@ -275,6 +288,10 @@ export default {
 			}
 			return errors
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-42
+		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-2.2
+		 */
 		stageErrors() {
 			return this.form.stages.map(stage => {
 				const errors = {}
@@ -284,9 +301,15 @@ export default {
 				if (stage.isWon && !stage.isClosed) {
 					errors.isWon = t('pipelinq', 'A Won stage must also be marked as Closed')
 				}
+				if (stage.probability != null && stage.probability !== '' && (Number(stage.probability) < 0 || Number(stage.probability) > 100)) {
+					errors.probability = t('pipelinq', 'Probability must be between 0 and 100')
+				}
 				return Object.keys(errors).length > 0 ? errors : null
 			})
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-34
+		 */
 		isValid() {
 			if (Object.keys(this.errors).length > 0) return false
 			if (this.stageErrors.some(e => e !== null)) return false
@@ -294,6 +317,9 @@ export default {
 			return true
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-32
+	 */
 	async created() {
 		if (this.pipeline) {
 			this.form = {
@@ -310,6 +336,9 @@ export default {
 		await this.loadViews()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-35
+		 */
 		async loadViews() {
 			this.loadingViews = true
 			try {
@@ -320,6 +349,9 @@ export default {
 			this.loadingViews = false
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-30
+		 */
 		addMapping() {
 			this.form.propertyMappings.push({
 				schemaSlug: '',
@@ -328,10 +360,17 @@ export default {
 			})
 		},
 
+		/**
+		 * @param index
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-39
+		 */
 		removeMapping(index) {
 			this.form.propertyMappings.splice(index, 1)
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-31
+		 */
 		addStage() {
 			const maxOrder = this.form.stages.reduce((max, s) => Math.max(max, s.order), -1)
 			this.form.stages.push({
@@ -343,6 +382,10 @@ export default {
 				color: null,
 			})
 		},
+		/**
+		 * @param index
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-40
+		 */
 		removeStage(index) {
 			const sorted = this.sortedStages
 			const stage = sorted[index]
@@ -352,6 +395,11 @@ export default {
 			}
 			this.recomputeOrders()
 		},
+		/**
+		 * @param stage
+		 * @param direction
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-36
+		 */
 		moveStage(stage, direction) {
 			const sorted = this.sortedStages
 			const currentIndex = sorted.indexOf(stage)
@@ -364,12 +412,18 @@ export default {
 			stage.order = otherStage.order
 			otherStage.order = tempOrder
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-38
+		 */
 		recomputeOrders() {
 			const sorted = [...this.form.stages].sort((a, b) => a.order - b.order)
 			sorted.forEach((stage, i) => {
 				stage.order = i
 			})
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-37
+		 */
 		onSave() {
 			if (!this.isValid) return
 
@@ -397,36 +451,11 @@ export default {
 </script>
 
 <style scoped>
-.pipeline-form-overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: rgba(0, 0, 0, 0.3);
-	display: flex;
-	justify-content: center;
-	align-items: flex-start;
-	padding-top: 60px;
-	z-index: 1000;
-}
-
 .pipeline-form {
-	background: var(--color-main-background);
-	border-radius: var(--border-radius-large);
 	padding: 24px;
-	width: 800px;
-	max-width: 90vw;
-	max-height: 80vh;
-	overflow-y: auto;
-	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
 }
 
-.pipeline-form h3 {
-	margin: 0 0 16px;
-}
-
-.form-section {
+.form-section:not(:last-child) {
 	margin-bottom: 24px;
 }
 
@@ -603,7 +632,7 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
-.stage-color-field input[type="color"] {
+.stage-color-field input[type='color'] {
 	width: 32px;
 	height: 32px;
 	padding: 0;
@@ -622,14 +651,6 @@ export default {
 .stage-delete {
 	flex-shrink: 0;
 	align-self: center;
-}
-
-.form-actions {
-	display: flex;
-	justify-content: flex-end;
-	gap: 8px;
-	padding-top: 16px;
-	border-top: 1px solid var(--color-border);
 }
 
 .error-text {

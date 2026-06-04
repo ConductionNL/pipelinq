@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-63
  */
 
 declare(strict_types=1);
@@ -34,11 +36,18 @@ class SchemaMapService
      * @var array<string, string>
      */
     private const SCHEMA_MAPPING = [
-        'client_schema'   => 'client',
-        'contact_schema'  => 'contact',
-        'lead_schema'     => 'lead',
-        'request_schema'  => 'request',
-        'pipeline_schema' => 'pipeline',
+        'client_schema'         => 'client',
+        'contact_schema'        => 'contact',
+        'lead_schema'           => 'lead',
+        'request_schema'        => 'request',
+        'pipeline_schema'       => 'pipeline',
+        'queue_schema'          => 'queue',
+        'skill_schema'          => 'skill',
+        'agentProfile_schema'   => 'agentProfile',
+        'task_schema'           => 'task',
+        'contactmoment_schema'  => 'contactmoment',
+        'survey_schema'         => 'survey',
+        'surveyResponse_schema' => 'surveyResponse',
     ];
 
     /**
@@ -66,6 +75,7 @@ class SchemaMapService
      * @param ?string $schemaId The schema ID to resolve.
      *
      * @return ?string The entity type or null.
+     * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-11
      */
     public function resolveEntityType(?string $schemaId): ?string
     {

@@ -1,7 +1,35 @@
 import { useObjectStore } from './modules/object.js'
 import { useSettingsStore } from './modules/settings.js'
 
-export async function initializeStores() {
+// Memoised in-flight/resolved bootstrap. initializeStores() loads the app
+// settings once and registers the object types; the config does not change
+// during a page session, so every caller (main bootstrap, dashboard data
+// fetchers, …) shares this single promise instead of re-fetching
+// /api/settings per call. Reset to null on failure so a later call retries.
+let initPromise = null
+
+/**
+ * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-60
+ */
+export function initializeStores() {
+	if (initPromise) {
+		return initPromise
+	}
+	initPromise = doInitializeStores().then((result) => {
+		// Settings failed to load (endpoint error → null config): don't cache
+		// the un-registered state, so the next caller can retry.
+		if (!result.settingsStore.getConfig) {
+			initPromise = null
+		}
+		return result
+	}).catch((error) => {
+		initPromise = null
+		throw error
+	})
+	return initPromise
+}
+
+async function doInitializeStores() {
 	const settingsStore = useSettingsStore()
 	const objectStore = useObjectStore()
 
@@ -31,6 +59,63 @@ export async function initializeStores() {
 		}
 		if (config.register && config.leadProduct_schema) {
 			objectStore.registerObjectType('leadProduct', config.leadProduct_schema, config.register)
+		}
+		if (config.register && config.intakeForm_schema) {
+			objectStore.registerObjectType('intakeForm', config.intakeForm_schema, config.register)
+		}
+		if (config.register && config.intakeSubmission_schema) {
+			objectStore.registerObjectType('intakeSubmission', config.intakeSubmission_schema, config.register)
+		}
+		if (config.register && config.automation_schema) {
+			objectStore.registerObjectType('automation', config.automation_schema, config.register)
+		}
+		if (config.register && config.automationLog_schema) {
+			objectStore.registerObjectType('automationLog', config.automationLog_schema, config.register)
+		}
+		if (config.register && config.relationship_schema) {
+			objectStore.registerObjectType('relationship', config.relationship_schema, config.register)
+		}
+		if (config.register && config.queue_schema) {
+			objectStore.registerObjectType('queue', config.queue_schema, config.register)
+		}
+		if (config.register && config.skill_schema) {
+			objectStore.registerObjectType('skill', config.skill_schema, config.register)
+		}
+		if (config.register && config.agentProfile_schema) {
+			objectStore.registerObjectType('agentProfile', config.agentProfile_schema, config.register)
+		}
+		if (config.register && config.contactmoment_schema) {
+			objectStore.registerObjectType('contactmoment', config.contactmoment_schema, config.register)
+		}
+		if (config.register && config.survey_schema) {
+			objectStore.registerObjectType('survey', config.survey_schema, config.register)
+		}
+		if (config.register && config.surveyResponse_schema) {
+			objectStore.registerObjectType('surveyResponse', config.surveyResponse_schema, config.register)
+		}
+		if (config.register && config.complaint_schema) {
+			objectStore.registerObjectType('complaint', config.complaint_schema, config.register)
+		}
+		if (config.register && config.posTransaction_schema) {
+			objectStore.registerObjectType('posTransaction', config.posTransaction_schema, config.register)
+		}
+		if (config.register && config.posTransactionLine_schema) {
+			objectStore.registerObjectType('posTransactionLine', config.posTransactionLine_schema, config.register)
+		}
+		if (config.register && config.receiptTemplate_schema) {
+			objectStore.registerObjectType('receiptTemplate', config.receiptTemplate_schema, config.register)
+		}
+		if (config.register && config.receiptPrintLog_schema) {
+			objectStore.registerObjectType('receiptPrintLog', config.receiptPrintLog_schema, config.register)
+		}
+		if (config.register && config.refundReason_schema) {
+			objectStore.registerObjectType('refundReason', config.refundReason_schema, config.register)
+		}
+		if (config.register && config.posRefund_schema) {
+			objectStore.registerObjectType('posRefund', config.posRefund_schema, config.register)
+		}
+		if (config.register && config.posRefundLine_schema) {
+			objectStore.registerObjectType('posRefundLine', config.posRefundLine_schema, config.register)
 		}
 	}
 

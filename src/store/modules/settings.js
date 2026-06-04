@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { generateUrl } from '@nextcloud/router'
 
 export const useSettingsStore = defineStore('settings', {
 	state: () => ({
@@ -8,6 +9,10 @@ export const useSettingsStore = defineStore('settings', {
 		loading: false,
 		error: null,
 		initialized: false,
+		objectenAccess: {},
+		apiTokens: [],
+		oauthConfig: {},
+		mcpConfig: {},
 	}),
 	getters: {
 		isLoading: (state) => state.loading,
@@ -16,14 +21,29 @@ export const useSettingsStore = defineStore('settings', {
 		getConfig: (state) => state.config,
 		hasOpenRegisters: (state) => state.openRegisters,
 		getIsAdmin: (state) => state.isAdmin,
+		/**
+		 * Get configured SLA hours for a complaint category.
+		 *
+		 * @param {object} state The store state.
+		 * @return {function(string): number}
+		 */
+		getComplaintSlaHours: (state) => (category) => {
+			if (!state.config) return 0
+			const key = 'complaint_sla_' + category
+			const value = parseInt(state.config[key], 10)
+			return isNaN(value) ? 0 : value
+		},
 	},
 	actions: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-43
+		 */
 		async fetchSettings() {
 			this.loading = true
 			this.error = null
 
 			try {
-				const response = await fetch('/apps/pipelinq/api/settings', {
+				const response = await fetch(generateUrl('/apps/pipelinq/api/settings'), {
 					method: 'GET',
 					headers: {
 						'Content-Type': 'application/json',
@@ -40,9 +60,13 @@ export const useSettingsStore = defineStore('settings', {
 				this.config = data.config || data
 				this.openRegisters = data.openRegisters ?? false
 				this.isAdmin = data.isAdmin ?? false
+				this.objectenAccess = data.objectenAccess ?? {}
+				this.apiTokens = data.apiTokens ?? []
+				this.oauthConfig = data.oauthConfig ?? {}
+				this.mcpConfig = data.mcpConfig ?? {}
 				this.initialized = true
 
-				return this.config
+				return data
 			} catch (error) {
 				this.error = error.message
 				console.error('Error fetching Pipelinq settings:', error)
@@ -52,12 +76,16 @@ export const useSettingsStore = defineStore('settings', {
 			}
 		},
 
+		/**
+		 * @param settingsData
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-44
+		 */
 		async saveSettings(settingsData) {
 			this.loading = true
 			this.error = null
 
 			try {
-				const response = await fetch('/apps/pipelinq/api/settings', {
+				const response = await fetch(generateUrl('/apps/pipelinq/api/settings'), {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',

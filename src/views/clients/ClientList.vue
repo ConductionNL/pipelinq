@@ -30,6 +30,9 @@ export default {
 		CnIndexPage,
 	},
 
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-34
+	 */
 	setup() {
 		const sidebarState = inject('sidebarState', null)
 		const objectStore = useObjectStore()
@@ -37,9 +40,16 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * @param row
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-33
+		 */
 		openClient(row) {
 			this.$router.push({ name: 'ClientDetail', params: { id: row.id } })
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-32
+		 */
 		createNew() {
 			this.$router.push({ name: 'ClientDetail', params: { id: 'new' } })
 		},

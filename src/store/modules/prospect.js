@@ -2,6 +2,7 @@
  * Prospect store — fetches prospect discovery data from the Pipelinq API.
  */
 import { defineStore } from 'pinia'
+import { generateUrl } from '@nextcloud/router'
 
 export const useProspectStore = defineStore('prospect', {
 	state: () => ({
@@ -14,12 +15,16 @@ export const useProspectStore = defineStore('prospect', {
 		error: null,
 	}),
 	actions: {
+		/**
+		 * @param refresh
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-33
+		 */
 		async fetchProspects(refresh = false) {
 			this.loading = true
 			this.error = null
 
 			try {
-				const url = `/apps/pipelinq/api/prospects${refresh ? '?refresh=true' : ''}`
+				const url = generateUrl(`/apps/pipelinq/api/prospects${refresh ? '?refresh=true' : ''}`)
 				const response = await fetch(url, {
 					headers: {
 						'Content-Type': 'application/json',
@@ -50,9 +55,13 @@ export const useProspectStore = defineStore('prospect', {
 			}
 		},
 
+		/**
+		 * @param prospectData
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-32
+		 */
 		async createLeadFromProspect(prospectData) {
 			try {
-				const response = await fetch('/apps/pipelinq/api/prospects/create-lead', {
+				const response = await fetch(generateUrl('/apps/pipelinq/api/prospects/create-lead'), {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',

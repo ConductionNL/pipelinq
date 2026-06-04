@@ -8,7 +8,7 @@
  * @category Service
  * @package  OCA\Pipelinq\Service
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -21,6 +21,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCP\App\IAppManager;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -29,11 +31,13 @@ use Psr\Log\LoggerInterface;
 class ProspectDiscoveryService
 {
     /**
-     * Cache TTL in seconds (1 hour).
+     * Default cache TTL in seconds (1 hour) when unconfigured.
+     *
+     * Tunable via `pipelinq.prospect_discovery.cache_ttl_seconds`.
      *
      * @var int
      */
-    private const CACHE_TTL = 3600;
+    private const DEFAULT_CACHE_TTL = 3600;
 
     /**
      * Cache key prefix.
@@ -45,12 +49,14 @@ class ProspectDiscoveryService
     /**
      * Constructor.
      *
-     * @param IcpConfigService        $icpConfig The ICP config service.
-     * @param KvkApiClient            $kvkClient The KVK API client.
-     * @param OpenCorporatesApiClient $ocClient  The OpenCorporates client.
-     * @param ProspectScoringService  $scoring   The scoring service.
-     * @param SettingsService         $settings  The settings service.
-     * @param LoggerInterface         $logger    The logger.
+     * @param IcpConfigService        $icpConfig  The ICP config service.
+     * @param KvkApiClient            $kvkClient  The KVK API client.
+     * @param OpenCorporatesApiClient $ocClient   The OpenCorporates client.
+     * @param ProspectScoringService  $scoring    The scoring service.
+     * @param SettingsService         $settings   The settings service.
+     * @param LoggerInterface         $logger     The logger.
+     * @param ContainerInterface      $container  The DI container.
+     * @param IAppManager             $appManager The app manager.
      */
     public function __construct(
         private IcpConfigService $icpConfig,
@@ -59,6 +65,8 @@ class ProspectDiscoveryService
         private ProspectScoringService $scoring,
         private SettingsService $settings,
         private LoggerInterface $logger,
+        private ContainerInterface $container,
+        private IAppManager $appManager,
     ) {
     }//end __construct()
 
@@ -72,6 +80,7 @@ class ProspectDiscoveryService
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag)  — $refresh is a simple cache bypass toggle
      * @SuppressWarnings(PHPMD.CyclomaticComplexity) — orchestration method with multiple sources
      * @SuppressWarnings(PHPMD.NPathComplexity)      — orchestration method with multiple sources
+     * @spec                                         openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-15
      */
     public function discover(bool $refresh=false): array
     {
@@ -165,6 +174,7 @@ class ProspectDiscoveryService
      * @param array $prospectData The prospect data.
      *
      * @return array The created client and lead IDs.
+     * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-14
      */
     public function createLeadFromProspect(array $prospectData): array
     {
@@ -224,29 +234,20 @@ class ProspectDiscoveryService
                 array: $prospects,
                 callback: function (array $prospect) use ($clientNames): bool {
                     $tradeName = strtolower(string: trim(string: $prospect['tradeName'] ?? ''));
-                    foreach ($clientNames as $clientName) {
-                        if ($tradeName === $clientName) {
-                            return false;
-                        }
-
-                        // Fuzzy match: check if one contains the other.
-                        if ($tradeName !== '' && $clientName !== '') {
-                            if (str_contains(haystack: $tradeName, needle: $clientName) === true
-                                || str_contains(haystack: $clientName, needle: $tradeName) === true
-                            ) {
-                                return false;
-                            }
-                        }
+                    if ($tradeName === '') {
+                        return true;
                     }
 
-                    return true;
+                    // Use strict normalised equality only; bidirectional str_contains
+                    // produces false positives on common substrings like "BV" or "Group".
+                    return in_array($tradeName, $clientNames, true) === false;
                 }
             )
         );
     }//end excludeExistingClients()
 
     /**
-     * Get names of existing clients (lowercased).
+     * Get names of existing clients (lowercased) from OpenRegister.
      *
      * @return array The client names.
      */
@@ -260,9 +261,35 @@ class ProspectDiscoveryService
                 return [];
             }
 
-            // Use the OpenRegister API internally via curl to get clients.
-            // This is a simplification; in production, inject ObjectService.
-            return [];
+            if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
+                return [];
+            }
+
+            /*
+             * @var \OCA\OpenRegister\Service\ObjectService $objectService
+             */
+
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+
+            $clients = $objectService->findAll(
+                [
+                    'filters' => [
+                        'register' => $register,
+                        'schema'   => $schema,
+                    ],
+                    'limit'   => 1000,
+                ]
+            );
+
+            $names = [];
+            foreach ($clients as $client) {
+                $name = $client['name'] ?? $client['tradeName'] ?? '';
+                if ($name !== '') {
+                    $names[] = strtolower(trim($name));
+                }
+            }
+
+            return $names;
         } catch (\Exception $e) {
             $this->logger->warning(
                 message: 'Failed to fetch existing clients for exclusion',
@@ -333,7 +360,11 @@ class ProspectDiscoveryService
     private function setInCache(string $key, array $data): void
     {
         if (function_exists(function: 'apcu_store') === true) {
-            apcu_store($key, $data, self::CACHE_TTL);
+            $ttl = $this->settings->getIntValue(
+                'prospect_discovery.cache_ttl_seconds',
+                self::DEFAULT_CACHE_TTL
+            );
+            apcu_store($key, $data, $ttl);
         }
     }//end setInCache()
 }//end class

@@ -25,6 +25,7 @@
 				<NcSelect
 					v-model="form.status"
 					:options="availableStatuses"
+					:aria-label-combobox="t('pipelinq', 'Status')"
 					:clearable="false"
 					:placeholder="t('pipelinq', 'Status')" />
 			</div>
@@ -33,6 +34,7 @@
 				<NcSelect
 					v-model="form.priority"
 					:options="priorityOptions"
+					:aria-label-combobox="t('pipelinq', 'Priority')"
 					:clearable="false"
 					:placeholder="t('pipelinq', 'Priority')" />
 			</div>
@@ -45,6 +47,7 @@
 				<NcSelect
 					v-model="form.channel"
 					:options="channelOptions"
+					:aria-label-combobox="t('pipelinq', 'Channel')"
 					:clearable="true"
 					:placeholder="t('pipelinq', 'Select channel')" />
 			</div>
@@ -58,11 +61,11 @@
 
 		<!-- Requested at -->
 		<div class="form-group">
-			<NcTextField
-				:value="form.requestedAt || ''"
+			<NcDateTimePickerNative
+				:value="requestedAtDate"
 				:label="t('pipelinq', 'Requested at')"
 				type="date"
-				@update:value="v => form.requestedAt = v || null" />
+				@input="requestedAtDate = $event" />
 		</div>
 
 		<!-- Client -->
@@ -71,6 +74,7 @@
 			<NcSelect
 				v-model="form.client"
 				:options="clientOptions"
+				:aria-label-combobox="t('pipelinq', 'Client')"
 				:clearable="true"
 				label="label"
 				:reduce="o => o.value"
@@ -84,6 +88,7 @@
 				<NcSelect
 					v-model="form.pipeline"
 					:options="pipelineOptions"
+					:aria-label-combobox="t('pipelinq', 'Pipeline')"
 					:clearable="true"
 					label="label"
 					:reduce="o => o.value"
@@ -95,6 +100,7 @@
 				<NcSelect
 					v-model="form.stage"
 					:options="stageOptions"
+					:aria-label-combobox="t('pipelinq', 'Stage')"
 					:clearable="true"
 					:disabled="!form.pipeline"
 					:placeholder="form.pipeline ? t('pipelinq', 'Select stage') : t('pipelinq', 'Select pipeline first')" />
@@ -114,15 +120,17 @@
 </template>
 
 <script>
-import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcDateTimePickerNative, NcSelect, NcTextField } from '@nextcloud/vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
 import { getAllowedTransitions } from '../../services/requestStatus.js'
+import { toDateObject, toDateInputString } from '../../services/localeUtils.js'
 
 export default {
 	name: 'RequestForm',
 	components: {
 		NcButton,
+		NcDateTimePickerNative,
 		NcSelect,
 		NcTextField,
 	},
@@ -154,56 +162,104 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * Bridge the stored `requestedAt` string to NcDateTimePickerNative,
+		 * which works with Date objects.
+		 */
+		requestedAtDate: {
+			get() {
+				return toDateObject(this.form.requestedAt)
+			},
+			set(date) {
+				this.form.requestedAt = toDateInputString(date)
+			},
+		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-44
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-49
+		 */
 		requestChannelsStore() {
 			return useRequestChannelsStore()
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-39
+		 */
 		channelOptions() {
 			return this.requestChannelsStore.channelNames
 		},
 		isEdit() {
 			return !!this.request?.id
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-38
+		 */
 		availableStatuses() {
 			if (!this.isEdit) return ['new']
 			const current = this.request.status || 'new'
 			return [current, ...getAllowedTransitions(current)]
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-48
+		 */
 		pipelines() {
 			return this.objectStore.collections.pipeline || []
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-50
+		 */
 		requestPipelines() {
 			return this.pipelines.filter(p =>
 				p.entityType === 'request' || p.entityType === 'both',
 			)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-47
+		 */
 		pipelineOptions() {
 			return this.requestPipelines.map(p => ({
 				value: p.id,
 				label: p.title,
 			}))
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-51
+		 */
 		selectedPipeline() {
 			if (!this.form.pipeline) return null
 			return this.pipelines.find(p => p.id === this.form.pipeline) || null
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-52
+		 */
 		stageOptions() {
 			if (!this.selectedPipeline?.stages) return []
 			return [...this.selectedPipeline.stages]
 				.sort((a, b) => a.order - b.order)
 				.map(s => s.name)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-41
+		 */
 		clients() {
 			return this.objectStore.collections.client || []
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-40
+		 */
 		clientOptions() {
 			return this.clients.map(c => ({
 				value: c.id,
 				label: c.name || c.id,
 			}))
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-43
+		 */
 		errors() {
 			const errors = {}
 			if (!this.form.title || !this.form.title.trim()) {
@@ -215,6 +271,9 @@ export default {
 			return Object.keys(this.errors).length === 0 && this.form.title?.trim()
 		},
 	},
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-42
+	 */
 	async created() {
 		await Promise.all([
 			this.objectStore.fetchCollection('pipeline', { _limit: 100 }),
@@ -244,6 +303,9 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-37
+		 */
 		autoAssignDefaultPipeline() {
 			const defaultPipeline = this.requestPipelines.find(p => p.isDefault)
 			if (defaultPipeline) {
@@ -255,6 +317,9 @@ export default {
 				}
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-45
+		 */
 		onPipelineChange() {
 			this.form.stage = null
 			if (this.selectedPipeline) {
@@ -265,6 +330,9 @@ export default {
 				}
 			}
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-46
+		 */
 		onSave() {
 			if (!this.isValid) return
 

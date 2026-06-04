@@ -15,6 +15,8 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-27
  */
 
 declare(strict_types=1);
@@ -29,22 +31,26 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for writing vCard data to Nextcloud addressbooks.
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-27
  */
 class ContactVcardWriterService
 {
     /**
      * Constructor.
      *
-     * @param IContactsManager   $contactsManager The contacts manager.
-     * @param IAppConfig         $appConfig       The app config.
-     * @param ContainerInterface $container       The container.
-     * @param LoggerInterface    $logger          The logger.
+     * @param IContactsManager        $contactsManager  The contacts manager.
+     * @param IAppConfig              $appConfig        The app config.
+     * @param ContainerInterface      $container        The container.
+     * @param LoggerInterface         $logger           The logger.
+     * @param RegisterResolverService $registerResolver The register resolver.
      */
     public function __construct(
         private IContactsManager $contactsManager,
         private IAppConfig $appConfig,
         private ContainerInterface $container,
         private LoggerInterface $logger,
+        private RegisterResolverService $registerResolver,
     ) {
     }//end __construct()
 
@@ -56,6 +62,8 @@ class ContactVcardWriterService
      * @param string $objectType The object type (client or contact).
      *
      * @return ?string The contacts UID or null.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-27
      */
     public function writeToAddressBook(array $properties, array $objData, string $objectType): ?string
     {
@@ -136,19 +144,17 @@ class ContactVcardWriterService
     {
         try {
             $objectService = $this->getObjectService();
-            $registerId    = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+            $registerId    = $this->registerResolver->resolve('contact');
             $schemaId      = $this->appConfig->getValueString(Application::APP_ID, "{$objectType}_schema", '');
 
             $updateData = $objData;
             $updateData['contactsUid'] = $contactsUid;
             $objectService->saveObject(
                 $updateData,
-                    [],
-                    $registerId,
-                    $schemaId,
-                    null,
-                    _rbac: false,
-                    _multitenancy: false
+                [],
+                $registerId,
+                $schemaId,
+                null
             );
         } catch (\Exception $e) {
             $this->logger->warning(
