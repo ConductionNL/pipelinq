@@ -34,6 +34,7 @@ export const useSkillsStore = defineStore('skills', {
 		},
 
 		/**
+		 * @param data
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-47
 		 */
 		async saveSkill(data) {
@@ -56,6 +57,7 @@ export const useSkillsStore = defineStore('skills', {
 		},
 
 		/**
+		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-45
 		 */
 		async deleteSkill(id) {

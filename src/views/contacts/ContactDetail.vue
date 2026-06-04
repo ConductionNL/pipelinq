@@ -176,6 +176,7 @@ export default {
 			}
 		},
 		/**
+		 * @param formData
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-37
 		 */
 		async onFormSave(formData) {
@@ -195,6 +196,7 @@ export default {
 			}
 		},
 		/**
+		 * @param objectId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-40
 		 */
 		async syncToContacts(objectId) {

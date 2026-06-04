@@ -9,7 +9,7 @@
  * Get the user's Nextcloud locale, falling back to 'nl-NL'.
  *
  * @return {string} BCP 47 locale tag (e.g., 'nl-NL', 'en-US')
-  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-27
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-27
  */
 export function getUserLocale() {
 	if (typeof OC !== 'undefined' && OC.getLocale) {
@@ -31,7 +31,7 @@ export function getUserLocale() {
  * @param {number|string} value The numeric value to format
  * @param {string} [currency] The currency code
  * @return {string} Formatted currency string (e.g., "EUR 12.500,50" or "EUR 12,500.50")
-  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-23
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-23
  */
 export function formatCurrency(value, currency = 'EUR') {
 	if (value === null || value === undefined || value === '') return currency + ' 0'
@@ -48,7 +48,7 @@ export function formatCurrency(value, currency = 'EUR') {
  *
  * @param {number|string} value The numeric value to format
  * @return {string} Formatted number string
-  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-26
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-26
  */
 export function formatNumber(value) {
 	if (value === null || value === undefined || value === '') return '0'
@@ -63,7 +63,7 @@ export function formatNumber(value) {
  * @param {string} dateStr ISO date string
  * @param {object} [options] Intl.DateTimeFormat options
  * @return {string} Formatted date string
-  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-24
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-24
  */
 export function formatDate(dateStr, options = { month: 'short', day: 'numeric' }) {
 	if (!dateStr) return ''
@@ -79,7 +79,7 @@ export function formatDate(dateStr, options = { month: 'short', day: 'numeric' }
  *
  * @param {string} dateStr ISO date string
  * @return {string} Formatted date string with year
-  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-25
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-25
  */
 export function formatDateFull(dateStr) {
 	return formatDate(dateStr, { month: 'short', day: 'numeric', year: 'numeric' })

@@ -55,9 +55,26 @@ import RapportageDashboardView from './views/rapportage/RapportageDashboard.vue'
 import ChannelAnalyticsView from './views/rapportage/ChannelAnalytics.vue'
 import AgentPerformanceView from './views/rapportage/AgentPerformance.vue'
 
+// --- Forecast roll-up (lib gap: no forecast/quota/override page type). ---
+import ForecastDashboardView from './views/forecast/ForecastDashboard.vue'
+import ForecastTrendView from './views/forecast/ForecastTrend.vue'
+import LeadForecastTab from './views/leads/LeadForecastTab.vue'
+
 // --- Admin managers (lib gap: no pipeline-designer / settings rich-section type). ---
 import PipelineManagerView from './views/settings/PipelineManager.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
+
+// --- BI export + data-warehouse sink (lib gap: declarative index/detail pages
+//     cannot express the bespoke test-connection / test-run / enable / retry
+//     actions on the export controllers, nor the run-detail manifest +
+//     schema-snapshot drill-down). Object CRUD still flows through the shared
+//     object store; these views add the action surface. ---
+import ExportJobsView from './views/export/ExportJobs.vue'
+import ExportJobFormView from './views/export/ExportJobForm.vue'
+import ExportDestinationsView from './views/export/ExportDestinations.vue'
+import ExportDestinationFormView from './views/export/ExportDestinationForm.vue'
+import ExportRunsView from './views/export/ExportRuns.vue'
+import ExportRunDetailView from './views/export/ExportRunDetail.vue'
 
 // --- POS transactions (lib gap: list needs custom row navigation to the cart
 //     editor; detail needs lifecycle action buttons + tax breakdown; form is a
@@ -72,6 +89,11 @@ import PosRefundFormView from './views/pos/PosRefundForm.vue'
 // --- Product barcode lookup (lib gap: index pages have no server-authoritative
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
 import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
+
+// --- Automation rule builder (lib gap: no automation-rule editor page type;
+//     the visual condition + action builder cannot be expressed as a declarative
+//     type:"detail" because it drives a bespoke condition-row + action-row UX). ---
+import AutomationBuilderView from './views/automations/AutomationBuilder.vue'
 
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
@@ -195,6 +217,23 @@ const registry = {
 		_note: 'Pipeline kanban/list board with in-memory title search (REQ-PIPE-022). Restored after migrate-pipeline-to-deck-leaf; coexists with Deck integration.',
 	},
 
+	// --- Forecast roll-up dashboards. ---
+	ForecastDashboardView: {
+		kind: 'page',
+		component: ForecastDashboardView,
+		_note: 'Manager forecast view: hierarchy/level selector, quota progress bar, at-risk banner, per-owner table with manager-override badges; lib gap: no forecast/quota page type. All amounts are server-computed.',
+	},
+	ForecastTrendView: {
+		kind: 'page',
+		component: ForecastTrendView,
+		_note: 'Forecast trend (inline SVG sparkline of commit/best-case/pipeline), week-over-week delta panel and accuracy table with colour bands; lib gap: no chart-widget page type.',
+	},
+	LeadForecastTab: {
+		kind: 'tab',
+		component: LeadForecastTab,
+		_note: 'Lead-detail sidebar tab: forecast-category selector with closed-deal lock indicator, large-commit justification modal and category history. Server-side DealUpdatedListener is the authoritative enforcer; this tab is the UX. Wiring into LeadDetail.config.sidebar.tabs is a monolith manifest.json edit deferred under ADR-037 (do not edit the monolith from a feature build).',
+	},
+
 	// --- Admin managers. ---
 	PipelineManagerView: {
 		kind: 'page',
@@ -246,6 +285,45 @@ const registry = {
 		kind: 'page',
 		component: ProductBarcodeSearchView,
 		_note: 'Scan-to-navigate barcode search; resolves via the server-authoritative scoped barcode-lookup API and routes to the matching product (highlighting a matched variant).',
+	},
+
+	// --- Automation rule builder. ---
+	AutomationBuilderView: {
+		kind: 'page',
+		component: AutomationBuilderView,
+		_note: 'Visual automation-rule editor with condition-row + action-row builder; lib gap: no automation-rule editor page type.',
+	},
+
+	// --- BI export + data-warehouse sink. ---
+	ExportJobsView: {
+		kind: 'page',
+		component: ExportJobsView,
+		_note: 'Export-job list with per-row Test-run + Enable/Disable actions calling the export controller; declarative index cannot trigger the test/enable endpoints.',
+	},
+	ExportJobFormView: {
+		kind: 'page',
+		component: ExportJobFormView,
+		_note: 'Export-job create/edit form (schemas multi-select, destination, format/mode, watermark, cron, row filter, PII column allowlist) with an inline Test-run action.',
+	},
+	ExportDestinationsView: {
+		kind: 'page',
+		component: ExportDestinationsView,
+		_note: 'Export-destination list with a per-row Test-connection action calling the export controller.',
+	},
+	ExportDestinationFormView: {
+		kind: 'page',
+		component: ExportDestinationFormView,
+		_note: 'Export-destination create/edit form (type, OpenConnector source, path template, compression, encryption) with an inline Test-connection action.',
+	},
+	ExportRunsView: {
+		kind: 'page',
+		component: ExportRunsView,
+		_note: 'Export-run history list with a per-row Retry action for failed/partial runs.',
+	},
+	ExportRunDetailView: {
+		kind: 'page',
+		component: ExportRunDetailView,
+		_note: 'Export-run detail: file manifest, schema snapshots with detected drift, error log and a Retry action; fetched via the export run-detail endpoint.',
 	},
 }
 

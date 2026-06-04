@@ -84,6 +84,7 @@ export default {
 	},
 	methods: {
 		/**
+		 * @param value
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-3
 		 */
 		onSearch(value) {
@@ -125,6 +126,7 @@ export default {
 		},
 
 		/**
+		 * @param contact
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-2
 		 */
 		async importContact(contact) {

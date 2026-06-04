@@ -1,5 +1,7 @@
 # Design: admin-settings
 
+**status: pr-created**
+
 ## Architecture Overview
 
 This change is purely within the admin settings layer. No new OpenRegister schemas are introduced — all configuration is stored in `IAppConfig` (per ADR-001-data-layer: app config → `IAppConfig`, NOT OpenRegister).

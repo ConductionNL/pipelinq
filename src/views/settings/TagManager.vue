@@ -176,6 +176,7 @@ export default {
 			}
 		},
 		/**
+		 * @param tag
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-95
 		 */
 		startEditing(tag) {
@@ -195,6 +196,7 @@ export default {
 			this.error = null
 		},
 		/**
+		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-93
 		 */
 		async saveRename(id) {
@@ -222,6 +224,7 @@ export default {
 			}
 		},
 		/**
+		 * @param tag
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-90
 		 */
 		async confirmRemove(tag) {

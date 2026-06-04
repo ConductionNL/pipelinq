@@ -198,7 +198,7 @@ export default {
 		 *
 		 * @param {string} key Translation key.
 		 * @return {string} Translated string (or the key on miss).
-		  * @spec openspec/changes/reverse-2026-05-26-fe-app-shell/tasks.md#task-4
+		 * @spec openspec/changes/reverse-2026-05-26-fe-app-shell/tasks.md#task-4
 		 */
 		translateForApp(key) {
 			return ncT('pipelinq', key)

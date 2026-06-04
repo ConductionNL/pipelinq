@@ -35,6 +35,7 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 		},
 
 		/**
+		 * @param data
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-5
 		 */
 		async saveProfile(data) {
@@ -57,6 +58,7 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 		},
 
 		/**
+		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-2
 		 */
 		async deleteProfile(id) {
@@ -83,7 +85,7 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 		 *
 		 * @param {string} userId Nextcloud user UID
 		 * @return {Promise<number>} Open item count
-		  * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-4
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-4
 		 */
 		async getWorkload(userId) {
 			const objectStore = useObjectStore()
@@ -144,7 +146,7 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 		 * @param {object} config Request type config
 		 * @param {string} userId User ID
 		 * @return {Promise<number>}
-		  * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-1
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-1
 		 */
 		async _countOpenRequests(config, userId) {
 			const terminalStatuses = ['completed', 'rejected', 'converted']

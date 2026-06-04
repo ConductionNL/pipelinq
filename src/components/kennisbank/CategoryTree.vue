@@ -1,6 +1,8 @@
 <template>
 	<div class="category-tree">
-		<h3 class="category-tree__title">{{ t('pipelinq', 'Categories') }}</h3>
+		<h3 class="category-tree__title">
+			{{ t('pipelinq', 'Categories') }}
+		</h3>
 		<div
 			class="category-tree__item category-tree__item--all"
 			:class="{ 'category-tree__item--active': !selectedCategory }"

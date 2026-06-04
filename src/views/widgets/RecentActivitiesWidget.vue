@@ -69,6 +69,7 @@ export default {
 	},
 	methods: {
 		/**
+		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-51
 		 */
 		onShow(item) {
@@ -76,6 +77,7 @@ export default {
 			window.location.href = generateUrl('/apps/pipelinq/' + type + '/' + item._entityId)
 		},
 		/**
+		 * @param dateStr
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-49
 		 */
 		formatTimeAgo(dateStr) {
@@ -148,6 +150,9 @@ export default {
 			}
 		},
 		/**
+		 * @param config
+		 * @param type
+		 * @param params
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-48
 		 */
 		async fetchRaw(config, type, params = {}) {

@@ -77,6 +77,11 @@ class SettingsLoadService
         'portalDelegation',
         'portalAuditEvent',
         'portalTenantConfig',
+        // BI export + data-warehouse sink schemas.
+        'exportDestination',
+        'exportJob',
+        'exportRun',
+        'exportSchemaSnapshot',
     ];
 
     /**

@@ -42,6 +42,7 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 		},
 
 		/**
+		 * @param name
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-28
 		 */
 		async addSource(name) {
@@ -69,6 +70,7 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 		},
 
 		/**
+		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-30
 		 */
 		async removeSource(id) {
@@ -94,6 +96,8 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 		},
 
 		/**
+		 * @param id
+		 * @param name
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-31
 		 */
 		async renameSource(id, name) {

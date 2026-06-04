@@ -1,6 +1,8 @@
 <template>
 	<div class="article-feedback">
-		<h3 class="article-feedback__title">{{ t('pipelinq', 'Was this article helpful?') }}</h3>
+		<h3 class="article-feedback__title">
+			{{ t('pipelinq', 'Was this article helpful?') }}
+		</h3>
 		<div class="article-feedback__buttons">
 			<NcButton
 				:type="submitted === 'nuttig' ? 'primary' : 'secondary'"
@@ -69,11 +71,18 @@ export default {
 		},
 	},
 	methods: {
+		/**
+		 * @param rating
+		 * @spec openspec/changes/reverse-2026-05-26-fe-kennisbank-ui/tasks.md#task-3
+		 */
 		async rate(rating) {
 			await this.store.submitFeedback(this.articleId, rating)
 			this.submitted = rating
 			this.$emit('feedback-submitted', rating)
 		},
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-kennisbank-ui/tasks.md#task-4
+		 */
 		async submitSuggestion() {
 			if (!this.suggestionText.trim()) {
 				return

@@ -179,6 +179,7 @@ export default {
 		getWaitingTime,
 
 		/**
+		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-9
 		 */
 		openItem(item) {
@@ -186,6 +187,7 @@ export default {
 		},
 
 		/**
+		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-14
 		 */
 		toggleSelect(id) {
@@ -197,6 +199,7 @@ export default {
 		},
 
 		/**
+		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-2
 		 */
 		async assignToMe(item) {

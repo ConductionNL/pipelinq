@@ -134,6 +134,7 @@ export default {
 	},
 	methods: {
 		/**
+		 * @param profile
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-5
 		 */
 		getSkillNames(profile) {
@@ -144,6 +145,7 @@ export default {
 				.map(s => s.title)
 		},
 		/**
+		 * @param profile
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-12
 		 */
 		startEdit(profile) {
@@ -158,6 +160,8 @@ export default {
 			this.editForm = {}
 		},
 		/**
+		 * @param skillId
+		 * @param checked
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-13
 		 */
 		toggleSkill(skillId, checked) {
@@ -191,6 +195,7 @@ export default {
 			})
 		},
 		/**
+		 * @param profile
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-4
 		 */
 		async deleteProfile(profile) {
