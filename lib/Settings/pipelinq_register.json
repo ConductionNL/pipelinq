@@ -2911,7 +2911,7 @@
       "posTransaction": {
         "slug": "posTransaction",
         "title": "POS Transaction",
-        "icon": "Receipt",
+        "icon": "ReceiptText",
         "version": "1.0.0",
         "summary": "A point-of-sale transaction (kassabon) with lifecycle, totals and tax breakdown",
         "description": "Represents a POS cart / receipt from open (draft) through payment (confirmed -> settled) or cancellation (refunded). The taxBreakdown array captures tax per BTW rate so receipts can show 9% and 21% lines separately. Totals are server-computed by PosTransactionService and must never be trusted from the client. Mapped to Schema.org Order.",
