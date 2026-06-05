@@ -97,6 +97,43 @@ import AutomationBuilderView from './views/automations/AutomationBuilder.vue'
 
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
+/*
+ * Grid metadata required for every kind:"widget" entry by the ADR-036
+ * registry validator in CnAppRoot. pipelinq's dashboard positions widgets
+ * via the manifest `config.layout` (GridStack), so these sizes are not
+ * consumed at runtime — they exist to satisfy the validator. Sizes mirror
+ * the manifest layout for coherence. `allowedSlots` uses the v2 slot
+ * literals (body, sidebar, header-actions, footer, modal).
+ */
+const KPI_WIDGET_META = {
+	defaultSize: { w: 3, h: 2 },
+	minSize: { w: 2, h: 2 },
+	maxSize: { w: 6, h: 4 },
+	allowedSlots: ['body'],
+	propsSchema: null,
+}
+const PANEL_WIDGET_META = {
+	defaultSize: { w: 6, h: 4 },
+	minSize: { w: 3, h: 2 },
+	maxSize: { w: 12, h: 6 },
+	allowedSlots: ['body'],
+	propsSchema: null,
+}
+const HEADER_ACTIONS_META = {
+	defaultSize: { w: 12, h: 1 },
+	minSize: { w: 1, h: 1 },
+	maxSize: { w: 12, h: 1 },
+	allowedSlots: ['header-actions'],
+	propsSchema: null,
+}
+const SIDEBAR_TAB_META = {
+	defaultSize: { w: 1, h: 2 },
+	minSize: { w: 1, h: 1 },
+	maxSize: { w: 1, h: 6 },
+	allowedSlots: ['sidebar'],
+	propsSchema: null,
+}
+
 /**
  * V2 component registry.
  *
@@ -124,46 +161,55 @@ const registry = {
 	DashboardHeaderActions: {
 		kind: 'widget',
 		component: DashboardHeaderActions,
+		...HEADER_ACTIONS_META,
 		_note: 'Dashboard header buttons (New Lead / Request / Client + Refresh) wired as the Dashboard page actionsComponent.',
 	},
 	OpenLeadsKpiWidget: {
 		kind: 'widget',
 		component: OpenLeadsKpiWidget,
+		...KPI_WIDGET_META,
 		_note: 'KPI card for open leads (leads minus those in pipeline stages flagged isClosed). Renders <CnStatsBlock>.',
 	},
 	OpenRequestsKpiWidget: {
 		kind: 'widget',
 		component: OpenRequestsKpiWidget,
+		...KPI_WIDGET_META,
 		_note: 'KPI card for open requests (status new or in_progress). Renders <CnStatsBlock>.',
 	},
 	PipelineValueKpiWidget: {
 		kind: 'widget',
 		component: PipelineValueKpiWidget,
+		...KPI_WIDGET_META,
 		_note: 'KPI card for total open-lead value in EUR. Renders <CnStatsBlock>.',
 	},
 	OverdueKpiWidget: {
 		kind: 'widget',
 		component: OverdueKpiWidget,
+		...KPI_WIDGET_META,
 		_note: 'KPI card for overdue leads + stale requests. Renders <CnStatsBlock>.',
 	},
 	RequestsByStatusWidget: {
 		kind: 'widget',
 		component: RequestsByStatusWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Horizontal bar chart of requests grouped by status. Standalone widget — fetches its own data.',
 	},
 	ComplaintsWidget: {
 		kind: 'widget',
 		component: ComplaintsWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Open / overdue / status breakdown of complaints. Wraps the existing ComplaintsOverviewWidget with a self-contained fetch.',
 	},
 	MyWorkWidget: {
 		kind: 'widget',
 		component: MyWorkWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Top-5 list of leads + requests assigned to the current user, sorted by overdue → priority → due date.',
 	},
 	ClientOverviewWidget: {
 		kind: 'widget',
 		component: ClientOverviewWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Top-5 recent clients with a view-all link to ClientList.',
 	},
 
@@ -231,6 +277,7 @@ const registry = {
 	LeadForecastTab: {
 		kind: 'widget',
 		component: LeadForecastTab,
+		...SIDEBAR_TAB_META,
 		_note: 'Lead-detail sidebar tab: forecast-category selector with closed-deal lock indicator, large-commit justification modal and category history. Server-side DealUpdatedListener is the authoritative enforcer; this tab is the UX. Wiring into LeadDetail.config.sidebar.tabs is a monolith manifest.json edit deferred under ADR-037 (do not edit the monolith from a feature build).',
 	},
 
