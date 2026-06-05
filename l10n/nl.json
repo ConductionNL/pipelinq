@@ -1443,8 +1443,31 @@
         "Last synced": "Laatst gesynchroniseerd",
         "Retry Sync": "Synchronisatie opnieuw proberen",
         "Ledger sync retried successfully.": "Grootboeksynchronisatie opnieuw gelukt.",
-        "Could not retry the ledger sync.": "Kon grootboeksynchronisatie niet opnieuw proberen."
+        "Could not retry the ledger sync.": "Kon grootboeksynchronisatie niet opnieuw proberen.",
+        "Mobile Timer": "Mobiele timer",
+        "Start": "Starten",
+        "Pause": "Pauzeren",
+        "Resume": "Hervatten",
+        "Stop": "Stoppen",
+        "Start timer": "Timer starten",
+        "Pause timer": "Timer pauzeren",
+        "Resume timer": "Timer hervatten",
+        "Stop timer and save": "Timer stoppen en opslaan",
+        "What are you working on?": "Waar werkt u aan?",
+        "Description (optional)": "Omschrijving (optioneel)",
+        "Capture GPS location": "GPS-locatie vastleggen",
+        "Location access denied": "Locatietoegang geweigerd",
+        "Location captured": "Locatie vastgelegd",
+        "Elapsed time": "Verstreken tijd",
+        "Offline — entries will sync when reconnected": "Offline — registraties worden gesynchroniseerd bij herverbinding",
+        "Syncing to server…": "Synchroniseren naar server…",
+        "Online — all entries synced": "Online — alle registraties gesynchroniseerd",
+        "Sync error: {error}": "Synchronisatiefout: {error}",
+        "%n capture pending sync": "%n registratie in de wachtrij",
+        "%n captures pending sync": "%n registraties in de wachtrij"
     },
-    "plurals": {},
+    "plurals": {
+        "%n capture pending sync": ["%n registratie in de wachtrij", "%n registraties in de wachtrij"]
+    },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

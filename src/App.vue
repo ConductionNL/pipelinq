@@ -54,6 +54,7 @@
 <script>
 import Vue from 'vue'
 import { translate as ncT } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
 import { CnAppRoot, CnObjectSidebar } from '@conduction/nextcloud-vue'
 
 export default {
@@ -169,6 +170,10 @@ export default {
 		},
 	},
 
+	mounted() {
+		this.registerPwa()
+	},
+
 	methods: {
 		/**
 		 * Translate function passed down to CnAppRoot / CnAppNav /
@@ -181,6 +186,47 @@ export default {
 		 */
 		translateForApp(key) {
 			return ncT('pipelinq', key)
+		},
+
+		/**
+		 * Register the PWA manifest link and service worker.
+		 *
+		 * Injects a <link rel="manifest"> tag into the document head so browsers
+		 * offer "Add to Home Screen", then registers the app-shell service worker
+		 * for offline caching. Both operations are best-effort and non-fatal.
+		 *
+		 * @spec openspec/changes/time-entry-mobile/tasks.md#task-1.1
+		 */
+		registerPwa() {
+			try {
+				// Inject the web app manifest link if not already present.
+				const existingLink = document.head.querySelector('link[rel="manifest"]')
+				if (!existingLink) {
+					const link = document.createElement('link')
+					link.rel = 'manifest'
+					// The manifest is served from the app's public/ directory.
+					// generateUrl maps to /apps/pipelinq/ or /custom_apps/pipelinq/
+					// depending on the install location — trim the trailing slash
+					// and append the relative path.
+					const appBase = generateUrl('/apps/pipelinq').replace(/\/$/, '')
+					link.href = appBase + '/public/manifest.json'
+					document.head.appendChild(link)
+				}
+			} catch (e) {
+				// Non-fatal — "Add to Home Screen" simply won't appear.
+			}
+
+			// Register the service worker for offline app-shell caching.
+			if ('serviceWorker' in navigator) {
+				const appBase = generateUrl('/apps/pipelinq').replace(/\/$/, '')
+				const swUrl = appBase + '/service-worker.js'
+				// Use swUrl as the explicit scope parameter host so the SW covers
+				// the app's directory even when registered from /index.php/apps/…
+				navigator.serviceWorker.register(swUrl, { scope: appBase + '/' })
+					.catch(() => {
+						// Non-fatal — offline caching degrades gracefully.
+					})
+			}
 		},
 	},
 }

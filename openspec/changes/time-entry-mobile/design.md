@@ -1,5 +1,5 @@
 ---
-status: draft
+status: pr-created
 ---
 
 # Design: time-entry-mobile (offline capture feeds the time-tracker leaf)

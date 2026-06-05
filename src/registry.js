@@ -95,6 +95,11 @@ import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
 //     type:"detail" because it drives a bespoke condition-row + action-row UX). ---
 import AutomationBuilderView from './views/automations/AutomationBuilder.vue'
 
+// --- Mobile timer (lib gap: no offline-first timer page type; this view
+//     wraps the time-tracker leaf capture action behind an IndexedDB buffer
+//     for offline-first mobile UX). ---
+import TimerMobileView from './views/timer/TimerMobile.vue'
+
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
 /**
@@ -292,6 +297,13 @@ const registry = {
 		kind: 'page',
 		component: AutomationBuilderView,
 		_note: 'Visual automation-rule editor with condition-row + action-row builder; lib gap: no automation-rule editor page type.',
+	},
+
+	// --- Mobile timer. ---
+	TimerMobileView: {
+		kind: 'page',
+		component: TimerMobileView,
+		_note: 'Offline-first mobile timer wrapping the time-tracker leaf capture action behind an IndexedDB buffer; no declarative page type for offline-first timer UX.',
 	},
 
 	// --- BI export + data-warehouse sink. ---

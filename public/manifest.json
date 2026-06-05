@@ -1,0 +1,20 @@
+{
+	"name": "Pipelinq Timer",
+	"short_name": "Pipelinq",
+	"description": "Offline mobile timer for Pipelinq — capture hours anywhere and sync to the time-tracker leaf on reconnect.",
+	"start_url": "/index.php/apps/pipelinq/timer",
+	"display": "standalone",
+	"orientation": "portrait-primary",
+	"background_color": "#0082c9",
+	"theme_color": "#0082c9",
+	"lang": "en",
+	"icons": [
+		{
+			"src": "/apps/pipelinq/img/app.svg",
+			"sizes": "any",
+			"type": "image/svg+xml",
+			"purpose": "any maskable"
+		}
+	],
+	"categories": ["productivity", "business"]
+}

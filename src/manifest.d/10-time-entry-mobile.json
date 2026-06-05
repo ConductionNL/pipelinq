@@ -1,0 +1,20 @@
+{
+	"menu": [
+		{
+			"id": "MobileTimer",
+			"label": "Mobile Timer",
+			"icon": "icon-category-monitoring",
+			"route": "MobileTimer",
+			"order": 145
+		}
+	],
+	"pages": [
+		{
+			"id": "MobileTimer",
+			"route": "/timer",
+			"type": "custom",
+			"title": "Mobile Timer",
+			"component": "TimerMobileView"
+		}
+	]
+}
