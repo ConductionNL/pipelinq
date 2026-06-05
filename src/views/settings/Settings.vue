@@ -270,6 +270,28 @@
 			</NcNoteCard>
 		</NcSettingsSection>
 
+		<!-- Shillinq Integration -->
+		<NcSettingsSection v-if="isAdmin"
+			:name="t('pipelinq', 'Shillinq Integration')"
+			:description="t('pipelinq', 'The HTTPS endpoint of the Shillinq project ledger. Leave empty to disable ledger sync.')">
+			<NcTextField v-model="config.shillinq_ledger_webhook_url"
+				:label="t('pipelinq', 'Shillinq Ledger Webhook URL')"
+				placeholder="https://shillinq.example.com/ledger/webhook"
+				:error="shillinqUrlInvalid"
+				:helper-text="shillinqUrlInvalid ? t('pipelinq', 'Please enter a valid HTTPS URL') : ''" />
+			<NcButton type="primary"
+				:disabled="savingShillinq || shillinqUrlInvalid"
+				@click="saveShillinq">
+				<template #icon>
+					<NcLoadingIcon v-if="savingShillinq" :size="16" />
+				</template>
+				{{ t('pipelinq', 'Save Shillinq Configuration') }}
+			</NcButton>
+			<NcNoteCard v-if="shillinqMessage" :type="shillinqMessageType">
+				{{ shillinqMessage }}
+			</NcNoteCard>
+		</NcSettingsSection>
+
 		<!-- Re-import Status -->
 		<div v-if="message" class="actions-section">
 			<NcNoteCard :type="messageType">
@@ -372,6 +394,10 @@ export default {
 			savingMcp: false,
 			mcpMessage: '',
 			mcpMessageType: 'success',
+			// Shillinq ledger integration.
+			savingShillinq: false,
+			shillinqMessage: '',
+			shillinqMessageType: 'success',
 		}
 	},
 	computed: {
@@ -401,6 +427,21 @@ export default {
 		},
 		isConfigured() {
 			return !!this.config.register
+		},
+		/**
+		 * Whether the entered Shillinq webhook URL is present but not a valid HTTPS URL.
+		 * An empty value is valid (disables the integration).
+		 */
+		shillinqUrlInvalid() {
+			const url = (this.config.shillinq_ledger_webhook_url || '').trim()
+			if (url === '') {
+				return false
+			}
+			try {
+				return new URL(url).protocol !== 'https:'
+			} catch (e) {
+				return true
+			}
 		},
 		objectenAccessEntries() {
 			return Object.entries(this.objectenAccess).map(([slug, groupIds]) => ({
@@ -703,6 +744,34 @@ export default {
 				this.mcpMessageType = 'error'
 			} finally {
 				this.savingMcp = false
+			}
+		},
+		/**
+		 * Persist the Shillinq ledger webhook URL through the standard settings endpoint.
+		 *
+		 * @spec openspec/changes/pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-006-03
+		 */
+		async saveShillinq() {
+			if (this.shillinqUrlInvalid) {
+				return
+			}
+			this.savingShillinq = true
+			this.shillinqMessage = ''
+			try {
+				const result = await this.settingsStore.saveSettings({
+					...this.config,
+					shillinq_ledger_webhook_url: (this.config.shillinq_ledger_webhook_url || '').trim(),
+				})
+				if (result) {
+					this.config = this.settingsStore.config || result
+				}
+				this.shillinqMessage = t('pipelinq', 'Shillinq configuration saved.')
+				this.shillinqMessageType = 'success'
+			} catch (e) {
+				this.shillinqMessage = e.response?.data?.message || t('pipelinq', 'Failed to save Shillinq configuration.')
+				this.shillinqMessageType = 'error'
+			} finally {
+				this.savingShillinq = false
 			}
 		},
 		/**

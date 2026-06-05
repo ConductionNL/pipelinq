@@ -64,6 +64,9 @@ class SettingsLoadService
         'queue',
         'skill',
         'agentProfile',
+        // Project ledger schemas (project-to-shillinq-ledger integration).
+        'project',
+        'projectPhase',
         'posTransaction',
         'posTransactionLine',
         'receiptTemplate',
