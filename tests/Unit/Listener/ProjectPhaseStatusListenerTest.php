@@ -101,7 +101,12 @@ class ProjectPhaseStatusListenerTest extends TestCase
      */
     private function entity(string $schema, array $data): ObjectEntity
     {
-        $entity = $this->createMock(ObjectEntity::class);
+        // createMock() uses disallowMockingUnknownTypes() which blocks configuring
+        // abstract methods not in the default mock list. getMockBuilder() without
+        // onlyMethods() mocks all declared abstract methods so we can configure them.
+        $entity = $this->getMockBuilder(ObjectEntity::class)
+            ->disableOriginalConstructor()
+            ->getMock();
         $entity->method('getSchema')->willReturn($schema);
         $entity->method('getUuid')->willReturn((string) ($data['uuid'] ?? 'obj-1'));
         $entity->method('getObject')->willReturn($data);
