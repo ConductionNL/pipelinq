@@ -27,6 +27,8 @@ use OCP\IUserSession;
 
 /**
  * Service for dispatching object event notifications and activities.
+ *
+ * @spec openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-3
  */
 class ObjectEventDispatcher
 {

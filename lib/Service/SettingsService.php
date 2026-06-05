@@ -65,6 +65,8 @@ class SettingsService
         'queue_schema',
         'skill_schema',
         'agentProfile_schema',
+        'project_schema',
+        'projectPhase_schema',
         'posTransaction_schema',
         'posTransactionLine_schema',
         'receiptTemplate_schema',
@@ -131,6 +133,7 @@ class SettingsService
         'receipt_printer_host'                     => '',
         'receipt_printer_port'                     => '9100',
         'receipt_default_template'                 => '',
+        'shillinq_ledger_webhook_url'              => '',
     ];
 
     /**
