@@ -44,6 +44,8 @@ class SchemaMapService
         'queue_schema'          => 'queue',
         'skill_schema'          => 'skill',
         'agentProfile_schema'   => 'agentProfile',
+        'project_schema'        => 'project',
+        'projectPhase_schema'   => 'projectPhase',
         'task_schema'           => 'task',
         'contactmoment_schema'  => 'contactmoment',
         'survey_schema'         => 'survey',
