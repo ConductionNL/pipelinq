@@ -19,9 +19,12 @@ const APP = 'pipelinq'
 /**
  * Object-type groups, rendered as sections in the admin Register Configuration
  * UI. `registerConfigKey` is the app-config key holding the id of the register
- * the group's schemas live in.
+ * the group's schemas live in (used to gate registration and by the admin UI).
+ * `registerSlug` is that register's slug, used to register object types by slug
+ * so the store builds slug-based API URLs (`/objects/pipelinq/posTransaction`)
+ * — consistent with the manifest-driven index/detail pages.
  *
- * @return {Array<{key: string, name: string, description: string, registerConfigKey: string}>} Group definitions.
+ * @return {Array<{key: string, name: string, description: string, registerConfigKey: string, registerSlug: string}>} Group definitions.
  */
 export function objectTypeGroups() {
 	return [
@@ -30,24 +33,28 @@ export function objectTypeGroups() {
 			name: t(APP, 'Pipelinq Objects'),
 			description: t(APP, 'Core CRM object types used by Pipelinq'),
 			registerConfigKey: 'register',
+			registerSlug: 'pipelinq',
 		},
 		{
 			key: 'intake',
 			name: t(APP, 'Intake & Automation'),
 			description: t(APP, 'Public intake forms and automation'),
 			registerConfigKey: 'register',
+			registerSlug: 'pipelinq',
 		},
 		{
 			key: 'service',
 			name: t(APP, 'Service & Feedback'),
 			description: t(APP, 'Contact moments, complaints and customer surveys'),
 			registerConfigKey: 'register',
+			registerSlug: 'pipelinq',
 		},
 		{
 			key: 'pos',
 			name: t(APP, 'Point of Sale'),
 			description: t(APP, 'POS transactions, receipts and refunds'),
 			registerConfigKey: 'register',
+			registerSlug: 'pipelinq',
 		},
 	]
 }
@@ -94,10 +101,10 @@ export function objectTypes() {
 }
 
 /**
- * Lookup of group key → register app-config key, for the store bootstrap.
+ * Lookup of group key → group definition, for the store bootstrap.
  *
- * @return {Object<string, string>} Map of group key to register config key.
+ * @return {{[key: string]: {key: string, name: string, description: string, registerConfigKey: string, registerSlug: string}}} Map of group key to group.
  */
-export function registerConfigKeyByGroup() {
-	return Object.fromEntries(objectTypeGroups().map((group) => [group.key, group.registerConfigKey]))
+export function objectTypeGroupsByKey() {
+	return Object.fromEntries(objectTypeGroups().map((group) => [group.key, group]))
 }

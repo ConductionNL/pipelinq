@@ -217,7 +217,7 @@ import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue
 import Cog from 'vue-material-design-icons/Cog.vue'
 import PipelineCard from './PipelineCard.vue'
 import { useObjectStore } from '../../store/modules/object.js'
-import { useSettingsStore } from '../../store/modules/settings.js'
+import { initializeStores } from '../../store/store.js'
 import { getPriorityLabel, getPriorityColor } from '../../services/requestStatus.js'
 import { getDaysAge, isStale, getAgingClass, formatAge } from '../../services/pipelineUtils.js'
 import { formatDate } from '../../services/localeUtils.js'
@@ -259,12 +259,6 @@ export default {
 		 */
 		objectStore() {
 			return useObjectStore()
-		},
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-26
-		 */
-		settingsStore() {
-			return useSettingsStore()
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-23
@@ -427,7 +421,9 @@ export default {
 
 		this.loading = true
 
-		await this.ensureObjectTypes(['pipeline', 'lead', 'request'])
+		// Ensure object types are registered (by slug) before fetching. Shared,
+		// memoised bootstrap — registers every type the app uses.
+		await initializeStores()
 
 		await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
 
@@ -451,29 +447,6 @@ export default {
 	methods: {
 		getPriorityLabel,
 		getPriorityColor,
-
-		/**
-		 * @param slugs
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-4
-		 */
-		async ensureObjectTypes(slugs) {
-			const registry = this.objectStore.objectTypeRegistry || {}
-			const missing = slugs.filter(s => !registry[s])
-			if (missing.length === 0) return
-
-			let config = this.settingsStore.getConfig
-			if (!config) {
-				config = await this.settingsStore.fetchSettings()
-			}
-			if (!config || !config.register) return
-
-			for (const slug of missing) {
-				const schemaId = config[slug + '_schema']
-				if (schemaId) {
-					this.objectStore.registerObjectType(slug, schemaId, config.register)
-				}
-			}
-		},
 
 		/**
 		 * @param pipeline
