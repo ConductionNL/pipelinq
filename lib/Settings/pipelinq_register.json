@@ -1690,7 +1690,9 @@
               "afgehandeld",
               "doorverbonden",
               "terugbelverzoek",
-              "vervolgactie"
+              "vervolgactie",
+              "opgelost",
+              "doorverwezen"
             ],
             "title": "Outcome",
             "facetable": true
