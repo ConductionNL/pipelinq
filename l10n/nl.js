@@ -1361,6 +1361,21 @@ OC.L10N.register(
     "Could not retry the run" : "Kon de uitvoering niet opnieuw proberen",
     "Test run failed" : "Testuitvoering mislukt",
     "Test run failed: {error}" : "Testuitvoering mislukt: {error}",
-    "Test run succeeded ({rows} sample rows)" : "Testuitvoering geslaagd ({rows} voorbeeldrijen)"
+    "Test run succeeded ({rows} sample rows)" : "Testuitvoering geslaagd ({rows} voorbeeldrijen)",
+    "Shillinq Integration" : "Shillinq-integratie",
+    "Shillinq Ledger Webhook URL" : "Shillinq grootboek webhook-URL",
+    "The HTTPS endpoint of the Shillinq project ledger. Leave empty to disable ledger sync." : "Het HTTPS-eindpunt van het Shillinq-projectgrootboek. Laat leeg om grootboeksynchronisatie uit te schakelen.",
+    "Please enter a valid HTTPS URL" : "Voer een geldige HTTPS-URL in",
+    "Save Shillinq Configuration" : "Shillinq-configuratie opslaan",
+    "Shillinq configuration saved." : "Shillinq-configuratie opgeslagen.",
+    "Failed to save Shillinq configuration." : "Opslaan van Shillinq-configuratie mislukt.",
+    "Shillinq Ledger" : "Shillinq-grootboek",
+    "Ledger synchronized" : "Grootboek gesynchroniseerd",
+    "Ledger pending" : "Grootboek in behandeling",
+    "Ledger sync failed" : "Grootboeksynchronisatie mislukt",
+    "Last synced" : "Laatst gesynchroniseerd",
+    "Retry Sync" : "Synchronisatie opnieuw proberen",
+    "Ledger sync retried successfully." : "Grootboeksynchronisatie opnieuw gelukt.",
+    "Could not retry the ledger sync." : "Kon grootboeksynchronisatie niet opnieuw proberen."
 },
 "nplurals=2; plural=(n != 1);");
