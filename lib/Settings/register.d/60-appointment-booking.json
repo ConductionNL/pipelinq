@@ -1,0 +1,38 @@
+{
+    "components": {
+        "registers": {
+            "pipelinq": {
+                "schemas": [
+                    "booking"
+                ]
+            }
+        },
+        "schemas": {
+            "booking": {
+                "slug": "booking",
+                "title": "Booking",
+                "version": "1.0.0",
+                "summary": "An appointment booking made by a customer for a service at a given time slot.",
+                "description": "A customer appointment booking. The customer's canonical identity is the linked contact entity (linkedContactId); the customerName/customerEmail/customerPhone fields are a denormalised snapshot of the customer PII at booking time and are the fields pseudonymised on an AVG right-to-be-forgotten request. Booking records are retained for the NL Boekhoudplicht 7-year period and are never auto-deleted.",
+                "@type": "Thing",
+                "required": ["service", "startTime", "status"],
+                "properties": {
+                    "linkedContactId": {"type": "string", "description": "UUID of the canonical customer contact entity in the pipelinq register (ADR-022: a customer is a Nextcloud/contact entity, never invented)."},
+                    "customerName": {"type": "string", "description": "Denormalised customer name snapshot; pseudonymised (SHA-256) on right-to-be-forgotten."},
+                    "customerEmail": {"type": "string", "format": "email", "description": "Denormalised customer email snapshot; pseudonymised (SHA-256) on right-to-be-forgotten."},
+                    "customerPhone": {"type": "string", "description": "Denormalised customer phone snapshot; pseudonymised (SHA-256) on right-to-be-forgotten."},
+                    "service": {"type": "string", "description": "UUID/slug of the booked service."},
+                    "resource": {"type": "string", "description": "UUID of the assigned resource/staff member."},
+                    "startTime": {"type": "string", "format": "date-time", "description": "Appointment start time."},
+                    "endTime": {"type": "string", "format": "date-time", "description": "Appointment end time."},
+                    "status": {"type": "string", "enum": ["pending", "confirmed", "completed", "cancelled", "no-show"], "default": "pending", "description": "Booking lifecycle status. Terminal statuses (completed/cancelled/no-show) are retained, never purged."},
+                    "depositAmount": {"type": "number", "description": "Deposit amount in the smallest currency unit (retained as an aggregate)."},
+                    "currency": {"type": "string", "default": "EUR"},
+                    "locale": {"type": "string", "default": "nl", "description": "Customer locale for confirmations/reminders."},
+                    "pseudonymized": {"type": "boolean", "default": false, "description": "True once the customer PII on this booking has been pseudonymised under AVG right-to-be-forgotten."},
+                    "pseudonymizedAt": {"type": "string", "format": "date-time", "description": "Timestamp of the pseudonymisation action."}
+                }
+            }
+        }
+    }
+}

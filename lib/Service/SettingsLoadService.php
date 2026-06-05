@@ -71,6 +71,8 @@ class SettingsLoadService
         'refundReason',
         'posRefund',
         'posRefundLine',
+        // Appointment booking schema (compliance / i18n closeout member 12).
+        'booking',
         // Customer portal schemas (live in the separate pipelinq-portal register).
         'portalAccount',
         'portalSession',

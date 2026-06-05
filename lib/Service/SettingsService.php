@@ -70,6 +70,7 @@ class SettingsService
         'refundReason_schema',
         'posRefund_schema',
         'posRefundLine_schema',
+        'booking_schema',
         'exportDestination_schema',
         'exportJob_schema',
         'exportRun_schema',
