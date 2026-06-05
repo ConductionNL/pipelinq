@@ -1,0 +1,286 @@
+{
+    "info": {
+        "name": "Pipelinq Kennisbank API Tests",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "description": "Newman API tests for the Pipelinq knowledge base (kennisbank) REST API. Covers public search and collections (unauthenticated), admin export and audit, and authenticated version history/diff. Credentials are supplied via environment variables; no defaults are committed."
+    },
+    "auth": {
+        "type": "basic",
+        "basic": [
+            { "key": "username", "value": "{{username}}", "type": "string" },
+            { "key": "password", "value": "{{password}}", "type": "string" }
+        ]
+    },
+    "variable": [
+        { "key": "baseUrl", "value": "{{baseUrl}}" },
+        { "key": "username", "value": "{{username}}" },
+        { "key": "password", "value": "{{password}}" },
+        { "key": "articleId", "value": "{{articleId}}" },
+        { "key": "categorySlug", "value": "{{categorySlug}}" }
+    ],
+    "item": [
+        {
+            "name": "Public Search",
+            "item": [
+                {
+                    "name": "GET /public/search (200, no internal fields)",
+                    "request": {
+                        "method": "GET",
+                        "auth": { "type": "noauth" },
+                        "url": "{{baseUrl}}/index.php/apps/pipelinq/api/kennisbank/public/search?q=paspoort&_page=1&_limit=20"
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                                    "var json = pm.response.json();",
+                                    "pm.test('Has pagination envelope', function () {",
+                                    "  pm.expect(json).to.have.property('total');",
+                                    "  pm.expect(json).to.have.property('page');",
+                                    "  pm.expect(json).to.have.property('pages');",
+                                    "  pm.expect(json.results).to.be.an('array');",
+                                    "});",
+                                    "pm.test('No internal fields leaked', function () {",
+                                    "  json.results.forEach(function (r) {",
+                                    "    pm.expect(r).to.not.have.property('author');",
+                                    "    pm.expect(r).to.not.have.property('lastUpdatedBy');",
+                                    "    pm.expect(r).to.not.have.property('zaaktypeLinks');",
+                                    "    pm.expect(r).to.not.have.property('usefulnessScore');",
+                                    "  });",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "OPTIONS /public/search (200, CORS headers)",
+                    "request": {
+                        "method": "OPTIONS",
+                        "auth": { "type": "noauth" },
+                        "url": "{{baseUrl}}/index.php/apps/pipelinq/api/kennisbank/public/search"
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                                    "pm.test('CORS allow-origin header present', function () {",
+                                    "  pm.expect(pm.response.headers.get('Access-Control-Allow-Origin')).to.eql('*');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Public Collections",
+            "item": [
+                {
+                    "name": "GET /public/collections (200, tree with counts)",
+                    "request": {
+                        "method": "GET",
+                        "auth": { "type": "noauth" },
+                        "url": "{{baseUrl}}/index.php/apps/pipelinq/api/kennisbank/public/collections"
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                                    "var json = pm.response.json();",
+                                    "pm.test('Results is an array of categories', function () {",
+                                    "  pm.expect(json.results).to.be.an('array');",
+                                    "  if (json.results.length > 0) {",
+                                    "    pm.expect(json.results[0]).to.have.property('articleCount');",
+                                    "    pm.expect(json.results[0]).to.have.property('children');",
+                                    "  }",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "GET /public/collections/{slug}/articles (200)",
+                    "request": {
+                        "method": "GET",
+                        "auth": { "type": "noauth" },
+                        "url": "{{baseUrl}}/index.php/apps/pipelinq/api/kennisbank/public/collections/{{categorySlug}}/articles?_page=1&_limit=20"
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                                    "pm.test('Has results array', function () { pm.expect(pm.response.json().results).to.be.an('array'); });"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "GET /public/collections/unknown/articles (404)",
+                    "request": {
+                        "method": "GET",
+                        "auth": { "type": "noauth" },
+                        "url": "{{baseUrl}}/index.php/apps/pipelinq/api/kennisbank/public/collections/this-slug-does-not-exist/articles"
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Status code is 404', function () { pm.response.to.have.status(404); });"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Export (admin)",
+            "item": [
+                {
+                    "name": "GET /articles/export?format=json (200, admin)",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/index.php/apps/pipelinq/api/kennisbank/articles/export?format=json"
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "GET /articles/export?format=xml (400, bad format)",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/index.php/apps/pipelinq/api/kennisbank/articles/export?format=xml"
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Status code is 400', function () { pm.response.to.have.status(400); });"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Version History (authenticated)",
+            "item": [
+                {
+                    "name": "GET /articles/{id}/versions (200)",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/index.php/apps/pipelinq/api/kennisbank/articles/{{articleId}}/versions"
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                                    "pm.test('Has results array', function () { pm.expect(pm.response.json().results).to.be.an('array'); });"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "GET /articles/unknown/versions (404)",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/index.php/apps/pipelinq/api/kennisbank/articles/00000000-0000-0000-0000-000000000000/versions"
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Status code is 404', function () { pm.response.to.have.status(404); });"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "GET /articles/{id}/versions/1/2 (200 or 400)",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/index.php/apps/pipelinq/api/kennisbank/articles/{{articleId}}/versions/1/2"
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Status code is 200 or 400', function () {",
+                                    "  pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Audit (admin)",
+            "item": [
+                {
+                    "name": "GET /audit (200, admin)",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/index.php/apps/pipelinq/api/kennisbank/audit?_page=1&_limit=20"
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                                    "pm.test('Has audit envelope', function () {",
+                                    "  var json = pm.response.json();",
+                                    "  pm.expect(json).to.have.property('total');",
+                                    "  pm.expect(json.results).to.be.an('array');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

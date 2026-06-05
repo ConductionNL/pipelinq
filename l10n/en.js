@@ -1298,7 +1298,16 @@ OC.L10N.register(
     "Could not retry the run" : "Could not retry the run",
     "Test run failed" : "Test run failed",
     "Test run failed: {error}" : "Test run failed: {error}",
-    "Test run succeeded ({rows} sample rows)" : "Test run succeeded ({rows} sample rows)"
+    "Test run succeeded ({rows} sample rows)" : "Test run succeeded ({rows} sample rows)",
+    "Authentication required" : "Authentication required",
+    "Admin privileges required" : "Admin privileges required",
+    "Knowledge base is not available" : "Knowledge base is not available",
+    "Search failed" : "Search failed",
+    "Operation failed" : "Operation failed",
+    "Category not found" : "Category not found",
+    "Unsupported export format" : "Unsupported export format",
+    "Export failed" : "Export failed",
+    "Requested version not found" : "Requested version not found"
 },
 "nplurals=2; plural=(n != 1);"
 );

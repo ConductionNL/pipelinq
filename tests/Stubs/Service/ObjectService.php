@@ -51,13 +51,19 @@ if (class_exists(ObjectService::class) === false) {
         }//end find()
 
         /**
-         * Find all objects matching the given filters.
+         * Find all objects matching the given config.
          *
-         * @param array<string, mixed> $filters Search filters and options.
+         * Signature mirrors the real OpenRegister ObjectService::findAll(), whose
+         * first parameter is the `$config` array (filters/limit/offset/sort), so
+         * named-argument calls (`findAll(config: ...)`) resolve correctly.
+         *
+         * @param array<string, mixed> $config        Search config (filters, limit, offset, sort).
+         * @param bool                 $_rbac         Whether to apply RBAC checks.
+         * @param bool                 $_multitenancy Whether to apply multitenancy filtering.
          *
          * @return array<string, mixed>
          */
-        public function findAll(array $filters = []): array
+        public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array
         {
             return [];
         }//end findAll()
@@ -120,6 +126,19 @@ if (class_exists(ObjectService::class) === false) {
         {
             return true;
         }//end deleteObject()
+
+        /**
+         * Get the audit-trail log entries for an object.
+         *
+         * @param string               $uuid    The object UUID.
+         * @param array<string, mixed> $filters Optional audit filters.
+         *
+         * @return array<int, mixed>
+         */
+        public function getLogs(string $uuid, array $filters = []): array
+        {
+            return [];
+        }//end getLogs()
 
     }//end class
 }//end if

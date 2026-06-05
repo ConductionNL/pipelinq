@@ -64,6 +64,10 @@ class SettingsLoadService
         'queue',
         'skill',
         'agentProfile',
+        // Knowledge base schemas (kennisbank REST API).
+        'kennisartikel',
+        'kenniscategorie',
+        'kennisfeedback',
         'posTransaction',
         'posTransactionLine',
         'receiptTemplate',

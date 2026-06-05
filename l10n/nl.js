@@ -1361,6 +1361,15 @@ OC.L10N.register(
     "Could not retry the run" : "Kon de uitvoering niet opnieuw proberen",
     "Test run failed" : "Testuitvoering mislukt",
     "Test run failed: {error}" : "Testuitvoering mislukt: {error}",
-    "Test run succeeded ({rows} sample rows)" : "Testuitvoering geslaagd ({rows} voorbeeldrijen)"
+    "Test run succeeded ({rows} sample rows)" : "Testuitvoering geslaagd ({rows} voorbeeldrijen)",
+    "Authentication required" : "Authenticatie vereist",
+    "Admin privileges required" : "Beheerdersrechten vereist",
+    "Knowledge base is not available" : "Kennisbank is niet beschikbaar",
+    "Search failed" : "Zoeken mislukt",
+    "Operation failed" : "Bewerking mislukt",
+    "Category not found" : "Categorie niet gevonden",
+    "Unsupported export format" : "Niet-ondersteund exportformaat",
+    "Export failed" : "Export mislukt",
+    "Requested version not found" : "Gevraagde versie niet gevonden"
 },
 "nplurals=2; plural=(n != 1);");

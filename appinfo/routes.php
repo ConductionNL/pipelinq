@@ -235,6 +235,18 @@ return [
         ['name' => 'exportRun#showRun',  'url' => '/api/export/runs/{id}',       'verb' => 'GET'],
         ['name' => 'exportRun#retryRun', 'url' => '/api/export/runs/{id}/retry', 'verb' => 'POST'],
 
+        // Knowledge base (kennisbank) REST API.
+        // Specific/public routes BEFORE the {id} wildcard routes (ADR-002/ADR-003).
+        ['name' => 'kennisbank#searchPublic',          'url' => '/api/kennisbank/public/search',                          'verb' => 'GET'],
+        ['name' => 'kennisbank#searchPublicCors',      'url' => '/api/kennisbank/public/search',                          'verb' => 'OPTIONS'],
+        ['name' => 'kennisbank#getCollections',        'url' => '/api/kennisbank/public/collections',                     'verb' => 'GET'],
+        ['name' => 'kennisbank#getCollectionsCors',    'url' => '/api/kennisbank/public/collections',                     'verb' => 'OPTIONS'],
+        ['name' => 'kennisbank#getCollectionArticles', 'url' => '/api/kennisbank/public/collections/{slug}/articles',     'verb' => 'GET'],
+        ['name' => 'kennisbank#exportArticles',        'url' => '/api/kennisbank/articles/export',                        'verb' => 'GET'],
+        ['name' => 'kennisbank#compareVersions',       'url' => '/api/kennisbank/articles/{id}/versions/{from}/{to}',     'verb' => 'GET'],
+        ['name' => 'kennisbank#getVersions',           'url' => '/api/kennisbank/articles/{id}/versions',                 'verb' => 'GET'],
+        ['name' => 'kennisbank#getAuditLog',           'url' => '/api/kennisbank/audit',                                  'verb' => 'GET'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],

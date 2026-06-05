@@ -1359,7 +1359,16 @@
         "Save MCP Configuration": "Save MCP Configuration",
         "MCP configuration saved.": "MCP configuration saved.",
         "Failed to save MCP configuration.": "Failed to save MCP configuration.",
-        "Authentication Mode": "Authentication Mode"
+        "Authentication Mode": "Authentication Mode",
+        "Authentication required": "Authentication required",
+        "Admin privileges required": "Admin privileges required",
+        "Knowledge base is not available": "Knowledge base is not available",
+        "Search failed": "Search failed",
+        "Operation failed": "Operation failed",
+        "Category not found": "Category not found",
+        "Unsupported export format": "Unsupported export format",
+        "Export failed": "Export failed",
+        "Requested version not found": "Requested version not found"
     },
     "plurals": {}
 }
