@@ -41,7 +41,7 @@ if ($autoloader instanceof \Composer\Autoload\ClassLoader && is_dir(__DIR__ . '/
 // stub here (before lib/base.php adds openregister to the front of the autoload
 // stack), the class is already defined and the real file is never loaded.
 if (class_exists(\OCA\OpenRegister\Db\ObjectEntity::class, false) === false) {
-    require_once __DIR__ . '/Stubs/Db/ObjectEntity.php';
+    include_once __DIR__.'/Stubs/Db/ObjectEntity.php';
 }
 
 // Bootstrap Nextcloud if not already done.
