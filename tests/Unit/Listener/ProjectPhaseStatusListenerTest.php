@@ -101,11 +101,11 @@ class ProjectPhaseStatusListenerTest extends TestCase
      */
     private function entity(string $schema, array $data): ObjectEntity
     {
-        // createMock() uses disallowMockingUnknownTypes() which blocks configuring
-        // abstract methods not in the default mock list. getMockBuilder() without
-        // onlyMethods() mocks all declared abstract methods so we can configure them.
+        // PHPUnit 10 requires onlyMethods() to configure any method, even abstract ones
+        // from the stub. Without it the mock is non-configuring by default.
         $entity = $this->getMockBuilder(ObjectEntity::class)
             ->disableOriginalConstructor()
+            ->onlyMethods(['getSchema', 'getUuid', 'getObject', 'jsonSerialize'])
             ->getMock();
         $entity->method('getSchema')->willReturn($schema);
         $entity->method('getUuid')->willReturn((string) ($data['uuid'] ?? 'obj-1'));
