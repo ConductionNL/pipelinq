@@ -31,7 +31,6 @@ import History from 'vue-material-design-icons/History.vue'
 import Package from 'vue-material-design-icons/Package.vue'
 import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
-import Receipt from 'vue-material-design-icons/Receipt.vue'
 import ReceiptText from 'vue-material-design-icons/ReceiptText.vue'
 import SchoolOutline from 'vue-material-design-icons/SchoolOutline.vue'
 import Tag from 'vue-material-design-icons/Tag.vue'
@@ -65,7 +64,6 @@ export default {
 	Package,
 	PhoneMessage,
 	Pipe,
-	Receipt,
 	ReceiptText,
 	SchoolOutline,
 	Tag,
