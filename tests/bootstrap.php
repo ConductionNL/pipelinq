@@ -34,6 +34,16 @@ if ($autoloader instanceof \Composer\Autoload\ClassLoader && is_dir(__DIR__ . '/
     }
 }
 
+// Load the ObjectEntity stub before Nextcloud bootstraps. Nextcloud's autoloader
+// registers with prepend=true, so it would otherwise shadow the autoload-dev PSR-4
+// mapping and load the real ObjectEntity — which declares getSchema/getUuid/getObject
+// as magic __call methods that PHPUnit cannot configure on mocks. By requiring the
+// stub here (before lib/base.php adds openregister to the front of the autoload
+// stack), the class is already defined and the real file is never loaded.
+if (class_exists(\OCA\OpenRegister\Db\ObjectEntity::class, false) === false) {
+    require_once __DIR__ . '/Stubs/Db/ObjectEntity.php';
+}
+
 // Bootstrap Nextcloud if not already done.
 if (!defined('OC_CONSOLE')) {
     // Try to include the main Nextcloud bootstrap.
