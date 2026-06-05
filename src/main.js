@@ -3,7 +3,7 @@
 
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import { PiniaVuePlugin } from 'pinia'
+import { PiniaVuePlugin, setActivePinia } from 'pinia'
 import { translate as t, translatePlural as n, loadTranslations } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import {
@@ -17,7 +17,7 @@ import App from './App.vue'
 import bundledManifest from './manifest.json'
 import registry from './registry.js'
 import appIcons from './icons.js'
-import { initializeStores } from './store/store.js'
+import { initializeStores, registerObjectTypes } from './store/store.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 // eslint-disable-next-line import/no-unresolved -- CSS subpath resolved by webpack alias, not ESLint's resolver
@@ -162,6 +162,14 @@ tryLoadTranslations()
 const pageTypesProp = { ...defaultPageTypes }
 const registryProp = { ...registry }
 
+// Register object types synchronously, before mount. Registration is static
+// (slug-based) so it needs no app config; doing it up front means the object
+// store registry is populated before the first view's onMounted fetchSchema()
+// runs — even on a hard reload directly onto a list page. setActivePinia lets
+// the store be used outside a component, before the Vue instance is created.
+setActivePinia(pinia)
+registerObjectTypes()
+
 // Create and mount Vue instance immediately so the App renders.
 new Vue({
 	pinia,
@@ -175,6 +183,5 @@ new Vue({
 	}),
 }).$mount('#content')
 
-// Initialize stores in parallel — the useListView retry logic will wait
-// for registerObjectType to complete.
+// Load settings in the background — object types are already registered above.
 initializeStores()
