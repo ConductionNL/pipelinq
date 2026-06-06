@@ -32,7 +32,7 @@
 
 ## 2. Backend Services
 
-- [ ] 2.1 Create `lib/Service/AutomationService.php`
+- [x] 2.1 Create `lib/Service/AutomationService.php`
   - **spec_ref**: `specs/crm-workflow-automation/spec.md#Feature 1`, `#Feature 4`
   - **files**: `lib/Service/AutomationService.php`
   - **acceptance_criteria**:
@@ -44,7 +44,7 @@
     - AND SPDX header `EUPL-1.2` MUST be present
     - AND `@spec` PHPDoc tag MUST reference `openspec/changes/crm-workflow-automation/tasks.md#task-2.1`
 
-- [ ] 2.2 Create `lib/Service/DmnDecisionService.php`
+- [x] 2.2 Create `lib/Service/DmnDecisionService.php`
   - **spec_ref**: `specs/crm-workflow-automation/spec.md#Feature 2`
   - **files**: `lib/Service/DmnDecisionService.php`
   - **acceptance_criteria**:
@@ -54,7 +54,7 @@
     - AND evaluation errors MUST throw exceptions (not return empty arrays)
     - AND `applyDecisionToEntity()` MUST call `ObjectService::saveObject($register, $schema, $object)` with 3 positional args
 
-- [ ] 2.3 Create `lib/Service/AutomationVariableService.php`
+- [x] 2.3 Create `lib/Service/AutomationVariableService.php`
   - **spec_ref**: `specs/crm-workflow-automation/spec.md#Feature 3`
   - **files**: `lib/Service/AutomationVariableService.php`
   - **acceptance_criteria**:
@@ -64,7 +64,7 @@
     - AND `getRuntimeState($automationId)` MUST return the most recent automationLog entry for that automation
     - AND `getVariableBindings($automationId)` MUST return `actionsExecuted` from the most recent log
 
-- [ ] 2.4 Create `lib/Service/MarketingSequenceService.php`
+- [x] 2.4 Create `lib/Service/MarketingSequenceService.php`
   - **spec_ref**: `specs/crm-workflow-automation/spec.md#Feature 4`
   - **files**: `lib/Service/MarketingSequenceService.php`
   - **acceptance_criteria**:
