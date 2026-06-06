@@ -2,7 +2,7 @@
 
 ## 0. Deduplication Check
 
-- [ ] 0.1 Search `openspec/specs/` for existing automation, webhook, DMN, and variable query specs
+- [x] 0.1 Search `openspec/specs/` for existing automation, webhook, DMN, and variable query specs
   - **acceptance_criteria**:
     - GIVEN the codebase is searched for `AutomationService`, `WebhookService`, `DmnDecision`, `automationLog`
     - THEN document any existing implementations and reference them
@@ -12,7 +12,7 @@
 
 ## 1. Schema Verification
 
-- [ ] 1.1 Verify `automation` and `automationLog` schemas are present in `lib/Settings/pipelinq_register.json`
+- [x] 1.1 Verify `automation` and `automationLog` schemas are present in `lib/Settings/pipelinq_register.json`
   - **spec_ref**: `specs/crm-workflow-automation/spec.md#Feature 1`, `#Feature 4`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -21,7 +21,7 @@
     - AND `automationLog` schema MUST be present with all ADR-000 properties
     - AND if either is missing, add it (non-breaking addition)
 
-- [ ] 1.2 Add seed data for `automation` and `automationLog` schemas to `lib/Settings/pipelinq_register.json`
+- [x] 1.2 Add seed data for `automation` and `automationLog` schemas to `lib/Settings/pipelinq_register.json`
   - **spec_ref**: `design.md#Seed Data`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
