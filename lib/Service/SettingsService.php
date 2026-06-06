@@ -99,6 +99,8 @@ class SettingsService
         'redemption_schema',
         'giftCard_schema',
         'giftCardTransaction_schema',
+        // Expense → Shillinq AP integration (pipelinq-expense-to-shillinq-ap).
+        'expense_schema',
     ];
 
     /**
@@ -144,6 +146,8 @@ class SettingsService
         'receipt_default_template'                 => '',
         'shillinq_ledger_webhook_url'              => '',
         'shillinq_wip_webhook_url'                 => '',
+        // Shillinq AP webhook for expense voucher dispatch (REQ-AP-004). Empty disables the integration.
+        'shillinq_ap_webhook_url'                  => '',
         // Lead-management: number of inactivity days before a lead is flagged stale.
         // Default mirrors REQ-LM-002 (14 days). Tenant-tunable through admin settings.
         // @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002

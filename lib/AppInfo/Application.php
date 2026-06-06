@@ -49,6 +49,7 @@ use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
 use OCA\Pipelinq\Listener\DealCreatedListener;
 use OCA\Pipelinq\Listener\DealUpdatedListener;
 use OCA\Pipelinq\Listener\DeepLinkRegistrationListener;
+use OCA\Pipelinq\Listener\ExpenseApprovalListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCA\Pipelinq\Listener\PosTransactionCompletedListener;
 use OCA\Pipelinq\Listener\ProjectCreationListener;
@@ -144,6 +145,19 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(
             event: ObjectUpdatedEvent::class,
             listener: PosTransactionCompletedListener::class
+        );
+
+        // Expense → Shillinq AP voucher dispatch on status=approved transitions
+        // (pipelinq-expense-to-shillinq-ap / REQ-AP-002). Listener is filtered
+        // to the expense schema and idempotent on apSyncStatus=synced so a
+        // re-fired update event cannot create a duplicate AP voucher.
+        $context->registerEventListener(
+            event: ObjectCreatedEvent::class,
+            listener: ExpenseApprovalListener::class
+        );
+        $context->registerEventListener(
+            event: ObjectUpdatedEvent::class,
+            listener: ExpenseApprovalListener::class
         );
 
         $context->registerDashboardWidget(DealsOverviewWidget::class);
