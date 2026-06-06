@@ -158,6 +158,7 @@ export default {
 		client: {
 			immediate: true,
 			/**
+			 * @param val
 			 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-26
 			 */
 			handler(val) {
@@ -169,6 +170,7 @@ export default {
 	},
 	methods: {
 		/**
+		 * @param data
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-29
 		 */
 		populateForm(data) {
@@ -185,6 +187,7 @@ export default {
 			this.errors = { name: '', type: '', email: '', phone: '', website: '' }
 		},
 		/**
+		 * @param field
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
 		 */
 		validateField(field) {

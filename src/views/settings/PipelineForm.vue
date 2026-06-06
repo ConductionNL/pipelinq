@@ -1,8 +1,9 @@
 <template>
-	<div class="pipeline-form-overlay">
+	<NcDialog
+		size="large"
+		:name="isEdit ? t('pipelinq', 'Edit pipeline') : t('pipelinq', 'New pipeline')"
+		@closing="$emit('cancel')">
 		<div class="pipeline-form">
-			<h3>{{ isEdit ? t('pipelinq', 'Edit pipeline') : t('pipelinq', 'New pipeline') }}</h3>
-
 			<!-- Pipeline properties -->
 			<div class="form-section">
 				<div class="form-group">
@@ -197,22 +198,21 @@
 					</div>
 				</draggable>
 			</div>
-
-			<!-- Actions -->
-			<div class="form-actions">
-				<NcButton type="tertiary" @click="$emit('cancel')">
-					{{ t('pipelinq', 'Cancel') }}
-				</NcButton>
-				<NcButton type="primary" :disabled="!isValid" @click="onSave">
-					{{ isEdit ? t('pipelinq', 'Save') : t('pipelinq', 'Create') }}
-				</NcButton>
-			</div>
 		</div>
-	</div>
+
+		<template #actions>
+			<NcButton type="tertiary" @click="$emit('cancel')">
+				{{ t('pipelinq', 'Cancel') }}
+			</NcButton>
+			<NcButton type="primary" :disabled="!isValid" @click="onSave">
+				{{ isEdit ? t('pipelinq', 'Save') : t('pipelinq', 'Create') }}
+			</NcButton>
+		</template>
+	</NcDialog>
 </template>
 
 <script>
-import { NcButton, NcCheckboxRadioSwitch, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcCheckboxRadioSwitch, NcDialog, NcSelect, NcTextField } from '@nextcloud/vue'
 import draggable from 'vuedraggable'
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue'
@@ -225,6 +225,7 @@ export default {
 	components: {
 		NcButton,
 		NcCheckboxRadioSwitch,
+		NcDialog,
 		NcSelect,
 		NcTextField,
 		draggable,
@@ -360,6 +361,7 @@ export default {
 		},
 
 		/**
+		 * @param index
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-39
 		 */
 		removeMapping(index) {
@@ -381,6 +383,7 @@ export default {
 			})
 		},
 		/**
+		 * @param index
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-40
 		 */
 		removeStage(index) {
@@ -393,6 +396,8 @@ export default {
 			this.recomputeOrders()
 		},
 		/**
+		 * @param stage
+		 * @param direction
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-36
 		 */
 		moveStage(stage, direction) {
@@ -446,36 +451,11 @@ export default {
 </script>
 
 <style scoped>
-.pipeline-form-overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: rgba(0, 0, 0, 0.3);
-	display: flex;
-	justify-content: center;
-	align-items: flex-start;
-	padding-top: 60px;
-	z-index: 1000;
-}
-
 .pipeline-form {
-	background: var(--color-main-background);
-	border-radius: var(--border-radius-large);
 	padding: 24px;
-	width: 800px;
-	max-width: 90vw;
-	max-height: 80vh;
-	overflow-y: auto;
-	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
 }
 
-.pipeline-form h3 {
-	margin: 0 0 16px;
-}
-
-.form-section {
+.form-section:not(:last-child) {
 	margin-bottom: 24px;
 }
 
@@ -671,14 +651,6 @@ export default {
 .stage-delete {
 	flex-shrink: 0;
 	align-self: center;
-}
-
-.form-actions {
-	display: flex;
-	justify-content: flex-end;
-	gap: 8px;
-	padding-top: 16px;
-	border-top: 1px solid var(--color-border);
 }
 
 .error-text {

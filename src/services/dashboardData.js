@@ -12,11 +12,28 @@
 // (5 min). Call `invalidateDashboardData()` to force a refetch (used
 // by the "Refresh" header action).
 
+import Vue from 'vue'
 import { generateUrl } from '@nextcloud/router'
 import { initializeStores } from '../store/store.js'
 
 const CACHE_TTL_MS = 5 * 60 * 1000
 const cache = new Map()
+
+// Reactive refresh signal. Dashboard widgets watch `refreshSignal.token`
+// (via dashboardRefreshMixin) and refetch when it bumps. This replaces the
+// old route-query-bump remount trick, which never fired because CnAppRoot's
+// <router-view> is not path-keyed so the widgets never remounted.
+const refreshSignal = Vue.observable({ token: 0 })
+
+/**
+ * The reactive refresh signal. Read `.token` inside a computed to make a
+ * component re-evaluate when the dashboard is refreshed.
+ *
+ * @return {{ token: number }} The observable signal.
+ */
+export function getDashboardRefreshSignal() {
+	return refreshSignal
+}
 
 /**
  * Build the OR query URL for a registered object type.
@@ -149,10 +166,20 @@ export function getMyRequests() {
  * Drop every cached dataset. Call from a "Refresh" UI action or
  * after creating a new object so the dashboard reflects the change
  * on the next widget mount/remount.
-  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-22
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-22
  */
 export function invalidateDashboardData() {
 	cache.clear()
+}
+
+/**
+ * Force the whole dashboard to refetch: drop every cached dataset and bump
+ * the reactive refresh signal so all mounted widgets re-run their `load()`.
+ * Use from the dashboard-wide "Refresh" action.
+ */
+export function refreshDashboardData() {
+	cache.clear()
+	refreshSignal.token++
 }
 
 /**
@@ -162,7 +189,7 @@ export function invalidateDashboardData() {
  *
  * @param {Array} pipelines - Pipeline records.
  * @return {Set<string>} Names of stages flagged isClosed.
-  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-15
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-15
  */
 export function getClosedStageNames(pipelines) {
 	const names = new Set()

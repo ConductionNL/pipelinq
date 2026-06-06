@@ -63,6 +63,8 @@ class SettingsService
         'queue_schema',
         'skill_schema',
         'agentProfile_schema',
+        'project_schema',
+        'projectPhase_schema',
         'posTransaction_schema',
         'posTransactionLine_schema',
         'receiptTemplate_schema',
@@ -70,11 +72,22 @@ class SettingsService
         'refundReason_schema',
         'posRefund_schema',
         'posRefundLine_schema',
+        'exportDestination_schema',
+        'exportJob_schema',
+        'exportRun_schema',
+        'exportSchemaSnapshot_schema',
         'complaint_sla_service',
         'complaint_sla_product',
         'complaint_sla_communication',
         'complaint_sla_billing',
         'complaint_sla_other',
+        // Customer portal (separate auth-domain register; ADR-005 / ADR-037).
+        'portal_register',
+        'portalAccount_schema',
+        'portalSession_schema',
+        'portalDelegation_schema',
+        'portalAuditEvent_schema',
+        'portalTenantConfig_schema',
     ];
 
     /**
@@ -118,6 +131,7 @@ class SettingsService
         'receipt_printer_host'                     => '',
         'receipt_printer_port'                     => '9100',
         'receipt_default_template'                 => '',
+        'shillinq_ledger_webhook_url'              => '',
     ];
 
     /**

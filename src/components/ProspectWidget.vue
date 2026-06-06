@@ -104,6 +104,7 @@ export default {
 			await this.prospectStore.fetchProspects(true)
 		},
 		/**
+		 * @param prospect
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-5
 		 */
 		async onCreateLead(prospect) {
@@ -118,6 +119,7 @@ export default {
 			}
 		},
 		/**
+		 * @param dateStr
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-4
 		 */
 		formatTime(dateStr) {

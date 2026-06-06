@@ -1,11 +1,10 @@
 <template>
-	<div class="tag-manager">
-		<div class="tag-manager__header">
-			<h3>{{ title }}</h3>
+	<CnSettingsSection :name="title">
+		<template #actions>
 			<NcButton type="secondary" @click="startAdding">
 				{{ addLabel }}
 			</NcButton>
-		</div>
+		</template>
 
 		<NcLoadingIcon v-if="loading" :size="24" />
 
@@ -73,15 +72,17 @@
 		<NcNoteCard v-if="error" type="error">
 			{{ error }}
 		</NcNoteCard>
-	</div>
+	</CnSettingsSection>
 </template>
 
 <script>
+import { CnSettingsSection } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 
 export default {
 	name: 'TagManager',
 	components: {
+		CnSettingsSection,
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,
@@ -165,7 +166,9 @@ export default {
 
 			this.error = null
 			try {
-				await this.$emit('add', name)
+				// $emit returns the vm, not the handler's promise, so we invoke the
+				// listener directly to await the action and catch any rejection.
+				await this.$listeners.add?.(name)
 				this.adding = false
 				this.newName = ''
 			} catch (e) {
@@ -173,6 +176,7 @@ export default {
 			}
 		},
 		/**
+		 * @param tag
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-95
 		 */
 		startEditing(tag) {
@@ -192,6 +196,7 @@ export default {
 			this.error = null
 		},
 		/**
+		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-93
 		 */
 		async saveRename(id) {
@@ -209,7 +214,9 @@ export default {
 
 			this.error = null
 			try {
-				await this.$emit('rename', id, name)
+				// $emit returns the vm, not the handler's promise, so we invoke the
+				// listener directly to await the action and catch any rejection.
+				await this.$listeners.rename?.(id, name)
 				this.editingId = null
 				this.editName = ''
 			} catch (e) {
@@ -217,6 +224,7 @@ export default {
 			}
 		},
 		/**
+		 * @param tag
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-90
 		 */
 		async confirmRemove(tag) {
@@ -242,21 +250,6 @@ export default {
 </script>
 
 <style scoped>
-.tag-manager {
-	margin-bottom: 24px;
-}
-
-.tag-manager__header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	margin-bottom: 12px;
-}
-
-.tag-manager__header h3 {
-	margin: 0;
-}
-
 .tag-manager__empty {
 	color: var(--color-text-maxcontrast);
 	padding: 8px 0;

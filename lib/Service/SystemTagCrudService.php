@@ -27,6 +27,8 @@ use OCP\SystemTag\TagAlreadyExistsException;
 
 /**
  * Low-level CRUD operations for SystemTag-based lists.
+ *
+ * @spec openspec/changes/reverse-2026-05-26-be-tags/tasks.md
  */
 class SystemTagCrudService
 {

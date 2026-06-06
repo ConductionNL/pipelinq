@@ -159,6 +159,7 @@ export default {
 		currentColumnValue: {
 			immediate: true,
 			/**
+			 * @param val
 			 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
 			 */
 			handler(val) {
@@ -168,6 +169,7 @@ export default {
 		'item.assignee': {
 			immediate: true,
 			/**
+			 * @param val
 			 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
 			 */
 			handler(val) {
@@ -210,6 +212,7 @@ export default {
 		},
 
 		/**
+		 * @param newStage
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-45
 		 */
 		async onStageChange(newStage) {
@@ -227,6 +230,7 @@ export default {
 		},
 
 		/**
+		 * @param newAssignee
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-43
 		 */
 		async onAssignChange(newAssignee) {
@@ -244,6 +248,7 @@ export default {
 		},
 
 		/**
+		 * @param e
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-44
 		 */
 		onDragStart(e) {
@@ -257,6 +262,7 @@ export default {
 		},
 
 		/**
+		 * @param dateStr
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-38
 		 */
 		formatDate(dateStr) {

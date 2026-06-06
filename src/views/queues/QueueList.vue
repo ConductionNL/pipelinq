@@ -136,6 +136,7 @@ export default {
 	},
 	methods: {
 		/**
+		 * @param queue
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-17
 		 */
 		openQueue(queue) {

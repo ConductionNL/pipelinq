@@ -47,6 +47,7 @@ export default {
 	},
 	methods: {
 		/**
+		 * @param formData
 		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-2
 		 */
 		async onSave(formData) {

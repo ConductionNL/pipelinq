@@ -1,11 +1,10 @@
 <template>
-	<div class="category-manager">
-		<div class="category-manager__header">
-			<h3>{{ t('pipelinq', 'Product Categories') }}</h3>
+	<CnSettingsSection :name="t('pipelinq', 'Product Categories')">
+		<template #actions>
 			<NcButton type="secondary" @click="startAdding">
 				{{ t('pipelinq', '+ Add Category') }}
 			</NcButton>
-		</div>
+		</template>
 
 		<NcLoadingIcon v-if="loading" :size="24" />
 
@@ -87,16 +86,18 @@
 		<NcNoteCard v-if="error" type="error">
 			{{ error }}
 		</NcNoteCard>
-	</div>
+	</CnSettingsSection>
 </template>
 
 <script>
+import { CnSettingsSection } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'ProductCategoryManager',
 	components: {
+		CnSettingsSection,
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,
@@ -190,6 +191,7 @@ export default {
 			}
 		},
 		/**
+		 * @param cat
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-64
 		 */
 		startEditing(cat) {
@@ -212,6 +214,7 @@ export default {
 			this.error = null
 		},
 		/**
+		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-60
 		 */
 		async saveEdit(id) {
@@ -233,6 +236,7 @@ export default {
 			}
 		},
 		/**
+		 * @param cat
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-57
 		 */
 		async confirmRemove(cat) {
@@ -251,21 +255,6 @@ export default {
 </script>
 
 <style scoped>
-.category-manager {
-	margin-bottom: 24px;
-}
-
-.category-manager__header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	margin-bottom: 12px;
-}
-
-.category-manager__header h3 {
-	margin: 0;
-}
-
 .category-manager__empty {
 	color: var(--color-text-maxcontrast);
 	padding: 8px 0;

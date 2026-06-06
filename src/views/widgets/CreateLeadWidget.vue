@@ -122,6 +122,7 @@ export default {
 	},
 	methods: {
 		/**
+		 * @param client
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-23
 		 */
 		onClientSelected(client) {
@@ -159,6 +160,7 @@ export default {
 			}
 		},
 		/**
+		 * @param pipeline
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-21
 		 */
 		getFirstStage(pipeline) {

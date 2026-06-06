@@ -23,7 +23,7 @@ export const useSkillsStore = defineStore('skills', {
 			this.error = null
 			try {
 				const objectStore = useObjectStore()
-				const result = await objectStore.fetchObjects('skill', { _limit: 100 })
+				const result = await objectStore.fetchCollection('skill', { _limit: 100 })
 				this.skills = result || []
 			} catch (error) {
 				this.error = error.message
@@ -34,6 +34,7 @@ export const useSkillsStore = defineStore('skills', {
 		},
 
 		/**
+		 * @param data
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-47
 		 */
 		async saveSkill(data) {
@@ -56,6 +57,7 @@ export const useSkillsStore = defineStore('skills', {
 		},
 
 		/**
+		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-45
 		 */
 		async deleteSkill(id) {

@@ -384,6 +384,7 @@ export default {
 		getSlaColor,
 
 		/**
+		 * @param status
 		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-13
 		 */
 		getTransitionLabel(status) {
@@ -394,6 +395,7 @@ export default {
 		},
 
 		/**
+		 * @param status
 		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-12
 		 */
 		getTransitionButtonType(status) {
@@ -403,6 +405,7 @@ export default {
 		},
 
 		/**
+		 * @param targetStatus
 		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-20
 		 */
 		onStatusTransition(targetStatus) {
@@ -432,6 +435,8 @@ export default {
 		},
 
 		/**
+		 * @param newStatus
+		 * @param extraData
 		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-3
 		 */
 		async applyStatusChange(newStatus, extraData = {}) {
@@ -517,6 +522,7 @@ export default {
 		},
 
 		/**
+		 * @param userId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-17
 		 */
 		async onAssigneeChange(userId) {
@@ -528,6 +534,7 @@ export default {
 		},
 
 		/**
+		 * @param formData
 		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-19
 		 */
 		async onFormSave(formData) {
@@ -572,6 +579,7 @@ export default {
 		},
 
 		/**
+		 * @param dateStr
 		 * @spec openspec/changes/reverse-2026-05-26-fe-complaints-ui/tasks.md#task-11
 		 */
 		formatDateTime(dateStr) {

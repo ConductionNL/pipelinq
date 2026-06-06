@@ -47,6 +47,7 @@ export default {
 	computed: { questions() { return this.value || [] } },
 	methods: {
 		/**
+		 * @param arr
 		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-3
 		 */
 		emit(arr) { this.$emit('input', arr) },
@@ -55,6 +56,7 @@ export default {
 		 */
 		add() { this.emit([...this.questions, { id: uuid(), type: 'rating', text: '', required: true, options: [], order: this.questions.length + 1 }]) },
 		/**
+		 * @param i
 		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-4
 		 */
 		remove(i) { const a = [...this.questions]; a.splice(i, 1); this.emit(a) },
@@ -62,10 +64,13 @@ export default {
 		setType(i, t) { const a = [...this.questions]; a[i] = { ...a[i], type: t }; if (t === 'multiple_choice' && (!a[i].options || a[i].options.length < 2)) a[i].options = ['', '']; this.emit(a) },
 		setOpt(i, oi, v) { const a = [...this.questions]; const opts = [...(a[i].options || [])]; opts[oi] = v; a[i] = { ...a[i], options: opts }; this.emit(a) },
 		/**
+		 * @param i
 		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-2
 		 */
 		addOpt(i) { const a = [...this.questions]; a[i] = { ...a[i], options: [...(a[i].options || []), ''] }; this.emit(a) },
 		/**
+		 * @param i
+		 * @param oi
 		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-5
 		 */
 		rmOpt(i, oi) { const a = [...this.questions]; const opts = [...(a[i].options || [])]; opts.splice(oi, 1); a[i] = { ...a[i], options: opts }; this.emit(a) },
