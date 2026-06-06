@@ -55,6 +55,11 @@ return [
         ['name' => 'notes#deleteAll', 'url' => '/api/notes/{objectType}/{objectId}', 'verb' => 'DELETE'],
         ['name' => 'notes#deleteSingle', 'url' => '/api/notes/single/{noteId}', 'verb' => 'DELETE'],
 
+        // Entity activity feed — per-entity contactmoment + note REST aggregation
+        // (entity-notes change). camelCase slug matches EntityActivityController
+        // class name; placed BEFORE any wildcard {slug} routes (ADR-003-backend).
+        ['name' => 'entityActivity#index', 'url' => '/api/activity/{entityType}/{entityId}', 'verb' => 'GET'],
+
         // Request channels (camelCase slug matches RequestChannelController class name)
         ['name' => 'requestChannel#index', 'url' => '/api/settings/request-channels', 'verb' => 'GET'],
         ['name' => 'requestChannel#create', 'url' => '/api/settings/request-channels', 'verb' => 'POST'],

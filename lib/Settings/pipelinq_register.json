@@ -4656,6 +4656,108 @@
         "stageOrder": 6,
         "status": "won",
         "notes": "Contract getekend 2026-03-28. Implementatie start Q2."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "client",
+          "slug": "client-entity-notes-demo",
+          "id": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c"
+        },
+        "name": "Gemeente Demo — Entity Notes Showcase",
+        "type": "organization",
+        "email": "info@gemeente-demo.nl",
+        "phone": "085-9999999",
+        "industry": "Lokale overheid",
+        "notes": "Demonstration client for the entity-notes change. Used as the target for the five contactmoment-001..005 seed objects so the Communication History panel is populated on first install."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "contactmoment",
+          "slug": "contactmoment-001"
+        },
+        "subject": "Vraag over status vergunningsaanvraag",
+        "summary": "Mevrouw Bakker belde in over de status van haar omgevingsvergunning. Verwachte afhandeling binnen 3 werkdagen toegezegd.",
+        "channel": "telefoon",
+        "outcome": "afgehandeld",
+        "agent": "mvanderberg",
+        "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
+        "contactedAt": "2026-04-14T09:12:00Z",
+        "duration": "PT7M30S",
+        "channelMetadata": {
+          "direction": "inbound",
+          "phoneNumber": "085-0123456"
+        }
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "contactmoment",
+          "slug": "contactmoment-002"
+        },
+        "subject": "Klacht over aanslagbiljet gemeentelijke belasting",
+        "summary": "De heer Jansen stuurde een e-mail met bezwaar tegen het aanslagbiljet. Doorverwezen naar de afdeling Belastingen.",
+        "channel": "email",
+        "outcome": "doorverbonden",
+        "agent": "sdejong",
+        "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
+        "contactedAt": "2026-04-11T14:30:00Z",
+        "channelMetadata": {
+          "emailThreadId": "MSG-20260411-4492",
+          "direction": "inbound"
+        }
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "contactmoment",
+          "slug": "contactmoment-003"
+        },
+        "subject": "Baliebezoek — aanvraag parkeervergunning",
+        "summary": "Meneer Ahmed Hassan bezocht de balie voor een parkeervergunning bewonerszone C. Aanvraagformulier ingevuld en ingediend.",
+        "channel": "balie",
+        "outcome": "afgehandeld",
+        "agent": "lvanhouten",
+        "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
+        "contactedAt": "2026-04-10T10:45:00Z",
+        "channelMetadata": {
+          "counterLocation": "Balie 3 — Stadhuis"
+        }
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "contactmoment",
+          "slug": "contactmoment-004"
+        },
+        "subject": "Chatgesprek — informatie over WMO-aanvraag",
+        "summary": "Mevrouw Pieterse vroeg via de chat naar de benodigde documenten voor een WMO-aanvraag. Documentenlijst per e-mail verstuurd.",
+        "channel": "chat",
+        "outcome": "afgehandeld",
+        "agent": "kbosma",
+        "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
+        "contactedAt": "2026-04-09T11:20:00Z",
+        "channelMetadata": {
+          "chatSessionId": "CS-20260409-8831"
+        }
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "contactmoment",
+          "slug": "contactmoment-005"
+        },
+        "subject": "Brief — bezwaar bestemmingsplan",
+        "summary": "De stichting Groen Amsterdam diende een formeel bezwaarschrift in per brief tegen het herziene bestemmingsplan Noord. Ontvangst bevestigd.",
+        "channel": "brief",
+        "outcome": "vervolgactie",
+        "agent": "mvanderberg",
+        "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
+        "contactedAt": "2026-04-07T08:00:00Z",
+        "channelMetadata": {
+          "letterReference": "BZW-2026-0042"
+        }
       }
     ]
   }

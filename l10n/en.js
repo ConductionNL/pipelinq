@@ -1422,7 +1422,12 @@ OC.L10N.register(
     "Retry WIP sync" : "Retry WIP sync",
     "Shillinq WIP webhook URL" : "Shillinq WIP webhook URL",
     "WIP synced at" : "WIP synced at",
-    "Not synced" : "Not synced"
+    "Not synced" : "Not synced",
+    "Communication History" : "Communication History",
+    "No communication history yet" : "No communication history yet",
+    "Loading communication history..." : "Loading communication history...",
+    "Could not load communication history" : "Could not load communication history",
+    "Invalid entity type" : "Invalid entity type"
 },
 "nplurals=2; plural=(n != 1);"
 );
