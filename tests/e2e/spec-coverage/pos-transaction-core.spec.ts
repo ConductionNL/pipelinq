@@ -30,8 +30,9 @@ test('POS transaction list (Kassabon) page renders the real list shell', async (
 	// element and the Kassabon page <main> region must both render.
 	const indexPage = page.locator('[data-testid="cn-index-page"]').first()
 	await expect(indexPage).toBeVisible({ timeout: 10000 })
-	await expect(page.locator('main').filter({ has: page.getByText('Kassabon') }).first()
-		.or(page.getByRole('main')).first()).toBeVisible()
+	// The list mounts inside the app's <main> region (the real content area,
+	// not the capability-guard screen).
+	await expect(page.getByRole('main').first()).toBeVisible()
 	// The actions bar (toolbar hosting the Add CTA + view toggle) is part of
 	// the real list, not the capability-guard screen.
 	await expect(page.locator('[data-testid="cn-actions-bar"]').first()).toBeVisible()
