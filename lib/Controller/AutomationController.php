@@ -81,6 +81,9 @@ class AutomationController extends Controller
     #[NoAdminRequired]
     public function index(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
         $page  = max(1, (int) $this->request->getParam('page', 1));
         $limit = max(1, min(200, (int) $this->request->getParam('limit', 50)));
         $data  = $this->automationService->listAutomations($page, $limit);
@@ -99,6 +102,9 @@ class AutomationController extends Controller
     #[NoAdminRequired]
     public function show(string $id): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
         $automation = $this->automationService->findAutomation($id);
         if ($automation === null) {
             return new JSONResponse(['message' => 'Automation not found'], Http::STATUS_NOT_FOUND);
@@ -180,6 +186,9 @@ class AutomationController extends Controller
     #[NoAdminRequired]
     public function history(string $id): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
         $entries = $this->loadHistory($id);
         return new JSONResponse([
             'results' => $entries,

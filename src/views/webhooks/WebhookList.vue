@@ -46,37 +46,24 @@
 				:description="t('pipelinq', 'Add a webhook subscription to push CRM events to an external system.')" />
 		</div>
 
-		<NcDialog v-if="testResult"
-			:name="t('pipelinq', 'Webhook test result')"
-			:open="!!testResult"
-			@closing="testResult = ''">
-			<p>{{ testResult }}</p>
-		</NcDialog>
+		<WebhookTestResultDialog v-if="testResult"
+			:message="testResult"
+			@closing="testResult = ''" />
 
-		<NcDialog v-if="pendingDelete"
-			:name="t('pipelinq', 'Delete webhook')"
-			:open="!!pendingDelete"
-			@closing="pendingDelete = null">
-			<p>{{ t('pipelinq', 'Delete this webhook subscription?') }}</p>
-			<template #actions>
-				<NcButton @click="pendingDelete = null">
-					{{ t('pipelinq', 'Cancel') }}
-				</NcButton>
-				<NcButton type="error" @click="confirmDelete">
-					{{ t('pipelinq', 'Delete') }}
-				</NcButton>
-			</template>
-		</NcDialog>
+		<DeleteWebhookDialog v-if="pendingDelete"
+			@cancel="pendingDelete = null"
+			@confirm="confirmDelete" />
 	</div>
 </template>
 
 <script>
 import { CnEmptyState, CnStatusBadge } from '@conduction/nextcloud-vue'
 import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
-import NcDialog from '@nextcloud/vue/dist/Components/NcDialog.js'
 import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
+import DeleteWebhookDialog from '../../dialogs/DeleteWebhookDialog.vue'
+import WebhookTestResultDialog from '../../dialogs/WebhookTestResultDialog.vue'
 
 export default {
 	name: 'WebhookList',
@@ -84,8 +71,9 @@ export default {
 		CnEmptyState,
 		CnStatusBadge,
 		NcButton,
-		NcDialog,
 		NcLoadingIcon,
+		DeleteWebhookDialog,
+		WebhookTestResultDialog,
 	},
 	data() {
 		return {

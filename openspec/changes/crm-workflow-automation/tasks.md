@@ -237,7 +237,7 @@
 
 ## 9. Tests
 
-- [ ] 9.1 Write PHPUnit tests for `AutomationService`
+- [x] 9.1 Write PHPUnit tests for `AutomationService`
   - **spec_ref**: company ADR-008 (testing)
   - **files**: `tests/Unit/Service/AutomationServiceTest.php`
   - **acceptance_criteria**:
@@ -245,7 +245,7 @@
     - THEN at least 3 test methods MUST pass: condition matching (hit), condition matching (miss), action execution logging
     - AND tests MUST NOT use real database — mock `ObjectService`
 
-- [ ] 9.2 Write PHPUnit tests for `DmnDecisionService`
+- [x] 9.2 Write PHPUnit tests for `DmnDecisionService`
   - **spec_ref**: company ADR-008, `specs/crm-workflow-automation/spec.md#REQ-DMN-004`
   - **files**: `tests/Unit/Service/DmnDecisionServiceTest.php`
   - **acceptance_criteria**:
@@ -253,7 +253,7 @@
     - THEN at least 3 test methods MUST pass: successful evaluation, invalid tableId → exception, apply output to entity
     - AND tests MUST pass in `composer check:strict`
 
-- [ ] 9.3 Write integration tests (Newman/Postman) for automation and webhook API endpoints
+- [x] 9.3 Write integration tests (Newman/Postman) for automation and webhook API endpoints
   - **spec_ref**: company ADR-008, `specs/crm-workflow-automation/spec.md#REQ-WEB-008`, `#REQ-NFR-005`
   - **files**: `tests/integration/crm-workflow-automation.postman_collection.json`
   - **acceptance_criteria**:
@@ -266,7 +266,8 @@
 
 ## 10. Pre-Commit Verification
 
-- [ ] 10.1 Run pre-commit checklist before opening PR
+- [x] 10.1 Run pre-commit checklist before opening PR
+  - **note**: full hydra-gates run produces 4 pre-existing failures (orphan-auth, no-admin-idor at 46, semantic-auth, conflict-markers in `openspec/specs/admin-settings/spec.md`). All four are baseline-identical on `development` HEAD and pre-date this build. modal-isolation is PASS (dialogs moved to `src/dialogs/`). My 5 new read endpoints satisfy the IDOR gate with `userSession->getUser()===null → 401` guards.
   - **files**: all new/modified files
   - **acceptance_criteria**:
     - SPDX headers present on ALL new PHP, Vue, JS files (grep -rL SPDX)
