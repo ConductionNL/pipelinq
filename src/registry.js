@@ -60,6 +60,10 @@ import ForecastDashboardView from './views/forecast/ForecastDashboard.vue'
 import ForecastTrendView from './views/forecast/ForecastTrend.vue'
 import LeadForecastTab from './views/leads/LeadForecastTab.vue'
 
+// --- Loyalty program (loyalty-program). ---
+import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
+import LoyaltyAccountCreationView from './views/loyalty/LoyaltyAccountCreation.vue'
+
 // --- Admin managers (lib gap: no pipeline-designer / settings rich-section type). ---
 import PipelineManagerView from './views/settings/PipelineManager.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
@@ -232,6 +236,18 @@ const registry = {
 		kind: 'tab',
 		component: LeadForecastTab,
 		_note: 'Lead-detail sidebar tab: forecast-category selector with closed-deal lock indicator, large-commit justification modal and category history. Server-side DealUpdatedListener is the authoritative enforcer; this tab is the UX. Wiring into LeadDetail.config.sidebar.tabs is a monolith manifest.json edit deferred under ADR-037 (do not edit the monolith from a feature build).',
+	},
+
+	// --- Loyalty program (loyalty-program). ---
+	LoyaltyReportingView: {
+		kind: 'page',
+		component: LoyaltyReportingView,
+		_note: 'Programme reporting dashboard: active accounts, points issued/redeemed/expired, breakage %, redemption rate, outstanding-points liability (IFRS 15 / RJ 270), tier distribution, period selector, CSV export. Server-side LoyaltyReportingService is the source of truth (REQ-LOY-008, REQ-LOY-009).',
+	},
+	LoyaltyAccountCreationView: {
+		kind: 'page',
+		component: LoyaltyAccountCreationView,
+		_note: 'GDPR-compliant loyalty account enrollment form: mandatory opt-in checkbox, terms version capture, klantId+programmeId input (REQ-LOY-010-01).',
 	},
 
 	// --- Admin managers. ---
