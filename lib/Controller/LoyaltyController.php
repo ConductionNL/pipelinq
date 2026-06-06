@@ -35,6 +35,7 @@ use OCA\Pipelinq\Service\PointsLedgerService;
 use OCA\Pipelinq\Service\RedemptionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
@@ -210,7 +211,7 @@ class LoyaltyController extends Controller
      * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004-03
      */
     #[NoAdminRequired]
-    public function validateRedemptionCode(string $code): JSONResponse
+    public function lookupRedemptionCode(string $code): JSONResponse
     {
         $user = $this->userSession->getUser();
         if ($user === null) {
@@ -281,7 +282,7 @@ class LoyaltyController extends Controller
      * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-007
      */
     #[NoAdminRequired]
-    public function validateGiftCard(): JSONResponse
+    public function lookupGiftCard(): JSONResponse
     {
         $user = $this->userSession->getUser();
         if ($user === null) {
@@ -390,6 +391,7 @@ class LoyaltyController extends Controller
      *
      * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-001-01
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function activateProgramme(string $programmeId): JSONResponse
     {
         $user = $this->userSession->getUser();

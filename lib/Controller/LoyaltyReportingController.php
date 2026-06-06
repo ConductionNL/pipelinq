@@ -37,10 +37,9 @@ use OCP\IUserSession;
 /**
  * Loyalty reporting REST controller.
  *
- * Endpoints require an authenticated user (NC enforces admin-only by default
- * without the NoAdminRequired attribute). To surface KPIs to programme managers
- * who are not Nextcloud admins, the methods are annotated #[NoAdminRequired] +
- * gated by the userSession.
+ * Endpoints require an authenticated user. To surface KPIs to programme managers
+ * who are not Nextcloud admins, the methods bypass the admin requirement and
+ * are gated by the userSession; constructor takes no action.
  *
  * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008
  */
