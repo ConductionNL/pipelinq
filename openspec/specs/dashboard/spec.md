@@ -333,6 +333,8 @@ The dashboard screens implemented in this app MUST provide the operations enumer
 
 #### Scenario: Documented operations are available
 
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
+
 - GIVEN the frontend component/store is loaded
 - WHEN a caller invokes one of the documented operations for dashboard screens
 - THEN the operation MUST execute and return a result consistent with the current implementation
@@ -346,6 +348,8 @@ Operations for dashboard screens MUST read their inputs from the relevant CRM en
 **Feature tier**: V1
 
 #### Scenario: Results reflect live state
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN CRM data backing dashboard screens
 - WHEN a documented operation runs
@@ -362,6 +366,8 @@ Operations for dashboard screens MUST tolerate missing, empty, or malformed inpu
 
 #### Scenario: Missing input does not crash the flow
 
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
+
 - GIVEN an operation for dashboard screens is called with absent or invalid input
 - WHEN it executes
 - THEN it MUST return a safe default or a validation result
@@ -374,6 +380,8 @@ The dashboard widgets implemented in this app MUST provide the operations enumer
 **Feature tier**: V1
 
 #### Scenario: Documented operations are available
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN the frontend component/store is loaded
 - WHEN a caller invokes one of the documented operations for dashboard widgets
@@ -389,6 +397,8 @@ Operations for dashboard widgets MUST read their inputs from the relevant CRM en
 
 #### Scenario: Results reflect live state
 
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
+
 - GIVEN CRM data backing dashboard widgets
 - WHEN a documented operation runs
 - THEN its output MUST be derived from that data
@@ -403,6 +413,8 @@ Operations for dashboard widgets MUST tolerate missing, empty, or malformed inpu
 **Feature tier**: V1
 
 #### Scenario: Missing input does not crash the flow
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN an operation for dashboard widgets is called with absent or invalid input
 - WHEN it executes

@@ -4,6 +4,8 @@
 
 Replace all hardcoded `nl-NL` locale formatting calls across Vue components with a shared `localeUtils.js` utility that respects the active Nextcloud user locale. Monetary values and dates must render correctly for any locale configured in the user's Nextcloud profile.
 
+@e2e exclude pure JS utility spec: getUserLocale/formatCurrency/formatDate/formatRelativeTime behaviour in src/services/localeUtils.js and "<file>.vue uses shared helpers" / "no hardcoded nl-NL" static-source assertions — verified by Vitest unit tests and source grep, no distinct UI surface.
+
 ## Requirements
 
 ### Requirement: Locale detection [MVP]

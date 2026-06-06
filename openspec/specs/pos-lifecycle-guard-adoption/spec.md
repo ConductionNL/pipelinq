@@ -4,6 +4,8 @@
 **Capability**: pos-lifecycle-guard-adoption
 **Schema.org mapping**: `schema:Order` (posTransaction, posRefund)
 
+@e2e exclude pure backend lifecycle-guard slice: declarative x-openregister-lifecycle in the register JSON, TransitionEngine routing, LifecycleGuardInterface per-object authorization (403 IDOR), server-side total recomputation, and manager-gated refunds — no UI surface; covered by PHPUnit and Newman.
+
 **OpenSpec changes**:
 - [pos-lifecycle-guard-adoption](../../changes/archive/2026-06-01-pos-lifecycle-guard-adoption/) _(archived 2026-06-01)_ — Move the POS transaction + refund lifecycles
   onto OpenRegister's declarative `x-openregister-lifecycle` machinery, route

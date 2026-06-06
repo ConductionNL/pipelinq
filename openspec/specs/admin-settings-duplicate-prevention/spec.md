@@ -4,6 +4,8 @@
 
 Prevent administrators from creating duplicate tag values in the `TagManager` component used on the admin settings page (lead sources and request channels). Duplicate detection is case-insensitive and runs client-side before any emit. A clear error message is displayed when a duplicate is detected; no data is submitted.
 
+@e2e exclude client-side TagManager component logic (saveNew/saveRename emit guards, NcNoteCard visibility) and l10n key-presence assertions, rendered on the Nextcloud admin-settings framework page (PHP AdminSettings.php, not an in-app Vue router surface per ADR-004); covered by Vitest component unit tests.
+
 ## Requirements
 
 ### Requirement: Duplicate detection on add [MVP]
