@@ -37,6 +37,7 @@ export const useQueuesStore = defineStore('queues', {
 		},
 
 		/**
+		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-35
 		 */
 		async fetchQueue(id) {
@@ -57,6 +58,7 @@ export const useQueuesStore = defineStore('queues', {
 		},
 
 		/**
+		 * @param data
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-38
 		 */
 		async saveQueue(data) {
@@ -79,6 +81,7 @@ export const useQueuesStore = defineStore('queues', {
 		},
 
 		/**
+		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-34
 		 */
 		async deleteQueue(id) {
@@ -101,6 +104,7 @@ export const useQueuesStore = defineStore('queues', {
 		},
 
 		/**
+		 * @param queueId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-36
 		 */
 		async fetchQueueItems(queueId) {

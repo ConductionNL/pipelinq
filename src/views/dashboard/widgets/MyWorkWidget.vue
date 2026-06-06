@@ -139,6 +139,7 @@ export default {
 			}
 		},
 		/**
+		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-11
 		 */
 		openItem(item) {

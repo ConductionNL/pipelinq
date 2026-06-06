@@ -287,6 +287,7 @@ export default {
 			}
 		},
 		/**
+		 * @param stage
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-39
 		 */
 		stageClass(stage) {
@@ -296,6 +297,7 @@ export default {
 			return 'stage-future'
 		},
 		/**
+		 * @param value
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-28
 		 */
 		formatValue(value) {
@@ -303,6 +305,7 @@ export default {
 			return 'EUR ' + Number(value).toLocaleString('nl-NL')
 		},
 		/**
+		 * @param formData
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-34
 		 */
 		async onFormSave(formData) {
@@ -357,6 +360,7 @@ export default {
 			this.valueOverridden = value !== 0 && Math.abs(value - computedTotal) > 0.001
 		},
 		/**
+		 * @param newTotal
 		 * @spec openspec/changes/2026-03-20-lead-product-link/tasks.md#task-3.2
 		 */
 		async onProductValueChanged(newTotal) {
@@ -365,6 +369,7 @@ export default {
 			}
 		},
 		/**
+		 * @param value
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-40
 		 */
 		async syncLeadValue(value) {

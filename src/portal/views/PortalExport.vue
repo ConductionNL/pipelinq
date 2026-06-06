@@ -20,18 +20,26 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 		<section>
 			<h2>{{ t('pipelinq', 'Close my account') }}</h2>
 			<p>{{ t('pipelinq', 'We will email a confirmation link. Closing your account cannot be undone.') }}</p>
-			<p v-if="closeMessage" role="alert" class="portal-success">{{ closeMessage }}</p>
+			<p v-if="closeMessage" role="alert" class="portal-success">
+				{{ closeMessage }}
+			</p>
 			<button v-if="!confirming" class="portal-button-danger" @click="confirming = true">
 				{{ t('pipelinq', 'Close my account') }}
 			</button>
 			<template v-else>
 				<p>{{ t('pipelinq', 'Are you sure?') }}</p>
-				<button class="portal-button-danger" @click="requestClose">{{ t('pipelinq', 'Yes, close my account') }}</button>
-				<button class="portal-button-link" @click="confirming = false">{{ t('pipelinq', 'Cancel') }}</button>
+				<button class="portal-button-danger" @click="requestClose">
+					{{ t('pipelinq', 'Yes, close my account') }}
+				</button>
+				<button class="portal-button-link" @click="confirming = false">
+					{{ t('pipelinq', 'Cancel') }}
+				</button>
 			</template>
 		</section>
 
-		<p v-if="error" role="alert" class="portal-error">{{ error }}</p>
+		<p v-if="error" role="alert" class="portal-error">
+			{{ error }}
+		</p>
 	</div>
 </template>
 

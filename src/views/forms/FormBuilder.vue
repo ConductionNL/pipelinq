@@ -244,6 +244,7 @@ export default {
 			this.mappingFor.push(null)
 		},
 		/**
+		 * @param index
 		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-13
 		 */
 		removeField(index) {

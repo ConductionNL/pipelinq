@@ -361,6 +361,7 @@ export default {
 		},
 
 		/**
+		 * @param index
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-39
 		 */
 		removeMapping(index) {
@@ -382,6 +383,7 @@ export default {
 			})
 		},
 		/**
+		 * @param index
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-40
 		 */
 		removeStage(index) {
@@ -394,6 +396,8 @@ export default {
 			this.recomputeOrders()
 		},
 		/**
+		 * @param stage
+		 * @param direction
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-36
 		 */
 		moveStage(stage, direction) {

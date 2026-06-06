@@ -166,7 +166,7 @@ export function getMyRequests() {
  * Drop every cached dataset. Call from a "Refresh" UI action or
  * after creating a new object so the dashboard reflects the change
  * on the next widget mount/remount.
-  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-22
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-22
  */
 export function invalidateDashboardData() {
 	cache.clear()
@@ -189,7 +189,7 @@ export function refreshDashboardData() {
  *
  * @param {Array} pipelines - Pipeline records.
  * @return {Set<string>} Names of stages flagged isClosed.
-  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-15
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-15
  */
 export function getClosedStageNames(pipelines) {
 	const names = new Set()

@@ -3,10 +3,17 @@ SPDX-License-Identifier: EUPL-1.2
 SPDX-FileCopyrightText: 2026 Conduction B.V.
 -->
 <template>
-	<div v-if="visible" class="portal-session-warning" role="alert" aria-live="polite">
+	<div v-if="visible"
+		class="portal-session-warning"
+		role="alert"
+		aria-live="polite">
 		<span>{{ t('pipelinq', 'Your session expires in {seconds} seconds.', { seconds }) }}</span>
-		<button class="portal-button-link" @click="logout">{{ t('pipelinq', 'Log out') }}</button>
-		<button class="portal-button-primary" @click="extend">{{ t('pipelinq', 'Extend session') }}</button>
+		<button class="portal-button-link" @click="logout">
+			{{ t('pipelinq', 'Log out') }}
+		</button>
+		<button class="portal-button-primary" @click="extend">
+			{{ t('pipelinq', 'Extend session') }}
+		</button>
 	</div>
 </template>
 
