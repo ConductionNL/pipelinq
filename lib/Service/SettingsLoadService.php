@@ -85,6 +85,10 @@ class SettingsLoadService
         'exportJob',
         'exportRun',
         'exportSchemaSnapshot',
+        // CTI screen-pop / click-to-dial adapter schemas (cti-screenpop-adapter).
+        'ctiAdapterConfig',
+        'ctiEventLog',
+        'ctiAgentPresence',
     ];
 
     /**
