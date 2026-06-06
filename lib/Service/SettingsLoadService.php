@@ -85,6 +85,16 @@ class SettingsLoadService
         'exportJob',
         'exportRun',
         'exportSchemaSnapshot',
+        // Loyalty programme schemas (loyalty-program).
+        'loyaltyProgramme',
+        'pointsRule',
+        'tierRule',
+        'klantLoyaltyAccount',
+        'pointsLedgerEntry',
+        'redemptionOption',
+        'redemption',
+        'giftCard',
+        'giftCardTransaction',
     ];
 
     /**
