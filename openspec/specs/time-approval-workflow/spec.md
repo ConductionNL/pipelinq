@@ -18,6 +18,8 @@ tables, and surfaces a deep-link to shillinq's billing/approval surface.
 
 **OpenSpec changes**: [time-approval-workflow](../../changes/archive/2026-05-31-time-approval-workflow/) _(archived 2026-05-31)_
 
+@e2e exclude delegation/architecture spec: the timesheet approve→lock→invoice lifecycle is owned by shillinq, NOT built in Pipelinq. Scenarios assert the absence of an approval subsystem, shillinq as lifecycle owner, OR-link/WIP sync, and a manifest deep-link (not an in-app approval view) — verified by source grep + manifest assertions; no Pipelinq-owned UI surface.
+
 ## ADDED Requirements
 
 ### Requirement: Approval and invoicing are owned by shillinq, not Pipelinq

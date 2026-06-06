@@ -30,6 +30,7 @@ The system MUST allow a cashier to open a new POS transaction in `draft` status.
 - AND the cashier MUST be navigated to the transaction form to add line items
 
 #### Scenario: Terminal identifier pre-fill
+@e2e exclude server-side pre-fill from app settings on draft creation; covered by PHPUnit
 
 - GIVEN a `terminalId` is configured in app settings
 - WHEN a new draft transaction is created
@@ -43,6 +44,7 @@ The system MUST allow a cashier to open a new POS transaction in `draft` status.
 The system MUST allow adding, editing, and removing line items on a draft or parked transaction.
 
 #### Scenario: Add a line item from the product catalog
+@e2e exclude cart editing on a data-dependent draft form (requires seeded product); line compute is server-authoritative — covered by PHPUnit/Newman
 
 - GIVEN a draft transaction is open in the form
 - WHEN the cashier selects a product from the product picker
@@ -52,6 +54,7 @@ The system MUST allow adding, editing, and removing line items on a draft or par
 - AND `taxAmount` and `lineTotal` MUST be computed immediately
 
 #### Scenario: Add a free-text line item (no catalog product)
+@e2e exclude cart editing on a data-dependent draft form; covered by PHPUnit/Newman
 
 - GIVEN the product picker is empty / cleared
 - WHEN the cashier types a free-text description and enters quantity and unit price
@@ -59,6 +62,7 @@ The system MUST allow adding, editing, and removing line items on a draft or par
 - AND `product` reference MUST remain null
 
 #### Scenario: Edit quantity on an existing line item
+@e2e exclude server-authoritative line recompute on a seeded line; covered by PHPUnit
 
 - GIVEN a line item with quantity 1 and unitPrice 4.25 and taxRate 9
 - WHEN the cashier changes quantity to 3
@@ -67,6 +71,7 @@ The system MUST allow adding, editing, and removing line items on a draft or par
 - AND the totals panel MUST reflect the updated grand total
 
 #### Scenario: Apply a line-level discount
+@e2e exclude server-authoritative discount/tax recompute; covered by PHPUnit
 
 - GIVEN a line item with unitPrice 54.98, quantity 1, taxRate 21
 - WHEN the cashier sets discount to 10
@@ -74,6 +79,7 @@ The system MUST allow adding, editing, and removing line items on a draft or par
 - AND `lineTotal` MUST be `(54.98 × 0.90) + 10.39 = 59.82`
 
 #### Scenario: Remove a line item
+@e2e exclude cart mutation + total recompute on a seeded draft; covered by PHPUnit/Newman
 
 - GIVEN a draft transaction with 2 line items
 - WHEN the cashier removes one line item
@@ -87,6 +93,7 @@ The system MUST allow adding, editing, and removing line items on a draft or par
 The totals panel MUST update in real time as line items are added, edited, or removed.
 
 #### Scenario: Subtotal reflects all lines
+@e2e exclude server-authoritative totals computation; covered by PHPUnit
 
 - GIVEN a transaction with 3 lines having lineTotals 6.43, 13.90, and 46.94
 - WHEN the totals panel is displayed
@@ -94,6 +101,7 @@ The totals panel MUST update in real time as line items are added, edited, or re
 - AND `total` MUST equal `subtotal + totalTax`
 
 #### Scenario: Tax breakdown groups by rate
+@e2e exclude server-authoritative tax grouping; covered by PHPUnit
 
 - GIVEN a transaction with lines at 9% BTW (base 22.00) and 21% BTW (base 45.00)
 - WHEN the totals panel is displayed
@@ -102,6 +110,7 @@ The totals panel MUST update in real time as line items are added, edited, or re
 - AND `totalTax` MUST equal 11.43
 
 #### Scenario: Zero total on empty cart
+@e2e exclude totals-panel computation for the zero case; covered by PHPUnit (UI empty list is asserted by the list-shell test)
 
 - GIVEN a draft transaction with no lines
 - WHEN the totals panel is displayed
@@ -115,6 +124,7 @@ The system MUST support confirming a draft or parked transaction, which locks to
 emits a CloudEvent.
 
 #### Scenario: Confirm a valid transaction
+@e2e exclude confirmTransaction lifecycle + total persistence + CloudEvent emission on a seeded draft; covered by PHPUnit/Newman
 
 - GIVEN a draft transaction with at least one line item
 - WHEN the cashier clicks "Bevestigen" and confirms
@@ -125,6 +135,7 @@ emits a CloudEvent.
 - AND a `pipelinq.PosTransaction.confirmed` CloudEvent MUST be emitted
 
 #### Scenario: Confirmation blocked on empty cart
+@e2e exclude confirm-guard on a data-dependent draft form; covered by PHPUnit
 
 - GIVEN a draft transaction with no line items
 - WHEN the cashier attempts to click "Bevestigen"
@@ -132,6 +143,7 @@ emits a CloudEvent.
 - AND an error message "Voeg minimaal één artikel toe" MUST be shown
 
 #### Scenario: Confirmed transaction is read-only
+@e2e exclude read-only rendering of a seeded confirmed transaction detail (no stable fixture); covered by PHPUnit
 
 - GIVEN a transaction with `status: confirmed`
 - WHEN the cashier views the transaction detail
@@ -145,6 +157,7 @@ emits a CloudEvent.
 The system MUST allow settling a confirmed transaction to mark payment received.
 
 #### Scenario: Settle a confirmed transaction
+@e2e exclude settle lifecycle transition on a seeded confirmed transaction; covered by PHPUnit/Newman
 
 - GIVEN a transaction with `status: confirmed`
 - WHEN the cashier clicks "Afrekenen" and confirms
@@ -153,6 +166,7 @@ The system MUST allow settling a confirmed transaction to mark payment received.
 - AND no CloudEvent is emitted on settle (already emitted on confirm)
 
 #### Scenario: Settlement blocked on wrong status
+@e2e exclude server-side 422 guard; covered by Newman/PHPUnit
 
 - GIVEN a transaction with `status: draft`
 - WHEN the API receives a settle request
@@ -167,6 +181,7 @@ The system MUST support refunding a confirmed or settled transaction. Refund req
 manager-level permission.
 
 #### Scenario: Manager refunds a settled transaction
+@e2e exclude manager-gated refund lifecycle on a seeded settled transaction; covered by PHPUnit/Newman
 
 - GIVEN a transaction with `status: settled` and the current user has manager role
 - WHEN the user clicks "Terugboeken", enters reason "klant ontevreden", and confirms
@@ -175,6 +190,7 @@ manager-level permission.
 - AND `refundReason` MUST be stored as "klant ontevreden"
 
 #### Scenario: Non-manager cannot refund
+@e2e exclude RBAC visibility + 403 guard; covered by PHPUnit/Newman
 
 - GIVEN a transaction with `status: settled` and the current user does NOT have manager role
 - WHEN the transaction detail is displayed
@@ -182,6 +198,7 @@ manager-level permission.
 - AND if called via API directly, a 403 Forbidden MUST be returned
 
 #### Scenario: Refund reason is required
+@e2e exclude refund-dialog validation on a seeded settled transaction; covered by PHPUnit
 
 - GIVEN the refund dialog is open
 - WHEN the user submits without entering a reason
@@ -195,6 +212,7 @@ manager-level permission.
 The system MUST allow parking a draft transaction to be resumed later.
 
 #### Scenario: Park a draft transaction
+@e2e exclude park lifecycle transition on a seeded draft; covered by PHPUnit/Newman
 
 - GIVEN a draft transaction with one or more line items
 - WHEN the cashier clicks "Parkeren"
@@ -203,6 +221,7 @@ The system MUST allow parking a draft transaction to be resumed later.
 - AND the cashier MUST be redirected to create a new draft transaction
 
 #### Scenario: Parked transaction appears in the list
+@e2e exclude requires a seeded parked transaction row (data-dependent); covered by PHPUnit/Newman
 
 - GIVEN a parked transaction "TXN-2026-0004"
 - WHEN the cashier views the transaction list filtered by status "parked"
@@ -210,6 +229,7 @@ The system MUST allow parking a draft transaction to be resumed later.
 - AND a "Hervatten" action MUST be available on the row
 
 #### Scenario: Resume a parked transaction
+@e2e exclude resume lifecycle transition on a seeded parked transaction; covered by PHPUnit/Newman
 
 - GIVEN a parked transaction
 - WHEN the cashier clicks "Hervatten"
@@ -256,6 +276,7 @@ The system MUST provide a searchable, filterable list of all POS transactions.
 The system MUST provide a full detail view of a transaction including line items and tax breakdown.
 
 #### Scenario: View transaction core information
+@e2e exclude detail view of a seeded settled transaction (no stable fixture); covered by PHPUnit
 
 - GIVEN a settled transaction with reference "TXN-2026-0001", total 21.53, 9% BTW
 - WHEN the cashier navigates to the detail view
@@ -263,6 +284,7 @@ The system MUST provide a full detail view of a transaction including line items
 - AND total MUST be formatted as "€ 21,53"
 
 #### Scenario: Line items table on detail view
+@e2e exclude detail view requires a seeded transaction with lines; covered by PHPUnit
 
 - GIVEN a transaction with 3 line items
 - WHEN the cashier views the detail
@@ -270,6 +292,7 @@ The system MUST provide a full detail view of a transaction including line items
 - AND line totals MUST be formatted as EUR with 2 decimal places
 
 #### Scenario: Tax breakdown on detail view
+@e2e exclude detail view requires a seeded transaction with a tax breakdown; covered by PHPUnit
 
 - GIVEN a transaction with taxBreakdown containing 9% and 21% rows
 - WHEN the detail view is rendered
@@ -284,6 +307,7 @@ The system MUST emit a `pipelinq.PosTransaction.confirmed` CloudEvent when a tra
 is confirmed, enabling Shillinq to draft a journal entry.
 
 #### Scenario: CloudEvent is emitted on confirm
+@e2e exclude server-side WebhookService CloudEvent emission; covered by PHPUnit/Newman
 
 - GIVEN a draft transaction with reference "TXN-2026-0001" and total 21.53
 - WHEN `PosTransactionService::confirmTransaction()` is called
@@ -298,6 +322,7 @@ is confirmed, enabling Shillinq to draft a journal entry.
 - AND `cloudEventId` MUST be stored on the posTransaction object
 
 #### Scenario: CloudEvent not emitted on settle or refund
+@e2e exclude server-side event-suppression assertion; covered by PHPUnit
 
 - GIVEN a confirmed transaction
 - WHEN the transaction is settled or refunded

@@ -591,6 +591,8 @@ The lead editing and lead-product linking screens implemented in this app MUST p
 
 #### Scenario: Documented operations are available
 
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
+
 - GIVEN the frontend component/store is loaded
 - WHEN a caller invokes one of the documented operations for lead editing and lead-product linking screens
 - THEN the operation MUST execute and return a result consistent with the current implementation
@@ -604,6 +606,8 @@ Operations for lead editing and lead-product linking screens MUST read their inp
 **Feature tier**: V1
 
 #### Scenario: Results reflect live state
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN CRM data backing lead editing and lead-product linking screens
 - WHEN a documented operation runs
@@ -619,6 +623,8 @@ Operations for lead editing and lead-product linking screens MUST tolerate missi
 **Feature tier**: V1
 
 #### Scenario: Missing input does not crash the flow
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN an operation for lead editing and lead-product linking screens is called with absent or invalid input
 - WHEN it executes

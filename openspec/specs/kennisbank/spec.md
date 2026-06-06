@@ -139,6 +139,7 @@ The system MUST provide fast, full-text search across all published articles to 
 **Feature tier**: V1
 
 #### Scenario: Full-text search
+@e2e exclude kennisbank views (src/views/kennisbank) are not registered in the manifest navigation/pages — draft surface unreachable in the current app shell; OR full-text `_search` covered by Newman
 
 - GIVEN 200 published articles in the kennisbank
 - WHEN an agent searches for "paspoort verlengen"
@@ -190,6 +191,7 @@ The system MUST support hierarchical categories for organizing articles and enab
 **Feature tier**: V1
 
 #### Scenario: Browse articles by category
+@e2e exclude kennisbank views are not wired into the manifest navigation/pages — draft surface unreachable in the current app shell
 
 - GIVEN categories: "Burgerzaken" (with subcategories "Paspoort", "Rijbewijs", "Uittreksel"), "Belastingen", "Vergunningen"
 - WHEN an agent browses the category "Burgerzaken > Paspoort"
@@ -408,6 +410,7 @@ The system MUST provide a dedicated navigation section for the kennisbank within
 **Feature tier**: V1
 
 #### Scenario: Kennisbank as navigation item
+@e2e exclude no "Kennisbank" entry exists in src/manifest.json menu/pages — the navigation item is not yet wired in (draft); cannot be driven via the app shell
 
 - GIVEN a KCC agent opens Pipelinq
 - WHEN the agent clicks "Kennisbank" in the left navigation sidebar
@@ -415,6 +418,7 @@ The system MUST provide a dedicated navigation section for the kennisbank within
 - AND the route MUST be `/apps/pipelinq/kennisbank`
 
 #### Scenario: Article detail view
+@e2e exclude kennisbank ArticleDetail view is not wired into the manifest navigation/pages — draft surface unreachable in the current app shell
 
 - GIVEN the agent clicks on article "Hoe vraag ik een paspoort aan?"
 - WHEN the article detail page loads
@@ -423,6 +427,7 @@ The system MUST provide a dedicated navigation section for the kennisbank within
 - AND the page MUST include a "Terug naar zoekresultaten" link if the agent came from a search
 
 #### Scenario: Keyboard navigation for accessibility
+@e2e exclude kennisbank views are not wired into the manifest navigation/pages — draft surface unreachable in the current app shell
 
 - GIVEN an agent is using the kennisbank with keyboard only
 - WHEN the agent navigates via Tab key

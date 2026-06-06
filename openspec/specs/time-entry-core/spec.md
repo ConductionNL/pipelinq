@@ -25,6 +25,8 @@ are handed to shillinq via `time-approval-workflow`.
 
 **OpenSpec changes**: [time-entry-core](../../changes/archive/2026-05-31-time-entry-core/) _(archived 2026-05-31)_
 
+@e2e exclude consumed-integration + manifest-config spec: Pipelinq builds no time subsystem — capture is delegated to the OpenRegister time-tracker leaf (CnTimeTrackerTab/Card, gated on NC timemanager). The scenarios assert src/manifest.json config (timemanager dependency, time-tracker sidebar tab / dashboard widget) and the absence of bespoke time/billing logic — verified by manifest assertions and source grep; the leaf's UI is owned and tested by the OpenRegister integration, and its rendering is gated on the timemanager app being installed (no stable fixture here).
+
 ## Requirements
 
 ### Requirement: Pipelinq consumes the time-tracker leaf for hour capture

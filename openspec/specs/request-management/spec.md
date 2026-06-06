@@ -420,6 +420,8 @@ The service request list and detail screens implemented in this app MUST provide
 
 #### Scenario: Documented operations are available
 
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
+
 - GIVEN the frontend component/store is loaded
 - WHEN a caller invokes one of the documented operations for service request list and detail screens
 - THEN the operation MUST execute and return a result consistent with the current implementation
@@ -433,6 +435,8 @@ Operations for service request list and detail screens MUST read their inputs fr
 **Feature tier**: V1
 
 #### Scenario: Results reflect live state
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN CRM data backing service request list and detail screens
 - WHEN a documented operation runs
@@ -448,6 +452,8 @@ Operations for service request list and detail screens MUST tolerate missing, em
 **Feature tier**: V1
 
 #### Scenario: Missing input does not crash the flow
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN an operation for service request list and detail screens is called with absent or invalid input
 - WHEN it executes
