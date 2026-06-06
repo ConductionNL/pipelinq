@@ -15,6 +15,8 @@
 
 These additions make the product catalog usable as a POS-grade product master for Shillinq and retail/salon POS integrations, while preserving backward compatibility with the existing flat CRM product fields (CRM deal-lines continue to work unchanged).
 
+@e2e exclude server-authoritative catalog logic + data-dependent editor sub-panels: ProductCatalogService/Controller compute (BTW class→taxRate, effective price for qty/variant/tier, SKU-uniqueness validation, scoped barcode lookup) is covered by PHPUnit and Newman; the variant matrix / modifier-group / price-tier editors (ProductVariantPanel, ModifierGroupPanel, PriceTierTable, ProductVariantDialog) and BTW-class selector are sub-panels of the product detail/edit view that only render with a seeded product open for editing (no stable fixture); POS-checkout tier/modifier enforcement is exercised by the pos-transaction flow against seeded catalog data. Verified by Vitest component tests + PHPUnit/Newman, not Playwright.
+
 ---
 
 ## Requirements
