@@ -35,6 +35,36 @@ export async function openApp(page: Page): Promise<void> {
 }
 
 /**
+ * Open a Pipelinq detail view by deep-linking to its manifest route.
+ *
+ * Detail routes (`/clients/:id`, `/leads/:id`, …) are registered in the
+ * vue-router built from the manifest, and Nextcloud serves the app shell
+ * for any sub-path, so the router boots straight onto the detail page.
+ * The OpenRegister object endpoint may 500 / return nothing for an
+ * unseeded id — that is expected. The detail component (CnDetailPage)
+ * still renders its shell (header + "Back to list" button + a fallback
+ * title), so the assertion targets the rendered chrome, NOT data rows.
+ *
+ * @param page   the Playwright page
+ * @param route  the detail route slug, e.g. `leads`, `clients`
+ * @param id     the object id segment (any value — shell renders regardless)
+ */
+export async function openDetail(
+	page: Page,
+	route: string,
+	id = '1',
+): Promise<void> {
+	await page.goto(`${APP_ROOT}${route}/${id}`, {
+		waitUntil: 'domcontentloaded',
+		timeout: 60000,
+	})
+	// The CnDetailPage shell renders for every load/error/empty state.
+	await expect(
+		page.locator('[data-testid="cn-detail-page"]'),
+	).toBeVisible({ timeout: 30000 })
+}
+
+/**
  * Open a Pipelinq sub-view by reloading the shell and clicking its
  * left-nav link, then assert the view's level-2 heading is visible.
  *
