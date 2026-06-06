@@ -145,7 +145,7 @@ The complaint list MUST support search, filtering by status/category/priority, s
 
 ---
 
-### Requirement: Complaint Detail View @e2e exclude Detail fields, SLA indicators, status transitions and resolution exercise computed logic and the object/transition API, covered by unit and API tests
+### Requirement: Complaint Detail View
 
 The complaint detail view MUST show all complaint information, linked entities, status timeline, and resolution fields.
 
@@ -159,6 +159,7 @@ The complaint detail view MUST show all complaint information, linked entities, 
 - AND the assigned agent MUST be shown
 
 #### Scenario: SLA deadline visual indicator
+@e2e exclude SLA approaching/overdue/met colour states derive from a seeded deadline + computed SLA logic; verified by PHPUnit/Newman.
 
 - GIVEN a complaint with SLA deadline in 2 hours
 - WHEN the agent views the detail
@@ -167,6 +168,7 @@ The complaint detail view MUST show all complaint information, linked entities, 
 - AND if resolved before deadline, it MUST show as "met" (green)
 
 #### Scenario: Status transition buttons
+@e2e exclude Valid-transition button set depends on a seeded complaint's current status; the state-machine rules are verified by PHPUnit/Newman.
 
 - GIVEN a complaint with status "new"
 - WHEN the agent views the detail
@@ -178,6 +180,7 @@ The complaint detail view MUST show all complaint information, linked entities, 
 - AND from "resolved"/"rejected": no further transitions
 
 #### Scenario: Resolution requires explanation
+@e2e exclude Resolution dialog + resolvedAt persistence requires a seeded in-progress complaint and a write to OpenRegister; verified by PHPUnit/Newman.
 
 - GIVEN a complaint in status "in_progress"
 - WHEN the agent clicks "Afhandelen"

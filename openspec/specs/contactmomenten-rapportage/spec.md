@@ -74,8 +74,6 @@ The system MUST provide a real-time dashboard showing key performance indicators
 
 #### Scenario: Dashboard empty state
 
-@e2e exclude Empty-state messaging and zero-value placeholders are component-level rendering, not exercised by the populated-dashboard render test
-
 - GIVEN no contactmomenten have been registered today
 - WHEN a KCC manager opens the rapportage dashboard
 - THEN the system MUST display all KPI widgets with value "0" or "N/A"
@@ -84,7 +82,7 @@ The system MUST provide a real-time dashboard showing key performance indicators
 
 ---
 
-### Requirement: Channel Analytics @e2e exclude Channel distribution/comparison/shift analytics are driven by the aggregation API and validated there, not via the dashboard render test
+### Requirement: Channel Analytics
 
 The system MUST provide detailed analytics per contact channel, enabling managers to understand channel distribution and trends.
 
@@ -108,6 +106,7 @@ The system MUST provide detailed analytics per contact channel, enabling manager
 - AND each metric cell MUST show a comparison indicator versus the previous month (arrow up/down with percentage)
 
 #### Scenario: Channel shift analysis
+@e2e exclude 12-month statistical-significance shift computation (>5% change detection) is a backend aggregation, verified by Newman/PHPUnit; no dedicated rendered surface beyond the comparison table.
 
 - GIVEN contactmomenten data spanning 12 months
 - WHEN the manager views the channel shift analysis
@@ -149,7 +148,7 @@ The system MUST track and report on wait times (wachttijden) for incoming contac
 
 ---
 
-### Requirement: Agent Performance @e2e exclude Individual and team agent statistics are sourced and computed via the API, not asserted by the Agent Performance tab render in the dashboard test
+### Requirement: Agent Performance
 
 The system MUST provide per-agent statistics to support team management and coaching.
 
@@ -172,6 +171,7 @@ The system MUST provide per-agent statistics to support team management and coac
 - AND the overview MUST highlight agents significantly above or below team averages (>1 standard deviation)
 
 #### Scenario: Agent workload distribution
+@e2e exclude Workload bar-chart + burnout-risk flagging (>20% above-average detection) is an ApexCharts/aggregation surface verified at the data layer; no seeded multi-agent fixture in the headless run.
 
 - GIVEN a KCC team of 10 agents with varying contact loads
 - WHEN the manager views the workload distribution
@@ -180,6 +180,7 @@ The system MUST provide per-agent statistics to support team management and coac
 - AND agents with >20% above average workload MUST be flagged for potential burnout risk
 
 #### Scenario: Agent performance over time
+@e2e exclude 30-day per-agent trend line chart (improving/declining detection) is a time-series aggregation verified at the data layer; no seeded history in the headless run.
 
 - GIVEN agent "Medewerker A" has been active for the past 30 days
 - WHEN the KCC manager views the agent's performance trend

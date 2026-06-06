@@ -272,7 +272,7 @@ The system MUST provide a list view of all clients with search, sort, filter, an
 
 ---
 
-### Requirement: Client Detail View @e2e exclude detail-view aggregation (summary stats, linked leads/requests/contacts, activity timeline) verified within the detail panel via unit tests; requires seeded relational fixtures unavailable to the smoke suite
+### Requirement: Client Detail View
 
 The system MUST provide a detail view for each client showing all properties, summary statistics, linked entities (contact persons, leads, requests), and an activity timeline.
 
@@ -286,6 +286,7 @@ The system MUST provide a detail view for each client showing all properties, su
 - AND the type MUST be displayed as "Organization"
 
 #### Scenario: View person client detail
+@e2e exclude Person-vs-organization field treatment (taxID hidden) depends on a seeded person client's data; field logic verified by component/unit tests.
 
 - GIVEN a person client "Jan de Vries" with email "jan@devries.nl"
 - WHEN the user navigates to the client detail view
@@ -294,6 +295,7 @@ The system MUST provide a detail view for each client showing all properties, su
 - AND the taxID field SHOULD NOT be prominently displayed for person clients
 
 #### Scenario: Display summary statistics
+@e2e exclude Summary-panel rollups (open/won lead counts + values, totals) require seeded relational fixtures; aggregation verified by Newman/PHPUnit.
 
 - GIVEN a client "Acme Corporation" with 2 open leads (total value EUR 25,000), 3 won leads (total value EUR 42,000), and 1 open request
 - WHEN the user views the client detail
@@ -306,6 +308,7 @@ The system MUST provide a detail view for each client showing all properties, su
   - Client since date (creation date)
 
 #### Scenario: Display linked contact persons
+@e2e exclude Linked contact-persons list requires a seeded client↔contact relation; the rollup is verified by Newman/PHPUnit.
 
 - GIVEN a client "Acme Corporation" with contact persons "Petra Jansen (Sales Manager)" and "Mark de Groot (CTO)"
 - WHEN the user views the client detail
@@ -314,6 +317,7 @@ The system MUST provide a detail view for each client showing all properties, su
 - AND a button to add a new contact person MUST be visible
 
 #### Scenario: Display linked leads
+@e2e exclude Linked-leads list + click-through requires a seeded client↔lead relation; the rollup is verified by Newman/PHPUnit.
 
 - GIVEN a client "Acme Corporation" with leads "Acme Corp deal (Qualified, EUR 5,000)" and "Acme expansion (New, EUR 20,000)"
 - WHEN the user views the client detail
@@ -322,6 +326,7 @@ The system MUST provide a detail view for each client showing all properties, su
 - AND clicking a lead MUST navigate to the lead detail view
 
 #### Scenario: Display linked requests
+@e2e exclude Linked-requests list + click-through requires a seeded client↔request relation; the rollup is verified by Newman/PHPUnit.
 
 - GIVEN a client "Acme Corporation" with request "IT Support #42 (In Progress)"
 - WHEN the user views the client detail
@@ -330,6 +335,7 @@ The system MUST provide a detail view for each client showing all properties, su
 - AND clicking a request MUST navigate to the request detail view
 
 #### Scenario: Activity timeline
+@e2e exclude Multi-entity activity timeline requires a seeded client with cross-entity history; aggregation + ordering verified by Newman/PHPUnit.
 
 - GIVEN a client "Acme Corporation" with the following history:
   - Jan 15: Client created

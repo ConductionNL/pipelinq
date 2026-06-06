@@ -181,7 +181,7 @@ The system MUST provide a full list view with search, sort, filter, and paginati
 
 ---
 
-### Requirement: Request Detail View [MVP] @e2e exclude detail-view rendering covered in detail panel via component tests
+### Requirement: Request Detail View [MVP]
 
 The system MUST provide a detail view with proper layout including core info, client link, pipeline position, assignment, and activity timeline. The current basic form MUST be replaced with a structured detail layout.
 
@@ -190,17 +190,20 @@ The system MUST provide a detail view with proper layout including core info, cl
 - **THEN** the system MUST display: title, description, status (badge), priority (badge), channel, category, requestedAt, and assignee
 
 #### Scenario: View request with linked client
+@e2e exclude Linked-client clickable link + contact info requires a seeded request↔client relation; resolution verified by Newman/API tests.
 - **WHEN** user views a request linked to client "Gemeente Utrecht"
 - **THEN** the system MUST display the client name as a clickable link to the client detail view
 - **THEN** the system MUST display available client contact information
 
 #### Scenario: View request pipeline position
+@e2e exclude Pipeline stage-progression indicator + "Move to next stage" requires a seeded request placed on a pipeline; verified by Newman/PHPUnit.
 - **WHEN** user views a request on the "Service Pipeline" at stage "In Progress"
 - **THEN** the system MUST display the pipeline name and current stage
 - **THEN** the system MUST display a visual stage progression indicator
 - **THEN** the system MUST provide a "Move to next stage" action
 
 #### Scenario: Navigate from detail to related entities
+@e2e exclude Cross-entity navigation depends on a seeded request↔client link to render the clickable target; verified by Newman/PHPUnit.
 - **WHEN** user clicks the client name on the request detail view
 - **THEN** the system MUST navigate to the client detail view
 - **THEN** there MUST be a way to navigate back to the request detail
@@ -638,7 +641,7 @@ The system MUST provide a full list view with search, sort, filter, and paginati
 
 ---
 
-### Requirement: Request Detail View [MVP] @e2e exclude detail-view rendering covered in detail panel via component tests
+### Requirement: Request Detail View [MVP]
 
 The system MUST provide a detail view with proper layout including core info, client link, pipeline position, assignment, and activity timeline. The current basic form MUST be replaced with a structured detail layout.
 
@@ -647,17 +650,20 @@ The system MUST provide a detail view with proper layout including core info, cl
 - **THEN** the system MUST display: title, description, status (badge), priority (badge), channel, category, requestedAt, and assignee
 
 #### Scenario: View request with linked client
+@e2e exclude Linked-client clickable link + contact info requires a seeded request↔client relation; resolution verified by Newman/API tests.
 - **WHEN** user views a request linked to client "Gemeente Utrecht"
 - **THEN** the system MUST display the client name as a clickable link to the client detail view
 - **THEN** the system MUST display available client contact information
 
 #### Scenario: View request pipeline position
+@e2e exclude Pipeline stage-progression indicator + "Move to next stage" requires a seeded request placed on a pipeline; verified by Newman/PHPUnit.
 - **WHEN** user views a request on the "Service Pipeline" at stage "In Progress"
 - **THEN** the system MUST display the pipeline name and current stage
 - **THEN** the system MUST display a visual stage progression indicator
 - **THEN** the system MUST provide a "Move to next stage" action
 
 #### Scenario: Navigate from detail to related entities
+@e2e exclude Cross-entity navigation depends on a seeded request↔client link to render the clickable target; verified by Newman/PHPUnit.
 - **WHEN** user clicks the client name on the request detail view
 - **THEN** the system MUST navigate to the client detail view
 - **THEN** there MUST be a way to navigate back to the request detail

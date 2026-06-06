@@ -150,7 +150,7 @@ The system MUST provide a list view at `/contactmomenten` showing all contactmom
 
 ---
 
-### Requirement: Contactmoment Detail View @e2e exclude Detail rendering and edit-mode flow not covered by the current passing UI tests
+### Requirement: Contactmoment Detail View
 
 The system MUST provide a detail view for individual contactmomenten showing all fields and linked entities.
 
@@ -165,6 +165,7 @@ The system MUST provide a detail view for individual contactmomenten showing all
 - AND if a request is linked, the request title MUST be shown as a clickable link to the request detail view
 
 #### Scenario: Edit contactmoment from detail view
+@e2e exclude Edit-mode toggle + field-level save requires a seeded contactmoment loaded into the detail panel; persistence verified by Newman/PHPUnit.
 
 - **WHEN** a user clicks "Edit" on the contactmoment detail view
 - **THEN** the view MUST switch to edit mode with all fields editable

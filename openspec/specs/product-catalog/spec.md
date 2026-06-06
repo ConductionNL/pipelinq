@@ -143,7 +143,7 @@ The system MUST provide a list view for browsing and managing products, followin
 
 ---
 
-### Requirement: Product Detail View @e2e exclude detail rendering + margin display verified via API + unit tests
+### Requirement: Product Detail View
 
 The system MUST provide a detail view for viewing and editing a single product, following the same patterns as existing entity detail views.
 
@@ -155,6 +155,7 @@ The system MUST provide a detail view for viewing and editing a single product, 
 - AND the system MUST display margin calculation (unitPrice - cost) if cost is set
 
 #### Scenario: Product detail with linked leads
+@e2e exclude "Linked Leads" section requires a seeded product↔lead LeadProduct relation; the rollup is verified by Newman/PHPUnit.
 - GIVEN a product that is linked to leads via LeadProduct line items
 - WHEN the user views the product detail
 - THEN the system MUST show a "Linked Leads" section listing all leads that include this product
