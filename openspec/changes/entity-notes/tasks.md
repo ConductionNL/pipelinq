@@ -2,10 +2,18 @@
 
 ## 0. Deduplication Check
 
-- [ ] 0.1 Search `openspec/specs/` and `lib/Service/` for any existing activity query, notes API, or communication history implementation.
+- [x] 0.1 Search `openspec/specs/` and `lib/Service/` for any existing activity query, notes API, or communication history implementation.
   Check: `ObjectService`, `CnObjectSidebar`, `CnNotesCard`, `relationsPlugin`, existing `NotesController` or `ActivityController`.
   Document findings below before writing any new code.
   **Expected finding:** `omnichannel-registratie` creates contactmomenten; no existing activity aggregation API or entity-level communication history panel exists. `CnObjectSidebar` notes tab is a platform capability not yet wired to entity detail views.
+
+  **Actual findings (2026-06-07):**
+  - `lib/Service/ActivityService.php` already exists but publishes to the Nextcloud `IManager` Activity Stream (lead/request created/assigned/note-added/deal-won events). Different surface and purpose than this spec's REST aggregation. To avoid a name collision the new service in this change is implemented as `EntityActivityService` (and the controller as `EntityActivityController`); URL path and behaviour remain exactly as specified.
+  - `lib/Service/ActivityTimelineService.php` + `lib/Controller/ActivityTimelineController.php` already exist and expose `/api/timeline` and `/api/worklog`, aggregating contactmomenten + tasks + emailLinks + calendarLinks. This change adds a narrower, single-purpose contactmoment-only REST endpoint matching the v1 wire-format in this spec (`/api/activity/{entityType}/{entityId}` with `total/page/pages/results`).
+  - `lib/Controller/NotesController.php` + `lib/Service/NotesService.php` already implement `/api/notes/{objectType}/{objectId}` CRUD over the OpenRegister `notes` field. `CnObjectSidebar` already renders the Notes tab in all four entity detail views via `sidebarProps()` (verified in `ClientDetail.vue`, `ContactDetail.vue`, `LeadDetail.vue`, `RequestDetail.vue` — each passes `register`, `schema`, `title`). Task 7.1 is therefore a verification (no code change).
+  - `src/components/EntityNotes.vue` and `src/components/ActivityTimeline.vue` already exist; `ActivityTimeline` is multi-source and filter-driven. The new `CommunicationHistory.vue` is a focused, paginated, contactmoment-only panel backed by the new REST endpoint (per spec).
+  - OR object API in pipelinq uses `ObjectService::findAll(['filters' => [...], 'limit' => ...])` everywhere (see `QueueService`, `ActivityTimelineService`, `ProspectDiscoveryService`). The `findObjects($register, $schema, $params)` signature mentioned in the task is not part of the real OR API (cf. [[or-objectservice-api]]). Implementation uses `findAll()` with a filters array; method name in `EntityActivityService` is kept as `getActivity()` and the spec contract is preserved.
+  - Five `contactmoment-rapportage-seed-*` objects already exist in `lib/Settings/pipelinq_register.json` but no seed client/contact/lead/request objects do. The five new objects use the `contactmoment-001 ... contactmoment-005` slugs from the spec. A single seed client (`client-entity-notes-demo`) is added alongside so the communication-history panel can be exercised against a real entity on first install (smoke test 10.1).
 
 ## 1. Seed Data
 
