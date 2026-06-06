@@ -17,30 +17,38 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-47
+ * @spec openspec/changes/crm-workflow-automation/tasks.md#task-4.1
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use Psr\Log\LoggerInterface;
+
 /**
  * Service for handling object event business logic.
  *
  * @spec openspec/changes/migrate-automation-to-flow-leaf/tasks.md#task-1.1
+ * @spec openspec/changes/crm-workflow-automation/tasks.md#task-4.1
  */
 class ObjectEventHandlerService
 {
     /**
      * Constructor.
      *
-     * @param SchemaMapService        $schemaMapService The schema map service.
-     * @param ObjectEventDispatcher   $dispatcher       The event dispatcher.
-     * @param ObjectUpdateDiffService $diffService      The update diff service.
+     * @param SchemaMapService        $schemaMapService   The schema map service.
+     * @param ObjectEventDispatcher   $dispatcher         The event dispatcher.
+     * @param ObjectUpdateDiffService $diffService        The update diff service.
+     * @param ?AutomationService      $automationService  Optional automation engine (crm-workflow-automation).
+     * @param ?LoggerInterface        $logger             Optional logger for automation dispatch warnings.
      */
     public function __construct(
         private SchemaMapService $schemaMapService,
         private ObjectEventDispatcher $dispatcher,
         private ObjectUpdateDiffService $diffService,
+        private ?AutomationService $automationService=null,
+        private ?LoggerInterface $logger=null,
     ) {
     }//end __construct()
 
@@ -68,6 +76,12 @@ class ObjectEventHandlerService
             title: ($data['title'] ?? ''),
             objectId: $objectId,
             assignee: ($data['assignee'] ?? '')
+        );
+
+        $this->dispatchAutomations(
+            trigger: ($entityType.'_created'),
+            entityId: $objectId,
+            entityData: $data
         );
     }//end handleCreated()
 
@@ -124,7 +138,95 @@ class ObjectEventHandlerService
                 dispatcher: $this->dispatcher
             );
         }
+
+        // Lead stage transitions get their own automation trigger.
+        if ($entityType === 'lead' && (($newData['stage'] ?? null) !== ($oldData['stage'] ?? null))) {
+            $this->dispatchAutomations(
+                trigger: 'lead_stage_changed',
+                entityId: $objectId,
+                entityData: $newData
+            );
+        }
+
+        // Request status transitions.
+        if ($entityType === 'request' && (($newData['status'] ?? null) !== ($oldData['status'] ?? null))) {
+            $this->dispatchAutomations(
+                trigger: 'request_status_changed',
+                entityId: $objectId,
+                entityData: $newData
+            );
+        }
+
+        // Always evaluate marketing-segment trigger on contact/lead update.
+        if ($entityType === 'contact' || $entityType === 'lead') {
+            $this->dispatchAutomations(
+                trigger: 'marketing_segment_match',
+                entityId: $objectId,
+                entityData: $newData
+            );
+        }
     }//end handleUpdated()
+
+    /**
+     * Queue matching automations for background execution.
+     *
+     * Resolves matching automation rules and logs them as queued so that
+     * the entity save response is never blocked by action execution. The
+     * background runner (BackgroundJob, scheduled separately) is expected
+     * to pick up automationLog entries with status="queued".
+     *
+     * REQ-NFR-001 explicitly forbids inline execution on the request path.
+     *
+     * @param string $trigger    Trigger name (e.g. lead_created).
+     * @param string $entityId   Entity UUID/slug.
+     * @param array  $entityData Entity payload snapshot.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/crm-workflow-automation/tasks.md#task-4.1
+     */
+    private function dispatchAutomations(string $trigger, string $entityId, array $entityData): void
+    {
+        if ($this->automationService === null) {
+            return;
+        }
+        try {
+            $matched = $this->automationService->getMatchingAutomations($trigger, $entityData);
+        } catch (\Throwable $e) {
+            if ($this->logger !== null) {
+                $this->logger->warning(
+                    'Automation dispatch lookup failed',
+                    ['exception' => $e->getMessage(), 'trigger' => $trigger]
+                );
+            }
+            return;
+        }
+
+        foreach ($matched as $automation) {
+            $automationId = (string) ($automation['id'] ?? $automation['slug'] ?? $automation['uuid'] ?? '');
+            if ($automationId === '') {
+                continue;
+            }
+            // Queue marker — execution is deferred to a background runner.
+            try {
+                $this->automationService->logExecution(
+                    $automationId,
+                    $entityId,
+                    [
+                        'actionsExecuted' => [],
+                        'status'          => 'queued',
+                    ]
+                );
+            } catch (\Throwable $e) {
+                if ($this->logger !== null) {
+                    $this->logger->warning(
+                        'Automation queue marker write failed',
+                        ['exception' => $e->getMessage(), 'automation' => $automationId]
+                    );
+                }
+            }
+        }
+    }//end dispatchAutomations()
 
     /**
      * Check if the entity type is relevant for event handling.
