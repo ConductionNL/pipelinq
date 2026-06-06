@@ -4,7 +4,10 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 -->
 <template>
 	<div class="booking-confirmation">
-		<div v-if="loading" class="booking-state" role="status" aria-live="polite">
+		<div v-if="loading"
+			class="booking-state"
+			role="status"
+			aria-live="polite">
 			{{ t('pipelinq', 'Loading…') }}
 		</div>
 
