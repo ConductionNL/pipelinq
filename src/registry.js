@@ -73,6 +73,9 @@ import PipelineFunnelWidget from './views/rapportage/PipelineFunnelWidget.vue'
 import SourcePerformanceWidget from './views/rapportage/SourcePerformanceWidget.vue'
 import LeadAgingWidget from './views/rapportage/LeadAgingWidget.vue'
 import WinLossWidget from './views/rapportage/WinLossWidget.vue'
+// --- Loyalty program (loyalty-program). ---
+import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
+import LoyaltyAccountCreationView from './views/loyalty/LoyaltyAccountCreation.vue'
 
 // --- Admin managers (lib gap: no pipeline-designer / settings rich-section type). ---
 import PipelineManagerView from './views/settings/PipelineManager.vue'
@@ -280,6 +283,16 @@ const registry = {
 		kind: 'widget',
 		component: WinLossWidget,
 		_note: 'Win/loss pie chart + KPI stats block with a date-range selector (REQ-LM-008).',
+	// --- Loyalty program (loyalty-program). ---
+	LoyaltyReportingView: {
+		kind: 'page',
+		component: LoyaltyReportingView,
+		_note: 'Programme reporting dashboard: active accounts, points issued/redeemed/expired, breakage %, redemption rate, outstanding-points liability (IFRS 15 / RJ 270), tier distribution, period selector, CSV export. Server-side LoyaltyReportingService is the source of truth (REQ-LOY-008, REQ-LOY-009).',
+	},
+	LoyaltyAccountCreationView: {
+		kind: 'page',
+		component: LoyaltyAccountCreationView,
+		_note: 'GDPR-compliant loyalty account enrollment form: mandatory opt-in checkbox, terms version capture, klantId+programmeId input (REQ-LOY-010-01).',
 	},
 
 	// --- Admin managers. ---

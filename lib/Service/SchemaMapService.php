@@ -50,6 +50,17 @@ class SchemaMapService
         'contactmoment_schema'  => 'contactmoment',
         'survey_schema'         => 'survey',
         'surveyResponse_schema' => 'surveyResponse',
+        'posTransaction_schema' => 'posTransaction',
+        // Loyalty programme schemas (loyalty-program).
+        'loyaltyProgramme_schema'    => 'loyaltyProgramme',
+        'pointsRule_schema'          => 'pointsRule',
+        'tierRule_schema'            => 'tierRule',
+        'klantLoyaltyAccount_schema' => 'klantLoyaltyAccount',
+        'pointsLedgerEntry_schema'   => 'pointsLedgerEntry',
+        'redemptionOption_schema'    => 'redemptionOption',
+        'redemption_schema'          => 'redemption',
+        'giftCard_schema'            => 'giftCard',
+        'giftCardTransaction_schema' => 'giftCardTransaction',
     ];
 
     /**
