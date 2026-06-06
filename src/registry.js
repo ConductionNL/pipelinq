@@ -60,6 +60,20 @@ import ForecastDashboardView from './views/forecast/ForecastDashboard.vue'
 import ForecastTrendView from './views/forecast/ForecastTrend.vue'
 import LeadForecastTab from './views/leads/LeadForecastTab.vue'
 
+// --- Leads list (lead-management spec REQ-LM-002 / REQ-LM-004 / REQ-LM-005).
+//     Wraps CnIndexPage to add the stale filter, overdue row highlighting
+//     and CSV import/export via the platform mass dialogs. ---
+import LeadListView from './views/leads/LeadList.vue'
+
+// --- Lead-management analytics dashboard (lead-management REQ-LM-006..008).
+//     RapportageView uses CnDashboardPage with four widget slots backed by
+//     the new RapportageController pipeline-stats endpoint. ---
+import RapportageView from './views/rapportage/RapportageView.vue'
+import PipelineFunnelWidget from './views/rapportage/PipelineFunnelWidget.vue'
+import SourcePerformanceWidget from './views/rapportage/SourcePerformanceWidget.vue'
+import LeadAgingWidget from './views/rapportage/LeadAgingWidget.vue'
+import WinLossWidget from './views/rapportage/WinLossWidget.vue'
+
 // --- Admin managers (lib gap: no pipeline-designer / settings rich-section type). ---
 import PipelineManagerView from './views/settings/PipelineManager.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
@@ -232,6 +246,40 @@ const registry = {
 		kind: 'tab',
 		component: LeadForecastTab,
 		_note: 'Lead-detail sidebar tab: forecast-category selector with closed-deal lock indicator, large-commit justification modal and category history. Server-side DealUpdatedListener is the authoritative enforcer; this tab is the UX. Wiring into LeadDetail.config.sidebar.tabs is a monolith manifest.json edit deferred under ADR-037 (do not edit the monolith from a feature build).',
+	},
+
+	// --- Leads list with lead-management enhancements. ---
+	LeadListView: {
+		kind: 'page',
+		component: LeadListView,
+		_note: 'Wraps CnIndexPage with the lead-management stale filter, overdue row highlighting and platform mass import/export dialogs (REQ-LM-002/004/005).',
+	},
+
+	// --- Lead-management analytics. ---
+	RapportageView: {
+		kind: 'page',
+		component: RapportageView,
+		_note: 'Lead analytics dashboard using CnDashboardPage with four widgets backed by the rapportage pipeline-stats endpoint (REQ-LM-006/007/008).',
+	},
+	PipelineFunnelWidget: {
+		kind: 'widget',
+		component: PipelineFunnelWidget,
+		_note: 'Pipeline value per stage (count, total, weighted) — bar chart with pipeline filter (REQ-LM-006).',
+	},
+	SourcePerformanceWidget: {
+		kind: 'widget',
+		component: SourcePerformanceWidget,
+		_note: 'Source conversion table (total, won, rate, avg) sortable per column (REQ-LM-007).',
+	},
+	LeadAgingWidget: {
+		kind: 'widget',
+		component: LeadAgingWidget,
+		_note: 'Aging-bucket donut chart (≤7d / 8-14d / 15-30d / >30d) (REQ-LM-006).',
+	},
+	WinLossWidget: {
+		kind: 'widget',
+		component: WinLossWidget,
+		_note: 'Win/loss pie chart + KPI stats block with a date-range selector (REQ-LM-008).',
 	},
 
 	// --- Admin managers. ---

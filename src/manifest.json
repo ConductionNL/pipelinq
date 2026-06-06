@@ -122,7 +122,7 @@
 		},
 		{
 			"id": "Rapportage",
-			"label": "Reporting",
+			"label": "Analytics",
 			"icon": "icon-category-monitoring",
 			"route": "Rapportage",
 			"order": 150
@@ -434,8 +434,9 @@
 		{
 			"id": "Leads",
 			"route": "/leads",
-			"type": "index",
+			"type": "custom",
 			"title": "Leads",
+			"component": "LeadListView",
 			"config": {
 				"register": "pipelinq",
 				"schema": "lead",
@@ -880,7 +881,14 @@
 			"id": "Rapportage",
 			"route": "/rapportage",
 			"type": "custom",
-			"title": "Reporting",
+			"title": "Analytics",
+			"component": "RapportageView"
+		},
+		{
+			"id": "RapportageContactmomenten",
+			"route": "/rapportage/contactmomenten",
+			"type": "custom",
+			"title": "Contact reporting",
 			"component": "RapportageDashboardView"
 		},
 		{

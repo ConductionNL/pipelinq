@@ -4571,6 +4571,91 @@
         "channelMetadata": {
           "waitTime": 28
         }
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "lead",
+          "slug": "lead-gemeente-amsterdam-crm-2026"
+        },
+        "title": "Gemeente Amsterdam - CRM implementatie 2026",
+        "source": "referral",
+        "value": 85000,
+        "probability": 60,
+        "expectedCloseDate": "2026-06-30",
+        "priority": "high",
+        "stage": "Gekwalificeerd",
+        "stageOrder": 3,
+        "status": "open",
+        "notes": "Gemeente zoekt vervanging voor verouderd CRM-pakket."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "lead",
+          "slug": "lead-provincie-zuidholland-digitalisering-2026"
+        },
+        "title": "Provincie Zuid-Holland - Digitalisering klantcontact",
+        "source": "event",
+        "value": 125000,
+        "probability": 40,
+        "expectedCloseDate": "2026-05-15",
+        "priority": "urgent",
+        "stage": "Voorstel",
+        "stageOrder": 4,
+        "status": "open",
+        "notes": "Ontmoet op GovTech Expo 2026. Interesse in omnichannel oplossing."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "lead",
+          "slug": "lead-rijkswaterstaat-onderhoudscontract-2026"
+        },
+        "title": "Rijkswaterstaat - Onderhoudscontract software 2026",
+        "source": "website",
+        "value": 45000,
+        "probability": 80,
+        "expectedCloseDate": "2026-04-30",
+        "priority": "normal",
+        "stage": "Onderhandeling",
+        "stageOrder": 5,
+        "status": "open",
+        "notes": "Bestaande klant, contractverlenging lopend jaar."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "lead",
+          "slug": "lead-ggd-rotterdam-zorginformatiesysteem"
+        },
+        "title": "GGD Rotterdam - Zorginformatiesysteem modules",
+        "source": "cold-call",
+        "value": 32000,
+        "probability": 20,
+        "expectedCloseDate": "2026-07-15",
+        "priority": "low",
+        "stage": "Nieuw",
+        "stageOrder": 1,
+        "status": "open",
+        "notes": "Eerste contact gelegd. Nog in orientatiefase."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "lead",
+          "slug": "lead-waterschap-hollandsedelta-zaaksysteem-gewonnen"
+        },
+        "title": "Waterschap Hollandse Delta - Zaaksysteemkoppeling",
+        "source": "partner",
+        "value": 67500,
+        "probability": 100,
+        "expectedCloseDate": "2026-03-31",
+        "priority": "normal",
+        "stage": "Gewonnen",
+        "stageOrder": 6,
+        "status": "won",
+        "notes": "Contract getekend 2026-03-28. Implementatie start Q2."
       }
     ]
   }
