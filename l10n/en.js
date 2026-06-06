@@ -1387,6 +1387,14 @@ OC.L10N.register(
     "Fire webhook" : "Fire webhook",
     "Update tag" : "Update tag",
     "Events" : "Events",
+    "WIP sync status" : "WIP sync status",
+    "WIP synced" : "WIP synced",
+    "WIP pending" : "WIP pending",
+    "WIP sync failed" : "WIP sync failed",
+    "Retry WIP sync" : "Retry WIP sync",
+    "Shillinq WIP webhook URL" : "Shillinq WIP webhook URL",
+    "WIP synced at" : "WIP synced at",
+    "Not synced" : "Not synced",
     "_%n minute_::_%n minutes_" : ["%n minute","%n minutes"]
 },
 "nplurals=2; plural=(n != 1);"
