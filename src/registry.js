@@ -107,6 +107,12 @@ import PosRefundFormView from './views/pos/PosRefundForm.vue'
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
 import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
 
+// --- CTI screen-pop and click-to-dial (lib gap: no telephony settings page
+//     type; admin needs platform + credentials + delay knobs and a webhook
+//     event log; cti-screenpop-adapter). ---
+import CtiSettingsView from './views/settings/CtiSettings.vue'
+import CtiEventLogView from './views/settings/CtiEventLog.vue'
+
 // --- Automation rule builder (lib gap: no automation-rule editor page type;
 //     the visual condition + action builder cannot be expressed as a declarative
 //     type:"detail" because it drives a bespoke condition-row + action-row UX). ---
@@ -385,6 +391,18 @@ const registry = {
 		kind: 'page',
 		component: ExportRunDetailView,
 		_note: 'Export-run detail: file manifest, schema snapshots with detected drift, error log and a Retry action; fetched via the export run-detail endpoint.',
+	},
+
+	// --- CTI screen-pop and click-to-dial adapter (cti-screenpop-adapter). ---
+	CtiSettingsView: {
+		kind: 'page',
+		component: CtiSettingsView,
+		_note: 'CTI admin settings: platform, API base URL, auth method, OpenConnector credentials ref, screen-pop / click-to-dial toggles and connection test. Lib gap: no telephony-config page type.',
+	},
+	CtiEventLogView: {
+		kind: 'page',
+		component: CtiEventLogView,
+		_note: 'CTI admin event-log inspector (last 30 days): platform + event-type filters, payload modal; lib gap: no audit/event-log page type that filters by platform.',
 	},
 }
 
