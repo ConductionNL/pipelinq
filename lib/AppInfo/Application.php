@@ -49,6 +49,7 @@ use OCA\Pipelinq\Listener\DealCreatedListener;
 use OCA\Pipelinq\Listener\DealUpdatedListener;
 use OCA\Pipelinq\Listener\DeepLinkRegistrationListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
+use OCA\Pipelinq\Listener\PosTransactionCompletedListener;
 use OCA\Pipelinq\Listener\ProjectCreationListener;
 use OCA\Pipelinq\Listener\ProjectPhaseStatusListener;
 use OCA\Pipelinq\Mcp\PipelinqToolProvider;
@@ -119,6 +120,19 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(
             event: ObjectUpdatedEvent::class,
             listener: ProjectPhaseStatusListener::class
+        );
+
+        // Loyalty program: POS transaction completion fires the loyalty engine
+        // (loyalty-program / REQ-LOY-002). The listener filters to posTransaction
+        // entities + completed/settled/paid statuses, catches all errors, and never
+        // throws so the POS flow is unaffected (REQ-LOY-002-05).
+        $context->registerEventListener(
+            event: ObjectCreatedEvent::class,
+            listener: PosTransactionCompletedListener::class
+        );
+        $context->registerEventListener(
+            event: ObjectUpdatedEvent::class,
+            listener: PosTransactionCompletedListener::class
         );
 
         $context->registerDashboardWidget(DealsOverviewWidget::class);
