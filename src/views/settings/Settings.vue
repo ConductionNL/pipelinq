@@ -270,6 +270,29 @@
 			</NcNoteCard>
 		</NcSettingsSection>
 
+		<!-- Lead Management — stale threshold (REQ-LM-002).
+		     Persisted via IAppConfig under key `lead_stale_threshold_days`. -->
+		<NcSettingsSection v-if="isAdmin"
+			:name="t('pipelinq', 'Lead Management')"
+			:description="t('pipelinq', 'Tune lead staleness detection for kanban badges and the lead list filter.')">
+			<NcTextField v-model="staleThresholdInput"
+				type="number"
+				:label="t('pipelinq', 'Stale after (days)')"
+				placeholder="14"
+				:helper-text="t('pipelinq', 'Number of days a lead can stay untouched before it is flagged as stale. Default: 14.')" />
+			<NcButton type="primary"
+				:disabled="savingStale"
+				@click="saveStaleThreshold">
+				<template #icon>
+					<NcLoadingIcon v-if="savingStale" :size="16" />
+				</template>
+				{{ t('pipelinq', 'Save lead settings') }}
+			</NcButton>
+			<NcNoteCard v-if="staleMessage" :type="staleMessageType">
+				{{ staleMessage }}
+			</NcNoteCard>
+		</NcSettingsSection>
+
 		<!-- Shillinq Integration -->
 		<NcSettingsSection v-if="isAdmin"
 			:name="t('pipelinq', 'Shillinq Integration')"
@@ -398,6 +421,11 @@ export default {
 			savingShillinq: false,
 			shillinqMessage: '',
 			shillinqMessageType: 'success',
+			// Lead management — stale threshold (REQ-LM-002).
+			staleThresholdInput: 14,
+			savingStale: false,
+			staleMessage: '',
+			staleMessageType: 'success',
 		}
 	},
 	computed: {
@@ -506,6 +534,10 @@ export default {
 		if (data) {
 			this.config = data.config || {}
 			this.isAdmin = this.settingsStore.isAdmin
+			// Seed the stale-threshold input from the persisted config
+			// (REQ-LM-002). Falls back to 14 days when unset.
+			const parsed = parseInt(this.config.lead_stale_threshold_days, 10)
+			this.staleThresholdInput = Number.isFinite(parsed) && parsed > 0 ? parsed : 14
 
 			if (this.isAdmin) {
 				this.objectenAccess = this.settingsStore.objectenAccess
@@ -772,6 +804,38 @@ export default {
 				this.shillinqMessageType = 'error'
 			} finally {
 				this.savingShillinq = false
+			}
+		},
+		/**
+		 * Persist the lead stale threshold through the standard settings endpoint.
+		 *
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+		 */
+		async saveStaleThreshold() {
+			this.savingStale = true
+			this.staleMessage = ''
+			const days = parseInt(this.staleThresholdInput, 10)
+			if (!Number.isFinite(days) || days <= 0) {
+				this.staleMessage = t('pipelinq', 'Stale threshold must be a positive number of days.')
+				this.staleMessageType = 'error'
+				this.savingStale = false
+				return
+			}
+			try {
+				const result = await this.settingsStore.saveSettings({
+					...this.config,
+					lead_stale_threshold_days: String(days),
+				})
+				if (result) {
+					this.config = this.settingsStore.config || result
+				}
+				this.staleMessage = t('pipelinq', 'Lead settings saved.')
+				this.staleMessageType = 'success'
+			} catch (e) {
+				this.staleMessage = e.response?.data?.message || t('pipelinq', 'Failed to save lead settings.')
+				this.staleMessageType = 'error'
+			} finally {
+				this.savingStale = false
 			}
 		},
 		/**

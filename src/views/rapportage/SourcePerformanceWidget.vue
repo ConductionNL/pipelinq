@@ -1,0 +1,55 @@
+<!-- SPDX-License-Identifier: EUPL-1.2 -->
+<!-- Copyright (C) 2026 Conduction B.V. -->
+<!--
+  Source performance — sortable table of total / won / conversion / avg
+  per lead source.
+
+  @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-007
+-->
+<template>
+	<CnEmptyState
+		v-if="!rows.length"
+		:title="t('pipelinq', 'No source data')"
+		:description="t('pipelinq', 'No lead source performance to report yet.')" />
+
+	<CnTableWidget
+		v-else
+		:rows="rows"
+		:columns="columns"
+		:sortable="true" />
+</template>
+
+<script>
+import { CnTableWidget, CnEmptyState } from '@conduction/nextcloud-vue'
+
+export default {
+	name: 'SourcePerformanceWidget',
+	components: { CnTableWidget, CnEmptyState },
+	props: {
+		data: {
+			type: Array,
+			default: () => [],
+		},
+	},
+	computed: {
+		/**
+		 * Column descriptors consumed by CnTableWidget. Each row is
+		 * rendered with sortable per-column behaviour.
+		 *
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-007
+		 */
+		columns() {
+			return [
+				{ key: 'source',         label: t('pipelinq', 'Source'),         sortable: true },
+				{ key: 'total',          label: t('pipelinq', 'Total leads'),    sortable: true, align: 'right' },
+				{ key: 'won',            label: t('pipelinq', 'Won'),            sortable: true, align: 'right' },
+				{ key: 'conversionRate', label: t('pipelinq', 'Conversion %'),   sortable: true, align: 'right', format: v => `${v}%` },
+				{ key: 'avgWonValue',    label: t('pipelinq', 'Avg deal value'), sortable: true, align: 'right', format: v => v > 0 ? `EUR ${v.toLocaleString('nl-NL')}` : '—' },
+			]
+		},
+		rows() {
+			return Array.isArray(this.data) ? this.data : []
+		},
+	},
+}
+</script>
