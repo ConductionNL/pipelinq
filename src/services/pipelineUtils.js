@@ -14,13 +14,66 @@ export function getDaysAge(item) {
 }
 
 /**
+ * Resolve the stale-threshold (days) from the Pipelinq settings config.
+ * Falls back to 14 when the value is missing or unparseable so consumers
+ * never need to special-case an empty store.
+ *
+ * @param {object|null} config Pipelinq settings config (settingsStore.config).
+ * @return {number}
+ * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+ */
+export function getStaleThreshold(config) {
+	const raw = config && config.lead_stale_threshold_days
+	const parsed = parseInt(raw, 10)
+	if (Number.isFinite(parsed) && parsed > 0) {
+		return parsed
+	}
+	return 14
+}
+
+/**
  * @param item
  * @param entityType
+ * @param {number} [threshold] Optional explicit threshold (days); defaults to 14.
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-31
  */
-export function isStale(item, entityType) {
+export function isStale(item, entityType, threshold = 14) {
 	if (entityType !== 'lead') return false
-	return getDaysAge(item) >= 14
+	return getDaysAge(item) >= threshold
+}
+
+/**
+ * True when a lead has an expectedCloseDate in the past and the lead is
+ * not in a closed/won/lost state. Pure function — used by LeadList row
+ * highlighting and PipelineCard isOverdue logic.
+ *
+ * @param {object} lead The lead object.
+ * @param {Array<{name:string,isClosed?:boolean}>} stages Pipeline stages.
+ * @return {boolean}
+ * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-004
+ */
+export function isLeadOverdue(lead, stages = []) {
+	if (!lead || !lead.expectedCloseDate) return false
+	if (lead.status === 'won' || lead.status === 'lost') return false
+	const currentStage = stages.find(s => s.name === lead.stage)
+	if (currentStage && currentStage.isClosed) return false
+	return new Date(lead.expectedCloseDate) < new Date()
+}
+
+/**
+ * Days a lead has been overdue (always >= 0). Returns 0 when not overdue.
+ *
+ * @param {object} lead The lead object.
+ * @param {Array<{name:string,isClosed?:boolean}>} stages Pipeline stages.
+ * @return {number}
+ * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-004
+ */
+export function getOverdueDays(lead, stages = []) {
+	if (!isLeadOverdue(lead, stages)) return 0
+	const due = new Date(lead.expectedCloseDate).getTime()
+	const now = Date.now()
+	const days = Math.floor((now - due) / 86400000)
+	return days > 0 ? days : 0
 }
 
 /**
