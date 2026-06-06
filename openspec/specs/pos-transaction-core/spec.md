@@ -252,12 +252,14 @@ The system MUST provide a searchable, filterable list of all POS transactions.
 - AND pagination MUST show 20 transactions per page
 
 #### Scenario: Filter by status
+@e2e exclude the POS list configures no CnIndexPage sidebar, so no status-filter control renders; scenario is data-dependent (seeded transactions per status); covered by PHPUnit/Newman
 
 - GIVEN transactions with statuses: draft (2), confirmed (3), settled (5), refunded (1)
 - WHEN the cashier filters by status "settled"
 - THEN exactly 5 transactions MUST be shown
 
 #### Scenario: Search by reference
+@e2e exclude the POS list configures no CnIndexPage sidebar, so no search control renders; scenario is data-dependent (seeded references); covered by PHPUnit/Newman
 
 - GIVEN transactions "TXN-2026-0001" and "TXN-2026-0099"
 - WHEN the cashier types "0001" in the search box
