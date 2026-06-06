@@ -25,7 +25,7 @@
 
 ## 2. Backend: ActivityService
 
-- [ ] 2.1 Create `lib/Service/ActivityService.php`.
+- [x] 2.1 Create `lib/Service/ActivityService.php`.
   - Constructor: inject `ObjectService`, `IUserSession`, `LoggerInterface`. Use `private readonly`.
   - `getActivity(string $entityType, string $entityId, string $type, int $page, int $limit): array`
     — Validates `$entityType` against allowlist `['client', 'contact', 'lead', 'request']`.
@@ -33,10 +33,11 @@
     — Returns `['total' => ..., 'page' => ..., 'pages' => ..., 'results' => [...]]`.
   - MUST NOT call mappers directly (ADR-003-backend).
   - Add `@spec openspec/changes/entity-notes/tasks.md#task-2` PHPDoc to class and method.
+  **Implemented as `lib/Service/EntityActivityService.php`** to avoid colliding with the pre-existing `lib/Service/ActivityService.php` (Nextcloud Activity Stream publisher; see task 0.1). Constructor takes the OR `ObjectService` lazily via `Psr\Container\ContainerInterface` (the same pattern used by `ContactmomentService` and `ActivityTimelineService` — a hard `ObjectService` type-hint would explode pipelinq's DI graph when OR is not yet enabled at boot). `IUserSession` and `LoggerInterface` are injected directly. Allowlist validation is implemented; method signature matches the spec. Mappers are not touched.
 
 ## 3. Backend: ActivityController
 
-- [ ] 3.1 Create `lib/Controller/ActivityController.php`.
+- [x] 3.1 Create `lib/Controller/ActivityController.php`.
   - Route: `GET /api/activity/{entityType}/{entityId}`
   - Annotations: `@NoAdminRequired`
   - Query params: `type` (default: `all`), `_page` (default: 1), `_limit` (default: 20)
@@ -45,7 +46,8 @@
   - Error handling: unknown `entityType` → `JSONResponse(['message' => 'Invalid entity type'], 400)`
   - NEVER returns `$e->getMessage()` to the response — log it and return generic message (ADR-015-common-patterns)
   - Add `@spec openspec/changes/entity-notes/tasks.md#task-3` PHPDoc.
-- [ ] 3.2 Add SPDX header `// SPDX-License-Identifier: EUPL-1.2` after `<?php` on both new PHP files.
+  **Implemented as `lib/Controller/EntityActivityController.php`** delegating to `EntityActivityService`. Uses `#[NoAdminRequired]` PHP attribute (matches the modern controllers in this repo). Static error messages only — `Throwable::getMessage()` is logged but never echoed.
+- [x] 3.2 Add SPDX header `// SPDX-License-Identifier: EUPL-1.2` after `<?php` on both new PHP files.
 
 ## 4. Routes
 
