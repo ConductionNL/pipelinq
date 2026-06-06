@@ -17,9 +17,11 @@
 
 ## 1. Seed Data
 
-- [ ] 1.1 Add 5 `contactmoment` seed objects to `lib/Settings/pipelinq_register.json` using the `@self` envelope (slugs: `contactmoment-001` through `contactmoment-005`).
+- [x] 1.1 Add 5 `contactmoment` seed objects to `lib/Settings/pipelinq_register.json` using the `@self` envelope (slugs: `contactmoment-001` through `contactmoment-005`).
   Values per design.md Seed Data section — Dutch municipality context, varied channels (telefoon, e-mail, balie, chat, brief).
-- [ ] 1.2 Verify idempotency: re-importing with `force: false` MUST NOT create duplicates (matched by slug).
+  **Note:** `e-mail` rewritten to `email` to match the schema's `channel` enum (`telefoon|email|balie|chat|social|brief`). `outcome` values aligned with the schema enum (`afgehandeld|doorverbonden|terugbelverzoek|vervolgactie`). One `client` seed object (`client-entity-notes-demo`, fixed UUID `a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c`) is added alongside so all five contactmomenten link to a real client; this matches design.md's intent that the Communication History panel is populated on a fresh install.
+- [x] 1.2 Verify idempotency: re-importing with `force: false` MUST NOT create duplicates (matched by slug).
+  **Verified:** `ConfigurationService::importFromArray()` in OpenRegister matches objects on the `@self.slug` envelope; each new seed object has a unique slug, so re-imports update existing rows rather than creating duplicates.
 
 ## 2. Backend: ActivityService
 
