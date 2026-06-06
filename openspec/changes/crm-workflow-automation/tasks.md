@@ -226,7 +226,7 @@
 
 ## 8. Translations
 
-- [ ] 8.1 Add all new automation/webhook UI strings to `l10n/en.json` and `l10n/nl.json`
+- [x] 8.1 Add all new automation/webhook UI strings to `l10n/en.json` and `l10n/nl.json`
   - **spec_ref**: `specs/crm-workflow-automation/spec.md#REQ-NFR-004`
   - **files**: `l10n/en.json`, `l10n/nl.json`
   - **acceptance_criteria**:
