@@ -1376,6 +1376,11 @@ OC.L10N.register(
     "Last synced" : "Laatst gesynchroniseerd",
     "Retry Sync" : "Synchronisatie opnieuw proberen",
     "Ledger sync retried successfully." : "Grootboeksynchronisatie opnieuw gelukt.",
-    "Could not retry the ledger sync." : "Kon grootboeksynchronisatie niet opnieuw proberen."
+    "Could not retry the ledger sync." : "Kon grootboeksynchronisatie niet opnieuw proberen.",
+    "Communication History" : "Communicatiegeschiedenis",
+    "No communication history yet" : "Nog geen communicatiegeschiedenis",
+    "Loading communication history..." : "Communicatiegeschiedenis laden...",
+    "Could not load communication history" : "Kon communicatiegeschiedenis niet laden",
+    "Invalid entity type" : "Ongeldig entiteitstype"
 },
 "nplurals=2; plural=(n != 1);");

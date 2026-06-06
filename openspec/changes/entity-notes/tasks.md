@@ -94,16 +94,19 @@
 
 ## 7. CnObjectSidebar Notes Tab
 
-- [ ] 7.1 Verify each entity detail view (`ClientDetail`, `ContactDetail`, `LeadDetail`, `RequestDetail`) correctly passes `objectSidebarState` so `CnObjectSidebar` renders the Notes tab.
+- [x] 7.1 Verify each entity detail view (`ClientDetail`, `ContactDetail`, `LeadDetail`, `RequestDetail`) correctly passes `objectSidebarState` so `CnObjectSidebar` renders the Notes tab.
   If the `sidebarState` is not injected: add `inject: ['sidebarState']` and pass it to `CnDetailPage`.
   This is a configuration check — no new components needed.
+  **Verified (no changes required):** All four views render `<CnDetailPage>` with `:sidebar="!isNew && !loading"`, `object-type="pipelinq_{type}"`, `:object-id="{id}"`, and `:sidebar-props="sidebarProps"`. Each `sidebarProps` computed returns `{ title, register, schema, hiddenTabs: ['tasks'] }` derived from the per-entity `objectStore.objectTypeRegistry` entry. CnObjectSidebar therefore renders the Notes tab (it is the platform default; only `tasks` is hidden) for clients, contacts, leads and requests.
 
 ## 8. i18n
 
-- [ ] 8.1 Add English keys to `l10n/en.json`:
+- [x] 8.1 Add English keys to `l10n/en.json`:
   `Communication History`, `No communication history yet`, `Refresh`, `Channel`, `Subject`, `Agent`, `Date`, `Invalid entity type`.
-- [ ] 8.2 Add Dutch translations to `l10n/nl.json`:
+  `Refresh`, `Channel`, `Subject`, `Agent`, `Date`, `Phone`, `Email`, `Counter`, `Chat`, `Social media`, `Letter` already exist in the catalogue; this change adds the new ones (`Communication History`, `No communication history yet`, `Loading communication history...`, `Could not load communication history`, `Invalid entity type`) to both `l10n/en.json` and `l10n/en.js`.
+- [x] 8.2 Add Dutch translations to `l10n/nl.json`:
   `Communicatiegeschiedenis`, `Nog geen communicatiegeschiedenis`, `Vernieuwen`, `Kanaal`, `Onderwerp`, `Medewerker`, `Datum`, `Ongeldig entiteitstype`.
+  Same set translated and added to both `l10n/nl.json` and `l10n/nl.js`.
 
 ## 9. Pre-commit Verification
 
