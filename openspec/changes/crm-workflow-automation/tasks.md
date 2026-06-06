@@ -128,7 +128,7 @@
 
 ## 4. Event Integration
 
-- [ ] 4.1 Modify `lib/Service/ObjectEventHandlerService.php` to dispatch automations
+- [x] 4.1 Modify `lib/Service/ObjectEventHandlerService.php` to dispatch automations
   - **spec_ref**: `specs/crm-workflow-automation/spec.md#REQ-NFR-001`
   - **files**: `lib/Service/ObjectEventHandlerService.php`
   - **acceptance_criteria**:

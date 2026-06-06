@@ -121,8 +121,9 @@
 					},
 					"status": {
 						"type": "string",
-						"description": "Overall execution outcome.",
+						"description": "Overall execution outcome. `queued` marks an automation that has been matched but not yet executed by the background runner; `success`/`failure` are terminal states written when the run completes.",
 						"enum": [
+							"queued",
 							"success",
 							"failure"
 						],
