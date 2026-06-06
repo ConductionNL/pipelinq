@@ -6,7 +6,10 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 	<div class="booking-portal">
 		<a class="booking-skip-link" href="#booking-form">{{ t('pipelinq', 'Skip to booking form') }}</a>
 
-		<div v-if="loadingService" class="booking-state" role="status" aria-live="polite">
+		<div v-if="loadingService"
+			class="booking-state"
+			role="status"
+			aria-live="polite">
 			{{ t('pipelinq', 'Loading…') }}
 		</div>
 
@@ -20,7 +23,9 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 			<!-- Service header -->
 			<header class="booking-header">
 				<h1>{{ service.name }}</h1>
-				<p v-if="service.description" class="booking-description">{{ service.description }}</p>
+				<p v-if="service.description" class="booking-description">
+					{{ service.description }}
+				</p>
 				<dl class="booking-meta">
 					<div class="booking-meta-item">
 						<dt>{{ t('pipelinq', 'Duration') }}</dt>
@@ -35,7 +40,9 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 
 			<!-- Date picker -->
 			<section class="booking-section" aria-labelledby="booking-date-heading">
-				<h2 id="booking-date-heading">{{ t('pipelinq', 'Choose a date') }}</h2>
+				<h2 id="booking-date-heading">
+					{{ t('pipelinq', 'Choose a date') }}
+				</h2>
 				<label class="booking-field" for="booking-date">
 					<span class="booking-field-label">{{ t('pipelinq', 'Date') }}</span>
 					<input id="booking-date"
@@ -55,8 +62,13 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 			<section v-if="selectedDate"
 				class="booking-section"
 				aria-labelledby="booking-slot-heading">
-				<h2 id="booking-slot-heading">{{ t('pipelinq', 'Choose a time') }}</h2>
-				<div v-if="loadingSlots" class="booking-state" role="status" aria-live="polite">
+				<h2 id="booking-slot-heading">
+					{{ t('pipelinq', 'Choose a time') }}
+				</h2>
+				<div v-if="loadingSlots"
+					class="booking-state"
+					role="status"
+					aria-live="polite">
 					{{ t('pipelinq', 'Loading available times…') }}
 				</div>
 				<p v-else-if="!slots.length" class="booking-hint" role="status">
@@ -80,7 +92,9 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 				id="booking-form"
 				class="booking-section"
 				aria-labelledby="booking-form-heading">
-				<h2 id="booking-form-heading">{{ t('pipelinq', 'Your details') }}</h2>
+				<h2 id="booking-form-heading">
+					{{ t('pipelinq', 'Your details') }}
+				</h2>
 				<form novalidate @submit.prevent="onSubmit">
 					<label class="booking-field" for="booking-name">
 						<span class="booking-field-label">
