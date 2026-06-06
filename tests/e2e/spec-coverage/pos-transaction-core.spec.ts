@@ -8,6 +8,10 @@
  * Lifecycle, server-authoritative totals, CloudEvent emission and the
  * data-dependent cart/detail views are excluded per-scenario in the spec.md
  * (covered by PHPUnit / Newman).
+ *
+ * NOTE: pipelinq renders through the manifest-shell (CnAppRoot / CnPageRenderer)
+ * which mounts into `#content-vue` and does NOT emit the legacy
+ * `#app-content` / `main` wrappers. Assert the manifest content host.
  */
 
 import { test, expect } from '@playwright/test'
@@ -17,8 +21,8 @@ test('POS transaction list (Kassabon) page renders the list shell', async ({ pag
 	await page.goto('/apps/pipelinq/pos')
 	await expect(page).toHaveURL(/pos/, { timeout: 10000 })
 	await expect(page.locator('body')).not.toContainText('Internal Server Error')
-	// The manifest-driven list surface mounts inside the app content area
-	await expect(page.locator('#app-content, .app-content, main').first()).toBeVisible({ timeout: 10000 })
+	// The manifest-driven list surface mounts inside the CnAppRoot content host.
+	await expect(page.locator('#content-vue').first()).toBeVisible({ timeout: 10000 })
 })
 
 // @e2e openspec/specs/pos-transaction-core/spec.md#filter-by-status
@@ -27,14 +31,14 @@ test('POS transaction list exposes a status filter control', async ({ page }) =>
 	// A manifest list page renders filter controls in its toolbar; assert the
 	// shell renders without error rather than depending on seeded rows.
 	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
-	await expect(page.locator('#app-content, .app-content, main').first()).toBeVisible()
+	await expect(page.locator('#content-vue').first()).toBeVisible()
 })
 
 // @e2e openspec/specs/pos-transaction-core/spec.md#search-by-reference
 test('POS transaction list exposes a search control', async ({ page }) => {
 	await page.goto('/apps/pipelinq/pos')
 	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
-	await expect(page.locator('#app-content, .app-content, main').first()).toBeVisible()
+	await expect(page.locator('#content-vue').first()).toBeVisible()
 })
 
 // @e2e openspec/specs/pos-transaction-core/spec.md#empty-state
@@ -43,13 +47,14 @@ test('POS transaction list shows an empty state or data without error', async ({
 	// Either the empty-state placeholder or a populated list — both are valid;
 	// what matters is the surface mounts cleanly.
 	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
-	await expect(page.locator('#app-content, .app-content, main').first()).toBeVisible()
+	await expect(page.locator('#content-vue').first()).toBeVisible()
 })
 
 // @e2e openspec/specs/pos-transaction-core/spec.md#create-a-new-draft-transaction
 test('Kassabon navigation item is reachable from the app shell', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
-	const nav = page.locator('#app-navigation-vue')
+	const nav = page.locator('[id^="app-navigation"]').first()
 	await expect(nav).toBeVisible({ timeout: 10000 })
-	await expect(nav.getByText('Kassabon')).toBeVisible()
+	// The manifest registers a top-level "Kassabon" nav entry → /pos.
+	await expect(nav.getByText('Kassabon', { exact: true }).first()).toBeVisible({ timeout: 10000 })
 })
