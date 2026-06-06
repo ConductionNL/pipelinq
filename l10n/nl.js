@@ -1485,6 +1485,11 @@ OC.L10N.register(
     "Retry WIP sync" : "Opnieuw synchroniseren",
     "Shillinq WIP webhook URL" : "Shillinq WIP-webhook-URL",
     "WIP synced at" : "WIP gesynchroniseerd op",
-    "Not synced" : "Niet gesynchroniseerd"
+    "Not synced" : "Niet gesynchroniseerd",
+    "Communication History" : "Communicatiegeschiedenis",
+    "No communication history yet" : "Nog geen communicatiegeschiedenis",
+    "Loading communication history..." : "Communicatiegeschiedenis laden...",
+    "Could not load communication history" : "Kon communicatiegeschiedenis niet laden",
+    "Invalid entity type" : "Ongeldig entiteitstype"
 },
 "nplurals=2; plural=(n != 1);");
