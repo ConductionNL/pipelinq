@@ -519,6 +519,8 @@ The user settings, preferences and configuration loading implemented in this app
 
 #### Scenario: Documented operations are available
 
+@e2e exclude backend service/controller method contract; covered by PHPUnit
+
 - GIVEN the backend service/controller is loaded
 - WHEN a caller invokes one of the documented operations for user settings, preferences and configuration loading
 - THEN the operation MUST execute and return a result consistent with the current implementation
@@ -532,6 +534,8 @@ Operations for user settings, preferences and configuration loading MUST read th
 **Feature tier**: V1
 
 #### Scenario: Results reflect live state
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN CRM data backing user settings, preferences and configuration loading
 - WHEN a documented operation runs
@@ -548,6 +552,8 @@ Operations for user settings, preferences and configuration loading MUST tolerat
 
 #### Scenario: Missing input does not crash the flow
 
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
+
 - GIVEN an operation for user settings, preferences and configuration loading is called with absent or invalid input
 - WHEN it executes
 - THEN it MUST return a safe default or a validation result
@@ -560,6 +566,8 @@ The settings and admin configuration screens implemented in this app MUST provid
 **Feature tier**: V1
 
 #### Scenario: Documented operations are available
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN the frontend component/store is loaded
 - WHEN a caller invokes one of the documented operations for settings and admin configuration screens
@@ -575,6 +583,8 @@ Operations for settings and admin configuration screens MUST read their inputs f
 
 #### Scenario: Results reflect live state
 
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
+
 - GIVEN CRM data backing settings and admin configuration screens
 - WHEN a documented operation runs
 - THEN its output MUST be derived from that data
@@ -589,6 +599,8 @@ Operations for settings and admin configuration screens MUST tolerate missing, e
 **Feature tier**: V1
 
 #### Scenario: Missing input does not crash the flow
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN an operation for settings and admin configuration screens is called with absent or invalid input
 - WHEN it executes
