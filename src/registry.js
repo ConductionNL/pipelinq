@@ -306,6 +306,7 @@ const registry = {
 		kind: 'widget',
 		component: WinLossWidget,
 		_note: 'Win/loss pie chart + KPI stats block with a date-range selector (REQ-LM-008).',
+	},
 	// --- Loyalty program (loyalty-program). ---
 	LoyaltyReportingView: {
 		kind: 'page',
