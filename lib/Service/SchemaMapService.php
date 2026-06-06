@@ -62,6 +62,8 @@ class SchemaMapService
         'redemption_schema'          => 'redemption',
         'giftCard_schema'            => 'giftCard',
         'giftCardTransaction_schema' => 'giftCardTransaction',
+        // Expense → Shillinq AP integration (pipelinq-expense-to-shillinq-ap / REQ-AP-001).
+        'expense_schema'             => 'expense',
     ];
 
     /**
