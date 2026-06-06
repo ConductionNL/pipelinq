@@ -49,6 +49,8 @@ use OCA\Pipelinq\Listener\DealCreatedListener;
 use OCA\Pipelinq\Listener\DealUpdatedListener;
 use OCA\Pipelinq\Listener\DeepLinkRegistrationListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
+use OCA\Pipelinq\Listener\ProjectCreationListener;
+use OCA\Pipelinq\Listener\ProjectPhaseStatusListener;
 use OCA\Pipelinq\Mcp\PipelinqToolProvider;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -109,6 +111,14 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(
             event: ObjectUpdatedEvent::class,
             listener: DealUpdatedListener::class
+        );
+        $context->registerEventListener(
+            event: ObjectCreatedEvent::class,
+            listener: ProjectCreationListener::class
+        );
+        $context->registerEventListener(
+            event: ObjectUpdatedEvent::class,
+            listener: ProjectPhaseStatusListener::class
         );
 
         $context->registerDashboardWidget(DealsOverviewWidget::class);

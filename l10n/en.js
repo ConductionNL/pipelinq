@@ -1299,7 +1299,22 @@ OC.L10N.register(
     "Could not retry the run" : "Could not retry the run",
     "Test run failed" : "Test run failed",
     "Test run failed: {error}" : "Test run failed: {error}",
-    "Test run succeeded ({rows} sample rows)" : "Test run succeeded ({rows} sample rows)"
+    "Test run succeeded ({rows} sample rows)" : "Test run succeeded ({rows} sample rows)",
+    "Shillinq Integration" : "Shillinq Integration",
+    "Shillinq Ledger Webhook URL" : "Shillinq Ledger Webhook URL",
+    "The HTTPS endpoint of the Shillinq project ledger. Leave empty to disable ledger sync." : "The HTTPS endpoint of the Shillinq project ledger. Leave empty to disable ledger sync.",
+    "Please enter a valid HTTPS URL" : "Please enter a valid HTTPS URL",
+    "Save Shillinq Configuration" : "Save Shillinq Configuration",
+    "Shillinq configuration saved." : "Shillinq configuration saved.",
+    "Failed to save Shillinq configuration." : "Failed to save Shillinq configuration.",
+    "Shillinq Ledger" : "Shillinq Ledger",
+    "Ledger synchronized" : "Ledger synchronized",
+    "Ledger pending" : "Ledger pending",
+    "Ledger sync failed" : "Ledger sync failed",
+    "Last synced" : "Last synced",
+    "Retry Sync" : "Retry Sync",
+    "Ledger sync retried successfully." : "Ledger sync retried successfully.",
+    "Could not retry the ledger sync." : "Could not retry the ledger sync."
 },
 "nplurals=2; plural=(n != 1);"
 );
