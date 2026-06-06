@@ -77,7 +77,7 @@
 
 ## 6. Detail View Integration
 
-- [ ] 6.1 Add `CommunicationHistory` to `src/views/clients/ClientDetail.vue`:
+- [x] 6.1 Add `CommunicationHistory` to `src/views/clients/ClientDetail.vue`:
   ```vue
   <CommunicationHistory
     v-if="!isNew && !loading && !editing"
@@ -86,11 +86,11 @@
   ```
   Import component and register in `components: {}`.
 
-- [ ] 6.2 Add `CommunicationHistory` to `src/views/contacts/ContactDetail.vue` with `entity-type="contact"`.
+- [x] 6.2 Add `CommunicationHistory` to `src/views/contacts/ContactDetail.vue` with `entity-type="contact"`.
 
-- [ ] 6.3 Add `CommunicationHistory` to `src/views/leads/LeadDetail.vue` with `entity-type="lead"`.
+- [x] 6.3 Add `CommunicationHistory` to `src/views/leads/LeadDetail.vue` with `entity-type="lead"`.
 
-- [ ] 6.4 Add `CommunicationHistory` to `src/views/requests/RequestDetail.vue` with `entity-type="request"`.
+- [x] 6.4 Add `CommunicationHistory` to `src/views/requests/RequestDetail.vue` with `entity-type="request"`.
 
 ## 7. CnObjectSidebar Notes Tab
 

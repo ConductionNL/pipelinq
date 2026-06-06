@@ -239,6 +239,15 @@
 			<ActivityTimeline :entity-type="'client'" :entity-id="clientId" />
 		</CnDetailCard>
 
+		<!--
+			Communication History — paginated contactmoment feed for this entity.
+			@spec openspec/changes/entity-notes/tasks.md#task-6.1
+		-->
+		<CommunicationHistory
+			v-if="!isNew && !loading && !editing"
+			entity-type="client"
+			:entity-id="clientId" />
+
 		<CnDetailCard :title="t('pipelinq', 'Complaints')">
 			<template #actions>
 				<NcButton @click="createComplaint">
@@ -332,6 +341,7 @@ import ClientForm from './ClientForm.vue'
 import ContactRelationships from '../../components/ContactRelationships.vue'
 import ContactmomentQuickLog from '../../components/ContactmomentQuickLog.vue'
 import ActivityTimeline from '../../components/ActivityTimeline.vue'
+import CommunicationHistory from '../../components/CommunicationHistory.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -345,6 +355,7 @@ export default {
 		ContactRelationships,
 		ContactmomentQuickLog,
 		ActivityTimeline,
+		CommunicationHistory,
 	},
 	props: {
 		clientId: {

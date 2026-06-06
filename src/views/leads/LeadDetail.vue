@@ -137,6 +137,15 @@
 			<ActivityTimeline :entity-type="'lead'" :entity-id="leadId" />
 		</CnDetailCard>
 
+		<!--
+			Communication History — paginated contactmoment feed for this entity.
+			@spec openspec/changes/entity-notes/tasks.md#task-6.3
+		-->
+		<CommunicationHistory
+			v-if="!isNew && !loading && !editing"
+			entity-type="lead"
+			:entity-id="leadId" />
+
 		<!-- Delete dialog -->
 		<NcDialog
 			v-if="showDeleteDialog"
@@ -163,6 +172,7 @@ import LeadForm from './LeadForm.vue'
 import LeadProducts from '../../components/LeadProducts.vue'
 import LeadContactRoles from '../../components/LeadContactRoles.vue'
 import ActivityTimeline from '../../components/ActivityTimeline.vue'
+import CommunicationHistory from '../../components/CommunicationHistory.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -176,6 +186,7 @@ export default {
 		LeadProducts,
 		LeadContactRoles,
 		ActivityTimeline,
+		CommunicationHistory,
 	},
 	props: {
 		leadId: {
