@@ -60,7 +60,7 @@
 
 ## 5. Frontend: CommunicationHistory Component
 
-- [ ] 5.1 Create `src/components/CommunicationHistory.vue`.
+- [x] 5.1 Create `src/components/CommunicationHistory.vue`.
   - SPDX header: `<!-- SPDX-License-Identifier: EUPL-1.2 -->` as first line.
   - Props: `entityType` (String, required), `entityId` (String, required).
   - Data: `items`, `loading`, `page`, `total`.
