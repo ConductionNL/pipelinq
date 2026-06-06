@@ -132,6 +132,10 @@ class SettingsService
         'receipt_printer_port'                     => '9100',
         'receipt_default_template'                 => '',
         'shillinq_ledger_webhook_url'              => '',
+        // Lead-management: number of inactivity days before a lead is flagged stale.
+        // Default mirrors REQ-LM-002 (14 days). Tenant-tunable through admin settings.
+        // @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+        'lead_stale_threshold_days'                => '14',
     ];
 
     /**
