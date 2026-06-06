@@ -1450,6 +1450,14 @@ OC.L10N.register(
     "Fire webhook" : "Webhook afvuren",
     "Update tag" : "Tag bijwerken",
     "Events" : "Gebeurtenissen",
+    "WIP sync status" : "WIP-synchronisatiestatus",
+    "WIP synced" : "WIP gesynchroniseerd",
+    "WIP pending" : "WIP in behandeling",
+    "WIP sync failed" : "WIP synchronisatie mislukt",
+    "Retry WIP sync" : "Opnieuw synchroniseren",
+    "Shillinq WIP webhook URL" : "Shillinq WIP-webhook-URL",
+    "WIP synced at" : "WIP gesynchroniseerd op",
+    "Not synced" : "Niet gesynchroniseerd",
     "_%n minute_::_%n minutes_" : ["%n minuut","%n minuten"]
 },
 "nplurals=2; plural=(n != 1);");

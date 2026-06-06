@@ -25,6 +25,7 @@ use OCA\OpenRegister\Event\DeepLinkRegistrationEvent;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
+use OCA\Pipelinq\Event\TimeEntryApprovedEvent;
 use OCA\Pipelinq\Adapter\AzureDataLakeExportAdapter;
 use OCA\Pipelinq\Adapter\BigQueryExportAdapter;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
@@ -52,6 +53,7 @@ use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCA\Pipelinq\Listener\PosTransactionCompletedListener;
 use OCA\Pipelinq\Listener\ProjectCreationListener;
 use OCA\Pipelinq\Listener\ProjectPhaseStatusListener;
+use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Mcp\PipelinqToolProvider;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -120,6 +122,15 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(
             event: ObjectUpdatedEvent::class,
             listener: ProjectPhaseStatusListener::class
+        );
+
+        // Shillinq WIP integration: time-entry approval dispatches a CloudEvent
+        // to the configured shillinq webhook (pipelinq-time-to-shillinq-wip /
+        // REQ-WIP-001). The listener is idempotent and a no-op when the
+        // shillinq_wip_webhook_url app-config value is unset.
+        $context->registerEventListener(
+            event: TimeEntryApprovedEvent::class,
+            listener: TimeApprovalListener::class
         );
 
         // Loyalty program: POS transaction completion fires the loyalty engine
