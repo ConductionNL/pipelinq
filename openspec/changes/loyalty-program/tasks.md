@@ -62,7 +62,7 @@
 
 ## 2. Core Service Layer — Points Ledger & Account Management
 
-- [ ] 2.1 Implement LoyaltyAccountService
+- [x] 2.1 Implement LoyaltyAccountService
   - **files**: `pipelinq/app/Service/LoyaltyAccountService.php`
   - **spec_ref**: REQ-LOY-002, REQ-LOY-003
   - Methods:
@@ -77,7 +77,7 @@
     - Tier calculated on first account creation (should start at lowest tier)
     - GDPR compliance: deletion does not remove record, only anonymizes
 
-- [ ] 2.2 Implement PointsLedgerService (immutable append-only)
+- [x] 2.2 Implement PointsLedgerService (immutable append-only)
   - **files**: `pipelinq/app/Service/PointsLedgerService.php`
   - **spec_ref**: REQ-LOY-002, REQ-LOY-005
   - Methods:
@@ -99,7 +99,7 @@
     - All entries include timestamp, verwerktDoor, and brondocument
     - Ledger entries searchable/filterable by account, type, date range
 
-- [ ] 2.3 Implement TierService (automatic reclassification)
+- [x] 2.3 Implement TierService (automatic reclassification)
   - **files**: `pipelinq/app/Service/TierService.php`
   - **spec_ref**: REQ-LOY-003
   - Methods:
@@ -119,7 +119,7 @@
 
 ## 3. Points Calculation & POS Integration
 
-- [ ] 3.1 Implement PointsRuleEngine
+- [x] 3.1 Implement PointsRuleEngine
   - **files**: `pipelinq/app/Service/PointsRuleEngine.php`
   - **spec_ref**: REQ-LOY-002
   - Methods:
@@ -147,7 +147,7 @@
     - Tier multiplier applied before rounding
     - Non-integer results rounded down (floor)
 
-- [ ] 3.2 Create POS transaction hook / event listener
+- [x] 3.2 Create POS transaction hook / event listener
   - **files**: `pipelinq/app/EventListener/PosTransactionCompletedListener.php` OR integration in `openconnector`
   - **spec_ref**: REQ-LOY-002
   - Trigger: When `pos-transaction-core` emits "transaction.completed" event
@@ -171,7 +171,7 @@
 
 ## 4. Redemption Workflow
 
-- [ ] 4.1 Implement RedemptionService
+- [x] 4.1 Implement RedemptionService
   - **files**: `pipelinq/app/Service/RedemptionService.php`
   - **spec_ref**: REQ-LOY-004
   - Methods:
@@ -197,7 +197,7 @@
     - Failed debit prevents Redemption creation
     - Cancellation reverses ledger debit
 
-- [ ] 4.2 Create POS redemption code validator endpoint
+- [x] 4.2 Create POS redemption code validator endpoint
   - **files**: `pipelinq/app/Controller/RedemptionController.php`
   - **spec_ref**: REQ-LOY-004
   - Endpoints:
@@ -214,7 +214,7 @@
 
 ## 5. Gift Card Management
 
-- [ ] 5.1 Implement GiftCardService
+- [x] 5.1 Implement GiftCardService
   - **files**: `pipelinq/app/Service/GiftCardService.php`
   - **spec_ref**: REQ-LOY-006, REQ-LOY-007
   - Methods:
@@ -249,7 +249,7 @@
     - PIN verification uses bcrypt::verify
     - Expired cards (vervaltOp < now) rejected at redemption
 
-- [ ] 5.2 Create gift card POS integration
+- [x] 5.2 Create gift card POS integration
   - **files**: `pipelinq/app/Controller/GiftCardController.php` OR pos-transaction-core hook
   - **spec_ref**: REQ-LOY-006, REQ-LOY-007
   - Endpoints:
@@ -270,7 +270,7 @@
 
 ## 6. Expiry & Cleanup
 
-- [ ] 6.1 Implement points expiry batch job
+- [x] 6.1 Implement points expiry batch job
   - **files**: `pipelinq/app/Job/PointsExpiryBatchJob.php`
   - **spec_ref**: REQ-LOY-005
   - Scheduled: Daily at 02:00 UTC
@@ -292,7 +292,7 @@
     - Batch idempotent (running twice on same day is safe)
     - Failed account does not block remaining accounts
 
-- [ ] 6.2 Implement scheduled tier downgrade job (if applicable)
+- [x] 6.2 Implement scheduled tier downgrade job (if applicable)
   - **files**: `pipelinq/app/Job/TierDowngradeJob.php`
   - **spec_ref**: REQ-LOY-003
   - Scheduled: Daily, checks for accounts with scheduled downgrade
@@ -309,7 +309,7 @@
 
 ## 7. Reporting & Analytics
 
-- [ ] 7.1 Implement LoyaltyReportingService
+- [x] 7.1 Implement LoyaltyReportingService
   - **files**: `pipelinq/app/Service/LoyaltyReportingService.php`
   - **spec_ref**: REQ-LOY-008, REQ-LOY-009
   - Methods:
@@ -376,7 +376,7 @@
 
 ## 8. GDPR & Compliance
 
-- [ ] 8.1 Implement GDPR data access & deletion
+- [x] 8.1 Implement GDPR data access & deletion
   - **files**: `pipelinq/app/Service/GdprService.php` or extend existing service
   - **spec_ref**: REQ-LOY-010
   - Methods:
