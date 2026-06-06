@@ -51,11 +51,12 @@
 
 ## 4. Routes
 
-- [ ] 4.1 Add to `appinfo/routes.php`:
+- [x] 4.1 Add to `appinfo/routes.php`:
   ```php
   ['name' => 'activity#index', 'url' => '/api/activity/{entityType}/{entityId}', 'verb' => 'GET'],
   ```
   Place BEFORE any wildcard `{slug}` routes (ADR-003-backend).
+  **Registered as `entityActivity#index` (camelCase slug matches the `EntityActivityController` class name — the pipelinq convention; see e.g. `requestChannel#*`, `contactSync#*`, `activityTimeline#*`). Path and verb are exactly as specified; placement is alongside the other `/api/notes/*` and `/api/timeline/*` routes, well before the SPA catch-all at the bottom of `routes.php`.**
 
 ## 5. Frontend: CommunicationHistory Component
 
