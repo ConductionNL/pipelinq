@@ -638,6 +638,8 @@ The pipeline board interaction and rendering implemented in this app MUST provid
 
 #### Scenario: Documented operations are available
 
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
+
 - GIVEN the frontend component/store is loaded
 - WHEN a caller invokes one of the documented operations for pipeline board interaction and rendering
 - THEN the operation MUST execute and return a result consistent with the current implementation
@@ -651,6 +653,8 @@ Operations for pipeline board interaction and rendering MUST read their inputs f
 **Feature tier**: V1
 
 #### Scenario: Results reflect live state
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN CRM data backing pipeline board interaction and rendering
 - WHEN a documented operation runs
@@ -666,6 +670,8 @@ Operations for pipeline board interaction and rendering MUST tolerate missing, e
 **Feature tier**: V1
 
 #### Scenario: Missing input does not crash the flow
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN an operation for pipeline board interaction and rendering is called with absent or invalid input
 - WHEN it executes
