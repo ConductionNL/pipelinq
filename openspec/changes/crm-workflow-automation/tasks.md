@@ -77,7 +77,7 @@
 
 ## 3. Backend Controllers and Routes
 
-- [ ] 3.1 Create `lib/Controller/AutomationController.php`
+- [x] 3.1 Create `lib/Controller/AutomationController.php`
   - **spec_ref**: `specs/crm-workflow-automation/spec.md#REQ-WEB-008`, `#REQ-NFR-005`
   - **files**: `lib/Controller/AutomationController.php`
   - **acceptance_criteria**:
@@ -88,7 +88,7 @@
     - AND error responses MUST use static messages (never `$e->getMessage()`)
     - AND controller methods MUST be ≤10 lines; delegate to `AutomationService`
 
-- [ ] 3.2 Create `lib/Controller/WebhookController.php`
+- [x] 3.2 Create `lib/Controller/WebhookController.php`
   - **spec_ref**: `specs/crm-workflow-automation/spec.md#REQ-WEB-001` through `#REQ-WEB-008`
   - **files**: `lib/Controller/WebhookController.php`
   - **acceptance_criteria**:
@@ -97,7 +97,7 @@
     - AND all 6 endpoints MUST delegate to `WebhookService`
     - AND mutations MUST check `IGroupManager::isAdmin()`
 
-- [ ] 3.3 Create `lib/Controller/DmnController.php`
+- [x] 3.3 Create `lib/Controller/DmnController.php`
   - **spec_ref**: `specs/crm-workflow-automation/spec.md#REQ-DMN-001` through `#REQ-DMN-005`
   - **files**: `lib/Controller/DmnController.php`
   - **acceptance_criteria**:
@@ -106,7 +106,7 @@
     - AND invalid `decisionTableId` MUST return HTTP 400 with static `message` field
     - AND all endpoints MUST require admin authentication (HTTP 403 if not admin)
 
-- [ ] 3.4 Create `lib/Controller/AutomationVariableController.php`
+- [x] 3.4 Create `lib/Controller/AutomationVariableController.php`
   - **spec_ref**: `specs/crm-workflow-automation/spec.md#Feature 3`
   - **files**: `lib/Controller/AutomationVariableController.php`
   - **acceptance_criteria**:
@@ -115,7 +115,7 @@
     - AND with valid auth, a paginated list of active automations with runtime state MUST be returned
     - AND `GET /api/automations/{id}/variables` MUST return an empty `variables` array (HTTP 200) if no executions exist
 
-- [ ] 3.5 Register all routes in `appinfo/routes.php`
+- [x] 3.5 Register all routes in `appinfo/routes.php`
   - **spec_ref**: `design.md#Controllers`
   - **files**: `appinfo/routes.php`
   - **acceptance_criteria**:
