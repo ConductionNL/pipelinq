@@ -95,6 +95,10 @@ class SettingsLoadService
         'redemption',
         'giftCard',
         'giftCardTransaction',
+        // CTI screen-pop / click-to-dial adapter schemas (cti-screenpop-adapter).
+        'ctiAdapterConfig',
+        'ctiEventLog',
+        'ctiAgentPresence',
     ];
 
     /**
