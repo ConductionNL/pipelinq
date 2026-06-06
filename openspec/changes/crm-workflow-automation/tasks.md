@@ -140,7 +140,8 @@
 
 ## 5. Frontend Store
 
-- [ ] 5.1 Register `automation` and `automation-log` object types in `src/store/store.js`
+- [x] 5.1 Register `automation` and `automation-log` object types in `src/store/store.js`
+  - **note**: implemented as `automation` and `automationLog` (camelCase) to match the rest of the pipelinq store; the entire pipelinq store uses camelCase type names (`leadProduct`, `intakeForm`, `posTransaction`…), kebab-case would break the manifest/UI lookups. Each type registered exactly once.
   - **spec_ref**: `design.md#Store`
   - **files**: `src/store/store.js`
   - **acceptance_criteria**:
@@ -152,7 +153,7 @@
 
 ## 6. Frontend Views
 
-- [ ] 6.1 Create `src/views/automations/AutomationList.vue`
+- [x] 6.1 Create `src/views/automations/AutomationList.vue`
   - **spec_ref**: `specs/crm-workflow-automation/spec.md#REQ-MKT-005`
   - **files**: `src/views/automations/AutomationList.vue`
   - **acceptance_criteria**:
@@ -165,7 +166,7 @@
     - AND ALL imports used in `<template>` MUST be registered in `components: {}`
     - AND ALL user-visible strings MUST use `this.t(appName, 'english key')`
 
-- [ ] 6.2 Create `src/views/automations/AutomationDetail.vue`
+- [x] 6.2 Create `src/views/automations/AutomationDetail.vue`
   - **spec_ref**: `specs/crm-workflow-automation/spec.md#Feature 1`, `#Feature 4`
   - **files**: `src/views/automations/AutomationDetail.vue`
   - **acceptance_criteria**:
@@ -177,7 +178,7 @@
     - AND the Webhook section MUST only appear when `webhookUrl` is set
     - AND Edit/Delete header actions MUST be present
 
-- [ ] 6.3 Create `src/views/automations/AutomationBuilder.vue`
+- [x] 6.3 Create `src/views/automations/AutomationBuilder.vue`
   - **spec_ref**: `specs/crm-workflow-automation/spec.md#Feature 1`, `#Feature 4`
   - **files**: `src/views/automations/AutomationBuilder.vue`
   - **acceptance_criteria**:
@@ -188,7 +189,7 @@
     - AND save MUST call `await automationStore.saveObject(data)` wrapped in `try/catch` with user-facing error feedback
     - AND NEVER use `window.confirm()` — use `NcDialog` for confirmations
 
-- [ ] 6.4 Create `src/views/automations/AutomationHistory.vue`
+- [x] 6.4 Create `src/views/automations/AutomationHistory.vue`
   - **spec_ref**: `specs/crm-workflow-automation/spec.md#REQ-NFR-002`
   - **files**: `src/views/automations/AutomationHistory.vue`
   - **acceptance_criteria**:
@@ -197,7 +198,7 @@
     - AND status MUST use `CnStatusBadge` (not color alone — WCAG REQ-NFR-003)
     - AND empty state MUST show `CnEmptyState` if no logs exist
 
-- [ ] 6.5 Create `src/views/webhooks/WebhookList.vue`
+- [x] 6.5 Create `src/views/webhooks/WebhookList.vue`
   - **spec_ref**: `specs/crm-workflow-automation/spec.md#REQ-WEB-001` through `#REQ-WEB-005`
   - **files**: `src/views/webhooks/WebhookList.vue`
   - **acceptance_criteria**:
@@ -210,17 +211,11 @@
 
 ## 7. Navigation and Routing
 
-- [ ] 7.1 Add automation and webhook routes to `src/router/index.js`
-  - **spec_ref**: `design.md#Router`
-  - **files**: `src/router/index.js`
-  - **acceptance_criteria**:
-    - GIVEN the router is loaded
-    - THEN named route `AutomationList` MUST exist at path `/automations`
-    - AND named route `AutomationDetail` MUST exist at path `/automations/:id` with props via arrow function
-    - AND named route `WebhookList` MUST exist at path `/webhooks`
-    - AND routes MUST use history mode (path format, NOT hash format)
+- [x] 7.1 Add automation and webhook routes to `src/router/index.js`
+  - **note**: pipelinq uses manifest-v2 routing (ADR-036) — routes live in `src/manifest.d/automations.json` (no per-route Vue router file). The fragment registers the `/automations`, `/automations/new`, `/automations/:id`, `/automations/:id/edit` and `/webhooks` paths with named ids (`Automations`, `AutomationNew`, `AutomationDetail`, `AutomationEdit`, `Webhooks`) consumed by CnAppRoot. The shell is history-mode (path format) globally.
 
-- [ ] 7.2 Add "Automatiseringen" nav section to `src/navigation/MainMenu.vue`
+- [x] 7.2 Add "Automatiseringen" nav section to `src/navigation/MainMenu.vue`
+  - **note**: pipelinq's main menu is manifest-driven; the fragment's `menu` section adds an "Automatiseringen" group with two children (Automations → AutomationList, Webhooks → WebhookList). Labels resolved by the shared CnAppRoot translation layer.
   - **spec_ref**: `design.md#Navigation`
   - **files**: `src/navigation/MainMenu.vue`
   - **acceptance_criteria**:

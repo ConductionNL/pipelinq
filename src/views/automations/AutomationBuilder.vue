@@ -91,6 +91,20 @@
 				</NcButton>
 			</div>
 
+			<!-- Webhook URL (optional) -->
+			<div class="form-group">
+				<label>{{ t('pipelinq', 'Webhook URL') }}</label>
+				<input v-model="automation.webhookUrl"
+					type="url"
+					class="form-input"
+					:placeholder="t('pipelinq', 'https://n8n.example.com/webhook/...')">
+			</div>
+
+			<!-- Inline error feedback -->
+			<p v-if="saveError" class="save-error" role="alert">
+				{{ saveError }}
+			</p>
+
 			<!-- Save / Cancel -->
 			<div class="form-actions">
 				<NcButton type="primary" :disabled="!canSave" @click="save">
@@ -124,16 +138,22 @@ export default {
 			type: String,
 			default: null,
 		},
+		id: {
+			type: String,
+			default: null,
+		},
 	},
 	data() {
 		return {
 			loading: false,
+			saveError: '',
 			automation: {
 				name: '',
 				trigger: null,
 				conditions: [],
 				actions: [],
 				isActive: true,
+				webhookUrl: '',
 			},
 			conditions: [],
 		}
@@ -151,12 +171,13 @@ export default {
 		 */
 		actionOptions() {
 			return [
-				{ value: 'send_email', label: this.t('pipelinq', 'Send email') },
-				{ value: 'update_field', label: this.t('pipelinq', 'Update field') },
-				{ value: 'create_task', label: this.t('pipelinq', 'Create task') },
-				{ value: 'assign_agent', label: this.t('pipelinq', 'Assign to agent') },
-				{ value: 'add_tag', label: this.t('pipelinq', 'Add tag') },
-				{ value: 'send_webhook', label: this.t('pipelinq', 'Send webhook') },
+				{ value: 'assign_lead', label: this.t('pipelinq', 'Assign lead') },
+				{ value: 'move_stage', label: this.t('pipelinq', 'Move stage') },
+				{ value: 'send_notification', label: this.t('pipelinq', 'Send notification') },
+				{ value: 'add_note', label: this.t('pipelinq', 'Add note') },
+				{ value: 'fire_webhook', label: this.t('pipelinq', 'Fire webhook') },
+				{ value: 'update_tag', label: this.t('pipelinq', 'Update tag') },
+				{ value: 'apply_decision', label: this.t('pipelinq', 'Apply DMN decision') },
 			]
 		},
 		/**
@@ -197,18 +218,13 @@ export default {
 		 */
 		triggerOptions() {
 			return [
-				{ value: 'lead.created', label: this.t('pipelinq', 'Lead created') },
-				{ value: 'lead.updated', label: this.t('pipelinq', 'Lead updated') },
-				{ value: 'lead.stage_changed', label: this.t('pipelinq', 'Lead stage changed') },
-				{ value: 'lead.closed', label: this.t('pipelinq', 'Lead closed') },
-				{ value: 'request.created', label: this.t('pipelinq', 'Request created') },
-				{ value: 'request.updated', label: this.t('pipelinq', 'Request updated') },
-				{ value: 'request.closed', label: this.t('pipelinq', 'Request closed') },
-				{ value: 'contact.created', label: this.t('pipelinq', 'Contact created') },
-				{ value: 'contact.updated', label: this.t('pipelinq', 'Contact updated') },
-				{ value: 'complaint.created', label: this.t('pipelinq', 'Complaint created') },
-				{ value: 'complaint.resolved', label: this.t('pipelinq', 'Complaint resolved') },
-				{ value: 'task.completed', label: this.t('pipelinq', 'Task completed') },
+				{ value: 'lead_created', label: this.t('pipelinq', 'Lead created') },
+				{ value: 'lead_stage_changed', label: this.t('pipelinq', 'Lead stage changed') },
+				{ value: 'lead_assigned', label: this.t('pipelinq', 'Lead assigned') },
+				{ value: 'contact_created', label: this.t('pipelinq', 'Contact created') },
+				{ value: 'request_created', label: this.t('pipelinq', 'Request created') },
+				{ value: 'request_status_changed', label: this.t('pipelinq', 'Request status changed') },
+				{ value: 'marketing_segment_match', label: this.t('pipelinq', 'Marketing segment match') },
 			]
 		},
 	},
@@ -219,8 +235,9 @@ export default {
 	 * @spec openspec/changes/reverse-2026-05-26-fe-automations-ui/tasks.md#task-7
 	 */
 	mounted() {
-		if (this.automationId) {
-			this.loadAutomation()
+		const effectiveId = this.automationId || (this.id && this.id !== 'new' ? this.id : null)
+		if (effectiveId) {
+			this.loadAutomation(effectiveId)
 		}
 	},
 	methods: {
@@ -277,16 +294,17 @@ export default {
 		 *
 		 * @spec openspec/changes/reverse-2026-05-26-fe-automations-ui/tasks.md#task-6
 		 */
-		async loadAutomation() {
+		async loadAutomation(effectiveId) {
 			this.loading = true
 			try {
 				const objectStore = useObjectStore()
-				const result = await objectStore.fetchObject('automation', this.automationId)
+				const result = await objectStore.fetchObject('automation', effectiveId || this.automationId || this.id)
 				if (result) {
 					this.automation = { ...result }
 					this.parseConditions()
 				}
 			} catch (e) {
+				this.saveError = this.t('pipelinq', 'Failed to load automation')
 				// eslint-disable-next-line no-console
 				console.error('Failed to load automation', e)
 			} finally {
@@ -338,11 +356,18 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-automations-ui/tasks.md#task-12
 		 */
 		async save() {
+			this.saveError = ''
 			this.automation.conditions = this.buildConditions()
 
-			const objectStore = useObjectStore()
-			await objectStore.saveObject('automation', this.automation)
-			this.$router.push({ name: 'Automations' })
+			try {
+				const objectStore = useObjectStore()
+				await objectStore.saveObject('automation', this.automation)
+				this.$router.push({ name: 'Automations' })
+			} catch (e) {
+				this.saveError = this.t('pipelinq', 'Failed to save automation')
+				// eslint-disable-next-line no-console
+				console.error('Failed to save automation', e)
+			}
 		},
 	},
 }
@@ -409,5 +434,10 @@ export default {
 	display: flex;
 	gap: 8px;
 	margin-top: 12px;
+}
+
+.save-error {
+	color: var(--color-error);
+	font-weight: 600;
 }
 </style>
