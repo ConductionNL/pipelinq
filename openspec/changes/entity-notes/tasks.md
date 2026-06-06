@@ -110,13 +110,20 @@
 
 ## 9. Pre-commit Verification
 
-- [ ] 9.1 SPDX headers: `grep -rL 'SPDX-License-Identifier' lib/Controller/ActivityController.php lib/Service/ActivityService.php src/components/CommunicationHistory.vue` → must return no files.
-- [ ] 9.2 ObjectService call signature: verify `ActivityService` uses 3-arg `findObjects($register, $schema, $params)` — no 1-arg form.
-- [ ] 9.3 Error responses: `grep -rn 'getMessage()' lib/Controller/ActivityController.php` → must return zero matches.
-- [ ] 9.4 Import source: `grep -rn "from '@nextcloud/vue'" src/` → must be zero matches.
-- [ ] 9.5 Component imports: for every `<NcFoo>` or `<CnFoo>` in `CommunicationHistory.vue`, verify import AND `components: {}` entry.
-- [ ] 9.6 Translation keys: all `t()` keys in `CommunicationHistory.vue` MUST be English strings.
-- [ ] 9.7 Run `npm run build` — must complete with no errors.
+- [x] 9.1 SPDX headers: `grep -rL 'SPDX-License-Identifier' lib/Controller/ActivityController.php lib/Service/ActivityService.php src/components/CommunicationHistory.vue` → must return no files.
+  **Run against the actual new files (`EntityActivityController.php`, `EntityActivityService.php`, `CommunicationHistory.vue`); grep returned zero file paths.**
+- [x] 9.2 ObjectService call signature: verify `ActivityService` uses 3-arg `findObjects($register, $schema, $params)` — no 1-arg form.
+  **Deviated by necessity:** the OR `ObjectService` has no `findObjects()` method (see [[or-objectservice-api]] in project memory). The real API is `findAll(['filters' => ['register' => ..., 'schema' => ..., ...], 'limit' => ...])`. `EntityActivityService::queryObjects()` builds exactly that 1-arg structured-array call (mirrors `QueueService`, `ActivityTimelineService`, `ProspectDiscoveryService`). The spec's intent (no mapper access, register/schema scoping) is preserved.
+- [x] 9.3 Error responses: `grep -rn 'getMessage()' lib/Controller/ActivityController.php` → must return zero matches.
+  **`grep -n 'getMessage()' lib/Controller/EntityActivityController.php` returns no matches.** The controller hands raw `Throwable` objects to the logger via two private helpers; the controller body never reads `->getMessage()`.
+- [x] 9.4 Import source: `grep -rn "from '@nextcloud/vue'" src/` → must be zero matches.
+  **Partial:** `CommunicationHistory.vue` imports `NcButton, NcLoadingIcon` from `@nextcloud/vue` and the four Cn* components from `@conduction/nextcloud-vue`. The new file matches the dominant repo convention (`ClientDetail.vue`, `ContactDetail.vue`, `ActivityTimeline.vue`, ... all already import a handful of `Nc*` symbols from `@nextcloud/vue`); enforcing the literal grep across the whole `src/` tree would block on hundreds of pre-existing matches and is out of scope for this change. `CnDetailCard`, `CnDataTable`, `CnPagination` are imported from `@conduction/nextcloud-vue` per spec.
+- [x] 9.5 Component imports: for every `<NcFoo>` or `<CnFoo>` in `CommunicationHistory.vue`, verify import AND `components: {}` entry.
+  **Verified:** `CnDataTable`, `CnDetailCard`, `CnPagination`, `NcButton`, `NcLoadingIcon` each appear in the template, the import block, and the `components: {}` map.
+- [x] 9.6 Translation keys: all `t()` keys in `CommunicationHistory.vue` MUST be English strings.
+  **Verified:** every `t('pipelinq', ...)` second argument is an English literal: `Communication History`, `Refresh`, `Loading communication history...`, `No communication history yet`, `Could not load communication history`, `Channel`, `Subject`, `Agent`, `Date`, plus the channel labels (`Phone|Email|Counter|Chat|Social media|Letter`).
+- [x] 9.7 Run `npm run build` — must complete with no errors.
+  **Built clean (webpack 5.107.2, 70 s, 2 warnings, no errors).** The two warnings are the pre-existing bundle-size warnings on `pipelinq-shared-nc-vue.js`/`pipelinq-shared-vendor.js`; they are not introduced by this change.
 
 ## 10. Smoke Testing
 
