@@ -129,6 +129,12 @@ import AutomationDetailView from './views/automations/AutomationDetail.vue'
 import AutomationHistoryView from './views/automations/AutomationHistory.vue'
 import WebhookListView from './views/webhooks/WebhookList.vue'
 
+// --- Expense → Shillinq AP (pipelinq-expense-to-shillinq-ap): list with
+//     apSyncStatus badge column, detail with embedded Shillinq AP card
+//     (REQ-AP-005 / REQ-AP-006).
+import ExpenseListView from './views/expenses/ExpenseList.vue'
+import ExpenseDetailView from './views/expenses/ExpenseDetail.vue'
+
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
 /**
@@ -388,6 +394,18 @@ const registry = {
 		component: AutomationHistoryView,
 		_note: 'Standalone automation execution history table; reusable from detail as a section.',
 	},
+	// --- Expense → Shillinq AP (pipelinq-expense-to-shillinq-ap). ---
+	ExpenseListView: {
+		kind: 'page',
+		component: ExpenseListView,
+		_note: 'Expenses list with apSyncStatus badge column (REQ-AP-005).',
+	},
+	ExpenseDetailView: {
+		kind: 'page',
+		component: ExpenseDetailView,
+		_note: 'Expense detail with embedded Shillinq AP card + retry button on failed dispatches (REQ-AP-006).',
+	},
+
 	WebhookListView: {
 		kind: 'page',
 		component: WebhookListView,
