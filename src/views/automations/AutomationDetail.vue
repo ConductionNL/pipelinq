@@ -82,32 +82,21 @@
 			</CnDetailCard>
 		</CnDetailPage>
 
-		<NcDialog v-if="confirmDelete"
-			:name="t('pipelinq', 'Delete automation')"
-			:open="confirmDelete"
-			@closing="confirmDelete = false">
-			<p>{{ t('pipelinq', 'Are you sure? This cannot be undone.') }}</p>
-			<template #actions>
-				<NcButton @click="confirmDelete = false">
-					{{ t('pipelinq', 'Cancel') }}
-				</NcButton>
-				<NcButton type="error" @click="doDelete">
-					{{ t('pipelinq', 'Delete') }}
-				</NcButton>
-			</template>
-		</NcDialog>
+		<DeleteAutomationDialog v-if="confirmDelete"
+			@cancel="confirmDelete = false"
+			@confirm="doDelete" />
 	</div>
 </template>
 
 <script>
 import { CnDetailPage, CnDetailCard, CnStatusBadge } from '@conduction/nextcloud-vue'
 import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
-import NcDialog from '@nextcloud/vue/dist/Components/NcDialog.js'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from '../../store/modules/object.js'
 import AutomationBuilder from './AutomationBuilder.vue'
 import AutomationHistory from './AutomationHistory.vue'
+import DeleteAutomationDialog from '../../dialogs/DeleteAutomationDialog.vue'
 
 export default {
 	name: 'AutomationDetail',
@@ -116,9 +105,9 @@ export default {
 		CnDetailCard,
 		CnStatusBadge,
 		NcButton,
-		NcDialog,
 		AutomationBuilder,
 		AutomationHistory,
+		DeleteAutomationDialog,
 	},
 	props: {
 		id: {

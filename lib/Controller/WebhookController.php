@@ -78,6 +78,9 @@ class WebhookController extends Controller
     #[NoAdminRequired]
     public function index(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
         $page  = max(1, (int) $this->request->getParam('page', 1));
         $limit = max(1, min(200, (int) $this->request->getParam('limit', 50)));
         try {
@@ -132,6 +135,9 @@ class WebhookController extends Controller
     #[NoAdminRequired]
     public function show(string $id): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
         try {
             $webhook = $this->getWebhookMapper()->find((int) $id);
         } catch (\Throwable) {

@@ -1,0 +1,149 @@
+{
+	"info": {
+		"name": "Pipelinq CRM workflow automation",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"description": "Newman integration tests for the crm-workflow-automation feature: automation CRUD, webhook proxy and DMN evaluation."
+	},
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{ "key": "username", "value": "{{username}}", "type": "string" },
+			{ "key": "password", "value": "{{password}}", "type": "string" }
+		]
+	},
+	"variable": [
+		{ "key": "baseUrl", "value": "{{baseUrl}}" },
+		{ "key": "username", "value": "{{username}}" },
+		{ "key": "password", "value": "{{password}}" }
+	],
+	"item": [
+		{
+			"name": "GET /api/automations returns paginated list",
+			"request": {
+				"method": "GET",
+				"url": "{{baseUrl}}/index.php/apps/pipelinq/api/automations"
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status is 200', () => pm.response.to.have.status(200));",
+							"const body = pm.response.json();",
+							"pm.test('Has pagination shape', () => {",
+							"  pm.expect(body).to.have.property('results');",
+							"  pm.expect(body).to.have.property('total');",
+							"  pm.expect(body).to.have.property('page');",
+							"  pm.expect(body).to.have.property('pages');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "POST /api/automations without admin returns 403",
+			"request": {
+				"method": "POST",
+				"url": "{{baseUrl}}/index.php/apps/pipelinq/api/automations",
+				"header": [{ "key": "Content-Type", "value": "application/json" }],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\":\"newman-test\",\"trigger\":\"lead_created\"}"
+				},
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{ "key": "username", "value": "{{nonAdminUsername}}", "type": "string" },
+						{ "key": "password", "value": "{{nonAdminPassword}}", "type": "string" }
+					]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status is 403 for non-admin', () => pm.response.to.have.status(403));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "GET /api/automations/runtime requires auth",
+			"request": {
+				"method": "GET",
+				"url": "{{baseUrl}}/index.php/apps/pipelinq/api/automations/runtime",
+				"auth": {
+					"type": "noauth"
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Unauthenticated request is rejected', () => {",
+							"  pm.expect([401, 403]).to.include(pm.response.code);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "POST /api/dmn/evaluate with invalid id returns 400",
+			"request": {
+				"method": "POST",
+				"url": "{{baseUrl}}/index.php/apps/pipelinq/api/dmn/evaluate",
+				"header": [{ "key": "Content-Type", "value": "application/json" }],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"decisionTableId\":\"\",\"inputData\":{}}"
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Returns 400 on invalid decisionTableId', () => pm.response.to.have.status(400));",
+							"const body = pm.response.json();",
+							"pm.test('Has message field', () => pm.expect(body).to.have.property('message'));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "GET /api/webhooks returns paginated list",
+			"request": {
+				"method": "GET",
+				"url": "{{baseUrl}}/index.php/apps/pipelinq/api/webhooks"
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status is 200', () => pm.response.to.have.status(200));",
+							"const body = pm.response.json();",
+							"pm.test('Has pagination shape', () => {",
+							"  pm.expect(body).to.have.property('results');",
+							"  pm.expect(body).to.have.property('total');",
+							"  pm.expect(body).to.have.property('page');",
+							"  pm.expect(body).to.have.property('pages');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		}
+	]
+}
