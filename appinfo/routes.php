@@ -270,6 +270,28 @@ return [
         ['name' => 'loyaltyGdpr#export',                  'url' => '/api/loyalty/gdpr/{klantId}/export',                 'verb' => 'GET'],
         ['name' => 'loyaltyGdpr#delete',                  'url' => '/api/loyalty/gdpr/{klantId}',                        'verb' => 'DELETE'],
 
+        // CRM workflow automation (crm-workflow-automation).
+        // Specific routes BEFORE wildcard {id} routes — symfony router order matters.
+        ['name' => 'automationVariable#index',     'url' => '/api/automations/runtime',          'verb' => 'GET'],
+        ['name' => 'automation#index',             'url' => '/api/automations',                  'verb' => 'GET'],
+        ['name' => 'automation#create',            'url' => '/api/automations',                  'verb' => 'POST'],
+        ['name' => 'automation#activate',          'url' => '/api/automations/{id}/activate',    'verb' => 'PUT'],
+        ['name' => 'automation#history',           'url' => '/api/automations/{id}/history',     'verb' => 'GET'],
+        ['name' => 'automationVariable#variables', 'url' => '/api/automations/{id}/variables',   'verb' => 'GET'],
+        ['name' => 'automation#show',              'url' => '/api/automations/{id}',             'verb' => 'GET'],
+        ['name' => 'automation#update',            'url' => '/api/automations/{id}',             'verb' => 'PUT'],
+        ['name' => 'automation#destroy',           'url' => '/api/automations/{id}',             'verb' => 'DELETE'],
+
+        ['name' => 'webhook#index',   'url' => '/api/webhooks',           'verb' => 'GET'],
+        ['name' => 'webhook#create',  'url' => '/api/webhooks',           'verb' => 'POST'],
+        ['name' => 'webhook#test',    'url' => '/api/webhooks/{id}/test', 'verb' => 'POST'],
+        ['name' => 'webhook#show',    'url' => '/api/webhooks/{id}',      'verb' => 'GET'],
+        ['name' => 'webhook#update',  'url' => '/api/webhooks/{id}',      'verb' => 'PUT'],
+        ['name' => 'webhook#destroy', 'url' => '/api/webhooks/{id}',      'verb' => 'DELETE'],
+
+        ['name' => 'dmn#listTables', 'url' => '/api/dmn/tables',   'verb' => 'GET'],
+        ['name' => 'dmn#evaluate',   'url' => '/api/dmn/evaluate', 'verb' => 'POST'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
