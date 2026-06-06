@@ -1477,6 +1477,14 @@ OC.L10N.register(
     "Verzending in progress, moment geduld a.u.b." : "Verzending in progress, moment geduld a.u.b.",
     "Opnieuw versturen" : "Opnieuw versturen",
     "Retry started." : "Opnieuw versturen gestart.",
-    "Retry failed." : "Opnieuw versturen mislukt."
+    "Retry failed." : "Opnieuw versturen mislukt.",
+    "WIP sync status" : "WIP-synchronisatiestatus",
+    "WIP synced" : "WIP gesynchroniseerd",
+    "WIP pending" : "WIP in behandeling",
+    "WIP sync failed" : "WIP synchronisatie mislukt",
+    "Retry WIP sync" : "Opnieuw synchroniseren",
+    "Shillinq WIP webhook URL" : "Shillinq WIP-webhook-URL",
+    "WIP synced at" : "WIP gesynchroniseerd op",
+    "Not synced" : "Niet gesynchroniseerd"
 },
 "nplurals=2; plural=(n != 1);");
