@@ -88,6 +88,16 @@ class SettingsService
         'portalDelegation_schema',
         'portalAuditEvent_schema',
         'portalTenantConfig_schema',
+        // Loyalty programme schemas (loyalty-program).
+        'loyaltyProgramme_schema',
+        'pointsRule_schema',
+        'tierRule_schema',
+        'klantLoyaltyAccount_schema',
+        'pointsLedgerEntry_schema',
+        'redemptionOption_schema',
+        'redemption_schema',
+        'giftCard_schema',
+        'giftCardTransaction_schema',
     ];
 
     /**

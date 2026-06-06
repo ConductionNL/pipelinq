@@ -2,22 +2,30 @@
 
 ## 0. Deduplication Check
 
-- [ ] 0.1 Search for existing loyalty/points tracking capabilities
+- [x] 0.1 Search for existing loyalty/points tracking capabilities
   - Search `pipelinq/src/`, `pipelinq/app/`, and `openregister/lib/` for "loyalty", "points", "tier",
     "redemption", "gift-card"
   - Check if any prior app (openklant, openzaak, valtimo) has reward/loyalty features
   - Verify no overlapping Open APIs (Gegevensmagazijn, etc.) define loyalty models
-  - **Finding**: [Document findings — no overlap found / minor overlap with X / requires coordination]
+  - **Finding**: No overlap. `grep -rli "loyalty" lib/` returned 0 hits in pipelinq; the only
+    `points`/`reward` hits were unrelated POS refund/portal endpoints. No prior loyalty feature in
+    openklant/openzaak/valtimo (none of those ship reward primitives). No Gegevensmagazijn API defines
+    loyalty models — this is a native pipelinq engine.
 
-- [ ] 0.2 Check OpenRegister platform for reusable transaction/ledger patterns
+- [x] 0.2 Check OpenRegister platform for reusable transaction/ledger patterns
   - Search `ObjectService`, `AuditTrailService`, `TransactionService` for append-only ledger support
   - Verify immutability patterns are available for PointsLedgerEntry
   - Confirm relation linking (accountId → customerId → contact) is supported
-  - **Finding**: [Document what platform provides vs. what must be built]
+  - **Finding**: OR provides `ObjectService::createObject/saveObject/updateObject/deleteObject` +
+    automatic `AuditTrailService` on every mutation. Append-only immutability for `PointsLedgerEntry`
+    is enforced at the application layer (services never call `updateObject` on ledger entries, only
+    `createObject`). Relation linking is supported via plain FK string fields (`accountId`, `klantId`,
+    `programmeId`) traversed by `ObjectService::findAll` filters. `klantId` references a Nextcloud
+    contact UID (`OCP\Contacts\IManager`) per the fleet contact-is-NC-entity pattern.
 
 ## 1. Schema Design & Migrations
 
-- [ ] 1.1 Create OpenRegister schemas for 9 entities
+- [x] 1.1 Create OpenRegister schemas for 9 entities
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **spec_ref**: REQ-LOY-001 through REQ-LOY-010
   - Create schemas with all properties from context-brief.md:
@@ -37,7 +45,7 @@
     - Seed data provided (3-5 example objects per schema per design.md)
     - Relations defined: KlantLoyaltyAccount → klantId, → programmeId; etc.
 
-- [ ] 1.2 Create database migrations for any custom indexes
+- [x] 1.2 Create database migrations for any custom indexes
   - **files**: `pipelinq/app/Migration/`, if needed
   - Index on (accountId, timestamp) for ledger queries by account
   - Unique index on GiftCard.serial
@@ -45,6 +53,12 @@
   - **acceptance_criteria**:
     - Migrations idempotent (check if index exists before creating)
     - No breaking changes to existing schema
+  - **Implementation note**: Loyalty objects live in OR's per-schema magic tables
+    (`oc_openregister_table_pipelinq_<schema>`); OR auto-provisions an indexed JSON-objects column.
+    Composite/unique enforcement is done by services at application layer
+    (`LoyaltyAccountService::getOrCreateAccount` checks `(klantId, programmeId)` via
+    `ObjectService::findAll`; `GiftCardService::issueGiftCard` retries on serial collision). No
+    custom NC migration step is required; OR builds the storage on first object write.
 
 ## 2. Core Service Layer — Points Ledger & Account Management
 
