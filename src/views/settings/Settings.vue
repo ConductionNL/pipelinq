@@ -302,8 +302,13 @@
 				placeholder="https://shillinq.example.com/ledger/webhook"
 				:error="shillinqUrlInvalid"
 				:helper-text="shillinqUrlInvalid ? t('pipelinq', 'Please enter a valid HTTPS URL') : ''" />
+			<NcTextField v-model="config.shillinq_wip_webhook_url"
+				:label="t('pipelinq', 'Shillinq WIP webhook URL')"
+				placeholder="https://shillinq.example.com/api/wip/events"
+				:error="wipUrlInvalid"
+				:helper-text="wipUrlInvalid ? t('pipelinq', 'Please enter a valid HTTPS URL') : ''" />
 			<NcButton type="primary"
-				:disabled="savingShillinq || shillinqUrlInvalid"
+				:disabled="savingShillinq || shillinqUrlInvalid || wipUrlInvalid"
 				@click="saveShillinq">
 				<template #icon>
 					<NcLoadingIcon v-if="savingShillinq" :size="16" />
@@ -462,6 +467,23 @@ export default {
 		 */
 		shillinqUrlInvalid() {
 			const url = (this.config.shillinq_ledger_webhook_url || '').trim()
+			if (url === '') {
+				return false
+			}
+			try {
+				return new URL(url).protocol !== 'https:'
+			} catch (e) {
+				return true
+			}
+		},
+		/**
+		 * Whether the entered Shillinq WIP webhook URL is present but not a valid HTTPS URL.
+		 * An empty value is valid (disables the integration).
+		 *
+		 * @spec openspec/changes/pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-004
+		 */
+		wipUrlInvalid() {
+			const url = (this.config.shillinq_wip_webhook_url || '').trim()
 			if (url === '') {
 				return false
 			}
@@ -784,7 +806,7 @@ export default {
 		 * @spec openspec/changes/pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-006-03
 		 */
 		async saveShillinq() {
-			if (this.shillinqUrlInvalid) {
+			if (this.shillinqUrlInvalid || this.wipUrlInvalid) {
 				return
 			}
 			this.savingShillinq = true
@@ -793,6 +815,7 @@ export default {
 				const result = await this.settingsStore.saveSettings({
 					...this.config,
 					shillinq_ledger_webhook_url: (this.config.shillinq_ledger_webhook_url || '').trim(),
+					shillinq_wip_webhook_url: (this.config.shillinq_wip_webhook_url || '').trim(),
 				})
 				if (result) {
 					this.config = this.settingsStore.config || result
