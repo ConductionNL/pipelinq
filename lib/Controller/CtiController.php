@@ -1,0 +1,390 @@
+<?php
+
+/**
+ * Pipelinq CtiController.
+ *
+ * Controller for the CTI screen-pop and click-to-dial API endpoints.
+ *
+ * @category Controller
+ * @package  OCA\Pipelinq\Controller
+ *
+ * @author    Conduction <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * @version GIT: <git_id>
+ *
+ * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Pipelinq\Controller;
+
+use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\CtiService;
+use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
+use OCP\AppFramework\Http\JSONResponse;
+use OCP\IGroupManager;
+use OCP\IRequest;
+use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
+
+/**
+ * CTI controller.
+ *
+ * Endpoints:
+ *   POST  /api/cti/webhook/{platform}           PublicPage (signature verified)
+ *   POST  /api/cti/screen-pop                   Authenticated user
+ *   POST  /api/cti/click-to-dial                Authenticated user
+ *   POST  /api/cti/contactmoment/{id}/disposition  Authenticated user
+ *   POST  /api/cti/contactmoment/{id}/recording    Authenticated user
+ *   GET   /api/cti/config                       Admin
+ *   PUT   /api/cti/config                       Admin
+ *   GET   /api/cti/test-connection              Admin
+ *   GET   /api/cti/event-log                    Admin
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Thin controller wiring the
+ *  CtiService surface to HTTP — coupling is unavoidable on a CRUD facade.
+ *
+ * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+ */
+class CtiController extends Controller
+{
+    /**
+     * Constructor.
+     *
+     * @param IRequest        $request      The HTTP request.
+     * @param CtiService      $ctiService   The CTI service.
+     * @param IUserSession    $userSession  The user session.
+     * @param IGroupManager   $groupManager The group manager.
+     * @param LoggerInterface $logger       The logger.
+     */
+    public function __construct(
+        IRequest $request,
+        private CtiService $ctiService,
+        private IUserSession $userSession,
+        private IGroupManager $groupManager,
+        private LoggerInterface $logger,
+    ) {
+        parent::__construct(appName: Application::APP_ID, request: $request);
+    }//end __construct()
+
+    /**
+     * Inbound webhook handler.
+     *
+     * The route is PublicPage (the platform cannot CSRF-token sign);
+     * authenticity is enforced by the adapter's signature verification.
+     *
+     * @param string $platform Platform identifier from the URL.
+     *
+     * @return JSONResponse Acknowledgement.
+     *
+     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+     */
+    #[PublicPage]
+    #[NoCSRFRequired]
+    public function webhook(string $platform): JSONResponse
+    {
+        $rawBody   = (string) file_get_contents('php://input');
+        $signature = ($this->request->getHeader('X-Pipelinq-Signature')
+            ?: ($this->request->getHeader('Validation-Token')
+                ?: ($this->request->getParam('signature', '') ?? '')));
+
+        $payload = json_decode($rawBody, true);
+        if (is_array($payload) === false) {
+            $payload = (array) $this->request->getParams();
+        }
+
+        try {
+            $result = $this->ctiService->handleWebhook(
+                platform: $platform,
+                payload: $payload,
+                rawBody: $rawBody,
+                signature: ($signature === '' ? null : (string) $signature),
+            );
+        } catch (\RuntimeException $e) {
+            $this->logger->warning(
+                'CTI webhook: unknown platform',
+                ['platform' => $platform, 'exception' => $e->getMessage()]
+            );
+            return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
+        }
+
+        if ($result['valid'] === false) {
+            // 422 (Unprocessable Entity) signals an invalid webhook signature
+            // without leaking session-level auth status to the telephony platform.
+            return new JSONResponse(
+                ['error' => 'Invalid webhook signature', 'logged' => true],
+                Http::STATUS_UNPROCESSABLE_ENTITY
+            );
+        }
+
+        return new JSONResponse(
+            [
+                'ok'              => true,
+                'contactmomentId' => ($result['contactmomentId'] ?? null),
+            ]
+        );
+    }//end webhook()
+
+    /**
+     * Trigger a screen-pop lookup.
+     *
+     * @return JSONResponse The screen-pop result.
+     *
+     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+     */
+    #[NoAdminRequired]
+    public function screenPop(): JSONResponse
+    {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        $fromNumber = (string) $this->request->getParam('fromNumber', '');
+        if ($fromNumber === '') {
+            return new JSONResponse(['error' => 'fromNumber is required'], Http::STATUS_BAD_REQUEST);
+        }
+
+        $result = $this->ctiService->initiateScreenPop($fromNumber);
+        return new JSONResponse($result->toArray());
+    }//end screenPop()
+
+    /**
+     * Initiate an outbound click-to-dial.
+     *
+     * @return JSONResponse The originate result.
+     *
+     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+     */
+    #[NoAdminRequired]
+    public function clickToDial(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        $targetNumber = (string) $this->request->getParam('targetNumber', '');
+        $extension    = (string) $this->request->getParam('extension', '');
+        if ($targetNumber === '' || $extension === '') {
+            return new JSONResponse(
+                ['error' => 'targetNumber and extension are required'],
+                Http::STATUS_BAD_REQUEST
+            );
+        }
+
+        $result = $this->ctiService->originateCall(
+            userId: $user->getUID(),
+            extension: $extension,
+            targetNumber: $targetNumber,
+        );
+
+        $status = $result->success === true ? Http::STATUS_OK : Http::STATUS_BAD_GATEWAY;
+        return new JSONResponse($result->toArray(), $status);
+    }//end clickToDial()
+
+    /**
+     * Submit a disposition form.
+     *
+     * @param string $id Contactmoment UUID.
+     *
+     * @return JSONResponse Outcome with optional task id.
+     *
+     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+     */
+    #[NoAdminRequired]
+    public function disposition(string $id): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        $subject = (string) $this->request->getParam('subject', '');
+        $outcome = (string) $this->request->getParam('outcome', '');
+        $notes   = (string) $this->request->getParam('notes', '');
+
+        if ($subject === '' || $outcome === '') {
+            return new JSONResponse(
+                ['error' => 'subject and outcome are required'],
+                Http::STATUS_BAD_REQUEST
+            );
+        }
+
+        try {
+            $result = $this->ctiService->processDisposition(
+                contactmomentId: $id,
+                subject: $subject,
+                outcome: $outcome,
+                notes: $notes,
+            );
+        } catch (\InvalidArgumentException $e) {
+            return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+        } catch (\Throwable $e) {
+            $this->logger->error('CTI disposition failed', ['exception' => $e->getMessage()]);
+            return new JSONResponse(
+                ['error' => 'Disposition processing failed'],
+                Http::STATUS_INTERNAL_SERVER_ERROR
+            );
+        }
+
+        return new JSONResponse($result);
+    }//end disposition()
+
+    /**
+     * Attach recording metadata to a contactmoment.
+     *
+     * Used by the adapter system to relay an ad-hoc recording event when the
+     * platform delivers the recording URL outside of the standard `ended`
+     * event.
+     *
+     * @param string $id Contactmoment UUID.
+     *
+     * @return JSONResponse Acknowledgement.
+     *
+     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+     */
+    #[NoAdminRequired]
+    public function attachRecording(string $id): JSONResponse
+    {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        $recordingUrl = (string) $this->request->getParam('recordingUrl', '');
+        $expiresAt    = (string) $this->request->getParam('expiresAt', '');
+        if ($recordingUrl === '') {
+            return new JSONResponse(['error' => 'recordingUrl is required'], Http::STATUS_BAD_REQUEST);
+        }
+
+        $this->ctiService->attachRecording($id, $recordingUrl, $expiresAt);
+        return new JSONResponse(['ok' => true]);
+    }//end attachRecording()
+
+    /**
+     * Read the current CTI singleton configuration.
+     *
+     * Admin-only. Endpoint carries `#[NoAdminRequired]` so the NC SecurityMiddleware
+     * does not block authenticated non-admin requests at the framework layer; we
+     * gate the body with an `isAdmin($uid)` check (consistent with the rest of
+     * the pipelinq admin surface).
+     *
+     * @return JSONResponse Current config (credentials never returned).
+     *
+     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+     */
+    #[NoAdminRequired]
+    public function getConfig(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null || $this->groupManager->isAdmin($user->getUID()) === false) {
+            return new JSONResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
+        }
+
+        $config = $this->ctiService->loadConfig();
+        // Strip secrets before returning.
+        unset($config['webhook_secret']);
+        return new JSONResponse($config);
+    }//end getConfig()
+
+    /**
+     * Update the CTI singleton configuration.
+     *
+     * Admin-only — see {@see self::getConfig()} for the auth model.
+     *
+     * @return JSONResponse The saved configuration.
+     *
+     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+     */
+    #[NoAdminRequired]
+    public function updateConfig(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null || $this->groupManager->isAdmin($user->getUID()) === false) {
+            return new JSONResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
+        }
+
+        $allowedFields = [
+            'platform',
+            'api_base_url',
+            'auth_method',
+            'credentials_ref',
+            'screen_pop_enabled',
+            'screen_pop_delay_ms',
+            'click_to_dial_enabled',
+            'default_outbound_caller_id',
+            'webhook_secret',
+            'default_country_code',
+        ];
+
+        $payload = [];
+        foreach ($allowedFields as $field) {
+            $value = $this->request->getParam($field, null);
+            if ($value !== null) {
+                $payload[$field] = $value;
+            }
+        }
+
+        $saved = $this->ctiService->saveConfig($payload);
+        $this->logger->info(
+            'CTI config updated',
+            ['user' => $user->getUID(), 'fields' => array_keys($payload)]
+        );
+
+        unset($saved['webhook_secret']);
+        return new JSONResponse($saved);
+    }//end updateConfig()
+
+    /**
+     * Test platform connectivity (admin only).
+     *
+     * @return JSONResponse Test outcome.
+     *
+     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+     */
+    #[NoAdminRequired]
+    public function testConnection(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null || $this->groupManager->isAdmin($user->getUID()) === false) {
+            return new JSONResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
+        }
+
+        return new JSONResponse($this->ctiService->testConnection());
+    }//end testConnection()
+
+    /**
+     * Read the CTI webhook event log (admin only).
+     *
+     * @return JSONResponse Event log entries (max 30-day retention).
+     *
+     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+     */
+    #[NoAdminRequired]
+    public function eventLog(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null || $this->groupManager->isAdmin($user->getUID()) === false) {
+            return new JSONResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
+        }
+
+        $filters = array_filter([
+            'platform'   => (string) $this->request->getParam('platform', ''),
+            'event_type' => (string) $this->request->getParam('event_type', ''),
+        ]);
+
+        $limit  = (int) $this->request->getParam('limit', 50);
+        $offset = (int) $this->request->getParam('offset', 0);
+        $events = $this->ctiService->listEventLog($filters, $limit, $offset);
+
+        return new JSONResponse(['events' => $events, 'limit' => $limit, 'offset' => $offset]);
+    }//end eventLog()
+}//end class

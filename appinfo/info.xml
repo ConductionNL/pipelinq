@@ -79,6 +79,7 @@ Vrij en open source onder de AGPL-licentie.
     <repair-steps>
         <post-migration>
             <step>OCA\Pipelinq\Repair\InitializeSettings</step>
+            <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
         </post-migration>
     </repair-steps>
 
@@ -91,6 +92,7 @@ Vrij en open source onder de AGPL-licentie.
         <job>OCA\Pipelinq\BackgroundJob\ExportSchedulerJob</job>
         <job>OCA\Pipelinq\BackgroundJob\ExportWorkerJob</job>
         <job>OCA\Pipelinq\BackgroundJob\ForecastSnapshotJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\CtiEventLogCleanupJob</job>
     </background-jobs>
 
     <navigations>
