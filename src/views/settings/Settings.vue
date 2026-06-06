@@ -320,6 +320,28 @@
 			</NcNoteCard>
 		</NcSettingsSection>
 
+		<!-- Integraties — Shillinq AP webhook (REQ-AP-004) -->
+		<NcSettingsSection v-if="isAdmin"
+			:name="t('pipelinq', 'Integraties')"
+			:description="t('pipelinq', 'Voer de webhook URL in voor de Shillinq AP integratie. Laat leeg om uitgeschakeld te laten.')">
+			<NcTextField v-model="config.shillinq_ap_webhook_url"
+				:label="t('pipelinq', 'Shillinq AP webhook URL')"
+				placeholder="https://shillinq.example.com/ap-webhook"
+				:error="shillinqApUrlInvalid"
+				:helper-text="shillinqApUrlInvalid ? t('pipelinq', 'Voer een geldige HTTPS URL in, bijv. https://shillinq.example.com/webhook') : ''" />
+			<NcButton type="primary"
+				:disabled="savingShillinqAp || shillinqApUrlInvalid"
+				@click="saveShillinqAp">
+				<template #icon>
+					<NcLoadingIcon v-if="savingShillinqAp" :size="16" />
+				</template>
+				{{ t('pipelinq', 'Save Shillinq AP Configuration') }}
+			</NcButton>
+			<NcNoteCard v-if="shillinqApMessage" :type="shillinqApMessageType">
+				{{ shillinqApMessage }}
+			</NcNoteCard>
+		</NcSettingsSection>
+
 		<!-- Re-import Status -->
 		<div v-if="message" class="actions-section">
 			<NcNoteCard :type="messageType">
@@ -426,6 +448,10 @@ export default {
 			savingShillinq: false,
 			shillinqMessage: '',
 			shillinqMessageType: 'success',
+			// Shillinq AP integration (REQ-AP-004).
+			savingShillinqAp: false,
+			shillinqApMessage: '',
+			shillinqApMessageType: 'success',
 			// Lead management — stale threshold (REQ-LM-002).
 			staleThresholdInput: 14,
 			savingStale: false,
@@ -484,6 +510,23 @@ export default {
 		 */
 		wipUrlInvalid() {
 			const url = (this.config.shillinq_wip_webhook_url || '').trim()
+			if (url === '') {
+				return false
+			}
+			try {
+				return new URL(url).protocol !== 'https:'
+			} catch (e) {
+				return true
+			}
+		},
+		/**
+		 * Whether the entered Shillinq AP webhook URL is present but not a valid HTTPS URL.
+		 * An empty value is valid (disables the integration). REQ-AP-004 Scenario 13.
+		 *
+		 * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-004
+		 */
+		shillinqApUrlInvalid() {
+			const url = (this.config.shillinq_ap_webhook_url || '').trim()
 			if (url === '') {
 				return false
 			}
@@ -827,6 +870,34 @@ export default {
 				this.shillinqMessageType = 'error'
 			} finally {
 				this.savingShillinq = false
+			}
+		},
+		/**
+		 * Persist the Shillinq AP webhook URL through the standard settings endpoint.
+		 *
+		 * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-004
+		 */
+		async saveShillinqAp() {
+			if (this.shillinqApUrlInvalid) {
+				return
+			}
+			this.savingShillinqAp = true
+			this.shillinqApMessage = ''
+			try {
+				const result = await this.settingsStore.saveSettings({
+					...this.config,
+					shillinq_ap_webhook_url: (this.config.shillinq_ap_webhook_url || '').trim(),
+				})
+				if (result) {
+					this.config = this.settingsStore.config || result
+				}
+				this.shillinqApMessage = t('pipelinq', 'Shillinq AP configuration saved.')
+				this.shillinqApMessageType = 'success'
+			} catch (e) {
+				this.shillinqApMessage = e.response?.data?.message || t('pipelinq', 'Failed to save Shillinq AP configuration.')
+				this.shillinqApMessageType = 'error'
+			} finally {
+				this.savingShillinqAp = false
 			}
 		},
 		/**

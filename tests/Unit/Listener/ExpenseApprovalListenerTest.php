@@ -1,0 +1,332 @@
+<?php
+
+/**
+ * Unit tests for ExpenseApprovalListener.
+ *
+ * Asserts the listener dispatches an approved expense to the Shillinq AP
+ * webhook, records the synced/failed outcome on the persisted object, is
+ * idempotent for an already-synced expense (REQ-AP-002 Scenario 5),
+ * no-ops when unconfigured (REQ-AP-002 Scenario 6), ignores non-expense
+ * schemas and ignores non-approved status transitions.
+ *
+ * @category Test
+ * @package  OCA\Pipelinq\Tests\Unit\Listener
+ *
+ * @author    Conduction <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * @version GIT: <git-id>
+ *
+ * @link https://github.com/ConductionNL/pipelinq
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Pipelinq\Tests\Unit\Listener;
+
+use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Event\ObjectCreatedEvent;
+use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\Pipelinq\Listener\ExpenseApprovalListener;
+use OCA\Pipelinq\Service\ApSyncNotifier;
+use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\Pipelinq\Service\ShillinqApService;
+use OCP\EventDispatcher\Event;
+use OCP\EventDispatcher\IEventDispatcher;
+use OCP\IAppConfig;
+use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
+
+/**
+ * In-memory ObjectService capturing saveObject() calls.
+ */
+class ApFakeObjectService
+{
+    /**
+     * Captured saved objects keyed by uuid.
+     *
+     * @var array<string, array<string, mixed>>
+     */
+    public array $saved = [];
+
+    /**
+     * Capture a saved object.
+     *
+     * @param array|object $object   The object data.
+     * @param array        $extend   Unused.
+     * @param string       $register The register id.
+     * @param string       $schema   The schema id.
+     * @param string|null  $uuid     The object uuid.
+     *
+     * @return array<string, mixed>
+     */
+    public function saveObject($object, array $extend = [], string $register = '', string $schema = '', ?string $uuid = null): array
+    {
+        $this->saved[(string) $uuid] = (array) $object;
+        return (array) $object;
+    }//end saveObject()
+}//end class
+
+/**
+ * Tests for ExpenseApprovalListener.
+ */
+class ExpenseApprovalListenerTest extends TestCase
+{
+    /**
+     * Build an ObjectEntity double for the given schema and data.
+     *
+     * @param string               $schema The schema id.
+     * @param array<string, mixed> $data   The object data.
+     *
+     * @return ObjectEntity The entity double.
+     */
+    private function entity(string $schema, array $data): ObjectEntity
+    {
+        $entity = $this->getMockBuilder(ObjectEntity::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getSchema', 'getUuid', 'getObject', 'jsonSerialize'])
+            ->getMock();
+        $entity->method('getSchema')->willReturn($schema);
+        $entity->method('getUuid')->willReturn((string) ($data['uuid'] ?? 'exp-1'));
+        $entity->method('getObject')->willReturn($data);
+        return $entity;
+    }//end entity()
+
+    /**
+     * Build the listener with the given collaborators.
+     *
+     * @param SchemaMapService     $schemaMap The schema map service.
+     * @param ShillinqApService    $apService The AP service.
+     * @param ApFakeObjectService  $objects   The fake object service.
+     * @param ApSyncNotifier|null  $notify    The failure notifier (optional).
+     *
+     * @return ExpenseApprovalListener The listener under test.
+     */
+    private function listener(
+        SchemaMapService $schemaMap,
+        ShillinqApService $apService,
+        ApFakeObjectService $objects,
+        ?ApSyncNotifier $notify = null
+    ): ExpenseApprovalListener {
+        $container = $this->createMock(ContainerInterface::class);
+        $container->method('get')->willReturnCallback(
+            function (string $id) use ($objects) {
+                if ($id === 'OCA\OpenRegister\Service\ObjectService') {
+                    return $objects;
+                }
+                throw new \RuntimeException('unknown service '.$id);
+            }
+        );
+
+        $appConfig = $this->createMock(IAppConfig::class);
+        $appConfig->method('getValueString')->willReturnCallback(
+            function (string $app, string $key, string $default = ''): string {
+                if ($key === 'register') {
+                    return 'reg-1';
+                }
+                if ($key === 'expense_schema') {
+                    return 'schema-expense';
+                }
+                return $default;
+            }
+        );
+
+        return new ExpenseApprovalListener(
+            schemaMapService: $schemaMap,
+            apService: $apService,
+            notifier: ($notify ?? $this->createMock(ApSyncNotifier::class)),
+            eventDispatcher: $this->createMock(IEventDispatcher::class),
+            container: $container,
+            appConfig: $appConfig,
+            logger: $this->createMock(LoggerInterface::class),
+        );
+    }//end listener()
+
+    /**
+     * A non-ObjectCreatedEvent / ObjectUpdatedEvent is ignored.
+     *
+     * @return void
+     */
+    public function testIgnoresNonObjectEvent(): void
+    {
+        $apService = $this->createMock(ShillinqApService::class);
+        $apService->expects($this->never())->method('dispatchApEvent');
+
+        $objects  = new ApFakeObjectService();
+        $listener = $this->listener($this->createMock(SchemaMapService::class), $apService, $objects);
+
+        $listener->handle(new class extends Event {});
+        $this->assertCount(0, $objects->saved);
+    }//end testIgnoresNonObjectEvent()
+
+    /**
+     * A non-expense schema is ignored.
+     *
+     * @return void
+     */
+    public function testIgnoresNonExpenseSchema(): void
+    {
+        $schemaMap = $this->createMock(SchemaMapService::class);
+        $schemaMap->method('resolveEntityType')->willReturn('lead');
+
+        $apService = $this->createMock(ShillinqApService::class);
+        $apService->expects($this->never())->method('dispatchApEvent');
+
+        $objects  = new ApFakeObjectService();
+        $listener = $this->listener($schemaMap, $apService, $objects);
+
+        $listener->handle(new ObjectCreatedEvent($this->entity('schema-lead', ['uuid' => 'lead-1', 'status' => 'approved'])));
+        $this->assertCount(0, $objects->saved);
+    }//end testIgnoresNonExpenseSchema()
+
+    /**
+     * A non-approved expense is ignored.
+     *
+     * @return void
+     */
+    public function testIgnoresNonApprovedExpense(): void
+    {
+        $schemaMap = $this->createMock(SchemaMapService::class);
+        $schemaMap->method('resolveEntityType')->willReturn('expense');
+
+        $apService = $this->createMock(ShillinqApService::class);
+        $apService->expects($this->never())->method('dispatchApEvent');
+
+        $objects  = new ApFakeObjectService();
+        $listener = $this->listener($schemaMap, $apService, $objects);
+
+        $listener->handle(new ObjectUpdatedEvent(
+            $this->entity('schema-expense', ['uuid' => 'exp-1', 'status' => 'draft']),
+            $this->entity('schema-expense', ['uuid' => 'exp-1', 'status' => 'draft'])
+        ));
+        $this->assertCount(0, $objects->saved);
+    }//end testIgnoresNonApprovedExpense()
+
+    /**
+     * An unconfigured integration no-ops without persisting (REQ-AP-002 Scenario 6).
+     *
+     * @return void
+     */
+    public function testNoopWhenUnconfigured(): void
+    {
+        $schemaMap = $this->createMock(SchemaMapService::class);
+        $schemaMap->method('resolveEntityType')->willReturn('expense');
+
+        $apService = $this->createMock(ShillinqApService::class);
+        $apService->method('shouldDispatch')->willReturn(false);
+        $apService->expects($this->never())->method('dispatchApEvent');
+
+        $objects  = new ApFakeObjectService();
+        $listener = $this->listener($schemaMap, $apService, $objects);
+
+        $listener->handle(new ObjectCreatedEvent(
+            $this->entity('schema-expense', ['uuid' => 'exp-1', 'status' => 'approved'])
+        ));
+        $this->assertCount(0, $objects->saved);
+    }//end testNoopWhenUnconfigured()
+
+    /**
+     * A successful dispatch marks the expense synced and stamps apSyncedAt (REQ-AP-003 Scenario 9).
+     *
+     * @return void
+     */
+    public function testSuccessfulDispatchMarksSynced(): void
+    {
+        $schemaMap = $this->createMock(SchemaMapService::class);
+        $schemaMap->method('resolveEntityType')->willReturn('expense');
+
+        $apService = $this->createMock(ShillinqApService::class);
+        $apService->method('shouldDispatch')->willReturn(true);
+        $apService->method('dispatchApEvent')->willReturn(true);
+        $apService->method('now')->willReturn('2026-05-15T14:35:00Z');
+
+        $objects  = new ApFakeObjectService();
+        $listener = $this->listener($schemaMap, $apService, $objects);
+
+        $listener->handle(new ObjectCreatedEvent($this->entity('schema-expense', [
+            'uuid'       => 'exp-1',
+            'title'      => 'Hotel',
+            'amount'     => 185.50,
+            'status'     => 'approved',
+            'approvedBy' => 'alice',
+            'approvedAt' => '2026-05-15T14:30:00Z',
+        ])));
+
+        $this->assertArrayHasKey('exp-1', $objects->saved);
+        $this->assertSame('synced', $objects->saved['exp-1']['apSyncStatus']);
+        $this->assertSame('2026-05-15T14:35:00Z', $objects->saved['exp-1']['apSyncedAt']);
+    }//end testSuccessfulDispatchMarksSynced()
+
+    /**
+     * A failed dispatch marks the expense failed and notifies admins (REQ-AP-003 Scenario 10).
+     *
+     * @return void
+     */
+    public function testFailedDispatchMarksFailedAndNotifies(): void
+    {
+        $schemaMap = $this->createMock(SchemaMapService::class);
+        $schemaMap->method('resolveEntityType')->willReturn('expense');
+
+        $apService = $this->createMock(ShillinqApService::class);
+        $apService->method('shouldDispatch')->willReturn(true);
+        $apService->method('dispatchApEvent')->willReturn(false);
+        $apService->method('now')->willReturn('2026-05-15T14:35:00Z');
+
+        $notify = $this->createMock(ApSyncNotifier::class);
+        $notify->expects($this->once())->method('notifyFailure');
+
+        $objects  = new ApFakeObjectService();
+        $listener = $this->listener($schemaMap, $apService, $objects, $notify);
+
+        $listener->handle(new ObjectCreatedEvent($this->entity('schema-expense', [
+            'uuid'       => 'exp-1',
+            'title'      => 'Catering',
+            'amount'     => 78.30,
+            'status'     => 'approved',
+            'approvedBy' => 'alice',
+            'approvedAt' => '2026-05-10T11:20:00Z',
+        ])));
+
+        $this->assertSame('failed', $objects->saved['exp-1']['apSyncStatus']);
+    }//end testFailedDispatchMarksFailedAndNotifies()
+
+    /**
+     * An already-synced expense is not re-dispatched (REQ-AP-002 Scenario 5 — idempotency).
+     *
+     * @return void
+     */
+    public function testIdempotentSkipsAlreadySynced(): void
+    {
+        $schemaMap = $this->createMock(SchemaMapService::class);
+        $schemaMap->method('resolveEntityType')->willReturn('expense');
+
+        $apService = $this->createMock(ShillinqApService::class);
+        $apService->method('shouldDispatch')->willReturn(true);
+        $apService->expects($this->never())->method('dispatchApEvent');
+
+        $objects  = new ApFakeObjectService();
+        $listener = $this->listener($schemaMap, $apService, $objects);
+
+        $listener->handle(new ObjectUpdatedEvent(
+            $this->entity('schema-expense', [
+                'uuid'         => 'exp-1',
+                'status'       => 'approved',
+                'apSyncStatus' => 'synced',
+                'apSyncedAt'   => '2026-05-15T14:35:00Z',
+            ]),
+            $this->entity('schema-expense', [
+                'uuid'         => 'exp-1',
+                'status'       => 'approved',
+                'apSyncStatus' => 'synced',
+                'apSyncedAt'   => '2026-05-15T14:35:00Z',
+            ])
+        ));
+
+        $this->assertCount(0, $objects->saved);
+    }//end testIdempotentSkipsAlreadySynced()
+}//end class
