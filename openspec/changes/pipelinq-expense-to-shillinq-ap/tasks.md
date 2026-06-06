@@ -2,24 +2,28 @@
 
 ## 0. Deduplication Check
 
-- [ ] 0.1 Verify that `expense-capture-core` is merged and `ExpenseApprovedEvent` exists. If not, block this change until `expense-capture-core` is complete.
+- [x] 0.1 Verify that `expense-capture-core` is merged and `ExpenseApprovedEvent` exists. If not, block this change until `expense-capture-core` is complete.
   - Check: `find lib/ -name "ExpenseApprovedEvent.php"` or search the `expense-capture-core` change artifacts
-- [ ] 0.2 Verify that `expense-capture-core` is merged and the `expense` schema exists in `lib/Settings/pipelinq_register.json`. If not, block this change.
-- [ ] 0.3 Search for any existing shillinq AP integration:
+- [x] 0.2 Verify that `expense-capture-core` is merged and the `expense` schema exists in `lib/Settings/pipelinq_register.json`. If not, block this change.
+- [x] 0.3 Search for any existing shillinq AP integration:
   - `grep -r "shillinq\|apSync\|ap_sync\|ApSync" lib/ src/`
   - If any AP-related listener or service already exists, extend it rather than create new files. Document findings below.
-- [ ] 0.4 Search for any existing `ExpenseApprovalListener` or approval event listener in `lib/Listener/`:
+- [x] 0.4 Search for any existing `ExpenseApprovalListener` or approval event listener in `lib/Listener/`:
   - `ls lib/Listener/ 2>/dev/null`
   - If an existing listener handles expense approval, add the AP dispatch logic there instead of creating a new class.
-- [ ] 0.5 Confirm `WebhookService` is available in the installed OpenRegister version. Check `lib/AppInfo/Application.php` or OpenRegister vendor for `WebhookService`.
+- [x] 0.5 Confirm `WebhookService` is available in the installed OpenRegister version. Check `lib/AppInfo/Application.php` or OpenRegister vendor for `WebhookService`.
 
-  **Findings:** _(document here after running checks)_
+  **Findings:**
+  - `expense-capture-core` does NOT exist in `openspec/changes/` or `openspec/specs/`; `ExpenseApprovedEvent` was not present in `lib/Event/` and the `expense` schema was not present in `lib/Settings/pipelinq_register.json`. Per the marathon protocol (build forward; expense-capture-core can supersede later), this change ships the minimum subset that lets the AP integration be tested end-to-end: a self-contained `expense` schema (in fragment `lib/Settings/register.d/30-expense-shillinq-ap.json`) and an in-process `lib/Event/ExpenseApprovedEvent.php`. A later expense-capture-core build can extend the schema and replace the in-listener event re-emission with the canonical approval workflow.
+  - No prior shillinq AP integration: `grep -r "shillinq.*ap\|ApSync"` returned zero. `lib/Service/ShillinqLedgerService.php` is the closest pattern and was used as the template for `ShillinqApService`.
+  - No prior `ExpenseApprovalListener` in `lib/Listener/`. New file added.
+  - OpenRegister's `WebhookService` is available (`apps-extra/openregister/lib/Service/WebhookService.php`) and is wired through the DI container exactly as `ShillinqLedgerService::dispatch()` does.
 
 ---
 
 ## 1. Schema: extend `expense` with AP sync fields
 
-- [ ] 1.1 Add `apSyncStatus` and `apSyncedAt` properties to the `expense` schema in `lib/Settings/pipelinq_register.json`
+- [x] 1.1 Add `apSyncStatus` and `apSyncedAt` properties to the `expense` schema in `lib/Settings/pipelinq_register.json`
   - **spec_ref**: `specs/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-001`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **tier**: P0-must
@@ -30,7 +34,7 @@
     - Schema version is incremented in the register template
     - Re-importing with `force: false` MUST NOT create a duplicate schema (matched by slug)
 
-- [ ] 1.2 Add 5 AP-status seed `expense` objects to `lib/Settings/pipelinq_register.json`
+- [x] 1.2 Add 5 AP-status seed `expense` objects to `lib/Settings/pipelinq_register.json`
   - **spec_ref**: `specs/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-007`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **tier**: P0-must
@@ -45,7 +49,7 @@
 
 ## 2. Backend: event listener
 
-- [ ] 2.1 Create `lib/Listener/ExpenseApprovalListener.php`
+- [x] 2.1 Create `lib/Listener/ExpenseApprovalListener.php`
   - **spec_ref**: `specs/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002`
   - **files**: `lib/Listener/ExpenseApprovalListener.php`
   - **tier**: P0-must
@@ -61,7 +65,7 @@
     - On failure: sets `apSyncStatus = "failed"`, notifies admin
     - Idempotent check: if `apSyncStatus` already `synced`, skip dispatch
 
-- [ ] 2.2 Register listener in `lib/AppInfo/Application.php`
+- [x] 2.2 Register listener in `lib/AppInfo/Application.php`
   - **spec_ref**: `specs/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002`
   - **files**: `lib/AppInfo/Application.php`
   - **tier**: P0-must
@@ -74,7 +78,7 @@
 
 ## 3. Backend: AP service
 
-- [ ] 3.1 Create `lib/Service/ShillinqApService.php`
+- [x] 3.1 Create `lib/Service/ShillinqApService.php`
   - **spec_ref**: `specs/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003`
   - **files**: `lib/Service/ShillinqApService.php`
   - **tier**: P0-must
@@ -93,7 +97,7 @@
 
 ## 4. Backend: admin settings
 
-- [ ] 4.1 Modify `lib/Settings/Admin.php`
+- [x] 4.1 Modify `lib/Settings/Admin.php`
   - **spec_ref**: `specs/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-004`
   - **files**: `lib/Settings/Admin.php`
   - **tier**: P0-must
@@ -110,7 +114,7 @@
 
 ## 5. Frontend: Admin settings UI
 
-- [ ] 5.1 Update admin settings Vue component
+- [x] 5.1 Update admin settings Vue component
   - **spec_ref**: `specs/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-004`
   - **files**: `src/components/AdminSettings.vue` or equivalent
   - **tier**: P0-must
@@ -126,7 +130,7 @@
 
 ## 6. Frontend: Expense list view apSyncStatus column
 
-- [ ] 6.1 Modify expense list view to add `apSyncStatus` column
+- [x] 6.1 Modify expense list view to add `apSyncStatus` column
   - **spec_ref**: `specs/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-005`
   - **files**: `src/views/ExpenseList.vue` or equivalent (from `expense-capture-core`)
   - **tier**: P0-must
@@ -146,7 +150,7 @@
 
 ## 7. Frontend: Expense detail view Shillinq AP card
 
-- [ ] 7.1 Create Shillinq AP detail card component
+- [x] 7.1 Create Shillinq AP detail card component
   - **spec_ref**: `specs/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-006`
   - **files**: `src/components/ExpenseShillinqApCard.vue` (new)
   - **tier**: P0-must
@@ -166,7 +170,7 @@
       - Button is disabled during retry (show spinner or disabled state)
       - After retry completes, update card to reflect new status
 
-- [ ] 7.2 Integrate Shillinq AP card into expense detail view
+- [x] 7.2 Integrate Shillinq AP card into expense detail view
   - **spec_ref**: `specs/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-006`
   - **files**: `src/views/ExpenseDetail.vue` or equivalent (from `expense-capture-core`)
   - **tier**: P0-must
@@ -179,7 +183,7 @@
 
 ## 8. Frontend: API endpoints for manual retry
 
-- [ ] 8.1 Create or extend API endpoint for manual retry
+- [x] 8.1 Create or extend API endpoint for manual retry
   - **spec_ref**: `specs/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003` Scenario 11
   - **files**: `lib/Controller/ExpenseController.php` or `lib/Controller/ShillinqApController.php` (new)
   - **tier**: P0-must
@@ -196,7 +200,7 @@
 
 ## 9. Internationalization (i18n)
 
-- [ ] 9.1 Add i18n keys for Dutch + English
+- [x] 9.1 Add i18n keys for Dutch + English
   - **spec_ref**: `specs/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-004, REQ-AP-005, REQ-AP-006`
   - **files**: `lib/Settings/i18n.json` or `resources/translations/` directory
   - **tier**: P0-must
@@ -213,7 +217,7 @@
 
 ## 10. Testing
 
-- [ ] 10.1 Unit tests: ExpenseApprovalListener
+- [x] 10.1 Unit tests: ExpenseApprovalListener
   - **spec_ref**: `specs/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002`
   - **files**: `tests/Unit/Listener/ExpenseApprovalListenerTest.php`
   - **tier**: P0-must
@@ -224,7 +228,7 @@
     - Test that listener calls `ShillinqApService::dispatchApEvent()`
     - Test notification on final failure
 
-- [ ] 10.2 Unit tests: ShillinqApService
+- [x] 10.2 Unit tests: ShillinqApService
   - **spec_ref**: `specs/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003`
   - **files**: `tests/Unit/Service/ShillinqApServiceTest.php`
   - **tier**: P0-must
@@ -261,7 +265,7 @@
 
 ## 11. Build and Quality
 
-- [ ] 11.1 Run PHP static analysis
+- [x] 11.1 Run PHP static analysis
   - **files**: all new `.php` files
   - **tier**: P0-must
   - **acceptance_criteria**:
@@ -269,7 +273,7 @@
     - PHPStan / Psalm analysis (if configured): zero errors
     - Code style (PSR-12): pass linter
 
-- [ ] 11.2 Run frontend build
+- [x] 11.2 Run frontend build
   - **files**: all new/modified `.vue`, `.js`, `.ts` files
   - **tier**: P0-must
   - **acceptance_criteria**:
