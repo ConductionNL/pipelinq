@@ -1313,7 +1313,12 @@ OC.L10N.register(
     "Last synced" : "Last synced",
     "Retry Sync" : "Retry Sync",
     "Ledger sync retried successfully." : "Ledger sync retried successfully.",
-    "Could not retry the ledger sync." : "Could not retry the ledger sync."
+    "Could not retry the ledger sync." : "Could not retry the ledger sync.",
+    "Communication History" : "Communication History",
+    "No communication history yet" : "No communication history yet",
+    "Loading communication history..." : "Loading communication history...",
+    "Could not load communication history" : "Could not load communication history",
+    "Invalid entity type" : "Invalid entity type"
 },
 "nplurals=2; plural=(n != 1);"
 );
