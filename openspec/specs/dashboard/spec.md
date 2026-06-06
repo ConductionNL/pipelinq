@@ -18,7 +18,6 @@ The dashboard MUST use the `CnDashboardPage` component to render a configurable 
 
 #### Scenario: Default grid layout on first load
 
-@e2e exclude configurable grid layout covered via integration tests
 - GIVEN the user has not customized their dashboard layout
 - WHEN the user navigates to the dashboard
 - THEN the layout MUST render with the default configuration:
@@ -29,7 +28,6 @@ The dashboard MUST use the `CnDashboardPage` component to render a configurable 
 
 #### Scenario: Dashboard page title and empty state
 
-@e2e exclude empty/welcome state covered by unit/component tests
 - WHEN the dashboard loads
 - THEN the page title MUST be "Dashboard" (translatable via `t('pipelinq', 'Dashboard')`)
 - AND if no data exists (no leads, requests, or clients), a welcome message MUST be displayed: "Welcome to Pipelinq! Get started by creating your first client, lead, or request using the buttons above."
