@@ -98,8 +98,14 @@ class ExpenseApprovalListener implements IEventListener
         }
 
         try {
-            $entity = $event->getObject();
-            if ($this->isExpense(entity: $entity) === false) {
+            // OR's ObjectUpdatedEvent exposes both getObject() and getNewObject();
+            // ObjectCreatedEvent only has getObject(). Prefer the typed accessor.
+            if ($event instanceof ObjectUpdatedEvent && method_exists($event, 'getNewObject') === true) {
+                $entity = $event->getNewObject();
+            } else {
+                $entity = $event->getObject();
+            }
+            if ($entity === null || $this->isExpense(entity: $entity) === false) {
                 return;
             }
 
