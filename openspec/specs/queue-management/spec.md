@@ -156,7 +156,7 @@ The system SHALL provide a queue list view showing all queues with their current
 
 ---
 
-### Requirement: Queue Detail View [Enterprise] @e2e exclude covered in detail/navigation flows
+### Requirement: Queue Detail View [Enterprise]
 
 The system SHALL provide a queue detail view showing all items in the queue with priority-based ordering, along with queue metadata and agent assignments.
 
@@ -166,12 +166,14 @@ The system SHALL provide a queue detail view showing all items in the queue with
 - **THEN** each item SHALL show: entity type badge (REQ/LEAD), title, priority badge, age ("waiting 3 days"), assignee (if any), category
 
 #### Scenario: Pick next item from queue
+@e2e exclude "Pick next" assignment writes the top-priority item's assignee to OpenRegister; requires seeded queue items and a write — verified by Newman/PHPUnit.
 - **WHEN** an agent clicks "Pick next" on a queue
 - **THEN** the system SHALL assign the top-priority item (first in queue order) to the current user
 - **THEN** the item's `assignee` field SHALL be set to the current user's UID
 - **THEN** a success message SHALL confirm the assignment
 
 #### Scenario: Bulk assign from queue
+@e2e exclude Multi-select bulk-assign writes assignee to multiple OpenRegister objects; requires seeded queue items and writes — verified by Newman/PHPUnit.
 - **WHEN** an agent selects multiple items and clicks "Assign to me"
 - **THEN** all selected items SHALL have their `assignee` set to the current user
 

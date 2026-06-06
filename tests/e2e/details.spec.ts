@@ -21,6 +21,7 @@
  *   "Product detail renders the shell"      @e2e product-catalog::product-detail-display
  *   "Client detail renders the shell"       @e2e client-management::view-organization-client-detail
  *   "Contactmoment detail renders…"         @e2e contactmomenten::display-contactmoment-details
+ *   "Queue detail renders the shell"        @e2e queue-management::view-queue-items
  */
 import { test, expect } from '@playwright/test'
 import { openDetail } from './helpers/nav'
@@ -33,6 +34,7 @@ const DETAILS = [
 	{ route: 'products', name: 'Product' },
 	{ route: 'clients', name: 'Client' },
 	{ route: 'contactmomenten', name: 'Contactmoment' },
+	{ route: 'queues', name: 'Queue' },
 ] as const
 
 test.describe('Detail views', () => {
