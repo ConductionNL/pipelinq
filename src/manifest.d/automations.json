@@ -1,32 +1,35 @@
 {
 	"menu": [
 		{
-			"id": "Automations",
-			"label": "Automations",
-			"icon": "icon-toggle",
-			"route": "Automations",
-			"order": 125
+			"id": "AutomationsGroup",
+			"label": "Automatiseringen",
+			"order": 125,
+			"children": [
+				{
+					"id": "Automations",
+					"label": "Automations",
+					"icon": "icon-toggle",
+					"route": "Automations"
+				},
+				{
+					"id": "Webhooks",
+					"label": "Webhooks",
+					"icon": "icon-toggle",
+					"route": "Webhooks"
+				}
+			]
 		}
 	],
 	"pages": [
 		{
 			"id": "Automations",
 			"route": "/automations",
-			"type": "index",
+			"type": "custom",
 			"title": "Automations",
+			"component": "AutomationListView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "automation",
-				"columns": [
-					"name",
-					"trigger",
-					"isActive",
-					"_dateCreated"
-				],
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true
-				}
+				"schema": "automation"
 			}
 		},
 		{
@@ -54,12 +57,22 @@
 		{
 			"id": "AutomationDetail",
 			"route": "/automations/:id",
-			"type": "detail",
+			"type": "custom",
 			"title": "Automation",
+			"component": "AutomationDetailView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "automation",
-				"sidebar": true
+				"schema": "automation"
+			}
+		},
+		{
+			"id": "Webhooks",
+			"route": "/webhooks",
+			"type": "custom",
+			"title": "Webhooks",
+			"component": "WebhookListView",
+			"config": {
+				"register": "pipelinq"
 			}
 		}
 	]
