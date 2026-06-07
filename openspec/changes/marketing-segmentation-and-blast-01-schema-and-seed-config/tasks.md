@@ -39,7 +39,9 @@
 
 ## BlastDelivery seed (Task 1.4)
 
-- [ ] Add 20 BlastDelivery objects with status distribution (4 delivered, 3 bounced, 2 unsubscribed, 11 queued), provider IDs, timestamps, clicked URLs with utm params, linked to parent Blast
+- [x] Add 20 BlastDelivery objects with status distribution (4 delivered, 3 bounced, 2 unsubscribed, 11 queued), provider IDs, timestamps, clicked URLs with utm params, linked to parent Blast
+
+  Twenty BlastDelivery seed objects (slugs `delivery-q4-gem-001` … `-020`), all linked to parent `blast-q4-gemeente-outreach-a`. Status distribution matches the spec exactly: 4 `delivered` (with `openedAt < firstClickAt` progression on three of them and a `clickedUrls` array carrying `utm_campaign=blast-q4-launch&utm_source=pipelinq-blast`), 3 `bounced` (mixed `bounceType: hard|soft`, with `bouncedAt` set), 2 `unsubscribed` (with `openedAt` and `unsubscribedAt`), 11 `queued`. providerId values follow SendGrid format (`sg-abc123xyz###`). Recipient emails span 20 different Dutch municipalities for realism.
 
 ## ConsentRecord seed (Task 1.5)
 
