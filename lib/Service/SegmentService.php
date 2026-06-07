@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
+use OCP\ICache;
 use OCP\ICacheFactory;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -42,10 +43,28 @@ use Throwable;
 class SegmentService
 {
     /**
+     * Default estimateSize cache TTL in seconds when the
+     * `segment.estimate_ttl_seconds` app config key is unset.
+     */
+    private const DEFAULT_ESTIMATE_TTL_SECONDS = 3600;
+
+    /**
      * Default contact schema slug used when no `contact_schema` app
      * config value is set. Matches the seed register slug.
      */
     private const DEFAULT_CONTACT_SCHEMA_SLUG = 'contact';
+
+    /**
+     * Default Segment schema slug used when no `segment_schema` app
+     * config value is set.
+     */
+    private const DEFAULT_SEGMENT_SCHEMA_SLUG = 'segment';
+
+    /**
+     * Default register slug used when no `register` app config value is
+     * set. Pipelinq's canonical register is also called `pipelinq`.
+     */
+    private const DEFAULT_REGISTER_SLUG = 'pipelinq';
 
     /**
      * Default customer schema slug used when no `customer_schema` /
@@ -170,6 +189,68 @@ class SegmentService
     {
         return $this->evaluateNode(node: $rules, entity: $entity);
     }//end evaluateRules()
+
+    /**
+     * Estimate the size of a Segment by counting matching entities.
+     *
+     * Loads the Segment, resolves its entityType schema, queries every
+     * object of that type via OpenRegister's ObjectService, evaluates
+     * the rule tree against each, and returns the match count. The
+     * result is cached via the NC distributed cache with the TTL given
+     * by the `segment.estimate_ttl_seconds` app config key (default
+     * 3600s) — repeated previews on the same Segment within the TTL
+     * window hit cache instead of re-scanning.
+     *
+     * Returns 0 when the Segment is not found, its rules are invalid,
+     * or the OpenRegister query fails — the count is a preview, not an
+     * authoritative billing input, so failing to 0 is preferable to
+     * raising on the segment-detail view.
+     *
+     * @param string $segmentId Segment UUID or slug.
+     *
+     * @return int Count of matching entities; 0 on failure.
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.6
+     */
+    public function estimateSize(string $segmentId): int
+    {
+        $cache    = $this->getEstimateCache();
+        $cacheKey = 'estimate:' . $segmentId;
+        if ($cache !== null) {
+            $cached = $cache->get($cacheKey);
+            if (is_int($cached) === true) {
+                return $cached;
+            }
+            if (is_numeric($cached) === true) {
+                return (int) $cached;
+            }
+        }
+
+        $segment = $this->loadSegment(segmentId: $segmentId);
+        if ($segment === null) {
+            return 0;
+        }
+        $rules      = $this->extractRules(segment: $segment);
+        $entityType = $this->extractEntityType(segment: $segment);
+        if ($rules === null || $entityType === null) {
+            return 0;
+        }
+
+        $count    = 0;
+        $entities = $this->loadEntitiesForType(entityType: $entityType);
+        foreach ($entities as $entity) {
+            if ($this->evaluateRules(rules: $rules, entity: $entity) === true) {
+                $count++;
+            }
+        }
+
+        if ($cache !== null) {
+            $ttl = $this->getEstimateTtl();
+            $cache->set($cacheKey, $count, $ttl);
+        }
+
+        return $count;
+    }//end estimateSize()
 
     /**
      * Recursively evaluate a node against the entity.
@@ -741,6 +822,249 @@ class SegmentService
         }
         return '';
     }//end resolveSchemaSlug()
+
+    /**
+     * Load one Segment payload by UUID or slug.
+     *
+     * @param string $segmentId The Segment UUID or slug.
+     *
+     * @return array<string, mixed>|null The Segment as an array or null.
+     */
+    private function loadSegment(string $segmentId): ?array
+    {
+        $register = $this->getRegisterSlug();
+        $schema   = $this->getSegmentSchemaSlug();
+        if ($register === '' || $schema === '') {
+            return null;
+        }
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
+            return null;
+        }
+        try {
+            $entity = $objectService->find(
+                id: $segmentId,
+                register: $register,
+                schema: $schema,
+            );
+        } catch (Throwable $e) {
+            $this->logger->info(
+                'SegmentService.loadSegment: not found',
+                ['segmentId' => $segmentId, 'exception' => $e->getMessage()]
+            );
+            return null;
+        }
+        return $this->toArray(value: $entity);
+    }//end loadSegment()
+
+    /**
+     * Load every entity of the given type for in-memory rule evaluation.
+     *
+     * Intentionally returns ALL matching objects (no filters) — the
+     * SegmentService does the predicate evaluation in PHP since
+     * OpenRegister's filter DSL does not natively express AND/OR rule
+     * trees. Member-09 tests will pin the upper bound on the seed
+     * dataset.
+     *
+     * @param string $entityType "contact" or "customer".
+     *
+     * @return array<int, array<string, mixed>> Entity payloads.
+     */
+    private function loadEntitiesForType(string $entityType): array
+    {
+        $register = $this->getRegisterSlug();
+        $schema   = $this->resolveSchemaSlug(entityType: $entityType);
+        if ($register === '' || $schema === '') {
+            return [];
+        }
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
+            return [];
+        }
+        try {
+            $rows = $objectService->findAll(
+                filters: [],
+                register: $register,
+                schema: $schema,
+            );
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'SegmentService.loadEntitiesForType: findAll failed',
+                ['entityType' => $entityType, 'exception' => $e->getMessage()]
+            );
+            return [];
+        }
+
+        $entities = [];
+        foreach (($rows ?? []) as $row) {
+            $entities[] = $this->toArray(value: $row);
+        }
+        return $entities;
+    }//end loadEntitiesForType()
+
+    /**
+     * Resolve the Segment schema slug from app config.
+     *
+     * @return string Schema slug.
+     */
+    private function getSegmentSchemaSlug(): string
+    {
+        $slug = $this->appConfig->getValueString(Application::APP_ID, 'segment_schema', '');
+        if ($slug !== '') {
+            return $slug;
+        }
+        return self::DEFAULT_SEGMENT_SCHEMA_SLUG;
+    }//end getSegmentSchemaSlug()
+
+    /**
+     * Resolve the register slug from app config.
+     *
+     * @return string Register slug.
+     */
+    private function getRegisterSlug(): string
+    {
+        $slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        if ($slug !== '') {
+            return $slug;
+        }
+        return self::DEFAULT_REGISTER_SLUG;
+    }//end getRegisterSlug()
+
+    /**
+     * Extract the rule tree from a Segment payload.
+     *
+     * @param array<string, mixed> $segment The Segment payload.
+     *
+     * @return array<string, mixed>|null Rule tree or null if missing.
+     */
+    private function extractRules(array $segment): ?array
+    {
+        $rules = ($segment['rules'] ?? null);
+        if (is_string($rules) === true && $rules !== '') {
+            $decoded = json_decode($rules, true);
+            if (is_array($decoded) === true) {
+                return $decoded;
+            }
+            return null;
+        }
+        if (is_array($rules) === true) {
+            return $rules;
+        }
+        return null;
+    }//end extractRules()
+
+    /**
+     * Extract the entityType from a Segment payload.
+     *
+     * @param array<string, mixed> $segment The Segment payload.
+     *
+     * @return string|null entityType or null if missing.
+     */
+    private function extractEntityType(array $segment): ?string
+    {
+        $entityType = ($segment['entityType'] ?? null);
+        if (is_string($entityType) === true && $entityType !== '') {
+            return $entityType;
+        }
+        return null;
+    }//end extractEntityType()
+
+    /**
+     * Normalise an OpenRegister entity (or array) to a plain array.
+     *
+     * @param mixed $value Entity object or array.
+     *
+     * @return array<string, mixed> Plain payload.
+     */
+    private function toArray(mixed $value): array
+    {
+        if (is_array($value) === true) {
+            return $value;
+        }
+        if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
+            $serialised = $value->jsonSerialize();
+            if (is_array($serialised) === true) {
+                return $serialised;
+            }
+        }
+        if (is_object($value) === true && method_exists($value, 'getObject') === true) {
+            $payload = $value->getObject();
+            if (is_array($payload) === true) {
+                return $payload;
+            }
+        }
+        return [];
+    }//end toArray()
+
+    /**
+     * Resolve the estimateSize TTL from app config, with a 3600s default.
+     *
+     * @return int TTL seconds.
+     */
+    private function getEstimateTtl(): int
+    {
+        $configured = $this->appConfig->getValueString(
+            Application::APP_ID,
+            'segment.estimate_ttl_seconds',
+            (string) self::DEFAULT_ESTIMATE_TTL_SECONDS
+        );
+        if ($configured === '' || is_numeric($configured) === false) {
+            return self::DEFAULT_ESTIMATE_TTL_SECONDS;
+        }
+        $ttl = (int) $configured;
+        if ($ttl < 0) {
+            return self::DEFAULT_ESTIMATE_TTL_SECONDS;
+        }
+        return $ttl;
+    }//end getEstimateTtl()
+
+    /**
+     * Build the distributed cache used for estimateSize, falling back
+     * to the local cache if distributed is unavailable.
+     *
+     * @return ICache|null The cache, or null on initialisation failure.
+     */
+    private function getEstimateCache(): ?ICache
+    {
+        try {
+            if ($this->cacheFactory->isAvailable() === true) {
+                return $this->cacheFactory->createDistributed('pipelinq_segment_estimate');
+            }
+        } catch (Throwable $e) {
+            $this->logger->info(
+                'SegmentService.getEstimateCache: distributed cache unavailable',
+                ['exception' => $e->getMessage()]
+            );
+        }
+        try {
+            return $this->cacheFactory->createLocal('pipelinq_segment_estimate');
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'SegmentService.getEstimateCache: local cache unavailable',
+                ['exception' => $e->getMessage()]
+            );
+            return null;
+        }
+    }//end getEstimateCache()
+
+    /**
+     * Resolve the OpenRegister ObjectService lazily.
+     *
+     * @return object|null ObjectService, or null when OpenRegister is
+     *                     not loaded.
+     */
+    private function getObjectService(): ?object
+    {
+        try {
+            return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'SegmentService.getObjectService: OpenRegister unavailable',
+                ['exception' => $e->getMessage()]
+            );
+            return null;
+        }
+    }//end getObjectService()
 
     /**
      * Resolve the OpenRegister SchemaMapper lazily.
