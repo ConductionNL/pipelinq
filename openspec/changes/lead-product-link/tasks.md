@@ -7,13 +7,13 @@
 
 ## 0. Deduplication Check
 
-- [ ] 0.1 Verify no custom search endpoints are introduced — all LeadProduct querying uses `ObjectService.findObjects` via the existing `leadProduct` store registration in `store.js`
+- [x] 0.1 Verify no custom search endpoints are introduced — all LeadProduct querying uses `ObjectService.findObjects` via the existing `leadProduct` store registration in `store.js`
   - **Finding**: `leadProduct` store already registered. No new registration needed.
-- [ ] 0.2 Verify the Add Product dialog continues to use `CnFormDialog` (schema-driven) — no custom dialog component
+- [x] 0.2 Verify the Add Product dialog continues to use `CnFormDialog` (schema-driven) — no custom dialog component
   - **Finding**: Existing `LeadProducts.vue` uses `NcSelect` for product search within the dialog. SKU change is a label-only update to `productOptions` computed; no new component.
-- [ ] 0.3 Verify that the "Linked Leads" reverse lookup uses `fetchUsed` from `relationsPlugin` — no custom API endpoint
+- [x] 0.3 Verify that the "Linked Leads" reverse lookup uses `fetchUsed` from `relationsPlugin` — no custom API endpoint
   - **Finding**: `relationsPlugin` on the `leadProduct` store provides `fetchUsed`. ProductDetail can call `leadProductStore.fetchUsed(productId)` to retrieve linked LeadProduct objects. No new PHP controller needed.
-- [ ] 0.4 Verify pipeline stage breakdown uses client-side aggregation of already-fetched data — no new backend endpoint
+- [x] 0.4 Verify pipeline stage breakdown uses client-side aggregation of already-fetched data — no new backend endpoint
   - **Finding**: PipelineBoard already fetches leads per stage. A secondary `objectStore.findObjects('leadProduct', { lead: stageLeadIds })` call is the only addition. No custom controller.
 
 ---
