@@ -119,9 +119,9 @@ class AnalyticsServiceTest extends TestCase
         $service = $this->buildService(
             byCollection: [
                 'lead_schema' => [
-                    ['status' => 'active', 'value' => 1000],
-                    ['status' => 'active', 'value' => 500.5],
-                    ['status' => 'won',    'value' => 999],   // not counted (status != active).
+                    ['status' => 'open',   'value' => 1000],
+                    ['status' => 'active', 'value' => 500.5], // legacy alias still counts.
+                    ['status' => 'won',    'value' => 999],   // not counted.
                     ['status' => 'lost',   'value' => 42],    // not counted.
                 ],
                 'request_schema' => [
