@@ -481,6 +481,222 @@
 				}
 			}
 		},
-		"objects": []
+		"objects": [
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "segment",
+					"slug": "segment-gemeente-contact-blast"
+				},
+				"name": "Gemeente Contact Blast",
+				"description": "Contactpersonen bij Nederlandse gemeenten met sector 'overheid' — gebruikt voor de Q4 Gemeente Outreach blasts (A/B).",
+				"entityType": "contact",
+				"rules": {
+					"type": "AND",
+					"children": [
+						{
+							"field": "sector",
+							"operator": "equals",
+							"value": "overheid"
+						},
+						{
+							"field": "country",
+							"operator": "equals",
+							"value": "NL"
+						},
+						{
+							"type": "OR",
+							"children": [
+								{
+									"field": "organisationType",
+									"operator": "equals",
+									"value": "gemeente"
+								},
+								{
+									"field": "organisationType",
+									"operator": "equals",
+									"value": "provincie"
+								}
+							]
+						}
+					]
+				},
+				"estimatedSize": 248,
+				"createdBy": "admin",
+				"createdAt": "2026-09-15T08:30:00+00:00",
+				"updatedAt": "2026-10-02T14:12:00+00:00"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "segment",
+					"slug": "segment-enterprise-high-value"
+				},
+				"name": "Enterprise High-Value",
+				"description": "Klanten met een jaarcontract > EUR 50.000 én > 250 medewerkers — doelgroep voor account-based retention.",
+				"entityType": "customer",
+				"rules": {
+					"type": "AND",
+					"children": [
+						{
+							"field": "annualContractValue",
+							"operator": "greaterThan",
+							"value": 50000
+						},
+						{
+							"field": "employeeCount",
+							"operator": "greaterThan",
+							"value": 250
+						},
+						{
+							"field": "lifecycleStage",
+							"operator": "in",
+							"value": [
+								"customer",
+								"renewal"
+							]
+						}
+					]
+				},
+				"estimatedSize": 37,
+				"createdBy": "admin",
+				"createdAt": "2026-09-18T09:45:00+00:00",
+				"updatedAt": "2026-10-12T11:00:00+00:00"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "segment",
+					"slug": "segment-inactive-leads"
+				},
+				"name": "Inactive Leads",
+				"description": "Leads zonder contactmoment in de afgelopen 90 dagen die nog geen 'closed' status hebben — voor de win-back campagne.",
+				"entityType": "contact",
+				"rules": {
+					"type": "AND",
+					"children": [
+						{
+							"field": "leadStage",
+							"operator": "notIn",
+							"value": [
+								"closed-won",
+								"closed-lost"
+							]
+						},
+						{
+							"field": "lastContactMoment",
+							"operator": "before",
+							"value": "2026-07-09"
+						},
+						{
+							"type": "OR",
+							"children": [
+								{
+									"field": "leadScore",
+									"operator": "greaterThan",
+									"value": 40
+								},
+								{
+									"field": "source",
+									"operator": "equals",
+									"value": "web-form"
+								}
+							]
+						}
+					]
+				},
+				"estimatedSize": 412,
+				"createdBy": "marketing@example.com",
+				"createdAt": "2026-09-22T13:20:00+00:00",
+				"updatedAt": "2026-10-07T16:48:00+00:00"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "segment",
+					"slug": "segment-retention-newsletter"
+				},
+				"name": "Retention Newsletter",
+				"description": "Bestaande klanten die zich hebben ingeschreven voor de maandelijkse productnieuwsbrief.",
+				"entityType": "customer",
+				"rules": {
+					"type": "AND",
+					"children": [
+						{
+							"field": "newsletterOptIn",
+							"operator": "equals",
+							"value": true
+						},
+						{
+							"field": "lifecycleStage",
+							"operator": "equals",
+							"value": "customer"
+						},
+						{
+							"field": "churnRisk",
+							"operator": "lessThan",
+							"value": 0.5
+						}
+					]
+				},
+				"estimatedSize": 1342,
+				"createdBy": "marketing@example.com",
+				"createdAt": "2026-09-25T10:00:00+00:00",
+				"updatedAt": "2026-10-15T09:30:00+00:00"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "segment",
+					"slug": "segment-technical-leads"
+				},
+				"name": "Technical Leads",
+				"description": "Contacten met een technische rol (CTO/architect/developer) bij prospect-organisaties — doelgroep voor de developer-onboarding serie.",
+				"entityType": "contact",
+				"rules": {
+					"type": "OR",
+					"children": [
+						{
+							"type": "AND",
+							"children": [
+								{
+									"field": "jobTitle",
+									"operator": "contains",
+									"value": "CTO"
+								},
+								{
+									"field": "lifecycleStage",
+									"operator": "equals",
+									"value": "prospect"
+								}
+							]
+						},
+						{
+							"type": "AND",
+							"children": [
+								{
+									"field": "jobTitle",
+									"operator": "containsAny",
+									"value": [
+										"architect",
+										"developer",
+										"engineer"
+									]
+								},
+								{
+									"field": "leadScore",
+									"operator": "greaterThan",
+									"value": 25
+								}
+							]
+						}
+					]
+				},
+				"estimatedSize": 186,
+				"createdBy": "marketing@example.com",
+				"createdAt": "2026-09-28T12:15:00+00:00",
+				"updatedAt": "2026-10-18T08:00:00+00:00"
+			}
+		]
 	}
 }
