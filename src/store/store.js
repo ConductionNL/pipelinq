@@ -117,6 +117,10 @@ async function doInitializeStores() {
 		if (config.register && config.posRefundLine_schema) {
 			objectStore.registerObjectType('posRefundLine', config.posRefundLine_schema, config.register)
 		}
+		// Billing categories (billable-categories-and-tags) — REQ-BCT-001.
+		if (config.register && config.billingCategory_schema) {
+			objectStore.registerObjectType('billingCategory', config.billingCategory_schema, config.register)
+		}
 	}
 
 	return { settingsStore, objectStore }

@@ -1,0 +1,46 @@
+{
+	"menu": [
+		{
+			"id": "BillingCategories",
+			"label": "Billing categories",
+			"icon": "icon-toggle",
+			"route": "BillingCategories",
+			"order": 145
+		}
+	],
+	"pages": [
+		{
+			"id": "BillingCategories",
+			"route": "/billing-categories",
+			"type": "custom",
+			"title": "Billing categories",
+			"component": "BillingCategoryListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "billingCategory"
+			}
+		},
+		{
+			"id": "BillingCategoryNew",
+			"route": "/billing-categories/new",
+			"type": "custom",
+			"title": "New billing category",
+			"component": "CnWizardDialog",
+			"config": {
+				"register": "pipelinq",
+				"schema": "billingCategory"
+			}
+		},
+		{
+			"id": "BillingCategoryDetail",
+			"route": "/billing-categories/:id",
+			"type": "detail",
+			"title": "Billing category",
+			"config": {
+				"register": "pipelinq",
+				"schema": "billingCategory",
+				"sidebar": true
+			}
+		}
+	]
+}
