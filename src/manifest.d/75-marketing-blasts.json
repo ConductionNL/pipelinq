@@ -10,6 +10,12 @@
 					"label": "Blasts",
 					"icon": "icon-mail",
 					"route": "Blasts"
+				},
+				{
+					"id": "BlastPerformance",
+					"label": "Blast performance",
+					"icon": "icon-category-monitoring",
+					"route": "BlastPerformance"
 				}
 			]
 		}
@@ -32,6 +38,17 @@
 			"type": "custom",
 			"title": "New blast",
 			"component": "BlastFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "blast"
+			}
+		},
+		{
+			"id": "BlastPerformance",
+			"route": "/blasts/performance",
+			"type": "custom",
+			"title": "Blast performance",
+			"component": "BlastPerformanceDashboardView",
 			"config": {
 				"register": "pipelinq",
 				"schema": "blast"

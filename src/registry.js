@@ -163,6 +163,7 @@ import ContactDetail from './views/contacts/ContactDetail.vue'
 import BlastListView from './views/blasts/BlastList.vue'
 import BlastFormView from './views/blasts/BlastForm.vue'
 import BlastMonitorView from './views/blasts/BlastMonitor.vue'
+import BlastPerformanceDashboardView from './views/blasts/PerformanceDashboard.vue'
 
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
@@ -541,6 +542,11 @@ const registry = {
 		kind: 'page',
 		component: BlastMonitorView,
 		_note: 'Live blast monitor (marketing-segmentation-and-blast 07): progress bar + ETA, totals grid (queued/sent/delivered/bounced/opened/clicked/unsubscribed/complained), reverse-chronological event timeline (last 50), cancel action while sending; polls /api/blasts/:id every 2 seconds and stops on sent/failed/cancelled.',
+	},
+	BlastPerformanceDashboardView: {
+		kind: 'page',
+		component: BlastPerformanceDashboardView,
+		_note: 'Post-send performance dashboard (marketing-segmentation-and-blast 08): three tabs — Overview (sortable blast table with sent/delivered/open-rate/click-rate/unsubscribed), A/B Testing (side-by-side variant comparison + chi-square p-value once each arm has >=500 delivered and 24h elapsed since send), Attribution (per-blast attributed deal count + summed EUR value from GET /api/blasts/:id/attribution).',
 	},
 }
 
