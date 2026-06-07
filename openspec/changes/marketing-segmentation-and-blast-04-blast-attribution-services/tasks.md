@@ -14,7 +14,7 @@
 ## AttributionService (Task 2.4 of giant)
 
 - [x] Create `lib/Service/AttributionService.php`
-- [ ] Implement `recordClick(string $blastDeliveryId, array $clickEvent): void` — set firstClickAt + clickedUrls
+- [x] Implement `recordClick(string $blastDeliveryId, array $clickEvent): void` — set firstClickAt + clickedUrls
 - [ ] Implement `linkBlastToDeal(string $blastDeliveryId, string $dealId): void` — create AttributionLink
 - [ ] Implement `getBlastAttributedValue(string $blastId): float` — sum attributedValue
 - [ ] Inject `ObjectService`, `LoggerInterface`; add `@spec` PHPDoc
