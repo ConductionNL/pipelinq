@@ -16,9 +16,11 @@
 
 ## Segment seed (Task 1.1)
 
-- [ ] Add 5 Segment objects under `components.objects[]` with `@self` envelope (register: pipelinq, schema: segment, unique slug)
-- [ ] Segments 1–5: Gemeente Contact Blast, Enterprise High-Value, Inactive Leads, Retention Newsletter, Technical Leads with varied rule trees and entityTypes
-- [ ] Verify rule trees are valid JSON conforming to `{ type, children }` structure
+- [x] Add 5 Segment objects under `components.objects[]` with `@self` envelope (register: pipelinq, schema: segment, unique slug)
+- [x] Segments 1–5: Gemeente Contact Blast, Enterprise High-Value, Inactive Leads, Retention Newsletter, Technical Leads with varied rule trees and entityTypes
+- [x] Verify rule trees are valid JSON conforming to `{ type, children }` structure
+
+  Five Segment seed objects added with slugs `segment-gemeente-contact-blast`, `segment-enterprise-high-value`, `segment-inactive-leads`, `segment-retention-newsletter`, `segment-technical-leads`. entityType is mixed (`contact` × 3, `customer` × 2). Each `rules` payload uses the `{type:"AND"|"OR", children:[...]}` node shape with leaf nodes `{field, operator, value}`; the gemeente / inactive-leads / technical-leads segments use nested OR/AND combinations to exercise the evaluator. JSON validates and round-trips through `json.load`.
 
 ## CampaignTemplate seed (Task 1.2)
 
