@@ -72,6 +72,21 @@ class ComplianceService
     private const DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG = 'blastDelivery';
 
     /**
+     * Delivery statuses that should be transitioned to
+     * "unsubscribed-before-send" on a withdrawal — the queue is still
+     * upstream of the provider, so the message has not left the system.
+     *
+     * @var array<int, string>
+     */
+    private const QUEUED_DELIVERY_STATUSES = ['queued'];
+
+    /**
+     * The withdrawal-side delivery status applied by
+     * `recordConsentWithdrawal()` to queued rows.
+     */
+    private const STATUS_UNSUBSCRIBED_BEFORE_SEND = 'unsubscribed-before-send';
+
+    /**
      * Lawful-basis values that DO satisfy marketing consent gating.
      *
      * "imported" is intentionally NOT on this list — ADR-005 fail-safe
@@ -221,6 +236,274 @@ class ComplianceService
 
         return true;
     }//end hasConsentForChannel()
+
+    /**
+     * Withdraw consent for a (contact, channel) pair and skip any
+     * queued BlastDelivery rows for that contact.
+     *
+     * Sets `withdrawnAt` to the current UTC ISO-8601 timestamp and
+     * `withdrawnReason` to the supplied reason. Queued BlastDelivery
+     * rows for the contact are transitioned to
+     * `"unsubscribed-before-send"` so they are skipped before the
+     * provider receives them. Member 04 wires the deeper BlastService
+     * counter roll-up; until then this method updates the rows directly
+     * via ObjectService so the audit trail is preserved on the
+     * delivery rows themselves.
+     *
+     * Idempotent: a record that is already withdrawn is left unchanged.
+     * A missing ConsentRecord is created so the audit ledger always
+     * reflects the withdrawal event — this matches GDPR Art. 7(3) which
+     * grants a withdrawal even when consent was never formally captured.
+     *
+     * @param string      $contactId     Contact UUID / slug.
+     * @param string      $channel       "email" or "sms".
+     * @param string      $reason        Withdrawal reason
+     *                                   ("user-unsubscribed", "bounce-hard",
+     *                                   "bounce-soft-x5", "admin-removed",
+     *                                   "complaint").
+     * @param string|null $sourceBlastId Blast UUID that triggered the
+     *                                   withdrawal (for audit context).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-03-compliance-service/tasks.md#record-consent-withdrawal
+     */
+    public function recordConsentWithdrawal(
+        string $contactId,
+        string $channel,
+        string $reason,
+        ?string $sourceBlastId = null,
+    ): void {
+        $channel = strtolower(trim($channel));
+        if ($contactId === '' || $channel === '' || $reason === '') {
+            return;
+        }
+
+        $now = gmdate('Y-m-d\TH:i:s\Z');
+
+        $record = $this->findConsentRecord(contactId: $contactId, channel: $channel);
+        if ($record !== null) {
+            $existingWithdrawnAt = $record['withdrawnAt'] ?? null;
+            if (is_string($existingWithdrawnAt) === true && trim($existingWithdrawnAt) !== '') {
+                // Already withdrawn — keep first-withdrawal timestamp.
+                $this->logger->info(
+                    'ComplianceService.recordConsentWithdrawal: already withdrawn',
+                    [
+                        'contactId'     => $contactId,
+                        'channel'       => $channel,
+                        'sourceBlastId' => $sourceBlastId,
+                    ]
+                );
+            } else {
+                $record['withdrawnAt']     = $now;
+                $record['withdrawnReason'] = $reason;
+                $this->persistConsentUpdate(record: $record);
+            }
+        } else {
+            $this->persistConsentCreate(
+                contactId: $contactId,
+                channel: $channel,
+                reason: $reason,
+                now: $now
+            );
+        }
+
+        $this->transitionQueuedDeliveries(contactId: $contactId, sourceBlastId: $sourceBlastId);
+
+        $this->logger->info(
+            'ComplianceService.recordConsentWithdrawal: withdrawal recorded',
+            [
+                'contactId'     => $contactId,
+                'channel'       => $channel,
+                'reason'        => $reason,
+                'sourceBlastId' => $sourceBlastId,
+            ]
+        );
+    }//end recordConsentWithdrawal()
+
+    /**
+     * Persist a withdrawal update on an existing ConsentRecord.
+     *
+     * @param array<string, mixed> $record Updated record payload.
+     *
+     * @return void
+     */
+    private function persistConsentUpdate(array $record): void
+    {
+        $register = $this->getRegisterSlug();
+        $schema   = $this->getConsentRecordSchemaSlug();
+        if ($register === '' || $schema === '') {
+            return;
+        }
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
+            return;
+        }
+
+        $id = $this->extractObjectId(payload: $record);
+        if ($id === '') {
+            return;
+        }
+
+        try {
+            $objectService->updateObject(
+                id: $id,
+                object: $record,
+                register: $register,
+                schema: $schema,
+            );
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'ComplianceService.persistConsentUpdate: updateObject failed',
+                [
+                    'id'        => $id,
+                    'exception' => $e->getMessage(),
+                ]
+            );
+        }
+    }//end persistConsentUpdate()
+
+    /**
+     * Persist a synthetic ConsentRecord at withdrawal time when none
+     * existed — preserves the audit ledger for GDPR Art. 7(3).
+     *
+     * @param string $contactId Contact UUID / slug.
+     * @param string $channel   "email" or "sms".
+     * @param string $reason    Withdrawal reason.
+     * @param string $now       UTC timestamp string.
+     *
+     * @return void
+     */
+    private function persistConsentCreate(
+        string $contactId,
+        string $channel,
+        string $reason,
+        string $now,
+    ): void {
+        $register = $this->getRegisterSlug();
+        $schema   = $this->getConsentRecordSchemaSlug();
+        if ($register === '' || $schema === '') {
+            return;
+        }
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
+            return;
+        }
+
+        $payload = [
+            'contactId'       => $contactId,
+            'channel'         => $channel,
+            'lawfulBasis'     => 'consent',
+            'consentSource'   => 'auto-withdrawal-ledger',
+            'consentedAt'     => $now,
+            'withdrawnAt'     => $now,
+            'withdrawnReason' => $reason,
+            'softBounceCount' => 0,
+        ];
+
+        try {
+            $objectService->saveObject(
+                object: $payload,
+                register: $register,
+                schema: $schema,
+            );
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'ComplianceService.persistConsentCreate: saveObject failed',
+                [
+                    'contactId' => $contactId,
+                    'channel'   => $channel,
+                    'exception' => $e->getMessage(),
+                ]
+            );
+        }
+    }//end persistConsentCreate()
+
+    /**
+     * Transition queued BlastDelivery rows for the contact to
+     * `unsubscribed-before-send` so they are skipped on dispatch.
+     *
+     * Member 04 wires this through BlastService::transitionQueuedDeliveries
+     * for centralised counter roll-up. Until that lands the rows are
+     * updated directly so the audit trail and skip behaviour are still
+     * correct end-to-end.
+     *
+     * @param string      $contactId     Contact UUID / slug.
+     * @param string|null $sourceBlastId Blast UUID for audit context.
+     *
+     * @return void
+     */
+    private function transitionQueuedDeliveries(string $contactId, ?string $sourceBlastId): void
+    {
+        $register = $this->getRegisterSlug();
+        $schema   = $this->getBlastDeliverySchemaSlug();
+        if ($register === '' || $schema === '') {
+            return;
+        }
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
+            return;
+        }
+
+        try {
+            $rows = $objectService->findAll(
+                filters: ['contactId' => $contactId],
+                register: $register,
+                schema: $schema,
+            );
+        } catch (Throwable $e) {
+            $this->logger->info(
+                'ComplianceService.transitionQueuedDeliveries: findAll failed',
+                [
+                    'contactId' => $contactId,
+                    'exception' => $e->getMessage(),
+                ]
+            );
+            return;
+        }
+
+        foreach (($rows ?? []) as $row) {
+            $array = $this->toArray(value: $row);
+            if ($array === []) {
+                continue;
+            }
+            $status = strtolower((string) ($array['status'] ?? ''));
+            if (in_array($status, self::QUEUED_DELIVERY_STATUSES, true) === false) {
+                continue;
+            }
+            if ($sourceBlastId !== null && $sourceBlastId !== '') {
+                $rowBlast = (string) ($array['blastId'] ?? '');
+                if ($rowBlast !== '' && $rowBlast !== $sourceBlastId) {
+                    // Sourcing blast pinned and delivery belongs to a
+                    // different blast — leave it alone.
+                    continue;
+                }
+            }
+            $id = $this->extractObjectId(payload: $array);
+            if ($id === '') {
+                continue;
+            }
+            $array['status']         = self::STATUS_UNSUBSCRIBED_BEFORE_SEND;
+            $array['unsubscribedAt'] = gmdate('Y-m-d\TH:i:s\Z');
+
+            try {
+                $objectService->updateObject(
+                    id: $id,
+                    object: $array,
+                    register: $register,
+                    schema: $schema,
+                );
+            } catch (Throwable $e) {
+                $this->logger->warning(
+                    'ComplianceService.transitionQueuedDeliveries: updateObject failed',
+                    [
+                        'id'        => $id,
+                        'exception' => $e->getMessage(),
+                    ]
+                );
+            }
+        }
+    }//end transitionQueuedDeliveries()
 
     /**
      * Look up a ConsentRecord by (contactId, channel).
