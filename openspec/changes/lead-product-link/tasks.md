@@ -155,35 +155,39 @@
 
 ## 5. Product Linked Leads (REQ-LPL-014)
 
-- [ ] 5.1 Add a "Linked Leads" `CnDetailCard` section to `ProductDetail.vue`
+- [x] 5.1 Add a "Linked Leads" `CnDetailCard` section to `ProductDetail.vue`
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-014`
   - **files**: `src/views/products/ProductDetail.vue`
   - **acceptance_criteria**:
     - GIVEN a product is referenced by 4 LeadProduct objects
     - WHEN the user views the product detail
     - THEN a "Linked Leads (4)" `CnDetailCard` MUST be present on the page
+  - **Implementation**: title now binds to `linkedLeadsTitle` which renders `Linked Leads ({count})` with the live count.
 
-- [ ] 5.2 Use `fetchUsed` (relationsPlugin) on the `leadProduct` store to find LeadProduct objects where `product = this.productId`; resolve parent leads for display
+- [x] 5.2 Use `fetchUsed` (relationsPlugin) on the `leadProduct` store to find LeadProduct objects where `product = this.productId`; resolve parent leads for display
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-014`
   - **files**: `src/views/products/ProductDetail.vue`
   - **acceptance_criteria**:
     - GIVEN `fetchUsed` returns 4 LeadProduct objects
     - THEN the 4 corresponding leads MUST be resolved and displayed with: title, stage, qty, line item total
+  - **Implementation**: `fetchRelated` queries `leadProduct` by `product` (`objectStore.fetchCollection`, the schema-driven equivalent of `relationsPlugin.fetchUsed`) and fetches each parent `lead` so the row shows title, stage, quantity and total.
 
-- [ ] 5.3 Sort linked leads by creation date descending; add empty state when no linked leads exist
+- [x] 5.3 Sort linked leads by creation date descending; add empty state when no linked leads exist
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-014`
   - **files**: `src/views/products/ProductDetail.vue`
   - **acceptance_criteria**:
     - GIVEN no leads reference this product
     - THEN the section MUST show: "No leads are using this product yet." and header "Linked Leads (0)"
+  - **Implementation**: enriched rows are sorted by `leadCreatedAt` descending with leadProduct id as tie-breaker; empty state is "No leads are using this product yet." and header shows count 0.
 
-- [ ] 5.4 Make lead titles in the linked leads table clickable — navigate to the lead detail view on click
+- [x] 5.4 Make lead titles in the linked leads table clickable — navigate to the lead detail view on click
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-014`
   - **files**: `src/views/products/ProductDetail.vue`
   - **acceptance_criteria**:
     - GIVEN the linked leads list shows a lead "Gemeente Amsterdam — CRM implementatie"
     - WHEN the user clicks the lead title
     - THEN the router MUST navigate to `/leads/{leadId}`
+  - **Implementation**: lead-name cell renders an `<a @click.prevent.stop="openLead(item)">`; full row still routes via `openLead`.
 
 ---
 
