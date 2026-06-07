@@ -72,23 +72,25 @@
 
 ## 3. Auto-Recalculation (REQ-LPL-012)
 
-- [ ] 3.1 Remove the `lead.value === 0` (or `null`) guard from `onProductValueChanged` in `LeadDetail.vue`
+- [x] 3.1 Remove the `lead.value === 0` (or `null`) guard from `onProductValueChanged` in `LeadDetail.vue`
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-012`
   - **files**: `src/views/leads/LeadDetail.vue`
   - **acceptance_criteria**:
     - GIVEN a lead with value EUR 5,000 and no manual override
     - WHEN a new line item worth EUR 2,000 is added
     - THEN the lead value MUST auto-update to EUR 7,000 (REQ-LPL-012)
+  - **Verified**: `onProductValueChanged` guards on `valueOverridden` only, no value-equals-zero check.
 
-- [ ] 3.2 Add `valueIsOverridden` boolean to `LeadDetail.vue` component data (default: false)
+- [x] 3.2 Add `valueIsOverridden` boolean to `LeadDetail.vue` component data (default: false)
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-012`
   - **files**: `src/views/leads/LeadDetail.vue`
   - **acceptance_criteria**:
     - GIVEN `valueIsOverridden` is false
     - WHEN `onProductValueChanged` fires
     - THEN the lead value MUST be updated to the product total
+  - **Verified**: `data()` returns `valueOverridden: false`; same semantics as `valueIsOverridden`.
 
-- [ ] 3.3 Set `valueIsOverridden = true` when the user manually edits the lead value to a number different from the current product total
+- [x] 3.3 Set `valueIsOverridden = true` when the user manually edits the lead value to a number different from the current product total
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-012`
   - **files**: `src/views/leads/LeadDetail.vue`
   - **acceptance_criteria**:
@@ -96,8 +98,9 @@
     - WHEN the user manually sets lead value to EUR 6,000
     - THEN `valueIsOverridden` MUST become true
     - AND a hint MUST display showing calculated vs manual value
+  - **Verified**: `_computeValueOverride` flips `valueOverridden` true when the saved lead value diverges from the LeadProduct total; LeadProducts.vue `hasManualOverride` shows the "Lead value is manually set to {manual}. Calculated total: {calculated}" hint.
 
-- [ ] 3.4 Wire the "Use calculated value" button to reset `valueIsOverridden = false` and sync lead value to product total
+- [x] 3.4 Wire the "Use calculated value" button to reset `valueIsOverridden = false` and sync lead value to product total
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-012`
   - **files**: `src/views/leads/LeadDetail.vue`
   - **acceptance_criteria**:
@@ -105,6 +108,7 @@
     - WHEN the user clicks "Use calculated value"
     - THEN the lead value MUST reset to the product total
     - AND `valueIsOverridden` MUST become false
+  - **Verified**: LeadProducts.vue `@sync-value` → `syncLeadValue(value)` saves the lead with the calculated total and resets `valueOverridden = false`.
 
 ---
 
