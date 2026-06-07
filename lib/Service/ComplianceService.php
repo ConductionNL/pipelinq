@@ -111,6 +111,64 @@ class ComplianceService
     }//end __construct()
 
     /**
+     * Check every member of a Segment for a usable ConsentRecord on the
+     * requested channel.
+     *
+     * Returns a triple:
+     *
+     * - `compliant` (bool) — true when no member is missing consent.
+     * - `missingConsent` (string[]) — contactIds without a usable record.
+     * - `missingCount` (int) — convenience count of the above.
+     *
+     * Members without a contactId are conservatively treated as
+     * missing-consent (they cannot be matched to a ConsentRecord row, so
+     * the fail-safe rule applies). When SegmentService returns an empty
+     * recipient set (segment not found, OR unreachable, etc.) the result
+     * is `compliant: true, missingCount: 0` — there's nothing to send.
+     *
+     * @param string $segmentId Segment UUID or slug.
+     * @param string $channel   "email" or "sms".
+     *
+     * @return array{compliant: bool, missingConsent: array<int, string>, missingCount: int}
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-03-compliance-service/tasks.md#check-segment-compliance
+     */
+    public function checkSegmentCompliance(string $segmentId, string $channel): array
+    {
+        $channel = strtolower(trim($channel));
+        $members = $this->segmentService->getMembersForBlast(segmentId: $segmentId);
+        if ($members === []) {
+            return [
+                'compliant'      => true,
+                'missingConsent' => [],
+                'missingCount'   => 0,
+            ];
+        }
+
+        $missing = [];
+        foreach ($members as $member) {
+            $contactId = (string) ($member['contactId'] ?? '');
+            if ($contactId === '') {
+                // Members without a stable contactId cannot be matched to
+                // a ConsentRecord — fail safe, treat as missing.
+                $missing[] = '';
+                continue;
+            }
+            if ($this->hasConsentForChannel(contactId: $contactId, channel: $channel) === false) {
+                $missing[] = $contactId;
+            }
+        }
+
+        $missing = array_values(array_unique($missing));
+
+        return [
+            'compliant'      => ($missing === []),
+            'missingConsent' => $missing,
+            'missingCount'   => count($missing),
+        ];
+    }//end checkSegmentCompliance()
+
+    /**
      * Return whether a Contact has a usable ConsentRecord on the channel.
      *
      * True iff a ConsentRecord exists for `(contactId, channel)` whose
