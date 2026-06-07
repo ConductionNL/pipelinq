@@ -32,8 +32,10 @@
 
 ## Blast seed (Task 1.3)
 
-- [ ] Add Blast 1 parent "Q4 Gemeente Outreach - Variant A" (abSplitPercent 50, status sent, realistic totals)
-- [ ] Add Blast 2 variant B (abVariantOf parent, status sent, totals)
+- [x] Add Blast 1 parent "Q4 Gemeente Outreach - Variant A" (abSplitPercent 50, status sent, realistic totals)
+- [x] Add Blast 2 variant B (abVariantOf parent, status sent, totals)
+
+  Two Blast seed objects forming the A/B pair: `blast-q4-gemeente-outreach-a` is the parent (abVariantOf null, abSplitPercent 50, status sent, totals 124 sent / 119 delivered / 28 clicked) and `blast-q4-gemeente-outreach-b` is the child variant (abVariantOf points at the parent slug, abSplitPercent 50, status sent, totals 124 sent / 121 delivered / 34 clicked — slightly higher engagement on B, as expected from a tuned subject variant). Both reference `segment-gemeente-contact-blast` and `template-q4-product-launch`; both flag the SendGrid OpenConnector source.
 
 ## BlastDelivery seed (Task 1.4)
 
