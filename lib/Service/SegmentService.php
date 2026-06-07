@@ -117,6 +117,8 @@ class SegmentService
      * @param SchemaMapService   $schemaMapService Schema-slug map.
      * @param ICacheFactory      $cacheFactory     NC cache factory.
      * @param LoggerInterface    $logger           Logger.
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.8
      */
     public function __construct(
         private ContainerInterface $container,
@@ -189,6 +191,50 @@ class SegmentService
     {
         return $this->evaluateNode(node: $rules, entity: $entity);
     }//end evaluateRules()
+
+    /**
+     * Validate a rule tree and return its size estimate in one call.
+     *
+     * Convenience entry point for the segment-builder save path used by
+     * controllers (member 06) and BlastService (member 04) — it runs
+     * `validateRules()` on the supplied rule tree, returns a structured
+     * `{ valid, error, estimatedSize }` triple, and counts matching
+     * entities only when the tree is valid. Centralising the
+     * validate-then-estimate sequence here keeps every caller honest
+     * about the order: never persist a Segment whose tree did not pass
+     * `validateRules()` first.
+     *
+     * @param array<string, mixed> $rules      Rule tree from the request.
+     * @param string               $entityType "contact" or "customer".
+     *
+     * @return array{valid: bool, error: ?string, estimatedSize: int}
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.2
+     */
+    public function previewRulePayload(array $rules, string $entityType): array
+    {
+        $error = $this->validateRules(rules: $rules, entityType: $entityType);
+        if ($error !== null) {
+            return [
+                'valid'         => false,
+                'error'         => $error,
+                'estimatedSize' => 0,
+            ];
+        }
+
+        $count    = 0;
+        $entities = $this->loadEntitiesForType(entityType: $entityType);
+        foreach ($entities as $entity) {
+            if ($this->evaluateRules(rules: $rules, entity: $entity) === true) {
+                $count++;
+            }
+        }
+        return [
+            'valid'         => true,
+            'error'         => null,
+            'estimatedSize' => $count,
+        ];
+    }//end previewRulePayload()
 
     /**
      * Return the minimal recipient projection used by the blast engine.
