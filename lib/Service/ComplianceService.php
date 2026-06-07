@@ -189,6 +189,7 @@ class ComplianceService
                 $missing[] = '';
                 continue;
             }
+
             if ($this->hasConsentForChannel(contactId: $contactId, channel: $channel) === false) {
                 $missing[] = $contactId;
             }
@@ -219,11 +220,13 @@ class ComplianceService
      * downstream "what would block this blast?" preview endpoints can
      * call the method without first proving they have data.
      *
-     * @param string               $segmentId   Segment UUID / slug.
-     * @param array<string, mixed> $template    CampaignTemplate payload.
-     * @param string               $channel     "email" or "sms".
+     * @param string               $segmentId Segment UUID / slug.
+     * @param array<string, mixed> $template  CampaignTemplate payload.
+     * @param string               $channel   "email" or "sms".
      *
-     * @return array{valid: bool, templateError: ?string, segmentCompliance: array{compliant: bool, missingConsent: array<int, string>, missingCount: int}}
+     * @return array<string, mixed> Preflight triple — see
+     *                              `validateTemplate()` / `checkSegmentCompliance()`
+     *                              for the field shapes.
      *
      * @spec openspec/changes/marketing-segmentation-and-blast-03-compliance-service/tasks.md#check-segment-compliance
      */
@@ -272,6 +275,7 @@ class ComplianceService
         if ($lawfulBasis === '') {
             return false;
         }
+
         if (in_array($lawfulBasis, self::LAWFUL_BASIS_UNSATISFYING, true) === true) {
             // ADR-005 fail-safe: "imported" rows are recorded for
             // GDPR audit purposes but cannot themselves authorise a
@@ -283,6 +287,7 @@ class ComplianceService
             );
             return false;
         }
+
         if (in_array($lawfulBasis, self::LAWFUL_BASIS_ALLOWED, true) === false) {
             return false;
         }
@@ -331,7 +336,7 @@ class ComplianceService
         $bodyText       = (string) ($templateData['bodyText'] ?? '');
         $footerOverride = (string) ($templateData['footerOverride'] ?? '');
 
-        $haystack = $bodyHtml . "\n" . $bodyText . "\n" . $footerOverride;
+        $haystack = $bodyHtml."\n".$bodyText."\n".$footerOverride;
 
         if (str_contains($haystack, self::UNSUBSCRIBE_TOKEN) === false) {
             return sprintf(
@@ -349,15 +354,312 @@ class ComplianceService
                 }
             }
         }
+
         if ($hasAddress === false) {
             return 'Email templates must include a physical-address block '
-                . '(footerOverride or one of {{physical_address}} / '
-                . '{{sender_address}} / {{company_address}} / '
-                . '{{address_block}}) per CAN-SPAM § 7704(a)(5).';
+                .'(footerOverride or one of {{physical_address}} / '
+                .'{{sender_address}} / {{company_address}} / '
+                .'{{address_block}}) per CAN-SPAM § 7704(a)(5).';
         }
 
         return null;
     }//end validateTemplate()
+
+    /**
+     * List CampaignTemplates with pagination envelope.
+     *
+     * @param int $page  1-based page number (clamped to >= 1).
+     * @param int $limit Page size (clamped 1..100).
+     *
+     * @return array{data: array<int, array<string, mixed>>, pagination: array{page: int, limit: int, total: int, pages: int}}
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
+     */
+    public function listTemplates(int $page, int $limit): array
+    {
+        $page  = max(1, $page);
+        $limit = min(100, max(1, $limit));
+        $all   = $this->loadTemplatesRaw();
+        $total = count($all);
+        $slice = array_slice($all, (($page - 1) * $limit), $limit);
+        return [
+            'data'       => $slice,
+            'pagination' => [
+                'page'  => $page,
+                'limit' => $limit,
+                'total' => $total,
+                'pages' => $this->computePages(total: $total, limit: $limit),
+            ],
+        ];
+    }//end listTemplates()
+
+    /**
+     * Compute the page-count from a total + page-size pair.
+     *
+     * Centralised so the inline ternary stays out of the envelope
+     * builders (matches the team's "no inline IF" coding style).
+     *
+     * @param int $total Total row count.
+     * @param int $limit Page size.
+     *
+     * @return int Page count (0 when total is 0).
+     */
+    private function computePages(int $total, int $limit): int
+    {
+        if ($total <= 0 || $limit <= 0) {
+            return 0;
+        }
+
+        return (int) ceil($total / $limit);
+    }//end computePages()
+
+    /**
+     * Fetch one CampaignTemplate by id.
+     *
+     * @param string $templateId Template UUID or slug.
+     *
+     * @return array<string, mixed>|null Template payload or null.
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
+     */
+    public function getTemplateById(string $templateId): ?array
+    {
+        if ($templateId === '') {
+            return null;
+        }
+
+        $register      = $this->getRegisterSlug();
+        $schema        = $this->getCampaignTemplateSchemaSlug();
+        $objectService = $this->getObjectService();
+        if ($register === '' || $schema === '' || $objectService === null) {
+            return null;
+        }
+
+        try {
+            $entity = $objectService->find(id: $templateId, register: $register, schema: $schema);
+        } catch (Throwable $e) {
+            $this->logger->info(
+                'ComplianceService.getTemplateById: not found',
+                ['templateId' => $templateId, 'exception' => $e->getMessage()]
+            );
+            return null;
+        }
+
+        if ($entity === null) {
+            return null;
+        }
+
+        return $this->toArray(value: $entity);
+    }//end getTemplateById()
+
+    /**
+     * Create a CampaignTemplate after compliance validation.
+     *
+     * Calls `validateTemplate()` for the requested channel before
+     * persisting. An invalid template is rejected with a human-readable
+     * error string; the row is never written. `createdBy` is stamped
+     * from the authenticated user id (ADR-005).
+     *
+     * @param array<string, mixed> $payload      Inbound template payload.
+     * @param string               $createdByUid Authenticated user id.
+     *
+     * @return array{template?: array<string, mixed>, error?: string}
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
+     */
+    public function createTemplate(array $payload, string $createdByUid): array
+    {
+        $name = (string) ($payload['name'] ?? '');
+        if (trim($name) === '') {
+            return ['error' => 'Invalid name'];
+        }
+
+        $channel = strtolower((string) ($payload['channel'] ?? ''));
+        if (in_array($channel, ['email', 'sms'], true) === false) {
+            return ['error' => 'Invalid channel'];
+        }
+
+        $validationError = $this->validateTemplate(templateData: $payload, channel: $channel);
+        if ($validationError !== null) {
+            return ['error' => $validationError];
+        }
+
+        $now    = gmdate('Y-m-d\TH:i:s\Z');
+        $object = [
+            'name'           => $name,
+            'channel'        => $channel,
+            'subject'        => (string) ($payload['subject'] ?? ''),
+            'bodyHtml'       => (string) ($payload['bodyHtml'] ?? ''),
+            'bodyText'       => (string) ($payload['bodyText'] ?? ''),
+            'senderName'     => (string) ($payload['senderName'] ?? ''),
+            'senderEmail'    => (string) ($payload['senderEmail'] ?? ''),
+            'footerOverride' => (string) ($payload['footerOverride'] ?? ''),
+            'createdBy'      => $createdByUid,
+            'createdAt'      => $now,
+            'updatedAt'      => $now,
+        ];
+
+        $saved = $this->saveTemplateObject(payload: $object);
+        if ($saved === null) {
+            return ['error' => 'Could not create template'];
+        }
+
+        return ['template' => $saved];
+    }//end createTemplate()
+
+    /**
+     * Patch an existing CampaignTemplate with compliance re-validation.
+     *
+     * Any change to body / channel / footer triggers a fresh
+     * `validateTemplate()` call so an operator cannot edit a template
+     * into a non-compliant state. `createdBy` / `createdAt` are
+     * preserved from the existing row; `updatedAt` is bumped.
+     *
+     * @param string               $templateId Template UUID or slug.
+     * @param array<string, mixed> $patch      Patch payload.
+     *
+     * @return array{template?: array<string, mixed>, error?: string}
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
+     */
+    public function patchTemplate(string $templateId, array $patch): array
+    {
+        $existing = $this->getTemplateById(templateId: $templateId);
+        if ($existing === null) {
+            return ['error' => 'Template not found'];
+        }
+
+        $editable = ['name', 'subject', 'bodyHtml', 'bodyText', 'senderName', 'senderEmail', 'footerOverride'];
+        $payload  = $existing;
+        foreach ($editable as $field) {
+            if (array_key_exists($field, $patch) === true && is_string($patch[$field]) === true) {
+                $payload[$field] = $patch[$field];
+            }
+        }
+
+        $channel = strtolower((string) ($existing['channel'] ?? 'email'));
+        $error   = $this->validateTemplate(templateData: $payload, channel: $channel);
+        if ($error !== null) {
+            return ['error' => $error];
+        }
+
+        $payload['updatedAt'] = gmdate('Y-m-d\TH:i:s\Z');
+        $saved = $this->saveTemplateObject(payload: $payload, id: $this->extractTemplateId(payload: $existing));
+        if ($saved === null) {
+            return ['error' => 'Could not update template'];
+        }
+
+        return ['template' => $saved];
+    }//end patchTemplate()
+
+    /**
+     * Load every CampaignTemplate via ObjectService.
+     *
+     * @return array<int, array<string, mixed>> Plain payloads.
+     */
+    private function loadTemplatesRaw(): array
+    {
+        $register      = $this->getRegisterSlug();
+        $schema        = $this->getCampaignTemplateSchemaSlug();
+        $objectService = $this->getObjectService();
+        if ($register === '' || $schema === '' || $objectService === null) {
+            return [];
+        }
+
+        try {
+            $rows = $objectService->findAll(filters: [], register: $register, schema: $schema);
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'ComplianceService.loadTemplatesRaw: findAll failed',
+                ['exception' => $e->getMessage()]
+            );
+            return [];
+        }
+
+        $out = [];
+        foreach (($rows ?? []) as $row) {
+            $out[] = $this->toArray(value: $row);
+        }
+
+        return $out;
+    }//end loadTemplatesRaw()
+
+    /**
+     * Persist a CampaignTemplate via ObjectService.
+     *
+     * @param array<string, mixed> $payload Template payload.
+     * @param string|null          $id      Existing id when patching.
+     *
+     * @return array<string, mixed>|null Saved row or null on failure.
+     */
+    private function saveTemplateObject(array $payload, ?string $id=null): ?array
+    {
+        $register      = $this->getRegisterSlug();
+        $schema        = $this->getCampaignTemplateSchemaSlug();
+        $objectService = $this->getObjectService();
+        if ($register === '' || $schema === '' || $objectService === null) {
+            return null;
+        }
+
+        try {
+            $saved = $objectService->saveObject(
+                object: $payload,
+                register: $register,
+                schema: $schema,
+                uuid: $id,
+            );
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'ComplianceService.saveTemplateObject: save failed',
+                ['exception' => $e->getMessage()]
+            );
+            return null;
+        }
+
+        return $this->toArray(value: $saved);
+    }//end saveTemplateObject()
+
+    /**
+     * Extract a template's id from a payload (uuid > id > slug).
+     *
+     * @param array<string, mixed> $payload Payload.
+     *
+     * @return string Id or empty string.
+     */
+    private function extractTemplateId(array $payload): string
+    {
+        foreach (['uuid', 'id', 'slug'] as $key) {
+            if (isset($payload[$key]) === true && is_scalar($payload[$key]) === true && (string) $payload[$key] !== '') {
+                return (string) $payload[$key];
+            }
+        }
+
+        if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
+            foreach (['uuid', 'id', 'slug'] as $key) {
+                $value = ($payload['@self'][$key] ?? null);
+                if (is_scalar($value) === true && (string) $value !== '') {
+                    return (string) $value;
+                }
+            }
+        }
+
+        return '';
+    }//end extractTemplateId()
+
+    /**
+     * Resolve the CampaignTemplate schema slug from app config.
+     *
+     * @return string Schema slug.
+     */
+    private function getCampaignTemplateSchemaSlug(): string
+    {
+        $slug = $this->appConfig->getValueString(Application::APP_ID, 'campaignTemplate_schema', '');
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        return 'campaignTemplate';
+    }//end getCampaignTemplateSchemaSlug()
 
     /**
      * Withdraw consent for a (contact, channel) pair and skip any
@@ -394,7 +696,7 @@ class ComplianceService
         string $contactId,
         string $channel,
         string $reason,
-        ?string $sourceBlastId = null,
+        ?string $sourceBlastId=null,
     ): void {
         $channel = strtolower(trim($channel));
         if ($contactId === '' || $channel === '' || $reason === '') {
@@ -428,7 +730,7 @@ class ComplianceService
                 reason: $reason,
                 now: $now
             );
-        }
+        }//end if
 
         $this->transitionQueuedDeliveries(contactId: $contactId, sourceBlastId: $sourceBlastId);
 
@@ -457,6 +759,7 @@ class ComplianceService
         if ($register === '' || $schema === '') {
             return;
         }
+
         $objectService = $this->getObjectService();
         if ($objectService === null) {
             return;
@@ -507,6 +810,7 @@ class ComplianceService
         if ($register === '' || $schema === '') {
             return;
         }
+
         $objectService = $this->getObjectService();
         if ($objectService === null) {
             return;
@@ -562,6 +866,7 @@ class ComplianceService
         if ($register === '' || $schema === '') {
             return;
         }
+
         $objectService = $this->getObjectService();
         if ($objectService === null) {
             return;
@@ -589,10 +894,12 @@ class ComplianceService
             if ($array === []) {
                 continue;
             }
+
             $status = strtolower((string) ($array['status'] ?? ''));
             if (in_array($status, self::QUEUED_DELIVERY_STATUSES, true) === false) {
                 continue;
             }
+
             if ($sourceBlastId !== null && $sourceBlastId !== '') {
                 $rowBlast = (string) ($array['blastId'] ?? '');
                 if ($rowBlast !== '' && $rowBlast !== $sourceBlastId) {
@@ -601,10 +908,12 @@ class ComplianceService
                     continue;
                 }
             }
+
             $id = $this->extractObjectId(payload: $array);
             if ($id === '') {
                 continue;
             }
+
             $array['status']         = self::STATUS_UNSUBSCRIBED_BEFORE_SEND;
             $array['unsubscribedAt'] = gmdate('Y-m-d\TH:i:s\Z');
 
@@ -624,7 +933,7 @@ class ComplianceService
                     ]
                 );
             }
-        }
+        }//end foreach
     }//end transitionQueuedDeliveries()
 
     /**
@@ -642,6 +951,7 @@ class ComplianceService
         if ($register === '' || $schema === '') {
             return null;
         }
+
         $objectService = $this->getObjectService();
         if ($objectService === null) {
             return null;
@@ -673,6 +983,7 @@ class ComplianceService
             if ($array === []) {
                 continue;
             }
+
             // Defensive in-PHP filter — OR's filter DSL may ignore
             // unknown keys silently, so re-check here.
             $rowContact = (string) ($array['contactId'] ?? '');
@@ -681,6 +992,7 @@ class ComplianceService
                 return $array;
             }
         }
+
         return null;
     }//end findConsentRecord()
 
@@ -695,6 +1007,7 @@ class ComplianceService
         if ($slug !== '') {
             return $slug;
         }
+
         return self::DEFAULT_REGISTER_SLUG;
     }//end getRegisterSlug()
 
@@ -709,6 +1022,7 @@ class ComplianceService
         if ($slug !== '') {
             return $slug;
         }
+
         return self::DEFAULT_CONSENT_RECORD_SCHEMA_SLUG;
     }//end getConsentRecordSchemaSlug()
 
@@ -723,6 +1037,7 @@ class ComplianceService
         if ($slug !== '') {
             return $slug;
         }
+
         return self::DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG;
     }//end getBlastDeliverySchemaSlug()
 
@@ -757,18 +1072,21 @@ class ComplianceService
         if (is_array($value) === true) {
             return $value;
         }
+
         if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
             $serialised = $value->jsonSerialize();
             if (is_array($serialised) === true) {
                 return $serialised;
             }
         }
+
         if (is_object($value) === true && method_exists($value, 'getObject') === true) {
             $payload = $value->getObject();
             if (is_array($payload) === true) {
                 return $payload;
             }
         }
+
         return [];
     }//end toArray()
 
@@ -789,6 +1107,7 @@ class ComplianceService
                 }
             }
         }
+
         if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
             foreach (['uuid', 'id', 'slug'] as $key) {
                 if (isset($payload['@self'][$key]) === true && is_scalar($payload['@self'][$key]) === true) {
@@ -799,6 +1118,7 @@ class ComplianceService
                 }
             }
         }
+
         return '';
     }//end extractObjectId()
 }//end class

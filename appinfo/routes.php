@@ -313,6 +313,13 @@ return [
         ['name' => 'segment#members',       'url' => '/api/segments/{id}/members',     'verb' => 'GET'],
         ['name' => 'segment#show',          'url' => '/api/segments/{id}',             'verb' => 'GET'],
 
+        // Marketing — CampaignTemplates (marketing-segmentation-and-blast chain member 06).
+        // Specific routes precede any wildcard {slug} routes (ADR-016).
+        ['name' => 'template#index',  'url' => '/api/templates',      'verb' => 'GET'],
+        ['name' => 'template#create', 'url' => '/api/templates',      'verb' => 'POST'],
+        ['name' => 'template#show',   'url' => '/api/templates/{id}', 'verb' => 'GET'],
+        ['name' => 'template#update', 'url' => '/api/templates/{id}', 'verb' => 'PATCH'],
+
         // Marketing — Blasts (marketing-segmentation-and-blast chain member 06).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
         ['name' => 'blast#index',      'url' => '/api/blasts',                     'verb' => 'GET'],
