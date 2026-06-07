@@ -2,7 +2,9 @@
 
 ## Deduplication
 
-- [ ] Verify no prior SegmentService/BlastService/ComplianceService/AttributionService or schemas exist; document findings in PR (ADR-012)
+- [x] Verify no prior SegmentService/BlastService/ComplianceService/AttributionService or schemas exist; document findings in PR (ADR-012)
+
+  Dedup check (ADR-012): grep across `lib/Service/`, `lib/Controller/`, `lib/Settings/` and `lib/Settings/register.d/` confirms no prior `SegmentService`, `BlastService`, `ComplianceService` or `AttributionService` class exists, and no `segment` / `campaignTemplate` / `blast` / `blastDelivery` / `consentRecord` / `attributionLink` schema is declared in the monolith (`lib/Settings/pipelinq_register.json`) or in any existing register fragment. The only `segment`/`marketing_segment_match` matches are the incidental description string in `70-loyalty-program.json` and the `marketing_segment_match` automation trigger enum in `80-automation.json` (consumer, not producer). This chain root is the first time the data model is introduced.
 
 ## Schema registration (Section 6 of giant)
 
