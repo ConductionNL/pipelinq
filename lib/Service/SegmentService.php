@@ -145,6 +145,312 @@ class SegmentService
     }//end validateRules()
 
     /**
+     * Evaluate a validated rule tree against one entity payload.
+     *
+     * AND nodes return true when ALL children return true.
+     * OR nodes return true when ANY child returns true.
+     * NOT nodes (single child) invert the child's truth value.
+     * Leaf predicates compare the entity's field against the rule value
+     * with type-aware coercion (date strings → unix-timestamp for
+     * before/after, scalars → float for numeric comparisons, scalars →
+     * lower-cased strings for equals/contains).
+     *
+     * Missing fields evaluate to false (predicate fails) rather than
+     * throwing — a Contact without a `lastContactMoment` is simply not
+     * a match for `lastContactMoment < 90 days`.
+     *
+     * @param array<string, mixed> $rules  Rule tree node.
+     * @param array<string, mixed> $entity Entity payload (key-value).
+     *
+     * @return bool True when the entity matches the tree.
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.5
+     */
+    public function evaluateRules(array $rules, array $entity): bool
+    {
+        return $this->evaluateNode(node: $rules, entity: $entity);
+    }//end evaluateRules()
+
+    /**
+     * Recursively evaluate a node against the entity.
+     *
+     * @param array<string, mixed> $node   Tree node.
+     * @param array<string, mixed> $entity Entity payload.
+     *
+     * @return bool Truth value of this node.
+     */
+    private function evaluateNode(array $node, array $entity): bool
+    {
+        $type = $this->nodeType(node: $node);
+        if ($type === 'AND') {
+            $children = ($node['children'] ?? []);
+            if (is_array($children) === false || $children === []) {
+                return false;
+            }
+            foreach ($children as $child) {
+                if (is_array($child) === false) {
+                    return false;
+                }
+                if ($this->evaluateNode(node: $child, entity: $entity) === false) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        if ($type === 'OR') {
+            $children = ($node['children'] ?? []);
+            if (is_array($children) === false || $children === []) {
+                return false;
+            }
+            foreach ($children as $child) {
+                if (is_array($child) === false) {
+                    continue;
+                }
+                if ($this->evaluateNode(node: $child, entity: $entity) === true) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        if ($type === 'NOT') {
+            $children = ($node['children'] ?? []);
+            if (is_array($children) === false || isset($children[0]) === false || is_array($children[0]) === false) {
+                return false;
+            }
+            return ($this->evaluateNode(node: $children[0], entity: $entity) === false);
+        }
+
+        return $this->evaluateLeaf(leaf: $node, entity: $entity);
+    }//end evaluateNode()
+
+    /**
+     * Evaluate one leaf predicate against the entity.
+     *
+     * @param array<string, mixed> $leaf   Leaf predicate.
+     * @param array<string, mixed> $entity Entity payload.
+     *
+     * @return bool Truth value.
+     */
+    private function evaluateLeaf(array $leaf, array $entity): bool
+    {
+        $field = ($leaf['field'] ?? null);
+        if (is_string($field) === false || $field === '') {
+            return false;
+        }
+        $operator = (string) ($leaf['operator'] ?? 'equals');
+        $value    = ($leaf['value'] ?? null);
+        $actual   = ($entity[$field] ?? null);
+
+        switch ($operator) {
+            case 'equals':
+                return $this->looseEquals(left: $actual, right: $value);
+            case 'notEquals':
+                return ($this->looseEquals(left: $actual, right: $value) === false);
+            case 'gt':
+            case 'greaterThan':
+                return $this->compareNumeric(left: $actual, right: $value) === 1;
+            case 'gte':
+            case 'greaterThanOrEqual':
+                return $this->compareNumeric(left: $actual, right: $value) >= 0;
+            case 'lt':
+            case 'lessThan':
+                return $this->compareNumeric(left: $actual, right: $value) === -1;
+            case 'lte':
+            case 'lessThanOrEqual':
+                $cmp = $this->compareNumeric(left: $actual, right: $value);
+                return ($cmp === -1 || $cmp === 0);
+            case 'before':
+                return $this->compareDates(left: $actual, right: $value) === -1;
+            case 'after':
+                return $this->compareDates(left: $actual, right: $value) === 1;
+            case 'between':
+                if (is_array($value) === false || count($value) !== 2) {
+                    return false;
+                }
+                $low  = $this->compareNumeric(left: $actual, right: $value[0]);
+                $high = $this->compareNumeric(left: $actual, right: $value[1]);
+                return ($low >= 0 && $high <= 0);
+            case 'contains':
+                return $this->valueContains(haystack: $actual, needle: $value);
+            case 'containsAny':
+                if (is_array($value) === false) {
+                    return false;
+                }
+                foreach ($value as $candidate) {
+                    if ($this->valueContains(haystack: $actual, needle: $candidate) === true) {
+                        return true;
+                    }
+                }
+                return false;
+            case 'in':
+                if (is_array($value) === false) {
+                    return false;
+                }
+                foreach ($value as $candidate) {
+                    if ($this->looseEquals(left: $actual, right: $candidate) === true) {
+                        return true;
+                    }
+                }
+                return false;
+            case 'notIn':
+                if (is_array($value) === false) {
+                    return true;
+                }
+                foreach ($value as $candidate) {
+                    if ($this->looseEquals(left: $actual, right: $candidate) === true) {
+                        return false;
+                    }
+                }
+                return true;
+            case 'isNull':
+                return ($actual === null);
+            case 'isNotNull':
+                return ($actual !== null);
+            default:
+                return false;
+        }
+    }//end evaluateLeaf()
+
+    /**
+     * Loose equality with case-insensitive string compare.
+     *
+     * @param mixed $left  Left value.
+     * @param mixed $right Right value.
+     *
+     * @return bool Whether the two values match.
+     */
+    private function looseEquals(mixed $left, mixed $right): bool
+    {
+        if ($left === null && $right === null) {
+            return true;
+        }
+        if (is_bool($left) === true || is_bool($right) === true) {
+            return ((bool) $left === (bool) $right);
+        }
+        if (is_numeric($left) === true && is_numeric($right) === true) {
+            return ((float) $left === (float) $right);
+        }
+        if (is_scalar($left) === true && is_scalar($right) === true) {
+            return (strcasecmp((string) $left, (string) $right) === 0);
+        }
+        return ($left === $right);
+    }//end looseEquals()
+
+    /**
+     * Numeric comparison returning -1, 0, or 1. Returns 0 when either
+     * side is non-numeric so callers fail closed.
+     *
+     * @param mixed $left  Left value.
+     * @param mixed $right Right value.
+     *
+     * @return int -1, 0, or 1.
+     */
+    private function compareNumeric(mixed $left, mixed $right): int
+    {
+        if (is_numeric($left) === false || is_numeric($right) === false) {
+            if (is_string($left) === true && is_string($right) === true) {
+                return $left <=> $right;
+            }
+            return 0;
+        }
+        $lf = (float) $left;
+        $rf = (float) $right;
+        if ($lf < $rf) {
+            return -1;
+        }
+        if ($lf > $rf) {
+            return 1;
+        }
+        return 0;
+    }//end compareNumeric()
+
+    /**
+     * Parse two date strings and compare them. Returns 0 on parse
+     * failure so callers fail closed.
+     *
+     * @param mixed $left  Left date-like value.
+     * @param mixed $right Right date-like value.
+     *
+     * @return int -1, 0, or 1.
+     */
+    private function compareDates(mixed $left, mixed $right): int
+    {
+        $lt = $this->toTimestamp(value: $left);
+        $rt = $this->toTimestamp(value: $right);
+        if ($lt === null || $rt === null) {
+            return 0;
+        }
+        if ($lt < $rt) {
+            return -1;
+        }
+        if ($lt > $rt) {
+            return 1;
+        }
+        return 0;
+    }//end compareDates()
+
+    /**
+     * Coerce a value to a unix timestamp. Accepts ISO date strings, a
+     * "N days" / "N days ago" relative expression, or an integer.
+     *
+     * @param mixed $value Date-like value.
+     *
+     * @return int|null Timestamp seconds or null on parse failure.
+     */
+    private function toTimestamp(mixed $value): ?int
+    {
+        if (is_int($value) === true) {
+            return $value;
+        }
+        if (is_string($value) === false || $value === '') {
+            return null;
+        }
+        $match = [];
+        if (preg_match('/^(\d+)\s+days?(\s+ago)?$/i', $value, $match) === 1) {
+            $days  = (int) $match[1];
+            $stamp = (time() - ($days * 86400));
+            return $stamp;
+        }
+        $parsed = strtotime($value);
+        if ($parsed === false) {
+            return null;
+        }
+        return $parsed;
+    }//end toTimestamp()
+
+    /**
+     * Substring-or-array-membership check used by `contains` / `containsAny`.
+     *
+     * @param mixed $haystack The actual entity value.
+     * @param mixed $needle   The rule value.
+     *
+     * @return bool Whether the haystack contains the needle.
+     */
+    private function valueContains(mixed $haystack, mixed $needle): bool
+    {
+        if ($haystack === null) {
+            return false;
+        }
+        if (is_array($haystack) === true) {
+            foreach ($haystack as $element) {
+                if ($this->looseEquals(left: $element, right: $needle) === true) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        if (is_scalar($haystack) === false || is_scalar($needle) === false) {
+            return false;
+        }
+        $haystackStr = strtolower((string) $haystack);
+        $needleStr   = strtolower((string) $needle);
+        if ($needleStr === '') {
+            return false;
+        }
+        return (str_contains($haystackStr, $needleStr) === true);
+    }//end valueContains()
+
+    /**
      * Recursively validate a node.
      *
      * @param array<string, mixed> $node       Tree node.
