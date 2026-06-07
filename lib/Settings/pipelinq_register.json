@@ -4576,7 +4576,8 @@
         "@self": {
           "register": "pipelinq",
           "schema": "lead",
-          "slug": "lead-gemeente-amsterdam-crm-2026"
+          "slug": "lead-gemeente-amsterdam-crm-2026",
+          "id": "b5a0d3f1-9c2e-4a1b-8d6f-3e7c9f1a2b40"
         },
         "title": "Gemeente Amsterdam - CRM implementatie 2026",
         "source": "referral",
@@ -4593,7 +4594,8 @@
         "@self": {
           "register": "pipelinq",
           "schema": "lead",
-          "slug": "lead-provincie-zuidholland-digitalisering-2026"
+          "slug": "lead-provincie-zuidholland-digitalisering-2026",
+          "id": "b5a0d3f1-9c2e-4a1b-8d6f-3e7c9f1a2b41"
         },
         "title": "Provincie Zuid-Holland - Digitalisering klantcontact",
         "source": "event",
@@ -4758,6 +4760,175 @@
         "channelMetadata": {
           "letterReference": "BZW-2026-0042"
         }
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "productCategory",
+          "slug": "product-category-implementatie",
+          "id": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e60"
+        },
+        "name": "Implementatie",
+        "description": "Implementatiediensten voor softwareoplossingen bij overheidsorganisaties",
+        "order": 1
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "productCategory",
+          "slug": "product-category-training",
+          "id": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e61"
+        },
+        "name": "Training",
+        "description": "Opleidingen en trainingsprogramma's voor beheerders en eindgebruikers",
+        "order": 2
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "productCategory",
+          "slug": "product-category-support",
+          "id": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e62"
+        },
+        "name": "Support & Onderhoud",
+        "description": "Beheer, onderhoud en SLA-contracten voor doorlopende dienstverlening",
+        "order": 3
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "product",
+          "slug": "product-openregister-implementatie",
+          "id": "d0e1f2a3-4b5c-4d6e-8f9a-2b3c4d5e6f70"
+        },
+        "name": "OpenRegister Implementatie",
+        "description": "Volledige implementatie van OpenRegister inclusief configuratie, migratie en acceptatietest",
+        "sku": "ORI-001",
+        "unitPrice": 12500.00,
+        "cost": 8000.00,
+        "type": "service",
+        "status": "active",
+        "unit": "project",
+        "taxRate": 21,
+        "btwClass": "hoog",
+        "category": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e60"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "product",
+          "slug": "product-training-beheerders",
+          "id": "d0e1f2a3-4b5c-4d6e-8f9a-2b3c4d5e6f71"
+        },
+        "name": "Training Beheerders",
+        "description": "Tweedaagse training voor systeembeheerders en functioneel beheerders van Nextcloud-omgevingen",
+        "sku": "TRN-002",
+        "unitPrice": 1850.00,
+        "cost": 950.00,
+        "type": "service",
+        "status": "active",
+        "unit": "dag",
+        "taxRate": 21,
+        "btwClass": "hoog",
+        "category": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e61"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "product",
+          "slug": "product-support-pakket-basis",
+          "id": "d0e1f2a3-4b5c-4d6e-8f9a-2b3c4d5e6f72"
+        },
+        "name": "Support Pakket Basis",
+        "description": "Maandelijks SLA-contract met 8x5 ondersteuning en maximaal 4 uur responstijd bij storingen",
+        "sku": "SUP-003",
+        "unitPrice": 450.00,
+        "cost": 200.00,
+        "type": "service",
+        "status": "active",
+        "unit": "maand",
+        "taxRate": 21,
+        "btwClass": "hoog",
+        "category": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e62"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "product",
+          "slug": "product-pipelinq-licentie",
+          "id": "d0e1f2a3-4b5c-4d6e-8f9a-2b3c4d5e6f73"
+        },
+        "name": "Pipelinq Licentie",
+        "description": "Jaarlijkse gebruikerslicentie voor Pipelinq CRM inclusief updates en basishulp",
+        "sku": "LIC-004",
+        "unitPrice": 240.00,
+        "cost": 80.00,
+        "type": "service",
+        "status": "active",
+        "unit": "gebruiker/jaar",
+        "taxRate": 21,
+        "btwClass": "hoog",
+        "category": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e62"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "leadProduct",
+          "slug": "leadproduct-amsterdam-ori",
+          "id": "e1f2a3b4-5c6d-4e7f-9a8b-3c4d5e6f7080"
+        },
+        "lead": "b5a0d3f1-9c2e-4a1b-8d6f-3e7c9f1a2b40",
+        "product": "d0e1f2a3-4b5c-4d6e-8f9a-2b3c4d5e6f70",
+        "quantity": 1,
+        "unitPrice": 12500.00,
+        "discount": 0,
+        "total": 12500.00,
+        "notes": "Inclusief datamigratie vanuit legacy zaaksysteem"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "leadProduct",
+          "slug": "leadproduct-amsterdam-training",
+          "id": "e1f2a3b4-5c6d-4e7f-9a8b-3c4d5e6f7081"
+        },
+        "lead": "b5a0d3f1-9c2e-4a1b-8d6f-3e7c9f1a2b40",
+        "product": "d0e1f2a3-4b5c-4d6e-8f9a-2b3c4d5e6f71",
+        "quantity": 2,
+        "unitPrice": 1850.00,
+        "discount": 10,
+        "total": 3330.00,
+        "notes": "2 trainingsdagen voor team burgerzaken en KCC"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "leadProduct",
+          "slug": "leadproduct-zuidholland-licentie",
+          "id": "e1f2a3b4-5c6d-4e7f-9a8b-3c4d5e6f7082"
+        },
+        "lead": "b5a0d3f1-9c2e-4a1b-8d6f-3e7c9f1a2b41",
+        "product": "d0e1f2a3-4b5c-4d6e-8f9a-2b3c4d5e6f73",
+        "quantity": 25,
+        "unitPrice": 240.00,
+        "discount": 15,
+        "total": 5100.00,
+        "notes": "25 gebruikerslicenties, jaarcontract met volumekorting"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "leadProduct",
+          "slug": "leadproduct-zuidholland-support",
+          "id": "e1f2a3b4-5c6d-4e7f-9a8b-3c4d5e6f7083"
+        },
+        "lead": "b5a0d3f1-9c2e-4a1b-8d6f-3e7c9f1a2b41",
+        "product": "d0e1f2a3-4b5c-4d6e-8f9a-2b3c4d5e6f72",
+        "quantity": 12,
+        "unitPrice": 450.00,
+        "discount": 0,
+        "total": 5400.00,
+        "notes": "12 maanden SLA Basis, ingangsdatum bij go-live"
       }
     ]
   }

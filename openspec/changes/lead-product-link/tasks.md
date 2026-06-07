@@ -193,29 +193,32 @@
 
 ## 6. Seed Data
 
-- [ ] 6.1 Add 3 `productCategory` seed objects to `lib/Settings/pipelinq_register.json` (Implementatie, Training, Support & Onderhoud) using `@self` envelope with unique slugs
+- [x] 6.1 Add 3 `productCategory` seed objects to `lib/Settings/pipelinq_register.json` (Implementatie, Training, Support & Onderhoud) using `@self` envelope with unique slugs
   - **spec_ref**: company ADR Seed Data
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
     - GIVEN a fresh install
     - WHEN the register is imported via `importFromApp()`
     - THEN 3 product categories MUST exist and re-import MUST be idempotent (matched by slug)
+  - **Implementation**: slugs `product-category-implementatie`/`-training`/`-support` with fixed UUIDs so leadProduct references remain stable across re-imports.
 
-- [ ] 6.2 Add 4 `product` seed objects with Dutch names, SKUs (ORI-001, TRN-002, SUP-003, LIC-004), and realistic prices
+- [x] 6.2 Add 4 `product` seed objects with Dutch names, SKUs (ORI-001, TRN-002, SUP-003, LIC-004), and realistic prices
   - **spec_ref**: company ADR Seed Data
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
     - GIVEN a fresh install
     - WHEN the register is imported
     - THEN 4 products MUST exist with correct SKUs and unitPrice values
+  - **Implementation**: 4 products (ORI-001, TRN-002, SUP-003, LIC-004) wired to their seed categories via fixed UUIDs.
 
-- [ ] 6.3 Add 4 `leadProduct` seed objects linking seed products to seed leads with computed `total` values
+- [x] 6.3 Add 4 `leadProduct` seed objects linking seed products to seed leads with computed `total` values
   - **spec_ref**: company ADR Seed Data
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
     - GIVEN seed products and seed leads exist
     - WHEN the register is imported
     - THEN 4 leadProduct objects MUST exist with correct `total` values matching `quantity * unitPrice * (1 - discount/100)`
+  - **Implementation**: 2 leadProducts on the Amsterdam-CRM seed lead and 2 on the Zuid-Holland-Digitalisering seed lead (both now have fixed UUIDs). Totals: 12500.00, 3330.00, 5100.00, 5400.00.
 
 ---
 
