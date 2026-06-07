@@ -305,6 +305,13 @@ return [
         ['name' => 'dmn#listTables', 'url' => '/api/dmn/tables',   'verb' => 'GET'],
         ['name' => 'dmn#evaluate',   'url' => '/api/dmn/evaluate', 'verb' => 'POST'],
 
+        // Marketing blast provider webhooks (signature-verified, PublicPage)
+        // marketing-segmentation-and-blast-05-jobs-and-webhooks.
+        // camelCase slug matches BlastWebhookController class name.
+        ['name' => 'blastWebhook#sendgrid', 'url' => '/api/blast-webhooks/sendgrid', 'verb' => 'POST'],
+        ['name' => 'blastWebhook#ses',      'url' => '/api/blast-webhooks/ses',      'verb' => 'POST'],
+        ['name' => 'blastWebhook#twilio',   'url' => '/api/blast-webhooks/twilio',   'verb' => 'POST'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
