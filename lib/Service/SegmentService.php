@@ -109,6 +109,239 @@ class SegmentService
     }//end __construct()
 
     /**
+     * Validate a rule tree against the schema for the given entity type.
+     *
+     * Walks the tree recursively. Composite nodes (AND/OR/NOT) must
+     * declare a `children` array; each child is either another composite
+     * or a leaf {field, operator, value}. Each leaf is validated against
+     * the resolved schema's properties:
+     *
+     * - field must exist as a property on the schema
+     * - operator must be one of OPERATOR_TYPE_MATRIX's keys
+     * - operator must be compatible with the property's `type` (so
+     *   `industry > 50` on a string field is rejected)
+     * - value must be coercible to the field type (so
+     *   `employees = "not-a-number"` is rejected)
+     *
+     * Returns NULL when the tree is structurally and semantically valid.
+     * Returns a human-readable error string locating the first failure;
+     * the caller surfaces this as a field-level save error.
+     *
+     * @param array<string, mixed> $rules      The rule tree (AND/OR node).
+     * @param string               $entityType "contact" or "customer".
+     *
+     * @return string|null NULL on success, otherwise the first error.
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.2
+     */
+    public function validateRules(array $rules, string $entityType): ?string
+    {
+        $properties = $this->resolveSchemaProperties(entityType: $entityType);
+        if ($properties === null) {
+            return sprintf('Unknown entityType "%s" (no schema mapping configured).', $entityType);
+        }
+
+        return $this->validateNode(node: $rules, path: '$', properties: $properties);
+    }//end validateRules()
+
+    /**
+     * Recursively validate a node.
+     *
+     * @param array<string, mixed> $node       Tree node.
+     * @param string               $path       JSON-pointer-ish breadcrumb.
+     * @param array<string, mixed> $properties Schema properties map.
+     *
+     * @return string|null Error string or null.
+     */
+    private function validateNode(array $node, string $path, array $properties): ?string
+    {
+        $type = $this->nodeType(node: $node);
+        if ($type === 'AND' || $type === 'OR') {
+            $children = ($node['children'] ?? null);
+            if (is_array($children) === false || $children === []) {
+                return sprintf('%s: composite "%s" node requires non-empty "children".', $path, $type);
+            }
+            foreach ($children as $index => $child) {
+                if (is_array($child) === false) {
+                    return sprintf('%s.children[%d]: child must be an object.', $path, $index);
+                }
+                $childError = $this->validateNode(
+                    node: $child,
+                    path: $path . '.children[' . $index . ']',
+                    properties: $properties
+                );
+                if ($childError !== null) {
+                    return $childError;
+                }
+            }
+            return null;
+        }
+        if ($type === 'NOT') {
+            $children = ($node['children'] ?? null);
+            if (is_array($children) === false || count($children) !== 1) {
+                return sprintf('%s: NOT node requires exactly one child.', $path);
+            }
+            $child = $children[0];
+            if (is_array($child) === false) {
+                return sprintf('%s.children[0]: child must be an object.', $path);
+            }
+            return $this->validateNode(node: $child, path: $path . '.children[0]', properties: $properties);
+        }
+
+        // Leaf predicate.
+        $field = ($node['field'] ?? null);
+        if (is_string($field) === false || $field === '') {
+            return sprintf('%s: leaf predicate requires non-empty "field".', $path);
+        }
+        if (array_key_exists($field, $properties) === false) {
+            return sprintf('%s: field "%s" is not declared on the entity schema.', $path, $field);
+        }
+        $operator = ($node['operator'] ?? null);
+        if (is_string($operator) === false || isset(self::OPERATOR_TYPE_MATRIX[$operator]) === false) {
+            return sprintf('%s: operator "%s" is not supported.', $path, (string) $operator);
+        }
+        $fieldType    = $this->propertyType(property: $properties[$field]);
+        $allowedTypes = self::OPERATOR_TYPE_MATRIX[$operator];
+        if (in_array($fieldType, $allowedTypes, true) === false) {
+            return sprintf(
+                '%s: operator "%s" is not valid for field "%s" of type "%s".',
+                $path,
+                $operator,
+                $field,
+                $fieldType
+            );
+        }
+        if ($operator === 'isNull' || $operator === 'isNotNull') {
+            return null;
+        }
+        if (array_key_exists('value', $node) === false) {
+            return sprintf('%s: operator "%s" requires a "value".', $path, $operator);
+        }
+        if ($this->isValueCoercible(value: $node['value'], fieldType: $fieldType, operator: $operator) === false) {
+            return sprintf(
+                '%s: value for field "%s" is not coercible to type "%s".',
+                $path,
+                $field,
+                $fieldType
+            );
+        }
+
+        return null;
+    }//end validateNode()
+
+    /**
+     * Determine whether a value is coercible to the field's declared type.
+     *
+     * @param mixed  $value     The raw rule value.
+     * @param string $fieldType JSON-schema type.
+     * @param string $operator  Operator (drives array-vs-scalar shape).
+     *
+     * @return bool True when coercion succeeds.
+     */
+    private function isValueCoercible(mixed $value, string $fieldType, string $operator): bool
+    {
+        if ($operator === 'in' || $operator === 'notIn' || $operator === 'containsAny' || $operator === 'between') {
+            if (is_array($value) === false) {
+                return false;
+            }
+            if ($operator === 'between' && count($value) !== 2) {
+                return false;
+            }
+            foreach ($value as $element) {
+                if ($this->isScalarCoercible(value: $element, fieldType: $fieldType) === false) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        return $this->isScalarCoercible(value: $value, fieldType: $fieldType);
+    }//end isValueCoercible()
+
+    /**
+     * Determine whether one scalar value coerces to the field type.
+     *
+     * @param mixed  $value     The raw value.
+     * @param string $fieldType JSON-schema type.
+     *
+     * @return bool True when coercion succeeds.
+     */
+    private function isScalarCoercible(mixed $value, string $fieldType): bool
+    {
+        if ($value === null) {
+            return true;
+        }
+        switch ($fieldType) {
+            case 'integer':
+                if (is_int($value) === true) {
+                    return true;
+                }
+                if (is_string($value) === true && preg_match('/^-?\d+$/', $value) === 1) {
+                    return true;
+                }
+                return false;
+            case 'number':
+                if (is_int($value) === true || is_float($value) === true) {
+                    return true;
+                }
+                if (is_string($value) === true && is_numeric($value) === true) {
+                    return true;
+                }
+                return false;
+            case 'boolean':
+                if (is_bool($value) === true) {
+                    return true;
+                }
+                if (is_string($value) === true && in_array(strtolower($value), ['true', 'false', '0', '1'], true) === true) {
+                    return true;
+                }
+                if (is_int($value) === true && ($value === 0 || $value === 1)) {
+                    return true;
+                }
+                return false;
+            case 'array':
+                return is_array($value);
+            case 'string':
+            default:
+                return (is_scalar($value) === true);
+        }
+    }//end isScalarCoercible()
+
+    /**
+     * Return the canonical node type — `AND`, `OR`, `NOT`, or `LEAF`.
+     *
+     * @param array<string, mixed> $node Tree node.
+     *
+     * @return string The node type.
+     */
+    private function nodeType(array $node): string
+    {
+        $declared = ($node['type'] ?? null);
+        if (is_string($declared) === true) {
+            $upper = strtoupper($declared);
+            if (in_array($upper, ['AND', 'OR', 'NOT'], true) === true) {
+                return $upper;
+            }
+        }
+        return 'LEAF';
+    }//end nodeType()
+
+    /**
+     * Resolve a schema property's JSON-schema type, defaulting to string.
+     *
+     * @param mixed $property The property definition.
+     *
+     * @return string Type string.
+     */
+    private function propertyType(mixed $property): string
+    {
+        if (is_array($property) === true && isset($property['type']) === true && is_string($property['type']) === true) {
+            return $property['type'];
+        }
+        return 'string';
+    }//end propertyType()
+
+    /**
      * Resolve the entityType's schema properties via OpenRegister.
      *
      * Looks up the schema slug for the requested entityType, then fetches
