@@ -42,28 +42,31 @@
 
 ## 2. Notes Column (REQ-LPL-011)
 
-- [ ] 2.1 Add a "Notes" column to the line items table in `LeadProducts.vue` that displays `item.notes`
+- [x] 2.1 Add a "Notes" column to the line items table in `LeadProducts.vue` that displays `item.notes`
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-011`
   - **files**: `src/components/LeadProducts.vue`
   - **acceptance_criteria**:
     - GIVEN a line item with notes "Jaarlijks contract"
     - WHEN the lead product table renders
     - THEN the "Notes" column MUST display "Jaarlijks contract"
+  - **Verified**: Notes column header + `<input v-model="item.notes">` per row.
 
-- [ ] 2.2 Make the notes cell inline-editable with save-on-blur
+- [x] 2.2 Make the notes cell inline-editable with save-on-blur
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-011`
   - **files**: `src/components/LeadProducts.vue`
   - **acceptance_criteria**:
     - GIVEN the user edits the notes field and tabs or clicks away
     - THEN the updated notes MUST be saved to the LeadProduct object via `objectStore.saveObject`
     - AND save failure MUST display a user-facing error (no raw error to the console only)
+  - **Verified**: `@change="updateNotes"` triggers `objectStore.saveObject('leadProduct', {...item})`; failure surfaces via `showError(...)`.
 
-- [ ] 2.3 Ensure empty notes field shows an em-dash or placeholder and is still clickable
+- [x] 2.3 Ensure empty notes field shows an em-dash or placeholder and is still clickable
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-011`
   - **files**: `src/components/LeadProducts.vue`
   - **acceptance_criteria**:
     - GIVEN a line item with no notes value
     - THEN the notes cell MUST be visually distinct (placeholder) and editable on click
+  - **Verified**: `:placeholder="t('pipelinq', 'Notities...')"` on the input keeps the empty cell clickable and clearly different from a filled cell.
 
 ---
 
