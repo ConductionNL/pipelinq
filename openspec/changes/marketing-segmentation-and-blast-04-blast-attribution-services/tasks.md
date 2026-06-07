@@ -7,7 +7,7 @@
 - [x] In sendBlast: if abSplitPercent set, create variant B Blast and split members deterministically via hash(contactId)
 - [x] Implement `dispatchBlastDeliveries(string $blastId, int $maxPerSecond = 100): int` — batch queued rows, read throttle from openconnector source, call `send-mail`, store providerId, update totals, enforce rate limit
 - [x] Implement `createAbVariant(string $parentBlastId, array $variantData): string`
-- [ ] Implement `updateBlastTotals(string $blastId): void` — recount by status
+- [x] Implement `updateBlastTotals(string $blastId): void` — recount by status
 - [ ] Implement `transitionQueuedDeliveries(string $contactId, string $blastId, string $newStatus): void` (called by ComplianceService)
 - [x] Inject `SegmentService`, `ComplianceService`, `ObjectService`, `IAppConfig`, `LoggerInterface`; add `@spec` PHPDoc
 
