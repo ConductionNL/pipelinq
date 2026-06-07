@@ -29,6 +29,7 @@
 		:manifest="manifest"
 		:registry="registry"
 		:custom-components="customComponents"
+		:cell-widgets="cellWidgets"
 		:page-types="pageTypes"
 		app-id="pipelinq"
 		:translate="translateForApp"
@@ -55,6 +56,8 @@
 import Vue from 'vue'
 import { translate as ncT } from '@nextcloud/l10n'
 import { CnAppRoot, CnObjectSidebar } from '@conduction/nextcloud-vue'
+import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
+import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 
 export default {
 	name: 'App',
@@ -166,6 +169,23 @@ export default {
 					.filter(([, entry]) => entry && entry.component)
 					.map(([name, entry]) => [name, entry.component]),
 			)
+		},
+		/**
+		 * Cell-widget registry passed to CnAppRoot — every entry must be
+		 * referenced from a manifest column's `widget` id. The lead-list
+		 * close-date + probability columns reach this registry via
+		 * `pages[Leads].config.columns[].widget` per ADR-036.
+		 *
+		 * @return {Record<string, object>}
+		 *
+		 * @spec openspec/changes/klantbeeld-360/tasks.md#task-6.1
+		 * @spec openspec/changes/klantbeeld-360/tasks.md#task-6.2
+		 */
+		cellWidgets() {
+			return {
+				'lead-close-date': LeadCloseDateCell,
+				'lead-probability': LeadProbabilityCell,
+			}
 		},
 	},
 

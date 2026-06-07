@@ -204,7 +204,7 @@
 
 ## 6. Frontend: Opportunity Tracking (LeadList.vue Enhancements)
 
-- [ ] 6.1 Add expected close date warnings to `LeadList.vue`
+- [x] 6.1 Add expected close date warnings to `LeadList.vue`
   - **spec_ref**: `specs/klantbeeld-360/spec.md#REQ-KB360-014`
   - **files**: `src/views/leads/LeadList.vue`
   - **acceptance_criteria**:
@@ -213,7 +213,7 @@
     - GIVEN a lead with `expectedCloseDate` in the past
     - THEN the cell shows an overdue icon + the date with overdue color
 
-- [ ] 6.2 Add probability badge to `LeadList.vue`
+- [x] 6.2 Add probability badge to `LeadList.vue`
   - **spec_ref**: `specs/klantbeeld-360/spec.md#REQ-KB360-015`
   - **files**: `src/views/leads/LeadList.vue`
   - **acceptance_criteria**:

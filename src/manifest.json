@@ -446,8 +446,9 @@
 					"stage",
 					"status",
 					"priority",
+					{ "key": "probability", "label": "Probability", "widget": "lead-probability" },
 					"value",
-					"expectedCloseDate"
+					{ "key": "expectedCloseDate", "label": "Expected close", "widget": "lead-close-date" }
 				],
 				"sidebar": {
 					"enabled": true,
