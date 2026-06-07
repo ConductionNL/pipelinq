@@ -768,6 +768,64 @@
 				"language": "nl",
 				"createdBy": "service@example.com",
 				"createdAt": "2026-09-22T09:00:00+00:00"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blast",
+					"slug": "blast-q4-gemeente-outreach-a"
+				},
+				"name": "Q4 Gemeente Outreach - Variant A",
+				"segmentId": "segment-gemeente-contact-blast",
+				"templateId": "template-q4-product-launch",
+				"channel": "email",
+				"scheduledFor": "2026-10-15T08:00:00+00:00",
+				"sentAt": "2026-10-15T08:02:18+00:00",
+				"status": "sent",
+				"abVariantOf": null,
+				"abSplitPercent": 50,
+				"totals": {
+					"queued": 0,
+					"sent": 124,
+					"delivered": 119,
+					"bounced": 3,
+					"opened": 71,
+					"clicked": 28,
+					"unsubscribed": 2,
+					"complained": 0
+				},
+				"connectorSourceId": "openconnector-sendgrid-prod",
+				"createdBy": "marketing@example.com",
+				"createdAt": "2026-10-10T15:30:00+00:00"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blast",
+					"slug": "blast-q4-gemeente-outreach-b"
+				},
+				"name": "Q4 Gemeente Outreach - Variant B",
+				"segmentId": "segment-gemeente-contact-blast",
+				"templateId": "template-q4-product-launch",
+				"channel": "email",
+				"scheduledFor": "2026-10-15T08:00:00+00:00",
+				"sentAt": "2026-10-15T08:02:35+00:00",
+				"status": "sent",
+				"abVariantOf": "blast-q4-gemeente-outreach-a",
+				"abSplitPercent": 50,
+				"totals": {
+					"queued": 0,
+					"sent": 124,
+					"delivered": 121,
+					"bounced": 2,
+					"opened": 82,
+					"clicked": 34,
+					"unsubscribed": 1,
+					"complained": 0
+				},
+				"connectorSourceId": "openconnector-sendgrid-prod",
+				"createdBy": "marketing@example.com",
+				"createdAt": "2026-10-10T15:32:00+00:00"
 			}
 		]
 	}
