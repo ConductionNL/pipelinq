@@ -115,9 +115,11 @@ class AttributionService
         if (is_array($clickedUrls) === false) {
             $clickedUrls = [];
         }
+
         if ($url !== '' && in_array($url, $clickedUrls, true) === false) {
             $clickedUrls[] = $url;
         }
+
         $payload['clickedUrls'] = $clickedUrls;
 
         $current = (string) ($payload['status'] ?? '');
@@ -159,6 +161,7 @@ class AttributionService
             );
             return;
         }
+
         $blastId   = (string) ($delivery['blastId'] ?? '');
         $contactId = (string) ($delivery['contactId'] ?? '');
         if ($blastId === '' || $contactId === '') {
@@ -169,7 +172,7 @@ class AttributionService
             return;
         }
 
-        $deal = $this->loadDeal(id: $dealId);
+        $deal        = $this->loadDeal(id: $dealId);
         $closedWonAt = $this->extractClosedWonAt(deal: $deal);
         $value       = $this->extractDealValue(deal: $deal);
 
@@ -210,6 +213,7 @@ class AttributionService
                 $total += (float) $raw;
             }
         }
+
         return $total;
     }//end getBlastAttributedValue()
 
@@ -228,11 +232,13 @@ class AttributionService
                 if (is_int($value) === true) {
                     return gmdate('Y-m-d\TH:i:s\Z', $value);
                 }
+
                 if (is_string($value) === true && $value !== '') {
                     return $value;
                 }
             }
         }
+
         return $this->nowIso();
     }//end extractClickTimestamp()
 
@@ -250,6 +256,7 @@ class AttributionService
                 return (string) $event[$key];
             }
         }
+
         return '';
     }//end extractClickUrl()
 
@@ -282,11 +289,13 @@ class AttributionService
         if ($deal === null) {
             return $this->nowIso();
         }
+
         foreach (['closedWonAt', 'closedAt', 'wonAt'] as $key) {
             if (isset($deal[$key]) === true && is_string($deal[$key]) === true && $deal[$key] !== '') {
                 return (string) $deal[$key];
             }
         }
+
         return $this->nowIso();
     }//end extractClosedWonAt()
 
@@ -302,11 +311,13 @@ class AttributionService
         if ($deal === null) {
             return 0.0;
         }
+
         foreach (['value', 'dealValue', 'amount', 'attributedValue'] as $key) {
             if (isset($deal[$key]) === true && is_numeric($deal[$key]) === true) {
                 return (float) $deal[$key];
             }
         }
+
         return 0.0;
     }//end extractDealValue()
 
@@ -334,6 +345,7 @@ class AttributionService
         if ($id === '') {
             return null;
         }
+
         return $this->loadOne(id: $id, schemaSlug: $this->getLeadSchemaSlug());
     }//end loadDeal()
 
@@ -351,10 +363,12 @@ class AttributionService
         if ($register === '' || $schemaSlug === '') {
             return null;
         }
+
         $objectService = $this->getObjectService();
         if ($objectService === null) {
             return null;
         }
+
         try {
             $entity = $objectService->find(
                 id: $id,
@@ -368,9 +382,11 @@ class AttributionService
             );
             return null;
         }
+
         if ($entity === null) {
             return null;
         }
+
         return $this->toArray(value: $entity);
     }//end loadOne()
 
@@ -388,10 +404,12 @@ class AttributionService
         if ($register === '' || $schema === '') {
             return [];
         }
+
         $objectService = $this->getObjectService();
         if ($objectService === null) {
             return [];
         }
+
         try {
             $rows = $objectService->findAll(
                 filters: $filters,
@@ -405,10 +423,12 @@ class AttributionService
             );
             return [];
         }
+
         $out = [];
         foreach (($rows ?? []) as $row) {
             $out[] = $this->toArray(value: $row);
         }
+
         return $out;
     }//end loadAttributionLinks()
 
@@ -421,16 +441,18 @@ class AttributionService
      *
      * @return array<string, mixed>|null Saved row or null on failure.
      */
-    private function saveObject(array $payload, string $schemaSlug, ?string $id = null): ?array
+    private function saveObject(array $payload, string $schemaSlug, ?string $id=null): ?array
     {
         $register = $this->getRegisterSlug();
         if ($register === '' || $schemaSlug === '') {
             return null;
         }
+
         $objectService = $this->getObjectService();
         if ($objectService === null) {
             return null;
         }
+
         try {
             $saved = $objectService->saveObject(
                 object: $payload,
@@ -445,6 +467,7 @@ class AttributionService
             );
             return null;
         }
+
         return $this->toArray(value: $saved);
     }//end saveObject()
 
@@ -462,13 +485,16 @@ class AttributionService
                 return (string) $payload[$key];
             }
         }
+
         if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
             foreach (['uuid', 'id', 'slug'] as $key) {
-                if (isset($payload['@self'][$key]) === true && is_scalar($payload['@self'][$key]) === true && (string) $payload['@self'][$key] !== '') {
-                    return (string) $payload['@self'][$key];
+                $value = ($payload['@self'][$key] ?? null);
+                if (is_scalar($value) === true && (string) $value !== '') {
+                    return (string) $value;
                 }
             }
         }
+
         return '';
     }//end extractId()
 
@@ -483,6 +509,7 @@ class AttributionService
         if ($slug !== '') {
             return $slug;
         }
+
         return self::DEFAULT_ATTRIBUTION_LINK_SCHEMA_SLUG;
     }//end getAttributionLinkSchemaSlug()
 
@@ -497,6 +524,7 @@ class AttributionService
         if ($slug !== '') {
             return $slug;
         }
+
         return self::DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG;
     }//end getBlastDeliverySchemaSlug()
 
@@ -511,6 +539,7 @@ class AttributionService
         if ($slug !== '') {
             return $slug;
         }
+
         return self::DEFAULT_LEAD_SCHEMA_SLUG;
     }//end getLeadSchemaSlug()
 
@@ -525,6 +554,7 @@ class AttributionService
         if ($slug !== '') {
             return $slug;
         }
+
         return self::DEFAULT_REGISTER_SLUG;
     }//end getRegisterSlug()
 
@@ -558,18 +588,21 @@ class AttributionService
         if (is_array($value) === true) {
             return $value;
         }
+
         if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
             $serialised = $value->jsonSerialize();
             if (is_array($serialised) === true) {
                 return $serialised;
             }
         }
+
         if (is_object($value) === true && method_exists($value, 'getObject') === true) {
             $payload = $value->getObject();
             if (is_array($payload) === true) {
                 return $payload;
             }
         }
+
         return [];
     }//end toArray()
 

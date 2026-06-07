@@ -96,10 +96,10 @@ class BlastService
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container         DI container.
-     * @param IAppConfig         $appConfig         Pipelinq app config.
-     * @param SegmentService     $segmentService    Segment evaluator.
-     * @param LoggerInterface    $logger            Logger.
+     * @param ContainerInterface $container      DI container.
+     * @param IAppConfig         $appConfig      Pipelinq app config.
+     * @param SegmentService     $segmentService Segment evaluator.
+     * @param LoggerInterface    $logger         Logger.
      *
      * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
      */
@@ -140,39 +140,44 @@ class BlastService
      *
      * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
      */
-    public function sendBlast(string $blastId, bool $isDraft = false): array
+    public function sendBlast(string $blastId, bool $isDraft=false): array
     {
         $blast = $this->loadBlast(blastId: $blastId);
         if ($blast === null) {
             return $this->emptySummary(status: 'not-found');
         }
+
         $status = (string) ($blast['status'] ?? 'draft');
         if ($status !== 'draft') {
-            return $this->emptySummary(status: 'not-draft-' . $status);
+            return $this->emptySummary(status: 'not-draft-'.$status);
         }
+
         $segmentId = (string) ($blast['segmentId'] ?? '');
         if ($segmentId === '') {
             return $this->emptySummary(status: 'no-segment');
         }
+
         $channel = (string) ($blast['channel'] ?? 'email');
 
         $complianceResult = $this->checkSegmentCompliance(
             segmentId: $segmentId,
             channel: $channel,
         );
-        $missingConsent = $complianceResult['missingConsent'];
-        $missingSet     = array_flip($missingConsent);
+        $missingConsent   = $complianceResult['missingConsent'];
+        $missingSet       = array_flip($missingConsent);
 
-        $members           = $this->segmentService->getMembersForBlast(segmentId: $segmentId);
-        $compliantMembers  = [];
+        $members          = $this->segmentService->getMembersForBlast(segmentId: $segmentId);
+        $compliantMembers = [];
         foreach ($members as $member) {
             $contactId = (string) ($member['contactId'] ?? '');
             if ($contactId === '') {
                 continue;
             }
+
             if (isset($missingSet[$contactId]) === true) {
                 continue;
             }
+
             $compliantMembers[] = $member;
         }
 
@@ -191,7 +196,7 @@ class BlastService
             ];
         }
 
-        $abSplit       = $this->extractAbSplitPercent(blast: $blast);
+        $abSplit        = $this->extractAbSplitPercent(blast: $blast);
         $variantBlastId = null;
         if ($abSplit !== null && $isDraft === false) {
             $variantBlastId = $this->createAbVariant(
@@ -219,10 +224,12 @@ class BlastService
                 if ($persisted === false) {
                     continue;
                 }
+
                 if ($row['variant'] === 'B') {
                     $variantBCount++;
                     continue;
                 }
+
                 $variantACount++;
             }
 
@@ -241,9 +248,10 @@ class BlastService
                     $variantBCount++;
                     continue;
                 }
+
                 $variantACount++;
             }
-        }
+        }//end if
 
         return [
             'queued'           => ($variantACount + $variantBCount),
@@ -251,9 +259,25 @@ class BlastService
             'variantA'         => $variantACount,
             'variantB'         => $variantBCount,
             'variantBlastId'   => $variantBlastId,
-            'status'           => ($isDraft === true ? 'draft-preview' : 'queued'),
+            'status'           => $this->summaryStatusFor(isDraft: $isDraft),
         ];
     }//end sendBlast()
+
+    /**
+     * Return the summary `status` for a sendBlast call.
+     *
+     * @param bool $isDraft Whether the call was a dry-run preview.
+     *
+     * @return string Status label.
+     */
+    private function summaryStatusFor(bool $isDraft): string
+    {
+        if ($isDraft === true) {
+            return 'draft-preview';
+        }
+
+        return 'queued';
+    }//end summaryStatusFor()
 
     /**
      * Dispatch queued BlastDeliveries for a Blast through openconnector.
@@ -278,12 +302,13 @@ class BlastService
      *
      * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
      */
-    public function dispatchBlastDeliveries(string $blastId, int $maxPerSecond = 100): int
+    public function dispatchBlastDeliveries(string $blastId, int $maxPerSecond=100): int
     {
         $blast = $this->loadBlast(blastId: $blastId);
         if ($blast === null) {
             return 0;
         }
+
         $template = $this->loadTemplate(templateId: (string) ($blast['templateId'] ?? ''));
         if ($template === null) {
             $this->logger->warning(
@@ -326,8 +351,10 @@ class BlastService
                 if ($result === false) {
                     continue;
                 }
+
                 $dispatched++;
             }
+
             // Enforce rate limit BETWEEN batches — wait until the configured
             // budget for this batch has elapsed.
             $expectedDuration = (count($batch) / max($rateLimit, 1));
@@ -336,7 +363,7 @@ class BlastService
             if ($remaining > 0.0 && $batchIndex < (count($batches) - 1)) {
                 $this->throttle(seconds: $remaining);
             }
-        }
+        }//end foreach
 
         $this->updateBlastTotals(blastId: $blastId);
 
@@ -366,11 +393,15 @@ class BlastService
         if ($parent === null) {
             return '';
         }
-        $suffix    = (string) ($variantData['suffix'] ?? ' (Variant B)');
-        $baseName  = (string) ($parent['name'] ?? 'Blast');
-        $childName = (isset($variantData['name']) === true && (string) $variantData['name'] !== '')
-            ? (string) $variantData['name']
-            : ($baseName . $suffix);
+
+        $suffix   = (string) ($variantData['suffix'] ?? ' (Variant B)');
+        $baseName = (string) ($parent['name'] ?? 'Blast');
+        $override = (string) ($variantData['name'] ?? '');
+        if ($override !== '') {
+            $childName = $override;
+        } else {
+            $childName = ($baseName.$suffix);
+        }
 
         $childPayload = [
             'name'              => $childName,
@@ -392,6 +423,7 @@ class BlastService
         if ($created === null) {
             return '';
         }
+
         return $this->extractId(payload: $created);
     }//end createAbVariant()
 
@@ -415,6 +447,7 @@ class BlastService
         if ($blast === null) {
             return;
         }
+
         $deliveries = $this->loadAllDeliveriesForBlast(blastId: $blastId);
         $totals     = $this->emptyTotals();
         foreach ($deliveries as $delivery) {
@@ -422,6 +455,7 @@ class BlastService
             if ($status === '' || isset($totals[$status]) === false) {
                 continue;
             }
+
             $totals[$status]++;
         }
 
@@ -451,12 +485,12 @@ class BlastService
      *
      * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
      */
-    public function transitionQueuedDeliveries(string $contactId, string $blastId, string $newStatus = self::STATUS_UNSUBSCRIBED_BEFORE_SEND): void
+    public function transitionQueuedDeliveries(string $contactId, string $blastId, string $newStatus=self::STATUS_UNSUBSCRIBED_BEFORE_SEND): void
     {
         $deliveries = $this->loadQueuedDeliveriesForContact(blastId: $blastId, contactId: $contactId);
         foreach ($deliveries as $delivery) {
-            $payload                 = $delivery;
-            $payload['status']       = $newStatus;
+            $payload           = $delivery;
+            $payload['status'] = $newStatus;
             $payload['unsubscribedAt'] = $this->nowIso();
             $this->saveObject(
                 payload: $payload,
@@ -464,6 +498,7 @@ class BlastService
                 id: $this->extractId(payload: $delivery),
             );
         }
+
         if ($deliveries !== []) {
             $this->updateBlastTotals(blastId: $blastId);
         }
@@ -476,12 +511,14 @@ class BlastService
      * verify same-input → same-output across runs without instantiating
      * the full send pipeline.
      *
-     * @param array<int, array<string, string>> $members       Recipient rows.
+     * @param array<int, array<string, string>> $members        Recipient rows.
      * @param int|null                          $abSplitPercent A/B percent (0-100).
-     * @param string                            $parentBlastId Parent Blast id.
+     * @param string                            $parentBlastId  Parent Blast id.
      * @param string|null                       $variantBlastId Variant B Blast id.
      *
      * @return array<int, array{member: array<string, string>, variant: string, blastId: string}>
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
      */
     public function sliceMembersForAb(array $members, ?int $abSplitPercent, string $parentBlastId, ?string $variantBlastId): array
     {
@@ -491,17 +528,20 @@ class BlastService
             if ($contactId === '') {
                 continue;
             }
+
             $variant  = $this->variantFor(contactId: $contactId, abSplitPercent: $abSplitPercent);
             $targetId = $parentBlastId;
             if ($variant === 'B' && $variantBlastId !== null && $variantBlastId !== '') {
                 $targetId = $variantBlastId;
             }
+
             $sliced[] = [
                 'member'  => $member,
                 'variant' => $variant,
                 'blastId' => $targetId,
             ];
         }
+
         return $sliced;
     }//end sliceMembersForAb()
 
@@ -533,12 +573,13 @@ class BlastService
                     $missingConsent[] = $contactId;
                 }
             }
+
             return [
                 'compliant'      => false,
                 'missingConsent' => $missingConsent,
                 'missingCount'   => count($missingConsent),
             ];
-        }
+        }//end try
 
         try {
             $result = $service->checkSegmentCompliance($segmentId, $channel);
@@ -553,16 +594,19 @@ class BlastService
         if (is_array($result) === false) {
             return ['compliant' => false, 'missingConsent' => [], 'missingCount' => 0];
         }
+
         $missing = ($result['missingConsent'] ?? []);
         if (is_array($missing) === false) {
             $missing = [];
         }
+
         $missingScalars = [];
         foreach ($missing as $id) {
             if (is_scalar($id) === true) {
                 $missingScalars[] = (string) $id;
             }
         }
+
         return [
             'compliant'      => (bool) ($result['compliant'] ?? false),
             'missingConsent' => $missingScalars,
@@ -582,16 +626,20 @@ class BlastService
      * @param int|null $abSplitPercent Split (0-100).
      *
      * @return string "A" or "B".
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
      */
     public function variantFor(string $contactId, ?int $abSplitPercent): string
     {
         if ($abSplitPercent === null || $abSplitPercent <= 0 || $abSplitPercent > 100) {
             return 'A';
         }
+
         $bucket = (crc32($contactId) % 100);
         if ($bucket < $abSplitPercent) {
             return 'B';
         }
+
         return 'A';
     }//end variantFor()
 
@@ -615,6 +663,7 @@ class BlastService
         if ($channel === 'sms') {
             $payload['phone'] = (string) ($member['phone'] ?? '');
         }
+
         $created = $this->saveObject(
             payload: $payload,
             schemaSlug: $this->getBlastDeliverySchemaSlug(),
@@ -648,7 +697,7 @@ class BlastService
 
         try {
             if (method_exists($sourceService, 'executeAction') === true) {
-                $result = $sourceService->executeAction($connectorSourceId, 'send-mail', $rendered);
+                $result     = $sourceService->executeAction($connectorSourceId, 'send-mail', $rendered);
                 $providerId = $this->extractProviderId(result: $result);
             } else {
                 $this->logger->warning(
@@ -665,12 +714,13 @@ class BlastService
             return false;
         }
 
-        $payload                 = $delivery;
-        $payload['status']       = 'sent';
-        $payload['sentAt']       = $this->nowIso();
+        $payload           = $delivery;
+        $payload['status'] = 'sent';
+        $payload['sentAt'] = $this->nowIso();
         if ($providerId !== null && $providerId !== '') {
             $payload['providerId'] = $providerId;
         }
+
         $this->saveObject(
             payload: $payload,
             schemaSlug: $this->getBlastDeliverySchemaSlug(),
@@ -696,6 +746,7 @@ class BlastService
                 }
             }
         }
+
         if (is_object($result) === true) {
             foreach (['providerId', 'messageId', 'id'] as $key) {
                 if (isset($result->{$key}) === true && is_scalar($result->{$key}) === true && (string) $result->{$key} !== '') {
@@ -703,9 +754,11 @@ class BlastService
                 }
             }
         }
+
         if (is_string($result) === true && $result !== '') {
             return $result;
         }
+
         return null;
     }//end extractProviderId()
 
@@ -729,18 +782,18 @@ class BlastService
             '{{contactId}}' => (string) ($delivery['contactId'] ?? ''),
         ];
 
-        $subject = strtr((string) ($template['subject'] ?? ''), $tokens);
+        $subject  = strtr((string) ($template['subject'] ?? ''), $tokens);
         $bodyHtml = strtr((string) ($template['bodyHtml'] ?? ''), $tokens);
         $bodyText = strtr((string) ($template['bodyText'] ?? ''), $tokens);
 
         return [
-            'to'         => (string) ($delivery['email'] ?? ''),
-            'subject'    => $subject,
-            'bodyHtml'   => $bodyHtml,
-            'bodyText'   => $bodyText,
-            'senderName' => (string) ($template['senderName'] ?? ''),
-            'senderEmail'=> (string) ($template['senderEmail'] ?? ''),
-            'replyTo'    => (string) ($template['replyTo'] ?? ''),
+            'to'          => (string) ($delivery['email'] ?? ''),
+            'subject'     => $subject,
+            'bodyHtml'    => $bodyHtml,
+            'bodyText'    => $bodyText,
+            'senderName'  => (string) ($template['senderName'] ?? ''),
+            'senderEmail' => (string) ($template['senderEmail'] ?? ''),
+            'replyTo'     => (string) ($template['replyTo'] ?? ''),
         ];
     }//end renderTemplate()
 
@@ -760,10 +813,16 @@ class BlastService
     private function resolveRateLimit(string $connectorSourceId, int $callerRate): int
     {
         $sourceRate = $this->readSourceRateLimit(connectorSourceId: $connectorSourceId);
-        $candidate  = ($callerRate > 0 ? $callerRate : self::DEFAULT_RATE_LIMIT_PER_SECOND);
+        if ($callerRate > 0) {
+            $candidate = $callerRate;
+        } else {
+            $candidate = self::DEFAULT_RATE_LIMIT_PER_SECOND;
+        }
+
         if ($sourceRate !== null && $sourceRate > 0 && $sourceRate < $candidate) {
             return $sourceRate;
         }
+
         return max($candidate, 1);
     }//end resolveRateLimit()
 
@@ -781,6 +840,7 @@ class BlastService
         } catch (Throwable $e) {
             return null;
         }
+
         try {
             if (method_exists($sourceService, 'find') === true) {
                 $source = $sourceService->find($connectorSourceId);
@@ -792,6 +852,7 @@ class BlastService
         } catch (Throwable $e) {
             return null;
         }
+
         return null;
     }//end readSourceRateLimit()
 
@@ -808,14 +869,17 @@ class BlastService
         if (is_array($source) === true) {
             return ($source[$field] ?? null);
         }
+
         if (is_object($source) === true) {
-            $getter = 'get' . ucfirst($field);
+            $getter = 'get'.ucfirst($field);
             if (method_exists($source, $getter) === true) {
                 return $source->{$getter}();
             }
+
             if (isset($source->{$field}) === true) {
                 return $source->{$field};
             }
+
             if (method_exists($source, 'jsonSerialize') === true) {
                 $serialised = $source->jsonSerialize();
                 if (is_array($serialised) === true && isset($serialised[$field]) === true) {
@@ -823,6 +887,7 @@ class BlastService
                 }
             }
         }
+
         return null;
     }//end readSourceField()
 
@@ -857,10 +922,12 @@ class BlastService
         if ($configured === '' || is_numeric($configured) === false) {
             return self::DEFAULT_DISPATCH_BATCH_SIZE;
         }
+
         $size = (int) $configured;
         if ($size <= 0) {
             return self::DEFAULT_DISPATCH_BATCH_SIZE;
         }
+
         return $size;
     }//end resolveBatchSize()
 
@@ -873,16 +940,18 @@ class BlastService
      *
      * @return array<string, mixed>|null Saved row or null on failure.
      */
-    private function saveObject(array $payload, string $schemaSlug, ?string $id = null): ?array
+    private function saveObject(array $payload, string $schemaSlug, ?string $id=null): ?array
     {
         $register = $this->getRegisterSlug();
         if ($register === '' || $schemaSlug === '') {
             return null;
         }
+
         $objectService = $this->getObjectService();
         if ($objectService === null) {
             return null;
         }
+
         try {
             $saved = $objectService->saveObject(
                 object: $payload,
@@ -897,6 +966,7 @@ class BlastService
             );
             return null;
         }
+
         return $this->toArray(value: $saved);
     }//end saveObject()
 
@@ -924,6 +994,7 @@ class BlastService
         if ($templateId === '') {
             return null;
         }
+
         return $this->loadOne(id: $templateId, schemaSlug: $this->getCampaignTemplateSchemaSlug());
     }//end loadTemplate()
 
@@ -941,10 +1012,12 @@ class BlastService
         if ($register === '' || $schemaSlug === '') {
             return null;
         }
+
         $objectService = $this->getObjectService();
         if ($objectService === null) {
             return null;
         }
+
         try {
             $entity = $objectService->find(
                 id: $id,
@@ -958,9 +1031,11 @@ class BlastService
             );
             return null;
         }
+
         if ($entity === null) {
             return null;
         }
+
         return $this->toArray(value: $entity);
     }//end loadOne()
 
@@ -1017,10 +1092,12 @@ class BlastService
         if ($register === '' || $schema === '') {
             return [];
         }
+
         $objectService = $this->getObjectService();
         if ($objectService === null) {
             return [];
         }
+
         try {
             $rows = $objectService->findAll(
                 filters: $filters,
@@ -1034,10 +1111,12 @@ class BlastService
             );
             return [];
         }
+
         $out = [];
         foreach (($rows ?? []) as $row) {
             $out[] = $this->toArray(value: $row);
         }
+
         return $out;
     }//end loadDeliveries()
 
@@ -1055,11 +1134,13 @@ class BlastService
         if ($blast === null) {
             return;
         }
+
         $payload           = $blast;
         $payload['status'] = $newStatus;
         if ($newStatus === 'sending' && empty($blast['sentAt']) === true) {
             $payload['sentAt'] = $this->nowIso();
         }
+
         $this->saveObject(
             payload: $payload,
             schemaSlug: $this->getBlastSchemaSlug(),
@@ -1080,10 +1161,12 @@ class BlastService
         if ($raw === null || is_numeric($raw) === false) {
             return null;
         }
+
         $value = (int) $raw;
         if ($value < 0 || $value > 100) {
             return null;
         }
+
         return $value;
     }//end extractAbSplitPercent()
 
@@ -1095,14 +1178,14 @@ class BlastService
     private function emptyTotals(): array
     {
         return [
-            'queued'      => 0,
-            'sent'        => 0,
-            'delivered'   => 0,
-            'bounced'     => 0,
-            'opened'      => 0,
-            'clicked'     => 0,
-            'unsubscribed'=> 0,
-            'complained'  => 0,
+            'queued'       => 0,
+            'sent'         => 0,
+            'delivered'    => 0,
+            'bounced'      => 0,
+            'opened'       => 0,
+            'clicked'      => 0,
+            'unsubscribed' => 0,
+            'complained'   => 0,
         ];
     }//end emptyTotals()
 
@@ -1139,13 +1222,16 @@ class BlastService
                 return (string) $payload[$key];
             }
         }
+
         if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
             foreach (['uuid', 'id', 'slug'] as $key) {
-                if (isset($payload['@self'][$key]) === true && is_scalar($payload['@self'][$key]) === true && (string) $payload['@self'][$key] !== '') {
-                    return (string) $payload['@self'][$key];
+                $value = ($payload['@self'][$key] ?? null);
+                if (is_scalar($value) === true && (string) $value !== '') {
+                    return (string) $value;
                 }
             }
         }
+
         return '';
     }//end extractId()
 
@@ -1160,6 +1246,7 @@ class BlastService
         if ($slug !== '') {
             return $slug;
         }
+
         return self::DEFAULT_BLAST_SCHEMA_SLUG;
     }//end getBlastSchemaSlug()
 
@@ -1174,6 +1261,7 @@ class BlastService
         if ($slug !== '') {
             return $slug;
         }
+
         return self::DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG;
     }//end getBlastDeliverySchemaSlug()
 
@@ -1188,6 +1276,7 @@ class BlastService
         if ($slug !== '') {
             return $slug;
         }
+
         return self::DEFAULT_CAMPAIGN_TEMPLATE_SCHEMA_SLUG;
     }//end getCampaignTemplateSchemaSlug()
 
@@ -1202,6 +1291,7 @@ class BlastService
         if ($slug !== '') {
             return $slug;
         }
+
         return self::DEFAULT_REGISTER_SLUG;
     }//end getRegisterSlug()
 
@@ -1235,18 +1325,21 @@ class BlastService
         if (is_array($value) === true) {
             return $value;
         }
+
         if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
             $serialised = $value->jsonSerialize();
             if (is_array($serialised) === true) {
                 return $serialised;
             }
         }
+
         if (is_object($value) === true && method_exists($value, 'getObject') === true) {
             $payload = $value->getObject();
             if (is_array($payload) === true) {
                 return $payload;
             }
         }
+
         return [];
     }//end toArray()
 
