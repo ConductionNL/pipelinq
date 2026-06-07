@@ -123,7 +123,7 @@ class AnalyticsService
      *
      * @spec openspec/changes/klantbeeld-360/tasks.md#task-1.1
      */
-    public function getSummary(string $period = self::DEFAULT_PERIOD): array
+    public function getSummary(string $period=self::DEFAULT_PERIOD): array
     {
         if (in_array($period, self::ALLOWED_PERIODS, true) === false) {
             throw new InvalidArgumentException(message: 'Invalid period');
