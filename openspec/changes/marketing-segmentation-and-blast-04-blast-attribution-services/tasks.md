@@ -8,7 +8,7 @@
 - [x] Implement `dispatchBlastDeliveries(string $blastId, int $maxPerSecond = 100): int` — batch queued rows, read throttle from openconnector source, call `send-mail`, store providerId, update totals, enforce rate limit
 - [x] Implement `createAbVariant(string $parentBlastId, array $variantData): string`
 - [x] Implement `updateBlastTotals(string $blastId): void` — recount by status
-- [ ] Implement `transitionQueuedDeliveries(string $contactId, string $blastId, string $newStatus): void` (called by ComplianceService)
+- [x] Implement `transitionQueuedDeliveries(string $contactId, string $blastId, string $newStatus): void` (called by ComplianceService)
 - [x] Inject `SegmentService`, `ComplianceService`, `ObjectService`, `IAppConfig`, `LoggerInterface`; add `@spec` PHPDoc
 
 ## AttributionService (Task 2.4 of giant)
