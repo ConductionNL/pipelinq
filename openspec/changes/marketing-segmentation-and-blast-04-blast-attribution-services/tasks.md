@@ -17,4 +17,4 @@
 - [x] Implement `recordClick(string $blastDeliveryId, array $clickEvent): void` — set firstClickAt + clickedUrls
 - [x] Implement `linkBlastToDeal(string $blastDeliveryId, string $dealId): void` — create AttributionLink
 - [x] Implement `getBlastAttributedValue(string $blastId): float` — sum attributedValue
-- [ ] Inject `ObjectService`, `LoggerInterface`; add `@spec` PHPDoc
+- [x] Inject `ObjectService`, `LoggerInterface`; add `@spec` PHPDoc
