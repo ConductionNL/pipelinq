@@ -87,6 +87,26 @@ class ComplianceService
     private const STATUS_UNSUBSCRIBED_BEFORE_SEND = 'unsubscribed-before-send';
 
     /**
+     * The token every compliant email body must embed (the renderer
+     * substitutes the unsubscribe URL on send).
+     */
+    private const UNSUBSCRIBE_TOKEN = '{{unsubscribe_link}}';
+
+    /**
+     * Token alternatives the validator will accept for the CAN-SPAM
+     * physical-address requirement (any one of these in the body OR a
+     * non-empty footerOverride satisfies the rule).
+     *
+     * @var array<int, string>
+     */
+    private const PHYSICAL_ADDRESS_TOKENS = [
+        '{{physical_address}}',
+        '{{sender_address}}',
+        '{{company_address}}',
+        '{{address_block}}',
+    ];
+
+    /**
      * Lawful-basis values that DO satisfy marketing consent gating.
      *
      * "imported" is intentionally NOT on this list — ADR-005 fail-safe
@@ -236,6 +256,70 @@ class ComplianceService
 
         return true;
     }//end hasConsentForChannel()
+
+    /**
+     * Validate a CampaignTemplate payload against the channel's rules.
+     *
+     * For email templates the body MUST embed `{{unsubscribe_link}}`
+     * (token literally present in `bodyHtml` or `bodyText`) AND a
+     * physical-address indicator — either one of the recognised
+     * placeholder tokens (see `PHYSICAL_ADDRESS_TOKENS`) or a non-empty
+     * `footerOverride` (the operator is supplying a literal address
+     * block in place of the templated one).
+     *
+     * Returns `null` on success or a human-readable error string on
+     * failure. Callers (controller / save path) surface the error as a
+     * field-level validation error and refuse to persist.
+     *
+     * SMS templates have no footer requirement (carriers strip
+     * footers; the CAN-SPAM rule is email-specific) — this method
+     * returns null for any non-email channel.
+     *
+     * @param array<string, mixed> $templateData CampaignTemplate payload.
+     * @param string               $channel      "email" or "sms".
+     *
+     * @return string|null Error message or null when valid.
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-03-compliance-service/tasks.md#validate-template
+     */
+    public function validateTemplate(array $templateData, string $channel): ?string
+    {
+        $channel = strtolower(trim($channel));
+        if ($channel !== 'email') {
+            return null;
+        }
+
+        $bodyHtml       = (string) ($templateData['bodyHtml'] ?? '');
+        $bodyText       = (string) ($templateData['bodyText'] ?? '');
+        $footerOverride = (string) ($templateData['footerOverride'] ?? '');
+
+        $haystack = $bodyHtml . "\n" . $bodyText . "\n" . $footerOverride;
+
+        if (str_contains($haystack, self::UNSUBSCRIBE_TOKEN) === false) {
+            return sprintf(
+                'Email templates must embed the %s token (GDPR Art. 7(3) withdrawal).',
+                self::UNSUBSCRIBE_TOKEN
+            );
+        }
+
+        $hasAddress = (trim($footerOverride) !== '');
+        if ($hasAddress === false) {
+            foreach (self::PHYSICAL_ADDRESS_TOKENS as $token) {
+                if (str_contains($haystack, $token) === true) {
+                    $hasAddress = true;
+                    break;
+                }
+            }
+        }
+        if ($hasAddress === false) {
+            return 'Email templates must include a physical-address block '
+                . '(footerOverride or one of {{physical_address}} / '
+                . '{{sender_address}} / {{company_address}} / '
+                . '{{address_block}}) per CAN-SPAM § 7704(a)(5).';
+        }
+
+        return null;
+    }//end validateTemplate()
 
     /**
      * Withdraw consent for a (contact, channel) pair and skip any
