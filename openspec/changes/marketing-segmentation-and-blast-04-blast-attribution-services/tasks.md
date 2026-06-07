@@ -9,7 +9,7 @@
 - [ ] Implement `createAbVariant(string $parentBlastId, array $variantData): string`
 - [ ] Implement `updateBlastTotals(string $blastId): void` — recount by status
 - [ ] Implement `transitionQueuedDeliveries(string $contactId, string $blastId, string $newStatus): void` (called by ComplianceService)
-- [ ] Inject `SegmentService`, `ComplianceService`, `ObjectService`, `IAppConfig`, `LoggerInterface`; add `@spec` PHPDoc
+- [x] Inject `SegmentService`, `ComplianceService`, `ObjectService`, `IAppConfig`, `LoggerInterface`; add `@spec` PHPDoc
 
 ## AttributionService (Task 2.4 of giant)
 
