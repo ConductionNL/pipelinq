@@ -74,9 +74,23 @@ class ComplianceService
     /**
      * Lawful-basis values that DO satisfy marketing consent gating.
      *
+     * "imported" is intentionally NOT on this list — ADR-005 fail-safe
+     * rule: bulk-imported rows cannot stand in for documented consent.
+     * The withdrawal ledger may still carry the row, but a send is
+     * never permitted on the bare "imported" basis.
+     *
      * @var array<int, string>
      */
     private const LAWFUL_BASIS_ALLOWED = ['consent', 'legitimate-interest', 'contract'];
+
+    /**
+     * Lawful-basis values that are recorded on a ConsentRecord but do
+     * NOT permit a marketing send. The list is consulted explicitly so
+     * an audit-log line surfaces every blocked "imported" send.
+     *
+     * @var array<int, string>
+     */
+    private const LAWFUL_BASIS_UNSATISFYING = ['imported'];
 
     /**
      * Constructor.
@@ -124,7 +138,21 @@ class ComplianceService
         }
 
         $lawfulBasis = strtolower(trim((string) ($record['lawfulBasis'] ?? '')));
-        if ($lawfulBasis === '' || in_array($lawfulBasis, self::LAWFUL_BASIS_ALLOWED, true) === false) {
+        if ($lawfulBasis === '') {
+            return false;
+        }
+        if (in_array($lawfulBasis, self::LAWFUL_BASIS_UNSATISFYING, true) === true) {
+            // ADR-005 fail-safe: "imported" rows are recorded for
+            // GDPR audit purposes but cannot themselves authorise a
+            // marketing dispatch. Log the block so the operator sees
+            // why the contact was excluded.
+            $this->logger->info(
+                'ComplianceService.hasConsentForChannel: blocked — lawfulBasis "imported" does not permit marketing sends',
+                ['contactId' => $contactId, 'channel' => $channel]
+            );
+            return false;
+        }
+        if (in_array($lawfulBasis, self::LAWFUL_BASIS_ALLOWED, true) === false) {
             return false;
         }
 
