@@ -191,6 +191,94 @@ class SegmentService
     }//end evaluateRules()
 
     /**
+     * Return the minimal recipient projection used by the blast engine.
+     *
+     * Same query path as estimateSize, but returns one row per matching
+     * entity carrying just the fields a downstream Blast needs:
+     * `contactId`, `email`, `firstName`, `lastName`. No caching — a stale
+     * send list is worse than a slow one (compliance member 03 still
+     * filters this list against ConsentRecord before dispatch, but
+     * delivering to a deleted Contact would be a defect).
+     *
+     * @param string $segmentId Segment UUID or slug.
+     *
+     * @return array<int, array<string, string>> Recipient rows.
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.7
+     */
+    public function getMembersForBlast(string $segmentId): array
+    {
+        $segment = $this->loadSegment(segmentId: $segmentId);
+        if ($segment === null) {
+            return [];
+        }
+        $rules      = $this->extractRules(segment: $segment);
+        $entityType = $this->extractEntityType(segment: $segment);
+        if ($rules === null || $entityType === null) {
+            return [];
+        }
+
+        $members  = [];
+        $entities = $this->loadEntitiesForType(entityType: $entityType);
+        foreach ($entities as $entity) {
+            if ($this->evaluateRules(rules: $rules, entity: $entity) !== true) {
+                continue;
+            }
+            $members[] = $this->projectMember(entity: $entity);
+        }
+
+        return $members;
+    }//end getMembersForBlast()
+
+    /**
+     * Build the minimal member-projection row used by the blast engine.
+     *
+     * Supports the common shapes seen across the Conduction fleet:
+     * - flat key names (`email`, `firstName`)
+     * - snake_case fallbacks (`first_name`, `last_name`)
+     * - vCard-style `name` (split on whitespace) when no first/last
+     *
+     * @param array<string, mixed> $entity Entity payload.
+     *
+     * @return array<string, string> Recipient row.
+     */
+    private function projectMember(array $entity): array
+    {
+        $id = '';
+        foreach (['id', 'uuid', 'slug'] as $key) {
+            if (isset($entity[$key]) === true && is_scalar($entity[$key]) === true && (string) $entity[$key] !== '') {
+                $id = (string) $entity[$key];
+                break;
+            }
+        }
+        if ($id === '' && isset($entity['@self']) === true && is_array($entity['@self']) === true) {
+            foreach (['uuid', 'id', 'slug'] as $key) {
+                if (isset($entity['@self'][$key]) === true && is_scalar($entity['@self'][$key]) === true) {
+                    $id = (string) $entity['@self'][$key];
+                    break;
+                }
+            }
+        }
+
+        $firstName = (string) ($entity['firstName'] ?? $entity['first_name'] ?? '');
+        $lastName  = (string) ($entity['lastName'] ?? $entity['last_name'] ?? '');
+        if ($firstName === '' && $lastName === '' && isset($entity['name']) === true && is_string($entity['name']) === true) {
+            $parts = preg_split('/\s+/', trim($entity['name']));
+            if (is_array($parts) === true && $parts !== []) {
+                $firstName = (string) array_shift($parts);
+                $lastName  = trim(implode(' ', $parts));
+            }
+        }
+
+        return [
+            'contactId' => $id,
+            'email'     => (string) ($entity['email'] ?? ''),
+            'firstName' => $firstName,
+            'lastName'  => $lastName,
+        ];
+    }//end projectMember()
+
+    /**
      * Estimate the size of a Segment by counting matching entities.
      *
      * Loads the Segment, resolves its entityType schema, queries every
