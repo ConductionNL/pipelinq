@@ -1,0 +1,486 @@
+{
+	"components": {
+		"registers": {
+			"pipelinq": {
+				"schemas": [
+					"segment",
+					"campaignTemplate",
+					"blast",
+					"blastDelivery",
+					"consentRecord",
+					"attributionLink"
+				]
+			}
+		},
+		"schemas": {
+			"segment": {
+				"slug": "segment",
+				"title": "Segment",
+				"icon": "AccountMultipleOutline",
+				"version": "1.0.0",
+				"summary": "A stored rule-based query that selects Contacts or Customers for marketing blasts.",
+				"description": "A Segment is a saved query, not a materialised list. The rule tree (AND/OR with leaf {field, operator, value}) is evaluated by SegmentService against the entityType ('contact' or 'customer'). estimatedSize is a cached preview count refreshed on save. See ADR-000 and the marketing-segmentation-and-blast chain (member 02 owns the evaluator).",
+				"@type": "schema:DefinedTerm",
+				"required": [
+					"name",
+					"rules",
+					"entityType"
+				],
+				"properties": {
+					"name": {
+						"type": "string",
+						"description": "Display name of the segment.",
+						"maxLength": 255,
+						"minLength": 1
+					},
+					"description": {
+						"type": "string",
+						"description": "Free-text description of the segment's purpose."
+					},
+					"rules": {
+						"type": "object",
+						"description": "Rule tree as JSON: {type:'AND'|'OR', children:[...]} where each child is either another node or a leaf {field, operator, value}. Stored as a query; never materialised."
+					},
+					"entityType": {
+						"type": "string",
+						"enum": [
+							"contact",
+							"customer"
+						],
+						"description": "Which entity collection the rules are evaluated against."
+					},
+					"estimatedSize": {
+						"type": "integer",
+						"description": "Cached count of matching entities, refreshed on save.",
+						"default": 0
+					},
+					"createdBy": {
+						"type": "string",
+						"description": "Nextcloud user id that created the segment."
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time",
+						"description": "Creation timestamp (UTC)."
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time",
+						"description": "Last update timestamp (UTC)."
+					}
+				}
+			},
+			"campaignTemplate": {
+				"slug": "campaignTemplate",
+				"title": "Campaign Template",
+				"icon": "EmailEditOutline",
+				"version": "1.0.0",
+				"summary": "A reusable email or SMS template with variable substitution markers and compliance-required tokens.",
+				"description": "CampaignTemplate stores the channel-specific body (HTML + text for email, plain text for SMS), sender identity, and the variable list. Email templates MUST embed {{unsubscribe_link}} and a physical-address footer; SMS templates have no footer requirement. See marketing-segmentation-and-blast member 03 (compliance) for enforcement.",
+				"@type": "schema:CreativeWork",
+				"required": [
+					"name",
+					"channel"
+				],
+				"properties": {
+					"name": {
+						"type": "string",
+						"description": "Display name of the template.",
+						"maxLength": 255,
+						"minLength": 1
+					},
+					"channel": {
+						"type": "string",
+						"enum": [
+							"email",
+							"sms"
+						],
+						"description": "Delivery channel."
+					},
+					"subject": {
+						"type": "string",
+						"description": "Email subject line (ignored for SMS)."
+					},
+					"bodyHtml": {
+						"type": "string",
+						"description": "HTML body for email channels (with {{variable}} placeholders)."
+					},
+					"bodyText": {
+						"type": "string",
+						"description": "Plain-text body (email fallback or SMS body)."
+					},
+					"senderName": {
+						"type": "string",
+						"description": "From-name used on outbound."
+					},
+					"senderEmail": {
+						"type": "string",
+						"format": "email",
+						"description": "From-address for email (ignored for SMS)."
+					},
+					"replyTo": {
+						"type": "string",
+						"format": "email",
+						"description": "Reply-To address for email."
+					},
+					"footerOverride": {
+						"type": "string",
+						"description": "Optional override of the default compliance footer (physical address + unsubscribe block)."
+					},
+					"variables": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"description": "Declared variable names referenced in subject/body (e.g. ['first_name','unsubscribe_link'])."
+					},
+					"language": {
+						"type": "string",
+						"default": "nl",
+						"description": "Default language code for rendering (e.g. 'nl', 'en')."
+					},
+					"createdBy": {
+						"type": "string",
+						"description": "Nextcloud user id that created the template."
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			},
+			"blast": {
+				"slug": "blast",
+				"title": "Blast",
+				"icon": "BullhornOutline",
+				"version": "1.0.0",
+				"summary": "One outbound campaign execution against a Segment using a CampaignTemplate, with optional A/B variant pairing.",
+				"description": "A Blast is one campaign send. It binds a Segment (audience) to a CampaignTemplate (content) for a single channel, with optional scheduling, A/B split, and rolling delivery totals. abVariantOf links a child variant to its parent A blast; abSplitPercent on the parent records the audience split (0-100). totals is an aggregated counter map updated by BlastDelivery state changes (member 04). See ADR-000.",
+				"@type": "schema:CommunicateAction",
+				"required": [
+					"name",
+					"segmentId",
+					"templateId",
+					"channel"
+				],
+				"properties": {
+					"name": {
+						"type": "string",
+						"description": "Display name of the blast.",
+						"maxLength": 255,
+						"minLength": 1
+					},
+					"segmentId": {
+						"type": "string",
+						"description": "FK (UUID) to Segment."
+					},
+					"templateId": {
+						"type": "string",
+						"description": "FK (UUID) to CampaignTemplate."
+					},
+					"channel": {
+						"type": "string",
+						"enum": [
+							"email",
+							"sms"
+						],
+						"description": "Delivery channel (must match template channel)."
+					},
+					"scheduledFor": {
+						"type": "string",
+						"format": "date-time",
+						"description": "When the blast should start (null = immediate)."
+					},
+					"sentAt": {
+						"type": "string",
+						"format": "date-time",
+						"description": "When the blast was actually dispatched."
+					},
+					"status": {
+						"type": "string",
+						"enum": [
+							"draft",
+							"scheduled",
+							"sending",
+							"sent",
+							"paused",
+							"failed",
+							"cancelled"
+						],
+						"default": "draft",
+						"description": "Lifecycle status."
+					},
+					"abVariantOf": {
+						"type": "string",
+						"description": "UUID of the parent Blast if this is variant B; null on parent (variant A)."
+					},
+					"abSplitPercent": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 100,
+						"description": "Audience percentage receiving variant A on the parent (variant B receives 100 - abSplitPercent)."
+					},
+					"totals": {
+						"type": "object",
+						"description": "Aggregated counters: {queued, sent, delivered, bounced, opened, clicked, unsubscribed, complained}.",
+						"properties": {
+							"queued": {
+								"type": "integer",
+								"default": 0
+							},
+							"sent": {
+								"type": "integer",
+								"default": 0
+							},
+							"delivered": {
+								"type": "integer",
+								"default": 0
+							},
+							"bounced": {
+								"type": "integer",
+								"default": 0
+							},
+							"opened": {
+								"type": "integer",
+								"default": 0
+							},
+							"clicked": {
+								"type": "integer",
+								"default": 0
+							},
+							"unsubscribed": {
+								"type": "integer",
+								"default": 0
+							},
+							"complained": {
+								"type": "integer",
+								"default": 0
+							}
+						}
+					},
+					"connectorSourceId": {
+						"type": "string",
+						"description": "Optional OpenConnector source UUID used to dispatch this blast (email/SMS provider)."
+					},
+					"createdBy": {
+						"type": "string",
+						"description": "Nextcloud user id that created the blast."
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			},
+			"blastDelivery": {
+				"slug": "blastDelivery",
+				"title": "Blast Delivery",
+				"icon": "EmailFastOutline",
+				"version": "1.0.0",
+				"summary": "One row per (Blast, recipient) — tracks per-recipient delivery, open, click, bounce, and unsubscribe events.",
+				"description": "BlastDelivery is the per-recipient telemetry record for a Blast. status transitions queued → sent → delivered → opened/clicked/bounced/unsubscribed; providerId is the upstream provider's message id (e.g. SendGrid 'sg-...') used for webhook correlation. clickedUrls collects every URL the recipient clicked with utm parameters preserved. firstClickAt records the earliest click. See marketing-segmentation-and-blast member 05 (webhook ingest) and member 04 (totals roll-up).",
+				"@type": "schema:DeliveryEvent",
+				"required": [
+					"blastId",
+					"status"
+				],
+				"properties": {
+					"blastId": {
+						"type": "string",
+						"description": "FK (UUID) to Blast."
+					},
+					"contactId": {
+						"type": "string",
+						"description": "FK to Contact (UUID) — recipient identity."
+					},
+					"email": {
+						"type": "string",
+						"description": "Resolved recipient email at send time (snapshot; may differ from contact's current email)."
+					},
+					"phone": {
+						"type": "string",
+						"description": "Resolved recipient phone at send time (SMS)."
+					},
+					"status": {
+						"type": "string",
+						"enum": [
+							"queued",
+							"sent",
+							"delivered",
+							"opened",
+							"clicked",
+							"bounced",
+							"unsubscribed",
+							"complained",
+							"failed"
+						],
+						"default": "queued",
+						"description": "Latest delivery state."
+					},
+					"sentAt": {
+						"type": "string",
+						"format": "date-time",
+						"description": "When the provider accepted the message."
+					},
+					"providerId": {
+						"type": "string",
+						"description": "Provider-side message identifier (e.g. SendGrid 'sg-abc123xyz...') used for webhook lookups."
+					},
+					"openedAt": {
+						"type": "string",
+						"format": "date-time",
+						"description": "First open timestamp."
+					},
+					"firstClickAt": {
+						"type": "string",
+						"format": "date-time",
+						"description": "First click timestamp."
+					},
+					"clickedUrls": {
+						"type": "array",
+						"items": {
+							"type": "string",
+							"format": "uri"
+						},
+						"description": "URLs the recipient clicked (with utm_campaign / utm_source preserved)."
+					},
+					"bouncedAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"bounceType": {
+						"type": "string",
+						"enum": [
+							"soft",
+							"hard"
+						],
+						"description": "Bounce classification used by ConsentRecord soft-bounce counter."
+					},
+					"unsubscribedAt": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			},
+			"consentRecord": {
+				"slug": "consentRecord",
+				"title": "Consent Record",
+				"icon": "ShieldCheckOutline",
+				"version": "1.0.0",
+				"summary": "Per-contact-per-channel marketing consent (GDPR Art. 6 lawful basis + withdrawal state).",
+				"description": "ConsentRecord is the source of truth for whether a Contact may be sent marketing on a given channel. lawfulBasis records the GDPR Art. 6 basis used at capture (consent | legitimate-interest | contract); consentSource describes the capture mechanism (web-form, double-opt-in, import, etc.). withdrawnAt + withdrawnReason close the consent. softBounceCount counts consecutive soft bounces (5 triggers automatic withdrawal — member 03 owns the rule). One record per (contactId, channel).",
+				"@type": "schema:Permit",
+				"required": [
+					"contactId",
+					"channel",
+					"lawfulBasis"
+				],
+				"properties": {
+					"contactId": {
+						"type": "string",
+						"description": "FK to Contact (UUID)."
+					},
+					"channel": {
+						"type": "string",
+						"enum": [
+							"email",
+							"sms"
+						],
+						"description": "Channel the consent applies to."
+					},
+					"lawfulBasis": {
+						"type": "string",
+						"enum": [
+							"consent",
+							"legitimate-interest",
+							"contract"
+						],
+						"description": "GDPR Art. 6 lawful basis at capture."
+					},
+					"consentSource": {
+						"type": "string",
+						"description": "Capture mechanism (e.g. 'web-form-newsletter', 'double-opt-in-2026-q2', 'import-legacy', 'sales-call-2026-03-04')."
+					},
+					"consentedAt": {
+						"type": "string",
+						"format": "date-time",
+						"description": "When consent was captured."
+					},
+					"withdrawnAt": {
+						"type": "string",
+						"format": "date-time",
+						"description": "When consent was withdrawn (null = still active)."
+					},
+					"withdrawnReason": {
+						"type": "string",
+						"enum": [
+							"user-unsubscribed",
+							"bounce-hard",
+							"bounce-soft-x5",
+							"admin-removed",
+							"complaint"
+						],
+						"description": "Why consent ended."
+					},
+					"softBounceCount": {
+						"type": "integer",
+						"default": 0,
+						"description": "Consecutive soft-bounce counter; resets on successful delivery, 5 triggers automatic withdrawal."
+					}
+				}
+			},
+			"attributionLink": {
+				"slug": "attributionLink",
+				"title": "Attribution Link",
+				"icon": "ChartTimelineVariantShimmer",
+				"version": "1.0.0",
+				"summary": "Revenue attribution: a click on a Blast that preceded a closed-won Deal.",
+				"description": "AttributionLink ties one BlastDelivery first-click event to a closed-won Deal (lead with stage='closed-won' in Pipelinq). Created by the attribution job when a deal closes within the attribution window after the blast click. attributedValue is the EUR value attributed to the blast (typically the deal value, but may be weighted by the model in member 04).",
+				"@type": "schema:InteractAction",
+				"required": [
+					"blastId",
+					"contactId",
+					"dealId"
+				],
+				"properties": {
+					"blastId": {
+						"type": "string",
+						"description": "FK to Blast (UUID)."
+					},
+					"contactId": {
+						"type": "string",
+						"description": "FK to Contact (UUID)."
+					},
+					"dealId": {
+						"type": "string",
+						"description": "FK to Lead (UUID) — the closed-won deal being attributed."
+					},
+					"firstClickAt": {
+						"type": "string",
+						"format": "date-time",
+						"description": "Timestamp of the click that initiated the attribution chain."
+					},
+					"closedWonAt": {
+						"type": "string",
+						"format": "date-time",
+						"description": "Timestamp the deal moved to closed-won."
+					},
+					"attributedValue": {
+						"type": "number",
+						"description": "EUR value attributed to the blast."
+					},
+					"currency": {
+						"type": "string",
+						"default": "EUR",
+						"description": "ISO 4217 currency code (EUR for the seed data)."
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			}
+		},
+		"objects": []
+	}
+}

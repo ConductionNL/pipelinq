@@ -8,9 +8,11 @@
 
 ## Schema registration (Section 6 of giant)
 
-- [ ] Register schema definitions under `components.schemas[]`: segment, campaign-template, blast, blast-delivery, consent-record, attribution-link
-- [ ] Each schema includes fields from context-brief and ADR-000
-- [ ] Verify register syntax valid (OpenRegister format)
+- [x] Register schema definitions under `components.schemas[]`: segment, campaign-template, blast, blast-delivery, consent-record, attribution-link
+- [x] Each schema includes fields from context-brief and ADR-000
+- [x] Verify register syntax valid (OpenRegister format)
+
+  Added `lib/Settings/register.d/95-marketing-segmentation-blast.json` (ADR-037 register fragment): six new schemas — `segment`, `campaignTemplate`, `blast`, `blastDelivery`, `consentRecord`, `attributionLink` — each with the full property set from `design.md` / ADR-000 (Segment rule tree, A/B blast pairing fields, consent withdrawal states, attribution EUR value). The fragment also extends `components.registers.pipelinq.schemas` so OpenRegister wires the new schemas into the pipelinq register. JSON parses cleanly; no slug collisions with existing schemas in `pipelinq_register.json` or other `register.d/` fragments.
 
 ## Segment seed (Task 1.1)
 
