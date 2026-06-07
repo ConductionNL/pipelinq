@@ -311,6 +311,30 @@ return [
         ['name' => 'blastWebhook#sendgrid', 'url' => '/api/blast-webhooks/sendgrid', 'verb' => 'POST'],
         ['name' => 'blastWebhook#ses',      'url' => '/api/blast-webhooks/ses',      'verb' => 'POST'],
         ['name' => 'blastWebhook#twilio',   'url' => '/api/blast-webhooks/twilio',   'verb' => 'POST'],
+        // Marketing — Segments (marketing-segmentation-and-blast chain member 06).
+        // Specific routes precede any wildcard {slug} routes (ADR-016).
+        ['name' => 'segment#index',         'url' => '/api/segments',                  'verb' => 'GET'],
+        ['name' => 'segment#create',        'url' => '/api/segments',                  'verb' => 'POST'],
+        ['name' => 'segment#refreshSize',   'url' => '/api/segments/{id}/size',        'verb' => 'POST'],
+        ['name' => 'segment#members',       'url' => '/api/segments/{id}/members',     'verb' => 'GET'],
+        ['name' => 'segment#show',          'url' => '/api/segments/{id}',             'verb' => 'GET'],
+
+        // Marketing — CampaignTemplates (marketing-segmentation-and-blast chain member 06).
+        // Specific routes precede any wildcard {slug} routes (ADR-016).
+        ['name' => 'template#index',  'url' => '/api/templates',      'verb' => 'GET'],
+        ['name' => 'template#create', 'url' => '/api/templates',      'verb' => 'POST'],
+        ['name' => 'template#show',   'url' => '/api/templates/{id}', 'verb' => 'GET'],
+        ['name' => 'template#update', 'url' => '/api/templates/{id}', 'verb' => 'PATCH'],
+
+        // Marketing — Blasts (marketing-segmentation-and-blast chain member 06).
+        // Specific routes precede any wildcard {slug} routes (ADR-016).
+        ['name' => 'blast#index',      'url' => '/api/blasts',                     'verb' => 'GET'],
+        ['name' => 'blast#create',     'url' => '/api/blasts',                     'verb' => 'POST'],
+        ['name' => 'blast#send',       'url' => '/api/blasts/{id}/send',           'verb' => 'POST'],
+        ['name' => 'blast#cancel',     'url' => '/api/blasts/{id}/cancel',         'verb' => 'POST'],
+        ['name' => 'blast#deliveries', 'url' => '/api/blasts/{id}/deliveries',     'verb' => 'GET'],
+        ['name' => 'blast#show',       'url' => '/api/blasts/{id}',                'verb' => 'GET'],
+        ['name' => 'blast#update',     'url' => '/api/blasts/{id}',                'verb' => 'PATCH'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],

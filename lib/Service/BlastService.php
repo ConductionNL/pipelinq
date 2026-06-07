@@ -47,6 +47,9 @@ use Throwable;
  * - `updateBlastTotals()` — recount BlastDelivery statuses
  * - `transitionQueuedDeliveries()` — called by ComplianceService on consent
  *   withdrawal to flip queued rows to `unsubscribed-before-send`
+ * - `listBlasts()` / `getBlastById()` / `createDraftBlast()` /
+ *   `patchBlastName()` / `cancelBlast()` / `listDeliveriesForBlast()` —
+ *   thin repository surface consumed by the REST controllers (member 06).
  *
  * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
  */
@@ -503,6 +506,329 @@ class BlastService
             $this->updateBlastTotals(blastId: $blastId);
         }
     }//end transitionQueuedDeliveries()
+
+    /**
+     * List Blasts with optional status filter and pagination envelope.
+     *
+     * The list scope is the Pipelinq register's `blast` schema — never the
+     * raw object table — so OpenRegister enforces the Pipelinq RBAC profile
+     * (per-schema group restrictions). The envelope shape `{data,
+     * pagination}` is the one the marketing Vue views (member 07) consume.
+     *
+     * @param string|null $status Optional `status` filter
+     *                            (`draft|scheduled|sending|sent|paused|failed|cancelled`).
+     * @param int         $page   1-based page number (clamped to >= 1).
+     * @param int         $limit  Page size (clamped 1..100).
+     *
+     * @return array{data: array<int, array<string, mixed>>, pagination: array{page: int, limit: int, total: int, pages: int}}
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+     */
+    public function listBlasts(?string $status, int $page, int $limit): array
+    {
+        $page    = max(1, $page);
+        $limit   = min(100, max(1, $limit));
+        $filters = [];
+        if ($status !== null && $status !== '') {
+            $filters['status'] = $status;
+        }
+
+        $all   = $this->loadObjects(schemaSlug: $this->getBlastSchemaSlug(), filters: $filters);
+        $total = count($all);
+        $slice = array_slice($all, (($page - 1) * $limit), $limit);
+        return [
+            'data'       => $slice,
+            'pagination' => [
+                'page'  => $page,
+                'limit' => $limit,
+                'total' => $total,
+                'pages' => $this->computePages(total: $total, limit: $limit),
+            ],
+        ];
+    }//end listBlasts()
+
+    /**
+     * Public accessor returning one Blast or null.
+     *
+     * Thin wrapper around the private `loadBlast()` helper so the REST
+     * controller (member 06) can fetch one Blast without re-implementing
+     * the schema-slug resolution.
+     *
+     * @param string $blastId Blast UUID or slug.
+     *
+     * @return array<string, mixed>|null Blast payload or null.
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+     */
+    public function getBlastById(string $blastId): ?array
+    {
+        if ($blastId === '') {
+            return null;
+        }
+
+        return $this->loadBlast(blastId: $blastId);
+    }//end getBlastById()
+
+    /**
+     * Create a new Blast in `draft` status with server-set `createdBy`.
+     *
+     * Validates that the referenced Segment, CampaignTemplate and (when
+     * supplied) connector source identifiers are non-empty strings — the
+     * REST controller never trusts any `createdBy` value supplied in the
+     * request body (ADR-005). Returns either `{blast: array}` on success
+     * or `{error: string}` on invalid input so the controller can map
+     * each branch to an HTTP status.
+     *
+     * @param array<string, mixed> $payload      Inbound payload.
+     * @param string               $createdByUid Authenticated user id.
+     *
+     * @return array{blast?: array<string, mixed>, error?: string}
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+     */
+    public function createDraftBlast(array $payload, string $createdByUid): array
+    {
+        $error = $this->validateDraftBlastPayload(payload: $payload);
+        if ($error !== null) {
+            return ['error' => $error];
+        }
+
+        $now    = $this->nowIso();
+        $object = [
+            'name'              => (string) $payload['name'],
+            'segmentId'         => (string) $payload['segmentId'],
+            'templateId'        => (string) $payload['templateId'],
+            'channel'           => (string) $payload['channel'],
+            'connectorSourceId' => (string) ($payload['connectorSourceId'] ?? ''),
+            'status'            => 'draft',
+            'totals'            => $this->emptyTotals(),
+            'createdBy'         => $createdByUid,
+            'createdAt'         => $now,
+            'updatedAt'         => $now,
+        ];
+        if (isset($payload['scheduledFor']) === true && is_string($payload['scheduledFor']) === true) {
+            $object['scheduledFor'] = $payload['scheduledFor'];
+        }
+
+        $saved = $this->saveObject(payload: $object, schemaSlug: $this->getBlastSchemaSlug());
+        if ($saved === null) {
+            return ['error' => 'Could not create blast'];
+        }
+
+        return ['blast' => $saved];
+    }//end createDraftBlast()
+
+    /**
+     * Validate the inbound payload for createDraftBlast.
+     *
+     * @param array<string, mixed> $payload Inbound payload.
+     *
+     * @return string|null Error message or null when valid.
+     */
+    private function validateDraftBlastPayload(array $payload): ?string
+    {
+        $name = (string) ($payload['name'] ?? '');
+        if (trim($name) === '') {
+            return 'Invalid name';
+        }
+
+        $segmentId = (string) ($payload['segmentId'] ?? '');
+        if (trim($segmentId) === '' || $this->loadOne(id: $segmentId, schemaSlug: $this->segmentService->getSegmentSchemaSlugPublic()) === null) {
+            return 'Invalid segment';
+        }
+
+        $templateId = (string) ($payload['templateId'] ?? '');
+        if (trim($templateId) === '' || $this->loadTemplate(templateId: $templateId) === null) {
+            return 'Invalid template';
+        }
+
+        $channel = strtolower((string) ($payload['channel'] ?? ''));
+        if (in_array($channel, ['email', 'sms'], true) === false) {
+            return 'Invalid channel';
+        }
+
+        return null;
+    }//end validateDraftBlastPayload()
+
+    /**
+     * Patch the editable Blast fields. Only `name` is editable post-create.
+     *
+     * Re-derives `updatedAt`; ignores any client-supplied `createdBy` or
+     * status to preserve the server-authoritative lifecycle (ADR-005).
+     *
+     * @param string $blastId Blast UUID or slug.
+     * @param string $name    New name (validated non-empty).
+     *
+     * @return array<string, mixed>|null Saved Blast or null on failure.
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+     */
+    public function patchBlastName(string $blastId, string $name): ?array
+    {
+        if (trim($name) === '') {
+            return null;
+        }
+
+        $blast = $this->loadBlast(blastId: $blastId);
+        if ($blast === null) {
+            return null;
+        }
+
+        $payload         = $blast;
+        $payload['name'] = $name;
+        $payload['updatedAt'] = $this->nowIso();
+        return $this->saveObject(
+            payload: $payload,
+            schemaSlug: $this->getBlastSchemaSlug(),
+            id: $this->extractId(payload: $blast),
+        );
+    }//end patchBlastName()
+
+    /**
+     * Cancel a Blast: transition status → `cancelled` and flip every
+     * queued BlastDelivery row to `unsubscribed-before-send`.
+     *
+     * Idempotent: a Blast already in a terminal status (`sent`, `failed`,
+     * `cancelled`) is returned unchanged with a no-op summary so retries
+     * are safe. Member-05 background jobs will skip cancelled blasts on
+     * the next tick.
+     *
+     * @param string $blastId Blast UUID or slug.
+     *
+     * @return array{status: string, cancelledDeliveries: int} Summary.
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+     */
+    public function cancelBlast(string $blastId): array
+    {
+        $blast = $this->loadBlast(blastId: $blastId);
+        if ($blast === null) {
+            return ['status' => 'not-found', 'cancelledDeliveries' => 0];
+        }
+
+        $current = (string) ($blast['status'] ?? 'draft');
+        if (in_array($current, ['sent', 'failed', 'cancelled'], true) === true) {
+            return ['status' => 'noop-'.$current, 'cancelledDeliveries' => 0];
+        }
+
+        $queued = $this->loadQueuedDeliveries(blastId: $blastId);
+        foreach ($queued as $delivery) {
+            $row           = $delivery;
+            $row['status'] = self::STATUS_UNSUBSCRIBED_BEFORE_SEND;
+            $row['unsubscribedAt'] = $this->nowIso();
+            $this->saveObject(
+                payload: $row,
+                schemaSlug: $this->getBlastDeliverySchemaSlug(),
+                id: $this->extractId(payload: $delivery),
+            );
+        }
+
+        $this->updateBlastStatus(blastId: $blastId, newStatus: 'cancelled');
+        $this->updateBlastTotals(blastId: $blastId);
+        return ['status' => 'cancelled', 'cancelledDeliveries' => count($queued)];
+    }//end cancelBlast()
+
+    /**
+     * List BlastDelivery rows for a Blast with pagination.
+     *
+     * Scoped to the supplied blast id so callers cannot pull the entire
+     * BlastDelivery table by passing an empty/wildcard id (IDOR
+     * prevention).
+     *
+     * @param string $blastId Blast UUID or slug.
+     * @param int    $page    1-based page (clamped).
+     * @param int    $limit   Page size (clamped 1..100).
+     *
+     * @return array{data: array<int, array<string, mixed>>, pagination: array{page: int, limit: int, total: int, pages: int}}
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+     */
+    public function listDeliveriesForBlast(string $blastId, int $page, int $limit): array
+    {
+        $page  = max(1, $page);
+        $limit = min(100, max(1, $limit));
+        if ($blastId === '') {
+            return [
+                'data'       => [],
+                'pagination' => ['page' => $page, 'limit' => $limit, 'total' => 0, 'pages' => 0],
+            ];
+        }
+
+        $all   = $this->loadAllDeliveriesForBlast(blastId: $blastId);
+        $total = count($all);
+        $slice = array_slice($all, (($page - 1) * $limit), $limit);
+        return [
+            'data'       => $slice,
+            'pagination' => [
+                'page'  => $page,
+                'limit' => $limit,
+                'total' => $total,
+                'pages' => $this->computePages(total: $total, limit: $limit),
+            ],
+        ];
+    }//end listDeliveriesForBlast()
+
+    /**
+     * Compute the page-count from a total + page-size pair.
+     *
+     * Centralised so the inline ternary stays out of the envelope
+     * builders (matches the team's "no inline IF" coding style).
+     *
+     * @param int $total Total row count.
+     * @param int $limit Page size.
+     *
+     * @return int Page count (0 when total is 0).
+     */
+    private function computePages(int $total, int $limit): int
+    {
+        if ($total <= 0 || $limit <= 0) {
+            return 0;
+        }
+
+        return (int) ceil($total / $limit);
+    }//end computePages()
+
+    /**
+     * Load every object of the given schema (used by listBlasts).
+     *
+     * @param string               $schemaSlug Schema slug.
+     * @param array<string, mixed> $filters    Filter map.
+     *
+     * @return array<int, array<string, mixed>> Plain payloads.
+     */
+    private function loadObjects(string $schemaSlug, array $filters): array
+    {
+        $register = $this->getRegisterSlug();
+        if ($register === '' || $schemaSlug === '') {
+            return [];
+        }
+
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
+            return [];
+        }
+
+        try {
+            $rows = $objectService->findAll(
+                filters: $filters,
+                register: $register,
+                schema: $schemaSlug,
+            );
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'BlastService.loadObjects: findAll failed',
+                ['schema' => $schemaSlug, 'exception' => $e->getMessage()]
+            );
+            return [];
+        }
+
+        $out = [];
+        foreach (($rows ?? []) as $row) {
+            $out[] = $this->toArray(value: $row);
+        }
+
+        return $out;
+    }//end loadObjects()
 
     /**
      * Slice the recipient list into A/B variants deterministically.
