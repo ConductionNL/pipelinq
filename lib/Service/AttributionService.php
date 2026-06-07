@@ -368,6 +368,9 @@ class AttributionService
             );
             return null;
         }
+        if ($entity === null) {
+            return null;
+        }
         return $this->toArray(value: $entity);
     }//end loadOne()
 
