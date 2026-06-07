@@ -135,6 +135,13 @@ import WebhookListView from './views/webhooks/WebhookList.vue'
 import ExpenseListView from './views/expenses/ExpenseList.vue'
 import ExpenseDetailView from './views/expenses/ExpenseDetail.vue'
 
+// --- Billing categories (billable-categories-and-tags): list view with a
+//     bespoke color-swatch + DBA / active badge column layout the
+//     declarative type:"index" page cannot express. Donut widget for the
+//     dashboard (hours per billing category) registered as a slot. ---
+import BillingCategoryListView from './views/billingCategories/BillingCategoryList.vue'
+import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.vue'
+
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
 /**
@@ -405,6 +412,18 @@ const registry = {
 		kind: 'page',
 		component: ExpenseDetailView,
 		_note: 'Expense detail with embedded Shillinq AP card + retry button on failed dispatches (REQ-AP-006).',
+	},
+
+	// --- Billing categories (billable-categories-and-tags). ---
+	BillingCategoryListView: {
+		kind: 'page',
+		component: BillingCategoryListView,
+		_note: 'Billing-category management list (REQ-BCT-001) with color-swatch + DBA / active / default badges and client-side billable→non-billable→internal sort.',
+	},
+	BillingCategoryWidget: {
+		kind: 'widget',
+		component: BillingCategoryWidget,
+		_note: 'Donut chart of hours per billing category for the Dashboard (REQ-BCT-004). Clicking a segment navigates to the time entry list filtered by that category.',
 	},
 
 	WebhookListView: {

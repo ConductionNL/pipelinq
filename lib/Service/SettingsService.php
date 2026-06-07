@@ -101,6 +101,8 @@ class SettingsService
         'giftCardTransaction_schema',
         // Expense → Shillinq AP integration (pipelinq-expense-to-shillinq-ap).
         'expense_schema',
+        // Billing categories (billable-categories-and-tags) — REQ-BCT-001.
+        'billingCategory_schema',
     ];
 
     /**
