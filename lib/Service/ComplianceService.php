@@ -1,0 +1,209 @@
+<?php
+
+/**
+ * Pipelinq ComplianceService.
+ *
+ * GDPR/CAN-SPAM gate that blocks marketing sends without lawful basis,
+ * enforces unsubscribe + physical-address tokens on email templates, and
+ * withdraws consent on unsubscribe / bounce events. Reads ConsentRecord
+ * and CampaignTemplate (chain root 01) through OpenRegister's
+ * ObjectService and works alongside SegmentService (member 02) which
+ * supplies the recipient list. The downstream BlastService (member 04)
+ * calls into this service to filter a segment to its compliant subset
+ * before dispatching.
+ *
+ * @category Service
+ * @package  OCA\Pipelinq\Service
+ *
+ * @author    Conduction <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * @version GIT: <git_id>
+ *
+ * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/marketing-segmentation-and-blast-03-compliance-service/tasks.md#compliance-service
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Pipelinq\Service;
+
+use OCA\Pipelinq\AppInfo\Application;
+use OCP\IAppConfig;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
+use Throwable;
+
+/**
+ * ComplianceService — GDPR/CAN-SPAM gate for marketing blasts.
+ *
+ * Public surface (filled in by subsequent tasks):
+ *
+ * - `checkSegmentCompliance($segmentId, $channel)` — list compliant and
+ *   missing-consent members for a Segment on the requested channel.
+ * - `hasConsentForChannel($contactId, $channel)` — per-contact gate.
+ * - `recordConsentWithdrawal($contactId, $channel, $reason, ?$sourceBlastId)` —
+ *   transition a ConsentRecord to withdrawn and skip queued deliveries.
+ * - `validateTemplate(array $templateData, $channel)` — enforce
+ *   `{{unsubscribe_link}}` + physical-address token on email templates;
+ *   SMS templates pass through.
+ *
+ * @spec openspec/changes/marketing-segmentation-and-blast-03-compliance-service/tasks.md#compliance-service
+ */
+class ComplianceService
+{
+    /**
+     * Default register slug — matches SegmentService and the chain-root
+     * register fragment.
+     */
+    private const DEFAULT_REGISTER_SLUG = 'pipelinq';
+
+    /**
+     * Default ConsentRecord schema slug — matches the register fragment.
+     */
+    private const DEFAULT_CONSENT_RECORD_SCHEMA_SLUG = 'consentRecord';
+
+    /**
+     * Default BlastDelivery schema slug — used by withdrawal to skip
+     * queued rows. Wired through to BlastService in member 04.
+     */
+    private const DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG = 'blastDelivery';
+
+    /**
+     * Constructor.
+     *
+     * @param ContainerInterface $container      DI container (lazy OR resolve).
+     * @param IAppConfig         $appConfig      Pipelinq app config.
+     * @param SegmentService     $segmentService Segment member projection.
+     * @param LoggerInterface    $logger         Logger.
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-03-compliance-service/tasks.md#di
+     */
+    public function __construct(
+        private ContainerInterface $container,
+        private IAppConfig $appConfig,
+        private SegmentService $segmentService,
+        private LoggerInterface $logger,
+    ) {
+    }//end __construct()
+
+    /**
+     * Resolve the register slug from app config.
+     *
+     * @return string Register slug.
+     */
+    private function getRegisterSlug(): string
+    {
+        $slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        if ($slug !== '') {
+            return $slug;
+        }
+        return self::DEFAULT_REGISTER_SLUG;
+    }//end getRegisterSlug()
+
+    /**
+     * Resolve the ConsentRecord schema slug from app config.
+     *
+     * @return string Schema slug.
+     */
+    private function getConsentRecordSchemaSlug(): string
+    {
+        $slug = $this->appConfig->getValueString(Application::APP_ID, 'consent_record_schema', '');
+        if ($slug !== '') {
+            return $slug;
+        }
+        return self::DEFAULT_CONSENT_RECORD_SCHEMA_SLUG;
+    }//end getConsentRecordSchemaSlug()
+
+    /**
+     * Resolve the BlastDelivery schema slug from app config.
+     *
+     * @return string Schema slug.
+     */
+    private function getBlastDeliverySchemaSlug(): string
+    {
+        $slug = $this->appConfig->getValueString(Application::APP_ID, 'blast_delivery_schema', '');
+        if ($slug !== '') {
+            return $slug;
+        }
+        return self::DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG;
+    }//end getBlastDeliverySchemaSlug()
+
+    /**
+     * Resolve OpenRegister's ObjectService lazily.
+     *
+     * @return object|null ObjectService, or null when OpenRegister is
+     *                     not loaded.
+     */
+    private function getObjectService(): ?object
+    {
+        try {
+            return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'ComplianceService.getObjectService: OpenRegister unavailable',
+                ['exception' => $e->getMessage()]
+            );
+            return null;
+        }
+    }//end getObjectService()
+
+    /**
+     * Normalise an OpenRegister entity (or array) to a plain array.
+     *
+     * @param mixed $value Entity object or array.
+     *
+     * @return array<string, mixed> Plain payload.
+     */
+    private function toArray(mixed $value): array
+    {
+        if (is_array($value) === true) {
+            return $value;
+        }
+        if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
+            $serialised = $value->jsonSerialize();
+            if (is_array($serialised) === true) {
+                return $serialised;
+            }
+        }
+        if (is_object($value) === true && method_exists($value, 'getObject') === true) {
+            $payload = $value->getObject();
+            if (is_array($payload) === true) {
+                return $payload;
+            }
+        }
+        return [];
+    }//end toArray()
+
+    /**
+     * Extract the canonical id from an OpenRegister entity payload.
+     *
+     * @param array<string, mixed> $payload Entity payload.
+     *
+     * @return string Identifier or empty string.
+     */
+    private function extractObjectId(array $payload): string
+    {
+        foreach (['id', 'uuid', 'slug'] as $key) {
+            if (isset($payload[$key]) === true && is_scalar($payload[$key]) === true) {
+                $value = (string) $payload[$key];
+                if ($value !== '') {
+                    return $value;
+                }
+            }
+        }
+        if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
+            foreach (['uuid', 'id', 'slug'] as $key) {
+                if (isset($payload['@self'][$key]) === true && is_scalar($payload['@self'][$key]) === true) {
+                    $value = (string) $payload['@self'][$key];
+                    if ($value !== '') {
+                        return $value;
+                    }
+                }
+            }
+        }
+        return '';
+    }//end extractObjectId()
+}//end class
