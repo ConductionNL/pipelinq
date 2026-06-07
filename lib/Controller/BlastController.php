@@ -39,7 +39,7 @@ use OCP\IUserSession;
 /**
  * REST controller for Blast entities.
  *
- * Every endpoint is `#[NoAdminRequired]` — Blasts are operator content,
+ * Every endpoint declares NoAdminRequired — Blasts are operator content,
  * not admin settings — and resolves the acting user via IUserSession so
  * the `createdBy` field is always server-authoritative.
  *
