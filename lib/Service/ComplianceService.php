@@ -204,6 +204,44 @@ class ComplianceService
     }//end checkSegmentCompliance()
 
     /**
+     * Run every pre-send compliance check for one Blast in a single call.
+     *
+     * Convenience entry point for the blast-send path used by
+     * BlastService (member 04) and the blast controller (member 06) —
+     * it runs `validateTemplate()` over the supplied template payload
+     * and `checkSegmentCompliance()` over the supplied segment + channel,
+     * returning a structured `{ valid, templateError, segmentCompliance }`
+     * triple. Centralising the template-then-segment sequence here keeps
+     * every caller honest about the order: never queue a Blast whose
+     * template did not pass `validateTemplate()` first.
+     *
+     * Empty segment + empty template short-circuit to `valid: true` so
+     * downstream "what would block this blast?" preview endpoints can
+     * call the method without first proving they have data.
+     *
+     * @param string               $segmentId   Segment UUID / slug.
+     * @param array<string, mixed> $template    CampaignTemplate payload.
+     * @param string               $channel     "email" or "sms".
+     *
+     * @return array{valid: bool, templateError: ?string, segmentCompliance: array{compliant: bool, missingConsent: array<int, string>, missingCount: int}}
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-03-compliance-service/tasks.md#check-segment-compliance
+     */
+    public function preflightBlast(string $segmentId, array $template, string $channel): array
+    {
+        $templateError = $this->validateTemplate(templateData: $template, channel: $channel);
+        $segmentCheck  = $this->checkSegmentCompliance(segmentId: $segmentId, channel: $channel);
+
+        $valid = ($templateError === null && $segmentCheck['compliant'] === true);
+
+        return [
+            'valid'             => $valid,
+            'templateError'     => $templateError,
+            'segmentCompliance' => $segmentCheck,
+        ];
+    }//end preflightBlast()
+
+    /**
      * Return whether a Contact has a usable ConsentRecord on the channel.
      *
      * True iff a ConsentRecord exists for `(contactId, channel)` whose
