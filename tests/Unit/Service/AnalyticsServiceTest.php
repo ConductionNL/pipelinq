@@ -39,19 +39,11 @@ use RuntimeException;
 class AnalyticsServiceTest extends TestCase
 {
     /**
-     * Build a service with deterministic schema/register config and an
-     * ObjectService double whose `findAll` returns the supplied list
-     * (keyed by schema key) so tests can pre-seed leads / requests /
-     * contactmomenten.
+     * Build a service with deterministic config and a fake ObjectService.
      *
-     * @param array<string, array<int, array<string, mixed>>> $byCollection Map of
-     *        schema config key ("lead_schema", "request_schema",
-     *        "contactmoment_schema") to a list of object arrays.
-     * @param bool                                            $registerMissing If
-     *        true, the appConfig returns an empty `register` so the service
-     *        treats every collection as empty (configuration-not-set path).
-     * @param bool                                            $throwFromObjectService Force the ObjectService
-     *        double to throw on findAll (error propagation path).
+     * @param array<string, array<int, array<string, mixed>>> $byCollection           Per-schema fixture rows.
+     * @param bool                                            $registerMissing        Force the app-config `register` empty.
+     * @param bool                                            $throwFromObjectService Force the fake to throw on findAll.
      *
      * @return AnalyticsService
      */
@@ -64,10 +56,8 @@ class AnalyticsServiceTest extends TestCase
         $appConfig->method('getValueString')->willReturnCallback(
             static function (string $appId, string $key, string $default = '') use ($registerMissing): string {
                 if ($key === 'register') {
-                    return $registerMissing ? '' : 'register-1';
+                    return $registerMissing === true ? '' : 'register-1';
                 }
-
-                // lead_schema, request_schema, contactmoment_schema — map to themselves.
                 return $key;
             }
         );
@@ -90,7 +80,6 @@ class AnalyticsServiceTest extends TestCase
                 if ($this->throwAlways === true) {
                     throw new \RuntimeException('boom');
                 }
-
                 $schema = (string) ($config['filters']['schema'] ?? '');
                 return $this->byCollection[$schema] ?? [];
             }
@@ -102,12 +91,11 @@ class AnalyticsServiceTest extends TestCase
         $logger = $this->createMock(LoggerInterface::class);
 
         return new AnalyticsService(container: $container, appConfig: $appConfig, logger: $logger);
-    }//end buildService()
+    }
 
     /**
-     * Summary for the `month` window aggregates active-lead value, open
-     * requests (anything not in closed/rejected) and contactmomenten
-     * within the last 30 days.
+     * `month` aggregates active-lead value, open requests (anything not in
+     * closed/rejected) and contactmomenten within the last 30 days.
      *
      * @return void
      */
@@ -120,21 +108,21 @@ class AnalyticsServiceTest extends TestCase
             byCollection: [
                 'lead_schema' => [
                     ['status' => 'open',   'value' => 1000],
-                    ['status' => 'active', 'value' => 500.5], // legacy alias still counts.
-                    ['status' => 'won',    'value' => 999],   // not counted.
-                    ['status' => 'lost',   'value' => 42],    // not counted.
+                    ['status' => 'active', 'value' => 500.5],
+                    ['status' => 'won',    'value' => 999],
+                    ['status' => 'lost',   'value' => 42],
                 ],
                 'request_schema' => [
                     ['status' => 'new'],
                     ['status' => 'in_progress'],
-                    ['status' => 'closed'],   // closed -> excluded.
-                    ['status' => 'rejected'], // rejected -> excluded.
+                    ['status' => 'closed'],
+                    ['status' => 'rejected'],
                 ],
                 'contactmoment_schema' => [
                     ['contactedAt' => $recent],
                     ['contactedAt' => $recent],
-                    ['contactedAt' => $stale],  // outside window.
-                    ['contactedAt' => ''],      // invalid timestamp.
+                    ['contactedAt' => $stale],
+                    ['contactedAt' => ''],
                 ],
             ]
         );
@@ -146,7 +134,7 @@ class AnalyticsServiceTest extends TestCase
         $this->assertSame(2, $summary['contactmomentenCount']);
         $this->assertSame(2, $summary['activeLeads']);
         $this->assertSame('month', $summary['period']);
-    }//end testGetSummaryMonth()
+    }
 
     /**
      * `week` boundary is 7 days; contactmomenten older than that are excluded.
@@ -170,7 +158,7 @@ class AnalyticsServiceTest extends TestCase
         $summary = $service->getSummary(period: 'week');
         $this->assertSame(1, $summary['contactmomentenCount']);
         $this->assertSame('week', $summary['period']);
-    }//end testGetSummaryWeekBoundary()
+    }
 
     /**
      * `quarter` includes contactmomenten up to 90 days back.
@@ -194,10 +182,10 @@ class AnalyticsServiceTest extends TestCase
         $summary = $service->getSummary(period: 'quarter');
         $this->assertSame(1, $summary['contactmomentenCount']);
         $this->assertSame('quarter', $summary['period']);
-    }//end testGetSummaryQuarterBoundary()
+    }
 
     /**
-     * Empty-config path returns zeroes (no register/schema mapped).
+     * Empty config path returns zeroes for every KPI (no register/schema mapped).
      *
      * @return void
      */
@@ -210,11 +198,10 @@ class AnalyticsServiceTest extends TestCase
         $this->assertSame(0, $summary['openRequests']);
         $this->assertSame(0, $summary['contactmomentenCount']);
         $this->assertSame(0, $summary['activeLeads']);
-    }//end testGetSummaryReturnsZeroesWhenRegisterMissing()
+    }
 
     /**
-     * Invalid period rejects with InvalidArgumentException carrying a
-     * static error message (caller can map directly to HTTP 400).
+     * Invalid period rejects with a static error message (`Invalid period`).
      *
      * @return void
      */
@@ -225,12 +212,11 @@ class AnalyticsServiceTest extends TestCase
 
         $service = $this->buildService();
         $service->getSummary(period: 'yesterday');
-    }//end testGetSummaryRejectsInvalidPeriod()
+    }
 
     /**
-     * ObjectService throwing is wrapped in RuntimeException — the original
-     * message must NOT bubble through to the caller (controller maps to
-     * the static 500 string per ADR-004 / REQ-KB360-020 error contract).
+     * ObjectService failures wrap into a RuntimeException whose message
+     * does NOT carry the underlying text (controller maps to a static 500).
      *
      * @return void
      */
@@ -245,5 +231,5 @@ class AnalyticsServiceTest extends TestCase
             $this->assertSame('Analytics query failed', $e->getMessage());
             $this->assertStringNotContainsString('boom', $e->getMessage());
         }
-    }//end testGetSummaryWrapsObjectServiceFailure()
-}//end class
+    }
+}
