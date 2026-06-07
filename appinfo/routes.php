@@ -305,6 +305,14 @@ return [
         ['name' => 'dmn#listTables', 'url' => '/api/dmn/tables',   'verb' => 'GET'],
         ['name' => 'dmn#evaluate',   'url' => '/api/dmn/evaluate', 'verb' => 'POST'],
 
+        // Marketing — Segments (marketing-segmentation-and-blast chain member 06).
+        // Specific routes precede any wildcard {slug} routes (ADR-016).
+        ['name' => 'segment#index',         'url' => '/api/segments',                  'verb' => 'GET'],
+        ['name' => 'segment#create',        'url' => '/api/segments',                  'verb' => 'POST'],
+        ['name' => 'segment#refreshSize',   'url' => '/api/segments/{id}/size',        'verb' => 'POST'],
+        ['name' => 'segment#members',       'url' => '/api/segments/{id}/members',     'verb' => 'GET'],
+        ['name' => 'segment#show',          'url' => '/api/segments/{id}',             'verb' => 'GET'],
+
         // Marketing — Blasts (marketing-segmentation-and-blast chain member 06).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
         ['name' => 'blast#index',      'url' => '/api/blasts',                     'verb' => 'GET'],
