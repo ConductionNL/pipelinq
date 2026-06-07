@@ -45,7 +45,9 @@
 
 ## ConsentRecord seed (Task 1.5)
 
-- [ ] Add 10 ConsentRecord objects with varied lawfulBasis, consentSource, and withdrawal states (active, unsubscribe, bounce-hard, bounce-soft-x5)
+- [x] Add 10 ConsentRecord objects with varied lawfulBasis, consentSource, and withdrawal states (active, unsubscribe, bounce-hard, bounce-soft-x5)
+
+  Ten ConsentRecord seed objects spanning the full state matrix: 4 active (`withdrawnAt: null`) across `consent` / `legitimate-interest` / `contract` lawful bases, 2 withdrawn `user-unsubscribed` (tied to the two unsubscribed BlastDelivery rows), 2 withdrawn `bounce-hard` (tied to the two hard bounces), 1 withdrawn `bounce-soft-x5` (with `softBounceCount: 5`, tied to the soft-bounce delivery), and 1 active SMS record (`channel: sms`) to show consent is per-(contact, channel). `consentSource` varies across `web-form-newsletter-2026-q2`, `double-opt-in-2026-q3`, `existing-customer-2026`, `contract-clause-renewals`, `sales-call-confirm-2026-09`, and `import-legacy-2025`.
 
 ## AttributionLink seed (Task 1.6)
 

@@ -1092,6 +1092,146 @@
 				"contactId": "contact-gemeente-haarlemmermeer-schouten",
 				"email": "o.schouten@haarlemmermeer.nl",
 				"status": "queued"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "consentRecord",
+					"slug": "consent-001-active-form"
+				},
+				"contactId": "contact-gemeente-amsterdam-jansen",
+				"channel": "email",
+				"lawfulBasis": "consent",
+				"consentSource": "web-form-newsletter-2026-q2",
+				"consentedAt": "2026-04-12T10:18:00+00:00",
+				"softBounceCount": 0
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "consentRecord",
+					"slug": "consent-002-active-doi"
+				},
+				"contactId": "contact-gemeente-rotterdam-devries",
+				"channel": "email",
+				"lawfulBasis": "consent",
+				"consentSource": "double-opt-in-2026-q3",
+				"consentedAt": "2026-07-22T14:05:00+00:00",
+				"softBounceCount": 0
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "consentRecord",
+					"slug": "consent-003-active-legit-interest"
+				},
+				"contactId": "contact-gemeente-utrecht-bakker",
+				"channel": "email",
+				"lawfulBasis": "legitimate-interest",
+				"consentSource": "existing-customer-2026",
+				"consentedAt": "2026-01-15T09:00:00+00:00",
+				"softBounceCount": 1
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "consentRecord",
+					"slug": "consent-004-active-contract"
+				},
+				"contactId": "contact-gemeente-eindhoven-mulder",
+				"channel": "email",
+				"lawfulBasis": "contract",
+				"consentSource": "contract-clause-renewals",
+				"consentedAt": "2026-02-01T08:30:00+00:00",
+				"softBounceCount": 0
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "consentRecord",
+					"slug": "consent-005-withdrawn-unsubscribe"
+				},
+				"contactId": "contact-gemeente-haarlem-vandenberg",
+				"channel": "email",
+				"lawfulBasis": "consent",
+				"consentSource": "web-form-newsletter-2026-q2",
+				"consentedAt": "2026-04-12T11:00:00+00:00",
+				"withdrawnAt": "2026-10-15T12:03:14+00:00",
+				"withdrawnReason": "user-unsubscribed",
+				"softBounceCount": 0
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "consentRecord",
+					"slug": "consent-006-withdrawn-unsubscribe-2"
+				},
+				"contactId": "contact-gemeente-arnhem-jacobs",
+				"channel": "email",
+				"lawfulBasis": "consent",
+				"consentSource": "double-opt-in-2026-q3",
+				"consentedAt": "2026-07-22T14:50:00+00:00",
+				"withdrawnAt": "2026-10-15T13:45:50+00:00",
+				"withdrawnReason": "user-unsubscribed",
+				"softBounceCount": 0
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "consentRecord",
+					"slug": "consent-007-withdrawn-bounce-hard"
+				},
+				"contactId": "contact-gemeente-groningen-visser",
+				"channel": "email",
+				"lawfulBasis": "consent",
+				"consentSource": "import-legacy-2025",
+				"consentedAt": "2025-11-08T09:00:00+00:00",
+				"withdrawnAt": "2026-10-15T08:02:38+00:00",
+				"withdrawnReason": "bounce-hard",
+				"softBounceCount": 0
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "consentRecord",
+					"slug": "consent-008-withdrawn-bounce-hard-2"
+				},
+				"contactId": "contact-gemeente-almere-hendriks",
+				"channel": "email",
+				"lawfulBasis": "consent",
+				"consentSource": "web-form-newsletter-2026-q2",
+				"consentedAt": "2026-04-12T11:30:00+00:00",
+				"withdrawnAt": "2026-10-15T08:02:44+00:00",
+				"withdrawnReason": "bounce-hard",
+				"softBounceCount": 0
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "consentRecord",
+					"slug": "consent-009-withdrawn-bounce-soft-x5"
+				},
+				"contactId": "contact-gemeente-tilburg-smit",
+				"channel": "email",
+				"lawfulBasis": "consent",
+				"consentSource": "web-form-newsletter-2026-q1",
+				"consentedAt": "2026-02-19T10:00:00+00:00",
+				"withdrawnAt": "2026-10-15T08:02:41+00:00",
+				"withdrawnReason": "bounce-soft-x5",
+				"softBounceCount": 5
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "consentRecord",
+					"slug": "consent-010-active-sms"
+				},
+				"contactId": "contact-gemeente-amsterdam-jansen",
+				"channel": "sms",
+				"lawfulBasis": "consent",
+				"consentSource": "sales-call-confirm-2026-09",
+				"consentedAt": "2026-09-14T13:20:00+00:00",
+				"softBounceCount": 0
 			}
 		]
 	}
