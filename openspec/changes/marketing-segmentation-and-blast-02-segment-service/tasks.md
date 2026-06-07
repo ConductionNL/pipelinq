@@ -2,7 +2,7 @@
 
 ## SegmentService (Task 2.1 of giant)
 
-- [ ] Create `lib/Service/SegmentService.php`
+- [x] Create `lib/Service/SegmentService.php`
 - [ ] Implement `validateRules(array $rules, string $entityType): ?string` — recursive traversal; verify field exists, operator valid for type, value coercible; return null if valid
 - [ ] Field resolution via `SchemaMapService` to get Contact/Customer field definitions
 - [ ] Support operators: equals, gt, gte, lt, lte, contains, in, between per field type
