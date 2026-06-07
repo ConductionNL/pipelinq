@@ -17,7 +17,7 @@
 
 ## 1. Backend: Analytics Service and Controller
 
-- [ ] 1.1 Create `lib/Service/AnalyticsService.php`
+- [x] 1.1 Create `lib/Service/AnalyticsService.php`
   - **spec_ref**: `specs/klantbeeld-360/spec.md#REQ-KB360-020`
   - **files**: `lib/Service/AnalyticsService.php`
   - **acceptance_criteria**:
@@ -29,7 +29,7 @@
     - AND all error paths MUST log via logger and throw — never return `$e->getMessage()` to caller
   - **notes**: Add `@spec openspec/changes/klantbeeld-360/tasks.md#task-1.1` PHPDoc tag per ADR-003
 
-- [ ] 1.2 Create `lib/Controller/AnalyticsController.php`
+- [x] 1.2 Create `lib/Controller/AnalyticsController.php`
   - **spec_ref**: `specs/klantbeeld-360/spec.md#REQ-KB360-020`, `REQ-KB360-022`
   - **files**: `lib/Controller/AnalyticsController.php`
   - **acceptance_criteria**:
@@ -42,13 +42,13 @@
     - AND `#[NoAdminRequired]` MUST be applied (all authenticated users may view)
   - **notes**: Controller MUST be thin (<10 lines per action). Business logic in AnalyticsService.
 
-- [ ] 1.3 Add analytics route to `appinfo/routes.php`
+- [x] 1.3 Add analytics route to `appinfo/routes.php`
   - **files**: `appinfo/routes.php`
   - **acceptance_criteria**:
     - `GET /api/analytics/summary` MUST be registered as `analytics#summary`
     - Route MUST be placed BEFORE any wildcard `{slug}` routes
 
-- [ ] 1.4 Write PHPUnit tests for `AnalyticsService`
+- [x] 1.4 Write PHPUnit tests for `AnalyticsService`
   - **spec_ref**: ADR-008 (≥3 test methods per service)
   - **files**: `tests/Unit/Service/AnalyticsServiceTest.php`
   - **acceptance_criteria**:
