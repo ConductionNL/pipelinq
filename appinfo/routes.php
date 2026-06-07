@@ -333,6 +333,7 @@ return [
         ['name' => 'blast#send',       'url' => '/api/blasts/{id}/send',           'verb' => 'POST'],
         ['name' => 'blast#cancel',     'url' => '/api/blasts/{id}/cancel',         'verb' => 'POST'],
         ['name' => 'blast#deliveries', 'url' => '/api/blasts/{id}/deliveries',     'verb' => 'GET'],
+        ['name' => 'blast#attribution', 'url' => '/api/blasts/{id}/attribution',   'verb' => 'GET'],
         ['name' => 'blast#show',       'url' => '/api/blasts/{id}',                'verb' => 'GET'],
         ['name' => 'blast#update',     'url' => '/api/blasts/{id}',                'verb' => 'PATCH'],
 

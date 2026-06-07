@@ -218,6 +218,43 @@ class AttributionService
     }//end getBlastAttributedValue()
 
     /**
+     * Return the attribution summary for a Blast — the number of distinct
+     * attributed deals and the summed EUR `attributedValue`. Used by the
+     * Performance Dashboard Attribution tab via
+     * `GET /api/blasts/{id}/attribution` (member 08).
+     *
+     * @param string $blastId Blast UUID or slug.
+     *
+     * @return array{blastId: string, dealCount: int, attributedValue: float, currency: string}
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-08-performance-dashboard/tasks.md#performancedashboard-vue-task-3-4-of-giant
+     */
+    public function getBlastAttributionSummary(string $blastId): array
+    {
+        $rows  = $this->loadAttributionLinks(filters: ['blastId' => $blastId]);
+        $total = 0.0;
+        $deals = [];
+        foreach ($rows as $row) {
+            $raw = ($row['attributedValue'] ?? null);
+            if (is_numeric($raw) === true) {
+                $total += (float) $raw;
+            }
+
+            $dealId = (string) ($row['dealId'] ?? '');
+            if ($dealId !== '') {
+                $deals[$dealId] = true;
+            }
+        }
+
+        return [
+            'blastId'         => $blastId,
+            'dealCount'       => count($deals),
+            'attributedValue' => $total,
+            'currency'        => 'EUR',
+        ];
+    }//end getBlastAttributionSummary()
+
+    /**
      * Extract a click timestamp from a webhook event.
      *
      * @param array<string, mixed> $event Click event.
