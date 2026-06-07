@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\AttributionService;
 use OCA\Pipelinq\Service\BlastService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -50,13 +51,15 @@ class BlastController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest     $request      The request.
-     * @param BlastService $blastService Blast orchestration service.
-     * @param IUserSession $userSession  Current user session.
+     * @param IRequest           $request            The request.
+     * @param BlastService       $blastService       Blast orchestration service.
+     * @param AttributionService $attributionService Attribution roll-up service (member 04).
+     * @param IUserSession       $userSession        Current user session.
      */
     public function __construct(
         IRequest $request,
         private readonly BlastService $blastService,
+        private readonly AttributionService $attributionService,
         private readonly IUserSession $userSession,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
@@ -218,6 +221,33 @@ class BlastController extends Controller
         $envelope = $this->blastService->listDeliveriesForBlast(blastId: $id, page: $page, limit: $limit);
         return new JSONResponse($envelope);
     }//end deliveries()
+
+    /**
+     * GET /api/blasts/:id/attribution — attributed deal count + summed
+     * value (EUR) for one Blast, surfaced by the Performance Dashboard
+     * Attribution tab (member 08).
+     *
+     * @param string $id Blast UUID or slug.
+     *
+     * @return JSONResponse 200 with `{blastId, dealCount, attributedValue, currency}`, 404 on unknown Blast.
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-08-performance-dashboard/tasks.md#performancedashboard-vue-task-3-4-of-giant
+     */
+    #[NoAdminRequired]
+    public function attribution(string $id): JSONResponse
+    {
+        if ($this->requireUser() === null) {
+            return $this->unauthorized();
+        }
+
+        $blast = $this->blastService->getBlastById(blastId: $id);
+        if ($blast === null) {
+            return $this->notFound();
+        }
+
+        $summary = $this->attributionService->getBlastAttributionSummary(blastId: $id);
+        return new JSONResponse($summary);
+    }//end attribution()
 
     /**
      * Return the authenticated user id, or null when unauthenticated.
