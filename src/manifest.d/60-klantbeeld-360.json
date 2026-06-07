@@ -1,0 +1,36 @@
+{
+	"menu": [
+		{
+			"id": "Analytics",
+			"label": "Analytics",
+			"icon": "icon-category-monitoring",
+			"route": "Analytics",
+			"order": 96
+		},
+		{
+			"id": "PipelineAnalytics",
+			"label": "Pipeline Analytics",
+			"icon": "icon-category-monitoring",
+			"route": "PipelineAnalytics",
+			"order": 97
+		}
+	],
+	"pages": [
+		{
+			"id": "Analytics",
+			"route": "/analytics",
+			"type": "custom",
+			"title": "Analytics",
+			"component": "AnalyticsDashboard",
+			"config": { "register": "pipelinq" }
+		},
+		{
+			"id": "PipelineAnalytics",
+			"route": "/pipeline-analytics",
+			"type": "custom",
+			"title": "Pipeline Analytics",
+			"component": "PipelineAnalyticsView",
+			"config": { "register": "pipelinq", "schema": "lead" }
+		}
+	]
+}
