@@ -95,6 +95,13 @@ import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
 //     type:"detail" because it drives a bespoke condition-row + action-row UX). ---
 import AutomationBuilderView from './views/automations/AutomationBuilder.vue'
 
+// --- Klantbeeld 360 (lib gap: no cross-module KPI dashboard with a
+//     trailing-period filter wired to a domain-specific aggregation
+//     endpoint, and no pipeline KPI / stage-funnel page driving four
+//     bespoke ratio KPIs off lead-collection client-side aggregation). ---
+import AnalyticsDashboard from './views/analytics/AnalyticsDashboard.vue'
+import PipelineAnalyticsView from './views/pipeline/PipelineAnalyticsView.vue'
+
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
 /**
@@ -292,6 +299,20 @@ const registry = {
 		kind: 'page',
 		component: AutomationBuilderView,
 		_note: 'Visual automation-rule editor with condition-row + action-row builder; lib gap: no automation-rule editor page type.',
+	},
+
+	// --- Klantbeeld 360 — cross-module analytics dashboard. ---
+	AnalyticsDashboard: {
+		kind: 'page',
+		component: AnalyticsDashboard,
+		_note: 'Cross-module KPI dashboard (Open Pipeline Value / Open Requests / Contactmomenten / Active Leads) with a trailing-period filter; driven by a server-side aggregation endpoint so large installations are not forced to fetch full collections client-side.',
+	},
+
+	// --- Klantbeeld 360 — per-pipeline sales analytics. ---
+	PipelineAnalyticsView: {
+		kind: 'page',
+		component: PipelineAnalyticsView,
+		_note: 'Per-pipeline KPI cards (Total Pipeline Value / Win Rate / Avg Deal Size / Active Opportunities) and a horizontal stage-funnel CnChartWidget; client-side aggregation is appropriate (< 500 leads per pipeline) and gives instant updates on pipeline switch.',
 	},
 
 	// --- BI export + data-warehouse sink. ---
