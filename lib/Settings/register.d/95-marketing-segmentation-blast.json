@@ -1232,6 +1232,36 @@
 				"consentSource": "sales-call-confirm-2026-09",
 				"consentedAt": "2026-09-14T13:20:00+00:00",
 				"softBounceCount": 0
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "attributionLink",
+					"slug": "attribution-001-amsterdam-q4"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-amsterdam-jansen",
+				"dealId": "lead-gemeente-amsterdam-q4-licence",
+				"firstClickAt": "2026-10-15T09:15:08+00:00",
+				"closedWonAt": "2026-11-02T16:22:00+00:00",
+				"attributedValue": 28500.0,
+				"currency": "EUR",
+				"createdAt": "2026-11-02T16:25:00+00:00"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "attributionLink",
+					"slug": "attribution-002-rotterdam-q4"
+				},
+				"blastId": "blast-q4-gemeente-outreach-b",
+				"contactId": "contact-gemeente-rotterdam-devries",
+				"dealId": "lead-gemeente-rotterdam-q4-pilot",
+				"firstClickAt": "2026-10-15T10:03:48+00:00",
+				"closedWonAt": "2026-11-10T11:05:00+00:00",
+				"attributedValue": 14750.0,
+				"currency": "EUR",
+				"createdAt": "2026-11-10T11:08:00+00:00"
 			}
 		]
 	}

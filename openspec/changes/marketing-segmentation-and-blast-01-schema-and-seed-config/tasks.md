@@ -51,4 +51,6 @@
 
 ## AttributionLink seed (Task 1.6)
 
-- [ ] Add 2 AttributionLink objects with blastId/contactId/dealId, click-before-close timestamps, attributedValue in EUR
+- [x] Add 2 AttributionLink objects with blastId/contactId/dealId, click-before-close timestamps, attributedValue in EUR
+
+  Two AttributionLink seed objects: `attribution-001-amsterdam-q4` (variant A → 28.500 EUR licence deal, click 2026-10-15 → close 2026-11-02) and `attribution-002-rotterdam-q4` (variant B → 14.750 EUR pilot deal, click 2026-10-15 → close 2026-11-10). Both carry `firstClickAt < closedWonAt` per spec, `currency: EUR`, and link to the BlastDelivery click that opened the attribution chain on the corresponding contact + lead.
