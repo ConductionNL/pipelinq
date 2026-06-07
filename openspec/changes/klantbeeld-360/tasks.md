@@ -115,7 +115,7 @@
 
 ## 4. Frontend: Client 360° View (ClientDetail.vue Enhancements)
 
-- [ ] 4.1 Add summary statistics card to `ClientDetail.vue`
+- [x] 4.1 Add summary statistics card to `ClientDetail.vue`
   - **spec_ref**: `specs/klantbeeld-360/spec.md#REQ-KB360-001`
   - **files**: `src/views/clients/ClientDetail.vue`
   - **acceptance_criteria**:
@@ -126,7 +126,7 @@
     - AND EUR values formatted as `€ X.XXX` (Dutch locale)
     - AND zero values display `0`, not blank
 
-- [ ] 4.2 Add linked leads section to `ClientDetail.vue`
+- [x] 4.2 Add linked leads section to `ClientDetail.vue`
   - **spec_ref**: `specs/klantbeeld-360/spec.md#REQ-KB360-002`
   - **files**: `src/views/clients/ClientDetail.vue`
   - **acceptance_criteria**:
@@ -136,7 +136,7 @@
     - AND clicking a row navigates to `/leads/{uuid}`
     - GIVEN no linked leads: empty state shown, no error
 
-- [ ] 4.3 Add linked contactmomenten section to `ClientDetail.vue`
+- [x] 4.3 Add linked contactmomenten section to `ClientDetail.vue`
   - **spec_ref**: `specs/klantbeeld-360/spec.md#REQ-KB360-003`
   - **files**: `src/views/clients/ClientDetail.vue`
   - **acceptance_criteria**:
@@ -146,7 +146,7 @@
     - AND each row shows: subject, channel, contactedAt (formatted), agent UID, outcome
     - GIVEN no contactmomenten: empty state shown
 
-- [ ] 4.4 Add linked requests section to `ClientDetail.vue`
+- [x] 4.4 Add linked requests section to `ClientDetail.vue`
   - **spec_ref**: `specs/klantbeeld-360/spec.md#REQ-KB360-004`
   - **files**: `src/views/clients/ClientDetail.vue`
   - **acceptance_criteria**:
@@ -154,7 +154,7 @@
     - THEN a "Requests" `CnDetailCard` section shows up to 5 requests sorted by `requestedAt` desc
     - AND each row shows: title, status, priority, requestedAt (formatted)
 
-- [ ] 4.5 Enhance linked contacts section in `ClientDetail.vue`
+- [x] 4.5 Enhance linked contacts section in `ClientDetail.vue`
   - **spec_ref**: `specs/klantbeeld-360/spec.md#REQ-KB360-005`
   - **files**: `src/views/clients/ClientDetail.vue`
   - **acceptance_criteria**:
@@ -163,7 +163,7 @@
     - AND clicking a contact row navigates to `/contacts/{uuid}`
     - GIVEN no contacts: empty state with "Add Contact" action button
 
-- [ ] 4.6 Implement parallel loading with section-level states in `ClientDetail.vue`
+- [x] 4.6 Implement parallel loading with section-level states in `ClientDetail.vue`
   - **spec_ref**: `specs/klantbeeld-360/spec.md#REQ-KB360-006`
   - **files**: `src/views/clients/ClientDetail.vue`
   - **acceptance_criteria**:
