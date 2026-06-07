@@ -229,6 +229,7 @@ class SegmentService
                 $count++;
             }
         }
+
         return [
             'valid'         => true,
             'error'         => null,
@@ -258,6 +259,7 @@ class SegmentService
         if ($segment === null) {
             return [];
         }
+
         $rules      = $this->extractRules(segment: $segment);
         $entityType = $this->extractEntityType(segment: $segment);
         if ($rules === null || $entityType === null) {
@@ -270,11 +272,335 @@ class SegmentService
             if ($this->evaluateRules(rules: $rules, entity: $entity) !== true) {
                 continue;
             }
+
             $members[] = $this->projectMember(entity: $entity);
         }
 
         return $members;
     }//end getMembersForBlast()
+
+    /**
+     * List Segments with pagination envelope.
+     *
+     * Used by the marketing Vue views (member 07) to browse the segment
+     * library. Filtered list is server-paged so the views never load the
+     * entire register; the envelope shape mirrors `BlastService::listBlasts()`.
+     *
+     * @param int $page  1-based page number.
+     * @param int $limit Page size (clamped 1..100).
+     *
+     * @return array{data: array<int, array<string, mixed>>, pagination: array{page: int, limit: int, total: int, pages: int}}
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
+     */
+    public function listSegments(int $page, int $limit): array
+    {
+        $page  = max(1, $page);
+        $limit = min(100, max(1, $limit));
+        $all   = $this->loadEntities(schemaSlug: $this->getSegmentSchemaSlug(), filters: []);
+        $total = count($all);
+        $slice = array_slice($all, (($page - 1) * $limit), $limit);
+        return [
+            'data'       => $slice,
+            'pagination' => [
+                'page'  => $page,
+                'limit' => $limit,
+                'total' => $total,
+                'pages' => $this->computePages(total: $total, limit: $limit),
+            ],
+        ];
+    }//end listSegments()
+
+    /**
+     * Compute the page-count from a total + page-size pair.
+     *
+     * Centralised so the inline ternary stays out of the envelope
+     * builder (matches the team's "no inline IF" coding style).
+     *
+     * @param int $total Total row count.
+     * @param int $limit Page size.
+     *
+     * @return int Page count (0 when total is 0).
+     */
+    private function computePages(int $total, int $limit): int
+    {
+        if ($total <= 0 || $limit <= 0) {
+            return 0;
+        }
+
+        return (int) ceil($total / $limit);
+    }//end computePages()
+
+    /**
+     * Public accessor returning one Segment payload (or null).
+     *
+     * Returns the raw Segment with the rules tree as stored, enabling the
+     * controller to layer an `estimatedSize` field on top via
+     * `estimateSize()` — kept as two separate methods so the rule-tree
+     * fetch path is reusable without paying for the count when the
+     * caller does not need it.
+     *
+     * @param string $segmentId Segment UUID or slug.
+     *
+     * @return array<string, mixed>|null The Segment payload or null.
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
+     */
+    public function getSegmentById(string $segmentId): ?array
+    {
+        if ($segmentId === '') {
+            return null;
+        }
+
+        return $this->loadSegment(segmentId: $segmentId);
+    }//end getSegmentById()
+
+    /**
+     * Create a Segment after validating the rule tree.
+     *
+     * Runs `validateRules()` against the resolved entity-schema before
+     * touching ObjectService — an invalid tree is rejected with a
+     * generic-but-actionable error and no row is persisted. `createdBy`
+     * is set from the authenticated user id (ADR-005); the request body
+     * is never trusted for this field.
+     *
+     * @param array<string, mixed> $payload      Inbound Segment payload.
+     * @param string               $createdByUid Authenticated user id.
+     *
+     * @return array{segment?: array<string, mixed>, error?: string, estimatedSize?: int}
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
+     */
+    public function createSegment(array $payload, string $createdByUid): array
+    {
+        $name = (string) ($payload['name'] ?? '');
+        if (trim($name) === '') {
+            return ['error' => 'Invalid name'];
+        }
+
+        $entityType = strtolower((string) ($payload['entityType'] ?? ''));
+        if (in_array($entityType, ['contact', 'customer'], true) === false) {
+            return ['error' => 'Invalid entityType'];
+        }
+
+        $rules = ($payload['rules'] ?? null);
+        if (is_array($rules) === false) {
+            return ['error' => 'Invalid rules'];
+        }
+
+        $error = $this->validateRules(rules: $rules, entityType: $entityType);
+        if ($error !== null) {
+            return ['error' => 'Invalid rule tree: '.$error];
+        }
+
+        return $this->persistSegment(payload: $payload, rules: $rules, entityType: $entityType, createdByUid: $createdByUid);
+    }//end createSegment()
+
+    /**
+     * Persist a validated Segment payload and return the saved row.
+     *
+     * @param array<string, mixed> $payload      Inbound payload.
+     * @param array<string, mixed> $rules        Validated rule tree.
+     * @param string               $entityType   "contact" or "customer".
+     * @param string               $createdByUid Authenticated user id.
+     *
+     * @return array{segment?: array<string, mixed>, error?: string, estimatedSize?: int}
+     */
+    private function persistSegment(array $payload, array $rules, string $entityType, string $createdByUid): array
+    {
+        $now    = gmdate('Y-m-d\TH:i:s\Z');
+        $object = [
+            'name'        => (string) $payload['name'],
+            'description' => (string) ($payload['description'] ?? ''),
+            'rules'       => $rules,
+            'entityType'  => $entityType,
+            'createdBy'   => $createdByUid,
+            'createdAt'   => $now,
+            'updatedAt'   => $now,
+        ];
+
+        $saved = $this->saveSegmentObject(payload: $object);
+        if ($saved === null) {
+            return ['error' => 'Could not create segment'];
+        }
+
+        $estimated = 0;
+        $idForSize = $this->extractSegmentId(payload: $saved);
+        if ($idForSize !== '') {
+            $estimated = $this->estimateSize(segmentId: $idForSize);
+            $saved['estimatedSize'] = $estimated;
+        }
+
+        return ['segment' => $saved, 'estimatedSize' => $estimated];
+    }//end persistSegment()
+
+    /**
+     * Project the per-recipient list used to preview a Segment's members.
+     *
+     * Reuses `getMembersForBlast()` so the preview shape matches what the
+     * blast engine will actually consume. Capped at `$limit` rows so the
+     * controller cannot accidentally exhaust memory on a million-row
+     * segment.
+     *
+     * @param string $segmentId Segment UUID or slug.
+     * @param int    $limit     Max rows returned (clamped 1..500).
+     *
+     * @return array<int, array<string, string>> Recipient rows.
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
+     */
+    public function previewSegmentMembers(string $segmentId, int $limit=50): array
+    {
+        $limit = min(500, max(1, $limit));
+        if ($segmentId === '') {
+            return [];
+        }
+
+        $members = $this->getMembersForBlast(segmentId: $segmentId);
+        return array_slice($members, 0, $limit);
+    }//end previewSegmentMembers()
+
+    /**
+     * Recompute the Segment's `estimatedSize` and persist it.
+     *
+     * Backs the `POST /api/segments/:id/size` endpoint — used by the
+     * segment-builder to refresh the cached count after rule edits or
+     * after the underlying contact pool has changed. Returns the freshly
+     * computed value so the caller does not have to re-read.
+     *
+     * @param string $segmentId Segment UUID or slug.
+     *
+     * @return int The refreshed estimated size; 0 when the Segment is
+     *             missing or unreachable.
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
+     */
+    public function refreshSegmentSize(string $segmentId): int
+    {
+        if ($segmentId === '') {
+            return 0;
+        }
+
+        $segment = $this->loadSegment(segmentId: $segmentId);
+        if ($segment === null) {
+            return 0;
+        }
+
+        $size    = $this->estimateSize(segmentId: $segmentId);
+        $payload = $segment;
+        $payload['estimatedSize'] = $size;
+        $payload['updatedAt']     = gmdate('Y-m-d\TH:i:s\Z');
+        $this->saveSegmentObject(payload: $payload, id: $this->extractSegmentId(payload: $segment));
+        return $size;
+    }//end refreshSegmentSize()
+
+    /**
+     * Persist a Segment payload via OpenRegister ObjectService.
+     *
+     * @param array<string, mixed> $payload Segment payload.
+     * @param string|null          $id      Existing id when patching.
+     *
+     * @return array<string, mixed>|null Saved row or null on failure.
+     */
+    private function saveSegmentObject(array $payload, ?string $id=null): ?array
+    {
+        $register = $this->getRegisterSlug();
+        $schema   = $this->getSegmentSchemaSlug();
+        if ($register === '' || $schema === '') {
+            return null;
+        }
+
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
+            return null;
+        }
+
+        try {
+            $saved = $objectService->saveObject(
+                object: $payload,
+                register: $register,
+                schema: $schema,
+                uuid: $id,
+            );
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'SegmentService.saveSegmentObject: save failed',
+                ['exception' => $e->getMessage()]
+            );
+            return null;
+        }
+
+        return $this->toArray(value: $saved);
+    }//end saveSegmentObject()
+
+    /**
+     * Load every object of the supplied schema (Segment list helper).
+     *
+     * @param string               $schemaSlug Schema slug.
+     * @param array<string, mixed> $filters    Filter map.
+     *
+     * @return array<int, array<string, mixed>> Plain payloads.
+     */
+    private function loadEntities(string $schemaSlug, array $filters): array
+    {
+        $register = $this->getRegisterSlug();
+        if ($register === '' || $schemaSlug === '') {
+            return [];
+        }
+
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
+            return [];
+        }
+
+        try {
+            $rows = $objectService->findAll(
+                filters: $filters,
+                register: $register,
+                schema: $schemaSlug,
+            );
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'SegmentService.loadEntities: findAll failed',
+                ['schema' => $schemaSlug, 'exception' => $e->getMessage()]
+            );
+            return [];
+        }
+
+        $out = [];
+        foreach (($rows ?? []) as $row) {
+            $out[] = $this->toArray(value: $row);
+        }
+
+        return $out;
+    }//end loadEntities()
+
+    /**
+     * Extract the id from a Segment payload (uuid > id > slug).
+     *
+     * @param array<string, mixed> $payload Segment payload.
+     *
+     * @return string Id or empty string.
+     */
+    private function extractSegmentId(array $payload): string
+    {
+        foreach (['uuid', 'id', 'slug'] as $key) {
+            if (isset($payload[$key]) === true && is_scalar($payload[$key]) === true && (string) $payload[$key] !== '') {
+                return (string) $payload[$key];
+            }
+        }
+
+        if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
+            foreach (['uuid', 'id', 'slug'] as $key) {
+                $value = ($payload['@self'][$key] ?? null);
+                if (is_scalar($value) === true && (string) $value !== '') {
+                    return (string) $value;
+                }
+            }
+        }
+
+        return '';
+    }//end extractSegmentId()
 
     /**
      * Build the minimal member-projection row used by the blast engine.
@@ -297,6 +623,7 @@ class SegmentService
                 break;
             }
         }
+
         if ($id === '' && isset($entity['@self']) === true && is_array($entity['@self']) === true) {
             foreach (['uuid', 'id', 'slug'] as $key) {
                 if (isset($entity['@self'][$key]) === true && is_scalar($entity['@self'][$key]) === true) {
@@ -349,12 +676,13 @@ class SegmentService
     public function estimateSize(string $segmentId): int
     {
         $cache    = $this->getEstimateCache();
-        $cacheKey = 'estimate:' . $segmentId;
+        $cacheKey = 'estimate:'.$segmentId;
         if ($cache !== null) {
             $cached = $cache->get($cacheKey);
             if (is_int($cached) === true) {
                 return $cached;
             }
+
             if (is_numeric($cached) === true) {
                 return (int) $cached;
             }
@@ -364,6 +692,7 @@ class SegmentService
         if ($segment === null) {
             return 0;
         }
+
         $rules      = $this->extractRules(segment: $segment);
         $entityType = $this->extractEntityType(segment: $segment);
         if ($rules === null || $entityType === null) {
@@ -402,36 +731,45 @@ class SegmentService
             if (is_array($children) === false || $children === []) {
                 return false;
             }
+
             foreach ($children as $child) {
                 if (is_array($child) === false) {
                     return false;
                 }
+
                 if ($this->evaluateNode(node: $child, entity: $entity) === false) {
                     return false;
                 }
             }
+
             return true;
         }
+
         if ($type === 'OR') {
             $children = ($node['children'] ?? []);
             if (is_array($children) === false || $children === []) {
                 return false;
             }
+
             foreach ($children as $child) {
                 if (is_array($child) === false) {
                     continue;
                 }
+
                 if ($this->evaluateNode(node: $child, entity: $entity) === true) {
                     return true;
                 }
             }
+
             return false;
         }
+
         if ($type === 'NOT') {
             $children = ($node['children'] ?? []);
             if (is_array($children) === false || isset($children[0]) === false || is_array($children[0]) === false) {
                 return false;
             }
+
             return ($this->evaluateNode(node: $children[0], entity: $entity) === false);
         }
 
@@ -452,6 +790,7 @@ class SegmentService
         if (is_string($field) === false || $field === '') {
             return false;
         }
+
         $operator = (string) ($leaf['operator'] ?? 'equals');
         $value    = ($leaf['value'] ?? null);
         $actual   = ($entity[$field] ?? null);
@@ -482,6 +821,7 @@ class SegmentService
                 if (is_array($value) === false || count($value) !== 2) {
                     return false;
                 }
+
                 $low  = $this->compareNumeric(left: $actual, right: $value[0]);
                 $high = $this->compareNumeric(left: $actual, right: $value[1]);
                 return ($low >= 0 && $high <= 0);
@@ -491,6 +831,7 @@ class SegmentService
                 if (is_array($value) === false) {
                     return false;
                 }
+
                 foreach ($value as $candidate) {
                     if ($this->valueContains(haystack: $actual, needle: $candidate) === true) {
                         return true;
@@ -501,6 +842,7 @@ class SegmentService
                 if (is_array($value) === false) {
                     return false;
                 }
+
                 foreach ($value as $candidate) {
                     if ($this->looseEquals(left: $actual, right: $candidate) === true) {
                         return true;
@@ -511,6 +853,7 @@ class SegmentService
                 if (is_array($value) === false) {
                     return true;
                 }
+
                 foreach ($value as $candidate) {
                     if ($this->looseEquals(left: $actual, right: $candidate) === true) {
                         return false;
@@ -523,7 +866,7 @@ class SegmentService
                 return ($actual !== null);
             default:
                 return false;
-        }
+        }//end switch
     }//end evaluateLeaf()
 
     /**
@@ -539,15 +882,19 @@ class SegmentService
         if ($left === null && $right === null) {
             return true;
         }
+
         if (is_bool($left) === true || is_bool($right) === true) {
             return ((bool) $left === (bool) $right);
         }
+
         if (is_numeric($left) === true && is_numeric($right) === true) {
             return ((float) $left === (float) $right);
         }
+
         if (is_scalar($left) === true && is_scalar($right) === true) {
             return (strcasecmp((string) $left, (string) $right) === 0);
         }
+
         return ($left === $right);
     }//end looseEquals()
 
@@ -566,16 +913,20 @@ class SegmentService
             if (is_string($left) === true && is_string($right) === true) {
                 return $left <=> $right;
             }
+
             return 0;
         }
+
         $lf = (float) $left;
         $rf = (float) $right;
         if ($lf < $rf) {
             return -1;
         }
+
         if ($lf > $rf) {
             return 1;
         }
+
         return 0;
     }//end compareNumeric()
 
@@ -595,12 +946,15 @@ class SegmentService
         if ($lt === null || $rt === null) {
             return 0;
         }
+
         if ($lt < $rt) {
             return -1;
         }
+
         if ($lt > $rt) {
             return 1;
         }
+
         return 0;
     }//end compareDates()
 
@@ -617,19 +971,23 @@ class SegmentService
         if (is_int($value) === true) {
             return $value;
         }
+
         if (is_string($value) === false || $value === '') {
             return null;
         }
+
         $match = [];
         if (preg_match('/^(\d+)\s+days?(\s+ago)?$/i', $value, $match) === 1) {
             $days  = (int) $match[1];
             $stamp = (time() - ($days * 86400));
             return $stamp;
         }
+
         $parsed = strtotime($value);
         if ($parsed === false) {
             return null;
         }
+
         return $parsed;
     }//end toTimestamp()
 
@@ -646,22 +1004,27 @@ class SegmentService
         if ($haystack === null) {
             return false;
         }
+
         if (is_array($haystack) === true) {
             foreach ($haystack as $element) {
                 if ($this->looseEquals(left: $element, right: $needle) === true) {
                     return true;
                 }
             }
+
             return false;
         }
+
         if (is_scalar($haystack) === false || is_scalar($needle) === false) {
             return false;
         }
+
         $haystackStr = strtolower((string) $haystack);
         $needleStr   = strtolower((string) $needle);
         if ($needleStr === '') {
             return false;
         }
+
         return (str_contains($haystackStr, $needleStr) === true);
     }//end valueContains()
 
@@ -682,31 +1045,37 @@ class SegmentService
             if (is_array($children) === false || $children === []) {
                 return sprintf('%s: composite "%s" node requires non-empty "children".', $path, $type);
             }
+
             foreach ($children as $index => $child) {
                 if (is_array($child) === false) {
                     return sprintf('%s.children[%d]: child must be an object.', $path, $index);
                 }
+
                 $childError = $this->validateNode(
                     node: $child,
-                    path: $path . '.children[' . $index . ']',
+                    path: $path.'.children['.$index.']',
                     properties: $properties
                 );
                 if ($childError !== null) {
                     return $childError;
                 }
             }
+
             return null;
-        }
+        }//end if
+
         if ($type === 'NOT') {
             $children = ($node['children'] ?? null);
             if (is_array($children) === false || count($children) !== 1) {
                 return sprintf('%s: NOT node requires exactly one child.', $path);
             }
+
             $child = $children[0];
             if (is_array($child) === false) {
                 return sprintf('%s.children[0]: child must be an object.', $path);
             }
-            return $this->validateNode(node: $child, path: $path . '.children[0]', properties: $properties);
+
+            return $this->validateNode(node: $child, path: $path.'.children[0]', properties: $properties);
         }
 
         // Leaf predicate.
@@ -714,13 +1083,16 @@ class SegmentService
         if (is_string($field) === false || $field === '') {
             return sprintf('%s: leaf predicate requires non-empty "field".', $path);
         }
+
         if (array_key_exists($field, $properties) === false) {
             return sprintf('%s: field "%s" is not declared on the entity schema.', $path, $field);
         }
+
         $operator = ($node['operator'] ?? null);
         if (is_string($operator) === false || isset(self::OPERATOR_TYPE_MATRIX[$operator]) === false) {
             return sprintf('%s: operator "%s" is not supported.', $path, (string) $operator);
         }
+
         $fieldType    = $this->propertyType(property: $properties[$field]);
         $allowedTypes = self::OPERATOR_TYPE_MATRIX[$operator];
         if (in_array($fieldType, $allowedTypes, true) === false) {
@@ -732,12 +1104,15 @@ class SegmentService
                 $fieldType
             );
         }
+
         if ($operator === 'isNull' || $operator === 'isNotNull') {
             return null;
         }
+
         if (array_key_exists('value', $node) === false) {
             return sprintf('%s: operator "%s" requires a "value".', $path, $operator);
         }
+
         if ($this->isValueCoercible(value: $node['value'], fieldType: $fieldType, operator: $operator) === false) {
             return sprintf(
                 '%s: value for field "%s" is not coercible to type "%s".',
@@ -765,14 +1140,17 @@ class SegmentService
             if (is_array($value) === false) {
                 return false;
             }
+
             if ($operator === 'between' && count($value) !== 2) {
                 return false;
             }
+
             foreach ($value as $element) {
                 if ($this->isScalarCoercible(value: $element, fieldType: $fieldType) === false) {
                     return false;
                 }
             }
+
             return true;
         }
 
@@ -792,11 +1170,13 @@ class SegmentService
         if ($value === null) {
             return true;
         }
+
         switch ($fieldType) {
             case 'integer':
                 if (is_int($value) === true) {
                     return true;
                 }
+
                 if (is_string($value) === true && preg_match('/^-?\d+$/', $value) === 1) {
                     return true;
                 }
@@ -805,6 +1185,7 @@ class SegmentService
                 if (is_int($value) === true || is_float($value) === true) {
                     return true;
                 }
+
                 if (is_string($value) === true && is_numeric($value) === true) {
                     return true;
                 }
@@ -813,9 +1194,11 @@ class SegmentService
                 if (is_bool($value) === true) {
                     return true;
                 }
+
                 if (is_string($value) === true && in_array(strtolower($value), ['true', 'false', '0', '1'], true) === true) {
                     return true;
                 }
+
                 if (is_int($value) === true && ($value === 0 || $value === 1)) {
                     return true;
                 }
@@ -825,7 +1208,7 @@ class SegmentService
             case 'string':
             default:
                 return (is_scalar($value) === true);
-        }
+        }//end switch
     }//end isScalarCoercible()
 
     /**
@@ -844,6 +1227,7 @@ class SegmentService
                 return $upper;
             }
         }
+
         return 'LEAF';
     }//end nodeType()
 
@@ -859,6 +1243,7 @@ class SegmentService
         if (is_array($property) === true && isset($property['type']) === true && is_string($property['type']) === true) {
             return $property['type'];
         }
+
         return 'string';
     }//end propertyType()
 
@@ -909,10 +1294,12 @@ class SegmentService
         if (is_object($schema) === false || method_exists($schema, 'getProperties') === false) {
             return null;
         }
+
         $properties = $schema->getProperties();
         if (is_array($properties) === false) {
             return null;
         }
+
         return $properties;
     }//end resolveSchemaProperties()
 
@@ -937,7 +1324,7 @@ class SegmentService
         $candidateKeys = [];
         if ($entityType === 'contact') {
             $candidateKeys = ['contact_schema'];
-        } elseif ($entityType === 'customer' || $entityType === 'client') {
+        } else if ($entityType === 'customer' || $entityType === 'client') {
             $candidateKeys = ['customer_schema', 'client_schema'];
         }
 
@@ -951,9 +1338,11 @@ class SegmentService
         if ($entityType === 'contact') {
             return self::DEFAULT_CONTACT_SCHEMA_SLUG;
         }
+
         if ($entityType === 'customer' || $entityType === 'client') {
             return self::DEFAULT_CUSTOMER_SCHEMA_SLUG;
         }
+
         return '';
     }//end resolveSchemaSlug()
 
@@ -971,10 +1360,12 @@ class SegmentService
         if ($register === '' || $schema === '') {
             return null;
         }
+
         $objectService = $this->getObjectService();
         if ($objectService === null) {
             return null;
         }
+
         try {
             $entity = $objectService->find(
                 id: $segmentId,
@@ -988,6 +1379,7 @@ class SegmentService
             );
             return null;
         }
+
         return $this->toArray(value: $entity);
     }//end loadSegment()
 
@@ -1011,10 +1403,12 @@ class SegmentService
         if ($register === '' || $schema === '') {
             return [];
         }
+
         $objectService = $this->getObjectService();
         if ($objectService === null) {
             return [];
         }
+
         try {
             $rows = $objectService->findAll(
                 filters: [],
@@ -1033,6 +1427,7 @@ class SegmentService
         foreach (($rows ?? []) as $row) {
             $entities[] = $this->toArray(value: $row);
         }
+
         return $entities;
     }//end loadEntitiesForType()
 
@@ -1047,8 +1442,26 @@ class SegmentService
         if ($slug !== '') {
             return $slug;
         }
+
         return self::DEFAULT_SEGMENT_SCHEMA_SLUG;
     }//end getSegmentSchemaSlug()
+
+    /**
+     * Public accessor for the Segment schema slug.
+     *
+     * Used by BlastService (member 04 + 06) to validate that a referenced
+     * `segmentId` points at an existing Segment row before it persists a
+     * draft Blast — without forcing BlastService to re-read the same
+     * `segment_schema` app-config key.
+     *
+     * @return string Schema slug.
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+     */
+    public function getSegmentSchemaSlugPublic(): string
+    {
+        return $this->getSegmentSchemaSlug();
+    }//end getSegmentSchemaSlugPublic()
 
     /**
      * Resolve the register slug from app config.
@@ -1061,6 +1474,7 @@ class SegmentService
         if ($slug !== '') {
             return $slug;
         }
+
         return self::DEFAULT_REGISTER_SLUG;
     }//end getRegisterSlug()
 
@@ -1079,11 +1493,14 @@ class SegmentService
             if (is_array($decoded) === true) {
                 return $decoded;
             }
+
             return null;
         }
+
         if (is_array($rules) === true) {
             return $rules;
         }
+
         return null;
     }//end extractRules()
 
@@ -1100,6 +1517,7 @@ class SegmentService
         if (is_string($entityType) === true && $entityType !== '') {
             return $entityType;
         }
+
         return null;
     }//end extractEntityType()
 
@@ -1115,18 +1533,21 @@ class SegmentService
         if (is_array($value) === true) {
             return $value;
         }
+
         if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
             $serialised = $value->jsonSerialize();
             if (is_array($serialised) === true) {
                 return $serialised;
             }
         }
+
         if (is_object($value) === true && method_exists($value, 'getObject') === true) {
             $payload = $value->getObject();
             if (is_array($payload) === true) {
                 return $payload;
             }
         }
+
         return [];
     }//end toArray()
 
@@ -1145,10 +1566,12 @@ class SegmentService
         if ($configured === '' || is_numeric($configured) === false) {
             return self::DEFAULT_ESTIMATE_TTL_SECONDS;
         }
+
         $ttl = (int) $configured;
         if ($ttl < 0) {
             return self::DEFAULT_ESTIMATE_TTL_SECONDS;
         }
+
         return $ttl;
     }//end getEstimateTtl()
 
@@ -1170,6 +1593,7 @@ class SegmentService
                 ['exception' => $e->getMessage()]
             );
         }
+
         try {
             return $this->cacheFactory->createLocal('pipelinq_segment_estimate');
         } catch (Throwable $e) {

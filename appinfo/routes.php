@@ -305,6 +305,16 @@ return [
         ['name' => 'dmn#listTables', 'url' => '/api/dmn/tables',   'verb' => 'GET'],
         ['name' => 'dmn#evaluate',   'url' => '/api/dmn/evaluate', 'verb' => 'POST'],
 
+        // Marketing — Blasts (marketing-segmentation-and-blast chain member 06).
+        // Specific routes precede any wildcard {slug} routes (ADR-016).
+        ['name' => 'blast#index',      'url' => '/api/blasts',                     'verb' => 'GET'],
+        ['name' => 'blast#create',     'url' => '/api/blasts',                     'verb' => 'POST'],
+        ['name' => 'blast#send',       'url' => '/api/blasts/{id}/send',           'verb' => 'POST'],
+        ['name' => 'blast#cancel',     'url' => '/api/blasts/{id}/cancel',         'verb' => 'POST'],
+        ['name' => 'blast#deliveries', 'url' => '/api/blasts/{id}/deliveries',     'verb' => 'GET'],
+        ['name' => 'blast#show',       'url' => '/api/blasts/{id}',                'verb' => 'GET'],
+        ['name' => 'blast#update',     'url' => '/api/blasts/{id}',                'verb' => 'PATCH'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
