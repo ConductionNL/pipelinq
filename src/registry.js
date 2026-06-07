@@ -142,6 +142,18 @@ import ExpenseDetailView from './views/expenses/ExpenseDetail.vue'
 import BillingCategoryListView from './views/billingCategories/BillingCategoryList.vue'
 import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.vue'
 
+// --- Klantbeeld 360 (lib gap: no cross-module KPI dashboard with a
+//     trailing-period filter wired to a domain-specific aggregation
+//     endpoint, and no pipeline KPI / stage-funnel page driving four
+//     bespoke ratio KPIs off lead-collection client-side aggregation;
+//     ClientDetail + ContactDetail aggregate 5 cross-schema sections
+//     with per-section loading and a contact->client linking dialog,
+//     beyond what a declarative type:"detail" page can express). ---
+import AnalyticsDashboard from './views/analytics/AnalyticsDashboard.vue'
+import PipelineAnalyticsView from './views/pipeline/PipelineAnalyticsView.vue'
+import ClientDetail from './views/clients/ClientDetail.vue'
+import ContactDetail from './views/contacts/ContactDetail.vue'
+
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
 /**
@@ -430,6 +442,34 @@ const registry = {
 		kind: 'page',
 		component: WebhookListView,
 		_note: 'Webhook subscriptions list (crm-workflow-automation): proxies the OR-backed /api/webhooks endpoints and exposes a Test action via NcDialog (no window.alert).',
+	},
+
+	// --- Klantbeeld 360 — cross-module analytics dashboard. ---
+	AnalyticsDashboard: {
+		kind: 'page',
+		component: AnalyticsDashboard,
+		_note: 'Cross-module KPI dashboard (Open Pipeline Value / Open Requests / Contactmomenten / Active Leads) with a trailing-period filter; driven by a server-side aggregation endpoint so large installations are not forced to fetch full collections client-side.',
+	},
+
+	// --- Klantbeeld 360 — per-pipeline sales analytics. ---
+	PipelineAnalyticsView: {
+		kind: 'page',
+		component: PipelineAnalyticsView,
+		_note: 'Per-pipeline KPI cards (Total Pipeline Value / Win Rate / Avg Deal Size / Active Opportunities) and a horizontal stage-funnel CnChartWidget; client-side aggregation is appropriate (< 500 leads per pipeline) and gives instant updates on pipeline switch.',
+	},
+
+	// --- Klantbeeld 360 — Client 360 view. ---
+	ClientDetail: {
+		kind: 'page',
+		component: ClientDetail,
+		_note: 'Aggregates 5 cross-schema relation sections (leads / contactmomenten / requests / contacts / complaints) with per-section loading + per-section error state, summary statistics card and delete-with-link-warning dialog; declarative type:"detail" cannot express the parallel cross-schema fetches with section-isolation.',
+	},
+
+	// --- Klantbeeld 360 — Contact detail with parent-organisation card. ---
+	ContactDetail: {
+		kind: 'page',
+		component: ContactDetail,
+		_note: 'Parent Organisation card with quick-link CnFormDialog for setting contact.client; declarative type:"detail" has no way to drive a searchable client-select dialog tied to the contact save flow.',
 	},
 
 	// --- BI export + data-warehouse sink. ---

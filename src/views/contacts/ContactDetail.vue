@@ -1,3 +1,7 @@
+<!-- SPDX-License-Identifier: EUPL-1.2 -->
+<!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
+<!-- @spec openspec/changes/klantbeeld-360/tasks.md#task-5.1 -->
+<!-- @spec openspec/changes/klantbeeld-360/tasks.md#task-5.2 -->
 <template>
 	<div v-if="editing || isNew">
 		<div class="contact-detail__header">
@@ -69,6 +73,29 @@
 			</div>
 		</CnDetailCard>
 
+		<!-- Parent Organisation — REQ-KB360-030 / REQ-KB360-031 -->
+		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Parent Organisation')">
+			<div v-if="contactData.client" class="parent-org">
+				<div class="parent-org__name">
+					<a
+						href="#"
+						class="parent-org__link"
+						@click.prevent="$router.push({ name: 'ClientDetail', params: { id: contactData.client } })">
+						{{ clientName }}
+					</a>
+				</div>
+				<div class="parent-org__type">
+					{{ clientType || '-' }}
+				</div>
+			</div>
+			<div v-else class="parent-org__empty">
+				<p>{{ t('pipelinq', 'No organisation linked') }}</p>
+				<NcButton type="secondary" @click="openLinkDialog">
+					{{ t('pipelinq', 'Link to Organisation') }}
+				</NcButton>
+			</div>
+		</CnDetailCard>
+
 		<!-- Relationships -->
 		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Relationships')">
 			<ContactRelationships
@@ -85,14 +112,27 @@
 			v-if="!isNew && !loading && !editing"
 			entity-type="contact"
 			:entity-id="contactId" />
+
+		<!-- Organisation link dialog — REQ-KB360-032 -->
+		<CnFormDialog
+			v-if="showLinkDialog"
+			ref="linkDialog"
+			:dialog-title="t('pipelinq', 'Link to Organisation')"
+			:fields="linkDialogFields"
+			:confirm-label="t('pipelinq', 'Link')"
+			:cancel-label="t('pipelinq', 'Cancel')"
+			:success-text="t('pipelinq', 'Organisation linked.')"
+			name-field="client"
+			@confirm="onLinkConfirm"
+			@close="showLinkDialog = false" />
 	</CnDetailPage>
 </template>
 
 <script>
 import { NcButton } from '@nextcloud/vue'
-import { showError } from '@nextcloud/dialogs'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
+import { CnDetailPage, CnDetailCard, CnFormDialog } from '@conduction/nextcloud-vue'
 import ContactForm from './ContactForm.vue'
 import ContactRelationships from '../../components/ContactRelationships.vue'
 import CommunicationHistory from '../../components/CommunicationHistory.vue'
@@ -104,12 +144,22 @@ export default {
 		NcButton,
 		CnDetailPage,
 		CnDetailCard,
+		CnFormDialog,
 		ContactForm,
 		ContactRelationships,
 		CommunicationHistory,
 	},
 	props: {
-		contactId: {
+		/**
+		 * Route param `:id` forwarded by CnPageRenderer (manifest v2).
+		 * `contactIdProp` keeps the legacy prop name accessible without
+		 * renaming every call site that pushed `params: { id }`.
+		 */
+		id: {
+			type: String,
+			default: null,
+		},
+		contactIdProp: {
 			type: String,
 			default: null,
 		},
@@ -118,9 +168,21 @@ export default {
 		return {
 			editing: false,
 			clientName: '-',
+			clientType: '',
+			showLinkDialog: false,
+			availableClients: [],
 		}
 	},
 	computed: {
+		/**
+		 * Resolved contact UUID — prefers the renderer-forwarded `:id`
+		 * route param, then the legacy `contactIdProp`.
+		 *
+		 * @return {?string}
+		 */
+		contactId() {
+			return this.id || this.contactIdProp || null
+		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-35
 		 */
@@ -129,6 +191,26 @@ export default {
 		},
 		isNew() {
 			return !this.contactId || this.contactId === 'new'
+		},
+		/**
+		 * CnFormDialog field definition for the organisation linker.
+		 * Single async-loaded select backed by `loadClientOptions()`.
+		 *
+		 * @return {Array<object>}
+		 *
+		 * @spec openspec/changes/klantbeeld-360/specs/klantbeeld-360/spec.md#REQ-KB360-032
+		 */
+		linkDialogFields() {
+			return [
+				{
+					key: 'client',
+					label: this.t('pipelinq', 'Select organisation'),
+					description: this.t('pipelinq', 'Choose a client organisation to link this contact to.'),
+					widget: 'select',
+					required: true,
+					enum: this.loadClientOptions,
+				},
+			]
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-38
@@ -173,16 +255,104 @@ export default {
 	},
 	methods: {
 		/**
+		 * Load the linked client's display name and type for the Parent
+		 * Organisation card (REQ-KB360-030).
+		 *
+		 * @return {Promise<void>}
+		 *
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-32
+		 * @spec openspec/changes/klantbeeld-360/specs/klantbeeld-360/spec.md#REQ-KB360-030
 		 */
 		async loadClientName() {
 			const clientId = this.contactData.client
-			if (clientId) {
-				try {
-					const client = await this.objectStore.fetchObject('client', clientId)
-					this.clientName = client?.name || t('pipelinq', '[Deleted client]')
-				} catch {
-					this.clientName = t('pipelinq', '[Deleted client]')
+			if (!clientId) {
+				this.clientName = '-'
+				this.clientType = ''
+				return
+			}
+			try {
+				const client = await this.objectStore.fetchObject('client', clientId)
+				this.clientName = client?.name || this.t('pipelinq', '[Deleted client]')
+				this.clientType = client?.type || ''
+			} catch {
+				this.clientName = this.t('pipelinq', '[Deleted client]')
+				this.clientType = ''
+			}
+		},
+		/**
+		 * Open the organisation linker dialog (REQ-KB360-031).
+		 *
+		 * @return {void}
+		 */
+		openLinkDialog() {
+			this.showLinkDialog = true
+		},
+		/**
+		 * Async option loader for the CnFormDialog client select. Returns
+		 * the matching clients as label/value pairs; the schema-driven
+		 * dialog stores the chosen option in formData.
+		 *
+		 * @param {string} query Search query (free-text, may be empty).
+		 * @return {Promise<Array<{label: string, value: string}>>}
+		 *
+		 * @spec openspec/changes/klantbeeld-360/specs/klantbeeld-360/spec.md#REQ-KB360-032
+		 */
+		async loadClientOptions(query) {
+			try {
+				const params = { _limit: 50 }
+				if (query) {
+					params._search = query
+				}
+				const clients = await this.objectStore.fetchCollection('client', params) || []
+				this.availableClients = clients
+				return clients.map(c => ({
+					label: c.name || c.id,
+					value: c.id,
+				}))
+			} catch (e) {
+				// eslint-disable-next-line no-console
+				console.warn('[ContactDetail] loadClientOptions failed', e)
+				return []
+			}
+		},
+		/**
+		 * CnFormDialog confirm handler. Persists `contact.client` via the
+		 * object store and refreshes the Parent Organisation card.
+		 *
+		 * @param {object} formData Submitted form data (`{ client: {label,value} }`).
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/klantbeeld-360/specs/klantbeeld-360/spec.md#REQ-KB360-032
+		 */
+		async onLinkConfirm(formData) {
+			const selected = formData?.client
+			const clientId = selected && typeof selected === 'object' ? selected.value : selected
+			if (!clientId) {
+				if (this.$refs.linkDialog) {
+					this.$refs.linkDialog.setResult({ error: this.t('pipelinq', 'Select organisation') })
+				}
+				return
+			}
+			try {
+				const payload = { ...this.contactData, client: clientId }
+				const result = await this.objectStore.saveObject('contact', payload)
+				if (!result) {
+					throw new Error('saveObject returned falsy')
+				}
+				await this.objectStore.fetchObject('contact', this.contactId)
+				await this.loadClientName()
+				showSuccess(this.t('pipelinq', 'Organisation linked.'))
+				if (this.$refs.linkDialog) {
+					this.$refs.linkDialog.setResult({ success: true })
+				}
+				this.showLinkDialog = false
+			} catch (e) {
+				// eslint-disable-next-line no-console
+				console.warn('[ContactDetail] link save failed', e)
+				const msg = this.t('pipelinq', 'Failed to link organisation. Please try again.')
+				showError(msg)
+				if (this.$refs.linkDialog) {
+					this.$refs.linkDialog.setResult({ error: msg })
 				}
 			}
 		},
@@ -293,12 +463,46 @@ export default {
 .sync-badge {
 	display: inline-block;
 	padding: 4px 10px;
-	background: #dcfce7;
-	color: #166534;
-	border: 1px solid #86efac;
+	background: var(--color-success);
+	color: var(--color-main-background);
+	border: 1px solid var(--color-success);
 	border-radius: 12px;
 	font-size: 12px;
 	font-weight: 600;
 	margin-bottom: 16px;
+}
+
+.parent-org {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.parent-org__name {
+	font-weight: 600;
+}
+
+.parent-org__link {
+	color: var(--color-primary);
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+.parent-org__link:hover {
+	color: var(--color-primary-hover);
+}
+
+.parent-org__type {
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
+}
+
+.parent-org__empty {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 12px 0;
+	color: var(--color-text-maxcontrast);
 }
 </style>

@@ -240,8 +240,9 @@
 		{
 			"id": "ClientDetail",
 			"route": "/clients/:id",
-			"type": "detail",
+			"type": "custom",
 			"title": "Client",
+			"component": "ClientDetail",
 			"config": {
 				"register": "pipelinq",
 				"schema": "client",
@@ -426,8 +427,9 @@
 		{
 			"id": "ContactDetail",
 			"route": "/contacts/:id",
-			"type": "detail",
+			"type": "custom",
 			"title": "Contact",
+			"component": "ContactDetail",
 			"config": {
 				"register": "pipelinq",
 				"schema": "contact",
@@ -448,8 +450,9 @@
 					"stage",
 					"status",
 					"priority",
+					{ "key": "probability", "label": "Probability", "widget": "lead-probability" },
 					"value",
-					"expectedCloseDate"
+					{ "key": "expectedCloseDate", "label": "Expected close", "widget": "lead-close-date" }
 				],
 				"sidebar": {
 					"enabled": true,
