@@ -1493,7 +1493,14 @@
         "Failed to link organisation. Please try again.": "Koppelen aan organisatie is mislukt. Probeer het opnieuw.",
         "Organisation linked.": "Organisatie gekoppeld.",
         "Link": "Koppelen",
-        "Search clients": "Zoek klanten"
+        "Search clients": "Zoek klanten",
+        "No organisation linked": "Geen organisatie gekoppeld",
+        "Failed to load contacts": "Contacten konden niet worden geladen",
+        "Failed to load leads": "Leads konden niet worden geladen",
+        "Failed to load requests": "Verzoeken konden niet worden geladen",
+        "Failed to load contactmomenten": "Contactmomenten konden niet worden geladen",
+        "Failed to load complaints": "Klachten konden niet worden geladen",
+        "Requested": "Aangevraagd"
     },
     "plurals": {},
     "pluralForm": "nplurals=2; plural=(n != 1);"

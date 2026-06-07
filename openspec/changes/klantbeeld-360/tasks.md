@@ -177,7 +177,7 @@
 
 ## 5. Frontend: Contact–Organisation Linking (ContactDetail.vue)
 
-- [ ] 5.1 Add Parent Organisation card to `ContactDetail.vue`
+- [x] 5.1 Add Parent Organisation card to `ContactDetail.vue`
   - **spec_ref**: `specs/klantbeeld-360/spec.md#REQ-KB360-030`, `REQ-KB360-031`
   - **files**: `src/views/contacts/ContactDetail.vue`
   - **acceptance_criteria**:
@@ -187,7 +187,7 @@
     - GIVEN `contact.client` is null
     - THEN empty state + "Link to Organisation" button is shown (no error)
 
-- [ ] 5.2 Implement organisation linking dialog in `ContactDetail.vue`
+- [x] 5.2 Implement organisation linking dialog in `ContactDetail.vue`
   - **spec_ref**: `specs/klantbeeld-360/spec.md#REQ-KB360-032`
   - **files**: `src/views/contacts/ContactDetail.vue`
   - **acceptance_criteria**:
