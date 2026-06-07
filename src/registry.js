@@ -154,6 +154,16 @@ import PipelineAnalyticsView from './views/pipeline/PipelineAnalyticsView.vue'
 import ClientDetail from './views/clients/ClientDetail.vue'
 import ContactDetail from './views/contacts/ContactDetail.vue'
 
+// --- Marketing segmentation + blast (marketing-segmentation-and-blast 07):
+//     three-route Vue surface — list, multi-step create wizard, live monitor.
+//     The wizard embeds the missing-consent modal (own file under modals/);
+//     the monitor polls /api/blasts/:id every 2s and stops on terminal status.
+//     SegmentBuilder + SegmentRuleNode live under components/ for reuse by
+//     forthcoming SegmentEditor / dashboard surfaces (slice 08). ---
+import BlastListView from './views/blasts/BlastList.vue'
+import BlastFormView from './views/blasts/BlastForm.vue'
+import BlastMonitorView from './views/blasts/BlastMonitor.vue'
+
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
 /**
@@ -514,6 +524,23 @@ const registry = {
 		kind: 'page',
 		component: CtiEventLogView,
 		_note: 'CTI admin event-log inspector (last 30 days): platform + event-type filters, payload modal; lib gap: no audit/event-log page type that filters by platform.',
+	},
+
+	// --- Marketing blasts (marketing-segmentation-and-blast slice 07). ---
+	BlastListView: {
+		kind: 'page',
+		component: BlastListView,
+		_note: 'Blasts list (marketing-segmentation-and-blast 07): CnIndexPage with bespoke columns (name, channel, status, scheduledFor, sentAt) and a "New blast" header action routing to the multi-step wizard.',
+	},
+	BlastFormView: {
+		kind: 'page',
+		component: BlastFormView,
+		_note: 'Multi-step new-blast wizard (marketing-segmentation-and-blast 07): name → segment → template → channel → schedule → A/B split, with pre-send compliance preflight, missing-consent modal (skip / request / cancel) and email template validation. Declarative type:"form" cannot express the cross-endpoint preflight or the gated send flow.',
+	},
+	BlastMonitorView: {
+		kind: 'page',
+		component: BlastMonitorView,
+		_note: 'Live blast monitor (marketing-segmentation-and-blast 07): progress bar + ETA, totals grid (queued/sent/delivered/bounced/opened/clicked/unsubscribed/complained), reverse-chronological event timeline (last 50), cancel action while sending; polls /api/blasts/:id every 2 seconds and stops on sent/failed/cancelled.',
 	},
 }
 
