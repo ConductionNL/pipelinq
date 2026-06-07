@@ -72,6 +72,13 @@ class ComplianceService
     private const DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG = 'blastDelivery';
 
     /**
+     * Lawful-basis values that DO satisfy marketing consent gating.
+     *
+     * @var array<int, string>
+     */
+    private const LAWFUL_BASIS_ALLOWED = ['consent', 'legitimate-interest', 'contract'];
+
+    /**
      * Constructor.
      *
      * @param ContainerInterface $container      DI container (lazy OR resolve).
@@ -88,6 +95,103 @@ class ComplianceService
         private LoggerInterface $logger,
     ) {
     }//end __construct()
+
+    /**
+     * Return whether a Contact has a usable ConsentRecord on the channel.
+     *
+     * True iff a ConsentRecord exists for `(contactId, channel)` whose
+     * `lawfulBasis` is one of `consent`, `legitimate-interest`,
+     * `contract` AND whose `withdrawnAt` is empty. Any failure
+     * resolving the record returns false — the caller blocks the send.
+     *
+     * @param string $contactId Contact UUID / slug.
+     * @param string $channel   "email" or "sms".
+     *
+     * @return bool True when the channel is gated open for this contact.
+     *
+     * @spec openspec/changes/marketing-segmentation-and-blast-03-compliance-service/tasks.md#has-consent-for-channel
+     */
+    public function hasConsentForChannel(string $contactId, string $channel): bool
+    {
+        $channel = strtolower(trim($channel));
+        if ($contactId === '' || $channel === '') {
+            return false;
+        }
+
+        $record = $this->findConsentRecord(contactId: $contactId, channel: $channel);
+        if ($record === null) {
+            return false;
+        }
+
+        $lawfulBasis = strtolower(trim((string) ($record['lawfulBasis'] ?? '')));
+        if ($lawfulBasis === '' || in_array($lawfulBasis, self::LAWFUL_BASIS_ALLOWED, true) === false) {
+            return false;
+        }
+
+        $withdrawnAt = $record['withdrawnAt'] ?? null;
+        if (is_string($withdrawnAt) === true && trim($withdrawnAt) !== '') {
+            return false;
+        }
+
+        return true;
+    }//end hasConsentForChannel()
+
+    /**
+     * Look up a ConsentRecord by (contactId, channel).
+     *
+     * @param string $contactId Contact UUID / slug.
+     * @param string $channel   "email" or "sms".
+     *
+     * @return array<string, mixed>|null Record array or null.
+     */
+    private function findConsentRecord(string $contactId, string $channel): ?array
+    {
+        $register = $this->getRegisterSlug();
+        $schema   = $this->getConsentRecordSchemaSlug();
+        if ($register === '' || $schema === '') {
+            return null;
+        }
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
+            return null;
+        }
+
+        try {
+            $rows = $objectService->findAll(
+                filters: [
+                    'contactId' => $contactId,
+                    'channel'   => $channel,
+                ],
+                register: $register,
+                schema: $schema,
+            );
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'ComplianceService.findConsentRecord: findAll failed',
+                [
+                    'contactId' => $contactId,
+                    'channel'   => $channel,
+                    'exception' => $e->getMessage(),
+                ]
+            );
+            return null;
+        }
+
+        foreach (($rows ?? []) as $row) {
+            $array = $this->toArray(value: $row);
+            if ($array === []) {
+                continue;
+            }
+            // Defensive in-PHP filter — OR's filter DSL may ignore
+            // unknown keys silently, so re-check here.
+            $rowContact = (string) ($array['contactId'] ?? '');
+            $rowChannel = strtolower((string) ($array['channel'] ?? ''));
+            if ($rowContact === $contactId && $rowChannel === $channel) {
+                return $array;
+            }
+        }
+        return null;
+    }//end findConsentRecord()
 
     /**
      * Resolve the register slug from app config.
