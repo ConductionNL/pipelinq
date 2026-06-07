@@ -826,6 +826,272 @@
 				"connectorSourceId": "openconnector-sendgrid-prod",
 				"createdBy": "marketing@example.com",
 				"createdAt": "2026-10-10T15:32:00+00:00"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blastDelivery",
+					"slug": "delivery-q4-gem-001"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-amsterdam-jansen",
+				"email": "p.jansen@amsterdam.nl",
+				"status": "delivered",
+				"sentAt": "2026-10-15T08:02:18+00:00",
+				"providerId": "sg-abc123xyz001",
+				"openedAt": "2026-10-15T09:14:32+00:00",
+				"firstClickAt": "2026-10-15T09:15:08+00:00",
+				"clickedUrls": [
+					"https://pipelinq.example.nl/q4-launch?utm_campaign=blast-q4-launch&utm_source=pipelinq-blast"
+				]
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blastDelivery",
+					"slug": "delivery-q4-gem-002"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-rotterdam-devries",
+				"email": "m.devries@rotterdam.nl",
+				"status": "delivered",
+				"sentAt": "2026-10-15T08:02:19+00:00",
+				"providerId": "sg-abc123xyz002",
+				"openedAt": "2026-10-15T10:02:11+00:00",
+				"firstClickAt": "2026-10-15T10:03:48+00:00",
+				"clickedUrls": [
+					"https://pipelinq.example.nl/q4-launch?utm_campaign=blast-q4-launch&utm_source=pipelinq-blast"
+				]
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blastDelivery",
+					"slug": "delivery-q4-gem-003"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-utrecht-bakker",
+				"email": "s.bakker@utrecht.nl",
+				"status": "delivered",
+				"sentAt": "2026-10-15T08:02:20+00:00",
+				"providerId": "sg-abc123xyz003",
+				"openedAt": "2026-10-15T11:32:00+00:00",
+				"firstClickAt": null,
+				"clickedUrls": []
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blastDelivery",
+					"slug": "delivery-q4-gem-004"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-eindhoven-mulder",
+				"email": "j.mulder@eindhoven.nl",
+				"status": "delivered",
+				"sentAt": "2026-10-15T08:02:21+00:00",
+				"providerId": "sg-abc123xyz004",
+				"openedAt": "2026-10-16T07:18:55+00:00",
+				"firstClickAt": "2026-10-16T07:20:30+00:00",
+				"clickedUrls": [
+					"https://pipelinq.example.nl/q4-launch?utm_campaign=blast-q4-launch&utm_source=pipelinq-blast"
+				]
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blastDelivery",
+					"slug": "delivery-q4-gem-005"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-groningen-visser",
+				"email": "h.visser@groningen.nl",
+				"status": "bounced",
+				"sentAt": "2026-10-15T08:02:22+00:00",
+				"providerId": "sg-abc123xyz005",
+				"bouncedAt": "2026-10-15T08:02:38+00:00",
+				"bounceType": "hard"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blastDelivery",
+					"slug": "delivery-q4-gem-006"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-tilburg-smit",
+				"email": "k.smit@tilburg.nl",
+				"status": "bounced",
+				"sentAt": "2026-10-15T08:02:23+00:00",
+				"providerId": "sg-abc123xyz006",
+				"bouncedAt": "2026-10-15T08:02:41+00:00",
+				"bounceType": "soft"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blastDelivery",
+					"slug": "delivery-q4-gem-007"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-almere-hendriks",
+				"email": "l.hendriks@almere.nl",
+				"status": "bounced",
+				"sentAt": "2026-10-15T08:02:24+00:00",
+				"providerId": "sg-abc123xyz007",
+				"bouncedAt": "2026-10-15T08:02:44+00:00",
+				"bounceType": "hard"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blastDelivery",
+					"slug": "delivery-q4-gem-008"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-haarlem-vandenberg",
+				"email": "r.vandenberg@haarlem.nl",
+				"status": "unsubscribed",
+				"sentAt": "2026-10-15T08:02:25+00:00",
+				"providerId": "sg-abc123xyz008",
+				"openedAt": "2026-10-15T12:01:00+00:00",
+				"unsubscribedAt": "2026-10-15T12:03:14+00:00"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blastDelivery",
+					"slug": "delivery-q4-gem-009"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-arnhem-jacobs",
+				"email": "t.jacobs@arnhem.nl",
+				"status": "unsubscribed",
+				"sentAt": "2026-10-15T08:02:26+00:00",
+				"providerId": "sg-abc123xyz009",
+				"openedAt": "2026-10-15T13:42:08+00:00",
+				"unsubscribedAt": "2026-10-15T13:45:50+00:00"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blastDelivery",
+					"slug": "delivery-q4-gem-010"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-nijmegen-vandermeer",
+				"email": "e.vandermeer@nijmegen.nl",
+				"status": "queued"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blastDelivery",
+					"slug": "delivery-q4-gem-011"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-zwolle-prins",
+				"email": "n.prins@zwolle.nl",
+				"status": "queued"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blastDelivery",
+					"slug": "delivery-q4-gem-012"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-leiden-koster",
+				"email": "y.koster@leiden.nl",
+				"status": "queued"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blastDelivery",
+					"slug": "delivery-q4-gem-013"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-delft-meijer",
+				"email": "f.meijer@delft.nl",
+				"status": "queued"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blastDelivery",
+					"slug": "delivery-q4-gem-014"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-breda-dejong",
+				"email": "w.dejong@breda.nl",
+				"status": "queued"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blastDelivery",
+					"slug": "delivery-q4-gem-015"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-leeuwarden-postma",
+				"email": "g.postma@leeuwarden.nl",
+				"status": "queued"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blastDelivery",
+					"slug": "delivery-q4-gem-016"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-maastricht-willems",
+				"email": "d.willems@maastricht.nl",
+				"status": "queued"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blastDelivery",
+					"slug": "delivery-q4-gem-017"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-apeldoorn-vos",
+				"email": "b.vos@apeldoorn.nl",
+				"status": "queued"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blastDelivery",
+					"slug": "delivery-q4-gem-018"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-enschede-bos",
+				"email": "i.bos@enschede.nl",
+				"status": "queued"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blastDelivery",
+					"slug": "delivery-q4-gem-019"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-amersfoort-peters",
+				"email": "u.peters@amersfoort.nl",
+				"status": "queued"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "blastDelivery",
+					"slug": "delivery-q4-gem-020"
+				},
+				"blastId": "blast-q4-gemeente-outreach-a",
+				"contactId": "contact-gemeente-haarlemmermeer-schouten",
+				"email": "o.schouten@haarlemmermeer.nl",
+				"status": "queued"
 			}
 		]
 	}
