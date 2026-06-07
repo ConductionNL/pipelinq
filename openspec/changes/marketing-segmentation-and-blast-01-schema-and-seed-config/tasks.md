@@ -24,9 +24,11 @@
 
 ## CampaignTemplate seed (Task 1.2)
 
-- [ ] Add Template 1 (email) "Q4 Product Launch" with `{{unsubscribe_link}}` + physical address
-- [ ] Add Template 2 (email) "Renewal Reminder" with unsubscribe tokens
-- [ ] Add Template 3 (SMS) "Appointment Confirmation" (no footer)
+- [x] Add Template 1 (email) "Q4 Product Launch" with `{{unsubscribe_link}}` + physical address
+- [x] Add Template 2 (email) "Renewal Reminder" with unsubscribe tokens
+- [x] Add Template 3 (SMS) "Appointment Confirmation" (no footer)
+
+  Three CampaignTemplate seed objects: `template-q4-product-launch` (email) and `template-renewal-reminder` (email) both render a `{{unsubscribe_link}}` plus the Conduction B.V. physical-address block (Nieuwezijds Voorburgwal 282, 1012 RT Amsterdam) in both HTML and text bodies; `template-appointment-confirmation-sms` (sms) carries only the body text (STOP-to-unsubscribe instruction) with no footer and empty subject/senderEmail, exactly per spec. UTM parameters (`utm_campaign=blast-...&utm_source=pipelinq-blast`) are embedded in the email CTAs so member 05 (webhook ingest) has clickable URLs to attribute against.
 
 ## Blast seed (Task 1.3)
 

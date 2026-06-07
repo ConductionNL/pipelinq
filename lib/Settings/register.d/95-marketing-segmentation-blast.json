@@ -696,6 +696,78 @@
 				"createdBy": "marketing@example.com",
 				"createdAt": "2026-09-28T12:15:00+00:00",
 				"updatedAt": "2026-10-18T08:00:00+00:00"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "campaignTemplate",
+					"slug": "template-q4-product-launch"
+				},
+				"name": "Q4 Product Launch",
+				"channel": "email",
+				"subject": "Nieuw in Q4: {{product_name}} — zo werkt het voor {{organisation_name}}",
+				"bodyHtml": "<!doctype html><html lang=\"nl\"><body><p>Beste {{first_name}},</p><p>Vandaag introduceren we <strong>{{product_name}}</strong>. We hebben deze release ontworpen met klanten zoals {{organisation_name}} in gedachten.</p><p><a href=\"https://pipelinq.example.nl/q4-launch?utm_campaign=blast-q4-launch&utm_source=pipelinq-blast\">Bekijk de demo</a></p><hr><p style=\"font-size:12px;color:#666\">Conduction B.V. &middot; Nieuwezijds Voorburgwal 282, 1012 RT Amsterdam, Nederland<br>Geen interesse meer? <a href=\"{{unsubscribe_link}}\">Uitschrijven</a></p></body></html>",
+				"bodyText": "Beste {{first_name}},\n\nVandaag introduceren we {{product_name}}. We hebben deze release ontworpen met klanten zoals {{organisation_name}} in gedachten.\n\nDemo: https://pipelinq.example.nl/q4-launch?utm_campaign=blast-q4-launch&utm_source=pipelinq-blast\n\n---\nConduction B.V., Nieuwezijds Voorburgwal 282, 1012 RT Amsterdam, Nederland\nUitschrijven: {{unsubscribe_link}}",
+				"senderName": "Conduction Pipelinq",
+				"senderEmail": "marketing@pipelinq.example.nl",
+				"replyTo": "support@pipelinq.example.nl",
+				"variables": [
+					"first_name",
+					"organisation_name",
+					"product_name",
+					"unsubscribe_link"
+				],
+				"language": "nl",
+				"createdBy": "marketing@example.com",
+				"createdAt": "2026-09-20T10:00:00+00:00"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "campaignTemplate",
+					"slug": "template-renewal-reminder"
+				},
+				"name": "Renewal Reminder",
+				"channel": "email",
+				"subject": "Uw {{product_name}} contract loopt af op {{renewal_date}}",
+				"bodyHtml": "<!doctype html><html lang=\"nl\"><body><p>Beste {{first_name}},</p><p>Uw contract voor <strong>{{product_name}}</strong> loopt af op <strong>{{renewal_date}}</strong>. We willen u graag helpen met een soepele verlenging.</p><p><a href=\"https://pipelinq.example.nl/renewal/{{contract_id}}?utm_campaign=blast-renewal&utm_source=pipelinq-blast\">Bekijk uw verlengingsopties</a></p><hr><p style=\"font-size:12px;color:#666\">Conduction B.V. &middot; Nieuwezijds Voorburgwal 282, 1012 RT Amsterdam, Nederland<br><a href=\"{{unsubscribe_link}}\">Uitschrijven uit deze communicatie</a></p></body></html>",
+				"bodyText": "Beste {{first_name}},\n\nUw contract voor {{product_name}} loopt af op {{renewal_date}}. We willen u graag helpen met een soepele verlenging.\n\nVerlengingsopties: https://pipelinq.example.nl/renewal/{{contract_id}}?utm_campaign=blast-renewal&utm_source=pipelinq-blast\n\n---\nConduction B.V., Nieuwezijds Voorburgwal 282, 1012 RT Amsterdam, Nederland\nUitschrijven: {{unsubscribe_link}}",
+				"senderName": "Conduction Account Team",
+				"senderEmail": "renewals@pipelinq.example.nl",
+				"replyTo": "renewals@pipelinq.example.nl",
+				"variables": [
+					"first_name",
+					"product_name",
+					"renewal_date",
+					"contract_id",
+					"unsubscribe_link"
+				],
+				"language": "nl",
+				"createdBy": "renewals@example.com",
+				"createdAt": "2026-09-21T11:30:00+00:00"
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "campaignTemplate",
+					"slug": "template-appointment-confirmation-sms"
+				},
+				"name": "Appointment Confirmation",
+				"channel": "sms",
+				"subject": "",
+				"bodyHtml": "",
+				"bodyText": "Hallo {{first_name}}, uw afspraak bij Pipelinq is bevestigd op {{appointment_date}} om {{appointment_time}}. Reageer met STOP om af te melden.",
+				"senderName": "Pipelinq",
+				"senderEmail": "",
+				"replyTo": "",
+				"variables": [
+					"first_name",
+					"appointment_date",
+					"appointment_time"
+				],
+				"language": "nl",
+				"createdBy": "service@example.com",
+				"createdAt": "2026-09-22T09:00:00+00:00"
 			}
 		]
 	}
