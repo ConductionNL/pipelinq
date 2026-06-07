@@ -74,6 +74,18 @@ class AnalyticsService
     private const REQUEST_CLOSED_STATUSES = ['closed', 'rejected'];
 
     /**
+     * Statuses considered "active" (open) for leads.
+     *
+     * The spec wording uses `active` as the shorthand for "still in
+     * the pipeline"; the actual lead schema enum is
+     * `open|won|lost` (lib/Settings/pipelinq_register.json -> lead.status).
+     * `open` is the canonical match; we accept both for resilience.
+     *
+     * @var array<int, string>
+     */
+    private const LEAD_ACTIVE_STATUSES = ['open', 'active'];
+
+    /**
      * Constructor.
      *
      * @param ContainerInterface $container The DI container (OpenRegister lookup).
@@ -127,7 +139,7 @@ class AnalyticsService
         $activeLeads       = 0;
         foreach ($leads as $lead) {
             $status = (string) ($lead['status'] ?? '');
-            if ($status === 'active') {
+            if (in_array($status, self::LEAD_ACTIVE_STATUSES, true) === true) {
                 $activeLeads++;
                 $openPipelineValue += (float) ($lead['value'] ?? 0);
             }

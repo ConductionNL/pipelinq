@@ -144,12 +144,17 @@ export default {
 			return this.pipelines.find(p => p.id === this.selectedPipelineId) || null
 		},
 		/**
-		 * Open / active leads — those still being worked.
+		 * Open / active leads — those still being worked. The pipelinq
+		 * lead schema enum is `open|won|lost` (see
+		 * `lib/Settings/pipelinq_register.json -> lead.status`); the
+		 * spec wording says "active" as a shorthand. We accept both
+		 * values so this view works regardless of which value the
+		 * schema ships with.
 		 *
 		 * @return {Array<object>}
 		 */
 		openLeads() {
-			return this.leads.filter(l => l.status === 'active')
+			return this.leads.filter(l => l.status === 'open' || l.status === 'active')
 		},
 		/**
 		 * Leads marked as won.
