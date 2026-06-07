@@ -114,23 +114,25 @@
 
 ## 4. Pipeline Stage Product-Value Breakdown (REQ-LPL-013)
 
-- [ ] 4.1 After stage leads load in `PipelineBoard.vue`, batch-fetch all LeadProduct objects for leads in each visible stage using `objectStore.findObjects('leadProduct', { lead: stageLeadIds })`
+- [x] 4.1 After stage leads load in `PipelineBoard.vue`, batch-fetch all LeadProduct objects for leads in each visible stage using `objectStore.findObjects('leadProduct', { lead: stageLeadIds })`
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-013`
   - **files**: `src/views/pipeline/PipelineBoard.vue`
   - **acceptance_criteria**:
     - GIVEN a stage contains 3 leads each with LeadProduct line items
     - WHEN the board finishes loading
     - THEN LeadProduct data for all 3 leads MUST be fetched
+  - **Implementation**: `fetchLeadProductsForStages()` bulk-fetches `leadProduct` once after `fetchPipelineItems` and indexes the result by `lead` id; product names are resolved via a second bulk fetch of `product`.
 
-- [ ] 4.2 Compute per-stage product aggregates client-side: group LeadProduct objects by `product` UUID, sum `total`, count occurrences
+- [x] 4.2 Compute per-stage product aggregates client-side: group LeadProduct objects by `product` UUID, sum `total`, count occurrences
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-013`
   - **files**: `src/views/pipeline/PipelineBoard.vue`
   - **acceptance_criteria**:
     - GIVEN 3 line items for "OpenRegister Implementatie" at EUR 12,500 each
     - WHEN aggregated
     - THEN result MUST be: { name: "OpenRegister Implementatie", count: 3, total: 37500 }
+  - **Implementation**: `getStageBreakdown(stageName)` groups by `product` UUID, sums `total`, counts occurrences, sorts descending.
 
-- [ ] 4.3 Add a breakdown popover/tooltip to each stage column total in `PipelineBoard.vue` showing top 5 products by aggregate value, sorted descending
+- [x] 4.3 Add a breakdown popover/tooltip to each stage column total in `PipelineBoard.vue` showing top 5 products by aggregate value, sorted descending
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-013`
   - **files**: `src/views/pipeline/PipelineBoard.vue`
   - **acceptance_criteria**:
@@ -138,14 +140,16 @@
     - THEN a breakdown panel MUST appear listing products with count × and total
     - AND at most 5 products MUST be shown
     - AND if more exist, an "and X more" label MUST appear
+  - **Implementation**: stage column total is now a `<button>` toggling `expandedBreakdownStage`; popover renders top 5 entries plus an "and {count} more" row when `remaining > 0`.
 
-- [ ] 4.4 Handle the case where a stage has leads with no line items — show "No product breakdown available" in the popover
+- [x] 4.4 Handle the case where a stage has leads with no line items — show "No product breakdown available" in the popover
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-013`
   - **files**: `src/views/pipeline/PipelineBoard.vue`
   - **acceptance_criteria**:
     - GIVEN a stage has only manually-valued leads
     - WHEN the breakdown panel opens
     - THEN MUST show "No product breakdown available for this stage"
+  - **Implementation**: empty `items` array shows the "No product breakdown available for this stage" message.
 
 ---
 
