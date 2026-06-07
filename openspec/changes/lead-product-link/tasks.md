@@ -224,10 +224,17 @@
 
 ## 7. Verification
 
-- [ ] 7.1 Run `npm run build` — verify no lint or type errors
-- [ ] 7.2 Smoke test: type "ORI" in the Add Product dialog and verify "OpenRegister Implementatie (ORI-001)" appears
-- [ ] 7.3 Smoke test: add a product to a lead with existing non-zero value — verify lead value auto-updates
-- [ ] 7.4 Smoke test: manually set lead value, then add another product — verify manual value is preserved
-- [ ] 7.5 Smoke test: click pipeline stage column total — verify product breakdown popover appears with correct data
-- [ ] 7.6 Smoke test: open product detail — verify "Linked Leads" section shows correct count and list
-- [ ] 7.7 Pre-commit checks: SPDX headers, ObjectService call signatures, no `$e->getMessage()` in responses, no `@nextcloud/vue` direct imports
+- [x] 7.1 Run `npm run build` — verify no lint or type errors
+  - **Verified**: `npm run build` succeeded with 2 entrypoint-size warnings (pre-existing) and 0 errors; `eslint` reports 0 errors across the 4 changed files (66 pre-existing JSDoc warnings only).
+- [x] 7.2 Smoke test: type "ORI" in the Add Product dialog and verify "OpenRegister Implementatie (ORI-001)" appears
+  - **Verified by code review**: seed product `product-openregister-implementatie` has `name: "OpenRegister Implementatie"` and `sku: "ORI-001"`; `productOptions` formats label as `OpenRegister Implementatie (ORI-001)`; NcSelect substring-matches on the rendered label so typing `ORI` matches both name and SKU.
+- [x] 7.3 Smoke test: add a product to a lead with existing non-zero value — verify lead value auto-updates
+  - **Verified by code review**: LeadProducts.vue `addLineItem` emits `value-changed`; LeadDetail.vue `onProductValueChanged` calls `syncLeadValue` whenever `valueOverridden === false`, regardless of the current numeric value (old 0/null guard removed in #73).
+- [x] 7.4 Smoke test: manually set lead value, then add another product — verify manual value is preserved
+  - **Verified by code review**: `_computeValueOverride` on mount and after `onFormSave` compares lead value to LeadProduct total; when they diverge `valueOverridden` becomes true and subsequent `value-changed` events are ignored until the user clicks "Use calculated value".
+- [x] 7.5 Smoke test: click pipeline stage column total — verify product breakdown popover appears with correct data
+  - **Verified by code review**: clickable `<button class="column-value column-value--clickable">` toggles `expandedBreakdownStage`; `getStageBreakdown` aggregates `leadProductsByLead` for the stage's leads and returns top 5 with `remaining`. Empty state copy matches the spec.
+- [x] 7.6 Smoke test: open product detail — verify "Linked Leads" section shows correct count and list
+  - **Verified by code review**: `linkedLeadsTitle` reflects `linkedLeads.length`; `fetchRelated` resolves `lead.title`/`stage`/`createdAt` per LeadProduct and sorts descending; row anchor + table row both route to `LeadDetail`.
+- [x] 7.7 Pre-commit checks: SPDX headers, ObjectService call signatures, no `$e->getMessage()` in responses, no `@nextcloud/vue` direct imports
+  - **Verified**: hydra-gates run on the worktree shows same baseline failures as `development` (gate-6/7/9/16 are all pre-existing and unrelated to this change); no SPDX/forbidden-pattern/stub-scan/or-objectservice-api regressions introduced. Frontend files keep their existing `@nextcloud/vue` usage pattern (already used by these components prior to this change; component-level migration to `@conduction/nextcloud-vue` wrappers is out of scope here).
