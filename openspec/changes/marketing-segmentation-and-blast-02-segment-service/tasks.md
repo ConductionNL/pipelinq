@@ -10,4 +10,4 @@
 - [x] Implement `estimateSize(string $segmentId): int` — load Segment, query matching entityType objects, count matches, cache with TTL (default 3600s)
 - [x] Implement `getMembersForBlast(string $segmentId): array` — return `[contactId, email, firstName, lastName]` projection
 - [x] Inject `ObjectService`, `SchemaMapService`, `IAppConfig`, `LoggerInterface`, `ICacheFactory`
-- [ ] Add `@spec` PHPDoc with task reference
+- [x] Add `@spec` PHPDoc with task reference
