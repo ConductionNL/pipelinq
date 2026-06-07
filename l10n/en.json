@@ -1424,7 +1424,14 @@
         "Failed to link organisation. Please try again.": "Failed to link organisation. Please try again.",
         "Organisation linked.": "Organisation linked.",
         "Link": "Link",
-        "Search clients": "Search clients"
+        "Search clients": "Search clients",
+        "No organisation linked": "No organisation linked",
+        "Failed to load contacts": "Failed to load contacts",
+        "Failed to load leads": "Failed to load leads",
+        "Failed to load requests": "Failed to load requests",
+        "Failed to load contactmomenten": "Failed to load contactmomenten",
+        "Failed to load complaints": "Failed to load complaints",
+        "Requested": "Requested"
     },
     "plurals": {}
 }
