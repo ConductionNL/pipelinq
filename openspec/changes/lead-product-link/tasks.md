@@ -20,21 +20,23 @@
 
 ## 1. SKU Search (REQ-LPL-010)
 
-- [ ] 1.1 Update `productOptions` computed property in `LeadProducts.vue` to format option label as `"${product.name} (${product.sku})"` when `product.sku` is present
+- [x] 1.1 Update `productOptions` computed property in `LeadProducts.vue` to format option label as `"${product.name} (${product.sku})"` when `product.sku` is present
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-010`
   - **files**: `src/components/LeadProducts.vue`
   - **acceptance_criteria**:
     - GIVEN a product with name "Support Pakket Basis" and SKU "SUP-003"
     - WHEN the user types "SUP" in the product dropdown
     - THEN the product MUST appear in the search results
+  - **Verified**: `productOptions` formats as `${name} (${sku})` when sku is truthy.
 
-- [ ] 1.2 Verify that products without a SKU are not affected (label shows name only)
+- [x] 1.2 Verify that products without a SKU are not affected (label shows name only)
   - **spec_ref**: `specs/lead-product-link/spec.md#REQ-LPL-010`
   - **files**: `src/components/LeadProducts.vue`
   - **acceptance_criteria**:
     - GIVEN a product with no SKU
     - WHEN the options are rendered
     - THEN the label MUST show the product name only (no empty parentheses)
+  - **Verified**: ternary falls back to `p.name || p.id`, no empty parens.
 
 ---
 
