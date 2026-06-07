@@ -4,7 +4,7 @@
 
 - [x] Create `lib/Service/BlastService.php`
 - [x] Implement `sendBlast(string $blastId, bool $isDraft = false): array` — load Blast, assert draft, call ComplianceService gate, return skip summary on missing consent, else queue compliant BlastDeliveries and transition to "sending"
-- [ ] In sendBlast: if abSplitPercent set, create variant B Blast and split members deterministically via hash(contactId)
+- [x] In sendBlast: if abSplitPercent set, create variant B Blast and split members deterministically via hash(contactId)
 - [ ] Implement `dispatchBlastDeliveries(string $blastId, int $maxPerSecond = 100): int` — batch queued rows, read throttle from openconnector source, call `send-mail`, store providerId, update totals, enforce rate limit
 - [ ] Implement `createAbVariant(string $parentBlastId, array $variantData): string`
 - [ ] Implement `updateBlastTotals(string $blastId): void` — recount by status
