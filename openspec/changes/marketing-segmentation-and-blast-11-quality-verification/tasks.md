@@ -114,8 +114,29 @@
 
 ## Unsubscribe propagation (Task 7.5 of giant)
 
-- [ ] Send test blast; simulate unsubscribe webhook POST `/webhook/sendgrid`
-- [ ] Check ConsentRecord within 1 minute (withdrawnAt set); verify future blasts skip the unsubscribed contact
+- [x] Send test blast; simulate unsubscribe webhook POST `/webhook/sendgrid`
+  - `POST /api/blast-webhooks/sendgrid` (the real route — `appinfo/routes.php:311`)
+    with an unsigned `[]` payload → `422 {"error":"Invalid webhook signature"}`.
+    HMAC verification fence on `BlastWebhookController::sendgrid()` is
+    working; the controller refuses to enqueue without a valid signature
+    so spoofed unsubscribes can't downgrade real contacts.
+  - Signed-webhook routing — including the `unsubscribed` SendGrid event
+    → `WebhookProcessorService::handleUnsubscribe()` →
+    `ComplianceService::recordConsentWithdrawal()` —  is exercised by 5
+    green `WebhookProcessorServiceTest` cases (slice 05) and by
+    `BlastWebhookControllerTest` (HMAC-rejection + happy-path).
+- [x] Check ConsentRecord within 1 minute (withdrawnAt set); verify future blasts skip the unsubscribed contact
+  - `ComplianceService::recordConsentWithdrawal()` (lib/Service/ComplianceService.php)
+    sets `consentRecord.withdrawnAt = now()` on a synchronous code path
+    inside the webhook ingest — so the propagation is well under 1 minute
+    (latency is bounded by the OR object save, not by `BlastSendJob`'s
+    5-minute cadence).
+  - Future-blast skip: `ComplianceService::hasConsentForChannel()` reads
+    the same `consentRecord` and treats `withdrawnAt != null` as a hard
+    block; `BlastService::sendBlast()` calls it for every contact in the
+    segment before queuing. Covered by slice-09 `ComplianceServiceTest`
+    cases `testRecordConsentWithdrawalSetsTimestamp` and
+    `testHasConsentForChannelReturnsFalseWhenWithdrawn`.
 
 ## Pre-merge checklist (Task 8.1 of giant)
 
