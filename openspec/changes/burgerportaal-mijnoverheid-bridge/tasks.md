@@ -49,7 +49,7 @@
   - `handleWebhookSignature(Request $request): bool` — Verify Logius webhook signature per BBK 1.7
   - Unit test: mock Logius API, test success, rate-limit, auth-failure, malformed-payload cases
 
-- [ ] 2.3 Create `lib/Service/MailboxResolver.php` — Caching layer for BSN → mailbox lookups
+- [x] 2.3 Create `lib/Service/MailboxResolver.php` — Caching layer for BSN → mailbox lookups
   - `resolve(string $bsn, string $tenantId): MailboxResolution`
     - Check MailboxResolution cache: if `expiresAt > now`, return cached result
     - Otherwise, call `LogiusConnector::checkMailboxExists()`, store result in cache with `expiresAt = now + 24h`, return
@@ -57,7 +57,7 @@
     - Handle opted-out flag separately
   - Unit test: mock LogiusConnector, test cache hit/miss, TTL expiration
 
-- [ ] 2.4 Create `lib/Service/DeliveryAuditLogger.php` — Append-only audit logging
+- [x] 2.4 Create `lib/Service/DeliveryAuditLogger.php` — Append-only audit logging
   - `logQueued(string $messageId, string $payloadHash, DateTime $retentionUntil): void`
   - `logSent(string $messageId, string $logiusMessageId, string $payloadHash, DateTime $retentionUntil): void`
   - `logRead(string $messageId, string $payloadHash, DateTime $retentionUntil): void`
