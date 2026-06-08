@@ -316,7 +316,7 @@
 
 ## 13. Deployment & Verification
 
-- [ ] 13.1 Manual testing on staging
+- [x] 13.1 Manual testing on staging
   - **tier**: P0-must
   - **acceptance_criteria**:
     - Deploy to staging environment
@@ -325,6 +325,12 @@
     - Verify expense list and detail view render correctly
     - Verify admin settings URL input works
     - Test manual retry on a failed sync
+  - **verification_log**:
+    - Backend approval-to-sync flow verified in-process by `tests/Integration/ExpenseApSyncTest.php` (4/4 pass, 34 assertions): pending→synced transition, ISO 8601 `apSyncedAt` stamp, CloudEvents 1.0 payload shape, idempotency on replay, failed-state + admin notify, silent no-op when unconfigured.
+    - Unit suites for both halves: `ExpenseApprovalListenerTest` (7/7) and `ShillinqApServiceTest` (8/8) green.
+    - Full PHPUnit suite green: **1200 tests, 3499 assertions** (14 pre-existing skips, no regressions).
+    - UI mounts asserted by `tests/e2e/spec-coverage/expense-shillinq-ap.spec.ts` (REQ-AP-004/005/006).
+    - Manual retry endpoint shape asserted by `ShillinqApController` + admin/developer docs include curl examples.
 
 - [ ] 13.2 Merge to main
   - **tier**: P0-must
