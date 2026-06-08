@@ -251,7 +251,7 @@
     - Verify expense is updated with `apSyncStatus = synced` and `apSyncedAt` timestamp
     - Verify audit trail records the sync
 
-- [ ] 10.4 UI tests (manual or e2e)
+- [x] 10.4 UI tests (manual or e2e)
   - **spec_ref**: `specs/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-005, REQ-AP-006`
   - **tier**: P0-must
   - **acceptance_criteria**:
