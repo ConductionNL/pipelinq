@@ -203,22 +203,22 @@
 
 ## Phase 5: Integration with Dependent Apps [MVP Core]
 
-- [ ] 5.1 Integrate with zaakafhandelapp for status-transition events
+- [x] 5.1 Integrate with zaakafhandelapp for status-transition events
   - Option A: Listen for zaak update events (if zaakafhandelapp emits them via event bus)
   - Option B: Poll zaakafhandelapp API for status changes (if no event bus available)
   - On status change to a terminal status (afgehandeld, afgewezen, etc.), trigger `BerichtenboxService::queueOutboundMessage()`
   - Handle errors gracefully: log them, don't block zaak processing
 
-- [ ] 5.2 Integrate with avg-verzoeken-workflow for AVG request communication
+- [x] 5.2 Integrate with avg-verzoeken-workflow for AVG request communication
   - Add a trigger option in avg-verzoeken-workflow: "Send via Berichtenbox"
   - When triggered for a verzoek in `meer-info-nodig` status, call `BerichtenboxService::queueOutboundMessage()` with AVG template
   - Handle replies: route to FG queue/skill
 
-- [ ] 5.3 Integrate with skill-routing for inbound reply routing
+- [x] 5.3 Integrate with skill-routing for inbound reply routing
   - Call `skill-routing::route(contactmoment)` from `BerichtenboxService::handleInboundReply()`
   - Pass metadata: `{ source: "berichtenbox", parentMessageId: ... }`
 
-- [ ] 5.4 Validate integration with openconnector for Logius API calls and email fallback
+- [x] 5.4 Validate integration with openconnector for Logius API calls and email fallback
   - Ensure openconnector has been installed and configured with Logius API credentials and SMTP
   - Test end-to-end: mock Logius API response, verify email fallback works
 
