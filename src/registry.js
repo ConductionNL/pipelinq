@@ -655,6 +655,8 @@ const registry = {
 		kind: 'page',
 		component: ProjectActivityList,
 		_note: 'Time-entry list for one project with date/user/task/billable filters and a totals row that applies the billable inheritance chain (REQ-PTH-004 / REQ-PTH-005 / REQ-PTH-008).',
+	},
+
 	// --- StUF-ZKN/BG adapter (stuf-zkn-bg-adapter). ---
 	StufEndpointsView: {
 		kind: 'page',
