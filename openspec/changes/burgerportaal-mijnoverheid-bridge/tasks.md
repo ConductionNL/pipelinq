@@ -227,20 +227,20 @@
 ## Phase 6: Testing [MVP Quality Gate]
 
 ### Unit Tests
-- [ ] 6.1 Create `tests/Unit/Service/EncryptionServiceTest.php`
+- [x] 6.1 Create `tests/Unit/Service/EncryptionServiceTest.php`
   - Test: encrypt/decrypt round-trip
   - Test: encryption with different keys per tenant
   - Test: hash generation matches expected value
   - Test: key rotation (old key can still decrypt)
 
-- [ ] 6.2 Create `tests/Unit/Service/DutchHolidayCalendarTest.php`
+- [x] 6.2 Create `tests/Unit/Service/DutchHolidayCalendarTest.php`
   - Test: add 5 working days across a regular week (Mon-Fri)
   - Test: add 5 working days across a weekend (Fri + 5 = Wed next week)
   - Test: add 5 working days across Koningsdag (Apr 27)
   - Test: add 5 working days across Bevrijdingsdag in lustrum year (May 5)
   - Test: add 5 working days across Kerstmis (Dec 25-26)
 
-- [ ] 6.3 Create `tests/Unit/Service/LogiusConnectorTest.php`
+- [x] 6.3 Create `tests/Unit/Service/LogiusConnectorTest.php`
   - Mock Logius API endpoints
   - Test: successful message send (BBK 1.7 payload structure, signature)
   - Test: rate-limit response (HTTP 429)
@@ -248,21 +248,21 @@
   - Test: mailbox check endpoint (returns true/false)
   - Test: webhook signature verification (valid and invalid signatures)
 
-- [ ] 6.4 Create `tests/Unit/Service/MailboxResolverTest.php`
+- [x] 6.4 Create `tests/Unit/Service/MailboxResolverTest.php`
   - Mock LogiusConnector
   - Test: cache hit (no API call)
   - Test: cache miss → API call → cache store
   - Test: cache expiration (TTL exceeded, API called again)
   - Test: opted-out flag handling
 
-- [ ] 6.5 Create `tests/Unit/Service/TemplateRendererTest.php`
+- [x] 6.5 Create `tests/Unit/Service/TemplateRendererTest.php`
   - Test: valid Mustache template rendering with all variables
   - Test: template with missing variables (Mustache default: empty string)
   - Test: invalid Mustache syntax (error handling)
   - Test: XHTML strict validation (valid HTML accepted, invalid rejected)
   - Test: subject truncation to 200 chars
 
-- [ ] 6.6 Create `tests/Unit/Service/BerichtenboxServiceTest.php`
+- [x] 6.6 Create `tests/Unit/Service/BerichtenboxServiceTest.php`
   - Mock: OpenRegister ObjectService, MailboxResolver, LogiusConnector, EmailFallbackSender, DeliveryAuditLogger, TemplateRenderer
   - Test: queueOutboundMessage() creates message with encrypted BSN
   - Test: dispatchQueuedMessages() with successful send
@@ -274,21 +274,21 @@
   - Test: handleInboundReply() creates Contactmoment and routes
   - Test: cryptoShred() re-encrypts BSN
 
-- [ ] 6.7 Create `tests/Unit/Controller/BerichtenboxWebhookControllerTest.php`
+- [x] 6.7 Create `tests/Unit/Controller/BerichtenboxWebhookControllerTest.php`
   - Mock: BerichtenboxService, LogiusConnector
   - Test: readReceipt() with valid signature → 200 OK
   - Test: readReceipt() with invalid signature → 400 Bad Request
   - Test: inboundReply() with valid payload → 200 OK, contactmomentId returned
   - Test: inboundReply() with processing error → 400 Bad Request
 
-- [ ] 6.8 Create `tests/Unit/Service/DeliveryAuditLoggerTest.php`
+- [x] 6.8 Create `tests/Unit/Service/DeliveryAuditLoggerTest.php`
   - Test: logQueued() inserts immutable row
   - Test: logSent() inserts with logiusMessageId
   - Test: logRead(), logFallback(), logFailed(), logReplyReceived()
   - Verify: rows are never updated/deleted; payloadHash is consistent; retentionUntil is calculated per zaak selectielijst
 
 ### Integration Tests
-- [ ] 6.9 Create `tests/Integration/BerichtenboxIntegrationTest.php`
+- [x] 6.9 Create `tests/Integration/BerichtenboxIntegrationTest.php`
   - Set up a test database with sample zaak, contactmoment, burger, template
   - Test: end-to-end outbound message dispatch (queueOutboundMessage → dispatchQueuedMessages → Logius call)
   - Test: end-to-end inbound reply (webhook → createContactmoment → skill-routing)
@@ -301,17 +301,17 @@
     - Attachments are PDF/PNG/JPG and ≤25 MB total
     - Request is signed with PKI-overheid certificate
 
-- [ ] 6.10 Create `tests/Integration/EmailFallbackIntegrationTest.php`
+- [x] 6.10 Create `tests/Integration/EmailFallbackIntegrationTest.php`
   - Mock openconnector email source
   - Test: fallback email is sent with correct subject/body
   - Test: email includes fallback notice prepended
   - Verify: message is updated with fallbackEmail, fallbackSentAt, deliveryStatus
 
 ### Quality Gates
-- [ ] 6.11 Run PHP linting on all new PHP files
+- [x] 6.11 Run PHP linting on all new PHP files
   - `php -l lib/**/*.php tests/**/*.php`
 
-- [ ] 6.12 Run unit and integration tests
+- [x] 6.12 Run unit and integration tests
   - `./vendor/bin/phpunit tests/Unit/Service/ tests/Unit/Controller/ tests/Integration/Berichtenbox*`
   - Verify: all tests pass, coverage ≥ 80%
 
