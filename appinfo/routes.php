@@ -310,6 +310,15 @@ return [
         // appointment-booking-08-deposit-payment / REQ-APT-010.
         // openconnector hits this URL with the payment outcome.
         ['name' => 'appointmentPaymentWebhook#callback', 'url' => '/api/appointment-payment-webhook', 'verb' => 'POST'],
+
+        // Berichtenbox bridge (burgerportaal-mijnoverheid-bridge).
+        // Logius webhooks for read-receipt + inbound replies — HMAC-SHA256
+        // signature-verified (REQ-RECEIPT-005 / REQ-INBOUND-006).
+        ['name' => 'berichtenboxWebhook#readReceipt',  'url' => '/api/webhook/berichtenbox/read',  'verb' => 'POST'],
+        ['name' => 'berichtenboxWebhook#inboundReply', 'url' => '/api/webhook/berichtenbox/reply', 'verb' => 'POST'],
+        // Admin ops — retry a failed message + read aggregate stats.
+        ['name' => 'berichtenboxAdmin#retry', 'url' => '/api/admin/berichtenbox/message/{id}/retry', 'verb' => 'POST'],
+        ['name' => 'berichtenboxAdmin#stats', 'url' => '/api/admin/berichtenbox/stats',              'verb' => 'GET'],
         // Marketing — Segments (marketing-segmentation-and-blast chain member 06).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
         ['name' => 'segment#index',         'url' => '/api/segments',                  'verb' => 'GET'],
