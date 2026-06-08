@@ -1,0 +1,66 @@
+{
+    "components": {
+        "schemas": {
+            "request": {
+                "properties": {
+                    "slaStatus": {
+                        "type": "object",
+                        "description": "SLA tracking snapshot (managed by SlaEngineService — do not edit manually).",
+                        "properties": {
+                            "policyId": {"type": "string", "description": "UUID of the resolved sla_policy."},
+                            "startedAt": {"type": "string", "format": "date-time"},
+                            "pausedAt": {"type": "string", "format": "date-time", "description": "Set when timer is paused (null when running)."},
+                            "totalPausedMs": {"type": "integer", "default": 0},
+                            "targets": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "kind": {"type": "string"},
+                                        "dueAt": {"type": "string", "format": "date-time"},
+                                        "consumedPercentage": {"type": "number"},
+                                        "status": {"type": "string", "enum": ["on-track", "at-risk", "breached", "met"]},
+                                        "metAt": {"type": "string", "format": "date-time"},
+                                        "breachEventIds": {"type": "array", "items": {"type": "string"}}
+                                    }
+                                }
+                            },
+                            "currentEscalationLevel": {"type": "integer", "default": 0},
+                            "lastEvaluatedAt": {"type": "string", "format": "date-time"}
+                        }
+                    }
+                }
+            },
+            "complaint": {
+                "properties": {
+                    "slaStatus": {
+                        "type": "object",
+                        "description": "SLA tracking snapshot (managed by SlaEngineService — do not edit manually).",
+                        "properties": {
+                            "policyId": {"type": "string"},
+                            "startedAt": {"type": "string", "format": "date-time"},
+                            "pausedAt": {"type": "string", "format": "date-time"},
+                            "totalPausedMs": {"type": "integer", "default": 0},
+                            "targets": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "kind": {"type": "string"},
+                                        "dueAt": {"type": "string", "format": "date-time"},
+                                        "consumedPercentage": {"type": "number"},
+                                        "status": {"type": "string", "enum": ["on-track", "at-risk", "breached", "met"]},
+                                        "metAt": {"type": "string", "format": "date-time"},
+                                        "breachEventIds": {"type": "array", "items": {"type": "string"}}
+                                    }
+                                }
+                            },
+                            "currentEscalationLevel": {"type": "integer", "default": 0},
+                            "lastEvaluatedAt": {"type": "string", "format": "date-time"}
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
