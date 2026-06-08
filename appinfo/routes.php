@@ -205,6 +205,21 @@ return [
         // Per-staff sales report (pos-staff-pin-permissions REQ-PSP-008).
         ['name' => 'posStaffReport#staffSales', 'url' => '/api/pos/reports/staff-sales', 'verb' => 'GET'],
 
+        // POS payment provider adapter (pos-payment-provider-adapter).
+        // - /api/pos-payments/{id}/* are the per-transaction payment actions (cashier-facing).
+        // - /api/payment-providers* are the admin-only credential + connection management endpoints.
+        // - /api/pos-payment-webhook/{provider} is the public, signature-validated webhook
+        //   inbound from Mollie / CCV / Adyen / Stripe (REQ-PAY-006).
+        // Specific routes precede any wildcard {path} catch-all (ADR-016).
+        ['name' => 'posPayment#initiate', 'url' => '/api/pos-payments/{id}/initiate', 'verb' => 'POST'],
+        ['name' => 'posPayment#capture',  'url' => '/api/pos-payments/{id}/capture',  'verb' => 'POST'],
+        ['name' => 'posPayment#refund',   'url' => '/api/pos-payments/{id}/refund',   'verb' => 'POST'],
+        ['name' => 'posPayment#index',    'url' => '/api/payment-providers',          'verb' => 'GET'],
+        ['name' => 'posPayment#show',     'url' => '/api/payment-providers/{name}',   'verb' => 'GET'],
+        ['name' => 'posPayment#update',   'url' => '/api/payment-providers/{name}',   'verb' => 'PUT'],
+        ['name' => 'posPayment#test',     'url' => '/api/payment-providers/{name}/test', 'verb' => 'POST'],
+        ['name' => 'posPayment#webhook',  'url' => '/api/pos-payment-webhook/{provider}', 'verb' => 'POST'],
+
         // ---------------------------------------------------------------------
         // Customer portal (separate auth domain — ADR-005). All /portal/api/*
         // endpoints are #[PublicPage]; the portal session bearer token (not a

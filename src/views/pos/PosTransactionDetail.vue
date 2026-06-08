@@ -152,6 +152,15 @@
 			<PosTotalsPanel :lines="lines" :price-mode="priceMode" />
 		</CnDetailCard>
 
+		<CnDetailCard
+			v-if="hasPaymentInfo"
+			:title="t('pipelinq', 'Betaling')">
+			<PaymentStatusCard
+				:transaction="transaction"
+				:is-manager="canRefund"
+				@updated="onPaymentUpdated" />
+		</CnDetailCard>
+
 		<PosRefundDialog
 			v-if="showRefund"
 			:submitting="busy"
@@ -181,6 +190,7 @@ import { generateUrl } from '@nextcloud/router'
 import { CnDetailPage, CnDetailCard, CnStatusBadge } from '@conduction/nextcloud-vue'
 import PosTotalsPanel from '../../components/pos/PosTotalsPanel.vue'
 import TaxBreakdownCard from '../../components/pos/TaxBreakdownCard.vue'
+import PaymentStatusCard from '../../components/pos/PaymentStatusCard.vue'
 import PosRefundDialog from '../../modals/PosRefundDialog.vue'
 import PrintReceiptModal from '../../modals/PrintReceiptModal.vue'
 import EmailReceiptModal from '../../modals/EmailReceiptModal.vue'
@@ -204,6 +214,7 @@ export default {
 		CnStatusBadge,
 		PosTotalsPanel,
 		TaxBreakdownCard,
+		PaymentStatusCard,
 		PosRefundDialog,
 		PrintReceiptModal,
 		EmailReceiptModal,
@@ -326,6 +337,19 @@ export default {
 			return ['confirmed', 'settled', 'refunded'].includes(this.status)
 		},
 		/**
+		 * Whether the transaction has any payment metadata to display.
+		 *
+		 * @return {boolean} True when the payment card should render.
+		 *
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-009
+		 */
+		hasPaymentInfo() {
+			return !!(this.transaction.paymentProvider
+				|| this.transaction.paymentSessionId
+				|| this.transaction.paymentStatus
+				|| this.transaction.paymentMethod)
+		},
+		/**
 		 * Sidebar props (files / notes / audit trail).
 		 *
 		 * @return {object} The props.
@@ -377,6 +401,14 @@ export default {
 		 * Reload after a receipt is printed or emailed (the audit log changes).
 		 */
 		async onReceiptIssued() {
+			await this.load()
+		},
+		/**
+		 * Refresh transaction after PaymentStatusCard capture/refund completes.
+		 *
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-009
+		 */
+		async onPaymentUpdated() {
 			await this.load()
 		},
 		/**

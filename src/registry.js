@@ -124,6 +124,12 @@ import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
 import CtiSettingsView from './views/settings/CtiSettings.vue'
 import CtiEventLogView from './views/settings/CtiEventLog.vue'
 
+// --- POS pluggable payment provider adapter (pos-payment-provider-adapter):
+//     admin-only credential form for Mollie / CCV / Adyen / Stripe with
+//     encrypted-at-rest secrets and a per-provider "Verbinding testen" button.
+//     Lib gap: no payment-provider-settings page type. ---
+import PaymentSettingsForm from './views/settings/PaymentSettingsForm.vue'
+
 // --- Expense → Shillinq AP (pipelinq-expense-to-shillinq-ap): list with
 //     apSyncStatus badge column, detail with embedded Shillinq AP card
 //     (REQ-AP-005 / REQ-AP-006).
@@ -535,6 +541,13 @@ const registry = {
 		kind: 'page',
 		component: CtiEventLogView,
 		_note: 'CTI admin event-log inspector (last 30 days): platform + event-type filters, payload modal; lib gap: no audit/event-log page type that filters by platform.',
+	},
+
+	// --- POS pluggable payment provider adapter (pos-payment-provider-adapter). ---
+	PaymentSettingsForm: {
+		kind: 'page',
+		component: PaymentSettingsForm,
+		_note: 'Admin-only credential form for Mollie / CCV / Adyen / Stripe with encrypted-at-rest secrets via ICrypto and per-provider connection test. Lib gap: no payment-provider-settings page type. Renders ***SET*** for already-stored secrets so the form never leaks credentials.',
 	},
 
 	// --- Marketing blasts (marketing-segmentation-and-blast slice 07). ---
