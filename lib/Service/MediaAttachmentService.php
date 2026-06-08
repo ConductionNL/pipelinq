@@ -44,7 +44,7 @@ use Throwable;
  *   virus-scans it, and stores it under the conversation folder.
  *   Returns the saved path + metadata bundle to merge onto the
  *   message row.
- * - validateOutbound(filePath, mimeType) — pre-upload size check
+ * - prepareOutbound(filePath, mimeType) — pre-upload size check
  *   for outbound media (Meta's 100MB hard limit).
  *
  * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.7
@@ -180,7 +180,7 @@ class MediaAttachmentService
      *
      * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.7
      */
-    public function validateOutbound(string $filePath, string $mimeType): array
+    public function prepareOutbound(string $filePath, string $mimeType): array
     {
         if ($filePath === '' || file_exists($filePath) === false) {
             return ['ok' => false, 'error' => 'fileMissing'];
@@ -200,7 +200,7 @@ class MediaAttachmentService
         }
 
         return ['ok' => true, 'sizeBytes' => (int) $size];
-    }//end validateOutbound()
+    }//end prepareOutbound()
 
     /**
      * Write a binary blob under the conversation folder.
