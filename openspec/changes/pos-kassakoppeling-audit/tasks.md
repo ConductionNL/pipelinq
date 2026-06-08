@@ -46,7 +46,7 @@
 
 ## 2. Backend Cryptographic Services
 
-- [ ] 2.1 Create `KassakoppelingSignatureService.php`
+- [x] 2.1 Create `KassakoppelingSignatureService.php`
   - **spec_ref**: `REQ-AUDIT-002` / `openspec/changes/pos-kassakoppeling-audit/design.md#KassakoppelingSignatureService`
   - **files**: `pipelinq/lib/Service/KassakoppelingSignatureService.php`
   - **tier**: P0
