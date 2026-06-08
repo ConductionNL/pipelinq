@@ -12,7 +12,7 @@
 
 ## 1. Backend: Transaction Schema Extension
 
-- [ ] 1.1 Extend posTransaction schema with customer fields
+- [x] 1.1 Extend posTransaction schema with customer fields
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-002`
   - **files**: `pos/lib/Db/Transaction.php`, `pos/openregister/pipelinq_pos_register.json` (or equivalent schema definition)
   - **acceptance_criteria**:
