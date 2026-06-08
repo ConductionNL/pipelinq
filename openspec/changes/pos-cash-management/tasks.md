@@ -123,7 +123,7 @@
 
 ## 5. Frontend — CashShift List View
 
-- [ ] 5.1 Create `CashShiftList.vue` in `src/views/pos/CashShiftList.vue`
+- [x] 5.1 Create `CashShiftList.vue` in `src/views/pos/CashShiftList.vue`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-007`
   - **files**: `src/views/pos/CashShiftList.vue`
   - **acceptance_criteria**:
@@ -135,7 +135,7 @@
     - MUST link each row to the detail view
     - MUST show pagination (10 items per page)
 
-- [ ] 5.2 Create filter + search logic in `CashShiftList.vue`
+- [x] 5.2 Create filter + search logic in `CashShiftList.vue`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-007`
   - **files**: `src/views/pos/CashShiftList.vue`
   - **acceptance_criteria**:
@@ -149,7 +149,7 @@
 
 ## 6. Frontend — CashShift Detail View
 
-- [ ] 6.1 Create `CashShiftDetail.vue` in `src/views/pos/CashShiftDetail.vue`
+- [x] 6.1 Create `CashShiftDetail.vue` in `src/views/pos/CashShiftDetail.vue`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-001`, `REQ-CCM-002`, `REQ-CCM-003`
   - **files**: `src/views/pos/CashShiftDetail.vue`
   - **acceptance_criteria**:
@@ -161,7 +161,7 @@
       4. **Diff Panel** — displays calculated `expectedAmount`, `actualAmount`, `diffAmount`, `diffPercentage`, `withinTolerance`, status, approval/rejection buttons (visible when status = closed)
       5. **Notes** — editable text field
 
-- [ ] 6.2 Implement "Geld verwijderen" (Record Drop) form in `CashShiftDetail.vue`
+- [x] 6.2 Implement "Geld verwijderen" (Record Drop) form in `CashShiftDetail.vue`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-002`
   - **files**: `src/views/pos/CashShiftDetail.vue`
   - **acceptance_criteria**:
@@ -170,7 +170,7 @@
     - On success, drop is added to list and form closes
     - On error, error message is displayed
 
-- [ ] 6.3 Implement "Shift afsluiten en tellen" (Close and Count) in `CashShiftDetail.vue`
+- [x] 6.3 Implement "Shift afsluiten en tellen" (Close and Count) in `CashShiftDetail.vue`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-003`
   - **files**: `src/views/pos/CashShiftDetail.vue`
   - **acceptance_criteria**:
@@ -180,7 +180,7 @@
     - Submit calls `POST /api/v1/pos/shifts/{id}/count` with amount
     - On success, shift `status` changes to `closed`, count is displayed, and diff panel appears
 
-- [ ] 6.4 Implement variance diff panel in `CashShiftDetail.vue`
+- [x] 6.4 Implement variance diff panel in `CashShiftDetail.vue`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-004`, `REQ-CCM-005`
   - **files**: `src/views/pos/CashShiftDetail.vue`
   - **acceptance_criteria**:
@@ -203,7 +203,7 @@
 
 ## 7. Frontend — Navigation
 
-- [ ] 7.1 Add "Kassalade" menu item to POS sidebar in Pipelinq main layout
+- [x] 7.1 Add "Kassalade" menu item to POS sidebar in Pipelinq main layout
   - **spec_ref**: design.md#Frontend
   - **files**: `src/layouts/MainLayout.vue` or `src/navigation.json`
   - **acceptance_criteria**:
