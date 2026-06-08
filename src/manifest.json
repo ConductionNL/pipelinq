@@ -193,6 +193,20 @@
 			"order": 215
 		},
 		{
+			"id": "StufEndpoints",
+			"label": "StUF endpoints",
+			"icon": "icon-category-integration",
+			"route": "StufEndpoints",
+			"order": 216
+		},
+		{
+			"id": "StufAuditLog",
+			"label": "StUF audit log",
+			"icon": "icon-category-monitoring",
+			"route": "StufAuditLog",
+			"order": 217
+		},
+		{
 			"id": "FeaturesRoadmapMenu",
 			"label": "Features & roadmap",
 			"icon": "icon-toggle",
@@ -1351,6 +1365,28 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "exportRun"
+			}
+		},
+		{
+			"id": "StufEndpoints",
+			"route": "/stuf/endpoints",
+			"type": "custom",
+			"title": "StUF endpoints",
+			"component": "StufEndpointsView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "stufEndpoint"
+			}
+		},
+		{
+			"id": "StufAuditLog",
+			"route": "/stuf/audit-log",
+			"type": "custom",
+			"title": "StUF audit log",
+			"component": "StufAuditLogView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "stufMessage"
 			}
 		}
 	]
