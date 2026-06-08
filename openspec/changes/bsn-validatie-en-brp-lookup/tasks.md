@@ -318,7 +318,7 @@
 
 ## 7. Localization (i18n)
 
-- [ ] 7.1 Add Dutch translations
+- [x] 7.1 Add Dutch translations
   - **spec_ref**: `design.md#Frontend`
   - **files**: `translationfiles/nl.json` or similar
   - **acceptance_criteria**:
@@ -339,7 +339,7 @@
       - `brp.cache.indicator` = "⚡ van cache"
       - `bsn.audit.timeline_event` = "BRP-gegevens opgehaald ({reason}, {cache})"
 
-- [ ] 7.2 Add English translations
+- [x] 7.2 Add English translations
   - **spec_ref**: `design.md#Frontend`
   - **files**: `translationfiles/en.json`
   - **acceptance_criteria**:
@@ -351,7 +351,7 @@
 
 ## 8. Seed Data
 
-- [ ] 8.1 Create seed BrpLookupVerzoek objects
+- [x] 8.1 Create seed BrpLookupVerzoek objects
   - **spec_ref**: `design.md#Seed Data`
   - **files**: migration or seed fixture
   - **acceptance_criteria**:
@@ -360,7 +360,7 @@
       - Example 1: succesvol (responseStatus: "geslaagd")
       - Example 2: niet-gevonden (responseStatus: "niet-gevonden")
 
-- [ ] 8.2 Create seed BrpPersoon objects
+- [x] 8.2 Create seed BrpPersoon objects
   - **spec_ref**: `design.md#Seed Data`
   - **files**: migration or seed fixture
   - **acceptance_criteria**:
@@ -370,7 +370,7 @@
       - One with indicatieGeheim: "0" (no secret)
       - One with indicatieGeheim: "1" (geheimhouding) optional
 
-- [ ] 8.3 Create seed BsnAuditRecord objects
+- [x] 8.3 Create seed BsnAuditRecord objects
   - **spec_ref**: `design.md#Seed Data`
   - **files**: migration or seed fixture
   - **acceptance_criteria**:
@@ -379,7 +379,7 @@
       - Example 1: brp-lookup-uitgevoerd, uitkomst: "geslaagd"
       - Example 2: brp-lookup-uitgevoerd, uitkomst: "niet-gevonden"
 
-- [ ] 8.4 Create seed OptOutVlag object
+- [x] 8.4 Create seed OptOutVlag object
   - **spec_ref**: `design.md#Seed Data`
   - **files**: migration or seed fixture
   - **acceptance_criteria**:
