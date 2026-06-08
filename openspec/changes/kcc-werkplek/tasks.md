@@ -32,13 +32,13 @@
 
 ## 3. Frontend Components
 
-- [ ] 3.1 Create `src/components/werkplek/WerkplekAgentStatus.vue`:
+- [x] 3.1 Create `src/components/werkplek/WerkplekAgentStatus.vue`:
   - Toggle button: "Beschikbaar" (green) / "Niet beschikbaar" (grey) based on `isAvailable` prop
   - On toggle → `await axios.put(generateUrl('/apps/pipelinq/api/kcc-werkplek/availability'), { isAvailable })`
   - Wrap in `try/catch` with NcDialog error feedback on failure; revert toggle on error
   - SPDX header; all strings via `this.t('pipelinq', ...)`
 
-- [ ] 3.2 Create `src/components/werkplek/WerkplekInbox.vue`:
+- [x] 3.2 Create `src/components/werkplek/WerkplekInbox.vue`:
   - Two sections: "Verzoeken" (requests) and "Taken" (tasks)
   - Use `CnDataTable` for each section; sort by priority descending
   - Highlight overdue tasks (deadline < now) with red text via NL Design token `var(--color-error)`
@@ -46,7 +46,7 @@
   - Show `CnEmptyState` with "Geen openstaande items" when both sections are empty
   - SPDX header; all strings translated
 
-- [ ] 3.3 Create `src/components/werkplek/WerkplekContactmomentPanel.vue`:
+- [x] 3.3 Create `src/components/werkplek/WerkplekContactmomentPanel.vue`:
   - Channel NcSelect (options: telefoon, email, balie, chat, post, social)
   - Show `CallTimer.vue` only when channel = telefoon; auto-populate duration on timer stop
   - Client search autocomplete: query `ObjectService.findObjects('request', 'client', { _search: term })`
@@ -57,7 +57,7 @@
   - Every `await store.action()` wrapped in `try/catch` with user-facing feedback
   - SPDX header; all strings translated
 
-- [ ] 3.4 Create `src/components/werkplek/WerkplekKennisSearch.vue`:
+- [x] 3.4 Create `src/components/werkplek/WerkplekKennisSearch.vue`:
   - Debounced search field (300ms, min 2 chars) — use `setTimeout`/`clearTimeout` pattern
   - Query `createObjectStore('kennisartikel')` with `_search=term&status=gepubliceerd`
   - Results list: title + summary snippet (150 char truncation) + category badges
