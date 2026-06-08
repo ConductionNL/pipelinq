@@ -596,9 +596,9 @@
 
 ## 12. Documentation and Verification
 
-- [ ] 12.1 Update user-facing docs (docs/ directory) — DEFERRED: requires a running app for screenshots (Hydra verify stage). Code complete.
+- [x] 12.1 Update user-facing docs (docs/ directory)
   - **spec_ref**: ADR-009
-  - **files**: `docs/forecast.md` (new)
+  - **files**: `docs/Features/forecast.md` (new)
   - **acceptance_criteria**:
     - GIVEN the feature is complete
     - THEN a user-facing doc MUST exist explaining:
