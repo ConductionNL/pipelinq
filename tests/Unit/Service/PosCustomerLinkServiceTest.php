@@ -179,6 +179,32 @@ class PosCustomerLinkServiceTest extends TestCase
     }//end testOnAccountRequiresCustomer()
 
     /**
+     * assertOnAccountHasCustomer respects the admin toggle: when
+     * requireCustomerForOnAccount is 'false', missing customer is allowed.
+     *
+     * @return void
+     */
+    public function testOnAccountInvariantDisabledByAdminToggle(): void
+    {
+        $this->appConfig->method('getValueString')
+            ->willReturnCallback(static function (string $app, string $key, string $default = '') {
+                if ($key === 'requireCustomerForOnAccount') {
+                    return 'false';
+                }
+
+                return $default;
+            });
+
+        // Should NOT throw.
+        $this->service->assertOnAccountHasCustomer([
+            'tenderType' => 'onAccount',
+            'customer'   => '',
+        ]);
+
+        $this->addToAssertionCount(1);
+    }//end testOnAccountInvariantDisabledByAdminToggle()
+
+    /**
      * assertOnAccountHasCustomer is a no-op when the customer is set or the
      * tender is not on-account.
      *
