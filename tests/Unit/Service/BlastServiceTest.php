@@ -416,4 +416,390 @@ class BlastServiceTest extends TestCase
         $this->assertSame('blast-parent', $child['abVariantOf']);
         $this->assertStringContainsString('Variant B', $child['name']);
     }//end testCreateAbVariantClonesParent()
+
+    /**
+     * createAbVariant honours an override template id, name, and suffix
+     * supplied via the variantData payload — the child blast carries the
+     * overrides verbatim.
+     *
+     * @return void
+     */
+    public function testCreateAbVariantHonoursOverrides(): void
+    {
+        $this->objectService->store['blast-parent2'] = [
+            'uuid'              => 'blast-parent2',
+            'name'              => 'Q4 Gemeente',
+            'segmentId'         => 'seg-1',
+            'templateId'        => 'tmpl-1',
+            'channel'           => 'email',
+            'connectorSourceId' => 'oc-source-1',
+        ];
+        $childId = $this->service->createAbVariant(
+            'blast-parent2',
+            ['templateId' => 'tmpl-2', 'name' => 'Q4 Gemeente — Variant B (override)'],
+        );
+        $this->assertNotSame('', $childId);
+
+        $child = end($this->objectService->saved);
+        $this->assertSame('tmpl-2', $child['templateId']);
+        $this->assertSame('Q4 Gemeente — Variant B (override)', $child['name']);
+        $this->assertSame('blast-parent2', $child['abVariantOf']);
+    }//end testCreateAbVariantHonoursOverrides()
+
+    /**
+     * Slice 09 — sendBlast with a wired ComplianceService queues compliant
+     * BlastDeliveries and skips non-compliant ones; the Blast transitions
+     * draft → sending.
+     *
+     * @return void
+     */
+    public function testSendBlastQueuesCompliantSkipsNonCompliant(): void
+    {
+        $blast = [
+            'uuid'      => 'blast-q4',
+            'name'      => 'Q4 Outreach',
+            'segmentId' => 'seg-q4',
+            'templateId'=> 'tmpl-q4',
+            'channel'   => 'email',
+            'status'    => 'draft',
+        ];
+        $this->objectService->store['blast-q4'] = $blast;
+
+        $this->segmentService->method('getMembersForBlast')->willReturn([
+            ['contactId' => 'c-yes', 'email' => 'yes@example.test'],
+            ['contactId' => 'c-no',  'email' => 'no@example.test'],
+        ]);
+
+        // Wire a ComplianceService stub via the container — c-no is in
+        // the missingConsent list, c-yes passes.
+        $compliance = new class {
+            public function checkSegmentCompliance(string $segmentId, string $channel): array
+            {
+                return [
+                    'compliant'      => false,
+                    'missingConsent' => ['c-no'],
+                    'missingCount'   => 1,
+                ];
+            }
+        };
+        $objectService = $this->objectService;
+        $this->container = $this->createMock(ContainerInterface::class);
+        $this->container->method('get')->willReturnCallback(
+            function (string $id) use ($compliance, $objectService) {
+                if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
+                    return $objectService;
+                }
+                if ($id === 'OCA\\Pipelinq\\Service\\ComplianceService') {
+                    return $compliance;
+                }
+                throw new \RuntimeException('not registered: ' . $id);
+            }
+        );
+        $this->service = new BlastService(
+            $this->container,
+            $this->appConfig,
+            $this->segmentService,
+            $this->logger,
+        );
+
+        $summary = $this->service->sendBlast('blast-q4', false);
+
+        $this->assertSame('queued', $summary['status']);
+        $this->assertSame(1, $summary['queued']);
+        $this->assertSame(1, $summary['skippedNoConsent']);
+        $this->assertSame(1, $summary['variantA']);
+        $this->assertSame(0, $summary['variantB']);
+
+        // The one queued delivery row carries the compliant contact id.
+        $deliveryRows = array_filter(
+            $this->objectService->saved,
+            fn (array $row) => ($row['status'] ?? null) === 'queued',
+        );
+        $this->assertCount(1, $deliveryRows);
+        $deliveryRow = array_values($deliveryRows)[0];
+        $this->assertSame('c-yes', $deliveryRow['contactId']);
+
+        // Blast transitioned to sending.
+        $blastSaves = array_filter(
+            $this->objectService->saved,
+            fn (array $row) => ($row['uuid'] ?? null) === 'blast-q4',
+        );
+        $finalBlast = end($blastSaves);
+        $this->assertSame('sending', $finalBlast['status']);
+    }//end testSendBlastQueuesCompliantSkipsNonCompliant()
+
+    /**
+     * Slice 09 — sendBlast with abSplitPercent set on the parent creates
+     * the variant-B child Blast and persists deliveries against both
+     * blasts.
+     *
+     * @return void
+     */
+    public function testSendBlastCreatesVariantChildOnAbSplit(): void
+    {
+        $blast = [
+            'uuid'           => 'blast-ab',
+            'name'           => 'A/B Trial',
+            'segmentId'      => 'seg-ab',
+            'templateId'     => 'tmpl-ab',
+            'channel'        => 'email',
+            'status'         => 'draft',
+            'abSplitPercent' => 50,
+        ];
+        $this->objectService->store['blast-ab'] = $blast;
+
+        // 6 deterministic contact ids — at 50% some land in A, some in B.
+        $members = [];
+        for ($i = 1; $i <= 6; $i++) {
+            $members[] = ['contactId' => 'ab-' . $i, 'email' => 'ab' . $i . '@example.test'];
+        }
+        $this->segmentService->method('getMembersForBlast')->willReturn($members);
+
+        $compliance = new class {
+            public function checkSegmentCompliance(string $segmentId, string $channel): array
+            {
+                return ['compliant' => true, 'missingConsent' => [], 'missingCount' => 0];
+            }
+        };
+        $objectService = $this->objectService;
+        $this->container = $this->createMock(ContainerInterface::class);
+        $this->container->method('get')->willReturnCallback(
+            function (string $id) use ($compliance, $objectService) {
+                if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
+                    return $objectService;
+                }
+                if ($id === 'OCA\\Pipelinq\\Service\\ComplianceService') {
+                    return $compliance;
+                }
+                throw new \RuntimeException('not registered: ' . $id);
+            }
+        );
+        $this->service = new BlastService(
+            $this->container,
+            $this->appConfig,
+            $this->segmentService,
+            $this->logger,
+        );
+
+        $summary = $this->service->sendBlast('blast-ab', false);
+
+        $this->assertSame('queued', $summary['status']);
+        $this->assertSame(6, $summary['queued']);
+        $this->assertNotNull($summary['variantBlastId']);
+        $this->assertGreaterThan(0, $summary['variantA']);
+        $this->assertGreaterThan(0, $summary['variantB']);
+
+        // Variant child Blast was created with abVariantOf = parent id.
+        $variantId   = $summary['variantBlastId'];
+        $variantRow  = array_values(array_filter(
+            $this->objectService->saved,
+            fn (array $row) => ($row['uuid'] ?? null) === $variantId && isset($row['abVariantOf']),
+        ));
+        $this->assertNotEmpty($variantRow);
+        $this->assertSame('blast-ab', $variantRow[0]['abVariantOf']);
+    }//end testSendBlastCreatesVariantChildOnAbSplit()
+
+    /**
+     * Slice 09 — dispatchBlastDeliveries calls openconnector's send-mail
+     * action exactly once per queued delivery, flips each row to `sent`
+     * with a providerId, and respects the rate-limit (source value < caller
+     * → throttle helper invoked at least once between batches).
+     *
+     * @return void
+     */
+    public function testDispatchBlastDeliveriesCallsOpenconnectorAndRespectsRateLimit(): void
+    {
+        $blast = [
+            'uuid'              => 'blast-dispatch',
+            'segmentId'         => 'seg-d',
+            'templateId'        => 'tmpl-d',
+            'channel'           => 'email',
+            'status'            => 'sending',
+            'connectorSourceId' => 'oc-source-x',
+        ];
+        $template = [
+            'uuid'        => 'tmpl-d',
+            'subject'     => 'Hi {{contactId}}',
+            'bodyHtml'    => '<p>{{email}}</p>',
+            'bodyText'    => 'Hello {{email}}',
+            'senderName'  => 'Pipelinq',
+            'senderEmail' => 'pipelinq@example.test',
+        ];
+        $this->objectService->store['blast-dispatch'] = $blast;
+        $this->objectService->store['tmpl-d']         = $template;
+        $this->objectService->deliveries              = [
+            ['uuid' => 'dx-1', 'blastId' => 'blast-dispatch', 'contactId' => 'c1', 'email' => 'c1@example.test', 'status' => 'queued'],
+            ['uuid' => 'dx-2', 'blastId' => 'blast-dispatch', 'contactId' => 'c2', 'email' => 'c2@example.test', 'status' => 'queued'],
+            ['uuid' => 'dx-3', 'blastId' => 'blast-dispatch', 'contactId' => 'c3', 'email' => 'c3@example.test', 'status' => 'queued'],
+        ];
+        // Tighten batch size to 2 so two batches run — the throttle hook
+        // fires between them.
+        $this->appConfig = $this->createMock(IAppConfig::class);
+        $this->appConfig->method('getValueString')->willReturnCallback(
+            function (string $app, string $key, string $default) {
+                return match ($key) {
+                    'register'                 => 'pipelinq',
+                    'blast_schema'             => 'blast',
+                    'blastDelivery_schema'     => 'blastDelivery',
+                    'campaignTemplate_schema'  => 'campaignTemplate',
+                    'blast.dispatch_batch_size' => '2',
+                    default                    => $default,
+                };
+            }
+        );
+
+        $sourceService = new class {
+            /** @var array<int, array<string, mixed>> */
+            public array $calls = [];
+
+            /**
+             * Return a source object whose sendRateLimit is intentionally
+             * lower than the caller-supplied rate.
+             *
+             * @param string $id Source id.
+             *
+             * @return array<string, mixed>|null Source row.
+             */
+            public function find(string $id): ?array
+            {
+                return ['uuid' => $id, 'sendRateLimit' => 1];
+            }
+
+            /**
+             * Mock executeAction — captures every send-mail call and
+             * returns a synthetic provider id derived from the recipient.
+             *
+             * @param string $sourceId Source id.
+             * @param string $action   Action name.
+             * @param array  $payload  Send-mail input.
+             *
+             * @return array<string, string> Provider response.
+             */
+            public function executeAction(string $sourceId, string $action, array $payload): array
+            {
+                $this->calls[] = ['sourceId' => $sourceId, 'action' => $action, 'payload' => $payload];
+                return ['providerId' => 'p-' . count($this->calls)];
+            }
+        };
+
+        $objectService = $this->objectService;
+        $this->container = $this->createMock(ContainerInterface::class);
+        $this->container->method('get')->willReturnCallback(
+            function (string $id) use ($sourceService, $objectService) {
+                if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
+                    return $objectService;
+                }
+                if ($id === 'OCA\\OpenConnector\\Service\\SourceService') {
+                    return $sourceService;
+                }
+                throw new \RuntimeException('not registered: ' . $id);
+            }
+        );
+
+        // Use a throttle-counting subclass to assert the rate-limit hook
+        // is invoked between batches without sleeping the test.
+        $service = new class ($this->container, $this->appConfig, $this->segmentService, $this->logger) extends BlastService {
+            /** @var int */
+            public int $throttleCalls = 0;
+
+            protected function throttle(float $seconds): void
+            {
+                $this->throttleCalls++;
+            }
+        };
+
+        $dispatched = $service->dispatchBlastDeliveries('blast-dispatch', 100);
+
+        $this->assertSame(3, $dispatched, 'every queued row was dispatched');
+        $this->assertCount(3, $sourceService->calls, 'one send-mail call per row');
+        foreach ($sourceService->calls as $call) {
+            $this->assertSame('send-mail', $call['action']);
+            $this->assertSame('oc-source-x', $call['sourceId']);
+            $this->assertArrayHasKey('to', $call['payload']);
+            $this->assertArrayHasKey('subject', $call['payload']);
+        }
+
+        // Each row was flipped to `sent` with a providerId.
+        $sentRows = array_filter(
+            $this->objectService->saved,
+            fn (array $row) => ($row['status'] ?? null) === 'sent',
+        );
+        $this->assertCount(3, $sentRows);
+        foreach ($sentRows as $row) {
+            $this->assertNotEmpty((string) ($row['providerId'] ?? ''));
+            $this->assertNotEmpty((string) ($row['sentAt'] ?? ''));
+        }
+
+        // batch_size=2 + 3 queued rows → 2 batches → throttle called
+        // between batches at least once (source rate 1/s < caller 100).
+        $this->assertGreaterThanOrEqual(
+            1,
+            $service->throttleCalls,
+            'throttle helper must fire between batches when the source rate is tighter than the caller rate',
+        );
+    }//end testDispatchBlastDeliveriesCallsOpenconnectorAndRespectsRateLimit()
+
+    /**
+     * Slice 09 — dispatchBlastDeliveries returns 0 and persists no rows
+     * when the openconnector source service is unavailable (fail-closed).
+     *
+     * @return void
+     */
+    public function testDispatchBlastDeliveriesFailsClosedWhenSourceServiceUnavailable(): void
+    {
+        $blast = [
+            'uuid'              => 'blast-no-oc',
+            'segmentId'         => 'seg-no-oc',
+            'templateId'        => 'tmpl-no-oc',
+            'channel'           => 'email',
+            'status'            => 'sending',
+            'connectorSourceId' => 'oc-source-missing',
+        ];
+        $template = [
+            'uuid' => 'tmpl-no-oc',
+            'bodyHtml' => '<p>{{email}}</p>',
+            'bodyText' => '{{email}}',
+        ];
+        $this->objectService->store['blast-no-oc'] = $blast;
+        $this->objectService->store['tmpl-no-oc']  = $template;
+        $this->objectService->deliveries           = [
+            ['uuid' => 'dn-1', 'blastId' => 'blast-no-oc', 'contactId' => 'c1', 'email' => 'c1@example.test', 'status' => 'queued'],
+        ];
+
+        // SourceService NOT registered in the container — every send call
+        // should fail-closed and the row should NOT flip to sent.
+        $dispatched = $this->service->dispatchBlastDeliveries('blast-no-oc', 100);
+        $this->assertSame(0, $dispatched);
+
+        $sentRows = array_filter(
+            $this->objectService->saved,
+            fn (array $row) => ($row['status'] ?? null) === 'sent',
+        );
+        $this->assertCount(0, $sentRows, 'no deliveries should flip to sent when SourceService is unavailable');
+    }//end testDispatchBlastDeliveriesFailsClosedWhenSourceServiceUnavailable()
+
+    /**
+     * Slice 09 — updateBlastTotals on a blast with no deliveries leaves
+     * every status counter at 0.
+     *
+     * @return void
+     */
+    public function testUpdateBlastTotalsZeroesAllStatusesWhenNoDeliveries(): void
+    {
+        $blast = [
+            'uuid'    => 'blast-empty',
+            'status'  => 'sending',
+            'totals'  => ['sent' => 99, 'delivered' => 50],
+        ];
+        $this->objectService->store['blast-empty'] = $blast;
+
+        $this->service->updateBlastTotals('blast-empty');
+
+        $persisted = end($this->objectService->saved);
+        $this->assertSame(0, $persisted['totals']['sent']);
+        $this->assertSame(0, $persisted['totals']['delivered']);
+        $this->assertSame(0, $persisted['totals']['bounced']);
+        $this->assertSame(0, $persisted['totals']['unsubscribed']);
+        $this->assertSame(0, $persisted['totals']['complained']);
+    }//end testUpdateBlastTotalsZeroesAllStatusesWhenNoDeliveries()
 }//end class
