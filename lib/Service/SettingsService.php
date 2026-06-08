@@ -101,6 +101,12 @@ class SettingsService
         'expense_schema',
         // Billing categories (billable-categories-and-tags) — REQ-BCT-001.
         'billingCategory_schema',
+        // SLA engine (sla-engine-and-escalation) — separate register identifier.
+        'sla_register',
+        'sla_policy_schema',
+        'sla_breach_event_schema',
+        // Optional callback schema (callback-management) — referenced by SLA sweep job.
+        'callback_schema',
     ];
 
     /**
@@ -157,6 +163,20 @@ class SettingsService
         'export.default_compression'               => 'none',
         'export.failure_notification_email'        => '',
         'export.at_risk_warning_hours'             => '24',
+        // SLA engine (sla-engine-and-escalation) — admin settings.
+        // @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-008
+        'sla_sweep_interval_seconds'               => '300',
+        'sla_business_hours_start'                 => '09:00',
+        'sla_business_hours_end'                   => '17:00',
+        'sla_default_holiday_calendar'             => 'nl-feestdagen-rijksoverheid',
+        'sla_tenant_holiday_overrides'             => '',
+        'sla_bevrijdingsdag_yearly'                => 'false',
+        'sla_actor_fallback'                       => '',
+        'sla_actor_assignee'                       => '',
+        'sla_actor_team-lead'                      => '',
+        'sla_actor_manager'                        => '',
+        'sla_actor_director'                       => '',
+        'sla_resolved_statuses'                    => 'resolved,completed,closed,afgehandeld',
     ];
 
     /**
