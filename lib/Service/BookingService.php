@@ -148,6 +148,18 @@ class BookingService
     private ?object $walkInQueueRebalance = null;
 
     /**
+     * Optional calendar seam (member 10).
+     *
+     * Implementations expose `pushBookingEvent(string $bookingId): void`. Called
+     * after every transition into `confirmed` (create-as-confirmed, deposit
+     * cleared confirm, reschedule). When unset the calendar mirror is skipped
+     * silently — the booking still transitions and persists.
+     *
+     * @var object|null
+     */
+    private ?object $calendarProvider = null;
+
+    /**
      * Constructor.
      *
      * @param ContainerInterface  $container           The DI container (OpenRegister lookup).
@@ -211,6 +223,20 @@ class BookingService
     {
         $this->walkInQueueRebalance = $service;
     }//end setWalkInQueueRebalance()
+
+    /**
+     * Inject a calendar provider seam (member 10).
+     *
+     * @param object|null $provider Provider exposing `pushBookingEvent(string)`.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
+     */
+    public function setCalendarProvider(?object $provider): void
+    {
+        $this->calendarProvider = $provider;
+    }//end setCalendarProvider()
 
     /**
      * Create a new Booking.
@@ -294,6 +320,7 @@ class BookingService
 
         if ($initialStatus === 'confirmed') {
             $this->dispatchConfirmationEmail(bookingId: $uuid);
+            $this->pushCalendarEvent(bookingId: $uuid);
         }
 
         return $uuid;
@@ -394,6 +421,7 @@ class BookingService
         $this->saveBooking(payload: $this->stripSelf(payload: $booking), uuid: $bookingId);
         $this->invalidateAvailability(payload: $booking);
         $this->dispatchConfirmationEmail(bookingId: $bookingId);
+        $this->pushCalendarEvent(bookingId: $bookingId);
     }//end confirmBooking()
 
     /**
@@ -493,6 +521,11 @@ class BookingService
         // Free the old slot AND warm-bust the new slot.
         $this->invalidateAvailability(payload: $original);
         $this->invalidateAvailability(payload: $newPayload);
+
+        // Move the calendar mirror to the new booking (the provider drops any
+        // existing leaf events linked to the original UUID and creates fresh
+        // VEVENTs tied to the new booking — guaranteeing reschedule = move).
+        $this->pushCalendarEvent(bookingId: $newUuid);
 
         return $newUuid;
     }//end rescheduleBooking()
@@ -1191,6 +1224,40 @@ class BookingService
             $this->logger->warning('Pipelinq: confirmation email seam failed', ['booking' => $bookingId]);
         }
     }//end dispatchConfirmationEmail()
+
+    /**
+     * Push the confirmed Booking to the staff calendar via the leaf (member 10).
+     *
+     * Best-effort: a missing provider, a missing method, or a leaf failure is
+     * absorbed — the booking still persists and the customer still gets their
+     * confirmation. Only the calendar mirror is lost.
+     *
+     * @param string $bookingId Booking UUID.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
+     */
+    private function pushCalendarEvent(string $bookingId): void
+    {
+        if ($this->calendarProvider === null) {
+            return;
+        }
+
+        if (method_exists($this->calendarProvider, 'pushBookingEvent') === false) {
+            return;
+        }
+
+        try {
+            // @phpstan-ignore-next-line dynamic provider seam (member 10 leaf bridge).
+            $this->calendarProvider->pushBookingEvent($bookingId);
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'Pipelinq: calendar push seam failed',
+                ['booking' => $bookingId]
+            );
+        }
+    }//end pushCalendarEvent()
 
     /**
      * Queue the no-show fee through the payment seam (member 08).
