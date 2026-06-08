@@ -71,6 +71,11 @@
 
 			<PosTotalsPanel :lines="lines" :price-mode="priceMode" />
 
+			<PaymentMethodSelector
+				v-model="paymentSelection"
+				:client-selected="!!transaction.client"
+				@change="onPaymentSelectionChange" />
+
 			<div class="pos-form__actions">
 				<NcButton type="primary" :disabled="saving" @click="save">
 					{{ t('pipelinq', 'Save') }}
@@ -86,6 +91,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import PosLineItemRow from '../../components/pos/PosLineItemRow.vue'
 import PosTotalsPanel from '../../components/pos/PosTotalsPanel.vue'
+import PaymentMethodSelector from '../../components/pos/PaymentMethodSelector.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { recalculateLine } from '../../services/posTotals.js'
 
@@ -99,6 +105,7 @@ export default {
 		Plus,
 		PosLineItemRow,
 		PosTotalsPanel,
+		PaymentMethodSelector,
 	},
 	props: {
 		posTransactionId: {
@@ -116,6 +123,9 @@ export default {
 			loading: false,
 			saving: false,
 			keyCounter: 0,
+			paymentSelection: 'cash',
+			paymentProvider: 'cash',
+			paymentMethod: 'cash',
 		}
 	},
 	computed: {
@@ -229,6 +239,14 @@ export default {
 				.filter(l => l.transaction === this.transactionId)
 				.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
 				.map(l => ({ ...l, _key: this.nextKey() }))
+			// Restore the payment-method selector from the persisted transaction.
+			const provider = (tx && tx.paymentProvider) || 'cash'
+			const method = (tx && tx.paymentMethod) || 'cash'
+			this.paymentProvider = provider
+			this.paymentMethod = method
+			this.paymentSelection = (provider === 'cash' || provider === 'voucher' || provider === 'account')
+				? provider
+				: provider + ':' + method
 		},
 		/**
 		 * Next stable v-for key for a line row.
@@ -273,6 +291,32 @@ export default {
 				this.deletedLineIds.push(line.id)
 			}
 			this.lines.splice(index, 1)
+		},
+		/**
+		 * Update local payment provider/method state when the selector changes.
+		 *
+		 * @param {object} payload The selector payload.
+		 *
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
+		 */
+		onPaymentSelectionChange({ providerName, paymentMethod }) {
+			this.paymentProvider = providerName || 'cash'
+			this.paymentMethod = paymentMethod || providerName || 'cash'
+			// Cash / voucher / account settle immediately on confirm — mirror
+			// the selection onto the draft transaction so saveObject persists it.
+			if (this.paymentProvider === 'cash' || this.paymentProvider === 'voucher' || this.paymentProvider === 'account') {
+				this.transaction.paymentProvider = this.paymentProvider
+				this.transaction.paymentMethod = this.paymentMethod
+				this.transaction.paymentStatus = (this.paymentProvider === 'cash' ? 'settled' : 'pending')
+			} else {
+				// Card / online providers — actual session is initiated server-side
+				// by PosPaymentService.initiatePayment AFTER the transaction is
+				// confirmed; clear the stale draft fields so saveObject does not
+				// persist a stale value.
+				this.transaction.paymentProvider = this.paymentProvider
+				this.transaction.paymentMethod = this.paymentMethod
+				this.transaction.paymentStatus = 'pending'
+			}
 		},
 		/**
 		 * Persist the transaction header and its lines.
