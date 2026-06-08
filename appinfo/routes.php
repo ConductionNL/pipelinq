@@ -277,6 +277,16 @@ return [
         ['name' => 'exportRun#showRun',  'url' => '/api/export/runs/{id}',       'verb' => 'GET'],
         ['name' => 'exportRun#retryRun', 'url' => '/api/export/runs/{id}/retry', 'verb' => 'POST'],
 
+        // Appointment booking — admin lifecycle actions (member 11 of 12).
+        // All endpoints require an authenticated user (#[NoAdminRequired]);
+        // BookingService runs the per-status transition + IDOR guards.
+        ['name' => 'bookingAdmin#reschedule',     'url' => '/api/bookings/{id}/reschedule',     'verb' => 'POST'],
+        ['name' => 'bookingAdmin#cancel',         'url' => '/api/bookings/{id}/cancel',         'verb' => 'POST'],
+        ['name' => 'bookingAdmin#markCompleted',  'url' => '/api/bookings/{id}/complete',       'verb' => 'POST'],
+        ['name' => 'bookingAdmin#markNoShow',     'url' => '/api/bookings/{id}/no-show',        'verb' => 'POST'],
+        ['name' => 'bookingAdmin#sendReminder',   'url' => '/api/bookings/{id}/send-reminder',  'verb' => 'POST'],
+        ['name' => 'bookingAdmin#confirmDeposit', 'url' => '/api/bookings/{id}/confirm-deposit', 'verb' => 'POST'],
+
         // Loyalty program (loyalty-program — REQ-LOY-001..010).
         ['name' => 'loyalty#getAccount',         'url' => '/api/loyalty/accounts/{accountId}',          'verb' => 'GET'],
         ['name' => 'loyalty#getAccountHistory',  'url' => '/api/loyalty/accounts/{accountId}/history',  'verb' => 'GET'],
