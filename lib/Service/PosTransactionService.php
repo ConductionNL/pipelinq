@@ -533,15 +533,9 @@ class PosTransactionService
         // verifies the non-empty-cart precondition and the per-object access
         // rule that closes the IDOR; the engine validates the from-state).
         $transaction = $this->fetchTransaction(id: $id);
-
-        // Pos-customer-link / REQ-PCL-005: 'op rekening' (onAccount) tender
-        // requires a linked customer. Enforced server-side here (the UI
-        // disables the Afrekenen button but the contract is the server's).
-        $this->assertOnAccountHasCustomer(transaction: $transaction);
-
-        $mode   = $this->normalizePriceMode(mode: ($transaction['priceMode'] ?? null));
-        $lines  = $this->fetchLines(transactionId: $id);
-        $totals = $this->computeTotals(lines: $lines, priceMode: $mode);
+        $mode        = $this->normalizePriceMode(mode: ($transaction['priceMode'] ?? null));
+        $lines       = $this->fetchLines(transactionId: $id);
+        $totals      = $this->computeTotals(lines: $lines, priceMode: $mode);
 
         $transaction = array_merge(
             $transaction,
@@ -589,65 +583,15 @@ class PosTransactionService
     public function settleTransaction(string $id, string $userId): array
     {
         $transaction = $this->fetchTransaction(id: $id);
-
-        // Tender-sum gate (pos-split-tender REQ-PST-004): sum of tenders MUST
-        // equal the transaction total before settle. Resolved lazily via the
-        // container so this service does not pull PosTenderService into its
-        // constructor signature (avoids a circular DI graph with the routes
-        // that wire both controllers together).
-        $tenderService = $this->resolveTenderService();
-        if ($tenderService !== null) {
-            $tenderService->assertBalancedForSettle(transactionId: $id);
-        }
-
         $transaction['settledAt'] = $this->now();
         $this->saveTransaction(id: $id, transaction: $transaction);
 
         $saved = $this->transitionObject(id: $id, action: 'settle');
 
-        // Emit a TenderPostedEvent per tender so Shillinq posts each leg to
-        // its configured GL account (pos-split-tender REQ-PST-006). The
-        // emitter is fire-and-forget — failure NEVER aborts the settle path
-        // (a tender that did not post is picked up by TenderPostedRetryJob).
-        if ($tenderService !== null) {
-            try {
-                $tenderService->emitTendersPosted(transactionId: $id);
-            } catch (\Throwable $e) {
-                $this->logger->warning(
-                    'Pipelinq: tender CloudEvent emission failed; retry job will pick up',
-                    ['id' => $id, 'exception' => $e->getMessage()]
-                );
-            }
-        }
-
         $this->logger->info('Pipelinq: POS transaction settled', ['id' => $id, 'userId' => $userId]);
 
         return $saved;
     }//end settleTransaction()
-
-    /**
-     * Lazy resolver for the tender-domain service. Returns null when OR /
-     * tender schemas are not configured (so older fleet apps without the
-     * split-tender migration applied keep working).
-     *
-     * @return PosTenderService|null The service, or null when unavailable.
-     *
-     * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-004
-     */
-    private function resolveTenderService(): ?PosTenderService
-    {
-        try {
-            $service = $this->container->get(PosTenderService::class);
-        } catch (\Throwable $e) {
-            return null;
-        }
-
-        if ($service instanceof PosTenderService) {
-            return $service;
-        }
-
-        return null;
-    }//end resolveTenderService()
 
     /**
      * Refund / void a confirmed or settled transaction (manager only).
@@ -741,34 +685,6 @@ class PosTransactionService
 
         return $saved;
     }//end resumeTransaction()
-
-    /**
-     * Assert that an on-account ('op rekening') transaction has a linked customer.
-     *
-     * Mirrors PosCustomerLinkService::assertOnAccountHasCustomer; duplicated
-     * here to avoid a circular service dependency at confirm-time. The check
-     * is a single guarded comparison so duplication has negligible cost and
-     * the invariant is enforced by the same module the lifecycle owns.
-     *
-     * @param array<string, mixed> $transaction The transaction data.
-     *
-     * @return void
-     *
-     * @throws OCSBadRequestException When tenderType is 'onAccount' without a customer.
-     *
-     * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-005
-     */
-    private function assertOnAccountHasCustomer(array $transaction): void
-    {
-        $tender   = (string) ($transaction['tenderType'] ?? '');
-        $customer = (string) ($transaction['customer'] ?? '');
-
-        if ($tender === 'onAccount' && $customer === '') {
-            throw new OCSBadRequestException(
-                "Klant is verplicht voor 'op rekening' transacties."
-            );
-        }
-    }//end assertOnAccountHasCustomer()
 
     /**
      * Apply a named lifecycle transition through OpenRegister's TransitionEngine.
@@ -939,15 +855,6 @@ class PosTransactionService
                 'transactionId'    => (string) ($transaction['id'] ?? $transaction['uuid'] ?? ''),
                 'reference'        => (string) ($transaction['reference'] ?? ''),
                 'cashier'          => (string) ($transaction['cashier'] ?? ''),
-                'customer'         => (string) ($transaction['customer'] ?? ''),
-                'tenderType'       => (string) ($transaction['tenderType'] ?? 'cash'),
-                'marketingConsent' => (bool) ($transaction['marketingConsent'] ?? false),
-                // pos-staff-pin-permissions REQ-PSP-009: include the active
-                // POS staff member id in the shillinq commission feed so the
-                // accounting integration can attribute the sale to the staff
-                // who actually rang it up (which may differ from the NC cashier
-                // user). Empty when no staff session was opened.
-                'staffMemberId'    => (string) ($transaction['staffMemberId'] ?? ''),
                 'total'            => (float) ($transaction['total'] ?? 0),
                 'totalTax'         => (float) ($transaction['totalTax'] ?? 0),
                 'priceMode'        => $this->normalizePriceMode(mode: ($transaction['priceMode'] ?? null)),

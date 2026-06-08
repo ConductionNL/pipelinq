@@ -111,42 +111,9 @@ async function doInitializeStores() {
 		if (config.register && config.posRefundLine_schema) {
 			objectStore.registerObjectType('posRefundLine', config.posRefundLine_schema, config.register)
 		}
-		// POS cash-drawer (pos-cash-management) — REQ-CCM-001..007.
-		if (config.register && config.cashShift_schema) {
-			objectStore.registerObjectType('cashShift', config.cashShift_schema, config.register)
-		}
-		if (config.register && config.cashDrop_schema) {
-			objectStore.registerObjectType('cashDrop', config.cashDrop_schema, config.register)
-		}
-		if (config.register && config.cashCount_schema) {
-			objectStore.registerObjectType('cashCount', config.cashCount_schema, config.register)
-		}
-		if (config.register && config.cashDiff_schema) {
-			objectStore.registerObjectType('cashDiff', config.cashDiff_schema, config.register)
-		}
-		// POS staff PIN + role permissions (pos-staff-pin-permissions REQ-PSP-001/002).
-		if (config.register && config.posRole_schema) {
-			objectStore.registerObjectType('posRole', config.posRole_schema, config.register)
-		}
-		if (config.register && config.posStaff_schema) {
-			objectStore.registerObjectType('posStaff', config.posStaff_schema, config.register)
-		}
 		// Billing categories (billable-categories-and-tags) — REQ-BCT-001.
 		if (config.register && config.billingCategory_schema) {
 			objectStore.registerObjectType('billingCategory', config.billingCategory_schema, config.register)
-		}
-		// Appointment booking — admin views (appointment-booking 01..11).
-		if (config.register && config.service_schema) {
-			objectStore.registerObjectType('service', config.service_schema, config.register)
-		}
-		if (config.register && config.resource_schema) {
-			objectStore.registerObjectType('resource', config.resource_schema, config.register)
-		}
-		if (config.register && config.booking_schema) {
-			objectStore.registerObjectType('booking', config.booking_schema, config.register)
-		}
-		if (config.register && config.walkInTicket_schema) {
-			objectStore.registerObjectType('walkInTicket', config.walkInTicket_schema, config.register)
 		}
 	}
 

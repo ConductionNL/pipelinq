@@ -148,17 +148,6 @@ return [
         ['name' => 'posTransaction#park',    'url' => '/api/pos-transactions/{id}/park',    'verb' => 'POST'],
         ['name' => 'posTransaction#resume',  'url' => '/api/pos-transactions/{id}/resume',  'verb' => 'POST'],
 
-        // POS customer-link surface (search, attach, detach, history) — pos-customer-link.
-        // Static /search route precedes the wildcard /{id} routes per Symfony ordering.
-        ['name' => 'posCustomer#search',  'url' => '/api/pos-customers/search',          'verb' => 'GET'],
-        ['name' => 'posCustomer#history', 'url' => '/api/pos-customers/{id}/history',    'verb' => 'GET'],
-        ['name' => 'posCustomer#attach',  'url' => '/api/pos-transactions/{id}/customer', 'verb' => 'POST'],
-        ['name' => 'posCustomer#detach',  'url' => '/api/pos-transactions/{id}/customer', 'verb' => 'DELETE'],
-
-        // POS customer-link admin settings (admin-only via #[AuthorizedAdminSetting]).
-        ['name' => 'posCustomerSettings#index',  'url' => '/api/admin/pos-customer-settings', 'verb' => 'GET'],
-        ['name' => 'posCustomerSettings#update', 'url' => '/api/admin/pos-customer-settings', 'verb' => 'POST'],
-
         // POS product catalogue resolution (barcode lookup + server-authoritative price).
         ['name' => 'productCatalog#lookupBarcode', 'url' => '/api/products/barcode-lookup', 'verb' => 'POST'],
         ['name' => 'productCatalog#resolvePrice',  'url' => '/api/products/resolve-price',  'verb' => 'POST'],
@@ -175,83 +164,6 @@ return [
         // object API; these are the manager-gated confirm/reject lifecycle actions.
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
-
-        // POS cash-drawer lifecycle (camelCase slug matches CashShiftController class name).
-        // cashShift / cashDrop / cashCount / cashDiff CRUD reads are handled by OpenRegister's
-        // generic object API; these are the server-authoritative lifecycle actions. The static
-        // open route precedes every {id} wildcard route below it (ADR-016).
-        ['name' => 'cashShift#open',    'url' => '/api/pos-shifts',                   'verb' => 'POST'],
-        ['name' => 'cashShift#drop',    'url' => '/api/pos-shifts/{id}/drop',         'verb' => 'POST'],
-        ['name' => 'cashShift#count',   'url' => '/api/pos-shifts/{id}/count',        'verb' => 'POST'],
-        ['name' => 'cashShift#approve', 'url' => '/api/pos-shifts/{id}/diff/approve', 'verb' => 'POST'],
-        ['name' => 'cashShift#reject',  'url' => '/api/pos-shifts/{id}/diff/reject',  'verb' => 'POST'],
-
-        // POS staff + role permissions (pos-staff-pin-permissions). Static auth
-        // route precedes the {id} wildcard routes for the same resource.
-        ['name' => 'posStaff#authenticate', 'url' => '/api/pos/staff/auth', 'verb' => 'POST'],
-
-        ['name' => 'posRole#index',   'url' => '/api/pos/roles',         'verb' => 'GET'],
-        ['name' => 'posRole#create',  'url' => '/api/pos/roles',         'verb' => 'POST'],
-        ['name' => 'posRole#show',    'url' => '/api/pos/roles/{id}',    'verb' => 'GET'],
-        ['name' => 'posRole#update',  'url' => '/api/pos/roles/{id}',    'verb' => 'PUT'],
-        ['name' => 'posRole#destroy', 'url' => '/api/pos/roles/{id}',    'verb' => 'DELETE'],
-
-        ['name' => 'posStaff#index',   'url' => '/api/pos/staff',        'verb' => 'GET'],
-        ['name' => 'posStaff#create',  'url' => '/api/pos/staff',        'verb' => 'POST'],
-        ['name' => 'posStaff#show',    'url' => '/api/pos/staff/{id}',   'verb' => 'GET'],
-        ['name' => 'posStaff#update',  'url' => '/api/pos/staff/{id}',   'verb' => 'PUT'],
-        ['name' => 'posStaff#destroy', 'url' => '/api/pos/staff/{id}',   'verb' => 'DELETE'],
-
-        // Per-staff sales report (pos-staff-pin-permissions REQ-PSP-008).
-        ['name' => 'posStaffReport#staffSales', 'url' => '/api/pos/reports/staff-sales', 'verb' => 'GET'],
-
-        // POS payment provider adapter (pos-payment-provider-adapter).
-        // - /api/pos-payments/{id}/* are the per-transaction payment actions (cashier-facing).
-        // - /api/payment-providers* are the admin-only credential + connection management endpoints.
-        // - /api/pos-payment-webhook/{provider} is the public, signature-validated webhook
-        //   inbound from Mollie / CCV / Adyen / Stripe (REQ-PAY-006).
-        // Specific routes precede any wildcard {path} catch-all (ADR-016).
-        ['name' => 'posPayment#initiate', 'url' => '/api/pos-payments/{id}/initiate', 'verb' => 'POST'],
-        ['name' => 'posPayment#capture',  'url' => '/api/pos-payments/{id}/capture',  'verb' => 'POST'],
-        ['name' => 'posPayment#refund',   'url' => '/api/pos-payments/{id}/refund',   'verb' => 'POST'],
-        ['name' => 'posPayment#index',    'url' => '/api/payment-providers',          'verb' => 'GET'],
-        ['name' => 'posPayment#show',     'url' => '/api/payment-providers/{name}',   'verb' => 'GET'],
-        ['name' => 'posPayment#update',   'url' => '/api/payment-providers/{name}',   'verb' => 'PUT'],
-        ['name' => 'posPayment#test',     'url' => '/api/payment-providers/{name}/test', 'verb' => 'POST'],
-        ['name' => 'posPayment#webhook',  'url' => '/api/pos-payment-webhook/{provider}', 'verb' => 'POST'],
-
-        // POS end-of-day bookkeeping post pipeline (pos-end-of-day-bookkeeping-post).
-        // Manager-gated submit / resubmit of a posJournalEntryOutbound to Shillinq.
-        // Admin GET / POST for the daily Z-report time + Shillinq endpoint + bearer token.
-        ['name' => 'posBookkeeping#post',         'url' => '/api/pos-bookkeeping/post',         'verb' => 'POST'],
-        ['name' => 'posBookkeepingConfig#index',  'url' => '/api/admin/pos-bookkeeping/config', 'verb' => 'GET'],
-        ['name' => 'posBookkeepingConfig#update', 'url' => '/api/admin/pos-bookkeeping/config', 'verb' => 'POST'],
-
-        // POS split-tender (pos-split-tender). Admin tender-type CRUD +
-        // cashier-facing per-transaction tender CRUD + validate-only helper
-        // for the settle preflight. Specific routes precede the {id}/{tenderId}
-        // wildcards (ADR-016). Tender-type CRUD is admin-only via
-        // #[AuthorizedAdminSetting]; transaction-scoped routes are #[NoAdminRequired].
-        ['name' => 'posTender#indexTypes',  'url' => '/api/pos/tender-types',        'verb' => 'GET'],
-        ['name' => 'posTender#createType',  'url' => '/api/pos/tender-types',        'verb' => 'POST'],
-        ['name' => 'posTender#showType',    'url' => '/api/pos/tender-types/{id}',   'verb' => 'GET'],
-        ['name' => 'posTender#updateType',  'url' => '/api/pos/tender-types/{id}',   'verb' => 'PUT'],
-        ['name' => 'posTender#destroyType', 'url' => '/api/pos/tender-types/{id}',   'verb' => 'DELETE'],
-        ['name' => 'posTender#summary',     'url' => '/api/pos-transactions/{transactionId}/tenders/summary', 'verb' => 'GET'],
-        ['name' => 'posTender#indexTenders','url' => '/api/pos-transactions/{transactionId}/tenders',         'verb' => 'GET'],
-        ['name' => 'posTender#addTender',   'url' => '/api/pos-transactions/{transactionId}/tenders',         'verb' => 'POST'],
-        ['name' => 'posTender#removeTender','url' => '/api/pos-transactions/{transactionId}/tenders/{tenderId}', 'verb' => 'DELETE'],
-
-        // POS Kassakoppeling-compliant Audit Log (pos-kassakoppeling-audit).
-        // Append-only signed audit entries with per-register hash chain + admin-gated
-        // Belastingdienst export. The static `/export` route precedes the `{id}`
-        // wildcard so the Symfony router never mistakes "export" for an id (ADR-016).
-        // camelCase slug matches KassakoppelingAuditController class name.
-        ['name' => 'kassakoppelingAudit#index',  'url' => '/api/kassakoppeling/audit',           'verb' => 'GET'],
-        ['name' => 'kassakoppelingAudit#create', 'url' => '/api/kassakoppeling/audit',           'verb' => 'POST'],
-        ['name' => 'kassakoppelingAudit#export', 'url' => '/api/kassakoppeling/audit/export',    'verb' => 'GET'],
-        ['name' => 'kassakoppelingAudit#verify', 'url' => '/api/kassakoppeling/audit/{id}/verify', 'verb' => 'POST'],
-        ['name' => 'kassakoppelingAudit#show',   'url' => '/api/kassakoppeling/audit/{id}',      'verb' => 'GET'],
 
         // ---------------------------------------------------------------------
         // Customer portal (separate auth domain — ADR-005). All /portal/api/*
@@ -364,16 +276,6 @@ return [
         ['name' => 'exportRun#listRuns', 'url' => '/api/export/runs',           'verb' => 'GET'],
         ['name' => 'exportRun#showRun',  'url' => '/api/export/runs/{id}',       'verb' => 'GET'],
         ['name' => 'exportRun#retryRun', 'url' => '/api/export/runs/{id}/retry', 'verb' => 'POST'],
-
-        // Appointment booking — admin lifecycle actions (member 11 of 12).
-        // All endpoints require an authenticated user (#[NoAdminRequired]);
-        // BookingService runs the per-status transition + IDOR guards.
-        ['name' => 'bookingAdmin#reschedule',     'url' => '/api/bookings/{id}/reschedule',     'verb' => 'POST'],
-        ['name' => 'bookingAdmin#cancel',         'url' => '/api/bookings/{id}/cancel',         'verb' => 'POST'],
-        ['name' => 'bookingAdmin#markCompleted',  'url' => '/api/bookings/{id}/complete',       'verb' => 'POST'],
-        ['name' => 'bookingAdmin#markNoShow',     'url' => '/api/bookings/{id}/no-show',        'verb' => 'POST'],
-        ['name' => 'bookingAdmin#sendReminder',   'url' => '/api/bookings/{id}/send-reminder',  'verb' => 'POST'],
-        ['name' => 'bookingAdmin#confirmDeposit', 'url' => '/api/bookings/{id}/confirm-deposit', 'verb' => 'POST'],
 
         // Loyalty program (loyalty-program — REQ-LOY-001..010).
         ['name' => 'loyalty#getAccount',         'url' => '/api/loyalty/accounts/{accountId}',          'verb' => 'GET'],
