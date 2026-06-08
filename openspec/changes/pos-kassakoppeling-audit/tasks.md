@@ -75,7 +75,7 @@
     - WHEN a link is broken
     - THEN `verifyHashChain()` MUST return false
 
-- [ ] 2.2 Create `KassakoppelingAuditService.php`
+- [x] 2.2 Create `KassakoppelingAuditService.php`
   - **spec_ref**: `REQ-AUDIT-001` / `openspec/changes/pos-kassakoppeling-audit/design.md#KassakoppelingAuditService`
   - **files**: `pipelinq/lib/Service/KassakoppelingAuditService.php`
   - **tier**: P0
@@ -107,9 +107,9 @@
     - WHEN verifying an entry
     - THEN `verifyEntry()` MUST update `verified` flag
 
-- [ ] 2.3 Create `BelastingdienestExportService.php`
+- [x] 2.3 Create `BelastingdienstExportService.php`
   - **spec_ref**: `REQ-AUDIT-005` / `openspec/changes/pos-kassakoppeling-audit/design.md#BelastingdienestExportService`
-  - **files**: `pipelinq/lib/Service/BelastingdienestExportService.php`
+  - **files**: `pipelinq/lib/Service/BelastingdienstExportService.php` (filename corrected — Belasting**dienst**, not **dienest**, per Dutch spelling)
   - **tier**: P0
   - Implement methods per design.md:
     - `exportAsXml(array $entries): string`
