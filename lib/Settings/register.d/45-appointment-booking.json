@@ -746,6 +746,187 @@
                 "cancellationPolicy": "free",
                 "cancellationHoursBefore": 12,
                 "status": "active"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "resource",
+                    "slug": "resource-sarah-stylist"
+                },
+                "name": "Sarah",
+                "type": "staff",
+                "skills": [
+                    "color-certified",
+                    "knippen"
+                ],
+                "workingHours": [
+                    {
+                        "day": "tuesday",
+                        "openTime": "09:00",
+                        "closeTime": "17:30"
+                    },
+                    {
+                        "day": "wednesday",
+                        "openTime": "09:00",
+                        "closeTime": "17:30"
+                    },
+                    {
+                        "day": "thursday",
+                        "openTime": "09:00",
+                        "closeTime": "20:00"
+                    },
+                    {
+                        "day": "friday",
+                        "openTime": "09:00",
+                        "closeTime": "17:30"
+                    },
+                    {
+                        "day": "saturday",
+                        "openTime": "09:00",
+                        "closeTime": "15:00"
+                    }
+                ],
+                "vacations": [
+                    {
+                        "startDate": "2026-07-13",
+                        "endDate": "2026-07-27",
+                        "label": "Zomervakantie"
+                    }
+                ],
+                "bookable": true,
+                "maxConcurrent": 1,
+                "status": "active"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "resource",
+                    "slug": "resource-jan-mechanic"
+                },
+                "name": "Jan",
+                "type": "staff",
+                "skills": [
+                    "monteur-apk",
+                    "monteur-elektro"
+                ],
+                "workingHours": [
+                    {
+                        "day": "monday",
+                        "openTime": "08:00",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "tuesday",
+                        "openTime": "08:00",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "wednesday",
+                        "openTime": "08:00",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "thursday",
+                        "openTime": "08:00",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "friday",
+                        "openTime": "08:00",
+                        "closeTime": "16:00"
+                    }
+                ],
+                "vacations": [],
+                "bookable": true,
+                "maxConcurrent": 1,
+                "status": "active"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "resource",
+                    "slug": "resource-treatment-room-a"
+                },
+                "name": "Behandelkamer A",
+                "type": "room",
+                "skills": [],
+                "workingHours": [
+                    {
+                        "day": "monday",
+                        "openTime": "09:00",
+                        "closeTime": "18:00"
+                    },
+                    {
+                        "day": "tuesday",
+                        "openTime": "09:00",
+                        "closeTime": "18:00"
+                    },
+                    {
+                        "day": "wednesday",
+                        "openTime": "09:00",
+                        "closeTime": "18:00"
+                    },
+                    {
+                        "day": "thursday",
+                        "openTime": "09:00",
+                        "closeTime": "20:00"
+                    },
+                    {
+                        "day": "friday",
+                        "openTime": "09:00",
+                        "closeTime": "18:00"
+                    },
+                    {
+                        "day": "saturday",
+                        "openTime": "09:00",
+                        "closeTime": "15:00"
+                    }
+                ],
+                "vacations": [],
+                "bookable": true,
+                "maxConcurrent": 1,
+                "status": "active"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "resource",
+                    "slug": "resource-workshop-bay-1"
+                },
+                "name": "Werkplaats brug 1",
+                "type": "equipment",
+                "skills": [],
+                "workingHours": [
+                    {
+                        "day": "monday",
+                        "openTime": "08:00",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "tuesday",
+                        "openTime": "08:00",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "wednesday",
+                        "openTime": "08:00",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "thursday",
+                        "openTime": "08:00",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "friday",
+                        "openTime": "08:00",
+                        "closeTime": "16:00"
+                    }
+                ],
+                "vacations": [],
+                "bookable": true,
+                "maxConcurrent": 1,
+                "status": "active"
             }
         ]
     }

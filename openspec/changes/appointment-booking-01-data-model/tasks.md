@@ -41,8 +41,13 @@
 - [x] Each Service has unique slug
 
   Slugs are `service-haircut-simple`, `service-color-and-cut`, `service-oil-change-standard`, `service-consultation-tax` — all distinct and prefixed `service-` for register-wide global slug safety.
-- [ ] Add 4 Resource seed objects: Sarah (stylist with skills), Jan (mechanic), treatment-room-a, workshop-bay-1 with varied types
-- [ ] Each Resource has unique slug, working hours for all weekdays, optionally vacations
+- [x] Add 4 Resource seed objects: Sarah (stylist with skills), Jan (mechanic), treatment-room-a, workshop-bay-1 with varied types
+
+  Four `resource` mock objects: `resource-sarah-stylist` (staff, color-certified + knippen, Tue–Sat working hours incl. late Thursday, two-week Zomervakantie 13–27 July), `resource-jan-mechanic` (staff, monteur-apk + monteur-elektro skills, Mon–Fri working hours), `resource-treatment-room-a` (room, Mon–Sat with late Thursday, no skills, no vacations), `resource-workshop-bay-1` (equipment, Mon–Fri). One staff with vacations, one staff without; one room; one equipment — exercises every Resource enum branch.
+
+- [x] Each Resource has unique slug, working hours for all weekdays, optionally vacations
+
+  Slugs are `resource-sarah-stylist`, `resource-jan-mechanic`, `resource-treatment-room-a`, `resource-workshop-bay-1` — all distinct and prefixed `resource-`. Each resource declares the weekdays on which it works (kapsalons are typically closed Monday; mechanics close earlier on Friday; rooms follow shop hours) — i.e. realistic Dutch SMB schedules rather than a default Mon–Fri 9–5 stamp. Vacations are populated on Sarah only.
 - [ ] Add 2 Booking seed objects: booking-001-completed (past), booking-002-confirmed (future, multi-step)
 - [ ] Verify all seed objects use realistic Dutch names, times, and currency
 
