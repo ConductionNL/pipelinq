@@ -144,6 +144,8 @@ class AppointmentPaymentProvider
      * @param object|null $service The PaymentService seam.
      *
      * @return void
+     *
+     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-011a
      */
     public function setPaymentService(?object $service): void
     {
@@ -233,8 +235,8 @@ class AppointmentPaymentProvider
             $payment->chargeCustomer(
                 $sourceSlug,
                 [
-                    'customerId' => $customerId,
-                    'amount'     => [
+                    'customerId'  => $customerId,
+                    'amount'      => [
                         'value'    => $this->centsToDecimal(cents: $cents),
                         'currency' => 'EUR',
                     ],
@@ -278,7 +280,7 @@ class AppointmentPaymentProvider
                 return $service;
             }
         } catch (Throwable $e) {
-            // openconnector not installed.
+            // Openconnector not installed.
         }
 
         return null;
