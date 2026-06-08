@@ -109,6 +109,8 @@ Vrij en open source onder de AGPL-licentie.
         <job>OCA\Pipelinq\BackgroundJob\BudgetPeriodResetJob</job>
         <job>OCA\Pipelinq\BackgroundJob\CostReconciliationJob</job>
         <job>OCA\Pipelinq\BackgroundJob\WebhookProcessorJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\DispatchQueuedMessagesJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\FallbackEmailJob</job>
     </background-jobs>
 
     <navigations>

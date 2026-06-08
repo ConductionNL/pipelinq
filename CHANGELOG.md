@@ -50,6 +50,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fails terminally + sends alert, 5xx / timeout schedules retry). UI
   ships a "Boekhoudkundige Afhandeling" sidebar entry plus a Z-report
   list + detail with GL line items + submission timeline.
+- **Burgerportaal MijnOverheid Berichtenbox bridge**
+  (burgerportaal-mijnoverheid-bridge) — connects Pipelinq zaak status
+  transitions to the citizen's MijnOverheid mailbox via the Logius
+  Berichtenbox-koppelvlak (BBK) 1.7 API, with email fallback after 5 Dutch
+  working days unread and inbound-reply ingestion as new Contactmomenten on
+  the parent zaak. Ships five new OR schemas (berichtenboxMessage / Reply /
+  Template, mailboxResolution, deliveryAuditLog), the BerichtenboxService
+  state machine + LogiusConnector (OAuth 2.0 client-credentials, BBK 1.7
+  payload validation, RSA-SHA256 PKI-overheid request signing, webhook
+  HMAC verification), the EncryptionService for AES-256-GCM BSN crypto
+  with HMAC-SHA256 index hashing (constant-time compare via hash_equals
+  per ADR-005), DispatchQueuedMessagesJob (5-min, exponential-backoff
+  retries) + FallbackEmailJob (daily, DutchHolidayCalendar-aware), a
+  zaakafhandelapp event-bus listener, four endpoints (two HMAC-verified
+  Logius webhooks + two admin ops endpoints), three seed templates, full
+  user/admin documentation at docs/Integrations/berichtenbox-integration.md,
+  and 58 unit + 5 integration tests covering BBK 1.7 conformance, the full
+  state machine including retry semantics, crypto round-trips with vault
+  precedence, the Dutch holiday calendar, and webhook signature handling.
 
 - Marketing segmentation and blast campaigns (marketing-segmentation-and-blast,
   11-slice chain — this entry covers the user-visible feature; slice 10
