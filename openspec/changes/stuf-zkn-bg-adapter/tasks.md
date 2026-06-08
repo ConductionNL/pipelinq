@@ -62,19 +62,19 @@
 
 ## 3. API Endpoints
 
-- [ ] 3.1 Create `lib/Controller/StufController.php` with routes:
+- [x] 3.1 Create `lib/Controller/StufController.php` with routes:
   - `POST /api/stuf/outbound` — accept request with endpointId, berichtNaam, payload; call adapter.vrijBericht(); return {success, referentienummer, stufMessageId}
   - `POST /api/stuf/inkomend` — receive raw SOAP envelope; parse; match to outbound; update mappings; return 200
   - `GET /api/stuf/endpoints` — list all StufEndpoint objects (admin only)
   - `GET /api/stuf/messages?endpointId=xxx&limit=50` — query StufMessage by filters (admin only)
 
-- [ ] 3.2 Register routes in `appinfo/routes.php`:
+- [x] 3.2 Register routes in `appinfo/routes.php`:
   - POST /index.php/apps/pipelinq/api/stuf/outbound
   - POST /index.php/apps/pipelinq/api/stuf/inkomend (marked #[PublicPage] to accept inbound notifications without user session)
   - GET /index.php/apps/pipelinq/api/stuf/endpoints
   - GET /index.php/apps/pipelinq/api/stuf/messages
 
-- [ ] 3.3 Implement authorization checks:
+- [x] 3.3 Implement authorization checks:
   - Endpoints protected with admin check except /api/stuf/inkomend (public)
   - /api/stuf/inkomend validates WSSE signature or other mutual auth to prevent spoofing
 
