@@ -392,7 +392,7 @@
 
 ## 9. Testing & Verification
 
-- [ ] 9.1 Unit tests for BsnValidationService
+- [x] 9.1 Unit tests for BsnValidationService
   - **spec_ref**: `specs.md#REQ-BSN-001`
   - **files**: `tests/Unit/Service/BsnValidationServiceTest.php`
   - **acceptance_criteria**:
@@ -403,7 +403,7 @@
     - Test non-numeric input
     - Coverage: 100%
 
-- [ ] 9.2 Unit tests for HaalCentraalClient
+- [x] 9.2 Unit tests for HaalCentraalClient
   - **spec_ref**: `specs.md#REQ-BSN-003`
   - **files**: `tests/Unit/Service/HaalCentraalClientTest.php`
   - **acceptance_criteria**:
@@ -414,7 +414,7 @@
     - Test timeout (> 5s)
     - Test mTLS certificate validation
 
-- [ ] 9.3 Integration tests for lookup flow
+- [x] 9.3 Integration tests for lookup flow
   - **spec_ref**: `design.md#Flow: BRP Lookup with Doelbinding`
   - **files**: `tests/Integration/BrpLookupFlowTest.php`
   - **acceptance_criteria**:
@@ -423,7 +423,7 @@
     - Test cache miss
     - Test error handling
 
-- [ ] 9.4 Verify no build errors
+- [x] 9.4 Verify no build errors
   - **spec_ref**: `proposal.md#Success Criteria`
   - **files**: all
   - **acceptance_criteria**:
