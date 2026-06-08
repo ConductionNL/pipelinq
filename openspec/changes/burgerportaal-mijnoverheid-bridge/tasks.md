@@ -69,7 +69,7 @@
   - Set actor to "system" (background jobs) or current user ID (manual actions)
   - Unit test: verify rows are inserted immutably, retention dates are calculated per zaak selectielijst
 
-- [ ] 2.5 Create `lib/Service/EmailFallbackSender.php` — Email fallback via openconnector
+- [x] 2.5 Create `lib/Service/EmailFallbackSender.php` — Email fallback via openconnector
   - `send(BerichtenboxMessage $msg, string $toEmail, string $tenantId): void`
     - Render the same message template (add prepended notice: "Dit bericht is ook beschikbaar in uw MijnOverheid Berichtenbox")
     - Build email: To=$toEmail, From=gemeente-noreply@gemeente.nl, Subject=msg.subject, Body=msg.body + notice
@@ -78,7 +78,7 @@
     - Throw `EmailSendException` on failure (caught by BerichtenboxService for retry)
   - Unit test: mock openconnector email source, test success and failure cases
 
-- [ ] 2.6 Create `lib/Service/TemplateRenderer.php` — Mustache template rendering with validation
+- [x] 2.6 Create `lib/Service/TemplateRenderer.php` — Mustache template rendering with validation
   - `render(BerichtenboxTemplate $template, array $variables): RenderedTemplate`
     - Variables: `{zaakId, status, gemeente, deepLink, deadline}`
     - Use Mustache library to render subject and body
