@@ -18,7 +18,7 @@
   - Schema defines field types, validators, and OpenRegister UI hints
 
 ### Encryption Setup
-- [ ] 1.3 Create `lib/Service/EncryptionService.php` for AES-256-GCM encryption/decryption of BSN
+- [x] 1.3 Create `lib/Service/EncryptionService.php` for AES-256-GCM encryption/decryption of BSN
   - `encrypt(string $plaintext, string $tenantId): EncryptedValue` — returns encrypted string + IV
   - `decrypt(string $ciphertext, string $tenantId): string` — retrieves key from openregister key-vault, decrypts
   - `hashBsn(string $plaintext, string $tenantId): string` — returns HMAC-SHA256 of BSN for index lookups
