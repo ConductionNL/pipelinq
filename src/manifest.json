@@ -94,6 +94,13 @@
 			"order": 96
 		},
 		{
+			"id": "CashShifts",
+			"label": "Kassalade",
+			"icon": "icon-toggle-filelist",
+			"route": "CashShifts",
+			"order": 97
+		},
+		{
 			"id": "Pipeline",
 			"label": "Pipeline",
 			"icon": "icon-category-organization",
@@ -786,6 +793,28 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "posRefund"
+			}
+		},
+		{
+			"id": "CashShifts",
+			"route": "/pos/shifts",
+			"type": "custom",
+			"title": "Kassalade",
+			"component": "CashShiftListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "cashShift"
+			}
+		},
+		{
+			"id": "CashShiftDetail",
+			"route": "/pos/shifts/:id",
+			"type": "custom",
+			"title": "Shift",
+			"component": "CashShiftDetailView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "cashShift"
 			}
 		},
 		{

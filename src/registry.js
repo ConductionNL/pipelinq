@@ -103,6 +103,11 @@ import PosRefundListView from './views/pos/PosRefundList.vue'
 import PosRefundDetailView from './views/pos/PosRefundDetail.vue'
 import PosRefundFormView from './views/pos/PosRefundForm.vue'
 
+// --- POS cash drawer (lib gap: index/detail pages cannot express the cash-shift
+//     lifecycle — declare float, record drops, blind count, variance reconcile). ---
+import CashShiftListView from './views/pos/CashShiftList.vue'
+import CashShiftDetailView from './views/pos/CashShiftDetail.vue'
+
 // --- Product barcode lookup (lib gap: index pages have no server-authoritative
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
 import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
@@ -387,6 +392,18 @@ const registry = {
 		kind: 'page',
 		component: PosRefundFormView,
 		_note: 'Bespoke return editor: select original lines with partial quantities, per-line reason + restock toggle and real-time refund totals; lib has no line-selection/refund page type.',
+	},
+
+	// --- POS cash drawer. ---
+	CashShiftListView: {
+		kind: 'page',
+		component: CashShiftListView,
+		_note: 'Cash-shift list; custom so rows navigate to the drawer-reconciliation detail and the empty state offers "Shift openen".',
+	},
+	CashShiftDetailView: {
+		kind: 'page',
+		component: CashShiftDetailView,
+		_note: 'Cash-shift detail: float declaration, drops panel, blind-count entry and the server-authoritative variance panel with manager-gated approve/reject; lib detail page cannot express the cash-drawer lifecycle.',
 	},
 
 	// --- Product barcode lookup. ---
