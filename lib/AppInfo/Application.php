@@ -58,6 +58,7 @@ use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Mcp\PipelinqToolProvider;
 use OCA\Pipelinq\Service\AppointmentEmailService;
 use OCA\Pipelinq\Service\BookingService;
+use OCA\Pipelinq\Service\WalkInQueueService;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -351,6 +352,16 @@ class Application extends App implements IBootstrap
         }//end try
 
         $this->wireAppointmentEmailSeam();
+
+        // Wire the walk-in queue rebalance seam (member 09) into the booking
+        // lifecycle so a Booking completion fires WalkInQueueService::rebalance.
+        try {
+            $bookingService     = $this->getContainer()->get(BookingService::class);
+            $walkInQueueService = $this->getContainer()->get(WalkInQueueService::class);
+            $bookingService->setWalkInQueueRebalance(service: $walkInQueueService);
+        } catch (\Exception $e) {
+            // Booking / walk-in surfaces not available — leave rebalance seam unset.
+        }
     }//end boot()
 
     /**

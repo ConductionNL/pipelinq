@@ -137,6 +137,17 @@ class BookingService
     private ?object $emailProvider = null;
 
     /**
+     * Optional walk-in queue rebalance seam (member 09).
+     *
+     * Invoked from {@see completeBooking()} so the walk-in queue ETAs are
+     * recomputed as scheduled appointments finish. Implementations expose
+     * `rebalance(): int` (the WalkInQueueService satisfies this contract).
+     *
+     * @var object|null
+     */
+    private ?object $walkInQueueRebalance = null;
+
+    /**
      * Constructor.
      *
      * @param ContainerInterface  $container           The DI container (OpenRegister lookup).
@@ -183,6 +194,23 @@ class BookingService
     {
         $this->emailProvider = $provider;
     }//end setEmailProvider()
+
+    /**
+     * Inject the walk-in queue rebalance seam (member 09).
+     *
+     * Wired by Application bootstrap to the WalkInQueueService instance so
+     * that {@see completeBooking()} fires the rebalance on completion.
+     *
+     * @param object|null $service Provider exposing `rebalance(): int`.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+     */
+    public function setWalkInQueueRebalance(?object $service): void
+    {
+        $this->walkInQueueRebalance = $service;
+    }//end setWalkInQueueRebalance()
 
     /**
      * Create a new Booking.
@@ -613,7 +641,38 @@ class BookingService
 
         $this->saveBooking(payload: $this->stripSelf(payload: $booking), uuid: $bookingId);
         $this->invalidateAvailability(payload: $booking);
+        $this->rebalanceWalkInQueue();
     }//end completeBooking()
+
+    /**
+     * Fire the walk-in queue rebalance seam (member 09).
+     *
+     * The rebalance recomputes ETAs for every waiting walk-in ticket so the
+     * queue panel reflects the freshly freed slot. Errors are swallowed —
+     * the booking completion already succeeded and the walk-in panel
+     * auto-refreshes regardless.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+     */
+    private function rebalanceWalkInQueue(): void
+    {
+        if ($this->walkInQueueRebalance === null) {
+            return;
+        }
+
+        if (method_exists($this->walkInQueueRebalance, 'rebalance') === false) {
+            return;
+        }
+
+        try {
+            // @phpstan-ignore-next-line dynamic provider seam
+            $this->walkInQueueRebalance->rebalance();
+        } catch (\Throwable $e) {
+            $this->logger->warning('Pipelinq: walk-in queue rebalance failed');
+        }
+    }//end rebalanceWalkInQueue()
 
     /**
      * Assert that a status transition is permitted by the state machine.

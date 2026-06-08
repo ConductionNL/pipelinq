@@ -937,4 +937,59 @@ class BookingServiceTest extends TestCase
         $service->completeBooking(bookingId: 'b-done');
 
     }//end testCompleteBookingRejectsTransitionFromTerminalStatus()
+
+    /**
+     * completeBooking fires the walk-in queue rebalance seam (member 09) so
+     * the queue panel refreshes ETAs for waiting tickets.
+     *
+     * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+     *
+     * @return void
+     */
+    public function testCompleteBookingFiresWalkInQueueRebalanceSeam(): void
+    {
+        $booking = [
+            '@self'         => ['id' => 'b-finish'],
+            'customerId'    => 'cust-1',
+            'serviceId'     => 'svc-haircut',
+            'startAt'       => '2026-05-01T10:00:00+02:00',
+            'endAt'         => '2026-05-01T10:30:00+02:00',
+            'status'        => 'confirmed',
+            'statusHistory' => [],
+            'depositAmount' => 0.0,
+        ];
+
+        $object = $this->createMock(originalClassName: ObjectService::class);
+        $object->method('find')->willReturn($booking);
+        $object->method('saveObject')->willReturn(['@self' => ['id' => 'b-finish']]);
+
+        $rebalance = new class {
+
+            /**
+             * Number of rebalance invocations seen by the seam.
+             *
+             * @var int
+             */
+            public int $calls = 0;
+
+            /**
+             * Capture rebalance call.
+             *
+             * @return int Tickets touched (irrelevant for assertion).
+             */
+            public function rebalance(): int
+            {
+                $this->calls++;
+                return 0;
+            }//end rebalance()
+        };
+
+        [$service] = $this->buildService(objectService: $object);
+        $service->setWalkInQueueRebalance(service: $rebalance);
+
+        $service->completeBooking(bookingId: 'b-finish');
+
+        $this->assertSame(expected: 1, actual: $rebalance->calls);
+
+    }//end testCompleteBookingFiresWalkInQueueRebalanceSeam()
 }//end class
