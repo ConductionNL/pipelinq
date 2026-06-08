@@ -9,6 +9,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Marketing segmentation and blast campaigns (marketing-segmentation-and-blast,
+  11-slice chain — this entry covers the user-visible feature; slice 10
+  ships docs, slice 11 the manual verification + pre-merge review
+  checklist):
+  - **Rule-based segments:** the `segment` schema and `SegmentService`
+    validate and evaluate AND/OR rule trees against contact/customer
+    data, estimate audience size with TTL caching, and project the
+    per-recipient send list (`getMembersForBlast`). Rules are live
+    queries — every send re-evaluates against current data, picking
+    up newly-qualifying contacts automatically.
+  - **Multi-channel sends:** the `blast` schema and `BlastService`
+    orchestrate email and SMS sends through pluggable provider
+    connectors (SendGrid, SES, Twilio); `BlastSendJob` drains
+    scheduled blasts every 5 minutes; deliveries dispatch with a
+    configurable per-second rate limit (default 100/s) to respect
+    provider quotas.
+  - **Compliance enforcement (GDPR / CAN-SPAM):** `ComplianceService`
+    validates every template against per-channel requirements
+    (`{{unsubscribe_url}}` merge field, sender address, `STOP`
+    keyword for SMS), runs a per-segment consent preflight before
+    a blast leaves draft, and routes unsubscribe / complaint webhook
+    events into a contact's consent record so a single click on the
+    List-Unsubscribe header removes them from every future segment.
+  - **A/B testing:** a blast can declare a second template variant
+    and a split percentage; `BlastService::sliceMembersForAb` does a
+    deterministic hash-bucket split so the same recipient lands in
+    the same arm on every re-evaluation; `PerformanceDashboard`
+    surfaces the chi-square significance test once both arms have at
+    least 100 deliveries.
+  - **Revenue attribution:** `AttributionService` records click
+    events from tracked links and links blast deliveries to
+    downstream deals on a first-click model within a configurable
+    attribution window (default 30 days); the **Attribution** tab on
+    the performance dashboard reports the attributed deal count and
+    summed attributed EUR per blast.
+  - **REST surface:** `GET`/`POST /api/segments`,
+    `GET /api/segments/{id}`, `GET /api/segments/{id}/members`,
+    `POST /api/segments/{id}/size`; `GET`/`POST /api/templates`,
+    `GET`/`PATCH /api/templates/{id}`; `GET`/`POST /api/blasts`,
+    `GET`/`PATCH /api/blasts/{id}`, `POST /api/blasts/{id}/send`,
+    `POST /api/blasts/{id}/cancel`, `GET /api/blasts/{id}/deliveries`,
+    `GET /api/blasts/{id}/attribution`; provider webhooks at
+    `POST /api/blast-webhooks/sendgrid|ses|twilio`
+    (HMAC-verified, `#[PublicPage]`).
+  - **Frontend (manifest v2):** new **Marketing** navigation group
+    with **Blasts** (list + 6-step wizard with consent-preflight
+    modal), **Blast monitor** (live delivery log) and **Blast
+    performance** (Overview / A-B / Attribution tabs).
+  - **Docs:** user guide at `docs/user/marketing-blasts.md`
+    (English) and `docs/user/marketing-blasts.nl.md` (Dutch) — covers
+    segment building, compliant template authoring, the send
+    workflow, A/B testing, and monitoring / attribution.
+  - **i18n:** Dutch and English translations for all marketing
+    strings.
 - Sales forecast roll-up and categories (forecast-roll-up-and-categories) —
   category-driven forecasting that aggregates existing lead/pipeline data
   (ADR-022) into server-authoritative roll-ups (ADR-005):
