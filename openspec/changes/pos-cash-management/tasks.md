@@ -215,7 +215,7 @@
 
 ## 8. Testing
 
-- [ ] 8.1 Unit test `CashShiftService.calculateDiff()` with multiple scenarios
+- [x] 8.1 Unit test `CashShiftService.calculateDiff()` with multiple scenarios
   - **files**: `tests/Unit/Service/CashShiftServiceTest.php`
   - **acceptance_criteria**:
     - Scenario: no drops, expected = actual (diff = 0, withinTolerance = true)
@@ -224,14 +224,14 @@
     - Scenario: shortage beyond tolerance (diffPercentage > 2)
     - Scenario: division by zero (expected = 0, diffPercentage should be null or marked invalid)
 
-- [ ] 8.2 Integration test: Full shift lifecycle
+- [x] 8.2 Integration test: Full shift lifecycle
   - **files**: `tests/Integration/CashShiftLifecycleTest.php`
   - **acceptance_criteria**:
     - Test: Open shift → Record drop → Record count → Auto-approve diff (within tolerance) → Verify CloudEvent emitted
     - Test: Open shift → Close without count → Verify count form is required
     - Test: Record count → Manager rejects → Verify shift reopens
 
-- [ ] 8.3 API endpoint tests
+- [x] 8.3 API endpoint tests
   - **files**: `tests/Api/CashShiftControllerTest.php`
   - **acceptance_criteria**:
     - `POST /api/v1/pos/shifts` creates shift with correct properties
