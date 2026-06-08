@@ -226,7 +226,7 @@
     - Admin can update settings via `POST /api/admin/settings` with JSON body
     - Settings changes take effect immediately (no restart required)
 
-- [ ] 6.2 Create admin settings UI component
+- [x] 6.2 Create admin settings UI component (file: `src/components/admin/PosCustomerSettings.vue`)
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-006`
   - **files**: `pos/src/views/settings/CustomerSettings.vue` (new)
   - **acceptance_criteria**:
