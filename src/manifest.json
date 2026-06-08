@@ -878,6 +878,16 @@
 			}
 		},
 		{
+			"id": "BrpMonitor",
+			"route": "/admin/brp-monitor",
+			"type": "custom",
+			"title": "BRP Monitor",
+			"component": "BrpMonitorView",
+			"config": {
+				"register": "pipelinq"
+			}
+		},
+		{
 			"id": "KassakoppelingAuditList",
 			"route": "/kassakoppeling/audit",
 			"type": "custom",
