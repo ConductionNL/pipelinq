@@ -55,7 +55,7 @@
 
 ## 2. Backend: Services
 
-- [ ] 2.1 Create `lib/Service/BsnValidationService.php`
+- [x] 2.1 Create `lib/Service/BsnValidationService.php`
   - **spec_ref**: `specs.md#REQ-BSN-001`
   - **files**: `lib/Service/BsnValidationService.php`
   - **acceptance_criteria**:
@@ -65,7 +65,7 @@
     - AND compute 11-proef (sum of digit × position, modulo 11)
     - AND return BsnValidationResult with isFormeelGeldig (true/false) and error message if invalid
 
-- [ ] 2.2 Create `lib/Service/HaalCentraalClient.php`
+- [x] 2.2 Create `lib/Service/HaalCentraalClient.php`
   - **spec_ref**: `specs.md#REQ-BSN-003`
   - **files**: `lib/Service/HaalCentraalClient.php`
   - **acceptance_criteria**:
@@ -77,7 +77,7 @@
     - AND parse HaalCentraal HAL+JSON response and normalize to BrpPersoon
     - AND throw HaalCentraalException on error
 
-- [ ] 2.3 Create `lib/Service/BrpCacheService.php`
+- [x] 2.3 Create `lib/Service/BrpCacheService.php`
   - **spec_ref**: `specs.md#REQ-BSN-004`
   - **files**: `lib/Service/BrpCacheService.php`
   - **acceptance_criteria**:
@@ -87,7 +87,7 @@
       - `set(BrpPersoon $person, int $ttlHours = 24): void` — stores with retentieTot = now + ttl
       - `invalidate(string $bsn): void` — marks entry as expired
 
-- [ ] 2.4 Create `lib/Service/BsnAuditService.php`
+- [x] 2.4 Create `lib/Service/BsnAuditService.php`
   - **spec_ref**: `specs.md#REQ-BSN-005`
   - **files**: `lib/Service/BsnAuditService.php`
   - **acceptance_criteria**:
@@ -96,7 +96,7 @@
     - AND always write to immutable BsnAuditRecord schema
     - AND mask BSN in all logging output as `***{last1digit}`
 
-- [ ] 2.5 Create `lib/Service/OptOutService.php`
+- [x] 2.5 Create `lib/Service/OptOutService.php`
   - **spec_ref**: `specs.md#REQ-BSN-006`
   - **files**: `lib/Service/OptOutService.php`
   - **acceptance_criteria**:
@@ -106,7 +106,7 @@
       - `getOptOut(string $bsn): ?OptOutVlag`
       - `recordFromBrpResponse(BrpPersoon $person): void` — creates OptOutVlag if indicatieGeheim = "1"
 
-- [ ] 2.6 Create `lib/Listener/BrpMutationWebhookListener.php`
+- [x] 2.6 Create `lib/Listener/BrpMutationWebhookListener.php`
   - **spec_ref**: `specs.md#REQ-BSN-004-03`
   - **files**: `lib/Listener/BrpMutationWebhookListener.php`
   - **acceptance_criteria**:
