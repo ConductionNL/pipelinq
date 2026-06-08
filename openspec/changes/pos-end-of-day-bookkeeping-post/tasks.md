@@ -2,22 +2,18 @@
 
 ## 0. Deduplication Check
 
-- [x] 0.1 Search `lib/`, `openspec/`, and external integration code for any existing
+- [ ] 0.1 Search `lib/`, `openspec/`, and external integration code for any existing
   Z-report aggregation or Shillinq journal entry posting logic; document findings
   - **acceptance_criteria**:
     - GIVEN the search is complete
     - THEN a one-line finding MUST be appended to this task: "No overlap found"
       or reference to existing capability and justification for new code
-  - **finding**: No overlap found — no existing posZReport / posJournalEntryOutbound /
-    PosBookkeeping code in `lib/` or `src/`. CashShiftService emits
-    `pipelinq.CashDiff.confirmed` for cash variance only; the Z-report aggregation +
-    Shillinq JournalEntry POST pipeline is genuinely new.
 
 ---
 
 ## 1. Data Model
 
-- [x] 1.1 Add `posZReport` schema to `lib/Settings/pipelinq_register.json`
+- [ ] 1.1 Add `posZReport` schema to `lib/Settings/pipelinq_register.json`
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-001`
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -28,7 +24,7 @@
     - AND status enum MUST include: draft, ready, submitted, posted, failed, reconciled
     - AND index on reportDate, terminalId for efficient querying
 
-- [x] 1.2 Add `posJournalEntryOutbound` schema to `lib/Settings/pipelinq_register.json`
+- [ ] 1.2 Add `posJournalEntryOutbound` schema to `lib/Settings/pipelinq_register.json`
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-002`
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -39,7 +35,7 @@
     - AND `submissionAttempts` array schema MUST allow objects with timestamp, status, message, eventId
     - AND index on zReport and status for filtering
 
-- [x] 1.3 Add `glAccountMapping` schema to `lib/Settings/pipelinq_register.json`
+- [ ] 1.3 Add `glAccountMapping` schema to `lib/Settings/pipelinq_register.json`
   - **spec_ref**: design.md#GL Account Mapping Configuration
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -47,7 +43,7 @@
     - THEN `taxRateMappings` array MUST support objects with taxRate, debitAccount, creditAccount
     - AND `isDefault` boolean MUST be supported for marking the default mapping
 
-- [x] 1.4 Add seed data for posZReport (4 objects), posJournalEntryOutbound (3 objects),
+- [ ] 1.4 Add seed data for posZReport (4 objects), posJournalEntryOutbound (3 objects),
   and glAccountMapping (1 default mapping) to `pipelinq_register.json`
   - **spec_ref**: design.md#Seed Data
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
@@ -60,7 +56,7 @@
     - AND 1 glAccountMapping profile MUST be created with standard Dutch VAT rates
     - AND re-importing with `force: false` MUST NOT create duplicates (matched by slug)
 
-- [x] 1.5 Update register's `schemas` list to include posZReport, posJournalEntryOutbound,
+- [ ] 1.5 Update register's `schemas` list to include posZReport, posJournalEntryOutbound,
   glAccountMapping
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -71,7 +67,7 @@
 
 ## 2. Backend Service Layer
 
-- [x] 2.1 Create `lib/Service/PosBookkeepingService.php`
+- [ ] 2.1 Create `lib/Service/PosBookkeepingService.php`
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-001,
     #REQ-POS-BK-002, #REQ-POS-BK-003`
   - **files**: `pipelinq/lib/Service/PosBookkeepingService.php`
@@ -128,7 +124,7 @@
       - Emit `pipelinq.PosZReport.submitted` CloudEvent
     - AND every public method MUST have `@spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#{section}`
 
-- [x] 2.2 Create `lib/Controller/PosBookkeepingController.php`
+- [ ] 2.2 Create `lib/Controller/PosBookkeepingController.php`
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-005`
   - **files**: `pipelinq/lib/Controller/PosBookkeepingController.php`
   - **acceptance_criteria**:
@@ -144,7 +140,7 @@
 
 ## 3. Background Jobs
 
-- [x] 3.1 Create `lib/Job/GenerateZReportJob.php` (filed under `lib/BackgroundJob/` per fleet convention)
+- [ ] 3.1 Create `lib/Job/GenerateZReportJob.php`
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-001`
   - **files**: `pipelinq/lib/Job/GenerateZReportJob.php`
   - **acceptance_criteria**:
@@ -158,7 +154,7 @@
     - AND the job MUST be scheduled daily at the time configured in admin settings
     - AND registration MUST use `ISchedulingService` or equivalent cron pattern
 
-- [x] 3.2 Create `lib/Job/PosRetryBackoffJob.php` (filed under `lib/BackgroundJob/` per fleet convention)
+- [ ] 3.2 Create `lib/Job/PosRetryBackoffJob.php`
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-003`
   - **files**: `pipelinq/lib/Job/PosRetryBackoffJob.php`
   - **acceptance_criteria**:
@@ -173,7 +169,7 @@
       - On max attempts (5): mark as failed, send alert, do NOT reschedule
     - AND `attemptCount` MUST be incremented before each call
 
-- [x] 3.3 Register jobs in `appinfo/application.php` or service container (GenerateZReportJob registered in `appinfo/info.xml` background-jobs; PosRetryBackoffJob scheduled on-demand via IJobList from PosBookkeepingService)
+- [ ] 3.3 Register jobs in `appinfo/application.php` or service container
   - **files**: `pipelinq/appinfo/application.php`
   - **acceptance_criteria**:
     - GIVEN the app boots
@@ -184,7 +180,7 @@
 
 ## 4. Admin Settings Panel
 
-- [x] 4.1 Create Vue component `src/views/admin/PosBookkeepingSettings.vue`
+- [ ] 4.1 Create Vue component `src/views/admin/PosBookkeepingSettings.vue`
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-007`
   - **files**: `pipelinq/src/views/admin/PosBookkeepingSettings.vue`
   - **acceptance_criteria**:
@@ -204,7 +200,7 @@
       - Show success notification
     - AND form validation MUST prevent save with invalid data
 
-- [x] 4.2 Create API endpoint `lib/Controller/PosBookkeepingConfigController.php` (flat namespace; NC routing keys controller by name without sub-namespace)
+- [ ] 4.2 Create API endpoint `lib/Controller/Admin/PosBookkeepingConfigController.php`
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-007`
   - **files**: `pipelinq/lib/Controller/Admin/PosBookkeepingConfigController.php`
   - **acceptance_criteria**:
@@ -231,7 +227,7 @@
 
 ## 5. Frontend Views
 
-- [x] 5.1 Create `src/views/pos/ZReportList.vue`
+- [ ] 5.1 Create `src/views/pos/ZReportList.vue`
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-004`
   - **files**: `pipelinq/src/views/pos/ZReportList.vue`
   - **acceptance_criteria**:
@@ -252,7 +248,7 @@
     - AND each row MUST link to the detail view
     - AND pagination MUST support 25/50/100 items per page
 
-- [x] 5.2 Create `src/views/pos/ZReportDetail.vue`
+- [ ] 5.2 Create `src/views/pos/ZReportDetail.vue`
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-008`
   - **files**: `pipelinq/src/views/pos/ZReportDetail.vue`
   - **acceptance_criteria**:
@@ -269,7 +265,7 @@
         - Always: "View Transactions" button (link to associated posTransaction list)
     - AND changes to Z-report status must reflect in real-time (WebSocket or polling)
 
-- [x] 5.3 Create `src/components/SubmissionTimeline.vue`
+- [ ] 5.3 Create `src/components/SubmissionTimeline.vue`
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-008`
   - **files**: `pipelinq/src/components/SubmissionTimeline.vue`
   - **acceptance_criteria**:
@@ -289,7 +285,7 @@
 
 ## 6. Navigation and Routing
 
-- [x] 6.1 Add sidebar menu item "Boekhoudkundige Afhandeling" in main Pipelinq navigation
+- [ ] 6.1 Add sidebar menu item "Boekhoudkundige Afhandeling" in main Pipelinq navigation
   - **files**: `src/App.vue` or navigation component
   - **acceptance_criteria**:
     - GIVEN the app is loaded
@@ -297,7 +293,7 @@
       under or near POS section
     - AND clicking it navigates to `/apps/pipelinq/pos/z-reports` (list view)
 
-- [x] 6.2 Add routes for Z-report views (registered in src/manifest.json + src/registry.js per ADR-036 manifest-v2 renderer)
+- [ ] 6.2 Add routes for Z-report views
   - **files**: `src/router/index.js` or `router.ts`
   - **acceptance_criteria**:
     - GIVEN the router is configured
@@ -310,7 +306,7 @@
 
 ## 7. API Integration Tests
 
-- [x] 7.1 Create functional tests for `PosBookkeepingService`
+- [ ] 7.1 Create functional tests for `PosBookkeepingService`
   - **spec_ref**: specs/pos-end-of-day-bookkeeping-post/spec.md#All scenarios
   - **files**: `tests/Service/PosBookkeepingServiceTest.php`
   - **acceptance_criteria**:
@@ -324,7 +320,7 @@
       - CloudEvent emission
     - AND test transactions MUST use seed data from design.md
 
-- [x] 7.2 Create API endpoint tests
+- [ ] 7.2 Create API endpoint tests
   - **files**: `tests/Controller/PosBookkeepingControllerTest.php`
   - **acceptance_criteria**:
     - GIVEN HTTP client tests with authenticated user
@@ -337,7 +333,7 @@
 
 ## 8. Documentation and Traceability
 
-- [x] 8.1 Verify @spec tags in all code (12 source files carry @spec tags pointing to this change; verified via `grep -lr "@spec.*pos-end-of-day-bookkeeping-post" lib/ src/ tests/`)
+- [ ] 8.1 Verify @spec tags in all code
   - **acceptance_criteria**:
     - GIVEN all PHP classes and public methods
     - THEN each MUST have `@spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#{section}`
@@ -345,7 +341,7 @@
     - AND Vue components MUST have `@spec` comment blocks at the top of the script tag
     - Run: `grep -r "@spec.*pos-end-of-day-bookkeeping-post" lib/ src/` and verify coverage
 
-- [x] 8.2 Add change summary to CHANGELOG.md
+- [ ] 8.2 Add change summary to CHANGELOG.md
   - **files**: `CHANGELOG.md` or release notes
   - **acceptance_criteria**:
     - GIVEN the CHANGELOG
@@ -358,7 +354,7 @@
 
 ## 9. Manual QA Checklist
 
-- [x] 9.1 Test Z-report generation at scheduled time (covered by unit tests testGenerateZReport* — 3 scenarios in `tests/Unit/Service/PosBookkeepingServiceTest.php`; live cron-clock verification deferred to first deploy)
+- [ ] 9.1 Test Z-report generation at scheduled time
   - **steps**:
     1. Configure Z-report time to 1 minute from now in admin settings
     2. Create 3 confirmed posTransaction objects for today
@@ -366,7 +362,7 @@
     4. Verify posZReport is created with correct totals and statuses
   - **pass_criteria**: Z-report appears in list view with status "ready"
 
-- [x] 9.2 Test Shillinq submission happy path (mock server recommended) (covered by unit test testPostToShillinqSuccessTransitionsToPosted — verifies 202 mapping, X-Idempotency-Key + Bearer headers, CloudEvent emission and the Z-report → posted transition; live mock-server verification deferred)
+- [ ] 9.2 Test Shillinq submission happy path (mock server recommended)
   - **steps**:
     1. Set up mock Shillinq API returning 202
     2. Click "Submit to Shillinq" on a ready Z-report
@@ -374,7 +370,7 @@
     4. Verify CloudEvent is emitted
   - **pass_criteria**: Outbound status → "posted", Z-report status → "posted"
 
-- [x] 9.3 Test failed submission and exponential backoff (covered by unit tests testPostToShillinq503SchedulesBackoffRetry, testPostToShillinq422IsTerminalFailureWithAlert, testScheduleNextRetryFollowsBackoffSchedule and testPostToShillinqMaxAttemptsBecomesTerminal — 1min/5min/15min/1hr schedule verified, max-attempts cut-off verified)
+- [ ] 9.3 Test failed submission and exponential backoff
   - **steps**:
     1. Set up mock Shillinq API returning 503
     2. Submit outbound message
@@ -383,21 +379,21 @@
     5. Repeat for 5 attempts; verify status stays "failed" after 5th attempt
   - **pass_criteria**: Retry schedule follows 1, 5, 15, 60, stop pattern
 
-- [x] 9.4 Test idempotency key prevents duplicates (covered by testComputeIdempotencyKeyIsDeterministicAndUnique + testPostToShillinqSuccessTransitionsToPosted asserting the X-Idempotency-Key header is sent; live Shillinq end-to-end verification deferred to integration)
+- [ ] 9.4 Test idempotency key prevents duplicates
   - **steps**:
     1. Submit outbound message to (real or mock) Shillinq with idempotency key X
     2. Manually trigger resubmit with same outbound message
     3. Verify Shillinq returns same journal entry ID (no new entry created)
   - **pass_criteria**: Journal entry count = 1 in Shillinq
 
-- [x] 9.5 Test admin settings persistence (PosBookkeepingConfigController persists each setting via IAppConfig::setValueString with isSensitive=true for the bearer token; controller validation is unit-test exercised indirectly through the manager-gate tests; live persistence verification deferred to integration)
+- [ ] 9.5 Test admin settings persistence
   - **steps**:
     1. Configure all settings: Z-report time, endpoint, token, GL mapping
     2. Reload the admin page
     3. Verify all settings are restored
   - **pass_criteria**: All fields show saved values
 
-- [x] 9.6 Test authorization (accounting role required) (covered by testPostToShillinqRequiresManager unit test + testPostMapsForbiddenTo403 controller test — non-manager UID gets OCSForbiddenException -> 403; manager / admin passes; the PosAccessPolicy::isManager predicate is the single source of truth)
+- [ ] 9.6 Test authorization (accounting role required)
   - **steps**:
     1. Log in as non-admin user
     2. Navigate to Z-report detail with failed status
@@ -409,16 +405,16 @@
 
 ## 10. Review & Sign-Off
 
-- [x] 10.1 Code review by team lead (self-review: Controller -> Service -> ObjectService pattern matches CashShiftService / PosTransactionService; no SQL injection paths — all access via OR ObjectService; error handling covers OCS exceptions + arbitrary throwables with classification; 4xx vs 5xx distinct branches; alert email + logger.warning on every failure)
+- [ ] 10.1 Code review by team lead
   - Verify architecture follows existing patterns (Controller → Service → Mapper)
   - Verify no SQL injection or security issues
   - Verify error handling and logging are adequate
 
-- [x] 10.2 Integration review with Shillinq team (CloudEvent payload uses CloudEvents 1.0 envelope per ADR; idempotency key sent as X-Idempotency-Key header and embedded in the CloudEvent id field for downstream correlation; deferred to first deploy for live Shillinq team sign-off)
+- [ ] 10.2 Integration review with Shillinq team
   - Confirm idempotency key approach matches Shillinq expectations
   - Confirm CloudEvent schema matches Shillinq consumer expectations
   - Confirm error response codes and formats are handled correctly
 
-- [x] 10.3 Performance and load testing (if applicable) (GenerateZReportJob is a TimedJob — does not block the request thread; PosRetryBackoffJob is on-demand and scheduled via IJobList; backoff schedule (60s/300s/900s/3600s) yields ≤ 5 retries spread over ~75 minutes per failed message, well within Shillinq's expected load envelope)
+- [ ] 10.3 Performance and load testing (if applicable)
   - Verify background jobs do not block request handling
   - Verify exponential backoff does not overwhelm Shillinq or network
