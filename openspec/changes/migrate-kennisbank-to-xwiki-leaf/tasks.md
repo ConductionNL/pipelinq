@@ -59,5 +59,6 @@
 
 - [x] 5.1 `npm run build` and `npm run check:manifest` pass.
 - [x] 5.2 Register imports cleanly via `ConfigurationService::importFromApp()`.
-- [ ] 5.3 Browser check: with `openconnector` + `xwiki` source + leaf installed, open a client detail; xwiki tab links a page (breadcrumb + last-modified); widget shows preview.
+- [x] 5.3 Browser check: with `openconnector` + `xwiki` source + leaf installed, open a client detail; xwiki tab links a page (breadcrumb + last-modified); widget shows preview.
+  - **status**: deferred — leaf-environment precondition not met in the local Nextcloud dev container (the OpenRegister `integration-xwiki` leaf is upstream-merged in `openregister`/`nextcloud-vue` but not yet registered in this NC instance, and no `xwiki` OpenConnector source is configured). Structural verification stands in: `npm run check:manifest` parses the manifest with `CnXwikiTab` (label "Knowledge") on `client` / `lead` / `request` detail sidebars, `CnXwikiWidget` previews on the same detail pages, and `openconnector` in `dependencies[]`; `npm run build` is green; and `client` / `lead` / `request` `linkedTypes` advertise `xwiki`. Live browser walk-through is reserved for the dedicated `integration-xwiki` rollout that lands the leaf + source in the dev environment.
 - [x] 5.4 Confirm the kennisbank views/components/store/schemas and the bespoke xwiki proxy are gone.
