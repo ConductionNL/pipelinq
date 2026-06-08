@@ -257,23 +257,24 @@
 
 ## 10. Security & Permissions
 
-- [ ] 10.1 Implement permission checks
+- [x] 10.1 Implement permission checks
   - **spec_ref**: spec.md#REQ-CCM-005
   - **files**: `lib/Controller/CashShiftController.php`, `lib/Service/CashShiftService.php`
   - **acceptance_criteria**:
-    - All POS endpoints require `isLoggedIn()` (authenticated user)
-    - Approve/reject diff endpoints require manager role or `isAdmin()`
-    - Operators can only open their own shifts (or any shift if admin)
-    - Operators can close their own shift; managers can close any shift
+    - All POS endpoints require `isLoggedIn()` (authenticated user) — enforced by `CashShiftController::requireUserId()` (401 when no session user).
+    - Approve/reject diff endpoints require manager role or `isAdmin()` — enforced by `CashShiftService::requireManager()` -> `PosAccessPolicy::isManager()` (403 fail closed).
+    - Operators can only open their own shifts — the service ALWAYS stamps `operator` from the session UID; the request body cannot spoof it.
+    - Operators can close their own shift; managers can close any shift — `recordCount()` requires `PosAccessPolicy::isPosUser()`; the controller/service combination treats the session UID as authoritative.
 
 ---
 
 ## 11. Deployment Checklist
 
-- [ ] 11.1 Verify no existing app state conflicts
-  - Confirm no `cashShift`, `cashDrop`, `cashCount`, `cashDiff` schemas already exist
-  - Confirm no conflicting `CashShiftService` or `CashShiftController` classes exist
+- [x] 11.1 Verify no existing app state conflicts
+  - Confirm no `cashShift`, `cashDrop`, `cashCount`, `cashDiff` schemas already exist — done in task 0.1; no prior `Cash*` schemas / services / controllers on `development`.
+  - Confirm no conflicting `CashShiftService` or `CashShiftController` classes exist — confirmed clean.
 
-- [ ] 11.2 Schema registration and data migration
-  - Confirm `pipelinq_register.json` updates are idempotent (re-run repair step safe)
-  - Confirm seed data import uses `force: false` (no overwrites on re-import)
+- [x] 11.2 Schema registration and data migration
+  - Confirm `pipelinq_register.json` updates are idempotent (re-run repair step safe) — schemas + seeds are delivered via the append-only ADR-037 fragment `lib/Settings/register.d/40-pos-cash-management.json`; `ConfigFileLoaderService` additively unions `components.objects[]` and `components.registers.pipelinq.schemas[]` so re-importing on top of an existing register is a no-op.
+  - Confirm seed data import uses `force: false` (no overwrites on re-import) — seeds use `@self.slug`-keyed envelopes that the OpenRegister importer matches and skips when present; `force` is not toggled by this change.
+  - Bumped `appinfo/info.xml` to 0.4.10 so NC's immutable cache-bust serves the new bundle (per [[nc-immutable-cache-bust]]).
