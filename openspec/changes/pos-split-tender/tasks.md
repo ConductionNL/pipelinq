@@ -293,10 +293,11 @@
   - Verify GL posting in shillinq
   - **DEFERRED**: Requires a running NC instance with pipelinq + shillinq + a wired CloudEvent broker. Behavioural coverage is provided by `tests/Unit/Service/PosTenderServiceTest.php` (912 lines — covers `calculateChange` overpay/exact/underpay, `validateTenderSum` balanced/underpayment, `addTender` happy + 8 negative paths, `removeTender`, `assertBalancedForSettle` underpayment + overpayment-with-change + overpayment-without-change) and `tests/Unit/Controller/PosTenderControllerTest.php` (427 lines — exercises the HTTP surface including 404/400/409 mapping for the per-transaction tender endpoints). Live QA against a real POS terminal happens in the follow-up `pos-split-tender-qa-pass` flight once the staging POS terminal is provisioned.
 
-- [ ] 12.2 Test error scenarios:
+- [~] 12.2 Test error scenarios:
   - Attempt to settle with underpayment → error shown
   - Attempt to add tender to settled transaction → error shown
   - Remove all tenders → transaction shows "no payment" state
+  - **DEFERRED**: All three negative paths have automated coverage — underpayment via `PosTenderServiceTest::testAssertBalancedForSettleRejectsUnderpayment` + `testValidateTenderSumReportsUnderpayment`, settled-state guards via `PosTenderServiceTest::testAddTenderRejectsOnSettledTransaction` and `testRemoveTenderRejectsOnSettledTransaction` (mapped to 409 by `PosTenderControllerTest`), empty-tender state via the controller test's DELETE flow + `testGetTendersForEmptyIdReturnsEmpty`. The remaining work is exploratory manual UX confirmation in the staging QA flight (see 12.1).
 
 - [ ] 12.3 Verify migrations (if needed):
   - If `posTransaction` schema changed, verify seed data is re-imported
