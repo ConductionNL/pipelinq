@@ -115,6 +115,19 @@ async function doInitializeStores() {
 		if (config.register && config.billingCategory_schema) {
 			objectStore.registerObjectType('billingCategory', config.billingCategory_schema, config.register)
 		}
+		// Appointment booking — admin views (appointment-booking 01..11).
+		if (config.register && config.service_schema) {
+			objectStore.registerObjectType('service', config.service_schema, config.register)
+		}
+		if (config.register && config.resource_schema) {
+			objectStore.registerObjectType('resource', config.resource_schema, config.register)
+		}
+		if (config.register && config.booking_schema) {
+			objectStore.registerObjectType('booking', config.booking_schema, config.register)
+		}
+		if (config.register && config.walkInTicket_schema) {
+			objectStore.registerObjectType('walkInTicket', config.walkInTicket_schema, config.register)
+		}
 	}
 
 	return { settingsStore, objectStore }
