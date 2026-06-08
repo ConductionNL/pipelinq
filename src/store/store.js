@@ -111,6 +111,19 @@ async function doInitializeStores() {
 		if (config.register && config.posRefundLine_schema) {
 			objectStore.registerObjectType('posRefundLine', config.posRefundLine_schema, config.register)
 		}
+		// POS cash-drawer (pos-cash-management) — REQ-CCM-001..007.
+		if (config.register && config.cashShift_schema) {
+			objectStore.registerObjectType('cashShift', config.cashShift_schema, config.register)
+		}
+		if (config.register && config.cashDrop_schema) {
+			objectStore.registerObjectType('cashDrop', config.cashDrop_schema, config.register)
+		}
+		if (config.register && config.cashCount_schema) {
+			objectStore.registerObjectType('cashCount', config.cashCount_schema, config.register)
+		}
+		if (config.register && config.cashDiff_schema) {
+			objectStore.registerObjectType('cashDiff', config.cashDiff_schema, config.register)
+		}
 		// Billing categories (billable-categories-and-tags) — REQ-BCT-001.
 		if (config.register && config.billingCategory_schema) {
 			objectStore.registerObjectType('billingCategory', config.billingCategory_schema, config.register)
