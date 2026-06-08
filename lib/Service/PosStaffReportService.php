@@ -49,10 +49,10 @@ class PosStaffReportService
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container        The DI container.
-     * @param IAppConfig         $appConfig        The app config.
-     * @param PosStaffService    $posStaffService  The POS staff service (for name lookup).
-     * @param LoggerInterface    $logger           The logger.
+     * @param ContainerInterface $container       The DI container.
+     * @param IAppConfig         $appConfig       The app config.
+     * @param PosStaffService    $posStaffService The POS staff service (for name lookup).
+     * @param LoggerInterface    $logger          The logger.
      */
     public function __construct(
         private ContainerInterface $container,
@@ -98,12 +98,12 @@ class PosStaffReportService
             $byStaff[$staffId]['transactionCount']++;
             $byStaff[$staffId]['total']    += ($sign * (float) ($tx['total'] ?? 0));
             $byStaff[$staffId]['totalTax'] += ($sign * (float) ($tx['totalTax'] ?? 0));
-        }
+        }//end foreach
 
         // Resolve display names from posStaff. Failures fall back to the UUID.
         foreach ($byStaff as $staffId => $_row) {
             try {
-                $staff                          = $this->posStaffService->getStaff(id: $staffId);
+                $staff = $this->posStaffService->getStaff(id: $staffId);
                 $byStaff[$staffId]['displayName'] = (string) ($staff['displayName'] ?? $staffId);
             } catch (\Throwable $e) {
                 $byStaff[$staffId]['displayName'] = $staffId;

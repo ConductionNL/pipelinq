@@ -51,12 +51,12 @@ class PosStaffReportController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest              $request      The request.
-     * @param PosStaffReportService $service      The report service.
-     * @param PosAccessPolicy       $policy       The POS access policy (manager predicate).
-     * @param IUserSession          $userSession  The user session.
-     * @param IL10N                 $l10n         The localization service.
-     * @param LoggerInterface       $logger       The logger.
+     * @param IRequest              $request     The request.
+     * @param PosStaffReportService $service     The report service.
+     * @param PosAccessPolicy       $policy      The POS access policy (manager predicate).
+     * @param IUserSession          $userSession The user session.
+     * @param IL10N                 $l10n        The localization service.
+     * @param LoggerInterface       $logger      The logger.
      */
     public function __construct(
         IRequest $request,

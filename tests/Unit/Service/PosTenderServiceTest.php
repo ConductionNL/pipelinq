@@ -65,7 +65,7 @@ class TenderFakeObjectService
     private int $seq = 0;
 
     /**
-     * @var bool
+     * @var boolean
      */
     public bool $throwOnSave = false;
 
@@ -124,7 +124,7 @@ class TenderFakeObjectService
             $uuid = $schema.'-'.$this->seq;
         }
 
-        $object['id']                = $uuid;
+        $object['id'] = $uuid;
         $this->store[$schema][$uuid] = $object;
         return $object;
     }//end saveObject()
@@ -341,7 +341,7 @@ class PosTenderServiceTest extends TestCase
     {
         $this->seedTenderType(['id' => 't1', 'code' => 'CASH', 'sortOrder' => 2]);
         $this->seedTenderType(['id' => 't2', 'code' => 'CARD', 'sortOrder' => 1]);
-        $this->seedTenderType(['id' => 't3', 'code' => 'OFF',  'sortOrder' => 3, 'isActive' => false]);
+        $this->seedTenderType(['id' => 't3', 'code' => 'OFF', 'sortOrder' => 3, 'isActive' => false]);
 
         $types = $this->service->listTenderTypes(activeOnly: false);
 
@@ -416,11 +416,13 @@ class PosTenderServiceTest extends TestCase
         $this->seedTenderType(['id' => 't1', 'code' => 'CASH']);
 
         $this->expectException(OCSBadRequestException::class);
-        $this->service->createTenderType(data: [
-            'name'      => 'Contant 2',
-            'code'      => 'CASH',
-            'glAccount' => '1100',
-        ]);
+        $this->service->createTenderType(
+                data: [
+                    'name'      => 'Contant 2',
+                    'code'      => 'CASH',
+                    'glAccount' => '1100',
+                ]
+                );
     }//end testCreateTenderTypeRejectsDuplicateCode()
 
     /**
@@ -428,12 +430,14 @@ class PosTenderServiceTest extends TestCase
      */
     public function testCreateTenderTypePersists(): void
     {
-        $saved = $this->service->createTenderType(data: [
-            'name'              => 'Cadeaubon',
-            'code'              => 'VOUCHER',
-            'glAccount'         => '2100',
-            'requiresReference' => true,
-        ]);
+        $saved = $this->service->createTenderType(
+                data: [
+                    'name'              => 'Cadeaubon',
+                    'code'              => 'VOUCHER',
+                    'glAccount'         => '2100',
+                    'requiresReference' => true,
+                ]
+                );
 
         $this->assertSame('VOUCHER', $saved['code']);
         $this->assertSame('2100', $saved['glAccount']);
@@ -820,14 +824,16 @@ class PosTenderServiceTest extends TestCase
     public function testEmitSingleTenderPostedPersistsEventIdAndIncrementsAttempts(): void
     {
         $this->seedTenderType(['id' => 't1', 'code' => 'CASH']);
-        $tender = $this->seedTender([
-            'id'             => 'tnd1',
-            'transaction'    => 'tx1',
-            'tenderType'     => 't1',
-            'amount'         => 25.00,
-            'glAccount'      => '1100',
-            'glPostAttempts' => 0,
-        ]);
+        $tender = $this->seedTender(
+                [
+                    'id'             => 'tnd1',
+                    'transaction'    => 'tx1',
+                    'tenderType'     => 't1',
+                    'amount'         => 25.00,
+                    'glAccount'      => '1100',
+                    'glPostAttempts' => 0,
+                ]
+                );
 
         $eventId = $this->service->emitSingleTenderPosted(
             transactionUuid: 'tx1',
@@ -849,12 +855,14 @@ class PosTenderServiceTest extends TestCase
     public function testEmitSingleTenderPostedSoftFailsAtMaxAttempts(): void
     {
         $this->seedTenderType(['id' => 't1']);
-        $tender = $this->seedTender([
-            'id'             => 'tnd1',
-            'transaction'    => 'tx1',
-            'tenderType'     => 't1',
-            'glPostAttempts' => PosTenderService::MAX_GL_POST_ATTEMPTS,
-        ]);
+        $tender = $this->seedTender(
+                [
+                    'id'             => 'tnd1',
+                    'transaction'    => 'tx1',
+                    'tenderType'     => 't1',
+                    'glPostAttempts' => PosTenderService::MAX_GL_POST_ATTEMPTS,
+                ]
+                );
 
         $eventId = $this->service->emitSingleTenderPosted(
             transactionUuid: 'tx1',
@@ -884,12 +892,12 @@ class PosTenderServiceTest extends TestCase
     public function testListUnpostedTendersIncludesAttemptedNotConfirmed(): void
     {
         $this->seedTender(['id' => 'a', 'glPosted' => false, 'glPostAttempts' => 1]);
-        $this->seedTender(['id' => 'b', 'glPosted' => true,  'glPostAttempts' => 2]);
+        $this->seedTender(['id' => 'b', 'glPosted' => true, 'glPostAttempts' => 2]);
         $this->seedTender(['id' => 'c', 'glPosted' => false, 'glPostAttempts' => 0]);
         $this->seedTender(['id' => 'd', 'glPosted' => false, 'glPostAttempts' => PosTenderService::MAX_GL_POST_ATTEMPTS]);
 
         $unposted = $this->service->listUnpostedTenders();
-        $ids = array_map(static fn (array $row): string => (string) $row['id'], $unposted);
+        $ids      = array_map(static fn (array $row): string => (string) $row['id'], $unposted);
 
         $this->assertSame(['a'], $ids);
     }//end testListUnpostedTendersIncludesAttemptedNotConfirmed()

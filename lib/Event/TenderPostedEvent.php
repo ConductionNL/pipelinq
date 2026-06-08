@@ -50,14 +50,14 @@ class TenderPostedEvent extends Event
     /**
      * Constructor.
      *
-     * @param string $eventId             The CloudEvents id (stable UUID per emission).
-     * @param string $tenderUuid          The tender object UUID.
-     * @param string $transactionUuid     The parent transaction UUID.
+     * @param string $eventId              The CloudEvents id (stable UUID per emission).
+     * @param string $tenderUuid           The tender object UUID.
+     * @param string $transactionUuid      The parent transaction UUID.
      * @param string $transactionReference Human-readable transaction reference (e.g. TXN-2026-0003).
-     * @param string $tenderTypeCode      The tender type code (CASH / CARD / VOUCHER / ...).
-     * @param float  $amount              The tendered amount in EUR.
-     * @param string $glAccount           The GL account the tender posts to.
-     * @param string $emittedAt           ISO 8601 UTC emission timestamp.
+     * @param string $tenderTypeCode       The tender type code (CASH / CARD / VOUCHER / ...).
+     * @param float  $amount               The tendered amount in EUR.
+     * @param string $glAccount            The GL account the tender posts to.
+     * @param string $emittedAt            ISO 8601 UTC emission timestamp.
      */
     public function __construct(
         private string $eventId,

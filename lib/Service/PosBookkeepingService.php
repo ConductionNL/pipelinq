@@ -475,9 +475,9 @@ class PosBookkeepingService
         $lines    = [];
 
         // Balanced double-entry POS retail booking:
-        //   1× debit on the bank/cash clearing account == gross,
-        //   1× credit on each rate-specific omzet/revenue account == base,
-        //   1× credit on the Te dragen BTW (1500) clearing == total tax.
+        // 1× debit on the bank/cash clearing account == gross,
+        // 1× credit on each rate-specific omzet/revenue account == base,
+        // 1× credit on the Te dragen BTW (1500) clearing == total tax.
         // Per-rate revenue lines preserve the BTW-uitsplitsing the bookkeeper
         // expects; the single bank-side debit keeps the entry compact.
         foreach ($rateRows as $row) {

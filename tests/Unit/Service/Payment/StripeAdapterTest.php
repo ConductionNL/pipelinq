@@ -63,13 +63,15 @@ class StripeAdapterTest extends TestCase
 
     public function testInitiateCreatesPaymentIntentInCents(): void
     {
-        [$adapter, $transport] = $this->build(responses: [
-            [
-                'status' => 200,
-                'body'   => ['id' => 'pi_1ABC', 'client_secret' => 'pi_1ABC_secret_x'],
-                'raw'    => '{}',
-            ],
-        ]);
+        [$adapter, $transport] = $this->build(
+                responses: [
+                    [
+                        'status' => 200,
+                        'body'   => ['id' => 'pi_1ABC', 'client_secret' => 'pi_1ABC_secret_x'],
+                        'raw'    => '{}',
+                    ],
+                ]
+                );
 
         $result = $adapter->initiate(
             transactionData: ['reference' => 'TXN-2026-0005', 'id' => 'uuid-5'],
@@ -103,10 +105,11 @@ class StripeAdapterTest extends TestCase
         [$adapter] = $this->build(responses: []);
 
         $payload = '{"id":"evt_1"}';
-        $time    = (time() - 86400); // 24h old.
-        $signed  = $time.'.'.$payload;
-        $v1      = hash_hmac('sha256', $signed, 'whsec_test_signature');
-        $header  = sprintf('t=%d,v1=%s', $time, $v1);
+        $time    = (time() - 86400);
+        // 24h old.
+        $signed = $time.'.'.$payload;
+        $v1     = hash_hmac('sha256', $signed, 'whsec_test_signature');
+        $header = sprintf('t=%d,v1=%s', $time, $v1);
 
         $this->assertFalse($adapter->validateWebhook(rawPayload: $payload, signature: $header));
     }//end testValidateWebhookRejectsExpiredSignature()
@@ -115,11 +118,13 @@ class StripeAdapterTest extends TestCase
     {
         [$adapter] = $this->build(responses: []);
 
-        $envelope = $adapter->parseWebhook(payload: [
-            'id'   => 'evt_2',
-            'type' => 'payment_intent.succeeded',
-            'data' => ['object' => ['id' => 'pi_2', 'payment_intent' => 'pi_2']],
-        ]);
+        $envelope = $adapter->parseWebhook(
+                payload: [
+                    'id'   => 'evt_2',
+                    'type' => 'payment_intent.succeeded',
+                    'data' => ['object' => ['id' => 'pi_2', 'payment_intent' => 'pi_2']],
+                ]
+                );
 
         $this->assertSame('pi_2', $envelope['sessionId']);
         $this->assertSame('settled', $envelope['status']);
@@ -128,9 +133,11 @@ class StripeAdapterTest extends TestCase
 
     public function testRefundCallsRefundsEndpoint(): void
     {
-        [$adapter, $transport] = $this->build(responses: [
-            ['status' => 200, 'body' => ['id' => 're_456'], 'raw' => '{}'],
-        ]);
+        [$adapter, $transport] = $this->build(
+                responses: [
+                    ['status' => 200, 'body' => ['id' => 're_456'], 'raw' => '{}'],
+                ]
+                );
 
         $result = $adapter->refund(sessionId: 'pi_2', reason: 'Artikel defect');
 

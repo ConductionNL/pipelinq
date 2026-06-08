@@ -209,7 +209,7 @@ return [
         // - /api/pos-payments/{id}/* are the per-transaction payment actions (cashier-facing).
         // - /api/payment-providers* are the admin-only credential + connection management endpoints.
         // - /api/pos-payment-webhook/{provider} is the public, signature-validated webhook
-        //   inbound from Mollie / CCV / Adyen / Stripe (REQ-PAY-006).
+        // inbound from Mollie / CCV / Adyen / Stripe (REQ-PAY-006).
         // Specific routes precede any wildcard {path} catch-all (ADR-016).
         ['name' => 'posPayment#initiate', 'url' => '/api/pos-payments/{id}/initiate', 'verb' => 'POST'],
         ['name' => 'posPayment#capture',  'url' => '/api/pos-payments/{id}/capture',  'verb' => 'POST'],
@@ -259,7 +259,6 @@ return [
         // Nextcloud user) authenticates each request inside the controller via
         // PortalRequestGuard. Static routes precede {id} wildcards (ADR-016).
         // ---------------------------------------------------------------------
-
         // Public (pre-login) tenant branding.
         ['name' => 'portalTenant#config', 'url' => '/portal/api/tenant-config', 'verb' => 'GET'],
 
@@ -396,7 +395,6 @@ return [
         // CRM workflow automation has been migrated to the OpenRegister
         // flow leaf (NC Flow / n8n) per migrate-automation-to-flow-leaf;
         // no automation / webhook / dmn endpoints remain in pipelinq.
-
         // Marketing blast provider webhooks (signature-verified, PublicPage)
         // marketing-segmentation-and-blast-05-jobs-and-webhooks.
         // camelCase slug matches BlastWebhookController class name.

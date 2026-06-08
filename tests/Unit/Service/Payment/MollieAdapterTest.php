@@ -64,16 +64,18 @@ class MollieAdapterTest extends TestCase
 
     public function testInitiateSendsCorrectMolliePayload(): void
     {
-        [$adapter, $transport] = $this->build(responses: [
-            [
-                'status' => 201,
-                'body'   => [
-                    'id'     => 'tr_WDqYK6vllg',
-                    '_links' => ['checkout' => ['href' => 'https://mollie.com/pay/abc']],
-                ],
-                'raw'    => '{}',
-            ],
-        ]);
+        [$adapter, $transport] = $this->build(
+                responses: [
+                    [
+                        'status' => 201,
+                        'body'   => [
+                            'id'     => 'tr_WDqYK6vllg',
+                            '_links' => ['checkout' => ['href' => 'https://mollie.com/pay/abc']],
+                        ],
+                        'raw'    => '{}',
+                    ],
+                ]
+                );
 
         $result = $adapter->initiate(
             transactionData: ['reference' => 'TXN-2026-0001', 'id' => 'uuid-1'],
@@ -97,8 +99,8 @@ class MollieAdapterTest extends TestCase
 
     public function testInitiateWithoutApiKeyFails(): void
     {
-        $logger    = $this->createMock(originalClassName: LoggerInterface::class);
-        $adapter   = new MollieAdapter(
+        $logger  = $this->createMock(originalClassName: LoggerInterface::class);
+        $adapter = new MollieAdapter(
             credentials: [],
             config: [],
             logger: $logger,
@@ -113,9 +115,11 @@ class MollieAdapterTest extends TestCase
 
     public function testInitiateMapsHttpErrorToFailed(): void
     {
-        [$adapter, $transport] = $this->build(responses: [
-            ['status' => 401, 'body' => [], 'raw' => 'unauthorized'],
-        ]);
+        [$adapter, $transport] = $this->build(
+                responses: [
+                    ['status' => 401, 'body' => [], 'raw' => 'unauthorized'],
+                ]
+                );
 
         $result = $adapter->initiate(transactionData: ['reference' => 'X'], amount: 10.0, paymentMethod: 'ideal');
 
@@ -148,11 +152,13 @@ class MollieAdapterTest extends TestCase
     {
         [$adapter] = $this->build(responses: []);
 
-        $envelope = $adapter->parseWebhook(payload: [
-            'id'      => 'tr_xyz',
-            'status'  => 'paid',
-            'eventId' => 'evt_1',
-        ]);
+        $envelope = $adapter->parseWebhook(
+                payload: [
+                    'id'      => 'tr_xyz',
+                    'status'  => 'paid',
+                    'eventId' => 'evt_1',
+                ]
+                );
 
         $this->assertSame('tr_xyz', $envelope['sessionId']);
         $this->assertSame('settled', $envelope['status']);
@@ -161,9 +167,11 @@ class MollieAdapterTest extends TestCase
 
     public function testRefundCallsRefundEndpoint(): void
     {
-        [$adapter, $transport] = $this->build(responses: [
-            ['status' => 201, 'body' => ['id' => 're_123'], 'raw' => '{}'],
-        ]);
+        [$adapter, $transport] = $this->build(
+                responses: [
+                    ['status' => 201, 'body' => ['id' => 're_123'], 'raw' => '{}'],
+                ]
+                );
 
         $result = $adapter->refund(sessionId: 'tr_xyz', reason: 'Artikel defect');
 
@@ -174,10 +182,12 @@ class MollieAdapterTest extends TestCase
 
     public function testTestConnectionOkAndFail(): void
     {
-        [$adapter, $transport] = $this->build(responses: [
-            ['status' => 200, 'body' => ['count' => 5], 'raw' => '{}'],
-            ['status' => 401, 'body' => [], 'raw' => ''],
-        ]);
+        [$adapter, $transport] = $this->build(
+                responses: [
+                    ['status' => 200, 'body' => ['count' => 5], 'raw' => '{}'],
+                    ['status' => 401, 'body' => [], 'raw' => ''],
+                ]
+                );
 
         $ok = $adapter->testConnection();
         $this->assertSame('ok', $ok['status']);

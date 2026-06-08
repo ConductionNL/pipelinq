@@ -292,12 +292,14 @@ class PosTenderControllerTest extends TestCase
         $this->loginAs();
         $this->request->method('getParams')->willReturn(['tenderType' => 't1', 'amount' => 10.0]);
         $this->service->method('addTender')->willReturn(['id' => 'a', 'amount' => 10.0]);
-        $this->service->method('validateTenderSum')->willReturn([
-            'tenderSum'        => 10.0,
-            'transactionTotal' => 10.0,
-            'variance'         => 0.0,
-            'balanced'         => true,
-        ]);
+        $this->service->method('validateTenderSum')->willReturn(
+                [
+                    'tenderSum'        => 10.0,
+                    'transactionTotal' => 10.0,
+                    'variance'         => 0.0,
+                    'balanced'         => true,
+                ]
+                );
 
         $response = $this->controller->addTender(transactionId: 'tx1');
 
@@ -412,12 +414,14 @@ class PosTenderControllerTest extends TestCase
     public function testSummaryReturnsValidation(): void
     {
         $this->loginAs();
-        $this->service->method('validateTenderSum')->willReturn([
-            'tenderSum'        => 50.0,
-            'transactionTotal' => 100.0,
-            'variance'         => 50.0,
-            'balanced'         => false,
-        ]);
+        $this->service->method('validateTenderSum')->willReturn(
+                [
+                    'tenderSum'        => 50.0,
+                    'transactionTotal' => 100.0,
+                    'variance'         => 50.0,
+                    'balanced'         => false,
+                ]
+                );
 
         $response = $this->controller->summary(transactionId: 'tx1');
 

@@ -279,11 +279,13 @@ class PosTenderController extends Controller
         try {
             $tenders    = $this->service->getTendersForTransaction(transactionId: $transactionId);
             $validation = $this->service->validateTenderSum(transactionId: $transactionId);
-            return new JSONResponse([
-                'results'    => $tenders,
-                'total'      => count($tenders),
-                'validation' => $validation,
-            ]);
+            return new JSONResponse(
+                    [
+                        'results'    => $tenders,
+                        'total'      => count($tenders),
+                        'validation' => $validation,
+                    ]
+                    );
         } catch (OCSNotFoundException $e) {
             return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
         } catch (Throwable $e) {
@@ -295,7 +297,7 @@ class PosTenderController extends Controller
                 ['error' => 'Failed to list tenders'],
                 Http::STATUS_INTERNAL_SERVER_ERROR
             );
-        }
+        }//end try
     }//end indexTenders()
 
     /**
@@ -338,7 +340,7 @@ class PosTenderController extends Controller
                 ['error' => 'Failed to add tender'],
                 Http::STATUS_INTERNAL_SERVER_ERROR
             );
-        }
+        }//end try
     }//end addTender()
 
     /**
@@ -376,7 +378,7 @@ class PosTenderController extends Controller
                 ['error' => 'Failed to remove tender'],
                 Http::STATUS_INTERNAL_SERVER_ERROR
             );
-        }
+        }//end try
     }//end removeTender()
 
     /**

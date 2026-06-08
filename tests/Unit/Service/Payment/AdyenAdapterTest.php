@@ -54,8 +54,8 @@ class AdyenAdapterTest extends TestCase
                 'webhookSecret' => bin2hex('adyen-hmac-secret'),
             ],
             config: [
-                'environment'      => 'sandbox',
-                'merchantAccount'  => 'PipelinqPOS',
+                'environment'     => 'sandbox',
+                'merchantAccount' => 'PipelinqPOS',
             ],
             logger: $logger,
             http: $transport
@@ -66,9 +66,11 @@ class AdyenAdapterTest extends TestCase
 
     public function testInitiateSendsCentsAndMerchantAccount(): void
     {
-        [$adapter, $transport] = $this->build(responses: [
-            ['status' => 200, 'body' => ['pspReference' => 'psp_1'], 'raw' => '{}'],
-        ]);
+        [$adapter, $transport] = $this->build(
+                responses: [
+                    ['status' => 200, 'body' => ['pspReference' => 'psp_1'], 'raw' => '{}'],
+                ]
+                );
 
         $result = $adapter->initiate(
             transactionData: ['reference' => 'TXN-1', 'id' => 'uuid-1'],
@@ -99,17 +101,19 @@ class AdyenAdapterTest extends TestCase
     {
         [$adapter] = $this->build(responses: []);
 
-        $envelope = $adapter->parseWebhook(payload: [
-            'notificationItems' => [
-                [
-                    'NotificationRequestItem' => [
-                        'pspReference' => 'psp_2',
-                        'eventCode'    => 'CAPTURE',
-                        'success'      => 'true',
+        $envelope = $adapter->parseWebhook(
+                payload: [
+                    'notificationItems' => [
+                        [
+                            'NotificationRequestItem' => [
+                                'pspReference' => 'psp_2',
+                                'eventCode'    => 'CAPTURE',
+                                'success'      => 'true',
+                            ],
+                        ],
                     ],
-                ],
-            ],
-        ]);
+                ]
+                );
 
         $this->assertSame('psp_2', $envelope['sessionId']);
         $this->assertSame('settled', $envelope['status']);

@@ -49,21 +49,22 @@ use Psr\Log\LoggerInterface;
  */
 class PosPaymentServiceTest extends TestCase
 {
+
     /**
      * In-memory app config storage.
      *
      * @var array<string, string>
      */
     private array $configStore = [
-        'register'               => 'pipelinq',
-        'posTransaction_schema'  => 'posTransaction',
-        'pos_managers_group'     => 'pos_managers',
+        'register'              => 'pipelinq',
+        'posTransaction_schema' => 'posTransaction',
+        'pos_managers_group'    => 'pos_managers',
     ];
 
     /**
      * Build a service with overridable mocks.
      *
-     * @param ObjectService|null $object   The ObjectService mock.
+     * @param ObjectService|null   $object The ObjectService mock.
      * @param array<string, mixed> $opts   Optional knobs: isManager (bool).
      *
      * @return PosPaymentService
@@ -78,6 +79,7 @@ class PosPaymentServiceTest extends TestCase
                 if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
                     return $object;
                 }
+
                 throw new \RuntimeException('container: '.$id);
             }
         );
@@ -106,11 +108,12 @@ class PosPaymentServiceTest extends TestCase
                 if (str_starts_with($encrypted, 'ENC:') === true) {
                     return substr($encrypted, 4);
                 }
+
                 return $encrypted;
             }
         );
 
-        $groupMgr = $this->createMock(originalClassName: IGroupManager::class);
+        $groupMgr  = $this->createMock(originalClassName: IGroupManager::class);
         $isManager = ($opts['isManager'] ?? false);
         $groupMgr->method('isAdmin')->willReturn(false);
         $groupMgr->method('isInGroup')->willReturn($isManager);
@@ -203,10 +206,12 @@ class PosPaymentServiceTest extends TestCase
     public function testRefundRejectsUnsettledTransaction(): void
     {
         $object = $this->createMock(originalClassName: ObjectService::class);
-        $object->method('find')->willReturn([
-            '@self'         => ['id' => 'tx-1'],
-            'paymentStatus' => 'pending',
-        ]);
+        $object->method('find')->willReturn(
+                [
+                    '@self'         => ['id' => 'tx-1'],
+                    'paymentStatus' => 'pending',
+                ]
+                );
 
         $service = $this->buildService(object: $object, opts: ['isManager' => true]);
 
@@ -245,10 +250,12 @@ class PosPaymentServiceTest extends TestCase
     public function testInitiateRejectsUnconfirmedTransaction(): void
     {
         $object = $this->createMock(originalClassName: ObjectService::class);
-        $object->method('find')->willReturn([
-            '@self'  => ['id' => 'tx-1'],
-            'status' => 'draft',
-        ]);
+        $object->method('find')->willReturn(
+                [
+                    '@self'  => ['id' => 'tx-1'],
+                    'status' => 'draft',
+                ]
+                );
 
         $service = $this->buildService(object: $object);
 

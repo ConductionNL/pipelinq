@@ -46,16 +46,25 @@ use Psr\Log\LoggerInterface;
  */
 class CashShiftControllerTest extends TestCase
 {
-    /** @var CashShiftController */
+
+    /**
+     * @var CashShiftController
+     */
     private CashShiftController $controller;
 
-    /** @var CashShiftService&MockObject */
+    /**
+     * @var CashShiftService&MockObject
+     */
     private CashShiftService $service;
 
-    /** @var IRequest&MockObject */
+    /**
+     * @var IRequest&MockObject
+     */
     private IRequest $request;
 
-    /** @var IUserSession&MockObject */
+    /**
+     * @var IUserSession&MockObject
+     */
     private IUserSession $userSession;
 
     /**
@@ -118,12 +127,14 @@ class CashShiftControllerTest extends TestCase
     public function testOpenDelegatesWithSessionUid(): void
     {
         $this->loginAs('clerk');
-        $this->request->method('getParam')->willReturnMap([
-            ['drawer', '', 'kassa-01'],
-            ['floatAmount', 0, '100'],
-            ['reference', '', 'SHIFT-9'],
-            ['notes', '', ''],
-        ]);
+        $this->request->method('getParam')->willReturnMap(
+                [
+                    ['drawer', '', 'kassa-01'],
+                    ['floatAmount', 0, '100'],
+                    ['reference', '', 'SHIFT-9'],
+                    ['notes', '', ''],
+                ]
+                );
 
         $this->service->expects($this->once())
             ->method('openShift')
@@ -144,10 +155,12 @@ class CashShiftControllerTest extends TestCase
     public function testCountDelegates(): void
     {
         $this->loginAs('clerk');
-        $this->request->method('getParam')->willReturnMap([
-            ['amount', 0, '625.50'],
-            ['notes', '', 'blind'],
-        ]);
+        $this->request->method('getParam')->willReturnMap(
+                [
+                    ['amount', 0, '625.50'],
+                    ['notes', '', 'blind'],
+                ]
+                );
 
         $this->service->expects($this->once())
             ->method('recordCount')

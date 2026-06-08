@@ -46,7 +46,7 @@ use Psr\Log\LoggerInterface;
  * Tests for KassakoppelingAuditController.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the controller's mocks.
- * @SuppressWarnings(PHPMD.TooManyPublicMethods) Each endpoint × edge case is
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)   Each endpoint × edge case is
  *  asserted independently for clarity.
  */
 class KassakoppelingAuditControllerTest extends TestCase
@@ -152,31 +152,35 @@ class KassakoppelingAuditControllerTest extends TestCase
     public function testCreateDelegatesAndReturns201(): void
     {
         $this->loginAs('user_john');
-        $this->request->method('getParam')->willReturnMap([
-            ['operatorId', 'user_john', 'user_john'],
-            ['registerNumber', '', 'REG-001'],
-            ['action', '', 'sale'],
-            ['amount', 0, 4950],
-            ['itemCount', null, 3],
-            ['taxAmount', null, 870],
-            ['timestamp', '', '2026-05-20T08:15:30+00:00'],
-            ['transactionUuid', null, 'uuid-txn-001'],
-            ['description', null, 'Regular sale'],
-        ]);
+        $this->request->method('getParam')->willReturnMap(
+                [
+                    ['operatorId', 'user_john', 'user_john'],
+                    ['registerNumber', '', 'REG-001'],
+                    ['action', '', 'sale'],
+                    ['amount', 0, 4950],
+                    ['itemCount', null, 3],
+                    ['taxAmount', null, 870],
+                    ['timestamp', '', '2026-05-20T08:15:30+00:00'],
+                    ['transactionUuid', null, 'uuid-txn-001'],
+                    ['description', null, 'Regular sale'],
+                ]
+                );
 
         $this->service->expects($this->once())
             ->method('createEntry')
-            ->with([
-                'operatorId'      => 'user_john',
-                'registerNumber'  => 'REG-001',
-                'action'          => 'sale',
-                'amount'          => 4950,
-                'itemCount'       => 3,
-                'taxAmount'       => 870,
-                'timestamp'       => '2026-05-20T08:15:30+00:00',
-                'transactionUuid' => 'uuid-txn-001',
-                'description'     => 'Regular sale',
-            ])
+            ->with(
+                    [
+                        'operatorId'      => 'user_john',
+                        'registerNumber'  => 'REG-001',
+                        'action'          => 'sale',
+                        'amount'          => 4950,
+                        'itemCount'       => 3,
+                        'taxAmount'       => 870,
+                        'timestamp'       => '2026-05-20T08:15:30+00:00',
+                        'transactionUuid' => 'uuid-txn-001',
+                        'description'     => 'Regular sale',
+                    ]
+                    )
             ->willReturn(['id' => 'aud-1', 'signature' => 'sig']);
 
         $response = $this->controller->create();
@@ -210,23 +214,27 @@ class KassakoppelingAuditControllerTest extends TestCase
     public function testIndexForwardsFilters(): void
     {
         $this->loginAs('user_john');
-        $this->request->method('getParam')->willReturnMap([
-            ['registerNumber', '', 'REG-001'],
-            ['operatorId', '', ''],
-            ['action', '', 'sale'],
-            ['from', '', '2026-05-01'],
-            ['to', '', '2026-05-31'],
-        ]);
+        $this->request->method('getParam')->willReturnMap(
+                [
+                    ['registerNumber', '', 'REG-001'],
+                    ['operatorId', '', ''],
+                    ['action', '', 'sale'],
+                    ['from', '', '2026-05-01'],
+                    ['to', '', '2026-05-31'],
+                ]
+                );
 
         $this->service->expects($this->once())
             ->method('listEntries')
-            ->with([
-                'registerNumber' => 'REG-001',
-                'operatorId'     => '',
-                'action'         => 'sale',
-                'from'           => '2026-05-01',
-                'to'             => '2026-05-31',
-            ])
+            ->with(
+                    [
+                        'registerNumber' => 'REG-001',
+                        'operatorId'     => '',
+                        'action'         => 'sale',
+                        'from'           => '2026-05-01',
+                        'to'             => '2026-05-31',
+                    ]
+                    )
             ->willReturn([['id' => 'aud-1']]);
 
         $response = $this->controller->index();
@@ -262,12 +270,14 @@ class KassakoppelingAuditControllerTest extends TestCase
         $this->service->expects($this->once())
             ->method('verifyEntry')
             ->with(id: 'aud-1')
-            ->willReturn([
-                'verified'       => true,
-                'signatureValid' => true,
-                'hashValid'      => true,
-                'entry'          => ['id' => 'aud-1'],
-            ]);
+            ->willReturn(
+                    [
+                        'verified'       => true,
+                        'signatureValid' => true,
+                        'hashValid'      => true,
+                        'entry'          => ['id' => 'aud-1'],
+                    ]
+                    );
 
         $response = $this->controller->verify('aud-1');
         $this->assertSame(Http::STATUS_OK, $response->getStatus());
@@ -334,21 +344,25 @@ class KassakoppelingAuditControllerTest extends TestCase
     {
         $this->loginAs('admin');
         $this->groupManager->method('isAdmin')->with('admin')->willReturn(true);
-        $this->request->method('getParam')->willReturnMap([
-            ['from', '', '2026-05-01'],
-            ['to', '', '2026-05-31'],
-            ['format', 'xml', 'xml'],
-        ]);
+        $this->request->method('getParam')->willReturnMap(
+                [
+                    ['from', '', '2026-05-01'],
+                    ['to', '', '2026-05-31'],
+                    ['format', 'xml', 'xml'],
+                ]
+                );
 
         $this->service->expects($this->once())
             ->method('exportForBelastingdienst')
             ->with(fromDate: '2026-05-01', toDate: '2026-05-31', format: 'xml')
-            ->willReturn([
-                'body'        => '<KassakoppelingExport/>',
-                'contentType' => 'application/xml',
-                'filename'    => 'kassakoppeling-export-2026-05-01-to-2026-05-31.xml',
-                'entryCount'  => 1,
-            ]);
+            ->willReturn(
+                    [
+                        'body'        => '<KassakoppelingExport/>',
+                        'contentType' => 'application/xml',
+                        'filename'    => 'kassakoppeling-export-2026-05-01-to-2026-05-31.xml',
+                        'entryCount'  => 1,
+                    ]
+                    );
 
         $response = $this->controller->export();
         $this->assertInstanceOf(DataDownloadResponse::class, $response);
@@ -364,11 +378,13 @@ class KassakoppelingAuditControllerTest extends TestCase
     {
         $this->loginAs('admin');
         $this->groupManager->method('isAdmin')->willReturn(true);
-        $this->request->method('getParam')->willReturnMap([
-            ['from', '', '2026-05-31'],
-            ['to', '', '2026-05-01'],
-            ['format', 'xml', 'xml'],
-        ]);
+        $this->request->method('getParam')->willReturnMap(
+                [
+                    ['from', '', '2026-05-31'],
+                    ['to', '', '2026-05-01'],
+                    ['format', 'xml', 'xml'],
+                ]
+                );
 
         $this->service->method('exportForBelastingdienst')
             ->willThrowException(new OCSBadRequestException('range'));
@@ -377,5 +393,4 @@ class KassakoppelingAuditControllerTest extends TestCase
         $this->assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $response->getStatus());
 
     }//end testExportBadServiceInputMapsTo422()
-
 }//end class

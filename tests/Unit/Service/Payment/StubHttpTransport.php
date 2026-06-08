@@ -36,6 +36,7 @@ use OCA\Pipelinq\Service\Payment\HttpTransport;
  */
 class StubHttpTransport implements HttpTransport
 {
+
     /**
      * Queued responses.
      *

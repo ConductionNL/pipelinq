@@ -110,7 +110,7 @@ class KassakoppelingSignatureServiceTest extends TestCase
      */
     public function testGenerateSignatureReturnsHmacSha256Hex(): void
     {
-        $entry              = $this->saleEntry();
+        $entry = $this->saleEntry();
         $entry['previousHash'] = '0';
 
         $signature = $this->service->generateSignature(entryData: $entry);
@@ -133,7 +133,7 @@ class KassakoppelingSignatureServiceTest extends TestCase
      */
     public function testVerifySignaturePasses(): void
     {
-        $entry              = $this->saleEntry();
+        $entry = $this->saleEntry();
         $entry['previousHash'] = '0';
 
         $signature = $this->service->generateSignature(entryData: $entry);
@@ -148,9 +148,9 @@ class KassakoppelingSignatureServiceTest extends TestCase
      */
     public function testVerifySignatureFailsWhenAmountTampered(): void
     {
-        $entry              = $this->saleEntry();
+        $entry = $this->saleEntry();
         $entry['previousHash'] = '0';
-        $signature          = $this->service->generateSignature(entryData: $entry);
+        $signature = $this->service->generateSignature(entryData: $entry);
 
         $entry['amount'] = 9999;
         $this->assertFalse($this->service->verifySignature(entryData: $entry, signature: $signature));
@@ -164,7 +164,7 @@ class KassakoppelingSignatureServiceTest extends TestCase
      */
     public function testVerifySignatureFailsForEmptySignature(): void
     {
-        $entry              = $this->saleEntry();
+        $entry = $this->saleEntry();
         $entry['previousHash'] = '0';
         $this->assertFalse($this->service->verifySignature(entryData: $entry, signature: ''));
 
@@ -199,7 +199,7 @@ class KassakoppelingSignatureServiceTest extends TestCase
      */
     public function testGenerateHashChangesWhenDescriptionTampered(): void
     {
-        $entry      = $this->saleEntry();
+        $entry        = $this->saleEntry();
         $originalHash = $this->service->generateHash(entryData: $entry, previousHash: '0');
 
         $entry['description'] = 'tampered';
@@ -217,18 +217,18 @@ class KassakoppelingSignatureServiceTest extends TestCase
      */
     public function testVerifyHashChainValidates(): void
     {
-        $first                  = $this->saleEntry();
-        $first['previousHash']  = KassakoppelingSignatureService::GENESIS_HASH;
-        $first['currentHash']   = $this->service->generateHash(
+        $first = $this->saleEntry();
+        $first['previousHash'] = KassakoppelingSignatureService::GENESIS_HASH;
+        $first['currentHash']  = $this->service->generateHash(
             entryData: $first,
             previousHash: $first['previousHash']
         );
 
-        $second                  = $this->saleEntry();
-        $second['action']        = 'void';
-        $second['timestamp']     = '2026-05-20T08:18:15+00:00';
-        $second['previousHash']  = $first['currentHash'];
-        $second['currentHash']   = $this->service->generateHash(
+        $second           = $this->saleEntry();
+        $second['action'] = 'void';
+        $second['timestamp']    = '2026-05-20T08:18:15+00:00';
+        $second['previousHash'] = $first['currentHash'];
+        $second['currentHash']  = $this->service->generateHash(
             entryData: $second,
             previousHash: $second['previousHash']
         );
@@ -249,19 +249,19 @@ class KassakoppelingSignatureServiceTest extends TestCase
      */
     public function testVerifyHashChainDetectsBreak(): void
     {
-        $first                  = $this->saleEntry();
-        $first['previousHash']  = KassakoppelingSignatureService::GENESIS_HASH;
-        $first['currentHash']   = $this->service->generateHash(
+        $first = $this->saleEntry();
+        $first['previousHash'] = KassakoppelingSignatureService::GENESIS_HASH;
+        $first['currentHash']  = $this->service->generateHash(
             entryData: $first,
             previousHash: $first['previousHash']
         );
 
-        $second                  = $this->saleEntry();
-        $second['action']        = 'void';
-        $second['timestamp']     = '2026-05-20T08:18:15+00:00';
+        $second           = $this->saleEntry();
+        $second['action'] = 'void';
+        $second['timestamp'] = '2026-05-20T08:18:15+00:00';
         // Wrong previousHash on purpose.
-        $second['previousHash']  = '0';
-        $second['currentHash']   = $this->service->generateHash(
+        $second['previousHash'] = '0';
+        $second['currentHash']  = $this->service->generateHash(
             entryData: $second,
             previousHash: $second['previousHash']
         );
@@ -282,9 +282,9 @@ class KassakoppelingSignatureServiceTest extends TestCase
      */
     public function testVerifyHashChainDetectsCurrentHashTamper(): void
     {
-        $first                  = $this->saleEntry();
-        $first['previousHash']  = KassakoppelingSignatureService::GENESIS_HASH;
-        $first['currentHash']   = $this->service->generateHash(
+        $first = $this->saleEntry();
+        $first['previousHash'] = KassakoppelingSignatureService::GENESIS_HASH;
+        $first['currentHash']  = $this->service->generateHash(
             entryData: $first,
             previousHash: $first['previousHash']
         );
@@ -365,5 +365,4 @@ class KassakoppelingSignatureServiceTest extends TestCase
         $service->getSecretKey();
 
     }//end testGetSecretKeyThrowsWhenNoMaterialAvailable()
-
 }//end class

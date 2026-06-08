@@ -61,12 +61,12 @@ class PosStaffController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest         $request      The request.
-     * @param PosStaffService  $service      The POS staff service.
-     * @param IUserSession     $userSession  The user session.
-     * @param IGroupManager    $groupManager The group manager (admin gate).
-     * @param IL10N            $l10n         The localization service.
-     * @param LoggerInterface  $logger       The logger.
+     * @param IRequest        $request      The request.
+     * @param PosStaffService $service      The POS staff service.
+     * @param IUserSession    $userSession  The user session.
+     * @param IGroupManager   $groupManager The group manager (admin gate).
+     * @param IL10N           $l10n         The localization service.
+     * @param LoggerInterface $logger       The logger.
      */
     public function __construct(
         IRequest $request,

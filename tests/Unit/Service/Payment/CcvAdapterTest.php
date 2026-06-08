@@ -67,9 +67,11 @@ class CcvAdapterTest extends TestCase
 
     public function testInitiateSendsCorrectCcvPayload(): void
     {
-        [$adapter, $transport] = $this->build(responses: [
-            ['status' => 201, 'body' => ['reference' => 'CCV20260520102833001'], 'raw' => '{}'],
-        ]);
+        [$adapter, $transport] = $this->build(
+                responses: [
+                    ['status' => 201, 'body' => ['reference' => 'CCV20260520102833001'], 'raw' => '{}'],
+                ]
+                );
 
         $result = $adapter->initiate(
             transactionData: ['reference' => 'TXN-2026-0003', 'id' => 'uuid-3'],
@@ -91,8 +93,8 @@ class CcvAdapterTest extends TestCase
     {
         [$adapter] = $this->build(responses: []);
 
-        $payload   = '{"reference":"CCV-1","status":"success"}';
-        $expected  = hash_hmac('sha512', 'merchant-1'.$payload, 'ccv-hmac-secret');
+        $payload  = '{"reference":"CCV-1","status":"success"}';
+        $expected = hash_hmac('sha512', 'merchant-1'.$payload, 'ccv-hmac-secret');
 
         $this->assertTrue($adapter->validateWebhook(rawPayload: $payload, signature: $expected));
         $this->assertFalse($adapter->validateWebhook(rawPayload: $payload, signature: 'wrong'));
@@ -100,9 +102,11 @@ class CcvAdapterTest extends TestCase
 
     public function testTestConnectionRecognisesInvalidCredentials(): void
     {
-        [$adapter] = $this->build(responses: [
-            ['status' => 401, 'body' => [], 'raw' => ''],
-        ]);
+        [$adapter] = $this->build(
+                responses: [
+                    ['status' => 401, 'body' => [], 'raw' => ''],
+                ]
+                );
 
         $result = $adapter->testConnection();
 

@@ -65,7 +65,7 @@ class FakeAuditObjectService
     /**
      * Auto-incrementing uuid generator (matches OR contract — opaque string).
      *
-     * @var int
+     * @var integer
      */
     private int $cursor = 0;
 
@@ -112,10 +112,10 @@ class FakeAuditObjectService
             $resolvedUuid = 'aud-'.$this->cursor;
         }
 
-        $arrayObject['id']                 = $resolvedUuid;
-        $arrayObject['uuid']               = $resolvedUuid;
+        $arrayObject['id']   = $resolvedUuid;
+        $arrayObject['uuid'] = $resolvedUuid;
         $this->store[$schemaKey][$resolvedUuid] = $arrayObject;
-        $this->saves[]                     = [
+        $this->saves[] = [
             'schema' => $schemaKey,
             'uuid'   => $resolvedUuid,
             'object' => $arrayObject,
@@ -124,7 +124,6 @@ class FakeAuditObjectService
         return $arrayObject;
 
     }//end saveObject()
-
 }//end class
 
 
@@ -248,12 +247,12 @@ class KassakoppelingAuditServiceTest extends TestCase
      */
     public function testCreateEntryIgnoresClientSuppliedSignatureAndHashes(): void
     {
-        $data                  = $this->saleInput();
-        $data['signature']     = str_repeat('a', 64);
-        $data['previousHash']  = str_repeat('b', 64);
-        $data['currentHash']   = str_repeat('c', 64);
-        $data['verified']      = true;
-        $data['exportedAt']    = '2026-01-01T00:00:00+00:00';
+        $data = $this->saleInput();
+        $data['signature']    = str_repeat('a', 64);
+        $data['previousHash'] = str_repeat('b', 64);
+        $data['currentHash']  = str_repeat('c', 64);
+        $data['verified']     = true;
+        $data['exportedAt']   = '2026-01-01T00:00:00+00:00';
 
         $entry = $this->service->createEntry(data: $data);
 
@@ -311,8 +310,8 @@ class KassakoppelingAuditServiceTest extends TestCase
      */
     public function testCreateEntryRejectsMissingRegister(): void
     {
-        $data                    = $this->saleInput();
-        $data['registerNumber']  = '';
+        $data = $this->saleInput();
+        $data['registerNumber'] = '';
 
         $this->expectException(exception: OCSBadRequestException::class);
         $this->service->createEntry(data: $data);
@@ -515,5 +514,4 @@ class KassakoppelingAuditServiceTest extends TestCase
         );
 
     }//end testExportForBelastingdienstRejectsInvertedRange()
-
 }//end class

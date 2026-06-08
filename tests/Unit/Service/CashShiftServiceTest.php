@@ -45,10 +45,15 @@ use Psr\Log\LoggerInterface;
  */
 class CashFakeObjectService
 {
-    /** @var array<string, array<string, array<string, mixed>>> */
+
+    /**
+     * @var array<string, array<string, array<string, mixed>>>
+     */
     public array $store = [];
 
-    /** @var int */
+    /**
+     * @var integer
+     */
     private int $seq = 0;
 
     /**
@@ -57,7 +62,7 @@ class CashFakeObjectService
     public function find(string $id, string $register, string $schema): ?array
     {
         return $this->store[$schema][$id] ?? null;
-    }
+    }//end find()
 
     /**
      * @param array<string, mixed> $config
@@ -70,16 +75,21 @@ class CashFakeObjectService
         $schema  = (string) ($filters['schema'] ?? '');
         $rows    = array_values($this->store[$schema] ?? []);
 
-        return array_values(array_filter($rows, function (array $row) use ($filters): bool {
-            foreach (['shift', 'status'] as $key) {
-                if (isset($filters[$key]) === true && ($row[$key] ?? null) !== $filters[$key]) {
-                    return false;
-                }
-            }
+        return array_values(
+                array_filter(
+                $rows,
+                function (array $row) use ($filters): bool {
+                    foreach (['shift', 'status'] as $key) {
+                        if (isset($filters[$key]) === true && ($row[$key] ?? null) !== $filters[$key]) {
+                            return false;
+                        }
+                    }
 
-            return true;
-        }));
-    }
+                    return true;
+                }
+                )
+                );
+    }//end findAll()
 
     /**
      * @param array<string, mixed> $object
@@ -97,15 +107,18 @@ class CashFakeObjectService
         $this->store[$schema][$uuid] = $object;
 
         return $object;
-    }
-}
+    }//end saveObject()
+}//end class
 
 /**
  * A fake WebhookService capturing dispatched CloudEvents.
  */
 class CashFakeWebhookService
 {
-    /** @var array<int, array{eventName: string, payload: array<string, mixed>}> */
+
+    /**
+     * @var array<int, array{eventName: string, payload: array<string, mixed>}>
+     */
     public array $events = [];
 
     /**
@@ -114,19 +127,20 @@ class CashFakeWebhookService
     public function dispatchEvent(object $_event, string $eventName, array $payload): void
     {
         $this->events[] = ['eventName' => $eventName, 'payload' => $payload];
-    }
-}
+    }//end dispatchEvent()
+}//end class
 
 /**
  * Tests for CashShiftService.
  *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)     The cash lifecycle has many
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)   The cash lifecycle has many
  *  small, single-purpose behaviours each asserted independently.
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Wires the fakes the cash
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the fakes the cash
  *  lifecycle legitimately exercises.
  */
 class CashShiftServiceTest extends TestCase
 {
+
     private CashShiftService $service;
 
     private CashFakeObjectService $objects;
@@ -163,7 +177,7 @@ class CashShiftServiceTest extends TestCase
 
         $this->appConfig = $this->createMock(IAppConfig::class);
         $this->appConfig->method('getValueString')->willReturnCallback(
-            function (string $app, string $key, string $default = '') {
+            function (string $app, string $key, string $default='') {
                 if ($key === 'register') {
                     return 'reg';
                 }
@@ -196,17 +210,19 @@ class CashShiftServiceTest extends TestCase
         );
 
         $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturnCallback(function (string $id) {
-            if ($id === 'OCA\OpenRegister\Service\ObjectService') {
-                return $this->objects;
-            }
+        $container->method('get')->willReturnCallback(
+                function (string $id) {
+                    if ($id === 'OCA\OpenRegister\Service\ObjectService') {
+                        return $this->objects;
+                    }
 
-            if ($id === 'OCA\OpenRegister\Service\WebhookService') {
-                return $this->webhooks;
-            }
+                    if ($id === 'OCA\OpenRegister\Service\WebhookService') {
+                        return $this->webhooks;
+                    }
 
-            throw new \RuntimeException('unknown service '.$id);
-        });
+                    throw new \RuntimeException('unknown service '.$id);
+                }
+                );
 
         $this->service = new CashShiftService(
             $container,
@@ -225,7 +241,7 @@ class CashShiftServiceTest extends TestCase
     private function asAdmin(): void
     {
         $this->admins[] = 'boss';
-    }
+    }//end asAdmin()
 
     /**
      * Seed a shift and a confirmed-sales transaction inside its window.
@@ -255,7 +271,7 @@ class CashShiftServiceTest extends TestCase
         ];
 
         return 'shift-1';
-    }
+    }//end seedShift()
 
     /**
      * No drops, expected == actual: diff 0, percentage 0, within tolerance.
@@ -528,10 +544,12 @@ class CashShiftServiceTest extends TestCase
         $this->assertSame('reconciled', $shift['status']);
         $this->assertSame('approved', $shift['reconciliationStatus']);
 
-        $events = array_values(array_filter(
+        $events = array_values(
+                array_filter(
             $this->webhooks->events,
             fn (array $e): bool => $e['eventName'] === CashShiftService::EVENT_CASH_DIFF_CONFIRMED
-        ));
+        )
+                );
         $this->assertCount(1, $events);
         $data = $events[0]['payload']['data'];
         $this->assertSame('shift-1', $data['shift_id']);
