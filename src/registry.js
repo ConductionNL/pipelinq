@@ -103,6 +103,11 @@ import PosRefundListView from './views/pos/PosRefundList.vue'
 import PosRefundDetailView from './views/pos/PosRefundDetail.vue'
 import PosRefundFormView from './views/pos/PosRefundForm.vue'
 
+// --- POS cash drawer (lib gap: index/detail pages cannot express the cash-shift
+//     lifecycle — declare float, record drops, blind count, variance reconcile). ---
+import CashShiftListView from './views/pos/CashShiftList.vue'
+import CashShiftDetailView from './views/pos/CashShiftDetail.vue'
+
 // --- Product barcode lookup (lib gap: index pages have no server-authoritative
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
 import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
@@ -148,6 +153,16 @@ import BlastListView from './views/blasts/BlastList.vue'
 import BlastFormView from './views/blasts/BlastForm.vue'
 import BlastMonitorView from './views/blasts/BlastMonitor.vue'
 import BlastPerformanceDashboardView from './views/blasts/PerformanceDashboard.vue'
+
+// --- Appointment booking — admin surface (appointment-booking 11 of 12).
+//     Service / Resource / Booking list + detail views; resolved by the v2
+//     renderer from the manifest.d fragment at render time. ---
+import ServiceListView from './views/bookings/ServiceList.vue'
+import ServiceDetailView from './views/bookings/ServiceDetail.vue'
+import ResourceListView from './views/bookings/ResourceList.vue'
+import ResourceDetailView from './views/bookings/ResourceDetail.vue'
+import BookingListView from './views/bookings/BookingList.vue'
+import BookingDetailView from './views/bookings/BookingDetail.vue'
 
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
@@ -379,6 +394,18 @@ const registry = {
 		_note: 'Bespoke return editor: select original lines with partial quantities, per-line reason + restock toggle and real-time refund totals; lib has no line-selection/refund page type.',
 	},
 
+	// --- POS cash drawer. ---
+	CashShiftListView: {
+		kind: 'page',
+		component: CashShiftListView,
+		_note: 'Cash-shift list; custom so rows navigate to the drawer-reconciliation detail and the empty state offers "Shift openen".',
+	},
+	CashShiftDetailView: {
+		kind: 'page',
+		component: CashShiftDetailView,
+		_note: 'Cash-shift detail: float declaration, drops panel, blind-count entry and the server-authoritative variance panel with manager-gated approve/reject; lib detail page cannot express the cash-drawer lifecycle.',
+	},
+
 	// --- Product barcode lookup. ---
 	ProductBarcodeSearchView: {
 		kind: 'page',
@@ -502,6 +529,38 @@ const registry = {
 		kind: 'page',
 		component: BlastPerformanceDashboardView,
 		_note: 'Post-send performance dashboard (marketing-segmentation-and-blast 08): three tabs — Overview (sortable blast table with sent/delivered/open-rate/click-rate/unsubscribed), A/B Testing (side-by-side variant comparison + chi-square p-value once each arm has >=500 delivered and 24h elapsed since send), Attribution (per-blast attributed deal count + summed EUR value from GET /api/blasts/:id/attribution).',
+	},
+
+	// --- Appointment booking — admin views (appointment-booking 11 of 12). ---
+	ServiceListView: {
+		kind: 'page',
+		component: ServiceListView,
+		_note: 'Service catalogue list with formatted duration / currency cells and a status badge; lib gap: declarative index page cannot express the duration / currency cell renderers.',
+	},
+	ServiceDetailView: {
+		kind: 'page',
+		component: ServiceDetailView,
+		_note: 'Service detail + edit page with the multiStep sub-table editor, deposit / cancellation policy cards and a best-effort availabilityCache invalidation hook on save (REQ-APT-015).',
+	},
+	ResourceListView: {
+		kind: 'page',
+		component: ResourceListView,
+		_note: 'Resource list (staff / room / equipment) with type + bookable + status badges.',
+	},
+	ResourceDetailView: {
+		kind: 'page',
+		component: ResourceDetailView,
+		_note: 'Resource detail + edit page with the 7-weekday workingHours grid, vacation list, validation (open<close, startDate<=endDate) and per-resource cache invalidation on save (REQ-APT-002).',
+	},
+	BookingListView: {
+		kind: 'page',
+		component: BookingListView,
+		_note: 'Booking list with formatted start-time and status badge; admins create bookings through the public portal on a customer\'s behalf, no inline create.',
+	},
+	BookingDetailView: {
+		kind: 'page',
+		component: BookingDetailView,
+		_note: 'Booking detail with context-sensitive lifecycle buttons (Reschedule / Cancel / Mark Completed / Mark No-show / Send Reminder / Confirm Deposit) wired to the BookingAdminController endpoints, inline notes editor, audit-trail card and a chronological timeline (REQ-APT-015).',
 	},
 }
 
