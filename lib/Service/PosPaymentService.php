@@ -988,9 +988,12 @@ class PosPaymentService
 
         try {
             $result = $objectService->findAll(
-                filters: ['paymentSessionId' => $sessionId],
-                register: $register,
-                schema: $schema
+                config: [
+                    'filters'  => ['paymentSessionId' => $sessionId],
+                    'register' => $register,
+                    'schema'   => $schema,
+                    'limit'    => 2,
+                ]
             );
         } catch (Throwable $e) {
             return null;
@@ -1082,16 +1085,6 @@ class PosPaymentService
             'pos_managers_group',
             'pos_managers'
         );
-
-        try {
-            $user = \OC::$server->getUserManager()->get($userId);
-        } catch (Throwable $e) {
-            return false;
-        }
-
-        if ($user === null) {
-            return false;
-        }
 
         if ($this->groupMgr->isAdmin($userId) === true) {
             return true;
