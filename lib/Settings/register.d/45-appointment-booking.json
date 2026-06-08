@@ -927,6 +927,98 @@
                 "bookable": true,
                 "maxConcurrent": 1,
                 "status": "active"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "booking",
+                    "slug": "booking-001-completed"
+                },
+                "customerId": "00000000-0000-0000-0000-000000000001",
+                "serviceId": "service-haircut-simple",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceId": "resource-sarah-stylist",
+                        "startAt": "2026-05-12T10:00:00+02:00",
+                        "endAt": "2026-05-12T10:30:00+02:00"
+                    }
+                ],
+                "startAt": "2026-05-12T10:00:00+02:00",
+                "endAt": "2026-05-12T10:30:00+02:00",
+                "status": "completed",
+                "statusHistory": [
+                    {
+                        "status": "confirmed",
+                        "changedAt": "2026-05-10T14:22:00+02:00",
+                        "changedBy": "portal",
+                        "reason": "Booking created via portal"
+                    },
+                    {
+                        "status": "completed",
+                        "changedAt": "2026-05-12T10:31:00+02:00",
+                        "changedBy": "admin:sarah",
+                        "reason": "Knipbeurt afgerond"
+                    }
+                ],
+                "notes": "Graag iets korter dan vorige keer.",
+                "internalNotes": "",
+                "source": "portal",
+                "confirmationSentAt": "2026-05-10T14:22:30+02:00",
+                "reminderSentAt": "2026-05-11T10:00:00+02:00",
+                "depositAmount": 0
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "booking",
+                    "slug": "booking-002-confirmed"
+                },
+                "customerId": "00000000-0000-0000-0000-000000000002",
+                "serviceId": "service-color-and-cut",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceId": "resource-sarah-stylist",
+                        "startAt": "2026-06-15T13:00:00+02:00",
+                        "endAt": "2026-06-15T13:45:00+02:00"
+                    },
+                    {
+                        "stepIndex": 1,
+                        "resourceId": "resource-treatment-room-a",
+                        "startAt": "2026-06-15T13:45:00+02:00",
+                        "endAt": "2026-06-15T14:15:00+02:00"
+                    },
+                    {
+                        "stepIndex": 2,
+                        "resourceId": "resource-sarah-stylist",
+                        "startAt": "2026-06-15T14:15:00+02:00",
+                        "endAt": "2026-06-15T15:00:00+02:00"
+                    }
+                ],
+                "startAt": "2026-06-15T13:00:00+02:00",
+                "endAt": "2026-06-15T15:00:00+02:00",
+                "status": "confirmed",
+                "statusHistory": [
+                    {
+                        "status": "pending-deposit",
+                        "changedAt": "2026-06-01T09:14:00+02:00",
+                        "changedBy": "portal",
+                        "reason": "Booking created — awaiting deposit"
+                    },
+                    {
+                        "status": "confirmed",
+                        "changedAt": "2026-06-01T09:17:00+02:00",
+                        "changedBy": "system",
+                        "reason": "Deposit cleared"
+                    }
+                ],
+                "notes": "Lichtblond, geen ammonia indien mogelijk.",
+                "internalNotes": "Allergie voor PPD genoteerd in profiel.",
+                "source": "portal",
+                "confirmationSentAt": "2026-06-01T09:17:30+02:00",
+                "depositPaidAt": "2026-06-01T09:16:42+02:00",
+                "depositAmount": 20.0
             }
         ]
     }

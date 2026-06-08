@@ -48,8 +48,13 @@
 - [x] Each Resource has unique slug, working hours for all weekdays, optionally vacations
 
   Slugs are `resource-sarah-stylist`, `resource-jan-mechanic`, `resource-treatment-room-a`, `resource-workshop-bay-1` — all distinct and prefixed `resource-`. Each resource declares the weekdays on which it works (kapsalons are typically closed Monday; mechanics close earlier on Friday; rooms follow shop hours) — i.e. realistic Dutch SMB schedules rather than a default Mon–Fri 9–5 stamp. Vacations are populated on Sarah only.
-- [ ] Add 2 Booking seed objects: booking-001-completed (past), booking-002-confirmed (future, multi-step)
-- [ ] Verify all seed objects use realistic Dutch names, times, and currency
+- [x] Add 2 Booking seed objects: booking-001-completed (past), booking-002-confirmed (future, multi-step)
+
+  Two `booking` mock objects: `booking-001-completed` (past, 2026-05-12, single-step Knipbeurt with Sarah, two-entry statusHistory `confirmed → completed`, source=portal, confirmation + reminder sent) and `booking-002-confirmed` (future, 2026-06-15, multi-step Kleur & Knippen exercising the resource-handoff: Sarah on step 0, treatment-room-a on the allowGap step 1, Sarah again on step 2, two-entry statusHistory `pending-deposit → confirmed` after deposit clears, depositAmount 20.00, depositPaidAt set). Internal notes record the PPD-allergie for the colour booking.
+
+- [x] Verify all seed objects use realistic Dutch names, times, and currency
+
+  Service titles (Knipbeurt, Kleur & Knippen, Olieverversing, Belastingadvies gesprek), Resource names (Sarah, Jan, Behandelkamer A, Werkplaats brug 1), notes/internalNotes (Dutch), statusHistory reasons (Dutch). Times include the `+02:00` Europe/Amsterdam CEST offset, currencies are EUR throughout.
 
 ## Section 3: Integration Test
 
