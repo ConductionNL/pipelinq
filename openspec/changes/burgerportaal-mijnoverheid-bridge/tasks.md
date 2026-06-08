@@ -182,20 +182,20 @@
 
 ## Phase 4: Background Jobs [MVP Core]
 
-- [ ] 4.1 Create `lib/BackgroundJob/DispatchQueuedMessagesJob.php` — ITimedJob, runs every 5 minutes
+- [x] 4.1 Create `lib/BackgroundJob/DispatchQueuedMessagesJob.php` — ITimedJob, runs every 5 minutes
   - `run(IJobList $jobList): void`
     - Call `BerichtenboxService::dispatchQueuedMessages()`
     - Handle exceptions: log them, don't stop the job
     - Update job schedule: `$jobList->setLastRun($this)`
   - DI: `BerichtenboxService`, `ILogger`, `IJobList`
 
-- [ ] 4.2 Create `lib/BackgroundJob/FallbackEmailJob.php` — ITimedJob, runs daily at 06:00 UTC
+- [x] 4.2 Create `lib/BackgroundJob/FallbackEmailJob.php` — ITimedJob, runs daily at 06:00 UTC
   - `run(IJobList $jobList): void`
     - Call `BerichtenboxService::processFallbackQueue()`
     - Log job start/end and any errors
   - DI: `BerichtenboxService`, `ILogger`, `IJobList`
 
-- [ ] 4.3 Edit `appinfo/app.php` — Register background jobs
+- [x] 4.3 Edit `appinfo/app.php` — Register background jobs
   - Register both jobs with the Nextcloud IJobList service
   - Set up event listeners for zaak status transitions (integration with zaakafhandelapp)
 
