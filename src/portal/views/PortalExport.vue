@@ -9,7 +9,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 		<section>
 			<h2>{{ t('pipelinq', 'Request my data') }}</h2>
 			<p>{{ t('pipelinq', 'Download a machine-readable copy of the data we hold about you (AVG Art. 15).') }}</p>
-			<p v-if="exportLink" role="alert" class="portal-success">
+			<p v-if="exportLink" role="status" aria-live="polite" class="portal-success">
 				<a :href="exportLink">{{ t('pipelinq', 'Your export is ready to download.') }}</a>
 			</p>
 			<button class="portal-button-primary" @click="requestExport">
@@ -20,7 +20,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 		<section>
 			<h2>{{ t('pipelinq', 'Close my account') }}</h2>
 			<p>{{ t('pipelinq', 'We will email a confirmation link. Closing your account cannot be undone.') }}</p>
-			<p v-if="closeMessage" role="alert" class="portal-success">
+			<p v-if="closeMessage" role="status" aria-live="polite" class="portal-success">
 				{{ closeMessage }}
 			</p>
 			<button v-if="!confirming" class="portal-button-danger" @click="confirming = true">
