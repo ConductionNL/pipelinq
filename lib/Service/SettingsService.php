@@ -154,7 +154,7 @@ class SettingsService
         'shillinq_ap_webhook_url'                  => '',
         // Lead-management: number of inactivity days before a lead is flagged stale.
         // Default mirrors REQ-LM-002 (14 days). Tenant-tunable through admin settings.
-        // @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+        // spec: openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002.
         'lead_stale_threshold_days'                => '14',
         // BI export + data-warehouse sink — admin settings (bi-export-and-data-warehouse-sink#14.1).
         'export.retention_days'                    => '365',
