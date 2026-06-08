@@ -39,6 +39,7 @@ use Psr\Log\LoggerInterface;
  */
 class PosCustomerLinkServiceTest extends TestCase
 {
+
     /**
      * The service under test.
      *
@@ -67,20 +68,21 @@ class PosCustomerLinkServiceTest extends TestCase
      */
     protected function setUp(): void
     {
-        $container          = $this->createMock(ContainerInterface::class);
-        $this->appConfig    = $this->createMock(IAppConfig::class);
-        $this->objectService = $this->createMock(ObjectService::class);
-        $logger             = $this->createMock(LoggerInterface::class);
+        $container           = $this->createMock(originalClassName: ContainerInterface::class);
+        $this->appConfig     = $this->createMock(originalClassName: IAppConfig::class);
+        $this->objectService = $this->createMock(originalClassName: ObjectService::class);
+        $logger = $this->createMock(originalClassName: LoggerInterface::class);
 
         $container->method('get')
             ->with('OCA\OpenRegister\Service\ObjectService')
             ->willReturn($this->objectService);
 
         $this->service = new PosCustomerLinkService(
-            $container,
-            $this->appConfig,
-            $logger,
+            container: $container,
+            appConfig: $this->appConfig,
+            logger: $logger,
         );
+
     }//end setUp()
 
     /**
@@ -92,23 +94,26 @@ class PosCustomerLinkServiceTest extends TestCase
     private function stubAppConfig(): void
     {
         $this->appConfig->method('getValueString')
-            ->willReturnCallback(static function (string $app, string $key, string $default = '') {
-                $values = [
-                    'register'                    => 'reg-1',
-                    'contact_schema'              => 'contact',
-                    'posTransaction_schema'       => 'posTransaction',
-                    'customerSearchFields'        => 'name,email,phone',
-                    'customerHistoryDepth'        => '10',
-                    'enablePipelinqSync'          => 'true',
-                    'requireCustomerForOnAccount' => 'true',
-                ];
+            ->willReturnCallback(
+                static function (string $app, string $key, string $default='') {
+                    $values = [
+                        'register'                    => 'reg-1',
+                        'contact_schema'              => 'contact',
+                        'posTransaction_schema'       => 'posTransaction',
+                        'customerSearchFields'        => 'name,email,phone',
+                        'customerHistoryDepth'        => '10',
+                        'enablePipelinqSync'          => 'true',
+                        'requireCustomerForOnAccount' => 'true',
+                    ];
 
-                return $values[$key] ?? $default;
-            });
+                    return $values[$key] ?? $default;
+                }
+            );
+
     }//end stubAppConfig()
 
     /**
-     * searchCustomers rejects queries shorter than 2 characters.
+     * SearchCustomers rejects queries shorter than 2 characters.
      *
      * @return void
      */
@@ -116,12 +121,13 @@ class PosCustomerLinkServiceTest extends TestCase
     {
         $this->stubAppConfig();
 
-        $this->expectException(OCSBadRequestException::class);
+        $this->expectException(exception: OCSBadRequestException::class);
         $this->service->searchCustomers(query: 'a');
+
     }//end testSearchRejectsShortQuery()
 
     /**
-     * searchCustomers performs a case-insensitive substring match across the
+     * SearchCustomers performs a case-insensitive substring match across the
      * enabled search fields and returns decorated rows.
      *
      * @return void
@@ -129,22 +135,25 @@ class PosCustomerLinkServiceTest extends TestCase
     public function testSearchMatchesAcrossEnabledFields(): void
     {
         $this->stubAppConfig();
-        $this->objectService->method('findAll')->willReturn([
-            ['id' => 'c1', 'name' => 'Maria García',   'email' => 'maria@example.nl',  'phone' => '+31 6 1234 5678'],
-            ['id' => 'c2', 'name' => 'Henk de Vries',  'email' => 'henk@example.nl',   'phone' => '+31 6 8765 4321'],
-            ['id' => 'c3', 'name' => 'Lisa van Loon',  'email' => 'lisa@example.nl',   'phone' => '+31 6 1111 2222'],
-        ]);
+        $this->objectService->method('findAll')->willReturn(
+            [
+                ['id' => 'c1', 'name' => 'Maria García',  'email' => 'maria@example.nl', 'phone' => '+31 6 1234 5678'],
+                ['id' => 'c2', 'name' => 'Henk de Vries', 'email' => 'henk@example.nl',  'phone' => '+31 6 8765 4321'],
+                ['id' => 'c3', 'name' => 'Lisa van Loon', 'email' => 'lisa@example.nl',  'phone' => '+31 6 1111 2222'],
+            ]
+        );
 
         $results = $this->service->searchCustomers(query: 'maria');
 
-        $this->assertCount(1, $results);
-        $this->assertSame('c1', $results[0]['id']);
-        $this->assertSame('Maria García', $results[0]['name']);
-        $this->assertFalse($results[0]['doNotContact']);
+        $this->assertCount(expectedCount: 1, haystack: $results);
+        $this->assertSame(expected: 'c1', actual: $results[0]['id']);
+        $this->assertSame(expected: 'Maria García', actual: $results[0]['name']);
+        $this->assertFalse(condition: $results[0]['doNotContact']);
+
     }//end testSearchMatchesAcrossEnabledFields()
 
     /**
-     * searchCustomers decorates contacts with the doNotContact badge so the
+     * SearchCustomers decorates contacts with the doNotContact badge so the
      * lookup modal can surface the privacy flag (REQ-PCL-007).
      *
      * @return void
@@ -152,34 +161,40 @@ class PosCustomerLinkServiceTest extends TestCase
     public function testSearchSurfacesDoNotContactFlag(): void
     {
         $this->stubAppConfig();
-        $this->objectService->method('findAll')->willReturn([
-            ['id' => 'c1', 'name' => 'Anonymous AB', 'email' => 'a@b.c', 'doNotContact' => true],
-        ]);
+        $this->objectService->method('findAll')->willReturn(
+            [
+                ['id' => 'c1', 'name' => 'Anonymous AB', 'email' => 'a@b.c', 'doNotContact' => true],
+            ]
+        );
 
         $results = $this->service->searchCustomers(query: 'anon');
 
-        $this->assertTrue($results[0]['doNotContact']);
-        $this->assertSame('Niet benaderen', $results[0]['doNotContactBadge']);
+        $this->assertTrue(condition: $results[0]['doNotContact']);
+        $this->assertSame(expected: 'Niet benaderen', actual: $results[0]['doNotContactBadge']);
+
     }//end testSearchSurfacesDoNotContactFlag()
 
     /**
-     * assertOnAccountHasCustomer raises when on-account is set without a customer.
+     * AssertOnAccountHasCustomer raises when on-account is set without a customer.
      *
      * @return void
      */
     public function testOnAccountRequiresCustomer(): void
     {
-        $this->expectException(OCSBadRequestException::class);
-        $this->expectExceptionMessageMatches("/op rekening/");
+        $this->expectException(exception: OCSBadRequestException::class);
+        $this->expectExceptionMessageMatches(regularExpression: "/op rekening/");
 
-        $this->service->assertOnAccountHasCustomer([
-            'tenderType' => 'onAccount',
-            'customer'   => '',
-        ]);
+        $this->service->assertOnAccountHasCustomer(
+            transaction: [
+                'tenderType' => 'onAccount',
+                'customer'   => '',
+            ]
+        );
+
     }//end testOnAccountRequiresCustomer()
 
     /**
-     * assertOnAccountHasCustomer respects the admin toggle: when
+     * AssertOnAccountHasCustomer respects the admin toggle: when
      * requireCustomerForOnAccount is 'false', missing customer is allowed.
      *
      * @return void
@@ -187,46 +202,56 @@ class PosCustomerLinkServiceTest extends TestCase
     public function testOnAccountInvariantDisabledByAdminToggle(): void
     {
         $this->appConfig->method('getValueString')
-            ->willReturnCallback(static function (string $app, string $key, string $default = '') {
-                if ($key === 'requireCustomerForOnAccount') {
-                    return 'false';
-                }
+            ->willReturnCallback(
+                static function (string $app, string $key, string $default='') {
+                    if ($key === 'requireCustomerForOnAccount') {
+                        return 'false';
+                    }
 
-                return $default;
-            });
+                    return $default;
+                }
+            );
 
         // Should NOT throw.
-        $this->service->assertOnAccountHasCustomer([
-            'tenderType' => 'onAccount',
-            'customer'   => '',
-        ]);
+        $this->service->assertOnAccountHasCustomer(
+            transaction: [
+                'tenderType' => 'onAccount',
+                'customer'   => '',
+            ]
+        );
 
-        $this->addToAssertionCount(1);
+        $this->addToAssertionCount(count: 1);
+
     }//end testOnAccountInvariantDisabledByAdminToggle()
 
     /**
-     * assertOnAccountHasCustomer is a no-op when the customer is set or the
+     * AssertOnAccountHasCustomer is a no-op when the customer is set or the
      * tender is not on-account.
      *
      * @return void
      */
     public function testOnAccountWithCustomerPasses(): void
     {
-        $this->service->assertOnAccountHasCustomer([
-            'tenderType' => 'onAccount',
-            'customer'   => 'c-uuid',
-        ]);
+        $this->service->assertOnAccountHasCustomer(
+            transaction: [
+                'tenderType' => 'onAccount',
+                'customer'   => 'c-uuid',
+            ]
+        );
 
-        $this->service->assertOnAccountHasCustomer([
-            'tenderType' => 'cash',
-            'customer'   => '',
-        ]);
+        $this->service->assertOnAccountHasCustomer(
+            transaction: [
+                'tenderType' => 'cash',
+                'customer'   => '',
+            ]
+        );
 
-        $this->addToAssertionCount(2);
+        $this->addToAssertionCount(count: 2);
+
     }//end testOnAccountWithCustomerPasses()
 
     /**
-     * syncConsent returns 'skipped' (and does not write) when the contact
+     * SyncConsent returns 'skipped' (and does not write) when the contact
      * carries the doNotContact flag (REQ-PCL-007 Scenario 2).
      *
      * @return void
@@ -244,11 +269,12 @@ class PosCustomerLinkServiceTest extends TestCase
             consent: true
         );
 
-        $this->assertSame('skipped', $status);
+        $this->assertSame(expected: 'skipped', actual: $status);
+
     }//end testSyncConsentSkippedForDoNotContact()
 
     /**
-     * syncConsent writes the consent to the contact via OR ObjectService and
+     * SyncConsent writes the consent to the contact via OR ObjectService and
      * returns 'success' on a clean write.
      *
      * @return void
@@ -269,11 +295,12 @@ class PosCustomerLinkServiceTest extends TestCase
             consent: true
         );
 
-        $this->assertSame('success', $status);
+        $this->assertSame(expected: 'success', actual: $status);
+
     }//end testSyncConsentWritesContact()
 
     /**
-     * syncConsent catches OR throwables and returns 'failed' (POS write is
+     * SyncConsent catches OR throwables and returns 'failed' (POS write is
      * authoritative; the contact-side error must never block the POS save).
      *
      * @return void
@@ -291,11 +318,12 @@ class PosCustomerLinkServiceTest extends TestCase
             consent: true
         );
 
-        $this->assertSame('failed', $status);
+        $this->assertSame(expected: 'failed', actual: $status);
+
     }//end testSyncConsentReturnsFailedOnError()
 
     /**
-     * getCustomer raises a 404 when the contact does not exist.
+     * GetCustomer raises a 404 when the contact does not exist.
      *
      * @return void
      */
@@ -304,12 +332,13 @@ class PosCustomerLinkServiceTest extends TestCase
         $this->stubAppConfig();
         $this->objectService->method('find')->willReturn(null);
 
-        $this->expectException(OCSNotFoundException::class);
+        $this->expectException(exception: OCSNotFoundException::class);
         $this->service->getCustomer(contactUuid: 'missing-uuid');
+
     }//end testGetCustomerNotFoundRaises404()
 
     /**
-     * enabledSearchFields defaults to the full set when the config string is
+     * EnabledSearchFields defaults to the full set when the config string is
      * empty or invalid.
      *
      * @return void
@@ -317,21 +346,24 @@ class PosCustomerLinkServiceTest extends TestCase
     public function testEnabledSearchFieldsDefaultsToAll(): void
     {
         $this->appConfig->method('getValueString')
-            ->willReturnCallback(static function (string $app, string $key, string $default = '') {
-                if ($key === 'customerSearchFields') {
-                    return '';
-                }
+            ->willReturnCallback(
+                static function (string $app, string $key, string $default='') {
+                    if ($key === 'customerSearchFields') {
+                        return '';
+                    }
 
-                return $default;
-            });
+                    return $default;
+                }
+            );
 
         $fields = $this->service->enabledSearchFields();
 
-        $this->assertSame(['name', 'email', 'phone'], $fields);
+        $this->assertSame(expected: ['name', 'email', 'phone'], actual: $fields);
+
     }//end testEnabledSearchFieldsDefaultsToAll()
 
     /**
-     * enabledSearchFields filters out unknown values and respects the admin
+     * EnabledSearchFields filters out unknown values and respects the admin
      * subset.
      *
      * @return void
@@ -339,59 +371,68 @@ class PosCustomerLinkServiceTest extends TestCase
     public function testEnabledSearchFieldsFiltersUnknownValues(): void
     {
         $this->appConfig->method('getValueString')
-            ->willReturnCallback(static function (string $app, string $key, string $default = '') {
-                if ($key === 'customerSearchFields') {
-                    return 'email,bogus,phone';
-                }
+            ->willReturnCallback(
+                static function (string $app, string $key, string $default='') {
+                    if ($key === 'customerSearchFields') {
+                        return 'email,bogus,phone';
+                    }
 
-                return $default;
-            });
+                    return $default;
+                }
+            );
 
         $fields = $this->service->enabledSearchFields();
 
-        $this->assertSame(['email', 'phone'], $fields);
+        $this->assertSame(expected: ['email', 'phone'], actual: $fields);
+
     }//end testEnabledSearchFieldsFiltersUnknownValues()
 
     /**
-     * historyDepth defaults to 10 on empty / non-numeric values and caps at 50.
+     * HistoryDepth defaults to 10 on empty / non-numeric values and caps at 50.
      *
      * @return void
      */
     public function testHistoryDepthBounds(): void
     {
         $this->appConfig->method('getValueString')
-            ->willReturnCallback(static function (string $app, string $key, string $default = '') {
-                if ($key === 'customerHistoryDepth') {
-                    return '999';
+            ->willReturnCallback(
+                static function (string $app, string $key, string $default='') {
+                    if ($key === 'customerHistoryDepth') {
+                        return '999';
+                    }
+
+                    return $default;
                 }
+            );
 
-                return $default;
-            });
+        $this->assertSame(expected: 50, actual: $this->service->historyDepth());
 
-        $this->assertSame(50, $this->service->historyDepth());
     }//end testHistoryDepthBounds()
 
     /**
-     * isSyncEnabled defaults to true; 'false' string disables.
+     * IsSyncEnabled defaults to true; 'false' string disables.
      *
      * @return void
      */
     public function testSyncEnabledTogglesOnFalseString(): void
     {
         $this->appConfig->method('getValueString')
-            ->willReturnCallback(static function (string $app, string $key, string $default = '') {
-                if ($key === 'enablePipelinqSync') {
-                    return 'false';
+            ->willReturnCallback(
+                static function (string $app, string $key, string $default='') {
+                    if ($key === 'enablePipelinqSync') {
+                        return 'false';
+                    }
+
+                    return $default;
                 }
+            );
 
-                return $default;
-            });
+        $this->assertFalse(condition: $this->service->isSyncEnabled());
 
-        $this->assertFalse($this->service->isSyncEnabled());
     }//end testSyncEnabledTogglesOnFalseString()
 
     /**
-     * requiresCustomerForOnAccount defaults to true.
+     * RequiresCustomerForOnAccount defaults to true.
      *
      * @return void
      */
@@ -399,11 +440,12 @@ class PosCustomerLinkServiceTest extends TestCase
     {
         $this->appConfig->method('getValueString')->willReturnArgument(2);
 
-        $this->assertTrue($this->service->requiresCustomerForOnAccount());
+        $this->assertTrue(condition: $this->service->requiresCustomerForOnAccount());
+
     }//end testRequiresCustomerForOnAccountDefault()
 
     /**
-     * getCustomerHistory excludes drafts / parked carts and sorts descending
+     * GetCustomerHistory excludes drafts / parked carts and sorts descending
      * by createdAt (most recent first).
      *
      * @return void
@@ -411,25 +453,28 @@ class PosCustomerLinkServiceTest extends TestCase
     public function testGetCustomerHistoryFiltersDraftsAndSorts(): void
     {
         $this->stubAppConfig();
-        $this->objectService->method('findAll')->willReturn([
-            ['id' => 't1', 'status' => 'confirmed', 'confirmedAt' => '2026-05-01T10:00:00Z', 'total' => 10],
-            ['id' => 't2', 'status' => 'draft',     'confirmedAt' => '2026-05-02T10:00:00Z', 'total' => 99],
-            ['id' => 't3', 'status' => 'settled',   'confirmedAt' => '2026-05-03T10:00:00Z', 'total' => 30],
-            ['id' => 't4', 'status' => 'parked',    'confirmedAt' => '2026-05-04T10:00:00Z', 'total' => 55],
-            ['id' => 't5', 'status' => 'refunded',  'confirmedAt' => '2026-05-02T10:00:00Z', 'total' => 20],
-        ]);
+        $this->objectService->method('findAll')->willReturn(
+            [
+                ['id' => 't1', 'status' => 'confirmed', 'confirmedAt' => '2026-05-01T10:00:00Z', 'total' => 10],
+                ['id' => 't2', 'status' => 'draft',     'confirmedAt' => '2026-05-02T10:00:00Z', 'total' => 99],
+                ['id' => 't3', 'status' => 'settled',   'confirmedAt' => '2026-05-03T10:00:00Z', 'total' => 30],
+                ['id' => 't4', 'status' => 'parked',    'confirmedAt' => '2026-05-04T10:00:00Z', 'total' => 55],
+                ['id' => 't5', 'status' => 'refunded',  'confirmedAt' => '2026-05-02T10:00:00Z', 'total' => 20],
+            ]
+        );
 
         $history = $this->service->getCustomerHistory(contactUuid: 'c1', limit: 10);
 
-        $this->assertCount(3, $history);
+        $this->assertCount(expectedCount: 3, haystack: $history);
         // DESC by createdAt: t3 (2026-05-03) > t5 (2026-05-02) > t1 (2026-05-01).
-        $this->assertSame('t3', $history[0]['id']);
-        $this->assertSame('t5', $history[1]['id']);
-        $this->assertSame('t1', $history[2]['id']);
+        $this->assertSame(expected: 't3', actual: $history[0]['id']);
+        $this->assertSame(expected: 't5', actual: $history[1]['id']);
+        $this->assertSame(expected: 't1', actual: $history[2]['id']);
+
     }//end testGetCustomerHistoryFiltersDraftsAndSorts()
 
     /**
-     * detachCustomer refuses to mutate a closed (settled / confirmed) transaction.
+     * DetachCustomer refuses to mutate a closed (settled / confirmed) transaction.
      *
      * @return void
      */
@@ -438,32 +483,36 @@ class PosCustomerLinkServiceTest extends TestCase
         $this->stubAppConfig();
         $this->objectService->method('find')->willReturn(['id' => 't1', 'status' => 'settled']);
 
-        $this->expectException(OCSBadRequestException::class);
+        $this->expectException(exception: OCSBadRequestException::class);
         $this->service->detachCustomer(transactionId: 't1');
+
     }//end testDetachRefusesClosedTransaction()
 
     /**
-     * attachCustomer refuses to attach when the transaction is no longer mutable.
+     * AttachCustomer refuses to attach when the transaction is no longer mutable.
      *
      * @return void
      */
     public function testAttachRefusesClosedTransaction(): void
     {
         $this->stubAppConfig();
-        $this->objectService->method('find')->willReturnCallback(static function (string $id, string $register = '', string $schema = '') {
-            if ($id === 'c1') {
-                return ['id' => 'c1', 'name' => 'Maria', 'doNotContact' => false];
+        $this->objectService->method('find')->willReturnCallback(
+            static function (string $id, string $register='', string $schema='') {
+                if ($id === 'c1') {
+                    return ['id' => 'c1', 'name' => 'Maria', 'doNotContact' => false];
+                }
+
+                return ['id' => 't1', 'status' => 'settled'];
             }
+        );
 
-            return ['id' => 't1', 'status' => 'settled'];
-        });
-
-        $this->expectException(OCSBadRequestException::class);
+        $this->expectException(exception: OCSBadRequestException::class);
         $this->service->attachCustomer(transactionId: 't1', contactUuid: 'c1');
+
     }//end testAttachRefusesClosedTransaction()
 
     /**
-     * attachCustomer writes customer + marketingConsent + consentSyncStatus
+     * AttachCustomer writes customer + marketingConsent + consentSyncStatus
      * on a draft transaction.
      *
      * @return void
@@ -471,18 +520,22 @@ class PosCustomerLinkServiceTest extends TestCase
     public function testAttachWritesCustomerAndConsent(): void
     {
         $this->stubAppConfig();
-        $this->objectService->method('find')->willReturnCallback(static function (string $id, string $register = '', string $schema = '') {
-            if ($id === 'c1') {
-                return ['id' => 'c1', 'name' => 'Maria', 'doNotContact' => false];
-            }
+        $this->objectService->method('find')->willReturnCallback(
+            static function (string $id, string $register='', string $schema='') {
+                if ($id === 'c1') {
+                    return ['id' => 'c1', 'name' => 'Maria', 'doNotContact' => false];
+                }
 
-            return ['id' => 't1', 'status' => 'draft'];
-        });
+                return ['id' => 't1', 'status' => 'draft'];
+            }
+        );
         $this->objectService->expects($this->atLeastOnce())
             ->method('saveObject')
-            ->willReturnCallback(static function (array $object) {
-                return $object;
-            });
+            ->willReturnCallback(
+                static function (array $object) {
+                    return $object;
+                }
+            );
 
         $saved = $this->service->attachCustomer(
             transactionId: 't1',
@@ -490,8 +543,9 @@ class PosCustomerLinkServiceTest extends TestCase
             marketingConsent: true
         );
 
-        $this->assertSame('c1', $saved['customer']);
-        $this->assertTrue($saved['marketingConsent']);
-        $this->assertSame('success', $saved['consentSyncStatus']);
+        $this->assertSame(expected: 'c1', actual: $saved['customer']);
+        $this->assertTrue(condition: $saved['marketingConsent']);
+        $this->assertSame(expected: 'success', actual: $saved['consentSyncStatus']);
+
     }//end testAttachWritesCustomerAndConsent()
 }//end class

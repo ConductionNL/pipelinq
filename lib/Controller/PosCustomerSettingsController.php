@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -34,6 +35,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Admin settings controller for POS customer-link configuration.
@@ -126,9 +128,9 @@ class PosCustomerSettingsController extends Controller
             $this->applyDepthParam();
             $this->applyBoolParam(key: 'enablePipelinqSync');
             $this->applyBoolParam(key: 'requireCustomerForOnAccount');
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger->error('PosCustomerSettingsController::update failed', ['exception' => $e->getMessage()]);
             return new JSONResponse(
                 ['error' => 'Onverwachte fout bij opslaan van instellingen.'],
@@ -146,15 +148,17 @@ class PosCustomerSettingsController extends Controller
      */
     private function readAll(): array
     {
-        $fields = $this->appConfig->getValueString(
+        $fields    = $this->appConfig->getValueString(
             Application::APP_ID,
             'customerSearchFields',
             self::DEFAULTS['customerSearchFields']
         );
-        $fieldList = array_values(array_intersect(
+        $fieldList = array_values(
+                array_intersect(
             array_filter(array_map('trim', explode(',', $fields))),
             self::ALLOWED_FIELDS
-        ));
+        )
+                );
         if (count($fieldList) === 0) {
             $fieldList = self::ALLOWED_FIELDS;
         }
@@ -192,7 +196,7 @@ class PosCustomerSettingsController extends Controller
      *
      * @return void
      *
-     * @throws \InvalidArgumentException On invalid input.
+     * @throws InvalidArgumentException On invalid input.
      */
     private function applyFieldsParam(): void
     {
@@ -201,22 +205,21 @@ class PosCustomerSettingsController extends Controller
             return;
         }
 
+        $fields = array_filter(array_map('trim', explode(',', (string) $raw)));
         if (is_array($raw) === true) {
             $fields = array_values(array_filter(array_map('strval', $raw)));
-        } else {
-            $fields = array_filter(array_map('trim', explode(',', (string) $raw)));
         }
 
         foreach ($fields as $field) {
             if (in_array($field, self::ALLOWED_FIELDS, true) === false) {
-                throw new \InvalidArgumentException(
+                throw new InvalidArgumentException(
                     "Onbekend zoekveld: '".$field."'. Toegestaan: name, email, phone."
                 );
             }
         }
 
         if (count($fields) === 0) {
-            throw new \InvalidArgumentException('Ten minste één zoekveld is verplicht.');
+            throw new InvalidArgumentException('Ten minste één zoekveld is verplicht.');
         }
 
         $this->appConfig->setValueString(Application::APP_ID, 'customerSearchFields', implode(',', $fields));
@@ -227,7 +230,7 @@ class PosCustomerSettingsController extends Controller
      *
      * @return void
      *
-     * @throws \InvalidArgumentException On invalid input.
+     * @throws InvalidArgumentException On invalid input.
      */
     private function applyDepthParam(): void
     {
@@ -238,7 +241,7 @@ class PosCustomerSettingsController extends Controller
 
         $depth = (int) $raw;
         if (in_array($depth, self::ALLOWED_DEPTHS, true) === false) {
-            throw new \InvalidArgumentException('Geschiedenisdiepte moet 10, 20 of 50 zijn.');
+            throw new InvalidArgumentException('Geschiedenisdiepte moet 10, 20 of 50 zijn.');
         }
 
         $this->appConfig->setValueString(Application::APP_ID, 'customerHistoryDepth', (string) $depth);
@@ -258,13 +261,18 @@ class PosCustomerSettingsController extends Controller
             return;
         }
 
-        $value = 'true';
+        $truthy = ((int) $raw) === 1;
         if (is_bool($raw) === true) {
-            $value = $raw === true ? 'true' : 'false';
-        } else if (is_string($raw) === true) {
-            $value = in_array(strtolower($raw), ['1', 'true', 'yes', 'on'], true) === true ? 'true' : 'false';
-        } else {
-            $value = ((int) $raw) === 1 ? 'true' : 'false';
+            $truthy = $raw;
+        }
+
+        if (is_string($raw) === true) {
+            $truthy = in_array(strtolower($raw), ['1', 'true', 'yes', 'on'], true);
+        }
+
+        $value = 'false';
+        if ($truthy === true) {
+            $value = 'true';
         }
 
         $this->appConfig->setValueString(Application::APP_ID, $key, $value);
