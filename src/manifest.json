@@ -3,6 +3,7 @@
 	"version": "1.0.0",
 	"dependencies": [
 		"openregister",
+		"openconnector",
 		"deck",
 		"workflowengine",
 		"timemanager"
@@ -261,6 +262,14 @@
 							"config": {
 								"linkedType": "time-tracker"
 							}
+						},
+						{
+							"id": "xwiki",
+							"label": "Knowledge",
+							"component": "CnXwikiTab",
+							"config": {
+								"linkedType": "xwiki"
+							}
 						}
 					]
 				},
@@ -277,6 +286,13 @@
 						"component": "CnTimeTrackerCard",
 						"config": {
 							"linkedType": "time-tracker"
+						}
+					},
+					{
+						"id": "client-xwiki-preview",
+						"component": "CnXwikiWidget",
+						"config": {
+							"linkedType": "xwiki"
 						}
 					}
 				]
@@ -338,6 +354,14 @@
 							"config": {
 								"linkedType": "time-tracker"
 							}
+						},
+						{
+							"id": "xwiki",
+							"label": "Knowledge",
+							"component": "CnXwikiTab",
+							"config": {
+								"linkedType": "xwiki"
+							}
 						}
 					]
 				},
@@ -362,6 +386,13 @@
 						"component": "CnTimeTrackerCard",
 						"config": {
 							"linkedType": "time-tracker"
+						}
+					},
+					{
+						"id": "request-xwiki-preview",
+						"component": "CnXwikiWidget",
+						"config": {
+							"linkedType": "xwiki"
 						}
 					}
 				]
@@ -488,6 +519,14 @@
 							"config": {
 								"linkedType": "time-tracker"
 							}
+						},
+						{
+							"id": "xwiki",
+							"label": "Knowledge",
+							"component": "CnXwikiTab",
+							"config": {
+								"linkedType": "xwiki"
+							}
 						}
 					]
 				},
@@ -512,6 +551,13 @@
 						"component": "CnTimeTrackerCard",
 						"config": {
 							"linkedType": "time-tracker"
+						}
+					},
+					{
+						"id": "lead-xwiki-preview",
+						"component": "CnXwikiWidget",
+						"config": {
+							"linkedType": "xwiki"
 						}
 					}
 				]
