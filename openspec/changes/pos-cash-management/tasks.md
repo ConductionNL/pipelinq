@@ -95,7 +95,7 @@
 
 ## 4. Backend Controller — REST API Endpoints
 
-- [ ] 4.1 Create `CashShiftController` in `lib/Controller/CashShiftController.php`
+- [x] 4.1 Create `CashShiftController` in `lib/Controller/CashShiftController.php`
   - **spec_ref**: All REQ-CCM-*
   - **files**: `lib/Controller/CashShiftController.php`
   - **acceptance_criteria**:
@@ -111,7 +111,7 @@
       - `POST /api/v1/pos/shifts/{id}/diff/reject` — calls `CashShiftService.rejectDiff()`
     - Permission: All endpoints require auth; manager-only endpoints check `isAdmin()` or manager role (defined in V2)
 
-- [ ] 4.2 Implement CloudEvent emission in `CashShiftService`
+- [x] 4.2 Implement CloudEvent emission in `CashShiftService`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-006`
   - **files**: `lib/Service/CashShiftService.php`
   - **acceptance_criteria**:
