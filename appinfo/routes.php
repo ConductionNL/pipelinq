@@ -227,6 +227,21 @@ return [
         ['name' => 'posBookkeepingConfig#index',  'url' => '/api/admin/pos-bookkeeping/config', 'verb' => 'GET'],
         ['name' => 'posBookkeepingConfig#update', 'url' => '/api/admin/pos-bookkeeping/config', 'verb' => 'POST'],
 
+        // POS split-tender (pos-split-tender). Admin tender-type CRUD +
+        // cashier-facing per-transaction tender CRUD + validate-only helper
+        // for the settle preflight. Specific routes precede the {id}/{tenderId}
+        // wildcards (ADR-016). Tender-type CRUD is admin-only via
+        // #[AuthorizedAdminSetting]; transaction-scoped routes are #[NoAdminRequired].
+        ['name' => 'posTender#indexTypes',  'url' => '/api/pos/tender-types',        'verb' => 'GET'],
+        ['name' => 'posTender#createType',  'url' => '/api/pos/tender-types',        'verb' => 'POST'],
+        ['name' => 'posTender#showType',    'url' => '/api/pos/tender-types/{id}',   'verb' => 'GET'],
+        ['name' => 'posTender#updateType',  'url' => '/api/pos/tender-types/{id}',   'verb' => 'PUT'],
+        ['name' => 'posTender#destroyType', 'url' => '/api/pos/tender-types/{id}',   'verb' => 'DELETE'],
+        ['name' => 'posTender#summary',     'url' => '/api/pos-transactions/{transactionId}/tenders/summary', 'verb' => 'GET'],
+        ['name' => 'posTender#indexTenders','url' => '/api/pos-transactions/{transactionId}/tenders',         'verb' => 'GET'],
+        ['name' => 'posTender#addTender',   'url' => '/api/pos-transactions/{transactionId}/tenders',         'verb' => 'POST'],
+        ['name' => 'posTender#removeTender','url' => '/api/pos-transactions/{transactionId}/tenders/{tenderId}', 'verb' => 'DELETE'],
+
         // ---------------------------------------------------------------------
         // Customer portal (separate auth domain — ADR-005). All /portal/api/*
         // endpoints are #[PublicPage]; the portal session bearer token (not a
