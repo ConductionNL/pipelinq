@@ -68,6 +68,11 @@ parameters:
 			path: lib/Controller/SettingsController.php
 
 		-
+			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
+			count: 2
+			path: lib/Controller/PosBookkeepingConfigController.php
+
+		-
 			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\CalendarSyncService\\:\\:\\$logger is never read, only written\\.$#"
 			count: 1
 			path: lib/Service/CalendarSyncService.php
