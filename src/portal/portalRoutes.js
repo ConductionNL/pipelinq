@@ -21,12 +21,17 @@ import PortalProfile from './views/PortalProfile.vue'
 import PortalDelegations from './views/PortalDelegations.vue'
 import PortalExport from './views/PortalExport.vue'
 import PortalWidget from './views/PortalWidget.vue'
+import BookingPortal from '../views/portal/BookingPortal.vue'
+import BookingConfirmationPage from '../views/portal/BookingConfirmationPage.vue'
 
 export const portalRoutes = [
 	{ path: '/', redirect: '/dashboard' },
 	{ path: '/login', component: PortalLogin, meta: { public: true } },
 	{ path: '/password-reset', component: PortalPasswordReset, meta: { public: true } },
 	{ path: '/widget', component: PortalWidget, meta: { public: true } },
+	// Public appointment-booking portal (member 06) — no portal session required.
+	{ path: '/book/:serviceSlug', component: BookingPortal, meta: { public: true } },
+	{ path: '/booking-confirmation/:bookingId', component: BookingConfirmationPage, meta: { public: true } },
 	{ path: '/dashboard', component: PortalDashboard },
 	{ path: '/requests', component: PortalRequests },
 	{ path: '/profile', component: PortalProfile },

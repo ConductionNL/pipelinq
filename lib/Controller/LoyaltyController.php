@@ -1,0 +1,415 @@
+<?php
+
+/**
+ * Pipelinq LoyaltyController.
+ *
+ * Exposes the loyalty-program REST API for both authenticated app users (account
+ * + redemption lookup) and POS terminals (gift-card validate/redeem + redemption
+ * validate/use). Endpoints follow the auth posture documented per method.
+ *
+ * @category Controller
+ * @package  OCA\Pipelinq\Controller
+ *
+ * @author    Conduction <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * @version GIT: <git_id>
+ *
+ * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004
+ * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006
+ * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-007
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Pipelinq\Controller;
+
+use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\GiftCardService;
+use OCA\Pipelinq\Service\LoyaltyAccountService;
+use OCA\Pipelinq\Service\LoyaltyProgrammeService;
+use OCA\Pipelinq\Service\PointsLedgerService;
+use OCA\Pipelinq\Service\RedemptionService;
+use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
+use OCP\IRequest;
+use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
+use Throwable;
+
+/**
+ * Loyalty REST controller.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004
+ */
+class LoyaltyController extends Controller
+{
+    /**
+     * Constructor.
+     *
+     * @param IRequest                $request               The request.
+     * @param LoyaltyAccountService   $loyaltyAccountService The account service.
+     * @param PointsLedgerService     $ledgerService         The ledger service.
+     * @param RedemptionService       $redemptionService     The redemption service.
+     * @param GiftCardService         $giftCardService       The gift card service.
+     * @param LoyaltyProgrammeService $programmeService      The programme service.
+     * @param IUserSession            $userSession           The user session.
+     * @param IL10N                   $l10n                  The localiser.
+     * @param LoggerInterface         $logger                The logger.
+     */
+    public function __construct(
+        IRequest $request,
+        private LoyaltyAccountService $loyaltyAccountService,
+        private PointsLedgerService $ledgerService,
+        private RedemptionService $redemptionService,
+        private GiftCardService $giftCardService,
+        private LoyaltyProgrammeService $programmeService,
+        private IUserSession $userSession,
+        private IL10N $l10n,
+        private LoggerInterface $logger,
+    ) {
+        parent::__construct(appName: Application::APP_ID, request: $request);
+    }//end __construct()
+
+    /**
+     * Get an account by its UUID (the caller MUST own the underlying klantId).
+     *
+     * @param string $accountId The account UUID.
+     *
+     * @return JSONResponse
+     *
+     * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+     */
+    #[NoAdminRequired]
+    public function getAccount(string $accountId): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Authentication required')],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+
+        $account = $this->loyaltyAccountService->getAccount(accountId: $accountId);
+        if ($account === null) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Account not found')],
+                Http::STATUS_NOT_FOUND
+            );
+        }
+
+        // Strip the hashed PIN equivalent / opt-in legal text from the response.
+        unset($account['optInTermsVersion']);
+
+        return new JSONResponse($account);
+    }//end getAccount()
+
+    /**
+     * Get the ledger history for an account.
+     *
+     * @param string $accountId The account UUID.
+     *
+     * @return JSONResponse
+     *
+     * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+     */
+    #[NoAdminRequired]
+    public function getAccountHistory(string $accountId): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Authentication required')],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+
+        $entries = $this->ledgerService->getLedgerHistory(accountId: $accountId);
+        return new JSONResponse(['entries' => $entries]);
+    }//end getAccountHistory()
+
+    /**
+     * List redemption options the account can currently afford for a programme.
+     *
+     * @param string $programmeId The programme UUID.
+     * @param string $accountId   The account UUID.
+     *
+     * @return JSONResponse
+     *
+     * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004
+     */
+    #[NoAdminRequired]
+    public function getRedemptionOptions(string $programmeId, string $accountId): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Authentication required')],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+
+        $options = $this->redemptionService->getValidRedemptionOptions(
+            accountId: $accountId,
+            programmeId: $programmeId
+        );
+
+        return new JSONResponse(['options' => $options]);
+    }//end getRedemptionOptions()
+
+    /**
+     * Initiate a redemption — reserve points + return code.
+     *
+     * @param string $accountId The account UUID.
+     * @param string $optionId  The option UUID.
+     *
+     * @return JSONResponse
+     *
+     * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004-01
+     */
+    #[NoAdminRequired]
+    public function initiateRedemption(string $accountId, string $optionId): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Authentication required')],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+
+        try {
+            $redemption = $this->redemptionService->initiateRedemption(
+                accountId: $accountId,
+                optionId: $optionId
+            );
+            return new JSONResponse($redemption, Http::STATUS_CREATED);
+        } catch (Throwable $e) {
+            return new JSONResponse(
+                ['error' => $e->getMessage()],
+                Http::STATUS_BAD_REQUEST
+            );
+        }
+    }//end initiateRedemption()
+
+    /**
+     * Validate a redemption code (POS-facing — auth required as authenticated user).
+     *
+     * @param string $code The beloningCode.
+     *
+     * @return JSONResponse
+     *
+     * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004-03
+     */
+    #[NoAdminRequired]
+    public function lookupRedemptionCode(string $code): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Authentication required')],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+
+        $result = $this->redemptionService->validateCode(code: $code);
+        return new JSONResponse($result);
+    }//end validateRedemptionCode()
+
+    /**
+     * Mark a redemption code as used (POS settlement).
+     *
+     * @param string $code The beloningCode.
+     *
+     * @return JSONResponse
+     */
+    #[NoAdminRequired]
+    public function useRedemptionCode(string $code): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Authentication required')],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+
+        $validation = $this->redemptionService->validateCode(code: $code);
+        if ($validation['valid'] === false) {
+            return new JSONResponse(
+                ['error' => $validation['reason'] ?? 'Invalid code'],
+                Http::STATUS_BAD_REQUEST
+            );
+        }
+
+        $redemption = $validation['redemption'] ?? null;
+        if ($redemption === null) {
+            return new JSONResponse(['error' => 'Redemption missing'], Http::STATUS_BAD_REQUEST);
+        }
+
+        $self = $redemption['@self'] ?? [];
+        $redemptionId = (string) (is_array($self) === true ? ($self['id'] ?? '') : '');
+        if ($redemptionId === '') {
+            $redemptionId = (string) ($redemption['uuid'] ?? $redemption['id'] ?? '');
+        }
+
+        try {
+            $posTransactionId = $this->request->getParam('posTransactionId');
+            $updated = $this->redemptionService->markRedemptionUsed(
+                redemptionId: $redemptionId,
+                posTransactionId: is_string($posTransactionId) ? $posTransactionId : null
+            );
+            return new JSONResponse($updated);
+        } catch (Throwable $e) {
+            return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+        }
+    }//end useRedemptionCode()
+
+    /**
+     * Validate a gift card by serial+pin (POS-facing).
+     *
+     * @return JSONResponse
+     *
+     * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-007
+     */
+    #[NoAdminRequired]
+    public function lookupGiftCard(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Authentication required')],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+
+        $serial = (string) $this->request->getParam('serial', '');
+        $pin    = (string) $this->request->getParam('pin', '');
+        if ($serial === '' || $pin === '') {
+            return new JSONResponse(
+                ['error' => 'serial and pin are required'],
+                Http::STATUS_BAD_REQUEST
+            );
+        }
+
+        $result = $this->giftCardService->validateBySerial(serial: $serial, pin: $pin);
+        return new JSONResponse($result);
+    }//end validateGiftCard()
+
+    /**
+     * Redeem (debit) an amount from a gift card.
+     *
+     * @return JSONResponse
+     *
+     * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-007-01
+     */
+    #[NoAdminRequired]
+    public function redeemGiftCard(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Authentication required')],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+
+        $giftCardId       = (string) $this->request->getParam('giftCardId', '');
+        $pin              = (string) $this->request->getParam('pin', '');
+        $amount           = (float) $this->request->getParam('amount', 0);
+        $posTransactionId = $this->request->getParam('posTransactionId');
+        if ($giftCardId === '' || $pin === '' || $amount <= 0) {
+            return new JSONResponse(
+                ['error' => 'giftCardId, pin and amount (>0) are required'],
+                Http::STATUS_BAD_REQUEST
+            );
+        }
+
+        try {
+            $result = $this->giftCardService->redeemGiftCard(
+                giftCardId: $giftCardId,
+                pin: $pin,
+                amount: $amount,
+                posTransactionId: is_string($posTransactionId) ? $posTransactionId : null
+            );
+            return new JSONResponse($result);
+        } catch (Throwable $e) {
+            return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+        }
+    }//end redeemGiftCard()
+
+    /**
+     * Activate a gift card after a successful POS transaction.
+     *
+     * @param string $giftCardId The card UUID.
+     *
+     * @return JSONResponse
+     *
+     * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006-03
+     */
+    #[NoAdminRequired]
+    public function activateGiftCard(string $giftCardId): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Authentication required')],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+
+        $posTransactionId = $this->request->getParam('posTransactionId');
+        $card = $this->giftCardService->activateGiftCard(
+            giftCardId: $giftCardId,
+            posTransactionId: is_string($posTransactionId) ? $posTransactionId : null
+        );
+        if ($card === null) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Gift card not found')],
+                Http::STATUS_NOT_FOUND
+            );
+        }
+
+        return new JSONResponse($card);
+    }//end activateGiftCard()
+
+    /**
+     * Activate a loyalty programme (admin-only — relies on NC SecurityMiddleware default).
+     *
+     * @param string $programmeId The programme UUID.
+     *
+     * @return JSONResponse
+     *
+     * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-001-01
+     */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
+    public function activateProgramme(string $programmeId): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Authentication required')],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+
+        try {
+            $programme = $this->programmeService->activate(
+                programmeId: $programmeId,
+                activatedBy: (string) $user->getUID()
+            );
+            return new JSONResponse($programme);
+        } catch (Throwable $e) {
+            return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+        }
+    }//end activateProgramme()
+}//end class

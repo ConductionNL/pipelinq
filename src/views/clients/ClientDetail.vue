@@ -1,3 +1,11 @@
+<!-- SPDX-License-Identifier: EUPL-1.2 -->
+<!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
+<!-- @spec openspec/changes/klantbeeld-360/tasks.md#task-4.1 -->
+<!-- @spec openspec/changes/klantbeeld-360/tasks.md#task-4.2 -->
+<!-- @spec openspec/changes/klantbeeld-360/tasks.md#task-4.3 -->
+<!-- @spec openspec/changes/klantbeeld-360/tasks.md#task-4.4 -->
+<!-- @spec openspec/changes/klantbeeld-360/tasks.md#task-4.5 -->
+<!-- @spec openspec/changes/klantbeeld-360/tasks.md#task-4.6 -->
 <template>
 	<div v-if="editing || isNew">
 		<div class="client-detail__header">
@@ -104,8 +112,15 @@
 				</NcButton>
 			</template>
 
-			<div v-if="contacts.length === 0" class="section-empty">
-				<p>{{ t('pipelinq', 'No contacts found') }}</p>
+			<NcLoadingIcon v-if="sectionLoading.contacts" :size="24" />
+			<div v-else-if="sectionError.contacts" class="section-error">
+				<p>{{ sectionError.contacts }}</p>
+			</div>
+			<div v-else-if="contacts.length === 0" class="section-empty">
+				<p>{{ t('pipelinq', 'No contacts linked') }}</p>
+				<NcButton type="secondary" @click="addContact">
+					{{ t('pipelinq', 'Add Contact') }}
+				</NcButton>
 			</div>
 			<div v-else class="viewTableContainer">
 				<table class="viewTable">
@@ -114,6 +129,7 @@
 							<th>{{ t('pipelinq', 'Name') }}</th>
 							<th>{{ t('pipelinq', 'Role') }}</th>
 							<th>{{ t('pipelinq', 'Email') }}</th>
+							<th>{{ t('pipelinq', 'Phone') }}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -125,6 +141,7 @@
 							<td>{{ contact.name || '-' }}</td>
 							<td>{{ contact.role || '-' }}</td>
 							<td>{{ contact.email || '-' }}</td>
+							<td>{{ contact.phone || '-' }}</td>
 						</tr>
 					</tbody>
 				</table>
@@ -132,8 +149,12 @@
 		</CnDetailCard>
 
 		<CnDetailCard :title="t('pipelinq', 'Leads')">
-			<div v-if="leads.length === 0" class="section-empty">
-				<p>{{ t('pipelinq', 'No leads found') }}</p>
+			<NcLoadingIcon v-if="sectionLoading.leads" :size="24" />
+			<div v-else-if="sectionError.leads" class="section-error">
+				<p>{{ sectionError.leads }}</p>
+			</div>
+			<div v-else-if="recentLeads.length === 0" class="section-empty">
+				<p>{{ t('pipelinq', 'No leads linked') }}</p>
 			</div>
 			<div v-else class="viewTableContainer">
 				<table class="viewTable">
@@ -142,17 +163,21 @@
 							<th>{{ t('pipelinq', 'Title') }}</th>
 							<th>{{ t('pipelinq', 'Stage') }}</th>
 							<th>{{ t('pipelinq', 'Value') }}</th>
+							<th>{{ t('pipelinq', 'Probability') }}</th>
+							<th>{{ t('pipelinq', 'Expected close') }}</th>
 						</tr>
 					</thead>
 					<tbody>
 						<tr
-							v-for="lead in leads"
+							v-for="lead in recentLeads"
 							:key="lead.id"
 							class="viewTableRow"
 							@click="$router.push({ name: 'LeadDetail', params: { id: lead.id } })">
 							<td>{{ lead.title || '-' }}</td>
 							<td>{{ lead.stage || '-' }}</td>
-							<td>{{ lead.value || '-' }}</td>
+							<td>{{ formatCurrency(lead.value) }}</td>
+							<td>{{ formatProbability(lead.probability) }}</td>
+							<td>{{ formatDate(lead.expectedCloseDate) }}</td>
 						</tr>
 					</tbody>
 				</table>
@@ -166,8 +191,12 @@
 				</NcButton>
 			</template>
 
-			<div v-if="requests.length === 0" class="section-empty">
-				<p>{{ t('pipelinq', 'No requests found') }}</p>
+			<NcLoadingIcon v-if="sectionLoading.requests" :size="24" />
+			<div v-else-if="sectionError.requests" class="section-error">
+				<p>{{ sectionError.requests }}</p>
+			</div>
+			<div v-else-if="recentRequests.length === 0" class="section-empty">
+				<p>{{ t('pipelinq', 'No requests linked') }}</p>
 			</div>
 			<div v-else class="viewTableContainer">
 				<table class="viewTable">
@@ -175,16 +204,20 @@
 						<tr>
 							<th>{{ t('pipelinq', 'Title') }}</th>
 							<th>{{ t('pipelinq', 'Status') }}</th>
+							<th>{{ t('pipelinq', 'Priority') }}</th>
+							<th>{{ t('pipelinq', 'Requested') }}</th>
 						</tr>
 					</thead>
 					<tbody>
 						<tr
-							v-for="request in requests"
+							v-for="request in recentRequests"
 							:key="request.id"
 							class="viewTableRow"
 							@click="$router.push({ name: 'RequestDetail', params: { id: request.id } })">
 							<td>{{ request.title || '-' }}</td>
 							<td>{{ request.status || '-' }}</td>
+							<td>{{ request.priority || '-' }}</td>
+							<td>{{ formatDate(request.requestedAt || request._dateCreated) }}</td>
 						</tr>
 					</tbody>
 				</table>
@@ -206,8 +239,12 @@
 				</NcButton>
 			</template>
 
-			<div v-if="contactmomenten.length === 0" class="section-empty">
-				<p>{{ t('pipelinq', 'Geen contactmomenten geregistreerd') }}</p>
+			<NcLoadingIcon v-if="sectionLoading.contactmomenten" :size="24" />
+			<div v-else-if="sectionError.contactmomenten" class="section-error">
+				<p>{{ sectionError.contactmomenten }}</p>
+			</div>
+			<div v-else-if="recentContactmomenten.length === 0" class="section-empty">
+				<p>{{ t('pipelinq', 'No contactmomenten') }}</p>
 			</div>
 			<div v-else class="viewTableContainer">
 				<table class="viewTable">
@@ -215,20 +252,22 @@
 						<tr>
 							<th>{{ t('pipelinq', 'Subject') }}</th>
 							<th>{{ t('pipelinq', 'Channel') }}</th>
-							<th>{{ t('pipelinq', 'Agent') }}</th>
 							<th>{{ t('pipelinq', 'Date') }}</th>
+							<th>{{ t('pipelinq', 'Agent') }}</th>
+							<th>{{ t('pipelinq', 'Outcome') }}</th>
 						</tr>
 					</thead>
 					<tbody>
 						<tr
-							v-for="cm in contactmomenten"
+							v-for="cm in recentContactmomenten"
 							:key="cm.id"
 							class="viewTableRow"
 							@click="$router.push({ name: 'ContactmomentDetail', params: { id: cm.id } })">
 							<td>{{ cm.subject || '-' }}</td>
 							<td>{{ cm.channel || '-' }}</td>
-							<td>{{ cm.agent || '-' }}</td>
 							<td>{{ formatDate(cm.contactedAt) }}</td>
+							<td>{{ cm.agent || '-' }}</td>
+							<td>{{ cm.outcome || '-' }}</td>
 						</tr>
 					</tbody>
 				</table>
@@ -238,6 +277,15 @@
 		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Activity')">
 			<ActivityTimeline :entity-type="'client'" :entity-id="clientId" />
 		</CnDetailCard>
+
+		<!--
+			Communication History — paginated contactmoment feed for this entity.
+			@spec openspec/changes/entity-notes/tasks.md#task-6.1
+		-->
+		<CommunicationHistory
+			v-if="!isNew && !loading && !editing"
+			entity-type="client"
+			:entity-id="clientId" />
 
 		<CnDetailCard :title="t('pipelinq', 'Complaints')">
 			<template #actions>
@@ -324,7 +372,7 @@
 </template>
 
 <script>
-import { NcButton, NcDialog } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcLoadingIcon } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
@@ -332,6 +380,7 @@ import ClientForm from './ClientForm.vue'
 import ContactRelationships from '../../components/ContactRelationships.vue'
 import ContactmomentQuickLog from '../../components/ContactmomentQuickLog.vue'
 import ActivityTimeline from '../../components/ActivityTimeline.vue'
+import CommunicationHistory from '../../components/CommunicationHistory.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -339,15 +388,27 @@ export default {
 	components: {
 		NcButton,
 		NcDialog,
+		NcLoadingIcon,
 		CnDetailPage,
 		CnDetailCard,
 		ClientForm,
 		ContactRelationships,
 		ContactmomentQuickLog,
 		ActivityTimeline,
+		CommunicationHistory,
 	},
 	props: {
-		clientId: {
+		/**
+		 * The route param `:id` is forwarded by CnPageRenderer as `id`.
+		 * `clientIdProp` keeps the old prop name reachable for direct
+		 * usage (legacy callers) while the rest of the component uses
+		 * the `clientId` computed alias below.
+		 */
+		id: {
+			type: String,
+			default: null,
+		},
+		clientIdProp: {
 			type: String,
 			default: null,
 		},
@@ -362,9 +423,43 @@ export default {
 			complaints: [],
 			showDelete: false,
 			showContactmomentQuickLog: false,
+			/**
+			 * Per-section loading flags so each relation fetch shows its
+			 * own indicator instead of blocking the whole page on the
+			 * slowest call (REQ-KB360-006).
+			 */
+			sectionLoading: {
+				contacts: false,
+				leads: false,
+				contactmomenten: false,
+				requests: false,
+				complaints: false,
+			},
+			/**
+			 * Per-section error messages — a failure in one fetch must NOT
+			 * prevent other sections from rendering (REQ-KB360-006).
+			 */
+			sectionError: {
+				contacts: null,
+				leads: null,
+				contactmomenten: null,
+				requests: null,
+				complaints: null,
+			},
 		}
 	},
 	computed: {
+		/**
+		 * Resolved client UUID — prefers the renderer-forwarded `:id` route
+		 * param, then the legacy `clientIdProp`, then null. Centralised so
+		 * the rest of the component reads ONE source of truth and is
+		 * agnostic to how the value arrived.
+		 *
+		 * @return {?string}
+		 */
+		clientId() {
+			return this.id || this.clientIdProp || null
+		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-13
 		 */
@@ -445,6 +540,36 @@ export default {
 		clientSince() {
 			return this.clientData.createdAt || null
 		},
+		/**
+		 * Up to 10 leads sorted by `updatedAt` descending (REQ-KB360-002).
+		 *
+		 * @return {Array<object>}
+		 *
+		 * @spec openspec/changes/klantbeeld-360/specs/klantbeeld-360/spec.md#REQ-KB360-002
+		 */
+		recentLeads() {
+			return this.sortByDateDesc(this.leads, 'updatedAt').slice(0, 10)
+		},
+		/**
+		 * Up to 10 contactmomenten sorted by `contactedAt` desc (REQ-KB360-003).
+		 *
+		 * @return {Array<object>}
+		 *
+		 * @spec openspec/changes/klantbeeld-360/specs/klantbeeld-360/spec.md#REQ-KB360-003
+		 */
+		recentContactmomenten() {
+			return this.sortByDateDesc(this.contactmomenten, 'contactedAt').slice(0, 10)
+		},
+		/**
+		 * Up to 5 requests sorted by `requestedAt` desc (REQ-KB360-004).
+		 *
+		 * @return {Array<object>}
+		 *
+		 * @spec openspec/changes/klantbeeld-360/specs/klantbeeld-360/spec.md#REQ-KB360-004
+		 */
+		recentRequests() {
+			return this.sortByDateDesc(this.requests, 'requestedAt').slice(0, 5)
+		},
 	},
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-12
@@ -524,52 +649,99 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-8
+		 * Fetch all relation collections in parallel so a slow contactmomenten
+		 * page does not block leads from showing. Each section toggles its own
+		 * `sectionLoading` flag and writes its own error to `sectionError` on
+		 * failure — one bad call NEVER prevents the others from rendering
+		 * (REQ-KB360-006).
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/klantbeeld-360/specs/klantbeeld-360/spec.md#REQ-KB360-006
 		 */
 		async fetchRelated() {
-			const allRequests = await this.objectStore.fetchCollection('request', {
-				_limit: 50,
-				client: this.clientId,
-			})
-			this.requests = allRequests || []
-
-			const allContacts = await this.objectStore.fetchCollection('contact', {
-				_limit: 50,
-				client: this.clientId,
-			})
-			this.contacts = allContacts || []
-
-			try {
-				const allLeads = await this.objectStore.fetchCollection('lead', {
+			const tasks = [
+				this.loadSection('contacts', 'contact', {
 					_limit: 50,
 					client: this.clientId,
-				})
-				this.leads = allLeads || []
-			} catch {
-				this.leads = []
-			}
-
-			try {
-				const allContactmomenten = await this.objectStore.fetchCollection('contactmoment', {
+				}, this.t('pipelinq', 'Failed to load contacts')),
+				this.loadSection('leads', 'lead', {
+					_limit: 50,
+					client: this.clientId,
+				}, this.t('pipelinq', 'Failed to load leads')),
+				this.loadSection('requests', 'request', {
+					_limit: 50,
+					client: this.clientId,
+				}, this.t('pipelinq', 'Failed to load requests')),
+				this.loadSection('contactmomenten', 'contactmoment', {
 					_limit: 50,
 					client: this.clientId,
 					_order: { contactedAt: 'desc' },
-				})
-				this.contactmomenten = allContactmomenten || []
-			} catch {
-				this.contactmomenten = []
-			}
-
-			try {
-				const allComplaints = await this.objectStore.fetchCollection('complaint', {
+				}, this.t('pipelinq', 'Failed to load contactmomenten')),
+				this.loadSection('complaints', 'complaint', {
 					_limit: 50,
 					client: this.clientId,
 					_order: { _dateCreated: 'desc' },
-				})
-				this.complaints = allComplaints || []
-			} catch {
-				this.complaints = []
+				}, this.t('pipelinq', 'Failed to load complaints')),
+			]
+			// allSettled — one rejected fetch must NOT cancel the others.
+			await Promise.allSettled(tasks)
+		},
+		/**
+		 * Generic per-section loader: toggles `sectionLoading[key]`, fetches the
+		 * collection, writes the result into `this[key]`, and records a
+		 * user-facing error into `sectionError[key]` on failure.
+		 *
+		 * @param {string} key       Data property + section-state key (e.g. 'leads').
+		 * @param {string} schema    Object-store schema slug (e.g. 'lead').
+		 * @param {object} params    fetchCollection params.
+		 * @param {string} errorMsg  User-facing fallback message.
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/klantbeeld-360/specs/klantbeeld-360/spec.md#REQ-KB360-006
+		 */
+		async loadSection(key, schema, params, errorMsg) {
+			this.sectionLoading[key] = true
+			this.sectionError[key] = null
+			try {
+				const data = await this.objectStore.fetchCollection(schema, params)
+				this[key] = data || []
+			} catch (e) {
+				this[key] = []
+				this.sectionError[key] = errorMsg
+				// eslint-disable-next-line no-console
+				console.warn('[ClientDetail] section fetch failed', key, e)
+			} finally {
+				this.sectionLoading[key] = false
 			}
+		},
+		/**
+		 * Sort an array of objects by an ISO-date string property descending.
+		 * Missing values sort last (treated as epoch).
+		 *
+		 * @param {Array<object>} rows Source rows.
+		 * @param {string} field       Field name holding an ISO-date string.
+		 * @return {Array<object>}
+		 */
+		sortByDateDesc(rows, field) {
+			return [...rows].sort((a, b) => {
+				const ta = a && a[field] ? Date.parse(a[field]) : 0
+				const tb = b && b[field] ? Date.parse(b[field]) : 0
+				return (tb || 0) - (ta || 0)
+			})
+		},
+		/**
+		 * Format a lead.probability value as a percentage string. Returns
+		 * `-` when undefined / null so the table never renders `NaN%`.
+		 *
+		 * @param {*} value Raw probability (0..100).
+		 * @return {string}
+		 */
+		formatProbability(value) {
+			if (value === undefined || value === null || value === '') return '-'
+			const n = Number(value)
+			if (Number.isNaN(n)) return '-'
+			return Math.round(n) + '%'
 		},
 		/**
 		 * @param dateStr
@@ -612,12 +784,26 @@ export default {
 			return lead.status === 'won' || lead.status === 'lost'
 		},
 		/**
-		 * @param value
+		 * Format a numeric value as Dutch-locale EUR (e.g. `€ 42.000`).
+		 * `0` and missing values render as `€ 0` (not blank — REQ-KB360-001).
+		 *
+		 * @param {*} value Raw amount.
+		 * @return {string}
+		 *
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-9
+		 * @spec openspec/changes/klantbeeld-360/specs/klantbeeld-360/spec.md#REQ-KB360-001
 		 */
 		formatCurrency(value) {
-			if (value === 0 || value == null) return 'EUR 0'
-			return 'EUR ' + new Intl.NumberFormat('nl-NL').format(value)
+			const n = Number(value) || 0
+			try {
+				return new Intl.NumberFormat('nl-NL', {
+					style: 'currency',
+					currency: 'EUR',
+					maximumFractionDigits: 0,
+				}).format(n)
+			} catch {
+				return '€ ' + n
+			}
 		},
 	},
 }
@@ -699,6 +885,16 @@ export default {
 .section-empty {
 	text-align: center;
 	color: var(--color-text-maxcontrast);
+	padding: 20px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+}
+
+.section-error {
+	text-align: center;
+	color: var(--color-error);
 	padding: 20px;
 }
 

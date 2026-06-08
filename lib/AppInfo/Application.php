@@ -25,6 +25,7 @@ use OCA\OpenRegister\Event\DeepLinkRegistrationEvent;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
+use OCA\Pipelinq\Event\TimeEntryApprovedEvent;
 use OCA\Pipelinq\Adapter\AzureDataLakeExportAdapter;
 use OCA\Pipelinq\Adapter\BigQueryExportAdapter;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
@@ -48,9 +49,12 @@ use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
 use OCA\Pipelinq\Listener\DealCreatedListener;
 use OCA\Pipelinq\Listener\DealUpdatedListener;
 use OCA\Pipelinq\Listener\DeepLinkRegistrationListener;
+use OCA\Pipelinq\Listener\ExpenseApprovalListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
+use OCA\Pipelinq\Listener\PosTransactionCompletedListener;
 use OCA\Pipelinq\Listener\ProjectCreationListener;
 use OCA\Pipelinq\Listener\ProjectPhaseStatusListener;
+use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Mcp\PipelinqToolProvider;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -119,6 +123,41 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(
             event: ObjectUpdatedEvent::class,
             listener: ProjectPhaseStatusListener::class
+        );
+
+        // Shillinq WIP integration: time-entry approval dispatches a CloudEvent
+        // to the configured shillinq webhook (pipelinq-time-to-shillinq-wip /
+        // REQ-WIP-001). The listener is idempotent and a no-op when the
+        // shillinq_wip_webhook_url app-config value is unset.
+        $context->registerEventListener(
+            event: TimeEntryApprovedEvent::class,
+            listener: TimeApprovalListener::class
+        );
+
+        // Loyalty program: POS transaction completion fires the loyalty engine
+        // (loyalty-program / REQ-LOY-002). The listener filters to posTransaction
+        // entities + completed/settled/paid statuses, catches all errors, and never
+        // throws so the POS flow is unaffected (REQ-LOY-002-05).
+        $context->registerEventListener(
+            event: ObjectCreatedEvent::class,
+            listener: PosTransactionCompletedListener::class
+        );
+        $context->registerEventListener(
+            event: ObjectUpdatedEvent::class,
+            listener: PosTransactionCompletedListener::class
+        );
+
+        // Expense → Shillinq AP voucher dispatch on status=approved transitions
+        // (pipelinq-expense-to-shillinq-ap / REQ-AP-002). Listener is filtered
+        // to the expense schema and idempotent on apSyncStatus=synced so a
+        // re-fired update event cannot create a duplicate AP voucher.
+        $context->registerEventListener(
+            event: ObjectCreatedEvent::class,
+            listener: ExpenseApprovalListener::class
+        );
+        $context->registerEventListener(
+            event: ObjectUpdatedEvent::class,
+            listener: ExpenseApprovalListener::class
         );
 
         $context->registerDashboardWidget(DealsOverviewWidget::class);

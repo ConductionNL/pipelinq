@@ -60,6 +60,23 @@ import ForecastDashboardView from './views/forecast/ForecastDashboard.vue'
 import ForecastTrendView from './views/forecast/ForecastTrend.vue'
 import LeadForecastTab from './views/leads/LeadForecastTab.vue'
 
+// --- Leads list (lead-management spec REQ-LM-002 / REQ-LM-004 / REQ-LM-005).
+//     Wraps CnIndexPage to add the stale filter, overdue row highlighting
+//     and CSV import/export via the platform mass dialogs. ---
+import LeadListView from './views/leads/LeadList.vue'
+
+// --- Lead-management analytics dashboard (lead-management REQ-LM-006..008).
+//     RapportageView uses CnDashboardPage with four widget slots backed by
+//     the new RapportageController pipeline-stats endpoint. ---
+import RapportageView from './views/rapportage/RapportageView.vue'
+import PipelineFunnelWidget from './views/rapportage/PipelineFunnelWidget.vue'
+import SourcePerformanceWidget from './views/rapportage/SourcePerformanceWidget.vue'
+import LeadAgingWidget from './views/rapportage/LeadAgingWidget.vue'
+import WinLossWidget from './views/rapportage/WinLossWidget.vue'
+// --- Loyalty program (loyalty-program). ---
+import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
+import LoyaltyAccountCreationView from './views/loyalty/LoyaltyAccountCreation.vue'
+
 // --- Admin managers (lib gap: no pipeline-designer / settings rich-section type). ---
 import PipelineManagerView from './views/settings/PipelineManager.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
@@ -90,10 +107,47 @@ import PosRefundFormView from './views/pos/PosRefundForm.vue'
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
 import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
 
-// --- Automation rule builder (lib gap: no automation-rule editor page type;
-//     the visual condition + action builder cannot be expressed as a declarative
-//     type:"detail" because it drives a bespoke condition-row + action-row UX). ---
-import AutomationBuilderView from './views/automations/AutomationBuilder.vue'
+// --- CTI screen-pop and click-to-dial (lib gap: no telephony settings page
+//     type; admin needs platform + credentials + delay knobs and a webhook
+//     event log; cti-screenpop-adapter). ---
+import CtiSettingsView from './views/settings/CtiSettings.vue'
+import CtiEventLogView from './views/settings/CtiEventLog.vue'
+
+// --- Expense → Shillinq AP (pipelinq-expense-to-shillinq-ap): list with
+//     apSyncStatus badge column, detail with embedded Shillinq AP card
+//     (REQ-AP-005 / REQ-AP-006).
+import ExpenseListView from './views/expenses/ExpenseList.vue'
+import ExpenseDetailView from './views/expenses/ExpenseDetail.vue'
+
+// --- Billing categories (billable-categories-and-tags): list view with a
+//     bespoke color-swatch + DBA / active badge column layout the
+//     declarative type:"index" page cannot express. Donut widget for the
+//     dashboard (hours per billing category) registered as a slot. ---
+import BillingCategoryListView from './views/billingCategories/BillingCategoryList.vue'
+import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.vue'
+
+// --- Klantbeeld 360 (lib gap: no cross-module KPI dashboard with a
+//     trailing-period filter wired to a domain-specific aggregation
+//     endpoint, and no pipeline KPI / stage-funnel page driving four
+//     bespoke ratio KPIs off lead-collection client-side aggregation;
+//     ClientDetail + ContactDetail aggregate 5 cross-schema sections
+//     with per-section loading and a contact->client linking dialog,
+//     beyond what a declarative type:"detail" page can express). ---
+import AnalyticsDashboard from './views/analytics/AnalyticsDashboard.vue'
+import PipelineAnalyticsView from './views/pipeline/PipelineAnalyticsView.vue'
+import ClientDetail from './views/clients/ClientDetail.vue'
+import ContactDetail from './views/contacts/ContactDetail.vue'
+
+// --- Marketing segmentation + blast (marketing-segmentation-and-blast 07):
+//     three-route Vue surface — list, multi-step create wizard, live monitor.
+//     The wizard embeds the missing-consent modal (own file under modals/);
+//     the monitor polls /api/blasts/:id every 2s and stops on terminal status.
+//     SegmentBuilder + SegmentRuleNode live under components/ for reuse by
+//     forthcoming SegmentEditor / dashboard surfaces (slice 08). ---
+import BlastListView from './views/blasts/BlastList.vue'
+import BlastFormView from './views/blasts/BlastForm.vue'
+import BlastMonitorView from './views/blasts/BlastMonitor.vue'
+import BlastPerformanceDashboardView from './views/blasts/PerformanceDashboard.vue'
 
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
@@ -234,6 +288,51 @@ const registry = {
 		_note: 'Lead-detail sidebar tab: forecast-category selector with closed-deal lock indicator, large-commit justification modal and category history. Server-side DealUpdatedListener is the authoritative enforcer; this tab is the UX. Wiring into LeadDetail.config.sidebar.tabs is a monolith manifest.json edit deferred under ADR-037 (do not edit the monolith from a feature build).',
 	},
 
+	// --- Leads list with lead-management enhancements. ---
+	LeadListView: {
+		kind: 'page',
+		component: LeadListView,
+		_note: 'Wraps CnIndexPage with the lead-management stale filter, overdue row highlighting and platform mass import/export dialogs (REQ-LM-002/004/005).',
+	},
+
+	// --- Lead-management analytics. ---
+	RapportageView: {
+		kind: 'page',
+		component: RapportageView,
+		_note: 'Lead analytics dashboard using CnDashboardPage with four widgets backed by the rapportage pipeline-stats endpoint (REQ-LM-006/007/008).',
+	},
+	PipelineFunnelWidget: {
+		kind: 'widget',
+		component: PipelineFunnelWidget,
+		_note: 'Pipeline value per stage (count, total, weighted) — bar chart with pipeline filter (REQ-LM-006).',
+	},
+	SourcePerformanceWidget: {
+		kind: 'widget',
+		component: SourcePerformanceWidget,
+		_note: 'Source conversion table (total, won, rate, avg) sortable per column (REQ-LM-007).',
+	},
+	LeadAgingWidget: {
+		kind: 'widget',
+		component: LeadAgingWidget,
+		_note: 'Aging-bucket donut chart (≤7d / 8-14d / 15-30d / >30d) (REQ-LM-006).',
+	},
+	WinLossWidget: {
+		kind: 'widget',
+		component: WinLossWidget,
+		_note: 'Win/loss pie chart + KPI stats block with a date-range selector (REQ-LM-008).',
+	},
+	// --- Loyalty program (loyalty-program). ---
+	LoyaltyReportingView: {
+		kind: 'page',
+		component: LoyaltyReportingView,
+		_note: 'Programme reporting dashboard: active accounts, points issued/redeemed/expired, breakage %, redemption rate, outstanding-points liability (IFRS 15 / RJ 270), tier distribution, period selector, CSV export. Server-side LoyaltyReportingService is the source of truth (REQ-LOY-008, REQ-LOY-009).',
+	},
+	LoyaltyAccountCreationView: {
+		kind: 'page',
+		component: LoyaltyAccountCreationView,
+		_note: 'GDPR-compliant loyalty account enrollment form: mandatory opt-in checkbox, terms version capture, klantId+programmeId input (REQ-LOY-010-01).',
+	},
+
 	// --- Admin managers. ---
 	PipelineManagerView: {
 		kind: 'page',
@@ -287,11 +386,56 @@ const registry = {
 		_note: 'Scan-to-navigate barcode search; resolves via the server-authoritative scoped barcode-lookup API and routes to the matching product (highlighting a matched variant).',
 	},
 
-	// --- Automation rule builder. ---
-	AutomationBuilderView: {
+	// --- Expense → Shillinq AP (pipelinq-expense-to-shillinq-ap). ---
+	ExpenseListView: {
 		kind: 'page',
-		component: AutomationBuilderView,
-		_note: 'Visual automation-rule editor with condition-row + action-row builder; lib gap: no automation-rule editor page type.',
+		component: ExpenseListView,
+		_note: 'Expenses list with apSyncStatus badge column (REQ-AP-005).',
+	},
+	ExpenseDetailView: {
+		kind: 'page',
+		component: ExpenseDetailView,
+		_note: 'Expense detail with embedded Shillinq AP card + retry button on failed dispatches (REQ-AP-006).',
+	},
+
+	// --- Billing categories (billable-categories-and-tags). ---
+	BillingCategoryListView: {
+		kind: 'page',
+		component: BillingCategoryListView,
+		_note: 'Billing-category management list (REQ-BCT-001) with color-swatch + DBA / active / default badges and client-side billable→non-billable→internal sort.',
+	},
+	BillingCategoryWidget: {
+		kind: 'widget',
+		component: BillingCategoryWidget,
+		_note: 'Donut chart of hours per billing category for the Dashboard (REQ-BCT-004). Clicking a segment navigates to the time entry list filtered by that category.',
+	},
+
+	// --- Klantbeeld 360 — cross-module analytics dashboard. ---
+	AnalyticsDashboard: {
+		kind: 'page',
+		component: AnalyticsDashboard,
+		_note: 'Cross-module KPI dashboard (Open Pipeline Value / Open Requests / Contactmomenten / Active Leads) with a trailing-period filter; driven by a server-side aggregation endpoint so large installations are not forced to fetch full collections client-side.',
+	},
+
+	// --- Klantbeeld 360 — per-pipeline sales analytics. ---
+	PipelineAnalyticsView: {
+		kind: 'page',
+		component: PipelineAnalyticsView,
+		_note: 'Per-pipeline KPI cards (Total Pipeline Value / Win Rate / Avg Deal Size / Active Opportunities) and a horizontal stage-funnel CnChartWidget; client-side aggregation is appropriate (< 500 leads per pipeline) and gives instant updates on pipeline switch.',
+	},
+
+	// --- Klantbeeld 360 — Client 360 view. ---
+	ClientDetail: {
+		kind: 'page',
+		component: ClientDetail,
+		_note: 'Aggregates 5 cross-schema relation sections (leads / contactmomenten / requests / contacts / complaints) with per-section loading + per-section error state, summary statistics card and delete-with-link-warning dialog; declarative type:"detail" cannot express the parallel cross-schema fetches with section-isolation.',
+	},
+
+	// --- Klantbeeld 360 — Contact detail with parent-organisation card. ---
+	ContactDetail: {
+		kind: 'page',
+		component: ContactDetail,
+		_note: 'Parent Organisation card with quick-link CnFormDialog for setting contact.client; declarative type:"detail" has no way to drive a searchable client-select dialog tied to the contact save flow.',
 	},
 
 	// --- BI export + data-warehouse sink. ---
@@ -324,6 +468,40 @@ const registry = {
 		kind: 'page',
 		component: ExportRunDetailView,
 		_note: 'Export-run detail: file manifest, schema snapshots with detected drift, error log and a Retry action; fetched via the export run-detail endpoint.',
+	},
+
+	// --- CTI screen-pop and click-to-dial adapter (cti-screenpop-adapter). ---
+	CtiSettingsView: {
+		kind: 'page',
+		component: CtiSettingsView,
+		_note: 'CTI admin settings: platform, API base URL, auth method, OpenConnector credentials ref, screen-pop / click-to-dial toggles and connection test. Lib gap: no telephony-config page type.',
+	},
+	CtiEventLogView: {
+		kind: 'page',
+		component: CtiEventLogView,
+		_note: 'CTI admin event-log inspector (last 30 days): platform + event-type filters, payload modal; lib gap: no audit/event-log page type that filters by platform.',
+	},
+
+	// --- Marketing blasts (marketing-segmentation-and-blast slice 07). ---
+	BlastListView: {
+		kind: 'page',
+		component: BlastListView,
+		_note: 'Blasts list (marketing-segmentation-and-blast 07): CnIndexPage with bespoke columns (name, channel, status, scheduledFor, sentAt) and a "New blast" header action routing to the multi-step wizard.',
+	},
+	BlastFormView: {
+		kind: 'page',
+		component: BlastFormView,
+		_note: 'Multi-step new-blast wizard (marketing-segmentation-and-blast 07): name → segment → template → channel → schedule → A/B split, with pre-send compliance preflight, missing-consent modal (skip / request / cancel) and email template validation. Declarative type:"form" cannot express the cross-endpoint preflight or the gated send flow.',
+	},
+	BlastMonitorView: {
+		kind: 'page',
+		component: BlastMonitorView,
+		_note: 'Live blast monitor (marketing-segmentation-and-blast 07): progress bar + ETA, totals grid (queued/sent/delivered/bounced/opened/clicked/unsubscribed/complained), reverse-chronological event timeline (last 50), cancel action while sending; polls /api/blasts/:id every 2 seconds and stops on sent/failed/cancelled.',
+	},
+	BlastPerformanceDashboardView: {
+		kind: 'page',
+		component: BlastPerformanceDashboardView,
+		_note: 'Post-send performance dashboard (marketing-segmentation-and-blast 08): three tabs — Overview (sortable blast table with sent/delivered/open-rate/click-rate/unsubscribed), A/B Testing (side-by-side variant comparison + chi-square p-value once each arm has >=500 delivered and 24h elapsed since send), Attribution (per-blast attributed deal count + summed EUR value from GET /api/blasts/:id/attribution).',
 	},
 }
 

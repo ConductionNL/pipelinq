@@ -1,0 +1,29 @@
+{
+	"menu": [
+		{
+			"id": "Loyalty",
+			"label": "Loyalty",
+			"icon": "icon-star",
+			"route": "LoyaltyReporting",
+			"order": 96
+		}
+	],
+	"pages": [
+		{
+			"id": "LoyaltyReporting",
+			"route": "/loyalty/reporting",
+			"type": "custom",
+			"title": "Loyalty reporting",
+			"component": "LoyaltyReportingView",
+			"config": { "register": "pipelinq", "schema": "loyaltyProgramme" }
+		},
+		{
+			"id": "LoyaltyEnrollment",
+			"route": "/loyalty/enroll",
+			"type": "custom",
+			"title": "Loyalty enrollment",
+			"component": "LoyaltyAccountCreationView",
+			"config": { "register": "pipelinq", "schema": "klantLoyaltyAccount" }
+		}
+	]
+}
