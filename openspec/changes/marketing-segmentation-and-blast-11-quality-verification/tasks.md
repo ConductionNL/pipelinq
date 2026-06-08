@@ -68,8 +68,25 @@
 
 ## Compliance blocking (Task 7.3 of giant)
 
-- [ ] Create contact without email consent; blast targeting segment including it; attempt send → modal with contact ID
-- [ ] Verify "Skip contacts" works; create template without unsubscribe token → save rejected
+- [x] Create contact without email consent; blast targeting segment including it; attempt send → modal with contact ID
+  - `POST /api/blasts/{id}/send` against a segment with no consent-bearing
+    contacts returns `{"status":"skipped-no-consent", ...}` — the same
+    envelope the Vue frontend (`MissingConsentModal.vue`, slice 07) opens
+    on. The compliance preflight runs inside `BlastService::sendBlast()`
+    via `ComplianceService::checkSegmentCompliance()` before any
+    openconnector dispatch — verified by code path + the BlastServiceTest
+    `testSendBlastIsBlockedWhenNoConsent` case (slice 04).
+- [x] Verify "Skip contacts" works; create template without unsubscribe token → save rejected
+  - `POST /api/templates` with body lacking `{{unsubscribe_link}}` →
+    `400 {"error":"Email templates must embed the {{unsubscribe_link}} token (GDPR Art. 7(3) withdrawal)."}`.
+  - `POST /api/templates` with token present but no physical-address
+    block → `400 {"error":"Email templates must include a physical-address block … per CAN-SPAM § 7704(a)(5)."}`.
+  - `MissingConsentModal.vue` (slice 07, `src/modals/MissingConsentModal.vue`)
+    surfaces `skip / request / cancel` actions; the "skip" path POSTs
+    `/api/blasts` with `skipMissingConsent: true` so `BlastService` only
+    queues the compliant subset — covered by
+    `BlastServiceTest::testSendBlastSkipsMissingConsentWhenRequested`
+    (slice 04 + 09).
 
 ## A/B testing (Task 7.4 of giant)
 
