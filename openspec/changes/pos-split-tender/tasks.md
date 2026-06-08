@@ -299,9 +299,10 @@
   - Remove all tenders → transaction shows "no payment" state
   - **DEFERRED**: All three negative paths have automated coverage — underpayment via `PosTenderServiceTest::testAssertBalancedForSettleRejectsUnderpayment` + `testValidateTenderSumReportsUnderpayment`, settled-state guards via `PosTenderServiceTest::testAddTenderRejectsOnSettledTransaction` and `testRemoveTenderRejectsOnSettledTransaction` (mapped to 409 by `PosTenderControllerTest`), empty-tender state via the controller test's DELETE flow + `testGetTendersForEmptyIdReturnsEmpty`. The remaining work is exploratory manual UX confirmation in the staging QA flight (see 12.1).
 
-- [ ] 12.3 Verify migrations (if needed):
+- [~] 12.3 Verify migrations (if needed):
   - If `posTransaction` schema changed, verify seed data is re-imported
   - Confirm backwards compatibility with existing transactions (pre-split-tender)
+  - **DEFERRED**: No migration is required — `posTransaction` was not altered; only the two new schemas (`posTenderType`, `posTender`) and their seed rows were added via `lib/Settings/pipelinq_register.json`. The repair step (`lib/Repair/InitializeRegister.php`) imports these on `occ upgrade`. Backwards compat: transactions without an associated `posTender` row keep working — `getTendersForTransaction()` returns `[]` and the legacy single-tender code path is untouched (no `posTransaction.tenderType` field was removed). To be re-verified against a real upgrade snapshot in the staging flight.
 
 - [ ] 12.4 Check performance:
   - `validateTenderSum()` should complete in < 100ms for typical transaction
