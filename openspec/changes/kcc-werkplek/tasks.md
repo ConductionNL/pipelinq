@@ -2,17 +2,17 @@
 
 ## 0. Deduplication Check
 
-- [ ] 0.1 Search `openspec/specs/` and `openregister/lib/Service/` for overlap with `ObjectService`, `RegisterService`, `SchemaService`, `ConfigurationService` — document findings; no overlap expected since workspace state aggregation is domain-specific and not provided by OpenRegister core
-- [ ] 0.2 Verify `CallTimer.vue` already exists from `omnichannel-registratie` and is reused — do NOT create a new one
-- [ ] 0.3 Verify `KennisbankService.submitFeedback()` already exists from `kennisbank` and is reused — do NOT duplicate feedback logic
+- [x] 0.1 Search `openspec/specs/` and `openregister/lib/Service/` for overlap with `ObjectService`, `RegisterService`, `SchemaService`, `ConfigurationService` — document findings; no overlap expected since workspace state aggregation is domain-specific and not provided by OpenRegister core
+- [x] 0.2 Verify `CallTimer.vue` already exists from `omnichannel-registratie` and is reused — do NOT create a new one
+- [x] 0.3 Verify `KennisbankService.submitFeedback()` already exists from `kennisbank` and is reused — do NOT duplicate feedback logic — NOTE: the kennisbank backend service does not yet exist (only its spec); the werkplek panel writes feedback via the `articleFeedback` shape persisted through the kennisartikel object store rather than duplicating a parallel feedback service
 
 ## 1. Seed Data
 
-- [ ] 1.1 Add 3 `queue` seed objects to `lib/Settings/pipelinq_register.json` per design.md if not already present (slugs: `queue-algemene-zaken`, `queue-vergunningen`, `queue-wmo-zorg`)
-- [ ] 1.2 Add 3 `agentProfile` seed objects to `lib/Settings/pipelinq_register.json` (slugs: `agent-jan-de-vries`, `agent-fatima-el-amrani`, `agent-pieter-bakker`)
-- [ ] 1.3 Add 3 `skill` seed objects to `lib/Settings/pipelinq_register.json` (slugs: `skill-vergunningen`, `skill-wmo-zorg`, `skill-algemene-dienstverlening`)
-- [ ] 1.4 Verify all seed entries use `@self` envelope with `register: "pipelinq"`, correct schema name, and unique slug
-- [ ] 1.5 Verify `importFromApp()` idempotency: re-importing must skip existing slugs (no duplicate check needed in code — this is a design-time verification)
+- [x] 1.1 Add 3 `queue` seed objects to `lib/Settings/pipelinq_register.json` per design.md if not already present (slugs: `queue-algemene-zaken`, `queue-vergunningen`, `queue-wmo-zorg`)
+- [x] 1.2 Add 3 `agentProfile` seed objects to `lib/Settings/pipelinq_register.json` (slugs: `agent-jan-de-vries`, `agent-fatima-el-amrani`, `agent-pieter-bakker`)
+- [x] 1.3 Add 3 `skill` seed objects to `lib/Settings/pipelinq_register.json` (slugs: `skill-vergunningen`, `skill-wmo-zorg`, `skill-algemene-dienstverlening`)
+- [x] 1.4 Verify all seed entries use `@self` envelope with `register: "pipelinq"`, correct schema name, and unique slug
+- [x] 1.5 Verify `importFromApp()` idempotency: re-importing must skip existing slugs (no duplicate check needed in code — this is a design-time verification)
 
 ## 2. Backend
 
