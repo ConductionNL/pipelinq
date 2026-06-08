@@ -4,29 +4,29 @@
 
 ## Section 1: Block Fetching
 
-- [ ] In AvailabilityService::getBlockedTimes(): call the leaf's `CalendarSyncService::getBlockedTimes()` for resources with calendarSyncId
-- [ ] Merge returned blocks into the total blocked list
-- [ ] Invalidate AvailabilityCache within 5 minutes of a leaf calendar sync for affected resource/dates
+- [x] In AvailabilityService::getBlockedTimes(): call the leaf's `CalendarSyncService::getBlockedTimes()` for resources with calendarSyncId
+- [x] Merge returned blocks into the total blocked list
+- [x] Invalidate AvailabilityCache within 5 minutes of a leaf calendar sync for affected resource/dates
 
 ## Section 2: Booking Push
 
-- [ ] After Booking status → confirmed: call the leaf to create a calendar event
-- [ ] Event details: summary = customer name + service name, description = service details + deep-link, attendees = staff resource's email
-- [ ] Event UID: unique identifier based on Booking.id
-- [ ] Fetch staff email from Resource.userId (Nextcloud user email)
-- [ ] Reschedule moves (not duplicates) the VEVENT
+- [x] After Booking status → confirmed: call the leaf to create a calendar event
+- [x] Event details: summary = customer name + service name, description = service details + deep-link, attendees = staff resource's email
+- [x] Event UID: unique identifier based on Booking.id
+- [x] Fetch staff email from Resource.userId (Nextcloud user email)
+- [x] Reschedule moves (not duplicates) the VEVENT
 
 ## Section 3: AvailabilityCacheRefreshJob
 
-- [ ] Extend `OCP\BackgroundJob\TimedJob` with `setInterval(3600)` (1 hour)
-- [ ] In `run()`: iterate all active Resources, call `AvailabilityService::invalidateCache()` for today+30 days
-- [ ] Catch per-resource errors, log, and continue
-- [ ] Register in `appinfo/info.xml` under `<background-jobs>`
-- [ ] Add `@spec` PHPDoc
+- [x] Extend `OCP\BackgroundJob\TimedJob` with `setInterval(3600)` (1 hour)
+- [x] In `run()`: iterate all active Resources, call `AvailabilityService::invalidateCache()` for today+30 days
+- [x] Catch per-resource errors, log, and continue
+- [x] Register in `appinfo/info.xml` under `<background-jobs>`
+- [x] Add `@spec` PHPDoc
 
 ## Section 4: Unit Tests
 
-- [ ] Test getBlockedTimes merges leaf-synced blocks
-- [ ] Test confirmed booking triggers a leaf VEVENT create
-- [ ] Test AvailabilityCacheRefreshJob iterates resources and invalidates cache
-- [ ] Mock the calendar leaf and ObjectService
+- [x] Test getBlockedTimes merges leaf-synced blocks
+- [x] Test confirmed booking triggers a leaf VEVENT create
+- [x] Test AvailabilityCacheRefreshJob iterates resources and invalidates cache
+- [x] Mock the calendar leaf and ObjectService

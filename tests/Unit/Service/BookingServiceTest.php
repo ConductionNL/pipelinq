@@ -913,6 +913,186 @@ class BookingServiceTest extends TestCase
      *
      * @return void
      */
+    /**
+     * A confirmed-from-creation Booking pushes a VEVENT through the calendar
+     * seam (member 10). Pending-deposit bookings MUST NOT push — the calendar
+     * mirror only mirrors actually-confirmed appointments.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
+     */
+    public function testCreateBookingFiresCalendarPushSeamWhenConfirmed(): void
+    {
+        $object = $this->createMock(originalClassName: ObjectService::class);
+        $object->method('find')->willReturn(self::SERVICE_FREE_HAIRCUT);
+        $object->method('saveObject')->willReturn(['@self' => ['id' => 'b-new']]);
+
+        [$service] = $this->buildService(objectService: $object);
+
+        $calendar = new class {
+
+            /**
+             * Tracks the booking ids the seam was asked to push.
+             *
+             * @var array<int, string>
+             */
+            public array $pushed = [];
+
+            /**
+             * Capture pushBookingEvent invocations.
+             *
+             * @param string $bookingId Booking UUID.
+             *
+             * @return void
+             */
+            public function pushBookingEvent(string $bookingId): void
+            {
+                $this->pushed[] = $bookingId;
+            }//end pushBookingEvent()
+        };
+
+        $service->setCalendarProvider(provider: $calendar);
+
+        $service->createBooking(
+            data: [
+                'customerId'          => 'cust-1',
+                'serviceId'           => 'svc-haircut',
+                'startAt'             => '2026-06-15T10:00:00+02:00',
+                'endAt'               => '2026-06-15T10:30:00+02:00',
+                'resourceAssignments' => [
+                    [
+                        'stepIndex'  => 0,
+                        'resourceId' => 'res-sarah',
+                        'startAt'    => '2026-06-15T10:00:00+02:00',
+                        'endAt'      => '2026-06-15T10:30:00+02:00',
+                    ],
+                ],
+            ],
+            source: 'portal'
+        );
+
+        $this->assertSame(expected: ['b-new'], actual: $calendar->pushed);
+
+    }//end testCreateBookingFiresCalendarPushSeamWhenConfirmed()
+
+    /**
+     * A pending-deposit booking MUST NOT fire the calendar seam — calendar
+     * mirroring is reserved for confirmed bookings.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
+     */
+    public function testPendingDepositBookingSkipsCalendarPushSeam(): void
+    {
+        $object = $this->createMock(originalClassName: ObjectService::class);
+        $object->method('find')->willReturn(self::SERVICE_DEPOSIT_REQUIRED);
+        $object->method('saveObject')->willReturn(['@self' => ['id' => 'b-pending']]);
+
+        [$service] = $this->buildService(objectService: $object);
+
+        $calendar = new class {
+
+            /**
+             * Tracks pushes.
+             *
+             * @var array<int, string>
+             */
+            public array $pushed = [];
+
+            /**
+             * Capture pushBookingEvent invocations.
+             *
+             * @param string $bookingId Booking UUID.
+             *
+             * @return void
+             */
+            public function pushBookingEvent(string $bookingId): void
+            {
+                $this->pushed[] = $bookingId;
+            }//end pushBookingEvent()
+        };
+
+        $service->setCalendarProvider(provider: $calendar);
+
+        $service->createBooking(
+            data: [
+                'customerId' => 'cust-1',
+                'serviceId'  => 'svc-color',
+                'startAt'    => '2026-06-20T13:00:00+02:00',
+                'endAt'      => '2026-06-20T15:00:00+02:00',
+            ],
+            source: 'portal'
+        );
+
+        $this->assertSame(expected: [], actual: $calendar->pushed);
+
+    }//end testPendingDepositBookingSkipsCalendarPushSeam()
+
+    /**
+     * confirmBooking (pending-deposit → confirmed) fires the calendar seam,
+     * mirroring the freshly-confirmed booking to the staff calendar.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
+     */
+    public function testConfirmBookingFiresCalendarPushSeam(): void
+    {
+        $booking = [
+            '@self'         => ['id' => 'b-pending'],
+            'customerId'    => 'cust-1',
+            'serviceId'     => 'svc-color',
+            'startAt'       => '2026-07-01T10:00:00+02:00',
+            'endAt'         => '2026-07-01T12:00:00+02:00',
+            'status'        => 'pending-deposit',
+            'statusHistory' => [
+                [
+                    'status'    => 'pending-deposit',
+                    'changedAt' => '2026-06-01T00:00:00+00:00',
+                    'changedBy' => 'portal',
+                    'reason'    => 'Created',
+                ],
+            ],
+            'depositAmount' => 20.0,
+        ];
+
+        $object = $this->createMock(originalClassName: ObjectService::class);
+        $object->method('find')->willReturn($booking);
+        $object->method('saveObject')->willReturn(['@self' => ['id' => 'b-pending']]);
+
+        $calendar = new class {
+
+            /**
+             * Tracks pushes.
+             *
+             * @var array<int, string>
+             */
+            public array $pushed = [];
+
+            /**
+             * Capture pushBookingEvent invocations.
+             *
+             * @param string $bookingId Booking UUID.
+             *
+             * @return void
+             */
+            public function pushBookingEvent(string $bookingId): void
+            {
+                $this->pushed[] = $bookingId;
+            }//end pushBookingEvent()
+        };
+
+        [$service] = $this->buildService(objectService: $object);
+        $service->setCalendarProvider(provider: $calendar);
+
+        $service->confirmBooking(bookingId: 'b-pending', reason: 'Deposit cleared');
+
+        $this->assertSame(expected: ['b-pending'], actual: $calendar->pushed);
+
+    }//end testConfirmBookingFiresCalendarPushSeam()
+
     public function testCompleteBookingRejectsTransitionFromTerminalStatus(): void
     {
         $booking = [
