@@ -121,7 +121,7 @@
 
 ## 3. Backend: Controllers & Health Checks
 
-- [ ] 3.1 Create `lib/Controller/BrpController.php`
+- [x] 3.1 Create `lib/Controller/BrpController.php`
   - **spec_ref**: `specs.md#REQ-BSN-002, REQ-BSN-003`
   - **files**: `lib/Controller/BrpController.php`
   - **acceptance_criteria**:
@@ -132,7 +132,7 @@
       - Validates doelbinding is not empty (400 if missing)
       - Requires user role behandelaar-burgerzaken or behandelaar-avg (403 if missing)
 
-- [ ] 3.2 Implement lookup flow in BrpController
+- [x] 3.2 Implement lookup flow in BrpController
   - **spec_ref**: `design.md#Flow: BRP Lookup with Doelbinding`
   - **files**: `lib/Controller/BrpController.php`
   - **acceptance_criteria**:
@@ -150,7 +150,7 @@
       9. Call BsnAuditService.recordLookup(...)
       10. Return BrpPersoon or error
 
-- [ ] 3.3 Create daily health-check job
+- [x] 3.3 Create daily health-check job
   - **spec_ref**: `specs.md#REQ-BSN-003-02`
   - **files**: `lib/Job/BrpHealthCheckJob.php`
   - **acceptance_criteria**:
@@ -160,7 +160,7 @@
     - AND if expiring in < 30 days: create Nextcloud Notification to admin
     - AND update admin cache with certificate expiry info
 
-- [ ] 3.4 Create BRP Monitor job
+- [x] 3.4 Create BRP Monitor job
   - **spec_ref**: `specs.md#REQ-BSN-010`
   - **files**: `lib/Job/BrpMonitorJob.php`
   - **acceptance_criteria**:
@@ -171,7 +171,7 @@
     - AND store report (write to cache or BrpMonitorReport schema)
     - AND if error rate > 10%: send notification to admin
 
-- [ ] 3.5 Create Retention cleanup job
+- [x] 3.5 Create Retention cleanup job
   - **spec_ref**: `specs.md#REQ-BSN-008`
   - **files**: `lib/Job/BrpRetentionJob.php`
   - **acceptance_criteria**:

@@ -434,6 +434,15 @@ return [
         ['name' => 'blast#show',       'url' => '/api/blasts/{id}',                'verb' => 'GET'],
         ['name' => 'blast#update',     'url' => '/api/blasts/{id}',                'verb' => 'PATCH'],
 
+        // BRP / BSN — Haalcentraal Personen integration (bsn-validatie-en-brp-lookup).
+        // Specific routes precede any wildcard {slug} routes (ADR-016).
+        ['name' => 'brp#validate',         'url' => '/api/brp/validate',                  'verb' => 'POST'],
+        ['name' => 'brp#lookup',           'url' => '/api/brp/lookup',                    'verb' => 'POST'],
+        ['name' => 'brp#revealAddress',    'url' => '/api/brp/contact/{id}/reveal-address', 'verb' => 'POST'],
+        ['name' => 'brp#optOutCreate',     'url' => '/api/brp/opt-out',                   'verb' => 'POST'],
+        ['name' => 'brp#mutationWebhook',  'url' => '/api/brp/mutations',                 'verb' => 'POST'],
+        ['name' => 'brp#monitor',          'url' => '/api/brp/monitor',                   'verb' => 'GET'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
