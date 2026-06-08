@@ -69,6 +69,8 @@ class HealthController extends Controller
     #[NoAdminRequired]
     public function index(): JSONResponse
     {
+        // @PublicPage by attribute — health probe must be reachable by
+        // unauthenticated infra (kube readiness/liveness, uptime monitors).
         $checks = [];
         $status = 'ok';
 

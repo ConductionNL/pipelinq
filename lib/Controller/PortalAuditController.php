@@ -69,7 +69,7 @@ class PortalAuditController extends PortalApiController
     {
         return $this->guarded(
                 handler: function (): array {
-                    $ctx     = $this->context();
+                    $ctx     = $this->requireSession();
                     $events  = $this->audit->getForAccount($ctx['accountId']);
                     $page    = max(1, $this->intParam(name: 'page', default: 1));
                     $perPage = min(100, max(1, $this->intParam(name: 'perPage', default: 25)));

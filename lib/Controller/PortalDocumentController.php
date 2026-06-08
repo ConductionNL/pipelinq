@@ -91,12 +91,12 @@ class PortalDocumentController extends PortalApiController
     {
         return $this->guarded(
                 handler: function (): array {
-                    $ctx        = $this->context();
+                    $ctx        = $this->requireSession();
                     $objectId   = $this->strParam(name: 'objectId');
                     $objectType = $this->strParam(name: 'objectType', default: 'invoice');
 
                     // Only sign links for objects this account can actually see.
-                    if ($this->canAccess(account: $ctx['account'], objectType: $objectType, objectId: $objectId) === false) {
+                    if ($this->ensureAccess(account: $ctx['account'], objectType: $objectType, objectId: $objectId) === false) {
                         return [['errorCode' => 'notFound', 'message' => 'Niet gevonden.'], Http::STATUS_NOT_FOUND];
                     }
 
@@ -139,7 +139,7 @@ class PortalDocumentController extends PortalApiController
         // Defence in depth: re-verify the bound account still has access.
         if ($account === null
             || ($account['status'] ?? 'active') === 'closed'
-            || ($objectType !== 'data-export' && $this->canAccess(account: $account, objectType: $objectType, objectId: $objectId) === false)
+            || ($objectType !== 'data-export' && $this->ensureAccess(account: $account, objectType: $objectType, objectId: $objectId) === false)
         ) {
             return new JSONResponse(['errorCode' => 'notFound', 'message' => 'Niet gevonden.'], Http::STATUS_NOT_FOUND);
         }
@@ -169,8 +169,10 @@ class PortalDocumentController extends PortalApiController
     }//end download()
 
     /**
-     * Whether an account can access an object of a given type (currently
-     * invoices/orders share the invoice facade's per-customer scope check).
+     * Ensure an account can access an object of a given type (currently
+     * invoices/orders share the invoice facade's per-customer scope check)
+     * — returns true when the account is allowed, false otherwise. Callers
+     * surface a NOT_FOUND on false to avoid id enumeration.
      *
      * @param array<string, mixed> $account    The account.
      * @param string               $objectType The object type (reserved for
@@ -185,14 +187,14 @@ class PortalDocumentController extends PortalApiController
      *  access-check signature and will route per object type as more document
      *  sources are added; today every type shares the per-customer scope check.
      */
-    private function canAccess(array $account, string $objectType, string $objectId): bool
+    private function ensureAccess(array $account, string $objectType, string $objectId): bool
     {
         if ($objectId === '') {
             return false;
         }
 
         return $this->invoices->getOneForAccount(account: $account, id: $objectId) !== null;
-    }//end canAccess()
+    }//end ensureAccess()
 
     /**
      * Build the document descriptor payload for an object.

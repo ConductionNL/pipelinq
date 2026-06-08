@@ -71,6 +71,35 @@ abstract class PortalApiController extends Controller
     }//end context()
 
     /**
+     * Require an authenticated portal session for this request — alias of
+     * {@see self::context()} with a name that documents the auth posture (the
+     * call throws PortalException(STATUS_UNAUTHORIZED) when no valid bearer
+     * session is presented). Used by every portal endpoint that operates on
+     * customer-scoped data.
+     *
+     * @return array{account: array<string, mixed>, accountId: string, session: array<string, mixed>, tenantId: string}
+     *
+     * @throws PortalException When not authenticated.
+     */
+    protected function requireSession(): array
+    {
+        return $this->context();
+    }//end requireSession()
+
+    /**
+     * Require the resolved tenant id for this request — wraps the guard's
+     * server-trusted tenant resolution (host header + X-Portal-Tenant). Used
+     * by pre-session entry points (login, password reset) and tenant-scoped
+     * public configuration so the auth posture is explicit at the call site.
+     *
+     * @return string The tenant id.
+     */
+    protected function requireTenant(): string
+    {
+        return $this->guard->resolveTenant(request: $this->request);
+    }//end requireTenant()
+
+    /**
      * Run a handler, mapping PortalException to a safe JSON error and any other
      * throwable to an opaque 500 (no internal detail leaks to the client).
      *
