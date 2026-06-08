@@ -56,6 +56,8 @@ use OCA\Pipelinq\Listener\ProjectCreationListener;
 use OCA\Pipelinq\Listener\ProjectPhaseStatusListener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Mcp\PipelinqToolProvider;
+use OCA\Pipelinq\Service\AppointmentEmailService;
+use OCA\Pipelinq\Service\BookingService;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -347,5 +349,34 @@ class Application extends App implements IBootstrap
         } catch (\Exception $e) {
             // Comments manager not available — skip registration.
         }//end try
+
+        $this->wireAppointmentEmailSeam();
     }//end boot()
+
+    /**
+     * Inject {@see AppointmentEmailService} into {@see BookingService} as the
+     * confirmation email seam (member 07 of the appointment-booking chain).
+     *
+     * BookingService is constructed without the email provider and uses a
+     * setter seam so the lifecycle code never depends on the email transport;
+     * we wire the provider at boot so confirmation emails go out automatically
+     * on booking create / confirm.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/appointment-booking-07-email-confirmation-reminder/specs/appointment-booking/spec.md#req-apt-006
+     */
+    private function wireAppointmentEmailSeam(): void
+    {
+        try {
+            $container      = $this->getContainer();
+            $bookingService = $container->get(BookingService::class);
+            $emailProvider  = $container->get(AppointmentEmailService::class);
+            $bookingService->setEmailProvider(provider: $emailProvider);
+        } catch (\Throwable $e) {
+            // OpenRegister or one of the collaborators is unavailable — the
+            // seam stays null and bookings still transition; this is the
+            // documented graceful-degradation path from BookingService.
+        }
+    }//end wireAppointmentEmailSeam()
 }//end class
