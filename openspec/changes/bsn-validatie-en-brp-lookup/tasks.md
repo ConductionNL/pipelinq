@@ -186,7 +186,7 @@
 
 ## 4. Backend: Configuration & Admin Settings
 
-- [ ] 4.1 Add HaalCentraal OAuth2 credentials to admin settings
+- [x] 4.1 Add HaalCentraal OAuth2 credentials to admin settings
   - **spec_ref**: `design.md#Backend`
   - **files**: `lib/Settings/Admin.php` or settings form
   - **acceptance_criteria**:
@@ -200,7 +200,7 @@
       - mTLS Key (file upload)
       - CA Bundle (file upload)
 
-- [ ] 4.2 Add cache and retention settings
+- [x] 4.2 Add cache and retention settings
   - **spec_ref**: `specs.md#REQ-BSN-004-04, REQ-BSN-008-01`
   - **files**: `lib/Settings/Admin.php`
   - **acceptance_criteria**:
