@@ -63,6 +63,18 @@ It pairs naturally with [Procest](https://github.com/ConductionNL/procest) to fo
 - **Activity Feed** — Real-time updates on assignments, stage changes, new notes, and interactions
 - **Contact Moments** — Log calls, emails, visits, and other client interactions with timestamps
 
+### Messaging Channels (WhatsApp + SMS)
+- **WhatsApp** — Meta Cloud API direct + BSP fallback (Twilio, 360dialog); HSM template send with
+  parameter validation; 24-hour customer-service window enforcement; inbound media downloaded,
+  virus-scanned and stored alongside the conversation in Nextcloud Files
+- **SMS** — Multi-provider abstraction (Twilio, MessageBird, CM.com, Vonage) with priority-based
+  failover, caller-pinned provider hints, and a shared HMAC webhook surface
+- **Compliance** — Append-only `messagingConsentRecord` audit log; automatic STOP / STOPALL /
+  UITSCHRIJVEN opt-out detection; GDPR Art. 17 erasure cascade
+- **Budgets** — Per-tenant, per-provider message + EUR caps with hard-stop or soft-alert; cost
+  capture from provider webhooks (Twilio) with ECB EUR conversion and static-price-table fallback
+  (Meta)
+
 ### Point of Sale (BTW engine)
 - **Per-item BTW rate** — Each line carries its own Dutch VAT rate; the rate is pre-filled from the
   product's `btwClass` and may be overridden per line

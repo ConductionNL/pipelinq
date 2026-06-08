@@ -421,6 +421,11 @@ return [
         // zaak/status/besluit/catalogi event for a subscribed gemeente.
         ['name' => 'zgwNotification#inbox', 'url' => '/api/zgw/notificaties/inbox', 'verb' => 'POST'],
 
+        // WhatsApp / SMS messaging webhooks (signature-verified, PublicPage)
+        // whatsapp-sms-channel-adapter / REQ-003. Specific routes precede
+        // any wildcard catch-alls (ADR-016).
+        ['name' => 'messagingWebhook#whatsapp', 'url' => '/api/messaging-webhooks/whatsapp/{providerId}', 'verb' => 'POST'],
+        ['name' => 'messagingWebhook#sms',      'url' => '/api/messaging-webhooks/sms/{providerId}',      'verb' => 'POST'],
         // Marketing — Segments (marketing-segmentation-and-blast chain member 06).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
         ['name' => 'segment#index',         'url' => '/api/segments',                  'verb' => 'GET'],
