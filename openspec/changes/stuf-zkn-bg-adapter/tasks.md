@@ -116,75 +116,75 @@
 
 ## 6. Retry, Idempotency & Resilience
 
-- [ ] 6.1 Implement retry queue in StufAdapterService:
+- [x] 6.1 Implement retry queue in StufAdapterService:
   - On transient error (HTTP 5xx, timeout), enqueue retry job with exponential backoff (5s, 30s, 2m, 10m)
   - Reuse same referentienummer across retries for idempotency
   - Record each attempt via MessageHandler.recordRetry()
 
-- [ ] 6.2 Implement circuit breaker:
+- [x] 6.2 Implement circuit breaker:
   - CircuitBreakerService.checkEndpoint() called before sending any message
   - On 4th failure, open circuit for 5 minutes (store open timestamp in IAppConfig)
   - Raise needs-input event with endpoint ID and last error
 
-- [ ] 6.3 Implement timeout handling for sync queries:
+- [x] 6.3 Implement timeout handling for sync queries:
   - geefZaakDetails defaults to 30s timeout
   - StufHttpClient enforces timeout via cURL or Guzzle
   - On timeout, do NOT retry; raise TimeoutException and needs-input event
 
 ## 7. Validation & Error Handling
 
-- [ ] 7.1 Add zaaktype mapping table to endpoint config:
+- [x] 7.1 Add zaaktype mapping table to endpoint config:
   - StufEndpoint includes zaaktypeMappings: {request_type → zkn:omschrijving}
   - StufEnvelopeBuilder validates request.type against mapping before build
   - Raise ZaaktypeNotMappedException if not found (pre-send validation)
 
-- [ ] 7.2 Add document size validation:
+- [x] 7.2 Add document size validation:
   - StufEnvelopeBuilder checks total payload size pre-base64 against limit (default 25 MiB)
   - Raise PayloadTooLargeException before transmission
   - Advice caller to use alternate channel (DMS-direct URL)
 
-- [ ] 7.3 Add SOAP fault parsing:
+- [x] 7.3 Add SOAP fault parsing:
   - StufMessageParser extracts stuf:fout from Fo02 envelopes
   - Distinguish transient (5xx, network) from permanent (StUF064, validation) errors
   - Log separately for circuit breaker logic vs. needs-input escalation
 
 ## 8. Logging & Observability
 
-- [ ] 8.1 Add debug-level logging to all services:
+- [x] 8.1 Add debug-level logging to all services:
   - StufEnvelopeBuilder: log built envelope (truncated, first 500 chars)
   - StufHttpClient: log request URI, method, response status, duration
   - StufMessageParser: log parsed object counts (betrokkenen, zaak fields)
   - CircuitBreakerService: log circuit state transitions
 
-- [ ] 8.2 Graceful degradation:
+- [x] 8.2 Graceful degradation:
   - Catch vault load exceptions (credentials missing) and log ERROR with endpoint ID
   - Catch TLS cert load exceptions and log ERROR
   - Do NOT transmit envelope if credentials/certs unavailable
 
-- [ ] 8.3 Add per-endpoint health check:
+- [x] 8.3 Add per-endpoint health check:
   - Admin audit log should show endpoint health (last 5 messages: success/fail rate)
   - Endpoint list view shows status badge (ok, circuit_open, error)
 
 ## 9. Testing & QA
 
-- [ ] 9.1 Unit tests for StufEnvelopeBuilder:
+- [x] 9.1 Unit tests for StufEnvelopeBuilder:
   - buildLk01CreeerZaak generates valid XML with all required stuurgegevens
   - referentienummer is unique ULID per call
   - tijdstipBericht matches expected format
   - Document base64 encoding is correct (no line wrapping)
 
-- [ ] 9.2 Unit tests for StufMessageParser:
+- [x] 9.2 Unit tests for StufMessageParser:
   - parseBevestiging extracts Bv01 data correctly
   - parseZaakDetails returns Zaak object with all fields
   - parseError extracts Fo02 code and omschrijving
 
-- [ ] 9.3 Unit tests for CircuitBreakerService:
+- [x] 9.3 Unit tests for CircuitBreakerService:
   - recordFailure increments count
   - At 4 failures, checkEndpoint returns false
   - After cooldown, circuit resets
   - resetEndpoint clears count on success
 
-- [ ] 9.4 Integration tests:
+- [x] 9.4 Integration tests:
   - Mock StufHttpClient with sample SOAP responses
   - creeerZaak flow: Request → Lk01 build → HTTP call → Bv01 parse → ZaaksysteemMapping created
   - Retry flow: 503 response → wait 5s → retry with same referentienummer → success
