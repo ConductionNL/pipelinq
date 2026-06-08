@@ -47,7 +47,9 @@
           "receiptPrintLog",
           "refundReason",
           "posRefund",
-          "posRefundLine"
+          "posRefundLine",
+          "posRole",
+          "posStaff"
         ],
         "tablePrefix": "",
         "folder": "Open Registers/Pipelinq"
@@ -2727,6 +2729,12 @@
             "title": "Cashier",
             "facetable": true
           },
+          "staffMemberId": {
+            "type": "string",
+            "description": "Optional UUID reference to the posStaff member who was actively logged in at the POS terminal when this transaction was confirmed. Drives per-staff sales reporting and the shillinq commission feed (pos-staff-pin-permissions REQ-PSP-008 / REQ-PSP-009).",
+            "title": "Staff member",
+            "facetable": true
+          },
           "client": {
             "type": "string",
             "description": "Optional UUID reference to a client object for account sales",
@@ -3171,6 +3179,124 @@
           "notes": {
             "type": "string",
             "description": "Line-specific return notes, e.g. dent on back corner"
+          }
+        }
+      },
+      "posRole": {
+        "slug": "posRole",
+        "title": "POS Role",
+        "icon": "AccountKey",
+        "version": "1.0.0",
+        "summary": "A named set of POS terminal permissions assignable to staff members",
+        "description": "Defines a permission matrix (canVoid, maxDiscountPercent, canRefund, canNoSale) that can be assigned to one or many posStaff records. The role drives action gates on the POS terminal: any operator whose active session resolves to a role without the relevant flag is blocked from the protected action. Mapped to Schema.org Role.",
+        "@type": "schema:Role",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Role display name, e.g. Kassamedewerker, Supervisor, Manager",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Name",
+            "facetable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional description of the role's purpose and scope",
+            "maxLength": 512
+          },
+          "canVoid": {
+            "type": "boolean",
+            "description": "Whether the role may void a completed transaction",
+            "default": false,
+            "title": "Can void"
+          },
+          "maxDiscountPercent": {
+            "type": "integer",
+            "description": "Maximum line-item discount percentage this role may apply (0-100)",
+            "minimum": 0,
+            "maximum": 100,
+            "default": 0,
+            "title": "Max discount %"
+          },
+          "canRefund": {
+            "type": "boolean",
+            "description": "Whether the role may process a refund / return",
+            "default": false,
+            "title": "Can refund"
+          },
+          "canNoSale": {
+            "type": "boolean",
+            "description": "Whether the role may open the cash drawer without a transaction (no-sale)",
+            "default": false,
+            "title": "Can no-sale"
+          }
+        }
+      },
+      "posStaff": {
+        "slug": "posStaff",
+        "title": "POS Staff",
+        "icon": "AccountTie",
+        "version": "1.0.0",
+        "summary": "A POS terminal operator with a PIN, role assignment and active/inactive flag",
+        "description": "Represents a POS operator. PIN is stored as a bcrypt hash and NEVER returned by any API. failedPinAttempts and lockedUntil implement the 5-attempt / 15-minute lockout. userId is an optional link to a Nextcloud account; not every operator needs an NC user. Mapped to Schema.org Person (POS operator role).",
+        "@type": "schema:Person",
+        "required": [
+          "displayName",
+          "posRole"
+        ],
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "Operator name shown on the terminal header after login",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Display name",
+            "facetable": true
+          },
+          "userId": {
+            "type": "string",
+            "description": "Optional Nextcloud user UID linking this operator to an NC account",
+            "maxLength": 64,
+            "title": "Nextcloud user",
+            "facetable": true
+          },
+          "posRole": {
+            "type": "string",
+            "description": "UUID reference to the operator's posRole",
+            "title": "POS role",
+            "facetable": true
+          },
+          "pinHash": {
+            "type": "string",
+            "description": "Bcrypt hash of the 4-6 digit PIN. Write-only: never returned by any API response.",
+            "maxLength": 255,
+            "writeOnly": true
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether this staff member is allowed to log in",
+            "default": true,
+            "title": "Active",
+            "facetable": true
+          },
+          "failedPinAttempts": {
+            "type": "integer",
+            "description": "Consecutive failed PIN attempts (reset on success; lockout at 5)",
+            "minimum": 0,
+            "default": 0
+          },
+          "lockedUntil": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp until which PIN login is blocked after 5 failed attempts"
+          },
+          "lastLoginAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp of the most recent successful PIN login"
           }
         }
       },
@@ -4206,6 +4332,78 @@
         "taxAmount": 0.38,
         "lineTotal": 4.63,
         "notes": "Een broodje te veel gegeven op kassamachine"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posRole", "slug": "pos-role-kassamedewerker", "id": "9e1c2a01-1111-4aaa-9111-1234deadbeef" },
+        "name": "Kassamedewerker",
+        "description": "Standaard kassamedewerker zonder speciale bevoegdheden",
+        "canVoid": false,
+        "maxDiscountPercent": 0,
+        "canRefund": false,
+        "canNoSale": false
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posRole", "slug": "pos-role-supervisor", "id": "9e1c2a01-2222-4aaa-9222-2345cafebabe" },
+        "name": "Supervisor",
+        "description": "Kassasupervisor met beperkte kortings- en retourbevoegdheid",
+        "canVoid": false,
+        "maxDiscountPercent": 15,
+        "canRefund": true,
+        "canNoSale": true
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posRole", "slug": "pos-role-manager", "id": "9e1c2a01-3333-4aaa-9333-3456f00dbabe" },
+        "name": "Manager",
+        "description": "Filiaalmanager met volledige kassabevoegdheden",
+        "canVoid": true,
+        "maxDiscountPercent": 100,
+        "canRefund": true,
+        "canNoSale": true
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posStaff", "slug": "pos-staff-anna-de-vries" },
+        "displayName": "Anna de Vries",
+        "userId": "",
+        "posRole": "9e1c2a01-1111-4aaa-9111-1234deadbeef",
+        "pinHash": "$2y$12$abcdefghijklmnopqrstuOeQxhDDS7vrA8a2sV1HnRr2cZ9oF0wPnW",
+        "isActive": true,
+        "failedPinAttempts": 0
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posStaff", "slug": "pos-staff-bob-janssen" },
+        "displayName": "Bob Janssen",
+        "userId": "",
+        "posRole": "9e1c2a01-1111-4aaa-9111-1234deadbeef",
+        "pinHash": "$2y$12$abcdefghijklmnopqrstuOeQxhDDS7vrA8a2sV1HnRr2cZ9oF0wPnW",
+        "isActive": true,
+        "failedPinAttempts": 0
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posStaff", "slug": "pos-staff-carla-peters" },
+        "displayName": "Carla Peters",
+        "userId": "",
+        "posRole": "9e1c2a01-2222-4aaa-9222-2345cafebabe",
+        "pinHash": "$2y$12$abcdefghijklmnopqrstuOeQxhDDS7vrA8a2sV1HnRr2cZ9oF0wPnW",
+        "isActive": true,
+        "failedPinAttempts": 0
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posStaff", "slug": "pos-staff-david-visser" },
+        "displayName": "David Visser",
+        "userId": "",
+        "posRole": "9e1c2a01-3333-4aaa-9333-3456f00dbabe",
+        "pinHash": "$2y$12$abcdefghijklmnopqrstuOeQxhDDS7vrA8a2sV1HnRr2cZ9oF0wPnW",
+        "isActive": true,
+        "failedPinAttempts": 0
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "posStaff", "slug": "pos-staff-emma-bakker" },
+        "displayName": "Emma Bakker",
+        "userId": "",
+        "posRole": "9e1c2a01-1111-4aaa-9111-1234deadbeef",
+        "pinHash": "$2y$12$abcdefghijklmnopqrstuOeQxhDDS7vrA8a2sV1HnRr2cZ9oF0wPnW",
+        "isActive": false,
+        "failedPinAttempts": 0
       },
       {
         "@self": {

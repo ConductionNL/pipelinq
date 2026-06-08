@@ -71,6 +71,9 @@ class SettingsService
         'refundReason_schema',
         'posRefund_schema',
         'posRefundLine_schema',
+        // POS staff PIN + role permissions (pos-staff-pin-permissions).
+        'posRole_schema',
+        'posStaff_schema',
         'exportDestination_schema',
         'exportJob_schema',
         'exportRun_schema',

@@ -165,6 +165,25 @@ return [
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
 
+        // POS staff + role permissions (pos-staff-pin-permissions). Static auth
+        // route precedes the {id} wildcard routes for the same resource.
+        ['name' => 'posStaff#authenticate', 'url' => '/api/pos/staff/auth', 'verb' => 'POST'],
+
+        ['name' => 'posRole#index',   'url' => '/api/pos/roles',         'verb' => 'GET'],
+        ['name' => 'posRole#create',  'url' => '/api/pos/roles',         'verb' => 'POST'],
+        ['name' => 'posRole#show',    'url' => '/api/pos/roles/{id}',    'verb' => 'GET'],
+        ['name' => 'posRole#update',  'url' => '/api/pos/roles/{id}',    'verb' => 'PUT'],
+        ['name' => 'posRole#destroy', 'url' => '/api/pos/roles/{id}',    'verb' => 'DELETE'],
+
+        ['name' => 'posStaff#index',   'url' => '/api/pos/staff',        'verb' => 'GET'],
+        ['name' => 'posStaff#create',  'url' => '/api/pos/staff',        'verb' => 'POST'],
+        ['name' => 'posStaff#show',    'url' => '/api/pos/staff/{id}',   'verb' => 'GET'],
+        ['name' => 'posStaff#update',  'url' => '/api/pos/staff/{id}',   'verb' => 'PUT'],
+        ['name' => 'posStaff#destroy', 'url' => '/api/pos/staff/{id}',   'verb' => 'DELETE'],
+
+        // Per-staff sales report (pos-staff-pin-permissions REQ-PSP-008).
+        ['name' => 'posStaffReport#staffSales', 'url' => '/api/pos/reports/staff-sales', 'verb' => 'GET'],
+
         // ---------------------------------------------------------------------
         // Customer portal (separate auth domain — ADR-005). All /portal/api/*
         // endpoints are #[PublicPage]; the portal session bearer token (not a
