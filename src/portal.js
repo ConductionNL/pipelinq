@@ -17,6 +17,7 @@ import { generateUrl } from '@nextcloud/router'
 
 import PortalApp from './portal/PortalApp.vue'
 import { portalRoutes, installPortalGuard } from './portal/portalRoutes.js'
+import './assets/app.css'
 
 Vue.use(VueRouter)
 Vue.prototype.t = t

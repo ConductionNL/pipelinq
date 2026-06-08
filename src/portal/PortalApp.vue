@@ -4,6 +4,9 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 -->
 <template>
 	<div class="portal-app" :class="{ 'portal-app--embedded': embedded }">
+		<a class="portal-skip-link" href="#portal-main-content">
+			{{ t('pipelinq', 'Skip to main content') }}
+		</a>
 		<header v-if="!embedded && authenticated" class="portal-header">
 			<span class="portal-brand">{{ branding.displayName }}</span>
 			<nav class="portal-nav" :aria-label="t('pipelinq', 'Portal navigation')">
@@ -27,7 +30,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 				</button>
 			</nav>
 		</header>
-		<main class="portal-main">
+		<main id="portal-main-content" class="portal-main" tabindex="-1">
 			<router-view />
 		</main>
 		<PortalSessionWarning v-if="!embedded" />
@@ -187,7 +190,7 @@ export default {
 	box-shadow: 0 2px 8px rgba(0,0,0,.2);
 }
 
-.portal-app :focus {
+.portal-app :focus-visible {
 	outline: 2px solid var(--portal-brand-primary, #21468B);
 	outline-offset: 2px;
 }
