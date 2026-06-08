@@ -2,38 +2,39 @@
 
 ## 0. Deduplication Check
 
-- [ ] 0.1 Verify no existing OpenRegister service or Pipelinq component already implements cash shift, drop, count, or diff logic
+- [x] 0.1 Verify no existing OpenRegister service or Pipelinq component already implements cash shift, drop, count, or diff logic
   - Search `openspec/specs/`, `lib/Service/`, and `src/components/` for: "cashShift", "cashDrop", "cashCount", "cashDiff", "drawer", "float", "variance"
   - Document findings: if overlap found, extend existing code; if none found, proceed.
+  - **Findings**: No prior `Cash*` service / controller / schema / view on `development` (only POS cores: `PosTransactionService`, `PosRefundService`, `ProductCatalogService`, `ReceiptService`). The 2026-06 `hydra/pos-cash-management` branch carries a prior implementation that fell behind dev by 241 commits; it is reused as the design reference and refreshed onto current dev in this build. Proceed.
 
 ---
 
 ## 1. Data Model — New Schemas
 
-- [ ] 1.1 Add `cashShift` schema to `pipelinq_register.json`
+- [x] 1.1 Add `cashShift` schema to `pipelinq_register.json`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-001`
-  - **files**: `lib/Settings/pipelinq_register.json`
+  - **files**: `lib/Settings/register.d/40-pos-cash-management.json` (ADR-037 append-only fragment, not the monolith)
   - **acceptance_criteria**:
     - Schema MUST define all properties: reference (string), drawer (string), operator (string, required), managedBy (string), currency (string, default "EUR"), floatAmount (number, required), floatAt (date-time, required), status (enum: open/closed/reconciled, required, default "open"), closedAt (date-time), reconciliationStatus (enum: pending/approved/rejected), notes (string)
     - Schema MUST include a `title` and `icon` for UI rendering
 
-- [ ] 1.2 Add `cashDrop` schema to `pipelinq_register.json`
+- [x] 1.2 Add `cashDrop` schema to `pipelinq_register.json`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-002`
-  - **files**: `lib/Settings/pipelinq_register.json`
+  - **files**: `lib/Settings/register.d/40-pos-cash-management.json` (ADR-037 append-only fragment, not the monolith)
   - **acceptance_criteria**:
     - Schema MUST define: shift (string uuid, required), amount (number, required, minimum: 0.01), reason (string), droppedAt (date-time, required), droppedBy (string, required)
     - Schema MUST include title and icon
 
-- [ ] 1.3 Add `cashCount` schema to `pipelinq_register.json`
+- [x] 1.3 Add `cashCount` schema to `pipelinq_register.json`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-003`
-  - **files**: `lib/Settings/pipelinq_register.json`
+  - **files**: `lib/Settings/register.d/40-pos-cash-management.json` (ADR-037 append-only fragment, not the monolith)
   - **acceptance_criteria**:
     - Schema MUST define: shift (string uuid, required), amount (number, required, minimum: 0), countedAt (date-time, required), countedBy (string, required), notes (string), denominationBreakdown (array)
     - Schema MUST validate that amount is non-negative
 
-- [ ] 1.4 Add `cashDiff` schema to `pipelinq_register.json`
+- [x] 1.4 Add `cashDiff` schema to `pipelinq_register.json`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-004`, `REQ-CCM-006`
-  - **files**: `lib/Settings/pipelinq_register.json`
+  - **files**: `lib/Settings/register.d/40-pos-cash-management.json` (ADR-037 append-only fragment, not the monolith)
   - **acceptance_criteria**:
     - Schema MUST define: shift (string uuid, required), count (string uuid, required), expectedAmount (number, required), actualAmount (number, required), diffAmount (number), diffPercentage (number), tolerancePercentage (number, default 2), withinTolerance (boolean), status (enum: pending/approved/rejected, required, default "pending"), approvedBy (string), approvedAt (date-time), cloudEventId (string)
 
@@ -41,9 +42,9 @@
 
 ## 2. Seed Data
 
-- [ ] 2.1 Add Dutch seed objects to `components.objects[]` in `pipelinq_register.json`
+- [x] 2.1 Add Dutch seed objects to `components.objects[]` in `pipelinq_register.json`
   - **spec_ref**: Company ADR-001 (data-layer)
-  - **files**: `lib/Settings/pipelinq_register.json`
+  - **files**: `lib/Settings/register.d/40-pos-cash-management.json` (ADR-037 fragment; `ConfigFileLoaderService` additively unions `components.objects[]` across fragments + monolith)
   - **acceptance_criteria**:
     - 3 `cashShift` objects with statuses: reconciled, open, closed (various drawers, operators, and float amounts €75–€100)
     - 3 `cashDrop` objects linked to shifts with reasons: manager-deposit, bank-run, security-removal

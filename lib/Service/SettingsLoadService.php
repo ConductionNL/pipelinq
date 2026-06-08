@@ -72,6 +72,11 @@ class SettingsLoadService
         'refundReason',
         'posRefund',
         'posRefundLine',
+        // POS cash-drawer (pos-cash-management).
+        'cashShift',
+        'cashDrop',
+        'cashCount',
+        'cashDiff',
         // Customer portal schemas (live in the separate pipelinq-portal register).
         'portalAccount',
         'portalSession',
