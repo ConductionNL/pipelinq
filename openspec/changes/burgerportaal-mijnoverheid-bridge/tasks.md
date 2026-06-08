@@ -30,7 +30,7 @@
 ## Phase 2: Backend Services [MVP Core]
 
 ### Service Implementation
-- [ ] 2.1 Create `lib/Service/DutchHolidayCalendar.php`
+- [x] 2.1 Create `lib/Service/DutchHolidayCalendar.php`
   - `addWorkingDays(DateTime $from, int $days, string $tenantTimeZone = 'Europe/Amsterdam'): DateTime`
   - Skip weekends (Sat/Sun) and official holidays: Koningsdag (Apr 27), Bevrijdingsdag (May 5 in lustrum years), Kerstmis (Dec 25), Tweede Kerstdag (Dec 26), plus any tenant-custom holidays
   - Return the date that is `$days` working days after `$from`
