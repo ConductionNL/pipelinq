@@ -82,6 +82,9 @@ class SettingsService
         'posZReport_schema',
         'posJournalEntryOutbound_schema',
         'glAccountMapping_schema',
+        // POS split-tender (multi-method payment on a single transaction; pos-split-tender).
+        'posTenderType_schema',
+        'posTender_schema',
         'exportDestination_schema',
         'exportJob_schema',
         'exportRun_schema',
