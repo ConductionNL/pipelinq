@@ -121,6 +121,15 @@ import ZReportListView from './views/pos/ZReportList.vue'
 import ZReportDetailView from './views/pos/ZReportDetail.vue'
 import PosBookkeepingSettingsView from './views/admin/PosBookkeepingSettings.vue'
 
+// --- POS Kassakoppeling-compliant audit log (pos-kassakoppeling-audit):
+//     append-only HMAC-SHA256 signed register actions chained per-register
+//     with an admin-gated Belastingdienst export pack. Lib gap: declarative
+//     type:"index" cannot express the bespoke /api/kassakoppeling/audit
+//     endpoint, the verify-button + verification badge ramp on the detail
+//     view, or the date-range + format export modal. ---
+import KassakoppelingAuditListView from './views/kassakoppeling/KassakoppelingAuditList.vue'
+import KassakoppelingAuditDetailView from './views/kassakoppeling/KassakoppelingAuditDetail.vue'
+
 // --- Product barcode lookup (lib gap: index pages have no server-authoritative
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
 import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
@@ -462,6 +471,18 @@ const registry = {
 		kind: 'page',
 		component: PosBookkeepingSettingsView,
 		_note: 'Admin settings panel for the POS bookkeeping pipeline: daily Z-report time, Shillinq endpoint + bearer token (isSensitive), alert email and max retry attempts (pos-end-of-day-bookkeeping-post).',
+	},
+
+	// --- POS Kassakoppeling-compliant audit log (pos-kassakoppeling-audit). ---
+	KassakoppelingAuditListView: {
+		kind: 'page',
+		component: KassakoppelingAuditListView,
+		_note: 'Append-only Kassakoppeling audit log list: streams from the bespoke /api/kassakoppeling/audit endpoint (NOT the OR object store, which only stores entries), drives the date / register / operator / action filter bar and the admin-only Belastingdienst export modal (pos-kassakoppeling-audit REQ-AUDIT-003 / REQ-AUDIT-005).',
+	},
+	KassakoppelingAuditDetailView: {
+		kind: 'page',
+		component: KassakoppelingAuditDetailView,
+		_note: 'Read-only Kassakoppeling audit entry detail: verification status badge ramp (green ok / red tampered / grey pending), summary + entry + crypto cards with truncated hex digests + copy buttons, an optional transaction-link card linking to pos-transaction-core and the manual server-side verify action (pos-kassakoppeling-audit REQ-AUDIT-002 / REQ-AUDIT-004 / REQ-AUDIT-006).',
 	},
 
 	// --- Product barcode lookup. ---
