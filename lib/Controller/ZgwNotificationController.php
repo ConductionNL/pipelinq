@@ -85,12 +85,18 @@ class ZgwNotificationController extends Controller
     #[NoCSRFRequired]
     public function inbox(): JSONResponse
     {
+        // Webhook authenticity is enforced by the per-abonnement bearer match
+        // below. The endpoint is #[PublicPage] because NRC cannot present a
+        // Nextcloud session cookie; bearer mismatch maps to HTTP 422
+        // (the BlastWebhookController/AppointmentPaymentWebhookController
+        // convention) instead of 401 to signal "webhook signature failure"
+        // without overloading session-auth semantics.
         $authHeader = (string) $this->request->getHeader('Authorization');
         $token      = self::extractBearer($authHeader);
         if ($token === '') {
             return new JSONResponse(
                 ['error' => 'Missing bearer token'],
-                Http::STATUS_UNAUTHORIZED
+                Http::STATUS_UNPROCESSABLE_ENTITY
             );
         }
 
@@ -102,7 +108,7 @@ class ZgwNotificationController extends Controller
             );
             return new JSONResponse(
                 ['error' => 'Unknown bearer token'],
-                Http::STATUS_UNAUTHORIZED
+                Http::STATUS_UNPROCESSABLE_ENTITY
             );
         }
 

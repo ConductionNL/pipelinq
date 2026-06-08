@@ -4,8 +4,10 @@
  * Unit tests for ZgwNotificationController.
  *
  * Covers the bearer-auth handshake (REQ-ZGW-007): valid token → 202
- * Accepted + dispatcher invoked; missing/unknown token → 401; bad JSON
- * → 400. Dispatcher behaviour is exercised in NrcNotificationListenerTest.
+ * Accepted + dispatcher invoked; missing/unknown token → 422 (webhook
+ * signature failure, matching the BlastWebhook/AppointmentPaymentWebhook
+ * convention); bad JSON → 400. Dispatcher behaviour is exercised in
+ * NrcNotificationListenerTest.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Controller
@@ -100,11 +102,11 @@ class ZgwNotificationControllerTest extends TestCase
 
 
     /**
-     * Test: missing Authorization header → 401.
+     * Test: missing Authorization header → 422.
      *
      * @return void
      */
-    public function testMissingBearerReturns401(): void
+    public function testMissingBearerReturns422(): void
     {
         $request = $this->createMock(IRequest::class);
         $request->method('getHeader')->willReturn('');
@@ -123,16 +125,16 @@ class ZgwNotificationControllerTest extends TestCase
         );
 
         $response = $controller->inbox();
-        self::assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
-    }//end testMissingBearerReturns401()
+        self::assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $response->getStatus());
+    }//end testMissingBearerReturns422()
 
 
     /**
-     * Test: unknown bearer (no matching abonnement) → 401.
+     * Test: unknown bearer (no matching abonnement) → 422.
      *
      * @return void
      */
-    public function testUnknownBearerReturns401(): void
+    public function testUnknownBearerReturns422(): void
     {
         $request = $this->createMock(IRequest::class);
         $request->method('getHeader')->willReturnMap([
@@ -158,8 +160,8 @@ class ZgwNotificationControllerTest extends TestCase
         );
 
         $response = $controller->inbox();
-        self::assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
-    }//end testUnknownBearerReturns401()
+        self::assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $response->getStatus());
+    }//end testUnknownBearerReturns422()
 
 
     /**
