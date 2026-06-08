@@ -400,13 +400,9 @@ class WalkInQueueServiceTest extends TestCase
 
         $object = $this->createMock(originalClassName: ObjectService::class);
         $object->method('findAll')->willReturnCallback(
-            callback: function (
-                array $filters=[],
-                int|string|null $register=null,
-                int|string|null $schema=null,
-                int|null $limit=null,
-            ) use ($waiting, $resources): array {
-                if (($schema ?? '') === 'resource') {
+            callback: function (array $config=[]) use ($waiting, $resources): array {
+                $schema = (string) ($config['schema'] ?? '');
+                if ($schema === 'resource') {
                     return $resources;
                 }
 
