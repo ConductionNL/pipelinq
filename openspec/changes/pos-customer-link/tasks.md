@@ -2,7 +2,13 @@
 
 ## Deduplication Check
 
-- [ ] DC-1: Verify no overlap with existing POS or Pipelinq specs
+- [x] DC-1: Verify no overlap with existing POS or Pipelinq specs
+  - openspec/specs grep: no existing customer-link / debtor-tracking
+    spec; existing POS specs (pos-transaction-core, pos-product-catalogue,
+    pos-nl-btw-engine, pos-receipt-engine, pos-refund-return,
+    pos-barcode-scan) are upstream of this change and require it.
+  - openspec/changes/archive grep: no prior pos-customer or
+    pipelinq-contact-link change. This is the first implementation.
   - Search `openspec/specs/` for any existing customer-link or debtor-tracking specs
   - Search `openspec/changes/` for completed pos-customer or pipelinq-contact-link changes
   - Confirm this is the first implementation of POS-Pipelinq customer linking
@@ -373,7 +379,7 @@
 
 ## 9. Documentation & Translation
 
-- [ ] 9.1 Add UI translations (Dutch)
+- [x] 9.1 Add UI translations (Dutch) — l10n/nl.json + l10n/nl.js (+ en.json/en.js identity strings, 42 new keys)
   - **files**: `pos/l10n/nl.json`
   - **acceptance_criteria**:
     - "Voeg klant toe" — Add customer button label
@@ -389,7 +395,18 @@
     - "Klant is verplicht voor 'op rekening' transacties" — On-account validation error
     - All admin settings labels and help text
 
-- [ ] 9.2 Update developer documentation
+- [x] 9.2 Update developer documentation
+  - API endpoint inventory: PosCustomerController + PosCustomerSettingsController
+    PHPDoc + the route lines in `appinfo/routes.php` document every URL and
+    payload shape (matches the fleet convention; no separate README required).
+  - Admin settings keys (`customerSearchFields`, `customerHistoryDepth`,
+    `enablePipelinqSync`, `requireCustomerForOnAccount`) documented in
+    PosCustomerSettingsController::DEFAULTS.
+  - Cross-app data flow described in `openspec/changes/pos-customer-link/design.md`.
+  - Note: there is no `PIPELINQ_SERVICE_TOKEN` env var — the search service
+    runs **in-process** in the pipelinq app itself (reuses the local OR
+    ObjectService), so the proposal's HTTP service-account loop is not
+    applicable. The proposal text is preserved for historical context.
   - **files**: `.claude/openspec/pos-customer-link-notes.md` (optional) or main README
   - **acceptance_criteria**:
     - Document Pipelinq service account token setup (PIPELINQ_SERVICE_TOKEN env var)
@@ -402,7 +419,15 @@
 
 ## 10. Cross-App Coordination
 
-- [ ] 10.1 Coordinate Pipelinq contact schema (verify compatibility)
+- [x] 10.1 Coordinate Pipelinq contact schema (verify compatibility)
+  - Contact schema now exposes `marketingConsent` + `doNotContact` fields
+    (this change, `lib/Settings/pipelinq_register.json`).
+  - OR's generic `PATCH /api/objects/contact/{uuid}` is the standard CRUD
+    surface; PosCustomerLinkService uses `ObjectService::saveObject` against
+    it (in-process, no external HTTP call).
+  - Search uses OR `findAll` with substring matching across name / email /
+    phone (admin-configurable subset). REST full-text search is not used —
+    the in-process pipeline is faster and avoids cross-service token plumbing.
   - **spec_ref**: All requirements
   - **files**: Pipelinq data model review
   - **acceptance_criteria**:
@@ -412,7 +437,11 @@
     - Confirm Pipelinq REST API full-text search works on name, email, phone
     - If any fields/endpoints are missing, coordinate with Pipelinq team
 
-- [ ] 10.2 Set up service-to-service authentication
+- [x] 10.2 Set up service-to-service authentication
+  - N/A — POS and contact storage both live inside the pipelinq app and
+    share the same NC session / OR container. The service-account token
+    pattern in the design doc is preserved as historical context; the
+    implementation is fully in-process so no external token is needed.
   - **spec_ref**: All backend integration
   - **files**: `.env` configuration, documentation
   - **acceptance_criteria**:
@@ -422,7 +451,14 @@
     - Test service account can search contacts and update consent
     - Document token rotation procedure
 
-- [ ] 10.3 Define transaction event for Pipelinq (future integration point)
+- [x] 10.3 Define transaction event for Pipelinq (future integration point)
+  - `PosTransactionService::emitConfirmedEvent()` already dispatches the
+    `pipelinq.PosTransaction.confirmed` CloudEvent (CloudEvents 1.0
+    envelope) on every successful confirm; payload includes transactionId,
+    customer (when set via this change), total, totalTax, taxBreakdown +
+    invoiceBreakdown, tenderType (now includes 'onAccount'), and
+    confirmedAt. Shillinq's debtor consumer can subscribe today; no extra
+    event surface required.
   - **spec_ref**: Design section "Cross-App Integration: POS ↔ Pipelinq ↔ Shillinq"
   - **files**: `pos/lib/Events/TransactionSavedEvent.php` (new)
   - **acceptance_criteria**:
