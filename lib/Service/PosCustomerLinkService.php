@@ -56,13 +56,18 @@ use Throwable;
  * (`find` / `findAll` / `saveObject`); no custom SQL, no foreign-app
  * controller calls, and no service-token HTTP loop back into ourselves.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Aggregates the legitimate
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Aggregates the legitimate
  *  collaborators a POS-customer service needs: OR container, app config,
  *  PosTransactionService (for transaction fetch + persist), logger.
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)   The public surface is the
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)     The public surface is the
  *  six checkout-flow primitives (searchCustomers, getCustomer, attachCustomer,
  *  detachCustomer, getCustomerHistory, syncConsent) plus the on-account
  *  validator — all single-purpose and unit-tested.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The class is intentionally
+ *  cohesive: six checkout primitives + four admin-config readers + small
+ *  decoration / persistence helpers. Splitting it would scatter one
+ *  transactional concern (POS ↔ contact link) across several classes
+ *  without reducing real complexity.
  *
  * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-001
  */
@@ -130,7 +135,7 @@ class PosCustomerLinkService
      * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
      * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-007
      */
-    public function searchCustomers(string $query, int $limit = self::DEFAULT_SEARCH_LIMIT): array
+    public function searchCustomers(string $query, int $limit=self::DEFAULT_SEARCH_LIMIT): array
     {
         $needle = trim($query);
         if (mb_strlen($needle) < 2) {
@@ -140,7 +145,7 @@ class PosCustomerLinkService
         $cap = max(1, min(self::MAX_SEARCH_LIMIT, $limit));
 
         [$register, $schema] = $this->configContact();
-        $fields              = $this->enabledSearchFields();
+        $fields = $this->enabledSearchFields();
 
         try {
             $rows = $this->getObjectService()->findAll(
@@ -154,9 +159,13 @@ class PosCustomerLinkService
             return [];
         }
 
-        $rows     = is_array($rows) === true ? array_values($rows) : [];
         $matches  = [];
         $haystack = mb_strtolower($needle);
+        if (is_array($rows) === false) {
+            $rows = [];
+        }
+
+        $rows = array_values($rows);
 
         foreach ($rows as $row) {
             $data = $this->toArray(object: $row);
@@ -170,11 +179,14 @@ class PosCustomerLinkService
             }
         }
 
-        $this->logger->info('Pipelinq: POS customer search', [
-            'query'  => $needle,
-            'count'  => count($matches),
-            'fields' => $fields,
-        ]);
+        $this->logger->info(
+                'Pipelinq: POS customer search',
+                [
+                    'query'  => $needle,
+                    'count'  => count($matches),
+                    'fields' => $fields,
+                ]
+                );
 
         return $matches;
     }//end searchCustomers()
@@ -193,7 +205,7 @@ class PosCustomerLinkService
     public function getCustomer(string $contactUuid): array
     {
         [$register, $schema] = $this->configContact();
-        $data                = $this->fetchObject(id: $contactUuid, register: $register, schema: $schema);
+        $data = $this->fetchObject(id: $contactUuid, register: $register, schema: $schema);
         if ($data === null) {
             throw new OCSNotFoundException('Klant niet gevonden.');
         }
@@ -210,8 +222,8 @@ class PosCustomerLinkService
      * fire-and-forget after the transaction save so a consent-PATCH failure
      * never reverts the attachment.
      *
-     * @param string $transactionId   The POS transaction UUID.
-     * @param string $contactUuid     The contact UUID to attach.
+     * @param string $transactionId    The POS transaction UUID.
+     * @param string $contactUuid      The contact UUID to attach.
      * @param bool   $marketingConsent Whether the cashier captured opt-in.
      *
      * @return array<string, mixed> The updated transaction.
@@ -219,13 +231,18 @@ class PosCustomerLinkService
      * @throws OCSNotFoundException   When the transaction or contact is missing.
      * @throws OCSBadRequestException When the transaction is not in a mutable state.
      *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) marketingConsent is the
+     *  GDPR opt-in state captured by the same UI action that attaches the
+     *  customer; splitting it into a setter would force the controller to
+     *  make two round-trips for one logical write.
+     *
      * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-002
      * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-004
      */
     public function attachCustomer(
         string $transactionId,
         string $contactUuid,
-        bool $marketingConsent = false
+        bool $marketingConsent=false
     ): array {
         $contact     = $this->getCustomer(contactUuid: $contactUuid);
         $transaction = $this->fetchTransaction(id: $transactionId);
@@ -247,12 +264,15 @@ class PosCustomerLinkService
 
         $saved = $this->saveTransaction(id: $transactionId, transaction: $transaction);
 
-        $this->logger->info('Pipelinq: POS customer attached', [
-            'transactionId'    => $transactionId,
-            'customer'         => $contactUuid,
-            'consent'          => $marketingConsent,
-            'consentSyncState' => $syncStatus,
-        ]);
+        $this->logger->info(
+                'Pipelinq: POS customer attached',
+                [
+                    'transactionId'    => $transactionId,
+                    'customer'         => $contactUuid,
+                    'consent'          => $marketingConsent,
+                    'consentSyncState' => $syncStatus,
+                ]
+                );
 
         return $saved;
     }//end attachCustomer()
@@ -306,9 +326,14 @@ class PosCustomerLinkService
      *
      * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-003
      */
-    public function getCustomerHistory(string $contactUuid, int $limit = self::DEFAULT_HISTORY_LIMIT): array
+    public function getCustomerHistory(string $contactUuid, int $limit=self::DEFAULT_HISTORY_LIMIT): array
     {
-        $cap = max(1, min(self::MAX_HISTORY_LIMIT, $limit > 0 ? $limit : $this->historyDepth()));
+        $effectiveLimit = $this->historyDepth();
+        if ($limit > 0) {
+            $effectiveLimit = $limit;
+        }
+
+        $cap = max(1, min(self::MAX_HISTORY_LIMIT, $effectiveLimit));
 
         [$register, $schema] = $this->configTransaction();
 
@@ -324,14 +349,21 @@ class PosCustomerLinkService
                 ]
             );
         } catch (Throwable $e) {
-            $this->logger->warning('Pipelinq: POS customer history fetch failed', [
-                'exception' => $e->getMessage(),
-                'customer'  => $contactUuid,
-            ]);
+            $this->logger->warning(
+                    'Pipelinq: POS customer history fetch failed',
+                    [
+                        'exception' => $e->getMessage(),
+                        'customer'  => $contactUuid,
+                    ]
+                    );
             return [];
+        }//end try
+
+        if (is_array($rows) === false) {
+            $rows = [];
         }
 
-        $rows = is_array($rows) === true ? array_values($rows) : [];
+        $rows = array_values($rows);
 
         $history = [];
         foreach ($rows as $row) {
@@ -398,17 +430,23 @@ class PosCustomerLinkService
                 uuid: $contactUuid
             );
         } catch (Throwable $e) {
-            $this->logger->warning('Pipelinq: marketing-consent sync failed', [
-                'contact'   => $contactUuid,
-                'exception' => $e->getMessage(),
-            ]);
+            $this->logger->warning(
+                    'Pipelinq: marketing-consent sync failed',
+                    [
+                        'contact'   => $contactUuid,
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
             return 'failed';
         }
 
-        $this->logger->info('Pipelinq: marketing-consent synced to contact', [
-            'contact' => $contactUuid,
-            'consent' => $consent,
-        ]);
+        $this->logger->info(
+                'Pipelinq: marketing-consent synced to contact',
+                [
+                    'contact' => $contactUuid,
+                    'consent' => $consent,
+                ]
+                );
 
         return 'success';
     }//end syncConsent()
@@ -481,7 +519,16 @@ class PosCustomerLinkService
      */
     private function decorateContact(array $data): array
     {
-        $self = is_array($data['@self'] ?? null) === true ? $data['@self'] : [];
+        $self = [];
+        if (is_array($data['@self'] ?? null) === true) {
+            $self = $data['@self'];
+        }
+
+        $doNotContact = (bool) ($data['doNotContact'] ?? false);
+        $badge        = '';
+        if ($doNotContact === true) {
+            $badge = 'Niet benaderen';
+        }
 
         return [
             'id'                => (string) ($data['id'] ?? $data['uuid'] ?? ($self['id'] ?? '')),
@@ -492,8 +539,8 @@ class PosCustomerLinkService
             'client'            => (string) ($data['client'] ?? ''),
             'contactsUid'       => (string) ($data['contactsUid'] ?? ''),
             'marketingConsent'  => (bool) ($data['marketingConsent'] ?? false),
-            'doNotContact'      => (bool) ($data['doNotContact'] ?? false),
-            'doNotContactBadge' => ((bool) ($data['doNotContact'] ?? false)) === true ? 'Niet benaderen' : '',
+            'doNotContact'      => $doNotContact,
+            'doNotContactBadge' => $badge,
         ];
     }//end decorateContact()
 
@@ -506,7 +553,10 @@ class PosCustomerLinkService
      */
     private function summariseTransaction(array $data): array
     {
-        $self = is_array($data['@self'] ?? null) === true ? $data['@self'] : [];
+        $self = [];
+        if (is_array($data['@self'] ?? null) === true) {
+            $self = $data['@self'];
+        }
 
         return [
             'id'         => (string) ($data['id'] ?? $data['uuid'] ?? ($self['id'] ?? '')),
@@ -532,7 +582,7 @@ class PosCustomerLinkService
      */
     public function enabledSearchFields(): array
     {
-        $raw = $this->appConfig->getValueString(Application::APP_ID, 'customerSearchFields', 'name,email,phone');
+        $raw   = $this->appConfig->getValueString(Application::APP_ID, 'customerSearchFields', 'name,email,phone');
         $parts = array_filter(array_map('trim', explode(',', $raw)));
 
         $allowed  = ['name', 'email', 'phone'];
@@ -612,7 +662,7 @@ class PosCustomerLinkService
     private function fetchTransaction(string $id): array
     {
         [$register, $schema] = $this->configTransaction();
-        $data                = $this->fetchObject(id: $id, register: $register, schema: $schema);
+        $data = $this->fetchObject(id: $id, register: $register, schema: $schema);
         if ($data === null) {
             throw new OCSNotFoundException('Transactie niet gevonden.');
         }

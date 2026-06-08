@@ -534,14 +534,14 @@ class PosTransactionService
         // rule that closes the IDOR; the engine validates the from-state).
         $transaction = $this->fetchTransaction(id: $id);
 
-        // pos-customer-link / REQ-PCL-005: 'op rekening' (onAccount) tender
+        // Pos-customer-link / REQ-PCL-005: 'op rekening' (onAccount) tender
         // requires a linked customer. Enforced server-side here (the UI
         // disables the Afrekenen button but the contract is the server's).
         $this->assertOnAccountHasCustomer(transaction: $transaction);
 
-        $mode        = $this->normalizePriceMode(mode: ($transaction['priceMode'] ?? null));
-        $lines       = $this->fetchLines(transactionId: $id);
-        $totals      = $this->computeTotals(lines: $lines, priceMode: $mode);
+        $mode   = $this->normalizePriceMode(mode: ($transaction['priceMode'] ?? null));
+        $lines  = $this->fetchLines(transactionId: $id);
+        $totals = $this->computeTotals(lines: $lines, priceMode: $mode);
 
         $transaction = array_merge(
             $transaction,
