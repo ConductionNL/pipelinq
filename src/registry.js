@@ -176,6 +176,17 @@ import PipelineAnalyticsView from './views/pipeline/PipelineAnalyticsView.vue'
 import ClientDetail from './views/clients/ClientDetail.vue'
 import ContactDetail from './views/contacts/ContactDetail.vue'
 
+// --- Project / WBS hierarchy (project-task-hierarchy):
+//     four schemas (project / projectPhase / projectTask / projectActivity)
+//     surface as ProjectList → ProjectDetail (WBS tree with inline phase /
+//     task / time-entry CnFormDialogs) → ProjectActivityList. Custom views
+//     because the declarative type:"detail" cannot drive the cross-schema
+//     parallel relation fetch, the resolved-billable inheritance chain or
+//     the inline-add CnFormDialogs feeding three different schemas. ---
+import ProjectList from './views/projects/ProjectList.vue'
+import ProjectDetail from './views/projects/ProjectDetail.vue'
+import ProjectActivityList from './views/projects/ProjectActivityList.vue'
+
 // --- Marketing segmentation + blast (marketing-segmentation-and-blast 07):
 //     three-route Vue surface — list, multi-step create wizard, live monitor.
 //     The wizard embeds the missing-consent modal (own file under modals/);
@@ -605,6 +616,23 @@ const registry = {
 		kind: 'page',
 		component: PaymentSettingsForm,
 		_note: 'Admin-only credential form for Mollie / CCV / Adyen / Stripe with encrypted-at-rest secrets via ICrypto and per-provider connection test. Lib gap: no payment-provider-settings page type. Renders ***SET*** for already-stored secrets so the form never leaks credentials.',
+	},
+
+	// --- Project / WBS hierarchy (project-task-hierarchy). ---
+	ProjectList: {
+		kind: 'page',
+		component: ProjectList,
+		_note: 'Project list view wrapping CnIndexPage with per-cell slot overrides for status pill, billable indicator, budget/logged progress and overdue-end-date treatment (REQ-PTH-006).',
+	},
+	ProjectDetail: {
+		kind: 'page',
+		component: ProjectDetail,
+		_note: 'Project detail with parallel cross-schema relation fetch (phases / tasks / activities), budget KPI cards, embedded WBS tree (ProjectWbsTree.vue), inline CnFormDialogs for phase/task/activity create and CnObjectSidebar; declarative type:"detail" cannot orchestrate three nested schemas through one screen (REQ-PTH-001 / REQ-PTH-007).',
+	},
+	ProjectActivityList: {
+		kind: 'page',
+		component: ProjectActivityList,
+		_note: 'Time-entry list for one project with date/user/task/billable filters and a totals row that applies the billable inheritance chain (REQ-PTH-004 / REQ-PTH-005 / REQ-PTH-008).',
 	},
 
 	// --- Marketing blasts (marketing-segmentation-and-blast slice 07). ---
