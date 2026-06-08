@@ -589,15 +589,65 @@ class PosTransactionService
     public function settleTransaction(string $id, string $userId): array
     {
         $transaction = $this->fetchTransaction(id: $id);
+
+        // Tender-sum gate (pos-split-tender REQ-PST-004): sum of tenders MUST
+        // equal the transaction total before settle. Resolved lazily via the
+        // container so this service does not pull PosTenderService into its
+        // constructor signature (avoids a circular DI graph with the routes
+        // that wire both controllers together).
+        $tenderService = $this->resolveTenderService();
+        if ($tenderService !== null) {
+            $tenderService->assertBalancedForSettle(transactionId: $id);
+        }
+
         $transaction['settledAt'] = $this->now();
         $this->saveTransaction(id: $id, transaction: $transaction);
 
         $saved = $this->transitionObject(id: $id, action: 'settle');
 
+        // Emit a TenderPostedEvent per tender so Shillinq posts each leg to
+        // its configured GL account (pos-split-tender REQ-PST-006). The
+        // emitter is fire-and-forget — failure NEVER aborts the settle path
+        // (a tender that did not post is picked up by TenderPostedRetryJob).
+        if ($tenderService !== null) {
+            try {
+                $tenderService->emitTendersPosted(transactionId: $id);
+            } catch (\Throwable $e) {
+                $this->logger->warning(
+                    'Pipelinq: tender CloudEvent emission failed; retry job will pick up',
+                    ['id' => $id, 'exception' => $e->getMessage()]
+                );
+            }
+        }
+
         $this->logger->info('Pipelinq: POS transaction settled', ['id' => $id, 'userId' => $userId]);
 
         return $saved;
     }//end settleTransaction()
+
+    /**
+     * Lazy resolver for the tender-domain service. Returns null when OR /
+     * tender schemas are not configured (so older fleet apps without the
+     * split-tender migration applied keep working).
+     *
+     * @return PosTenderService|null The service, or null when unavailable.
+     *
+     * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-004
+     */
+    private function resolveTenderService(): ?PosTenderService
+    {
+        try {
+            $service = $this->container->get(PosTenderService::class);
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        if ($service instanceof PosTenderService) {
+            return $service;
+        }
+
+        return null;
+    }//end resolveTenderService()
 
     /**
      * Refund / void a confirmed or settled transaction (manager only).
