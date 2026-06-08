@@ -99,6 +99,7 @@ Vrij en open source onder de AGPL-licentie.
         <job>OCA\Pipelinq\BackgroundJob\ReminderDispatchJob</job>
         <job>OCA\Pipelinq\BackgroundJob\AvailabilityCacheRefreshJob</job>
         <job>OCA\Pipelinq\BackgroundJob\AppointmentDepositTimeoutJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\GenerateZReportJob</job>
     </background-jobs>
 
     <navigations>

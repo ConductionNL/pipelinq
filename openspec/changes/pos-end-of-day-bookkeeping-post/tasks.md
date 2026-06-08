@@ -71,7 +71,7 @@
 
 ## 2. Backend Service Layer
 
-- [ ] 2.1 Create `lib/Service/PosBookkeepingService.php`
+- [x] 2.1 Create `lib/Service/PosBookkeepingService.php`
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-001,
     #REQ-POS-BK-002, #REQ-POS-BK-003`
   - **files**: `pipelinq/lib/Service/PosBookkeepingService.php`
@@ -128,7 +128,7 @@
       - Emit `pipelinq.PosZReport.submitted` CloudEvent
     - AND every public method MUST have `@spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#{section}`
 
-- [ ] 2.2 Create `lib/Controller/PosBookkeepingController.php`
+- [x] 2.2 Create `lib/Controller/PosBookkeepingController.php`
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-005`
   - **files**: `pipelinq/lib/Controller/PosBookkeepingController.php`
   - **acceptance_criteria**:
@@ -144,7 +144,7 @@
 
 ## 3. Background Jobs
 
-- [ ] 3.1 Create `lib/Job/GenerateZReportJob.php`
+- [x] 3.1 Create `lib/Job/GenerateZReportJob.php` (filed under `lib/BackgroundJob/` per fleet convention)
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-001`
   - **files**: `pipelinq/lib/Job/GenerateZReportJob.php`
   - **acceptance_criteria**:
@@ -158,7 +158,7 @@
     - AND the job MUST be scheduled daily at the time configured in admin settings
     - AND registration MUST use `ISchedulingService` or equivalent cron pattern
 
-- [ ] 3.2 Create `lib/Job/PosRetryBackoffJob.php`
+- [x] 3.2 Create `lib/Job/PosRetryBackoffJob.php` (filed under `lib/BackgroundJob/` per fleet convention)
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-003`
   - **files**: `pipelinq/lib/Job/PosRetryBackoffJob.php`
   - **acceptance_criteria**:
@@ -173,7 +173,7 @@
       - On max attempts (5): mark as failed, send alert, do NOT reschedule
     - AND `attemptCount` MUST be incremented before each call
 
-- [ ] 3.3 Register jobs in `appinfo/application.php` or service container
+- [x] 3.3 Register jobs in `appinfo/application.php` or service container (GenerateZReportJob registered in `appinfo/info.xml` background-jobs; PosRetryBackoffJob scheduled on-demand via IJobList from PosBookkeepingService)
   - **files**: `pipelinq/appinfo/application.php`
   - **acceptance_criteria**:
     - GIVEN the app boots
@@ -204,7 +204,7 @@
       - Show success notification
     - AND form validation MUST prevent save with invalid data
 
-- [ ] 4.2 Create API endpoint `lib/Controller/Admin/PosBookkeepingConfigController.php`
+- [x] 4.2 Create API endpoint `lib/Controller/PosBookkeepingConfigController.php` (flat namespace; NC routing keys controller by name without sub-namespace)
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-007`
   - **files**: `pipelinq/lib/Controller/Admin/PosBookkeepingConfigController.php`
   - **acceptance_criteria**:
