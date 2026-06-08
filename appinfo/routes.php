@@ -84,6 +84,11 @@ return [
         // Rapportage / reporting — specific routes before wildcard catch-all.
         // Klantbeeld 360 — cross-module analytics summary (must precede any wildcard `{slug}` routes).
         ['name' => 'analytics#summary', 'url' => '/api/analytics/summary', 'verb' => 'GET'],
+        // SLA engine — attainment dashboard endpoint (sla-engine-and-escalation / REQ-006).
+        ['name' => 'slaAttainment#attainment', 'url' => '/api/sla/attainment', 'verb' => 'GET'],
+        // SLA engine — admin-gated policy CRUD with justification enforcement (REQ-009).
+        ['name' => 'slaPolicy#create', 'url' => '/api/sla/policies',      'verb' => 'POST'],
+        ['name' => 'slaPolicy#update', 'url' => '/api/sla/policies/{id}', 'verb' => 'PUT'],
         ['name' => 'reporting#getKpis',     'url' => '/api/rapportage/kpis',     'verb' => 'GET'],
         ['name' => 'reporting#getChannels', 'url' => '/api/rapportage/channels', 'verb' => 'GET'],
         ['name' => 'reporting#getAgents',   'url' => '/api/rapportage/agents',   'verb' => 'GET'],

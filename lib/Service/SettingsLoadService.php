@@ -97,6 +97,9 @@ class SettingsLoadService
         'ctiAdapterConfig',
         'ctiEventLog',
         'ctiAgentPresence',
+        // SLA engine (sla-engine-and-escalation) — separate sla register.
+        'slaPolicy',
+        'slaBreachEvent',
     ];
 
     /**
@@ -105,6 +108,13 @@ class SettingsLoadService
      * @var string
      */
     private const PORTAL_REGISTER_SLUG = 'pipelinq-portal';
+
+    /**
+     * Slug of the cross-cutting SLA engine register.
+     *
+     * @var string
+     */
+    private const SLA_REGISTER_SLUG = 'sla';
 
     /**
      * Constructor.
@@ -182,6 +192,25 @@ class SettingsLoadService
         );
         if ($portalRegisterId !== null) {
             $this->appConfig->setValueString(Application::APP_ID, 'portal_register', (string) $portalRegisterId);
+        }
+
+        $slaRegisterId = $this->resolveRegisterIdBySlug(
+            registers: ($importResult['registers'] ?? []),
+            slug: self::SLA_REGISTER_SLUG
+        );
+        if ($slaRegisterId !== null) {
+            $this->appConfig->setValueString(Application::APP_ID, 'sla_register', (string) $slaRegisterId);
+        }
+
+        // SLA schema config keys diverge from the auto-derived `<slug>_schema`
+        // naming because the engine expects `sla_policy_schema` and
+        // `sla_breach_event_schema` rather than `slaPolicy_schema`.
+        if (isset($schemaMap['slaPolicy']) === true && $schemaMap['slaPolicy'] !== null) {
+            $this->appConfig->setValueString(Application::APP_ID, 'sla_policy_schema', (string) $schemaMap['slaPolicy']);
+        }
+
+        if (isset($schemaMap['slaBreachEvent']) === true && $schemaMap['slaBreachEvent'] !== null) {
+            $this->appConfig->setValueString(Application::APP_ID, 'sla_breach_event_schema', (string) $schemaMap['slaBreachEvent']);
         }
 
         foreach (self::SCHEMA_SLUGS as $slug) {

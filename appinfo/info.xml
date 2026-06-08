@@ -80,6 +80,7 @@ Vrij en open source onder de AGPL-licentie.
         <post-migration>
             <step>OCA\Pipelinq\Repair\InitializeSettings</step>
             <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
+            <step>OCA\Pipelinq\Repair\InitSlaStatus</step>
         </post-migration>
     </repair-steps>
 
