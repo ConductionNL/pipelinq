@@ -113,22 +113,6 @@ import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
 import CtiSettingsView from './views/settings/CtiSettings.vue'
 import CtiEventLogView from './views/settings/CtiEventLog.vue'
 
-// --- Automation rule builder (lib gap: no automation-rule editor page type;
-//     the visual condition + action builder cannot be expressed as a declarative
-//     type:"detail" because it drives a bespoke condition-row + action-row UX). ---
-import AutomationBuilderView from './views/automations/AutomationBuilder.vue'
-
-// --- CRM workflow automation (crm-workflow-automation): list + detail + history,
-//     plus the webhook list. List/detail wrap CnIndexPage/CnDetailPage with the
-//     automation-specific information cards (trigger conditions JSON viewer,
-//     ordered actions list and the linked automationLog history table). The
-//     webhook list calls the pipelinq /api/webhooks proxy that delegates to
-//     OpenRegister's WebhookService for delivery + retry. ---
-import AutomationListView from './views/automations/AutomationList.vue'
-import AutomationDetailView from './views/automations/AutomationDetail.vue'
-import AutomationHistoryView from './views/automations/AutomationHistory.vue'
-import WebhookListView from './views/webhooks/WebhookList.vue'
-
 // --- Expense → Shillinq AP (pipelinq-expense-to-shillinq-ap): list with
 //     apSyncStatus badge column, detail with embedded Shillinq AP card
 //     (REQ-AP-005 / REQ-AP-006).
@@ -402,29 +386,6 @@ const registry = {
 		_note: 'Scan-to-navigate barcode search; resolves via the server-authoritative scoped barcode-lookup API and routes to the matching product (highlighting a matched variant).',
 	},
 
-	// --- Automation rule builder. ---
-	AutomationBuilderView: {
-		kind: 'page',
-		component: AutomationBuilderView,
-		_note: 'Visual automation-rule editor with condition-row + action-row builder; lib gap: no automation-rule editor page type.',
-	},
-
-	// --- CRM workflow automation (crm-workflow-automation). ---
-	AutomationListView: {
-		kind: 'page',
-		component: AutomationListView,
-		_note: 'Automations list (crm-workflow-automation): CnIndexPage with bespoke trigger/status columns and a "New automation" header action.',
-	},
-	AutomationDetailView: {
-		kind: 'page',
-		component: AutomationDetailView,
-		_note: 'Automation detail (crm-workflow-automation): CnDetailPage with information, trigger conditions (JSON), actions list, webhook section and linked automationLog history. Renders AutomationBuilder when id="new".',
-	},
-	AutomationHistoryView: {
-		kind: 'page',
-		component: AutomationHistoryView,
-		_note: 'Standalone automation execution history table; reusable from detail as a section.',
-	},
 	// --- Expense → Shillinq AP (pipelinq-expense-to-shillinq-ap). ---
 	ExpenseListView: {
 		kind: 'page',
@@ -447,12 +408,6 @@ const registry = {
 		kind: 'widget',
 		component: BillingCategoryWidget,
 		_note: 'Donut chart of hours per billing category for the Dashboard (REQ-BCT-004). Clicking a segment navigates to the time entry list filtered by that category.',
-	},
-
-	WebhookListView: {
-		kind: 'page',
-		component: WebhookListView,
-		_note: 'Webhook subscriptions list (crm-workflow-automation): proxies the OR-backed /api/webhooks endpoints and exposes a Test action via NcDialog (no window.alert).',
 	},
 
 	// --- Klantbeeld 360 — cross-module analytics dashboard. ---
