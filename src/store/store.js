@@ -111,6 +111,13 @@ async function doInitializeStores() {
 		if (config.register && config.posRefundLine_schema) {
 			objectStore.registerObjectType('posRefundLine', config.posRefundLine_schema, config.register)
 		}
+		// POS staff PIN + role permissions (pos-staff-pin-permissions REQ-PSP-001/002).
+		if (config.register && config.posRole_schema) {
+			objectStore.registerObjectType('posRole', config.posRole_schema, config.register)
+		}
+		if (config.register && config.posStaff_schema) {
+			objectStore.registerObjectType('posStaff', config.posStaff_schema, config.register)
+		}
 		// Billing categories (billable-categories-and-tags) — REQ-BCT-001.
 		if (config.register && config.billingCategory_schema) {
 			objectStore.registerObjectType('billingCategory', config.billingCategory_schema, config.register)
