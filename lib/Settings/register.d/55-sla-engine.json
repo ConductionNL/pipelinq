@@ -70,11 +70,15 @@
                         "properties": {
                             "organisationIds": {
                                 "type": "array",
-                                "items": {"type": "string"}
+                                "items": {
+                                    "type": "string"
+                                }
                             },
                             "contractIds": {
                                 "type": "array",
-                                "items": {"type": "string"}
+                                "items": {
+                                    "type": "string"
+                                }
                             }
                         }
                     },
@@ -84,11 +88,20 @@
                         "description": "Array of target objects (acknowledgement / firstResponse / resolution / callback).",
                         "items": {
                             "type": "object",
-                            "required": ["kind", "duration", "calendar"],
+                            "required": [
+                                "kind",
+                                "duration",
+                                "calendar"
+                            ],
                             "properties": {
                                 "kind": {
                                     "type": "string",
-                                    "enum": ["acknowledgement", "firstResponse", "resolution", "callback"]
+                                    "enum": [
+                                        "acknowledgement",
+                                        "firstResponse",
+                                        "resolution",
+                                        "callback"
+                                    ]
                                 },
                                 "duration": {
                                     "type": "string",
@@ -96,7 +109,11 @@
                                 },
                                 "calendar": {
                                     "type": "string",
-                                    "enum": ["24x7", "business-hours", "extended-business-hours"]
+                                    "enum": [
+                                        "24x7",
+                                        "business-hours",
+                                        "extended-business-hours"
+                                    ]
                                 }
                             }
                         }
@@ -106,7 +123,11 @@
                         "description": "Array of escalation steps. Empty = no escalation.",
                         "items": {
                             "type": "object",
-                            "required": ["triggerAt", "notify", "channel"],
+                            "required": [
+                                "triggerAt",
+                                "notify",
+                                "channel"
+                            ],
                             "properties": {
                                 "triggerAt": {
                                     "type": "number",
@@ -114,11 +135,24 @@
                                 },
                                 "notify": {
                                     "type": "string",
-                                    "enum": ["assignee", "team-lead", "manager", "director", "customer", "webhook"]
+                                    "enum": [
+                                        "assignee",
+                                        "team-lead",
+                                        "manager",
+                                        "director",
+                                        "customer",
+                                        "webhook"
+                                    ]
                                 },
                                 "channel": {
                                     "type": "string",
-                                    "enum": ["email", "nextcloud-notification", "whatsapp", "sms", "webhook"]
+                                    "enum": [
+                                        "email",
+                                        "nextcloud-notification",
+                                        "whatsapp",
+                                        "sms",
+                                        "webhook"
+                                    ]
                                 },
                                 "webhookUrl": {
                                     "type": "string",
@@ -130,7 +164,9 @@
                     "pauseConditions": {
                         "type": "array",
                         "description": "Status values that pause the timer (e.g. ['awaiting-customer', 'on-hold']).",
-                        "items": {"type": "string"}
+                        "items": {
+                            "type": "string"
+                        }
                     },
                     "holidayCalendar": {
                         "type": "string",
@@ -160,7 +196,11 @@
                     },
                     "status": {
                         "type": "string",
-                        "enum": ["draft", "published", "archived"],
+                        "enum": [
+                            "draft",
+                            "published",
+                            "archived"
+                        ],
                         "default": "published"
                     }
                 }
@@ -196,7 +236,12 @@
                     },
                     "targetKind": {
                         "type": "string",
-                        "enum": ["acknowledgement", "firstResponse", "resolution", "callback"]
+                        "enum": [
+                            "acknowledgement",
+                            "firstResponse",
+                            "resolution",
+                            "callback"
+                        ]
                     },
                     "breachedAt": {
                         "type": "string",
@@ -215,7 +260,9 @@
                     "notifiedActors": {
                         "type": "array",
                         "description": "User IDs / external addresses notified, or 'failed:<channel>' placeholders.",
-                        "items": {"type": "string"}
+                        "items": {
+                            "type": "string"
+                        }
                     },
                     "channel": {
                         "type": "string",
@@ -240,8 +287,8 @@
                 }
             }
         },
-        "objects": {
-            "standaard-request-sla": {
+        "objects": [
+            {
                 "@self": {
                     "register": "sla",
                     "schema": "slaPolicy",
@@ -252,21 +299,40 @@
                 "appliesTo": "request",
                 "customerTier": "*",
                 "targets": [
-                    {"kind": "acknowledgement", "duration": "PT4H", "calendar": "business-hours"},
-                    {"kind": "resolution", "duration": "P3W", "calendar": "business-hours"}
+                    {
+                        "kind": "acknowledgement",
+                        "duration": "PT4H",
+                        "calendar": "business-hours"
+                    },
+                    {
+                        "kind": "resolution",
+                        "duration": "P3W",
+                        "calendar": "business-hours"
+                    }
                 ],
                 "escalationChain": [
-                    {"triggerAt": 0.8, "notify": "assignee", "channel": "nextcloud-notification"},
-                    {"triggerAt": 1.0, "notify": "team-lead", "channel": "email"}
+                    {
+                        "triggerAt": 0.8,
+                        "notify": "assignee",
+                        "channel": "nextcloud-notification"
+                    },
+                    {
+                        "triggerAt": 1.0,
+                        "notify": "team-lead",
+                        "channel": "email"
+                    }
                 ],
-                "pauseConditions": ["awaiting-customer", "on-hold"],
+                "pauseConditions": [
+                    "awaiting-customer",
+                    "on-hold"
+                ],
                 "holidayCalendar": "nl-feestdagen-rijksoverheid",
                 "priority": 100,
                 "active": true,
                 "justification": "Initiele baseline voor alle requests (seed data).",
                 "status": "published"
             },
-            "goud-tier-request-sla": {
+            {
                 "@self": {
                     "register": "sla",
                     "schema": "slaPolicy",
@@ -277,23 +343,49 @@
                 "appliesTo": "request",
                 "customerTier": "gold",
                 "targets": [
-                    {"kind": "acknowledgement", "duration": "PT1H", "calendar": "24x7"},
-                    {"kind": "firstResponse", "duration": "PT4H", "calendar": "24x7"},
-                    {"kind": "resolution", "duration": "P1W", "calendar": "business-hours"}
+                    {
+                        "kind": "acknowledgement",
+                        "duration": "PT1H",
+                        "calendar": "24x7"
+                    },
+                    {
+                        "kind": "firstResponse",
+                        "duration": "PT4H",
+                        "calendar": "24x7"
+                    },
+                    {
+                        "kind": "resolution",
+                        "duration": "P1W",
+                        "calendar": "business-hours"
+                    }
                 ],
                 "escalationChain": [
-                    {"triggerAt": 0.8, "notify": "assignee", "channel": "nextcloud-notification"},
-                    {"triggerAt": 1.0, "notify": "manager", "channel": "email"},
-                    {"triggerAt": 1.5, "notify": "director", "channel": "email"}
+                    {
+                        "triggerAt": 0.8,
+                        "notify": "assignee",
+                        "channel": "nextcloud-notification"
+                    },
+                    {
+                        "triggerAt": 1.0,
+                        "notify": "manager",
+                        "channel": "email"
+                    },
+                    {
+                        "triggerAt": 1.5,
+                        "notify": "director",
+                        "channel": "email"
+                    }
                 ],
-                "pauseConditions": ["awaiting-customer"],
+                "pauseConditions": [
+                    "awaiting-customer"
+                ],
                 "holidayCalendar": "nl-feestdagen-rijksoverheid",
                 "priority": 10,
                 "active": true,
                 "justification": "Goud-tier contractueel commitment (seed data).",
                 "status": "published"
             },
-            "avg-datalek-klacht-sla": {
+            {
                 "@self": {
                     "register": "sla",
                     "schema": "slaPolicy",
@@ -304,13 +396,33 @@
                 "appliesTo": "klacht",
                 "customerTier": "*",
                 "targets": [
-                    {"kind": "acknowledgement", "duration": "PT1H", "calendar": "24x7"},
-                    {"kind": "resolution", "duration": "PT72H", "calendar": "24x7"}
+                    {
+                        "kind": "acknowledgement",
+                        "duration": "PT1H",
+                        "calendar": "24x7"
+                    },
+                    {
+                        "kind": "resolution",
+                        "duration": "PT72H",
+                        "calendar": "24x7"
+                    }
                 ],
                 "escalationChain": [
-                    {"triggerAt": 0.5, "notify": "manager", "channel": "email"},
-                    {"triggerAt": 0.8, "notify": "director", "channel": "email"},
-                    {"triggerAt": 1.0, "notify": "director", "channel": "nextcloud-notification"}
+                    {
+                        "triggerAt": 0.5,
+                        "notify": "manager",
+                        "channel": "email"
+                    },
+                    {
+                        "triggerAt": 0.8,
+                        "notify": "director",
+                        "channel": "email"
+                    },
+                    {
+                        "triggerAt": 1.0,
+                        "notify": "director",
+                        "channel": "nextcloud-notification"
+                    }
                 ],
                 "pauseConditions": [],
                 "holidayCalendar": "none",
@@ -319,7 +431,7 @@
                 "justification": "AVG Art. 33 wettelijke meldplicht (seed data).",
                 "status": "published"
             },
-            "callback-default-sla": {
+            {
                 "@self": {
                     "register": "sla",
                     "schema": "slaPolicy",
@@ -330,20 +442,38 @@
                 "appliesTo": "callback",
                 "customerTier": "*",
                 "targets": [
-                    {"kind": "acknowledgement", "duration": "PT2H", "calendar": "business-hours"},
-                    {"kind": "callback", "duration": "P1D", "calendar": "business-hours"}
+                    {
+                        "kind": "acknowledgement",
+                        "duration": "PT2H",
+                        "calendar": "business-hours"
+                    },
+                    {
+                        "kind": "callback",
+                        "duration": "P1D",
+                        "calendar": "business-hours"
+                    }
                 ],
                 "escalationChain": [
-                    {"triggerAt": 0.8, "notify": "assignee", "channel": "nextcloud-notification"},
-                    {"triggerAt": 1.0, "notify": "team-lead", "channel": "email"}
+                    {
+                        "triggerAt": 0.8,
+                        "notify": "assignee",
+                        "channel": "nextcloud-notification"
+                    },
+                    {
+                        "triggerAt": 1.0,
+                        "notify": "team-lead",
+                        "channel": "email"
+                    }
                 ],
-                "pauseConditions": ["awaiting-customer"],
+                "pauseConditions": [
+                    "awaiting-customer"
+                ],
                 "holidayCalendar": "nl-feestdagen-rijksoverheid",
                 "priority": 100,
                 "active": true,
                 "justification": "Baseline voor terugbel-verzoeken (seed data).",
                 "status": "published"
             }
-        }
+        ]
     }
 }
