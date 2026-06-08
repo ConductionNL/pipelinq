@@ -310,6 +310,12 @@ return [
         // appointment-booking-08-deposit-payment / REQ-APT-010.
         // openconnector hits this URL with the payment outcome.
         ['name' => 'appointmentPaymentWebhook#callback', 'url' => '/api/appointment-payment-webhook', 'verb' => 'POST'],
+
+        // WhatsApp / SMS messaging webhooks (signature-verified, PublicPage)
+        // whatsapp-sms-channel-adapter / REQ-003. Specific routes precede
+        // any wildcard catch-alls (ADR-016).
+        ['name' => 'messagingWebhook#whatsapp', 'url' => '/api/messaging-webhooks/whatsapp/{providerId}', 'verb' => 'POST'],
+        ['name' => 'messagingWebhook#sms',      'url' => '/api/messaging-webhooks/sms/{providerId}',      'verb' => 'POST'],
         // Marketing — Segments (marketing-segmentation-and-blast chain member 06).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
         ['name' => 'segment#index',         'url' => '/api/segments',                  'verb' => 'GET'],
