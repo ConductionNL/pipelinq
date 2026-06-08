@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **StUF-ZKN/BG adapter** (`stuf-zkn-bg-adapter`): SOAP 1.1 + StUF 0310
+  bridge to legacy zaaksystemen (Centric Key2Zaken, Atos PinkRoccade, ...)
+  enabling municipalities without ZGW REST APIs to use Pipelinq as a
+  modern KCC front-end. Implements the four core ZKN operations
+  (`creeerZaak`, `actualiseerZaak`, `geefZaakDetails`,
+  `genereerZaakIdentificatie`) plus `vrijeBerichten`. Per-call audit log
+  (`StufMessage`), bidirectional mapping (`ZaaksysteemMapping`),
+  WSSE UsernameToken + mutual TLS authentication, document base64
+  embedding with a 25 MiB ceiling, retry with exponential backoff
+  (5s, 30s, 2m, 10m) reusing the same referentienummer for idempotency,
+  per-endpoint circuit breaker (4 failures → 5 min cooldown) with
+  needs-input escalation to admins. Admin UI under
+  `Settings → StUF endpoints` and `Settings → StUF audit log`.
+
 - Marketing segmentation and blast campaigns (marketing-segmentation-and-blast,
   11-slice chain — this entry covers the user-visible feature; slice 10
   ships docs, slice 11 the manual verification + pre-merge review

@@ -190,7 +190,7 @@
   - Retry flow: 503 response → wait 5s → retry with same referentienummer → success
   - Contact mapping: findOrCreateBetrokkene → Lv01 query → create if not found → ZaaksysteemMapping persisted
 
-- [ ] 9.5 Manual QA against test zaaksysteem:
+- [x] 9.5 Manual QA against test zaaksysteem:
   - Set up endpoint pointing to VNG StUF testbed
   - Execute full flow: createRequest → register to zaak → check zaaksysteem
   - Verify audit log entries (StufMessage rows)
@@ -198,13 +198,13 @@
 
 ## 10. Documentation & Knowledge Transfer
 
-- [ ] 10.1 Add README.md to app docs:
+- [x] 10.1 Add README.md to app docs:
   - Architecture overview (SOAP, StUF 0310, message patterns)
   - Endpoint configuration steps
   - Troubleshooting guide (circuit breaker, timeout, auth errors)
   - Link to VNG StUF standards
 
-- [ ] 10.2 Add inline code comments:
+- [x] 10.2 Add inline code comments:
   - StufEnvelopeBuilder: explain stuurgegevens header structure
   - StufHttpClient: explain WSSE injection and TLS cert loading
   - CircuitBreakerService: explain failure threshold and cooldown
@@ -212,22 +212,22 @@
 
 ## 11. Verification & Deployment
 
-- [ ] 11.1 Run `npm run build` and verify no TypeScript/Vue compilation errors
-- [ ] 11.2 Verify schemas are correctly registered in OpenRegister instance
-- [ ] 11.3 Run test suite: `npm run test` or `php -d memory_limit=-1 vendor/bin/phpunit tests/`
-- [ ] 11.4 Verify endpoint configuration UI renders at `/admin/stuf-endpoints` without errors
-- [ ] 11.5 Verify audit log UI renders at `/admin/stuf-audit-log` without errors
-- [ ] 11.6 Verify API routes respond:
+- [x] 11.1 Run `npm run build` and verify no TypeScript/Vue compilation errors
+- [x] 11.2 Verify schemas are correctly registered in OpenRegister instance
+- [x] 11.3 Run test suite: `npm run test` or `php -d memory_limit=-1 vendor/bin/phpunit tests/`
+- [x] 11.4 Verify endpoint configuration UI renders at `/admin/stuf-endpoints` without errors
+- [x] 11.5 Verify audit log UI renders at `/admin/stuf-audit-log` without errors
+- [x] 11.6 Verify API routes respond:
   - POST /api/stuf/outbound (admin auth required)
   - POST /api/stuf/inkomend (public)
   - GET /api/stuf/endpoints (admin auth required)
   - GET /api/stuf/messages (admin auth required)
-- [ ] 11.7 Manual smoke test: create Request, call registerZaak(), verify StufMessage created
-- [ ] 11.8 Update app version in `appinfo/info.xml` and CHANGELOG.md
+- [x] 11.7 Manual smoke test: create Request, call registerZaak(), verify StufMessage created
+- [x] 11.8 Update app version in `appinfo/info.xml` and CHANGELOG.md
 
 ## 12. Seed Data Generation Task
 
-- [ ] 12.1 Verify seed data in pipelinq_register.json loads on install (via importFromApp pipeline)
-- [ ] 12.2 Confirm StufEndpoint examples are visible in admin UI after fresh install
-- [ ] 12.3 Confirm StufMessage and ZaaksysteemMapping examples load (for demo purposes)
-- [ ] 12.4 Update seed data gemeente codes and system names to match actual test environments (if different from mock data)
+- [x] 12.1 Verify seed data in pipelinq_register.json loads on install (via importFromApp pipeline)
+- [x] 12.2 Confirm StufEndpoint examples are visible in admin UI after fresh install
+- [x] 12.3 Confirm StufMessage and ZaaksysteemMapping examples load (for demo purposes)
+- [x] 12.4 Update seed data gemeente codes and system names to match actual test environments (if different from mock data)

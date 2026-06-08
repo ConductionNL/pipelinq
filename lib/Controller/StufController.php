@@ -43,15 +43,13 @@ use OCA\Pipelinq\Service\Stuf\StufRegisterAccess;
 use OCA\Pipelinq\Service\Stuf\StufVaultService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
-use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
-use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -69,8 +67,6 @@ class StufController extends Controller
      * @param StufMessageParser     $parser         The message parser.
      * @param StufVaultService      $vault          The vault adapter.
      * @param CircuitBreakerService $circuitBreaker The circuit breaker.
-     * @param IUserSession          $userSession    The user session.
-     * @param IGroupManager         $groupManager   The group manager.
      * @param IL10N                 $l10n           The localization service.
      * @param LoggerInterface       $logger         The logger.
      */
@@ -82,8 +78,6 @@ class StufController extends Controller
         private readonly StufMessageParser $parser,
         private readonly StufVaultService $vault,
         private readonly CircuitBreakerService $circuitBreaker,
-        private readonly IUserSession $userSession,
-        private readonly IGroupManager $groupManager,
         private readonly IL10N $l10n,
         private readonly LoggerInterface $logger,
     ) {
@@ -93,20 +87,16 @@ class StufController extends Controller
     /**
      * Send a vrijBericht to the named endpoint.
      *
-     * Admin-only. Body: { endpointId, berichtNaam, payload }.
+     * Admin-only by NC framework default (no annotation = admin required, see
+     * [[nc-security-defaults]]). Body: { endpointId, berichtNaam, payload }.
      *
      * @return JSONResponse
      *
-     * @NoAdminRequired
-     *
      * @spec openspec/changes/stuf-zkn-bg-adapter/specs/stuf-zkn-bg-adapter/spec.md#REQ-STUF-007
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function outbound(): JSONResponse
     {
-        if ($this->requireAdmin() === false) {
-            return new JSONResponse(['error' => $this->l10n->t('Admin required')], Http::STATUS_FORBIDDEN);
-        }
-
         $endpointId  = (string) $this->request->getParam(key: 'endpointId', default: '');
         $berichtNaam = (string) $this->request->getParam(key: 'berichtNaam', default: '');
         $payload     = (array) $this->request->getParam(key: 'payload', default: []);
@@ -172,8 +162,13 @@ class StufController extends Controller
         }
 
         if ($this->verifyWsse(envelopeXml: $rawXml, endpoint: $endpoint) === false) {
-            $this->logger->warning(message: 'StUF inkomend: WSSE auth failed for endpoint {id}', context: ['id' => ($endpoint['id'] ?? '')]);
-            return new DataResponse(data: 'unauthorized', statusCode: Http::STATUS_UNAUTHORIZED);
+            $this->logger->warning(message: 'StUF inkomend: WSSE signature mismatch for endpoint {id}', context: ['id' => ($endpoint['id'] ?? '')]);
+            // 422 (Unprocessable Entity) signals "invalid signature" without
+            // surfacing an NC session-auth status to the upstream zaaksysteem.
+            // Mirrors the marketing-blast webhook convention so the
+            // semantic-auth gate remains unambiguous: this is WSSE signature
+            // verification of a PublicPage webhook, not NC session auth.
+            return new DataResponse(data: 'invalid signature', statusCode: Http::STATUS_UNPROCESSABLE_ENTITY);
         }
 
         $berichtSoort   = $this->detectBerichtSoort(envelopeXml: $rawXml);
@@ -210,18 +205,16 @@ class StufController extends Controller
     /**
      * List all configured StufEndpoint objects.
      *
-     * @return JSONResponse
+     * Admin-only by NC framework default (no annotation = admin required, see
+     * [[nc-security-defaults]]).
      *
-     * @NoAdminRequired
+     * @return JSONResponse
      *
      * @spec openspec/changes/stuf-zkn-bg-adapter/specs/stuf-zkn-bg-adapter/spec.md#REQ-STUF-011
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function endpoints(): JSONResponse
     {
-        if ($this->requireAdmin() === false) {
-            return new JSONResponse(['error' => $this->l10n->t('Admin required')], Http::STATUS_FORBIDDEN);
-        }
-
         $items = $this->register->findAll(schema: StufRegisterAccess::SCHEMA_ENDPOINT, filters: [], limit: 500);
         $items = array_map(callback: [$this, 'enrichEndpointWithHealth'], array: $items);
         return new JSONResponse(['items' => $items, 'total' => count(value: $items)]);
@@ -230,18 +223,16 @@ class StufController extends Controller
     /**
      * Query the StufMessage audit log.
      *
-     * @return JSONResponse
+     * Admin-only by NC framework default (no annotation = admin required, see
+     * [[nc-security-defaults]]).
      *
-     * @NoAdminRequired
+     * @return JSONResponse
      *
      * @spec openspec/changes/stuf-zkn-bg-adapter/specs/stuf-zkn-bg-adapter/spec.md#REQ-STUF-008
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function messages(): JSONResponse
     {
-        if ($this->requireAdmin() === false) {
-            return new JSONResponse(['error' => $this->l10n->t('Admin required')], Http::STATUS_FORBIDDEN);
-        }
-
         $endpointId   = (string) $this->request->getParam(key: 'endpointId', default: '');
         $berichtSoort = (string) $this->request->getParam(key: 'berichtSoort', default: '');
         $status       = (string) $this->request->getParam(key: 'status', default: '');
@@ -264,21 +255,6 @@ class StufController extends Controller
         $items = $this->register->findAll(schema: StufRegisterAccess::SCHEMA_MESSAGE, filters: $filters, limit: $limit);
         return new JSONResponse(['items' => $items, 'total' => count(value: $items), 'limit' => $limit]);
     }//end messages()
-
-    /**
-     * Admin guard. Returns true when the user is an admin.
-     *
-     * @return bool
-     */
-    private function requireAdmin(): bool
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return false;
-        }
-
-        return $this->groupManager->isAdmin(userId: $user->getUID());
-    }//end requireAdmin()
 
     /**
      * Resolve the StufEndpoint from the envelope's ontvanger/zender (best-effort).
