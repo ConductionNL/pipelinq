@@ -81,7 +81,7 @@ class PortalDataController extends PortalApiController
      */
     public function invoices(): JSONResponse
     {
-        return $this->listFor(facade: $this->invoices, feature: 'invoices');
+        return $this->requireListAccess(facade: $this->invoices, feature: 'invoices');
     }//end invoices()
 
     /**
@@ -97,7 +97,7 @@ class PortalDataController extends PortalApiController
      */
     public function invoice(string $id): JSONResponse
     {
-        return $this->oneFor(facade: $this->invoices, feature: 'invoices', id: $id);
+        return $this->requireObjectAccess(facade: $this->invoices, feature: 'invoices', id: $id);
     }//end invoice()
 
     /**
@@ -111,7 +111,7 @@ class PortalDataController extends PortalApiController
      */
     public function contracts(): JSONResponse
     {
-        return $this->listFor(facade: $this->contracts, feature: 'contracts');
+        return $this->requireListAccess(facade: $this->contracts, feature: 'contracts');
     }//end contracts()
 
     /**
@@ -127,7 +127,7 @@ class PortalDataController extends PortalApiController
      */
     public function contract(string $id): JSONResponse
     {
-        return $this->oneFor(facade: $this->contracts, feature: 'contracts', id: $id);
+        return $this->requireObjectAccess(facade: $this->contracts, feature: 'contracts', id: $id);
     }//end contract()
 
     /**
@@ -141,7 +141,7 @@ class PortalDataController extends PortalApiController
      */
     public function orders(): JSONResponse
     {
-        return $this->listFor(facade: $this->orders, feature: 'orders');
+        return $this->requireListAccess(facade: $this->orders, feature: 'orders');
     }//end orders()
 
     /**
@@ -157,7 +157,7 @@ class PortalDataController extends PortalApiController
      */
     public function order(string $id): JSONResponse
     {
-        return $this->oneFor(facade: $this->orders, feature: 'orders', id: $id);
+        return $this->requireObjectAccess(facade: $this->orders, feature: 'orders', id: $id);
     }//end order()
 
     /**
@@ -168,11 +168,11 @@ class PortalDataController extends PortalApiController
      *
      * @return JSONResponse The paginated list.
      */
-    private function listFor(AbstractPortalReadFacade $facade, string $feature): JSONResponse
+    private function requireListAccess(AbstractPortalReadFacade $facade, string $feature): JSONResponse
     {
         return $this->guarded(
                 handler: function () use ($facade, $feature): array {
-                    $ctx = $this->context();
+                    $ctx = $this->requireSession();
                     $this->tenant->requireFeature(tenantId: $ctx['tenantId'], feature: $feature);
                     $page = $facade->getForAccount(
                         $ctx['account'],
@@ -182,7 +182,7 @@ class PortalDataController extends PortalApiController
                     return [$page, Http::STATUS_OK];
                 }
                 );
-    }//end listFor()
+    }//end requireListAccess()
 
     /**
      * Shared detail handler: authenticate, feature-gate, fetch-or-404.
@@ -193,11 +193,11 @@ class PortalDataController extends PortalApiController
      *
      * @return JSONResponse The object, or 404.
      */
-    private function oneFor(AbstractPortalReadFacade $facade, string $feature, string $id): JSONResponse
+    private function requireObjectAccess(AbstractPortalReadFacade $facade, string $feature, string $id): JSONResponse
     {
         return $this->guarded(
                 handler: function () use ($facade, $feature, $id): array {
-                    $ctx = $this->context();
+                    $ctx = $this->requireSession();
                     $this->tenant->requireFeature(tenantId: $ctx['tenantId'], feature: $feature);
                     $object = $facade->getOneForAccount($ctx['account'], $id);
                     if ($object === null) {
@@ -207,5 +207,5 @@ class PortalDataController extends PortalApiController
                     return [$object, Http::STATUS_OK];
                 }
                 );
-    }//end oneFor()
+    }//end requireObjectAccess()
 }//end class
