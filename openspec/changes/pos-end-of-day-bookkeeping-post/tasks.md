@@ -184,7 +184,7 @@
 
 ## 4. Admin Settings Panel
 
-- [ ] 4.1 Create Vue component `src/views/admin/PosBookkeepingSettings.vue`
+- [x] 4.1 Create Vue component `src/views/admin/PosBookkeepingSettings.vue`
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-007`
   - **files**: `pipelinq/src/views/admin/PosBookkeepingSettings.vue`
   - **acceptance_criteria**:
@@ -231,7 +231,7 @@
 
 ## 5. Frontend Views
 
-- [ ] 5.1 Create `src/views/pos/ZReportList.vue`
+- [x] 5.1 Create `src/views/pos/ZReportList.vue`
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-004`
   - **files**: `pipelinq/src/views/pos/ZReportList.vue`
   - **acceptance_criteria**:
@@ -252,7 +252,7 @@
     - AND each row MUST link to the detail view
     - AND pagination MUST support 25/50/100 items per page
 
-- [ ] 5.2 Create `src/views/pos/ZReportDetail.vue`
+- [x] 5.2 Create `src/views/pos/ZReportDetail.vue`
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-008`
   - **files**: `pipelinq/src/views/pos/ZReportDetail.vue`
   - **acceptance_criteria**:
@@ -269,7 +269,7 @@
         - Always: "View Transactions" button (link to associated posTransaction list)
     - AND changes to Z-report status must reflect in real-time (WebSocket or polling)
 
-- [ ] 5.3 Create `src/components/SubmissionTimeline.vue`
+- [x] 5.3 Create `src/components/SubmissionTimeline.vue`
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-008`
   - **files**: `pipelinq/src/components/SubmissionTimeline.vue`
   - **acceptance_criteria**:
@@ -289,7 +289,7 @@
 
 ## 6. Navigation and Routing
 
-- [ ] 6.1 Add sidebar menu item "Boekhoudkundige Afhandeling" in main Pipelinq navigation
+- [x] 6.1 Add sidebar menu item "Boekhoudkundige Afhandeling" in main Pipelinq navigation
   - **files**: `src/App.vue` or navigation component
   - **acceptance_criteria**:
     - GIVEN the app is loaded
@@ -297,7 +297,7 @@
       under or near POS section
     - AND clicking it navigates to `/apps/pipelinq/pos/z-reports` (list view)
 
-- [ ] 6.2 Add routes for Z-report views
+- [x] 6.2 Add routes for Z-report views (registered in src/manifest.json + src/registry.js per ADR-036 manifest-v2 renderer)
   - **files**: `src/router/index.js` or `router.ts`
   - **acceptance_criteria**:
     - GIVEN the router is configured

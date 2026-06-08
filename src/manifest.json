@@ -115,6 +115,13 @@
 			"order": 99
 		},
 		{
+			"id": "ZReports",
+			"label": "Boekhoudkundige Afhandeling",
+			"icon": "icon-category-monitoring",
+			"route": "ZReports",
+			"order": 99
+		},
+		{
 			"id": "Pipeline",
 			"label": "Pipeline",
 			"icon": "icon-category-organization",
@@ -829,6 +836,38 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "cashShift"
+			}
+		},
+		{
+			"id": "ZReports",
+			"route": "/pos/z-reports",
+			"type": "custom",
+			"title": "Boekhoudkundige Afhandeling",
+			"component": "ZReportListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posZReport"
+			}
+		},
+		{
+			"id": "ZReportDetail",
+			"route": "/pos/z-reports/:id",
+			"type": "custom",
+			"title": "Z-report",
+			"component": "ZReportDetailView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posZReport"
+			}
+		},
+		{
+			"id": "PosBookkeepingSettings",
+			"route": "/admin/pos-bookkeeping",
+			"type": "custom",
+			"title": "POS bookkeeping",
+			"component": "PosBookkeepingSettingsView",
+			"config": {
+				"register": "pipelinq"
 			}
 		},
 		{
