@@ -31,6 +31,10 @@
 				</NcButton>
 			</template>
 		</CnIndexPage>
+		<ExportTestRunModal
+			v-if="testRunJobId"
+			:job-id="testRunJobId"
+			@close="testRunJobId = null" />
 	</div>
 </template>
 
@@ -41,12 +45,14 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { exportApi } from '../../services/exportApi.js'
+import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
 
 export default {
 	name: 'ExportJobs',
 	components: {
 		CnIndexPage,
 		NcButton,
+		ExportTestRunModal,
 	},
 	setup() {
 		const sidebarState = inject('sidebarState', null)
@@ -56,6 +62,7 @@ export default {
 	data() {
 		return {
 			busyId: null,
+			testRunJobId: null,
 		}
 	},
 	computed: {
@@ -84,24 +91,12 @@ export default {
 			this.$router.push({ name: 'ExportJobNew' })
 		},
 		/**
-		 * Trigger a non-destructive test run for a job.
+		 * Open the test-run modal for a job. The modal auto-executes the run.
 		 *
 		 * @param {object} row The job row.
 		 */
-		async testRun(row) {
-			this.busyId = row.id
-			try {
-				const result = await exportApi.testRun(row.id)
-				if (result.success) {
-					showSuccess(this.t('pipelinq', 'Test run succeeded ({rows} sample rows)', { rows: result.sample_rows }))
-				} else {
-					showError(this.t('pipelinq', 'Test run failed: {error}', { error: (result.errors || []).join('; ') }))
-				}
-			} catch (e) {
-				showError(this.t('pipelinq', 'Test run failed'))
-			} finally {
-				this.busyId = null
-			}
+		testRun(row) {
+			this.testRunJobId = row.id
 		},
 		/**
 		 * Enable or disable a job.
