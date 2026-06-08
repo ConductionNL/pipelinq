@@ -220,6 +220,13 @@ return [
         ['name' => 'posPayment#test',     'url' => '/api/payment-providers/{name}/test', 'verb' => 'POST'],
         ['name' => 'posPayment#webhook',  'url' => '/api/pos-payment-webhook/{provider}', 'verb' => 'POST'],
 
+        // POS end-of-day bookkeeping post pipeline (pos-end-of-day-bookkeeping-post).
+        // Manager-gated submit / resubmit of a posJournalEntryOutbound to Shillinq.
+        // Admin GET / POST for the daily Z-report time + Shillinq endpoint + bearer token.
+        ['name' => 'posBookkeeping#post',         'url' => '/api/pos-bookkeeping/post',         'verb' => 'POST'],
+        ['name' => 'posBookkeepingConfig#index',  'url' => '/api/admin/pos-bookkeeping/config', 'verb' => 'GET'],
+        ['name' => 'posBookkeepingConfig#update', 'url' => '/api/admin/pos-bookkeeping/config', 'verb' => 'POST'],
+
         // ---------------------------------------------------------------------
         // Customer portal (separate auth domain — ADR-005). All /portal/api/*
         // endpoints are #[PublicPage]; the portal session bearer token (not a
