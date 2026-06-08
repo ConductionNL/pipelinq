@@ -415,6 +415,12 @@ return [
         // appointment-booking-08-deposit-payment / REQ-APT-010.
         // openconnector hits this URL with the payment outcome.
         ['name' => 'appointmentPaymentWebhook#callback', 'url' => '/api/appointment-payment-webhook', 'verb' => 'POST'],
+
+        // ZGW API bridge — NRC notification inbox (bearer-authenticated, PublicPage)
+        // zgw-api-bridge / REQ-ZGW-007. Open Notificaties posts here on every
+        // zaak/status/besluit/catalogi event for a subscribed gemeente.
+        ['name' => 'zgwNotification#inbox', 'url' => '/api/zgw/notificaties/inbox', 'verb' => 'POST'],
+
         // Marketing — Segments (marketing-segmentation-and-blast chain member 06).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
         ['name' => 'segment#index',         'url' => '/api/segments',                  'verb' => 'GET'],
