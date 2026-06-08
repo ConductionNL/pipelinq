@@ -91,11 +91,11 @@ class KassakoppelingAuditService
     /**
      * Constructor.
      *
-     * @param ContainerInterface              $container  The DI container (OR lookup).
-     * @param IAppConfig                      $appConfig  The app config.
-     * @param KassakoppelingSignatureService  $signature  The signature primitive.
-     * @param BelastingdienstExportService    $exporter   The export builder.
-     * @param LoggerInterface                 $logger     The logger.
+     * @param ContainerInterface             $container The DI container (OR lookup).
+     * @param IAppConfig                     $appConfig The app config.
+     * @param KassakoppelingSignatureService $signature The signature primitive.
+     * @param BelastingdienstExportService   $exporter  The export builder.
+     * @param LoggerInterface                $logger    The logger.
      */
     public function __construct(
         private ContainerInterface $container,
@@ -129,13 +129,13 @@ class KassakoppelingAuditService
         $entry = $this->sanitiseInput(data: $data);
         $this->validateInput(entry: $entry);
 
-        $registerNumber          = (string) $entry['registerNumber'];
-        $previousHash            = $this->getLastCurrentHash(registerNumber: $registerNumber);
-        $entry['previousHash']   = $previousHash;
-        $entry['signature']      = $this->signature->generateSignature(entryData: $entry);
-        $entry['currentHash']    = $this->signature->generateHash(entryData: $entry, previousHash: $previousHash);
-        $entry['verified']       = null;
-        $entry['exportedAt']     = null;
+        $registerNumber        = (string) $entry['registerNumber'];
+        $previousHash          = $this->getLastCurrentHash(registerNumber: $registerNumber);
+        $entry['previousHash'] = $previousHash;
+        $entry['signature']    = $this->signature->generateSignature(entryData: $entry);
+        $entry['currentHash']  = $this->signature->generateHash(entryData: $entry, previousHash: $previousHash);
+        $entry['verified']     = null;
+        $entry['exportedAt']   = null;
 
         $persisted = $this->saveEntry(id: '', object: $entry);
 
@@ -262,10 +262,10 @@ class KassakoppelingAuditService
         $storedCurrent     = (string) ($entry['currentHash'] ?? '');
         $hashValid         = $storedCurrent !== '' && hash_equals($recomputedCurrent, $storedCurrent);
 
-        $verified           = ($signatureValid === true && $hashValid === true);
-        $entry['verified']  = $verified;
-        $entryId            = (string) ($entry['id'] ?? $entry['uuid'] ?? $id);
-        $persisted          = $this->saveEntry(id: $entryId, object: $entry);
+        $verified          = ($signatureValid === true && $hashValid === true);
+        $entry['verified'] = $verified;
+        $entryId           = (string) ($entry['id'] ?? $entry['uuid'] ?? $id);
+        $persisted         = $this->saveEntry(id: $entryId, object: $entry);
 
         $this->logger->info(
             'Pipelinq: kassakoppeling audit entry verified',
@@ -345,7 +345,7 @@ class KassakoppelingAuditService
             }
 
             $entry['exportedAt'] = $stamp;
-            $entryId             = (string) ($entry['id'] ?? $entry['uuid'] ?? '');
+            $entryId = (string) ($entry['id'] ?? $entry['uuid'] ?? '');
             if ($entryId === '') {
                 continue;
             }
@@ -459,7 +459,7 @@ class KassakoppelingAuditService
             }
         }
 
-        if (isset($entry['timestamp']) === false || $entry['timestamp'] === '' || $entry['timestamp'] === null) {
+        if (isset($entry['timestamp']) === false || $entry['timestamp'] === '') {
             $entry['timestamp'] = $this->now();
         }
 
@@ -515,11 +515,11 @@ class KassakoppelingAuditService
      */
     private function applyFilters(array $entries, array $filters): array
     {
-        $register  = (string) ($filters['registerNumber'] ?? '');
-        $operator  = (string) ($filters['operatorId'] ?? '');
-        $action    = (string) ($filters['action'] ?? '');
-        $from      = (string) ($filters['from'] ?? '');
-        $to        = (string) ($filters['to'] ?? '');
+        $register = (string) ($filters['registerNumber'] ?? '');
+        $operator = (string) ($filters['operatorId'] ?? '');
+        $action   = (string) ($filters['action'] ?? '');
+        $from     = (string) ($filters['from'] ?? '');
+        $to       = (string) ($filters['to'] ?? '');
 
         $kept = [];
         foreach ($entries as $entry) {
