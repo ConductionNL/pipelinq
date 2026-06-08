@@ -242,6 +242,17 @@ return [
         ['name' => 'posTender#addTender',   'url' => '/api/pos-transactions/{transactionId}/tenders',         'verb' => 'POST'],
         ['name' => 'posTender#removeTender','url' => '/api/pos-transactions/{transactionId}/tenders/{tenderId}', 'verb' => 'DELETE'],
 
+        // POS Kassakoppeling-compliant Audit Log (pos-kassakoppeling-audit).
+        // Append-only signed audit entries with per-register hash chain + admin-gated
+        // Belastingdienst export. The static `/export` route precedes the `{id}`
+        // wildcard so the Symfony router never mistakes "export" for an id (ADR-016).
+        // camelCase slug matches KassakoppelingAuditController class name.
+        ['name' => 'kassakoppelingAudit#index',  'url' => '/api/kassakoppeling/audit',           'verb' => 'GET'],
+        ['name' => 'kassakoppelingAudit#create', 'url' => '/api/kassakoppeling/audit',           'verb' => 'POST'],
+        ['name' => 'kassakoppelingAudit#export', 'url' => '/api/kassakoppeling/audit/export',    'verb' => 'GET'],
+        ['name' => 'kassakoppelingAudit#verify', 'url' => '/api/kassakoppeling/audit/{id}/verify', 'verb' => 'POST'],
+        ['name' => 'kassakoppelingAudit#show',   'url' => '/api/kassakoppeling/audit/{id}',      'verb' => 'GET'],
+
         // ---------------------------------------------------------------------
         // Customer portal (separate auth domain — ADR-005). All /portal/api/*
         // endpoints are #[PublicPage]; the portal session bearer token (not a
