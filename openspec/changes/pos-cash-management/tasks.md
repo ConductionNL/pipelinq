@@ -245,7 +245,7 @@
 
 ## 9. Documentation & Configuration
 
-- [ ] 9.1 Add Shillinq webhook subscription configuration docs
+- [x] 9.1 Add Shillinq webhook subscription configuration docs
   - **spec_ref**: design.md#Integration with Shillinq
   - **files**: `docs/POS_CASH_SHILLINQ_INTEGRATION.md`
   - **acceptance_criteria**:
