@@ -59,11 +59,11 @@ class SlaDeadlineSweepJob extends TimedJob
     /**
      * Constructor.
      *
-     * @param ITimeFactory       $time       Time factory.
-     * @param SlaEngineService   $engine     SLA engine.
-     * @param ContainerInterface $container  DI container (OR ObjectService).
-     * @param IAppConfig         $appConfig  App config.
-     * @param LoggerInterface    $logger     PSR logger.
+     * @param ITimeFactory       $time      Time factory.
+     * @param SlaEngineService   $engine    SLA engine.
+     * @param ContainerInterface $container DI container (OR ObjectService).
+     * @param IAppConfig         $appConfig App config.
+     * @param LoggerInterface    $logger    PSR logger.
      */
     public function __construct(
         ITimeFactory $time,
@@ -117,10 +117,10 @@ class SlaDeadlineSweepJob extends TimedJob
             return;
         }
 
-        $startTime  = microtime(true);
-        $processed  = 0;
-        $escalated  = 0;
-        $now        = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $startTime = microtime(true);
+        $processed = 0;
+        $escalated = 0;
+        $now       = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 
         try {
             $policies = $this->indexPolicies();
@@ -138,7 +138,7 @@ class SlaDeadlineSweepJob extends TimedJob
                 continue;
             }
 
-            $type = $this->schemaTypeFromKey($schemaConfigKey);
+            $type   = $this->schemaTypeFromKey(key: $schemaConfigKey);
             $offset = 0;
             do {
                 try {
@@ -158,7 +158,10 @@ class SlaDeadlineSweepJob extends TimedJob
                     break;
                 }
 
-                $rows = is_array($rows) === true ? $rows : iterator_to_array($rows);
+                if (is_array($rows) === false) {
+                    $rows = iterator_to_array($rows);
+                }
+
                 $count = count($rows);
                 if ($count === 0) {
                     break;
@@ -166,7 +169,16 @@ class SlaDeadlineSweepJob extends TimedJob
 
                 foreach ($rows as $entity) {
                     $processed++;
-                    if ($this->processEntity($entity, $type, $policies, $now, $register, $schemaId, $objectService) === true) {
+                    $fired = $this->processEntity(
+                        entity: $entity,
+                        type: $type,
+                        policies: $policies,
+                        now: $now,
+                        register: $register,
+                        schemaId: $schemaId,
+                        objectService: $objectService
+                    );
+                    if ($fired === true) {
                         $escalated++;
                     }
                 }
@@ -177,7 +189,7 @@ class SlaDeadlineSweepJob extends TimedJob
                     break;
                 }
             } while ($count === self::BATCH_SIZE);
-        }
+        }//end foreach
 
         $elapsed = (microtime(true) - $startTime);
         $this->logger->info(
@@ -189,13 +201,13 @@ class SlaDeadlineSweepJob extends TimedJob
     /**
      * Process a single tracked-object row.
      *
-     * @param mixed                                       $entity      Object entity.
-     * @param string                                      $type        Tracked object type.
-     * @param array<string, array<string, mixed>>         $policies    Policy index by identity.
-     * @param DateTimeInterface                           $now         Now.
-     * @param string                                      $register    Register UUID.
-     * @param string                                      $schemaId    Schema UUID.
-     * @param object                                      $objectService OR ObjectService.
+     * @param mixed                               $entity        Object entity.
+     * @param string                              $type          Tracked object type.
+     * @param array<string, array<string, mixed>> $policies      Policy index by identity.
+     * @param DateTimeInterface                   $now           Now.
+     * @param string                              $register      Register UUID.
+     * @param string                              $schemaId      Schema UUID.
+     * @param object                              $objectService OR ObjectService.
      *
      * @return bool True when an escalation fired (for run stats).
      */
@@ -209,12 +221,17 @@ class SlaDeadlineSweepJob extends TimedJob
         object $objectService,
     ): bool {
         try {
-            $data = is_object($entity) === true && method_exists($entity, 'getObject') === true
-                ? $entity->getObject()
-                : (array) $entity;
-            $uuid = is_object($entity) === true && method_exists($entity, 'getUuid') === true
-                ? (string) $entity->getUuid()
-                : (string) ($data['uuid'] ?? $data['id'] ?? '');
+            if (is_object($entity) === true && method_exists($entity, 'getObject') === true) {
+                $data = $entity->getObject();
+            } else {
+                $data = (array) $entity;
+            }
+
+            if (is_object($entity) === true && method_exists($entity, 'getUuid') === true) {
+                $uuid = (string) $entity->getUuid();
+            } else {
+                $uuid = (string) ($data['uuid'] ?? $data['id'] ?? '');
+            }
 
             $slaStatus = $data['slaStatus'] ?? null;
             if (is_array($slaStatus) === false || ($slaStatus['policyId'] ?? '') === '') {
@@ -231,7 +248,7 @@ class SlaDeadlineSweepJob extends TimedJob
                 return false;
             }
 
-            $previousLevel = (int) ($slaStatus['currentEscalationLevel'] ?? 0);
+            $previousLevel        = (int) ($slaStatus['currentEscalationLevel'] ?? 0);
             $slaStatus['targets'] = $this->engine->evaluateTargets($slaStatus['targets'] ?? [], $policy, $now);
 
             $result = $this->engine->executeEscalations(
@@ -247,10 +264,14 @@ class SlaDeadlineSweepJob extends TimedJob
             if ($escalated === true) {
                 $slaStatus['currentEscalationLevel'] = $result['level'];
                 foreach ($slaStatus['targets'] as $idx => $target) {
-                    $slaStatus['targets'][$idx]['breachEventIds'] = array_values(array_unique(array_merge(
+                    $slaStatus['targets'][$idx]['breachEventIds'] = array_values(
+                            array_unique(
+                            array_merge(
                         (array) ($target['breachEventIds'] ?? []),
                         $result['eventIds']
-                    )));
+                            )
+                            )
+                            );
                 }
             }
 
@@ -274,7 +295,7 @@ class SlaDeadlineSweepJob extends TimedJob
                 ['error' => $e->getMessage()]
             );
             return false;
-        }
+        }//end try
     }//end processEntity()
 
     /**

@@ -92,22 +92,18 @@ class SlaObjectUpdatedListener implements IEventListener
 
         try {
             $entity = $event->getNewObject();
-            if ($entity === null) {
-                return;
-            }
-
-            $type = $this->schemaMapService->resolveEntityType($entity->getSchema());
+            $type   = $this->schemaMapService->resolveEntityType($entity->getSchema());
             if (in_array($type, self::TRACKED_TYPES, true) === false) {
                 return;
             }
 
-            $data = $entity->getObject();
+            $data      = $entity->getObject();
             $slaStatus = $data['slaStatus'] ?? null;
             if (is_array($slaStatus) === false || ($slaStatus['policyId'] ?? '') === '') {
                 return;
             }
 
-            $policy = $this->loadPolicy((string) $slaStatus['policyId']);
+            $policy = $this->loadPolicy(policyId: (string) $slaStatus['policyId']);
             if ($policy === null) {
                 $this->logger->debug(
                     'SlaObjectUpdatedListener: policy not found',
@@ -119,17 +115,23 @@ class SlaObjectUpdatedListener implements IEventListener
             $now    = new DateTimeImmutable('now', new DateTimeZone('UTC'));
             $status = (string) ($data['status'] ?? '');
 
-            $slaStatus = $this->applyPauseResume($slaStatus, $policy, $status, $now);
-            $slaStatus = $this->applyResolution($slaStatus, $status, $now);
+            $slaStatus = $this->applyPauseResume(slaStatus: $slaStatus, policy: $policy, status: $status, now: $now);
+            $slaStatus = $this->applyResolution(slaStatus: $slaStatus, status: $status, now: $now);
 
             // Re-evaluate target statuses and fire escalations.
             $slaStatus['targets'] = $this->engine->evaluateTargets($slaStatus['targets'] ?? [], $policy, $now);
 
             if (($slaStatus['pausedAt'] ?? null) === null) {
                 $alreadyFired = (int) ($slaStatus['currentEscalationLevel'] ?? 0);
-                $result       = $this->engine->executeEscalations(
+                if ($type === 'complaint') {
+                    $matchType = 'klacht';
+                } else {
+                    $matchType = $type;
+                }
+
+                $result = $this->engine->executeEscalations(
                     $policy,
-                    (string) ($type === 'complaint' ? 'klacht' : $type),
+                    (string) $matchType,
                     (string) $entity->getUuid(),
                     $slaStatus['targets'],
                     $slaStatus['targets'],
@@ -137,27 +139,29 @@ class SlaObjectUpdatedListener implements IEventListener
                 );
                 if ($result['eventIds'] !== []) {
                     foreach ($slaStatus['targets'] as $idx => $target) {
-                        $slaStatus['targets'][$idx]['breachEventIds'] = array_values(array_unique(
+                        $slaStatus['targets'][$idx]['breachEventIds'] = array_values(
+                                array_unique(
                             array_merge(
                                 (array) ($target['breachEventIds'] ?? []),
                                 $result['eventIds']
-                            )
-                        ));
+                                )
+                        )
+                                );
                     }
                 }
 
                 $slaStatus['currentEscalationLevel'] = $result['level'];
-            }
+            }//end if
 
             $slaStatus['lastEvaluatedAt'] = $now->format(DateTimeInterface::ATOM);
             $data['slaStatus']            = $slaStatus;
-            $this->persist($entity, $data);
+            $this->persist(entity: $entity, data: $data);
         } catch (Throwable $e) {
             $this->logger->warning(
                 'SlaObjectUpdatedListener: SLA update failed (non-blocking)',
                 ['error' => $e->getMessage()]
             );
-        }
+        }//end try
     }//end handle()
 
     /**

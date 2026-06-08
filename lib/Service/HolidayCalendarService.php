@@ -44,10 +44,13 @@ use Throwable;
  * `sla_tenant_holiday_overrides` app-config key (JSON object keyed by
  * calendar name → array of `{date, name}` entries).
  *
+ * @spec openspec/changes/sla-engine-and-escalation/tasks.md#3.2
+ *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class HolidayCalendarService
 {
+
     /**
      * In-process cache of parsed calendars.
      *
@@ -84,6 +87,8 @@ class HolidayCalendarService
      * @param string $calendarName The calendar slug (e.g. nl-feestdagen-rijksoverheid).
      *
      * @return array<string, mixed> The parsed calendar definition.
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-010
      */
     public function loadCalendar(string $calendarName): array
     {
@@ -106,8 +111,12 @@ class HolidayCalendarService
         }
 
         try {
-            $raw  = file_get_contents($path);
-            $data = json_decode($raw === false ? '{}' : $raw, true, 32, JSON_THROW_ON_ERROR);
+            $raw = file_get_contents($path);
+            if ($raw === false) {
+                $raw = '{}';
+            }
+
+            $data = json_decode($raw, true, 32, JSON_THROW_ON_ERROR);
             if (is_array($data) === false) {
                 throw new \RuntimeException('calendar root is not an object');
             }
@@ -130,13 +139,15 @@ class HolidayCalendarService
      * @param array<int, string> $calendarNames List of calendar slugs.
      *
      * @return array<string, mixed> The merged calendar definition.
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-010
      */
     public function compositeCalendar(array $calendarNames): array
     {
         $rules    = [];
         $computed = [];
         foreach ($calendarNames as $name) {
-            $cal      = $this->loadCalendar($name);
+            $cal      = $this->loadCalendar(calendarName: $name);
             $rules    = array_merge($rules, $cal['rules'] ?? []);
             $computed = array_merge($computed, $cal['computed'] ?? []);
         }
@@ -150,10 +161,12 @@ class HolidayCalendarService
      * Composite calendar names are supported via comma separation
      * (e.g. `nl-feestdagen-rijksoverheid,be-feestdagen`).
      *
-     * @param string             $calendarName The calendar slug (or comma list).
-     * @param DateTimeInterface  $date         The date to check.
+     * @param string            $calendarName The calendar slug (or comma list).
+     * @param DateTimeInterface $date         The date to check.
      *
      * @return bool True when $date is a recognised holiday.
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
      */
     public function isHoliday(string $calendarName, DateTimeInterface $date): bool
     {
@@ -162,7 +175,7 @@ class HolidayCalendarService
         }
 
         $year  = (int) $date->format('Y');
-        $cache = $this->resolveYearSet($calendarName, $year);
+        $cache = $this->resolveYearSet(calendarName: $calendarName, year: $year);
 
         $key = $date->format('Y-m-d');
         return isset($cache[$key]);
@@ -184,7 +197,11 @@ class HolidayCalendarService
         }
 
         $names = array_filter(array_map('trim', explode(',', $calendarName)));
-        $cal   = count($names) > 1 ? $this->compositeCalendar($names) : $this->loadCalendar($names[0] ?? '');
+        if (count($names) > 1) {
+            $cal = $this->compositeCalendar(calendarNames: $names);
+        } else {
+            $cal = $this->loadCalendar(calendarName: ($names[0] ?? ''));
+        }
 
         $set = [];
         foreach (($cal['rules'] ?? []) as $rule) {
@@ -194,19 +211,25 @@ class HolidayCalendarService
 
             // Lustrum-only holidays (Bevrijdingsdag): only in years divisible by 5.
             if (($rule['lustrum'] ?? false) === true && ($year % 5) !== 0) {
-                if ($this->lustrumOverrideEnabled($calendarName) === false) {
+                if ($this->lustrumOverrideEnabled(calendarName: $calendarName) === false) {
                     continue;
                 }
             }
 
-            $key = $year.'-'.$rule['date'];
+            $key       = $year.'-'.$rule['date'];
             $set[$key] = true;
         }
 
         foreach (($cal['computed'] ?? []) as $computed) {
             $offset = (int) ($computed['easterOffset'] ?? 0);
-            $easter = $this->easterDate($year);
-            $date   = $easter->modify(($offset >= 0 ? '+' : '').$offset.' days');
+            $easter = $this->easterDate(year: $year);
+            if ($offset >= 0) {
+                $sign = '+';
+            } else {
+                $sign = '';
+            }
+
+            $date = $easter->modify($sign.$offset.' days');
             $set[$date->format('Y-m-d')] = true;
         }
 
@@ -219,7 +242,12 @@ class HolidayCalendarService
                 }
 
                 $raw = (string) $entry['date'];
-                $key = strlen($raw) === 5 ? $year.'-'.$raw : $raw;
+                if (strlen($raw) === 5) {
+                    $key = $year.'-'.$raw;
+                } else {
+                    $key = $raw;
+                }
+
                 $set[$key] = true;
             }
         }
@@ -281,21 +309,23 @@ class HolidayCalendarService
      * @param int $year The Gregorian year.
      *
      * @return DateTimeImmutable Easter Sunday in UTC.
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
      */
     public function easterDate(int $year): DateTimeImmutable
     {
-        $a = $year % 19;
-        $b = intdiv($year, 100);
-        $c = $year % 100;
-        $d = intdiv($b, 4);
-        $e = $b % 4;
-        $f = intdiv(($b + 8), 25);
-        $g = intdiv(($b - $f + 1), 3);
-        $h = ((19 * $a) + $b - $d - $g + 15) % 30;
-        $i = intdiv($c, 4);
-        $k = $c % 4;
-        $l = (32 + (2 * $e) + (2 * $i) - $h - $k) % 7;
-        $m = intdiv(($a + (11 * $h) + (22 * $l)), 451);
+        $a     = $year % 19;
+        $b     = intdiv($year, 100);
+        $c     = $year % 100;
+        $d     = intdiv($b, 4);
+        $e     = $b % 4;
+        $f     = intdiv(($b + 8), 25);
+        $g     = intdiv(($b - $f + 1), 3);
+        $h     = ((19 * $a) + $b - $d - $g + 15) % 30;
+        $i     = intdiv($c, 4);
+        $k     = $c % 4;
+        $l     = (32 + (2 * $e) + (2 * $i) - $h - $k) % 7;
+        $m     = intdiv(($a + (11 * $h) + (22 * $l)), 451);
         $month = intdiv(($h + $l - (7 * $m) + 114), 31);
         $day   = (($h + $l - (7 * $m) + 114) % 31) + 1;
 

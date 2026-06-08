@@ -91,8 +91,13 @@ class SlaObjectCreatedListener implements IEventListener
             }
 
             // Normalise 'complaint' → 'klacht' for policy matching, per spec wording.
-            $matchType = $type === 'complaint' ? 'klacht' : $type;
-            $data      = $entity->getObject();
+            if ($type === 'complaint') {
+                $matchType = 'klacht';
+            } else {
+                $matchType = $type;
+            }
+
+            $data = $entity->getObject();
 
             // Already initialised? Don't recompute (REQ-001 immutability).
             if (isset($data['slaStatus']) === true && is_array($data['slaStatus']) === true
@@ -101,7 +106,7 @@ class SlaObjectCreatedListener implements IEventListener
                 return;
             }
 
-            $metadata = $this->extractMetadata($data);
+            $metadata = $this->extractMetadata(data: $data);
             $policy   = $this->engine->resolvePolicyForObject($matchType, (string) $entity->getUuid(), $metadata);
             if ($policy === null) {
                 $this->logger->debug(
@@ -111,16 +116,16 @@ class SlaObjectCreatedListener implements IEventListener
                 return;
             }
 
-            $now             = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+            $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
             $data['slaStatus'] = $this->engine->initialiseStatus($policy, $now);
 
-            $this->persist($entity, $data);
+            $this->persist(entity: $entity, data: $data);
         } catch (Throwable $e) {
             $this->logger->warning(
                 'SlaObjectCreatedListener: SLA init failed (non-blocking)',
                 ['error' => $e->getMessage()]
             );
-        }
+        }//end try
     }//end handle()
 
     /**

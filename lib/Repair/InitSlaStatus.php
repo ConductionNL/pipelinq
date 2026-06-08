@@ -100,9 +100,9 @@ class InitSlaStatus implements IRepairStep
             return;
         }
 
-        $now        = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-        $totalInit  = 0;
-        $totalSkip  = 0;
+        $now       = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $totalInit = 0;
+        $totalSkip = 0;
 
         foreach (['request_schema' => 'request', 'complaint_schema' => 'klacht', 'callback_schema' => 'callback'] as $configKey => $type) {
             $schemaId = $this->appConfig->getValueString(Application::APP_ID, $configKey, '');
@@ -129,7 +129,10 @@ class InitSlaStatus implements IRepairStep
                     break;
                 }
 
-                $rows  = is_array($rows) === true ? $rows : iterator_to_array($rows);
+                if (is_array($rows) === false) {
+                    $rows = iterator_to_array($rows);
+                }
+
                 $count = count($rows);
                 if ($count === 0) {
                     break;
@@ -137,12 +140,18 @@ class InitSlaStatus implements IRepairStep
 
                 foreach ($rows as $row) {
                     try {
-                        $data = is_object($row) === true && method_exists($row, 'getObject') === true
-                            ? $row->getObject()
-                            : (array) $row;
-                        $uuid = is_object($row) === true && method_exists($row, 'getUuid') === true
-                            ? (string) $row->getUuid()
-                            : (string) ($data['uuid'] ?? $data['id'] ?? '');
+                        if (is_object($row) === true && method_exists($row, 'getObject') === true) {
+                            $data = $row->getObject();
+                        } else {
+                            $data = (array) $row;
+                        }
+
+                        if (is_object($row) === true && method_exists($row, 'getUuid') === true) {
+                            $uuid = (string) $row->getUuid();
+                        } else {
+                            $uuid = (string) ($data['uuid'] ?? $data['id'] ?? '');
+                        }
+
                         if ($uuid === '') {
                             $totalSkip++;
                             continue;
@@ -166,7 +175,7 @@ class InitSlaStatus implements IRepairStep
                             continue;
                         }
 
-                        $startedAt = $this->parseStarted($data) ?? $now;
+                        $startedAt         = $this->parseStarted(data: $data) ?? $now;
                         $data['slaStatus'] = $this->engine->initialiseStatus($policy, $startedAt);
 
                         $objectService->saveObject(
@@ -183,15 +192,15 @@ class InitSlaStatus implements IRepairStep
                             ['error' => $e->getMessage()]
                         );
                         $totalSkip++;
-                    }
-                }
+                    }//end try
+                }//end foreach
 
                 $offset += self::BATCH_SIZE;
                 if ($offset >= 10000) {
                     break;
                 }
             } while ($count === self::BATCH_SIZE);
-        }
+        }//end foreach
 
         $output->info(sprintf('InitSlaStatus: initialised=%d, skipped=%d', $totalInit, $totalSkip));
         $this->logger->info(

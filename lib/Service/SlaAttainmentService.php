@@ -30,6 +30,7 @@ use DateTimeInterface;
 use DateTimeZone;
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\SlaEngineService;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -56,13 +57,11 @@ class SlaAttainmentService
     /**
      * Constructor.
      *
-     * @param SlaEngineService   $engine    SLA engine.
      * @param ContainerInterface $container DI container.
      * @param IAppConfig         $appConfig App config.
      * @param LoggerInterface    $logger    PSR logger.
      */
     public function __construct(
-        private SlaEngineService $engine,
         private ContainerInterface $container,
         private IAppConfig $appConfig,
         private LoggerInterface $logger,
@@ -73,7 +72,7 @@ class SlaAttainmentService
      * Compute attainment for the requested filter.
      *
      * @param array<string, mixed> $params Filter parameters: bucket, date,
-     *        week, month, quarter, groupBy, policy.
+     *                                     week, month, quarter, groupBy, policy.
      *
      * @return array<string, mixed> Attainment payload.
      *
@@ -91,16 +90,16 @@ class SlaAttainmentService
             throw new InvalidArgumentException('invalidGroupBy');
         }
 
-        [$start, $end] = $this->resolveBucketRange($bucket, $params);
-        $events = $this->loadBreachEventsInRange($start, $end);
-        $policyFilter = (string) ($params['policy'] ?? '');
+        [$start, $end] = $this->resolveBucketRange(bucket: $bucket, params: $params);
+        $events        = $this->loadBreachEventsInRange(start: $start, end: $end);
+        $policyFilter  = (string) ($params['policy'] ?? '');
 
-        $total = 0;
-        $met   = 0;
-        $breached = 0;
-        $inFlight = 0;
-        $closed   = 0;
-        $byTarget = [];
+        $total      = 0;
+        $met        = 0;
+        $breached   = 0;
+        $inFlight   = 0;
+        $closed     = 0;
+        $byTarget   = [];
         $groupAccum = [];
 
         foreach ($events as $event) {
@@ -118,58 +117,78 @@ class SlaAttainmentService
             }
 
             $breached++;
-            $byTarget[$kind]            = ($byTarget[$kind] ?? ['breached' => 0, 'met' => 0]);
+            $byTarget[$kind] = ($byTarget[$kind] ?? ['breached' => 0, 'met' => 0]);
             $byTarget[$kind]['breached']++;
 
-            $groupKey  = $this->groupKey($groupBy, $event);
-            $groupName = $this->groupName($groupBy, $event, $groupKey);
+            $groupKey  = $this->groupKey(groupBy: $groupBy, event: $event);
+            $groupName = $this->groupName(groupBy: $groupBy, event: $event, key: $groupKey);
             $groupAccum[$groupKey] = ($groupAccum[$groupKey] ?? ['name' => $groupName, 'total' => 0, 'breached' => 0]);
             $groupAccum[$groupKey]['total']++;
             $groupAccum[$groupKey]['breached']++;
-        }
+        }//end foreach
 
         // For attainment we need the closed-met denominator too — query
         // tracked objects with all targets met in the period.
-        $metCounts = $this->countMetObjectsInRange($start, $end, $policyFilter);
+        $metCounts = $this->countMetObjectsInRange(start: $start, end: $end, policyFilter: $policyFilter);
         foreach ($metCounts['byTarget'] as $kind => $count) {
-            $byTarget[$kind]          = ($byTarget[$kind] ?? ['breached' => 0, 'met' => 0]);
-            $byTarget[$kind]['met']   = $count;
+            $byTarget[$kind]        = ($byTarget[$kind] ?? ['breached' => 0, 'met' => 0]);
+            $byTarget[$kind]['met'] = $count;
         }
 
         $met   += $metCounts['total'];
         $total += $metCounts['total'];
 
         foreach ($metCounts['byGroup'] as $key => $entry) {
-            $groupAccum[$key] = ($groupAccum[$key] ?? ['name' => $entry['name'], 'total' => 0, 'breached' => 0, 'met' => 0]);
-            $groupAccum[$key]['total']   = ($groupAccum[$key]['total'] ?? 0) + $entry['total'];
-            $groupAccum[$key]['met']     = ($groupAccum[$key]['met'] ?? 0) + $entry['total'];
+            $groupAccum[$key]          = ($groupAccum[$key] ?? ['name' => $entry['name'], 'total' => 0, 'breached' => 0, 'met' => 0]);
+            $groupAccum[$key]['total'] = ($groupAccum[$key]['total'] ?? 0) + $entry['total'];
+            $groupAccum[$key]['met']   = ($groupAccum[$key]['met'] ?? 0) + $entry['total'];
         }
 
         $byTargetOut = [];
         foreach ($byTarget as $kind => $counts) {
-            $denom = ($counts['breached'] + ($counts['met'] ?? 0));
+            $metCount = (int) $counts['met'];
+            $denom    = ($counts['breached'] + $metCount);
+            if ($denom > 0) {
+                $attainment = round(($metCount / $denom), 4);
+            } else {
+                $attainment = 0.0;
+            }
+
             $byTargetOut[$kind] = [
-                'attainment' => $denom > 0 ? round((($counts['met'] ?? 0) / $denom), 4) : 0.0,
+                'attainment' => $attainment,
                 'breached'   => $counts['breached'],
-                'met'        => ($counts['met'] ?? 0),
+                'met'        => $metCount,
             ];
         }
 
         $byGroup = [];
         foreach ($groupAccum as $key => $entry) {
-            $denom = (int) ($entry['total'] ?? 0);
+            $denom = (int) $entry['total'];
+            $metE  = (int) ($entry['met'] ?? 0);
+            if ($denom > 0) {
+                $groupAttainment = round(($metE / $denom), 4);
+            } else {
+                $groupAttainment = 0.0;
+            }
+
             $byGroup[] = [
                 'groupKey'   => (string) $key,
                 'groupName'  => (string) ($entry['name'] ?? $key),
-                'attainment' => $denom > 0 ? round((((int) ($entry['met'] ?? 0)) / $denom), 4) : 0.0,
+                'attainment' => $groupAttainment,
                 'total'      => $denom,
-                'met'        => (int) ($entry['met'] ?? 0),
-                'breached'   => (int) ($entry['breached'] ?? 0),
+                'met'        => $metE,
+                'breached'   => (int) $entry['breached'],
             ];
         }
 
+        if ($total > 0) {
+            $overallAttainment = round(($met / $total), 4);
+        } else {
+            $overallAttainment = 0.0;
+        }
+
         return [
-            'attainment'       => $total > 0 ? round(($met / $total), 4) : 0.0,
+            'attainment'       => $overallAttainment,
             'total'            => $total,
             'met'              => $met,
             'breached'         => $breached,
@@ -189,8 +208,8 @@ class SlaAttainmentService
     /**
      * Resolve the (start, end) instant pair for the requested bucket.
      *
-     * @param string                $bucket Bucket identifier.
-     * @param array<string, mixed>  $params Filter parameters.
+     * @param string               $bucket Bucket identifier.
+     * @param array<string, mixed> $params Filter parameters.
      *
      * @return array{0: DateTimeImmutable, 1: DateTimeImmutable} Range.
      *
@@ -241,7 +260,7 @@ class SlaAttainmentService
 
             default:
                 throw new InvalidArgumentException('invalidBucket');
-        }
+        }//end switch
     }//end resolveBucketRange()
 
     /**
@@ -288,7 +307,7 @@ class SlaAttainmentService
 
         $events = [];
         foreach ((array) $rows as $row) {
-            $array = $this->normalise($row);
+            $array = $this->normalise(row: $row);
             $when  = $array['breachedAt'] ?? '';
             if ($when === '') {
                 continue;
@@ -362,7 +381,7 @@ class SlaAttainmentService
             }
 
             foreach ((array) $rows as $row) {
-                $array     = $this->normalise($row);
+                $array     = $this->normalise(row: $row);
                 $slaStatus = $array['slaStatus'] ?? null;
                 if (is_array($slaStatus) === false) {
                     continue;
@@ -393,20 +412,20 @@ class SlaAttainmentService
                     }
 
                     if ($metInstant >= $start && $metInstant < $end) {
-                        $touchedKey = true;
-                        $kind = (string) ($target['kind'] ?? 'resolution');
+                        $touchedKey      = true;
+                        $kind            = (string) ($target['kind'] ?? 'resolution');
                         $byTarget[$kind] = ($byTarget[$kind] ?? 0) + 1;
                     }
-                }
+                }//end foreach
 
                 if ($allMet === true && $touchedKey === true) {
                     $total++;
-                    $key   = (string) ($slaStatus['policyId'] ?? 'unknown');
+                    $key           = (string) ($slaStatus['policyId'] ?? 'unknown');
                     $byGroup[$key] = ($byGroup[$key] ?? ['name' => $key, 'total' => 0]);
                     $byGroup[$key]['total']++;
                 }
-            }
-        }
+            }//end foreach
+        }//end foreach
 
         return ['total' => $total, 'byTarget' => $byTarget, 'byGroup' => $byGroup];
     }//end countMetObjectsInRange()
@@ -414,8 +433,8 @@ class SlaAttainmentService
     /**
      * Derive a group key for an event according to the requested grouping.
      *
-     * @param string                $groupBy Grouping mode.
-     * @param array<string, mixed>  $event   Breach event.
+     * @param string               $groupBy Grouping mode.
+     * @param array<string, mixed> $event   Breach event.
      *
      * @return string Group key.
      */
@@ -434,9 +453,9 @@ class SlaAttainmentService
     /**
      * Derive a human-readable name for a group key.
      *
-     * @param string                $groupBy Grouping mode.
-     * @param array<string, mixed>  $event   Breach event.
-     * @param string                $key     Resolved group key.
+     * @param string               $groupBy Grouping mode.
+     * @param array<string, mixed> $event   Breach event.
+     * @param string               $key     Resolved group key.
      *
      * @return string Group display name.
      */
@@ -468,7 +487,11 @@ class SlaAttainmentService
 
         if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
             $json = $row->jsonSerialize();
-            return is_array($json) === true ? $json : [];
+            if (is_array($json) === true) {
+                return $json;
+            }
+
+            return [];
         }
 
         return [];
