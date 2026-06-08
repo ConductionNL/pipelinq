@@ -319,17 +319,17 @@
 
 ## Phase 7: Data Setup and Configuration [MVP Operations]
 
-- [ ] 7.1 Create seed data for development
+- [x] 7.1 Create seed data for development
   - Create 3-5 BerichtenboxTemplate records for common zaaktypes: paspoortaanvraag, rijbewijsaanvraag, avg-inzageverzoek (zaaktype values + statuses)
   - Create 2-3 sample BerichtenboxMessage records (sent, unread) for testing fallback job
   - Create 1 sample BerichtenboxReply record for testing inbound reply handler
 
-- [ ] 7.2 Document Logius API credentials setup
+- [x] 7.2 Document Logius API credentials setup
   - Add section to admin docs: how to register client credentials with Logius
   - Store credentials in openregister key-vault (openregister::vault::logius::client_id, client_secret)
   - Store tenant PKI-overheid certificate in key-vault (openregister::vault::pki_cert, pki_key)
 
-- [ ] 7.3 Document template management workflow
+- [x] 7.3 Document template management workflow
   - Admin UI or API to create/edit/delete BerichtenboxTemplate records
   - Validate: zaaktype and status are known (query zaakafhandelapp API or use a predefined list)
   - Test template rendering before saving
@@ -338,7 +338,7 @@
 
 ## Phase 8: Monitoring and Operations [MVP Observability]
 
-- [ ] 8.1 Set up Prometheus metrics
+- [x] 8.1 Set up Prometheus metrics
   - `berichtenbox_messages_dispatched_total` (Counter, by status)
   - `berichtenbox_messages_failed_total` (Counter, by reason)
   - `berichtenbox_messages_unread_days` (Gauge)
@@ -346,20 +346,20 @@
   - `berichtenbox_fallback_emails_sent_total` (Counter)
   - `berichtenbox_dispatch_duration_seconds` (Histogram)
 
-- [ ] 8.2 Create Grafana dashboard
+- [x] 8.2 Create Grafana dashboard
   - Tile 1: Delivery success rate (%) over 24h
   - Tile 2: Failure reasons breakdown (pie chart)
   - Tile 3: Queue depth (messages pending dispatch)
   - Tile 4: Fallback email rate (% of total delivered)
   - Tile 5: Average dispatch latency (seconds)
 
-- [ ] 8.3 Create alerting rules
+- [x] 8.3 Create alerting rules
   - Alert if delivery failure rate > 5% in 1h window
   - Alert if queue depth > 1000 messages
   - Alert if Logius API errors (rate-limit, auth failure) occur
   - Alert if any message remains in "failed" state > 24h (manual intervention needed)
 
-- [ ] 8.4 Document troubleshooting and manual procedures
+- [x] 8.4 Document troubleshooting and manual procedures
   - How to retry a failed message: admin API `POST /api/admin/berichtenbox/message/{id}/retry`
   - How to check delivery stats: `GET /api/admin/berichtenbox/stats`
   - How to view audit log for a message: OpenRegister UI or API
@@ -369,30 +369,30 @@
 
 ## Phase 9: Documentation [MVP Docs]
 
-- [ ] 9.1 Create `docs/berichtenbox-integration.md` — User and admin guide
+- [x] 9.1 Create `docs/berichtenbox-integration.md` — User and admin guide
   - Overview of the bridge and compliance benefits
   - Prerequisites: Logius API registration, PKI-overheid cert
   - Template setup and customization
   - Monitoring and troubleshooting
 
-- [ ] 9.2 Create architecture documentation in code comments
+- [x] 9.2 Create architecture documentation in code comments
   - Class-level docstrings for services and controllers
   - Method signatures document assumptions (e.g., "BSN MUST be validated before passing to this method")
 
-- [ ] 9.3 Create CHANGELOG entry
+- [x] 9.3 Create CHANGELOG entry
   - Summarize the feature: Berichtenbox integration, BBK 1.7 conformance, 5-day fallback, audit logging
 
 ---
 
 ## Phase 10: Checklist for PR Merge [MVP Definition of Done]
 
-- [ ] 10.1 All unit and integration tests pass with ≥ 80% coverage
-- [ ] 10.2 PHP linting (php -l) passes on all new/modified PHP files
+- [x] 10.1 All unit and integration tests pass with ≥ 80% coverage
+- [x] 10.2 PHP linting (php -l) passes on all new/modified PHP files
 - [ ] 10.3 Code review approved by at least 1 maintainer
-- [ ] 10.4 BBK 1.7 conformance validated in integration test
+- [x] 10.4 BBK 1.7 conformance validated in integration test
 - [ ] 10.5 Logius API credentials documented and tested (can use sandbox credentials)
-- [ ] 10.6 No hardcoded secrets in code (all credentials in openregister key-vault)
-- [ ] 10.7 Background jobs registered and tested locally
-- [ ] 10.8 Documentation links from CHANGELOG to user guide
+- [x] 10.6 No hardcoded secrets in code (all credentials in openregister key-vault)
+- [x] 10.7 Background jobs registered and tested locally
+- [x] 10.8 Documentation links from CHANGELOG to user guide
 - [ ] 10.9 Performance baseline: dispatch job completes <5 seconds for 100 queued messages
-- [ ] 10.10 Security review: BSN encryption validated, audit log immutability verified, webhook signature validation tested
+- [x] 10.10 Security review: BSN encryption validated, audit log immutability verified, webhook signature validation tested

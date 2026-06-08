@@ -1,0 +1,47 @@
+{
+    "components": {
+        "objects": {
+            "berichtenboxTemplate": [
+                {
+                    "_meta": {
+                        "slug": "paspoort-afgehandeld-nl",
+                        "description": "Paspoort uitgereikt — Dutch standard template."
+                    },
+                    "zaaktype": "paspoortaanvraag",
+                    "status": "afgehandeld",
+                    "language": "nl",
+                    "subject": "Uw paspoort is gereed - zaak {{zaakId}}",
+                    "body": "<p>Geachte burger,</p><p>Uw paspoortaanvraag (zaak {{zaakId}}) is afgehandeld. U kunt uw paspoort ophalen bij {{gemeente}}.</p><p>Met vriendelijke groet,<br/>{{gemeente}}</p>",
+                    "requiresDeepLink": true,
+                    "deepLinkBase": "https://burgerportaal.example.nl/zaak"
+                },
+                {
+                    "_meta": {
+                        "slug": "rijbewijs-in-behandeling-nl",
+                        "description": "Rijbewijs aanvraag in behandeling — Dutch standard template."
+                    },
+                    "zaaktype": "rijbewijsaanvraag",
+                    "status": "in-behandeling",
+                    "language": "nl",
+                    "subject": "Uw rijbewijsaanvraag is in behandeling - zaak {{zaakId}}",
+                    "body": "<p>Geachte burger,</p><p>Wij hebben uw rijbewijsaanvraag (zaak {{zaakId}}) ontvangen en in behandeling genomen. U ontvangt bericht zodra deze klaar is.</p>",
+                    "requiresDeepLink": true,
+                    "deepLinkBase": "https://burgerportaal.example.nl/zaak"
+                },
+                {
+                    "_meta": {
+                        "slug": "avg-inzage-meer-info-nl",
+                        "description": "AVG inzageverzoek meer-info-nodig — wettelijke termijn AVG art. 15."
+                    },
+                    "zaaktype": "avg-inzageverzoek",
+                    "status": "meer-info-nodig",
+                    "language": "nl",
+                    "subject": "Uw AVG-inzageverzoek - aanvullende informatie nodig",
+                    "body": "<p>Geachte burger,</p><p>Voor uw inzageverzoek (zaak {{zaakId}}) hebben wij aanvullende informatie nodig.</p><p><strong>Wettelijke termijn:</strong> {{deadline}}</p><p><strong>Grondslag:</strong> AVG Art. 15</p>",
+                    "requiresDeepLink": true,
+                    "deepLinkBase": "https://burgerportaal.example.nl/zaak"
+                }
+            ]
+        }
+    }
+}
