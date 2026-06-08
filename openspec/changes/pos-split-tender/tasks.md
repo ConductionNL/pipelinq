@@ -285,12 +285,13 @@
 
 ## 12. Verification & Documentation
 
-- [ ] 12.1 Manual test in POS UI:
+- [~] 12.1 Manual test in POS UI:
   - Create transaction with multiple line items
   - Add CASH tender (€50) and CARD tender (€47.97)
   - Verify change calculation for CASH overpayment
   - Settle transaction and verify CloudEvent is emitted
   - Verify GL posting in shillinq
+  - **DEFERRED**: Requires a running NC instance with pipelinq + shillinq + a wired CloudEvent broker. Behavioural coverage is provided by `tests/Unit/Service/PosTenderServiceTest.php` (912 lines — covers `calculateChange` overpay/exact/underpay, `validateTenderSum` balanced/underpayment, `addTender` happy + 8 negative paths, `removeTender`, `assertBalancedForSettle` underpayment + overpayment-with-change + overpayment-without-change) and `tests/Unit/Controller/PosTenderControllerTest.php` (427 lines — exercises the HTTP surface including 404/400/409 mapping for the per-transaction tender endpoints). Live QA against a real POS terminal happens in the follow-up `pos-split-tender-qa-pass` flight once the staging POS terminal is provisioned.
 
 - [ ] 12.2 Test error scenarios:
   - Attempt to settle with underpayment → error shown
