@@ -114,6 +114,13 @@ import PosRoleFormView from './views/pos/PosRoleForm.vue'
 import PosStaffListView from './views/pos/PosStaffList.vue'
 import PosStaffFormView from './views/pos/PosStaffForm.vue'
 
+// --- POS end-of-day bookkeeping (lib gap: index/detail pages cannot express the
+//     server-authoritative Z-report aggregation + Shillinq submission timeline
+//     + manager-gated retry). ---
+import ZReportListView from './views/pos/ZReportList.vue'
+import ZReportDetailView from './views/pos/ZReportDetail.vue'
+import PosBookkeepingSettingsView from './views/admin/PosBookkeepingSettings.vue'
+
 // --- Product barcode lookup (lib gap: index pages have no server-authoritative
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
 import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
@@ -438,6 +445,23 @@ const registry = {
 		kind: 'page',
 		component: PosStaffFormView,
 		_note: 'POS staff create/edit form with masked PIN field; on edit, blank PIN keeps the existing hash.',
+	},
+
+	// --- POS end-of-day bookkeeping. ---
+	ZReportListView: {
+		kind: 'page',
+		component: ZReportListView,
+		_note: 'Daily Z-report list with status / date / terminal filters; rows navigate to the per-report detail with GL mapping, submission timeline and manager-gated retry (pos-end-of-day-bookkeeping-post).',
+	},
+	ZReportDetailView: {
+		kind: 'page',
+		component: ZReportDetailView,
+		_note: 'Z-report detail: server-authoritative summary, tax breakdown, payment-method breakdown, GL ledger line items (read-only), submission timeline and the manager-gated retry-submission action (pos-end-of-day-bookkeeping-post).',
+	},
+	PosBookkeepingSettingsView: {
+		kind: 'page',
+		component: PosBookkeepingSettingsView,
+		_note: 'Admin settings panel for the POS bookkeeping pipeline: daily Z-report time, Shillinq endpoint + bearer token (isSensitive), alert email and max retry attempts (pos-end-of-day-bookkeeping-post).',
 	},
 
 	// --- Product barcode lookup. ---
