@@ -322,5 +322,6 @@
   - **DEFERRED**: GitHub is no longer the fleet's primary forge — pipelinq lives on Codeberg (`Conduction/pipelinq`). The Codeberg issue tracker is currently rate-limited (see `[[codeberg-ip-abuse-governor]]`); the feature-shipped announcement is batched into the next POS release-notes drop (`pos-split-tender-release-notes`) which posts one consolidated changelog instead of per-change issues, matching how the rest of the POS suite (#28–#32) was announced.
 - [~] 13.2 Notify QA team for regression testing on existing single-tender flows
   - **DEFERRED**: Single-tender regression is already covered by the automated suite — `PosTransactionServiceTest` retains all legacy single-tender assertions and the integration suite re-runs them on every CI build. A human QA pass is scheduled as part of the staging QA flight (see 12.1) which runs the full POS regression scenario set, not just split-tender.
-- [ ] 13.3 Update POS user documentation with screenshots of Add Tender flow
+- [~] 13.3 Update POS user documentation with screenshots of Add Tender flow
+  - **DEFERRED**: Per-app user docs follow ADR-030 (journeydoc / capture-driven), which requires a stable journeydoc harness against a running app — pipelinq has not been journeydoc-bootstrapped yet. Tracked in the fleet journeydoc-init backlog (`pipelinq-journeydoc-init`). Until then the design-side flow lives in the spec delta + Vue component PHPDoc.
 - [ ] 13.4 Add admin onboarding: guide for setting up custom tender types per location
