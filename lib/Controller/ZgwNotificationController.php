@@ -181,9 +181,12 @@ class ZgwNotificationController extends Controller
     /**
      * Read the raw request body.
      *
+     * Protected so unit tests can subclass and inject a fixture without
+     * touching `php://input`.
+     *
      * @return string Body contents (possibly empty).
      */
-    private function readRawBody(): string
+    protected function readRawBody(): string
     {
         $body = file_get_contents('php://input');
         return $body !== false ? $body : '';
