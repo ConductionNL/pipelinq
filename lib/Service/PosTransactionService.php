@@ -892,6 +892,12 @@ class PosTransactionService
                 'customer'         => (string) ($transaction['customer'] ?? ''),
                 'tenderType'       => (string) ($transaction['tenderType'] ?? 'cash'),
                 'marketingConsent' => (bool) ($transaction['marketingConsent'] ?? false),
+                // pos-staff-pin-permissions REQ-PSP-009: include the active
+                // POS staff member id in the shillinq commission feed so the
+                // accounting integration can attribute the sale to the staff
+                // who actually rang it up (which may differ from the NC cashier
+                // user). Empty when no staff session was opened.
+                'staffMemberId'    => (string) ($transaction['staffMemberId'] ?? ''),
                 'total'            => (float) ($transaction['total'] ?? 0),
                 'totalTax'         => (float) ($transaction['totalTax'] ?? 0),
                 'priceMode'        => $this->normalizePriceMode(mode: ($transaction['priceMode'] ?? null)),

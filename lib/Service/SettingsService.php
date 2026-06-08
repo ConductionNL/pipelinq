@@ -75,6 +75,9 @@ class SettingsService
         'cashDrop_schema',
         'cashCount_schema',
         'cashDiff_schema',
+        // POS staff PIN + role permissions (pos-staff-pin-permissions).
+        'posRole_schema',
+        'posStaff_schema',
         'exportDestination_schema',
         'exportJob_schema',
         'exportRun_schema',
