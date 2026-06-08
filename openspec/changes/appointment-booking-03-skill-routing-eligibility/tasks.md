@@ -12,7 +12,7 @@
 
 ## Section 2: Unit Tests
 
-- [ ] Test eligible resources excludes uncertified stylist for a skill-required service
-- [ ] Test resource with no skills is eligible for a no-skill service
-- [ ] Test multi-step service applies step-specific skill filters
-- [ ] Mock `SkillMatchService` and `ObjectService`
+- [x] Test eligible resources excludes uncertified stylist for a skill-required service
+- [x] Test resource with no skills is eligible for a no-skill service
+- [x] Test multi-step service applies step-specific skill filters
+- [x] Mock `SkillMatchService` and `ObjectService`
