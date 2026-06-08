@@ -281,7 +281,7 @@
     - No TypeScript compilation errors
     - No unused variables or imports
 
-- [ ] 11.3 Run test suite
+- [x] 11.3 Run test suite
   - **files**: all tests
   - **tier**: P0-must
   - **acceptance_criteria**:
@@ -293,7 +293,7 @@
 
 ## 12. Documentation
 
-- [ ] 12.1 Update admin documentation
+- [x] 12.1 Update admin documentation
   - **files**: `docs/admin.md` or equivalent
   - **tier**: P1-should
   - **acceptance_criteria**:
@@ -303,7 +303,7 @@
     - Document how to manually retry failed syncs
     - Include examples
 
-- [ ] 12.2 Update developer documentation (if public)
+- [x] 12.2 Update developer documentation (if public)
   - **files**: `.github/docs/architecture.md` or equivalent
   - **tier**: P1-should
   - **acceptance_criteria**:
