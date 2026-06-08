@@ -16,16 +16,16 @@
 
 ## 2. Backend
 
-- [ ] 2.1 Create `lib/Service/KccWerkplekService.php` with:
+- [x] 2.1 Create `lib/Service/KccWerkplekService.php` with:
   - `getWorkspaceState(string $userId): array` — parallel `ObjectService::findObjects()` calls for requests (assignee=userId, status=new/in_progress), tasks (assigneeUserId=userId, status=open/in_behandeling), agentProfile (userId=userId), queue counts
   - `setAvailability(string $userId, bool $available): array` — find agentProfile by userId, update `isAvailable`, create new agentProfile if none exists
   - Add `@spec openspec/changes/kcc-werkplek/tasks.md#task-2` PHPDoc to file header and all public methods
-- [ ] 2.2 Create `lib/Controller/KccWerkplekController.php` with:
+- [x] 2.2 Create `lib/Controller/KccWerkplekController.php` with:
   - `GET /api/kcc-werkplek/state` → `stateAction()` — calls `KccWerkplekService::getWorkspaceState($currentUser->getUID())`; returns JSONResponse; `@NoAdminRequired`
   - `PUT /api/kcc-werkplek/availability` → `setAvailabilityAction()` — reads `isAvailable` from request body, calls `KccWerkplekService::setAvailability()`; `@NoAdminRequired`
   - Catch all exceptions with `return new JSONResponse(['message' => 'Operation failed'], 500)` + `$this->logger->error()`; NEVER return `$e->getMessage()`
   - Add `@spec` PHPDoc to file header and all public methods
-- [ ] 2.3 Add kcc-werkplek API routes to `appinfo/routes.php`:
+- [x] 2.3 Add kcc-werkplek API routes to `appinfo/routes.php`:
   - `GET /api/kcc-werkplek/state`
   - `PUT /api/kcc-werkplek/availability`
   - Specific routes MUST be added BEFORE any wildcard `{slug}` routes
