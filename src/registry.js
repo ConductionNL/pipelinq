@@ -149,6 +149,16 @@ import BlastFormView from './views/blasts/BlastForm.vue'
 import BlastMonitorView from './views/blasts/BlastMonitor.vue'
 import BlastPerformanceDashboardView from './views/blasts/PerformanceDashboard.vue'
 
+// --- Appointment booking — admin surface (appointment-booking 11 of 12).
+//     Service / Resource / Booking list + detail views; resolved by the v2
+//     renderer from the manifest.d fragment at render time. ---
+import ServiceListView from './views/bookings/ServiceList.vue'
+import ServiceDetailView from './views/bookings/ServiceDetail.vue'
+import ResourceListView from './views/bookings/ResourceList.vue'
+import ResourceDetailView from './views/bookings/ResourceDetail.vue'
+import BookingListView from './views/bookings/BookingList.vue'
+import BookingDetailView from './views/bookings/BookingDetail.vue'
+
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
 /**
@@ -502,6 +512,38 @@ const registry = {
 		kind: 'page',
 		component: BlastPerformanceDashboardView,
 		_note: 'Post-send performance dashboard (marketing-segmentation-and-blast 08): three tabs — Overview (sortable blast table with sent/delivered/open-rate/click-rate/unsubscribed), A/B Testing (side-by-side variant comparison + chi-square p-value once each arm has >=500 delivered and 24h elapsed since send), Attribution (per-blast attributed deal count + summed EUR value from GET /api/blasts/:id/attribution).',
+	},
+
+	// --- Appointment booking — admin views (appointment-booking 11 of 12). ---
+	ServiceListView: {
+		kind: 'page',
+		component: ServiceListView,
+		_note: 'Service catalogue list with formatted duration / currency cells and a status badge; lib gap: declarative index page cannot express the duration / currency cell renderers.',
+	},
+	ServiceDetailView: {
+		kind: 'page',
+		component: ServiceDetailView,
+		_note: 'Service detail + edit page with the multiStep sub-table editor, deposit / cancellation policy cards and a best-effort availabilityCache invalidation hook on save (REQ-APT-015).',
+	},
+	ResourceListView: {
+		kind: 'page',
+		component: ResourceListView,
+		_note: 'Resource list (staff / room / equipment) with type + bookable + status badges.',
+	},
+	ResourceDetailView: {
+		kind: 'page',
+		component: ResourceDetailView,
+		_note: 'Resource detail + edit page with the 7-weekday workingHours grid, vacation list, validation (open<close, startDate<=endDate) and per-resource cache invalidation on save (REQ-APT-002).',
+	},
+	BookingListView: {
+		kind: 'page',
+		component: BookingListView,
+		_note: 'Booking list with formatted start-time and status badge; admins create bookings through the public portal on a customer\'s behalf, no inline create.',
+	},
+	BookingDetailView: {
+		kind: 'page',
+		component: BookingDetailView,
+		_note: 'Booking detail with context-sensitive lifecycle buttons (Reschedule / Cancel / Mark Completed / Mark No-show / Send Reminder / Confirm Deposit) wired to the BookingAdminController endpoints, inline notes editor, audit-trail card and a chronological timeline (REQ-APT-015).',
 	},
 }
 
