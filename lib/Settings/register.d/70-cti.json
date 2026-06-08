@@ -11,6 +11,7 @@
         },
         "schemas": {
             "contactmoment": {
+                "slug": "contactmoment",
                 "properties": {
                     "telephony_platform": {
                         "type": "string",

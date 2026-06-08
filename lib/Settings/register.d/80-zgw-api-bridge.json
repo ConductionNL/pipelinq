@@ -263,6 +263,7 @@
                 }
             },
             "request": {
+                "slug": "request",
                 "properties": {
                     "zgwResourceMappings": {
                         "type": "array",
