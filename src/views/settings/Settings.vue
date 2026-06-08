@@ -270,6 +270,11 @@
 			</NcNoteCard>
 		</NcSettingsSection>
 
+		<!-- BI Export Configuration -->
+		<ExportConfigurationSettings v-if="isAdmin"
+			:config="config"
+			@saved="onExportConfigSaved" />
+
 		<!-- Shillinq Integration -->
 		<NcSettingsSection v-if="isAdmin"
 			:name="t('pipelinq', 'Shillinq Integration')"
@@ -321,6 +326,7 @@ import QueueSettings from '../../components/admin/QueueSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
 import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
 import ForecastSettings from '../../components/admin/ForecastSettings.vue'
+import ExportConfigurationSettings from './ExportConfigurationSettings.vue'
 
 export default {
 	name: 'Settings',
@@ -344,6 +350,7 @@ export default {
 		SkillSettings,
 		AgentProfileSettings,
 		ForecastSettings,
+		ExportConfigurationSettings,
 	},
 	data() {
 		return {
@@ -772,6 +779,17 @@ export default {
 				this.shillinqMessageType = 'error'
 			} finally {
 				this.savingShillinq = false
+			}
+		},
+		/**
+		 * Reflect a saved export-configuration payload back into local state.
+		 *
+		 * @param {object} updated The updated config returned by the section.
+		 * @spec openspec/changes/bi-export-and-data-warehouse-sink/tasks.md#task-14.1
+		 */
+		onExportConfigSaved(updated) {
+			if (updated && typeof updated === 'object') {
+				this.config = { ...this.config, ...updated }
 			}
 		},
 		/**

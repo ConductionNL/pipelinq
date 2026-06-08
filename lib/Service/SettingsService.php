@@ -132,6 +132,11 @@ class SettingsService
         'receipt_printer_port'                     => '9100',
         'receipt_default_template'                 => '',
         'shillinq_ledger_webhook_url'              => '',
+        // BI export + data-warehouse sink — admin settings (bi-export-and-data-warehouse-sink#14.1).
+        'export.retention_days'                    => '365',
+        'export.default_compression'               => 'none',
+        'export.failure_notification_email'        => '',
+        'export.at_risk_warning_hours'             => '24',
     ];
 
     /**
