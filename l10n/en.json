@@ -1995,7 +1995,27 @@
         "{hours}h ago": "{hours}h ago",
         "{label} gekopieerd.": "{label} copied.",
         "{minutes}m ago": "{minutes}m ago",
-        "{value} of {quota} on track ({percent}%)": "{value} of {quota} on track ({percent}%)"
+        "{value} of {quota} on track ({percent}%)": "{value} of {quota} on track ({percent}%)",
+        "Email matching": "Email matching",
+        "Periodically link Nextcloud Mail messages to your CRM clients, contacts, leads and requests. The mail itself stays in Nextcloud Mail — Pipelinq only stores the link via the OpenRegister email integration.": "Periodically link Nextcloud Mail messages to your CRM clients, contacts, leads and requests. The mail itself stays in Nextcloud Mail — Pipelinq only stores the link via the OpenRegister email integration.",
+        "Nextcloud Mail account": "Nextcloud Mail account",
+        "Choose which Nextcloud Mail account the matcher reads from. Leaving this empty disables matching.": "Choose which Nextcloud Mail account the matcher reads from. Leaving this empty disables matching.",
+        "Enable email matching for this account": "Enable email matching for this account",
+        "Excluded addresses (comma separated)": "Excluded addresses (comma separated)",
+        "noreply@example.org, mailer@example.org": "noreply@example.org, mailer@example.org",
+        "Messages with these sender or recipient addresses are skipped by the matcher.": "Messages with these sender or recipient addresses are skipped by the matcher.",
+        "Save settings": "Save settings",
+        "Sync now": "Sync now",
+        "Matching settings saved.": "Matching settings saved.",
+        "Could not save matching settings.": "Could not save matching settings.",
+        "Could not load matching settings.": "Could not load matching settings.",
+        "Could not run the matching job.": "Could not run the matching job.",
+        "{linked} new links created across {scanned} messages.": "{linked} new links created across {scanned} messages.",
+        "Links created": "Links created",
+        "Messages scanned": "Messages scanned",
+        "Last error": "Last error",
+        "None": "None",
+        "Account #{id}": "Account #{id}"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
