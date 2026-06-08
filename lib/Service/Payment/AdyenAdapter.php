@@ -56,6 +56,8 @@ class AdyenAdapter extends AbstractPaymentAdapter
      * The canonical provider name.
      *
      * @return string
+     *
+     * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
      */
     public function getName(): string
     {
@@ -200,9 +202,14 @@ class AdyenAdapter extends AbstractPaymentAdapter
             return $this->failedRefund(sessionId: $sessionId, message: 'Adyen API key or session missing');
         }
 
+        $refundReason = 'Refund via Pipelinq POS';
+        if ($reason !== '') {
+            $refundReason = $reason;
+        }
+
         $payload = [
-            'merchantAccount'   => $merchantAccount,
-            'merchantRefundReason' => ($reason !== '' ? $reason : 'Refund via Pipelinq POS'),
+            'merchantAccount'      => $merchantAccount,
+            'merchantRefundReason' => $refundReason,
         ];
         $rawBody = (string) json_encode($payload);
 
@@ -405,10 +412,10 @@ class AdyenAdapter extends AbstractPaymentAdapter
         }
 
         $map = [
-            'AUTHORISATION' => 'captured',
-            'CAPTURE'       => 'settled',
-            'REFUND'        => 'refunded',
-            'CANCELLATION'  => 'failed',
+            'AUTHORISATION'    => 'captured',
+            'CAPTURE'          => 'settled',
+            'REFUND'           => 'refunded',
+            'CANCELLATION'     => 'failed',
             'CANCEL_OR_REFUND' => 'refunded',
         ];
 

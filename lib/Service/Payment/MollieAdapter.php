@@ -50,6 +50,8 @@ class MollieAdapter extends AbstractPaymentAdapter
      * The canonical provider name.
      *
      * @return string
+     *
+     * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
      */
     public function getName(): string
     {
@@ -79,8 +81,13 @@ class MollieAdapter extends AbstractPaymentAdapter
             return $this->failedInitiate(message: 'Invalid amount');
         }
 
-        $reference   = (string) ($transactionData['reference'] ?? '');
-        $description = sprintf('Pipelinq POS %s', $reference !== '' ? $reference : 'transactie');
+        $reference = (string) ($transactionData['reference'] ?? '');
+        $label     = 'transactie';
+        if ($reference !== '') {
+            $label = $reference;
+        }
+
+        $description = sprintf('Pipelinq POS %s', $label);
 
         $payload = [
             'amount'      => [
@@ -192,7 +199,12 @@ class MollieAdapter extends AbstractPaymentAdapter
             return $this->failedRefund(sessionId: $sessionId, message: 'Mollie API key or session missing');
         }
 
-        $payload = ['description' => ($reason !== '' ? $reason : 'Refund via Pipelinq POS')];
+        $description = 'Refund via Pipelinq POS';
+        if ($reason !== '') {
+            $description = $reason;
+        }
+
+        $payload = ['description' => $description];
         $rawBody = (string) json_encode($payload);
 
         try {
@@ -347,16 +359,16 @@ class MollieAdapter extends AbstractPaymentAdapter
     private function mapStatus(string $providerStatus): string
     {
         $map = [
-            'paid'      => 'settled',
-            'completed' => 'settled',
-            'authorized'=> 'captured',
-            'pending'   => 'pending',
-            'open'      => 'pending',
-            'canceled'  => 'failed',
-            'cancelled' => 'failed',
-            'expired'   => 'failed',
-            'failed'    => 'failed',
-            'refunded'  => 'refunded',
+            'paid'       => 'settled',
+            'completed'  => 'settled',
+            'authorized' => 'captured',
+            'pending'    => 'pending',
+            'open'       => 'pending',
+            'canceled'   => 'failed',
+            'cancelled'  => 'failed',
+            'expired'    => 'failed',
+            'failed'     => 'failed',
+            'refunded'   => 'refunded',
         ];
 
         return ($map[strtolower($providerStatus)] ?? 'pending');

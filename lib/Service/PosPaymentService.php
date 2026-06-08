@@ -54,7 +54,7 @@ use Throwable;
 /**
  * POS payment orchestration service.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the collaborators a
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Wires the collaborators a
  *  payment orchestrator legitimately needs: 4 adapter classes, OR container
  *  for ObjectService + WebhookService, ICrypto, IAppConfig, IGroupManager,
  *  logger. Splitting them would scatter one transactional concern.
@@ -63,7 +63,7 @@ use Throwable;
  *  capture + refund + webhook validate + settlement + idempotency + 2 event
  *  emitters) as many small, single-purpose methods. The cohesion is
  *  intentional.
- * @SuppressWarnings(PHPMD.TooManyPublicMethods) The public surface mirrors
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)     The public surface mirrors
  *  REQ-PAY-001 through REQ-PAY-011 — one method per requirement.
  *
  * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
@@ -129,11 +129,11 @@ class PosPaymentService
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container  The DI container (OR services).
-     * @param IAppConfig         $appConfig  App configuration.
-     * @param ICrypto            $crypto     Encryption service.
-     * @param IGroupManager      $groupMgr   Group manager for refund authorization.
-     * @param LoggerInterface    $logger     The logger.
+     * @param ContainerInterface $container The DI container (OR services).
+     * @param IAppConfig         $appConfig App configuration.
+     * @param ICrypto            $crypto    Encryption service.
+     * @param IGroupManager      $groupMgr  Group manager for refund authorization.
+     * @param LoggerInterface    $logger    The logger.
      */
     public function __construct(
         private ContainerInterface $container,
@@ -193,7 +193,12 @@ class PosPaymentService
 
         if ($includeMaskedSecrets === true) {
             foreach (self::SENSITIVE_FIELDS as $field) {
-                $config[$field] = ($this->readString(name: $name, key: $field, default: '') !== '' ? self::MASK : '');
+                $stored = $this->readString(name: $name, key: $field, default: '');
+                if ($stored === '') {
+                    $config[$field] = '';
+                } else {
+                    $config[$field] = self::MASK;
+                }
             }
         }
 
@@ -363,8 +368,8 @@ class PosPaymentService
      */
     public function capturePayment(string $transactionId): array
     {
-        $transaction = $this->loadTransaction(id: $transactionId);
-        $sessionId   = (string) ($transaction['paymentSessionId'] ?? '');
+        $transaction  = $this->loadTransaction(id: $transactionId);
+        $sessionId    = (string) ($transaction['paymentSessionId'] ?? '');
         $providerName = (string) ($transaction['paymentProvider'] ?? '');
 
         if ($providerName === '' || $sessionId === '') {
@@ -417,7 +422,7 @@ class PosPaymentService
             throw new OCSForbiddenException('Manager permission required');
         }
 
-        $transaction = $this->loadTransaction(id: $transactionId);
+        $transaction   = $this->loadTransaction(id: $transactionId);
         $paymentStatus = (string) ($transaction['paymentStatus'] ?? '');
         if ($paymentStatus !== 'settled' && $paymentStatus !== 'captured') {
             throw new OCSBadRequestException('Transaction payment not settled');
@@ -882,10 +887,15 @@ class PosPaymentService
      */
     private function writeBool(string $name, string $key, bool $value): void
     {
+        $encoded = 'false';
+        if ($value === true) {
+            $encoded = 'true';
+        }
+
         $this->appConfig->setValueString(
             Application::APP_ID,
             self::CONFIG_PREFIX.$name.'.'.$key,
-            ($value === true ? 'true' : 'false')
+            $encoded
         );
     }//end writeBool()
 
@@ -1058,7 +1068,7 @@ class PosPaymentService
     }//end registerId()
 
     /**
-     * posTransaction schema id (from app config).
+     * PosTransaction schema id (from app config).
      *
      * @return string
      */
@@ -1266,7 +1276,7 @@ class PosPaymentService
      */
     private function uuid(): string
     {
-        $bytes = random_bytes(16);
+        $bytes    = random_bytes(16);
         $bytes[6] = chr((ord($bytes[6]) & 0x0f) | 0x40);
         $bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
