@@ -87,7 +87,7 @@
     - Catch rendering errors; throw `TemplateRenderException` with context
   - Unit test: valid Mustache syntax, invalid Mustache syntax, XHTML validation, subject truncation
 
-- [ ] 2.7 Create `lib/Service/BerichtenboxService.php` — Core message lifecycle orchestration
+- [x] 2.7 Create `lib/Service/BerichtenboxService.php` — Core message lifecycle orchestration
   - `queueOutboundMessage(string $zaakId, string $contactmomentId, string $status, string $templateId): BerichtenboxMessage`
     - Fetch Contactmoment from OpenRegister; extract linked Burger and BSN
     - Fetch BerichtenboxTemplate matching zaaktype and status; if not found, use fallback template
@@ -145,7 +145,7 @@
     - Leave audit log intact
     - Update `bsnHash` if necessary for consistency
 
-- [ ] 2.8 Run syntax checks and import validation on all services
+- [x] 2.8 Run syntax checks and import validation on all services
   - `php -l lib/Service/*.php`
   - Verify imports: no circular dependencies, all dependencies available via DI
 
