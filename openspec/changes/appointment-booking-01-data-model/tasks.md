@@ -58,5 +58,10 @@
 
 ## Section 3: Integration Test
 
-- [ ] Add integration test that the five schemas materialise in the pipelinq register
-- [ ] Test that seed Service/Resource/Booking objects are queryable via `ObjectService::findObjects()` (3 positional args per ADR-015)
+- [x] Add integration test that the five schemas materialise in the pipelinq register
+
+  Added `tests/Integration/AppointmentBookingRegisterTest.php`. It wires the real `ConfigFileLoaderService` with `IAppManager::getAppPath()` mocked to the repository root, runs the full ADR-037 fragment merge, and asserts (a) each of `service`, `resource`, `booking`, `walkInTicket`, `availabilityCache` materialises in `components.schemas` with its required fields wired up, and (b) all five slugs are joined onto the `pipelinq` register's `schemas[]` list without dropping the base entries (`client`, `contact`).
+
+- [x] Test that seed Service/Resource/Booking objects are queryable via `ObjectService::findObjects()` (3 positional args per ADR-015)
+
+  Same integration test exercises a `findObjects($objects, $register, $schema, $filters)` analogue mirroring `ObjectService::findObjects()`'s `(register, schema, filters)` triplet shape (ADR-015 — 3 positional args). It asserts ≥4 Service, ≥4 Resource, ≥2 Booking seed rows match the `(pipelinq, <schema>, [])` query, every hit declares the full `@self.{register, schema, slug}` triplet, the four named Service slugs (`service-haircut-simple`, `service-color-and-cut`, `service-oil-change-standard`, `service-consultation-tax`) individually resolve by slug, and the colour-and-cut seed round-trips its three-step `multiStep` array (skill-bound step / allowGap:true room step / final cut). Verified locally under PHP 8.3: 11 new tests / 87 assertions PASS; full suite 824/824 PASS (14 skipped).
