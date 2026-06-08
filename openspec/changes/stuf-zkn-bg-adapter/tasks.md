@@ -2,13 +2,13 @@
 
 ## 1. Data Model & Schema Registration
 
-- [ ] 1.1 Add `StufEndpoint` schema to `lib/Settings/pipelinq_register.json` with all properties (id, naam, gemeenteCode, ontvangerApplicatie, ontvangerOrganisatie, ontvangerGebruiker, zenderApplicatie, zenderOrganisatie, endpointUrl, soapVersion, stufVersion, sectormodel, authenticatie object, tlsClientCertRef, zaakIdentificatieStrategie, actief, aangemaakt)
-- [ ] 1.2 Add `StufMessage` schema to `lib/Settings/pipelinq_register.json` with all properties (id, endpointId, richting, berichtSoort, entiteittype, functie, referentienummer, crossRefnummer, zaakIdentificatie, envelopeXml, responseEnvelopeXml, httpStatus, duurMs, fout, verzondenOp, ontvangenOp, gerelateerdeRequestId, gerelateerdeContactId, status, retries array)
-- [ ] 1.3 Add `ZaaksysteemMapping` schema to `lib/Settings/pipelinq_register.json` with all properties (id, pipelinqEntiteit, pipelinqId, externEntiteit, externIdentificatie, endpointId, laatsteSynchronisatie, synchronisatieStatus, openstaandeWijzigingen array)
-- [ ] 1.4 Register all three schemas in the register's `schemas` array in `pipelinq_register.json`
-- [ ] 1.5 Add seed data for StufEndpoint examples (2 gemeente endpoints: Amersfoort Key2Zaken + Rotterdam PinkRoccade with realistic authentication refs)
-- [ ] 1.6 Add seed data for StufMessage examples (2-3 examples covering Lk01 outbound, Bv01 response, Lk02 inbound)
-- [ ] 1.7 Add seed data for ZaaksysteemMapping examples (2-3 examples covering request→zaak mapping, contact→NPS mapping)
+- [x] 1.1 Add `StufEndpoint` schema to `lib/Settings/pipelinq_register.json` with all properties (id, naam, gemeenteCode, ontvangerApplicatie, ontvangerOrganisatie, ontvangerGebruiker, zenderApplicatie, zenderOrganisatie, endpointUrl, soapVersion, stufVersion, sectormodel, authenticatie object, tlsClientCertRef, zaakIdentificatieStrategie, actief, aangemaakt)
+- [x] 1.2 Add `StufMessage` schema to `lib/Settings/pipelinq_register.json` with all properties (id, endpointId, richting, berichtSoort, entiteittype, functie, referentienummer, crossRefnummer, zaakIdentificatie, envelopeXml, responseEnvelopeXml, httpStatus, duurMs, fout, verzondenOp, ontvangenOp, gerelateerdeRequestId, gerelateerdeContactId, status, retries array)
+- [x] 1.3 Add `ZaaksysteemMapping` schema to `lib/Settings/pipelinq_register.json` with all properties (id, pipelinqEntiteit, pipelinqId, externEntiteit, externIdentificatie, endpointId, laatsteSynchronisatie, synchronisatieStatus, openstaandeWijzigingen array)
+- [x] 1.4 Register all three schemas in the register's `schemas` array in `pipelinq_register.json`
+- [x] 1.5 Add seed data for StufEndpoint examples (2 gemeente endpoints: Amersfoort Key2Zaken + Rotterdam PinkRoccade with realistic authentication refs)
+- [x] 1.6 Add seed data for StufMessage examples (2-3 examples covering Lk01 outbound, Bv01 response, Lk02 inbound)
+- [x] 1.7 Add seed data for ZaaksysteemMapping examples (2-3 examples covering request→zaak mapping, contact→NPS mapping)
 
 ## 2. Backend Core Services
 
