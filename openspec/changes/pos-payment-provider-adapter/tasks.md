@@ -2,16 +2,17 @@
 
 ## 0. Deduplication Check
 
-- [ ] 0.1 Search `openspec/changes/` and `openregister/lib/Service/` for any existing payment provider or gateway integration; document findings
+- [x] 0.1 Search `openspec/changes/` and `openregister/lib/Service/` for any existing payment provider or gateway integration; document findings
   - **acceptance_criteria**:
     - GIVEN the search is complete
     - THEN a one-line finding MUST be appended: "No payment integration found" or reference to existing capability
+  - **finding**: No POS payment provider integration found. The existing `AppointmentPaymentProvider` is a single-purpose fee charger that routes booking no-show / late-cancellation charges through openconnector — it is NOT pluggable, NOT POS-related, and shares no contract surface. No `PaymentProviderInterface` / `PosPaymentService` / adapter classes existed prior to this change.
 
 ---
 
 ## 1. Data Model
 
-- [ ] 1.1 Add `paymentProvider` schema to `lib/Settings/pipelinq_register.json`
+- [x] 1.1 Add `paymentProvider` schema to `lib/Settings/pipelinq_register.json`
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-002`
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -20,7 +21,7 @@
     - AND `@type: "schema:PaymentService"` MUST be set
     - AND `apiKey`, `apiSecret`, `webhookSecret` MUST be marked as encrypted
 
-- [ ] 1.2 Extend `posTransaction` schema with payment fields
+- [x] 1.2 Extend `posTransaction` schema with payment fields
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001, REQ-PAY-009`
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -30,7 +31,7 @@
     - AND default `paymentStatus` MUST be null (no payment yet)
     - AND existing posTransaction objects MUST remain unchanged (backwards compatible)
 
-- [ ] 1.3 Add seed data for paymentProvider (4 objects: mollie, ccv, adyen, stripe)
+- [x] 1.3 Add seed data for paymentProvider (4 objects: mollie, ccv, adyen, stripe)
   - **spec_ref**: ADR-001 (data-layer)
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -39,7 +40,7 @@
     - AND encrypted fields MUST contain placeholder values (not real credentials)
     - AND each provider MUST have a unique slug for idempotent re-import
 
-- [ ] 1.4 Update posTransaction seed data with payment fields
+- [x] 1.4 Update posTransaction seed data with payment fields
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-009`
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -53,7 +54,7 @@
 
 ## 2. Payment Provider Interface & Adapters
 
-- [ ] 2.1 Create `lib/Service/Payment/PaymentProviderInterface.php`
+- [x] 2.1 Create `lib/Service/Payment/PaymentProviderInterface.php`
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001`
   - **files**: `pipelinq/lib/Service/Payment/PaymentProviderInterface.php`
   - **acceptance_criteria**:
@@ -62,7 +63,7 @@
     - AND return types and parameter types MUST match design.md
     - AND each method MUST include `@spec` docblock reference
 
-- [ ] 2.2 Create `lib/Service/Payment/MollieAdapter.php`
+- [x] 2.2 Create `lib/Service/Payment/MollieAdapter.php`
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001, REQ-PAY-003`
   - **files**: `pipelinq/lib/Service/Payment/MollieAdapter.php`
   - **acceptance_criteria**:
@@ -72,7 +73,7 @@
     - AND return { "sessionId": "tr_...", "redirectUrl": "https://...", "status": "pending" }
     - AND validateWebhook() MUST use HMAC-SHA256 signature validation with Mollie secret
 
-- [ ] 2.3 Create `lib/Service/Payment/CcvAdapter.php`
+- [x] 2.3 Create `lib/Service/Payment/CcvAdapter.php`
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001, REQ-PAY-003`
   - **files**: `pipelinq/lib/Service/Payment/CcvAdapter.php`
   - **acceptance_criteria**:
@@ -82,7 +83,7 @@
     - AND return { "sessionId": "CCV...", "redirectUrl": null, "status": "pending" }
     - AND validateWebhook() MUST use provider-specific signature algorithm (HmacSHA512)
 
-- [ ] 2.4 Create `lib/Service/Payment/AdyenAdapter.php`
+- [x] 2.4 Create `lib/Service/Payment/AdyenAdapter.php`
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001`
   - **files**: `pipelinq/lib/Service/Payment/AdyenAdapter.php`
   - **acceptance_criteria**:
@@ -92,7 +93,7 @@
     - AND return sessionId from Adyen response
     - AND validateWebhook() MUST use Adyen HMAC signature validation
 
-- [ ] 2.5 Create `lib/Service/Payment/StripeAdapter.php`
+- [x] 2.5 Create `lib/Service/Payment/StripeAdapter.php`
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001, REQ-PAY-004`
   - **files**: `pipelinq/lib/Service/Payment/StripeAdapter.php`
   - **acceptance_criteria**:
@@ -108,7 +109,7 @@
 
 ## 3. Credential Management
 
-- [ ] 3.1 Implement credential encryption/decryption in `PosPaymentService`
+- [x] 3.1 Implement credential encryption/decryption in `PosPaymentService`
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-002`
   - **files**: `pipelinq/lib/Service/PosPaymentService.php`
   - **acceptance_criteria**:
@@ -118,7 +119,7 @@
     - AND the decrypted values MUST NOT be logged or exposed in responses
     - AND after use, decrypted values MUST be discarded from memory
 
-- [ ] 3.2 Add encryption to provider credential form submission
+- [x] 3.2 Add encryption to provider credential form submission
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007`
   - **files**: `pipelinq/lib/Controller/PosPaymentController.php`
   - **acceptance_criteria**:
@@ -131,7 +132,7 @@
 
 ## 4. Payment Service & Controller
 
-- [ ] 4.1 Create `lib/Service/PosPaymentService.php`
+- [x] 4.1 Create `lib/Service/PosPaymentService.php`
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001 through REQ-PAY-011`
   - **files**: `pipelinq/lib/Service/PosPaymentService.php`
   - **acceptance_criteria**:
@@ -145,7 +146,7 @@
     - AND `testConnection()` MUST call provider test API, store result in provider config
     - AND every public method MUST have `@spec` docblock
 
-- [ ] 4.2 Create `lib/Controller/PosPaymentController.php`
+- [x] 4.2 Create `lib/Controller/PosPaymentController.php`
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003, REQ-PAY-004, REQ-PAY-005, REQ-PAY-007`
   - **files**: `pipelinq/lib/Controller/PosPaymentController.php`
   - **acceptance_criteria**:
@@ -163,7 +164,7 @@
 
 ## 5. Routes & Navigation
 
-- [ ] 5.1 Add payment API routes to `appinfo/routes.php`
+- [x] 5.1 Add payment API routes to `appinfo/routes.php`
   - **spec_ref**: ADR-002 (api)
   - **files**: `pipelinq/appinfo/routes.php`
   - **acceptance_criteria**:
@@ -172,7 +173,7 @@
     - AND route POST `/webhook/{provider}` MUST be public (no auth) so providers can send webhooks
     - AND routes GET|PUT `/api/payment-providers/{name}|/api/payment-providers` MUST require admin:PaymentProviders capability
 
-- [ ] 5.2 Add `/settings/payment` route to `src/router/index.js`
+- [x] 5.2 Add `/settings/payment` route to `src/router/index.js`
   - **spec_ref**: ADR-016 (routes)
   - **files**: `pipelinq/src/router/index.js`
   - **acceptance_criteria**:
@@ -184,7 +185,7 @@
 
 ## 6. Frontend: Admin Settings
 
-- [ ] 6.1 Create `src/views/settings/PaymentSettingsForm.vue`
+- [x] 6.1 Create `src/views/settings/PaymentSettingsForm.vue`
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007`
   - **files**: `pipelinq/src/views/settings/PaymentSettingsForm.vue`
   - **acceptance_criteria**:
@@ -202,7 +203,7 @@
     - AND clicking "Opslaan" MUST call `PUT /api/payment-providers/{name}` with encrypted credentials
     - AND clicking "Verbinding testen" MUST call `POST /api/payment-providers/{name}/test` and show result
 
-- [ ] 6.2 Update `src/navigation/SettingsMenu.vue`
+- [x] 6.2 Update `src/navigation/SettingsMenu.vue`
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007`
   - **files**: `pipelinq/src/navigation/SettingsMenu.vue`
   - **acceptance_criteria**:
@@ -214,7 +215,7 @@
 
 ## 7. Frontend: Transaction Payment UI
 
-- [ ] 7.1 Create `src/components/pos/PaymentMethodSelector.vue`
+- [x] 7.1 Create `src/components/pos/PaymentMethodSelector.vue`
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008`
   - **files**: `pipelinq/src/components/pos/PaymentMethodSelector.vue`
   - **acceptance_criteria**:
@@ -226,7 +227,7 @@
     - AND selecting Contant MUST set paymentMethod=cash automatically (no sub-option needed)
     - AND emitting @pay event MUST pass { paymentMethod, providerName }
 
-- [ ] 7.2 Update `src/views/pos/PosTransactionForm.vue`
+- [x] 7.2 Update `src/views/pos/PosTransactionForm.vue`
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003, REQ-PAY-008, REQ-PAY-010`
   - **files**: `pipelinq/src/views/pos/PosTransactionForm.vue`
   - **acceptance_criteria**:
@@ -240,7 +241,7 @@
     - AND errors from `initiatePayment()` MUST be shown in a CnNotification alert
     - AND the form MUST NOT submit if an error occurs (user can retry)
 
-- [ ] 7.3 Update `src/views/pos/PosTransactionDetail.vue`
+- [x] 7.3 Update `src/views/pos/PosTransactionDetail.vue`
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-009`
   - **files**: `pipelinq/src/views/pos/PosTransactionDetail.vue`
   - **acceptance_criteria**:
@@ -263,7 +264,7 @@
 
 ## 8. Webhook Handling
 
-- [ ] 8.1 Implement webhook routing in `lib/Service/PosPaymentService.php`
+- [x] 8.1 Implement webhook routing in `lib/Service/PosPaymentService.php`
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006, REQ-PAY-011`
   - **files**: `pipelinq/lib/Service/PosPaymentService.php`
   - **acceptance_criteria**:
@@ -283,7 +284,7 @@
       4. If paymentStatus becomes refunded, emit `pipelinq.PosPayment.refunded` CloudEvent
       5. Return the updated transaction
 
-- [ ] 8.2 Validate webhook signatures per provider specification
+- [x] 8.2 Validate webhook signatures per provider specification
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006`
   - **files**: `pipelinq/lib/Service/Payment/{MollieAdapter,CcvAdapter,AdyenAdapter,StripeAdapter}.php`
   - **acceptance_criteria**:
@@ -294,7 +295,7 @@
     - AND Stripe MUST use signature headers (t=, v1=) with HMAC-SHA256
     - AND all implementations MUST return true|false, not throw exceptions
 
-- [ ] 8.3 Handle webhook idempotency for duplicate events
+- [x] 8.3 Handle webhook idempotency for duplicate events
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006`
   - **files**: `pipelinq/lib/Service/PosPaymentService.php`
   - **acceptance_criteria**:
@@ -308,7 +309,7 @@
 
 ## 9. CloudEvent Emission
 
-- [ ] 9.1 Emit `pipelinq.PosPayment.settled` event on settlement
+- [x] 9.1 Emit `pipelinq.PosPayment.settled` event on settlement
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-011`
   - **files**: `pipelinq/lib/Service/PosPaymentService.php`
   - **acceptance_criteria**:
@@ -322,7 +323,7 @@
       - time: {{settledAt}}
       - data: { transactionId, reference, paymentProvider, paymentMethod, paymentSessionId, total, settledAt }
 
-- [ ] 9.2 Emit `pipelinq.PosPayment.refunded` event on refund
+- [x] 9.2 Emit `pipelinq.PosPayment.refunded` event on refund
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-011`
   - **files**: `pipelinq/lib/Service/PosPaymentService.php`
   - **acceptance_criteria**:
@@ -334,7 +335,7 @@
 
 ## 10. Error Handling & Validation
 
-- [ ] 10.1 Validate payment request parameters in controller
+- [x] 10.1 Validate payment request parameters in controller
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003, REQ-PAY-010`
   - **files**: `pipelinq/lib/Controller/PosPaymentController.php`
   - **acceptance_criteria**:
@@ -344,7 +345,7 @@
     - AND transaction status MUST NOT be updated
     - AND errors MUST be user-friendly: "Betaalmethode niet geconfigureerd" (not stack traces)
 
-- [ ] 10.2 Handle provider API errors gracefully
+- [x] 10.2 Handle provider API errors gracefully
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003, REQ-PAY-010`
   - **files**: `pipelinq/lib/Service/Payment/{Adapters}.php`
   - **acceptance_criteria**:
@@ -355,7 +356,7 @@
     - AND HTTP 500 or 422 MUST be returned to the client with user-friendly message
     - AND transaction status MUST NOT be updated (remains confirmed)
 
-- [ ] 10.3 Validate transaction state before payment actions
+- [x] 10.3 Validate transaction state before payment actions
   - **spec_ref**: `specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003, REQ-PAY-004, REQ-PAY-005`
   - **files**: `pipelinq/lib/Service/PosPaymentService.php`
   - **acceptance_criteria**:
@@ -371,7 +372,7 @@
 
 ## 11. Testing & Validation
 
-- [ ] 11.1 Create test fixtures for payment adapters
+- [x] 11.1 Create test fixtures for payment adapters
   - **files**: `tests/Unit/Service/Payment/MollieAdapterTest.php` (and for other adapters)
   - **acceptance_criteria**:
     - GIVEN test cases for each adapter
@@ -381,7 +382,7 @@
     - AND test validateWebhook() with valid and invalid signatures
     - AND test error handling for provider API failures
 
-- [ ] 11.2 Create integration test for payment flow
+- [x] 11.2 Create integration test for payment flow
   - **files**: `tests/Integration/PosPaymentIntegrationTest.php`
   - **acceptance_criteria**:
     - GIVEN a full payment flow test
@@ -394,7 +395,7 @@
 
 ## 12. Documentation & Configuration
 
-- [ ] 12.1 Document payment provider setup instructions
+- [x] 12.1 Document payment provider setup instructions
   - **files**: `docs/pos-payment-provider-adapter.md`
   - **acceptance_criteria**:
     - GIVEN the doc is written
@@ -405,7 +406,7 @@
       - How to set webhook URLs in each provider's settings
       - Testing checklist (test connections, test payment flow in sandbox)
 
-- [ ] 12.2 Add environment variable documentation for credentials
+- [x] 12.2 Add environment variable documentation for credentials
   - **files**: `.env.example` or `docs/configuration.md`
   - **acceptance_criteria**:
     - GIVEN operators need to configure payments
@@ -416,14 +417,14 @@
 
 ## 13. Merge & Release Checks
 
-- [ ] 13.1 Verify all files are created and routes are registered
+- [x] 13.1 Verify all files are created and routes are registered
   - **acceptance_criteria**:
     - GIVEN the code is complete
     - THEN `npm run build` MUST complete without errors
     - AND `npm run lint` MUST pass (or warnings only)
     - AND `php -l lib/Service/PosPaymentService.php` MUST pass (no syntax errors)
 
-- [ ] 13.2 Verify seed data imports without errors
+- [x] 13.2 Verify seed data imports without errors
   - **acceptance_criteria**:
     - GIVEN the app is installed / upgrade runs
     - THEN `lib/Settings/pipelinq_register.json` MUST be imported

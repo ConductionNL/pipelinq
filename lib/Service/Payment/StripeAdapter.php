@@ -58,6 +58,8 @@ class StripeAdapter extends AbstractPaymentAdapter
      * The canonical provider name.
      *
      * @return string
+     *
+     * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
      */
     public function getName(): string
     {
@@ -94,8 +96,8 @@ class StripeAdapter extends AbstractPaymentAdapter
         $reference = (string) ($transactionData['reference'] ?? '');
 
         $form = [
-            'amount'   => (string) $cents,
-            'currency' => 'eur',
+            'amount'                  => (string) $cents,
+            'currency'                => 'eur',
             'metadata[reference]'     => $reference,
             'metadata[transactionId]' => (string) ($transactionData['id'] ?? ''),
             'metadata[app]'           => 'pipelinq',
@@ -124,9 +126,13 @@ class StripeAdapter extends AbstractPaymentAdapter
 
         $sessionId    = (string) ($response['body']['id'] ?? '');
         $clientSecret = (string) ($response['body']['client_secret'] ?? '');
+        $finalSession = $clientSecret;
+        if ($sessionId !== '') {
+            $finalSession = $sessionId;
+        }
 
         return [
-            'sessionId'   => ($sessionId !== '' ? $sessionId : $clientSecret),
+            'sessionId'   => $finalSession,
             'redirectUrl' => null,
             'status'      => 'pending',
         ];
@@ -201,11 +207,16 @@ class StripeAdapter extends AbstractPaymentAdapter
             return $this->failedRefund(sessionId: $sessionId, message: 'Stripe API key or session missing');
         }
 
+        $refundReason = 'Refund via Pipelinq POS';
+        if ($reason !== '') {
+            $refundReason = $reason;
+        }
+
         $form = [
-            'payment_intent'      => $sessionId,
-            'reason'              => 'requested_by_customer',
-            'metadata[reason]'    => ($reason !== '' ? $reason : 'Refund via Pipelinq POS'),
-            'metadata[app]'       => 'pipelinq',
+            'payment_intent'   => $sessionId,
+            'reason'           => 'requested_by_customer',
+            'metadata[reason]' => $refundReason,
+            'metadata[app]'    => 'pipelinq',
         ];
 
         $body = http_build_query($form);
@@ -383,13 +394,13 @@ class StripeAdapter extends AbstractPaymentAdapter
     private function mapStatus(string $providerStatus): string
     {
         $map = [
-            'succeeded'             => 'settled',
-            'requires_capture'      => 'captured',
-            'requires_confirmation' => 'pending',
-            'requires_action'       => 'pending',
-            'processing'            => 'pending',
+            'succeeded'               => 'settled',
+            'requires_capture'        => 'captured',
+            'requires_confirmation'   => 'pending',
+            'requires_action'         => 'pending',
+            'processing'              => 'pending',
             'requires_payment_method' => 'failed',
-            'canceled'              => 'failed',
+            'canceled'                => 'failed',
         ];
 
         return ($map[strtolower($providerStatus)] ?? 'pending');
@@ -405,12 +416,12 @@ class StripeAdapter extends AbstractPaymentAdapter
     private function mapEventType(string $eventType): string
     {
         $map = [
-            'payment_intent.succeeded'       => 'settled',
+            'payment_intent.succeeded'                 => 'settled',
             'payment_intent.amount_capturable_updated' => 'captured',
-            'payment_intent.payment_failed'  => 'failed',
-            'payment_intent.canceled'        => 'failed',
-            'charge.refunded'                => 'refunded',
-            'refund.created'                 => 'refunded',
+            'payment_intent.payment_failed'            => 'failed',
+            'payment_intent.canceled'                  => 'failed',
+            'charge.refunded'                          => 'refunded',
+            'refund.created'                           => 'refunded',
         ];
 
         return ($map[strtolower($eventType)] ?? 'pending');

@@ -52,7 +52,7 @@ abstract class AbstractPaymentAdapter implements PaymentProviderInterface
         protected array $credentials,
         protected array $config,
         protected LoggerInterface $logger,
-        protected ?HttpTransport $http = null,
+        protected ?HttpTransport $http=null,
     ) {
     }//end __construct()
 
@@ -60,6 +60,8 @@ abstract class AbstractPaymentAdapter implements PaymentProviderInterface
      * The canonical provider name.
      *
      * @return string
+     *
+     * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
      */
     abstract public function getName(): string;
 
@@ -69,6 +71,8 @@ abstract class AbstractPaymentAdapter implements PaymentProviderInterface
      * @param HttpTransport|null $transport The transport.
      *
      * @return void
+     *
+     * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
      */
     public function setHttpTransport(?HttpTransport $transport): void
     {

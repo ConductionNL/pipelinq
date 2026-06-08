@@ -57,6 +57,8 @@ class CcvAdapter extends AbstractPaymentAdapter
      * The canonical provider name.
      *
      * @return string
+     *
+     * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
      */
     public function getName(): string
     {
@@ -89,6 +91,10 @@ class CcvAdapter extends AbstractPaymentAdapter
         }
 
         $reference = (string) ($transactionData['reference'] ?? '');
+        $label     = 'transactie';
+        if ($reference !== '') {
+            $label = $reference;
+        }
 
         $payload = [
             'amount'      => $cents,
@@ -96,7 +102,7 @@ class CcvAdapter extends AbstractPaymentAdapter
             'method'      => 'card',
             'terminalId'  => $terminalId,
             'reference'   => $reference,
-            'description' => sprintf('Pipelinq POS %s', $reference !== '' ? $reference : 'transactie'),
+            'description' => sprintf('Pipelinq POS %s', $label),
             'metadata'    => [
                 'transactionId' => (string) ($transactionData['id'] ?? ''),
                 'app'           => 'pipelinq',
@@ -191,7 +197,12 @@ class CcvAdapter extends AbstractPaymentAdapter
             return $this->failedRefund(sessionId: $sessionId, message: 'CCV API key or session missing');
         }
 
-        $payload = ['reason' => ($reason !== '' ? $reason : 'Refund via Pipelinq POS')];
+        $refundReason = 'Refund via Pipelinq POS';
+        if ($reason !== '') {
+            $refundReason = $reason;
+        }
+
+        $payload = ['reason' => $refundReason];
         $rawBody = (string) json_encode($payload);
 
         try {
@@ -350,18 +361,18 @@ class CcvAdapter extends AbstractPaymentAdapter
     private function mapStatus(string $providerStatus): string
     {
         $map = [
-            'success'     => 'settled',
+            'success'            => 'settled',
             'manualintervention' => 'pending',
-            'paid'        => 'settled',
-            'captured'    => 'captured',
-            'authorised'  => 'captured',
-            'authorized'  => 'captured',
-            'pending'     => 'pending',
-            'open'        => 'pending',
-            'failed'      => 'failed',
-            'cancelled'   => 'failed',
-            'expired'     => 'failed',
-            'refunded'    => 'refunded',
+            'paid'               => 'settled',
+            'captured'           => 'captured',
+            'authorised'         => 'captured',
+            'authorized'         => 'captured',
+            'pending'            => 'pending',
+            'open'               => 'pending',
+            'failed'             => 'failed',
+            'cancelled'          => 'failed',
+            'expired'            => 'failed',
+            'refunded'           => 'refunded',
         ];
 
         return ($map[strtolower($providerStatus)] ?? 'pending');

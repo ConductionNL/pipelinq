@@ -46,6 +46,8 @@ interface HttpTransport
      * @param string|null           $body    Optional raw request body.
      *
      * @return array{status: int, body: array<string, mixed>, raw: string}
+     *
+     * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
      */
     public function request(string $method, string $url, array $headers=[], ?string $body=null): array;
 }//end interface

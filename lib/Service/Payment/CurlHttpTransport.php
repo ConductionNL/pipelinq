@@ -34,7 +34,7 @@ namespace OCA\Pipelinq\Service\Payment;
 use Psr\Log\LoggerInterface;
 
 /**
- * cURL-backed HTTP transport.
+ * CURL-backed HTTP transport.
  *
  * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
  */
@@ -104,7 +104,11 @@ class CurlHttpTransport implements HttpTransport
 
         $raw     = curl_exec($handle);
         $status  = (int) curl_getinfo($handle, CURLINFO_HTTP_CODE);
-        $rawText = is_string($raw) ? $raw : '';
+        $rawText = '';
+        if (is_string($raw) === true) {
+            $rawText = $raw;
+        }
+
         curl_close($handle);
 
         $decoded = [];
