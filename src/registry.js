@@ -134,6 +134,7 @@ import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.
 //     with per-section loading and a contact->client linking dialog,
 //     beyond what a declarative type:"detail" page can express). ---
 import AnalyticsDashboard from './views/analytics/AnalyticsDashboard.vue'
+import SlaAttainmentDashboard from './views/sla/SlaAttainmentDashboard.vue'
 import PipelineAnalyticsView from './views/pipeline/PipelineAnalyticsView.vue'
 import ClientDetail from './views/clients/ClientDetail.vue'
 import ContactDetail from './views/contacts/ContactDetail.vue'
@@ -415,6 +416,13 @@ const registry = {
 		kind: 'page',
 		component: AnalyticsDashboard,
 		_note: 'Cross-module KPI dashboard (Open Pipeline Value / Open Requests / Contactmomenten / Active Leads) with a trailing-period filter; driven by a server-side aggregation endpoint so large installations are not forced to fetch full collections client-side.',
+	},
+
+	// --- SLA engine — attainment dashboard (sla-engine-and-escalation Feature 12). ---
+	SlaAttainmentDashboard: {
+		kind: 'page',
+		component: SlaAttainmentDashboard,
+		_note: 'SLA attainment dashboard: overall attainment KPI + per-target and per-policy/tier/team breakdown table. Bucketed by day/week/month/quarter and fetched from GET /api/sla/attainment.',
 	},
 
 	// --- Klantbeeld 360 — per-pipeline sales analytics. ---
