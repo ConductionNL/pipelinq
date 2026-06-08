@@ -47,7 +47,8 @@
           "receiptPrintLog",
           "refundReason",
           "posRefund",
-          "posRefundLine"
+          "posRefundLine",
+          "paymentProvider"
         ],
         "tablePrefix": "",
         "folder": "Open Registers/Pipelinq"
@@ -2845,6 +2846,48 @@
             "description": "Server-allocated legal invoice number (e.g. 2026-000042) assigned once when a receipt is issued for a transaction >= EUR 100. Never accepted from the client; allocated race-safe by InvoiceSequenceService.",
             "maxLength": 32,
             "visible": false
+          },
+          "paymentProvider": {
+            "type": "string",
+            "description": "Name of the payment provider used (mollie, ccv, adyen, stripe, cash, voucher, account)",
+            "maxLength": 32,
+            "title": "Payment provider",
+            "facetable": true,
+            "visible": false
+          },
+          "paymentSessionId": {
+            "type": "string",
+            "description": "External payment session id from the provider (e.g. Mollie order id, Stripe PaymentIntent id, CCV transaction id)",
+            "maxLength": 128,
+            "visible": false
+          },
+          "paymentStatus": {
+            "type": "string",
+            "description": "Payment lifecycle: pending -> captured -> settled OR failed -> [refunded]",
+            "enum": [
+              "pending",
+              "captured",
+              "settled",
+              "failed",
+              "refunded"
+            ],
+            "title": "Payment status",
+            "facetable": true,
+            "visible": false
+          },
+          "paymentMethod": {
+            "type": "string",
+            "description": "The specific payment method used (card, ideal, bancontact, cash, voucher, etc.)",
+            "maxLength": 32,
+            "title": "Payment method",
+            "facetable": true,
+            "visible": false
+          },
+          "paymentWebhookEventId": {
+            "type": "string",
+            "description": "Idempotency key — last processed provider webhook event id, prevents duplicate settlement updates",
+            "maxLength": 128,
+            "visible": false
           }
         }
       },
@@ -3324,6 +3367,102 @@
             "format": "date-time"
           }
         }
+      },
+      "paymentProvider": {
+        "slug": "paymentProvider",
+        "title": "Payment Provider",
+        "icon": "CreditCardOutline",
+        "version": "1.0.0",
+        "summary": "Configuration record for a POS payment provider (Mollie, CCV, Adyen, Stripe)",
+        "description": "Per-provider configuration record for the pluggable POS payment adapter. Encrypted credential fields (apiKey, apiSecret, webhookSecret) are stored encrypted in IAppConfig; this object only mirrors metadata + masked indicators for the admin UI. Mapped to Schema.org PaymentService.",
+        "@type": "schema:PaymentService",
+        "required": [
+          "name",
+          "displayName",
+          "type"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Provider identifier: mollie, ccv, adyen or stripe",
+            "enum": [
+              "mollie",
+              "ccv",
+              "adyen",
+              "stripe"
+            ],
+            "title": "Name",
+            "facetable": true
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Human-readable provider name (Mollie, CCV, Adyen, Stripe)",
+            "maxLength": 64,
+            "title": "Display name"
+          },
+          "type": {
+            "type": "string",
+            "description": "Provider type: online (Mollie, Stripe) or terminal (CCV, Adyen)",
+            "enum": [
+              "online",
+              "terminal"
+            ],
+            "title": "Type",
+            "facetable": true
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether this provider is enabled for transactions",
+            "default": false,
+            "title": "Active",
+            "facetable": true
+          },
+          "environment": {
+            "type": "string",
+            "description": "Execution environment: live or sandbox",
+            "enum": [
+              "live",
+              "sandbox"
+            ],
+            "default": "sandbox",
+            "title": "Environment"
+          },
+          "apiKey": {
+            "type": "string",
+            "description": "Provider API key or secret — encrypted. Masked as ***SET*** in API responses.",
+            "visible": false
+          },
+          "apiSecret": {
+            "type": "string",
+            "description": "Additional secret for providers that require signing (e.g. CCV) — encrypted. Masked in responses.",
+            "visible": false
+          },
+          "webhookSecret": {
+            "type": "string",
+            "description": "Webhook signature verification key from the provider — encrypted. Masked in responses.",
+            "visible": false
+          },
+          "testMode": {
+            "type": "boolean",
+            "description": "If true, payment requests use test/dummy amounts for validation without charging",
+            "default": true,
+            "title": "Test mode"
+          },
+          "config": {
+            "type": "object",
+            "description": "Provider-specific nested config — e.g. { terminalId: \"kassa-01\", merchantAccount: \"...\" }"
+          },
+          "lastTestedAt": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of the last connection test",
+            "format": "date-time",
+            "visible": false
+          },
+          "testResult": {
+            "type": "object",
+            "description": "Result of the last connection test: { status: ok|error, message: \"...\" }"
+          }
+        }
       }
     },
     "views": {
@@ -3381,9 +3520,13 @@
         ],
         "totalTax": 2.94,
         "total": 27.59,
+        "paymentProvider": "mollie",
+        "paymentSessionId": "tr_WDqYK6vllg",
+        "paymentStatus": "settled",
+        "paymentMethod": "ideal",
         "confirmedAt": "2026-05-20T09:14:00+02:00",
         "settledAt": "2026-05-20T09:14:30+02:00",
-        "notes": "Contante betaling -- koffie, broodje en notitieboek"
+        "notes": "Mollie iDEAL betaling -- koffie, broodje en notitieboek"
       },
       {
         "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0002", "id": "635e3bb9-d4d1-463d-96c7-4bc0b20baa64" },
@@ -3395,7 +3538,9 @@
         "discountTotal": 0,
         "taxBreakdown": [],
         "totalTax": 0,
-        "total": 0
+        "total": 0,
+        "paymentProvider": null,
+        "paymentStatus": "pending"
       },
       {
         "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0003", "id": "f838244c-2939-44c1-aa23-549dea3682bc" },
@@ -3445,8 +3590,12 @@
         ],
         "totalTax": 18.1,
         "total": 126.06,
+        "paymentProvider": "ccv",
+        "paymentSessionId": "CCV20260520102833001",
+        "paymentStatus": "captured",
+        "paymentMethod": "card",
         "confirmedAt": "2026-05-20T10:33:00+02:00",
-        "notes": "Zakelijke aankoop -- factuur gevraagd (gemengd 0%/9%/21%)"
+        "notes": "CCV PIN-terminal betaling -- factuur gevraagd (gemengd 0%/9%/21%)"
       },
       {
         "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0004", "id": "da250c00-0537-4839-a546-429fe21c37ef" },
@@ -3474,6 +3623,8 @@
         ],
         "totalTax": 2.06,
         "total": 24.95,
+        "paymentProvider": null,
+        "paymentStatus": "pending",
         "parkedAt": "2026-05-20T11:02:00+02:00",
         "notes": "Klant even weg -- terugkomen (prijzen incl. BTW)"
       },
@@ -3514,6 +3665,10 @@
         ],
         "totalTax": 149.04,
         "total": 867.34,
+        "paymentProvider": "stripe",
+        "paymentSessionId": "pi_1ABCDefGHIjklmno",
+        "paymentStatus": "refunded",
+        "paymentMethod": "card",
         "confirmedAt": "2026-05-19T14:22:00+02:00",
         "settledAt": "2026-05-19T14:23:00+02:00",
         "refundedAt": "2026-05-20T09:45:00+02:00",
@@ -4644,6 +4799,60 @@
         "discount": 0,
         "total": 5400.00,
         "notes": "12 maanden SLA Basis, ingangsdatum bij go-live"
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "paymentProvider", "slug": "provider-mollie", "id": "9a4b1c20-6d3e-4f8a-9b2c-5e7f1a2b3c41" },
+        "name": "mollie",
+        "displayName": "Mollie",
+        "type": "online",
+        "isActive": false,
+        "environment": "sandbox",
+        "apiKey": "{{ENCRYPTED: test_dummy_key}}",
+        "webhookSecret": "{{ENCRYPTED: test_signature_key}}",
+        "testMode": true,
+        "config": {},
+        "testResult": null
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "paymentProvider", "slug": "provider-ccv", "id": "9a4b1c20-6d3e-4f8a-9b2c-5e7f1a2b3c42" },
+        "name": "ccv",
+        "displayName": "CCV",
+        "type": "terminal",
+        "isActive": false,
+        "environment": "sandbox",
+        "apiKey": "{{ENCRYPTED: test_dummy_key}}",
+        "apiSecret": "{{ENCRYPTED: test_dummy_secret}}",
+        "webhookSecret": "{{ENCRYPTED: test_signature_key}}",
+        "testMode": true,
+        "config": { "terminalId": "kassa-01" },
+        "testResult": null
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "paymentProvider", "slug": "provider-adyen", "id": "9a4b1c20-6d3e-4f8a-9b2c-5e7f1a2b3c43" },
+        "name": "adyen",
+        "displayName": "Adyen",
+        "type": "terminal",
+        "isActive": false,
+        "environment": "sandbox",
+        "apiKey": "{{ENCRYPTED: test_dummy_key}}",
+        "webhookSecret": "{{ENCRYPTED: test_signature_key}}",
+        "testMode": true,
+        "config": {},
+        "testResult": null
+      },
+      {
+        "@self": { "register": "pipelinq", "schema": "paymentProvider", "slug": "provider-stripe", "id": "9a4b1c20-6d3e-4f8a-9b2c-5e7f1a2b3c44" },
+        "name": "stripe",
+        "displayName": "Stripe",
+        "type": "online",
+        "isActive": false,
+        "environment": "sandbox",
+        "apiKey": "{{ENCRYPTED: pk_test_dummy}}",
+        "apiSecret": "{{ENCRYPTED: sk_test_dummy}}",
+        "webhookSecret": "{{ENCRYPTED: whsec_test_signature}}",
+        "testMode": true,
+        "config": {},
+        "testResult": null
       }
     ]
   }
