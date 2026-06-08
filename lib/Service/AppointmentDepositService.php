@@ -59,6 +59,7 @@ use Throwable;
  * (`euros * 100`, rounded once at the boundary).
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  *
  * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
  */
@@ -137,11 +138,11 @@ class AppointmentDepositService
      * {@see \OCA\Pipelinq\BackgroundJob\AppointmentDepositTimeoutJob})
      * releases the slot if payment never completes.
      *
-     * @param string $bookingId      Booking UUID.
-     * @param int    $amountCents    Deposit amount in integer cents.
-     * @param string $currency       ISO-4217 currency code (default EUR).
-     * @param string $description    Short description for the payment session.
-     * @param string $returnUrl      The portal URL the customer returns to.
+     * @param string $bookingId   Booking UUID.
+     * @param int    $amountCents Deposit amount in integer cents.
+     * @param string $currency    ISO-4217 currency code (default EUR).
+     * @param string $description Short description for the payment session.
+     * @param string $returnUrl   The portal URL the customer returns to.
      *
      * @return array{sessionUrl: string, status: string, providerReference: string}
      *
@@ -301,6 +302,8 @@ class AppointmentDepositService
      * @param int    $nowEpoch     Optional injected "now" (seconds since epoch) for tests.
      *
      * @return bool
+     *
+     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
      */
     public function isDepositExpired(string $createdAtIso, ?int $nowEpoch=null): bool
     {
@@ -358,6 +361,8 @@ class AppointmentDepositService
      * payment is a non-auth integration so a soft skip is permitted).
      *
      * @return object|null
+     *
+     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
      */
     public function resolvePaymentService(): ?object
     {
@@ -372,7 +377,7 @@ class AppointmentDepositService
                 return $service;
             }
         } catch (Throwable $e) {
-            // openconnector not installed / class not bound; soft skip.
+            // Openconnector not installed / class not bound; soft skip.
         }
 
         return null;
@@ -387,6 +392,8 @@ class AppointmentDepositService
      * @param object|null $service The PaymentService seam.
      *
      * @return void
+     *
+     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
      */
     public function setPaymentService(?object $service): void
     {

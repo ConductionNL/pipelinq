@@ -39,15 +39,16 @@ use RuntimeException;
  */
 class AppointmentPaymentProviderTest extends TestCase
 {
+
     /**
      * In-memory app config store.
      *
      * @var array<string, string>
      */
     private array $appConfigStore = [
-        'register'                  => 'pipelinq',
-        'booking_schema'            => 'booking',
-        'contact_schema'            => 'contact',
+        'register'                   => 'pipelinq',
+        'booking_schema'             => 'booking',
+        'contact_schema'             => 'contact',
         'appointment_payment_source' => 'mollie-prod',
     ];
 
@@ -105,8 +106,19 @@ class AppointmentPaymentProviderTest extends TestCase
     private function paymentStub(): object
     {
         return new class {
+
+            /**
+             * Number of times chargeCustomer was invoked.
+             *
+             * @var integer
+             */
             public int $calls = 0;
 
+            /**
+             * Last source slug chargeCustomer was called with.
+             *
+             * @var string
+             */
             public string $source = '';
 
             /**
@@ -129,7 +141,7 @@ class AppointmentPaymentProviderTest extends TestCase
                 $this->calls++;
                 $this->source  = $source;
                 $this->payload = $payload;
-            }
+            }//end chargeCustomer()
         };
     }//end paymentStub()
 
@@ -173,7 +185,11 @@ class AppointmentPaymentProviderTest extends TestCase
                 ?string $uuid=null,
             ) use (&$captured): array {
                 $captured = $payload;
-                return is_array($payload) ? $payload : (array) $payload;
+                if (is_array($payload) === true) {
+                    return $payload;
+                }
+
+                return (array) $payload;
             }
         );
 
@@ -254,7 +270,11 @@ class AppointmentPaymentProviderTest extends TestCase
                 ?string $uuid=null,
             ) use (&$captured): array {
                 $captured = $payload;
-                return is_array($payload) ? $payload : (array) $payload;
+                if (is_array($payload) === true) {
+                    return $payload;
+                }
+
+                return (array) $payload;
             }
         );
 
@@ -341,7 +361,7 @@ class AppointmentPaymentProviderTest extends TestCase
     }//end testChargeBookingFeeSkippedWhenSourceUnconfigured()
 
     /**
-     * openconnector PaymentService unavailable → soft skip; no throw.
+     * Openconnector PaymentService unavailable -> soft skip; no throw.
      *
      * @return void
      */

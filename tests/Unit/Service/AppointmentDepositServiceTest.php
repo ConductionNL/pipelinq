@@ -44,6 +44,7 @@ use RuntimeException;
  */
 class AppointmentDepositServiceTest extends TestCase
 {
+
     /**
      * In-memory app config store.
      *
@@ -99,6 +100,12 @@ class AppointmentDepositServiceTest extends TestCase
     private function paymentStub(string $sessionUrl, string $sessionId): object
     {
         return new class($sessionUrl, $sessionId) {
+
+            /**
+             * The source slug createSession was called with.
+             *
+             * @var string
+             */
             public string $capturedSource = '';
 
             /**
@@ -108,11 +115,17 @@ class AppointmentDepositServiceTest extends TestCase
              */
             public array $capturedPayload = [];
 
+            /**
+             * Stub constructor capturing the fixture session URL + id.
+             *
+             * @param string $sessionUrl Session URL the stub returns.
+             * @param string $sessionId  Provider reference id the stub returns.
+             */
             public function __construct(
                 private string $sessionUrl,
                 private string $sessionId,
             ) {
-            }
+            }//end __construct()
 
             /**
              * Stub createSession honouring openconnector's call shape.
@@ -131,7 +144,7 @@ class AppointmentDepositServiceTest extends TestCase
                     'sessionUrl' => $this->sessionUrl,
                     'status'     => 'open',
                 ];
-            }
+            }//end createSession()
         };
     }//end paymentStub()
 
@@ -145,7 +158,7 @@ class AppointmentDepositServiceTest extends TestCase
     public function testCreateDepositSessionReturnsSessionUrl(): void
     {
         $this->appConfigStore['appointment_payment_source'] = 'mollie-prod';
-        [$service]                                          = $this->buildService();
+        [$service] = $this->buildService();
 
         $stub = $this->paymentStub(sessionUrl: 'https://pay.example/abc', sessionId: 'sess-1');
         $service->setPaymentService(service: $stub);
@@ -183,7 +196,6 @@ class AppointmentDepositServiceTest extends TestCase
     {
         [$service] = $this->buildService();
         // No setPaymentService → container.get('OCA\OpenConnector\Service\PaymentService') will throw.
-
         $result = $service->createDepositSession(
             bookingId: 'b-2',
             amountCents: 5000
@@ -255,8 +267,8 @@ class AppointmentDepositServiceTest extends TestCase
         $booking->expects($this->once())
             ->method('confirmBooking')
             ->with(
-                $this->equalTo('b-1'),
-                $this->stringContains('Deposit payment confirmed')
+                $this->equalTo(value: 'b-1'),
+                $this->stringContains(string: 'Deposit payment confirmed')
             );
 
         [$service] = $this->buildService(bookingService: $booking);
@@ -364,9 +376,9 @@ class AppointmentDepositServiceTest extends TestCase
         $booking->expects($this->once())
             ->method('cancelBooking')
             ->with(
-                $this->equalTo('b-1'),
-                $this->stringContains('Deposit not paid'),
-                $this->equalTo(BookingService::ACTOR_SYSTEM)
+                $this->equalTo(value: 'b-1'),
+                $this->stringContains(string: 'Deposit not paid'),
+                $this->equalTo(value: BookingService::ACTOR_SYSTEM)
             );
 
         [$service] = $this->buildService(bookingService: $booking);

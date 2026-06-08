@@ -114,8 +114,9 @@ class AppointmentDepositTimeoutJobTest extends TestCase
      */
     public function testRunReleasesOnlyExpiredBookings(): void
     {
-        $expired = '2020-01-01T00:00:00+00:00'; // Long-expired.
-        $fresh   = (new \DateTimeImmutable('-1 minute'))->format('Y-m-d\TH:i:sP');
+        $expired = '2020-01-01T00:00:00+00:00';
+        // Long-expired.
+        $fresh = (new \DateTimeImmutable('-1 minute'))->format('Y-m-d\TH:i:sP');
 
         $objectService = $this->createMock(originalClassName: ObjectService::class);
         $objectService->method('findAll')->willReturn(
@@ -133,7 +134,7 @@ class AppointmentDepositTimeoutJobTest extends TestCase
         );
         $depositService->expects($this->once())
             ->method('releaseExpiredDeposit')
-            ->with($this->equalTo('b-expired'));
+            ->with($this->equalTo(value: 'b-expired'));
 
         $job = $this->buildJob(objectService: $objectService, depositService: $depositService);
         $this->invokeRun(job: $job);
@@ -168,8 +169,10 @@ class AppointmentDepositTimeoutJobTest extends TestCase
         $objectService = $this->createMock(originalClassName: ObjectService::class);
         $objectService->method('findAll')->willReturn(
             [
-                ['@self' => ['created' => '2020-01-01T00:00:00+00:00']],         // no id
-                ['@self' => ['id' => 'b-no-created']],                            // no createdAt
+                // No id field on this row.
+                ['@self' => ['created' => '2020-01-01T00:00:00+00:00']],
+                // No createdAt on this row.
+                ['@self' => ['id' => 'b-no-created']],
                 ['@self' => ['id' => 'b-good', 'created' => '2020-01-01T00:00:00+00:00']],
             ]
         );
@@ -178,7 +181,7 @@ class AppointmentDepositTimeoutJobTest extends TestCase
         $depositService->method('isDepositExpired')->willReturn(true);
         $depositService->expects($this->once())
             ->method('releaseExpiredDeposit')
-            ->with($this->equalTo('b-good'));
+            ->with($this->equalTo(value: 'b-good'));
 
         $job = $this->buildJob(objectService: $objectService, depositService: $depositService);
         $this->invokeRun(job: $job);
@@ -203,13 +206,15 @@ class AppointmentDepositTimeoutJobTest extends TestCase
         $depositService = $this->createMock(originalClassName: AppointmentDepositService::class);
         $depositService->method('isDepositExpired')->willReturn(true);
 
-        $depositService->expects($this->exactly(2))
+        $depositService->expects($this->exactly(count: 2))
             ->method('releaseExpiredDeposit')
-            ->willReturnCallback(static function (string $id): void {
-                if ($id === 'b-1') {
-                    throw new RuntimeException('OR down');
-                }
-            });
+            ->willReturnCallback(
+                    static function (string $id): void {
+                        if ($id === 'b-1') {
+                            throw new RuntimeException('OR down');
+                        }
+                    }
+                    );
 
         $job = $this->buildJob(objectService: $objectService, depositService: $depositService);
         $this->invokeRun(job: $job);

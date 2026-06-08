@@ -39,6 +39,7 @@ use RuntimeException;
  */
 class AppointmentPaymentWebhookControllerTest extends TestCase
 {
+
     /**
      * In-memory app config store.
      *
@@ -110,8 +111,23 @@ class AppointmentPaymentWebhookControllerTest extends TestCase
             $this->logger,
             $rawBody
         ) extends AppointmentPaymentWebhookController {
+
+            /**
+             * Raw body to return from readRawBody().
+             *
+             * @var string
+             */
             private string $stubBody;
 
+            /**
+             * Subclass constructor that captures the raw-body override.
+             *
+             * @param IRequest                  $request   The request.
+             * @param IAppConfig                $appConfig App config.
+             * @param AppointmentDepositService $deposit   Deposit service.
+             * @param LoggerInterface           $logger    Logger.
+             * @param string                    $stubBody  Raw body fixture.
+             */
             public function __construct(
                 IRequest $request,
                 IAppConfig $appConfig,
@@ -119,14 +135,24 @@ class AppointmentPaymentWebhookControllerTest extends TestCase
                 LoggerInterface $logger,
                 string $stubBody,
             ) {
-                parent::__construct($request, $appConfig, $deposit, $logger);
+                parent::__construct(
+                    request: $request,
+                    appConfig: $appConfig,
+                    deposit: $deposit,
+                    logger: $logger
+                );
                 $this->stubBody = $stubBody;
-            }
+            }//end __construct()
 
+            /**
+             * Return the captured raw body fixture.
+             *
+             * @return string
+             */
             protected function readRawBody(): string
             {
                 return $this->stubBody;
-            }
+            }//end readRawBody()
         };
     }//end buildController()
 
@@ -195,7 +221,7 @@ class AppointmentPaymentWebhookControllerTest extends TestCase
 
         $this->deposit->expects($this->once())
             ->method('handlePaymentCallback')
-            ->with($this->equalTo('b-1'), $this->equalTo('paid'))
+            ->with($this->equalTo(value: 'b-1'), $this->equalTo(value: 'paid'))
             ->willReturn('confirmed');
 
         $response = $this->buildController(rawBody: $rawBody)->callback();

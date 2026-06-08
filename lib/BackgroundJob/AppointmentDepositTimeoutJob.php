@@ -101,9 +101,39 @@ class AppointmentDepositTimeoutJob extends TimedJob
      *
      * @return void
      *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) Required by TimedJob::run.
+     *
      * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
      */
     protected function run(mixed $argument): void
+    {
+        $candidates = $this->loadPendingDeposits();
+        if ($candidates === []) {
+            return;
+        }
+
+        $released = 0;
+        foreach ($candidates as $candidate) {
+            $released += $this->releaseIfExpired(candidate: $candidate);
+        }
+
+        if ($released > 0) {
+            $this->logger->info(
+                'AppointmentDepositTimeoutJob: released expired deposit holds',
+                ['count' => $released]
+            );
+        }
+    }//end run()
+
+    /**
+     * Load pending-deposit candidates from OpenRegister.
+     *
+     * Returns an empty array on any failure (missing config, OR
+     * unavailable, query failure) so the calling `run()` stays linear.
+     *
+     * @return array<int, mixed>
+     */
+    private function loadPendingDeposits(): array
     {
         $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
         $schema   = $this->appConfig->getValueString(
@@ -113,14 +143,14 @@ class AppointmentDepositTimeoutJob extends TimedJob
         );
         if ($register === '' || $schema === '') {
             $this->logger->debug('AppointmentDepositTimeoutJob: no register/schema configured, skipping');
-            return;
+            return [];
         }
 
         try {
             $objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
         } catch (Throwable $e) {
             $this->logger->debug('AppointmentDepositTimeoutJob: OR ObjectService unavailable, skipping');
-            return;
+            return [];
         }
 
         try {
@@ -137,48 +167,51 @@ class AppointmentDepositTimeoutJob extends TimedJob
                 'AppointmentDepositTimeoutJob: pending-deposit query failed',
                 ['exception' => $e]
             );
-            return;
+            return [];
         }
 
-        if (is_array($candidates) === false || $candidates === []) {
-            return;
+        if (is_array($candidates) === false) {
+            return [];
         }
 
-        $released = 0;
-        foreach ($candidates as $candidate) {
-            $data = $this->toArray(object: $candidate);
-            if ($data === null) {
-                continue;
-            }
+        return $candidates;
+    }//end loadPendingDeposits()
 
-            $bookingId = $this->idOf(data: $data);
-            $createdAt = $this->createdAt(data: $data);
-            if ($bookingId === '' || $createdAt === '') {
-                continue;
-            }
+    /**
+     * Release a single candidate if its 15-minute window has elapsed.
+     *
+     * @param mixed $candidate A booking row from OR.
+     *
+     * @return int 1 when the candidate was released, 0 otherwise.
+     */
+    private function releaseIfExpired(mixed $candidate): int
+    {
+        $data = $this->toArray(object: $candidate);
+        if ($data === null) {
+            return 0;
+        }
 
-            if ($this->depositService->isDepositExpired(createdAtIso: $createdAt) === false) {
-                continue;
-            }
+        $bookingId = $this->idOf(data: $data);
+        $createdAt = $this->createdAt(data: $data);
+        if ($bookingId === '' || $createdAt === '') {
+            return 0;
+        }
 
-            try {
-                $this->depositService->releaseExpiredDeposit(bookingId: $bookingId);
-                $released++;
-            } catch (Throwable $e) {
-                $this->logger->warning(
-                    'AppointmentDepositTimeoutJob: release failed',
-                    ['booking' => $bookingId]
-                );
-            }
-        }//end foreach
+        if ($this->depositService->isDepositExpired(createdAtIso: $createdAt) === false) {
+            return 0;
+        }
 
-        if ($released > 0) {
-            $this->logger->info(
-                'AppointmentDepositTimeoutJob: released expired deposit holds',
-                ['count' => $released]
+        try {
+            $this->depositService->releaseExpiredDeposit(bookingId: $bookingId);
+            return 1;
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'AppointmentDepositTimeoutJob: release failed',
+                ['booking' => $bookingId]
             );
+            return 0;
         }
-    }//end run()
+    }//end releaseIfExpired()
 
     /**
      * Pull the booking id out of an OR object (supporting @self + flat shapes).
