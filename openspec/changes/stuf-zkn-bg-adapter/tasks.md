@@ -80,7 +80,7 @@
 
 ## 4. Frontend — Admin Configuration & Audit
 
-- [ ] 4.1 Create `src/views/admin/StufEndpoints.vue` for endpoint management:
+- [x] 4.1 Create `src/views/admin/StufEndpoints.vue` for endpoint management:
   - List all StufEndpoint objects in a data table (naam, gemeenteCode, soapVersion, actief status)
   - Create button opens a form dialog with fields: naam, gemeenteCode, ontvangerApplicatie, endpointUrl, soapVersion, stufVersion, sectormodel, zaakIdentificatieStrategie
   - Edit button opens form dialog with existing values
@@ -88,7 +88,7 @@
   - Test Connection button sends a test Du01 and shows response/error
   - Authentication config form: type dropdown (wsse-usernametoken), gebruikersnaam field, vault reference field for password and TLS cert
 
-- [ ] 4.2 Create `src/views/admin/StufAuditLog.vue` for audit log viewing:
+- [x] 4.2 Create `src/views/admin/StufAuditLog.vue` for audit log viewing:
   - Query StufMessage with filters: date range, endpointId dropdown, berichtSoort, status
   - Display table: date, direction, berichtSoort, functie, status, httpStatus, duration
   - Click row to expand and show full envelope XML (formatted, collapsible)
@@ -96,7 +96,7 @@
   - Show fout object if status=fout
   - Export button to download visible rows as CSV/JSON
 
-- [ ] 4.3 Add navigation:
+- [x] 4.3 Add navigation:
   - Add menu entries to admin sidebar: "StUF Eindpunten" (endpoints) and "StUF Audit Log"
   - Link from main settings page
 
