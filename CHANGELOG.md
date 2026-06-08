@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **StUF-ZKN/BG adapter** (`stuf-zkn-bg-adapter`): SOAP 1.1 + StUF 0310
+  bridge to legacy zaaksystemen (Centric Key2Zaken, Atos PinkRoccade, ...)
+  enabling municipalities without ZGW REST APIs to use Pipelinq as a
+  modern KCC front-end. Implements the four core ZKN operations
+  (`creeerZaak`, `actualiseerZaak`, `geefZaakDetails`,
+  `genereerZaakIdentificatie`) plus `vrijeBerichten`. Per-call audit log
+  (`StufMessage`), bidirectional mapping (`ZaaksysteemMapping`),
+  WSSE UsernameToken + mutual TLS authentication, document base64
+  embedding with a 25 MiB ceiling, retry with exponential backoff
+  (5s, 30s, 2m, 10m) reusing the same referentienummer for idempotency,
+  per-endpoint circuit breaker (4 failures → 5 min cooldown) with
+  needs-input escalation to admins. Admin UI under
+  `Settings → StUF endpoints` and `Settings → StUF audit log`.
 - **BSN-validatie + BRP-lookup (HaalCentraal Personen v2.0)**: complete
   integration with RvIG's HaalCentraal BRP API
   (`bsn-validatie-en-brp-lookup`). Adds five OpenRegister schemas
