@@ -52,7 +52,7 @@ Vrij en open source onder de AGPL-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.4.9</version>
+    <version>0.5.0</version>
     <licence>agpl</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Pipelinq</namespace>
@@ -99,6 +99,10 @@ Vrij en open source onder de AGPL-licentie.
         <job>OCA\Pipelinq\BackgroundJob\ReminderDispatchJob</job>
         <job>OCA\Pipelinq\BackgroundJob\AvailabilityCacheRefreshJob</job>
         <job>OCA\Pipelinq\BackgroundJob\AppointmentDepositTimeoutJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\TemplateApprovalSyncJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\BudgetPeriodResetJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\CostReconciliationJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\WebhookProcessorJob</job>
     </background-jobs>
 
     <navigations>
