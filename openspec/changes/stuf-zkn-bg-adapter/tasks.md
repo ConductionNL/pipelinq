@@ -12,14 +12,14 @@
 
 ## 2. Backend Core Services
 
-- [ ] 2.1 Create `lib/Service/StufAdapterService.php` with method stubs:
+- [x] 2.1 Create `lib/Service/StufAdapterService.php` with method stubs:
   - `creeerZaak(Request $request, StufEndpoint $endpoint, ?array $opts): array` — orchestrates Lk01 build, send, response parse, mapping persistence
   - `actualiseerZaak(Request $request, StufEndpoint $endpoint): array` — orchestrates Lk02 build and send
   - `geefZaakDetails(string $zaakId, StufEndpoint $endpoint): ?array` — sends Lv01, waits for La01 (30s timeout), returns Zaak object
   - `vrijBericht(string $name, array $payload, StufEndpoint $endpoint): array` — validates payload against template, builds Du01, sends
   - `genereerZaakIdentificatie(StufEndpoint $endpoint): string` — sends Du01, parses La01, returns zaak ID
 
-- [ ] 2.2 Create `lib/Service/StufEnvelopeBuilder.php` for SOAP construction:
+- [x] 2.2 Create `lib/Service/StufEnvelopeBuilder.php` for SOAP construction:
   - `buildLk01CreeerZaak(Request $request, StufEndpoint $endpoint, ?string $zaakId): string` — builds Lk01 with stuurgegevens, zaaktype, betrokkenen, documents
   - `buildLk02ActualiseerZaak(Request $request, ZaaksysteemMapping $mapping): string` — builds Lk02 with updated fields
   - `buildLv01GeefDetails(string $zaakId, StufEndpoint $endpoint, array $gewensteElementen): string` — builds Lv01 query
@@ -28,33 +28,33 @@
   - Helper: `generateReferentienummer(): string` — ULID generation
   - Helper: `currentTimestampStuf(): string` — Europe/Amsterdam, yyyyMMddHHmmssSSS format
 
-- [ ] 2.3 Create `lib/Service/StufHttpClient.php` for transport:
+- [x] 2.3 Create `lib/Service/StufHttpClient.php` for transport:
   - `send(StufEndpoint $endpoint, string $envelopeXml, ?int $timeoutSeconds = 30): array` — POST to endpoint URL, return [httpStatus, responseXml, durationMs]
   - Load WSSE credentials from vault (via IAppConfig)
   - Load TLS client certificate from vault
   - Enforce server certificate verification (DO NOT disable)
   - Return timing info for audit logging
 
-- [ ] 2.4 Create `lib/Service/StufMessageHandler.php` for audit logging:
+- [x] 2.4 Create `lib/Service/StufMessageHandler.php` for audit logging:
   - `logOutbound(StufEndpoint $endpoint, string $envelopeXml, string $referentienummer, string $berichtSoort, ?string $zaakId, ?string $requestId): StufMessage` — persist outbound envelope with status="verzonden"
   - `logInbound(string $responseXml, string $crossRefnummer): ?StufMessage` — find matching outbound by crossRefnummer, update status and responseEnvelopeXml
   - `recordRetry(StufMessage $msg, int $attempt, int $httpStatus, ?array $fout, int $durationMs)` — append to retries[] array
   - `transitionStatus(StufMessage $msg, string $newStatus)` — verzonden → bevestigd / fout
 
-- [ ] 2.5 Create `lib/Service/StufMessageParser.php` for response parsing:
+- [x] 2.5 Create `lib/Service/StufMessageParser.php` for response parsing:
   - `parseBevestiging(string $responseXml): array` — extract Bv01 confirmation data (referentienummer, zaakIdentificatie if present)
   - `parseZaakDetails(string $responseXml): array` — extract La01 Zaak object (identificatie, omschrijving, startdatum, einddatum, statussen, betrokkenen)
   - `parseError(string $responseXml): array` — extract Fo02 error (code, omschrijving, details)
   - `extractNamespaceValue(string $xml, string $xpath, string $namespace): ?string` — helper for XML parsing with StUF namespaces
 
-- [ ] 2.6 Create `lib/Service/CircuitBreakerService.php` for failure isolation:
+- [x] 2.6 Create `lib/Service/CircuitBreakerService.php` for failure isolation:
   - `checkEndpoint(StufEndpoint $endpoint): bool` — return false if circuit is open
   - `recordFailure(StufEndpoint $endpoint)` — increment failure count, open circuit if threshold (4) reached
   - `resetEndpoint(StufEndpoint $endpoint)` — reset failure count to 0
   - `isCircuitOpen(StufEndpoint $endpoint): bool` — check if open and cooldown has passed
   - Store state in IAppConfig (failure count per endpoint ID, open timestamp)
 
-- [ ] 2.7 Create `lib/Service/ContactBetrokkeneMapper.php` for entity mapping:
+- [x] 2.7 Create `lib/Service/ContactBetrokkeneMapper.php` for entity mapping:
   - `linkContact(Contact $contact, string $betrokkeneId, StufEndpoint $endpoint)` — create or update ZaaksysteemMapping with externEntiteit=NPS
   - `findOrCreateBetrokkene(Contact $contact, StufEndpoint $endpoint): string` — call geefBetrokkene Lv01 first, create new if not found, return betrokkeneId
   - `getContactMapping(Contact $contact, StufEndpoint $endpoint): ?ZaaksysteemMapping` — retrieve existing mapping by contact ID
