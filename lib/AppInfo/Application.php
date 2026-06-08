@@ -58,6 +58,7 @@ use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Mcp\PipelinqToolProvider;
 use OCA\Pipelinq\Service\AppointmentCalendarLeafProvider;
 use OCA\Pipelinq\Service\AppointmentEmailService;
+use OCA\Pipelinq\Service\AppointmentPaymentProvider;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCA\Pipelinq\Service\BookingService;
 use OCA\Pipelinq\Service\WalkInQueueService;
@@ -367,6 +368,7 @@ class Application extends App implements IBootstrap
         }
 
         $this->wireAppointmentCalendarSeam();
+        $this->wireAppointmentPaymentSeam();
     }//end boot()
 
     /**
@@ -426,4 +428,32 @@ class Application extends App implements IBootstrap
             // documented graceful-degradation path from BookingService.
         }
     }//end wireAppointmentCalendarSeam()
+
+    /**
+     * Inject {@see AppointmentPaymentProvider} into {@see BookingService} as
+     * the no-show + late-cancellation fee payment seam (member 08 of the
+     * appointment-booking chain).
+     *
+     * The provider routes the BookingService::chargeNoShowFee /
+     * chargeCancellationFee invocations through openconnector. The seam is
+     * optional: when either service cannot be resolved BookingService keeps
+     * recording the fee intent in statusHistory but skips the transport.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-011a
+     */
+    private function wireAppointmentPaymentSeam(): void
+    {
+        try {
+            $container       = $this->getContainer();
+            $bookingService  = $container->get(BookingService::class);
+            $paymentProvider = $container->get(AppointmentPaymentProvider::class);
+            $bookingService->setPaymentProvider(provider: $paymentProvider);
+        } catch (Throwable $e) {
+            // OpenRegister or one of the collaborators is unavailable — the
+            // seam stays null and bookings still transition; the fee is then
+            // recorded in statusHistory only, never transported.
+        }
+    }//end wireAppointmentPaymentSeam()
 }//end class
