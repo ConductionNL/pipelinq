@@ -71,6 +71,10 @@ class SettingsService
         'refundReason_schema',
         'posRefund_schema',
         'posRefundLine_schema',
+        'cashShift_schema',
+        'cashDrop_schema',
+        'cashCount_schema',
+        'cashDiff_schema',
         'exportDestination_schema',
         'exportJob_schema',
         'exportRun_schema',
@@ -101,6 +105,12 @@ class SettingsService
         'expense_schema',
         // Billing categories (billable-categories-and-tags) — REQ-BCT-001.
         'billingCategory_schema',
+        // Appointment booking schemas (appointment-booking 01..11).
+        'service_schema',
+        'resource_schema',
+        'booking_schema',
+        'walkInTicket_schema',
+        'availabilityCache_schema',
     ];
 
     /**
@@ -150,7 +160,7 @@ class SettingsService
         'shillinq_ap_webhook_url'                  => '',
         // Lead-management: number of inactivity days before a lead is flagged stale.
         // Default mirrors REQ-LM-002 (14 days). Tenant-tunable through admin settings.
-        // @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+        // spec: openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002.
         'lead_stale_threshold_days'                => '14',
         // BI export + data-warehouse sink — admin settings (bi-export-and-data-warehouse-sink#14.1).
         'export.retention_days'                    => '365',
