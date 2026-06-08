@@ -144,8 +144,10 @@ class PosCustomerLinkService
 
         try {
             $rows = $this->getObjectService()->findAll(
-                filters: ['register' => $register, 'schema' => $schema],
-                limit: 200
+                config: [
+                    'filters' => ['register' => $register, 'schema' => $schema],
+                    'limit'   => 200,
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->warning('Pipelinq: contact search failed', ['exception' => $e->getMessage()]);
@@ -312,12 +314,14 @@ class PosCustomerLinkService
 
         try {
             $rows = $this->getObjectService()->findAll(
-                filters: [
-                    'register' => $register,
-                    'schema'   => $schema,
-                    'customer' => $contactUuid,
-                ],
-                limit: 200
+                config: [
+                    'filters' => [
+                        'register' => $register,
+                        'schema'   => $schema,
+                        'customer' => $contactUuid,
+                    ],
+                    'limit'   => 200,
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->warning('Pipelinq: POS customer history fetch failed', [
@@ -429,7 +433,18 @@ class PosCustomerLinkService
         $tender   = (string) ($transaction['tenderType'] ?? '');
         $customer = (string) ($transaction['customer'] ?? '');
 
-        if ($tender === 'onAccount' && $customer === '') {
+        if ($tender !== 'onAccount') {
+            return;
+        }
+
+        // Admin can disable the invariant (REQ-PCL-006); when the toggle is
+        // off the cashier can still ring up on-account sales without a linked
+        // customer (e.g. for legacy / paper-ledger debtor flows).
+        if ($this->requiresCustomerForOnAccount() === false) {
+            return;
+        }
+
+        if ($customer === '') {
             throw new OCSBadRequestException(
                 "Klant is verplicht voor 'op rekening' transacties."
             );
