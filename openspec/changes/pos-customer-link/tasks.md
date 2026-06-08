@@ -43,7 +43,7 @@
     - Transaction is saved to database with customer and consent fields
     - Response includes customer and consent fields in JSON
 
-- [ ] 1.4 Add Pipelinq consent sync service
+- [x] 1.4 Add Pipelinq consent sync service
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-004 Scenario 2`
   - **files**: `pos/lib/Service/PipelinqConsentService.php` (new)
   - **acceptance_criteria**:
@@ -68,7 +68,7 @@
 
 ## 2. Backend: Customer Lookup API
 
-- [ ] 2.1 Create Pipelinq search proxy service
+- [x] 2.1 Create Pipelinq search proxy service
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-001`
   - **files**: `pos/lib/Service/PipelinqSearchService.php` (new)
   - **acceptance_criteria**:
@@ -244,7 +244,7 @@
 
 ## 7. Backend: Privacy & Compliance
 
-- [ ] 7.1 Add privacy flag decoration to search results
+- [x] 7.1 Add privacy flag decoration to search results
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-007`
   - **files**: `pos/lib/Service/PipelinqSearchService.php`
   - **acceptance_criteria**:
@@ -252,7 +252,7 @@
     - If contact has "do not contact" flag, results include `doNotContact: true`
     - Frontend decorates such results with visual indicator (icon or badge)
 
-- [ ] 7.2 Block consent sync if do-not-contact flag is set
+- [x] 7.2 Block consent sync if do-not-contact flag is set
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-007 Scenario 2`
   - **files**: `pos/lib/Service/PipelinqConsentService.php`
   - **acceptance_criteria**:
