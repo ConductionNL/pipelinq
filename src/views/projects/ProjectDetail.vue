@@ -161,6 +161,42 @@
 			</div>
 		</CnDetailCard>
 
+		<!-- Shillinq Ledger card (REQ-PLG-005) — only rendered when the admin
+		     has configured shillinq_ledger_webhook_url. Sits above the WBS so
+		     finance-conscious users see sync state without scrolling. -->
+		<CnDetailCard
+			v-if="ledgerWebhookConfigured"
+			:title="t('pipelinq', 'Shillinq Ledger')">
+			<div class="ledger-card">
+				<div class="ledger-card__row">
+					<label class="ledger-card__label">
+						{{ t('pipelinq', 'Status') }}
+					</label>
+					<span v-if="!ledgerSyncStatus" class="ledger-card__dash">-</span>
+					<span
+						v-else
+						class="ledger-card__pill"
+						:class="ledgerPillClass(ledgerSyncStatus)">
+						{{ ledgerStatusLabel(ledgerSyncStatus) }}
+					</span>
+				</div>
+				<div class="ledger-card__row">
+					<label class="ledger-card__label">
+						{{ t('pipelinq', 'Last synced') }}
+					</label>
+					<span>{{ formatDateTime(ledgerSyncedAt) }}</span>
+				</div>
+				<div v-if="ledgerSyncStatus === 'failed'" class="ledger-card__row ledger-card__row--actions">
+					<NcButton
+						type="primary"
+						:disabled="ledgerRetrying"
+						@click="retryLedgerSync">
+						{{ ledgerRetrying ? t('pipelinq', 'Retrying...') : t('pipelinq', 'Retry Sync') }}
+					</NcButton>
+				</div>
+			</div>
+		</CnDetailCard>
+
 		<CnDetailCard :title="t('pipelinq', 'Werkverdeling')">
 			<ProjectWbsTree
 				:project="projectData"
@@ -214,6 +250,8 @@
 </template>
 
 <script>
+import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
 import { NcButton } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard, CnFormDialog } from '@conduction/nextcloud-vue'
@@ -254,6 +292,9 @@ export default {
 			activities: [],
 			clientName: '-',
 			availableClients: [],
+			// Shillinq ledger integration (REQ-PLG-005).
+			ledgerWebhookConfigured: false,
+			ledgerRetrying: false,
 		}
 	},
 	computed: {
@@ -390,6 +431,24 @@ export default {
 		overBudget() {
 			return this.plannedHours > 0 && this.loggedHours > this.plannedHours
 		},
+		/**
+		 * Convenience accessor for the ledger sync status on the project
+		 * payload (REQ-PLG-005). The shared object store preserves this
+		 * field on every fetch / save round-trip.
+		 *
+		 * @return {string|null}
+		 */
+		ledgerSyncStatus() {
+			return this.projectData.ledgerSyncStatus || null
+		},
+		/**
+		 * ISO timestamp of the last successful ledger dispatch.
+		 *
+		 * @return {string|null}
+		 */
+		ledgerSyncedAt() {
+			return this.projectData.ledgerSyncedAt || null
+		},
 	},
 	async mounted() {
 		if (this.isNew) {
@@ -399,6 +458,7 @@ export default {
 			await this.objectStore.fetchObject('project', this.projectId)
 			await this.fetchRelations()
 			this.loadClientName()
+			this.loadLedgerWebhookStatus()
 		}
 	},
 	methods: {
@@ -636,6 +696,96 @@ export default {
 			if (Number.isNaN(n)) return '€ 0'
 			return '€ ' + n.toLocaleString('nl-NL', { maximumFractionDigits: 0 })
 		},
+		/**
+		 * Localised label for the ledger sync status (REQ-PLG-005). The
+		 * three keys are English source strings — Dutch translations live
+		 * in l10n/nl.json.
+		 *
+		 * @param {string|null} status The ledgerSyncStatus value.
+		 * @return {string}
+		 */
+		ledgerStatusLabel(status) {
+			const map = {
+				synced: t('pipelinq', 'Ledger synchronized'),
+				pending: t('pipelinq', 'Ledger pending'),
+				failed: t('pipelinq', 'Ledger sync failed'),
+			}
+			return map[status] || (status || '-')
+		},
+		/**
+		 * Modifier class for the ledger card pill (mirrors the ProjectList
+		 * pill colours for visual consistency).
+		 *
+		 * @param {string|null} status The ledgerSyncStatus value.
+		 * @return {string}
+		 */
+		ledgerPillClass(status) {
+			return 'ledger-card__pill--' + (status || 'unknown')
+		},
+		/**
+		 * Format an ISO timestamp as a locale date/time string, or "-" when
+		 * the value is missing.
+		 *
+		 * @param {string|null} value The ISO timestamp.
+		 * @return {string}
+		 */
+		formatDateTime(value) {
+			if (!value) return '-'
+			try {
+				return new Date(value).toLocaleString()
+			} catch {
+				return value
+			}
+		},
+		/**
+		 * Resolve whether the admin has configured the Shillinq ledger
+		 * webhook URL. Drives the v-if on the ledger card (REQ-PLG-005-04:
+		 * the entire card is removed from the DOM when no URL is set).
+		 *
+		 * @return {Promise<void>}
+		 */
+		async loadLedgerWebhookStatus() {
+			try {
+				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/settings'))
+				const url = (data?.config?.shillinq_ledger_webhook_url || '').trim()
+				this.ledgerWebhookConfigured = url !== ''
+			} catch {
+				// Settings unreachable -> hide the card rather than show stale state.
+				this.ledgerWebhookConfigured = false
+			}
+		},
+		/**
+		 * Manually re-dispatch this project to the Shillinq ledger via
+		 * POST /apps/pipelinq/api/ledger/retry/{projectId} (REQ-PLG-005-03).
+		 * Refreshes the project after a successful retry so the card
+		 * reflects the new state.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async retryLedgerSync() {
+			if (this.ledgerRetrying || !this.projectId) return
+			this.ledgerRetrying = true
+			try {
+				const url = generateUrl(`/apps/pipelinq/api/ledger/retry/${encodeURIComponent(this.projectId)}`)
+				const { data } = await axios.post(url, {})
+				if (data?.ledgerSyncStatus === 'synced') {
+					showSuccess(t('pipelinq', 'Ledger sync retried successfully.'))
+				} else {
+					showError(data?.error || t('pipelinq', 'Could not retry the ledger sync.'))
+				}
+			} catch (e) {
+				const message = e?.response?.data?.error || t('pipelinq', 'Could not retry the ledger sync.')
+				showError(message)
+			} finally {
+				this.ledgerRetrying = false
+				// Refresh the project so the ledger card reflects the new state.
+				try {
+					await this.objectStore.fetchObject('project', this.projectId)
+				} catch {
+					// Best-effort refresh; the toast above already informed the user.
+				}
+			}
+		},
 	},
 }
 </script>
@@ -741,5 +891,48 @@ export default {
 .client-link {
 	color: var(--color-primary-element);
 	cursor: pointer;
+}
+
+/* Shillinq Ledger card (REQ-PLG-005). */
+.ledger-card {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 8px 16px;
+	align-items: center;
+}
+
+.ledger-card__row {
+	display: contents;
+}
+
+.ledger-card__row--actions {
+	grid-column: 1 / -1;
+	display: flex;
+	justify-content: flex-end;
+}
+
+.ledger-card__label {
+	font-size: 0.85em;
+	color: var(--color-text-maxcontrast);
+}
+
+.ledger-card__pill {
+	display: inline-block;
+	padding: 2px 10px;
+	border-radius: 12px;
+	font-size: 0.85em;
+	background: var(--color-background-dark);
+	color: var(--color-main-text);
+	width: max-content;
+}
+
+.ledger-card__pill--synced { background: #e8f5e9; color: #1b5e20; }
+
+.ledger-card__pill--pending { background: #fff8e1; color: #6d4c00; }
+
+.ledger-card__pill--failed { background: #fbe9e7; color: #b71c1c; }
+
+.ledger-card__dash {
+	color: var(--color-text-maxcontrast);
 }
 </style>
