@@ -51,10 +51,10 @@ class SlaAttainmentController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest             $request    HTTP request.
-     * @param SlaAttainmentService $attainment Attainment service.
+     * @param IRequest             $request     HTTP request.
+     * @param SlaAttainmentService $attainment  Attainment service.
      * @param IUserSession         $userSession Active session.
-     * @param LoggerInterface      $logger     Logger.
+     * @param LoggerInterface      $logger      Logger.
      */
     public function __construct(
         IRequest $request,

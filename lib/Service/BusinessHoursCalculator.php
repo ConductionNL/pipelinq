@@ -46,12 +46,14 @@ use Throwable;
  * The class operates on minute precision (seconds floored) to keep the
  * loop cheap; SLA deadlines are by spec rounded down anyway.
  *
+ * @spec openspec/changes/sla-engine-and-escalation/tasks.md#3.3
+ *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class BusinessHoursCalculator
 {
-    public const CALENDAR_24X7        = '24x7';
-    public const CALENDAR_BUSINESS    = 'business-hours';
+    public const CALENDAR_24X7         = '24x7';
+    public const CALENDAR_BUSINESS     = 'business-hours';
     public const CALENDAR_EXT_BUSINESS = 'extended-business-hours';
 
     /**
@@ -71,12 +73,14 @@ class BusinessHoursCalculator
     /**
      * Add a duration to a start time using the configured calendar mode.
      *
-     * @param string             $calendarType    Calendar mode.
-     * @param DateTimeInterface  $startTime       Start instant.
-     * @param DateInterval       $duration        Duration to add.
-     * @param string             $holidayCalendar Holiday calendar slug.
+     * @param string            $calendarType    Calendar mode.
+     * @param DateTimeInterface $startTime       Start instant.
+     * @param DateInterval      $duration        Duration to add.
+     * @param string            $holidayCalendar Holiday calendar slug.
      *
      * @return DateTimeImmutable End instant (immutable copy).
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
      */
     public function addDuration(
         string $calendarType,
@@ -90,12 +94,17 @@ class BusinessHoursCalculator
             return $start->add($duration);
         }
 
-        $minutes = $this->intervalToMinutes($duration);
+        $minutes = $this->intervalToMinutes(duration: $duration);
         if ($minutes <= 0) {
             return $start;
         }
 
-        return $this->advanceWithinWindow($calendarType, $start, $minutes, $holidayCalendar);
+        return $this->advanceWithinWindow(
+            calendarType: $calendarType,
+            start: $start,
+            minutesNeeded: $minutes,
+            holidayCalendar: $holidayCalendar
+        );
     }//end addDuration()
 
     /**
@@ -104,6 +113,8 @@ class BusinessHoursCalculator
      * @param DateInterval $duration Duration.
      *
      * @return int Minutes.
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
      */
     public function intervalToMinutes(DateInterval $duration): int
     {
@@ -117,6 +128,8 @@ class BusinessHoursCalculator
      * Compute the configured business-hours window.
      *
      * @return array{start: string, end: string} HH:MM window.
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
      */
     public function getBusinessHoursWindow(): array
     {
@@ -145,12 +158,14 @@ class BusinessHoursCalculator
      * @param string            $calendarType    Calendar mode (24x7 / business-hours / extended).
      *
      * @return int Elapsed minutes (>=0).
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
      */
     public function elapsedBusinessMinutes(
         DateTimeInterface $start,
         DateTimeInterface $end,
         string $holidayCalendar,
-        string $calendarType = self::CALENDAR_BUSINESS,
+        string $calendarType=self::CALENDAR_BUSINESS,
     ): int {
         if ($calendarType === self::CALENDAR_24X7) {
             return max(0, (int) floor(($end->getTimestamp() - $start->getTimestamp()) / 60));
@@ -166,7 +181,11 @@ class BusinessHoursCalculator
 
         // Step forward day-by-day, capping each window contribution.
         while ($cursor->getTimestamp() < $endStamp) {
-            [$winStart, $winEnd] = $this->dayWindow($calendarType, $cursor, $holidayCalendar);
+            [$winStart, $winEnd] = $this->dayWindow(
+                calendarType: $calendarType,
+                day: $cursor,
+                holidayCalendar: $holidayCalendar
+            );
             if ($winStart === null || $winEnd === null) {
                 $cursor = $cursor->modify('+1 day')->setTime(0, 0);
                 continue;
@@ -208,7 +227,11 @@ class BusinessHoursCalculator
         $maxLoops = 365 * 2;
 
         while ($minutesNeeded > 0 && $maxLoops-- > 0) {
-            [$winStart, $winEnd] = $this->dayWindow($calendarType, $cursor, $holidayCalendar);
+            [$winStart, $winEnd] = $this->dayWindow(
+                calendarType: $calendarType,
+                day: $cursor,
+                holidayCalendar: $holidayCalendar
+            );
             if ($winStart === null || $winEnd === null) {
                 // Non-business day; jump to next day start.
                 $cursor = $cursor->modify('+1 day')->setTime(0, 0);
@@ -233,7 +256,7 @@ class BusinessHoursCalculator
 
             $minutesNeeded -= $availMinutes;
             $cursor         = $winEnd;
-        }
+        }//end while
 
         if ($maxLoops <= 0) {
             $this->logger->error(
@@ -263,7 +286,8 @@ class BusinessHoursCalculator
         DateTimeImmutable $day,
         string $holidayCalendar,
     ): array {
-        $dow = (int) $day->format('N'); // 1=Mon..7=Sun.
+        $dow = (int) $day->format('N');
+        // 1=Mon..7=Sun.
         if ($this->holidays->isHoliday($holidayCalendar, $day) === true) {
             return [null, null];
         }
@@ -275,23 +299,23 @@ class BusinessHoursCalculator
             }
 
             return [
-                $this->withTime($day, $win['start']),
-                $this->withTime($day, $win['end']),
+                $this->withTime(day: $day, time: $win['start']),
+                $this->withTime(day: $day, time: $win['end']),
             ];
         }
 
         if ($calendarType === self::CALENDAR_EXT_BUSINESS) {
-            if ($dow >= 1 && $dow <= 5) {
+            if ($dow <= 5) {
                 return [
-                    $this->withTime($day, '08:00'),
-                    $this->withTime($day, '18:00'),
+                    $this->withTime(day: $day, time: '08:00'),
+                    $this->withTime(day: $day, time: '18:00'),
                 ];
             }
 
             if ($dow === 6) {
                 return [
-                    $this->withTime($day, '09:00'),
-                    $this->withTime($day, '13:00'),
+                    $this->withTime(day: $day, time: '09:00'),
+                    $this->withTime(day: $day, time: '13:00'),
                 ];
             }
 
@@ -304,8 +328,8 @@ class BusinessHoursCalculator
         }
 
         return [
-            $this->withTime($day, $win['start']),
-            $this->withTime($day, $win['end']),
+            $this->withTime(day: $day, time: $win['start']),
+            $this->withTime(day: $day, time: $win['end']),
         ];
     }//end dayWindow()
 

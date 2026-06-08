@@ -39,7 +39,6 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUserSession;
-use OCA\Pipelinq\Settings\AdminSettings;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -79,7 +78,7 @@ class SlaPolicyController extends Controller
      *
      * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-009
      */
-    #[AuthorizedAdminSetting(settings: AdminSettings::class)]
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function create(): JSONResponse
     {
         $payload = $this->request->getParams();
@@ -101,14 +100,14 @@ class SlaPolicyController extends Controller
 
         try {
             $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-            $saved = $objectService->saveObject(
+            $saved         = $objectService->saveObject(
                 object: $payload,
                 extend: [],
                 register: $register,
                 schema: $schema,
             );
-            $this->auditLog('create', null, $payload, $justification);
-            return new JSONResponse($this->serialise($saved));
+            $this->auditLog(action: 'create', existing: null, payload: $payload, justification: $justification);
+            return new JSONResponse($this->serialise(saved: $saved));
         } catch (Throwable $e) {
             $this->logger->error(
                 'SlaPolicyController: create failed',
@@ -127,7 +126,7 @@ class SlaPolicyController extends Controller
      *
      * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-009
      */
-    #[AuthorizedAdminSetting(settings: AdminSettings::class)]
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function update(string $id): JSONResponse
     {
         $payload = $this->request->getParams();
@@ -149,7 +148,7 @@ class SlaPolicyController extends Controller
 
         try {
             $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-            $existing = null;
+            $existing      = null;
             try {
                 $existing = $objectService->find(
                     register: $register,
@@ -170,15 +169,15 @@ class SlaPolicyController extends Controller
                 schema: $schema,
                 uuid: $id,
             );
-            $this->auditLog('update', $existing, $payload, $justification);
-            return new JSONResponse($this->serialise($saved));
+            $this->auditLog(action: 'update', existing: $existing, payload: $payload, justification: $justification);
+            return new JSONResponse($this->serialise(saved: $saved));
         } catch (Throwable $e) {
             $this->logger->error(
                 'SlaPolicyController: update failed',
                 ['error' => $e->getMessage(), 'id' => $id]
             );
             return new JSONResponse(['error' => 'saveFailed'], Http::STATUS_INTERNAL_SERVER_ERROR);
-        }
+        }//end try
     }//end update()
 
     /**
@@ -188,20 +187,30 @@ class SlaPolicyController extends Controller
      * — no, we use the engine's existing logging channel (PSR logger) to
      * keep the audit visible without introducing a second schema.
      *
-     * @param string                $action       Operation type.
-     * @param mixed                 $existing     Previous object (or null).
-     * @param array<string, mixed>  $payload      Submitted payload.
-     * @param string                $justification Free-text justification.
+     * @param string               $action        Operation type.
+     * @param mixed                $existing      Previous object (or null).
+     * @param array<string, mixed> $payload       Submitted payload.
+     * @param string               $justification Free-text justification.
      *
      * @return void
      */
     private function auditLog(string $action, $existing, array $payload, string $justification): void
     {
         $actor = $this->userSession->getUser();
-        $actorId = $actor === null ? 'system' : $actor->getUID();
-        $before = $existing === null ? null : (
-            method_exists($existing, 'getObject') === true ? $existing->getObject() : (array) $existing
-        );
+        if ($actor === null) {
+            $actorId = 'system';
+        } else {
+            $actorId = $actor->getUID();
+        }
+
+        if ($existing === null) {
+            $before = null;
+        } else if (method_exists($existing, 'getObject') === true) {
+            $before = $existing->getObject();
+        } else {
+            $before = (array) $existing;
+        }
+
         $this->logger->info(
             'SlaPolicyController: policy audited',
             [
@@ -230,7 +239,11 @@ class SlaPolicyController extends Controller
 
         if (is_object($saved) === true && method_exists($saved, 'jsonSerialize') === true) {
             $json = $saved->jsonSerialize();
-            return is_array($json) === true ? $json : [];
+            if (is_array($json) === true) {
+                return $json;
+            }
+
+            return [];
         }
 
         if (is_object($saved) === true && method_exists($saved, 'getObject') === true) {

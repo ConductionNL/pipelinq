@@ -109,6 +109,12 @@ parameters:
 			count: 2
 			path: lib/Controller/ForecastSettingsController.php
 
+		# sla-engine-and-escalation: same AuthorizedAdminSetting app-id-string false positive.
+		-
+			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
+			count: 2
+			path: lib/Controller/SlaPolicyController.php
+
 		# Pre-existing BI-export debt (feat c9713bf0) surfaced by the pre-merge check:strict
 		# gate; untouched by the forecast change. Tracked under issue #496.
 		-

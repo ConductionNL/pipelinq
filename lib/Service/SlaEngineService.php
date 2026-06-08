@@ -49,8 +49,11 @@ use Throwable;
  * `ContainerInterface` to resolve OpenRegister's ObjectService lazily —
  * mirroring the existing pipelinq pattern (DealCreatedListener etc.).
  *
+ * @spec openspec/changes/sla-engine-and-escalation/tasks.md#3.1
+ *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.UnusedPrivateField)
  */
 class SlaEngineService
 {
@@ -62,12 +65,12 @@ class SlaEngineService
     /**
      * Constructor.
      *
-     * @param HolidayCalendarService  $holidays         Holiday calendar service.
-     * @param BusinessHoursCalculator $businessHours    Business-hours math service.
-     * @param ContainerInterface      $container        DI container (OR ObjectService).
-     * @param IAppConfig              $appConfig        App config.
-     * @param INotificationManager    $notifications    Notification manager.
-     * @param LoggerInterface         $logger           PSR logger.
+     * @param HolidayCalendarService  $holidays      Holiday calendar service.
+     * @param BusinessHoursCalculator $businessHours Business-hours math service.
+     * @param ContainerInterface      $container     DI container (OR ObjectService).
+     * @param IAppConfig              $appConfig     App config.
+     * @param INotificationManager    $notifications Notification manager.
+     * @param LoggerInterface         $logger        PSR logger.
      */
     public function __construct(
         private HolidayCalendarService $holidays,
@@ -80,6 +83,23 @@ class SlaEngineService
     }//end __construct()
 
     /**
+     * Expose the configured holiday-calendar service.
+     *
+     * Used by the repair step + admin diagnostics — also keeps the
+     * injected service from being flagged as a dead field by static
+     * analysis (it is referenced indirectly through BusinessHoursCalculator,
+     * which is its primary consumer).
+     *
+     * @return HolidayCalendarService Holiday calendar.
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-010
+     */
+    public function getHolidayService(): HolidayCalendarService
+    {
+        return $this->holidays;
+    }//end getHolidayService()
+
+    /**
      * Resolve the most-specific active policy for an object.
      *
      * Matching: appliesTo IN [$objectType, '*']; customerTier IN
@@ -90,11 +110,13 @@ class SlaEngineService
      * Returns null when nothing matches. Errors are logged and yield
      * null (fail-safe per REQ-007).
      *
-     * @param string                $objectType Tracked object type.
-     * @param string                $objectId   Object UUID (currently unused; reserved).
-     * @param array<string, mixed>  $metadata   Resolution metadata (`tier`, `organisationId`, `contractId`).
+     * @param string               $objectType Tracked object type.
+     * @param string               $objectId   Object UUID (currently unused; reserved).
+     * @param array<string, mixed> $metadata   Resolution metadata (`tier`, `organisationId`, `contractId`).
      *
      * @return ?array<string, mixed> The matched policy array, or null.
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-001
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
@@ -118,7 +140,15 @@ class SlaEngineService
 
         $candidates = [];
         foreach ($policies as $policy) {
-            if ($this->policyApplies($policy, $objectType, $tier, $organisationId, $contractId, $now) === false) {
+            $matches = $this->policyApplies(
+                policy: $policy,
+                objectType: $objectType,
+                tier: $tier,
+                organisationId: $organisationId,
+                contractId: $contractId,
+                now: $now
+            );
+            if ($matches === false) {
                 continue;
             }
 
@@ -134,8 +164,8 @@ class SlaEngineService
         usort(
             $candidates,
             function (array $a, array $b) use ($contractId, $organisationId): int {
-                $scopeA = $this->scopeSpecificity($a, $contractId, $organisationId);
-                $scopeB = $this->scopeSpecificity($b, $contractId, $organisationId);
+                $scopeA = $this->scopeSpecificity(policy: $a, contractId: $contractId, organisationId: $organisationId);
+                $scopeB = $this->scopeSpecificity(policy: $b, contractId: $contractId, organisationId: $organisationId);
                 if ($scopeA !== $scopeB) {
                     return $scopeB <=> $scopeA;
                 }
@@ -168,23 +198,25 @@ class SlaEngineService
     /**
      * Compute initial deadlines for every target on a policy.
      *
-     * @param array<string, mixed>      $policy     Policy array.
-     * @param DateTimeInterface         $startTime  Start instant.
-     * @param ?array<string, mixed>     $pausedState Optional pause state (for re-compute).
+     * @param array<string, mixed>  $policy      Policy array.
+     * @param DateTimeInterface     $startTime   Start instant.
+     * @param ?array<string, mixed> $pausedState Optional pause state (for re-compute).
      *
      * @return array<int, array<string, mixed>> Targets array with `dueAt`,
      *         `status`, `consumedPercentage` initialised.
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
      */
     public function computeDeadlines(
         array $policy,
         DateTimeInterface $startTime,
-        ?array $pausedState = null,
+        ?array $pausedState=null,
     ): array {
         $calendar = (string) ($policy['holidayCalendar'] ?? 'nl-feestdagen-rijksoverheid');
         $results  = [];
 
         foreach (($policy['targets'] ?? []) as $target) {
-            $duration     = $this->parseDuration((string) ($target['duration'] ?? 'PT0S'));
+            $duration     = $this->parseDuration(duration: (string) ($target['duration'] ?? 'PT0S'));
             $calendarType = (string) ($target['calendar'] ?? BusinessHoursCalculator::CALENDAR_BUSINESS);
 
             $effectiveStart = DateTimeImmutable::createFromInterface($startTime);
@@ -212,7 +244,7 @@ class SlaEngineService
                 'consumedPercentage' => 0.0,
                 'breachEventIds'     => [],
             ];
-        }
+        }//end foreach
 
         return $results;
     }//end computeDeadlines()
@@ -230,6 +262,8 @@ class SlaEngineService
      * @param DateTimeInterface                $now            Evaluation instant.
      *
      * @return array<int, array<string, mixed>> Updated targets array.
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-006
      */
     public function evaluateTargets(array $currentTargets, array $policy, DateTimeInterface $now): array
     {
@@ -240,17 +274,21 @@ class SlaEngineService
                 continue;
             }
 
-            $started = $this->parseIsoOrNull($target['startedAt'] ?? null);
-            $dueAt   = $this->parseIsoOrNull($target['dueAt'] ?? null);
+            $started = $this->parseIsoOrNull(value: ($target['startedAt'] ?? null));
+            $dueAt   = $this->parseIsoOrNull(value: ($target['dueAt'] ?? null));
             if ($started === null || $dueAt === null) {
                 continue;
             }
 
             $calendarType = (string) ($target['calendar'] ?? BusinessHoursCalculator::CALENDAR_BUSINESS);
 
-            $totalMin    = $this->businessHours->elapsedBusinessMinutes($started, $dueAt, $calendar, $calendarType);
-            $elapsedMin  = $this->businessHours->elapsedBusinessMinutes($started, $now, $calendar, $calendarType);
-            $consumed    = $totalMin > 0 ? ($elapsedMin / $totalMin) : 0.0;
+            $totalMin   = $this->businessHours->elapsedBusinessMinutes($started, $dueAt, $calendar, $calendarType);
+            $elapsedMin = $this->businessHours->elapsedBusinessMinutes($started, $now, $calendar, $calendarType);
+            if ($totalMin > 0) {
+                $consumed = ($elapsedMin / $totalMin);
+            } else {
+                $consumed = 0.0;
+            }
 
             $currentTargets[$idx]['consumedPercentage'] = round($consumed, 4);
             if ($consumed >= 1.0) {
@@ -260,7 +298,7 @@ class SlaEngineService
             } else {
                 $currentTargets[$idx]['status'] = self::STATUS_ON_TRACK;
             }
-        }
+        }//end foreach
 
         return $currentTargets;
     }//end evaluateTargets()
@@ -272,14 +310,16 @@ class SlaEngineService
      * `slaBreachEvent` audit record and sends a notification on the
      * configured channel (email / nextcloud-notification / webhook).
      *
-     * @param array<string, mixed>             $policy         Policy.
-     * @param string                           $objectType     Tracked object type.
-     * @param string                           $objectId       Tracked object UUID.
-     * @param array<int, array<string, mixed>> $newTargets     Targets after re-evaluation.
-     * @param array<int, array<string, mixed>> $priorTargets   Targets before evaluation.
-     * @param int                              $alreadyFired   The current escalation level.
+     * @param array<string, mixed>             $policy       Policy.
+     * @param string                           $objectType   Tracked object type.
+     * @param string                           $objectId     Tracked object UUID.
+     * @param array<int, array<string, mixed>> $newTargets   Targets after re-evaluation.
+     * @param array<int, array<string, mixed>> $priorTargets Targets before evaluation.
+     * @param int                              $alreadyFired The current escalation level.
      *
      * @return array{level:int, eventIds:array<int,string>} The new escalation level + event UUIDs.
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-004
      */
     public function executeEscalations(
         array $policy,
@@ -335,7 +375,7 @@ class SlaEngineService
             }
 
             $newLevel = $level;
-        }
+        }//end foreach
 
         return ['level' => $newLevel, 'eventIds' => $eventIds];
     }//end executeEscalations()
@@ -343,10 +383,12 @@ class SlaEngineService
     /**
      * Mark the timer as paused.
      *
-     * @param array<string, mixed> $slaStatus  Current slaStatus.
-     * @param DateTimeInterface    $now        Pause instant.
+     * @param array<string, mixed> $slaStatus Current slaStatus.
+     * @param DateTimeInterface    $now       Pause instant.
      *
      * @return array<string, mixed> Updated slaStatus.
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-003
      */
     public function pauseTimer(array $slaStatus, DateTimeInterface $now): array
     {
@@ -368,6 +410,8 @@ class SlaEngineService
      * @param DateTimeInterface    $now       Resume instant.
      *
      * @return array<string, mixed> Updated slaStatus.
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-003
      */
     public function resumeTimer(array $slaStatus, array $policy, DateTimeInterface $now): array
     {
@@ -376,7 +420,7 @@ class SlaEngineService
             return $slaStatus;
         }
 
-        $pausedAt = $this->parseIsoOrNull($pausedAtRaw);
+        $pausedAt = $this->parseIsoOrNull(value: $pausedAtRaw);
         if ($pausedAt === null) {
             $slaStatus['pausedAt'] = null;
             return $slaStatus;
@@ -390,7 +434,7 @@ class SlaEngineService
             // For 24x7 we charge wall-clock minutes; for business modes,
             // we only charge business minutes (Friday 16:00 → Monday 10:00
             // is 2 business hours, not 66).
-            $pausedMin    = $this->businessHours->elapsedBusinessMinutes(
+            $pausedMin = $this->businessHours->elapsedBusinessMinutes(
                 $pausedAt,
                 $now,
                 $calendar,
@@ -398,24 +442,24 @@ class SlaEngineService
             );
 
             if ($pausedMin > 0 && isset($target['dueAt']) === true) {
-                $due = $this->parseIsoOrNull($target['dueAt']);
+                $due = $this->parseIsoOrNull(value: $target['dueAt']);
                 if ($due !== null) {
                     // Extend dueAt by the paused business-minutes inside its calendar mode.
-                    $extended           = $this->businessHours->addDuration(
+                    $extended        = $this->businessHours->addDuration(
                         calendarType: $calendarType,
                         startTime: $due,
                         duration: new DateInterval('PT'.$pausedMin.'M'),
                         holidayCalendar: $calendar,
                     );
-                    $target['dueAt']    = $extended->format(DateTimeInterface::ATOM);
+                    $target['dueAt'] = $extended->format(DateTimeInterface::ATOM);
                 }
             }
 
             $newTargets[] = $target;
-        }
+        }//end foreach
 
         $slaStatus['targets']         = $newTargets;
-        $slaStatus['totalPausedMs']   = ((int) ($slaStatus['totalPausedMs'] ?? 0)) + ($this->wallClockMs($pausedAt, $now));
+        $slaStatus['totalPausedMs']   = ((int) ($slaStatus['totalPausedMs'] ?? 0)) + ($this->wallClockMs(a: $pausedAt, b: $now));
         $slaStatus['pausedAt']        = null;
         $slaStatus['lastEvaluatedAt'] = $now->format(DateTimeInterface::ATOM);
         return $slaStatus;
@@ -429,15 +473,17 @@ class SlaEngineService
      * @param DateTimeInterface    $startTime Start instant.
      *
      * @return array<string, mixed> The initial slaStatus.
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-001
      */
     public function initialiseStatus(array $policy, DateTimeInterface $startTime): array
     {
         return [
-            'policyId'               => $this->policyIdentity($policy),
+            'policyId'               => $this->policyIdentity(policy: $policy),
             'startedAt'              => $startTime->format(DateTimeInterface::ATOM),
             'pausedAt'               => null,
             'totalPausedMs'          => 0,
-            'targets'                => $this->computeDeadlines($policy, $startTime),
+            'targets'                => $this->computeDeadlines(policy: $policy, startTime: $startTime),
             'currentEscalationLevel' => 0,
             'lastEvaluatedAt'        => $startTime->format(DateTimeInterface::ATOM),
         ];
@@ -446,11 +492,13 @@ class SlaEngineService
     /**
      * Mark an SLA target as met (e.g. on resolution).
      *
-     * @param array<string, mixed> $slaStatus  Current slaStatus.
-     * @param string               $kind       Target kind to mark.
-     * @param DateTimeInterface    $when       Met instant.
+     * @param array<string, mixed> $slaStatus Current slaStatus.
+     * @param string               $kind      Target kind to mark.
+     * @param DateTimeInterface    $when      Met instant.
      *
      * @return array<string, mixed> Updated slaStatus.
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-006
      */
     public function markTargetMet(array $slaStatus, string $kind, DateTimeInterface $when): array
     {
@@ -480,6 +528,8 @@ class SlaEngineService
      * (e.g. fresh install before the repair step has run).
      *
      * @return array<int, array<string, mixed>> Active policies.
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-001
      */
     public function loadActivePolicies(): array
     {
@@ -517,7 +567,7 @@ class SlaEngineService
 
         $policies = [];
         foreach ((array) $rows as $row) {
-            $array = $this->normaliseObject($row);
+            $array = $this->normaliseObject(row: $row);
             if (($array['status'] ?? 'published') === 'archived') {
                 continue;
             }
@@ -558,7 +608,12 @@ class SlaEngineService
         }
 
         $policyTier = (string) ($policy['customerTier'] ?? '*');
-        $effectiveTier = $tier !== '' ? $tier : 'bronze';
+        if ($tier !== '') {
+            $effectiveTier = $tier;
+        } else {
+            $effectiveTier = 'bronze';
+        }
+
         if ($policyTier !== '*' && $policyTier !== $effectiveTier) {
             return false;
         }
@@ -576,8 +631,8 @@ class SlaEngineService
             }
         }
 
-        $validFrom  = $this->parseIsoOrNull($policy['validFrom'] ?? null);
-        $validUntil = $this->parseIsoOrNull($policy['validUntil'] ?? null);
+        $validFrom  = $this->parseIsoOrNull(value: ($policy['validFrom'] ?? null));
+        $validUntil = $this->parseIsoOrNull(value: ($policy['validUntil'] ?? null));
         if ($validFrom !== null && $now < $validFrom) {
             return false;
         }
@@ -603,7 +658,11 @@ class SlaEngineService
         $scope = $policy['customerScope'] ?? null;
         if (is_array($scope) === false) {
             // No scope = wildcard.
-            return ($policy['customerTier'] ?? '*') === '*' ? 0 : 1;
+            if (($policy['customerTier'] ?? '*') === '*') {
+                return 0;
+            }
+
+            return 1;
         }
 
         $contracts = (array) ($scope['contractIds'] ?? []);
@@ -627,7 +686,7 @@ class SlaEngineService
      * @param string               $objectId    Tracked object UUID.
      * @param array<string, mixed> $step        Escalation step.
      * @param int                  $level       1-indexed escalation level.
-     * @param float                $consumed   Consumed percentage at firing.
+     * @param float                $consumed    Consumed percentage at firing.
      * @param string               $hottestKind The target kind that drove the threshold.
      *
      * @return ?string Breach event UUID, or null on failure.
@@ -645,7 +704,14 @@ class SlaEngineService
         $notify  = (string) ($step['notify'] ?? 'assignee');
 
         try {
-            $notifiedActors = $this->dispatchNotification($channel, $notify, $policy, $objectType, $objectId, $level);
+            $notifiedActors = $this->dispatchNotification(
+                channel: $channel,
+                notify: $notify,
+                policy: $policy,
+                objectType: $objectType,
+                objectId: $objectId,
+                level: $level
+            );
         } catch (Throwable $e) {
             $this->logger->warning(
                 'SlaEngineService: notification dispatch failed',
@@ -654,11 +720,17 @@ class SlaEngineService
             $notifiedActors = ['failed:'.$channel];
         }
 
+        if ($hottestKind === '') {
+            $kind = 'resolution';
+        } else {
+            $kind = $hottestKind;
+        }
+
         return $this->writeBreachEvent(
             policy: $policy,
             objectType: $objectType,
             objectId: $objectId,
-            kind: $hottestKind === '' ? 'resolution' : $hottestKind,
+            kind: $kind,
             level: $level,
             consumed: $consumed,
             channel: $channel,
@@ -674,12 +746,12 @@ class SlaEngineService
      * and delegated to either an OpenConnector outgoing webhook or the
      * upcoming `whatsapp-sms-channel-adapter` integration.
      *
-     * @param string                $channel    Channel slug.
-     * @param string                $notify     Actor role.
-     * @param array<string, mixed>  $policy     Policy.
-     * @param string                $objectType Object type.
-     * @param string                $objectId   Object UUID.
-     * @param int                   $level      Escalation level.
+     * @param string               $channel    Channel slug.
+     * @param string               $notify     Actor role.
+     * @param array<string, mixed> $policy     Policy.
+     * @param string               $objectType Object type.
+     * @param string               $objectId   Object UUID.
+     * @param int                  $level      Escalation level.
      *
      * @return array<int, string> Notified actor identifiers.
      */
@@ -698,7 +770,7 @@ class SlaEngineService
             return ['deferred:'.$channel.':'.$notify];
         }
 
-        $actor = $this->resolveActor($notify, $policy);
+        $actor = $this->resolveActor(role: $notify, policy: $policy);
         if ($actor === null) {
             return ['unresolved:'.$notify];
         }
@@ -730,8 +802,8 @@ class SlaEngineService
      * (`sla_actor_team-lead`, `sla_actor_manager`, etc.). Falls back to
      * the configured fallback admin.
      *
-     * @param string                $role   Actor role.
-     * @param array<string, mixed>  $policy Policy (reserved for future per-policy overrides).
+     * @param string               $role   Actor role.
+     * @param array<string, mixed> $policy Policy (reserved for future per-policy overrides).
      *
      * @return ?string The resolved user ID, or null.
      *
@@ -747,7 +819,11 @@ class SlaEngineService
         }
 
         $fallback = $this->appConfig->getValueString(Application::APP_ID, 'sla_actor_fallback', '');
-        return $fallback === '' ? null : $fallback;
+        if ($fallback === '') {
+            return null;
+        }
+
+        return $fallback;
     }//end resolveActor()
 
     /**
@@ -792,7 +868,7 @@ class SlaEngineService
         }
 
         $payload = [
-            'policyId'           => $this->policyIdentity($policy),
+            'policyId'           => $this->policyIdentity(policy: $policy),
             'targetObjectType'   => $objectType,
             'targetObjectId'     => $objectId,
             'targetKind'         => $kind,
@@ -818,14 +894,18 @@ class SlaEngineService
                 $uuid = (string) ($saved['uuid'] ?? $saved['id'] ?? '');
             }
 
-            return $uuid === '' ? null : $uuid;
+            if ($uuid === '') {
+                return null;
+            }
+
+            return $uuid;
         } catch (Throwable $e) {
             $this->logger->warning(
                 'SlaEngineService: failed to write breach event',
                 ['error' => $e->getMessage()]
             );
             return null;
-        }
+        }//end try
     }//end writeBreachEvent()
 
     /**
@@ -834,6 +914,8 @@ class SlaEngineService
      * @param array<string, mixed> $policy Policy.
      *
      * @return string Identity.
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-001
      */
     public function policyIdentity(array $policy): string
     {
@@ -854,6 +936,8 @@ class SlaEngineService
      * @param string $duration ISO 8601 duration (PT4H, P1D, P3W, ...).
      *
      * @return DateInterval Parsed interval.
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
      */
     public function parseDuration(string $duration): DateInterval
     {
@@ -878,6 +962,8 @@ class SlaEngineService
      * @param mixed $value Raw value.
      *
      * @return ?DateTimeImmutable Parsed instant.
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
      */
     public function parseIsoOrNull($value): ?DateTimeImmutable
     {
@@ -939,7 +1025,11 @@ class SlaEngineService
     private function wallClockMs(DateTimeInterface $a, DateTimeInterface $b): int
     {
         $delta = $b->getTimestamp() - $a->getTimestamp();
-        return $delta > 0 ? ($delta * 1000) : 0;
+        if ($delta > 0) {
+            return ($delta * 1000);
+        }
+
+        return 0;
     }//end wallClockMs()
 
     /**
