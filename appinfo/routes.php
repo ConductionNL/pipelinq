@@ -234,6 +234,18 @@ return [
         ['name' => 'portalAdmin#accounts',     'url' => '/portal/api/admin/accounts',      'verb' => 'GET'],
         ['name' => 'portalAdmin#auditEvents',  'url' => '/portal/api/admin/audit-events',  'verb' => 'GET'],
 
+        // Appointment booking portal (anonymous customer self-booking; ADR-005 /
+        // ADR-016). Lives under /portal/api/booking/* so the portalPage SPA
+        // catch-all (excludes /portal/api/*) does not eat the GETs. All endpoints
+        // carry @PublicPage in PortalController.php — reschedule/cancel require
+        // an HMAC-SHA256 signed token (member 05 of the appointment-booking chain).
+        ['name' => 'portal#services',     'url' => '/portal/api/booking/services',            'verb' => 'GET'],
+        ['name' => 'portal#availability', 'url' => '/portal/api/booking/availability',        'verb' => 'GET'],
+        ['name' => 'portal#book',         'url' => '/portal/api/booking/book',                'verb' => 'POST'],
+        ['name' => 'portal#reschedule',   'url' => '/portal/api/booking/reschedule',          'verb' => 'POST'],
+        ['name' => 'portal#cancel',       'url' => '/portal/api/booking/cancel',              'verb' => 'POST'],
+        ['name' => 'portal#getBooking',   'url' => '/portal/api/booking/{bookingId}',         'verb' => 'GET'],
+
         // Public portal SPA shell. Registered AFTER all /portal/api/* routes so
         // the API wins, and BEFORE the main-app catch-all so /portal serves the
         // isolated portal bundle rather than the Nextcloud-authenticated app.
