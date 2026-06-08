@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Utility\ITimeFactory;
 
 /**
@@ -189,6 +190,32 @@ class PortalSessionManager
 
         return $this->repository->save(self::SCHEMA, $session, $sessionId);
     }//end extendSession()
+
+    /**
+     * Extend a session and throw PortalException when the session is absent or
+     * revoked. Controllers use this to surface the not-logged-in failure as a
+     * single uniform error, keeping the auth literal off the controller body.
+     *
+     * @param string $sessionId The session id.
+     * @param int    $ttlHours  New TTL in hours from now.
+     *
+     * @return array<string, mixed> The updated session.
+     *
+     * @throws PortalException When the session is absent or revoked.
+     */
+    public function extendSessionOrThrow(string $sessionId, int $ttlHours=self::DEFAULT_TTL_HOURS): array
+    {
+        $updated = $this->extendSession(sessionId: $sessionId, ttlHours: $ttlHours);
+        if ($updated === null) {
+            throw new PortalException(
+                status: Http::STATUS_UNAUTHORIZED,
+                errorCode: 'unauthenticated',
+                message: 'Niet ingelogd.'
+            );
+        }
+
+        return $updated;
+    }//end extendSessionOrThrow()
 
     /**
      * Revoke a single session.
