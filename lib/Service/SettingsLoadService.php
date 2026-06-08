@@ -52,8 +52,6 @@ class SettingsLoadService
         'leadProduct',
         'intakeForm',
         'intakeSubmission',
-        'automation',
-        'automationLog',
         'contactmoment',
         'task',
         'emailLink',
