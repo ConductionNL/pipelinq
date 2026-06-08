@@ -134,39 +134,30 @@
 			</div>
 		</CnDetailCard>
 
-		<NcDialog v-if="showDelete"
-			:name="t('pipelinq', 'Delete resource')"
-			@closing="showDelete = false">
-			<p>
-				{{ t('pipelinq', 'Are you sure you want to delete "{name}"?', { name: resourceData.name }) }}
-			</p>
-			<template #actions>
-				<NcButton @click="showDelete = false">
-					{{ t('pipelinq', 'Cancel') }}
-				</NcButton>
-				<NcButton type="error" @click="confirmDelete">
-					{{ t('pipelinq', 'Delete') }}
-				</NcButton>
-			</template>
-		</NcDialog>
+		<DeleteResourceDialog
+			v-if="showDelete"
+			:name="resourceData.name"
+			@confirm="confirmDelete"
+			@cancel="showDelete = false" />
 	</CnDetailPage>
 </template>
 
 <script>
-import { NcButton, NcDialog } from '@nextcloud/vue'
+import { NcButton } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import ResourceForm from './ResourceForm.vue'
+import DeleteResourceDialog from '../../dialogs/DeleteResourceDialog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'ResourceDetail',
 	components: {
 		NcButton,
-		NcDialog,
 		CnDetailPage,
 		CnDetailCard,
 		ResourceForm,
+		DeleteResourceDialog,
 	},
 	props: {
 		id: { type: String, default: null },

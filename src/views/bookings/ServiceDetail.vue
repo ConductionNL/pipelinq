@@ -144,29 +144,20 @@
 			</div>
 		</CnDetailCard>
 
-		<NcDialog v-if="showDelete"
-			:name="t('pipelinq', 'Delete service')"
-			@closing="showDelete = false">
-			<p>
-				{{ t('pipelinq', 'Are you sure you want to delete "{name}"? Future bookings using this service will be left orphaned.', { name: serviceData.name }) }}
-			</p>
-			<template #actions>
-				<NcButton @click="showDelete = false">
-					{{ t('pipelinq', 'Cancel') }}
-				</NcButton>
-				<NcButton type="error" @click="confirmDelete">
-					{{ t('pipelinq', 'Delete') }}
-				</NcButton>
-			</template>
-		</NcDialog>
+		<DeleteServiceDialog
+			v-if="showDelete"
+			:name="serviceData.name"
+			@confirm="confirmDelete"
+			@cancel="showDelete = false" />
 	</CnDetailPage>
 </template>
 
 <script>
-import { NcButton, NcDialog } from '@nextcloud/vue'
+import { NcButton } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import ServiceForm from './ServiceForm.vue'
+import DeleteServiceDialog from '../../dialogs/DeleteServiceDialog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 const STATUS_LABELS = {
@@ -179,10 +170,10 @@ export default {
 	name: 'ServiceDetail',
 	components: {
 		NcButton,
-		NcDialog,
 		CnDetailPage,
 		CnDetailCard,
 		ServiceForm,
+		DeleteServiceDialog,
 	},
 	props: {
 		id: { type: String, default: null },
