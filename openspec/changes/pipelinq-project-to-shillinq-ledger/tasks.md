@@ -264,12 +264,8 @@
 
 ## 7. Frontend: Project List Badge (REQ-PLG-004)
 
-> **DEFERRED (7.1, 7.2)** — `src/views/projects/ProjectList.vue` does not exist; the
-> `project-task-hierarchy` change that owns the project list view was never merged to
-> `development`. The badge i18n strings (synced/pending/failed) ARE shipped (task 7.3 / l10n)
-> so the column drops in cleanly once the list view lands. Deferred until `project-task-hierarchy` ships.
-
-- [ ] 7.1 Add ledger sync status column to ProjectList.vue — **DEFERRED** (no ProjectList.vue)
+- [x] 7.1 Add ledger sync status column to ProjectList.vue
+  - **IMPLEMENTATION NOTE**: `src/views/projects/ProjectList.vue` (shipped via the merged `project-task-hierarchy` work) now adds `ledgerSyncStatus` to its `visibleColumns` whitelist right after `status`. CnIndexPage routes the cell through the new `#cell-ledgerSyncStatus` slot which renders the pill (see 7.2).
   - **spec_ref**: `specs/pipelinq-project-to-shillinq-ledger/spec.md#REQ-PLG-004`
   - **files**: `src/views/projects/ProjectList.vue`
   - **acceptance_criteria**:
@@ -277,7 +273,8 @@
     - THEN a new column "Ledger Status" MUST appear after the Status column
     - AND it MUST display a badge per project showing the sync state
 
-- [ ] 7.2 Render color-coded badges based on ledgerSyncStatus
+- [x] 7.2 Render color-coded badges based on ledgerSyncStatus
+  - **IMPLEMENTATION NOTE**: New `ledgerLabel()` / `ledgerPillClass()` helpers map the three sync states onto the existing English i18n source-string keys (`Ledger synchronized` / `Ledger pending` / `Ledger sync failed`) — Dutch translations already in `l10n/nl.json` resolve to "gesynchroniseerd" / "in behandeling" / "mislukt". Missing/`null` value renders a grey dash via `.ledger-dash`. Color palette mirrors the existing status-pill CSS conventions (green / amber / red) for consistency.
   - **spec_ref**: `specs/pipelinq-project-to-shillinq-ledger/spec.md#REQ-PLG-004`
   - **files**: `src/views/projects/ProjectList.vue`
   - **acceptance_criteria**:
