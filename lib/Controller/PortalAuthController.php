@@ -149,10 +149,7 @@ class PortalAuthController extends PortalApiController
                 handler: function (): array {
                     $ctx       = $this->context();
                     $sessionId = (string) $this->repository->idOf(object: $ctx['session']);
-                    $updated   = $this->sessions->extendSession($sessionId);
-                    if ($updated === null) {
-                        return [['errorCode' => 'unauthenticated', 'message' => 'Niet ingelogd.'], Http::STATUS_UNAUTHORIZED];
-                    }
+                    $updated   = $this->sessions->extendSessionOrThrow(sessionId: $sessionId);
 
                     return [['expiresAt' => ($updated['expiresAt'] ?? null)], Http::STATUS_OK];
                 }
