@@ -82,6 +82,8 @@ class SettingsService
         'posZReport_schema',
         'posJournalEntryOutbound_schema',
         'glAccountMapping_schema',
+        // POS Kassakoppeling-compliant Audit Log (pos-kassakoppeling-audit).
+        'kassakoppelingAuditLog_schema',
         'exportDestination_schema',
         'exportJob_schema',
         'exportRun_schema',
