@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **BSN-validatie + BRP-lookup (HaalCentraal Personen v2.0)**: complete
+  integration with RvIG's HaalCentraal BRP API
+  (`bsn-validatie-en-brp-lookup`). Adds five OpenRegister schemas
+  (`bsnValidatie`, `brpLookupVerzoek`, `brpPersoon`, `bsnAuditRecord`,
+  `optOutVlag`) plus three new contact fields (`verifiedBSN`,
+  `brpPersoonId`, `geheimhouding`). Backend services: client-side
+  11-proef (`BsnValidationService`, mirrored in `src/services/bsnValidation.js`),
+  OAuth2 + mTLS REST client (`HaalCentraalClient`), TTL-based response cache
+  with HMAC-verified webhook invalidation (`BrpCacheService` +
+  `BrpMutationWebhookListener`), immutable audit-trail with 5-year retention
+  and RTBF pseudonymisation (`BsnAuditService`), and opt-out / geheimhouding
+  handling (`OptOutService`). REST surface (`BrpController`,
+  `BrpAdminController`): lookup, validate, reveal-address, opt-out create,
+  webhook, monitor, settings + webhook-secret rotation. Three background
+  jobs: daily certificate health-check with admin notifications when expiry
+  is within 30 days, daily SLA monitor producing the admin BRP-Monitor tile,
+  daily retention sweep that deletes expired `brpPersoon` records and resets
+  the linked contact. Vue UI: BSN input + lookup button + Persoon detail
+  panel on contact-detail, doelbinding modal in its own file (ADR-004),
+  admin BRP-Monitor view at `/admin/brp-monitor`. Dutch + English
+  translations (~60 strings). 22 unit tests cover 11-proef, masking,
+  SHA-256 hashing, IP anonymisation, webhook HMAC signature verification,
+  and the unconfigured-fallback paths. ADR-005-compliant throughout: raw BSN
+  is **never** persisted, logged, or returned to the UI; the schemas store
+  only the SHA-256 hash, logs and audit records carry the `***XXXX*` mask,
+  and `hash_equals()` guards every signature comparison.
+
 - **POS Bookkeeping**: Automated Z-report generation and idempotent submission
   to Shillinq (pos-end-of-day-bookkeeping-post). Adds three OpenRegister
   schemas (`posZReport`, `posJournalEntryOutbound`, `glAccountMapping`),

@@ -436,7 +436,7 @@
 
 ## 10. Documentation & Compliance
 
-- [ ] 10.1 Create user-facing documentation
+- [x] 10.1 Create user-facing documentation
   - **spec_ref**: proposal.md
   - **files**: `docs/bsn-brp-lookup.md` (new)
   - **acceptance_criteria**:
@@ -449,7 +449,7 @@
       - Where to find audit logs
     - AND include screenshots of Contact detail, modal, Persoon detail
 
-- [ ] 10.2 Create admin configuration guide
+- [x] 10.2 Create admin configuration guide
   - **spec_ref**: design.md#Backend
   - **files**: `docs/admin/bsn-brp-setup.md` (new)
   - **acceptance_criteria**:
@@ -462,7 +462,7 @@
       - How to configure cache TTL, retention period
       - How to set up webhook URL for mutations
 
-- [ ] 10.3 Create audit and compliance checklist
+- [x] 10.3 Create audit and compliance checklist
   - **spec_ref**: specs.md (all)
   - **files**: `docs/compliance/bsn-audit-checklist.md` (new)
   - **acceptance_criteria**:
@@ -474,7 +474,7 @@
       - Audit export for RvIG inspectors (how to generate audit report)
       - Retention job verification (how to verify automatic deletion)
 
-- [ ] 10.4 Create CHANGELOG entry
+- [x] 10.4 Create CHANGELOG entry
   - **spec_ref**: proposal.md
   - **files**: `CHANGELOG.md`
   - **acceptance_criteria**:
@@ -496,7 +496,7 @@
 
 ## 11. Final Checks
 
-- [ ] 11.1 Security review
+- [x] 11.1 Security review
   - **spec_ref**: OWASP ASVS 4.0.3
   - **files**: security-review.md (new)
   - **acceptance_criteria**:
@@ -507,7 +507,7 @@
     - Review for authentication bypass (verify permission checks on all endpoints)
     - Review for insecure deserialization (trust only HaalCentraal signed responses)
 
-- [ ] 11.2 Performance review
+- [x] 11.2 Performance review
   - **spec_ref**: specs.md#REQ-BSN-003-01
   - **files**: performance-notes.md
   - **acceptance_criteria**:
@@ -516,7 +516,7 @@
     - Verify 11-proef validation < 100ms client-side
     - Profile database queries (ensure indexes on audit table)
 
-- [ ] 11.3 Compliance checklist
+- [x] 11.3 Compliance checklist
   - **spec_ref**: specs.md (all standards)
   - **files**: compliance-checklist.md
   - **acceptance_criteria**:
