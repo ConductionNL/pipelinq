@@ -63,17 +63,17 @@ class BookingAdminController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest                     $request      The HTTP request.
-     * @param BookingService               $bookings     The booking lifecycle service.
-     * @param AppointmentEmailService|null $emailService Optional email service (reminder seam).
-     * @param IUserSession                 $userSession  The current user session.
-     * @param IL10N                        $l10n         Localization service.
-     * @param LoggerInterface              $logger       The logger.
+     * @param IRequest                $request      The HTTP request.
+     * @param BookingService          $bookings     The booking lifecycle service.
+     * @param AppointmentEmailService $emailService The email service (reminder seam).
+     * @param IUserSession            $userSession  The current user session.
+     * @param IL10N                   $l10n         Localization service.
+     * @param LoggerInterface         $logger       The logger.
      */
     public function __construct(
         IRequest $request,
         private BookingService $bookings,
-        private ?AppointmentEmailService $emailService,
+        private AppointmentEmailService $emailService,
         private IUserSession $userSession,
         private IL10N $l10n,
         private LoggerInterface $logger,
@@ -211,13 +211,6 @@ class BookingAdminController extends Controller
     {
         if ($this->requireUser() === null) {
             return $this->unauthorised();
-        }
-
-        if ($this->emailService === null) {
-            return $this->error(
-                message: $this->l10n->t('Email service is not configured'),
-                status: Http::STATUS_SERVICE_UNAVAILABLE,
-            );
         }
 
         return $this->run(
