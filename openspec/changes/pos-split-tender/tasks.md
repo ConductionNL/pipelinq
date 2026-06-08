@@ -304,10 +304,11 @@
   - Confirm backwards compatibility with existing transactions (pre-split-tender)
   - **DEFERRED**: No migration is required — `posTransaction` was not altered; only the two new schemas (`posTenderType`, `posTender`) and their seed rows were added via `lib/Settings/pipelinq_register.json`. The repair step (`lib/Repair/InitializeRegister.php`) imports these on `occ upgrade`. Backwards compat: transactions without an associated `posTender` row keep working — `getTendersForTransaction()` returns `[]` and the legacy single-tender code path is untouched (no `posTransaction.tenderType` field was removed). To be re-verified against a real upgrade snapshot in the staging flight.
 
-- [ ] 12.4 Check performance:
+- [~] 12.4 Check performance:
   - `validateTenderSum()` should complete in < 100ms for typical transaction
   - Tender list fetch should use indexed query on `transaction` field
   - No N+1 queries when loading transaction with tenders
+  - **DEFERRED**: Static analysis — `validateTenderSum()` issues a single `findAll(['transaction' => $id])` against `posTender` plus one `find()` for the transaction (2 queries, no per-tender lookups). OR auto-indexes the `transaction` UUID column on the magic table. Empirical p95 timing under load belongs to the perf flight (`pipelinq-pos-perf-baseline`) which captures all POS endpoints in one pass against a seeded 10k-transaction dataset.
 
 - [ ] 12.5 Update API documentation (if using OpenAPI/Swagger):
   - Add schemas for `posTenderType` and `posTender`
