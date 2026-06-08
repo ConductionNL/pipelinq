@@ -96,6 +96,12 @@
 			</div>
 		</CnDetailCard>
 
+		<!-- BSN / BRP — bsn-validatie-en-brp-lookup -->
+		<BrpContactPanel
+			v-if="!isNew"
+			:contact-id="contactId"
+			@contact-updated="reloadContact" />
+
 		<!-- Relationships -->
 		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Relationships')">
 			<ContactRelationships
@@ -136,6 +142,7 @@ import { CnDetailPage, CnDetailCard, CnFormDialog } from '@conduction/nextcloud-
 import ContactForm from './ContactForm.vue'
 import ContactRelationships from '../../components/ContactRelationships.vue'
 import CommunicationHistory from '../../components/CommunicationHistory.vue'
+import BrpContactPanel from '../../components/BrpContactPanel.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -148,6 +155,7 @@ export default {
 		ContactForm,
 		ContactRelationships,
 		CommunicationHistory,
+		BrpContactPanel,
 	},
 	props: {
 		/**
@@ -254,6 +262,25 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * Refresh the contact object from the store after a BRP lookup.
+		 *
+		 * The BRP lookup updates Contact.verifiedBSN / brpPersoonId / geheimhouding
+		 * server-side; we re-fetch so the UI reflects the new values.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.5
+		 */
+		async reloadContact() {
+			if (this.contactId && this.contactId !== 'new') {
+				try {
+					await this.objectStore.fetchObject('contact', this.contactId)
+				} catch (err) {
+					// Best-effort refresh; lookups still succeed even if reload fails.
+				}
+			}
+		},
 		/**
 		 * Load the linked client's display name and type for the Parent
 		 * Organisation card (REQ-KB360-030).

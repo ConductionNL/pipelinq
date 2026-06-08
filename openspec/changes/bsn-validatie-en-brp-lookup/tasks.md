@@ -216,7 +216,7 @@
 
 ## 5. Frontend: Contact Detail View
 
-- [ ] 5.1 Add BSN input field with inline validation
+- [x] 5.1 Add BSN input field with inline validation
   - **spec_ref**: `specs.md#REQ-BSN-001`
   - **files**: frontend Contact detail component
   - **acceptance_criteria**:
@@ -228,7 +228,7 @@
       - If invalid: show red error message, disable "Ophalen uit BRP" button
       - If valid: show green checkmark, enable button
 
-- [ ] 5.2 Create "Ophalen uit BRP" button
+- [x] 5.2 Create "Ophalen uit BRP" button
   - **spec_ref**: `design.md#Contact Detail View`
   - **files**: frontend Contact detail component
   - **acceptance_criteria**:
@@ -238,7 +238,7 @@
     - WHEN button is clicked
     - THEN modal opens (see 5.3)
 
-- [ ] 5.3 Create doelbinding modal
+- [x] 5.3 Create doelbinding modal
   - **spec_ref**: `specs.md#REQ-BSN-002`
   - **files**: frontend modal component
   - **acceptance_criteria**:
@@ -253,7 +253,7 @@
     - WHEN user leaves required fields empty: "Ophalen" button disabled
     - WHEN user clicks "Ophalen": POST to `/api/brp/lookup`
 
-- [ ] 5.4 Add response spinner and error handling
+- [x] 5.4 Add response spinner and error handling
   - **spec_ref**: `design.md#Contact Detail View`
   - **files**: frontend
   - **acceptance_criteria**:
@@ -264,7 +264,7 @@
     - IF error response: show error banner with message from backend
     - IF success: close modal, render Persoon detail (see 5.5)
 
-- [ ] 5.5 Create Persoon detail view
+- [x] 5.5 Create Persoon detail view
   - **spec_ref**: `design.md#Frontend - Persoon Detail`
   - **files**: frontend detail component
   - **acceptance_criteria**:
@@ -277,7 +277,7 @@
       - IF geheimhouding: show "[GEHEIM]" with "Toon adres onder verantwoording" link
       - Cache indicator "⚡ van cache" if responseInCache=true
 
-- [ ] 5.6 Create timeline event for lookup
+- [x] 5.6 Create timeline event for lookup
   - **spec_ref**: `specs.md#REQ-BSN-009-02`
   - **files**: frontend timeline component
   - **acceptance_criteria**:
@@ -291,7 +291,7 @@
 
 ## 6. Frontend: Admin Dashboard
 
-- [ ] 6.1 Create BRP-Monitor admin tegel
+- [x] 6.1 Create BRP-Monitor admin tegel
   - **spec_ref**: `specs.md#REQ-BSN-010`
   - **files**: frontend admin dashboard component
   - **acceptance_criteria**:
@@ -302,7 +302,7 @@
       - Certificate status: "Expires {date} ({days} days)" with color badge
       - Link: "View detailed report"
 
-- [ ] 6.2 Implement detailed BRP report view
+- [x] 6.2 Implement detailed BRP report view
   - **spec_ref**: `specs.md#REQ-BSN-010`
   - **files**: frontend report component
   - **acceptance_criteria**:
