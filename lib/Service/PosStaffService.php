@@ -188,12 +188,10 @@ class PosStaffService
                 throw new OCSBadRequestException('PIN moet 4 tot 6 cijfers bevatten.');
             }
 
-            $newHash = password_hash($pin, PASSWORD_BCRYPT, ['cost' => self::BCRYPT_COST]);
-            if ($newHash === false) {
-                throw new OCSBadRequestException('PIN kon niet worden veilig opgeslagen.');
-            }
-
-            $hash = $newHash;
+            // password_hash with PASSWORD_BCRYPT always returns a non-empty
+            // string on PHP 8 (the deprecated false-on-failure return is
+            // gone), so no fallback is needed at this layer.
+            $hash = password_hash($pin, PASSWORD_BCRYPT, ['cost' => self::BCRYPT_COST]);
         }
 
         if ($isUpdate === false && $hash === '') {
