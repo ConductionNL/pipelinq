@@ -54,6 +54,8 @@ use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCA\Pipelinq\Listener\PosTransactionCompletedListener;
 use OCA\Pipelinq\Listener\ProjectCreationListener;
 use OCA\Pipelinq\Listener\ProjectPhaseStatusListener;
+use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
+use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Mcp\PipelinqToolProvider;
 use OCA\Pipelinq\Service\AppointmentCalendarLeafProvider;
@@ -165,6 +167,19 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(
             event: ObjectUpdatedEvent::class,
             listener: ExpenseApprovalListener::class
+        );
+
+        // SLA engine (sla-engine-and-escalation / REQ-001, REQ-003, REQ-007):
+        // initialise slaStatus on tracked-object create, re-evaluate /
+        // pause / resume / escalate on update. Listener exceptions are
+        // swallowed (REQ-007 fail-safe).
+        $context->registerEventListener(
+            event: ObjectCreatedEvent::class,
+            listener: SlaObjectCreatedListener::class
+        );
+        $context->registerEventListener(
+            event: ObjectUpdatedEvent::class,
+            listener: SlaObjectUpdatedListener::class
         );
 
         $context->registerDashboardWidget(DealsOverviewWidget::class);
