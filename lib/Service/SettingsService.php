@@ -125,6 +125,12 @@ class SettingsService
         'booking_schema',
         'walkInTicket_schema',
         'availabilityCache_schema',
+        // Berichtenbox bridge (burgerportaal-mijnoverheid-bridge).
+        'berichtenboxMessage_schema',
+        'berichtenboxReply_schema',
+        'berichtenboxTemplate_schema',
+        'mailboxResolution_schema',
+        'deliveryAuditLog_schema',
     ];
 
     /**
