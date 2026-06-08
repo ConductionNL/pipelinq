@@ -56,9 +56,12 @@ use OCA\Pipelinq\Listener\ProjectCreationListener;
 use OCA\Pipelinq\Listener\ProjectPhaseStatusListener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Mcp\PipelinqToolProvider;
+use OCA\Pipelinq\Service\AppointmentCalendarLeafProvider;
 use OCA\Pipelinq\Service\AppointmentEmailService;
+use OCA\Pipelinq\Service\AvailabilityService;
 use OCA\Pipelinq\Service\BookingService;
 use OCA\Pipelinq\Service\WalkInQueueService;
+use Throwable;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -362,6 +365,8 @@ class Application extends App implements IBootstrap
         } catch (\Exception $e) {
             // Booking / walk-in surfaces not available — leave rebalance seam unset.
         }
+
+        $this->wireAppointmentCalendarSeam();
     }//end boot()
 
     /**
@@ -384,10 +389,41 @@ class Application extends App implements IBootstrap
             $bookingService = $container->get(BookingService::class);
             $emailProvider  = $container->get(AppointmentEmailService::class);
             $bookingService->setEmailProvider(provider: $emailProvider);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // OpenRegister or one of the collaborators is unavailable — the
             // seam stays null and bookings still transition; this is the
             // documented graceful-degradation path from BookingService.
         }
     }//end wireAppointmentEmailSeam()
+
+    /**
+     * Inject {@see AppointmentCalendarLeafProvider} into the appointment
+     * services as the calendar-leaf seam (member 10 of the chain).
+     *
+     * AvailabilityService consumes the seam in `getBlockedTimes` to merge
+     * leaf-synced staff calendar VEVENTs into the slot computation;
+     * BookingService consumes it after every confirmed-transition to push
+     * the booking to staff calendars (REQ-APT-018). Setter seams keep the
+     * lifecycle code independent of the calendar transport; we wire the
+     * provider at boot so the merge + push happen automatically.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
+     */
+    private function wireAppointmentCalendarSeam(): void
+    {
+        try {
+            $container           = $this->getContainer();
+            $calendarProvider    = $container->get(AppointmentCalendarLeafProvider::class);
+            $availabilityService = $container->get(AvailabilityService::class);
+            $bookingService      = $container->get(BookingService::class);
+            $availabilityService->setCalendarProvider(provider: $calendarProvider);
+            $bookingService->setCalendarProvider(provider: $calendarProvider);
+        } catch (Throwable $e) {
+            // OpenRegister or one of the collaborators is unavailable — the
+            // seam stays null and bookings still transition; this is the
+            // documented graceful-degradation path from BookingService.
+        }
+    }//end wireAppointmentCalendarSeam()
 }//end class
