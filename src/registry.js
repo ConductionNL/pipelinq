@@ -114,6 +114,11 @@ import PosRoleFormView from './views/pos/PosRoleForm.vue'
 import PosStaffListView from './views/pos/PosStaffList.vue'
 import PosStaffFormView from './views/pos/PosStaffForm.vue'
 
+// --- POS split-tender admin (pos-split-tender REQ-PST-001).
+//     Tender-type registry: list + create/edit dialog. The dialog handles
+//     CRUD inline (no separate detail route). ---
+import PosTenderTypeListView from './views/pos/PosTenderTypeList.vue'
+
 // --- POS end-of-day bookkeeping (lib gap: index/detail pages cannot express the
 //     server-authoritative Z-report aggregation + Shillinq submission timeline
 //     + manager-gated retry). ---
@@ -445,6 +450,13 @@ const registry = {
 		kind: 'page',
 		component: PosStaffFormView,
 		_note: 'POS staff create/edit form with masked PIN field; on edit, blank PIN keeps the existing hash.',
+	},
+
+	// --- POS split-tender admin (pos-split-tender). ---
+	PosTenderTypeListView: {
+		kind: 'page',
+		component: PosTenderTypeListView,
+		_note: 'POS tender-type list (Contant / Betaalpas / Cadeaubon / ...) with inline create / edit / delete via PosTenderTypeFormDialog; admin-only configuration of available payment methods and their GL accounts.',
 	},
 
 	// --- POS end-of-day bookkeeping. ---
