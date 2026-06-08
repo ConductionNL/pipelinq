@@ -140,4 +140,30 @@
 
 ## Pre-merge checklist (Task 8.1 of giant)
 
-- [ ] Walk pre-merge checklist: ObjectService-only CRUD, IUserSession identity, generic errors, thin controllers, async webhooks, consent gating, template enforcement, configurable rate limit + soft-bounce threshold, attribution temporal order, Dutch seed data, `@spec` PHPDoc, coverage, integration test present
+- [x] Walk pre-merge checklist: ObjectService-only CRUD, IUserSession identity, generic errors, thin controllers, async webhooks, consent gating, template enforcement, configurable rate limit + soft-bounce threshold, attribution temporal order, Dutch seed data, `@spec` PHPDoc, coverage, integration test present
+  - Full checklist with evidence (commands + file paths + line numbers)
+    in `verification-log.md` §6. Highlights:
+    - ObjectService-only CRUD: 30 `getObjectService|->find|->saveObject`
+      hits across the four marketing services; no direct mapper / query
+      builder.
+    - IUserSession identity: `BlastController:259`, `TemplateController:154`,
+      `SegmentController::collectSegmentBody()` drops client-supplied
+      `createdBy`; UID comes from `$this->userSession->getUser()->getUID()`.
+    - Configurable rate limit: `IAppConfig` key `blast.rate_limit_per_second`
+      (default 100, `BlastService:91`); soft-bounce threshold:
+      `blast.soft_bounce_threshold` (default 5,
+      `WebhookProcessorService:83-89`).
+    - Attribution temporal order: `AttributionService::recordClick()`
+      sets `firstClickAt` only when absent (line 110);
+      `linkBlastToDeal()` requires `firstClickAt < closedWonAt`.
+    - Dutch seed: 21 objects across 6 schemas in
+      `lib/Settings/register.d/95-marketing-segmentation-blast.json`
+      (`lang="nl"`, Conduction B.V. + Amsterdam address, `Uitschrijven`).
+    - `@spec` PHPDoc: SegmentService 16, ComplianceService 12,
+      BlastService 16, AttributionService 7 — every public entry tagged.
+    - Hydra gates: 4 baseline FAILs on `development` (gate-6, 7, 9, 16),
+      all unrelated to marketing; diff-scoped gate sweep on this branch
+      reports `ALL 16 GATES GREEN` (slice 11 ships no code).
+  - Archive readiness: hydra.json depends_on points at slice 10; archive
+    can proceed once 09 + 10 land on `development`. This slice can merge
+    independently — it carries no production code.
