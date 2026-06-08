@@ -102,15 +102,15 @@
 
 ## 5. Integration with Request & Contact Flows
 
-- [ ] 5.1 Add method to Request service/controller:
+- [x] 5.1 Add method to Request service/controller:
   - `registerZaak(Request $request, StufEndpoint $endpoint, ?array $opts): array` — public wrapper for adapter.creeerZaak(); called from request creation workflow
   - On success, create ZaaksysteemMapping and update request status
   - On error, log StufMessage and raise needs-input
 
-- [ ] 5.2 Add method to Contact service/controller:
+- [x] 5.2 Add method to Contact service/controller:
   - `syncContactToBetrokkene(Contact $contact, StufEndpoint $endpoint)` — call mapper.findOrCreateBetrokkene() and link via ZaaksysteemMapping
 
-- [ ] 5.3 Add detail view integrations (UI):
+- [x] 5.3 Add detail view integrations (UI):
   - Request detail: show linked zaak ID if mapped; button to "Register to Zaaksysteem" if not yet mapped
   - Contact detail: show linked betrokkene ID if mapped
 
