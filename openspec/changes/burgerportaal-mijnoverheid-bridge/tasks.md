@@ -3,7 +3,7 @@
 ## Phase 1: Database Schema and Entities [MVP Core]
 
 ### Entity Setup
-- [ ] 1.1 Create `lib/Migration/CreateBerichtenboxTables.php` with schema for BerichtenboxMessage, BerichtenboxReply, BerichtenboxTemplate, MailboxResolution, DeliveryAuditLog tables
+- [x] 1.1 Create `lib/Migration/CreateBerichtenboxTables.php` with schema for BerichtenboxMessage, BerichtenboxReply, BerichtenboxTemplate, MailboxResolution, DeliveryAuditLog tables
   - All tables use standard OpenRegister built-in fields (id, uuid, uri, version, createdAt, updatedAt, owner, organization, register, schema, relations, files, auditTrail, notes, tasks, tags, status, locked)
   - BerichtenboxMessage: add bsn (encrypted), bsnHash (HMAC-SHA256, indexed), mailboxResolvedAt, mailboxAvailable (boolean), contactmomentId, zaakId, subject, body, templateId, attachments (JSON), sentToBerichtenboxAt, logiusMessageId (indexed), deliveryStatus (enum, indexed), readAt, fallbackTriggeredAt, fallbackEmail, fallbackSentAt, failureReason
   - BerichtenboxReply: add parentMessageId (indexed), logiusReplyId (indexed), receivedAt, bsn (encrypted), bsnHash, bodyText, attachments (JSON), processedAt, createdContactmomentId, processingError
@@ -13,7 +13,7 @@
   - Constraints: deliveryStatus ENUM, event ENUM, language ENUM, status ENUM (zaaktype status values)
   - Indexes: (bsnHash, expiresAt) on MailboxResolution for cache lookups; (logiusMessageId) on BerichtenboxMessage for webhook handlers; (retentionUntil) on DeliveryAuditLog for expiration jobs
 
-- [ ] 1.2 Create `lib/Settings/berichtenbox_register.json` OpenRegister schema definitions for the 5 new entities
+- [x] 1.2 Create `lib/Settings/berichtenbox_register.json` OpenRegister schema definitions for the 5 new entities
   - Each entity maps to OpenRegister's register/schema/object pattern
   - Schema defines field types, validators, and OpenRegister UI hints
 

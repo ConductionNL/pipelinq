@@ -101,6 +101,12 @@ class SettingsService
         'expense_schema',
         // Billing categories (billable-categories-and-tags) — REQ-BCT-001.
         'billingCategory_schema',
+        // Berichtenbox bridge (burgerportaal-mijnoverheid-bridge).
+        'berichtenboxMessage_schema',
+        'berichtenboxReply_schema',
+        'berichtenboxTemplate_schema',
+        'mailboxResolution_schema',
+        'deliveryAuditLog_schema',
     ];
 
     /**
