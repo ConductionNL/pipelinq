@@ -239,7 +239,7 @@
     - Test successful dispatch returns true and sets `apSyncStatus = synced`
     - Test failed dispatch returns false and sets `apSyncStatus = failed`
 
-- [ ] 10.3 Integration tests: Full approval-to-sync flow
+- [x] 10.3 Integration tests: Full approval-to-sync flow
   - **spec_ref**: `specs/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-001, REQ-AP-002, REQ-AP-003`
   - **files**: `tests/Integration/ExpenseApSyncTest.php`
   - **tier**: P0-must
