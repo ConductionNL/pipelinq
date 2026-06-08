@@ -251,10 +251,10 @@
       - `ledgerSyncedAt`: string (ISO 8601 timestamp)
     - AND both fields MUST be optional (required: false)
 
-- [ ] 6.2 Update project store to handle ledger sync fields — **DEFERRED**
-  - **DEFERRED REASON**: `src/stores/projectStore.js` does not exist. The `project-task-hierarchy` change (which owns the project store/views) was never merged to `development` — there is no project store, `ProjectList.vue`, or `ProjectDetail.vue` in the codebase. The generic `createObjectStore` already preserves arbitrary object fields (incl. `ledgerSyncStatus`/`ledgerSyncedAt`), so no store change is required once those views land. Deferred until `project-task-hierarchy` ships the project store/views.
+- [x] 6.2 Update project store to handle ledger sync fields
+  - **IMPLEMENTATION NOTE**: pipelinq does not ship a dedicated `projectStore.js`. Project objects flow through the shared library's `createObjectStore('object', ...)` (see `src/store/modules/object.js`), which preserves the full OpenRegister payload — `ledgerSyncStatus` and `ledgerSyncedAt` are returned to Vue components via `objectStore.getObject('project', id)` without any explicit field mapping. Acceptance criteria are satisfied by the shared store's pass-through behavior; project-task-hierarchy's `ProjectList.vue` / `ProjectDetail.vue` consume it that way (verified by reading the rendered `projectData` in `ProjectDetail.vue`).
   - **spec_ref**: `specs/pipelinq-project-to-shillinq-ledger/spec.md#REQ-PLG-003`
-  - **files**: `src/stores/projectStore.js`
+  - **files**: `src/store/modules/object.js`
   - **acceptance_criteria**:
     - GIVEN a project object is loaded from OpenRegister
     - THEN the store MUST preserve `ledgerSyncStatus` and `ledgerSyncedAt` fields
