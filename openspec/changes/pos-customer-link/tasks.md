@@ -32,7 +32,7 @@
     - Reversibility: schema rollback removes the fields
     - Existing transactions continue to work (fields are optional / defaulted)
 
-- [ ] 1.3 Update TransactionController to handle customer and consent
+- [x] 1.3 Update TransactionController to handle customer and consent
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-002, REQ-PCL-004`
   - **files**: `pos/lib/Controller/TransactionController.php`
   - **acceptance_criteria**:
@@ -55,7 +55,7 @@
     - Includes timeout (5 seconds) to prevent checkout slowdown
     - Catches and handles network errors without raising exceptions
 
-- [ ] 1.5 Integrate consent sync into transaction save
+- [x] 1.5 Integrate consent sync into transaction save
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-004 Scenario 5`
   - **files**: `pos/lib/Controller/TransactionController.php`, `pos/lib/Service/PipelinqConsentService.php`
   - **acceptance_criteria**:
@@ -80,7 +80,7 @@
     - Implements 5-second timeout (prevent long checkout waits)
     - Filters results by admin-configured search fields (name, email, phone)
 
-- [ ] 2.2 Create search endpoint in TransactionController
+- [x] 2.2 Create search endpoint in TransactionController
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-001`
   - **files**: `pos/lib/Controller/TransactionController.php`
   - **acceptance_criteria**:
@@ -91,7 +91,7 @@
     - Returns 200 on success, 500 on Pipelinq API error (with error message)
     - Query parameter validation: query must be 2+ characters, limit 1-100
 
-- [ ] 2.3 Fetch transaction history for customer
+- [x] 2.3 Fetch transaction history for customer
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-003`
   - **files**: `pos/lib/Controller/TransactionController.php`
   - **acceptance_criteria**:
@@ -212,7 +212,7 @@
 
 ## 6. Backend: Admin Settings
 
-- [ ] 6.1 Create admin settings for customer lookup configuration
+- [x] 6.1 Create admin settings for customer lookup configuration
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-006`
   - **files**: `pos/lib/Controller/SettingsController.php`, `pos/openregister/pipelinq_pos_register.json` (or similar)
   - **acceptance_criteria**:

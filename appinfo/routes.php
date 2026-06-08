@@ -148,6 +148,17 @@ return [
         ['name' => 'posTransaction#park',    'url' => '/api/pos-transactions/{id}/park',    'verb' => 'POST'],
         ['name' => 'posTransaction#resume',  'url' => '/api/pos-transactions/{id}/resume',  'verb' => 'POST'],
 
+        // POS customer-link surface (search, attach, detach, history) — pos-customer-link.
+        // Static /search route precedes the wildcard /{id} routes per Symfony ordering.
+        ['name' => 'posCustomer#search',  'url' => '/api/pos-customers/search',          'verb' => 'GET'],
+        ['name' => 'posCustomer#history', 'url' => '/api/pos-customers/{id}/history',    'verb' => 'GET'],
+        ['name' => 'posCustomer#attach',  'url' => '/api/pos-transactions/{id}/customer', 'verb' => 'POST'],
+        ['name' => 'posCustomer#detach',  'url' => '/api/pos-transactions/{id}/customer', 'verb' => 'DELETE'],
+
+        // POS customer-link admin settings (admin-only via #[AuthorizedAdminSetting]).
+        ['name' => 'posCustomerSettings#index',  'url' => '/api/admin/pos-customer-settings', 'verb' => 'GET'],
+        ['name' => 'posCustomerSettings#update', 'url' => '/api/admin/pos-customer-settings', 'verb' => 'POST'],
+
         // POS product catalogue resolution (barcode lookup + server-authoritative price).
         ['name' => 'productCatalog#lookupBarcode', 'url' => '/api/products/barcode-lookup', 'verb' => 'POST'],
         ['name' => 'productCatalog#resolvePrice',  'url' => '/api/products/resolve-price',  'verb' => 'POST'],
