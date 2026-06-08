@@ -57,7 +57,7 @@
 
 ## 3. Backend Service — Cash Shift Management
 
-- [ ] 3.1 Create `CashShiftService` in `lib/Service/CashShiftService.php`
+- [x] 3.1 Create `CashShiftService` in `lib/Service/CashShiftService.php`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-001`, `REQ-CCM-004`, `REQ-CCM-005`
   - **files**: `lib/Service/CashShiftService.php`
   - **acceptance_criteria**:
@@ -73,7 +73,7 @@
       - Computes `withinTolerance = |diffPercentage| ≤ 2.0`
       - Creates `cashDiff` object with all computed values and `status: pending`
 
-- [ ] 3.2 Implement `approveDiff` method in `CashShiftService`
+- [x] 3.2 Implement `approveDiff` method in `CashShiftService`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-005`, `REQ-CCM-006`
   - **files**: `lib/Service/CashShiftService.php`
   - **acceptance_criteria**:
@@ -82,7 +82,7 @@
     - MUST set `shift.status = "reconciled"`, `shift.reconciliationStatus = "approved"`
     - MUST emit `pipelinq.CashDiff.confirmed` CloudEvent via WebhookService
 
-- [ ] 3.3 Implement `rejectDiff` method in `CashShiftService`
+- [x] 3.3 Implement `rejectDiff` method in `CashShiftService`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-005`
   - **files**: `lib/Service/CashShiftService.php`
   - **acceptance_criteria**:
