@@ -101,6 +101,7 @@ Vrij en open source onder de AGPL-licentie.
         <job>OCA\Pipelinq\BackgroundJob\AppointmentDepositTimeoutJob</job>
         <job>OCA\Pipelinq\BackgroundJob\GenerateZReportJob</job>
         <job>OCA\Pipelinq\BackgroundJob\TenderPostedRetryJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\EmailMatchJob</job>
     </background-jobs>
 
     <navigations>
