@@ -103,6 +103,12 @@ import PosRefundListView from './views/pos/PosRefundList.vue'
 import PosRefundDetailView from './views/pos/PosRefundDetail.vue'
 import PosRefundFormView from './views/pos/PosRefundForm.vue'
 
+// --- POS staff PIN + role permissions (pos-staff-pin-permissions). ---
+import PosRoleListView from './views/pos/PosRoleList.vue'
+import PosRoleFormView from './views/pos/PosRoleForm.vue'
+import PosStaffListView from './views/pos/PosStaffList.vue'
+import PosStaffFormView from './views/pos/PosStaffForm.vue'
+
 // --- Product barcode lookup (lib gap: index pages have no server-authoritative
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
 import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
@@ -377,6 +383,28 @@ const registry = {
 		kind: 'page',
 		component: PosRefundFormView,
 		_note: 'Bespoke return editor: select original lines with partial quantities, per-line reason + restock toggle and real-time refund totals; lib has no line-selection/refund page type.',
+	},
+
+	// --- POS staff PIN + role permissions (pos-staff-pin-permissions). ---
+	PosRoleListView: {
+		kind: 'page',
+		component: PosRoleListView,
+		_note: 'POS role permission-matrix list (canVoid / maxDiscountPercent / canRefund / canNoSale).',
+	},
+	PosRoleFormView: {
+		kind: 'page',
+		component: PosRoleFormView,
+		_note: 'POS role create/edit form; client-side validation on maxDiscountPercent in [0,100].',
+	},
+	PosStaffListView: {
+		kind: 'page',
+		component: PosStaffListView,
+		_note: 'POS staff list (display name, linked NC user, role badge, active toggle); admin-only.',
+	},
+	PosStaffFormView: {
+		kind: 'page',
+		component: PosStaffFormView,
+		_note: 'POS staff create/edit form with masked PIN field; on edit, blank PIN keeps the existing hash.',
 	},
 
 	// --- Product barcode lookup. ---

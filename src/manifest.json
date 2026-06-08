@@ -94,6 +94,20 @@
 			"order": 96
 		},
 		{
+			"id": "PosStaffList",
+			"label": "POS medewerkers",
+			"icon": "icon-user",
+			"route": "PosStaffList",
+			"order": 97
+		},
+		{
+			"id": "PosRoleList",
+			"label": "POS rollen",
+			"icon": "icon-rename",
+			"route": "PosRoleList",
+			"order": 98
+		},
+		{
 			"id": "Pipeline",
 			"label": "Pipeline",
 			"icon": "icon-category-organization",
@@ -797,6 +811,72 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "posTransaction"
+			}
+		},
+		{
+			"id": "PosRoleList",
+			"route": "/pos/roles",
+			"type": "custom",
+			"title": "POS rollen",
+			"component": "PosRoleListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posRole"
+			}
+		},
+		{
+			"id": "PosRoleNew",
+			"route": "/pos/roles/new",
+			"type": "custom",
+			"title": "Nieuwe rol",
+			"component": "PosRoleFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posRole"
+			}
+		},
+		{
+			"id": "PosRoleDetail",
+			"route": "/pos/roles/:id",
+			"type": "custom",
+			"title": "POS rol",
+			"component": "PosRoleFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posRole"
+			}
+		},
+		{
+			"id": "PosStaffList",
+			"route": "/pos/staff",
+			"type": "custom",
+			"title": "POS medewerkers",
+			"component": "PosStaffListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posStaff"
+			}
+		},
+		{
+			"id": "PosStaffNew",
+			"route": "/pos/staff/new",
+			"type": "custom",
+			"title": "Nieuwe medewerker",
+			"component": "PosStaffFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posStaff"
+			}
+		},
+		{
+			"id": "PosStaffDetail",
+			"route": "/pos/staff/:id",
+			"type": "custom",
+			"title": "POS medewerker",
+			"component": "PosStaffFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posStaff"
 			}
 		},
 		{
