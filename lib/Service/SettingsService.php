@@ -63,6 +63,8 @@ class SettingsService
         'agentProfile_schema',
         'project_schema',
         'projectPhase_schema',
+        'projectTask_schema',
+        'projectActivity_schema',
         'timeEntry_schema',
         'posTransaction_schema',
         'posTransactionLine_schema',

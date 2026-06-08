@@ -148,6 +148,24 @@ async function doInitializeStores() {
 		if (config.register && config.walkInTicket_schema) {
 			objectStore.registerObjectType('walkInTicket', config.walkInTicket_schema, config.register)
 		}
+		// Project / WBS hierarchy (project-task-hierarchy):
+		// project → projectPhase → projectTask → projectActivity.
+		// `project` and `projectPhase` are also used by the Shillinq
+		// project-ledger integration; registering them here exposes the
+		// stores to the Projecten UI without affecting the listener-side
+		// reads (REQ-PTH-001..004).
+		if (config.register && config.project_schema) {
+			objectStore.registerObjectType('project', config.project_schema, config.register)
+		}
+		if (config.register && config.projectPhase_schema) {
+			objectStore.registerObjectType('projectPhase', config.projectPhase_schema, config.register)
+		}
+		if (config.register && config.projectTask_schema) {
+			objectStore.registerObjectType('projectTask', config.projectTask_schema, config.register)
+		}
+		if (config.register && config.projectActivity_schema) {
+			objectStore.registerObjectType('projectActivity', config.projectActivity_schema, config.register)
+		}
 	}
 
 	return { settingsStore, objectStore }

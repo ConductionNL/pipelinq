@@ -224,6 +224,43 @@
 			</div>
 		</CnDetailCard>
 
+		<!-- Projecten — every project referencing this client. project-task-hierarchy / REQ-PTH-009 Scenario 34. -->
+		<CnDetailCard :title="t('pipelinq', 'Projecten')">
+			<NcLoadingIcon v-if="sectionLoading.projects" :size="24" />
+			<div v-else-if="sectionError.projects" class="section-error">
+				<p>{{ sectionError.projects }}</p>
+			</div>
+			<div v-else-if="recentProjects.length === 0" class="section-empty">
+				<p>{{ t('pipelinq', 'No projects linked') }}</p>
+			</div>
+			<div v-else class="viewTableContainer">
+				<table class="viewTable">
+					<thead>
+						<tr>
+							<th>{{ t('pipelinq', 'Name') }}</th>
+							<th>{{ t('pipelinq', 'Status') }}</th>
+							<th>{{ t('pipelinq', 'Billable') }}</th>
+							<th>{{ t('pipelinq', 'Budget hours') }}</th>
+							<th>{{ t('pipelinq', 'End date') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="project in recentProjects"
+							:key="project.id"
+							class="viewTableRow"
+							@click="$router.push({ name: 'ProjectDetail', params: { id: project.id } })">
+							<td>{{ project.name || '-' }}</td>
+							<td>{{ project.status || '-' }}</td>
+							<td>{{ project.billable === false ? t('pipelinq', 'Niet-factureerbaar') : t('pipelinq', 'Factureerbaar') }}</td>
+							<td>{{ project.budgetHours || 0 }}u</td>
+							<td>{{ formatDate(project.endDate) }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</CnDetailCard>
+
 		<!-- Relationships -->
 		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Relationships')">
 			<ContactRelationships
@@ -431,6 +468,13 @@ export default {
 			leads: [],
 			contactmomenten: [],
 			complaints: [],
+			/**
+			 * Projects linked to this client (project-task-hierarchy
+			 * REQ-PTH-009 Scenario 34). Fetched alongside the other
+			 * cross-schema relations so a slow project query never
+			 * blocks the other client sections.
+			 */
+			projects: [],
 			showDelete: false,
 			showContactmomentQuickLog: false,
 			/**
@@ -444,6 +488,7 @@ export default {
 				contactmomenten: false,
 				requests: false,
 				complaints: false,
+				projects: false,
 			},
 			/**
 			 * Per-section error messages — a failure in one fetch must NOT
@@ -455,6 +500,7 @@ export default {
 				contactmomenten: null,
 				requests: null,
 				complaints: null,
+				projects: null,
 			},
 		}
 	},
@@ -580,6 +626,18 @@ export default {
 		recentRequests() {
 			return this.sortByDateDesc(this.requests, 'requestedAt').slice(0, 5)
 		},
+		/**
+		 * Up to 10 projects sorted by `_dateCreated` desc (project-task-hierarchy
+		 * REQ-PTH-009 Scenario 34). The Projecten card surfaces every project
+		 * referencing this client, regardless of status.
+		 *
+		 * @return {Array<object>}
+		 *
+		 * @spec openspec/changes/project-task-hierarchy/specs.md#REQ-PTH-009
+		 */
+		recentProjects() {
+			return this.sortByDateDesc(this.projects, '_dateCreated').slice(0, 10)
+		},
 	},
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-12
@@ -693,6 +751,14 @@ export default {
 					client: this.clientId,
 					_order: { _dateCreated: 'desc' },
 				}, this.t('pipelinq', 'Failed to load complaints')),
+				// project-task-hierarchy REQ-PTH-009 Scenario 34: surface
+				// projects on this client. fetchUsed semantics — collection
+				// filtered by `client` matching this clientId.
+				this.loadSection('projects', 'project', {
+					_limit: 50,
+					client: this.clientId,
+					_order: { _dateCreated: 'desc' },
+				}, this.t('pipelinq', 'Failed to load projects')),
 			]
 			// allSettled — one rejected fetch must NOT cancel the others.
 			await Promise.allSettled(tasks)
