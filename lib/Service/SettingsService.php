@@ -78,6 +78,10 @@ class SettingsService
         // POS staff PIN + role permissions (pos-staff-pin-permissions).
         'posRole_schema',
         'posStaff_schema',
+        // POS end-of-day bookkeeping post pipeline (pos-end-of-day-bookkeeping-post).
+        'posZReport_schema',
+        'posJournalEntryOutbound_schema',
+        'glAccountMapping_schema',
         'exportDestination_schema',
         'exportJob_schema',
         'exportRun_schema',
@@ -170,6 +174,12 @@ class SettingsService
         'export.default_compression'               => 'none',
         'export.failure_notification_email'        => '',
         'export.at_risk_warning_hours'             => '24',
+        // POS end-of-day bookkeeping (pos-end-of-day-bookkeeping-post).
+        'pos_eod.z_report_time'                    => '23:59',
+        'pos_eod.shillinq_endpoint'                => '',
+        // pos_eod.shillinq_token is stored via setValueString with isSensitive=true and never exposed in getSettings().
+        'pos_eod.alert_email'                      => '',
+        'pos_eod.max_retry_attempts'               => '5',
     ];
 
     /**

@@ -1,0 +1,478 @@
+{
+    "components": {
+        "registers": {
+            "pipelinq": {
+                "schemas": [
+                    "client",
+                    "contact",
+                    "lead",
+                    "request",
+                    "complaint",
+                    "pipeline",
+                    "product",
+                    "productCategory",
+                    "leadProduct",
+                    "intakeForm",
+                    "intakeSubmission",
+                    "contactmoment",
+                    "task",
+                    "kennisartikel",
+                    "kenniscategorie",
+                    "kennisfeedback",
+                    "emailLink",
+                    "calendarLink",
+                    "relationship",
+                    "survey",
+                    "surveyResponse",
+                    "queue",
+                    "skill",
+                    "agentProfile",
+                    "posTransaction",
+                    "posTransactionLine",
+                    "receiptTemplate",
+                    "receiptPrintLog",
+                    "refundReason",
+                    "posRefund",
+                    "posRefundLine",
+                    "cashShift",
+                    "cashDrop",
+                    "cashCount",
+                    "cashDiff",
+                    "posZReport",
+                    "posJournalEntryOutbound",
+                    "glAccountMapping"
+                ]
+            }
+        },
+        "schemas": {
+            "posZReport": {
+                "slug": "posZReport",
+                "title": "POS Z-Report",
+                "icon": "FileChart",
+                "version": "1.0.0",
+                "summary": "Daily POS end-of-day settlement, aggregating confirmed transactions per terminal",
+                "description": "Represents a daily Z-report (end-of-day settlement) for a POS terminal. Aggregates all confirmed/settled posTransaction objects for a given reportDate (and optional terminalId), computing per-rate tax breakdown, payment-method breakdown and gross/net totals server-authoritative — client-supplied figures are never trusted. Lifecycle: draft -> ready -> submitted -> posted -> reconciled, with a failed branch for retried submissions. Mapped to Schema.org Invoice.",
+                "@type": "schema:Invoice",
+                "required": [
+                    "reference",
+                    "reportDate",
+                    "createdAt",
+                    "status"
+                ],
+                "properties": {
+                    "reference": {
+                        "type": "string",
+                        "description": "Human-readable Z-report reference, e.g. Z-2026-05-20-KAS01 (date + terminal)",
+                        "maxLength": 64,
+                        "facetable": true
+                    },
+                    "reportDate": {
+                        "type": "string",
+                        "format": "date",
+                        "description": "Settlement date (not creation date) in YYYY-MM-DD",
+                        "facetable": true
+                    },
+                    "terminalId": {
+                        "type": "string",
+                        "description": "POS terminal / register identifier (e.g. kassa-01); null when the report spans all terminals",
+                        "maxLength": 64,
+                        "facetable": true
+                    },
+                    "store": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Optional reference to a store/location entity (future use)"
+                    },
+                    "transactionIds": {
+                        "type": "array",
+                        "description": "UUIDs of aggregated posTransaction objects (audit trail)",
+                        "items": { "type": "string" }
+                    },
+                    "transactionCount": {
+                        "type": "integer",
+                        "description": "Number of transactions aggregated",
+                        "default": 0,
+                        "minimum": 0
+                    },
+                    "subtotal": {
+                        "type": "number",
+                        "description": "Sum of transaction subtotals excluding tax",
+                        "default": 0
+                    },
+                    "discountTotal": {
+                        "type": "number",
+                        "description": "Aggregate discount across all transactions",
+                        "default": 0
+                    },
+                    "taxBreakdown": {
+                        "type": "array",
+                        "description": "Per-rate tax summary, e.g. [{rate:21, base:200.00, tax:42.00}]",
+                        "items": { "type": "object" }
+                    },
+                    "totalTax": {
+                        "type": "number",
+                        "description": "Aggregate tax (sum of taxBreakdown[*].tax)",
+                        "default": 0
+                    },
+                    "total": {
+                        "type": "number",
+                        "description": "Grand total including tax",
+                        "default": 0
+                    },
+                    "paymentMethodBreakdown": {
+                        "type": "array",
+                        "description": "Per-payment-method totals, e.g. [{method:cash, amount:300.00}]",
+                        "items": { "type": "object" }
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "ISO 8601 timestamp when the Z-report was generated (server-set)"
+                    },
+                    "settledAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "ISO 8601 timestamp when the transactions were settled"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Lifecycle status",
+                        "enum": [
+                            "draft",
+                            "ready",
+                            "submitted",
+                            "posted",
+                            "failed",
+                            "reconciled"
+                        ],
+                        "default": "draft",
+                        "title": "Status",
+                        "facetable": true
+                    },
+                    "notes": {
+                        "type": "string",
+                        "description": "Optional notes (e.g. overage adjustment)",
+                        "maxLength": 2000
+                    }
+                }
+            },
+            "posJournalEntryOutbound": {
+                "slug": "posJournalEntryOutbound",
+                "title": "POS Journal Entry Outbound",
+                "icon": "BookSync",
+                "version": "1.0.0",
+                "summary": "Staging entity for a Shillinq JournalEntry submission with idempotency and retry state",
+                "description": "Staging record for posting a Z-report to Shillinq as a JournalEntry. One-to-one link to a posZReport. The idempotencyKey is SHA256(zReport.uuid + reportDate), preventing duplicate journal entries at Shillinq. submissionAttempts is an append-only log of every HTTP attempt; nextRetryAt schedules the next exponential-backoff retry on 5xx/timeout. ledgerLineItems are server-computed from the Z-report's taxBreakdown + the active glAccountMapping. Mapped to Schema.org Message.",
+                "@type": "schema:Message",
+                "required": [
+                    "zReport",
+                    "idempotencyKey",
+                    "status"
+                ],
+                "properties": {
+                    "zReport": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "UUID reference to the parent posZReport",
+                        "facetable": true
+                    },
+                    "idempotencyKey": {
+                        "type": "string",
+                        "description": "SHA256(zReport.uuid + reportDate); sent as X-Idempotency-Key to Shillinq",
+                        "maxLength": 80
+                    },
+                    "payloadVersion": {
+                        "type": "integer",
+                        "description": "Payload schema version for backward compatibility",
+                        "default": 1,
+                        "minimum": 1
+                    },
+                    "ledgerLineItems": {
+                        "type": "array",
+                        "description": "Transformed GL entries with debit/credit, account, description and taxRate",
+                        "items": { "type": "object" }
+                    },
+                    "postingDate": {
+                        "type": "string",
+                        "format": "date",
+                        "description": "GL posting date (usually equal to the Z-report's reportDate)"
+                    },
+                    "glReference": {
+                        "type": "string",
+                        "description": "External GL batch reference returned by Shillinq",
+                        "maxLength": 128
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Submission status",
+                        "enum": [
+                            "draft",
+                            "pending",
+                            "posted",
+                            "failed"
+                        ],
+                        "default": "draft",
+                        "title": "Status",
+                        "facetable": true
+                    },
+                    "submissionAttempts": {
+                        "type": "array",
+                        "description": "Append-only log: [{timestamp, status, message, eventId}]",
+                        "items": { "type": "object" }
+                    },
+                    "attemptCount": {
+                        "type": "integer",
+                        "description": "Number of submission attempts (incremented before each call)",
+                        "default": 0,
+                        "minimum": 0
+                    },
+                    "lastAttemptAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "ISO 8601 timestamp of the most recent submission attempt"
+                    },
+                    "nextRetryAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Scheduled time for the next retry (null on success or after max attempts)"
+                    },
+                    "cloudEventId": {
+                        "type": "string",
+                        "description": "Id of the emitted pipelinq.PosJournalEntry.posted CloudEvent",
+                        "maxLength": 64
+                    },
+                    "shillinqEventId": {
+                        "type": "string",
+                        "description": "CloudEvents id returned by Shillinq on success",
+                        "maxLength": 64
+                    },
+                    "shillinqJournalEntryId": {
+                        "type": "string",
+                        "description": "JournalEntry UUID in Shillinq (set on posted/reconciled)",
+                        "maxLength": 64
+                    },
+                    "lastErrorMessage": {
+                        "type": "string",
+                        "description": "Most recent error message from Shillinq or transport",
+                        "maxLength": 2000
+                    },
+                    "lastErrorCode": {
+                        "type": "string",
+                        "description": "HTTP status or transport error code (e.g. 422, NETWORK_TIMEOUT)",
+                        "maxLength": 32
+                    }
+                }
+            },
+            "glAccountMapping": {
+                "slug": "glAccountMapping",
+                "title": "GL Account Mapping",
+                "icon": "AccountConvert",
+                "version": "1.0.0",
+                "summary": "GL account mapping profile per Dutch VAT rate, used to build outbound journal entries",
+                "description": "Configuration object that maps each Dutch VAT rate (0/9/21%) to a debit and credit GL account. PosBookkeepingService uses the default profile (isDefault=true) to translate a Z-report's taxBreakdown into balanced ledgerLineItems. The discount, refund and bank accounts are optional clearing accounts. Mapped to Schema.org Action.",
+                "@type": "schema:Action",
+                "required": [
+                    "name",
+                    "taxRateMappings"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Mapping profile name (e.g. Standard VAT Mapping 2026)",
+                        "maxLength": 128
+                    },
+                    "isDefault": {
+                        "type": "boolean",
+                        "description": "Whether this profile is used when no other mapping is selected",
+                        "default": false,
+                        "facetable": true
+                    },
+                    "taxRateMappings": {
+                        "type": "array",
+                        "description": "Per-rate GL pairs, e.g. [{taxRate:21, debitAccount:1200, creditAccount:5000}]",
+                        "items": { "type": "object" }
+                    },
+                    "discountAccount": {
+                        "type": "string",
+                        "description": "GL account for line / transaction discounts",
+                        "maxLength": 16
+                    },
+                    "refundAccount": {
+                        "type": "string",
+                        "description": "GL account for refund / void transactions",
+                        "maxLength": 16
+                    },
+                    "bankAccount": {
+                        "type": "string",
+                        "description": "GL bank / cash clearing account",
+                        "maxLength": 16
+                    }
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": { "register": "pipelinq", "schema": "glAccountMapping", "slug": "glmap-standaard-2026" },
+                "name": "Standaard BTW Mapping 2026",
+                "isDefault": true,
+                "taxRateMappings": [
+                    { "taxRate": 0,  "debitAccount": "1200", "creditAccount": "5100" },
+                    { "taxRate": 9,  "debitAccount": "1200", "creditAccount": "5010" },
+                    { "taxRate": 21, "debitAccount": "1200", "creditAccount": "5000" }
+                ],
+                "discountAccount": "5900",
+                "refundAccount": "5910",
+                "bankAccount": "1000"
+            },
+            {
+                "@self": { "register": "pipelinq", "schema": "posZReport", "slug": "zrep-2026-05-20-kas01" },
+                "reference": "Z-2026-05-20-KAS01",
+                "reportDate": "2026-05-20",
+                "terminalId": "kassa-01",
+                "transactionCount": 42,
+                "subtotal": 450.00,
+                "discountTotal": 15.00,
+                "taxBreakdown": [
+                    { "rate": 9,  "base": 50.00,  "tax": 4.50 },
+                    { "rate": 21, "base": 385.00, "tax": 80.85 }
+                ],
+                "totalTax": 85.35,
+                "total": 535.35,
+                "paymentMethodBreakdown": [
+                    { "method": "cash", "amount": 300.00 },
+                    { "method": "card", "amount": 235.35 }
+                ],
+                "createdAt": "2026-05-20T23:59:00+02:00",
+                "settledAt": "2026-05-20T23:59:00+02:00",
+                "status": "posted",
+                "notes": "Normale werkdag"
+            },
+            {
+                "@self": { "register": "pipelinq", "schema": "posZReport", "slug": "zrep-2026-05-21-kas01" },
+                "reference": "Z-2026-05-21-KAS01",
+                "reportDate": "2026-05-21",
+                "terminalId": "kassa-01",
+                "transactionCount": 38,
+                "subtotal": 380.00,
+                "discountTotal": 10.00,
+                "taxBreakdown": [
+                    { "rate": 9,  "base": 40.00,  "tax": 3.60 },
+                    { "rate": 21, "base": 330.00, "tax": 69.30 }
+                ],
+                "totalTax": 72.90,
+                "total": 452.90,
+                "paymentMethodBreakdown": [
+                    { "method": "cash", "amount": 250.00 },
+                    { "method": "card", "amount": 202.90 }
+                ],
+                "createdAt": "2026-05-21T23:59:00+02:00",
+                "settledAt": "2026-05-21T23:59:00+02:00",
+                "status": "submitted",
+                "notes": "Wachten op Shillinq posting"
+            },
+            {
+                "@self": { "register": "pipelinq", "schema": "posZReport", "slug": "zrep-2026-05-22-kas02" },
+                "reference": "Z-2026-05-22-KAS02",
+                "reportDate": "2026-05-22",
+                "terminalId": "kassa-02",
+                "transactionCount": 25,
+                "subtotal": 200.00,
+                "discountTotal": 5.00,
+                "taxBreakdown": [
+                    { "rate": 21, "base": 195.00, "tax": 40.95 }
+                ],
+                "totalTax": 40.95,
+                "total": 240.95,
+                "paymentMethodBreakdown": [
+                    { "method": "card", "amount": 240.95 }
+                ],
+                "createdAt": "2026-05-22T23:59:00+02:00",
+                "settledAt": "2026-05-22T23:59:00+02:00",
+                "status": "failed",
+                "notes": "Submission error - retry gepland"
+            },
+            {
+                "@self": { "register": "pipelinq", "schema": "posZReport", "slug": "zrep-2026-05-23-kas01" },
+                "reference": "Z-2026-05-23-KAS01",
+                "reportDate": "2026-05-23",
+                "terminalId": "kassa-01",
+                "transactionCount": 0,
+                "subtotal": 0,
+                "discountTotal": 0,
+                "taxBreakdown": [],
+                "totalTax": 0,
+                "total": 0,
+                "paymentMethodBreakdown": [],
+                "createdAt": "2026-05-23T23:59:00+02:00",
+                "status": "draft",
+                "notes": "Winkel gesloten"
+            },
+            {
+                "@self": { "register": "pipelinq", "schema": "posJournalEntryOutbound", "slug": "je-out-2026-05-20-kas01" },
+                "zReport": "zrep-2026-05-20-kas01",
+                "idempotencyKey": "sha256:a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
+                "payloadVersion": 1,
+                "ledgerLineItems": [
+                    { "account": "1200", "debit": 50.00,  "credit": 0,    "description": "Debiteuren - 9% omzet",  "taxRate": 9 },
+                    { "account": "5010", "debit": 0,     "credit": 50.00, "description": "Omzet 9% BTW",            "taxRate": 9 },
+                    { "account": "1200", "debit": 385.00, "credit": 0,    "description": "Debiteuren - 21% omzet", "taxRate": 21 },
+                    { "account": "5000", "debit": 0,     "credit": 385.00, "description": "Omzet 21% BTW",          "taxRate": 21 },
+                    { "account": "1500", "debit": 85.35,  "credit": 0,    "description": "Te dragen BTW",           "taxRate": null },
+                    { "account": "1000", "debit": 0,     "credit": 535.35, "description": "Kas/Bank clearing",      "taxRate": null }
+                ],
+                "postingDate": "2026-05-20",
+                "status": "posted",
+                "submissionAttempts": [
+                    { "timestamp": "2026-05-20T23:59:30+02:00", "status": 202, "message": "Accepted", "eventId": "evt-shillinq-2026-05-20-001" }
+                ],
+                "attemptCount": 1,
+                "lastAttemptAt": "2026-05-20T23:59:30+02:00",
+                "cloudEventId": "evt-pipelinq-2026-05-20-001",
+                "shillinqEventId": "evt-shillinq-2026-05-20-001",
+                "shillinqJournalEntryId": "je-shillinq-2026-05-20-001",
+                "glReference": "GL-BATCH-2026-05-20-001"
+            },
+            {
+                "@self": { "register": "pipelinq", "schema": "posJournalEntryOutbound", "slug": "je-out-2026-05-21-kas01" },
+                "zReport": "zrep-2026-05-21-kas01",
+                "idempotencyKey": "sha256:b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3",
+                "payloadVersion": 1,
+                "ledgerLineItems": [
+                    { "account": "1200", "debit": 40.00,  "credit": 0,    "description": "Debiteuren - 9% omzet",  "taxRate": 9 },
+                    { "account": "5010", "debit": 0,     "credit": 40.00, "description": "Omzet 9% BTW",            "taxRate": 9 },
+                    { "account": "1200", "debit": 330.00, "credit": 0,    "description": "Debiteuren - 21% omzet", "taxRate": 21 },
+                    { "account": "5000", "debit": 0,     "credit": 330.00, "description": "Omzet 21% BTW",          "taxRate": 21 },
+                    { "account": "1500", "debit": 72.90,  "credit": 0,    "description": "Te dragen BTW",           "taxRate": null },
+                    { "account": "1000", "debit": 0,     "credit": 452.90, "description": "Kas/Bank clearing",      "taxRate": null }
+                ],
+                "postingDate": "2026-05-21",
+                "status": "pending",
+                "submissionAttempts": [],
+                "attemptCount": 0
+            },
+            {
+                "@self": { "register": "pipelinq", "schema": "posJournalEntryOutbound", "slug": "je-out-2026-05-22-kas02" },
+                "zReport": "zrep-2026-05-22-kas02",
+                "idempotencyKey": "sha256:c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4",
+                "payloadVersion": 1,
+                "ledgerLineItems": [
+                    { "account": "1200", "debit": 195.00, "credit": 0,     "description": "Debiteuren - 21% omzet", "taxRate": 21 },
+                    { "account": "5000", "debit": 0,     "credit": 195.00, "description": "Omzet 21% BTW",          "taxRate": 21 },
+                    { "account": "1500", "debit": 40.95,  "credit": 0,     "description": "Te dragen BTW",          "taxRate": null },
+                    { "account": "1000", "debit": 0,     "credit": 240.95, "description": "Kas/Bank clearing",      "taxRate": null }
+                ],
+                "postingDate": "2026-05-22",
+                "status": "failed",
+                "submissionAttempts": [
+                    { "timestamp": "2026-05-22T23:59:15+02:00", "status": 503, "message": "Service Unavailable" },
+                    { "timestamp": "2026-05-23T00:04:20+02:00", "status": 503, "message": "Service Unavailable" }
+                ],
+                "attemptCount": 2,
+                "lastAttemptAt": "2026-05-23T00:04:20+02:00",
+                "nextRetryAt": "2026-05-23T00:19:20+02:00",
+                "lastErrorMessage": "Service Unavailable",
+                "lastErrorCode": "503"
+            }
+        ]
+    }
+}

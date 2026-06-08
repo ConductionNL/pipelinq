@@ -2,18 +2,22 @@
 
 ## 0. Deduplication Check
 
-- [ ] 0.1 Search `lib/`, `openspec/`, and external integration code for any existing
+- [x] 0.1 Search `lib/`, `openspec/`, and external integration code for any existing
   Z-report aggregation or Shillinq journal entry posting logic; document findings
   - **acceptance_criteria**:
     - GIVEN the search is complete
     - THEN a one-line finding MUST be appended to this task: "No overlap found"
       or reference to existing capability and justification for new code
+  - **finding**: No overlap found — no existing posZReport / posJournalEntryOutbound /
+    PosBookkeeping code in `lib/` or `src/`. CashShiftService emits
+    `pipelinq.CashDiff.confirmed` for cash variance only; the Z-report aggregation +
+    Shillinq JournalEntry POST pipeline is genuinely new.
 
 ---
 
 ## 1. Data Model
 
-- [ ] 1.1 Add `posZReport` schema to `lib/Settings/pipelinq_register.json`
+- [x] 1.1 Add `posZReport` schema to `lib/Settings/pipelinq_register.json`
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-001`
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -24,7 +28,7 @@
     - AND status enum MUST include: draft, ready, submitted, posted, failed, reconciled
     - AND index on reportDate, terminalId for efficient querying
 
-- [ ] 1.2 Add `posJournalEntryOutbound` schema to `lib/Settings/pipelinq_register.json`
+- [x] 1.2 Add `posJournalEntryOutbound` schema to `lib/Settings/pipelinq_register.json`
   - **spec_ref**: `specs/pos-end-of-day-bookkeeping-post/spec.md#REQ-POS-BK-002`
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -35,7 +39,7 @@
     - AND `submissionAttempts` array schema MUST allow objects with timestamp, status, message, eventId
     - AND index on zReport and status for filtering
 
-- [ ] 1.3 Add `glAccountMapping` schema to `lib/Settings/pipelinq_register.json`
+- [x] 1.3 Add `glAccountMapping` schema to `lib/Settings/pipelinq_register.json`
   - **spec_ref**: design.md#GL Account Mapping Configuration
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -43,7 +47,7 @@
     - THEN `taxRateMappings` array MUST support objects with taxRate, debitAccount, creditAccount
     - AND `isDefault` boolean MUST be supported for marking the default mapping
 
-- [ ] 1.4 Add seed data for posZReport (4 objects), posJournalEntryOutbound (3 objects),
+- [x] 1.4 Add seed data for posZReport (4 objects), posJournalEntryOutbound (3 objects),
   and glAccountMapping (1 default mapping) to `pipelinq_register.json`
   - **spec_ref**: design.md#Seed Data
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
@@ -56,7 +60,7 @@
     - AND 1 glAccountMapping profile MUST be created with standard Dutch VAT rates
     - AND re-importing with `force: false` MUST NOT create duplicates (matched by slug)
 
-- [ ] 1.5 Update register's `schemas` list to include posZReport, posJournalEntryOutbound,
+- [x] 1.5 Update register's `schemas` list to include posZReport, posJournalEntryOutbound,
   glAccountMapping
   - **files**: `pipelinq/lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
