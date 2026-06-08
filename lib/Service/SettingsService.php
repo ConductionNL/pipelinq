@@ -101,6 +101,12 @@ class SettingsService
         'expense_schema',
         // Billing categories (billable-categories-and-tags) — REQ-BCT-001.
         'billingCategory_schema',
+        // Appointment booking schemas (appointment-booking 01..11).
+        'service_schema',
+        'resource_schema',
+        'booking_schema',
+        'walkInTicket_schema',
+        'availabilityCache_schema',
     ];
 
     /**
