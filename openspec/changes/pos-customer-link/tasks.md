@@ -23,14 +23,14 @@
     - Schema must validate on-account tender requires non-null customer
     - Existing transactions without customer continue to work (backward compatible)
 
-- [ ] 1.2 Create database migration (if applicable)
-  - **files**: `pos/lib/Migration/` (or equivalent migration directory)
+- [x] 1.2 Create database migration (if applicable)
+  - **files**: N/A — pipelinq's POS uses OpenRegister's magic-table objects (`oc_openregister_table_<reg>_posTransaction`); columns derive from the JSON schema in `lib/Settings/pipelinq_register.json`. No `oc_pipelinq_*` table exists, so no NC `Migration/Version*` class is required. Existing rows are forward-compatible (new fields default to null / false / 'cash').
   - **acceptance_criteria**:
-    - Migration adds `customer` column (VARCHAR UUID, nullable)
-    - Migration adds `marketing_consent` column (TINYINT/BOOL, default 0)
-    - Migration updates `tender_type` enum values if stored as string
-    - Migration is reversible (down() method exists)
-    - Migration runs without errors on fresh and existing databases
+    - Customer column: derived from schema (no migration)
+    - marketing_consent column: derived from schema (no migration)
+    - tender_type enum: declared in schema (no migration)
+    - Reversibility: schema rollback removes the fields
+    - Existing transactions continue to work (fields are optional / defaulted)
 
 - [ ] 1.3 Update TransactionController to handle customer and consent
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-002, REQ-PCL-004`
