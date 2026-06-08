@@ -213,6 +213,12 @@ import ResourceDetailView from './views/bookings/ResourceDetail.vue'
 import BookingListView from './views/bookings/BookingList.vue'
 import BookingDetailView from './views/bookings/BookingDetail.vue'
 
+// --- KCC Werkplek (kcc-werkplek): unified KCC agent workspace combining
+//     inbox + contactmoment registration + inline knowledge search +
+//     availability toggle in a single three-panel page. Lib gap: no
+//     multi-panel workspace page type exists. ---
+import KccWerkplekPage from './views/werkplek/KccWerkplekPage.vue'
+
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
 /**
@@ -697,6 +703,13 @@ const registry = {
 		kind: 'page',
 		component: BookingDetailView,
 		_note: 'Booking detail with context-sensitive lifecycle buttons (Reschedule / Cancel / Mark Completed / Mark No-show / Send Reminder / Confirm Deposit) wired to the BookingAdminController endpoints, inline notes editor, audit-trail card and a chronological timeline (REQ-APT-015).',
+	},
+
+	// --- KCC Werkplek — unified agent workspace (kcc-werkplek). ---
+	KccWerkplekPage: {
+		kind: 'page',
+		component: KccWerkplekPage,
+		_note: 'Three-panel KCC agent workspace combining inbox, contactmoment quick-log and inline knowledge search; lib gap: no multi-panel workspace page type and the aggregated state endpoint requires a bespoke controller.',
 	},
 }
 
