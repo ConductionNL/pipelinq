@@ -106,7 +106,7 @@
 
 ## 3. Frontend: Customer Lookup Modal
 
-- [ ] 3.1 Create CustomerLookupModal.vue component
+- [x] 3.1 Create CustomerLookupModal.vue component
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-001`
   - **files**: `pos/src/components/CustomerLookupModal.vue` (new)
   - **acceptance_criteria**:
@@ -123,7 +123,7 @@
     - Implements error handling: shows error message if API fails, includes Retry button
     - Component is keyboard accessible (WCAG AA): Enter to select, Esc to cancel
 
-- [ ] 3.2 Add accessibility to modal results
+- [x] 3.2 Add accessibility to modal results
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-001 (accessibility implicit)`
   - **files**: `pos/src/components/CustomerLookupModal.vue`
   - **acceptance_criteria**:
@@ -136,7 +136,7 @@
 
 ## 4. Frontend: Checkout View Enhancement
 
-- [ ] 4.1 Add customer lookup button to CheckoutView.vue
+- [x] 4.1 Add customer lookup button to CheckoutView.vue
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-002, REQ-PCL-003`
   - **files**: `pos/src/views/CheckoutView.vue`
   - **acceptance_criteria**:
@@ -145,7 +145,7 @@
     - Button is disabled during transaction save (loading state)
     - Button text/icon clearly conveys "add customer" action
 
-- [ ] 4.2 Display selected customer in checkout form
+- [x] 4.2 Display selected customer in checkout form
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-002`
   - **files**: `pos/src/views/CheckoutView.vue`
   - **acceptance_criteria**:
@@ -154,7 +154,7 @@
     - Clicking "X" clears `selectedCustomer` and hides purchase history panel
     - Selected customer is retained during checkout (survives component re-renders)
 
-- [ ] 4.3 Integrate PurchaseHistory.vue component
+- [x] 4.3 Integrate PurchaseHistory.vue component
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-003`
   - **files**: `pos/src/views/CheckoutView.vue`, `pos/src/components/PurchaseHistory.vue` (new)
   - **acceptance_criteria**:
@@ -165,7 +165,7 @@
     - Panel is collapsible (toggle on header click)
     - Each transaction shows: date, item count, total, tender type
 
-- [ ] 4.4 Add marketing consent checkbox
+- [x] 4.4 Add marketing consent checkbox
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-004`
   - **files**: `pos/src/views/CheckoutView.vue`
   - **acceptance_criteria**:
@@ -175,7 +175,7 @@
     - Tooltip (when disabled): "Selecteer eerst een klant"
     - Checkbox value (true/false) is bound to component data and sent with transaction
 
-- [ ] 4.5 Extend tender type dropdown with "Op rekening"
+- [x] 4.5 Extend tender type dropdown with "Op rekening"
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-005`
   - **files**: `pos/src/views/CheckoutView.vue` (or CheckoutSummary component)
   - **acceptance_criteria**:
@@ -185,7 +185,7 @@
     - If on-account is selected without customer, "Afrekenen" button is disabled
     - Error message displays: "Klant is verplicht voor 'op rekening' transacties"
 
-- [ ] 4.6 Add validation for on-account + customer requirement
+- [x] 4.6 Add validation for on-account + customer requirement
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-005 Scenario 2`
   - **files**: `pos/src/views/CheckoutView.vue`
   - **acceptance_criteria**:
@@ -198,7 +198,7 @@
 
 ## 5. Frontend: Customer Lookup Service
 
-- [ ] 5.1 Create customerService.js API client
+- [x] 5.1 Create customerService.js API client (file: `src/services/posCustomerApi.js`)
   - **spec_ref**: `specs/pos-customer-link/spec.md#REQ-PCL-001, REQ-PCL-003`
   - **files**: `pos/src/services/customerService.js` (new)
   - **acceptance_criteria**:
