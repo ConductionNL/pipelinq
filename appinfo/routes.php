@@ -165,6 +165,16 @@ return [
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
 
+        // POS cash-drawer lifecycle (camelCase slug matches CashShiftController class name).
+        // cashShift / cashDrop / cashCount / cashDiff CRUD reads are handled by OpenRegister's
+        // generic object API; these are the server-authoritative lifecycle actions. The static
+        // open route precedes every {id} wildcard route below it (ADR-016).
+        ['name' => 'cashShift#open',    'url' => '/api/pos-shifts',                   'verb' => 'POST'],
+        ['name' => 'cashShift#drop',    'url' => '/api/pos-shifts/{id}/drop',         'verb' => 'POST'],
+        ['name' => 'cashShift#count',   'url' => '/api/pos-shifts/{id}/count',        'verb' => 'POST'],
+        ['name' => 'cashShift#approve', 'url' => '/api/pos-shifts/{id}/diff/approve', 'verb' => 'POST'],
+        ['name' => 'cashShift#reject',  'url' => '/api/pos-shifts/{id}/diff/reject',  'verb' => 'POST'],
+
         // ---------------------------------------------------------------------
         // Customer portal (separate auth domain — ADR-005). All /portal/api/*
         // endpoints are #[PublicPage]; the portal session bearer token (not a
