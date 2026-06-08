@@ -52,6 +52,9 @@ class SchemaMapService
         'survey_schema'         => 'survey',
         'surveyResponse_schema' => 'surveyResponse',
         'posTransaction_schema' => 'posTransaction',
+        // POS staff PIN + role permissions (pos-staff-pin-permissions).
+        'posRole_schema'        => 'posRole',
+        'posStaff_schema'       => 'posStaff',
         // Loyalty programme schemas (loyalty-program).
         'loyaltyProgramme_schema'    => 'loyaltyProgramme',
         'pointsRule_schema'          => 'pointsRule',
