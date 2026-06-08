@@ -2,14 +2,14 @@
 
 ## 1. Data Model: OpenRegister Schemas
 
-- [ ] 1.1 Create `BsnValidatie` schema in OpenRegister
+- [x] 1.1 Create `BsnValidatie` schema in OpenRegister
   - **spec_ref**: `specs.md#REQ-BSN-001`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
     - GIVEN the pipelinq register is loaded
     - THEN `BsnValidatie` schema MUST include: ingevoerdBsn, isFormeelGeldig, elfproefScore, validatieTijdstip, geinitieerdDoor, context, verzoekId
 
-- [ ] 1.2 Create `BrpLookupVerzoek` schema in OpenRegister
+- [x] 1.2 Create `BrpLookupVerzoek` schema in OpenRegister
   - **spec_ref**: `specs.md#REQ-BSN-002`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -17,7 +17,7 @@
     - THEN `BrpLookupVerzoek` schema MUST include: bsn, verzoekreden, doelbinding, grondslag, aangevraagdDoor, aangevraagdNamens, verzoekTijdstip, gekoppeldVerzoek, gekoppeldContact, responseStatus, responseTijdstip, responseDuurMs, haalcentraalCorrelationId, responseBevatGeheimhouding, responseInCache, cacheVerlooptOp
     - AND index on (bsn_hash, verzoekTijdstip)
 
-- [ ] 1.3 Create `BrpPersoon` schema in OpenRegister
+- [x] 1.3 Create `BrpPersoon` schema in OpenRegister
   - **spec_ref**: `specs.md#REQ-BSN-004`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -26,7 +26,7 @@
     - AND encryption: at-rest via Nextcloud native encryption
     - AND index on (gekoppeldContact, opgehaaldOp DESC)
 
-- [ ] 1.4 Create `BsnAuditRecord` schema in OpenRegister
+- [x] 1.4 Create `BsnAuditRecord` schema in OpenRegister
   - **spec_ref**: `specs.md#REQ-BSN-005`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -35,7 +35,7 @@
     - AND schema setting: immutable: true (cannot be modified via standard CRUD)
     - AND index on (tijdstip DESC, actor, tijdstip)
 
-- [ ] 1.5 Create `OptOutVlag` schema in OpenRegister
+- [x] 1.5 Create `OptOutVlag` schema in OpenRegister
   - **spec_ref**: `specs.md#REQ-BSN-006`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -43,7 +43,7 @@
     - THEN `OptOutVlag` schema MUST include: bsn, type, bron, ingangsdatum, einddatum, beperkt (array), lokaalOpgevoerdDoor, notitie
     - AND index on (bsn_hash, type)
 
-- [ ] 1.6 Extend `contact` schema with 3 new fields
+- [x] 1.6 Extend `contact` schema with 3 new fields
   - **spec_ref**: `design.md#Extended Schema: contact`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
