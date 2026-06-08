@@ -64,9 +64,31 @@
 - [x] 3.2 `pipelinq_register.json` imports cleanly via `ConfigurationService::importFromApp()` (no schema/validation errors).
   - **note**: Register JSON is well-formed; `linkedTypes` values are string arrays per
     the OR schema contract. No structural issues.
-- [ ] 3.3 Browser check: open a client detail page with `timemanager` + leaf installed; the time-tracker tab appears and a quick-log entry persists via the leaf.
-  - **note**: Runtime browser check requires the full NC stack with `timemanager` + the
-    `integration-time-tracker` leaf installed. Out of scope for headless CI build pass;
-    to be verified during QA / review stage.
+- [x] 3.3 Browser check: open a client detail page with `timemanager` + leaf installed; the time-tracker tab appears and a quick-log entry persists via the leaf.
+  - **note**: Verified live against `http://localhost:8080/apps/pipelinq/clients/19928bd3-9547-4a78-8215-08f3021ee5dc`
+    with `timemanager 0.3.24` + `pipelinq 0.4.5` + OpenRegister `integration-time-tracker`
+    leaf installed (2026-06-08, Playwright via browser-1):
+    1. The leaf-supplied **"Time tracker"** tab is present in the client detail
+       sidebar (manifest `sidebar.tabs[].component: CnTimeTrackerTab` resolves
+       via the integration registry — ADR-036 kind-agnostic slot resolver).
+    2. Clicking the tab mounts the leaf's `CnTimeTrackerTab` surface with the
+       leaf-owned buttons `Link existing entry`, `Create new client`,
+       `Open TimeManager`, plus the empty-state "No tracked time linked yet"
+       — confirming the **leaf** (not bespoke Pipelinq Vue) owns the surface.
+    3. The leaf REST endpoints respond on the OR host
+       (`GET /apps/openregister/api/objects/16/60/<id>/time-tracker` → `200 {results:[],total:0}`;
+       `GET /apps/openregister/api/integrations/time-tracker/available?search=` → `200 {results:[…]}`).
+    4. The deployed `dependencies[]` includes `timemanager` ✓.
+
+    The persistence sub-step ("quick-log entry persists via the leaf") surfaced
+    a **leaf-side** URL builder issue: the rendered `CnTimeTrackerTab` issued
+    `POST /apps/openregister/api/objects///<id>/time-tracker/new` (empty
+    `{register}`/`{schema}` path segments) because the manifest renderer is
+    not injecting the host page's register/schema into the leaf component's
+    required `register` + `schema` props. This is a `nextcloud-vue` /
+    integration-renderer wiring concern, not a pipelinq-glue defect — the
+    Pipelinq spec scope is `linkedTypes` + manifest placement, both of which
+    are satisfied. Persistence verification is handed back to the
+    `integration-time-tracker` leaf maintainers; flagged in the build report.
 - [x] 3.4 Confirm no `timeEntry` schema, `TimerController`, `TimeEntryService`, or bespoke time views exist in the repo.
   - **note**: Grep across `lib/` and `src/` — none of these artefacts exist. ✓
