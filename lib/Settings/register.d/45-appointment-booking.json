@@ -619,6 +619,134 @@
                 }
             }
         },
-        "objects": []
+        "objects": [
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "service",
+                    "slug": "service-haircut-simple"
+                },
+                "name": "Knipbeurt",
+                "description": "Standaard knipbeurt — wassen, knippen, kort fohnen.",
+                "durationMinutes": 30,
+                "bufferBeforeMinutes": 0,
+                "bufferAfterMinutes": 5,
+                "price": 27.5,
+                "currency": "EUR",
+                "requiredSkills": [],
+                "requiredResourceTypes": [
+                    "staff"
+                ],
+                "multiStep": [],
+                "bookableOnline": true,
+                "requiresDeposit": false,
+                "depositAmount": 0,
+                "noShowFee": 10.0,
+                "cancellationPolicy": "free",
+                "cancellationHoursBefore": 24,
+                "status": "active"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "service",
+                    "slug": "service-color-and-cut"
+                },
+                "name": "Kleur & Knippen",
+                "description": "Complete kleurbehandeling met knippen — kleur aanbrengen, intrekken, uitspoelen en knippen.",
+                "durationMinutes": 120,
+                "bufferBeforeMinutes": 0,
+                "bufferAfterMinutes": 10,
+                "price": 95.0,
+                "currency": "EUR",
+                "requiredSkills": [
+                    "color-certified"
+                ],
+                "requiredResourceTypes": [
+                    "staff",
+                    "room"
+                ],
+                "multiStep": [
+                    {
+                        "durationMinutes": 45,
+                        "skillRequired": "color-certified",
+                        "resourceType": "staff",
+                        "allowGap": false
+                    },
+                    {
+                        "durationMinutes": 30,
+                        "resourceType": "room",
+                        "allowGap": true
+                    },
+                    {
+                        "durationMinutes": 45,
+                        "resourceType": "staff",
+                        "allowGap": false
+                    }
+                ],
+                "bookableOnline": true,
+                "requiresDeposit": true,
+                "depositAmount": 20.0,
+                "noShowFee": 25.0,
+                "cancellationPolicy": "charge-deposit",
+                "cancellationHoursBefore": 48,
+                "status": "active"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "service",
+                    "slug": "service-oil-change-standard"
+                },
+                "name": "Olieverversing",
+                "description": "Standaard olieverversing inclusief filterwissel en vloeistofcheck.",
+                "durationMinutes": 45,
+                "bufferBeforeMinutes": 5,
+                "bufferAfterMinutes": 10,
+                "price": 79.0,
+                "currency": "EUR",
+                "requiredSkills": [
+                    "monteur-apk"
+                ],
+                "requiredResourceTypes": [
+                    "staff",
+                    "equipment"
+                ],
+                "multiStep": [],
+                "bookableOnline": true,
+                "requiresDeposit": false,
+                "depositAmount": 0,
+                "noShowFee": 25.0,
+                "cancellationPolicy": "always-charge",
+                "cancellationHoursBefore": 24,
+                "status": "active"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "service",
+                    "slug": "service-consultation-tax"
+                },
+                "name": "Belastingadvies gesprek",
+                "description": "Vrijblijvend kennismakingsgesprek met de belastingadviseur (geen kosten).",
+                "durationMinutes": 45,
+                "bufferBeforeMinutes": 0,
+                "bufferAfterMinutes": 15,
+                "price": 0,
+                "currency": "EUR",
+                "requiredSkills": [],
+                "requiredResourceTypes": [
+                    "staff"
+                ],
+                "multiStep": [],
+                "bookableOnline": true,
+                "requiresDeposit": false,
+                "depositAmount": 0,
+                "noShowFee": 0,
+                "cancellationPolicy": "free",
+                "cancellationHoursBefore": 12,
+                "status": "active"
+            }
+        ]
     }
 }

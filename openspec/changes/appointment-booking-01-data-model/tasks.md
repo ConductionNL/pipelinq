@@ -34,8 +34,13 @@
 
 ## Section 2: Seed Data
 
-- [ ] Add 4 Service seed objects: haircut-simple (simple), color-and-cut (multi-step), oil-change-standard, consultation-tax with varied requirements
-- [ ] Each Service has unique slug
+- [x] Add 4 Service seed objects: haircut-simple (simple), color-and-cut (multi-step), oil-change-standard, consultation-tax with varied requirements
+
+  Four `service` mock objects in the fragment's `components.objects[]` array, slugs `service-haircut-simple` (30m, simple, free cancellation, low no-show fee), `service-color-and-cut` (120m, 3-step multiStep with a 30m resource-free processing gap on a room, requires 20 EUR deposit, charge-deposit cancellation policy), `service-oil-change-standard` (45m, requires `monteur-apk` skill + equipment, always-charge cancellation, no-show fee 25 EUR), and `service-consultation-tax` (45m, free kennismakingsgesprek, no deposit, no no-show fee, 12h cancellation window). Dutch names + EUR currency throughout.
+
+- [x] Each Service has unique slug
+
+  Slugs are `service-haircut-simple`, `service-color-and-cut`, `service-oil-change-standard`, `service-consultation-tax` — all distinct and prefixed `service-` for register-wide global slug safety.
 - [ ] Add 4 Resource seed objects: Sarah (stylist with skills), Jan (mechanic), treatment-room-a, workshop-bay-1 with varied types
 - [ ] Each Resource has unique slug, working hours for all weekdays, optionally vacations
 - [ ] Add 2 Booking seed objects: booking-001-completed (past), booking-002-confirmed (future, multi-step)
