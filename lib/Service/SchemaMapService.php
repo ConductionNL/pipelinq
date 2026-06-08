@@ -46,6 +46,8 @@ class SchemaMapService
         'agentProfile_schema'   => 'agentProfile',
         'project_schema'        => 'project',
         'projectPhase_schema'   => 'projectPhase',
+        'projectTask_schema'    => 'projectTask',
+        'projectActivity_schema' => 'projectActivity',
         'timeEntry_schema'      => 'timeEntry',
         'task_schema'           => 'task',
         'contactmoment_schema'  => 'contactmoment',
