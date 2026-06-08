@@ -478,10 +478,12 @@ class WalkInQueueService
 
         try {
             $rows = $this->getObjectService()->findAll(
-                filters: ['status' => $status],
-                register: $register,
-                schema: $schema,
-                limit: self::QUEUE_PAGE_SIZE
+                config: [
+                    'filters'  => ['status' => $status],
+                    'register' => $register,
+                    'schema'   => $schema,
+                    'limit'    => self::QUEUE_PAGE_SIZE,
+                ]
             );
         } catch (\Throwable $e) {
             $this->logger->warning(
@@ -607,10 +609,12 @@ class WalkInQueueService
 
         try {
             $rows = $this->getObjectService()->findAll(
-                filters: [],
-                register: $register,
-                schema: $schema,
-                limit: self::QUEUE_PAGE_SIZE
+                config: [
+                    'filters'  => [],
+                    'register' => $register,
+                    'schema'   => $schema,
+                    'limit'    => self::QUEUE_PAGE_SIZE,
+                ]
             );
         } catch (\Throwable $e) {
             return [];
