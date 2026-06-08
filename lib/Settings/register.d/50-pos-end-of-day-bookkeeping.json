@@ -413,12 +413,10 @@
                 "idempotencyKey": "sha256:a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
                 "payloadVersion": 1,
                 "ledgerLineItems": [
-                    { "account": "1200", "debit": 50.00,  "credit": 0,    "description": "Debiteuren - 9% omzet",  "taxRate": 9 },
-                    { "account": "5010", "debit": 0,     "credit": 50.00, "description": "Omzet 9% BTW",            "taxRate": 9 },
-                    { "account": "1200", "debit": 385.00, "credit": 0,    "description": "Debiteuren - 21% omzet", "taxRate": 21 },
-                    { "account": "5000", "debit": 0,     "credit": 385.00, "description": "Omzet 21% BTW",          "taxRate": 21 },
-                    { "account": "1500", "debit": 85.35,  "credit": 0,    "description": "Te dragen BTW",           "taxRate": null },
-                    { "account": "1000", "debit": 0,     "credit": 535.35, "description": "Kas/Bank clearing",      "taxRate": null }
+                    { "account": "1000", "debit": 535.35, "credit": 0,     "description": "Kas/Bank clearing", "taxRate": null },
+                    { "account": "5010", "debit": 0,     "credit": 50.00,  "description": "Omzet 9% BTW",       "taxRate": 9 },
+                    { "account": "5000", "debit": 0,     "credit": 385.00, "description": "Omzet 21% BTW",      "taxRate": 21 },
+                    { "account": "1500", "debit": 0,     "credit": 85.35,  "description": "Te dragen BTW",      "taxRate": null }
                 ],
                 "postingDate": "2026-05-20",
                 "status": "posted",
@@ -438,12 +436,10 @@
                 "idempotencyKey": "sha256:b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3",
                 "payloadVersion": 1,
                 "ledgerLineItems": [
-                    { "account": "1200", "debit": 40.00,  "credit": 0,    "description": "Debiteuren - 9% omzet",  "taxRate": 9 },
-                    { "account": "5010", "debit": 0,     "credit": 40.00, "description": "Omzet 9% BTW",            "taxRate": 9 },
-                    { "account": "1200", "debit": 330.00, "credit": 0,    "description": "Debiteuren - 21% omzet", "taxRate": 21 },
-                    { "account": "5000", "debit": 0,     "credit": 330.00, "description": "Omzet 21% BTW",          "taxRate": 21 },
-                    { "account": "1500", "debit": 72.90,  "credit": 0,    "description": "Te dragen BTW",           "taxRate": null },
-                    { "account": "1000", "debit": 0,     "credit": 452.90, "description": "Kas/Bank clearing",      "taxRate": null }
+                    { "account": "1000", "debit": 452.90, "credit": 0,     "description": "Kas/Bank clearing", "taxRate": null },
+                    { "account": "5010", "debit": 0,     "credit": 40.00,  "description": "Omzet 9% BTW",       "taxRate": 9 },
+                    { "account": "5000", "debit": 0,     "credit": 330.00, "description": "Omzet 21% BTW",      "taxRate": 21 },
+                    { "account": "1500", "debit": 0,     "credit": 72.90,  "description": "Te dragen BTW",      "taxRate": null }
                 ],
                 "postingDate": "2026-05-21",
                 "status": "pending",
@@ -456,10 +452,9 @@
                 "idempotencyKey": "sha256:c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4",
                 "payloadVersion": 1,
                 "ledgerLineItems": [
-                    { "account": "1200", "debit": 195.00, "credit": 0,     "description": "Debiteuren - 21% omzet", "taxRate": 21 },
-                    { "account": "5000", "debit": 0,     "credit": 195.00, "description": "Omzet 21% BTW",          "taxRate": 21 },
-                    { "account": "1500", "debit": 40.95,  "credit": 0,     "description": "Te dragen BTW",          "taxRate": null },
-                    { "account": "1000", "debit": 0,     "credit": 240.95, "description": "Kas/Bank clearing",      "taxRate": null }
+                    { "account": "1000", "debit": 240.95, "credit": 0,     "description": "Kas/Bank clearing", "taxRate": null },
+                    { "account": "5000", "debit": 0,     "credit": 195.00, "description": "Omzet 21% BTW",      "taxRate": 21 },
+                    { "account": "1500", "debit": 0,     "credit": 40.95,  "description": "Te dragen BTW",      "taxRate": null }
                 ],
                 "postingDate": "2026-05-22",
                 "status": "failed",

@@ -310,7 +310,7 @@
 
 ## 7. API Integration Tests
 
-- [ ] 7.1 Create functional tests for `PosBookkeepingService`
+- [x] 7.1 Create functional tests for `PosBookkeepingService`
   - **spec_ref**: specs/pos-end-of-day-bookkeeping-post/spec.md#All scenarios
   - **files**: `tests/Service/PosBookkeepingServiceTest.php`
   - **acceptance_criteria**:
@@ -324,7 +324,7 @@
       - CloudEvent emission
     - AND test transactions MUST use seed data from design.md
 
-- [ ] 7.2 Create API endpoint tests
+- [x] 7.2 Create API endpoint tests
   - **files**: `tests/Controller/PosBookkeepingControllerTest.php`
   - **acceptance_criteria**:
     - GIVEN HTTP client tests with authenticated user

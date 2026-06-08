@@ -469,61 +469,59 @@ class PosBookkeepingService
             $bankAccount = '1000';
         }
 
-        $lines     = [];
-        $debitSum  = 0.0;
-        $creditSum = 0.0;
-        $taxSum    = 0.0;
-        $rateRows  = $zReport['taxBreakdown'] ?? [];
+        $rateRows = $zReport['taxBreakdown'] ?? [];
+        $baseSum  = 0.0;
+        $taxSum   = 0.0;
+        $lines    = [];
 
+        // Balanced double-entry POS retail booking:
+        //   1× debit on the bank/cash clearing account == gross,
+        //   1× credit on each rate-specific omzet/revenue account == base,
+        //   1× credit on the Te dragen BTW (1500) clearing == total tax.
+        // Per-rate revenue lines preserve the BTW-uitsplitsing the bookkeeper
+        // expects; the single bank-side debit keeps the entry compact.
         foreach ($rateRows as $row) {
             $rate = (int) (float) ($row['rate'] ?? 0);
             $base = (float) ($row['base'] ?? 0);
             $tax  = (float) ($row['tax'] ?? 0);
 
-            $debit  = (string) ($rateAccounts[$rate]['debit'] ?? '1200');
-            $credit = (string) ($rateAccounts[$rate]['credit'] ?? '5000');
+            $creditAccount = (string) ($rateAccounts[$rate]['credit'] ?? '5000');
 
-            $lines[] = [
-                'account'     => $debit,
-                'debit'       => $this->money(value: $base),
-                'credit'      => 0,
-                'description' => 'Debiteuren - '.$rate.'% omzet',
-                'taxRate'     => $rate,
-            ];
-            $lines[] = [
-                'account'     => $credit,
+            $lines[]  = [
+                'account'     => $creditAccount,
                 'debit'       => 0,
                 'credit'      => $this->money(value: $base),
                 'description' => 'Omzet '.$rate.'% BTW',
                 'taxRate'     => $rate,
             ];
-
-            $debitSum  += $base;
-            $creditSum += $base;
-            $taxSum    += $tax;
+            $baseSum += $base;
+            $taxSum  += $tax;
         }//end foreach
 
         if ($taxSum > 0.0) {
-            $lines[]   = [
+            $lines[] = [
                 'account'     => '1500',
-                'debit'       => $this->money(value: $taxSum),
-                'credit'      => 0,
+                'debit'       => 0,
+                'credit'      => $this->money(value: $taxSum),
                 'description' => 'Te dragen BTW',
                 'taxRate'     => null,
             ];
-            $debitSum += $taxSum;
         }
 
-        $gross = (float) ($zReport['total'] ?? ($debitSum + $taxSum));
+        $gross = (float) ($zReport['total'] ?? ($baseSum + $taxSum));
         if ($gross > 0.0) {
-            $lines[]    = [
-                'account'     => $bankAccount,
-                'debit'       => 0,
-                'credit'      => $this->money(value: $gross),
-                'description' => 'Kas/Bank clearing',
-                'taxRate'     => null,
-            ];
-            $creditSum += $gross;
+            // Debit the bank/cash clearing account for the gross — paired against
+            // the per-rate credit revenue + BTW lines so the entry balances.
+            array_unshift(
+                $lines,
+                [
+                    'account'     => $bankAccount,
+                    'debit'       => $this->money(value: $gross),
+                    'credit'      => 0,
+                    'description' => 'Kas/Bank clearing',
+                    'taxRate'     => null,
+                ]
+            );
         }
 
         return $lines;
