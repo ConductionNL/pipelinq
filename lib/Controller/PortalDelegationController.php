@@ -70,7 +70,7 @@ class PortalDelegationController extends PortalApiController
     {
         return $this->guarded(
                 handler: function (): array {
-                    $ctx = $this->context();
+                    $ctx = $this->requireSession();
                     $this->requireB2b(account: $ctx['account']);
                     return [['delegations' => $this->delegations->listGrantedBy(granterAccountId: $ctx['accountId'])], Http::STATUS_OK];
                 }
@@ -90,7 +90,7 @@ class PortalDelegationController extends PortalApiController
     {
         return $this->guarded(
             handler: function (): array {
-                $ctx = $this->context();
+                $ctx = $this->requireSession();
                 $this->requireB2b(account: $ctx['account']);
 
                 $scopes = $this->request->getParam('scopes', []);
@@ -130,7 +130,7 @@ class PortalDelegationController extends PortalApiController
     {
         return $this->guarded(
                 handler: function () use ($id): array {
-                    $ctx = $this->context();
+                    $ctx = $this->requireSession();
                     $this->requireB2b(account: $ctx['account']);
                     $this->delegations->revoke(delegationId: $id, granterAccountId: $ctx['accountId'], tenantId: $ctx['tenantId']);
                     return [['status' => 'revoked'], Http::STATUS_OK];

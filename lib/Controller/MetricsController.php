@@ -69,6 +69,8 @@ class MetricsController extends Controller
     #[NoAdminRequired]
     public function index(): TextPlainResponse
     {
+        // @PublicPage by attribute — Prometheus scrape target must be reachable
+        // by the metrics collector without an authenticated NC user.
         $metrics  = $this->collectMetrics();
         $response = new TextPlainResponse($metrics);
         $response->addHeader('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');

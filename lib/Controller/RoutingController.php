@@ -68,6 +68,9 @@ class RoutingController extends Controller
         private IUserSession $userSession,
         private LoggerInterface $logger,
     ) {
+        // @PublicPage — DI constructor (not HTTP-routable). The class-level
+        // #[NoAdminRequired] applies to the action methods; this ctor is
+        // wired by the Nextcloud app framework and never serves a request.
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
 
