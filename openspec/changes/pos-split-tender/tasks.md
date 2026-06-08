@@ -310,10 +310,11 @@
   - No N+1 queries when loading transaction with tenders
   - **DEFERRED**: Static analysis — `validateTenderSum()` issues a single `findAll(['transaction' => $id])` against `posTender` plus one `find()` for the transaction (2 queries, no per-tender lookups). OR auto-indexes the `transaction` UUID column on the magic table. Empirical p95 timing under load belongs to the perf flight (`pipelinq-pos-perf-baseline`) which captures all POS endpoints in one pass against a seeded 10k-transaction dataset.
 
-- [ ] 12.5 Update API documentation (if using OpenAPI/Swagger):
+- [~] 12.5 Update API documentation (if using OpenAPI/Swagger):
   - Add schemas for `posTenderType` and `posTender`
   - Document new endpoints with request/response examples
   - Add error code documentation (e.g., 409 for settled transaction)
+  - **DEFERRED**: pipelinq does not currently ship an OpenAPI/Swagger surface — REST endpoints are documented inside the controller PHPDoc + the OpenSpec spec delta (`openspec/changes/pos-split-tender/specs/pos-split-tender/spec.md`). When the fleet-wide OpenAPI generation lands (tracked in `hydra/openspec/openapi-fleet-generation`), `posTenderType`/`posTender` will be picked up automatically from the OR schema registry.
 
 ## 13. Post-Implementation
 
