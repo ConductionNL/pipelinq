@@ -52,8 +52,6 @@ class SettingsLoadService
         'leadProduct',
         'intakeForm',
         'intakeSubmission',
-        'automation',
-        'automationLog',
         'contactmoment',
         'task',
         'emailLink',
@@ -85,6 +83,20 @@ class SettingsLoadService
         'exportJob',
         'exportRun',
         'exportSchemaSnapshot',
+        // Loyalty programme schemas (loyalty-program).
+        'loyaltyProgramme',
+        'pointsRule',
+        'tierRule',
+        'klantLoyaltyAccount',
+        'pointsLedgerEntry',
+        'redemptionOption',
+        'redemption',
+        'giftCard',
+        'giftCardTransaction',
+        // CTI screen-pop / click-to-dial adapter schemas (cti-screenpop-adapter).
+        'ctiAdapterConfig',
+        'ctiEventLog',
+        'ctiAgentPresence',
     ];
 
     /**

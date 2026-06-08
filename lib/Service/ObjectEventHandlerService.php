@@ -17,6 +17,7 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-47
+ * @spec openspec/changes/migrate-automation-to-flow-leaf/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
@@ -25,6 +26,10 @@ namespace OCA\Pipelinq\Service;
 
 /**
  * Service for handling object event business logic.
+ *
+ * Per migrate-automation-to-flow-leaf, the bespoke automation engine has
+ * been retired. CRM events are surfaced through the OpenRegister flow leaf
+ * (NC Flow / n8n) — this service only handles in-app dispatcher notifications.
  *
  * @spec openspec/changes/migrate-automation-to-flow-leaf/tasks.md#task-1.1
  */

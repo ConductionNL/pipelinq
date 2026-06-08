@@ -33,9 +33,6 @@
           "intakeSubmission",
           "contactmoment",
           "task",
-          "kennisartikel",
-          "kenniscategorie",
-          "kennisfeedback",
           "emailLink",
           "calendarLink",
           "relationship",
@@ -67,7 +64,8 @@
         "@type": "schema:Person",
         "linkedTypes": [
           "flow",
-          "time-tracker"
+          "time-tracker",
+          "xwiki"
         ],
         "required": [
           "name",
@@ -281,7 +279,8 @@
         "linkedTypes": [
           "deck",
           "flow",
-          "time-tracker"
+          "time-tracker",
+          "xwiki"
         ],
         "configuration": {
           "x-openregister-relations": [
@@ -693,7 +692,8 @@
         "linkedTypes": [
           "deck",
           "flow",
-          "time-tracker"
+          "time-tracker",
+          "xwiki"
         ],
         "configuration": {
           "x-openregister-relations": [
@@ -1968,291 +1968,6 @@
               }
             },
             "visible": false
-          }
-        }
-      },
-      "kennisartikel": {
-        "slug": "kennisartikel",
-        "title": "Knowledge Article",
-        "icon": "BookOpenPageVariant",
-        "version": "1.0.0",
-        "summary": "A knowledge base article for KCC agents and citizens",
-        "description": "Represents a knowledge base article with rich text content, categorization, versioning, and visibility controls. Mapped to Schema.org Article. Used by KCC agents for first-call resolution and optionally published for citizen self-service.",
-        "@type": "schema:Article",
-        "configuration": {
-          "x-openregister-lifecycle": {
-            "field": "status",
-            "initial": "concept",
-            "final": [],
-            "transitions": {
-              "publish": {
-                "from": [
-                  "concept",
-                  "gearchiveerd"
-                ],
-                "to": "gepubliceerd",
-                "description": "Publish the article so it becomes available to agents (intern) and, when visibility is openbaar, to citizens. Authorization: author or a knowledge editor.",
-                "authorization": {
-                  "field": "author"
-                }
-              },
-              "archive": {
-                "from": [
-                  "gepubliceerd",
-                  "concept"
-                ],
-                "to": "gearchiveerd",
-                "description": "Withdraw the article from publication and archive it. Authorization: author or a knowledge editor.",
-                "authorization": {
-                  "field": "author"
-                }
-              },
-              "reopen": {
-                "from": [
-                  "gearchiveerd"
-                ],
-                "to": "concept",
-                "description": "Move an archived article back to concept for further editing. Authorization: author or a knowledge editor.",
-                "authorization": {
-                  "field": "author"
-                }
-              }
-            }
-          },
-          "x-openregister-archival": {
-            "retention": {
-              "default": "P7Y",
-              "rules": [
-                {
-                  "condition": "status == 'gearchiveerd'",
-                  "retention": "P7Y",
-                  "reason": "Archived (withdrawn) knowledge-base article versions retained 7 years per the Archiefwet baseline term before disposition per ADR-024. Editors archive superseded versions; this rule governs how long the archived copy is kept. DPO sign-off pending (task 4.1)."
-                },
-                {
-                  "condition": "status == 'concept'",
-                  "retention": "P1Y",
-                  "reason": "Draft (concept) articles never published carry no statutory record value; 1-year retention for clean-up of abandoned drafts. DPO sign-off pending."
-                }
-              ]
-            }
-          }
-        },
-        "required": [
-          "title",
-          "body",
-          "status",
-          "visibility",
-          "author"
-        ],
-        "properties": {
-          "title": {
-            "type": "string",
-            "description": "Article title (schema:headline)",
-            "maxLength": 255,
-            "minLength": 1,
-            "translatable": true,
-            "sourceLanguage": "nl"
-          },
-          "body": {
-            "type": "string",
-            "description": "Article content in Markdown format (schema:articleBody)",
-            "visible": false,
-            "translatable": true,
-            "sourceLanguage": "nl"
-          },
-          "summary": {
-            "type": "string",
-            "description": "Short summary for search result snippets (schema:abstract)",
-            "maxLength": 500,
-            "translatable": true,
-            "sourceLanguage": "nl"
-          },
-          "status": {
-            "type": "string",
-            "description": "Article lifecycle status",
-            "enum": [
-              "concept",
-              "gepubliceerd",
-              "gearchiveerd"
-            ],
-            "default": "concept",
-            "title": "Status",
-            "facetable": true
-          },
-          "visibility": {
-            "type": "string",
-            "description": "Access level — intern (agents only) or openbaar (public)",
-            "enum": [
-              "intern",
-              "openbaar"
-            ],
-            "default": "intern",
-            "title": "Visibility",
-            "facetable": true
-          },
-          "categories": {
-            "type": "array",
-            "description": "UUID references to kenniscategorie objects",
-            "items": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          "tags": {
-            "type": "array",
-            "description": "Searchable tags for article discovery",
-            "items": {
-              "type": "string"
-            }
-          },
-          "zaaktypeLinks": {
-            "type": "array",
-            "description": "References to zaaktypen for context-aware suggestions",
-            "items": {
-              "type": "string"
-            },
-            "visible": false
-          },
-          "author": {
-            "type": "string",
-            "description": "Nextcloud user UID of the article author",
-            "title": "Author",
-            "facetable": true
-          },
-          "lastUpdatedBy": {
-            "type": "string",
-            "description": "Nextcloud user UID of the last editor",
-            "visible": false
-          },
-          "version": {
-            "type": "integer",
-            "description": "Article version number, incremented on each edit",
-            "default": 1,
-            "visible": false
-          },
-          "publishedAt": {
-            "type": "string",
-            "description": "Publication timestamp",
-            "format": "date-time",
-            "visible": false
-          },
-          "archivedAt": {
-            "type": "string",
-            "description": "Archive timestamp",
-            "format": "date-time",
-            "visible": false
-          },
-          "usefulnessScore": {
-            "type": "number",
-            "description": "Aggregate usefulness rating score (percentage of positive ratings)",
-            "default": 0,
-            "visible": false
-          }
-        }
-      },
-      "kenniscategorie": {
-        "slug": "kenniscategorie",
-        "title": "Knowledge Category",
-        "icon": "FolderOpen",
-        "version": "1.0.0",
-        "summary": "A hierarchical category for organizing knowledge articles",
-        "description": "Represents a category in the knowledge base taxonomy. Supports up to 3 levels of hierarchy via parent references.",
-        "@type": "schema:DefinedTermSet",
-        "required": [
-          "name"
-        ],
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Category name",
-            "maxLength": 255,
-            "minLength": 1
-          },
-          "slug": {
-            "type": "string",
-            "description": "URL-friendly name for the category",
-            "maxLength": 255
-          },
-          "parent": {
-            "type": "string",
-            "description": "UUID reference to parent category for hierarchy",
-            "format": "uuid",
-            "visible": false
-          },
-          "description": {
-            "type": "string",
-            "description": "Category description",
-            "visible": false
-          },
-          "order": {
-            "type": "integer",
-            "description": "Display order within the same parent level",
-            "default": 0,
-            "visible": false
-          },
-          "icon": {
-            "type": "string",
-            "description": "Icon identifier for the category",
-            "visible": false
-          }
-        }
-      },
-      "kennisfeedback": {
-        "slug": "kennisfeedback",
-        "title": "Knowledge Feedback",
-        "icon": "ThumbsUpDown",
-        "version": "1.0.0",
-        "summary": "Agent feedback on a knowledge article",
-        "description": "Represents an agent's rating and optional improvement suggestion for a knowledge article. Supports KCS methodology for continuous knowledge improvement.",
-        "@type": "schema:ReviewAction",
-        "required": [
-          "article",
-          "rating",
-          "agent"
-        ],
-        "properties": {
-          "article": {
-            "type": "string",
-            "description": "UUID reference to the rated kennisartikel",
-            "format": "uuid"
-          },
-          "rating": {
-            "type": "string",
-            "description": "Usefulness rating",
-            "enum": [
-              "nuttig",
-              "niet_nuttig"
-            ],
-            "title": "Rating",
-            "facetable": true
-          },
-          "comment": {
-            "type": "string",
-            "description": "Improvement suggestion text",
-            "visible": false
-          },
-          "agent": {
-            "type": "string",
-            "description": "Nextcloud user UID of the rating agent",
-            "title": "Agent",
-            "facetable": true
-          },
-          "status": {
-            "type": "string",
-            "description": "Feedback processing status",
-            "enum": [
-              "nieuw",
-              "in_behandeling",
-              "verwerkt"
-            ],
-            "default": "nieuw",
-            "title": "Status",
-            "facetable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "Date and time the feedback was submitted",
-            "format": "date-time"
           }
         }
       },
@@ -4571,6 +4286,364 @@
         "channelMetadata": {
           "waitTime": 28
         }
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "lead",
+          "slug": "lead-gemeente-amsterdam-crm-2026",
+          "id": "b5a0d3f1-9c2e-4a1b-8d6f-3e7c9f1a2b40"
+        },
+        "title": "Gemeente Amsterdam - CRM implementatie 2026",
+        "source": "referral",
+        "value": 85000,
+        "probability": 60,
+        "expectedCloseDate": "2026-06-30",
+        "priority": "high",
+        "stage": "Gekwalificeerd",
+        "stageOrder": 3,
+        "status": "open",
+        "notes": "Gemeente zoekt vervanging voor verouderd CRM-pakket."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "lead",
+          "slug": "lead-provincie-zuidholland-digitalisering-2026",
+          "id": "b5a0d3f1-9c2e-4a1b-8d6f-3e7c9f1a2b41"
+        },
+        "title": "Provincie Zuid-Holland - Digitalisering klantcontact",
+        "source": "event",
+        "value": 125000,
+        "probability": 40,
+        "expectedCloseDate": "2026-05-15",
+        "priority": "urgent",
+        "stage": "Voorstel",
+        "stageOrder": 4,
+        "status": "open",
+        "notes": "Ontmoet op GovTech Expo 2026. Interesse in omnichannel oplossing."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "lead",
+          "slug": "lead-rijkswaterstaat-onderhoudscontract-2026"
+        },
+        "title": "Rijkswaterstaat - Onderhoudscontract software 2026",
+        "source": "website",
+        "value": 45000,
+        "probability": 80,
+        "expectedCloseDate": "2026-04-30",
+        "priority": "normal",
+        "stage": "Onderhandeling",
+        "stageOrder": 5,
+        "status": "open",
+        "notes": "Bestaande klant, contractverlenging lopend jaar."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "lead",
+          "slug": "lead-ggd-rotterdam-zorginformatiesysteem"
+        },
+        "title": "GGD Rotterdam - Zorginformatiesysteem modules",
+        "source": "cold-call",
+        "value": 32000,
+        "probability": 20,
+        "expectedCloseDate": "2026-07-15",
+        "priority": "low",
+        "stage": "Nieuw",
+        "stageOrder": 1,
+        "status": "open",
+        "notes": "Eerste contact gelegd. Nog in orientatiefase."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "lead",
+          "slug": "lead-waterschap-hollandsedelta-zaaksysteem-gewonnen"
+        },
+        "title": "Waterschap Hollandse Delta - Zaaksysteemkoppeling",
+        "source": "partner",
+        "value": 67500,
+        "probability": 100,
+        "expectedCloseDate": "2026-03-31",
+        "priority": "normal",
+        "stage": "Gewonnen",
+        "stageOrder": 6,
+        "status": "won",
+        "notes": "Contract getekend 2026-03-28. Implementatie start Q2."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "client",
+          "slug": "client-entity-notes-demo",
+          "id": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c"
+        },
+        "name": "Gemeente Demo — Entity Notes Showcase",
+        "type": "organization",
+        "email": "info@gemeente-demo.nl",
+        "phone": "085-9999999",
+        "industry": "Lokale overheid",
+        "notes": "Demonstration client for the entity-notes change. Used as the target for the five contactmoment-001..005 seed objects so the Communication History panel is populated on first install."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "contactmoment",
+          "slug": "contactmoment-001"
+        },
+        "subject": "Vraag over status vergunningsaanvraag",
+        "summary": "Mevrouw Bakker belde in over de status van haar omgevingsvergunning. Verwachte afhandeling binnen 3 werkdagen toegezegd.",
+        "channel": "telefoon",
+        "outcome": "afgehandeld",
+        "agent": "mvanderberg",
+        "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
+        "contactedAt": "2026-04-14T09:12:00Z",
+        "duration": "PT7M30S",
+        "channelMetadata": {
+          "direction": "inbound",
+          "phoneNumber": "085-0123456"
+        }
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "contactmoment",
+          "slug": "contactmoment-002"
+        },
+        "subject": "Klacht over aanslagbiljet gemeentelijke belasting",
+        "summary": "De heer Jansen stuurde een e-mail met bezwaar tegen het aanslagbiljet. Doorverwezen naar de afdeling Belastingen.",
+        "channel": "email",
+        "outcome": "doorverbonden",
+        "agent": "sdejong",
+        "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
+        "contactedAt": "2026-04-11T14:30:00Z",
+        "channelMetadata": {
+          "emailThreadId": "MSG-20260411-4492",
+          "direction": "inbound"
+        }
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "contactmoment",
+          "slug": "contactmoment-003"
+        },
+        "subject": "Baliebezoek — aanvraag parkeervergunning",
+        "summary": "Meneer Ahmed Hassan bezocht de balie voor een parkeervergunning bewonerszone C. Aanvraagformulier ingevuld en ingediend.",
+        "channel": "balie",
+        "outcome": "afgehandeld",
+        "agent": "lvanhouten",
+        "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
+        "contactedAt": "2026-04-10T10:45:00Z",
+        "channelMetadata": {
+          "counterLocation": "Balie 3 — Stadhuis"
+        }
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "contactmoment",
+          "slug": "contactmoment-004"
+        },
+        "subject": "Chatgesprek — informatie over WMO-aanvraag",
+        "summary": "Mevrouw Pieterse vroeg via de chat naar de benodigde documenten voor een WMO-aanvraag. Documentenlijst per e-mail verstuurd.",
+        "channel": "chat",
+        "outcome": "afgehandeld",
+        "agent": "kbosma",
+        "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
+        "contactedAt": "2026-04-09T11:20:00Z",
+        "channelMetadata": {
+          "chatSessionId": "CS-20260409-8831"
+        }
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "contactmoment",
+          "slug": "contactmoment-005"
+        },
+        "subject": "Brief — bezwaar bestemmingsplan",
+        "summary": "De stichting Groen Amsterdam diende een formeel bezwaarschrift in per brief tegen het herziene bestemmingsplan Noord. Ontvangst bevestigd.",
+        "channel": "brief",
+        "outcome": "vervolgactie",
+        "agent": "mvanderberg",
+        "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
+        "contactedAt": "2026-04-07T08:00:00Z",
+        "channelMetadata": {
+          "letterReference": "BZW-2026-0042"
+        }
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "productCategory",
+          "slug": "product-category-implementatie",
+          "id": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e60"
+        },
+        "name": "Implementatie",
+        "description": "Implementatiediensten voor softwareoplossingen bij overheidsorganisaties",
+        "order": 1
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "productCategory",
+          "slug": "product-category-training",
+          "id": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e61"
+        },
+        "name": "Training",
+        "description": "Opleidingen en trainingsprogramma's voor beheerders en eindgebruikers",
+        "order": 2
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "productCategory",
+          "slug": "product-category-support",
+          "id": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e62"
+        },
+        "name": "Support & Onderhoud",
+        "description": "Beheer, onderhoud en SLA-contracten voor doorlopende dienstverlening",
+        "order": 3
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "product",
+          "slug": "product-openregister-implementatie",
+          "id": "d0e1f2a3-4b5c-4d6e-8f9a-2b3c4d5e6f70"
+        },
+        "name": "OpenRegister Implementatie",
+        "description": "Volledige implementatie van OpenRegister inclusief configuratie, migratie en acceptatietest",
+        "sku": "ORI-001",
+        "unitPrice": 12500.00,
+        "cost": 8000.00,
+        "type": "service",
+        "status": "active",
+        "unit": "project",
+        "taxRate": 21,
+        "btwClass": "hoog",
+        "category": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e60"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "product",
+          "slug": "product-training-beheerders",
+          "id": "d0e1f2a3-4b5c-4d6e-8f9a-2b3c4d5e6f71"
+        },
+        "name": "Training Beheerders",
+        "description": "Tweedaagse training voor systeembeheerders en functioneel beheerders van Nextcloud-omgevingen",
+        "sku": "TRN-002",
+        "unitPrice": 1850.00,
+        "cost": 950.00,
+        "type": "service",
+        "status": "active",
+        "unit": "dag",
+        "taxRate": 21,
+        "btwClass": "hoog",
+        "category": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e61"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "product",
+          "slug": "product-support-pakket-basis",
+          "id": "d0e1f2a3-4b5c-4d6e-8f9a-2b3c4d5e6f72"
+        },
+        "name": "Support Pakket Basis",
+        "description": "Maandelijks SLA-contract met 8x5 ondersteuning en maximaal 4 uur responstijd bij storingen",
+        "sku": "SUP-003",
+        "unitPrice": 450.00,
+        "cost": 200.00,
+        "type": "service",
+        "status": "active",
+        "unit": "maand",
+        "taxRate": 21,
+        "btwClass": "hoog",
+        "category": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e62"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "product",
+          "slug": "product-pipelinq-licentie",
+          "id": "d0e1f2a3-4b5c-4d6e-8f9a-2b3c4d5e6f73"
+        },
+        "name": "Pipelinq Licentie",
+        "description": "Jaarlijkse gebruikerslicentie voor Pipelinq CRM inclusief updates en basishulp",
+        "sku": "LIC-004",
+        "unitPrice": 240.00,
+        "cost": 80.00,
+        "type": "service",
+        "status": "active",
+        "unit": "gebruiker/jaar",
+        "taxRate": 21,
+        "btwClass": "hoog",
+        "category": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e62"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "leadProduct",
+          "slug": "leadproduct-amsterdam-ori",
+          "id": "e1f2a3b4-5c6d-4e7f-9a8b-3c4d5e6f7080"
+        },
+        "lead": "b5a0d3f1-9c2e-4a1b-8d6f-3e7c9f1a2b40",
+        "product": "d0e1f2a3-4b5c-4d6e-8f9a-2b3c4d5e6f70",
+        "quantity": 1,
+        "unitPrice": 12500.00,
+        "discount": 0,
+        "total": 12500.00,
+        "notes": "Inclusief datamigratie vanuit legacy zaaksysteem"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "leadProduct",
+          "slug": "leadproduct-amsterdam-training",
+          "id": "e1f2a3b4-5c6d-4e7f-9a8b-3c4d5e6f7081"
+        },
+        "lead": "b5a0d3f1-9c2e-4a1b-8d6f-3e7c9f1a2b40",
+        "product": "d0e1f2a3-4b5c-4d6e-8f9a-2b3c4d5e6f71",
+        "quantity": 2,
+        "unitPrice": 1850.00,
+        "discount": 10,
+        "total": 3330.00,
+        "notes": "2 trainingsdagen voor team burgerzaken en KCC"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "leadProduct",
+          "slug": "leadproduct-zuidholland-licentie",
+          "id": "e1f2a3b4-5c6d-4e7f-9a8b-3c4d5e6f7082"
+        },
+        "lead": "b5a0d3f1-9c2e-4a1b-8d6f-3e7c9f1a2b41",
+        "product": "d0e1f2a3-4b5c-4d6e-8f9a-2b3c4d5e6f73",
+        "quantity": 25,
+        "unitPrice": 240.00,
+        "discount": 15,
+        "total": 5100.00,
+        "notes": "25 gebruikerslicenties, jaarcontract met volumekorting"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "leadProduct",
+          "slug": "leadproduct-zuidholland-support",
+          "id": "e1f2a3b4-5c6d-4e7f-9a8b-3c4d5e6f7083"
+        },
+        "lead": "b5a0d3f1-9c2e-4a1b-8d6f-3e7c9f1a2b41",
+        "product": "d0e1f2a3-4b5c-4d6e-8f9a-2b3c4d5e6f72",
+        "quantity": 12,
+        "unitPrice": 450.00,
+        "discount": 0,
+        "total": 5400.00,
+        "notes": "12 maanden SLA Basis, ingangsdatum bij go-live"
       }
     ]
   }

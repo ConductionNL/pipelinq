@@ -1,0 +1,69 @@
+{
+	"menu": [
+		{
+			"id": "MarketingGroup",
+			"label": "Marketing",
+			"order": 130,
+			"children": [
+				{
+					"id": "Blasts",
+					"label": "Blasts",
+					"icon": "icon-mail",
+					"route": "Blasts"
+				},
+				{
+					"id": "BlastPerformance",
+					"label": "Blast performance",
+					"icon": "icon-category-monitoring",
+					"route": "BlastPerformance"
+				}
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "Blasts",
+			"route": "/blasts",
+			"type": "custom",
+			"title": "Blasts",
+			"component": "BlastListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "blast"
+			}
+		},
+		{
+			"id": "BlastNew",
+			"route": "/blasts/new",
+			"type": "custom",
+			"title": "New blast",
+			"component": "BlastFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "blast"
+			}
+		},
+		{
+			"id": "BlastPerformance",
+			"route": "/blasts/performance",
+			"type": "custom",
+			"title": "Blast performance",
+			"component": "BlastPerformanceDashboardView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "blast"
+			}
+		},
+		{
+			"id": "BlastMonitor",
+			"route": "/blasts/:id/monitor",
+			"type": "custom",
+			"title": "Blast monitor",
+			"component": "BlastMonitorView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "blast"
+			}
+		}
+	]
+}

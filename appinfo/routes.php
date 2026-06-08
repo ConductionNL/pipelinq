@@ -28,6 +28,12 @@ return [
         // Admin — Shillinq project ledger manual re-dispatch (project-to-shillinq-ledger).
         ['name' => 'ledger#retry', 'url' => '/api/ledger/retry/{projectId}', 'verb' => 'POST'],
 
+        // Admin — Shillinq WIP manual re-dispatch (pipelinq-time-to-shillinq-wip / REQ-WIP-003).
+        ['name' => 'timeEntryWip#retry', 'url' => '/api/time-entries/{uuid}/wip-retry', 'verb' => 'POST'],
+
+        // Admin — Shillinq AP voucher manual re-dispatch (pipelinq-expense-to-shillinq-ap / REQ-AP-003 Scenario 11).
+        ['name' => 'shillinqAp#retry', 'url' => '/api/expenses/{id}/shillinq-ap/retry', 'verb' => 'POST'],
+
         // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g. CnSupportDialog)
         ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
         ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
@@ -48,6 +54,11 @@ return [
         ['name' => 'notes#create', 'url' => '/api/notes/{objectType}/{objectId}', 'verb' => 'POST'],
         ['name' => 'notes#deleteAll', 'url' => '/api/notes/{objectType}/{objectId}', 'verb' => 'DELETE'],
         ['name' => 'notes#deleteSingle', 'url' => '/api/notes/single/{noteId}', 'verb' => 'DELETE'],
+
+        // Entity activity feed — per-entity contactmoment + note REST aggregation
+        // (entity-notes change). camelCase slug matches EntityActivityController
+        // class name; placed BEFORE any wildcard {slug} routes (ADR-003-backend).
+        ['name' => 'entityActivity#index', 'url' => '/api/activity/{entityType}/{entityId}', 'verb' => 'GET'],
 
         // Request channels (camelCase slug matches RequestChannelController class name)
         ['name' => 'requestChannel#index', 'url' => '/api/settings/request-channels', 'verb' => 'GET'],
@@ -71,18 +82,34 @@ return [
         ['name' => 'intakeForm#embed', 'url' => '/api/forms/{id}/embed', 'verb' => 'GET'],
         ['name' => 'intakeForm#export', 'url' => '/api/forms/{id}/submissions/export', 'verb' => 'GET'],
         // Rapportage / reporting — specific routes before wildcard catch-all.
+        // Klantbeeld 360 — cross-module analytics summary (must precede any wildcard `{slug}` routes).
+        ['name' => 'analytics#summary', 'url' => '/api/analytics/summary', 'verb' => 'GET'],
         ['name' => 'reporting#getKpis',     'url' => '/api/rapportage/kpis',     'verb' => 'GET'],
         ['name' => 'reporting#getChannels', 'url' => '/api/rapportage/channels', 'verb' => 'GET'],
         ['name' => 'reporting#getAgents',   'url' => '/api/rapportage/agents',   'verb' => 'GET'],
         ['name' => 'reporting#getSla',      'url' => '/api/rapportage/sla',      'verb' => 'GET'],
         ['name' => 'reporting#updateSla',   'url' => '/api/rapportage/sla',      'verb' => 'PUT'],
         ['name' => 'reporting#exportCsv',   'url' => '/api/rapportage/export',   'verb' => 'GET'],
+        // Lead-management analytics endpoint (REQ-LM-006). Non-admin accessible.
+        ['name' => 'rapportage#getPipelineStats', 'url' => '/api/rapportage/pipeline-stats', 'verb' => 'GET'],
         // Public survey endpoints (unauthenticated; camelCase slug matches PublicSurveyController class name)
         ['name' => 'publicSurvey#show', 'url' => '/public/survey/{token}', 'verb' => 'GET'],
         ['name' => 'publicSurvey#submit', 'url' => '/public/survey/{token}/respond', 'verb' => 'POST'],
 
         // Contactmomenten (permission-checked delete)
         ['name' => 'contactmoment#destroy', 'url' => '/api/contactmomenten/{id}', 'verb' => 'DELETE'],
+
+        // CTI screen-pop / click-to-dial adapter endpoints (cti-screenpop-adapter).
+        // Routes are listed BEFORE the SPA / wildcard catch-alls (ADR-016).
+        ['name' => 'cti#webhook',          'url' => '/api/cti/webhook/{platform}',         'verb' => 'POST'],
+        ['name' => 'cti#screenPop',        'url' => '/api/cti/screen-pop',                 'verb' => 'POST'],
+        ['name' => 'cti#clickToDial',      'url' => '/api/cti/click-to-dial',              'verb' => 'POST'],
+        ['name' => 'cti#disposition',      'url' => '/api/cti/contactmoment/{id}/disposition', 'verb' => 'POST'],
+        ['name' => 'cti#attachRecording',  'url' => '/api/cti/contactmoment/{id}/recording',   'verb' => 'POST'],
+        ['name' => 'cti#getConfig',        'url' => '/api/cti/config',                     'verb' => 'GET'],
+        ['name' => 'cti#updateConfig',     'url' => '/api/cti/config',                     'verb' => 'PUT'],
+        ['name' => 'cti#testConnection',   'url' => '/api/cti/test-connection',            'verb' => 'GET'],
+        ['name' => 'cti#eventLog',         'url' => '/api/cti/event-log',                  'verb' => 'GET'],
 
         // Callback management endpoints
         ['name' => 'callback#attempt', 'url' => '/api/callbacks/{id}/attempts', 'verb' => 'POST'],
@@ -237,6 +264,60 @@ return [
         ['name' => 'exportRun#listRuns', 'url' => '/api/export/runs',           'verb' => 'GET'],
         ['name' => 'exportRun#showRun',  'url' => '/api/export/runs/{id}',       'verb' => 'GET'],
         ['name' => 'exportRun#retryRun', 'url' => '/api/export/runs/{id}/retry', 'verb' => 'POST'],
+
+        // Loyalty program (loyalty-program — REQ-LOY-001..010).
+        ['name' => 'loyalty#getAccount',         'url' => '/api/loyalty/accounts/{accountId}',          'verb' => 'GET'],
+        ['name' => 'loyalty#getAccountHistory',  'url' => '/api/loyalty/accounts/{accountId}/history',  'verb' => 'GET'],
+        ['name' => 'loyalty#getRedemptionOptions',    'url' => '/api/loyalty/redemption/options/{programmeId}/{accountId}', 'verb' => 'GET'],
+        ['name' => 'loyalty#initiateRedemption',      'url' => '/api/loyalty/redemption/initiate/{accountId}/{optionId}',   'verb' => 'POST'],
+        ['name' => 'loyalty#lookupRedemptionCode',    'url' => '/api/loyalty/redemption/{code}/validate',                   'verb' => 'POST'],
+        ['name' => 'loyalty#useRedemptionCode',       'url' => '/api/loyalty/redemption/{code}/use',                        'verb' => 'POST'],
+        ['name' => 'loyalty#lookupGiftCard',    'url' => '/api/loyalty/gift-card/validate',              'verb' => 'POST'],
+        ['name' => 'loyalty#redeemGiftCard',    'url' => '/api/loyalty/gift-card/redeem',                'verb' => 'POST'],
+        ['name' => 'loyalty#activateGiftCard',  'url' => '/api/loyalty/gift-card/activate/{giftCardId}', 'verb' => 'POST'],
+        ['name' => 'loyalty#activateProgramme', 'url' => '/api/loyalty/programme/{programmeId}/activate', 'verb' => 'POST'],
+        ['name' => 'loyaltyReporting#kpis',               'url' => '/api/loyalty/reporting/{programmeId}/kpis',          'verb' => 'GET'],
+        ['name' => 'loyaltyReporting#liability',          'url' => '/api/loyalty/reporting/{programmeId}/liability',     'verb' => 'GET'],
+        ['name' => 'loyaltyReporting#tierDistribution',   'url' => '/api/loyalty/reporting/{programmeId}/tiers',         'verb' => 'GET'],
+        ['name' => 'loyaltyReporting#expiryForecast',     'url' => '/api/loyalty/reporting/{programmeId}/expiry-forecast', 'verb' => 'GET'],
+        ['name' => 'loyaltyGdpr#export',                  'url' => '/api/loyalty/gdpr/{klantId}/export',                 'verb' => 'GET'],
+        ['name' => 'loyaltyGdpr#delete',                  'url' => '/api/loyalty/gdpr/{klantId}',                        'verb' => 'DELETE'],
+
+        // CRM workflow automation has been migrated to the OpenRegister
+        // flow leaf (NC Flow / n8n) per migrate-automation-to-flow-leaf;
+        // no automation / webhook / dmn endpoints remain in pipelinq.
+
+        // Marketing blast provider webhooks (signature-verified, PublicPage)
+        // marketing-segmentation-and-blast-05-jobs-and-webhooks.
+        // camelCase slug matches BlastWebhookController class name.
+        ['name' => 'blastWebhook#sendgrid', 'url' => '/api/blast-webhooks/sendgrid', 'verb' => 'POST'],
+        ['name' => 'blastWebhook#ses',      'url' => '/api/blast-webhooks/ses',      'verb' => 'POST'],
+        ['name' => 'blastWebhook#twilio',   'url' => '/api/blast-webhooks/twilio',   'verb' => 'POST'],
+        // Marketing — Segments (marketing-segmentation-and-blast chain member 06).
+        // Specific routes precede any wildcard {slug} routes (ADR-016).
+        ['name' => 'segment#index',         'url' => '/api/segments',                  'verb' => 'GET'],
+        ['name' => 'segment#create',        'url' => '/api/segments',                  'verb' => 'POST'],
+        ['name' => 'segment#refreshSize',   'url' => '/api/segments/{id}/size',        'verb' => 'POST'],
+        ['name' => 'segment#members',       'url' => '/api/segments/{id}/members',     'verb' => 'GET'],
+        ['name' => 'segment#show',          'url' => '/api/segments/{id}',             'verb' => 'GET'],
+
+        // Marketing — CampaignTemplates (marketing-segmentation-and-blast chain member 06).
+        // Specific routes precede any wildcard {slug} routes (ADR-016).
+        ['name' => 'template#index',  'url' => '/api/templates',      'verb' => 'GET'],
+        ['name' => 'template#create', 'url' => '/api/templates',      'verb' => 'POST'],
+        ['name' => 'template#show',   'url' => '/api/templates/{id}', 'verb' => 'GET'],
+        ['name' => 'template#update', 'url' => '/api/templates/{id}', 'verb' => 'PATCH'],
+
+        // Marketing — Blasts (marketing-segmentation-and-blast chain member 06).
+        // Specific routes precede any wildcard {slug} routes (ADR-016).
+        ['name' => 'blast#index',      'url' => '/api/blasts',                     'verb' => 'GET'],
+        ['name' => 'blast#create',     'url' => '/api/blasts',                     'verb' => 'POST'],
+        ['name' => 'blast#send',       'url' => '/api/blasts/{id}/send',           'verb' => 'POST'],
+        ['name' => 'blast#cancel',     'url' => '/api/blasts/{id}/cancel',         'verb' => 'POST'],
+        ['name' => 'blast#deliveries', 'url' => '/api/blasts/{id}/deliveries',     'verb' => 'GET'],
+        ['name' => 'blast#attribution', 'url' => '/api/blasts/{id}/attribution',   'verb' => 'GET'],
+        ['name' => 'blast#show',       'url' => '/api/blasts/{id}',                'verb' => 'GET'],
+        ['name' => 'blast#update',     'url' => '/api/blasts/{id}',                'verb' => 'PATCH'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],

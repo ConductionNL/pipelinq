@@ -51,8 +51,6 @@ class SettingsService
         'leadProduct_schema',
         'intakeForm_schema',
         'intakeSubmission_schema',
-        'automation_schema',
-        'automationLog_schema',
         'contactmoment_schema',
         'task_schema',
         'emailLink_schema',
@@ -65,6 +63,7 @@ class SettingsService
         'agentProfile_schema',
         'project_schema',
         'projectPhase_schema',
+        'timeEntry_schema',
         'posTransaction_schema',
         'posTransactionLine_schema',
         'receiptTemplate_schema',
@@ -88,6 +87,20 @@ class SettingsService
         'portalDelegation_schema',
         'portalAuditEvent_schema',
         'portalTenantConfig_schema',
+        // Loyalty programme schemas (loyalty-program).
+        'loyaltyProgramme_schema',
+        'pointsRule_schema',
+        'tierRule_schema',
+        'klantLoyaltyAccount_schema',
+        'pointsLedgerEntry_schema',
+        'redemptionOption_schema',
+        'redemption_schema',
+        'giftCard_schema',
+        'giftCardTransaction_schema',
+        // Expense → Shillinq AP integration (pipelinq-expense-to-shillinq-ap).
+        'expense_schema',
+        // Billing categories (billable-categories-and-tags) — REQ-BCT-001.
+        'billingCategory_schema',
     ];
 
     /**
@@ -132,6 +145,13 @@ class SettingsService
         'receipt_printer_port'                     => '9100',
         'receipt_default_template'                 => '',
         'shillinq_ledger_webhook_url'              => '',
+        'shillinq_wip_webhook_url'                 => '',
+        // Shillinq AP webhook for expense voucher dispatch (REQ-AP-004). Empty disables the integration.
+        'shillinq_ap_webhook_url'                  => '',
+        // Lead-management: number of inactivity days before a lead is flagged stale.
+        // Default mirrors REQ-LM-002 (14 days). Tenant-tunable through admin settings.
+        // @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+        'lead_stale_threshold_days'                => '14',
         // BI export + data-warehouse sink — admin settings (bi-export-and-data-warehouse-sink#14.1).
         'export.retention_days'                    => '365',
         'export.default_compression'               => 'none',

@@ -111,17 +111,17 @@
 				@saved="onPanelSaved" />
 		</CnDetailCard>
 
-		<CnDetailCard :title="t('pipelinq', 'Linked Leads')">
+		<CnDetailCard :title="linkedLeadsTitle">
 			<div v-if="linkedLeads.length === 0" class="section-empty">
-				<p>{{ t('pipelinq', 'No leads linked to this product') }}</p>
+				<p>{{ t('pipelinq', 'No leads are using this product yet.') }}</p>
 			</div>
 			<div v-else class="viewTableContainer">
 				<table class="viewTable">
 					<thead>
 						<tr>
 							<th>{{ t('pipelinq', 'Lead') }}</th>
+							<th>{{ t('pipelinq', 'Stage') }}</th>
 							<th>{{ t('pipelinq', 'Quantity') }}</th>
-							<th>{{ t('pipelinq', 'Unit Price') }}</th>
 							<th>{{ t('pipelinq', 'Total') }}</th>
 						</tr>
 					</thead>
@@ -131,9 +131,13 @@
 							:key="item.id"
 							class="viewTableRow"
 							@click="openLead(item)">
-							<td>{{ item.leadTitle || item.lead }}</td>
+							<td>
+								<a href="#" @click.prevent.stop="openLead(item)">
+									{{ item.leadTitle || t('pipelinq', '[Deleted lead]') }}
+								</a>
+							</td>
+							<td>{{ item.leadStage || '-' }}</td>
 							<td>{{ item.quantity }}</td>
-							<td>{{ formatCurrency(item.unitPrice) }}</td>
 							<td>{{ formatCurrency(item.total) }}</td>
 						</tr>
 					</tbody>
@@ -251,6 +255,15 @@ export default {
 		highlightVariantSku() {
 			return this.$route?.query?.variant || ''
 		},
+		/**
+		 * Title for the "Linked Leads" card, including the live count.
+		 *
+		 * @return {string} The localized title.
+		 * @spec openspec/changes/lead-product-link/tasks.md#task-5.1
+		 */
+		linkedLeadsTitle() {
+			return t('pipelinq', 'Linked Leads ({count})', { count: this.linkedLeads.length })
+		},
 	},
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-7
@@ -319,7 +332,31 @@ export default {
 					_limit: 50,
 					product: this.productId,
 				})
-				this.linkedLeads = leadProducts || []
+				const items = leadProducts || []
+				// Resolve parent lead title + stage so the table is human-readable.
+				const enriched = await Promise.all(items.map(async (lp) => {
+					if (!lp.lead) return { ...lp, leadTitle: null, leadStage: null, leadCreatedAt: null }
+					try {
+						const lead = await this.objectStore.fetchObject('lead', lp.lead)
+						return {
+							...lp,
+							leadTitle: lead?.title || null,
+							leadStage: lead?.stage || null,
+							leadCreatedAt: lead?._dateCreated || lead?.createdAt || null,
+						}
+					} catch {
+						return { ...lp, leadTitle: null, leadStage: null, leadCreatedAt: null }
+					}
+				}))
+				// Sort by lead creation date descending (most recent first); fall
+				// back to the leadProduct id for stability when dates are equal.
+				enriched.sort((a, b) => {
+					const aDate = a.leadCreatedAt || ''
+					const bDate = b.leadCreatedAt || ''
+					if (aDate === bDate) return (a.id || '').localeCompare(b.id || '')
+					return aDate < bDate ? 1 : -1
+				})
+				this.linkedLeads = enriched
 			} catch {
 				this.linkedLeads = []
 			}

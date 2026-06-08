@@ -46,10 +46,26 @@ class SchemaMapService
         'agentProfile_schema'   => 'agentProfile',
         'project_schema'        => 'project',
         'projectPhase_schema'   => 'projectPhase',
+        'timeEntry_schema'      => 'timeEntry',
         'task_schema'           => 'task',
         'contactmoment_schema'  => 'contactmoment',
         'survey_schema'         => 'survey',
         'surveyResponse_schema' => 'surveyResponse',
+        'posTransaction_schema' => 'posTransaction',
+        // Loyalty programme schemas (loyalty-program).
+        'loyaltyProgramme_schema'    => 'loyaltyProgramme',
+        'pointsRule_schema'          => 'pointsRule',
+        'tierRule_schema'            => 'tierRule',
+        'klantLoyaltyAccount_schema' => 'klantLoyaltyAccount',
+        'pointsLedgerEntry_schema'   => 'pointsLedgerEntry',
+        'redemptionOption_schema'    => 'redemptionOption',
+        'redemption_schema'          => 'redemption',
+        'giftCard_schema'            => 'giftCard',
+        'giftCardTransaction_schema' => 'giftCardTransaction',
+        // Expense → Shillinq AP integration (pipelinq-expense-to-shillinq-ap / REQ-AP-001).
+        'expense_schema'             => 'expense',
+        // Billing categories (billable-categories-and-tags / REQ-BCT-001).
+        'billingCategory_schema'     => 'billingCategory',
     ];
 
     /**
