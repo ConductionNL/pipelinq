@@ -154,9 +154,9 @@ class KassakoppelingSignatureService
      */
     public function generateHash(array $entryData, string $previousHash): string
     {
-        $entry                 = $entryData;
+        $entry = $entryData;
         $entry['previousHash'] = $previousHash;
-        $message               = $this->canonicalMessage(entryData: $entry, fields: self::HASH_FIELDS);
+        $message = $this->canonicalMessage(entryData: $entry, fields: self::HASH_FIELDS);
 
         return hash('sha256', $message);
     }//end generateHash()
@@ -288,16 +288,16 @@ class KassakoppelingSignatureService
                 $value = '';
             }
 
-            if ($value === null) {
-                $value = '';
-            }
-
             if (is_bool($value) === true) {
-                $value = $value === true ? 'true' : 'false';
+                if ($value === true) {
+                    $value = 'true';
+                } else {
+                    $value = 'false';
+                }
             }
 
             $parts[] = (string) $value;
-        }
+        }//end foreach
 
         return implode('|', $parts);
     }//end canonicalMessage()

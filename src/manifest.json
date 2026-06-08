@@ -122,6 +122,13 @@
 			"order": 99
 		},
 		{
+			"id": "KassakoppelingAuditList",
+			"label": "Kassakoppeling audit",
+			"icon": "icon-checkmark",
+			"route": "KassakoppelingAuditList",
+			"order": 99
+		},
+		{
 			"id": "Pipeline",
 			"label": "Pipeline",
 			"icon": "icon-category-organization",
@@ -868,6 +875,28 @@
 			"component": "PosBookkeepingSettingsView",
 			"config": {
 				"register": "pipelinq"
+			}
+		},
+		{
+			"id": "KassakoppelingAuditList",
+			"route": "/kassakoppeling/audit",
+			"type": "custom",
+			"title": "Kassakoppeling audit",
+			"component": "KassakoppelingAuditListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "kassakoppelingAuditLog"
+			}
+		},
+		{
+			"id": "KassakoppelingAuditDetail",
+			"route": "/kassakoppeling/audit/:id",
+			"type": "custom",
+			"title": "Audit entry",
+			"component": "KassakoppelingAuditDetailView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "kassakoppelingAuditLog"
 			}
 		},
 		{

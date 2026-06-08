@@ -111,7 +111,7 @@ class BelastingdienstExportService
             $manifest = $this->buildManifest(entries: $entries, fromDate: '', toDate: '');
         }
 
-        $document               = new \DOMDocument('1.0', 'UTF-8');
+        $document = new \DOMDocument('1.0', 'UTF-8');
         $document->formatOutput = true;
 
         $root = $document->createElement('KassakoppelingExport');
@@ -146,7 +146,11 @@ class BelastingdienstExportService
             foreach ($this->canonicalEntry(entry: $entry) as $field => $value) {
                 $childValue = $value;
                 if (is_bool($childValue) === true) {
-                    $childValue = $childValue === true ? 'true' : 'false';
+                    if ($childValue === true) {
+                        $childValue = 'true';
+                    } else {
+                        $childValue = 'false';
+                    }
                 }
 
                 if ($childValue === null) {
@@ -159,7 +163,7 @@ class BelastingdienstExportService
             }
 
             $entriesNode->appendChild($entryNode);
-        }
+        }//end foreach
 
         $root->appendChild($entriesNode);
 
@@ -257,8 +261,8 @@ class BelastingdienstExportService
                 )
             );
 
-            $result                          = $this->signature->verifyHashChain(entries: $forRegister);
-            $perRegisterStatus[$register]    = $result;
+            $result = $this->signature->verifyHashChain(entries: $forRegister);
+            $perRegisterStatus[$register] = $result;
             if ($result['chainValid'] === false) {
                 $chainIntegrity = 'invalid';
                 if ($chainStatus === '') {
@@ -268,17 +272,17 @@ class BelastingdienstExportService
         }//end foreach
 
         return [
-            'exportDate'          => (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DateTimeInterface::ATOM),
-            'entryCount'          => count($entries),
-            'dateRange'           => [
+            'exportDate'         => (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DateTimeInterface::ATOM),
+            'entryCount'         => count($entries),
+            'dateRange'          => [
                 'from' => $fromDate,
                 'to'   => $toDate,
             ],
-            'registerList'        => $registers,
-            'chainIntegrity'      => $chainIntegrity,
-            'chainStatus'         => $chainStatus,
-            'perRegisterStatus'   => $perRegisterStatus,
-            'signatureAlgorithm'  => self::SIGNATURE_ALGORITHM,
+            'registerList'       => $registers,
+            'chainIntegrity'     => $chainIntegrity,
+            'chainStatus'        => $chainStatus,
+            'perRegisterStatus'  => $perRegisterStatus,
+            'signatureAlgorithm' => self::SIGNATURE_ALGORITHM,
         ];
     }//end buildManifest()
 
