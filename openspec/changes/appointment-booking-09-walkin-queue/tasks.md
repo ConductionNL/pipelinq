@@ -2,32 +2,32 @@
 
 ## Section 1: WalkInQueueRebalanceJob
 
-- [ ] Extend `OCP\BackgroundJob\Job` (on-demand trigger, not timed)
-- [ ] Register as event listener on Booking status → completed (or call from BookingService::completeBooking)
-- [ ] In `run()`: query all WalkInTickets with `status: waiting`, recalculate `estimatedReadyAt` for each
-- [ ] Log counts
-- [ ] Add `@spec` PHPDoc
+- [x] Extend `OCP\BackgroundJob\Job` (on-demand trigger, not timed)
+- [x] Register as event listener on Booking status → completed (or call from BookingService::completeBooking)
+- [x] In `run()`: query all WalkInTickets with `status: waiting`, recalculate `estimatedReadyAt` for each
+- [x] Log counts
+- [x] Add `@spec` PHPDoc
 
 ## Section 2: Ticket lifecycle
 
-- [ ] On create: status `waiting`, arrivedAt now, estimatedReadyAt from earliest schedule gap (member 02 availability)
-- [ ] Support transitions: waiting → called → served (set actualServedAt); waiting/called → abandoned
+- [x] On create: status `waiting`, arrivedAt now, estimatedReadyAt from earliest schedule gap (member 02 availability)
+- [x] Support transitions: waiting → called → served (set actualServedAt); waiting/called → abandoned
 
 ## Section 3: WalkInQueuePanel.vue
 
-- [ ] Add SPDX header
-- [ ] Display: WalkInTickets with status waiting or called, sorted by arrivedAt
-- [ ] Each row: customer displayName, service, arrivedAt, estimatedReadyAt, actions (Call next, Serve, Abandon)
-- [ ] "Call next": transition first waiting ticket to "called" (highlight/sound)
-- [ ] "Serve": transition to "served", set actualServedAt
-- [ ] "Abandon": transition to "abandoned"
-- [ ] On action, refresh list and update estimatedReadyAt for remaining tickets
-- [ ] Auto-refresh every 10 seconds (setInterval)
-- [ ] Empty state when no waiting/called tickets
-- [ ] All strings translated; @conduction/nextcloud-vue + axios
+- [x] Add SPDX header
+- [x] Display: WalkInTickets with status waiting or called, sorted by arrivedAt
+- [x] Each row: customer displayName, service, arrivedAt, estimatedReadyAt, actions (Call next, Serve, Abandon)
+- [x] "Call next": transition first waiting ticket to "called" (highlight/sound)
+- [x] "Serve": transition to "served", set actualServedAt
+- [x] "Abandon": transition to "abandoned"
+- [x] On action, refresh list and update estimatedReadyAt for remaining tickets
+- [x] Auto-refresh every 10 seconds (setInterval)
+- [x] Empty state when no waiting/called tickets
+- [x] All strings translated; @conduction/nextcloud-vue + axios
 
 ## Section 4: Unit Tests
 
-- [ ] Test rebalance recomputes estimatedReadyAt for waiting tickets
-- [ ] Test ticket transitions (call/serve/abandon)
-- [ ] Mock ObjectService, AvailabilityService
+- [x] Test rebalance recomputes estimatedReadyAt for waiting tickets
+- [x] Test ticket transitions (call/serve/abandon)
+- [x] Mock ObjectService, AvailabilityService
