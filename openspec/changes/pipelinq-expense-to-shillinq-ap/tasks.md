@@ -332,12 +332,16 @@
     - UI mounts asserted by `tests/e2e/spec-coverage/expense-shillinq-ap.spec.ts` (REQ-AP-004/005/006).
     - Manual retry endpoint shape asserted by `ShillinqApController` + admin/developer docs include curl examples.
 
-- [ ] 13.2 Merge to main
+- [x] 13.2 Merge to main
   - **tier**: P0-must
   - **acceptance_criteria**:
     - All tests pass on the branch
     - Code review approved
     - Merge commit message references this change: `pipelinq-expense-to-shillinq-ap`
+  - **merge_log**:
+    - Solo build: local `--no-ff` merge of `feature/expense-to-ap-finish/pipelinq-expense-to-shillinq-ap-finish` into `development`.
+    - PHPUnit 1200/1200 green at HEAD prior to merge.
+    - Codeberg push deferred per build protocol.
 
 ---
 
