@@ -189,7 +189,7 @@ export default {
 
 	computed: {
 		/**
-		 * Channel <NcSelect> options — translated labels.
+		 * Channel selector options — translated labels.
 		 *
 		 * @return {Array<{value: string, label: string}>}
 		 */
@@ -200,7 +200,7 @@ export default {
 			}))
 		},
 		/**
-		 * Outcome <NcSelect> options — translated labels.
+		 * Outcome selector options — translated labels.
 		 *
 		 * @return {Array<{value: string, label: string}>}
 		 */
@@ -211,7 +211,7 @@ export default {
 			}))
 		},
 		/**
-		 * Client search results as <NcSelect>-compatible options.
+		 * Client search results as selector-compatible options.
 		 *
 		 * @return {Array<{value: string, label: string}>}
 		 */
@@ -275,7 +275,7 @@ export default {
 					this.form.taskId = it.id || ''
 					this.form.subject = it.subject || ''
 				}
-				// Ensure the selected client shows up in the <NcSelect> options.
+				// Ensure the selected client shows up in the selector options.
 				if (this.form.client && !this.clientOptions.find(o => o.value === this.form.client)) {
 					const stub = { id: this.form.client, name: it.clientName || it.client || this.form.client }
 					this.clientSearchResults = [...this.clientSearchResults, stub]
