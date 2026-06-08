@@ -75,12 +75,12 @@ class KassakoppelingAuditController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest                  $request      The request.
+     * @param IRequest                   $request      The request.
      * @param KassakoppelingAuditService $service      The audit service.
-     * @param IUserSession              $userSession  The user session.
-     * @param IGroupManager             $groupManager The group manager (admin gate).
-     * @param IL10N                     $l10n         The localisation service.
-     * @param LoggerInterface           $logger       The logger.
+     * @param IUserSession               $userSession  The user session.
+     * @param IGroupManager              $groupManager The group manager (admin gate).
+     * @param IL10N                      $l10n         The localisation service.
+     * @param LoggerInterface            $logger       The logger.
      */
     public function __construct(
         IRequest $request,
@@ -256,8 +256,6 @@ class KassakoppelingAuditController extends Controller
             );
         } catch (OCSBadRequestException $e) {
             return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
-        } catch (OCSNotFoundException $e) {
-            return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
         } catch (\Throwable $e) {
             $this->logger->error('KassakoppelingAuditController::export failed', ['exception' => $e->getMessage()]);
             return new JSONResponse(
