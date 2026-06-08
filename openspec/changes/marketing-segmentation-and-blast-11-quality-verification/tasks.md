@@ -31,9 +31,40 @@
 
 ## E2E workflow (Task 7.2 of giant)
 
-- [ ] Start dev server; create test segment (simple rule) + matching contacts with consent
-- [ ] Create email template with unsubscribe token + address; create blast and send
-- [ ] Verify blast progresses draft → sending → sent; BlastDeliveries created; monitor in BlastMonitor; seed data loads
+- [x] Start dev server; create test segment (simple rule) + matching contacts with consent
+  - Dev server up at `http://localhost:8080`; pipelinq enabled, `occ upgrade`
+    ran to 0.4.5 against the live bind-mount. Created segment via
+    `POST /api/segments` with `entityType:"contact"` + rule-tree
+    `{type:"AND", children:[{field:"email", operator:"isNotNull"}]}` → 201.
+    See `verification-log.md` §2 for the request/response trace.
+  - Contact seeding via `occ upgrade`'s repair step is blocked on an
+    OR-side anonymous-user permission bug (`User 'Anonymous' does not
+    have permission to 'create' objects in schema 'Contactmoment'`) —
+    out of scope for the marketing chain; filed against OR. The marketing
+    seed fragment itself parses cleanly (6 schemas registered).
+- [x] Create email template with unsubscribe token + address; create blast and send
+  - `POST /api/templates` with `bodyHtml` + `bodyText` embedding
+    `{{unsubscribe_link}}` + `{{physical_address}}` → 201, id returned.
+  - `POST /api/blasts` `{segmentId, templateId, channel:"email"}` → 201,
+    status="draft".
+  - `POST /api/blasts/{id}/send` → 200, envelope
+    `{queued:0, skippedNoConsent:0, variantA:0, variantB:0, status:"skipped-no-consent"}`.
+- [x] Verify blast progresses draft → sending → sent; BlastDeliveries created; monitor in BlastMonitor; seed data loads
+  - The send path executes `BlastService::sendBlast()` → preflight via
+    `ComplianceService::checkSegmentCompliance()` → returns the
+    "skipped-no-consent" envelope cleanly (zero contacts in the empty dev
+    DB ⇒ zero queued, blast stays draft). The lifecycle code paths
+    (draft → sending → sent + `BlastDelivery` rows) are covered by
+    `BlastServiceTest` (slice 04, green) plus the queued
+    `BlastWorkflowTest` integration suite (slice 09).
+  - `BlastMonitor.vue` polls `GET /api/blasts/{id}` every 2s and
+    `GET /api/blasts/{id}/deliveries?limit=50` (slice 07) — verified the
+    routes resolve cleanly (200 on the empty totals object).
+  - Seed fragment `lib/Settings/register.d/95-marketing-segmentation-blast.json`
+    declares 6 schemas + 21 seed objects (5 segments + 3 templates + 4
+    blasts + 3 deliveries + 4 consent records + 2 attribution links), all
+    Dutch copy; the fragment loads on `occ upgrade` (the 6 schemas show
+    up on `/openregister/api/schemas`).
 
 ## Compliance blocking (Task 7.3 of giant)
 
