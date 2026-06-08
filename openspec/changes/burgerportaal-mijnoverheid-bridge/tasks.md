@@ -36,7 +36,7 @@
   - Return the date that is `$days` working days after `$from`
   - Unit test: validate 5 working days calculation across a weekend and a holiday
 
-- [ ] 2.2 Create `lib/Service/LogiusConnector.php` — Berichtenbox-koppelvlak BBK 1.7 API wrapper
+- [x] 2.2 Create `lib/Service/LogiusConnector.php` — Berichtenbox-koppelvlak BBK 1.7 API wrapper
   - `authenticate(): OAuthToken` — POST to Logius token endpoint with client credentials (stored in openregister key-vault), return Bearer token
   - `sendMessage(BerichtenboxMessage $msg, string $tenantPkiCert, string $tenantPkiKey): LogiusResponse`
     - Validate message: subject ≤200 chars, body is valid XHTML strict, attachments ≤25 MB total and PDF/PNG/JPG only
