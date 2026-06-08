@@ -135,9 +135,9 @@
 
 ## 3. Backend Controller and API Routes
 
-- [ ] 3.1 Create `KassakoppelingAuditController.php`
+- [x] 3.1 Create `KassakoppelingAuditController.php`
   - **spec_ref**: `REQ-AUDIT-001`, `REQ-AUDIT-002`, `REQ-AUDIT-003`, `REQ-AUDIT-005` / `openspec/changes/pos-kassakoppeling-audit/design.md#KassakoppelingAuditController`
-  - **files**: `pipelinq/lib/Controller/KassakoppelingAuditController.php`
+  - **files**: `pipelinq/lib/Controller/KassakoppelingAuditController.php`, `pipelinq/appinfo/routes.php`
   - **tier**: P0
   - Implement endpoints per design.md:
     - `POST /api/kassakoppeling/audit` (create)
