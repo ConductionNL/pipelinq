@@ -153,7 +153,7 @@
 
 ## Phase 3: Controllers and Routing [MVP Core]
 
-- [ ] 3.1 Create `lib/Controller/BerichtenboxWebhookController.php` — Logius webhook handlers
+- [x] 3.1 Create `lib/Controller/BerichtenboxWebhookController.php` — Logius webhook handlers
   - `readReceipt(Request $request): JSONResponse`
     - Parse webhook payload: extract `logiusMessageId`, `readAt` (timestamp)
     - Verify webhook signature: `LogiusConnector::handleWebhookSignature(request)`
@@ -169,12 +169,12 @@
 
   - Both methods: log webhook reception and processing time; catch exceptions and return 400 with error detail
 
-- [ ] 3.2 Edit `appinfo/routes.php` — Add webhook routes
+- [x] 3.2 Edit `appinfo/routes.php` — Add webhook routes
   - `['name' => 'BerichtenboxWebhook#readReceipt', 'url' => '/api/webhook/berichtenbox/read', 'verb' => 'POST']`
   - `['name' => 'BerichtenboxWebhook#inboundReply', 'url' => '/api/webhook/berichtenbox/reply', 'verb' => 'POST']`
   - No authentication required (Logius webhooks are verified by signature, not OAuth)
 
-- [ ] 3.3 Create admin API endpoints (optional for MVP, but useful for testing)
+- [x] 3.3 Create admin API endpoints (optional for MVP, but useful for testing)
   - `POST /api/admin/berichtenbox/message/{id}/retry` — Manually retry a failed message
   - `GET /api/admin/berichtenbox/stats` — Return delivery stats (total sent, failed, fallback-emailed, unread count, queue depth)
 
