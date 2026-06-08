@@ -533,6 +533,12 @@ class PosTransactionService
         // verifies the non-empty-cart precondition and the per-object access
         // rule that closes the IDOR; the engine validates the from-state).
         $transaction = $this->fetchTransaction(id: $id);
+
+        // pos-customer-link / REQ-PCL-005: 'op rekening' (onAccount) tender
+        // requires a linked customer. Enforced server-side here (the UI
+        // disables the Afrekenen button but the contract is the server's).
+        $this->assertOnAccountHasCustomer(transaction: $transaction);
+
         $mode        = $this->normalizePriceMode(mode: ($transaction['priceMode'] ?? null));
         $lines       = $this->fetchLines(transactionId: $id);
         $totals      = $this->computeTotals(lines: $lines, priceMode: $mode);
@@ -685,6 +691,34 @@ class PosTransactionService
 
         return $saved;
     }//end resumeTransaction()
+
+    /**
+     * Assert that an on-account ('op rekening') transaction has a linked customer.
+     *
+     * Mirrors PosCustomerLinkService::assertOnAccountHasCustomer; duplicated
+     * here to avoid a circular service dependency at confirm-time. The check
+     * is a single guarded comparison so duplication has negligible cost and
+     * the invariant is enforced by the same module the lifecycle owns.
+     *
+     * @param array<string, mixed> $transaction The transaction data.
+     *
+     * @return void
+     *
+     * @throws OCSBadRequestException When tenderType is 'onAccount' without a customer.
+     *
+     * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-005
+     */
+    private function assertOnAccountHasCustomer(array $transaction): void
+    {
+        $tender   = (string) ($transaction['tenderType'] ?? '');
+        $customer = (string) ($transaction['customer'] ?? '');
+
+        if ($tender === 'onAccount' && $customer === '') {
+            throw new OCSBadRequestException(
+                "Klant is verplicht voor 'op rekening' transacties."
+            );
+        }
+    }//end assertOnAccountHasCustomer()
 
     /**
      * Apply a named lifecycle transition through OpenRegister's TransitionEngine.
