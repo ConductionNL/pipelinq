@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **POS Bookkeeping**: Automated Z-report generation and idempotent submission
+  to Shillinq (pos-end-of-day-bookkeeping-post). Adds three OpenRegister
+  schemas (`posZReport`, `posJournalEntryOutbound`, `glAccountMapping`),
+  `PosBookkeepingService` for the four-stage pipeline (aggregate → stage
+  with deterministic SHA256(zReportId+date) idempotency key → POST to
+  `/api/JournalEntry` with `X-Idempotency-Key` + Bearer → emit
+  CloudEvent), a manager-gated `/api/pos-bookkeeping/post` endpoint, an
+  admin settings panel (daily Z-report time, Shillinq endpoint +
+  sensitive bearer token, alert email, max retry attempts), a daily
+  `GenerateZReportJob` (TimedJob) and an on-demand `PosRetryBackoffJob`
+  with 1min/5min/15min/1hr exponential backoff (max 5 attempts; 4xx
+  fails terminally + sends alert, 5xx / timeout schedules retry). UI
+  ships a "Boekhoudkundige Afhandeling" sidebar entry plus a Z-report
+  list + detail with GL line items + submission timeline.
+
 - Marketing segmentation and blast campaigns (marketing-segmentation-and-blast,
   11-slice chain — this entry covers the user-visible feature; slice 10
   ships docs, slice 11 the manual verification + pre-merge review
