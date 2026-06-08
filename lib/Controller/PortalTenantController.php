@@ -70,7 +70,7 @@ class PortalTenantController extends PortalApiController
     {
         return $this->guarded(
                 handler: function (): array {
-                    $tenantId = $this->guard->resolveTenant(request: $this->request);
+                    $tenantId = $this->requireTenant();
                     return [$this->tenant->getPublicConfig(tenantId: $tenantId), Http::STATUS_OK];
                 }
                 );
