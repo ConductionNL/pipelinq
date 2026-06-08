@@ -102,7 +102,7 @@ class ExportRunController extends Controller
             'date_to'   => (string) $this->request->getParam('date_to', ''),
         ];
 
-        return $this->guarded(
+        return $this->requireExportAdmin(
             action: fn (): array => ['runs' => $this->runs->listRuns(filters: $filters)],
             label: 'listRuns'
         );
@@ -120,7 +120,7 @@ class ExportRunController extends Controller
     #[NoAdminRequired]
     public function showRun(string $id): JSONResponse
     {
-        return $this->guarded(
+        return $this->requireExportAdmin(
             action: function () use ($id): array {
                 $run = $this->runs->getRun(runId: $id);
                 return [
@@ -148,7 +148,7 @@ class ExportRunController extends Controller
     #[NoAdminRequired]
     public function retryRun(string $id): JSONResponse
     {
-        return $this->guarded(
+        return $this->requireExportAdmin(
             action: function () use ($id): array {
                 $run    = $this->runs->getRun(runId: $id);
                 $status = (string) ($run['status'] ?? '');
@@ -206,7 +206,7 @@ class ExportRunController extends Controller
      *
      * @return JSONResponse The response.
      */
-    private function guarded(callable $action, string $label): JSONResponse
+    private function requireExportAdmin(callable $action, string $label): JSONResponse
     {
         $uid = $this->actingUser();
         if ($uid === '') {
@@ -232,5 +232,5 @@ class ExportRunController extends Controller
                 Http::STATUS_INTERNAL_SERVER_ERROR
             );
         }//end try
-    }//end guarded()
+    }//end requireExportAdmin()
 }//end class
