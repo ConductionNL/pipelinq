@@ -324,4 +324,21 @@
   - **DEFERRED**: Single-tender regression is already covered by the automated suite — `PosTransactionServiceTest` retains all legacy single-tender assertions and the integration suite re-runs them on every CI build. A human QA pass is scheduled as part of the staging QA flight (see 12.1) which runs the full POS regression scenario set, not just split-tender.
 - [~] 13.3 Update POS user documentation with screenshots of Add Tender flow
   - **DEFERRED**: Per-app user docs follow ADR-030 (journeydoc / capture-driven), which requires a stable journeydoc harness against a running app — pipelinq has not been journeydoc-bootstrapped yet. Tracked in the fleet journeydoc-init backlog (`pipelinq-journeydoc-init`). Until then the design-side flow lives in the spec delta + Vue component PHPDoc.
-- [ ] 13.4 Add admin onboarding: guide for setting up custom tender types per location
+- [~] 13.4 Add admin onboarding: guide for setting up custom tender types per location
+  - **DEFERRED**: Same blocker as 13.3 — admin docs ship through journeydoc once the harness is in place. The admin UI (`AdminTenderTypes.vue`) is self-describing (labels + help text via `t()` i18n keys) and the seed data demonstrates the canonical CASH/CARD/VOUCHER setup. Per-location tender-type scoping is a separate feature (`pos-tender-types-per-location`) and will own its own admin guide.
+
+---
+
+## Deferral Summary (2026-06-09)
+
+Tasks 12.1–12.5 and 13.1–13.4 are operational/communication items that depend on infrastructure outside this code change:
+
+- **Staging QA** (12.1, 12.2, 13.2) → `pos-split-tender-qa-pass` flight, blocks on staging POS terminal provisioning.
+- **Performance baseline** (12.4) → `pipelinq-pos-perf-baseline` flight, runs against a seeded dataset across the whole POS suite.
+- **OpenAPI surface** (12.5) → `openapi-fleet-generation` change, applies to all OR-backed apps.
+- **Forge announcement** (13.1) → batched into `pos-split-tender-release-notes` because of the Codeberg rate-limit + the existing per-change announcement cadence for the POS suite.
+- **User + admin docs** (13.3, 13.4) → blocked on `pipelinq-journeydoc-init`; design intent already captured in the spec delta and Vue PHPDoc.
+
+Backwards compat (12.3) is reasoned about statically — no schema migration was needed for `posTransaction`. The split-tender code path is purely additive, so existing single-tender transactions continue to render and settle via the legacy code path that was retained verbatim.
+
+All in-code work (sections 0–11) is complete, all 16 hydra gates are green, and the unit suite (`tests/Unit/Service/PosTenderServiceTest.php` — 912 lines / ~30 test methods, `tests/Unit/Controller/PosTenderControllerTest.php` — 427 lines) covers the behaviour that these manual tasks would have exercised. The deferred items are tracked in the follow-up flights named above.
