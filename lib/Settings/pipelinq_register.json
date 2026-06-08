@@ -192,6 +192,20 @@
             "type": "string",
             "description": "Nextcloud Contacts UID linking this contact to a vCard in the user's addressbook",
             "visible": false
+          },
+          "marketingConsent": {
+            "type": "boolean",
+            "description": "Marketing opt-in for email/SMS campaigns. Captured at POS checkout and synced by PosCustomerLinkService. GDPR consent state.",
+            "default": false,
+            "title": "Marketing consent",
+            "facetable": true
+          },
+          "doNotContact": {
+            "type": "boolean",
+            "description": "Privacy flag: when true, this contact does not wish to be contacted. PosCustomerLinkService skips marketingConsent sync and the lookup UI surfaces a visual indicator.",
+            "default": false,
+            "title": "Do not contact",
+            "facetable": true
           }
         }
       },
@@ -2731,6 +2745,43 @@
             "type": "string",
             "description": "Optional UUID reference to a client object for account sales",
             "format": "uuid"
+          },
+          "customer": {
+            "type": "string",
+            "description": "Optional UUID reference to a pipelinq contact attached to this transaction (POS customer link). When tenderType is 'onAccount' this field is required and enforced server-side by PosCustomerLinkService.",
+            "format": "uuid",
+            "title": "Customer",
+            "facetable": true
+          },
+          "marketingConsent": {
+            "type": "boolean",
+            "description": "Marketing opt-in captured at checkout. When true and customer is set, PosCustomerLinkService syncs the flag onto the linked contact (unless the contact carries doNotContact).",
+            "default": false,
+            "title": "Marketing consent"
+          },
+          "tenderType": {
+            "type": "string",
+            "description": "Tender / payment method used to settle the transaction. 'onAccount' marks an AR (debtor) sale and requires a linked customer.",
+            "enum": [
+              "cash",
+              "card",
+              "onAccount"
+            ],
+            "default": "cash",
+            "title": "Tender type",
+            "facetable": true
+          },
+          "consentSyncStatus": {
+            "type": "string",
+            "description": "Status of the last marketingConsent sync to the linked pipelinq contact: 'success', 'skipped' (do-not-contact), 'failed', or empty when no sync was attempted.",
+            "enum": [
+              "",
+              "success",
+              "skipped",
+              "failed"
+            ],
+            "default": "",
+            "visible": false
           },
           "terminalId": {
             "type": "string",
