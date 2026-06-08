@@ -2,26 +2,26 @@
 
 ## 0. Setup and Verification
 
-- [ ] 0.1 Verify dependency: `pos-transaction-core` app exists and provides transaction UUID lookups
+- [x] 0.1 Verify dependency: `pos-transaction-core` app exists and provides transaction UUID lookups
   - Confirm `TransactionService::findTransaction(uuid)` or equivalent method available
   - Document the API endpoint for fetching linked transactions
-  - **Finding**: To be verified during implementation
+  - **Finding**: PosTransactionService + `posTransaction` schema are already shipped (pos-transaction-core merged into development). Audit entries store the transaction UUID in the `transactionUuid` property; the detail view renders the link only when populated. No direct PHP coupling — keeps the audit pack usable even if a transaction is purged.
 
-- [ ] 0.2 Verify environment variable configuration
+- [x] 0.2 Verify environment variable configuration
   - Confirm `KASSAKOPPELING_SECRET_KEY` can be set in `.env` or `config/config.php`
   - Confirm no hardcoded keys in source
-  - **Finding**: Standard Nextcloud config pattern; use `$this->config->getAppValue()`
+  - **Finding**: Secret persisted via `IAppConfig::setValueString($app, 'kassakoppeling.secret', $value, sensitive: true)`; the service falls back to an instance-id-derived default so the chain stays deterministic in CI but the production value remains an opt-in secret. Never read from `$_ENV` / `getenv()` directly.
 
-- [ ] 0.3 Deduplication check: no existing audit log schema
+- [x] 0.3 Deduplication check: no existing audit log schema
   - Search `openspec/architecture/adr-000-data-model.md` for `auditLog`, `audit`, `kassakoppeling`
   - Search `pipelinq/lib/Schemas/` for audit-related schema definitions
-  - **Finding**: No existing entity; safe to define new `kassakoppelingAuditLog` schema
+  - **Finding**: No existing entity. Schema `kassakoppelingAuditLog` added as a separate fragment under `lib/Settings/register.d/52-pos-kassakoppeling-audit.json` (ADR-037 modular register pattern), keyed alongside the EOD bookkeeping fragment.
 
 ## 1. Data Model and Database Schema
 
-- [ ] 1.1 Define `kassakoppelingAuditLog` schema in `pipelinq_register.json`
+- [x] 1.1 Define `kassakoppelingAuditLog` schema in `pipelinq_register.json`
   - **spec_ref**: `REQ-AUDIT-001` / `openspec/changes/pos-kassakoppeling-audit/design.md#Data Model`
-  - **files**: `pipelinq/lib/Schemas/pipelinq_register.json`
+  - **files**: `pipelinq/lib/Settings/register.d/52-pos-kassakoppeling-audit.json`, `pipelinq/lib/Service/SettingsService.php`
   - **tier**: P0
   - Add schema object with 13 properties per design.md table:
     - operatorId (string, required)
@@ -46,7 +46,7 @@
 
 ## 2. Backend Cryptographic Services
 
-- [ ] 2.1 Create `KassakoppelingSignatureService.php`
+- [x] 2.1 Create `KassakoppelingSignatureService.php`
   - **spec_ref**: `REQ-AUDIT-002` / `openspec/changes/pos-kassakoppeling-audit/design.md#KassakoppelingSignatureService`
   - **files**: `pipelinq/lib/Service/KassakoppelingSignatureService.php`
   - **tier**: P0
@@ -75,7 +75,7 @@
     - WHEN a link is broken
     - THEN `verifyHashChain()` MUST return false
 
-- [ ] 2.2 Create `KassakoppelingAuditService.php`
+- [x] 2.2 Create `KassakoppelingAuditService.php`
   - **spec_ref**: `REQ-AUDIT-001` / `openspec/changes/pos-kassakoppeling-audit/design.md#KassakoppelingAuditService`
   - **files**: `pipelinq/lib/Service/KassakoppelingAuditService.php`
   - **tier**: P0
@@ -107,9 +107,9 @@
     - WHEN verifying an entry
     - THEN `verifyEntry()` MUST update `verified` flag
 
-- [ ] 2.3 Create `BelastingdienestExportService.php`
+- [x] 2.3 Create `BelastingdienstExportService.php`
   - **spec_ref**: `REQ-AUDIT-005` / `openspec/changes/pos-kassakoppeling-audit/design.md#BelastingdienestExportService`
-  - **files**: `pipelinq/lib/Service/BelastingdienestExportService.php`
+  - **files**: `pipelinq/lib/Service/BelastingdienstExportService.php` (filename corrected — Belasting**dienst**, not **dienest**, per Dutch spelling)
   - **tier**: P0
   - Implement methods per design.md:
     - `exportAsXml(array $entries): string`
@@ -135,9 +135,9 @@
 
 ## 3. Backend Controller and API Routes
 
-- [ ] 3.1 Create `KassakoppelingAuditController.php`
+- [x] 3.1 Create `KassakoppelingAuditController.php`
   - **spec_ref**: `REQ-AUDIT-001`, `REQ-AUDIT-002`, `REQ-AUDIT-003`, `REQ-AUDIT-005` / `openspec/changes/pos-kassakoppeling-audit/design.md#KassakoppelingAuditController`
-  - **files**: `pipelinq/lib/Controller/KassakoppelingAuditController.php`
+  - **files**: `pipelinq/lib/Controller/KassakoppelingAuditController.php`, `pipelinq/appinfo/routes.php`
   - **tier**: P0
   - Implement endpoints per design.md:
     - `POST /api/kassakoppeling/audit` (create)

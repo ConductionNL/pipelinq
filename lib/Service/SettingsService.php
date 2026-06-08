@@ -85,6 +85,8 @@ class SettingsService
         // POS split-tender (multi-method payment on a single transaction; pos-split-tender).
         'posTenderType_schema',
         'posTender_schema',
+        // POS Kassakoppeling-compliant Audit Log (pos-kassakoppeling-audit).
+        'kassakoppelingAuditLog_schema',
         'exportDestination_schema',
         'exportJob_schema',
         'exportRun_schema',
