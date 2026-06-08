@@ -472,17 +472,11 @@ class AttributionService
     /**
      * Persist a payload via OpenRegister's ObjectService.
      *
-     * Returns the saved row for callers that need to chain off it (e.g.
-     * follow-up auditing); current callers fire-and-forget but the return
-     * remains part of the contract.
-     *
      * @param array<string, mixed> $payload    Payload.
      * @param string               $schemaSlug Schema slug.
      * @param string|null          $id         Existing object id or null.
      *
      * @return array<string, mixed>|null Saved row or null on failure.
-     *
-     * @psalm-suppress UnusedReturnValue
      */
     private function saveObject(array $payload, string $schemaSlug, ?string $id=null): ?array
     {

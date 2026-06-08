@@ -324,14 +324,6 @@
 			entity-type="client"
 			:entity-id="clientId" />
 
-		<!--
-			Bookings timeline — appointment-booking REQ-APT-014.
-			@spec openspec/changes/appointment-booking-11-admin-ui/specs/appointment-booking/spec.md#REQ-APT-014
-		-->
-		<BookingsCard
-			v-if="!isNew"
-			:customer-id="clientId" />
-
 		<CnDetailCard :title="t('pipelinq', 'Complaints')">
 			<template #actions>
 				<NcButton @click="createComplaint">
@@ -426,7 +418,6 @@ import ContactRelationships from '../../components/ContactRelationships.vue'
 import ContactmomentQuickLog from '../../components/ContactmomentQuickLog.vue'
 import ActivityTimeline from '../../components/ActivityTimeline.vue'
 import CommunicationHistory from '../../components/CommunicationHistory.vue'
-import BookingsCard from '../../components/bookings/BookingsCard.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -442,7 +433,6 @@ export default {
 		ContactmomentQuickLog,
 		ActivityTimeline,
 		CommunicationHistory,
-		BookingsCard,
 	},
 	props: {
 		/**

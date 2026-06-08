@@ -103,43 +103,6 @@ import PosRefundListView from './views/pos/PosRefundList.vue'
 import PosRefundDetailView from './views/pos/PosRefundDetail.vue'
 import PosRefundFormView from './views/pos/PosRefundForm.vue'
 
-// --- POS cash drawer (lib gap: index/detail pages cannot express the cash-shift
-//     lifecycle — declare float, record drops, blind count, variance reconcile). ---
-import CashShiftListView from './views/pos/CashShiftList.vue'
-import CashShiftDetailView from './views/pos/CashShiftDetail.vue'
-
-// --- POS staff PIN + role permissions (pos-staff-pin-permissions). ---
-import PosRoleListView from './views/pos/PosRoleList.vue'
-import PosRoleFormView from './views/pos/PosRoleForm.vue'
-import PosStaffListView from './views/pos/PosStaffList.vue'
-import PosStaffFormView from './views/pos/PosStaffForm.vue'
-
-// --- POS split-tender admin (pos-split-tender REQ-PST-001).
-//     Tender-type registry: list + create/edit dialog. The dialog handles
-//     CRUD inline (no separate detail route). ---
-import PosTenderTypeListView from './views/pos/PosTenderTypeList.vue'
-
-// --- POS end-of-day bookkeeping (lib gap: index/detail pages cannot express the
-//     server-authoritative Z-report aggregation + Shillinq submission timeline
-//     + manager-gated retry). ---
-import ZReportListView from './views/pos/ZReportList.vue'
-import ZReportDetailView from './views/pos/ZReportDetail.vue'
-import PosBookkeepingSettingsView from './views/admin/PosBookkeepingSettings.vue'
-
-// --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
-//     view aggregating the BrpMonitorJob output (lookups / cache-hits / errors /
-//     avg response time) and the mTLS client-certificate expiry countdown. ---
-import BrpMonitorView from './views/admin/BrpMonitor.vue'
-
-// --- POS Kassakoppeling-compliant audit log (pos-kassakoppeling-audit):
-//     append-only HMAC-SHA256 signed register actions chained per-register
-//     with an admin-gated Belastingdienst export pack. Lib gap: declarative
-//     type:"index" cannot express the bespoke /api/kassakoppeling/audit
-//     endpoint, the verify-button + verification badge ramp on the detail
-//     view, or the date-range + format export modal. ---
-import KassakoppelingAuditListView from './views/kassakoppeling/KassakoppelingAuditList.vue'
-import KassakoppelingAuditDetailView from './views/kassakoppeling/KassakoppelingAuditDetail.vue'
-
 // --- Product barcode lookup (lib gap: index pages have no server-authoritative
 //     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
 import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
@@ -149,12 +112,6 @@ import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
 //     event log; cti-screenpop-adapter). ---
 import CtiSettingsView from './views/settings/CtiSettings.vue'
 import CtiEventLogView from './views/settings/CtiEventLog.vue'
-
-// --- POS pluggable payment provider adapter (pos-payment-provider-adapter):
-//     admin-only credential form for Mollie / CCV / Adyen / Stripe with
-//     encrypted-at-rest secrets and a per-provider "Verbinding testen" button.
-//     Lib gap: no payment-provider-settings page type. ---
-import PaymentSettingsForm from './views/settings/PaymentSettingsForm.vue'
 
 // --- Expense → Shillinq AP (pipelinq-expense-to-shillinq-ap): list with
 //     apSyncStatus badge column, detail with embedded Shillinq AP card
@@ -202,16 +159,6 @@ import BlastListView from './views/blasts/BlastList.vue'
 import BlastFormView from './views/blasts/BlastForm.vue'
 import BlastMonitorView from './views/blasts/BlastMonitor.vue'
 import BlastPerformanceDashboardView from './views/blasts/PerformanceDashboard.vue'
-
-// --- Appointment booking — admin surface (appointment-booking 11 of 12).
-//     Service / Resource / Booking list + detail views; resolved by the v2
-//     renderer from the manifest.d fragment at render time. ---
-import ServiceListView from './views/bookings/ServiceList.vue'
-import ServiceDetailView from './views/bookings/ServiceDetail.vue'
-import ResourceListView from './views/bookings/ResourceList.vue'
-import ResourceDetailView from './views/bookings/ResourceDetail.vue'
-import BookingListView from './views/bookings/BookingList.vue'
-import BookingDetailView from './views/bookings/BookingDetail.vue'
 
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
@@ -443,81 +390,6 @@ const registry = {
 		_note: 'Bespoke return editor: select original lines with partial quantities, per-line reason + restock toggle and real-time refund totals; lib has no line-selection/refund page type.',
 	},
 
-	// --- POS cash drawer. ---
-	CashShiftListView: {
-		kind: 'page',
-		component: CashShiftListView,
-		_note: 'Cash-shift list; custom so rows navigate to the drawer-reconciliation detail and the empty state offers "Shift openen".',
-	},
-	CashShiftDetailView: {
-		kind: 'page',
-		component: CashShiftDetailView,
-		_note: 'Cash-shift detail: float declaration, drops panel, blind-count entry and the server-authoritative variance panel with manager-gated approve/reject; lib detail page cannot express the cash-drawer lifecycle.',
-	},
-
-	// --- POS staff PIN + role permissions (pos-staff-pin-permissions). ---
-	PosRoleListView: {
-		kind: 'page',
-		component: PosRoleListView,
-		_note: 'POS role permission-matrix list (canVoid / maxDiscountPercent / canRefund / canNoSale).',
-	},
-	PosRoleFormView: {
-		kind: 'page',
-		component: PosRoleFormView,
-		_note: 'POS role create/edit form; client-side validation on maxDiscountPercent in [0,100].',
-	},
-	PosStaffListView: {
-		kind: 'page',
-		component: PosStaffListView,
-		_note: 'POS staff list (display name, linked NC user, role badge, active toggle); admin-only.',
-	},
-	PosStaffFormView: {
-		kind: 'page',
-		component: PosStaffFormView,
-		_note: 'POS staff create/edit form with masked PIN field; on edit, blank PIN keeps the existing hash.',
-	},
-
-	// --- POS split-tender admin (pos-split-tender). ---
-	PosTenderTypeListView: {
-		kind: 'page',
-		component: PosTenderTypeListView,
-		_note: 'POS tender-type list (Contant / Betaalpas / Cadeaubon / ...) with inline create / edit / delete via PosTenderTypeFormDialog; admin-only configuration of available payment methods and their GL accounts.',
-	},
-
-	// --- POS end-of-day bookkeeping. ---
-	ZReportListView: {
-		kind: 'page',
-		component: ZReportListView,
-		_note: 'Daily Z-report list with status / date / terminal filters; rows navigate to the per-report detail with GL mapping, submission timeline and manager-gated retry (pos-end-of-day-bookkeeping-post).',
-	},
-	ZReportDetailView: {
-		kind: 'page',
-		component: ZReportDetailView,
-		_note: 'Z-report detail: server-authoritative summary, tax breakdown, payment-method breakdown, GL ledger line items (read-only), submission timeline and the manager-gated retry-submission action (pos-end-of-day-bookkeeping-post).',
-	},
-	PosBookkeepingSettingsView: {
-		kind: 'page',
-		component: PosBookkeepingSettingsView,
-		_note: 'Admin settings panel for the POS bookkeeping pipeline: daily Z-report time, Shillinq endpoint + bearer token (isSensitive), alert email and max retry attempts (pos-end-of-day-bookkeeping-post).',
-	},
-	BrpMonitorView: {
-		kind: 'page',
-		component: BrpMonitorView,
-		_note: 'Admin BRP Monitor — lookups / cache-hit ratio / error rate / avg response time over the last 24h, plus mTLS client-certificate expiry countdown (bsn-validatie-en-brp-lookup REQ-BSN-010).',
-	},
-
-	// --- POS Kassakoppeling-compliant audit log (pos-kassakoppeling-audit). ---
-	KassakoppelingAuditListView: {
-		kind: 'page',
-		component: KassakoppelingAuditListView,
-		_note: 'Append-only Kassakoppeling audit log list: streams from the bespoke /api/kassakoppeling/audit endpoint (NOT the OR object store, which only stores entries), drives the date / register / operator / action filter bar and the admin-only Belastingdienst export modal (pos-kassakoppeling-audit REQ-AUDIT-003 / REQ-AUDIT-005).',
-	},
-	KassakoppelingAuditDetailView: {
-		kind: 'page',
-		component: KassakoppelingAuditDetailView,
-		_note: 'Read-only Kassakoppeling audit entry detail: verification status badge ramp (green ok / red tampered / grey pending), summary + entry + crypto cards with truncated hex digests + copy buttons, an optional transaction-link card linking to pos-transaction-core and the manual server-side verify action (pos-kassakoppeling-audit REQ-AUDIT-002 / REQ-AUDIT-004 / REQ-AUDIT-006).',
-	},
-
 	// --- Product barcode lookup. ---
 	ProductBarcodeSearchView: {
 		kind: 'page',
@@ -621,6 +493,7 @@ const registry = {
 		_note: 'CTI admin event-log inspector (last 30 days): platform + event-type filters, payload modal; lib gap: no audit/event-log page type that filters by platform.',
 	},
 
+<<<<<<< Updated upstream
 	// --- POS pluggable payment provider adapter (pos-payment-provider-adapter). ---
 	PaymentSettingsForm: {
 		kind: 'page',
@@ -645,6 +518,8 @@ const registry = {
 		_note: 'Time-entry list for one project with date/user/task/billable filters and a totals row that applies the billable inheritance chain (REQ-PTH-004 / REQ-PTH-005 / REQ-PTH-008).',
 	},
 
+=======
+>>>>>>> Stashed changes
 	// --- Marketing blasts (marketing-segmentation-and-blast slice 07). ---
 	BlastListView: {
 		kind: 'page',
@@ -665,38 +540,6 @@ const registry = {
 		kind: 'page',
 		component: BlastPerformanceDashboardView,
 		_note: 'Post-send performance dashboard (marketing-segmentation-and-blast 08): three tabs — Overview (sortable blast table with sent/delivered/open-rate/click-rate/unsubscribed), A/B Testing (side-by-side variant comparison + chi-square p-value once each arm has >=500 delivered and 24h elapsed since send), Attribution (per-blast attributed deal count + summed EUR value from GET /api/blasts/:id/attribution).',
-	},
-
-	// --- Appointment booking — admin views (appointment-booking 11 of 12). ---
-	ServiceListView: {
-		kind: 'page',
-		component: ServiceListView,
-		_note: 'Service catalogue list with formatted duration / currency cells and a status badge; lib gap: declarative index page cannot express the duration / currency cell renderers.',
-	},
-	ServiceDetailView: {
-		kind: 'page',
-		component: ServiceDetailView,
-		_note: 'Service detail + edit page with the multiStep sub-table editor, deposit / cancellation policy cards and a best-effort availabilityCache invalidation hook on save (REQ-APT-015).',
-	},
-	ResourceListView: {
-		kind: 'page',
-		component: ResourceListView,
-		_note: 'Resource list (staff / room / equipment) with type + bookable + status badges.',
-	},
-	ResourceDetailView: {
-		kind: 'page',
-		component: ResourceDetailView,
-		_note: 'Resource detail + edit page with the 7-weekday workingHours grid, vacation list, validation (open<close, startDate<=endDate) and per-resource cache invalidation on save (REQ-APT-002).',
-	},
-	BookingListView: {
-		kind: 'page',
-		component: BookingListView,
-		_note: 'Booking list with formatted start-time and status badge; admins create bookings through the public portal on a customer\'s behalf, no inline create.',
-	},
-	BookingDetailView: {
-		kind: 'page',
-		component: BookingDetailView,
-		_note: 'Booking detail with context-sensitive lifecycle buttons (Reschedule / Cancel / Mark Completed / Mark No-show / Send Reminder / Confirm Deposit) wired to the BookingAdminController endpoints, inline notes editor, audit-trail card and a chronological timeline (REQ-APT-015).',
 	},
 }
 
