@@ -126,6 +126,11 @@ import ZReportListView from './views/pos/ZReportList.vue'
 import ZReportDetailView from './views/pos/ZReportDetail.vue'
 import PosBookkeepingSettingsView from './views/admin/PosBookkeepingSettings.vue'
 
+// --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
+//     view aggregating the BrpMonitorJob output (lookups / cache-hits / errors /
+//     avg response time) and the mTLS client-certificate expiry countdown. ---
+import BrpMonitorView from './views/admin/BrpMonitor.vue'
+
 // --- POS Kassakoppeling-compliant audit log (pos-kassakoppeling-audit):
 //     append-only HMAC-SHA256 signed register actions chained per-register
 //     with an admin-gated Belastingdienst export pack. Lib gap: declarative
@@ -494,6 +499,11 @@ const registry = {
 		kind: 'page',
 		component: PosBookkeepingSettingsView,
 		_note: 'Admin settings panel for the POS bookkeeping pipeline: daily Z-report time, Shillinq endpoint + bearer token (isSensitive), alert email and max retry attempts (pos-end-of-day-bookkeeping-post).',
+	},
+	BrpMonitorView: {
+		kind: 'page',
+		component: BrpMonitorView,
+		_note: 'Admin BRP Monitor — lookups / cache-hit ratio / error rate / avg response time over the last 24h, plus mTLS client-certificate expiry countdown (bsn-validatie-en-brp-lookup REQ-BSN-010).',
 	},
 
 	// --- POS Kassakoppeling-compliant audit log (pos-kassakoppeling-audit). ---
