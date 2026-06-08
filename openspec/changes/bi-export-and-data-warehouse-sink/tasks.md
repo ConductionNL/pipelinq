@@ -442,9 +442,9 @@
       - "Test Run" button with modal result display
       - "Save" and "Cancel" buttons
 
-- [ ] 11.3 Add test run modal
+- [x] 11.3 Add test run modal
   - **spec_ref**: `specs.md#REQ-BIE-003`
-  - **files**: `src/components/ExportTestRunModal.vue`
+  - **files**: `src/modals/ExportTestRunModal.vue`, `src/views/export/ExportJobs.vue`, `src/views/export/ExportJobForm.vue`
   - **acceptance_criteria**:
     - GIVEN user clicks "Test Run"
     - WHEN test executes
@@ -530,9 +530,9 @@
 
 ## 14. Frontend: Admin Settings
 
-- [ ] 14.1 Create export configuration section in admin settings
+- [x] 14.1 Create export configuration section in admin settings
   - **spec_ref**: `design.md#Admin Settings`
-  - **files**: `src/views/AdminSettingsExportPage.vue`
+  - **files**: `src/views/AdminSettingsExportPage.vue`, `src/views/settings/ExportConfigurationSettings.vue`, `src/views/settings/Settings.vue`, `lib/Service/SettingsService.php`
   - **acceptance_criteria**:
     - GIVEN admin opening Settings > Export Configuration
     - WHEN they view the page
@@ -598,9 +598,9 @@
     - Test removed column detection
     - Test type change detection
 
-- [ ] 16.4 Write integration tests for ExportWorkerJob
+- [x] 16.4 Write integration tests for ExportWorkerJob
   - **spec_ref**: `specs.md#REQ-BIE-004`
-  - **files**: `tests/Integration/Job/ExportWorkerJobTest.php`
+  - **files**: `tests/Integration/Job/ExportWorkerJobTest.php`, `phpunit.xml`
   - **acceptance_criteria**:
     - Test pending run pickup and execution
     - Test distributed lock prevents overlapping runs
@@ -674,22 +674,33 @@ The following remain unchecked and are documented as deferred — each needs a
 running instance, a live warehouse, or the frontend toolchain that is not
 available in the build sandbox:
 
-- **11.3 Test-run modal** — implemented as an inline "Test run" action on the
-  jobs list and job form (button + success/error toast surfacing the sample row
-  count and errors) rather than a standalone `src/modals/` component. A dedicated
-  modal can be added later if the sample preview needs richer display.
-- **14.1 Admin settings section** (retention / default compression / failure
-  notification): retention + notification belong to the OR retention engine and
-  the fleet notification plan; deferred to avoid duplicating that wiring here.
-- **16.4 ExportWorkerJob integration tests**: the worker exercises the OR
-  ObjectService, the distributed cache lock and the OC CallService end-to-end —
-  it needs a running Nextcloud + OpenRegister + OpenConnector. The orchestration
-  is unit-covered indirectly via the pure services; a Newman/runtime suite is the
-  right home for the end-to-end pickup/lock/status path.
 - **18.1 / 18.2 Frontend build + coverage**: `npm run test` / `npm run build`
   and Vue component coverage require `node_modules`, which is not installed in the
   build sandbox. The manifest validates structurally and all `.js`/`.json` parse;
   the Hydra reviewer runs the webpack build + eslint in their environment.
+
+Closed-out items (originally deferred, now implemented in this iteration):
+
+- **11.3 Test-run modal** — `src/modals/ExportTestRunModal.vue` (NcDialog,
+  auto-runs `exportApi.testRun()`, surfaces validation status, sample row count,
+  optional download URL, errors and a re-run button); wired into both
+  `ExportJobs.vue` row action and `ExportJobForm.vue` action bar.
+- **14.1 Admin settings section** — `src/views/AdminSettingsExportPage.vue`
+  (standalone wrapper) plus `src/views/settings/ExportConfigurationSettings.vue`
+  mounted in the admin Settings page. Persists `export.retention_days`,
+  `export.default_compression`, `export.failure_notification_email`,
+  `export.at_risk_warning_hours` through `SettingsService::TUNABLE_DEFAULTS`
+  via the admin-gated `SettingsController::create` write path.
+- **16.4 ExportWorkerJob integration tests** —
+  `tests/Integration/Job/ExportWorkerJobTest.php` (registered as an Integration
+  Tests suite in `phpunit.xml`). Drives the real `ExportWorkerJob::run()` with
+  mocked `ExportRunService` + `ExportExecutionService` collaborators; covers
+  pending pickup, the lock-overlap skip contract, status-transition delegation,
+  per-tick BATCH cap, listRuns failure handling and per-run exception
+  containment. The live `ICacheFactory`-backed lock contract is covered by
+  `ExportExecutionService`'s own unit suite; a live OC/OR end-to-end run is
+  still the right home for the warehouse-side path and remains scoped to a
+  Newman/runtime suite.
 
 The provider staging nuances of the BigQuery/Snowflake/Azure/GCS adapters
 (load-job, stage+COPY, blob properties) are implemented by delegating the byte
