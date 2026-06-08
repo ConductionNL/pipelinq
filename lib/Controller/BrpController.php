@@ -37,6 +37,7 @@ use OCA\Pipelinq\Service\HaalCentraalException;
 use OCA\Pipelinq\Service\OptOutService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
@@ -458,15 +459,19 @@ class BrpController extends Controller
             $signature = (string) $this->request->getHeader('x-signature');
         }
 
+        // Always respond 200 OK with a structured result field — HaalCentraal
+        // expects to ack the delivery regardless of inner outcome. The HMAC
+        // verification + bsn-shape check happen inside the listener
+        // (BrpMutationWebhookListener::handle) which logs + records an audit
+        // line on every rejection; the HTTP layer is just "we received it".
         $outcome = $this->webhookListener->handle($rawBody, $signature);
-        switch ($outcome['result']) {
-            case BrpMutationWebhookListener::RESULT_OK:
-                return new JSONResponse(['result' => 'ok', 'invalidated' => $outcome['invalidated']], Http::STATUS_OK);
-            case BrpMutationWebhookListener::RESULT_BAD_REQUEST:
-                return new JSONResponse(['result' => 'bad-request'], Http::STATUS_BAD_REQUEST);
-            default:
-                return new JSONResponse(['result' => 'forbidden'], Http::STATUS_FORBIDDEN);
-        }
+        return new JSONResponse(
+            [
+                'result'      => $outcome['result'],
+                'invalidated' => $outcome['invalidated'],
+            ],
+            Http::STATUS_OK
+        );
     }//end mutationWebhook()
 
     /**
@@ -478,14 +483,14 @@ class BrpController extends Controller
      *
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-010
      */
+    #[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
     public function monitor(): JSONResponse
     {
+        // AuthorizedAdminSetting middleware already enforces admin membership;
+        // we still load the user for logging context.
         $user = $this->userSession->getUser();
         if ($user === null) {
             return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-        }
-        if ($this->groupManager->isAdmin($user->getUID()) === false) {
-            return new JSONResponse(['error' => $this->l10n->t('Admin required')], Http::STATUS_FORBIDDEN);
         }
         $reportRaw = $this->appConfig->getValueString(Application::APP_ID, 'brp.monitor_report', '');
         $certRaw   = $this->appConfig->getValueString(Application::APP_ID, 'brp.cert_health', '');
