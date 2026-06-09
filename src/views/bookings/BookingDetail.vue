@@ -28,7 +28,7 @@
 		:back-route="{ name: 'Bookings' }"
 		:back-label="t('pipelinq', 'Back to list')"
 		:loading="loading"
-		:sidebar="!loading"
+		:sidebar="{ enabled: !loading }"
 		object-type="pipelinq_booking"
 		:object-id="bookingId"
 		:sidebar-props="sidebarProps">

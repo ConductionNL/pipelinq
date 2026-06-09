@@ -41,7 +41,7 @@
 		:back-route="{ name: 'Services' }"
 		:back-label="t('pipelinq', 'Back to list')"
 		:loading="loading"
-		:sidebar="!isNew && !loading"
+		:sidebar="{ enabled: !isNew && !loading }"
 		object-type="pipelinq_service"
 		:object-id="serviceId"
 		:sidebar-props="sidebarProps">

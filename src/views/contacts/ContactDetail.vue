@@ -29,7 +29,7 @@
 		:back-route="{ name: 'Contacts' }"
 		:back-label="t('pipelinq', 'Back to list')"
 		:loading="loading"
-		:sidebar="!isNew && !loading"
+		:sidebar="{ enabled: !isNew && !loading }"
 		object-type="pipelinq_contact"
 		:object-id="contactId"
 		:sidebar-props="sidebarProps">
