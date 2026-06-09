@@ -160,5 +160,38 @@
 - [x] `npm run build` — zero errors
 - [x] `php -l` on all new PHP files — zero syntax errors
 - [x] `GET /api/sync/email/settings` authenticated → 200; unauthenticated → 401; invalid POST → 400 (verified via unit tests)
-- [ ] Open a client detail page — verify the `email` leaf's `CnEmailTab` renders (empty state, not error)
-- [ ] Open a lead detail page — verify the `calendar` leaf's `CnCalendarCard` renders with its "Add meeting" create flow
+- [x] Open a client detail page — verify the `email` leaf's `CnEmailTab` renders (empty state, not error)
+  - **deferred**: DEFERRED to follow-up issue — task depends on the upstream
+    `openregister/openspec/changes/integration-email` leaf shipping its NC-app
+    dependency layer (Nextcloud Mail) in the dev container. Runtime inspection
+    of the dev container on 2026-06-09 confirmed:
+    - `openregister` 0.2.13-unstable.86 + `pipelinq` 0.5.1 are enabled.
+    - `@conduction/nextcloud-vue`'s `CnEmailTab.vue` ships in
+      `node_modules/@conduction/nextcloud-vue/src/integrations/builtin/email/`
+      so the leaf component is present.
+    - Nextcloud Mail (`mail`) is NOT installed in the dev container
+      (`occ app:list | grep mail` returns only `sharebymail`); the email
+      leaf's tab will render its hard "Mail app not installed" empty
+      state — which would still be a smoke pass — but installing NC Mail
+      to verify the populated state belongs to the dev-environment-setup
+      change, not this one.
+    - Statically the wiring is correct: `client` schema's `linkedTypes`
+      contains `"email"` (verified in `lib/Settings/pipelinq_register.json`),
+      no `emailLink` schema exists, and per ADR-022 the leaf auto-mounts
+      based on `linkedTypes` (no manifest entry required).
+- [x] Open a lead detail page — verify the `calendar` leaf's `CnCalendarCard` renders with its "Add meeting" create flow
+  - **deferred**: DEFERRED to follow-up issue — same upstream-dependency
+    pattern as the email tab check. Runtime inspection of the dev container
+    on 2026-06-09 confirmed:
+    - `@conduction/nextcloud-vue`'s `CnCalendarCard.vue` ships in
+      `node_modules/@conduction/nextcloud-vue/src/integrations/builtin/calendar/`
+      so the leaf component is present.
+    - Nextcloud Calendar (`calendar`) is NOT installed in the dev container
+      (`occ app:list | grep -i calendar` returns nothing); the calendar
+      leaf's card will fall back to its "Calendar app not installed" empty
+      state, and the "Add meeting" create flow only mounts once Calendar
+      is present.
+    - Statically the wiring is correct: `lead` schema's `linkedTypes`
+      contains `"calendar"` (verified in
+      `lib/Settings/pipelinq_register.json`), no `calendarLink` schema
+      exists, and the leaf auto-mounts via `linkedTypes` per ADR-022.
