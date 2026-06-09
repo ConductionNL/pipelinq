@@ -232,4 +232,172 @@ class AnalyticsServiceTest extends TestCase
             $this->assertStringNotContainsString('boom', $e->getMessage());
         }
     }
+
+    /**
+     * getOverview returns conversion-rate, contact volume, satisfaction
+     * score plus a previousPeriod block of the same shape.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/dashboard/tasks.md#task-2.3
+     */
+    public function testGetOverviewReturnsAllKpiFields(): void
+    {
+        $recent  = (new \DateTimeImmutable('-3 days'))->format(\DateTimeInterface::ATOM);
+        $earlier = (new \DateTimeImmutable('-40 days'))->format(\DateTimeInterface::ATOM);
+
+        $service = $this->buildService(byCollection: [
+            'lead_schema' => [
+                ['status' => 'won',  'createdAt' => $recent,  'value' => 100],
+                ['status' => 'lost', 'createdAt' => $recent,  'value' => 0],
+                ['status' => 'open', 'createdAt' => $recent,  'value' => 0],
+                ['status' => 'won',  'createdAt' => $earlier, 'value' => 0],
+            ],
+            'request_schema' => [
+                ['requestedAt' => $recent, 'completedAt' => $recent, 'status' => 'completed'],
+            ],
+            'contactmoment_schema' => [
+                ['contactedAt' => $recent],
+                ['contactedAt' => $recent],
+                ['contactedAt' => $earlier],
+            ],
+            'surveyresponse_schema' => [
+                ['submittedAt' => $recent, 'score' => 4],
+                ['submittedAt' => $recent, 'score' => 5],
+            ],
+        ]);
+
+        $overview = $service->getOverview(period: 'month');
+
+        $this->assertSame(33.3, $overview['leadConversionRate']);
+        $this->assertSame(0.0, $overview['avgRequestResolutionTime']);
+        $this->assertSame(2, $overview['contactMomentVolume']);
+        $this->assertSame(4.5, $overview['customerSatisfactionScore']);
+        $this->assertSame('month', $overview['period']);
+        $this->assertArrayHasKey('previousPeriod', $overview);
+        $this->assertArrayHasKey('leadConversionRate', $overview['previousPeriod']);
+    }
+
+    /**
+     * Empty survey responses yield a null customerSatisfactionScore.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/dashboard/tasks.md#task-2.3
+     */
+    public function testGetOverviewReturnsNullScoreWhenNoSurveyResponses(): void
+    {
+        $service  = $this->buildService(byCollection: []);
+        $overview = $service->getOverview(period: 'month');
+        $this->assertNull($overview['customerSatisfactionScore']);
+        $this->assertNull($overview['leadConversionRate']);
+        $this->assertNull($overview['avgRequestResolutionTime']);
+        $this->assertSame(0, $overview['contactMomentVolume']);
+    }
+
+    /**
+     * getTrends throws InvalidArgumentException for an unsupported metric.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/dashboard/tasks.md#task-2.3
+     */
+    public function testGetTrendsRejectsUnsupportedMetric(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unsupported metric');
+
+        $service = $this->buildService();
+        $service->getTrends(metric: 'meaning-of-life', period: 'month');
+    }
+
+    /**
+     * getTrends returns an empty series array when the dataset is empty.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/dashboard/tasks.md#task-2.3
+     */
+    public function testGetTrendsReturnsEmptySeriesForNoData(): void
+    {
+        $service = $this->buildService(byCollection: ['lead_schema' => []]);
+
+        $payload = $service->getTrends(metric: 'leads', period: 'month');
+        $this->assertSame('leads', $payload['metric']);
+        $this->assertSame('month', $payload['period']);
+        $this->assertSame([], $payload['series']);
+    }
+
+    /**
+     * getTrends groups requests by category, excluding zero-count buckets.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/dashboard/tasks.md#task-2.3
+     */
+    public function testGetTrendsRequestsByCategoryBuildsBars(): void
+    {
+        $recent  = (new \DateTimeImmutable('-2 days'))->format(\DateTimeInterface::ATOM);
+
+        $service = $this->buildService(byCollection: [
+            'request_schema' => [
+                ['requestedAt' => $recent, 'category' => 'belastingen'],
+                ['requestedAt' => $recent, 'category' => 'belastingen'],
+                ['requestedAt' => $recent, 'category' => 'vergunningen'],
+                ['requestedAt' => $recent, 'category' => ''],
+            ],
+        ]);
+
+        $payload = $service->getTrends(metric: 'requests-by-category', period: 'month');
+        $this->assertSame('requests-by-category', $payload['metric']);
+        $this->assertCount(2, $payload['series']);
+        $this->assertSame('belastingen', $payload['series'][0]['date']);
+        $this->assertSame(2, $payload['series'][0]['value']);
+    }
+
+    /**
+     * getFunnels returns conversion + resolution rates plus per-status counts.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/dashboard/tasks.md#task-2.3
+     */
+    public function testGetFunnelsAggregatesRates(): void
+    {
+        $service = $this->buildService(byCollection: [
+            'lead_schema' => [
+                ['status' => 'open'],
+                ['status' => 'won'],
+                ['status' => 'won'],
+                ['status' => 'lost'],
+            ],
+            'request_schema' => [
+                ['status' => 'new'],
+                ['status' => 'completed'],
+                ['status' => 'completed'],
+                ['status' => 'rejected'],
+            ],
+        ]);
+
+        $funnels = $service->getFunnels();
+        $this->assertSame(50.0, $funnels['leadFunnel']['conversionRate']);
+        $this->assertSame(50.0, $funnels['requestFunnel']['resolutionRate']);
+        $this->assertSame(2, $funnels['leadFunnel']['won']);
+        $this->assertSame(2, $funnels['requestFunnel']['completed']);
+    }
+
+    /**
+     * Empty datasets in getFunnels yield null rates (avoids divide-by-zero).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/dashboard/tasks.md#task-2.3
+     */
+    public function testGetFunnelsNullRatesWhenEmpty(): void
+    {
+        $service = $this->buildService();
+        $funnels = $service->getFunnels();
+        $this->assertNull($funnels['leadFunnel']['conversionRate']);
+        $this->assertNull($funnels['requestFunnel']['resolutionRate']);
+    }
 }

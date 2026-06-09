@@ -240,18 +240,24 @@
 					{ "id": "complaints",         "type": "custom", "title": "Complaints" },
 					{ "id": "my-work",            "type": "custom", "title": "My Work" },
 					{ "id": "client-overview",    "type": "custom", "title": "Client Overview" },
-					{ "id": "billing-categories", "type": "custom", "title": "Hours by billing category" }
+					{ "id": "billing-categories", "type": "custom", "title": "Hours by billing category" },
+					{ "id": "unified-analytics",  "type": "custom", "title": "Unified Analytics" },
+					{ "id": "navi-analytics",     "type": "custom", "title": "Ask Navi" },
+					{ "id": "report-export",      "type": "custom", "title": "Report Export" }
 				],
 				"layout": [
-					{ "id": "1", "widgetId": "open-leads",         "gridX": 0, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
-					{ "id": "2", "widgetId": "open-requests",      "gridX": 3, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
-					{ "id": "3", "widgetId": "pipeline-value",     "gridX": 6, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
-					{ "id": "4", "widgetId": "overdue",            "gridX": 9, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
-					{ "id": "5", "widgetId": "requests-by-status", "gridX": 0, "gridY": 2, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "6", "widgetId": "complaints",         "gridX": 6, "gridY": 2, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "7", "widgetId": "my-work",            "gridX": 0, "gridY": 6, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "8", "widgetId": "client-overview",    "gridX": 6, "gridY": 6, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "9", "widgetId": "billing-categories", "gridX": 0, "gridY": 10, "gridWidth": 6, "gridHeight": 4 }
+					{ "id": "1",  "widgetId": "open-leads",         "gridX": 0, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
+					{ "id": "2",  "widgetId": "open-requests",      "gridX": 3, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
+					{ "id": "3",  "widgetId": "pipeline-value",     "gridX": 6, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
+					{ "id": "4",  "widgetId": "overdue",            "gridX": 9, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
+					{ "id": "10", "widgetId": "unified-analytics",  "gridX": 0, "gridY": 2,  "gridWidth": 12, "gridHeight": 5 },
+					{ "id": "5",  "widgetId": "requests-by-status", "gridX": 0, "gridY": 7,  "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "6",  "widgetId": "complaints",         "gridX": 6, "gridY": 7,  "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "11", "widgetId": "navi-analytics",     "gridX": 0, "gridY": 11, "gridWidth": 12, "gridHeight": 6 },
+					{ "id": "7",  "widgetId": "my-work",            "gridX": 0, "gridY": 17, "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "8",  "widgetId": "client-overview",    "gridX": 6, "gridY": 17, "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "9",  "widgetId": "billing-categories", "gridX": 0, "gridY": 21, "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "12", "widgetId": "report-export",      "gridX": 0, "gridY": 25, "gridWidth": 12, "gridHeight": 3 }
 				]
 			},
 			"slots": {
@@ -263,7 +269,10 @@
 				"widget-complaints": "ComplaintsWidget",
 				"widget-my-work": "MyWorkWidget",
 				"widget-client-overview": "ClientOverviewWidget",
-				"widget-billing-categories": "BillingCategoryWidget"
+				"widget-billing-categories": "BillingCategoryWidget",
+				"widget-unified-analytics": "UnifiedAnalyticsWidget",
+				"widget-navi-analytics": "NaviAnalyticsWidget",
+				"widget-report-export": "ReportExportPanel"
 			}
 		},
 		{
