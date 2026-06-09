@@ -22,7 +22,7 @@
 			@sort="onSort"
 			@row-click="openDestination"
 			@page-changed="onPageChange">
-			<template #actions="{ row }">
+			<template #row-actions="{ row }">
 				<NcButton type="tertiary" :disabled="busyId === row.id" @click.stop="testConnection(row)">
 					{{ t('pipelinq', 'Test connection') }}
 				</NcButton>
