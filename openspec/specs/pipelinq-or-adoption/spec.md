@@ -19,6 +19,8 @@ object-store-exemplar role. The Phase 9 multi-tenancy + i18n runtime-adoption
 consumes are declared in the manifest; their runtime adoption is deferred until
 the nc-vue / OpenRegister prerequisites ship.
 
+@e2e exclude pure backend/config-adoption slice: admin-config constant migration (PHP services/BackgroundJob), openspec/manifest.yaml declarations, createObjectStore tenant-context wiring, and Accept-Language API negotiation — no UI surface; covered by PHPUnit, manifest assertions, and Newman.
+
 ## Requirements
 
 ### Requirement: Tenant-tunable values move to admin-config

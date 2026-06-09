@@ -73,7 +73,7 @@ class PortalRequestController extends PortalApiController
     {
         return $this->guarded(
                 handler: function (): array {
-                    $ctx  = $this->context();
+                    $ctx  = $this->requireSession();
                     $page = $this->requests->getForAccount(
                     $ctx['account'],
                     $this->intParam(name: 'page', default: 1),
@@ -99,7 +99,7 @@ class PortalRequestController extends PortalApiController
     {
         return $this->guarded(
                 handler: function () use ($id): array {
-                    $ctx    = $this->context();
+                    $ctx    = $this->requireSession();
                     $expose = ($this->tenant->getConfig($ctx['tenantId'])['exposeAssigneeName'] ?? false) === true;
                     $detail = $this->requests->getDetailForAccount(account: $ctx['account'], requestId: $id, exposeAssigneeName: $expose);
                     if ($detail === null) {
@@ -124,7 +124,7 @@ class PortalRequestController extends PortalApiController
     {
         return $this->guarded(
             handler: function (): array {
-                $ctx         = $this->context();
+                $ctx         = $this->requireSession();
                 $attachments = $this->request->getParam('attachments', []);
                 if (is_array($attachments) === false) {
                     $attachments = [];
@@ -158,7 +158,7 @@ class PortalRequestController extends PortalApiController
     {
         return $this->guarded(
                 handler: function () use ($id): array {
-                    $ctx    = $this->context();
+                    $ctx    = $this->requireSession();
                     $detail = $this->requests->addReply(
                         account: $ctx['account'],
                         tenantId: $ctx['tenantId'],

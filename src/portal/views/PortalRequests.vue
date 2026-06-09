@@ -6,11 +6,14 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 	<div class="portal-requests">
 		<h1>{{ t('pipelinq', 'My requests') }}</h1>
 
-		<p v-if="error" role="alert" class="portal-error">
+		<p v-if="error"
+			id="portal-requests-error"
+			role="alert"
+			class="portal-error">
 			{{ error }}
 		</p>
 
-		<table v-if="rows.length" class="portal-table" role="grid">
+		<table v-if="rows.length" class="portal-table">
 			<thead>
 				<tr>
 					<th scope="col">
@@ -66,16 +69,20 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 					id="portal-subject"
 					v-model="form.subject"
 					type="text"
-					required>
+					required
+					:aria-describedby="error ? 'portal-requests-error' : null"
+					:aria-invalid="error ? 'true' : null">
 			</div>
 			<div class="portal-field">
 				<label for="portal-body">{{ t('pipelinq', 'Message') }}</label>
 				<textarea
 					id="portal-body"
 					v-model="form.body"
-					required />
+					required
+					:aria-describedby="error ? 'portal-requests-error' : null"
+					:aria-invalid="error ? 'true' : null" />
 			</div>
-			<p v-if="submitMessage" role="alert" class="portal-success">
+			<p v-if="submitMessage" role="status" aria-live="polite" class="portal-success">
 				{{ submitMessage }}
 			</p>
 			<button type="submit" :disabled="submitting" class="portal-button-primary">

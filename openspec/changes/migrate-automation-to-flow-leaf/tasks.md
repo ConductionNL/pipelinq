@@ -64,7 +64,7 @@
 
 ## 5. Verification
 
-- [ ] 5.1 `npm run build` and `npm run check:manifest` pass.
-- [ ] 5.2 Register imports cleanly via `ConfigurationService::importFromApp()`.
-- [ ] 5.3 Browser check: with `workflowengine` enabled + leaf installed, open a lead detail; flow tab lists rules + recent fires; widget shows status.
+- [x] 5.1 `npm run build` and `npm run check:manifest` pass.
+- [x] 5.2 Register imports cleanly via `ConfigurationService::importFromApp()`.
+- [x] 5.3 Browser check: with `workflowengine` enabled + leaf installed, open a lead detail; flow tab lists rules + recent fires; widget shows status.
 - [x] 5.4 Confirm `AutomationBuilder.vue`, the webhook service, and both schemas are gone.

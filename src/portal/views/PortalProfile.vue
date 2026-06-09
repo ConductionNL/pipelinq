@@ -44,10 +44,13 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 				<input id="portal-change-email" v-model="form.email" type="email">
 				<small v-if="pendingEmail">{{ t('pipelinq', 'A verification link has been sent to {email}.', { email: pendingEmail }) }}</small>
 			</div>
-			<p v-if="message" role="alert" class="portal-success">
+			<p v-if="message" role="status" aria-live="polite" class="portal-success">
 				{{ message }}
 			</p>
-			<p v-if="error" role="alert" class="portal-error">
+			<p v-if="error"
+				id="portal-profile-error"
+				role="alert"
+				class="portal-error">
 				{{ error }}
 			</p>
 			<button type="submit" class="portal-button-primary">

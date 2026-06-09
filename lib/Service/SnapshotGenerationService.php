@@ -140,11 +140,31 @@ class SnapshotGenerationService
             $this->notifyAdmin(periodId: $periodId, errors: $errors);
         }
 
+        $hierarchyReport = $this->quotaService->validateQuotaHierarchy(
+            periodId: $periodId,
+            teamMembers: ($hierarchy['teams'] ?? [])
+        );
+        foreach ($hierarchyReport as $row) {
+            if (abs((float) ($row['variance_percent'] ?? 0.0)) > 0.0) {
+                $this->logger->info(
+                    'Pipelinq: forecast quota hierarchy variance',
+                    [
+                        'period_id'        => $periodId,
+                        'team_id'          => $row['team_id'],
+                        'team_quota'       => $row['team_quota'],
+                        'rep_quotas_sum'   => $row['rep_quotas_sum'],
+                        'variance_percent' => $row['variance_percent'],
+                    ]
+                );
+            }
+        }
+
         return [
-            'period_id' => $periodId,
-            'as_of'     => $asOfDate,
-            'generated' => $persisted,
-            'errors'    => $errors,
+            'period_id'         => $periodId,
+            'as_of'             => $asOfDate,
+            'generated'         => $persisted,
+            'errors'            => $errors,
+            'hierarchy_report'  => $hierarchyReport,
         ];
     }//end generate()
 
@@ -294,7 +314,19 @@ class SnapshotGenerationService
         bool $partial,
         array $missing
     ): array {
-        $quota = $this->quotaService->getQuotaAmount(ownerId: $ownerId, periodId: $periodId, level: $level);
+        $quota          = $this->quotaService->getQuotaAmount(ownerId: $ownerId, periodId: $periodId, level: $level);
+        $reference      = new DateTimeImmutable($asOfDate);
+        $daysRemaining  = $this->period->daysRemaining(periodId: $periodId, now: $reference);
+        $periodClosed   = $this->period->isClosed(periodId: $periodId, now: $reference);
+        $projected      = $this->quotaService->projectedAttainment(
+            closedWon: (float) $totals['closed_won_amount'],
+            commit: (float) $totals['commit_amount'],
+            bestCase: (float) $totals['best_case_amount']
+        );
+        $atRisk         = false;
+        if ($quota !== null && $quota > 0) {
+            $atRisk = $this->quotaService->isAtRisk(projected: $projected, quota: $quota, daysRemaining: $daysRemaining);
+        }
 
         return [
             'period_id'         => $periodId,
@@ -310,6 +342,9 @@ class SnapshotGenerationService
             'deal_snapshot_ids' => $dealIds,
             'partial'           => $partial,
             'missing_reps'      => $missing,
+            'days_remaining'    => $daysRemaining,
+            'period_closed'     => $periodClosed,
+            'at_risk'           => $atRisk,
         ];
     }//end snapshotRecord()
 

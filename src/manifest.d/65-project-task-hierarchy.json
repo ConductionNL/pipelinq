@@ -1,0 +1,46 @@
+{
+	"menu": [
+		{
+			"id": "Projects",
+			"label": "Projecten",
+			"icon": "icon-category-organization",
+			"route": "Projects",
+			"order": 55
+		}
+	],
+	"pages": [
+		{
+			"id": "Projects",
+			"route": "/projects",
+			"type": "custom",
+			"title": "Projecten",
+			"component": "ProjectList",
+			"config": {
+				"register": "pipelinq",
+				"schema": "project"
+			}
+		},
+		{
+			"id": "ProjectDetail",
+			"route": "/projects/:id",
+			"type": "custom",
+			"title": "Project",
+			"component": "ProjectDetail",
+			"config": {
+				"register": "pipelinq",
+				"schema": "project"
+			}
+		},
+		{
+			"id": "ProjectActivities",
+			"route": "/projects/:id/activities",
+			"type": "custom",
+			"title": "Tijdregistraties",
+			"component": "ProjectActivityList",
+			"config": {
+				"register": "pipelinq",
+				"schema": "projectActivity"
+			}
+		}
+	]
+}

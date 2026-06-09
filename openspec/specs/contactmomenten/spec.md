@@ -315,6 +315,8 @@ The contact linkage, contactmoment service and email sync implemented in this ap
 
 #### Scenario: Documented operations are available
 
+@e2e exclude backend service/controller method contract; covered by PHPUnit
+
 - GIVEN the backend service/controller is loaded
 - WHEN a caller invokes one of the documented operations for contact linkage, contactmoment service and email sync
 - THEN the operation MUST execute and return a result consistent with the current implementation
@@ -328,6 +330,8 @@ Operations for contact linkage, contactmoment service and email sync MUST read t
 **Feature tier**: V1
 
 #### Scenario: Results reflect live state
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN CRM data backing contact linkage, contactmoment service and email sync
 - WHEN a documented operation runs
@@ -344,6 +348,8 @@ Operations for contact linkage, contactmoment service and email sync MUST tolera
 
 #### Scenario: Missing input does not crash the flow
 
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
+
 - GIVEN an operation for contact linkage, contactmoment service and email sync is called with absent or invalid input
 - WHEN it executes
 - THEN it MUST return a safe default or a validation result
@@ -356,6 +362,8 @@ The contact detail, relationships and quick-log screens implemented in this app 
 **Feature tier**: V1
 
 #### Scenario: Documented operations are available
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN the frontend component/store is loaded
 - WHEN a caller invokes one of the documented operations for contact detail, relationships and quick-log screens
@@ -371,6 +379,8 @@ Operations for contact detail, relationships and quick-log screens MUST read the
 
 #### Scenario: Results reflect live state
 
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
+
 - GIVEN CRM data backing contact detail, relationships and quick-log screens
 - WHEN a documented operation runs
 - THEN its output MUST be derived from that data
@@ -385,6 +395,8 @@ Operations for contact detail, relationships and quick-log screens MUST tolerate
 **Feature tier**: V1
 
 #### Scenario: Missing input does not crash the flow
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN an operation for contact detail, relationships and quick-log screens is called with absent or invalid input
 - WHEN it executes

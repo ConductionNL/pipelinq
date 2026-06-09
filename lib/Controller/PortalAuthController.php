@@ -93,7 +93,7 @@ class PortalAuthController extends PortalApiController
     {
         return $this->guarded(
             handler: function (): array {
-                $tenantId = $this->guard->resolveTenant(request: $this->request);
+                $tenantId = $this->requireTenant();
                 $totpCode = $this->strParam(name: 'totpCode');
                 if ($totpCode === '') {
                     $totpCode = null;
@@ -126,7 +126,7 @@ class PortalAuthController extends PortalApiController
     {
         return $this->guarded(
                 handler: function (): array {
-                    $ctx       = $this->context();
+                    $ctx       = $this->requireSession();
                     $sessionId = (string) $this->repository->idOf(object: $ctx['session']);
                     $this->sessions->revokeSession(sessionId: $sessionId, reason: 'logout');
                     return [['status' => 'logged-out'], Http::STATUS_OK];
@@ -147,12 +147,9 @@ class PortalAuthController extends PortalApiController
     {
         return $this->guarded(
                 handler: function (): array {
-                    $ctx       = $this->context();
+                    $ctx       = $this->requireSession();
                     $sessionId = (string) $this->repository->idOf(object: $ctx['session']);
-                    $updated   = $this->sessions->extendSession($sessionId);
-                    if ($updated === null) {
-                        return [['errorCode' => 'unauthenticated', 'message' => 'Niet ingelogd.'], Http::STATUS_UNAUTHORIZED];
-                    }
+                    $updated   = $this->sessions->extendSessionOrThrow(sessionId: $sessionId);
 
                     return [['expiresAt' => ($updated['expiresAt'] ?? null)], Http::STATUS_OK];
                 }
@@ -172,7 +169,7 @@ class PortalAuthController extends PortalApiController
     {
         return $this->guarded(
                 handler: function (): array {
-                    $tenantId = $this->guard->resolveTenant(request: $this->request);
+                    $tenantId = $this->requireTenant();
                     $this->reset->requestReset(email: $this->strParam(name: 'email'), tenantId: $tenantId);
                     return [['status' => 'ok'], Http::STATUS_OK];
                 }
@@ -192,7 +189,7 @@ class PortalAuthController extends PortalApiController
     {
         return $this->guarded(
                 handler: function (): array {
-                    $tenantId = $this->guard->resolveTenant(request: $this->request);
+                    $tenantId = $this->requireTenant();
                     $this->reset->resetPassword(
                     $this->strParam(name: 'token'),
                     (string) $this->request->getParam('password', ''),
@@ -217,7 +214,7 @@ class PortalAuthController extends PortalApiController
     {
         return $this->guarded(
                 handler: function (): array {
-                    $ctx     = $this->context();
+                    $ctx     = $this->requireSession();
                     $account = $ctx['account'];
                     $secret  = $this->mfa->generateSecret();
                     $uri     = $this->mfa->provisioningUri(
@@ -249,7 +246,7 @@ class PortalAuthController extends PortalApiController
     {
         return $this->guarded(
                 handler: function (): array {
-                    $ctx     = $this->context();
+                    $ctx     = $this->requireSession();
                     $account = $ctx['account'];
                     if ($this->mfa->verifyCode(encryptedSecret: ($account['mfaSecret'] ?? null), code: $this->strParam(name: 'code')) === false) {
                         return [['errorCode' => 'invalidMfaCode', 'message' => 'Ongeldige code.'], Http::STATUS_BAD_REQUEST];

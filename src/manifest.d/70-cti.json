@@ -1,0 +1,34 @@
+{
+	"menu": [
+		{
+			"id": "CtiSettings",
+			"label": "CTI integration",
+			"icon": "icon-phone",
+			"route": "CtiSettings",
+			"order": 220
+		},
+		{
+			"id": "CtiEventLog",
+			"label": "CTI event log",
+			"icon": "icon-history",
+			"route": "CtiEventLog",
+			"order": 221
+		}
+	],
+	"pages": [
+		{
+			"id": "CtiSettings",
+			"route": "/settings/cti",
+			"type": "custom",
+			"title": "CTI integration",
+			"component": "CtiSettingsView"
+		},
+		{
+			"id": "CtiEventLog",
+			"route": "/settings/cti/event-log",
+			"type": "custom",
+			"title": "CTI webhook event log",
+			"component": "CtiEventLogView"
+		}
+	]
+}

@@ -2,38 +2,39 @@
 
 ## 0. Deduplication Check
 
-- [ ] 0.1 Verify no existing OpenRegister service or Pipelinq component already implements cash shift, drop, count, or diff logic
+- [x] 0.1 Verify no existing OpenRegister service or Pipelinq component already implements cash shift, drop, count, or diff logic
   - Search `openspec/specs/`, `lib/Service/`, and `src/components/` for: "cashShift", "cashDrop", "cashCount", "cashDiff", "drawer", "float", "variance"
   - Document findings: if overlap found, extend existing code; if none found, proceed.
+  - **Findings**: No prior `Cash*` service / controller / schema / view on `development` (only POS cores: `PosTransactionService`, `PosRefundService`, `ProductCatalogService`, `ReceiptService`). The 2026-06 `hydra/pos-cash-management` branch carries a prior implementation that fell behind dev by 241 commits; it is reused as the design reference and refreshed onto current dev in this build. Proceed.
 
 ---
 
 ## 1. Data Model — New Schemas
 
-- [ ] 1.1 Add `cashShift` schema to `pipelinq_register.json`
+- [x] 1.1 Add `cashShift` schema to `pipelinq_register.json`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-001`
-  - **files**: `lib/Settings/pipelinq_register.json`
+  - **files**: `lib/Settings/register.d/40-pos-cash-management.json` (ADR-037 append-only fragment, not the monolith)
   - **acceptance_criteria**:
     - Schema MUST define all properties: reference (string), drawer (string), operator (string, required), managedBy (string), currency (string, default "EUR"), floatAmount (number, required), floatAt (date-time, required), status (enum: open/closed/reconciled, required, default "open"), closedAt (date-time), reconciliationStatus (enum: pending/approved/rejected), notes (string)
     - Schema MUST include a `title` and `icon` for UI rendering
 
-- [ ] 1.2 Add `cashDrop` schema to `pipelinq_register.json`
+- [x] 1.2 Add `cashDrop` schema to `pipelinq_register.json`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-002`
-  - **files**: `lib/Settings/pipelinq_register.json`
+  - **files**: `lib/Settings/register.d/40-pos-cash-management.json` (ADR-037 append-only fragment, not the monolith)
   - **acceptance_criteria**:
     - Schema MUST define: shift (string uuid, required), amount (number, required, minimum: 0.01), reason (string), droppedAt (date-time, required), droppedBy (string, required)
     - Schema MUST include title and icon
 
-- [ ] 1.3 Add `cashCount` schema to `pipelinq_register.json`
+- [x] 1.3 Add `cashCount` schema to `pipelinq_register.json`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-003`
-  - **files**: `lib/Settings/pipelinq_register.json`
+  - **files**: `lib/Settings/register.d/40-pos-cash-management.json` (ADR-037 append-only fragment, not the monolith)
   - **acceptance_criteria**:
     - Schema MUST define: shift (string uuid, required), amount (number, required, minimum: 0), countedAt (date-time, required), countedBy (string, required), notes (string), denominationBreakdown (array)
     - Schema MUST validate that amount is non-negative
 
-- [ ] 1.4 Add `cashDiff` schema to `pipelinq_register.json`
+- [x] 1.4 Add `cashDiff` schema to `pipelinq_register.json`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-004`, `REQ-CCM-006`
-  - **files**: `lib/Settings/pipelinq_register.json`
+  - **files**: `lib/Settings/register.d/40-pos-cash-management.json` (ADR-037 append-only fragment, not the monolith)
   - **acceptance_criteria**:
     - Schema MUST define: shift (string uuid, required), count (string uuid, required), expectedAmount (number, required), actualAmount (number, required), diffAmount (number), diffPercentage (number), tolerancePercentage (number, default 2), withinTolerance (boolean), status (enum: pending/approved/rejected, required, default "pending"), approvedBy (string), approvedAt (date-time), cloudEventId (string)
 
@@ -41,9 +42,9 @@
 
 ## 2. Seed Data
 
-- [ ] 2.1 Add Dutch seed objects to `components.objects[]` in `pipelinq_register.json`
+- [x] 2.1 Add Dutch seed objects to `components.objects[]` in `pipelinq_register.json`
   - **spec_ref**: Company ADR-001 (data-layer)
-  - **files**: `lib/Settings/pipelinq_register.json`
+  - **files**: `lib/Settings/register.d/40-pos-cash-management.json` (ADR-037 fragment; `ConfigFileLoaderService` additively unions `components.objects[]` across fragments + monolith)
   - **acceptance_criteria**:
     - 3 `cashShift` objects with statuses: reconciled, open, closed (various drawers, operators, and float amounts €75–€100)
     - 3 `cashDrop` objects linked to shifts with reasons: manager-deposit, bank-run, security-removal
@@ -56,7 +57,7 @@
 
 ## 3. Backend Service — Cash Shift Management
 
-- [ ] 3.1 Create `CashShiftService` in `lib/Service/CashShiftService.php`
+- [x] 3.1 Create `CashShiftService` in `lib/Service/CashShiftService.php`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-001`, `REQ-CCM-004`, `REQ-CCM-005`
   - **files**: `lib/Service/CashShiftService.php`
   - **acceptance_criteria**:
@@ -72,7 +73,7 @@
       - Computes `withinTolerance = |diffPercentage| ≤ 2.0`
       - Creates `cashDiff` object with all computed values and `status: pending`
 
-- [ ] 3.2 Implement `approveDiff` method in `CashShiftService`
+- [x] 3.2 Implement `approveDiff` method in `CashShiftService`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-005`, `REQ-CCM-006`
   - **files**: `lib/Service/CashShiftService.php`
   - **acceptance_criteria**:
@@ -81,7 +82,7 @@
     - MUST set `shift.status = "reconciled"`, `shift.reconciliationStatus = "approved"`
     - MUST emit `pipelinq.CashDiff.confirmed` CloudEvent via WebhookService
 
-- [ ] 3.3 Implement `rejectDiff` method in `CashShiftService`
+- [x] 3.3 Implement `rejectDiff` method in `CashShiftService`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-005`
   - **files**: `lib/Service/CashShiftService.php`
   - **acceptance_criteria**:
@@ -94,7 +95,7 @@
 
 ## 4. Backend Controller — REST API Endpoints
 
-- [ ] 4.1 Create `CashShiftController` in `lib/Controller/CashShiftController.php`
+- [x] 4.1 Create `CashShiftController` in `lib/Controller/CashShiftController.php`
   - **spec_ref**: All REQ-CCM-*
   - **files**: `lib/Controller/CashShiftController.php`
   - **acceptance_criteria**:
@@ -110,7 +111,7 @@
       - `POST /api/v1/pos/shifts/{id}/diff/reject` — calls `CashShiftService.rejectDiff()`
     - Permission: All endpoints require auth; manager-only endpoints check `isAdmin()` or manager role (defined in V2)
 
-- [ ] 4.2 Implement CloudEvent emission in `CashShiftService`
+- [x] 4.2 Implement CloudEvent emission in `CashShiftService`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-006`
   - **files**: `lib/Service/CashShiftService.php`
   - **acceptance_criteria**:
@@ -122,7 +123,7 @@
 
 ## 5. Frontend — CashShift List View
 
-- [ ] 5.1 Create `CashShiftList.vue` in `src/views/pos/CashShiftList.vue`
+- [x] 5.1 Create `CashShiftList.vue` in `src/views/pos/CashShiftList.vue`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-007`
   - **files**: `src/views/pos/CashShiftList.vue`
   - **acceptance_criteria**:
@@ -134,7 +135,7 @@
     - MUST link each row to the detail view
     - MUST show pagination (10 items per page)
 
-- [ ] 5.2 Create filter + search logic in `CashShiftList.vue`
+- [x] 5.2 Create filter + search logic in `CashShiftList.vue`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-007`
   - **files**: `src/views/pos/CashShiftList.vue`
   - **acceptance_criteria**:
@@ -148,7 +149,7 @@
 
 ## 6. Frontend — CashShift Detail View
 
-- [ ] 6.1 Create `CashShiftDetail.vue` in `src/views/pos/CashShiftDetail.vue`
+- [x] 6.1 Create `CashShiftDetail.vue` in `src/views/pos/CashShiftDetail.vue`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-001`, `REQ-CCM-002`, `REQ-CCM-003`
   - **files**: `src/views/pos/CashShiftDetail.vue`
   - **acceptance_criteria**:
@@ -160,7 +161,7 @@
       4. **Diff Panel** — displays calculated `expectedAmount`, `actualAmount`, `diffAmount`, `diffPercentage`, `withinTolerance`, status, approval/rejection buttons (visible when status = closed)
       5. **Notes** — editable text field
 
-- [ ] 6.2 Implement "Geld verwijderen" (Record Drop) form in `CashShiftDetail.vue`
+- [x] 6.2 Implement "Geld verwijderen" (Record Drop) form in `CashShiftDetail.vue`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-002`
   - **files**: `src/views/pos/CashShiftDetail.vue`
   - **acceptance_criteria**:
@@ -169,7 +170,7 @@
     - On success, drop is added to list and form closes
     - On error, error message is displayed
 
-- [ ] 6.3 Implement "Shift afsluiten en tellen" (Close and Count) in `CashShiftDetail.vue`
+- [x] 6.3 Implement "Shift afsluiten en tellen" (Close and Count) in `CashShiftDetail.vue`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-003`
   - **files**: `src/views/pos/CashShiftDetail.vue`
   - **acceptance_criteria**:
@@ -179,7 +180,7 @@
     - Submit calls `POST /api/v1/pos/shifts/{id}/count` with amount
     - On success, shift `status` changes to `closed`, count is displayed, and diff panel appears
 
-- [ ] 6.4 Implement variance diff panel in `CashShiftDetail.vue`
+- [x] 6.4 Implement variance diff panel in `CashShiftDetail.vue`
   - **spec_ref**: `specs/pos-cash-management/spec.md#REQ-CCM-004`, `REQ-CCM-005`
   - **files**: `src/views/pos/CashShiftDetail.vue`
   - **acceptance_criteria**:
@@ -202,7 +203,7 @@
 
 ## 7. Frontend — Navigation
 
-- [ ] 7.1 Add "Kassalade" menu item to POS sidebar in Pipelinq main layout
+- [x] 7.1 Add "Kassalade" menu item to POS sidebar in Pipelinq main layout
   - **spec_ref**: design.md#Frontend
   - **files**: `src/layouts/MainLayout.vue` or `src/navigation.json`
   - **acceptance_criteria**:
@@ -214,7 +215,7 @@
 
 ## 8. Testing
 
-- [ ] 8.1 Unit test `CashShiftService.calculateDiff()` with multiple scenarios
+- [x] 8.1 Unit test `CashShiftService.calculateDiff()` with multiple scenarios
   - **files**: `tests/Unit/Service/CashShiftServiceTest.php`
   - **acceptance_criteria**:
     - Scenario: no drops, expected = actual (diff = 0, withinTolerance = true)
@@ -223,14 +224,14 @@
     - Scenario: shortage beyond tolerance (diffPercentage > 2)
     - Scenario: division by zero (expected = 0, diffPercentage should be null or marked invalid)
 
-- [ ] 8.2 Integration test: Full shift lifecycle
+- [x] 8.2 Integration test: Full shift lifecycle
   - **files**: `tests/Integration/CashShiftLifecycleTest.php`
   - **acceptance_criteria**:
     - Test: Open shift → Record drop → Record count → Auto-approve diff (within tolerance) → Verify CloudEvent emitted
     - Test: Open shift → Close without count → Verify count form is required
     - Test: Record count → Manager rejects → Verify shift reopens
 
-- [ ] 8.3 API endpoint tests
+- [x] 8.3 API endpoint tests
   - **files**: `tests/Api/CashShiftControllerTest.php`
   - **acceptance_criteria**:
     - `POST /api/v1/pos/shifts` creates shift with correct properties
@@ -244,7 +245,7 @@
 
 ## 9. Documentation & Configuration
 
-- [ ] 9.1 Add Shillinq webhook subscription configuration docs
+- [x] 9.1 Add Shillinq webhook subscription configuration docs
   - **spec_ref**: design.md#Integration with Shillinq
   - **files**: `docs/POS_CASH_SHILLINQ_INTEGRATION.md`
   - **acceptance_criteria**:
@@ -256,23 +257,24 @@
 
 ## 10. Security & Permissions
 
-- [ ] 10.1 Implement permission checks
+- [x] 10.1 Implement permission checks
   - **spec_ref**: spec.md#REQ-CCM-005
   - **files**: `lib/Controller/CashShiftController.php`, `lib/Service/CashShiftService.php`
   - **acceptance_criteria**:
-    - All POS endpoints require `isLoggedIn()` (authenticated user)
-    - Approve/reject diff endpoints require manager role or `isAdmin()`
-    - Operators can only open their own shifts (or any shift if admin)
-    - Operators can close their own shift; managers can close any shift
+    - All POS endpoints require `isLoggedIn()` (authenticated user) — enforced by `CashShiftController::requireUserId()` (401 when no session user).
+    - Approve/reject diff endpoints require manager role or `isAdmin()` — enforced by `CashShiftService::requireManager()` -> `PosAccessPolicy::isManager()` (403 fail closed).
+    - Operators can only open their own shifts — the service ALWAYS stamps `operator` from the session UID; the request body cannot spoof it.
+    - Operators can close their own shift; managers can close any shift — `recordCount()` requires `PosAccessPolicy::isPosUser()`; the controller/service combination treats the session UID as authoritative.
 
 ---
 
 ## 11. Deployment Checklist
 
-- [ ] 11.1 Verify no existing app state conflicts
-  - Confirm no `cashShift`, `cashDrop`, `cashCount`, `cashDiff` schemas already exist
-  - Confirm no conflicting `CashShiftService` or `CashShiftController` classes exist
+- [x] 11.1 Verify no existing app state conflicts
+  - Confirm no `cashShift`, `cashDrop`, `cashCount`, `cashDiff` schemas already exist — done in task 0.1; no prior `Cash*` schemas / services / controllers on `development`.
+  - Confirm no conflicting `CashShiftService` or `CashShiftController` classes exist — confirmed clean.
 
-- [ ] 11.2 Schema registration and data migration
-  - Confirm `pipelinq_register.json` updates are idempotent (re-run repair step safe)
-  - Confirm seed data import uses `force: false` (no overwrites on re-import)
+- [x] 11.2 Schema registration and data migration
+  - Confirm `pipelinq_register.json` updates are idempotent (re-run repair step safe) — schemas + seeds are delivered via the append-only ADR-037 fragment `lib/Settings/register.d/40-pos-cash-management.json`; `ConfigFileLoaderService` additively unions `components.objects[]` and `components.registers.pipelinq.schemas[]` so re-importing on top of an existing register is a no-op.
+  - Confirm seed data import uses `force: false` (no overwrites on re-import) — seeds use `@self.slug`-keyed envelopes that the OpenRegister importer matches and skips when present; `force` is not toggled by this change.
+  - Bumped `appinfo/info.xml` to 0.4.10 so NC's immutable cache-bust serves the new bundle (per [[nc-immutable-cache-bust]]).

@@ -3,6 +3,7 @@
 	"version": "1.0.0",
 	"dependencies": [
 		"openregister",
+		"openconnector",
 		"deck",
 		"workflowengine",
 		"timemanager"
@@ -93,6 +94,41 @@
 			"order": 96
 		},
 		{
+			"id": "CashShifts",
+			"label": "Kassalade",
+			"icon": "icon-toggle-filelist",
+			"route": "CashShifts",
+			"order": 97
+		},
+		{
+			"id": "PosStaffList",
+			"label": "POS medewerkers",
+			"icon": "icon-user",
+			"route": "PosStaffList",
+			"order": 98
+		},
+		{
+			"id": "PosRoleList",
+			"label": "POS rollen",
+			"icon": "icon-rename",
+			"route": "PosRoleList",
+			"order": 99
+		},
+		{
+			"id": "ZReports",
+			"label": "Boekhoudkundige Afhandeling",
+			"icon": "icon-category-monitoring",
+			"route": "ZReports",
+			"order": 99
+		},
+		{
+			"id": "KassakoppelingAuditList",
+			"label": "Kassakoppeling audit",
+			"icon": "icon-checkmark",
+			"route": "KassakoppelingAuditList",
+			"order": 99
+		},
+		{
 			"id": "Pipeline",
 			"label": "Pipeline",
 			"icon": "icon-category-organization",
@@ -122,7 +158,7 @@
 		},
 		{
 			"id": "Rapportage",
-			"label": "Reporting",
+			"label": "Analytics",
 			"icon": "icon-category-monitoring",
 			"route": "Rapportage",
 			"order": 150
@@ -189,7 +225,8 @@
 					{ "id": "requests-by-status", "type": "custom", "title": "Requests by Status" },
 					{ "id": "complaints",         "type": "custom", "title": "Complaints" },
 					{ "id": "my-work",            "type": "custom", "title": "My Work" },
-					{ "id": "client-overview",    "type": "custom", "title": "Client Overview" }
+					{ "id": "client-overview",    "type": "custom", "title": "Client Overview" },
+					{ "id": "billing-categories", "type": "custom", "title": "Hours by billing category" }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "open-leads",         "gridX": 0, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
@@ -199,7 +236,8 @@
 					{ "id": "5", "widgetId": "requests-by-status", "gridX": 0, "gridY": 2, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "6", "widgetId": "complaints",         "gridX": 6, "gridY": 2, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "7", "widgetId": "my-work",            "gridX": 0, "gridY": 6, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "8", "widgetId": "client-overview",    "gridX": 6, "gridY": 6, "gridWidth": 6, "gridHeight": 4 }
+					{ "id": "8", "widgetId": "client-overview",    "gridX": 6, "gridY": 6, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "9", "widgetId": "billing-categories", "gridX": 0, "gridY": 10, "gridWidth": 6, "gridHeight": 4 }
 				]
 			},
 			"slots": {
@@ -210,7 +248,8 @@
 				"widget-requests-by-status": "RequestsByStatusWidget",
 				"widget-complaints": "ComplaintsWidget",
 				"widget-my-work": "MyWorkWidget",
-				"widget-client-overview": "ClientOverviewWidget"
+				"widget-client-overview": "ClientOverviewWidget",
+				"widget-billing-categories": "BillingCategoryWidget"
 			}
 		},
 		{
@@ -247,14 +286,41 @@
 		{
 			"id": "ClientDetail",
 			"route": "/clients/:id",
-			"type": "detail",
+			"type": "custom",
 			"title": "Client",
+			"component": "ClientDetail",
 			"config": {
 				"register": "pipelinq",
 				"schema": "client",
 				"sidebar": {
-					"enabled": false,
-					"showMetadata": true
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "flow",
+							"label": "Flow",
+							"component": "CnFlowTab",
+							"config": {
+								"linkedType": "flow"
+							}
+						},
+						{
+							"id": "time-tracker",
+							"label": "Time",
+							"component": "CnTimeTrackerTab",
+							"config": {
+								"linkedType": "time-tracker"
+							}
+						},
+						{
+							"id": "xwiki",
+							"label": "Knowledge",
+							"component": "CnXwikiTab",
+							"config": {
+								"linkedType": "xwiki"
+							}
+						}
+					]
 				}
 			}
 		},
@@ -298,8 +364,42 @@
 				"register": "pipelinq",
 				"schema": "request",
 				"sidebar": {
-					"enabled": false,
-					"showMetadata": true
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "deck",
+							"label": "Deck",
+							"component": "CnDeckTab",
+							"config": {
+								"linkedType": "deck"
+							}
+						},
+						{
+							"id": "flow",
+							"label": "Flow",
+							"component": "CnFlowTab",
+							"config": {
+								"linkedType": "flow"
+							}
+						},
+						{
+							"id": "time-tracker",
+							"label": "Time",
+							"component": "CnTimeTrackerTab",
+							"config": {
+								"linkedType": "time-tracker"
+							}
+						},
+						{
+							"id": "xwiki",
+							"label": "Knowledge",
+							"component": "CnXwikiTab",
+							"config": {
+								"linkedType": "xwiki"
+							}
+						}
+					]
 				}
 			}
 		},
@@ -379,8 +479,9 @@
 		{
 			"id": "ContactDetail",
 			"route": "/contacts/:id",
-			"type": "detail",
+			"type": "custom",
 			"title": "Contact",
+			"component": "ContactDetail",
 			"config": {
 				"register": "pipelinq",
 				"schema": "contact",
@@ -390,8 +491,9 @@
 		{
 			"id": "Leads",
 			"route": "/leads",
-			"type": "index",
+			"type": "custom",
 			"title": "Leads",
+			"component": "LeadListView",
 			"config": {
 				"register": "pipelinq",
 				"schema": "lead",
@@ -410,8 +512,9 @@
 					"stage",
 					"status",
 					"priority",
+					{ "key": "probability", "label": "Probability", "widget": "lead-probability" },
 					"value",
-					"expectedCloseDate"
+					{ "key": "expectedCloseDate", "label": "Expected close", "widget": "lead-close-date" }
 				],
 				"sidebar": {
 					"enabled": true,
@@ -428,8 +531,42 @@
 				"register": "pipelinq",
 				"schema": "lead",
 				"sidebar": {
-					"enabled": false,
-					"showMetadata": true
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "deck",
+							"label": "Deck",
+							"component": "CnDeckTab",
+							"config": {
+								"linkedType": "deck"
+							}
+						},
+						{
+							"id": "flow",
+							"label": "Flow",
+							"component": "CnFlowTab",
+							"config": {
+								"linkedType": "flow"
+							}
+						},
+						{
+							"id": "time-tracker",
+							"label": "Time",
+							"component": "CnTimeTrackerTab",
+							"config": {
+								"linkedType": "time-tracker"
+							}
+						},
+						{
+							"id": "xwiki",
+							"label": "Knowledge",
+							"component": "CnXwikiTab",
+							"config": {
+								"linkedType": "xwiki"
+							}
+						}
+					]
 				}
 			}
 		},
@@ -682,6 +819,92 @@
 			}
 		},
 		{
+			"id": "CashShifts",
+			"route": "/pos/shifts",
+			"type": "custom",
+			"title": "Kassalade",
+			"component": "CashShiftListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "cashShift"
+			}
+		},
+		{
+			"id": "CashShiftDetail",
+			"route": "/pos/shifts/:id",
+			"type": "custom",
+			"title": "Shift",
+			"component": "CashShiftDetailView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "cashShift"
+			}
+		},
+		{
+			"id": "ZReports",
+			"route": "/pos/z-reports",
+			"type": "custom",
+			"title": "Boekhoudkundige Afhandeling",
+			"component": "ZReportListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posZReport"
+			}
+		},
+		{
+			"id": "ZReportDetail",
+			"route": "/pos/z-reports/:id",
+			"type": "custom",
+			"title": "Z-report",
+			"component": "ZReportDetailView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posZReport"
+			}
+		},
+		{
+			"id": "PosBookkeepingSettings",
+			"route": "/admin/pos-bookkeeping",
+			"type": "custom",
+			"title": "POS bookkeeping",
+			"component": "PosBookkeepingSettingsView",
+			"config": {
+				"register": "pipelinq"
+			}
+		},
+		{
+			"id": "BrpMonitor",
+			"route": "/admin/brp-monitor",
+			"type": "custom",
+			"title": "BRP Monitor",
+			"component": "BrpMonitorView",
+			"config": {
+				"register": "pipelinq"
+			}
+		},
+		{
+			"id": "KassakoppelingAuditList",
+			"route": "/kassakoppeling/audit",
+			"type": "custom",
+			"title": "Kassakoppeling audit",
+			"component": "KassakoppelingAuditListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "kassakoppelingAuditLog"
+			}
+		},
+		{
+			"id": "KassakoppelingAuditDetail",
+			"route": "/kassakoppeling/audit/:id",
+			"type": "custom",
+			"title": "Audit entry",
+			"component": "KassakoppelingAuditDetailView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "kassakoppelingAuditLog"
+			}
+		},
+		{
 			"id": "PosTransactionDetail",
 			"route": "/pos/:id",
 			"type": "custom",
@@ -690,6 +913,72 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "posTransaction"
+			}
+		},
+		{
+			"id": "PosRoleList",
+			"route": "/pos/roles",
+			"type": "custom",
+			"title": "POS rollen",
+			"component": "PosRoleListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posRole"
+			}
+		},
+		{
+			"id": "PosRoleNew",
+			"route": "/pos/roles/new",
+			"type": "custom",
+			"title": "Nieuwe rol",
+			"component": "PosRoleFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posRole"
+			}
+		},
+		{
+			"id": "PosRoleDetail",
+			"route": "/pos/roles/:id",
+			"type": "custom",
+			"title": "POS rol",
+			"component": "PosRoleFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posRole"
+			}
+		},
+		{
+			"id": "PosStaffList",
+			"route": "/pos/staff",
+			"type": "custom",
+			"title": "POS medewerkers",
+			"component": "PosStaffListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posStaff"
+			}
+		},
+		{
+			"id": "PosStaffNew",
+			"route": "/pos/staff/new",
+			"type": "custom",
+			"title": "Nieuwe medewerker",
+			"component": "PosStaffFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posStaff"
+			}
+		},
+		{
+			"id": "PosStaffDetail",
+			"route": "/pos/staff/:id",
+			"type": "custom",
+			"title": "POS medewerker",
+			"component": "PosStaffFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "posStaff"
 			}
 		},
 		{
@@ -846,7 +1135,14 @@
 			"id": "Rapportage",
 			"route": "/rapportage",
 			"type": "custom",
-			"title": "Reporting",
+			"title": "Analytics",
+			"component": "RapportageView"
+		},
+		{
+			"id": "RapportageContactmomenten",
+			"route": "/rapportage/contactmomenten",
+			"type": "custom",
+			"title": "Contact reporting",
 			"component": "RapportageDashboardView"
 		},
 		{

@@ -52,8 +52,6 @@ class SettingsLoadService
         'leadProduct',
         'intakeForm',
         'intakeSubmission',
-        'automation',
-        'automationLog',
         'contactmoment',
         'task',
         'emailLink',
@@ -74,6 +72,11 @@ class SettingsLoadService
         'refundReason',
         'posRefund',
         'posRefundLine',
+        // POS cash-drawer (pos-cash-management).
+        'cashShift',
+        'cashDrop',
+        'cashCount',
+        'cashDiff',
         // Customer portal schemas (live in the separate pipelinq-portal register).
         'portalAccount',
         'portalSession',
@@ -85,6 +88,20 @@ class SettingsLoadService
         'exportJob',
         'exportRun',
         'exportSchemaSnapshot',
+        // Loyalty programme schemas (loyalty-program).
+        'loyaltyProgramme',
+        'pointsRule',
+        'tierRule',
+        'klantLoyaltyAccount',
+        'pointsLedgerEntry',
+        'redemptionOption',
+        'redemption',
+        'giftCard',
+        'giftCardTransaction',
+        // CTI screen-pop / click-to-dial adapter schemas (cti-screenpop-adapter).
+        'ctiAdapterConfig',
+        'ctiEventLog',
+        'ctiAgentPresence',
     ];
 
     /**

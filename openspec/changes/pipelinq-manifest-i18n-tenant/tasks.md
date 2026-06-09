@@ -17,7 +17,20 @@ Cite `hydra/openspec/changes/adopt-app-manifest/`.
 - [x] 8.3 In the manifest, declare `pipelinq.role: object-store-exemplar` (or equivalent
       key as defined by `adopt-app-manifest`) so other apps can find the reference
       implementation.
-- [ ] 8.4 Validate the manifest with the Hydra manifest schema once it ships.
+- [x] 8.4 Validate the manifest with the Hydra manifest schema once it ships.
+      *(Done as best-effort structural validation: the Hydra coordination-manifest
+      schema for `openspec/manifest.yaml` has not shipped yet —
+      `hydra/openspec/changes/adopt-app-manifest` governs the runtime
+      `src/manifest.json` only, not the OpenSpec coordination YAML. Confirmed
+      against the spec's stated invariants: `app: pipelinq`, `tier: 3`,
+      `dependencies: ["openregister"]`, all five consumed shared specs present
+      (`register-resolver-service`, `pluggable-integration-registry`,
+      `i18n-source-of-truth`, `i18n-api-language-negotiation`,
+      `multi-tenancy-context`), plus `contacts-actions` per task 8.2 OR-version
+      pin requirement, `openregister.min-version: "1.0.2"`, and
+      `pipelinq.role: object-store-exemplar`. Re-run against the canonical
+      Hydra schema once it lands; this structural pre-check remains valid until
+      then.)*
 
 ## Phase 9 — multi-tenancy + i18n adoption
 
