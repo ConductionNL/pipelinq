@@ -73,7 +73,28 @@ export function objectTypeGroups() {
 		{
 			key: 'export',
 			name: t(APP, 'BI Export'),
-			description: t(APP, 'Data-warehouse export jobs'),
+			description: t(APP, 'Data-warehouse export jobs, destinations and run history'),
+			registerConfigKey: 'register',
+			registerSlug: 'pipelinq',
+		},
+		{
+			key: 'finance',
+			name: t(APP, 'Finance'),
+			description: t(APP, 'Expenses and accounts-payable sync'),
+			registerConfigKey: 'register',
+			registerSlug: 'pipelinq',
+		},
+		{
+			key: 'marketing',
+			name: t(APP, 'Marketing'),
+			description: t(APP, 'Marketing blasts and campaigns'),
+			registerConfigKey: 'register',
+			registerSlug: 'pipelinq',
+		},
+		{
+			key: 'knowledge',
+			name: t(APP, 'Knowledge base'),
+			description: t(APP, 'Knowledge articles (kennisartikelen)'),
 			registerConfigKey: 'register',
 			registerSlug: 'pipelinq',
 		},
@@ -101,6 +122,7 @@ export function objectTypes() {
 		{ slug: 'skill', group: 'core', label: t(APP, 'Skill'), description: t(APP, 'Skills for agent routing') },
 		{ slug: 'agentProfile', group: 'core', label: t(APP, 'Agent Profile'), description: t(APP, 'Agent skill profiles') },
 		{ slug: 'billingCategory', group: 'core', label: t(APP, 'Billing Category'), description: t(APP, 'Billable categories and tags') },
+		{ slug: 'task', group: 'core', label: t(APP, 'Task'), description: t(APP, 'Work items / tasks') },
 		// Intake & Automation (group: intake)
 		{ slug: 'intakeForm', group: 'intake', label: t(APP, 'Intake Form'), description: t(APP, 'Public intake forms for capturing leads') },
 		{ slug: 'intakeSubmission', group: 'intake', label: t(APP, 'Intake Submission'), description: t(APP, 'Submissions received through intake forms') },
@@ -125,11 +147,13 @@ export function objectTypes() {
 		{ slug: 'cashDiff', group: 'pos', label: t(APP, 'Cash Difference'), description: t(APP, 'Over/short differences on cash reconciliation') },
 		{ slug: 'posRole', group: 'pos', label: t(APP, 'POS Role'), description: t(APP, 'POS staff roles and permissions') },
 		{ slug: 'posStaff', group: 'pos', label: t(APP, 'POS Staff'), description: t(APP, 'POS staff members with PIN access') },
+		{ slug: 'posZReport', group: 'pos', label: t(APP, 'Z-Report'), description: t(APP, 'POS end-of-day Z-reports') },
 		// Appointment booking (group: appointments)
 		{ slug: 'service', group: 'appointments', label: t(APP, 'Service'), description: t(APP, 'Bookable services') },
 		{ slug: 'resource', group: 'appointments', label: t(APP, 'Resource'), description: t(APP, 'Bookable resources (staff, rooms, equipment)') },
 		{ slug: 'booking', group: 'appointments', label: t(APP, 'Booking'), description: t(APP, 'Appointment bookings') },
 		{ slug: 'walkInTicket', group: 'appointments', label: t(APP, 'Walk-in Ticket'), description: t(APP, 'Walk-in queue tickets') },
+		{ slug: 'availabilityCache', group: 'appointments', label: t(APP, 'Availability Cache'), description: t(APP, 'Cached bookable-slot availability') },
 		// Project / WBS hierarchy (group: projects)
 		{ slug: 'project', group: 'projects', label: t(APP, 'Project'), description: t(APP, 'Projects') },
 		{ slug: 'projectPhase', group: 'projects', label: t(APP, 'Project Phase'), description: t(APP, 'Phases within a project') },
@@ -137,6 +161,14 @@ export function objectTypes() {
 		{ slug: 'projectActivity', group: 'projects', label: t(APP, 'Project Activity'), description: t(APP, 'Logged activities on project tasks') },
 		// BI export (bi-export-and-data-warehouse-sink) — REQ-BIE-002.
 		{ slug: 'exportJob', group: 'export', label: t(APP, 'Export Job'), description: t(APP, 'BI / data-warehouse export jobs') },
+		{ slug: 'exportDestination', group: 'export', label: t(APP, 'Export Destination'), description: t(APP, 'BI export destinations (data warehouse / BI tool)') },
+		{ slug: 'exportRun', group: 'export', label: t(APP, 'Export Run'), description: t(APP, 'BI export run history') },
+		// Finance (pipelinq-expense-to-shillinq-ap)
+		{ slug: 'expense', group: 'finance', label: t(APP, 'Expense'), description: t(APP, 'Expenses synced to Shillinq accounts-payable') },
+		// Marketing (marketing-segmentation-and-blast)
+		{ slug: 'blast', group: 'marketing', label: t(APP, 'Blast'), description: t(APP, 'Marketing blasts / campaigns') },
+		// Knowledge base (werkplek kennis)
+		{ slug: 'kennisartikel', group: 'knowledge', label: t(APP, 'Knowledge Article'), description: t(APP, 'Knowledge base articles') },
 	]
 }
 
