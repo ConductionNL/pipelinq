@@ -162,19 +162,34 @@ tryLoadTranslations()
 const pageTypesProp = { ...defaultPageTypes }
 const registryProp = { ...registry }
 
-// Create and mount Vue instance immediately so the App renders.
-new Vue({
-	pinia,
-	router,
-	render: (h) => h(App, {
-		props: {
-			manifest: mergedManifest,
-			registry: registryProp,
-			pageTypes: pageTypesProp,
-		},
-	}),
-}).$mount('#content')
+/** Mount the Vue instance onto #content. */
+function mountApp() {
+	new Vue({
+		pinia,
+		router,
+		render: (h) => h(App, {
+			props: {
+				manifest: mergedManifest,
+				registry: registryProp,
+				pageTypes: pageTypesProp,
+			},
+		}),
+	}).$mount('#content')
+}
 
-// Initialize stores in parallel — the useListView retry logic will wait
-// for registerObjectType to complete.
-initializeStores()
+// Register every object type BEFORE mounting the app. initializeStores()
+// loads /api/settings once and calls registerObjectType for each schema —
+// including the canonical-slug fallback for types whose app-config numeric
+// schema id is empty (posRefund / billingCategory / exportJob / automation,
+// see store.js). The list views call fetchSchema('<type>') synchronously on
+// mount, and _getTypeConfig throws "Object type … is not registered" if the
+// type isn't registered yet. Mounting in parallel (the previous behaviour)
+// raced that registration and surfaced the not-registered error on the
+// Returns / Billing categories / BI export pages, leaving them stuck on an
+// empty state. Gate the mount on the registration promise so the types are
+// always present before the first view fetches. A settings failure still
+// mounts the shell (the .catch/.finally path) — the views then degrade to
+// their own empty/retry state rather than the whole app failing to boot.
+initializeStores().catch(() => {}).finally(() => {
+	mountApp()
+})

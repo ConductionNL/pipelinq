@@ -33,7 +33,19 @@ async function doInitializeStores() {
 	const settingsStore = useSettingsStore()
 	const objectStore = useObjectStore()
 
-	const config = await settingsStore.fetchSettings()
+	// fetchSettings() RESOLVES with the raw /api/settings envelope
+	// ({ success, openRegisters, isAdmin, config: { register, *_schema, … } }),
+	// so the schema ids live under `.config`, NOT at the top level. Read the
+	// unwrapped config the store already normalised onto its state
+	// (settingsStore.config === envelope.config). Using the raw envelope here
+	// meant `config.register` was always undefined, so the whole registration
+	// block below was skipped and every store.js-registered type (posRefund,
+	// billingCategory, exportJob, automation, the POS/project types, …) was
+	// left unregistered — surfacing "Object type X is not registered" on the
+	// Returns / Billing categories / BI export pages. Fall back to the raw
+	// return for older envelope shapes that put the ids at the top level.
+	const result = await settingsStore.fetchSettings()
+	const config = (result && result.config) ? result.config : (settingsStore.config || result)
 
 	if (config) {
 		if (config.register && config.client_schema) {
