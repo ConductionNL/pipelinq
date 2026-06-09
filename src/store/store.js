@@ -105,8 +105,15 @@ async function doInitializeStores() {
 		if (config.register && config.refundReason_schema) {
 			objectStore.registerObjectType('refundReason', config.refundReason_schema, config.register)
 		}
-		if (config.register && config.posRefund_schema) {
-			objectStore.registerObjectType('posRefund', config.posRefund_schema, config.register)
+		// posRefund / billingCategory / exportJob / automation may have an empty
+		// numeric schema id in a deployed app-config (the OpenRegister schema
+		// exists under its canonical slug but the admin-settings link was never
+		// populated). OpenRegister resolves both numeric ids and slugs in the
+		// {register}/{schema} object path, so fall back to the canonical slug —
+		// keeping the affected list pages (Returns, Billing categories, BI
+		// export jobs, Automations) functional regardless of config linkage.
+		if (config.register) {
+			objectStore.registerObjectType('posRefund', config.posRefund_schema || 'posRefund', config.register)
 		}
 		if (config.register && config.posRefundLine_schema) {
 			objectStore.registerObjectType('posRefundLine', config.posRefundLine_schema, config.register)
@@ -132,8 +139,16 @@ async function doInitializeStores() {
 			objectStore.registerObjectType('posStaff', config.posStaff_schema, config.register)
 		}
 		// Billing categories (billable-categories-and-tags) — REQ-BCT-001.
-		if (config.register && config.billingCategory_schema) {
-			objectStore.registerObjectType('billingCategory', config.billingCategory_schema, config.register)
+		if (config.register) {
+			objectStore.registerObjectType('billingCategory', config.billingCategory_schema || 'billingCategory', config.register)
+		}
+		// BI export jobs (bi-export-and-data-warehouse-sink) — REQ-BIE-002.
+		if (config.register) {
+			objectStore.registerObjectType('exportJob', config.exportJob_schema || 'exportJob', config.register)
+		}
+		// CRM workflow automation rules (crm-workflow-automation).
+		if (config.register) {
+			objectStore.registerObjectType('automation', config.automation_schema || 'automation', config.register)
 		}
 		// Appointment booking — admin views (appointment-booking 01..11).
 		if (config.register && config.service_schema) {
