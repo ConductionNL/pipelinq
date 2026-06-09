@@ -35,6 +35,13 @@ import ComplaintsWidget from './views/dashboard/widgets/ComplaintsWidget.vue'
 import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
 import ClientOverviewWidget from './views/dashboard/widgets/ClientOverviewWidget.vue'
 
+// --- Dashboard analytics widgets (openspec/changes/dashboard).
+//     Navi AI conversational analytics, the unified cross-module KPI
+//     panel, and the funder report export panel. ---
+import NaviAnalyticsWidget from './views/dashboard/widgets/NaviAnalyticsWidget.vue'
+import UnifiedAnalyticsWidget from './views/dashboard/widgets/UnifiedAnalyticsWidget.vue'
+import ReportExportPanel from './views/dashboard/widgets/ReportExportPanel.vue'
+
 // Bespoke kanban board with in-memory search (REQ-PIPE-022).
 // See openspec/changes/2026-03-20-pipeline/design.md.
 import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
@@ -295,6 +302,21 @@ const registry = {
 		kind: 'widget',
 		component: ClientOverviewWidget,
 		_note: 'Top-5 recent clients with a view-all link to ClientList.',
+	},
+	NaviAnalyticsWidget: {
+		kind: 'widget',
+		component: NaviAnalyticsWidget,
+		_note: 'Conversational analytics chat panel powered by NaviService — natural-language queries return CnChartWidget / CnTableWidget / plain text inline, with up to 3 suggested follow-up chips. openspec/changes/dashboard REQ-DASH-001 / REQ-DASH-003.',
+	},
+	UnifiedAnalyticsWidget: {
+		kind: 'widget',
+		component: UnifiedAnalyticsWidget,
+		_note: 'Cross-module KPI + trend panel (lead conversion / avg request resolution / contactmoment volume / customer satisfaction + leads-over-time line + requests-by-category bar). Driven by GET /api/analytics/overview + /api/analytics/trends. openspec/changes/dashboard REQ-DASH-010 / REQ-DASH-011.',
+	},
+	ReportExportPanel: {
+		kind: 'widget',
+		component: ReportExportPanel,
+		_note: 'Collapsible funder-reporting export panel; delegates the format picker + download to CnMassExportDialog / ExportService — no custom export controller. openspec/changes/dashboard REQ-DASH-020 / REQ-DASH-021.',
 	},
 
 	// --- Queues / routing rules. ---
