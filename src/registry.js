@@ -352,16 +352,19 @@ const registry = {
 	NaviAnalyticsWidget: {
 		kind: 'widget',
 		component: NaviAnalyticsWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Conversational analytics chat panel powered by NaviService — natural-language queries return CnChartWidget / CnTableWidget / plain text inline, with up to 3 suggested follow-up chips. openspec/changes/dashboard REQ-DASH-001 / REQ-DASH-003.',
 	},
 	UnifiedAnalyticsWidget: {
 		kind: 'widget',
 		component: UnifiedAnalyticsWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Cross-module KPI + trend panel (lead conversion / avg request resolution / contactmoment volume / customer satisfaction + leads-over-time line + requests-by-category bar). Driven by GET /api/analytics/overview + /api/analytics/trends. openspec/changes/dashboard REQ-DASH-010 / REQ-DASH-011.',
 	},
 	ReportExportPanel: {
 		kind: 'widget',
 		component: ReportExportPanel,
+		...PANEL_WIDGET_META,
 		_note: 'Collapsible funder-reporting export panel; delegates the format picker + download to CnMassExportDialog / ExportService — no custom export controller. openspec/changes/dashboard REQ-DASH-020 / REQ-DASH-021.',
 	},
 
