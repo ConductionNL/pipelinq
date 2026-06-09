@@ -42,9 +42,9 @@ use Psr\Log\LoggerInterface;
 /**
  * Controller for the Navi AI conversational analytics endpoint.
  *
- * Authenticated users only (`#[NoAdminRequired]`). All business logic lives
- * in `NaviService`; this controller stays under 10 lines per method per
- * ADR-003.
+ * Authenticated users only (per the attribute on `query()`). All business
+ * logic lives in `NaviService`; this controller stays under 10 lines per
+ * method per ADR-003.
  *
  * @spec openspec/changes/dashboard/tasks.md#task-1.1
  */
