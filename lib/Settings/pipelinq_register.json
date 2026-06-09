@@ -5541,7 +5541,61 @@
         "bron": "BRP",
         "ingangsdatum": "2024-11-01",
         "beperkt": ["commerciele-derden", "kerkgenootschappen", "derdeportalen"]
-      }
+      },
+
+      { "@self": { "register": "pipelinq", "schema": "queue", "slug": "queue-algemene-zaken", "id": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c01" },
+        "title": "Algemene Zaken",
+        "description": "Diverse gemeentelijke vragen en informatieverzoeken",
+        "isActive": true,
+        "maxCapacity": null,
+        "sortOrder": 1 },
+
+      { "@self": { "register": "pipelinq", "schema": "queue", "slug": "queue-vergunningen", "id": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c02" },
+        "title": "Vergunningen",
+        "description": "Aanvragen en meldingen omgevingsvergunning",
+        "isActive": true,
+        "maxCapacity": 50,
+        "sortOrder": 2 },
+
+      { "@self": { "register": "pipelinq", "schema": "queue", "slug": "queue-wmo-zorg", "id": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c03" },
+        "title": "WMO / Zorg",
+        "description": "Wmo-aanvragen, hulpmiddelenvragen en zorgondersteuning",
+        "isActive": true,
+        "maxCapacity": 30,
+        "sortOrder": 3 },
+
+      { "@self": { "register": "pipelinq", "schema": "agentProfile", "slug": "agent-jan-de-vries", "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c11" },
+        "userId": "jan.devries",
+        "maxConcurrent": 3,
+        "isAvailable": true },
+
+      { "@self": { "register": "pipelinq", "schema": "agentProfile", "slug": "agent-fatima-el-amrani", "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c12" },
+        "userId": "fatima.elamrani",
+        "maxConcurrent": 2,
+        "isAvailable": false },
+
+      { "@self": { "register": "pipelinq", "schema": "agentProfile", "slug": "agent-pieter-bakker", "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c13" },
+        "userId": "pieter.bakker",
+        "maxConcurrent": 4,
+        "isAvailable": true },
+
+      { "@self": { "register": "pipelinq", "schema": "skill", "slug": "skill-vergunningen", "id": "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c21" },
+        "title": "Vergunningen",
+        "description": "Behandeling van omgevingsvergunningen en meldingen op basis van de Wabo",
+        "categories": ["vergunningen", "omgeving"],
+        "isActive": true },
+
+      { "@self": { "register": "pipelinq", "schema": "skill", "slug": "skill-wmo-zorg", "id": "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c22" },
+        "title": "WMO / Zorg",
+        "description": "Begeleiding bij Wmo-aanvragen, hulpmiddelen en zorgvragen",
+        "categories": ["wmo", "zorg", "hulpmiddelen"],
+        "isActive": true },
+
+      { "@self": { "register": "pipelinq", "schema": "skill", "slug": "skill-algemene-dienstverlening", "id": "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c23" },
+        "title": "Algemene Dienstverlening",
+        "description": "Brede gemeentelijke dienstverlening voor eerste lijn vragen",
+        "categories": ["algemeen", "informatie"],
+        "isActive": true }
     ]
   }
 }

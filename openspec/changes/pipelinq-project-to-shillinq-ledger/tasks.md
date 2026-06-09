@@ -251,10 +251,10 @@
       - `ledgerSyncedAt`: string (ISO 8601 timestamp)
     - AND both fields MUST be optional (required: false)
 
-- [ ] 6.2 Update project store to handle ledger sync fields — **DEFERRED**
-  - **DEFERRED REASON**: `src/stores/projectStore.js` does not exist. The `project-task-hierarchy` change (which owns the project store/views) was never merged to `development` — there is no project store, `ProjectList.vue`, or `ProjectDetail.vue` in the codebase. The generic `createObjectStore` already preserves arbitrary object fields (incl. `ledgerSyncStatus`/`ledgerSyncedAt`), so no store change is required once those views land. Deferred until `project-task-hierarchy` ships the project store/views.
+- [x] 6.2 Update project store to handle ledger sync fields
+  - **IMPLEMENTATION NOTE**: pipelinq does not ship a dedicated `projectStore.js`. Project objects flow through the shared library's `createObjectStore('object', ...)` (see `src/store/modules/object.js`), which preserves the full OpenRegister payload — `ledgerSyncStatus` and `ledgerSyncedAt` are returned to Vue components via `objectStore.getObject('project', id)` without any explicit field mapping. Acceptance criteria are satisfied by the shared store's pass-through behavior; project-task-hierarchy's `ProjectList.vue` / `ProjectDetail.vue` consume it that way (verified by reading the rendered `projectData` in `ProjectDetail.vue`).
   - **spec_ref**: `specs/pipelinq-project-to-shillinq-ledger/spec.md#REQ-PLG-003`
-  - **files**: `src/stores/projectStore.js`
+  - **files**: `src/store/modules/object.js`
   - **acceptance_criteria**:
     - GIVEN a project object is loaded from OpenRegister
     - THEN the store MUST preserve `ledgerSyncStatus` and `ledgerSyncedAt` fields
@@ -264,12 +264,8 @@
 
 ## 7. Frontend: Project List Badge (REQ-PLG-004)
 
-> **DEFERRED (7.1, 7.2)** — `src/views/projects/ProjectList.vue` does not exist; the
-> `project-task-hierarchy` change that owns the project list view was never merged to
-> `development`. The badge i18n strings (synced/pending/failed) ARE shipped (task 7.3 / l10n)
-> so the column drops in cleanly once the list view lands. Deferred until `project-task-hierarchy` ships.
-
-- [ ] 7.1 Add ledger sync status column to ProjectList.vue — **DEFERRED** (no ProjectList.vue)
+- [x] 7.1 Add ledger sync status column to ProjectList.vue
+  - **IMPLEMENTATION NOTE**: `src/views/projects/ProjectList.vue` (shipped via the merged `project-task-hierarchy` work) now adds `ledgerSyncStatus` to its `visibleColumns` whitelist right after `status`. CnIndexPage routes the cell through the new `#cell-ledgerSyncStatus` slot which renders the pill (see 7.2).
   - **spec_ref**: `specs/pipelinq-project-to-shillinq-ledger/spec.md#REQ-PLG-004`
   - **files**: `src/views/projects/ProjectList.vue`
   - **acceptance_criteria**:
@@ -277,7 +273,8 @@
     - THEN a new column "Ledger Status" MUST appear after the Status column
     - AND it MUST display a badge per project showing the sync state
 
-- [ ] 7.2 Render color-coded badges based on ledgerSyncStatus
+- [x] 7.2 Render color-coded badges based on ledgerSyncStatus
+  - **IMPLEMENTATION NOTE**: New `ledgerLabel()` / `ledgerPillClass()` helpers map the three sync states onto the existing English i18n source-string keys (`Ledger synchronized` / `Ledger pending` / `Ledger sync failed`) — Dutch translations already in `l10n/nl.json` resolve to "gesynchroniseerd" / "in behandeling" / "mislukt". Missing/`null` value renders a grey dash via `.ledger-dash`. Color palette mirrors the existing status-pill CSS conventions (green / amber / red) for consistency.
   - **spec_ref**: `specs/pipelinq-project-to-shillinq-ledger/spec.md#REQ-PLG-004`
   - **files**: `src/views/projects/ProjectList.vue`
   - **acceptance_criteria**:
@@ -302,14 +299,8 @@
 
 ## 8. Frontend: Project Detail Ledger Card (REQ-PLG-005)
 
-> **DEFERRED (8.1–8.4)** — `src/views/projects/ProjectDetail.vue` does not exist; the
-> `project-task-hierarchy` change that owns the project detail view was never merged to
-> `development`. The backend for the manual retry IS shipped and tested: `LedgerController::retry`
-> on `POST /api/ledger/retry/{projectId}` (admin-gated) plus the ledger-card i18n strings
-> ("Shillinq Ledger", "Last synced", "Retry Sync", status labels). The card + retry button drop in
-> once the detail view lands. Deferred until `project-task-hierarchy` ships.
-
-- [ ] 8.1 Create ledger status card component in ProjectDetail.vue — **DEFERRED** (no ProjectDetail.vue)
+- [x] 8.1 Create ledger status card component in ProjectDetail.vue
+  - **IMPLEMENTATION NOTE**: Added a new `CnDetailCard` titled "Shillinq Ledger" between the Budget and Werkverdeling cards in `src/views/projects/ProjectDetail.vue`. Two grid rows show "Status" (color-coded pill via the existing English i18n source strings) and "Last synced" (locale date/time, "-" when null). Rendering is gated on `ledgerWebhookConfigured` (REQ-PLG-005-04).
   - **spec_ref**: `specs/pipelinq-project-to-shillinq-ledger/spec.md#REQ-PLG-005`
   - **files**: `src/views/projects/ProjectDetail.vue`
   - **acceptance_criteria**:
@@ -318,7 +309,8 @@
     - THEN a "Shillinq Ledger" card MUST appear above the WBS tree
     - AND it MUST display: status badge, "Status:" label, "Last synced:" timestamp
 
-- [ ] 8.2 Show retry button when ledgerSyncStatus is failed
+- [x] 8.2 Show retry button when ledgerSyncStatus is failed
+  - **IMPLEMENTATION NOTE**: The "Retry Sync" button is wrapped in `v-if="ledgerSyncStatus === 'failed'"`, so the button is absent from the DOM for `synced` / `pending` / unknown states. While a retry request is in flight, `ledgerRetrying` disables the button (visible only when the card itself is open).
   - **spec_ref**: `specs/pipelinq-project-to-shillinq-ledger/spec.md#REQ-PLG-005-02`
   - **files**: `src/views/projects/ProjectDetail.vue`
   - **acceptance_criteria**:
@@ -328,7 +320,8 @@
     - GIVEN `ledgerSyncStatus: "synced"` or `"pending"`
     - THEN the button MUST NOT appear or be disabled
 
-- [ ] 8.3 Implement retry button click handler
+- [x] 8.3 Implement retry button click handler
+  - **IMPLEMENTATION NOTE**: `retryLedgerSync()` POSTs to `generateUrl('/apps/pipelinq/api/ledger/retry/{projectId}')` via `@nextcloud/axios`. While in flight `ledgerRetrying` flips the button label to "Retrying..." and disables it. On success it shows the `Ledger sync retried successfully.` toast (already in l10n) and re-fetches the project so the card reflects `synced` / new `ledgerSyncedAt`. On error it surfaces the server's error message (or the localized `Could not retry the ledger sync.` fallback).
   - **spec_ref**: `specs/pipelinq-project-to-shillinq-ledger/spec.md#REQ-PLG-005-03`
   - **files**: `src/views/projects/ProjectDetail.vue`
   - **acceptance_criteria**:
@@ -339,7 +332,8 @@
     - AND on success, the ledger status card MUST refresh with the new status
     - AND on error, an error toast MUST appear with details
 
-- [ ] 8.4 Hide ledger card if webhook not configured
+- [x] 8.4 Hide ledger card if webhook not configured
+  - **IMPLEMENTATION NOTE**: On mount, `loadLedgerWebhookStatus()` GETs `/apps/pipelinq/api/settings` (NoAdminRequired endpoint that returns the tunable map including `shillinq_ledger_webhook_url`) and sets `ledgerWebhookConfigured` only when the URL is a non-empty string. The card carries `v-if="ledgerWebhookConfigured"`, so the entire DOM subtree is removed when the integration is not configured.
   - **spec_ref**: `specs/pipelinq-project-to-shillinq-ledger/spec.md#REQ-PLG-005-04`
   - **files**: `src/views/projects/ProjectDetail.vue`
   - **acceptance_criteria**:
