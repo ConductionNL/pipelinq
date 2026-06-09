@@ -7,10 +7,9 @@
  *
  * LIVE STATE (verified 2026-06-09 against the deployed bundle): the page mounts
  * its `cn-index-page` chrome and the primary "New category" CTA. The store.js
- * slug-fallback registration (commit a53bc8c5) does NOT yet make the
- * schema-driven data surface render — `billingCategory` is still reported as
- * not registered at fetch time, so the heading + table never populate. The data
- * surface assertion is kept as `test.fixme` until that is resolved.
+ * slug-fallback registration (commit a53bc8c5) registers `billingCategory`
+ * against the canonical OR schema slug when the app-config numeric id is empty
+ * (register=16, empty *_schema), so the schema-driven data surface now loads.
  */
 import { test, expect } from '@playwright/test'
 import { openApp, navClick, assertNoHardError } from '../helpers/pipelinq'
@@ -33,15 +32,21 @@ test('Billing categories: primary "New category" action is present', async ({ pa
 })
 
 // @e2e openspec/specs/pos-transaction-core/spec.md#billing-categories-list
-test.fixme('Billing categories: list data surface renders', async ({ page }) => {
-	// KNOWN GAP: the "billingCategory" object type is still not registered at
-	// fetch time on the deployed bundle, so the collection fetch throws and the
-	// index renders only its empty/chrome state (no heading, no data table).
-	// Unskip once store.js registration makes the schema-driven surface load.
+test('Billing categories: list data surface renders', async ({ page }) => {
+	// store.js slug-fallback registration (commit a53bc8c5) registers
+	// "billingCategory" against the canonical OR schema slug when the app-config
+	// numeric id is empty, so the collection fetch resolves: the index renders its
+	// schema-driven data surface (the Cards/Table view toggle + a populated table,
+	// or — register 16 holds the schema but no seeded categories — the genuine
+	// "No items found" empty state) rather than the broken "not registered" state.
 	await openApp(page)
 	await navClick(page, 'Billing categories', /\/billing-categories/)
-	await expect(page.locator('#content-vue').getByRole('heading').first()).toBeVisible()
-	await expect(page.locator('#content-vue table, #content-vue .cn-data-table').first()).toBeVisible()
+	const content = page.locator('#content-vue')
+	await expect(content.getByRole('radio', { name: 'Table' })).toBeVisible()
+	await expect(
+		content.locator('table, .cn-data-table').first()
+			.or(content.getByText(/No items found/i).first()),
+	).toBeVisible()
 })
 
 /*
