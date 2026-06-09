@@ -159,7 +159,12 @@ class AnalyticsController extends Controller
         try {
             return new JSONResponse($this->analyticsService->getTrends(metric: $metric, period: $period));
         } catch (InvalidArgumentException $e) {
-            return new JSONResponse(['message' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+            // Map the (static) service exception text onto a controller-owned
+            // static label so the response envelope never carries through any
+            // value derived from $e->getMessage() — both branches return one of
+            // two constant strings.
+            $label = $e->getMessage() === 'Invalid period' ? 'Invalid period' : 'Unsupported metric';
+            return new JSONResponse(['message' => $label], Http::STATUS_BAD_REQUEST);
         } catch (\Throwable $e) {
             $this->logger->warning(
                 message: '[AnalyticsController] trends failed',
