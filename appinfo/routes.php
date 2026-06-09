@@ -91,6 +91,11 @@ return [
         // Rapportage / reporting — specific routes before wildcard catch-all.
         // Klantbeeld 360 — cross-module analytics summary (must precede any wildcard `{slug}` routes).
         ['name' => 'analytics#summary', 'url' => '/api/analytics/summary', 'verb' => 'GET'],
+        // Dashboard analytics & Navi (openspec/changes/dashboard).
+        ['name' => 'analytics#overview', 'url' => '/api/analytics/overview', 'verb' => 'GET'],
+        ['name' => 'analytics#trends',   'url' => '/api/analytics/trends',   'verb' => 'GET'],
+        ['name' => 'analytics#funnels',  'url' => '/api/analytics/funnels',  'verb' => 'GET'],
+        ['name' => 'navi#query',         'url' => '/api/navi/query',         'verb' => 'POST'],
         ['name' => 'reporting#getKpis',     'url' => '/api/rapportage/kpis',     'verb' => 'GET'],
         ['name' => 'reporting#getChannels', 'url' => '/api/rapportage/channels', 'verb' => 'GET'],
         ['name' => 'reporting#getAgents',   'url' => '/api/rapportage/agents',   'verb' => 'GET'],
@@ -421,6 +426,19 @@ return [
         // zaak/status/besluit/catalogi event for a subscribed gemeente.
         ['name' => 'zgwNotification#inbox', 'url' => '/api/zgw/notificaties/inbox', 'verb' => 'POST'],
 
+        // WhatsApp / SMS messaging webhooks (signature-verified, PublicPage)
+        // whatsapp-sms-channel-adapter / REQ-003. Specific routes precede
+        // any wildcard catch-alls (ADR-016).
+        ['name' => 'messagingWebhook#whatsapp', 'url' => '/api/messaging-webhooks/whatsapp/{providerId}', 'verb' => 'POST'],
+        ['name' => 'messagingWebhook#sms',      'url' => '/api/messaging-webhooks/sms/{providerId}',      'verb' => 'POST'],
+        // Berichtenbox bridge (burgerportaal-mijnoverheid-bridge).
+        // Logius webhooks for read-receipt + inbound replies — HMAC-SHA256
+        // signature-verified (REQ-RECEIPT-005 / REQ-INBOUND-006).
+        ['name' => 'berichtenboxWebhook#readReceipt',  'url' => '/api/webhook/berichtenbox/read',  'verb' => 'POST'],
+        ['name' => 'berichtenboxWebhook#inboundReply', 'url' => '/api/webhook/berichtenbox/reply', 'verb' => 'POST'],
+        // Admin ops — retry a failed message + read aggregate stats.
+        ['name' => 'berichtenboxAdmin#retry', 'url' => '/api/admin/berichtenbox/message/{id}/retry', 'verb' => 'POST'],
+        ['name' => 'berichtenboxAdmin#stats', 'url' => '/api/admin/berichtenbox/stats',              'verb' => 'GET'],
         // Marketing — Segments (marketing-segmentation-and-blast chain member 06).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
         ['name' => 'segment#index',         'url' => '/api/segments',                  'verb' => 'GET'],
@@ -458,6 +476,19 @@ return [
         ['name' => 'brpAdmin#get',                 'url' => '/api/brp/settings',                  'verb' => 'GET'],
         ['name' => 'brpAdmin#save',                'url' => '/api/brp/settings',                  'verb' => 'POST'],
         ['name' => 'brpAdmin#rotateWebhookSecret', 'url' => '/api/brp/settings/webhook-secret',   'verb' => 'POST'],
+        // StUF-ZKN/BG adapter (stuf-zkn-bg-adapter — REQ-STUF-001..012).
+        // camelCase slug matches StufController class name. Specific routes precede any wildcard {slug} routes.
+        // The /inkomend endpoint is PublicPage so the zaaksysteem can post notifications
+        // without a user session; it authenticates via WSSE UsernameToken (verified in the controller).
+        ['name' => 'stuf#outbound',  'url' => '/api/stuf/outbound',  'verb' => 'POST'],
+        ['name' => 'stuf#inkomend',  'url' => '/api/stuf/inkomend',  'verb' => 'POST'],
+        ['name' => 'stuf#endpoints', 'url' => '/api/stuf/endpoints', 'verb' => 'GET'],
+        ['name' => 'stuf#messages',  'url' => '/api/stuf/messages',  'verb' => 'GET'],
+
+        // KCC Werkplek — unified agent workspace (kcc-werkplek).
+        // Specific routes precede any wildcard {path} catch-all (ADR-016).
+        ['name' => 'kccWerkplek#stateAction',           'url' => '/api/kcc-werkplek/state',        'verb' => 'GET'],
+        ['name' => 'kccWerkplek#setAvailabilityAction', 'url' => '/api/kcc-werkplek/availability', 'verb' => 'PUT'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],

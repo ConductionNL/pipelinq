@@ -53,6 +53,7 @@ use OCA\Pipelinq\Listener\ExpenseApprovalListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCA\Pipelinq\Listener\PosTransactionCompletedListener;
 use OCA\Pipelinq\Listener\ProjectCreationListener;
+use OCA\Pipelinq\Listener\BerichtenboxZaakStatusListener;
 use OCA\Pipelinq\Listener\ProjectPhaseStatusListener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Mcp\PipelinqToolProvider;
@@ -130,6 +131,15 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(
             event: ObjectUpdatedEvent::class,
             listener: ProjectPhaseStatusListener::class
+        );
+
+        // Burgerportaal / MijnOverheid Berichtenbox bridge:
+        // listen for zaak status transitions and queue an outbound
+        // Berichtenbox message via BerichtenboxService
+        // (burgerportaal-mijnoverheid-bridge / REQ-OUTBOUND-001).
+        $context->registerEventListener(
+            event: ObjectUpdatedEvent::class,
+            listener: BerichtenboxZaakStatusListener::class
         );
 
         // Shillinq WIP integration: time-entry approval dispatches a CloudEvent

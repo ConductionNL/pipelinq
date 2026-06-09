@@ -35,6 +35,13 @@ import ComplaintsWidget from './views/dashboard/widgets/ComplaintsWidget.vue'
 import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
 import ClientOverviewWidget from './views/dashboard/widgets/ClientOverviewWidget.vue'
 
+// --- Dashboard analytics widgets (openspec/changes/dashboard).
+//     Navi AI conversational analytics, the unified cross-module KPI
+//     panel, and the funder report export panel. ---
+import NaviAnalyticsWidget from './views/dashboard/widgets/NaviAnalyticsWidget.vue'
+import UnifiedAnalyticsWidget from './views/dashboard/widgets/UnifiedAnalyticsWidget.vue'
+import ReportExportPanel from './views/dashboard/widgets/ReportExportPanel.vue'
+
 // Bespoke kanban board with in-memory search (REQ-PIPE-022).
 // See openspec/changes/2026-03-20-pipeline/design.md.
 import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
@@ -155,6 +162,12 @@ import CtiEventLogView from './views/settings/CtiEventLog.vue'
 //     encrypted-at-rest secrets and a per-provider "Verbinding testen" button.
 //     Lib gap: no payment-provider-settings page type. ---
 import PaymentSettingsForm from './views/settings/PaymentSettingsForm.vue'
+// --- StUF-ZKN/BG adapter (stuf-zkn-bg-adapter): admin endpoint list with
+//     per-endpoint circuit-breaker health badge and per-call audit log
+//     (REQ-STUF-008, REQ-STUF-011). Lib gap: no envelope-style audit-log
+//     page type with CSV export and inline XML inspection. ---
+import StufEndpointsView from './views/settings/StufEndpoints.vue'
+import StufAuditLogView from './views/settings/StufAuditLog.vue'
 
 // --- Expense → Shillinq AP (pipelinq-expense-to-shillinq-ap): list with
 //     apSyncStatus badge column, detail with embedded Shillinq AP card
@@ -212,6 +225,12 @@ import ResourceListView from './views/bookings/ResourceList.vue'
 import ResourceDetailView from './views/bookings/ResourceDetail.vue'
 import BookingListView from './views/bookings/BookingList.vue'
 import BookingDetailView from './views/bookings/BookingDetail.vue'
+
+// --- KCC Werkplek (kcc-werkplek): unified KCC agent workspace combining
+//     inbox + contactmoment registration + inline knowledge search +
+//     availability toggle in a single three-panel page. Lib gap: no
+//     multi-panel workspace page type exists. ---
+import KccWerkplekPage from './views/werkplek/KccWerkplekPage.vue'
 
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
@@ -329,6 +348,21 @@ const registry = {
 		component: ClientOverviewWidget,
 		...PANEL_WIDGET_META,
 		_note: 'Top-5 recent clients with a view-all link to ClientList.',
+	},
+	NaviAnalyticsWidget: {
+		kind: 'widget',
+		component: NaviAnalyticsWidget,
+		_note: 'Conversational analytics chat panel powered by NaviService — natural-language queries return CnChartWidget / CnTableWidget / plain text inline, with up to 3 suggested follow-up chips. openspec/changes/dashboard REQ-DASH-001 / REQ-DASH-003.',
+	},
+	UnifiedAnalyticsWidget: {
+		kind: 'widget',
+		component: UnifiedAnalyticsWidget,
+		_note: 'Cross-module KPI + trend panel (lead conversion / avg request resolution / contactmoment volume / customer satisfaction + leads-over-time line + requests-by-category bar). Driven by GET /api/analytics/overview + /api/analytics/trends. openspec/changes/dashboard REQ-DASH-010 / REQ-DASH-011.',
+	},
+	ReportExportPanel: {
+		kind: 'widget',
+		component: ReportExportPanel,
+		_note: 'Collapsible funder-reporting export panel; delegates the format picker + download to CnMassExportDialog / ExportService — no custom export controller. openspec/changes/dashboard REQ-DASH-020 / REQ-DASH-021.',
 	},
 
 	// --- Queues / routing rules. ---
@@ -697,6 +731,18 @@ const registry = {
 		_note: 'Time-entry list for one project with date/user/task/billable filters and a totals row that applies the billable inheritance chain (REQ-PTH-004 / REQ-PTH-005 / REQ-PTH-008).',
 	},
 
+	// --- StUF-ZKN/BG adapter (stuf-zkn-bg-adapter). ---
+	StufEndpointsView: {
+		kind: 'page',
+		component: StufEndpointsView,
+		_note: 'StUF endpoint configuration list with per-endpoint circuit-breaker health badge (REQ-STUF-011); lib gap: no admin page type that shows the running circuit-breaker state alongside the endpoint row.',
+	},
+	StufAuditLogView: {
+		kind: 'page',
+		component: StufAuditLogView,
+		_note: 'StUF per-call audit log inspector (REQ-STUF-008): direction + bericht + status filters, inline envelope XML inspection, retries[] history and fout payload; CSV export. Lib gap: no envelope-style audit-log page type.',
+	},
+
 	// --- Marketing blasts (marketing-segmentation-and-blast slice 07). ---
 	BlastListView: {
 		kind: 'page',
@@ -749,6 +795,13 @@ const registry = {
 		kind: 'page',
 		component: BookingDetailView,
 		_note: 'Booking detail with context-sensitive lifecycle buttons (Reschedule / Cancel / Mark Completed / Mark No-show / Send Reminder / Confirm Deposit) wired to the BookingAdminController endpoints, inline notes editor, audit-trail card and a chronological timeline (REQ-APT-015).',
+	},
+
+	// --- KCC Werkplek — unified agent workspace (kcc-werkplek). ---
+	KccWerkplekPage: {
+		kind: 'page',
+		component: KccWerkplekPage,
+		_note: 'Three-panel KCC agent workspace combining inbox, contactmoment quick-log and inline knowledge search; lib gap: no multi-panel workspace page type and the aggregated state endpoint requires a bespoke controller.',
 	},
 }
 

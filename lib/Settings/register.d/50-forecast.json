@@ -11,6 +11,7 @@
         },
         "schemas": {
             "lead": {
+                "slug": "lead",
                 "properties": {
                     "forecast_category": {
                         "type": "string",

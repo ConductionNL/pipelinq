@@ -50,6 +50,15 @@
 				{{ formatDate(row.endDate) }}
 			</span>
 		</template>
+		<template #cell-ledgerSyncStatus="{ row }">
+			<span v-if="!row.ledgerSyncStatus" class="ledger-dash">-</span>
+			<span
+				v-else
+				class="ledger-pill"
+				:class="ledgerPillClass(row.ledgerSyncStatus)">
+				{{ ledgerLabel(row.ledgerSyncStatus) }}
+			</span>
+		</template>
 	</CnIndexPage>
 </template>
 
@@ -80,7 +89,7 @@ export default {
 		 * @return {Array<string>}
 		 */
 		visibleColumns() {
-			return ['name', 'client', 'status', 'billable', 'budget', 'endDate']
+			return ['name', 'client', 'status', 'ledgerSyncStatus', 'billable', 'budget', 'endDate']
 		},
 	},
 	methods: {
@@ -161,6 +170,29 @@ export default {
 			}
 		},
 		/**
+		 * Translated label for the ledger sync status pill (REQ-PLG-004).
+		 *
+		 * @param {string|null} status The ledgerSyncStatus value.
+		 * @return {string}
+		 */
+		ledgerLabel(status) {
+			const map = {
+				synced: t('pipelinq', 'Ledger synchronized'),
+				pending: t('pipelinq', 'Ledger pending'),
+				failed: t('pipelinq', 'Ledger sync failed'),
+			}
+			return map[status] || (status || '-')
+		},
+		/**
+		 * CSS modifier class for the ledger sync status pill (REQ-PLG-004).
+		 *
+		 * @param {string|null} status The ledgerSyncStatus value.
+		 * @return {string}
+		 */
+		ledgerPillClass(status) {
+			return 'ledger-pill--' + (status || 'unknown')
+		},
+		/**
 		 * Whether the project is past its end date AND not finalised.
 		 *
 		 * @param {object} project The project row.
@@ -219,5 +251,25 @@ export default {
 .endDate--overdue {
 	color: #c62828;
 	font-weight: 600;
+}
+
+/* Ledger sync status pill (REQ-PLG-004). */
+.ledger-pill {
+	display: inline-block;
+	padding: 2px 10px;
+	border-radius: 12px;
+	font-size: 0.85em;
+	background: var(--color-background-dark);
+	color: var(--color-main-text);
+}
+
+.ledger-pill--synced { background: #e8f5e9; color: #1b5e20; }
+
+.ledger-pill--pending { background: #fff8e1; color: #6d4c00; }
+
+.ledger-pill--failed { background: #fbe9e7; color: #b71c1c; }
+
+.ledger-dash {
+	color: var(--color-text-maxcontrast);
 }
 </style>

@@ -70,6 +70,13 @@ export function objectTypeGroups() {
 			registerConfigKey: 'register',
 			registerSlug: 'pipelinq',
 		},
+		{
+			key: 'export',
+			name: t(APP, 'BI Export'),
+			description: t(APP, 'Data-warehouse export jobs'),
+			registerConfigKey: 'register',
+			registerSlug: 'pipelinq',
+		},
 	]
 }
 
@@ -128,6 +135,8 @@ export function objectTypes() {
 		{ slug: 'projectPhase', group: 'projects', label: t(APP, 'Project Phase'), description: t(APP, 'Phases within a project') },
 		{ slug: 'projectTask', group: 'projects', label: t(APP, 'Project Task'), description: t(APP, 'Tasks within a project phase') },
 		{ slug: 'projectActivity', group: 'projects', label: t(APP, 'Project Activity'), description: t(APP, 'Logged activities on project tasks') },
+		// BI export (bi-export-and-data-warehouse-sink) — REQ-BIE-002.
+		{ slug: 'exportJob', group: 'export', label: t(APP, 'Export Job'), description: t(APP, 'BI / data-warehouse export jobs') },
 	]
 }
 

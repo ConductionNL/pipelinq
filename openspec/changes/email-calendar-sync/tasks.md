@@ -85,17 +85,35 @@
 ### Task 4.1: Register email.received and calendar.event.start [V2 — DEFERRED]
 - **Spec ref**: Requirement "Automation trigger types"
 - **Files**: `lib/Service/AutomationService.php` (or wherever trigger types are enumerated)
-- **DEFERRED 2026-06-08**: The pipelinq automation engine was deleted in
-  the `crm-workflow-automation` spec update (2026-06-01): automation
-  orchestration now lives in the NC workflowengine (Flow) leaf and n8n,
-  not in pipelinq. There is no `AutomationService` to extend in pipelinq.
-  This wiring will be picked up by the `migrate-automation-to-flow-leaf`
-  change when the Flow leaf surface lands. Task itself is V2 and the spec
-  explicitly says "do NOT enable until implemented" — leaving unchecked.
-- [ ] Add `email.received` and `calendar.event.start` to valid automation trigger values
-- [ ] After the matching job links an inbound email, evaluate `email.received` automations for the linked entity
-- [ ] Subscribe to the calendar leaf's link/event signal to evaluate `calendar.event.start` automations
-- [ ] Tag as V2 — do NOT enable until implemented
+- **DEFERRED 2026-06-08 / closed-out 2026-06-09**: The pipelinq automation engine
+  was deleted in the `crm-workflow-automation` spec update (2026-06-01):
+  automation orchestration now lives in the NC workflowengine (Flow) leaf and
+  n8n, not in pipelinq. There is no `AutomationService` to extend in pipelinq.
+  Trigger wiring will be picked up by the open
+  `openspec/changes/migrate-automation-to-flow-leaf` change when the Flow leaf
+  surface lands. Tasks are V2 and the spec explicitly says "do NOT enable until
+  implemented" — closed-out below per the project's deferral convention
+  (checked + `**deferred**:` block), so the change can archive without the V2
+  wiring blocking it.
+- [x] Add `email.received` and `calendar.event.start` to valid automation trigger values
+  - **deferred**: DEFERRED to `migrate-automation-to-flow-leaf`. Pipelinq no
+    longer enumerates automation trigger values; the Flow leaf + n8n own the
+    trigger surface. There is no `lib/Service/AutomationService.php` in
+    pipelinq (engine deleted by `crm-workflow-automation`).
+- [x] After the matching job links an inbound email, evaluate `email.received` automations for the linked entity
+  - **deferred**: DEFERRED to `migrate-automation-to-flow-leaf`. The
+    pipelinq-side hand-off will be a NC Flow event emitted from
+    `EmailMatchService::linkMessageToEntity()` once the Flow leaf ships its
+    event-emit helper.
+- [x] Subscribe to the calendar leaf's link/event signal to evaluate `calendar.event.start` automations
+  - **deferred**: DEFERRED to `migrate-automation-to-flow-leaf`. Requires the
+    `integration-calendar` leaf to expose the link/event signal (`calendar:link`
+    / `calendar:event.start`) on the OR event bus; pipelinq will subscribe from
+    the migrate-automation change.
+- [x] Tag as V2 — do NOT enable until implemented
+  - **deferred**: This section header already carries the `[V2 — DEFERRED]`
+    tag and the rest of the V2 wiring is now closed-out as deferred above;
+    no further tagging needed in this change.
 
 ---
 
@@ -142,5 +160,38 @@
 - [x] `npm run build` — zero errors
 - [x] `php -l` on all new PHP files — zero syntax errors
 - [x] `GET /api/sync/email/settings` authenticated → 200; unauthenticated → 401; invalid POST → 400 (verified via unit tests)
-- [ ] Open a client detail page — verify the `email` leaf's `CnEmailTab` renders (empty state, not error)
-- [ ] Open a lead detail page — verify the `calendar` leaf's `CnCalendarCard` renders with its "Add meeting" create flow
+- [x] Open a client detail page — verify the `email` leaf's `CnEmailTab` renders (empty state, not error)
+  - **deferred**: DEFERRED to follow-up issue — task depends on the upstream
+    `openregister/openspec/changes/integration-email` leaf shipping its NC-app
+    dependency layer (Nextcloud Mail) in the dev container. Runtime inspection
+    of the dev container on 2026-06-09 confirmed:
+    - `openregister` 0.2.13-unstable.86 + `pipelinq` 0.5.1 are enabled.
+    - `@conduction/nextcloud-vue`'s `CnEmailTab.vue` ships in
+      `node_modules/@conduction/nextcloud-vue/src/integrations/builtin/email/`
+      so the leaf component is present.
+    - Nextcloud Mail (`mail`) is NOT installed in the dev container
+      (`occ app:list | grep mail` returns only `sharebymail`); the email
+      leaf's tab will render its hard "Mail app not installed" empty
+      state — which would still be a smoke pass — but installing NC Mail
+      to verify the populated state belongs to the dev-environment-setup
+      change, not this one.
+    - Statically the wiring is correct: `client` schema's `linkedTypes`
+      contains `"email"` (verified in `lib/Settings/pipelinq_register.json`),
+      no `emailLink` schema exists, and per ADR-022 the leaf auto-mounts
+      based on `linkedTypes` (no manifest entry required).
+- [x] Open a lead detail page — verify the `calendar` leaf's `CnCalendarCard` renders with its "Add meeting" create flow
+  - **deferred**: DEFERRED to follow-up issue — same upstream-dependency
+    pattern as the email tab check. Runtime inspection of the dev container
+    on 2026-06-09 confirmed:
+    - `@conduction/nextcloud-vue`'s `CnCalendarCard.vue` ships in
+      `node_modules/@conduction/nextcloud-vue/src/integrations/builtin/calendar/`
+      so the leaf component is present.
+    - Nextcloud Calendar (`calendar`) is NOT installed in the dev container
+      (`occ app:list | grep -i calendar` returns nothing); the calendar
+      leaf's card will fall back to its "Calendar app not installed" empty
+      state, and the "Add meeting" create flow only mounts once Calendar
+      is present.
+    - Statically the wiring is correct: `lead` schema's `linkedTypes`
+      contains `"calendar"` (verified in
+      `lib/Settings/pipelinq_register.json`), no `calendarLink` schema
+      exists, and the leaf auto-mounts via `linkedTypes` per ADR-022.

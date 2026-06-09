@@ -54,9 +54,20 @@
 
   Every visible string in SegmentBuilder, SegmentRuleNode, BlastForm, BlastMonitor, BlastList and MissingConsentModal is wrapped in `t('pipelinq', ...)` or `n('pipelinq', ...)`. The 60 new English source keys are added to `l10n/en.json` + `l10n/en.js`; the Dutch translations land in `l10n/nl.json` + `l10n/nl.js` (re-using existing equivalents — Verzenden / Status / Annuleren — where they already exist). Every visual style uses `var(--color-*)` / `var(--border-radius)` (no hardcoded hex / rgb) so the nldesign theme applies cleanly.
 
-## BlastMonitor.vue (Task 3.3 of giant)
+## BlastMonitor.vue (Task 3.3 of giant) — duplicate of section above (kept for changelog continuity)
 
-- [ ] Create `src/views/blasts/BlastMonitor.vue` with progress bar + ETA + totals grid + event timeline (last 50, reverse chronological)
-- [ ] Poll `GET /api/blasts/:id` every 2s; update totals/progress/timeline; stop on "sent"/"failed"
-- [ ] Cancel button when "sending" → POST `/api/blasts/:id/cancel`
-- [ ] nl + en i18n strings; CSS variables (no hardcoded colors)
+- [x] Create `src/views/blasts/BlastMonitor.vue` with progress bar + ETA + totals grid + event timeline (last 50, reverse chronological)
+
+  Already delivered above. `src/views/blasts/BlastMonitor.vue` (467 lines, 11.3 KB) renders the progress bar with `role="progressbar"` + `aria-valuenow`, the localised ETA computed against `audienceTotal`, an auto-fit totals grid over the canonical 8-key list, and the reverse-chronological timeline capped at `TIMELINE_MAX = 50`.
+
+- [x] Poll `GET /api/blasts/:id` every 2s; update totals/progress/timeline; stop on "sent"/"failed"
+
+  `POLL_INTERVAL_MS = 2000`; `startPolling()` runs `fetchOnce()` on a `setInterval`; `TERMINAL_STATUSES = ['sent', 'failed', 'cancelled']` triggers `stopPolling()`; `beforeUnmount` clears the handle.
+
+- [x] Cancel button when "sending" → POST `/api/blasts/:id/cancel`
+
+  The footer renders when `blast.status` is `sending` or `scheduled` (`canCancel` computed). `cancel()` posts `/api/blasts/:id/cancel`, sets local `cancelling` status until the next poll, surfaces server errors inline as `cancelError` with `role="alert"`.
+
+- [x] nl + en i18n strings; CSS variables (no hardcoded colors)
+
+  Every visible string uses `t('pipelinq', ...)` (8 BlastMonitor-specific keys verified in `l10n/en.json` + `l10n/en.js` + `l10n/nl.json` + `l10n/nl.js`). Every style uses `var(--color-background-darker)`, `var(--color-primary-element)`, `var(--color-background-hover)`, `var(--color-text-lighter)`, `var(--color-main-text)`, `var(--color-border)`, `var(--color-error)`, `var(--border-radius)` — zero hex / rgb literals.
