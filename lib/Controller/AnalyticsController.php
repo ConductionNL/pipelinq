@@ -39,9 +39,11 @@ use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
- * Controller for the Klantbeeld 360 cross-module analytics summary.
+ * Controller for the Klantbeeld 360 cross-module analytics summary plus
+ * the dashboard analytics overview/trends/funnels endpoints.
  *
  * @spec openspec/changes/klantbeeld-360/tasks.md#task-1.2
+ * @spec openspec/changes/dashboard/tasks.md#task-2.1
  */
 class AnalyticsController extends Controller
 {
@@ -97,4 +99,101 @@ class AnalyticsController extends Controller
             return new JSONResponse(['message' => 'Analytics unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
         }//end try
     }//end summary()
+
+    /**
+     * GET /api/analytics/overview.
+     *
+     * Cross-module KPI snapshot for the unified analytics widget. Period
+     * defaults to "month" when omitted. Invalid period -> 400. OpenRegister
+     * outage -> 500 with a static message.
+     *
+     * @return JSONResponse The overview payload, or an error envelope.
+     *
+     * @spec openspec/changes/dashboard/tasks.md#task-2.1
+     */
+    #[NoAdminRequired]
+    public function overview(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        $period = (string) $this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
+
+        try {
+            return new JSONResponse($this->analyticsService->getOverview(period: $period));
+        } catch (InvalidArgumentException) {
+            return new JSONResponse(['message' => 'Invalid period'], Http::STATUS_BAD_REQUEST);
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                message: '[AnalyticsController] overview failed',
+                context: ['error' => $e->getMessage()]
+            );
+            return new JSONResponse(['message' => 'Analytics unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
+        }//end try
+    }//end overview()
+
+    /**
+     * GET /api/analytics/trends.
+     *
+     * Time-series data for the unified analytics charts. Unsupported metric
+     * -> 400 with `Unsupported metric`. Invalid period -> 400 with
+     * `Invalid period`. OpenRegister outage -> 500 (static message).
+     *
+     * @return JSONResponse The trend payload, or an error envelope.
+     *
+     * @spec openspec/changes/dashboard/tasks.md#task-2.1
+     */
+    #[NoAdminRequired]
+    public function trends(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        $metric = (string) $this->request->getParam('metric', '');
+        $period = (string) $this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
+
+        try {
+            return new JSONResponse($this->analyticsService->getTrends(metric: $metric, period: $period));
+        } catch (InvalidArgumentException $e) {
+            return new JSONResponse(['message' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                message: '[AnalyticsController] trends failed',
+                context: ['error' => $e->getMessage()]
+            );
+            return new JSONResponse(['message' => 'Analytics unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
+        }//end try
+    }//end trends()
+
+    /**
+     * GET /api/analytics/funnels.
+     *
+     * Lead-to-close and request-to-resolved funnel counts.
+     *
+     * @return JSONResponse The funnel payload, or an error envelope.
+     *
+     * @spec openspec/changes/dashboard/tasks.md#task-2.1
+     */
+    #[NoAdminRequired]
+    public function funnels(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        try {
+            return new JSONResponse($this->analyticsService->getFunnels());
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                message: '[AnalyticsController] funnels failed',
+                context: ['error' => $e->getMessage()]
+            );
+            return new JSONResponse(['message' => 'Analytics unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
+        }//end try
+    }//end funnels()
 }//end class
