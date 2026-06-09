@@ -30,23 +30,29 @@
 		<CnKpiGrid>
 			<CnStatsBlock
 				:title="t('pipelinq', 'Total Pipeline Value')"
-				:count="totalValueLabel"
+				:count="totalValue"
 				:count-label="t('pipelinq', 'open opportunities')"
 				:icon="CurrencyEur"
 				variant="primary"
-				horizontal />
+				horizontal>
+				<template #value>{{ totalValueLabel }}</template>
+			</CnStatsBlock>
 			<CnStatsBlock
 				:title="t('pipelinq', 'Win Rate')"
-				:count="winRateLabel"
+				:count="winRate ?? 0"
 				:count-label="t('pipelinq', 'closed deals')"
 				:icon="TrophyOutline"
-				horizontal />
+				horizontal>
+				<template #value>{{ winRateLabel }}</template>
+			</CnStatsBlock>
 			<CnStatsBlock
 				:title="t('pipelinq', 'Average Deal Size')"
-				:count="avgDealSizeLabel"
+				:count="avgDealSize ?? 0"
 				:count-label="t('pipelinq', 'per active opportunity')"
 				:icon="ChartBar"
-				horizontal />
+				horizontal>
+				<template #value>{{ avgDealSizeLabel }}</template>
+			</CnStatsBlock>
 			<CnStatsBlock
 				:title="t('pipelinq', 'Active Opportunities')"
 				:count="openLeads.length"
