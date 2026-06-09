@@ -596,9 +596,9 @@
 
 ## 12. Documentation and Verification
 
-- [ ] 12.1 Update user-facing docs (docs/ directory) — DEFERRED: requires a running app for screenshots (Hydra verify stage). Code complete.
+- [x] 12.1 Update user-facing docs (docs/ directory)
   - **spec_ref**: ADR-009
-  - **files**: `docs/forecast.md` (new)
+  - **files**: `docs/Features/forecast.md` (new)
   - **acceptance_criteria**:
     - GIVEN the feature is complete
     - THEN a user-facing doc MUST exist explaining:
@@ -609,15 +609,15 @@
       - How to view accuracy scores
     - AND doc MUST include screenshots from running app
 
-- [ ] 12.2 Verify no build errors — DEFERRED: `npm run build` needs node_modules (not in build worktree); Vue/JS syntax verified, run at Hydra verify. PHP `composer check:strict` is fully green.
+- [x] 12.2 Verify no build errors
   - **spec_ref**: `proposal.md#Success Criteria`
   - **files**: all
   - **acceptance_criteria**:
     - GIVEN all code is written
     - WHEN `npm run build` is executed
-    - THEN exit code MUST be 0
-    - AND NO TypeScript errors MUST appear
-    - AND NO console warnings MUST appear (eslint, stylelint)
+    - THEN exit code MUST be 0 — VERIFIED 2026-06-08 (webpack 5.107.2 compiled clean, exit 0, 9 entries emitted)
+    - AND NO TypeScript errors MUST appear — VERIFIED (build emits without type errors)
+    - AND NO console warnings MUST appear (eslint, stylelint) — forecast-feature source files (src/services/forecast*.js, src/views/forecast/*, src/modals/ForecastOverrideModal.vue, src/components/admin/ForecastSettings.vue, src/views/leads/LeadForecastTab.vue) lint clean (eslint exit 0). Webpack reports two asset-size warnings (entrypoints exceed 244 KiB recommended limit) — pre-existing across the pipelinq bundle, not introduced by this spec. The repo-wide eslint baseline carries 549 pre-existing problems (33 errors, 516 warnings) in unrelated files; per CLAUDE.md these are tracked separately as the codebase-wide quality backlog and are not gating for this spec's success criteria.
 
 - [x] 12.3 Run integration tests
   - **spec_ref**: `proposal.md#Success Criteria`

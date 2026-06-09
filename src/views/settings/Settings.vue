@@ -270,6 +270,34 @@
 			</NcNoteCard>
 		</NcSettingsSection>
 
+		<!-- BI Export Configuration -->
+		<ExportConfigurationSettings v-if="isAdmin"
+			:config="config"
+			@saved="onExportConfigSaved" />
+
+		<!-- Lead Management — stale threshold (REQ-LM-002).
+		     Persisted via IAppConfig under key `lead_stale_threshold_days`. -->
+		<NcSettingsSection v-if="isAdmin"
+			:name="t('pipelinq', 'Lead Management')"
+			:description="t('pipelinq', 'Tune lead staleness detection for kanban badges and the lead list filter.')">
+			<NcTextField v-model="staleThresholdInput"
+				type="number"
+				:label="t('pipelinq', 'Stale after (days)')"
+				placeholder="14"
+				:helper-text="t('pipelinq', 'Number of days a lead can stay untouched before it is flagged as stale. Default: 14.')" />
+			<NcButton type="primary"
+				:disabled="savingStale"
+				@click="saveStaleThreshold">
+				<template #icon>
+					<NcLoadingIcon v-if="savingStale" :size="16" />
+				</template>
+				{{ t('pipelinq', 'Save lead settings') }}
+			</NcButton>
+			<NcNoteCard v-if="staleMessage" :type="staleMessageType">
+				{{ staleMessage }}
+			</NcNoteCard>
+		</NcSettingsSection>
+
 		<!-- Shillinq Integration -->
 		<NcSettingsSection v-if="isAdmin"
 			:name="t('pipelinq', 'Shillinq Integration')"
@@ -279,8 +307,13 @@
 				placeholder="https://shillinq.example.com/ledger/webhook"
 				:error="shillinqUrlInvalid"
 				:helper-text="shillinqUrlInvalid ? t('pipelinq', 'Please enter a valid HTTPS URL') : ''" />
+			<NcTextField v-model="config.shillinq_wip_webhook_url"
+				:label="t('pipelinq', 'Shillinq WIP webhook URL')"
+				placeholder="https://shillinq.example.com/api/wip/events"
+				:error="wipUrlInvalid"
+				:helper-text="wipUrlInvalid ? t('pipelinq', 'Please enter a valid HTTPS URL') : ''" />
 			<NcButton type="primary"
-				:disabled="savingShillinq || shillinqUrlInvalid"
+				:disabled="savingShillinq || shillinqUrlInvalid || wipUrlInvalid"
 				@click="saveShillinq">
 				<template #icon>
 					<NcLoadingIcon v-if="savingShillinq" :size="16" />
@@ -289,6 +322,28 @@
 			</NcButton>
 			<NcNoteCard v-if="shillinqMessage" :type="shillinqMessageType">
 				{{ shillinqMessage }}
+			</NcNoteCard>
+		</NcSettingsSection>
+
+		<!-- Integraties — Shillinq AP webhook (REQ-AP-004) -->
+		<NcSettingsSection v-if="isAdmin"
+			:name="t('pipelinq', 'Integraties')"
+			:description="t('pipelinq', 'Voer de webhook URL in voor de Shillinq AP integratie. Laat leeg om uitgeschakeld te laten.')">
+			<NcTextField v-model="config.shillinq_ap_webhook_url"
+				:label="t('pipelinq', 'Shillinq AP webhook URL')"
+				placeholder="https://shillinq.example.com/ap-webhook"
+				:error="shillinqApUrlInvalid"
+				:helper-text="shillinqApUrlInvalid ? t('pipelinq', 'Voer een geldige HTTPS URL in, bijv. https://shillinq.example.com/webhook') : ''" />
+			<NcButton type="primary"
+				:disabled="savingShillinqAp || shillinqApUrlInvalid"
+				@click="saveShillinqAp">
+				<template #icon>
+					<NcLoadingIcon v-if="savingShillinqAp" :size="16" />
+				</template>
+				{{ t('pipelinq', 'Save Shillinq AP Configuration') }}
+			</NcButton>
+			<NcNoteCard v-if="shillinqApMessage" :type="shillinqApMessageType">
+				{{ shillinqApMessage }}
 			</NcNoteCard>
 		</NcSettingsSection>
 
@@ -322,6 +377,7 @@ import QueueSettings from '../../components/admin/QueueSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
 import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
 import ForecastSettings from '../../components/admin/ForecastSettings.vue'
+import ExportConfigurationSettings from './ExportConfigurationSettings.vue'
 
 export default {
 	name: 'Settings',
@@ -345,6 +401,7 @@ export default {
 		SkillSettings,
 		AgentProfileSettings,
 		ForecastSettings,
+		ExportConfigurationSettings,
 	},
 	data() {
 		return {
@@ -399,6 +456,15 @@ export default {
 			savingShillinq: false,
 			shillinqMessage: '',
 			shillinqMessageType: 'success',
+			// Shillinq AP integration (REQ-AP-004).
+			savingShillinqAp: false,
+			shillinqApMessage: '',
+			shillinqApMessageType: 'success',
+			// Lead management — stale threshold (REQ-LM-002).
+			staleThresholdInput: 14,
+			savingStale: false,
+			staleMessage: '',
+			staleMessageType: 'success',
 		}
 	},
 	computed: {
@@ -435,6 +501,40 @@ export default {
 		 */
 		shillinqUrlInvalid() {
 			const url = (this.config.shillinq_ledger_webhook_url || '').trim()
+			if (url === '') {
+				return false
+			}
+			try {
+				return new URL(url).protocol !== 'https:'
+			} catch (e) {
+				return true
+			}
+		},
+		/**
+		 * Whether the entered Shillinq WIP webhook URL is present but not a valid HTTPS URL.
+		 * An empty value is valid (disables the integration).
+		 *
+		 * @spec openspec/changes/pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-004
+		 */
+		wipUrlInvalid() {
+			const url = (this.config.shillinq_wip_webhook_url || '').trim()
+			if (url === '') {
+				return false
+			}
+			try {
+				return new URL(url).protocol !== 'https:'
+			} catch (e) {
+				return true
+			}
+		},
+		/**
+		 * Whether the entered Shillinq AP webhook URL is present but not a valid HTTPS URL.
+		 * An empty value is valid (disables the integration). REQ-AP-004 Scenario 13.
+		 *
+		 * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-004
+		 */
+		shillinqApUrlInvalid() {
+			const url = (this.config.shillinq_ap_webhook_url || '').trim()
 			if (url === '') {
 				return false
 			}
@@ -499,6 +599,10 @@ export default {
 		if (data) {
 			this.config = data.config || {}
 			this.isAdmin = this.settingsStore.isAdmin
+			// Seed the stale-threshold input from the persisted config
+			// (REQ-LM-002). Falls back to 14 days when unset.
+			const parsed = parseInt(this.config.lead_stale_threshold_days, 10)
+			this.staleThresholdInput = Number.isFinite(parsed) && parsed > 0 ? parsed : 14
 
 			if (this.isAdmin) {
 				this.objectenAccess = this.settingsStore.objectenAccess
@@ -745,7 +849,7 @@ export default {
 		 * @spec openspec/changes/pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-006-03
 		 */
 		async saveShillinq() {
-			if (this.shillinqUrlInvalid) {
+			if (this.shillinqUrlInvalid || this.wipUrlInvalid) {
 				return
 			}
 			this.savingShillinq = true
@@ -754,6 +858,7 @@ export default {
 				const result = await this.settingsStore.saveSettings({
 					...this.config,
 					shillinq_ledger_webhook_url: (this.config.shillinq_ledger_webhook_url || '').trim(),
+					shillinq_wip_webhook_url: (this.config.shillinq_wip_webhook_url || '').trim(),
 				})
 				if (result) {
 					this.config = this.settingsStore.config || result
@@ -765,6 +870,77 @@ export default {
 				this.shillinqMessageType = 'error'
 			} finally {
 				this.savingShillinq = false
+			}
+		},
+		/**
+		 * Reflect a saved export-configuration payload back into local state.
+		 *
+		 * @param {object} updated The updated config returned by the section.
+		 * @spec openspec/changes/bi-export-and-data-warehouse-sink/tasks.md#task-14.1
+		 */
+		onExportConfigSaved(updated) {
+			if (updated && typeof updated === 'object') {
+				this.config = { ...this.config, ...updated }
+			}
+		},
+		/**
+		 * Persist the Shillinq AP webhook URL through the standard settings endpoint.
+		 *
+		 * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-004
+		 */
+		async saveShillinqAp() {
+			if (this.shillinqApUrlInvalid) {
+				return
+			}
+			this.savingShillinqAp = true
+			this.shillinqApMessage = ''
+			try {
+				const result = await this.settingsStore.saveSettings({
+					...this.config,
+					shillinq_ap_webhook_url: (this.config.shillinq_ap_webhook_url || '').trim(),
+				})
+				if (result) {
+					this.config = this.settingsStore.config || result
+				}
+				this.shillinqApMessage = t('pipelinq', 'Shillinq AP configuration saved.')
+				this.shillinqApMessageType = 'success'
+			} catch (e) {
+				this.shillinqApMessage = e.response?.data?.message || t('pipelinq', 'Failed to save Shillinq AP configuration.')
+				this.shillinqApMessageType = 'error'
+			} finally {
+				this.savingShillinqAp = false
+			}
+		},
+		/**
+		 * Persist the lead stale threshold through the standard settings endpoint.
+		 *
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+		 */
+		async saveStaleThreshold() {
+			this.savingStale = true
+			this.staleMessage = ''
+			const days = parseInt(this.staleThresholdInput, 10)
+			if (!Number.isFinite(days) || days <= 0) {
+				this.staleMessage = t('pipelinq', 'Stale threshold must be a positive number of days.')
+				this.staleMessageType = 'error'
+				this.savingStale = false
+				return
+			}
+			try {
+				const result = await this.settingsStore.saveSettings({
+					...this.config,
+					lead_stale_threshold_days: String(days),
+				})
+				if (result) {
+					this.config = this.settingsStore.config || result
+				}
+				this.staleMessage = t('pipelinq', 'Lead settings saved.')
+				this.staleMessageType = 'success'
+			} catch (e) {
+				this.staleMessage = e.response?.data?.message || t('pipelinq', 'Failed to save lead settings.')
+				this.staleMessageType = 'error'
+			} finally {
+				this.savingStale = false
 			}
 		},
 		/**

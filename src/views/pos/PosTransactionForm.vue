@@ -32,9 +32,64 @@
 					label="label"
 					:clearable="false"
 					@input="onPriceModeSelect" />
+				<NcSelect
+					:value="selectedTender"
+					:options="tenderOptions"
+					:input-label="t('pipelinq', 'Tender type')"
+					label="label"
+					:clearable="false"
+					data-testid="tender-type"
+					@input="onTenderSelect" />
 				<NcTextField
 					:value.sync="transaction.notes"
 					:label="t('pipelinq', 'Notes')" />
+			</div>
+
+			<div class="pos-form__customer">
+				<div v-if="!selectedCustomer" class="pos-form__customer-empty">
+					<NcButton
+						type="secondary"
+						data-testid="add-customer"
+						:disabled="saving"
+						@click="openCustomerLookup">
+						{{ t('pipelinq', 'Add customer') }}
+					</NcButton>
+					<span v-if="onAccountError" class="pos-form__customer-error" role="alert">
+						{{ onAccountError }}
+					</span>
+				</div>
+				<div v-else class="pos-form__customer-selected" data-testid="selected-customer">
+					<span class="pos-form__customer-label">
+						{{ t('pipelinq', 'Customer:') }}
+						<strong>{{ selectedCustomer.name }}</strong>
+						<span
+							v-if="selectedCustomer.doNotContact"
+							class="pos-form__customer-flag"
+							:title="t('pipelinq', 'This customer does not wish to be contacted.')">
+							🔒
+						</span>
+					</span>
+					<NcButton
+						type="tertiary"
+						:aria-label="t('pipelinq', 'Remove customer')"
+						data-testid="clear-customer"
+						:disabled="saving"
+						@click="clearCustomer">
+						✕
+					</NcButton>
+				</div>
+				<PurchaseHistory v-if="selectedCustomer" :rows="history" />
+				<label
+					class="pos-form__consent"
+					:title="!selectedCustomer ? t('pipelinq', 'Select a customer first.') : ''">
+					<input
+						type="checkbox"
+						:checked="transaction.marketingConsent"
+						:disabled="!selectedCustomer || (selectedCustomer && selectedCustomer.doNotContact)"
+						data-testid="marketing-consent"
+						@change="onConsentChange">
+					{{ t('pipelinq', 'I want to receive offers and updates.') }}
+				</label>
 			</div>
 
 			<table class="pos-form__lines">
@@ -71,23 +126,45 @@
 
 			<PosTotalsPanel :lines="lines" :price-mode="priceMode" />
 
+			<PaymentMethodSelector
+				v-model="paymentSelection"
+				:client-selected="!!transaction.client"
+				@change="onPaymentSelectionChange" />
+
 			<div class="pos-form__actions">
-				<NcButton type="primary" :disabled="saving" @click="save">
-					{{ t('pipelinq', 'Save') }}
+				<NcButton
+					type="primary"
+					:disabled="saving || !checkoutAllowed"
+					data-testid="checkout"
+					@click="save">
+					{{ t('pipelinq', 'Checkout') }}
 				</NcButton>
 			</div>
 		</template>
+
+		<CustomerLookupModal
+			v-if="showCustomerModal"
+			@select="onCustomerSelected"
+			@cancel="closeCustomerLookup" />
 	</div>
 </template>
 
 <script>
 import { NcButton, NcTextField, NcSelect, NcLoadingIcon } from '@nextcloud/vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
+import { showError, showSuccess, showWarning } from '@nextcloud/dialogs'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import PosLineItemRow from '../../components/pos/PosLineItemRow.vue'
 import PosTotalsPanel from '../../components/pos/PosTotalsPanel.vue'
+import PurchaseHistory from '../../components/pos/PurchaseHistory.vue'
+import CustomerLookupModal from '../../modals/CustomerLookupModal.vue'
+import PaymentMethodSelector from '../../components/pos/PaymentMethodSelector.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { recalculateLine } from '../../services/posTotals.js'
+import {
+	attachCustomer as apiAttachCustomer,
+	detachCustomer as apiDetachCustomer,
+	getCustomerHistory,
+} from '../../services/posCustomerApi.js'
 
 export default {
 	name: 'PosTransactionForm',
@@ -99,6 +176,9 @@ export default {
 		Plus,
 		PosLineItemRow,
 		PosTotalsPanel,
+		PurchaseHistory,
+		CustomerLookupModal,
+		PaymentMethodSelector,
 	},
 	props: {
 		posTransactionId: {
@@ -108,7 +188,16 @@ export default {
 	},
 	data() {
 		return {
-			transaction: { status: 'draft', terminalId: '', notes: '', client: null, priceMode: 'excl' },
+			transaction: {
+				status: 'draft',
+				terminalId: '',
+				notes: '',
+				client: null,
+				priceMode: 'excl',
+				customer: null,
+				marketingConsent: false,
+				tenderType: 'cash',
+			},
 			lines: [],
 			products: [],
 			clients: [],
@@ -116,6 +205,12 @@ export default {
 			loading: false,
 			saving: false,
 			keyCounter: 0,
+			selectedCustomer: null,
+			history: [],
+			showCustomerModal: false,
+			paymentSelection: 'cash',
+			paymentProvider: 'cash',
+			paymentMethod: 'cash',
 		}
 	},
 	computed: {
@@ -181,6 +276,57 @@ export default {
 		selectedPriceMode() {
 			return this.priceModeOptions.find(o => o.id === this.priceMode) || this.priceModeOptions[0]
 		},
+		/**
+		 * Tender type picker options.
+		 *
+		 * @return {Array<object>} The options.
+		 */
+		tenderOptions() {
+			return [
+				{ id: 'cash', label: t('pipelinq', 'Cash') },
+				{ id: 'card', label: t('pipelinq', 'Card') },
+				{ id: 'onAccount', label: t('pipelinq', 'On account') },
+			]
+		},
+		/**
+		 * The selected tender option.
+		 *
+		 * @return {object} The option.
+		 */
+		selectedTender() {
+			const id = this.transaction.tenderType || 'cash'
+			return this.tenderOptions.find(o => o.id === id) || this.tenderOptions[0]
+		},
+		/**
+		 * Whether on-account + customer invariant holds (REQ-PCL-005).
+		 *
+		 * @return {boolean} True when the checkout button is allowed.
+		 */
+		isOnAccountValid() {
+			if (this.transaction.tenderType !== 'onAccount') {
+				return true
+			}
+			return !!this.selectedCustomer
+		},
+		/**
+		 * Aggregate gate for the Checkout button.
+		 *
+		 * @return {boolean} True when checkout is permitted.
+		 */
+		checkoutAllowed() {
+			return this.isOnAccountValid
+		},
+		/**
+		 * Error message surfaced near the customer picker for on-account misuse.
+		 *
+		 * @return {string} The error or empty string.
+		 */
+		onAccountError() {
+			if (this.transaction.tenderType === 'onAccount' && !this.selectedCustomer) {
+				return t('pipelinq', 'Customer is required for on-account transactions.')
+			}
+			return ''
+		},
 	},
 	async mounted() {
 		this.loading = true
@@ -222,13 +368,41 @@ export default {
 		 */
 		async loadTransaction() {
 			const tx = await this.objectStore.fetchObject('posTransaction', this.transactionId)
-			this.transaction = { ...tx }
+			this.transaction = {
+				tenderType: 'cash',
+				marketingConsent: false,
+				customer: null,
+				...tx,
+			}
 			await this.objectStore.fetchCollection('posTransactionLine', { transaction: this.transactionId, _limit: 500 })
 			const rows = this.objectStore.getCollection('posTransactionLine')?.results || []
 			this.lines = rows
 				.filter(l => l.transaction === this.transactionId)
 				.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
 				.map(l => ({ ...l, _key: this.nextKey() }))
+			if (this.transaction.customer) {
+				try {
+					this.history = await getCustomerHistory(this.transaction.customer, 0)
+					// Surface the linked customer in the picker — we do not call
+					// getCustomer (no need for the full row), just enough to
+					// reflect the selection so detach works.
+					this.selectedCustomer = {
+						id: this.transaction.customer,
+						name: tx.customerName || this.transaction.customer,
+						doNotContact: false,
+					}
+				} catch {
+					this.history = []
+				}
+			}
+			// Restore the payment-method selector from the persisted transaction.
+			const provider = (tx && tx.paymentProvider) || 'cash'
+			const method = (tx && tx.paymentMethod) || 'cash'
+			this.paymentProvider = provider
+			this.paymentMethod = method
+			this.paymentSelection = (provider === 'cash' || provider === 'voucher' || provider === 'account')
+				? provider
+				: provider + ':' + method
 		},
 		/**
 		 * Next stable v-for key for a line row.
@@ -275,6 +449,32 @@ export default {
 			this.lines.splice(index, 1)
 		},
 		/**
+		 * Update local payment provider/method state when the selector changes.
+		 *
+		 * @param {object} payload The selector payload.
+		 *
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
+		 */
+		onPaymentSelectionChange({ providerName, paymentMethod }) {
+			this.paymentProvider = providerName || 'cash'
+			this.paymentMethod = paymentMethod || providerName || 'cash'
+			// Cash / voucher / account settle immediately on confirm — mirror
+			// the selection onto the draft transaction so saveObject persists it.
+			if (this.paymentProvider === 'cash' || this.paymentProvider === 'voucher' || this.paymentProvider === 'account') {
+				this.transaction.paymentProvider = this.paymentProvider
+				this.transaction.paymentMethod = this.paymentMethod
+				this.transaction.paymentStatus = (this.paymentProvider === 'cash' ? 'settled' : 'pending')
+			} else {
+				// Card / online providers — actual session is initiated server-side
+				// by PosPaymentService.initiatePayment AFTER the transaction is
+				// confirmed; clear the stale draft fields so saveObject does not
+				// persist a stale value.
+				this.transaction.paymentProvider = this.paymentProvider
+				this.transaction.paymentMethod = this.paymentMethod
+				this.transaction.paymentStatus = 'pending'
+			}
+		},
+		/**
 		 * Persist the transaction header and its lines.
 		 *
 		 * Totals are intentionally NOT sent: the backend recomputes them
@@ -282,6 +482,10 @@ export default {
 		 * + line inputs.
 		 */
 		async save() {
+			if (!this.checkoutAllowed) {
+				showError(t('pipelinq', 'Customer is required for on-account transactions.'))
+				return
+			}
 			this.saving = true
 			try {
 				const header = {
@@ -294,6 +498,10 @@ export default {
 					return
 				}
 				const txId = savedTx.id || this.transactionId
+
+				// Attach the customer + consent server-authoritatively (also
+				// triggers the marketingConsent sync to the contact).
+				await this.syncCustomerAttachment(txId)
 
 				for (const id of this.deletedLineIds) {
 					await this.objectStore.deleteObject('posTransactionLine', id)
@@ -347,6 +555,97 @@ export default {
 			this.$set(this.transaction, 'priceMode', option ? option.id : 'excl')
 		},
 		/**
+		 * Apply a tender type selection.
+		 *
+		 * @param {object|null} option The chosen tender.
+		 */
+		onTenderSelect(option) {
+			this.$set(this.transaction, 'tenderType', option ? option.id : 'cash')
+		},
+		/**
+		 * Apply a marketing-consent toggle.
+		 *
+		 * @param {Event} event The change event.
+		 */
+		onConsentChange(event) {
+			this.$set(this.transaction, 'marketingConsent', !!event.target.checked)
+		},
+		/**
+		 * Open the customer lookup modal.
+		 */
+		openCustomerLookup() {
+			this.showCustomerModal = true
+		},
+		/**
+		 * Close the customer lookup modal.
+		 */
+		closeCustomerLookup() {
+			this.showCustomerModal = false
+		},
+		/**
+		 * Apply a customer chosen from the lookup modal.
+		 *
+		 * @param {object} row The selected contact.
+		 */
+		async onCustomerSelected(row) {
+			this.selectedCustomer = row
+			this.$set(this.transaction, 'customer', row.id)
+			if (row.doNotContact) {
+				this.$set(this.transaction, 'marketingConsent', false)
+				showWarning(t('pipelinq', 'This customer does not wish to be contacted.'))
+			}
+			this.showCustomerModal = false
+			await this.loadHistory(row.id)
+		},
+		/**
+		 * Clear the selected customer (REQ-PCL-002 Scenario 3).
+		 */
+		async clearCustomer() {
+			this.selectedCustomer = null
+			this.$set(this.transaction, 'customer', null)
+			this.$set(this.transaction, 'marketingConsent', false)
+			this.history = []
+			if (!this.isNew) {
+				try {
+					await apiDetachCustomer(this.transactionId)
+				} catch {
+					// Detach is best-effort on the persistent record; UI state
+					// already reflects the cleared selection.
+				}
+			}
+		},
+		/**
+		 * Load purchase history for the selected customer.
+		 *
+		 * @param {string} customerId The contact UUID.
+		 */
+		async loadHistory(customerId) {
+			try {
+				this.history = await getCustomerHistory(customerId, 0)
+			} catch {
+				this.history = []
+			}
+		},
+		/**
+		 * Attach the customer + consent on the server (called from save).
+		 *
+		 * @param {string} txId The transaction UUID.
+		 */
+		async syncCustomerAttachment(txId) {
+			if (!txId || !this.selectedCustomer) {
+				return
+			}
+			try {
+				await apiAttachCustomer(
+					txId,
+					this.selectedCustomer.id,
+					!!this.transaction.marketingConsent,
+				)
+			} catch {
+				showError(t('pipelinq', 'Could not link customer to the transaction.'))
+			}
+		},
+		/**
 		 * Return to the transaction list.
 		 */
 		goBack() {
@@ -398,5 +697,50 @@ export default {
 	display: flex;
 	justify-content: flex-end;
 	margin-top: 24px;
+}
+
+.pos-form__customer {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	margin: 16px 0;
+	padding: 12px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+}
+
+.pos-form__customer-empty {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.pos-form__customer-error {
+	color: var(--color-error);
+	font-size: 12px;
+}
+
+.pos-form__customer-selected {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.pos-form__customer-label {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.pos-form__customer-flag {
+	font-size: 13px;
+}
+
+.pos-form__consent {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 13px;
 }
 </style>

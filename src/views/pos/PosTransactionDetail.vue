@@ -152,6 +152,24 @@
 			<PosTotalsPanel :lines="lines" :price-mode="priceMode" />
 		</CnDetailCard>
 
+		<CnDetailCard
+			v-if="canShowTenderPanel"
+			:title="t('pipelinq', 'Tenders')">
+			<TenderEntryPanel
+				:transaction-id="transactionId"
+				:transaction-status="status"
+				@changed="onTenderChanged" />
+		</CnDetailCard>
+
+		<CnDetailCard
+			v-if="hasPaymentInfo"
+			:title="t('pipelinq', 'Betaling')">
+			<PaymentStatusCard
+				:transaction="transaction"
+				:is-manager="canRefund"
+				@updated="onPaymentUpdated" />
+		</CnDetailCard>
+
 		<PosRefundDialog
 			v-if="showRefund"
 			:submitting="busy"
@@ -181,6 +199,8 @@ import { generateUrl } from '@nextcloud/router'
 import { CnDetailPage, CnDetailCard, CnStatusBadge } from '@conduction/nextcloud-vue'
 import PosTotalsPanel from '../../components/pos/PosTotalsPanel.vue'
 import TaxBreakdownCard from '../../components/pos/TaxBreakdownCard.vue'
+import PaymentStatusCard from '../../components/pos/PaymentStatusCard.vue'
+import TenderEntryPanel from '../../components/pos/TenderEntryPanel.vue'
 import PosRefundDialog from '../../modals/PosRefundDialog.vue'
 import PrintReceiptModal from '../../modals/PrintReceiptModal.vue'
 import EmailReceiptModal from '../../modals/EmailReceiptModal.vue'
@@ -204,6 +224,8 @@ export default {
 		CnStatusBadge,
 		PosTotalsPanel,
 		TaxBreakdownCard,
+		PaymentStatusCard,
+		TenderEntryPanel,
 		PosRefundDialog,
 		PrintReceiptModal,
 		EmailReceiptModal,
@@ -310,6 +332,20 @@ export default {
 			return ['confirmed', 'settled'].includes(this.status) && this.isManager
 		},
 		/**
+		 * Whether to render the tender entry panel. Shown for any status that
+		 * could conceivably have or need tenders attached -- i.e. always except
+		 * for the void/initial-draft empty state where the transaction has no
+		 * id yet. Read-only when the transaction is settled / refunded; the
+		 * panel itself enforces that.
+		 *
+		 * @return {boolean} Whether to render the tender panel.
+		 *
+		 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-002
+		 */
+		canShowTenderPanel() {
+			return !!this.transactionId
+		},
+		/**
 		 * Whether a structured return can be registered (confirmed / settled only).
 		 *
 		 * @return {boolean} Whether to show the return action.
@@ -324,6 +360,19 @@ export default {
 		 */
 		canIssueReceipt() {
 			return ['confirmed', 'settled', 'refunded'].includes(this.status)
+		},
+		/**
+		 * Whether the transaction has any payment metadata to display.
+		 *
+		 * @return {boolean} True when the payment card should render.
+		 *
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-009
+		 */
+		hasPaymentInfo() {
+			return !!(this.transaction.paymentProvider
+				|| this.transaction.paymentSessionId
+				|| this.transaction.paymentStatus
+				|| this.transaction.paymentMethod)
 		},
 		/**
 		 * Sidebar props (files / notes / audit trail).
@@ -377,6 +426,24 @@ export default {
 		 * Reload after a receipt is printed or emailed (the audit log changes).
 		 */
 		async onReceiptIssued() {
+			await this.load()
+		},
+		/**
+		 * Refresh transaction after PaymentStatusCard capture/refund completes.
+		 *
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-009
+		 */
+		async onPaymentUpdated() {
+			await this.load()
+		},
+		/**
+		 * Refresh transaction after a tender has been added / removed; the
+		 * tender panel triggers this and the parent reloads to surface any
+		 * derived state (e.g. status flips).
+		 *
+		 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-002
+		 */
+		async onTenderChanged() {
 			await this.load()
 		},
 		/**

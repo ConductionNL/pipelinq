@@ -10,7 +10,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 			{{ error }}
 		</p>
 
-		<table v-if="delegations.length" class="portal-table" role="grid">
+		<table v-if="delegations.length" class="portal-table">
 			<thead>
 				<tr>
 					<th scope="col">
@@ -60,7 +60,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 				<label for="portal-validuntil">{{ t('pipelinq', 'Valid until') }}</label>
 				<input id="portal-validuntil" v-model="form.validUntil" type="date">
 			</div>
-			<p v-if="message" role="alert" class="portal-success">
+			<p v-if="message" role="status" aria-live="polite" class="portal-success">
 				{{ message }}
 			</p>
 			<button type="submit" class="portal-button-primary">

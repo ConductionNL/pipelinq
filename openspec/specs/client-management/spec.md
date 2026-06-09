@@ -642,6 +642,8 @@ The system tag CRUD and assignment implemented in this app MUST provide the oper
 
 #### Scenario: Documented operations are available
 
+@e2e exclude backend service/controller method contract; covered by PHPUnit
+
 - GIVEN the backend service/controller is loaded
 - WHEN a caller invokes one of the documented operations for system tag CRUD and assignment
 - THEN the operation MUST execute and return a result consistent with the current implementation
@@ -655,6 +657,8 @@ Operations for system tag CRUD and assignment MUST read their inputs from the re
 **Feature tier**: V1
 
 #### Scenario: Results reflect live state
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN CRM data backing system tag CRUD and assignment
 - WHEN a documented operation runs
@@ -671,6 +675,8 @@ Operations for system tag CRUD and assignment MUST tolerate missing, empty, or m
 
 #### Scenario: Missing input does not crash the flow
 
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
+
 - GIVEN an operation for system tag CRUD and assignment is called with absent or invalid input
 - WHEN it executes
 - THEN it MUST return a safe default or a validation result
@@ -683,6 +689,8 @@ The client management screens implemented in this app MUST provide the operation
 **Feature tier**: V1
 
 #### Scenario: Documented operations are available
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN the frontend component/store is loaded
 - WHEN a caller invokes one of the documented operations for client management screens
@@ -698,6 +706,8 @@ Operations for client management screens MUST read their inputs from the relevan
 
 #### Scenario: Results reflect live state
 
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
+
 - GIVEN CRM data backing client management screens
 - WHEN a documented operation runs
 - THEN its output MUST be derived from that data
@@ -712,6 +722,8 @@ Operations for client management screens MUST tolerate missing, empty, or malfor
 **Feature tier**: V1
 
 #### Scenario: Missing input does not crash the flow
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN an operation for client management screens is called with absent or invalid input
 - WHEN it executes

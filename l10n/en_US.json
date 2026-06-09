@@ -464,6 +464,15 @@
         "Geparkeerd": "Geparkeerd",
         "Bevestigd": "Bevestigd",
         "Afgerekend": "Afgerekend",
-        "Teruggeboekt": "Teruggeboekt"
+        "Teruggeboekt": "Teruggeboekt",
+        "Kassalade": "Cash drawer",
+        "Kassashift": "Cash shift",
+        "Kasverschil": "Cash variance",
+        "Openingsfloat": "Opening float",
+        "Geteld bedrag": "Counted amount",
+        "Verwacht bedrag": "Expected amount",
+        "Verschil": "Difference",
+        "Binnen tolerantie": "Within tolerance",
+        "Buiten tolerantie": "Outside tolerance"
     }
 }

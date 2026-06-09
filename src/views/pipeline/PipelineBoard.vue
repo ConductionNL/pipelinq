@@ -78,9 +78,55 @@
 						<span class="column-title">{{ stage.name }}</span>
 						<span class="column-count">{{ getStageItems(stage.name).length }}</span>
 					</div>
-					<span v-if="hasTotals" class="column-value">
-						{{ selectedPipeline.totalsLabel || '' }} {{ getStageTotalValue(stage.name).toLocaleString() }}
-					</span>
+					<div v-if="hasTotals" class="column-value-wrapper">
+						<button
+							type="button"
+							class="column-value column-value--clickable"
+							:aria-label="t('pipelinq', 'Show product breakdown for {stage}', { stage: stage.name })"
+							:aria-expanded="String(expandedBreakdownStage === stage.name)"
+							@click.stop="toggleStageBreakdown(stage.name)">
+							{{ selectedPipeline.totalsLabel || '' }} {{ getStageTotalValue(stage.name).toLocaleString() }}
+						</button>
+						<div
+							v-if="expandedBreakdownStage === stage.name"
+							class="stage-breakdown"
+							role="dialog"
+							:aria-label="t('pipelinq', 'Product breakdown for {stage}', { stage: stage.name })"
+							@click.stop>
+							<div class="stage-breakdown__header">
+								<span class="stage-breakdown__title">
+									{{ t('pipelinq', 'Top products in {stage}', { stage: stage.name }) }}
+								</span>
+								<button
+									type="button"
+									class="stage-breakdown__close"
+									:aria-label="t('pipelinq', 'Close')"
+									@click.stop="expandedBreakdownStage = null">
+									&times;
+								</button>
+							</div>
+							<div v-if="getStageBreakdown(stage.name).items.length === 0" class="stage-breakdown__empty">
+								{{ t('pipelinq', 'No product breakdown available for this stage') }}
+							</div>
+							<ul v-else class="stage-breakdown__list">
+								<li
+									v-for="entry in getStageBreakdown(stage.name).items"
+									:key="entry.product"
+									class="stage-breakdown__row">
+									<span class="stage-breakdown__name">{{ entry.name }}</span>
+									<span class="stage-breakdown__count">{{ entry.count }}&times;</span>
+									<span class="stage-breakdown__total">
+										{{ selectedPipeline.totalsLabel || '' }} {{ entry.total.toLocaleString() }}
+									</span>
+								</li>
+								<li
+									v-if="getStageBreakdown(stage.name).remaining > 0"
+									class="stage-breakdown__more">
+									{{ t('pipelinq', 'and {count} more', { count: getStageBreakdown(stage.name).remaining }) }}
+								</li>
+							</ul>
+						</div>
+					</div>
 				</div>
 				<div class="kanban-column__body">
 					<PipelineCard
@@ -251,6 +297,25 @@ export default {
 			viewMode: 'kanban',
 			sortBy: 'title',
 			sortDir: 'asc',
+			/**
+			 * Map of leadId → LeadProduct[] for the visible pipeline. Populated
+			 * after fetchPipelineItems so stage breakdowns are aggregated client-side.
+			 *
+			 * @spec openspec/changes/lead-product-link/tasks.md#task-4.1
+			 */
+			leadProductsByLead: {},
+			/**
+			 * Map of productId → product name, populated alongside leadProductsByLead.
+			 *
+			 * @spec openspec/changes/lead-product-link/tasks.md#task-4.2
+			 */
+			productNamesById: {},
+			/**
+			 * Name of the stage whose product-breakdown popover is open, or null.
+			 *
+			 * @spec openspec/changes/lead-product-link/tasks.md#task-4.3
+			 */
+			expandedBreakdownStage: null,
 		}
 	},
 	computed: {
@@ -566,7 +631,106 @@ export default {
 				await this.fetchItemsLegacy(pipeline)
 			}
 
+			await this.fetchLeadProductsForStages()
+
 			this.loading = false
+		},
+
+		/**
+		 * Batch-fetch all LeadProduct objects for leads in the visible pipeline so
+		 * the per-stage product-value breakdown can be computed client-side.
+		 *
+		 * @spec openspec/changes/lead-product-link/tasks.md#task-4.1
+		 */
+		async fetchLeadProductsForStages() {
+			const leadIds = new Set(this.items
+				.filter(i => i._schemaSlug === 'lead')
+				.map(i => i.id)
+				.filter(Boolean))
+
+			if (leadIds.size === 0) {
+				this.leadProductsByLead = {}
+				this.productNamesById = {}
+				return
+			}
+
+			try {
+				// Bulk fetch — filter client-side by leadId so we only emit one
+				// network call per board load. Backend `findAll` parameter for
+				// arrays is not contractually stable across OR versions.
+				const lpCollection = await this.objectStore.fetchCollection('leadProduct', {
+					_limit: 500,
+				})
+				const byLead = {}
+				const productIds = new Set()
+				for (const lp of (lpCollection || [])) {
+					if (!lp.lead || !leadIds.has(lp.lead)) continue
+					if (!byLead[lp.lead]) byLead[lp.lead] = []
+					byLead[lp.lead].push(lp)
+					if (lp.product) productIds.add(lp.product)
+				}
+				this.leadProductsByLead = byLead
+
+				if (productIds.size > 0) {
+					const products = await this.objectStore.fetchCollection('product', {
+						_limit: 500,
+					})
+					const names = {}
+					for (const p of (products || [])) {
+						if (productIds.has(p.id)) {
+							names[p.id] = p.name || p.id
+						}
+					}
+					this.productNamesById = names
+				} else {
+					this.productNamesById = {}
+				}
+			} catch {
+				this.leadProductsByLead = {}
+				this.productNamesById = {}
+			}
+		},
+
+		/**
+		 * Aggregates LeadProduct objects in the given stage by product UUID,
+		 * returning the top 5 by aggregate value plus a "remaining" count.
+		 *
+		 * @param {string} stageName Stage to aggregate.
+		 * @return {{items: Array<{product: string, name: string, count: number, total: number}>, remaining: number}} Top-5 entries plus remaining count.
+		 * @spec openspec/changes/lead-product-link/tasks.md#task-4.2
+		 */
+		getStageBreakdown(stageName) {
+			const stageLeads = this.getStageItems(stageName).filter(i => i._schemaSlug === 'lead')
+			const aggregate = new Map()
+			for (const lead of stageLeads) {
+				const lineItems = this.leadProductsByLead[lead.id] || []
+				for (const lp of lineItems) {
+					if (!lp.product) continue
+					const current = aggregate.get(lp.product) || {
+						product: lp.product,
+						name: this.productNamesById[lp.product] || lp.product,
+						count: 0,
+						total: 0,
+					}
+					current.count += 1
+					current.total += Number(lp.total) || 0
+					aggregate.set(lp.product, current)
+				}
+			}
+			const sorted = Array.from(aggregate.values()).sort((a, b) => b.total - a.total)
+			const top = sorted.slice(0, 5)
+			const remaining = Math.max(0, sorted.length - top.length)
+			return { items: top, remaining }
+		},
+
+		/**
+		 * Toggles the breakdown popover for the given stage.
+		 *
+		 * @param {string} stageName Stage whose breakdown to show or hide.
+		 * @spec openspec/changes/lead-product-link/tasks.md#task-4.3
+		 */
+		toggleStageBreakdown(stageName) {
+			this.expandedBreakdownStage = this.expandedBreakdownStage === stageName ? null : stageName
 		},
 
 		/**
@@ -835,6 +999,110 @@ export default {
 	font-weight: 600;
 	color: var(--color-text-maxcontrast);
 	margin-top: 2px;
+}
+
+.column-value-wrapper {
+	position: relative;
+	margin-top: 2px;
+}
+
+.column-value--clickable {
+	background: none;
+	border: none;
+	padding: 0;
+	cursor: pointer;
+	font: inherit;
+	color: inherit;
+	text-align: left;
+	width: 100%;
+}
+
+.column-value--clickable:hover,
+.column-value--clickable:focus-visible {
+	color: var(--color-primary);
+	outline: none;
+	text-decoration: underline;
+}
+
+.stage-breakdown {
+	position: absolute;
+	top: calc(100% + 6px);
+	left: 0;
+	right: 0;
+	z-index: 20;
+	min-width: 220px;
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	box-shadow: 0 6px 18px var(--color-box-shadow, rgba(0, 0, 0, 0.18));
+	padding: 8px 10px;
+}
+
+.stage-breakdown__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding-bottom: 6px;
+	border-bottom: 1px solid var(--color-border);
+	margin-bottom: 6px;
+}
+
+.stage-breakdown__title {
+	font-size: 12px;
+	font-weight: 700;
+	color: var(--color-text-maxcontrast);
+}
+
+.stage-breakdown__close {
+	background: none;
+	border: none;
+	font-size: 16px;
+	line-height: 1;
+	cursor: pointer;
+	padding: 0 4px;
+	color: var(--color-text-maxcontrast);
+}
+
+.stage-breakdown__empty {
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+	padding: 4px 0;
+}
+
+.stage-breakdown__list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.stage-breakdown__row {
+	display: grid;
+	grid-template-columns: 1fr auto auto;
+	gap: 6px;
+	align-items: baseline;
+	font-size: 12px;
+	padding: 3px 0;
+}
+
+.stage-breakdown__name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.stage-breakdown__count {
+	color: var(--color-text-maxcontrast);
+}
+
+.stage-breakdown__total {
+	font-weight: 600;
+}
+
+.stage-breakdown__more {
+	margin-top: 4px;
+	font-size: 11px;
+	color: var(--color-text-maxcontrast);
+	font-style: italic;
 }
 
 .kanban-column__body {

@@ -52,7 +52,21 @@ export function objectTypeGroups() {
 		{
 			key: 'pos',
 			name: t(APP, 'Point of Sale'),
-			description: t(APP, 'POS transactions, receipts and refunds'),
+			description: t(APP, 'POS transactions, receipts, refunds, cash drawer and staff'),
+			registerConfigKey: 'register',
+			registerSlug: 'pipelinq',
+		},
+		{
+			key: 'appointments',
+			name: t(APP, 'Appointment Booking'),
+			description: t(APP, 'Bookable services, resources, bookings and walk-in tickets'),
+			registerConfigKey: 'register',
+			registerSlug: 'pipelinq',
+		},
+		{
+			key: 'projects',
+			name: t(APP, 'Projects'),
+			description: t(APP, 'Project / WBS hierarchy: projects, phases, tasks and activities'),
 			registerConfigKey: 'register',
 			registerSlug: 'pipelinq',
 		},
@@ -79,6 +93,7 @@ export function objectTypes() {
 		{ slug: 'queue', group: 'core', label: t(APP, 'Queue'), description: t(APP, 'Work queues for routing') },
 		{ slug: 'skill', group: 'core', label: t(APP, 'Skill'), description: t(APP, 'Skills for agent routing') },
 		{ slug: 'agentProfile', group: 'core', label: t(APP, 'Agent Profile'), description: t(APP, 'Agent skill profiles') },
+		{ slug: 'billingCategory', group: 'core', label: t(APP, 'Billing Category'), description: t(APP, 'Billable categories and tags') },
 		// Intake & Automation (group: intake)
 		{ slug: 'intakeForm', group: 'intake', label: t(APP, 'Intake Form'), description: t(APP, 'Public intake forms for capturing leads') },
 		{ slug: 'intakeSubmission', group: 'intake', label: t(APP, 'Intake Submission'), description: t(APP, 'Submissions received through intake forms') },
@@ -97,6 +112,22 @@ export function objectTypes() {
 		{ slug: 'posRefundLine', group: 'pos', label: t(APP, 'POS Refund Line'), description: t(APP, 'Returned items on a POS refund') },
 		{ slug: 'receiptTemplate', group: 'pos', label: t(APP, 'Receipt Template'), description: t(APP, 'Customizable POS receipt templates') },
 		{ slug: 'receiptPrintLog', group: 'pos', label: t(APP, 'Receipt Print Log'), description: t(APP, 'Audit log of printed or emailed receipts') },
+		{ slug: 'cashShift', group: 'pos', label: t(APP, 'Cash Shift'), description: t(APP, 'POS cash-drawer shifts') },
+		{ slug: 'cashDrop', group: 'pos', label: t(APP, 'Cash Drop'), description: t(APP, 'Cash drops and pickups during a shift') },
+		{ slug: 'cashCount', group: 'pos', label: t(APP, 'Cash Count'), description: t(APP, 'Cash count entries for a shift') },
+		{ slug: 'cashDiff', group: 'pos', label: t(APP, 'Cash Difference'), description: t(APP, 'Over/short differences on cash reconciliation') },
+		{ slug: 'posRole', group: 'pos', label: t(APP, 'POS Role'), description: t(APP, 'POS staff roles and permissions') },
+		{ slug: 'posStaff', group: 'pos', label: t(APP, 'POS Staff'), description: t(APP, 'POS staff members with PIN access') },
+		// Appointment booking (group: appointments)
+		{ slug: 'service', group: 'appointments', label: t(APP, 'Service'), description: t(APP, 'Bookable services') },
+		{ slug: 'resource', group: 'appointments', label: t(APP, 'Resource'), description: t(APP, 'Bookable resources (staff, rooms, equipment)') },
+		{ slug: 'booking', group: 'appointments', label: t(APP, 'Booking'), description: t(APP, 'Appointment bookings') },
+		{ slug: 'walkInTicket', group: 'appointments', label: t(APP, 'Walk-in Ticket'), description: t(APP, 'Walk-in queue tickets') },
+		// Project / WBS hierarchy (group: projects)
+		{ slug: 'project', group: 'projects', label: t(APP, 'Project'), description: t(APP, 'Projects') },
+		{ slug: 'projectPhase', group: 'projects', label: t(APP, 'Project Phase'), description: t(APP, 'Phases within a project') },
+		{ slug: 'projectTask', group: 'projects', label: t(APP, 'Project Task'), description: t(APP, 'Tasks within a project phase') },
+		{ slug: 'projectActivity', group: 'projects', label: t(APP, 'Project Activity'), description: t(APP, 'Logged activities on project tasks') },
 	]
 }
 

@@ -94,7 +94,7 @@ class ExportJobController extends Controller
     #[NoAdminRequired]
     public function listDestinations(): JSONResponse
     {
-        return $this->guarded(action: fn (): array => ['destinations' => $this->destinations->listDestinations()], label: 'listDestinations');
+        return $this->requireExportAdmin(action: fn (): array => ['destinations' => $this->destinations->listDestinations()], label: 'listDestinations');
     }//end listDestinations()
 
     /**
@@ -108,7 +108,7 @@ class ExportJobController extends Controller
     public function createDestination(): JSONResponse
     {
         $data = $this->bodyParams();
-        return $this->guarded(
+        return $this->requireExportAdmin(
             action: fn (): array => ['destination' => $this->destinations->createDestination(data: $data)],
             label: 'createDestination'
         );
@@ -125,7 +125,7 @@ class ExportJobController extends Controller
     public function updateDestination(string $id): JSONResponse
     {
         $data = $this->bodyParams();
-        return $this->guarded(
+        return $this->requireExportAdmin(
             action: fn (): array => ['destination' => $this->destinations->updateDestination(id: $id, data: $data)],
             label: 'updateDestination'
         );
@@ -141,7 +141,7 @@ class ExportJobController extends Controller
     #[NoAdminRequired]
     public function deleteDestination(string $id): JSONResponse
     {
-        return $this->guarded(
+        return $this->requireExportAdmin(
             action: function () use ($id): array {
                 $this->destinations->deleteDestination(id: $id);
                 return ['deleted' => true];
@@ -162,7 +162,7 @@ class ExportJobController extends Controller
     #[NoAdminRequired]
     public function testDestination(string $id): JSONResponse
     {
-        return $this->guarded(
+        return $this->requireExportAdmin(
             action: fn (): array => ['valid' => $this->destinations->testConnection(id: $id)],
             label: 'testDestination'
         );
@@ -178,7 +178,7 @@ class ExportJobController extends Controller
     #[NoAdminRequired]
     public function listJobs(): JSONResponse
     {
-        return $this->guarded(action: fn (): array => ['jobs' => $this->jobs->listJobs()], label: 'listJobs');
+        return $this->requireExportAdmin(action: fn (): array => ['jobs' => $this->jobs->listJobs()], label: 'listJobs');
     }//end listJobs()
 
     /**
@@ -191,7 +191,7 @@ class ExportJobController extends Controller
     #[NoAdminRequired]
     public function showJob(string $id): JSONResponse
     {
-        return $this->guarded(action: fn (): array => ['job' => $this->jobs->getJob(id: $id)], label: 'showJob');
+        return $this->requireExportAdmin(action: fn (): array => ['job' => $this->jobs->getJob(id: $id)], label: 'showJob');
     }//end showJob()
 
     /**
@@ -207,7 +207,7 @@ class ExportJobController extends Controller
         $data = $this->bodyParams();
         $uid  = $this->actingUser();
 
-        return $this->guarded(
+        return $this->requireExportAdmin(
             action: fn (): array => ['job' => $this->jobs->createJob(data: $data, userId: $uid)],
             label: 'createJob'
         );
@@ -224,7 +224,7 @@ class ExportJobController extends Controller
     public function updateJob(string $id): JSONResponse
     {
         $data = $this->bodyParams();
-        return $this->guarded(
+        return $this->requireExportAdmin(
             action: fn (): array => ['job' => $this->jobs->updateJob(id: $id, data: $data)],
             label: 'updateJob'
         );
@@ -240,7 +240,7 @@ class ExportJobController extends Controller
     #[NoAdminRequired]
     public function deleteJob(string $id): JSONResponse
     {
-        return $this->guarded(
+        return $this->requireExportAdmin(
             action: function () use ($id): array {
                 $this->jobs->deleteJob(id: $id);
                 return ['deleted' => true];
@@ -261,7 +261,7 @@ class ExportJobController extends Controller
     #[NoAdminRequired]
     public function testRun(string $id): JSONResponse
     {
-        return $this->guarded(
+        return $this->requireExportAdmin(
             action: function () use ($id): array {
                 $job = $this->jobs->getJob(id: $id);
                 return ['result' => $this->jobs->testRun(job: $job)];
@@ -282,7 +282,7 @@ class ExportJobController extends Controller
     #[NoAdminRequired]
     public function enableJob(string $id): JSONResponse
     {
-        return $this->guarded(action: fn (): array => ['job' => $this->jobs->enableJob(id: $id)], label: 'enableJob');
+        return $this->requireExportAdmin(action: fn (): array => ['job' => $this->jobs->enableJob(id: $id)], label: 'enableJob');
     }//end enableJob()
 
     /**
@@ -295,7 +295,7 @@ class ExportJobController extends Controller
     #[NoAdminRequired]
     public function disableJob(string $id): JSONResponse
     {
-        return $this->guarded(action: fn (): array => ['job' => $this->jobs->disableJob(id: $id)], label: 'disableJob');
+        return $this->requireExportAdmin(action: fn (): array => ['job' => $this->jobs->disableJob(id: $id)], label: 'disableJob');
     }//end disableJob()
 
     /**
@@ -327,7 +327,8 @@ class ExportJobController extends Controller
     }//end bodyParams()
 
     /**
-     * Run an action behind the export-admin gate with shared error handling.
+     * Require export-admin / analyst authorization, then run the action with
+     * shared error handling.
      *
      * Returns 401 when unauthenticated, 403 when not an export admin/analyst,
      * 404 / 422 from the service's OCS exceptions, 500 otherwise.
@@ -337,7 +338,7 @@ class ExportJobController extends Controller
      *
      * @return JSONResponse The response.
      */
-    private function guarded(callable $action, string $label): JSONResponse
+    private function requireExportAdmin(callable $action, string $label): JSONResponse
     {
         $uid = $this->actingUser();
         if ($uid === '') {
@@ -363,5 +364,5 @@ class ExportJobController extends Controller
                 Http::STATUS_INTERNAL_SERVER_ERROR
             );
         }//end try
-    }//end guarded()
+    }//end requireExportAdmin()
 }//end class

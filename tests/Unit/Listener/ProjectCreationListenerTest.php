@@ -18,6 +18,9 @@
  * @version GIT: <git-id>
  *
  * @link https://github.com/ConductionNL/pipelinq
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -81,7 +84,12 @@ class ProjectCreationListenerTest extends TestCase
      */
     private function entity(string $schema, array $data): ObjectEntity
     {
-        $entity = $this->createMock(ObjectEntity::class);
+        // PHPUnit 10 requires onlyMethods() to configure any method, even abstract ones
+        // from the stub. Without it the mock is non-configuring by default.
+        $entity = $this->getMockBuilder(ObjectEntity::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getSchema', 'getUuid', 'getObject', 'jsonSerialize'])
+            ->getMock();
         $entity->method('getSchema')->willReturn($schema);
         $entity->method('getUuid')->willReturn((string) ($data['uuid'] ?? 'proj-1'));
         $entity->method('getObject')->willReturn($data);

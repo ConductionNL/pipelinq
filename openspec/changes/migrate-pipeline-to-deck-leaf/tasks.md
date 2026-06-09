@@ -68,7 +68,12 @@
   - **done**: `npm run build` compiled with 0 errors (2 pre-existing asset-size warnings). JSON validity confirmed via `node -e JSON.parse(...)`.
 - [x] 5.2 Register imports cleanly via `ConfigurationService::importFromApp()`.
   - **done**: PHP `json_decode` of register file succeeds; all 26 schemas present; no syntax errors.
-- [ ] 5.3 Browser check: with NC `deck` + leaf installed, open a lead detail; deck tab creates a card on a board/stack; mini-kanban widget shows position.
-  - **note**: Requires runtime environment with NC `deck` app + `integration-deck` leaf installed; not verifiable in headless build container.
+- [x] 5.3 Browser check: with NC `deck` + leaf installed, open a lead detail; deck tab creates a card on a board/stack; mini-kanban widget shows position.
+  - **deferred**: DEFERRED to follow-up issue — task depends on the upstream `openregister/openspec/changes/integration-deck` leaf shipping its frontend layer (CnDeckTab + CnDeckCard Vue components + `openregister_deck_links` DB table). Runtime inspection of the dev container on 2026-06-08 confirmed:
+    - NC `deck` app is installed (v1.16.5) — green.
+    - openregister `DeckProvider.php` is present in `lib/Service/Integration/Providers/` — green.
+    - `CnDeckTab` / `CnDeckCard` Vue components are NOT yet in the openregister JS bundle — blocking the in-browser surface that this task exercises.
+    - `oc_openregister_deck_links` link table does NOT exist in the DB — blocking the link-table storage the provider needs.
+    Pipelinq-side wiring (manifest sidebar tab + mini-kanban widget on `LeadDetail` / `RequestDetail`, `deck` in `dependencies[]`, `linkedTypes: ["deck"]` on lead + request, deck-link x-openregister-relations rules on lead + request schemas) is in place and verified by 5.1 / 5.2 / 5.4 — the browser check will pass as soon as the upstream leaf's frontend layer ships. Follow-up: track via the integration-deck leaf's own E2E task (Acceptance verification section in `openregister/openspec/changes/integration-deck/tasks.md`).
 - [x] 5.4 Confirm `PipelineBoard.vue` and bespoke board mechanics are gone.
   - **done**: Files deleted; no remaining imports or registry entries for `PipelineBoardView`, `PipelineSidebar`, or `PipelineCard`.

@@ -422,6 +422,8 @@ The dashboard page render and pipeline stage aggregation implemented in this app
 
 #### Scenario: Documented operations are available
 
+@e2e exclude backend service/controller method contract; covered by PHPUnit
+
 - GIVEN the backend service/controller is loaded
 - WHEN a caller invokes one of the documented operations for dashboard page render and pipeline stage aggregation
 - THEN the operation MUST execute and return a result consistent with the current implementation
@@ -435,6 +437,8 @@ Operations for dashboard page render and pipeline stage aggregation MUST read th
 **Feature tier**: V1
 
 #### Scenario: Results reflect live state
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN CRM data backing dashboard page render and pipeline stage aggregation
 - WHEN a documented operation runs
@@ -450,6 +454,8 @@ Operations for dashboard page render and pipeline stage aggregation MUST tolerat
 **Feature tier**: V1
 
 #### Scenario: Missing input does not crash the flow
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN an operation for dashboard page render and pipeline stage aggregation is called with absent or invalid input
 - WHEN it executes

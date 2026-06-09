@@ -28,6 +28,7 @@
 	<CnAppRoot
 		:manifest="manifest"
 		:registry="registry"
+		:cell-widgets="cellWidgets"
 		:page-types="pageTypes"
 		app-id="pipelinq"
 		:translate="translateForApp"
@@ -35,25 +36,21 @@
 		:requires-apps="[]">
 		<template #sidebar>
 			<!--
-				When active, this renders CnObjectSidebar's default tabs (Files,
-				Notes, Tags, Tasks, Audit trail). The detail pages ClientDetail,
-				RequestDetail and LeadDetail previously declared Flow/Deck/Time-tracker
-				sidebar tabs + body cards in the manifest (component:
-				"CnFlowTab"/"CnDeckTab"/"CnTimeTrackerTab" + matching *Card widgets).
-				Those were removed because the components do not exist: they are meant
-				to be OpenRegister integration "leaf" components surfaced via the
-				pluggable integration registry, but the leaf code — and even
-				registerLeafIntegrations — was never implemented in any repo, so they
-				rendered iconless tabs with empty panels. With the custom tabs gone,
-				the default tabs aren't wanted there either, so those three pages now
-				set config.sidebar.enabled: false (no sidebar at all).
-				To bring the integrations back once the leaves ship: re-enable the
-				sidebar, register the integrations on window.OCA.OpenRegister.integrations,
-				and set :use-registry="true" here (NOT the manifest `component:` string
-				path). See openspec/changes/migrate-automation-to-flow-leaf,
-				migrate-pipeline-to-deck-leaf, and archive/2026-05-31-time-entry-core.
-				Verified absent on the development branch of pipelinq, openregister,
-				and @conduction/nextcloud-vue (2026-06-03).
+				Host-rendered CnObjectSidebar driven by the manifest. The detail
+				pages ClientDetail, RequestDetail and LeadDetail declare their
+				integration sidebar tabs (Deck/Flow/Time-tracker/XWiki) in
+				config.sidebar.tabs via `component: "CnDeckTab"` etc. The matching
+				leaf components now ship in @conduction/nextcloud-vue's integration
+				registry (src/integrations/builtin/*), so `sidebarComponents` below
+				registers them by name as this sidebar's customComponents and the
+				lib's open-enum `tabs[].component` resolution mounts them.
+				Passing `tabs` puts the sidebar in open-enum mode; :use-registry is
+				false so the manifest is the single source of truth for the tab set
+				(and the registry-vs-tabs console.warn is avoided). Pages with no
+				tabs simply set config.sidebar.enabled: false and render no sidebar.
+				Note: body integration *cards* (CnDeckCard/…) are NOT wired here —
+				CnDetailPage renders those as type:"integration" grid widgets via the
+				integration registry, a separate mechanism.
 			-->
 			<CnObjectSidebar
 				v-if="objectSidebarState.active"
@@ -65,6 +62,8 @@
 				:schema="objectSidebarState.schema"
 				:hidden-tabs="objectSidebarState.hiddenTabs"
 				:tabs="objectSidebarState.tabs"
+				:custom-components="sidebarComponents"
+				:use-registry="false"
 				:open="objectSidebarState.open"
 				@update:open="objectSidebarState.open = $event" />
 		</template>
@@ -74,7 +73,9 @@
 <script>
 import Vue from 'vue'
 import { translate as ncT } from '@nextcloud/l10n'
-import { CnAppRoot, CnObjectSidebar } from '@conduction/nextcloud-vue'
+import { CnAppRoot, CnObjectSidebar, builtinIntegrations } from '@conduction/nextcloud-vue'
+import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
+import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 
 export default {
 	name: 'App',
@@ -166,6 +167,41 @@ export default {
 		 */
 		permissions() {
 			return window.OC?.currentUser?.permissions ?? []
+		},
+		/**
+		 * Cell-widget registry passed to CnAppRoot — every entry must be
+		 * referenced from a manifest column's `widget` id. The lead-list
+		 * close-date + probability columns reach this registry via
+		 * `pages[Leads].config.columns[].widget` per ADR-036.
+		 *
+		 * @return {Record<string, object>}
+		 *
+		 * @spec openspec/changes/klantbeeld-360/tasks.md#task-6.1
+		 * @spec openspec/changes/klantbeeld-360/tasks.md#task-6.2
+		 */
+		cellWidgets() {
+			return {
+				'lead-close-date': LeadCloseDateCell,
+				'lead-probability': LeadProbabilityCell,
+			}
+		},
+		/**
+		 * Component registry for the host CnObjectSidebar, keyed by component
+		 * name (CnDeckTab, CnFlowTab, …). Built from the library's integration
+		 * descriptors so the detail pages' manifest `sidebar.tabs[].component`
+		 * strings resolve to the real integration leaf components. Both tab and
+		 * widget components are mapped; only the tab components are referenced
+		 * today (open-enum tabs), the widgets are mapped for forward use.
+		 *
+		 * @return {Record<string, object>}
+		 */
+		sidebarComponents() {
+			const map = {}
+			for (const i of builtinIntegrations) {
+				if (i.tab && i.tab.name) map[i.tab.name] = i.tab
+				if (i.widget && i.widget.name) map[i.widget.name] = i.widget
+			}
+			return map
 		},
 	},
 

@@ -37,6 +37,13 @@
 			</NcButton>
 		</template>
 
+		<!-- Overdue banner (REQ-LM-004 Scenario 12). Shown when the lead's
+		     expectedCloseDate has passed and the lead is not closed. -->
+		<div v-if="isOverdue" class="lead-overdue-banner" role="alert">
+			<ClockAlert :size="20" />
+			<span>{{ n('pipelinq', '%n day overdue', '%n days overdue', overdueDays) }}</span>
+		</div>
+
 		<!-- Core Info -->
 		<CnDetailCard :title="t('pipelinq', 'Core Info')">
 			<div class="info-grid">
@@ -114,6 +121,12 @@
 					:class="stageClass(stage)">
 					<span class="stage-indicator" />
 					<span class="stage-name">{{ stage.name }}</span>
+					<span
+						v-if="stageClass(stage) === 'stage-current'"
+						class="stage-aging"
+						:aria-label="t('pipelinq', 'Days in current stage')">
+						{{ n('pipelinq', '%n day in current stage', '%n days in current stage', daysInStage) }}
+					</span>
 				</div>
 			</div>
 		</CnDetailCard>
@@ -137,6 +150,15 @@
 			<ActivityTimeline :entity-type="'lead'" :entity-id="leadId" />
 		</CnDetailCard>
 
+		<!--
+			Communication History — paginated contactmoment feed for this entity.
+			@spec openspec/changes/entity-notes/tasks.md#task-6.3
+		-->
+		<CommunicationHistory
+			v-if="!isNew && !loading && !editing"
+			entity-type="lead"
+			:entity-id="leadId" />
+
 		<!-- Delete dialog -->
 		<NcDialog
 			v-if="showDeleteDialog"
@@ -159,11 +181,14 @@
 import { NcButton, NcDialog } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
+import ClockAlert from 'vue-material-design-icons/ClockAlert.vue'
 import LeadForm from './LeadForm.vue'
 import LeadProducts from '../../components/LeadProducts.vue'
 import LeadContactRoles from '../../components/LeadContactRoles.vue'
 import ActivityTimeline from '../../components/ActivityTimeline.vue'
+import CommunicationHistory from '../../components/CommunicationHistory.vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import { getDaysAge, isLeadOverdue, getOverdueDays } from '../../services/pipelineUtils.js'
 
 export default {
 	name: 'LeadDetail',
@@ -172,10 +197,12 @@ export default {
 		NcDialog,
 		CnDetailPage,
 		CnDetailCard,
+		ClockAlert,
 		LeadForm,
 		LeadProducts,
 		LeadContactRoles,
 		ActivityTimeline,
+		CommunicationHistory,
 	},
 	props: {
 		leadId: {
@@ -239,6 +266,39 @@ export default {
 			if (p === 'urgent') return 'priority-urgent'
 			if (p === 'high') return 'priority-high'
 			return ''
+		},
+		/**
+		 * Pipeline stages, normalised for overdue/aging helpers that need
+		 * the `isClosed` flag to detect won/lost stages.
+		 */
+		stagesForOverdue() {
+			return this.pipelineData?.stages || []
+		},
+		/**
+		 * True when the lead's expectedCloseDate has passed and the lead
+		 * is not closed. Drives the overdue banner.
+		 *
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-004
+		 */
+		isOverdue() {
+			return isLeadOverdue(this.leadData, this.stagesForOverdue)
+		},
+		/**
+		 * Days since the expectedCloseDate when overdue, otherwise 0.
+		 *
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-004
+		 */
+		overdueDays() {
+			return getOverdueDays(this.leadData, this.stagesForOverdue)
+		},
+		/**
+		 * Days the lead has spent in its current stage. V1 proxy uses
+		 * `_dateModified` until `stageEnteredAt` is wired end-to-end.
+		 *
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-003
+		 */
+		daysInStage() {
+			return getDaysAge(this.leadData)
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-37
@@ -418,6 +478,28 @@ export default {
 
 .info-field--full {
 	margin-top: 16px;
+}
+
+/* Overdue banner (REQ-LM-004 Scenario 12). Uses the standard error
+   token + an icon so colour is never the sole signal (WCAG AA). */
+.lead-overdue-banner {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 8px 20px 16px;
+	padding: 10px 16px;
+	border-radius: var(--border-radius-large);
+	background: var(--color-error-bg, #fde8e8);
+	color: var(--color-error, #c0392b);
+	font-weight: 600;
+}
+
+/* Aging text on the current stage row (REQ-LM-003 Scenario 9). */
+.stage-aging {
+	margin-left: auto;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+	font-weight: normal;
 }
 
 .priority-urgent {
