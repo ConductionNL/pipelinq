@@ -6,7 +6,9 @@
     <name lang="nl">Pipelinq</name>
     <summary lang="en">CRM with client management, lead pipelines, and request intake</summary>
     <summary lang="nl">CRM met klantbeheer, lead-pipelines en verzoekintake</summary>
-    <description lang="en"><![CDATA[Pipelinq is a lightweight CRM for Nextcloud. Manage clients, track leads through visual pipelines, handle incoming requests, and keep a complete history of every interaction — all without leaving your Nextcloud workspace.
+    <description lang="en"><![CDATA[> ⚠️ **Active development — not for production use yet.** This app is under active development. Although it may carry a stable release status, **please do not use it in production environments before 12 June 2026.** See the [app page on conduction.nl](https://conduction.nl/apps/pipelinq) for release planning and what this app does.
+
+Pipelinq is a lightweight CRM for Nextcloud. Manage clients, track leads through visual pipelines, handle incoming requests, and keep a complete history of every interaction — all without leaving your Nextcloud workspace.
 
 **Key Features**
 
@@ -27,7 +29,9 @@ Pairs naturally with [Procest](https://apps.nextcloud.com/apps/procest) — hand
 
 Free and open source under the AGPL license.
     ]]></description>
-    <description lang="nl"><![CDATA[Pipelinq is een lichtgewicht CRM voor Nextcloud. Beheer klanten, volg leads door visuele pipelines, handel binnenkomende verzoeken af en houd een complete historie bij van elke interactie — allemaal zonder je Nextcloud-werkplek te verlaten.
+    <description lang="nl"><![CDATA[> ⚠️ **In actieve ontwikkeling — nog niet voor productiegebruik.** Deze app is volop in ontwikkeling. Hoewel de app een stabiele release-status kan hebben, **gebruik deze nog niet in productieomgevingen vóór 12 juni 2026.** Zie de [app-pagina op conduction.nl](https://conduction.nl/apps/pipelinq) voor release-planning en het doel van deze app.
+
+Pipelinq is een lichtgewicht CRM voor Nextcloud. Beheer klanten, volg leads door visuele pipelines, handel binnenkomende verzoeken af en houd een complete historie bij van elke interactie — allemaal zonder je Nextcloud-werkplek te verlaten.
 
 **Belangrijkste functies**
 
