@@ -6,21 +6,18 @@
  * Complements the existing bi-export.spec.ts (which only asserts no hard 500)
  * with the deeper UI observation captured during the gate-19 explore pass.
  *
- * KNOWN BUG (confirmed 2026-06-09): the export-jobs index never registers its
- * object type in the cn-vue store and a render path reads `.id` off an
- * undefined value, so the page logs BOTH:
- *   TypeError: Cannot read properties of undefined (reading 'id')
- *   Error: Object type "exportJob" is not registered in the store.
- *   Call registerObjectType('exportJob', schemaId, registerId) first.
- * The page heading is missing and the jobs table never populates. The
- * data-surface assertion is a test.fixme until src/registry.js registers
- * `exportJob` and the undefined-`id` read is guarded.
+ * LIVE STATE (verified 2026-06-09 against the deployed bundle): the page mounts
+ * its `cn-index-page` chrome. The store.js slug-fallback registration (commit
+ * a53bc8c5) does NOT yet make the schema-driven data surface render — `exportJob`
+ * is still reported as not registered at fetch time, so the heading + jobs table
+ * never populate (the page falls back to its empty state). The data surface
+ * assertion is kept as `test.fixme` until that is resolved.
  */
 import { test, expect } from '@playwright/test'
 import { openApp, navClick, assertNoHardError } from '../helpers/pipelinq'
 
 // @e2e openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-ui-shell
-test('BI export jobs: navigates from sidebar without a hard server error', async ({ page }) => {
+test('BI export jobs: navigates from sidebar and mounts the index chrome', async ({ page }) => {
 	await openApp(page)
 	await navClick(page, 'BI export', /\/export\/jobs/)
 
@@ -30,9 +27,10 @@ test('BI export jobs: navigates from sidebar without a hard server error', async
 
 // @e2e openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-ui-list
 test.fixme('BI export jobs: heading and jobs table render', async ({ page }) => {
-	// BUG: object type "exportJob" is not registered in the cn-vue store + a
-	// render path reads `.id` off undefined. Re-enable once src/registry.js
-	// registers `exportJob` and the undefined read is guarded.
+	// KNOWN GAP: the "exportJob" object type is still not registered at fetch
+	// time on the deployed bundle, so the collection fetch throws and the index
+	// renders only its empty/chrome state (no heading, no jobs table). Unskip
+	// once store.js registration makes the schema-driven surface load.
 	await openApp(page)
 	await navClick(page, 'BI export', /\/export\/jobs/)
 	await expect(page.locator('#content-vue').getByRole('heading').first()).toBeVisible()

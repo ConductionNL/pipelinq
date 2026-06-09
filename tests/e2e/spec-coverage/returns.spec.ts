@@ -5,19 +5,18 @@
  * Gate-19 behavioral e2e coverage for the Returns / refunds page (/pos/refunds).
  * Maps to openspec/specs/pos-refund-return/spec.md.
  *
- * KNOWN BUG (confirmed 2026-06-09): the refunds list never registers its
- * object type in the cn-vue store, so the page logs:
- *   Error: Object type "posRefund" is not registered in the store.
- *   Call registerObjectType('posRefund', schemaId, registerId) first.
- * The index chrome renders but the data table stays empty / no heading. The
- * data-surface assertion is a test.fixme until src/registry.js registers
- * `posRefund`.
+ * LIVE STATE (verified 2026-06-09 against the deployed bundle): the page mounts
+ * its `cn-index-page` chrome and the primary "Add Item" CTA. The store.js
+ * slug-fallback registration (commit a53bc8c5) does NOT yet make the
+ * schema-driven data surface render — `posRefund` is still reported as not
+ * registered at fetch time, so the heading + table never populate. The data
+ * surface assertion is kept as `test.fixme` until that is resolved.
  */
 import { test, expect } from '@playwright/test'
 import { openApp, navClick, assertNoHardError } from '../helpers/pipelinq'
 
 // @e2e openspec/specs/pos-refund-return/spec.md#returns-page
-test('Returns: navigates from sidebar without a hard server error', async ({ page }) => {
+test('Returns: navigates from sidebar and mounts the index chrome', async ({ page }) => {
 	await openApp(page)
 	await navClick(page, 'Returns', /\/pos\/refunds/)
 
@@ -35,9 +34,10 @@ test('Returns: primary "Add Item" action is present', async ({ page }) => {
 
 // @e2e openspec/specs/pos-refund-return/spec.md#returns-list
 test.fixme('Returns: refund list data surface renders', async ({ page }) => {
-	// BUG: object type "posRefund" is not registered in the cn-vue store, so the
-	// collection fetch throws and the table never populates. Re-enable once
-	// src/registry.js calls registerObjectType('posRefund', ...).
+	// KNOWN GAP: the "posRefund" object type is still not registered at fetch
+	// time on the deployed bundle, so the collection fetch throws and the index
+	// renders only its empty/chrome state (no heading, no data table). Unskip
+	// once store.js registration makes the schema-driven surface load.
 	await openApp(page)
 	await navClick(page, 'Returns', /\/pos\/refunds/)
 	await expect(page.locator('#content-vue').getByRole('heading').first()).toBeVisible()
