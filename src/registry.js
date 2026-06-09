@@ -359,7 +359,13 @@ const registry = {
 		_note: 'Forecast trend (inline SVG sparkline of commit/best-case/pipeline), week-over-week delta panel and accuracy table with colour bands; lib gap: no chart-widget page type.',
 	},
 	LeadForecastTab: {
-		kind: 'tab',
+		// Rendered as a lead-detail sidebar tab via a slot reference, not a
+		// router page. "tab" is not a CnAppRoot registry kind (valid: widget,
+		// modal, page, form-field, cell-renderer) and threw a RegistryKindError
+		// at every CnAppRoot mount. Per ADR-036 slot/section lookups are
+		// kind-agnostic as long as the entry carries a `component`, so register
+		// it as a widget — the closest valid kind for a self-contained panel.
+		kind: 'widget',
 		component: LeadForecastTab,
 		_note: 'Lead-detail sidebar tab: forecast-category selector with closed-deal lock indicator, large-commit justification modal and category history. Server-side DealUpdatedListener is the authoritative enforcer; this tab is the UX. Wiring into LeadDetail.config.sidebar.tabs is a monolith manifest.json edit deferred under ADR-037 (do not edit the monolith from a feature build).',
 	},
