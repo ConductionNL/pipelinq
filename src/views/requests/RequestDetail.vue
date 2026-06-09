@@ -25,7 +25,7 @@
 		:back-route="{ name: 'Requests' }"
 		:back-label="t('pipelinq', 'Back to list')"
 		:loading="loading"
-		:sidebar="!isNew && !loading"
+		:sidebar="{ enabled: !isNew && !loading }"
 		object-type="pipelinq_request"
 		:object-id="requestId"
 		:sidebar-props="sidebarProps">

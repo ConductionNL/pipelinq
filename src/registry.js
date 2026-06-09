@@ -415,21 +415,25 @@ const registry = {
 	PipelineFunnelWidget: {
 		kind: 'widget',
 		component: PipelineFunnelWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Pipeline value per stage (count, total, weighted) — bar chart with pipeline filter (REQ-LM-006).',
 	},
 	SourcePerformanceWidget: {
 		kind: 'widget',
 		component: SourcePerformanceWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Source conversion table (total, won, rate, avg) sortable per column (REQ-LM-007).',
 	},
 	LeadAgingWidget: {
 		kind: 'widget',
 		component: LeadAgingWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Aging-bucket donut chart (≤7d / 8-14d / 15-30d / >30d) (REQ-LM-006).',
 	},
 	WinLossWidget: {
 		kind: 'widget',
 		component: WinLossWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Win/loss pie chart + KPI stats block with a date-range selector (REQ-LM-008).',
 	},
 	// --- Loyalty program (loyalty-program). ---
@@ -593,6 +597,7 @@ const registry = {
 	BillingCategoryWidget: {
 		kind: 'widget',
 		component: BillingCategoryWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Donut chart of hours per billing category for the Dashboard (REQ-BCT-004). Clicking a segment navigates to the time entry list filtered by that category.',
 	},
 

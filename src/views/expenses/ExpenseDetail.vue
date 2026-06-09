@@ -13,7 +13,7 @@
 			:back-route="{ name: 'Expenses' }"
 			:back-label="t('pipelinq', 'Back to list')"
 			:loading="loading"
-			:sidebar="!loading"
+			:sidebar="{ enabled: !loading }"
 			object-type="pipelinq_expense"
 			:object-id="expenseId">
 			<CnDetailCard :title="t('pipelinq', 'Expense information')">

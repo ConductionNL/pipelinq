@@ -8,7 +8,7 @@
 		:back-route="{ name: 'Dashboard' }"
 		:back-label="t('pipelinq', 'Back to dashboard')"
 		:loading="loading"
-		:sidebar="false">
+		:sidebar="{ enabled: false }">
 		<template #actions>
 			<NcSelect
 				v-model="selectedPipelineId"
