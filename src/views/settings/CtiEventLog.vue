@@ -26,8 +26,11 @@
 				label="label"
 				:reduce="(o) => o.value"
 				clearable />
-			<NcButton type="primary" @click="reload">
-				{{ t('pipelinq', 'Reload') }}
+			<NcButton type="primary" :disabled="loading" @click="reload">
+				<template v-if="loading" #icon>
+					<NcLoadingIcon :size="20" />
+				</template>
+				{{ loading ? t('pipelinq', 'Reloading…') : t('pipelinq', 'Reload') }}
 			</NcButton>
 		</div>
 		<table class="cti-event-log__table" data-testid="cti-event-log-table">
@@ -78,17 +81,18 @@
 </template>
 
 <script>
-import { NcButton, NcDialog, NcSelect, NcSettingsSection } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcLoadingIcon, NcSelect, NcSettingsSection } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import { getEventLog } from '../../services/ctiApi.js'
 
 export default {
 	name: 'CtiEventLog',
-	components: { NcButton, NcDialog, NcSelect, NcSettingsSection },
+	components: { NcButton, NcDialog, NcLoadingIcon, NcSelect, NcSettingsSection },
 	data() {
 		return {
 			events: [],
 			payloadRow: null,
+			loading: false,
 			filters: {
 				platform: '',
 				event_type: '',
@@ -107,16 +111,23 @@ export default {
 			return ['ringing', 'answered', 'ended', 'abandoned', 'transferred', 'presence', 'recording'].map((v) => ({ value: v, label: v }))
 		},
 	},
+	watch: {
+		'filters.platform': 'reload',
+		'filters.event_type': 'reload',
+	},
 	mounted() {
 		this.reload()
 	},
 	methods: {
 		async reload() {
+			this.loading = true
 			try {
 				const data = await getEventLog(this.filters)
 				this.events = (data && data.events) || []
 			} catch (e) {
 				showError(t('pipelinq', 'Failed to load event log: {error}', { error: e.message || 'network error' }))
+			} finally {
+				this.loading = false
 			}
 		},
 		viewPayload(row) {
