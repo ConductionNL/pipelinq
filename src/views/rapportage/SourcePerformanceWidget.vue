@@ -7,9 +7,9 @@
   @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-007
 -->
 <template>
-	<CnEmptyState
+	<NcEmptyContent
 		v-if="!rows.length"
-		:title="t('pipelinq', 'No source data')"
+		:name="t('pipelinq', 'No source data')"
 		:description="t('pipelinq', 'No lead source performance to report yet.')" />
 
 	<CnTableWidget
@@ -20,11 +20,12 @@
 </template>
 
 <script>
-import { CnTableWidget, CnEmptyState } from '@conduction/nextcloud-vue'
+import { CnTableWidget } from '@conduction/nextcloud-vue'
+import { NcEmptyContent } from '@nextcloud/vue'
 
 export default {
 	name: 'SourcePerformanceWidget',
-	components: { CnTableWidget, CnEmptyState },
+	components: { CnTableWidget, NcEmptyContent },
 	props: {
 		data: {
 			type: Array,
