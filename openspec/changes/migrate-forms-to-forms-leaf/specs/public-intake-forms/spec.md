@@ -2,7 +2,7 @@
 
 ## ADDED Requirements
 
-### Requirement: Forms are provided by the Forms leaf, not an in-app builder
+### Requirement: Forms SHALL be provided by the Forms leaf, not an in-app builder
 
 Pipelinq SHALL NOT ship an in-app form builder or store form responses; form
 authoring, responses, and public submission SHALL be provided by the NC Forms
@@ -26,7 +26,7 @@ app via the OpenRegister forms leaf (`integration-forms`) (hydra ADR-022).
 - **AND** public submission SHALL use the NC Forms public link, not a
   pipelinq-owned endpoint.
 
-### Requirement: CRM objects expose the forms leaf
+### Requirement: CRM objects SHALL expose the forms leaf
 
 The `lead`, `request`, and `client` schemas SHALL declare `forms` in
 `linkedTypes` so the leaf's tab and widget appear on those objects.
@@ -40,7 +40,7 @@ The `lead`, `request`, and `client` schemas SHALL declare `forms` in
 - **AND** the `CnFormsCard` widget SHALL show the linked response count and
   most-recent response.
 
-### Requirement: Forms leaf is placed via the app manifest
+### Requirement: Forms leaf SHALL be placed via the app manifest
 
 The forms leaf's tab and widget SHALL be surfaced through `src/manifest.json`
 (ADR-024), and `forms` SHALL be declared as a dependency.
@@ -54,7 +54,7 @@ The forms leaf's tab and widget SHALL be surfaced through `src/manifest.json`
   `CnFormsCard` widget
 - **AND** `dependencies[]` SHALL include `forms`.
 
-### Requirement: Existing response data migration is a documented follow-up
+### Requirement: Existing response data migration SHALL be a documented follow-up
 
 Migration of existing `intakeSubmission` / `surveyResponse` objects SHALL NOT be
 performed by this change and SHALL be documented as a separate follow-up
