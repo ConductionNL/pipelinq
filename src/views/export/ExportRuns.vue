@@ -20,7 +20,7 @@
 			@sort="onSort"
 			@row-click="openRun"
 			@page-changed="onPageChange">
-			<template #actions="{ row }">
+			<template #row-actions="{ row }">
 				<NcButton
 					v-if="canRetry(row)"
 					type="tertiary"

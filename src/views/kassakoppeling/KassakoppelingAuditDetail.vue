@@ -17,7 +17,7 @@
 		:back-route="{ name: 'KassakoppelingAuditList' }"
 		:back-label="t('pipelinq', 'Terug naar audit log')"
 		:loading="loading"
-		:sidebar="false">
+		:sidebar="{ enabled: false }">
 		<template #actions>
 			<NcButton
 				v-if="entry.verified !== true"
