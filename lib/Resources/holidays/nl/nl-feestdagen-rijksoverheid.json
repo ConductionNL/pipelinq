@@ -1,0 +1,19 @@
+{
+    "name": "Nederlandse Rijksoverheid feestdagen",
+    "locale": "nl",
+    "rules": [
+        {"date": "01-01", "name": "Nieuwjaarsdag", "recurring": true},
+        {"date": "04-27", "name": "Koningsdag", "recurring": true},
+        {"date": "05-05", "name": "Bevrijdingsdag", "recurring": true, "lustrum": true},
+        {"date": "12-25", "name": "Eerste Kerstdag", "recurring": true},
+        {"date": "12-26", "name": "Tweede Kerstdag", "recurring": true}
+    ],
+    "computed": [
+        {"name": "Goede Vrijdag", "easterOffset": -2},
+        {"name": "Pasen (Eerste)", "easterOffset": 0},
+        {"name": "Tweede Paasdag", "easterOffset": 1},
+        {"name": "Hemelvaartsdag", "easterOffset": 39},
+        {"name": "Pinksteren (Eerste)", "easterOffset": 49},
+        {"name": "Tweede Pinksterdag", "easterOffset": 50}
+    ]
+}
