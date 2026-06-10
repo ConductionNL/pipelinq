@@ -193,6 +193,12 @@ class SettingsService
         // pos_eod.shillinq_token is stored via setValueString with isSensitive=true and never exposed in getSettings().
         'pos_eod.alert_email'                      => '',
         'pos_eod.max_retry_attempts'               => '5',
+        // xWiki integration (xwiki-integration). The default direct URL points at
+        // the dev compose stack so a fresh install renders content without manual
+        // configuration; admins can override or clear it to disable the fallback.
+        'xwiki_default_space'                      => '',
+        'xwiki_cache_ttl'                          => '300',
+        'xwiki_direct_url'                         => '',
     ];
 
     /**
