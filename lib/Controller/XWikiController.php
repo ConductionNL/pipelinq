@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * xWiki REST proxy controller.
+ * XWiki REST proxy controller.
  *
  * @psalm-suppress UnusedClass
  *
@@ -81,8 +81,13 @@ class XWikiController extends Controller
             $limit  = (int) ($this->request->getParam('limit') ?? 10);
             $offset = (int) ($this->request->getParam('offset') ?? 0);
 
-            $space = is_string($space) === true && $space !== '' ? $space : null;
-            $tags  = [];
+            if (is_string($space) === true && $space !== '') {
+                $space = $space;
+            } else {
+                $space = null;
+            }
+
+            $tags = [];
             if (is_string($tagsR) === true && $tagsR !== '') {
                 $tags = array_values(array_filter(array_map('trim', explode(',', $tagsR)), static fn($t) => $t !== ''));
             }
@@ -92,7 +97,7 @@ class XWikiController extends Controller
         } catch (Throwable $e) {
             $this->logger->warning('xWiki search proxy failed', ['exception' => $e]);
             return new JSONResponse(['results' => [], 'total' => 0, 'limit' => 10, 'offset' => 0, 'error' => 'unavailable']);
-        }
+        }//end try
     }//end search()
 
     /**
@@ -142,11 +147,22 @@ class XWikiController extends Controller
             if (isset($result['content']) === true && is_string($result['content']) === true) {
                 $result['content'] = $this->xwiki->sanitiseHtml($result['content']);
             }
+
             return new JSONResponse($result);
         } catch (Throwable $e) {
             $this->logger->warning('xWiki page proxy failed', ['exception' => $e]);
-            return new JSONResponse(['title' => '', 'content' => '', 'url' => '', 'modified' => '', 'space' => '', 'id' => '', 'error' => 'unavailable']);
-        }
+            return new JSONResponse(
+                [
+                    'title'    => '',
+                    'content'  => '',
+                    'url'      => '',
+                    'modified' => '',
+                    'space'    => '',
+                    'id'       => '',
+                    'error'    => 'unavailable',
+                ]
+            );
+        }//end try
     }//end page()
 
     /**

@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * xWiki REST proxy service.
+ * XWiki REST proxy service.
  *
  * @spec openspec/changes/xwiki-integration/tasks.md#1.1
  */
@@ -62,7 +62,7 @@ class XWikiService
      * In-memory marker for "xWiki unreachable" status checks so repeated calls
      * within a single request do not re-issue HTTP traffic.
      *
-     * @var bool|null
+     * @var boolean|null
      */
     private ?bool $availabilityMemo = null;
 
@@ -108,51 +108,57 @@ class XWikiService
      *
      * @spec openspec/changes/xwiki-integration/tasks.md#1.1
      */
-    public function search(string $query, ?string $space = null, array $tags = [], int $limit = 10, int $offset = 0): array
+    public function search(string $query, ?string $space=null, array $tags=[], int $limit=10, int $offset=0): array
     {
         $limit  = max(1, min(100, $limit));
         $offset = max(0, $offset);
 
-        $cacheKey = $this->makeCacheKey('search', [$query, $space ?? '', implode(',', $tags), $limit, $offset]);
-        $cached   = $this->fromCache($cacheKey);
+        $cacheKey = $this->makeCacheKey(bucket: 'search', parts: [$query, $space ?? '', implode(',', $tags), $limit, $offset]);
+        $cached   = $this->fromCache(key: $cacheKey);
         if ($cached !== null) {
             return $cached;
         }
 
         $base = $this->getBaseUrl();
         if ($base === '') {
-            return $this->emptyResult($limit, $offset);
+            return $this->emptyResult(limit: $limit, offset: $offset);
         }
 
         $params = [
-            'q'           => $query,
-            'number'      => $limit,
-            'start'       => $offset,
-            'media'       => 'xml',
+            'q'      => $query,
+            'number' => $limit,
+            'start'  => $offset,
+            'media'  => 'xml',
         ];
         if ($space !== null && $space !== '') {
             $params['scope'] = 'name,content,title';
             $params['wikis'] = 'xwiki';
         }
 
-        $url     = $base . '/rest/wikis/query?' . http_build_query($params);
-        $xml     = $this->fetchXml($url);
-        $results = $this->parseSearchResults($xml);
+        $url     = $base.'/rest/wikis/query?'.http_build_query($params);
+        $xml     = $this->fetchXml(url: $url);
+        $results = $this->parseSearchResults(xml: $xml);
 
         if ($space !== null && $space !== '') {
             $results = array_values(array_filter($results, static fn(array $item): bool => ($item['space'] ?? '') === $space));
         }
 
         if (count($tags) > 0) {
-            $results = array_values(array_filter($results, static function (array $item) use ($tags): bool {
-                $itemTags = $item['tags'] ?? [];
-                foreach ($tags as $tag) {
-                    if (in_array($tag, $itemTags, true) === true) {
-                        return true;
+            $results = array_values(
+                    array_filter(
+                    $results,
+                    static function (array $item) use ($tags): bool {
+                        $itemTags = $item['tags'] ?? [];
+                        foreach ($tags as $tag) {
+                            if (in_array($tag, $itemTags, true) === true) {
+                                return true;
+                            }
+                        }
+
+                        return false;
                     }
-                }
-                return false;
-            }));
+                    )
+                    );
         }
 
         $payload = [
@@ -162,7 +168,7 @@ class XWikiService
             'offset'  => $offset,
         ];
 
-        $this->toCache($cacheKey, $payload);
+        $this->toCache(key: $cacheKey, value: $payload);
         return $payload;
     }//end search()
 
@@ -177,26 +183,26 @@ class XWikiService
      *
      * @spec openspec/changes/xwiki-integration/tasks.md#1.1
      */
-    public function getPages(string $space, int $limit = 10, int $offset = 0): array
+    public function getPages(string $space, int $limit=10, int $offset=0): array
     {
         $limit  = max(1, min(100, $limit));
         $offset = max(0, $offset);
 
-        $cacheKey = $this->makeCacheKey('pages', [$space, $limit, $offset]);
-        $cached   = $this->fromCache($cacheKey);
+        $cacheKey = $this->makeCacheKey(bucket: 'pages', parts: [$space, $limit, $offset]);
+        $cached   = $this->fromCache(key: $cacheKey);
         if ($cached !== null) {
             return $cached;
         }
 
         $base = $this->getBaseUrl();
         if ($base === '' || $space === '') {
-            return $this->emptyResult($limit, $offset);
+            return $this->emptyResult(limit: $limit, offset: $offset);
         }
 
         $wiki    = 'xwiki';
         $url     = sprintf('%s/rest/wikis/%s/spaces/%s/pages?media=xml&number=%d&start=%d', $base, $wiki, rawurlencode($space), $limit, $offset);
-        $xml     = $this->fetchXml($url);
-        $results = $this->parsePageSummaries($xml, $space);
+        $xml     = $this->fetchXml(url: $url);
+        $results = $this->parsePageSummaries(xml: $xml, space: $space);
 
         $payload = [
             'results' => $results,
@@ -204,7 +210,7 @@ class XWikiService
             'limit'   => $limit,
             'offset'  => $offset,
         ];
-        $this->toCache($cacheKey, $payload);
+        $this->toCache(key: $cacheKey, value: $payload);
         return $payload;
     }//end getPages()
 
@@ -220,11 +226,16 @@ class XWikiService
      */
     public function getPageContent(string $wiki, string $page): array
     {
-        $wiki = trim($wiki) === '' ? 'xwiki' : trim($wiki);
+        if (trim($wiki) === '') {
+            $wiki = 'xwiki';
+        } else {
+            $wiki = trim($wiki);
+        }
+
         $page = trim($page);
 
-        $cacheKey = $this->makeCacheKey('page', [$wiki, $page]);
-        $cached   = $this->fromCache($cacheKey);
+        $cacheKey = $this->makeCacheKey(bucket: 'page', parts: [$wiki, $page]);
+        $cached   = $this->fromCache(key: $cacheKey);
         if ($cached !== null) {
             return $cached;
         }
@@ -241,26 +252,26 @@ class XWikiService
             ];
         }
 
-        $segments = array_map('rawurlencode', explode('.', $page));
-        $space    = (string) ($segments[0] ?? '');
-        $pageName = (string) end($segments);
+        $segments   = array_map('rawurlencode', explode('.', $page));
+        $space      = (string) ($segments[0] ?? '');
+        $pageName   = (string) end($segments);
         $spacesPath = implode('/spaces/', array_slice($segments, 0, -1));
         $url        = sprintf('%s/rest/wikis/%s/spaces/%s/pages/%s?media=xml', $base, rawurlencode($wiki), $spacesPath, $pageName);
-        $xml        = $this->fetchXml($url);
-        $page       = $this->parsePage($xml);
+        $xml        = $this->fetchXml(url: $url);
+        $page       = $this->parsePage(xml: $xml);
 
         // Fetch rendered HTML separately via the bin/view URL and extract the
         // body content (#xwikicontent) so the proxy can return a sanitised HTML
         // fragment for inline viewing.
-        $viewUrl  = sprintf('%s/bin/view/%s', $base, implode('/', $segments));
-        $rawHtml  = $this->fetchRaw($viewUrl);
-        $content  = $this->extractAndSanitiseHtml($rawHtml);
+        $viewUrl = sprintf('%s/bin/view/%s', $base, implode('/', $segments));
+        $rawHtml = $this->fetchRaw(url: $viewUrl);
+        $content = $this->extractAndSanitiseHtml(html: $rawHtml);
 
         $page['content'] = $content;
         $page['url']     = $viewUrl;
         $page['space']   = $space;
 
-        $this->toCache($cacheKey, $page);
+        $this->toCache(key: $cacheKey, value: $page);
         return $page;
     }//end getPageContent()
 
@@ -294,12 +305,13 @@ class XWikiService
 
         try {
             $client   = $this->clientService->newClient();
-            $response = $client->get($base . '/rest', ['timeout' => 5, 'connect_timeout' => 3]);
+            $response = $client->get($base.'/rest', ['timeout' => 5, 'connect_timeout' => 3]);
             $body     = (string) $response->getBody();
             $version  = '';
             if (preg_match('#<version>([^<]+)</version>#', $body, $m) === 1) {
                 $version = (string) $m[1];
             }
+
             $this->availabilityMemo = true;
             return [
                 'available' => true,
@@ -316,7 +328,7 @@ class XWikiService
                 'baseUrl'   => $base,
                 'source'    => $this->getInstanceSource(),
             ];
-        }
+        }//end try
     }//end getStatus()
 
     /**
@@ -361,6 +373,7 @@ class XWikiService
         } catch (Throwable $e) {
             // Fall through to direct.
         }
+
         return 'direct-url';
     }//end getInstanceSource()
 
@@ -372,7 +385,11 @@ class XWikiService
     private function getCacheTtl(): int
     {
         $raw = (int) $this->appConfig->getValueString(Application::APP_ID, 'xwiki_cache_ttl', (string) self::DEFAULT_CACHE_TTL);
-        return $raw > 0 ? $raw : self::DEFAULT_CACHE_TTL;
+        if ($raw > 0) {
+            return $raw;
+        }
+
+        return self::DEFAULT_CACHE_TTL;
     }//end getCacheTtl()
 
     /**
@@ -385,7 +402,7 @@ class XWikiService
      */
     private function makeCacheKey(string $bucket, array $parts): string
     {
-        return $bucket . ':' . sha1(implode('|', array_map('strval', $parts)));
+        return $bucket.':'.sha1(implode('|', array_map('strval', $parts)));
     }//end makeCacheKey()
 
     /**
@@ -400,14 +417,21 @@ class XWikiService
         if ($this->cache === null) {
             $this->cache = $this->cacheFactory->createDistributed('pipelinq-xwiki');
         }
+
         $raw = $this->cache->get($key);
         if (is_string($raw) === true) {
             $decoded = json_decode($raw, true);
-            return is_array($decoded) === true ? $decoded : null;
+            if (is_array($decoded) === true) {
+                return $decoded;
+            }
+
+            return null;
         }
+
         if (is_array($raw) === true) {
             return $raw;
         }
+
         return null;
     }//end fromCache()
 
@@ -424,6 +448,7 @@ class XWikiService
         if ($this->cache === null) {
             $this->cache = $this->cacheFactory->createDistributed('pipelinq-xwiki');
         }
+
         $this->cache->set($key, json_encode($value), $this->getCacheTtl());
     }//end toCache()
 
@@ -439,11 +464,14 @@ class XWikiService
     {
         try {
             $client   = $this->clientService->newClient();
-            $response = $client->get($url, [
-                'timeout'         => 10,
-                'connect_timeout' => 3,
-                'headers'         => ['Accept' => 'application/xml'],
-            ]);
+            $response = $client->get(
+                    $url,
+                    [
+                        'timeout'         => 10,
+                        'connect_timeout' => 3,
+                        'headers'         => ['Accept' => 'application/xml'],
+                    ]
+                    );
             return (string) $response->getBody();
         } catch (Throwable $e) {
             $this->logger->debug('xWiki XML fetch failed', ['url' => $url, 'exception' => $e]);
@@ -462,10 +490,13 @@ class XWikiService
     {
         try {
             $client   = $this->clientService->newClient();
-            $response = $client->get($url, [
-                'timeout'         => 10,
-                'connect_timeout' => 3,
-            ]);
+            $response = $client->get(
+                    $url,
+                    [
+                        'timeout'         => 10,
+                        'connect_timeout' => 3,
+                    ]
+                    );
             return (string) $response->getBody();
         } catch (Throwable $e) {
             $this->logger->debug('xWiki raw fetch failed', ['url' => $url, 'exception' => $e]);
@@ -479,22 +510,27 @@ class XWikiService
      * @param string $xml Raw XML body.
      *
      * @return array<int, array<string, mixed>>
+     *
+     * @spec openspec/changes/xwiki-integration/tasks.md#1.1
      */
     public function parseSearchResults(string $xml): array
     {
         if ($xml === '') {
             return [];
         }
+
         $previous = libxml_use_internal_errors(true);
         try {
             $doc = simplexml_load_string($xml);
             if ($doc === false) {
                 return [];
             }
+
             $results = [];
             foreach ($doc->xpath('//searchResult') as $node) {
-                $results[] = $this->resultNodeToArray($node);
+                $results[] = $this->resultNodeToArray(node: $node);
             }
+
             return $results;
         } finally {
             libxml_use_internal_errors($previous);
@@ -508,21 +544,25 @@ class XWikiService
      * @param string $space Space name (for tagging the result).
      *
      * @return array<int, array<string, mixed>>
+     *
+     * @spec openspec/changes/xwiki-integration/tasks.md#1.1
      */
     public function parsePageSummaries(string $xml, string $space): array
     {
         if ($xml === '') {
             return [];
         }
+
         $previous = libxml_use_internal_errors(true);
         try {
             $doc = simplexml_load_string($xml);
             if ($doc === false) {
                 return [];
             }
+
             $results = [];
             foreach ($doc->xpath('//pageSummary') as $node) {
-                $item = [
+                $item      = [
                     'id'       => (string) ($node->id ?? ''),
                     'title'    => (string) ($node->title ?? ''),
                     'space'    => $space,
@@ -532,10 +572,11 @@ class XWikiService
                 ];
                 $results[] = $item;
             }
+
             return $results;
         } finally {
             libxml_use_internal_errors($previous);
-        }
+        }//end try
     }//end parsePageSummaries()
 
     /**
@@ -544,18 +585,22 @@ class XWikiService
      * @param string $xml Raw XML.
      *
      * @return array<string, mixed>
+     *
+     * @spec openspec/changes/xwiki-integration/tasks.md#1.1
      */
     public function parsePage(string $xml): array
     {
         if ($xml === '') {
             return ['title' => '', 'modified' => '', 'id' => '', 'space' => '', 'content' => '', 'url' => ''];
         }
+
         $previous = libxml_use_internal_errors(true);
         try {
             $doc = simplexml_load_string($xml);
             if ($doc === false) {
                 return ['title' => '', 'modified' => '', 'id' => '', 'space' => '', 'content' => '', 'url' => ''];
             }
+
             return [
                 'id'       => (string) ($doc->id ?? ''),
                 'title'    => (string) ($doc->title ?? ''),
@@ -575,6 +620,8 @@ class XWikiService
      * @param string $html Raw HTML page.
      *
      * @return string Sanitised HTML fragment.
+     *
+     * @spec openspec/changes/xwiki-integration/tasks.md#1.1
      */
     public function extractAndSanitiseHtml(string $html): string
     {
@@ -583,11 +630,13 @@ class XWikiService
         }
 
         $fragment = $html;
-        if (preg_match('#<div[^>]*id=["\']xwikicontent["\'][^>]*>(.*?)</div>\s*(?:<!--\s*end\s*xwikicontent|<div[^>]*id=["\']xwikidocfooter)#is', $html, $m) === 1) {
+        $pattern  = '#<div[^>]*id=["\']xwikicontent["\'][^>]*>(.*?)</div>\s*'
+            .'(?:<!--\s*end\s*xwikicontent|<div[^>]*id=["\']xwikidocfooter)#is';
+        if (preg_match($pattern, $html, $m) === 1) {
             $fragment = (string) $m[1];
         }
 
-        return $this->sanitiseHtml($fragment);
+        return $this->sanitiseHtml(html: $fragment);
     }//end extractAndSanitiseHtml()
 
     /**
@@ -598,6 +647,8 @@ class XWikiService
      * @param string $html Fragment.
      *
      * @return string
+     *
+     * @spec openspec/changes/xwiki-integration/tasks.md#1.1
      */
     public function sanitiseHtml(string $html): string
     {
@@ -647,6 +698,7 @@ class XWikiService
         if ($title === '' && $id !== '') {
             $title = $id;
         }
+
         return [
             'id'       => $id,
             'title'    => $title,
