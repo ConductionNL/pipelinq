@@ -131,6 +131,12 @@ class SettingsService
         'berichtenboxTemplate_schema',
         'mailboxResolution_schema',
         'deliveryAuditLog_schema',
+        // SLA engine (sla-engine-and-escalation) — separate register identifier.
+        'sla_register',
+        'sla_policy_schema',
+        'sla_breach_event_schema',
+        // Optional callback schema (callback-management) — referenced by SLA sweep job.
+        'callback_schema',
     ];
 
     /**
@@ -193,6 +199,26 @@ class SettingsService
         // pos_eod.shillinq_token is stored via setValueString with isSensitive=true and never exposed in getSettings().
         'pos_eod.alert_email'                      => '',
         'pos_eod.max_retry_attempts'               => '5',
+        // xWiki integration (xwiki-integration). The default direct URL points at
+        // the dev compose stack so a fresh install renders content without manual
+        // configuration; admins can override or clear it to disable the fallback.
+        'xwiki_default_space'                      => '',
+        'xwiki_cache_ttl'                          => '300',
+        'xwiki_direct_url'                         => '',
+        // SLA engine (sla-engine-and-escalation) — admin settings.
+        // @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-008
+        'sla_sweep_interval_seconds'               => '300',
+        'sla_business_hours_start'                 => '09:00',
+        'sla_business_hours_end'                   => '17:00',
+        'sla_default_holiday_calendar'             => 'nl-feestdagen-rijksoverheid',
+        'sla_tenant_holiday_overrides'             => '',
+        'sla_bevrijdingsdag_yearly'                => 'false',
+        'sla_actor_fallback'                       => '',
+        'sla_actor_assignee'                       => '',
+        'sla_actor_team-lead'                      => '',
+        'sla_actor_manager'                        => '',
+        'sla_actor_director'                       => '',
+        'sla_resolved_statuses'                    => 'resolved,completed,closed,afgehandeld',
     ];
 
     /**

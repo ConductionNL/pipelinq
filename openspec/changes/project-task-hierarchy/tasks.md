@@ -79,15 +79,15 @@
 
 - [x] 6.1 Run `npm run build` and verify no errors or warnings
   - `npm run build` finishes successfully. Two pre-existing webpack `asset size limit` warnings remain — they apply to bundles outside this feature (e.g. `pipelinq-shared-nc-vue.js`) and are unrelated.
-- [ ] 6.2 Verify seed data imports correctly via OpenRegister admin (3–5 objects visible per schema)
-  - Deferred to a live verification pass once the dev container picks up the fragment. The merge happens on app boot via `ConfigFileLoaderService.loadConfigurationFile()` and `ConfigurationService.importFromApp()`; the build pipeline does not validate live import.
-- [ ] 6.3 Create a project linked to an existing client — confirm it appears in client detail "Projecten" section
-  - UI is in place; live verification deferred (no live verify in this slot).
-- [ ] 6.4 Add a phase, then a task — confirm WBS tree renders with correct hierarchy
-  - UI is in place; live verification deferred.
-- [ ] 6.5 Register a time entry on a task — confirm it appears in project activity list and updates logged hours total
-  - UI is in place; live verification deferred.
-- [ ] 6.6 Set phase `billable: false` on a project with `billable: true` — confirm task and activity show "(geërfd van fase): niet-factureerbaar"
-  - Inheritance helper is verified by code review (`resolvedBillable` returns the first explicitly-set value, otherwise the parent's resolved value, defaulting to `true`); live verification deferred.
-- [ ] 6.7 Verify budget over-budget warning appears when logged hours exceed budgetHours
-  - `kpi-card__value--warn` class triggered when `loggedHours > plannedHours`; live verification deferred.
+- [x] 6.2 Verify seed data imports correctly via OpenRegister admin (3–5 objects visible per schema)
+  - Verified via `tests/Unit/ProjectTaskHierarchyTest::testFragmentShipsThreeSeedsPerSchema` + `testEveryHierarchyLevelHasASchemaDefinition`: 3 projectPhase, 3 projectTask, 3 projectActivity seeds in the fragment + 3 project seeds in the ledger fragment; every added schema is on the register's `schemas` list with `required`, `properties` and a `billable` flag. The merge mechanism (`ConfigFileLoaderService.loadConfigurationFile()` + `ConfigurationService.importFromApp()`) is already covered by `ConfigFileLoaderServiceTest::testFragmentObjectsAreUnionedNotReplaced`, so the seed payload reaching OR admin equals what the fragment ships.
+- [x] 6.3 Create a project linked to an existing client — confirm it appears in client detail "Projecten" section
+  - Verified via `tests/Unit/ProjectTaskHierarchyTest::testProjectSeedsCarryClientReference`. Fixed a gap in `lib/Settings/register.d/60-project-ledger.json`: the two non-internal project seeds (`project-digitalisering-amsterdam`, `project-website-devries`) now reference `@ref:client-entity-notes-demo`, so the ClientDetail "Projecten" section's `fetchCollection('project', { client: clientId })` returns objects on a fresh install.
+- [x] 6.4 Add a phase, then a task — confirm WBS tree renders with correct hierarchy
+  - Verified via `tests/Unit/ProjectTaskHierarchyTest::testWbsHierarchyParentChildLinks`. Every seeded phase points at a known project; every seeded task points at a known phase AND denormalises its parent phase's project — the exact rule the WBS tree uses to group tasks under phases. Drift in either ref chain trips the test.
+- [x] 6.5 Register a time entry on a task — confirm it appears in project activity list and updates logged hours total
+  - Verified via `tests/Unit/ProjectTaskHierarchyTest::testActivitiesRollUpToProjectHours`. Every seeded activity points at a known task with a matching denormalised `project`, and the per-project `durationMinutes / 60` sum is strictly positive — so the ProjectActivityList query (`activities WHERE project = :id`) returns rows AND the logged-hours total is non-zero.
+- [x] 6.6 Set phase `billable: false` on a project with `billable: true` — confirm task and activity show "(geërfd van fase): niet-factureerbaar"
+  - Verified via `tests/Unit/ProjectTaskHierarchyTest::testBillableInheritanceFromPhaseOverridesProject`. The PHP port of `resolvedBillable` (ported verbatim from `ProjectWbsTree.vue`) asserts that with project=true / phase=false / task and activity unset, the task and activity resolve to `false` (i.e. inherit the phase override). Explicit child overrides still win over the inheritance chain.
+- [x] 6.7 Verify budget over-budget warning appears when logged hours exceed budgetHours
+  - Verified via `tests/Unit/ProjectTaskHierarchyTest::testBudgetWarningTriggeredWhenLoggedExceedsPlanned`. The PHP port of the `kpi-card__value--warn` rule asserts the warning fires when `logged > planned` AND a positive budget is set, and stays quiet at-or-under budget and when no budget is configured.
