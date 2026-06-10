@@ -243,7 +243,8 @@
 					{ "id": "billing-categories", "type": "custom", "title": "Hours by billing category" },
 					{ "id": "unified-analytics",  "type": "custom", "title": "Unified Analytics" },
 					{ "id": "navi-analytics",     "type": "custom", "title": "Ask Navi" },
-					{ "id": "report-export",      "type": "custom", "title": "Report Export" }
+					{ "id": "report-export",      "type": "custom", "title": "Report Export" },
+					{ "id": "xwiki-knowledge",    "type": "custom", "title": "Knowledge base" }
 				],
 				"layout": [
 					{ "id": "1",  "widgetId": "open-leads",         "gridX": 0, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
@@ -257,7 +258,8 @@
 					{ "id": "7",  "widgetId": "my-work",            "gridX": 0, "gridY": 17, "gridWidth": 6,  "gridHeight": 4 },
 					{ "id": "8",  "widgetId": "client-overview",    "gridX": 6, "gridY": 17, "gridWidth": 6,  "gridHeight": 4 },
 					{ "id": "9",  "widgetId": "billing-categories", "gridX": 0, "gridY": 21, "gridWidth": 6,  "gridHeight": 4 },
-					{ "id": "12", "widgetId": "report-export",      "gridX": 0, "gridY": 25, "gridWidth": 12, "gridHeight": 3 }
+					{ "id": "12", "widgetId": "report-export",      "gridX": 0, "gridY": 25, "gridWidth": 12, "gridHeight": 3 },
+					{ "id": "13", "widgetId": "xwiki-knowledge",    "gridX": 0, "gridY": 28, "gridWidth": 6,  "gridHeight": 5 }
 				]
 			},
 			"slots": {
@@ -272,7 +274,8 @@
 				"widget-billing-categories": "BillingCategoryWidget",
 				"widget-unified-analytics": "UnifiedAnalyticsWidget",
 				"widget-navi-analytics": "NaviAnalyticsWidget",
-				"widget-report-export": "ReportExportPanel"
+				"widget-report-export": "ReportExportPanel",
+				"widget-xwiki-knowledge": "XWikiDashboardWidget"
 			}
 		},
 		{
@@ -331,6 +334,15 @@
 							"component": "CnXwikiTab",
 							"config": {
 								"linkedType": "xwiki"
+							}
+						},
+						{
+							"id": "xwiki-pipelinq",
+							"label": "Knowledge base",
+							"component": "XWikiSidebarTab",
+							"config": {
+								"space": "",
+								"contextQuery": ""
 							}
 						}
 					]
@@ -423,6 +435,15 @@
 							"component": "CnXwikiTab",
 							"config": {
 								"linkedType": "xwiki"
+							}
+						},
+						{
+							"id": "xwiki-pipelinq",
+							"label": "Knowledge base",
+							"component": "XWikiSidebarTab",
+							"config": {
+								"space": "",
+								"contextQuery": ""
 							}
 						}
 					]
@@ -591,6 +612,15 @@
 							"component": "CnXwikiTab",
 							"config": {
 								"linkedType": "xwiki"
+							}
+						},
+						{
+							"id": "xwiki-pipelinq",
+							"label": "Knowledge base",
+							"component": "XWikiSidebarTab",
+							"config": {
+								"space": "",
+								"contextQuery": ""
 							}
 						}
 					]

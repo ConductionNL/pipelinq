@@ -1,8 +1,15 @@
 ---
-status: implemented
+status: deprecated
+superseded_by: xwiki-integration
 ---
 
 # Kennisbank Specification
+
+> **Deprecated.** The bespoke in-app kennisbank was removed by the
+> `migrate-kennisbank-to-xwiki-leaf` change and is superseded by the
+> `xwiki-integration` proxy + components. New knowledge content lives
+> in xWiki and is surfaced through the OpenRegister `integration-xwiki`
+> leaf (when configured) or the Pipelinq xWiki proxy (fallback).
 
 ## Purpose
 

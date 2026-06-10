@@ -232,6 +232,13 @@ import BookingDetailView from './views/bookings/BookingDetail.vue'
 //     multi-panel workspace page type exists. ---
 import KccWerkplekPage from './views/werkplek/KccWerkplekPage.vue'
 
+// --- xWiki integration (xwiki-integration): dashboard widget wrapper +
+//     reusable widget / sidebar / viewer / list components. ---
+import XWikiDashboardWidget from './views/dashboard/widgets/XWikiDashboardWidget.vue'
+import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
+import XWikiSidebarTabComponent from './components/xwiki/XWikiSidebarTab.vue'
+import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
+
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
 /**
@@ -756,6 +763,28 @@ const registry = {
 		kind: 'page',
 		component: KccWerkplekPage,
 		_note: 'Three-panel KCC agent workspace combining inbox, contactmoment quick-log and inline knowledge search; lib gap: no multi-panel workspace page type and the aggregated state endpoint requires a bespoke controller.',
+	},
+
+	// --- xWiki integration (xwiki-integration). ---
+	XWikiDashboardWidget: {
+		kind: 'widget',
+		component: XWikiDashboardWidget,
+		_note: 'Dashboard wrapper for the reusable XWikiWidget — pre-binds admin-configured xwiki_default_space + showSearch=true. Rendered as widget-xwiki on the Dashboard page.',
+	},
+	XWikiWidget: {
+		kind: 'widget',
+		component: XWikiWidgetComponent,
+		_note: 'Reusable compact xWiki article-list card. Consumed by the dashboard widget wrapper, detail-page widgets, and ad-hoc embeds. Filters by space / tags / query.',
+	},
+	XWikiSidebarTab: {
+		kind: 'widget',
+		component: XWikiSidebarTabComponent,
+		_note: 'xWiki detail-sidebar panel with search / space-browser / article-viewer modes. Mounted on client / lead / request detail pages.',
+	},
+	XWikiArticleViewer: {
+		kind: 'widget',
+		component: XWikiArticleViewer,
+		_note: 'Inline xWiki HTML viewer used by the sidebar tab; consumes the xwiki Pinia store directly.',
 	},
 }
 
