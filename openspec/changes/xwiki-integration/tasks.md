@@ -6,8 +6,8 @@
 
 ## 2. Backend: xWiki Settings
 
-- [ ] 2.1 Add xWiki settings keys to `lib/Service/SettingsService.php` — new keys: `xwiki_default_space` (string, default empty), `xwiki_cache_ttl` (int, default 300 seconds), `xwiki_direct_url` (string, default empty — fallback when xWiki NC app not installed).
-- [ ] 2.2 Add xWiki settings section to `SettingsController` — extend the existing settings GET/POST handlers to include the xWiki configuration keys.
+- [x] 2.1 Add xWiki settings keys to `lib/Service/SettingsService.php` — new keys: `xwiki_default_space` (string, default empty), `xwiki_cache_ttl` (int, default 300 seconds), `xwiki_direct_url` (string, default empty — fallback when xWiki NC app not installed).
+- [x] 2.2 Add xWiki settings section to `SettingsController` — extend the existing settings GET/POST handlers to include the xWiki configuration keys.
 
 ## 3. Frontend: xWiki Pinia Store
 
