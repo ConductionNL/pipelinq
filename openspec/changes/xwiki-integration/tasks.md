@@ -42,7 +42,7 @@
 
 ## 9. i18n
 
-- [ ] 9.1 Add Dutch and English translations for all xWiki integration strings — add translation keys for widget titles, error messages, settings labels, deprecation banners, sidebar tab labels. Minimum: `nl` and `en`.
+- [x] 9.1 Add Dutch and English translations for all xWiki integration strings — add translation keys for widget titles, error messages, settings labels, deprecation banners, sidebar tab labels. Minimum: `nl` and `en`.
 
 ## 10. Tests
 
