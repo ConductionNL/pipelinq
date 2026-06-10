@@ -32,9 +32,9 @@
 
 ## 7. Kennisbank Deprecation
 
-- [ ] 7.1 Remove kennisbank entry from sidebar navigation — update the navigation config to remove the "Kennisbank" link. The `/kennisbank` routes remain accessible by direct URL.
-- [ ] 7.2 Add deprecation banners to kennisbank views — in `KennisbankHome.vue`, `ArticleDetail.vue`, and `KennisbankEditor.vue`, add a prominent banner: "De ingebouwde kennisbank is vervangen door xWiki. Gebruik de xWiki integratie voor nieuwe artikelen." with a link to the xWiki instance.
-- [ ] 7.3 Add `@deprecated` annotations to kennisbank code — mark `KennisbankController.php`, `PublicKennisbankController.php`, `KennisbankReviewJob.php`, `src/store/modules/kennisbank.js`, and all `src/views/kennisbank/` components with deprecation comments.
+- [x] 7.1 Remove kennisbank entry from sidebar navigation — update the navigation config to remove the "Kennisbank" link. The `/kennisbank` routes remain accessible by direct URL.
+- [x] 7.2 Add deprecation banners to kennisbank views — in `KennisbankHome.vue`, `ArticleDetail.vue`, and `KennisbankEditor.vue`, add a prominent banner: "De ingebouwde kennisbank is vervangen door xWiki. Gebruik de xWiki integratie voor nieuwe artikelen." with a link to the xWiki instance.
+- [x] 7.3 Add `@deprecated` annotations to kennisbank code — mark `KennisbankController.php`, `PublicKennisbankController.php`, `KennisbankReviewJob.php`, `src/store/modules/kennisbank.js`, and all `src/views/kennisbank/` components with deprecation comments.
 
 ## 8. Admin Settings UI
 
