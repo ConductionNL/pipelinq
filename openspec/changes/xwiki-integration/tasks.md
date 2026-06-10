@@ -46,7 +46,7 @@
 
 ## 10. Tests
 
-- [ ] 10.1 Add unit tests for `XWikiService` — test XML parsing, caching, fallback behavior, error handling, HTML sanitization.
-- [ ] 10.2 Add unit tests for `XWikiController` — test endpoint routing, response format, error responses.
-- [ ] 10.3 Add E2E test for xWiki dashboard widget — navigate to dashboard, verify xWiki widget renders (or shows unavailable message).
-- [ ] 10.4 Add E2E test for xWiki sidebar tab — navigate to client detail, click Kennisbank tab, verify it renders.
+- [x] 10.1 Add unit tests for `XWikiService` — test XML parsing, caching, fallback behavior, error handling, HTML sanitization.
+- [x] 10.2 Add unit tests for `XWikiController` — test endpoint routing, response format, error responses.
+- [x] 10.3 Add E2E test for xWiki dashboard widget — navigate to dashboard, verify xWiki widget renders (or shows unavailable message).
+- [x] 10.4 Add E2E test for xWiki sidebar tab — navigate to client detail, click Kennisbank tab, verify it renders.
