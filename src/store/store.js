@@ -63,11 +63,16 @@ async function doInitializeStores() {
 		if (config.register && config.pipeline_schema) {
 			objectStore.registerObjectType('pipeline', config.pipeline_schema, config.register)
 		}
-		if (config.register && config.product_schema) {
-			objectStore.registerObjectType('product', config.product_schema, config.register)
+		// product / productCategory back the POS line product picker
+		// (PosTransactionForm.loadProducts → fetchCollection('product')). Use the
+		// canonical-slug fallback so the picker still resolves when a deployed
+		// app-config left the numeric product_schema id empty (OR resolves slugs
+		// in the {register}/{schema} path).
+		if (config.register) {
+			objectStore.registerObjectType('product', config.product_schema || 'product', config.register)
 		}
-		if (config.register && config.productCategory_schema) {
-			objectStore.registerObjectType('productCategory', config.productCategory_schema, config.register)
+		if (config.register) {
+			objectStore.registerObjectType('productCategory', config.productCategory_schema || 'productCategory', config.register)
 		}
 		if (config.register && config.leadProduct_schema) {
 			objectStore.registerObjectType('leadProduct', config.leadProduct_schema, config.register)
@@ -102,11 +107,23 @@ async function doInitializeStores() {
 		if (config.register && config.complaint_schema) {
 			objectStore.registerObjectType('complaint', config.complaint_schema, config.register)
 		}
-		if (config.register && config.posTransaction_schema) {
-			objectStore.registerObjectType('posTransaction', config.posTransaction_schema, config.register)
+		// POS transaction + line — the cashier checkout (PosTransactionForm.save)
+		// calls saveObject('posTransaction'/'posTransactionLine'). A deployed
+		// app-config often leaves posTransaction_schema / posTransactionLine_schema
+		// EMPTY (the OpenRegister schema exists under its canonical slug but the
+		// numeric admin-settings link was never populated — verified on the dev box
+		// where register=16 but both keys are blank). Guarding on the numeric id
+		// left both types unregistered, so checkout threw
+		// "Object type posTransaction is not registered in the store", no POST
+		// fired and the sale never persisted. OpenRegister resolves both numeric
+		// ids and slugs in the {register}/{schema} path, so fall back to the
+		// canonical slug — keeping the POS checkout functional regardless of
+		// config linkage (same pattern as posRefund / billingCategory below).
+		if (config.register) {
+			objectStore.registerObjectType('posTransaction', config.posTransaction_schema || 'posTransaction', config.register)
 		}
-		if (config.register && config.posTransactionLine_schema) {
-			objectStore.registerObjectType('posTransactionLine', config.posTransactionLine_schema, config.register)
+		if (config.register) {
+			objectStore.registerObjectType('posTransactionLine', config.posTransactionLine_schema || 'posTransactionLine', config.register)
 		}
 		if (config.register && config.receiptTemplate_schema) {
 			objectStore.registerObjectType('receiptTemplate', config.receiptTemplate_schema, config.register)
