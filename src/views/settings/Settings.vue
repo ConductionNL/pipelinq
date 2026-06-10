@@ -422,6 +422,7 @@ import { useSettingsStore } from '../../store/modules/settings.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
 import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
 import PipelineManager from './PipelineManager.vue'
 import ProductCategoryManager from './ProductCategoryManager.vue'
 import ProspectSettings from './ProspectSettings.vue'
@@ -638,25 +639,17 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-77
 		 */
 		registerGroups() {
-			return [{
-				name: t('pipelinq', 'Pipelinq Objects'),
-				description: t('pipelinq', 'Core CRM object types used by Pipelinq'),
-				registerConfigKey: 'register',
-				types: [
-					{ slug: 'client', label: t('pipelinq', 'Client'), description: t('pipelinq', 'Companies and organisations') },
-					{ slug: 'contact', label: t('pipelinq', 'Contact'), description: t('pipelinq', 'Contact persons') },
-					{ slug: 'lead', label: t('pipelinq', 'Lead'), description: t('pipelinq', 'Sales leads') },
-					{ slug: 'request', label: t('pipelinq', 'Request'), description: t('pipelinq', 'Customer requests') },
-					{ slug: 'pipeline', label: t('pipelinq', 'Pipeline'), description: t('pipelinq', 'Pipeline stages') },
-					{ slug: 'product', label: t('pipelinq', 'Product'), description: t('pipelinq', 'Products and services') },
-					{ slug: 'productCategory', label: t('pipelinq', 'Product Category'), description: t('pipelinq', 'Product categories') },
-					{ slug: 'leadProduct', label: t('pipelinq', 'Lead Product'), description: t('pipelinq', 'Product line items on leads') },
-					{ slug: 'relationship', label: t('pipelinq', 'Relationship'), description: t('pipelinq', 'Typed relationships between contacts and clients') },
-					{ slug: 'queue', label: t('pipelinq', 'Queue'), description: t('pipelinq', 'Work queues for routing') },
-					{ slug: 'skill', label: t('pipelinq', 'Skill'), description: t('pipelinq', 'Skills for agent routing') },
-					{ slug: 'agentProfile', label: t('pipelinq', 'Agent Profile'), description: t('pipelinq', 'Agent skill profiles') },
-				],
-			}]
+			const types = objectTypes()
+			return objectTypeGroups()
+				.map((group) => ({
+					name: group.name,
+					description: group.description,
+					registerConfigKey: group.registerConfigKey,
+					types: types
+						.filter((type) => type.group === group.key)
+						.map(({ slug, label, description }) => ({ slug, label, description })),
+				}))
+				.filter((group) => group.types.length > 0)
 		},
 	},
 	/**

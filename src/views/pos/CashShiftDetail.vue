@@ -9,7 +9,7 @@
 		:back-route="{ name: 'CashShifts' }"
 		:back-label="t('pipelinq', 'Terug naar lijst')"
 		:loading="loading"
-		:sidebar="!loading"
+		:sidebar="{ enabled: !loading }"
 		object-type="pipelinq_cashShift"
 		:object-id="shiftId"
 		:sidebar-props="sidebarProps">

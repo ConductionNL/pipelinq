@@ -1,5 +1,16 @@
 # Tasks: time-entry-core (consume the time-tracker leaf)
 
+> **⚠ Status correction (2026-06-03):** Verified on the `development` branch of
+> pipelinq, openregister, and @conduction/nextcloud-vue. The "leaf is SHIPPED"
+> claims below are inaccurate. `CnTimeTrackerTab`/`CnTimeTrackerCard` (and the
+> `integration-time-tracker` leaf) do not exist in pipelinq, openregister, or
+> @conduction/nextcloud-vue, and `registerLeafIntegrations` is a dangling import
+> (never defined/exported). The manifest tab/widget placements rendered iconless
+> sidebar tabs with empty panels, so they were **removed** from
+> `src/manifest.json` (ClientDetail / RequestDetail / LeadDetail). Restore via
+> the integration registry (`CnObjectSidebar :use-registry`) once the leaf
+> actually ships — not via a manifest `component:` string.
+
 ## 0. Deduplication / leaf check
 
 - [x] 0.1 Confirm the OpenRegister `integration-time-tracker` leaf is shipped

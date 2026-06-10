@@ -1,5 +1,18 @@
 # Tasks: migrate-automation-to-flow-leaf
 
+> **⚠ Status correction (2026-06-03):** Verified on the `development` branch of
+> pipelinq, openregister, and @conduction/nextcloud-vue.
+> Tasks 0.1 and 3.1 below are checked off
+> but were never actually delivered. `CnFlowTab`/`CnFlowCard` and the
+> `integration-flow` leaf (FlowService/FlowController/FlowProvider/link table)
+> do not exist in pipelinq, openregister, or @conduction/nextcloud-vue, and
+> `registerLeafIntegrations` is a dangling import (never defined/exported). The
+> manifest placements added by 3.1 rendered iconless sidebar tabs with empty
+> panels, so they were **removed** from `src/manifest.json` (ClientDetail /
+> RequestDetail / LeadDetail). Re-do 0.1 and 3.1 for real before re-adding the
+> manifest tab/widget — and surface it via the integration registry
+> (`CnObjectSidebar :use-registry`), not a `component:` string.
+
 ## 0. Leaf check
 
 - [x] 0.1 Confirm the OpenRegister `integration-flow` leaf is shipped (FlowService + FlowController + FlowProvider + CnFlowTab + CnFlowCard + link table) and note its key `flow`.

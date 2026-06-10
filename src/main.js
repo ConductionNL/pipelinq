@@ -3,7 +3,7 @@
 
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import { PiniaVuePlugin } from 'pinia'
+import { PiniaVuePlugin, setActivePinia } from 'pinia'
 import { translate as t, translatePlural as n, loadTranslations } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import {
@@ -17,7 +17,7 @@ import App from './App.vue'
 import bundledManifest from './manifest.json'
 import registry from './registry.js'
 import appIcons from './icons.js'
-import { initializeStores } from './store/store.js'
+import { initializeStores, registerObjectTypes } from './store/store.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 // eslint-disable-next-line import/no-unresolved -- CSS subpath resolved by webpack alias, not ESLint's resolver
@@ -162,6 +162,12 @@ tryLoadTranslations()
 const pageTypesProp = { ...defaultPageTypes }
 const registryProp = { ...registry }
 
+// Register object types synchronously before mount, so the store registry is
+// populated before any view's onMounted fetchSchema() runs. setActivePinia lets
+// the store be used before the Vue instance exists.
+setActivePinia(pinia)
+registerObjectTypes()
+
 /** Mount the Vue instance onto #content. */
 function mountApp() {
 	new Vue({
@@ -177,19 +183,9 @@ function mountApp() {
 	}).$mount('#content')
 }
 
-// Register every object type BEFORE mounting the app. initializeStores()
-// loads /api/settings once and calls registerObjectType for each schema —
-// including the canonical-slug fallback for types whose app-config numeric
-// schema id is empty (posRefund / billingCategory / exportJob / automation,
-// see store.js). The list views call fetchSchema('<type>') synchronously on
-// mount, and _getTypeConfig throws "Object type … is not registered" if the
-// type isn't registered yet. Mounting in parallel (the previous behaviour)
-// raced that registration and surfaced the not-registered error on the
-// Returns / Billing categories / BI export pages, leaving them stuck on an
-// empty state. Gate the mount on the registration promise so the types are
-// always present before the first view fetches. A settings failure still
-// mounts the shell (the .catch/.finally path) — the views then degrade to
-// their own empty/retry state rather than the whole app failing to boot.
+// Gate the mount on initializeStores() so types are registered and settings
+// loaded before the first view fetches. A settings failure still mounts the
+// shell (catch/finally) — views then degrade to their own empty/retry state.
 initializeStores().catch(() => {}).finally(() => {
 	mountApp()
 })

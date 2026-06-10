@@ -21,15 +21,16 @@ import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
 import ClipboardCheckOutline from 'vue-material-design-icons/ClipboardCheckOutline.vue'
 import ClipboardTextOutline from 'vue-material-design-icons/ClipboardTextOutline.vue'
 import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
+import Eye from 'vue-material-design-icons/Eye.vue'
 import FileDocumentCheck from 'vue-material-design-icons/FileDocumentCheck.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import FolderOpen from 'vue-material-design-icons/FolderOpen.vue'
+import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
 import FormTextboxPassword from 'vue-material-design-icons/FormTextboxPassword.vue'
 import History from 'vue-material-design-icons/History.vue'
 import Package from 'vue-material-design-icons/Package.vue'
 import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
-import Receipt from 'vue-material-design-icons/Receipt.vue'
 import ReceiptText from 'vue-material-design-icons/ReceiptText.vue'
 import SchoolOutline from 'vue-material-design-icons/SchoolOutline.vue'
 import Tag from 'vue-material-design-icons/Tag.vue'
@@ -53,15 +54,16 @@ export default {
 	ClipboardCheckOutline,
 	ClipboardTextOutline,
 	EmailOutline,
+	Eye,
 	FileDocumentCheck,
 	FileDocumentOutline,
 	FolderOpen,
+	FormatListBulleted,
 	FormTextboxPassword,
 	History,
 	Package,
 	PhoneMessage,
 	Pipe,
-	Receipt,
 	ReceiptText,
 	SchoolOutline,
 	Tag,

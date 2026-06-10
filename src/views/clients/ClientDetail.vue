@@ -32,10 +32,11 @@
 		:back-route="{ name: 'Clients' }"
 		:back-label="t('pipelinq', 'Back to list')"
 		:loading="loading"
-		:sidebar="!isNew && !loading"
+		:sidebar="{ enabled: !isNew && !loading }"
 		object-type="pipelinq_client"
 		:object-id="clientId"
-		:sidebar-props="sidebarProps">
+		:sidebar-props="sidebarProps"
+		:sidebar-tabs="sidebarTabs">
 		<template #actions>
 			<NcButton type="primary" @click="editing = true">
 				{{ t('pipelinq', 'Edit') }}
@@ -459,6 +460,19 @@ export default {
 			type: String,
 			default: null,
 		},
+		/**
+		 * Manifest `config.sidebar` block, spread in by CnPageRenderer.
+		 * Read only for its `tabs[]` (forwarded to CnDetailPage via
+		 * `sidebar-tabs`); the boolean `:sidebar` binding below still
+		 * gates whether the sidebar shows. Object form:
+		 * `{ enabled, showMetadata, tabs }`.
+		 *
+		 * @type {boolean|object|null}
+		 */
+		sidebar: {
+			type: [Boolean, Object],
+			default: null,
+		},
 	},
 	data() {
 		return {
@@ -549,6 +563,19 @@ export default {
 				schema: config.schema || '',
 				hiddenTabs: ['tasks'],
 			}
+		},
+		/**
+		 * Integration sidebar tabs declared in the manifest
+		 * (`config.sidebar.tabs`), forwarded to CnDetailPage which
+		 * publishes them to the host CnObjectSidebar. Empty when the
+		 * manifest declares none.
+		 *
+		 * @return {Array<object>}
+		 */
+		sidebarTabs() {
+			return (this.sidebar && typeof this.sidebar === 'object' && Array.isArray(this.sidebar.tabs))
+				? this.sidebar.tabs
+				: []
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-17

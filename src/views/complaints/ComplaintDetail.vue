@@ -25,7 +25,7 @@
 		:back-route="{ name: 'Complaints' }"
 		:back-label="t('pipelinq', 'Back to list')"
 		:loading="loading"
-		:sidebar="!isNew && !loading"
+		:sidebar="{ enabled: !isNew && !loading }"
 		object-type="pipelinq_complaint"
 		:object-id="complaintId"
 		:sidebar-props="sidebarProps">

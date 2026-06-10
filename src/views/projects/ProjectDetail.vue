@@ -42,7 +42,7 @@
 		:back-route="{ name: 'Projects' }"
 		:back-label="t('pipelinq', 'Terug naar lijst')"
 		:loading="loading"
-		:sidebar="!isNew && !loading"
+		:sidebar="{ enabled: !isNew && !loading }"
 		object-type="pipelinq_project"
 		:object-id="projectId"
 		:sidebar-props="sidebarProps">

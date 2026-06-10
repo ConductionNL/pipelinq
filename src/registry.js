@@ -242,6 +242,43 @@ import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
 
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
+/*
+ * Grid metadata required for every kind:"widget" entry by the ADR-036
+ * registry validator in CnAppRoot. pipelinq's dashboard positions widgets
+ * via the manifest `config.layout` (GridStack), so these sizes are not
+ * consumed at runtime — they exist to satisfy the validator. Sizes mirror
+ * the manifest layout for coherence. `allowedSlots` uses the v2 slot
+ * literals (body, sidebar, header-actions, footer, modal).
+ */
+const KPI_WIDGET_META = {
+	defaultSize: { w: 3, h: 2 },
+	minSize: { w: 2, h: 2 },
+	maxSize: { w: 6, h: 4 },
+	allowedSlots: ['body'],
+	propsSchema: null,
+}
+const PANEL_WIDGET_META = {
+	defaultSize: { w: 6, h: 4 },
+	minSize: { w: 3, h: 2 },
+	maxSize: { w: 12, h: 6 },
+	allowedSlots: ['body'],
+	propsSchema: null,
+}
+const HEADER_ACTIONS_META = {
+	defaultSize: { w: 12, h: 1 },
+	minSize: { w: 1, h: 1 },
+	maxSize: { w: 12, h: 1 },
+	allowedSlots: ['header-actions'],
+	propsSchema: null,
+}
+const SIDEBAR_TAB_META = {
+	defaultSize: { w: 1, h: 2 },
+	minSize: { w: 1, h: 1 },
+	maxSize: { w: 1, h: 6 },
+	allowedSlots: ['sidebar'],
+	propsSchema: null,
+}
+
 /**
  * V2 component registry.
  *
@@ -269,61 +306,73 @@ const registry = {
 	DashboardHeaderActions: {
 		kind: 'widget',
 		component: DashboardHeaderActions,
+		...HEADER_ACTIONS_META,
 		_note: 'Dashboard header buttons (New Lead / Request / Client + Refresh) wired as the Dashboard page actionsComponent.',
 	},
 	OpenLeadsKpiWidget: {
 		kind: 'widget',
 		component: OpenLeadsKpiWidget,
+		...KPI_WIDGET_META,
 		_note: 'KPI card for open leads (leads minus those in pipeline stages flagged isClosed). Renders <CnStatsBlock>.',
 	},
 	OpenRequestsKpiWidget: {
 		kind: 'widget',
 		component: OpenRequestsKpiWidget,
+		...KPI_WIDGET_META,
 		_note: 'KPI card for open requests (status new or in_progress). Renders <CnStatsBlock>.',
 	},
 	PipelineValueKpiWidget: {
 		kind: 'widget',
 		component: PipelineValueKpiWidget,
+		...KPI_WIDGET_META,
 		_note: 'KPI card for total open-lead value in EUR. Renders <CnStatsBlock>.',
 	},
 	OverdueKpiWidget: {
 		kind: 'widget',
 		component: OverdueKpiWidget,
+		...KPI_WIDGET_META,
 		_note: 'KPI card for overdue leads + stale requests. Renders <CnStatsBlock>.',
 	},
 	RequestsByStatusWidget: {
 		kind: 'widget',
 		component: RequestsByStatusWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Horizontal bar chart of requests grouped by status. Standalone widget — fetches its own data.',
 	},
 	ComplaintsWidget: {
 		kind: 'widget',
 		component: ComplaintsWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Open / overdue / status breakdown of complaints. Wraps the existing ComplaintsOverviewWidget with a self-contained fetch.',
 	},
 	MyWorkWidget: {
 		kind: 'widget',
 		component: MyWorkWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Top-5 list of leads + requests assigned to the current user, sorted by overdue → priority → due date.',
 	},
 	ClientOverviewWidget: {
 		kind: 'widget',
 		component: ClientOverviewWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Top-5 recent clients with a view-all link to ClientList.',
 	},
 	NaviAnalyticsWidget: {
 		kind: 'widget',
 		component: NaviAnalyticsWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Conversational analytics chat panel powered by NaviService — natural-language queries return CnChartWidget / CnTableWidget / plain text inline, with up to 3 suggested follow-up chips. openspec/changes/dashboard REQ-DASH-001 / REQ-DASH-003.',
 	},
 	UnifiedAnalyticsWidget: {
 		kind: 'widget',
 		component: UnifiedAnalyticsWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Cross-module KPI + trend panel (lead conversion / avg request resolution / contactmoment volume / customer satisfaction + leads-over-time line + requests-by-category bar). Driven by GET /api/analytics/overview + /api/analytics/trends. openspec/changes/dashboard REQ-DASH-010 / REQ-DASH-011.',
 	},
 	ReportExportPanel: {
 		kind: 'widget',
 		component: ReportExportPanel,
+		...PANEL_WIDGET_META,
 		_note: 'Collapsible funder-reporting export panel; delegates the format picker + download to CnMassExportDialog / ExportService — no custom export controller. openspec/changes/dashboard REQ-DASH-020 / REQ-DASH-021.',
 	},
 
@@ -389,14 +438,9 @@ const registry = {
 		_note: 'Forecast trend (inline SVG sparkline of commit/best-case/pipeline), week-over-week delta panel and accuracy table with colour bands; lib gap: no chart-widget page type.',
 	},
 	LeadForecastTab: {
-		// Rendered as a lead-detail sidebar tab via a slot reference, not a
-		// router page. "tab" is not a CnAppRoot registry kind (valid: widget,
-		// modal, page, form-field, cell-renderer) and threw a RegistryKindError
-		// at every CnAppRoot mount. Per ADR-036 slot/section lookups are
-		// kind-agnostic as long as the entry carries a `component`, so register
-		// it as a widget — the closest valid kind for a self-contained panel.
 		kind: 'widget',
 		component: LeadForecastTab,
+		...SIDEBAR_TAB_META,
 		_note: 'Lead-detail sidebar tab: forecast-category selector with closed-deal lock indicator, large-commit justification modal and category history. Server-side DealUpdatedListener is the authoritative enforcer; this tab is the UX. Wiring into LeadDetail.config.sidebar.tabs is a monolith manifest.json edit deferred under ADR-037 (do not edit the monolith from a feature build).',
 	},
 
@@ -416,21 +460,25 @@ const registry = {
 	PipelineFunnelWidget: {
 		kind: 'widget',
 		component: PipelineFunnelWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Pipeline value per stage (count, total, weighted) — bar chart with pipeline filter (REQ-LM-006).',
 	},
 	SourcePerformanceWidget: {
 		kind: 'widget',
 		component: SourcePerformanceWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Source conversion table (total, won, rate, avg) sortable per column (REQ-LM-007).',
 	},
 	LeadAgingWidget: {
 		kind: 'widget',
 		component: LeadAgingWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Aging-bucket donut chart (≤7d / 8-14d / 15-30d / >30d) (REQ-LM-006).',
 	},
 	WinLossWidget: {
 		kind: 'widget',
 		component: WinLossWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Win/loss pie chart + KPI stats block with a date-range selector (REQ-LM-008).',
 	},
 	// --- Loyalty program (loyalty-program). ---
@@ -594,6 +642,7 @@ const registry = {
 	BillingCategoryWidget: {
 		kind: 'widget',
 		component: BillingCategoryWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Donut chart of hours per billing category for the Dashboard (REQ-BCT-004). Clicking a segment navigates to the time entry list filtered by that category.',
 	},
 
