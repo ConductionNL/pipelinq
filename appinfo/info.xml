@@ -80,6 +80,7 @@ Vrij en open source onder de AGPL-licentie.
         <post-migration>
             <step>OCA\Pipelinq\Repair\InitializeSettings</step>
             <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
+            <step>OCA\Pipelinq\Repair\InitSlaStatus</step>
         </post-migration>
     </repair-steps>
 
@@ -111,6 +112,7 @@ Vrij en open source onder de AGPL-licentie.
         <job>OCA\Pipelinq\BackgroundJob\WebhookProcessorJob</job>
         <job>OCA\Pipelinq\BackgroundJob\DispatchQueuedMessagesJob</job>
         <job>OCA\Pipelinq\BackgroundJob\FallbackEmailJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\SlaDeadlineSweepJob</job>
     </background-jobs>
 
     <navigations>

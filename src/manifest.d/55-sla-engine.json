@@ -1,0 +1,21 @@
+{
+	"menu": [
+		{
+			"id": "SlaAttainment",
+			"label": "SLA attainment",
+			"icon": "icon-category-monitoring",
+			"route": "SlaAttainment",
+			"order": 98
+		}
+	],
+	"pages": [
+		{
+			"id": "SlaAttainment",
+			"route": "/sla/attainment",
+			"type": "custom",
+			"title": "SLA attainment",
+			"component": "SlaAttainmentDashboard",
+			"config": { "register": "pipelinq" }
+		}
+	]
+}
