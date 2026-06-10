@@ -16,9 +16,9 @@
   use t() — never hardcoded.
 -->
 <template>
-	<CnEmptyState
+	<NcEmptyContent
 		v-if="!loading && !hasData"
-		:title="t('pipelinq', 'No hours recorded')"
+		:name="t('pipelinq', 'No hours recorded')"
 		:description="t('pipelinq', 'When approved time entries are present, hours will be shown per billing category here.')" />
 
 	<CnChartWidget
@@ -32,7 +32,8 @@
 </template>
 
 <script>
-import { CnChartWidget, CnEmptyState } from '@conduction/nextcloud-vue'
+import { CnChartWidget } from '@conduction/nextcloud-vue'
+import { NcEmptyContent } from '@nextcloud/vue'
 import { useBillingCategoryStore } from '../../store/modules/billingCategory.js'
 import { initializeStores } from '../../store/store.js'
 import { generateUrl } from '@nextcloud/router'
@@ -41,7 +42,7 @@ const UNCATEGORIZED_KEY = '__uncategorized__'
 
 export default {
 	name: 'BillingCategoryWidget',
-	components: { CnChartWidget, CnEmptyState },
+	components: { CnChartWidget, NcEmptyContent },
 	setup() {
 		const billingCategoryStore = useBillingCategoryStore()
 		return { billingCategoryStore }

@@ -37,17 +37,25 @@
 		<CnKpiGrid class="unified-analytics__kpis">
 			<CnStatsBlock
 				:title="t('pipelinq', 'Lead Conversion Rate')"
-				:count="formatPercent(overview.leadConversionRate)"
+				:count="overview.leadConversionRate || 0"
 				:count-label="trendLabel('leadConversionRate')"
 				:icon="ChartLine"
 				variant="primary"
-				horizontal />
+				horizontal>
+				<template #value>
+					{{ formatPercent(overview.leadConversionRate) }}
+				</template>
+			</CnStatsBlock>
 			<CnStatsBlock
 				:title="t('pipelinq', 'Avg Request Resolution')"
-				:count="formatHours(overview.avgRequestResolutionTime)"
+				:count="overview.avgRequestResolutionTime || 0"
 				:count-label="trendLabel('avgRequestResolutionTime')"
 				:icon="ClockOutline"
-				horizontal />
+				horizontal>
+				<template #value>
+					{{ formatHours(overview.avgRequestResolutionTime) }}
+				</template>
+			</CnStatsBlock>
 			<CnStatsBlock
 				:title="t('pipelinq', 'Contact Moment Volume')"
 				:count="overview.contactMomentVolume || 0"
@@ -56,10 +64,14 @@
 				horizontal />
 			<CnStatsBlock
 				:title="t('pipelinq', 'Customer Satisfaction')"
-				:count="formatScore(overview.customerSatisfactionScore)"
+				:count="overview.customerSatisfactionScore || 0"
 				:count-label="trendLabel('customerSatisfactionScore')"
 				:icon="StarOutline"
-				horizontal />
+				horizontal>
+				<template #value>
+					{{ formatScore(overview.customerSatisfactionScore) }}
+				</template>
+			</CnStatsBlock>
 		</CnKpiGrid>
 
 		<div class="unified-analytics__charts">
