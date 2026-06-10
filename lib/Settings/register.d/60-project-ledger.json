@@ -150,6 +150,7 @@
 					"slug": "project-digitalisering-amsterdam"
 				},
 				"name": "Digitalisering Dienstverlening",
+				"client": "@ref:client-entity-notes-demo",
 				"description": "Modernisering van de publieke dienstverlening via digitale kanalen",
 				"status": "in_progress",
 				"billable": true,
@@ -169,6 +170,7 @@
 					"slug": "project-website-devries"
 				},
 				"name": "Website Herontwerp",
+				"client": "@ref:client-entity-notes-demo",
 				"description": "Redesign van de corporate website inclusief CMS-migratie",
 				"status": "open",
 				"billable": true,
