@@ -138,6 +138,14 @@ function routesFromManifest(manifest) {
 		component: RoutePageRenderer,
 		props: page.route.includes(':'),
 	}))
+	// vue-router matches in declaration order, so a param route like `/pos/:id`
+	// would otherwise swallow a static sibling like `/pos/tender-types` on a
+	// direct (non-SPA) load. Manifest page order isn't guaranteed — manifest.d
+	// fragments are appended last — so order routes by parameter count ascending
+	// (static before parameterised). Array.sort is stable, so each group keeps
+	// its original relative order.
+	const paramCount = (path) => (path.match(/:/g) || []).length
+	routes.sort((a, b) => paramCount(a.path) - paramCount(b.path))
 	// Catch-all redirect to dashboard, preserving prior router behaviour.
 	routes.push({ path: '*', redirect: '/' })
 	return routes
