@@ -11,7 +11,7 @@
 
 ## 3. Frontend: xWiki Pinia Store
 
-- [ ] 3.1 Create `src/store/modules/xwiki.js` — Pinia store with state: `articles`, `currentArticle`, `spaces`, `searchQuery`, `loading`, `error`, `available`. Actions: `search(params)`, `getPages(space)`, `getPageContent(wiki, page)`, `checkStatus()`. Calls the proxy endpoints via `fetch` with Nextcloud request token.
+- [x] 3.1 Create `src/store/modules/xwiki.js` — Pinia store with state: `articles`, `currentArticle`, `spaces`, `searchQuery`, `loading`, `error`, `available`. Actions: `search(params)`, `getPages(space)`, `getPageContent(wiki, page)`, `checkStatus()`. Calls the proxy endpoints via `fetch` with Nextcloud request token.
 
 ## 4. Frontend: xWiki Components
 
