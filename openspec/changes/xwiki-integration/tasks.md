@@ -1,6 +1,6 @@
 ## 1. Backend: xWiki Proxy Service
 
-- [ ] 1.1 Create `lib/Service/XWikiService.php` — wraps xWiki REST API calls. Methods: `search(query, space, tags, limit, offset)`, `getPages(space, limit, offset)`, `getPageContent(wiki, page)`, `getStatus()`. Uses Nextcloud `IClientService` for HTTP. Attempts to load `OCA\Xwiki\SettingsManager` and `Instance` via DI; falls back to direct URL from Pipelinq settings if xWiki app unavailable. Parses XML responses to arrays. Caches responses via `ICacheFactory` with configurable TTL.
+- [x] 1.1 Create `lib/Service/XWikiService.php` — wraps xWiki REST API calls. Methods: `search(query, space, tags, limit, offset)`, `getPages(space, limit, offset)`, `getPageContent(wiki, page)`, `getStatus()`. Uses Nextcloud `IClientService` for HTTP. Attempts to load `OCA\Xwiki\SettingsManager` and `Instance` via DI; falls back to direct URL from Pipelinq settings if xWiki app unavailable. Parses XML responses to arrays. Caches responses via `ICacheFactory` with configurable TTL.
 - [ ] 1.2 Create `lib/Controller/XWikiController.php` — proxy controller with `@NoAdminRequired @NoCSRFRequired` endpoints: `GET /api/xwiki/search`, `GET /api/xwiki/pages`, `GET /api/xwiki/page/{wiki}/{page}`, `GET /api/xwiki/status`. Delegates to `XWikiService`. Returns `JSONResponse`. Sanitizes HTML content (strip `<script>`, event handlers) before returning page content.
 - [ ] 1.3 Add xWiki proxy routes to `appinfo/routes.php` — register the 4 new GET endpoints for the XWikiController.
 
