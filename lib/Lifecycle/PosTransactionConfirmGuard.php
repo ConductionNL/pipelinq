@@ -121,16 +121,33 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface
 
         $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
         $schema   = $this->appConfig->getValueString(Application::APP_ID, 'posTransactionLine_schema', '');
+        // Fall back to the numeric schema id resolved from the canonical slug
+        // when the deployed app-config leaves posTransactionLine_schema blank.
+        // findAll()'s `@self.schema` filter requires a numeric id (a slug
+        // silently matches nothing), so resolve via OpenRegister's SchemaMapper.
+        // Mirrors PosTransactionService::config() so the non-empty-cart
+        // precondition can be verified instead of failing closed on a blank
+        // config (which previously denied every confirm on such a box).
+        if ($schema === '') {
+            $schema = $this->resolveSchemaIdBySlug(slug: 'posTransactionLine');
+        }
+
         if ($register === '' || $schema === '') {
             return true;
         }
 
         try {
+            // Register + schema scope MUST be nested under `@self` (flat
+            // filters.register / filters.schema are treated as ordinary property
+            // filters and match nothing, which made the guard see every cart as
+            // empty and deny every confirm). Transaction stays a top-level filter.
             $results = $this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
                 config: [
                     'filters' => [
-                        'register'    => $register,
-                        'schema'      => $schema,
+                        '@self'       => [
+                            'register' => $register,
+                            'schema'   => $schema,
+                        ],
                         'transaction' => $transactionId,
                     ],
                 ]
@@ -141,8 +158,50 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface
                 ['exception' => $e->getMessage(), 'transaction' => $transactionId]
             );
             return true;
-        }
+        }//end try
 
         return count(($results ?? [])) === 0;
     }//end cartIsEmpty()
+
+    /**
+     * Resolve a schema slug to its numeric OpenRegister schema id.
+     *
+     * Fallback for when the `<slug>_schema` app-config key is empty on a
+     * deployed instance. OpenRegister's SchemaMapper::find() accepts an id, uuid
+     * or slug; the numeric id is required by the findAll() `@self.schema` filter.
+     * Returns '' when unresolvable (the caller then fails closed as before).
+     *
+     * @param string $slug The canonical schema slug (e.g. 'posTransactionLine').
+     *
+     * @return string The numeric schema id, or '' when it cannot be resolved.
+     *
+     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.3
+     */
+    private function resolveSchemaIdBySlug(string $slug): string
+    {
+        if ($slug === '') {
+            return '';
+        }
+
+        try {
+            $schemaMapper = $this->container->get('OCA\OpenRegister\Db\SchemaMapper');
+            // RBAC + multi-tenancy disabled: server-authoritative internal id
+            // lookup; the POS schema may be owned by another organisation than
+            // the acting cashier, where the default org filter would throw.
+            // OpenRegister's Schema uses magic getters, so method_exists(...,
+            // 'getId') is false even though getId() resolves — call it directly.
+            $schema = $schemaMapper->find($slug, [], null, false, false);
+            if (is_object($schema) === true) {
+                return (string) $schema->getId();
+            }
+
+            return '';
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'Pipelinq: confirm guard could not resolve line schema slug (fail closed)',
+                ['slug' => $slug, 'exception' => $e->getMessage()]
+            );
+            return '';
+        }
+    }//end resolveSchemaIdBySlug()
 }//end class

@@ -49,6 +49,7 @@ class SettingsLoadService
         'pipeline',
         'product',
         'productCategory',
+        'billingCategory',
         'leadProduct',
         'intakeForm',
         'intakeSubmission',
