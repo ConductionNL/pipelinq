@@ -17,9 +17,9 @@ export function initializeStores() {
 		return initPromise
 	}
 	initPromise = doInitializeStores().then((result) => {
-		// Settings failed to load (endpoint error → null config): don't cache
-		// the un-registered state, so the next caller can retry.
-		if (!result.settingsStore.getConfig) {
+		// fetchSettings() only flips `initialized` on success; on a failed load
+		// it stays false. Drop the cached promise then so the next caller retries.
+		if (!result.settingsStore.isInitialized) {
 			initPromise = null
 		}
 		return result
@@ -31,16 +31,10 @@ export function initializeStores() {
 }
 
 /**
- * Register every object type the app uses against the shared object store.
- *
- * Registration is fully static: types are addressed by SLUG (schema slug =
- * type slug, register slug from the group), so the store builds slug-based API
- * URLs — e.g. /objects/pipelinq/posTransaction — matching the manifest-driven
- * index/detail pages. Because it needs no app config, it can run synchronously
- * at bootstrap, before any view mounts. That closes a race where a list view's
- * onMounted fetchSchema() ran before the (previously settings-dependent, async)
- * registration completed — leaving the page blank until you navigated away and
- * back. Idempotent: safe to call more than once.
+ * Register every object type against the shared object store, addressed by
+ * slug. Static (needs no app config) so it can run synchronously at bootstrap,
+ * before any view's onMounted fetchSchema() — closing the race that left
+ * list pages blank. Idempotent.
  *
  * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-60
  */
@@ -59,9 +53,9 @@ async function doInitializeStores() {
 	const settingsStore = useSettingsStore()
 	const objectStore = useObjectStore()
 
+	// registerObjectTypes() is also called eagerly in main.js, but entry points
+	// without that bootstrap (settings.js, dashboard widgets) rely on this call.
 	registerObjectTypes()
-	// Load app settings into the store for the rest of the app (isConfigured,
-	// admin flags, the register/schema id maps the settings UI maps, …).
 	await settingsStore.fetchSettings()
 
 	return { settingsStore, objectStore }
