@@ -15,10 +15,10 @@
 
 ## 4. Frontend: xWiki Components
 
-- [ ] 4.1 Create `src/components/xwiki/XWikiArticleList.vue` — shared list renderer: accepts `articles` array prop, emits `select` event on click. Renders each article as a list item with title, space badge, and modified date. Shows "Geen artikelen gevonden" when empty.
-- [ ] 4.2 Create `src/components/xwiki/XWikiWidget.vue` — widget component with props: `space`, `tags`, `query`, `limit` (default 5), `title` (default "Kennisbank"), `showSearch` (default false). Uses xWiki store to fetch articles on mount. Includes optional debounced search input (300ms). Shows "xWiki integratie niet beschikbaar" when xWiki unreachable. "Meer bekijken" link when results exceed limit.
-- [ ] 4.3 Create `src/components/xwiki/XWikiArticleViewer.vue` — inline HTML content viewer. Accepts `wiki` and `page` props. Fetches rendered HTML via store. Displays content in a sanitized `v-html` container. Shows "Open in xWiki" link and back button.
-- [ ] 4.4 Create `src/components/xwiki/XWikiSidebarTab.vue` — sidebar panel component with props: `space`, `tags`, `contextQuery`, `limit` (default 10). Has three modes: search (default), space browser, article viewer. Search mode: input + article list. Space browser: list of spaces, click to see pages. Article viewer: inline content with back button.
+- [x] 4.1 Create `src/components/xwiki/XWikiArticleList.vue` — shared list renderer: accepts `articles` array prop, emits `select` event on click. Renders each article as a list item with title, space badge, and modified date. Shows "Geen artikelen gevonden" when empty.
+- [x] 4.2 Create `src/components/xwiki/XWikiWidget.vue` — widget component with props: `space`, `tags`, `query`, `limit` (default 5), `title` (default "Kennisbank"), `showSearch` (default false). Uses xWiki store to fetch articles on mount. Includes optional debounced search input (300ms). Shows "xWiki integratie niet beschikbaar" when xWiki unreachable. "Meer bekijken" link when results exceed limit.
+- [x] 4.3 Create `src/components/xwiki/XWikiArticleViewer.vue` — inline HTML content viewer. Accepts `wiki` and `page` props. Fetches rendered HTML via store. Displays content in a sanitized `v-html` container. Shows "Open in xWiki" link and back button.
+- [x] 4.4 Create `src/components/xwiki/XWikiSidebarTab.vue` — sidebar panel component with props: `space`, `tags`, `contextQuery`, `limit` (default 10). Has three modes: search (default), space browser, article viewer. Search mode: input + article list. Space browser: list of spaces, click to see pages. Article viewer: inline content with back button.
 
 ## 5. Dashboard Integration
 
