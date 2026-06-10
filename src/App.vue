@@ -2,25 +2,11 @@
 <!-- Copyright (C) 2026 Conduction B.V. -->
 
 <!--
- Pipelinq app shell. Mounts CnAppRoot with the bundled manifest and
- the v2 kind-tagged registry prop (ADR-036); provides the
- `objectSidebarState` channel so detail pages (CnDetailPage) can drive
- a single host-rendered CnObjectSidebar through the #sidebar slot.
-
- The deprecated `customComponents` prop has been replaced by the v2
- `registry` prop (ADR-036). Each page/widget component is wrapped as
- `{ kind, component }` in src/registry.js and resolved by CnPageRenderer
- at render time. See nextcloud-vue#458 and openregister#1988.
-
- The legacy `sidebarState` channel is still provided as a no-op
- surface for any straggler view that injects it (notably the dead
- `views/clients/ClientList.vue`), but App.vue no longer renders a
- CnIndexSidebar — the lib's CnAppRoot auto-hoists CnIndexPage's
- sidebar at NcContent level, so rendering one here too produced the
- double-sidebar bug visible on every index page.
-
- The bespoke PipelineSidebar was removed with the pipeline board migration
- to the OpenRegister deck leaf. See openspec/changes/migrate-pipeline-to-deck-leaf/.
+ Pipelinq app shell. Mounts CnAppRoot with the bundled manifest and the v2
+ kind-tagged registry prop (ADR-036); provides `objectSidebarState` so detail
+ pages drive a single host-rendered CnObjectSidebar via the #sidebar slot.
+ App.vue renders no CnIndexSidebar itself — CnAppRoot auto-hoists CnIndexPage's
+ sidebar, so rendering one here too caused a double sidebar on index pages.
 
  @spec openspec/changes/pipelinq-manifest-v1/tasks.md
 -->
@@ -36,21 +22,11 @@
 		:requires-apps="[]">
 		<template #sidebar>
 			<!--
-				Host-rendered CnObjectSidebar driven by the manifest. The detail
-				pages ClientDetail, RequestDetail and LeadDetail declare their
-				integration sidebar tabs (Deck/Flow/Time-tracker/XWiki) in
-				config.sidebar.tabs via `component: "CnDeckTab"` etc. The matching
-				leaf components now ship in @conduction/nextcloud-vue's integration
-				registry (src/integrations/builtin/*), so `sidebarComponents` below
-				registers them by name as this sidebar's customComponents and the
-				lib's open-enum `tabs[].component` resolution mounts them.
-				Passing `tabs` puts the sidebar in open-enum mode; :use-registry is
-				false so the manifest is the single source of truth for the tab set
-				(and the registry-vs-tabs console.warn is avoided). Pages with no
-				tabs simply set config.sidebar.enabled: false and render no sidebar.
-				Note: body integration *cards* (CnDeckCard/…) are NOT wired here —
-				CnDetailPage renders those as type:"integration" grid widgets via the
-				integration registry, a separate mechanism.
+				Host-rendered CnObjectSidebar. Detail pages declare their tabs in
+				config.sidebar.tabs by component name; sidebarComponents resolves
+				those names to the library's integration leaves. Passing `tabs` with
+				:use-registry=false puts it in open-enum mode (manifest is the single
+				source of truth, avoids the registry-vs-tabs warning).
 			-->
 			<CnObjectSidebar
 				v-if="objectSidebarState.active"
@@ -169,13 +145,10 @@ export default {
 			return window.OC?.currentUser?.permissions ?? []
 		},
 		/**
-		 * Cell-widget registry passed to CnAppRoot — every entry must be
-		 * referenced from a manifest column's `widget` id. The lead-list
-		 * close-date + probability columns reach this registry via
-		 * `pages[Leads].config.columns[].widget` per ADR-036.
+		 * Cell-widget registry for CnAppRoot, keyed by the `widget` id a
+		 * manifest column references (ADR-036).
 		 *
 		 * @return {Record<string, object>}
-		 *
 		 * @spec openspec/changes/klantbeeld-360/tasks.md#task-6.1
 		 * @spec openspec/changes/klantbeeld-360/tasks.md#task-6.2
 		 */
@@ -187,11 +160,8 @@ export default {
 		},
 		/**
 		 * Component registry for the host CnObjectSidebar, keyed by component
-		 * name (CnDeckTab, CnFlowTab, …). Built from the library's integration
-		 * descriptors so the detail pages' manifest `sidebar.tabs[].component`
-		 * strings resolve to the real integration leaf components. Both tab and
-		 * widget components are mapped; only the tab components are referenced
-		 * today (open-enum tabs), the widgets are mapped for forward use.
+		 * name. Maps the library's integration tab/widget leaves so manifest
+		 * `sidebar.tabs[].component` strings resolve.
 		 *
 		 * @return {Record<string, object>}
 		 */
