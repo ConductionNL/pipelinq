@@ -347,6 +347,60 @@
 			</NcNoteCard>
 		</NcSettingsSection>
 
+		<!-- xWiki Integration (xwiki-integration) -->
+		<NcSettingsSection v-if="isAdmin"
+			:name="t('pipelinq', 'xWiki integration')"
+			:description="t('pipelinq', 'Configure the xWiki knowledge base proxy used by the dashboard widget and the detail sidebar tabs. When the xWiki Nextcloud app is installed its settings take precedence over the fallback URL below.')">
+			<NcNoteCard v-if="xwikiStatus" :type="xwikiStatus.available ? 'success' : 'warning'">
+				<span v-if="xwikiStatus.available">
+					{{ t('pipelinq', 'xWiki reachable at {url}', { url: xwikiStatus.baseUrl }) }}
+					<template v-if="xwikiStatus.version">
+						({{ t('pipelinq', 'version {ver}', { ver: xwikiStatus.version }) }})
+					</template>
+				</span>
+				<span v-else>
+					{{ t('pipelinq', 'xWiki not reachable. The xWiki Nextcloud app is not installed and the direct URL is empty or unreachable.') }}
+				</span>
+			</NcNoteCard>
+			<NcNoteCard v-if="!xwikiAppInstalled" type="warning">
+				{{ t('pipelinq', 'The optional xWiki Nextcloud app is not installed. Pipelinq is falling back to the configured direct URL.') }}
+			</NcNoteCard>
+			<NcTextField v-model="config.xwiki_default_space"
+				:label="t('pipelinq', 'Default xWiki space')"
+				placeholder="Kennisbank"
+				:helper-text="t('pipelinq', 'Space name pre-selected by the dashboard widget. Leave empty to search across all spaces.')" />
+			<NcTextField v-model="config.xwiki_cache_ttl"
+				type="number"
+				:label="t('pipelinq', 'Cache TTL (seconds)')"
+				placeholder="300"
+				:helper-text="t('pipelinq', 'How long search and page results are cached server-side. Default: 300.')" />
+			<NcTextField v-model="config.xwiki_direct_url"
+				:label="t('pipelinq', 'Direct xWiki URL (fallback)')"
+				placeholder="http://xwiki:8080/xwiki"
+				:helper-text="t('pipelinq', 'Used only when the xWiki Nextcloud app is unavailable. Should point at the xWiki base URL without trailing slash.')" />
+			<div class="xwiki-actions">
+				<NcButton type="primary"
+					:disabled="savingXwiki"
+					@click="saveXwiki">
+					<template #icon>
+						<NcLoadingIcon v-if="savingXwiki" :size="16" />
+					</template>
+					{{ t('pipelinq', 'Save xWiki settings') }}
+				</NcButton>
+				<NcButton type="secondary"
+					:disabled="testingXwiki"
+					@click="testXwiki">
+					<template #icon>
+						<NcLoadingIcon v-if="testingXwiki" :size="16" />
+					</template>
+					{{ t('pipelinq', 'Test connection') }}
+				</NcButton>
+			</div>
+			<NcNoteCard v-if="xwikiMessage" :type="xwikiMessageType">
+				{{ xwikiMessage }}
+			</NcNoteCard>
+		</NcSettingsSection>
+
 		<!-- Re-import Status -->
 		<div v-if="message" class="actions-section">
 			<NcNoteCard :type="messageType">
@@ -465,6 +519,13 @@ export default {
 			savingStale: false,
 			staleMessage: '',
 			staleMessageType: 'success',
+			// xWiki integration (xwiki-integration).
+			savingXwiki: false,
+			testingXwiki: false,
+			xwikiMessage: '',
+			xwikiMessageType: 'success',
+			xwikiStatus: null,
+			xwikiAppInstalled: true,
 		}
 	},
 	computed: {
@@ -628,6 +689,12 @@ export default {
 		if (this.isConfigured) {
 			this.leadSourcesStore.fetchSources()
 			this.requestChannelsStore.fetchChannels()
+		}
+
+		if (this.isAdmin) {
+			// xWiki integration (xwiki-integration): probe status so the
+			// admin section shows the reachable / unreachable badge on load.
+			this.testXwiki()
 		}
 	},
 	methods: {
@@ -941,6 +1008,65 @@ export default {
 				this.staleMessageType = 'error'
 			} finally {
 				this.savingStale = false
+			}
+		},
+		/**
+		 * Persist xWiki integration settings (xwiki-integration).
+		 *
+		 * @spec openspec/changes/xwiki-integration/tasks.md#8.1
+		 */
+		async saveXwiki() {
+			this.savingXwiki = true
+			this.xwikiMessage = ''
+			try {
+				const result = await this.settingsStore.saveSettings({
+					...this.config,
+					xwiki_default_space: (this.config.xwiki_default_space || '').trim(),
+					xwiki_cache_ttl: String(this.config.xwiki_cache_ttl || 300),
+					xwiki_direct_url: (this.config.xwiki_direct_url || '').trim(),
+				})
+				if (result) {
+					this.config = this.settingsStore.config || result
+				}
+				this.xwikiMessage = t('pipelinq', 'xWiki settings saved.')
+				this.xwikiMessageType = 'success'
+				await this.testXwiki()
+			} catch (e) {
+				this.xwikiMessage = e.response?.data?.message || t('pipelinq', 'Failed to save xWiki settings.')
+				this.xwikiMessageType = 'error'
+			} finally {
+				this.savingXwiki = false
+			}
+		},
+		/**
+		 * Test the xWiki connection via /api/xwiki/status.
+		 *
+		 * @spec openspec/changes/xwiki-integration/tasks.md#8.1
+		 */
+		async testXwiki() {
+			this.testingXwiki = true
+			try {
+				const response = await fetch(generateUrl('/apps/pipelinq/api/xwiki/status'), {
+					headers: {
+						requesttoken: typeof OC !== 'undefined' && OC.requestToken ? OC.requestToken : '',
+						'OCS-APIREQUEST': 'true',
+					},
+				})
+				const data = await response.json()
+				this.xwikiStatus = data
+				this.xwikiAppInstalled = data && data.source === 'xwiki-app'
+				if (data.available) {
+					this.xwikiMessage = t('pipelinq', 'xWiki connection successful.')
+					this.xwikiMessageType = 'success'
+				} else {
+					this.xwikiMessage = t('pipelinq', 'xWiki connection failed. Check the direct URL or install the xWiki Nextcloud app.')
+					this.xwikiMessageType = 'warning'
+				}
+			} catch (e) {
+				this.xwikiMessage = e.message || t('pipelinq', 'Failed to reach the xWiki status endpoint.')
+				this.xwikiMessageType = 'error'
+			} finally {
+				this.testingXwiki = false
 			}
 		},
 		/**

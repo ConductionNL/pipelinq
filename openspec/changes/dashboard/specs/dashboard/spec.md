@@ -19,7 +19,7 @@ Extend the existing Pipelinq dashboard with three analytics capabilities:
 
 ---
 
-### REQ-DASH-001: Navi AI Analytics Widget
+### Requirement: Navi AI Analytics Widget (REQ-DASH-001)
 
 The dashboard MUST include a Navi AI Analytics widget backed by `NaviController` and `NaviService`, accepting natural-language queries and returning results as inline charts or tables.
 
@@ -66,7 +66,7 @@ The dashboard MUST include a Navi AI Analytics widget backed by `NaviController`
 
 ---
 
-### REQ-DASH-002: Navi API Authorization
+### Requirement: Navi API Authorization (REQ-DASH-002)
 
 The Navi API MUST enforce Nextcloud authentication and MUST NOT expose data outside the current user's OpenRegister access scope.
 
@@ -88,7 +88,7 @@ The Navi API MUST enforce Nextcloud authentication and MUST NOT expose data outs
 
 ---
 
-### REQ-DASH-003: Navi Suggested Follow-Ups
+### Requirement: Navi Suggested Follow-Ups (REQ-DASH-003)
 
 The Navi widget MUST display suggested follow-up questions after each response to guide discovery.
 
@@ -109,7 +109,7 @@ The Navi widget MUST display suggested follow-up questions after each response t
 
 ---
 
-### REQ-DASH-010: Unified Analytics Dashboard Panel
+### Requirement: Unified Analytics Dashboard Panel (REQ-DASH-010)
 
 The dashboard MUST include an "Analytics" panel (`AnalyticsDashboard.vue`) providing real-time cross-module KPIs and trend charts covering the full client lifecycle.
 
@@ -158,7 +158,7 @@ The dashboard MUST include an "Analytics" panel (`AnalyticsDashboard.vue`) provi
 
 ---
 
-### REQ-DASH-011: Analytics API Endpoints
+### Requirement: Analytics API Endpoints (REQ-DASH-011)
 
 The `AnalyticsController` MUST provide aggregate endpoints consumed by the Analytics panel.
 
@@ -192,7 +192,7 @@ The `AnalyticsController` MUST provide aggregate endpoints consumed by the Analy
 
 ---
 
-### REQ-DASH-020: Funder Reporting Export Panel
+### Requirement: Funder Reporting Export Panel (REQ-DASH-020)
 
 The dashboard MUST include a collapsible "Report Export" panel (`ReportExportPanel.vue`) allowing users to generate and download structured CRM performance reports.
 
@@ -233,7 +233,7 @@ The dashboard MUST include a collapsible "Report Export" panel (`ReportExportPan
 
 ---
 
-### REQ-DASH-021: Report Export Accessibility
+### Requirement: Report Export Accessibility (REQ-DASH-021)
 
 The Report Export panel MUST meet WCAG AA accessibility standards.
 
@@ -248,7 +248,7 @@ The Report Export panel MUST meet WCAG AA accessibility standards.
 
 ---
 
-### REQ-DASH-030: Dashboard Widget Layout — Extended Default
+### Requirement: Dashboard Widget Layout — Extended Default (REQ-DASH-030)
 
 The existing default dashboard layout MUST be extended to include the three new analytics widgets.
 

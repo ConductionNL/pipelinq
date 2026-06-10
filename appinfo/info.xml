@@ -52,7 +52,7 @@ Vrij en open source onder de AGPL-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.5.2</version>
+    <version>0.5.3</version>
     <licence>agpl</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Pipelinq</namespace>
@@ -80,6 +80,7 @@ Vrij en open source onder de AGPL-licentie.
         <post-migration>
             <step>OCA\Pipelinq\Repair\InitializeSettings</step>
             <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
+            <step>OCA\Pipelinq\Repair\InitSlaStatus</step>
         </post-migration>
     </repair-steps>
 
@@ -111,6 +112,7 @@ Vrij en open source onder de AGPL-licentie.
         <job>OCA\Pipelinq\BackgroundJob\WebhookProcessorJob</job>
         <job>OCA\Pipelinq\BackgroundJob\DispatchQueuedMessagesJob</job>
         <job>OCA\Pipelinq\BackgroundJob\FallbackEmailJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\SlaDeadlineSweepJob</job>
     </background-jobs>
 
     <navigations>

@@ -190,6 +190,7 @@ import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.
 //     with per-section loading and a contact->client linking dialog,
 //     beyond what a declarative type:"detail" page can express). ---
 import AnalyticsDashboard from './views/analytics/AnalyticsDashboard.vue'
+import SlaAttainmentDashboard from './views/sla/SlaAttainmentDashboard.vue'
 import PipelineAnalyticsView from './views/pipeline/PipelineAnalyticsView.vue'
 import ClientDetail from './views/clients/ClientDetail.vue'
 import ContactDetail from './views/contacts/ContactDetail.vue'
@@ -231,6 +232,13 @@ import BookingDetailView from './views/bookings/BookingDetail.vue'
 //     availability toggle in a single three-panel page. Lib gap: no
 //     multi-panel workspace page type exists. ---
 import KccWerkplekPage from './views/werkplek/KccWerkplekPage.vue'
+
+// --- xWiki integration (xwiki-integration): dashboard widget wrapper +
+//     reusable widget / sidebar / viewer / list components. ---
+import XWikiDashboardWidget from './views/dashboard/widgets/XWikiDashboardWidget.vue'
+import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
+import XWikiSidebarTabComponent from './components/xwiki/XWikiSidebarTab.vue'
+import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
 
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
@@ -645,6 +653,13 @@ const registry = {
 		_note: 'Cross-module KPI dashboard (Open Pipeline Value / Open Requests / Contactmomenten / Active Leads) with a trailing-period filter; driven by a server-side aggregation endpoint so large installations are not forced to fetch full collections client-side.',
 	},
 
+	// --- SLA engine — attainment dashboard (sla-engine-and-escalation Feature 12). ---
+	SlaAttainmentDashboard: {
+		kind: 'page',
+		component: SlaAttainmentDashboard,
+		_note: 'SLA attainment dashboard: overall attainment KPI + per-target and per-policy/tier/team breakdown table. Bucketed by day/week/month/quarter and fetched from GET /api/sla/attainment.',
+	},
+
 	// --- Klantbeeld 360 — per-pipeline sales analytics. ---
 	PipelineAnalyticsView: {
 		kind: 'page',
@@ -805,6 +820,28 @@ const registry = {
 		kind: 'page',
 		component: KccWerkplekPage,
 		_note: 'Three-panel KCC agent workspace combining inbox, contactmoment quick-log and inline knowledge search; lib gap: no multi-panel workspace page type and the aggregated state endpoint requires a bespoke controller.',
+	},
+
+	// --- xWiki integration (xwiki-integration). ---
+	XWikiDashboardWidget: {
+		kind: 'widget',
+		component: XWikiDashboardWidget,
+		_note: 'Dashboard wrapper for the reusable XWikiWidget — pre-binds admin-configured xwiki_default_space + showSearch=true. Rendered as widget-xwiki on the Dashboard page.',
+	},
+	XWikiWidget: {
+		kind: 'widget',
+		component: XWikiWidgetComponent,
+		_note: 'Reusable compact xWiki article-list card. Consumed by the dashboard widget wrapper, detail-page widgets, and ad-hoc embeds. Filters by space / tags / query.',
+	},
+	XWikiSidebarTab: {
+		kind: 'widget',
+		component: XWikiSidebarTabComponent,
+		_note: 'xWiki detail-sidebar panel with search / space-browser / article-viewer modes. Mounted on client / lead / request detail pages.',
+	},
+	XWikiArticleViewer: {
+		kind: 'widget',
+		component: XWikiArticleViewer,
+		_note: 'Inline xWiki HTML viewer used by the sidebar tab; consumes the xwiki Pinia store directly.',
 	},
 }
 

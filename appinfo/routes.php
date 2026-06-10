@@ -96,6 +96,11 @@ return [
         ['name' => 'analytics#trends',   'url' => '/api/analytics/trends',   'verb' => 'GET'],
         ['name' => 'analytics#funnels',  'url' => '/api/analytics/funnels',  'verb' => 'GET'],
         ['name' => 'navi#query',         'url' => '/api/navi/query',         'verb' => 'POST'],
+        // SLA engine — attainment dashboard endpoint (sla-engine-and-escalation / REQ-006).
+        ['name' => 'slaAttainment#attainment', 'url' => '/api/sla/attainment', 'verb' => 'GET'],
+        // SLA engine — admin-gated policy CRUD with justification enforcement (REQ-009).
+        ['name' => 'slaPolicy#create', 'url' => '/api/sla/policies',      'verb' => 'POST'],
+        ['name' => 'slaPolicy#update', 'url' => '/api/sla/policies/{id}', 'verb' => 'PUT'],
         ['name' => 'reporting#getKpis',     'url' => '/api/rapportage/kpis',     'verb' => 'GET'],
         ['name' => 'reporting#getChannels', 'url' => '/api/rapportage/channels', 'verb' => 'GET'],
         ['name' => 'reporting#getAgents',   'url' => '/api/rapportage/agents',   'verb' => 'GET'],
@@ -489,6 +494,14 @@ return [
         // Specific routes precede any wildcard {path} catch-all (ADR-016).
         ['name' => 'kccWerkplek#stateAction',           'url' => '/api/kcc-werkplek/state',        'verb' => 'GET'],
         ['name' => 'kccWerkplek#setAvailabilityAction', 'url' => '/api/kcc-werkplek/availability', 'verb' => 'PUT'],
+
+        // xWiki integration proxy (xwiki-integration). Thin GET proxy to the
+        // xWiki REST API; all endpoints are #[NoAdminRequired] + #[NoCSRFRequired]
+        // and admin-tunable via xwiki_* settings.
+        ['name' => 'xWiki#search', 'url' => '/api/xwiki/search',                    'verb' => 'GET'],
+        ['name' => 'xWiki#pages',  'url' => '/api/xwiki/pages',                     'verb' => 'GET'],
+        ['name' => 'xWiki#page',   'url' => '/api/xwiki/page/{wiki}/{page}',        'verb' => 'GET', 'requirements' => ['page' => '.+']],
+        ['name' => 'xWiki#status', 'url' => '/api/xwiki/status',                    'verb' => 'GET'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],

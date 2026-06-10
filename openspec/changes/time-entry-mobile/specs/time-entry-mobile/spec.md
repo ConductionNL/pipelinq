@@ -2,7 +2,7 @@
 
 ## ADDED Requirements
 
-### Requirement: Mobile capture persists to the time-tracker leaf, not a pipelinq schema
+### Requirement: REQ-001 — Mobile capture persists to the time-tracker leaf, not a pipelinq schema
 
 The mobile timer SHALL persist captured hours to the OpenRegister time-tracker
 leaf's capture endpoints; Pipelinq SHALL NOT introduce or extend a `timeEntry`
@@ -19,7 +19,7 @@ schema for the mobile path (hydra ADR-022).
 - **AND** submission SHALL be idempotent (a buffered entry already accepted by
   the leaf is not duplicated).
 
-### Requirement: PWA shell and offline buffering are the only mobile-specific code
+### Requirement: REQ-002 — PWA shell and offline buffering are the only mobile-specific code
 
 The mobile-specific layer SHALL consist of a PWA shell, an IndexedDB offline
 buffer, and a sync queue; it SHALL NOT contain a parallel timer engine or
@@ -34,7 +34,7 @@ capture data model.
 - **AND** the timer state/duration semantics SHALL match the leaf's, not a
   pipelinq-local definition.
 
-### Requirement: Mobile view meets touch + responsive targets
+### Requirement: REQ-003 — Mobile view meets touch + responsive targets
 
 The mobile timer view SHALL render without horizontal scrolling at 375 px and
 768 px and provide touch targets of at least 48×48 px.
@@ -47,7 +47,7 @@ The mobile timer view SHALL render without horizontal scrolling at 375 px and
   targets and an offline status banner
 - **AND** the PWA manifest SHALL allow "Add to Home Screen" on Android/iOS.
 
-### Requirement: Optional GPS is leaf metadata, not a pipelinq schema field
+### Requirement: REQ-004 — Optional GPS is leaf metadata, not a pipelinq schema field
 
 When GPS is granted, the captured location SHALL be attached to the leaf capture
 as metadata; Pipelinq SHALL NOT add a schema field for it.
