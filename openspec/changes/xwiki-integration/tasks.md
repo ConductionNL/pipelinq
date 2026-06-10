@@ -38,7 +38,7 @@
 
 ## 8. Admin Settings UI
 
-- [ ] 8.1 Add xWiki settings section to the admin settings view — display fields for default space, cache TTL, and direct URL fallback. Show xWiki connection status indicator (available/unavailable with version). Include a "Test verbinding" button. Show warning when xWiki NC app is not installed.
+- [x] 8.1 Add xWiki settings section to the admin settings view — display fields for default space, cache TTL, and direct URL fallback. Show xWiki connection status indicator (available/unavailable with version). Include a "Test verbinding" button. Show warning when xWiki NC app is not installed.
 
 ## 9. i18n
 
