@@ -22,13 +22,13 @@
 
 ## 5. Dashboard Integration
 
-- [ ] 5.1 Add xWiki widget to dashboard grid — in the dashboard view, add an `XWikiWidget` instance to the `CnDashboardPage` layout with `showSearch="true"` and the admin-configured default space. Place at 6 columns width.
+- [x] 5.1 Add xWiki widget to dashboard grid — in the dashboard view, add an `XWikiWidget` instance to the `CnDashboardPage` layout with `showSearch="true"` and the admin-configured default space. Place at 6 columns width.
 
 ## 6. Detail View Sidebar Integration
 
-- [ ] 6.1 Add `XWikiSidebarTab` to client detail view — add a "Kennisbank" tab to the client detail sidebar. Pass relevant context (e.g., client industry/category) as `contextQuery`.
-- [ ] 6.2 Add `XWikiSidebarTab` to lead detail view — add a "Kennisbank" tab to the lead detail sidebar.
-- [ ] 6.3 Add `XWikiSidebarTab` to request detail view — add a "Kennisbank" tab to the request detail sidebar. Pass request type/category as `contextQuery`.
+- [x] 6.1 Add `XWikiSidebarTab` to client detail view — add a "Kennisbank" tab to the client detail sidebar. Pass relevant context (e.g., client industry/category) as `contextQuery`.
+- [x] 6.2 Add `XWikiSidebarTab` to lead detail view — add a "Kennisbank" tab to the lead detail sidebar.
+- [x] 6.3 Add `XWikiSidebarTab` to request detail view — add a "Kennisbank" tab to the request detail sidebar. Pass request type/category as `contextQuery`.
 
 ## 7. Kennisbank Deprecation
 
