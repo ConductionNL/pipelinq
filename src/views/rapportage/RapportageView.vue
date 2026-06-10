@@ -13,7 +13,8 @@
 	<CnDashboardPage
 		:title="t('pipelinq', 'Lead analytics')"
 		:loading="loading"
-		:widgets="widgets">
+		:widgets="widgets"
+		:show-refresh="false">
 		<template #header-actions>
 			<NcButton type="secondary" :disabled="loading" @click="loadStats">
 				<template #icon>

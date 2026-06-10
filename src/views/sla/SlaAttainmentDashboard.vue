@@ -5,7 +5,9 @@
 	<CnDashboardPage
 		:title="t('pipelinq', 'SLA attainment')"
 		:subtitle="t('pipelinq', 'Service Level Agreement performance per policy / tier / target')"
-		:loading="loading">
+		:loading="loading"
+		:refreshing="loading"
+		@refresh="fetchAttainment">
 		<template #header-actions>
 			<NcSelect
 				v-model="selectedBucket"

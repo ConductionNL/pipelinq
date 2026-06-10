@@ -11,6 +11,7 @@
 			:objects="objects"
 			:pagination="pagination"
 			:loading="loading"
+			:refreshing="refreshing"
 			:sort-key="sortKey"
 			:sort-order="sortOrder"
 			:selectable="true"
@@ -19,7 +20,7 @@
 			:empty-action-label="t('pipelinq', 'Shift openen')"
 			@add="openShift"
 			@empty-action="openShift"
-			@refresh="refresh"
+			@refresh="onRefresh"
 			@sort="onSort"
 			@row-click="openDetail"
 			@page-changed="onPageChange" />
@@ -55,6 +56,7 @@ export default {
 		return {
 			showOpen: false,
 			opening: false,
+			refreshing: false,
 		}
 	},
 	computed: {
@@ -68,6 +70,18 @@ export default {
 		},
 	},
 	methods: {
+		/**
+		 * Refresh handler for the Actions-menu Refresh item. Drives the
+		 * CnIndexPage `:refreshing` spinner around the underlying fetch.
+		 */
+		async onRefresh() {
+			this.refreshing = true
+			try {
+				await this.refresh()
+			} finally {
+				this.refreshing = false
+			}
+		},
 		/**
 		 * Navigate to a shift's detail.
 		 *

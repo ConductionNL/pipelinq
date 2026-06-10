@@ -21,7 +21,11 @@
 				</p>
 			</div>
 			<div class="kassakoppeling-audit-list__actions">
-				<NcButton @click="refresh">
+				<NcButton :disabled="loading" @click="refresh">
+					<template #icon>
+						<NcLoadingIcon v-if="loading" :size="20" />
+						<Refresh v-else :size="20" />
+					</template>
 					{{ t('pipelinq', 'Vernieuwen') }}
 				</NcButton>
 				<NcButton
@@ -29,6 +33,9 @@
 					type="primary"
 					data-testid="kassakoppeling-audit-export"
 					@click="showExport = true">
+					<template #icon>
+						<Download :size="20" />
+					</template>
 					{{ t('pipelinq', 'Exporteren naar Belastingdienst') }}
 				</NcButton>
 			</div>
@@ -164,6 +171,8 @@
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
+import Download from 'vue-material-design-icons/Download.vue'
 import BelastingdienstExportDialog from '../../dialogs/BelastingdienstExportDialog.vue'
 
 const PAGE_SIZE = 25
@@ -187,6 +196,8 @@ export default {
 	components: {
 		NcButton,
 		NcLoadingIcon,
+		Refresh,
+		Download,
 		BelastingdienstExportDialog,
 	},
 	data() {

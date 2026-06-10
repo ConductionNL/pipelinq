@@ -7,12 +7,13 @@
 			:objects="objects"
 			:pagination="pagination"
 			:loading="loading"
+			:refreshing="refreshing"
 			:sort-key="sortKey"
 			:sort-order="sortOrder"
 			:selectable="true"
 			:include-columns="visibleColumns"
 			@add="createNew"
-			@refresh="refresh"
+			@refresh="onRefresh"
 			@sort="onSort"
 			@view="openClient"
 			@page-changed="onPageChange" />
@@ -39,7 +40,25 @@ export default {
 		return useListView('client', { sidebarState, objectStore })
 	},
 
+	data() {
+		return {
+			refreshing: false,
+		}
+	},
+
 	methods: {
+		/**
+		 * Refresh handler for the Actions-menu Refresh item. Drives the
+		 * CnIndexPage `:refreshing` spinner around the underlying fetch.
+		 */
+		async onRefresh() {
+			this.refreshing = true
+			try {
+				await this.refresh()
+			} finally {
+				this.refreshing = false
+			}
+		},
 		/**
 		 * Open the detail view for a client (triggered by the View row action).
 		 *

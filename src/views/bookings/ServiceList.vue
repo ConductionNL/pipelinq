@@ -15,6 +15,7 @@
 			:objects="objects"
 			:pagination="pagination"
 			:loading="loading"
+			:refreshing="refreshing"
 			:sort-key="sortKey"
 			:sort-order="sortOrder"
 			:include-columns="visibleColumns"
@@ -23,7 +24,7 @@
 			:add-label="t('pipelinq', 'New service')"
 			@add="createNew"
 			@empty-action="createNew"
-			@refresh="refresh"
+			@refresh="onRefresh"
 			@sort="onSort"
 			@row-click="openService"
 			@page-changed="onPageChange">
@@ -70,12 +71,29 @@ export default {
 		const objectStore = useObjectStore()
 		return useListView('service', { sidebarState, objectStore })
 	},
+	data() {
+		return {
+			refreshing: false,
+		}
+	},
 	computed: {
 		visibleColumns() {
 			return ['name', 'durationMinutes', 'price', 'bookableOnline', 'status']
 		},
 	},
 	methods: {
+		/**
+		 * Refresh handler for the Actions-menu Refresh item. Drives the
+		 * CnIndexPage `:refreshing` spinner around the underlying fetch.
+		 */
+		async onRefresh() {
+			this.refreshing = true
+			try {
+				await this.refresh()
+			} finally {
+				this.refreshing = false
+			}
+		},
 		/**
 		 * @param {object} row The row clicked.
 		 */
