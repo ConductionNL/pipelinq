@@ -16,6 +16,7 @@
 			:objects="decoratedObjects"
 			:pagination="pagination"
 			:loading="loading"
+			:refreshing="refreshing"
 			:sort-key="sortKey"
 			:sort-order="sortOrder"
 			:include-columns="visibleColumns"
@@ -23,7 +24,7 @@
 			:empty-action-label="t('pipelinq', 'New expense')"
 			@add="createNew"
 			@empty-action="createNew"
-			@refresh="refresh"
+			@refresh="onRefresh"
 			@sort="onSort"
 			@row-click="openExpense"
 			@page-changed="onPageChange">
@@ -53,6 +54,11 @@ export default {
 		const objectStore = useObjectStore()
 		return useListView('expense', { sidebarState, objectStore })
 	},
+	data() {
+		return {
+			refreshing: false,
+		}
+	},
 	computed: {
 		/**
 		 * Columns shown on the list, in order. REQ-AP-005.
@@ -73,6 +79,18 @@ export default {
 		},
 	},
 	methods: {
+		/**
+		 * Refresh handler for the Actions-menu Refresh item. Drives the
+		 * CnIndexPage `:refreshing` spinner around the underlying fetch.
+		 */
+		async onRefresh() {
+			this.refreshing = true
+			try {
+				await this.refresh()
+			} finally {
+				this.refreshing = false
+			}
+		},
 		/**
 		 * Inline style for the AP status badge. REQ-AP-005.
 		 *

@@ -17,6 +17,7 @@
 		:objects="objects || []"
 		:pagination="pagination"
 		:loading="loading"
+		:refreshing="refreshing"
 		:sort-key="sortKey"
 		:sort-order="sortOrder"
 		:include-columns="visibleColumns"
@@ -24,7 +25,7 @@
 		:empty-action-label="t('pipelinq', 'Nieuw project')"
 		@add="createNew"
 		@empty-action="createNew"
-		@refresh="refresh"
+		@refresh="onRefresh"
 		@sort="onSort"
 		@row-click="openProject"
 		@page-changed="onPageChange">
@@ -80,6 +81,7 @@ export default {
 	data() {
 		return {
 			schema: 'project',
+			refreshing: false,
 		}
 	},
 	computed: {
@@ -93,6 +95,18 @@ export default {
 		},
 	},
 	methods: {
+		/**
+		 * Refresh handler for the Actions-menu Refresh item. Drives the
+		 * CnIndexPage `:refreshing` spinner around the underlying fetch.
+		 */
+		async onRefresh() {
+			this.refreshing = true
+			try {
+				await this.refresh()
+			} finally {
+				this.refreshing = false
+			}
+		},
 		/**
 		 * Navigate to the project detail page (REQ-PTH-006 Scenario 22).
 		 *
