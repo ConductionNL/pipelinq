@@ -231,6 +231,7 @@
 			"title": "Dashboard",
 			"actionsComponent": "DashboardHeaderActions",
 			"config": {
+				"showRefresh": false,
 				"widgets": [
 					{ "id": "open-leads",         "type": "custom", "title": "Open Leads" },
 					{ "id": "open-requests",      "type": "custom", "title": "Open Requests" },
