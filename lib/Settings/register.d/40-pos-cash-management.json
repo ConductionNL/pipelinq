@@ -356,7 +356,7 @@
             },
             {
                 "@self": { "register": "pipelinq", "schema": "cashDrop", "slug": "drop-2026-0520-01" },
-                "shift": "shift-2026-0520-01",
+                "shift": "@ref:shift-2026-0520-01",
                 "amount": 250.00,
                 "reason": "manager-deposit",
                 "droppedAt": "2026-05-20T13:00:00+02:00",
@@ -364,7 +364,7 @@
             },
             {
                 "@self": { "register": "pipelinq", "schema": "cashDrop", "slug": "drop-2026-0521-01" },
-                "shift": "shift-2026-0521-01",
+                "shift": "@ref:shift-2026-0521-01",
                 "amount": 150.00,
                 "reason": "bank-run",
                 "droppedAt": "2026-05-21T11:00:00+02:00",
@@ -372,7 +372,7 @@
             },
             {
                 "@self": { "register": "pipelinq", "schema": "cashDrop", "slug": "drop-2026-0521-02" },
-                "shift": "shift-2026-0521-01",
+                "shift": "@ref:shift-2026-0521-01",
                 "amount": 200.00,
                 "reason": "security-removal",
                 "droppedAt": "2026-05-21T18:00:00+02:00",
@@ -380,7 +380,7 @@
             },
             {
                 "@self": { "register": "pipelinq", "schema": "cashCount", "slug": "count-2026-0520-01" },
-                "shift": "shift-2026-0520-01",
+                "shift": "@ref:shift-2026-0520-01",
                 "amount": 487.50,
                 "countedAt": "2026-05-20T21:00:00+02:00",
                 "countedBy": "admin",
@@ -388,14 +388,14 @@
             },
             {
                 "@self": { "register": "pipelinq", "schema": "cashCount", "slug": "count-2026-0521-02" },
-                "shift": "shift-2026-0521-02",
+                "shift": "@ref:shift-2026-0521-02",
                 "amount": 623.25,
                 "countedAt": "2026-05-21T22:30:00+02:00",
                 "countedBy": "admin"
             },
             {
                 "@self": { "register": "pipelinq", "schema": "cashCount", "slug": "count-2026-0521-01" },
-                "shift": "shift-2026-0521-01",
+                "shift": "@ref:shift-2026-0521-01",
                 "amount": 318.00,
                 "countedAt": "2026-05-21T22:45:00+02:00",
                 "countedBy": "admin",
@@ -403,8 +403,8 @@
             },
             {
                 "@self": { "register": "pipelinq", "schema": "cashDiff", "slug": "diff-2026-0520-01" },
-                "shift": "shift-2026-0520-01",
-                "count": "count-2026-0520-01",
+                "shift": "@ref:shift-2026-0520-01",
+                "count": "@ref:count-2026-0520-01",
                 "expectedAmount": 487.25,
                 "actualAmount": 487.50,
                 "diffAmount": 0.25,
@@ -417,8 +417,8 @@
             },
             {
                 "@self": { "register": "pipelinq", "schema": "cashDiff", "slug": "diff-2026-0521-02" },
-                "shift": "shift-2026-0521-02",
-                "count": "count-2026-0521-02",
+                "shift": "@ref:shift-2026-0521-02",
+                "count": "@ref:count-2026-0521-02",
                 "expectedAmount": 620.00,
                 "actualAmount": 623.25,
                 "diffAmount": 3.25,
@@ -429,8 +429,8 @@
             },
             {
                 "@self": { "register": "pipelinq", "schema": "cashDiff", "slug": "diff-2026-0521-01" },
-                "shift": "shift-2026-0521-01",
-                "count": "count-2026-0521-01",
+                "shift": "@ref:shift-2026-0521-01",
+                "count": "@ref:count-2026-0521-01",
                 "expectedAmount": 300.00,
                 "actualAmount": 318.00,
                 "diffAmount": 18.00,

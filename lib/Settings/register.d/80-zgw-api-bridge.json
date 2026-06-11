@@ -365,8 +365,8 @@
                 "callbackAuth": "vault://zgw/zoetermeer/nrc-callback-bearer",
                 "kanalen": [
                     {"naam": "zaken", "filters": {"bronorganisatie": "002564440"}},
-                    {"naam": "besluiten", "filters": {}},
-                    {"naam": "catalogi", "filters": {}}
+                    {"naam": "besluiten"},
+                    {"naam": "catalogi"}
                 ],
                 "laatstOntvangenOp": "2026-05-21T08:44:13+02:00",
                 "actief": true
@@ -379,7 +379,7 @@
                 "callbackAuth": "vault://zgw/amsterdam/nrc-callback-bearer",
                 "kanalen": [
                     {"naam": "zaken", "filters": {"bronorganisatie": "002220647"}},
-                    {"naam": "besluiten", "filters": {}}
+                    {"naam": "besluiten"}
                 ],
                 "laatstOntvangenOp": "2026-06-04T14:08:12+02:00",
                 "actief": true
@@ -391,7 +391,7 @@
                 "callbackUrl": "https://pipelinq.utrecht.nl/index.php/apps/pipelinq/api/zgw/notificaties/inbox",
                 "callbackAuth": "vault://zgw/utrecht/nrc-callback-bearer",
                 "kanalen": [
-                    {"naam": "catalogi", "filters": {}}
+                    {"naam": "catalogi"}
                 ],
                 "actief": false
             },

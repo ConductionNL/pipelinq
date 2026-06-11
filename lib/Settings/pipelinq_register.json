@@ -5400,7 +5400,6 @@
         "apiKey": "{{ENCRYPTED: test_dummy_key}}",
         "webhookSecret": "{{ENCRYPTED: test_signature_key}}",
         "testMode": true,
-        "config": {},
         "testResult": null
       },
       {
@@ -5427,7 +5426,6 @@
         "apiKey": "{{ENCRYPTED: test_dummy_key}}",
         "webhookSecret": "{{ENCRYPTED: test_signature_key}}",
         "testMode": true,
-        "config": {},
         "testResult": null
       },
       {
@@ -5441,7 +5439,6 @@
         "apiSecret": "{{ENCRYPTED: sk_test_dummy}}",
         "webhookSecret": "{{ENCRYPTED: whsec_test_signature}}",
         "testMode": true,
-        "config": {},
         "testResult": null
       },
       {
@@ -5536,7 +5533,7 @@
       },
       {
         "@self": { "register": "pipelinq", "schema": "optOutVlag", "slug": "opt-out-seed-geheim-gemeente", "id": "e7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e51" },
-        "bsnHash": "abcdef7b8a8aa1c8ac9d7e4f2b6c5a3d9e2f1c4b7a8d3e6f0c1b2a5d8e9f0c1ee",
+        "bsnHash": "abcdef7b8a8aa1c8ac9d7e4f2b6c5a3d9e2f1c4b7a8d3e6f0c1b2a5d8e9f0c1e",
         "type": "geheimhouding-gemeente",
         "bron": "BRP",
         "ingangsdatum": "2024-11-01",
