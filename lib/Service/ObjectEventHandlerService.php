@@ -95,9 +95,15 @@ class ObjectEventHandlerService
 
         $newData  = $newObject->getObject();
         $oldData  = $this->extractOldData(oldObject: $oldObject);
-        $title    = $newData['title'] ?? '';
         $objectId = (string) $newObject->getId();
-        $assignee = $newData['assignee'] ?? '';
+
+        // Coerce to string: a schema may store these as a non-scalar (e.g. a
+        // structured/multi-value `title` or `assignee`), and the diff dispatch
+        // signatures require strings — a raw array here is a fatal TypeError.
+        $titleRaw    = $newData['title'] ?? '';
+        $title       = is_string($titleRaw) === true ? $titleRaw : '';
+        $assigneeRaw = $newData['assignee'] ?? '';
+        $assignee    = is_string($assigneeRaw) === true ? $assigneeRaw : '';
 
         $this->diffService->dispatchAssigneeChangeIfNeeded(
             oldData: $oldData,

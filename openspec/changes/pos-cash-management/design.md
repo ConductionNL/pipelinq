@@ -90,6 +90,8 @@ Variance report calculated at shift close. Compares expected cash (float + trans
 
 Seed objects are added to `lib/Settings/pipelinq_register.json` under `components.objects[]` using the `@self` envelope.
 
+> **Note (superseded syntax):** the `<<schema:slug>>` reference tokens shown below were the original proposal. The implemented OpenRegister import resolver uses **`@ref:<slug>`** (with `@ref:<schema>:<slug>` for disambiguation) — see `project-task-hierarchy`. Seed files and the resolver use `@ref:`; the `<<…>>` form is not processed. Read the examples below with that substitution.
+
 ### cashShift seeds (3 objects)
 
 ```json
