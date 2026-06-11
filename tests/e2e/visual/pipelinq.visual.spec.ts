@@ -23,4 +23,10 @@ test.describe('PipelinQ — visual baselines', () => {
 	test('clients list', async ({ page }) => {
 		await shootByNav(page, `${APP}/#/`, 'Clients', 'clients.png')
 	})
+
+	// New forms-leaf surface (this week's migration): the Forms list page was
+	// converted to a declarative type:index manifest page. Baseline its chrome.
+	test('forms list', async ({ page }) => {
+		await shootByNav(page, `${APP}/#/`, 'Forms', 'forms.png')
+	})
 })
