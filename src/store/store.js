@@ -55,6 +55,16 @@ async function doInitializeStores() {
 
 	// registerObjectTypes() is also called eagerly in main.js, but entry points
 	// without that bootstrap (settings.js, dashboard widgets) rely on this call.
+	//
+	// This registry-driven registration (PR #262) supersedes the earlier inline
+	// per-type block: objectTypes.js now registers EVERY type — including the POS
+	// types posTransaction/posTransactionLine/product/productCategory/
+	// billingCategory — by canonical slug against the 'pipelinq' register slug.
+	// OpenRegister resolves slugs in the {register}/{schema} object path, so this
+	// is the same slug-fallback the inline block used for those POS types, applied
+	// universally and statically (no dependency on numeric *_schema config), which
+	// fixes the "Object type X is not registered" failures on POS checkout, the
+	// Returns / Billing categories / BI export pages regardless of config linkage.
 	registerObjectTypes()
 	await settingsStore.fetchSettings()
 
