@@ -209,6 +209,20 @@ class Application extends App implements IBootstrap
             PipelinqToolProvider::class
         );
 
+        // Wave-4 external-API ports (low-volume families).
+        //
+        // - Logius Berichtenbox (burgerportaal-mijnoverheid-bridge):
+        //   the BBK 1.7 dispatch/verify/mailbox-check seam. The
+        //   existing concrete `LogiusConnector` HTTP client is
+        //   intentionally NOT bound here — it stays available for a
+        //   downstream activation step to wire in. The default
+        //   binding is the dormant log-only adapter so test +
+        //   staging environments never contact Logius.
+        $context->registerServiceAlias(
+            \OCA\Pipelinq\Service\External\Berichtenbox\BerichtenboxAdapterInterface::class,
+            \OCA\Pipelinq\Service\External\Berichtenbox\LogBerichtenboxAdapter::class
+        );
+
         $this->registerPosLifecycleGuards(context: $context);
         $this->registerExportServices(context: $context);
     }//end register()
