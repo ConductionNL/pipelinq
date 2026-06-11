@@ -1,20 +1,26 @@
 # Tasks: migrate-forms-to-forms-leaf
 
-> **Status: HANDOFF / deferred.** The OpenRegister `integration-forms` leaf
-> (FormResponseService, FormResponsesController, FormsProvider, CnFormsTab,
-> CnFormsCard, `openregister_form_links`) is **not yet shipped** — its own
-> openspec change `openregister/openspec/changes/integration-forms/` is still in
-> flight (16/17 tasks unchecked at handoff time). Pipelinq cannot consume the
-> leaf until it lands, so every task below is marked `[~]` (deferred). When the
-> leaf is merged + registered in the dev environment, resume from §0.1.
+> **Status (2026-06-11): leaf gating cleared.** OpenRegister
+> `integration-forms` is now fully shipped (`openregister/openspec/changes/integration-forms/tasks.md`
+> 17/17 ticked at upstream commit `93fcbbfd`) with `FormsProvider`,
+> `FormLinksController`, `FormLinkMapper`, the `openregister_form_links`
+> Tier-2 link table (migration `Version1Date20260524130000`) and the
+> bespoke `CnFormsTab` + `CnFormsCard` pair in
+> `nextcloud-vue/src/integrations/builtin/forms/`. §0.1 is therefore
+> flipped to `[x]`. Tasks §1–§5 remain `[~]` because they are real
+> pipelinq-side implementation work (delete `FormBuilder.vue`, retire
+> four schemas, add `forms` to `linkedTypes` on lead/request/client,
+> place the tab + widget via the manifest, run `npm run build` +
+> `check:manifest`) — that lands in a follow-up implementation flight,
+> not in this annotation-only sweep.
 
 ## 0. Leaf check
 
-- [~] 0.1 Confirm the OpenRegister `integration-forms` leaf is shipped (FormResponseService + FormResponsesController + FormsProvider + CnFormsTab + CnFormsCard + `openregister_form_links`).
+- [x] 0.1 Confirm the OpenRegister `integration-forms` leaf is shipped (FormResponseService + FormResponsesController + FormsProvider + CnFormsTab + CnFormsCard + `openregister_form_links`).
   - **acceptance_criteria**:
     - GIVEN `openregister/openspec/changes/integration-forms/`
     - THEN document the leaf key `forms` and required NC app `forms`; confirm authoring lives in Forms.
-  - **handoff**: leaf change still has 16 unchecked tasks; resume here once it archives.
+  - **finding (2026-06-11)**: `openregister/openspec/changes/integration-forms/tasks.md` is 17/17 ticked at upstream commit `93fcbbfd`. Backend artefacts present in `openregister/`: `lib/Service/Integration/Providers/FormsProvider.php`, `lib/Controller/FormLinksController.php`, `lib/Db/FormLinkMapper.php`, migration `lib/Migration/Version1Date20260524130000.php` (creates `openregister_form_links`). Bespoke leaf UI present in `nextcloud-vue/src/integrations/builtin/forms/`: `CnFormsTab.vue`, `CnFormsCard.vue`, registration shim `forms.js`, vitest specs in `__tests__/`. Leaf key is `forms`; required NC app is `forms`. Authoring (form definition) lives in NC Forms; OR exposes the Tier-2 link table and the leaf surfaces it on consuming objects.
 
 ## 1. Remove bespoke form builder + schemas
 
