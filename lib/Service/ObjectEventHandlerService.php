@@ -70,9 +70,9 @@ class ObjectEventHandlerService
 
         $this->dispatcher->dispatchCreated(
             entityType: $entityType,
-            title: ($data['title'] ?? ''),
+            title: $this->stringifyTitle(title: ($data['title'] ?? '')),
             objectId: $objectId,
-            assignee: ($data['assignee'] ?? '')
+            assignee: $this->stringifyScalar(value: ($data['assignee'] ?? ''))
         );
     }//end handleCreated()
 
@@ -95,9 +95,9 @@ class ObjectEventHandlerService
 
         $newData  = $newObject->getObject();
         $oldData  = $this->extractOldData(oldObject: $oldObject);
-        $title    = $newData['title'] ?? '';
+        $title    = $this->stringifyTitle(title: ($newData['title'] ?? ''));
         $objectId = (string) $newObject->getId();
-        $assignee = $newData['assignee'] ?? '';
+        $assignee = $this->stringifyScalar(value: ($newData['assignee'] ?? ''));
 
         $this->diffService->dispatchAssigneeChangeIfNeeded(
             oldData: $oldData,
@@ -130,6 +130,71 @@ class ObjectEventHandlerService
             );
         }
     }//end handleUpdated()
+
+    /**
+     * Coerce a (possibly translatable) title value to a single display string.
+     *
+     * OpenRegister stores a `translatable: true` string property (the lead
+     * schema's `title` is one) as a per-language map, e.g.
+     * `['en' => 'Acme deal', 'nl' => 'Acme deal']`, so `$data['title']` arrives
+     * as an array — which previously crashed the downstream
+     * ObjectEventDispatcher::dispatchCreated(string $title, ...) with a
+     * TypeError ("must be of type string, array given"), failing every lead
+     * create with a 500. Prefer the English value, then the first scalar
+     * member, then a JSON encoding; a plain scalar passes straight through.
+     *
+     * @param mixed $title The raw title value (string, translatable map, or null).
+     *
+     * @return string A display title string (never an array).
+     */
+    private function stringifyTitle(mixed $title): string
+    {
+        if (is_array($title) === true) {
+            // Prefer a conventional language key, else the first scalar value.
+            foreach (['en', 'en_GB', 'en_US', 'nl', 'nl_NL'] as $lang) {
+                if (isset($title[$lang]) === true && is_scalar($title[$lang]) === true) {
+                    return (string) $title[$lang];
+                }
+            }
+
+            foreach ($title as $value) {
+                if (is_scalar($value) === true) {
+                    return (string) $value;
+                }
+            }
+
+            // No usable scalar member: fall back to a compact JSON encoding so
+            // the activity/notification still carries something meaningful
+            // rather than throwing.
+            $encoded = json_encode($title);
+            if ($encoded !== false) {
+                return $encoded;
+            }
+
+            return '';
+        }//end if
+
+        return $this->stringifyScalar(value: $title);
+    }//end stringifyTitle()
+
+    /**
+     * Coerce a scalar-ish value to string, mapping arrays/objects/null to ''.
+     *
+     * Guards the other string arguments forwarded to the dispatcher (e.g.
+     * `assignee`) against the same translatable-map / null shapes.
+     *
+     * @param mixed $value The raw value.
+     *
+     * @return string The string value, or '' when not a scalar.
+     */
+    private function stringifyScalar(mixed $value): string
+    {
+        if (is_scalar($value) === true) {
+            return (string) $value;
+        }
+
+        return '';
+    }//end stringifyScalar()
 
     /**
      * Check if the entity type is relevant for event handling.

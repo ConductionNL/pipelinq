@@ -112,6 +112,58 @@ class ObjectEventHandlerServiceTest extends TestCase
     }//end testHandleCreatedDispatchesForLead()
 
     /**
+     * Test handleCreated coerces a translatable (array) title to a string.
+     *
+     * Regression for the lead-create 500: OpenRegister stores a
+     * `translatable: true` string property (the lead schema's `title`) as a
+     * per-language map, so `$data['title']` arrives as an array and previously
+     * crashed ObjectEventDispatcher::dispatchCreated(string $title, ...) with a
+     * TypeError. The handler must stringify it (preferring the English value)
+     * instead of throwing.
+     *
+     * @return void
+     */
+    public function testHandleCreatedStringifiesArrayTitle(): void
+    {
+        $this->schemaMapService->method('resolveEntityType')->willReturn('lead');
+
+        $entity = new class {
+            public function getSchema(): string { return '100'; }
+            public function getObject(): array { return ['title' => ['en' => 'Acme deal', 'nl' => 'Acme-deal'], 'assignee' => 'user1']; }
+            public function getId(): int { return 42; }
+        };
+
+        $this->dispatcher->expects($this->once())
+            ->method('dispatchCreated')
+            ->with('lead', 'Acme deal', '42', 'user1');
+
+        $this->service->handleCreated($entity);
+    }//end testHandleCreatedStringifiesArrayTitle()
+
+    /**
+     * Test handleCreated falls back to the first scalar member of an array
+     * title when no conventional language key is present.
+     *
+     * @return void
+     */
+    public function testHandleCreatedArrayTitleFallsBackToFirstScalar(): void
+    {
+        $this->schemaMapService->method('resolveEntityType')->willReturn('lead');
+
+        $entity = new class {
+            public function getSchema(): string { return '100'; }
+            public function getObject(): array { return ['title' => ['de' => 'Acme Geschäft'], 'assignee' => 'user1']; }
+            public function getId(): int { return 43; }
+        };
+
+        $this->dispatcher->expects($this->once())
+            ->method('dispatchCreated')
+            ->with('lead', 'Acme Geschäft', '43', 'user1');
+
+        $this->service->handleCreated($entity);
+    }//end testHandleCreatedArrayTitleFallsBackToFirstScalar()
+
+    /**
      * Test handleCreated skips null entity type.
      *
      * @return void

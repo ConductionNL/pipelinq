@@ -125,6 +125,23 @@ class PosTransactionService
     private const DEFAULT_PRICE_MODE = 'excl';
 
     /**
+     * Map of optional, non-null-typed string fields on the posTransaction
+     * schema to the non-empty default they must hold before a lifecycle
+     * transition, keyed by property name.
+     *
+     * Such a field materialises as null when it was never written (the magic
+     * column exists but the value is null), and OpenRegister's strict type
+     * validation then rejects null when the TransitionEngine re-saves the whole
+     * object — failing every confirm/settle/refund/park/resume with a 500.
+     * Writing the schema default '' does NOT help: OpenRegister coerces a stored
+     * empty string back to null. Only a NON-EMPTY enum member persists, so each
+     * field is coerced to its non-empty default here. See sanitizeForTransition().
+     *
+     * @var array<string, string>
+     */
+    private const TRANSITION_STRING_DEFAULTS = ['consentSyncStatus' => 'pending'];
+
+    /**
      * Human-readable Dutch GL descriptions per common BTW rate, used to label
      * the invoiceBreakdown lines shillinq posts. Falls back to a generated
      * "X% BTW" string for any rate not listed here.
@@ -793,6 +810,19 @@ class PosTransactionService
      */
     private function transitionObject(string $id, string $action): array
     {
+        // Cleanse the STORED object before the engine re-saves it. The
+        // TransitionEngine re-reads the whole persisted transaction
+        // ($object->getObject()) and re-saves it; OpenRegister's strict type
+        // validation then rejects an optional, non-null-typed string field that
+        // is stored as null (e.g. `consentSyncStatus`, schema type 'string'
+        // default '') with "should be type 'string' but is 'null'" — failing
+        // every confirm/settle/refund/park/resume with a 500. saveTransaction()
+        // only null-FILTERS its own direct-save path, which leaves the prior
+        // stored null untouched, so the engine path bypasses that guard. Coerce
+        // the null back to the schema default here so the engine's whole-object
+        // re-save validates.
+        $this->sanitizeForTransition(id: $id);
+
         try {
             $saved = $this->getTransitionEngine()->transition(objectId: $id, action: $action);
         } catch (\Throwable $e) {
@@ -801,6 +831,52 @@ class PosTransactionService
 
         return $this->toArray(object: $saved);
     }//end transitionObject()
+
+    /**
+     * Coerce null-valued optional string fields to their schema default before
+     * a TransitionEngine re-save.
+     *
+     * Only persists when a coercion is actually needed (so the happy path adds
+     * no extra write). `consentSyncStatus` is the known offender: it is a
+     * non-null-typed string with default '' that materialises as null when the
+     * marketing-consent sync never ran, and the engine's whole-object re-save
+     * then fails OR's strict type validation.
+     *
+     * @param string $id The transaction UUID.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
+     */
+    private function sanitizeForTransition(string $id): void
+    {
+        try {
+            $transaction = $this->fetchTransaction(id: $id);
+        } catch (\Throwable $e) {
+            // A missing object is surfaced by the engine call itself as 404; do
+            // not mask it here.
+            return;
+        }
+
+        $needsSave = false;
+        foreach (self::TRANSITION_STRING_DEFAULTS as $field => $default) {
+            // Coerce the null AND the empty-string case to a NON-EMPTY default.
+            // Null is what the engine's whole-object re-save chokes on; an empty
+            // string is no use because OpenRegister stores it back as null. A
+            // non-empty enum member persists and lets the transition succeed.
+            // The `?? ''` collapses a missing/null value to '', so testing for
+            // '' alone covers both the absent and the explicit-null cases.
+            $value = ($transaction[$field] ?? '');
+            if ($value === '') {
+                $transaction[$field] = $default;
+                $needsSave           = true;
+            }
+        }
+
+        if ($needsSave === true) {
+            $this->saveTransaction(id: $id, transaction: $transaction);
+        }
+    }//end sanitizeForTransition()
 
     /**
      * Map a TransitionEngine throwable to the correct OCS exception.
