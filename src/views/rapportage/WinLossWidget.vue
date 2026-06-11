@@ -21,9 +21,9 @@
 				@input="onRangeChange" />
 		</div>
 
-		<CnEmptyState
+		<NcEmptyContent
 			v-if="!hasData"
-			:title="t('pipelinq', 'No closed deals')"
+			:name="t('pipelinq', 'No closed deals')"
 			:description="t('pipelinq', 'No won or lost leads in the selected range.')" />
 
 		<template v-else>
@@ -38,12 +38,12 @@
 </template>
 
 <script>
-import { CnChartWidget, CnStatsBlock, CnEmptyState } from '@conduction/nextcloud-vue'
-import { NcSelect } from '@nextcloud/vue'
+import { CnChartWidget, CnStatsBlock } from '@conduction/nextcloud-vue'
+import { NcSelect, NcEmptyContent } from '@nextcloud/vue'
 
 export default {
 	name: 'WinLossWidget',
-	components: { CnChartWidget, CnStatsBlock, CnEmptyState, NcSelect },
+	components: { CnChartWidget, CnStatsBlock, NcSelect, NcEmptyContent },
 	props: {
 		data: {
 			type: Object,

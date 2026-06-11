@@ -96,8 +96,7 @@
 
 					<p v-if="provider.testResult && provider.testResult.status"
 						class="payment-settings__test-result"
-						:class="{ 'payment-settings__test-result--ok': provider.testResult.status === 'ok',
-								   'payment-settings__test-result--error': provider.testResult.status === 'error' }">
+						:class="{ 'payment-settings__test-result--ok': provider.testResult.status === 'ok', 'payment-settings__test-result--error': provider.testResult.status === 'error' }">
 						{{ provider.testResult.message }}
 						<span v-if="provider.lastTestedAt" class="payment-settings__timestamp">
 							{{ t('pipelinq', 'Laatst getest op {time}', { time: provider.lastTestedAt }) }}
@@ -155,14 +154,34 @@ export default {
 			this.loading = true
 			try {
 				const providers = await listProviders()
-				this.providers = providers.map((p) => ({
-					...p,
-					config: p.config || {},
-				}))
+				this.providers = providers.map((p) => this.normalizeProvider(p))
 			} catch (e) {
 				showError(t('pipelinq', 'Kon providers niet laden: {error}', { error: e.message || 'netwerkfout' }))
 			} finally {
 				this.loading = false
+			}
+		},
+		/**
+		 * Normalize a provider from the API so every field bound to an
+		 * NcTextField is always a string. The secrets come back as the MASK
+		 * sentinel, undefined or null; the per-provider config keys (ccv
+		 * terminalId, adyen merchantAccount) must be pre-declared so their
+		 * v-model is reactive in Vue 2 and NcTextField never gets `undefined`
+		 * (which triggers its "Missing required prop: value" warning).
+		 *
+		 * @param {object} p Raw provider from the API.
+		 * @return {object} Provider with string-safe, reactive fields.
+		 */
+		normalizeProvider(p) {
+			const config = { ...(p.config || {}) }
+			if (p.name === 'ccv' && config.terminalId == null) config.terminalId = ''
+			if (p.name === 'adyen' && config.merchantAccount == null) config.merchantAccount = ''
+			return {
+				...p,
+				apiKey: p.apiKey ?? '',
+				apiSecret: p.apiSecret ?? '',
+				webhookSecret: p.webhookSecret ?? '',
+				config,
 			}
 		},
 		hasApiSecret(name) {
@@ -200,8 +219,7 @@ export default {
 				}
 				const saved = await updateProvider(provider.name, payload)
 				if (saved) {
-					Object.assign(provider, saved)
-					provider.config = saved.config || {}
+					Object.assign(provider, this.normalizeProvider(saved))
 				}
 				showSuccess(t('pipelinq', 'Provider {name} opgeslagen', { name: provider.displayName }))
 			} catch (e) {

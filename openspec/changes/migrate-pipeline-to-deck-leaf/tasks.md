@@ -1,5 +1,18 @@
 # Tasks: migrate-pipeline-to-deck-leaf
 
+> **⚠ Status correction (2026-06-03):** Verified on the `development` branch of
+> pipelinq, openregister, and @conduction/nextcloud-vue.
+> Tasks 0.1 and 3.1 are checked off but
+> were never actually delivered. `CnDeckTab`/`CnDeckCard` and the
+> `integration-deck` leaf (DeckProvider + `openregister_deck_links`) do not
+> exist in pipelinq, openregister, or @conduction/nextcloud-vue, and
+> `registerLeafIntegrations` is a dangling import (never defined/exported). The
+> manifest placements rendered iconless sidebar tabs with empty panels, so they
+> were **removed** from `src/manifest.json` (RequestDetail / LeadDetail). Re-do
+> 0.1 and 3.1 for real before re-adding the manifest tab/widget — and surface it
+> via the integration registry (`CnObjectSidebar :use-registry`), not a
+> `component:` string.
+
 ## 0. Leaf check
 
 - [x] 0.1 Confirm the OpenRegister `integration-deck` leaf is shipped (DeckProvider + CnDeckTab inline-create + CnDeckCard mini-kanban + `openregister_deck_links`).

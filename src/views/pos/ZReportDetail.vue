@@ -15,7 +15,7 @@
 		:back-route="{ name: 'ZReports' }"
 		:back-label="t('pipelinq', 'Terug naar lijst')"
 		:loading="loading"
-		:sidebar="!loading"
+		:sidebar="{ enabled: !loading }"
 		object-type="pipelinq_posZReport"
 		:object-id="zReportId">
 		<template #actions>
