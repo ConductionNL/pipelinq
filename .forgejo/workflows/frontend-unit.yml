@@ -39,3 +39,74 @@ jobs:
 
       - name: Run Vitest unit suite
         run: npm run test:unit
+
+  # ---------------------------------------------------------------------------
+  # COVERAGE GATE A — PHPUnit COVERAGE RATCHET (PCOV clover line coverage).
+  # Re-measures backend LINE coverage over lib/ via the OFFLINE unit-only
+  # phpunit-unit.xml (tests/Unit; no Integration suite, which needs a live NC)
+  # and FAILS the PR if it drops below tests/.coverage-baseline.json `phpunit`
+  # minus tolerance (~0.5%). On an increase the baseline ratchets up.
+  # See TESTING-CI-ROLLOUT.md "Coverage ratchet".
+  # ---------------------------------------------------------------------------
+  phpunit-coverage-ratchet:
+    name: PHPUnit coverage ratchet (pipelinq)
+    runs-on: codeberg-small
+    container:
+      image: code.forgejo.org/oci/ci-php:8.3
+    steps:
+      - name: Checkout
+        uses: https://code.forgejo.org/actions/checkout@v4
+
+      - name: Ensure a coverage driver (PCOV)
+        run: |
+          if ! php -m | grep -qiE 'pcov|xdebug'; then
+            (pecl install pcov && docker-php-ext-enable pcov) \
+              || echo "WARN: could not install pcov — coverage step may report no driver"
+          fi
+          php -m | grep -qiE 'pcov|xdebug' && echo "coverage driver: present" \
+            || echo "coverage driver: ABSENT (ratchet will no-op; see TESTING-CI-ROLLOUT.md)"
+
+      - name: Install composer deps
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run unit suite WITH coverage (clover)
+        run: |
+          php -d pcov.enabled=1 -d pcov.directory=lib \
+            ./vendor/bin/phpunit --configuration phpunit-unit.xml \
+            --coverage-clover coverage/clover.xml --colors=never || true
+          test -f coverage/clover.xml || { echo "no clover.xml (driver absent?) — skipping ratchet"; exit 0; }
+
+      - name: Coverage ratchet (fail on drop)
+        run: |
+          test -f coverage/clover.xml || exit 0
+          bash tests/coverage-ratchet.sh phpunit coverage/clover.xml
+
+  # ---------------------------------------------------------------------------
+  # COVERAGE GATE B — FRONTEND COVERAGE RATCHET (Vitest v8, src/** lines).
+  # Fails a PR that drops frontend coverage below baseline `vitest` minus
+  # tolerance. Uses @vitest/coverage-v8 (installed on demand). Always gating.
+  # ---------------------------------------------------------------------------
+  frontend-coverage-ratchet:
+    name: Frontend coverage ratchet (pipelinq)
+    runs-on: codeberg-small
+    container:
+      image: code.forgejo.org/oci/ci-node:20
+    steps:
+      - name: Checkout
+        uses: https://code.forgejo.org/actions/checkout@v4
+
+      - name: Install npm deps (+ coverage-v8)
+        run: |
+          npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+          VITEST_VER="$(node -e "console.log(require('./node_modules/vitest/package.json').version)")"
+          npm install --no-save --legacy-peer-deps "@vitest/coverage-v8@${VITEST_VER}"
+
+      - name: Run Vitest WITH coverage (json-summary over src/**)
+        run: |
+          npx vitest run --coverage --coverage.provider=v8 \
+            --coverage.reporter=json-summary --coverage.reporter=text-summary \
+            --coverage.include='src/**' \
+            --coverage.reportsDirectory=coverage-vitest
+
+      - name: Coverage ratchet (fail on drop)
+        run: bash tests/coverage-ratchet.sh vitest coverage-vitest/coverage-summary.json
