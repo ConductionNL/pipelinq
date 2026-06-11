@@ -2610,14 +2610,14 @@
           },
           "consentSyncStatus": {
             "type": "string",
-            "description": "Status of the last marketingConsent sync to the linked pipelinq contact: 'success', 'skipped' (do-not-contact), 'failed', or empty when no sync was attempted.",
+            "description": "Status of the last marketingConsent sync to the linked pipelinq contact: 'pending' (no sync attempted yet), 'success', 'skipped' (do-not-contact), or 'failed'. Defaults to 'pending' rather than an empty string: OpenRegister coerces a stored empty string back to null, and the TransitionEngine's whole-object re-save (confirm/settle/refund/park/resume) then fails strict validation with \"should be type 'string' but is 'null'\". A non-empty default persists and keeps the lifecycle transitions working.",
             "enum": [
-              "",
+              "pending",
               "success",
               "skipped",
               "failed"
             ],
-            "default": "",
+            "default": "pending",
             "visible": false
           },
           "terminalId": {
