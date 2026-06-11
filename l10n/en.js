@@ -1,6 +1,12 @@
 OC.L10N.register(
     "pipelinq",
     {
+    "(no title)" : "(no title)",
+    "Accounts" : "Accounts",
+    "Active accounts" : "Active accounts",
+    "Add step" : "Add step",
+    "Clear" : "Clear",
+    "Select" : "Select",
     "\"Vanaf\" datum moet voor of gelijk zijn aan \"tot en met\" datum." : "\"From\" date must be before or equal to \"up to and including\" date.",
     "(no subject)" : "(no subject)",
     "+ Add" : "+ Add",
