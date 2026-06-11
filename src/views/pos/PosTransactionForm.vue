@@ -158,6 +158,8 @@ import PosTotalsPanel from '../../components/pos/PosTotalsPanel.vue'
 import PurchaseHistory from '../../components/pos/PurchaseHistory.vue'
 import CustomerLookupModal from '../../modals/CustomerLookupModal.vue'
 import PaymentMethodSelector from '../../components/pos/PaymentMethodSelector.vue'
+import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from '../../store/modules/object.js'
 import { recalculateLine } from '../../services/posTotals.js'
 import {
@@ -165,6 +167,23 @@ import {
 	detachCustomer as apiDetachCustomer,
 	getCustomerHistory,
 } from '../../services/posCustomerApi.js'
+
+/**
+ * Normalise an object-store collection into a plain rows array.
+ *
+ * useObjectStore().getCollection(type) returns the results ARRAY directly, but
+ * older shapes wrapped them in a { results } envelope. Accept either so a lib
+ * bump cannot silently empty the POS product / client / line lists again.
+ *
+ * @param {Array|object|null|undefined} collection The getCollection() value.
+ * @return {Array} The rows array (never null/undefined).
+ */
+function collectionRows(collection) {
+	if (Array.isArray(collection)) {
+		return collection
+	}
+	return (collection && collection.results) || []
+}
 
 export default {
 	name: 'PosTransactionForm',
@@ -196,6 +215,11 @@ export default {
 				priceMode: 'excl',
 				customer: null,
 				marketingConsent: false,
+				// Schema-typed string (default ''); send an explicit empty string
+				// so the value is never persisted as null — a null trips the
+				// posTransaction schema's string-type validation when the confirm
+				// transition re-saves the header, blocking checkout completion.
+				consentSyncStatus: '',
 				tenderType: 'cash',
 			},
 			lines: [],
@@ -347,7 +371,10 @@ export default {
 		async loadProducts() {
 			try {
 				await this.objectStore.fetchCollection('product', { _limit: 500 })
-				this.products = this.objectStore.getCollection('product')?.results || []
+				// getCollection() returns the results ARRAY directly (not a
+				// { results } envelope); reading `.results` off it yielded
+				// undefined → [] and left the product picker permanently empty.
+				this.products = collectionRows(this.objectStore.getCollection('product'))
 			} catch {
 				this.products = []
 			}
@@ -358,7 +385,7 @@ export default {
 		async loadClients() {
 			try {
 				await this.objectStore.fetchCollection('client', { _limit: 500 })
-				this.clients = this.objectStore.getCollection('client')?.results || []
+				this.clients = collectionRows(this.objectStore.getCollection('client'))
 			} catch {
 				this.clients = []
 			}
@@ -375,7 +402,7 @@ export default {
 				...tx,
 			}
 			await this.objectStore.fetchCollection('posTransactionLine', { transaction: this.transactionId, _limit: 500 })
-			const rows = this.objectStore.getCollection('posTransactionLine')?.results || []
+			const rows = collectionRows(this.objectStore.getCollection('posTransactionLine'))
 			this.lines = rows
 				.filter(l => l.transaction === this.transactionId)
 				.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
@@ -491,6 +518,11 @@ export default {
 				const header = {
 					...this.transaction,
 					status: this.transaction.status || 'draft',
+					// `cashier` is a schema-required field on posTransaction; default
+					// it to the logged-in user (same pattern as PosRefundForm) so the
+					// OpenRegister POST validates and the sale persists. Preserve any
+					// value already on the (edited) transaction.
+					cashier: this.transaction.cashier || (window.OC?.getCurrentUser?.()?.uid ?? ''),
 				}
 				const savedTx = await this.objectStore.saveObject('posTransaction', header)
 				if (!savedTx) {
@@ -528,6 +560,25 @@ export default {
 						payload.id = line.id
 					}
 					await this.objectStore.saveObject('posTransactionLine', payload)
+				}
+
+				// Complete the sale: confirm the transaction so the backend
+				// recomputes the server-authoritative totals from the persisted
+				// lines and moves it out of `draft` (the draft header is stored
+				// with total=0 — totals are only computed on the confirm
+				// transition). Without this a "Checkout" only ever left an
+				// unpriced draft. The endpoint is idempotent-safe for our flow:
+				// it is only called once per checkout, immediately after the
+				// lines persist. On failure we still navigate to the detail view
+				// (the draft + lines are saved) but surface the error.
+				try {
+					await axios.post(
+						generateUrl('/apps/pipelinq/api/pos-transactions/' + encodeURIComponent(txId) + '/confirm'),
+					)
+				} catch (confirmError) {
+					showError(t('pipelinq', 'Transaction saved but could not be completed.'))
+					this.$router.push({ name: 'PosTransactionDetail', params: { id: txId } })
+					return
 				}
 
 				showSuccess(t('pipelinq', 'Transaction saved.'))

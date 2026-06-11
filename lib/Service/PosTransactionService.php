@@ -942,7 +942,7 @@ class PosTransactionService
                 'customer'         => (string) ($transaction['customer'] ?? ''),
                 'tenderType'       => (string) ($transaction['tenderType'] ?? 'cash'),
                 'marketingConsent' => (bool) ($transaction['marketingConsent'] ?? false),
-                // pos-staff-pin-permissions REQ-PSP-009: include the active
+                // Pos-staff-pin-permissions REQ-PSP-009: include the active
                 // POS staff member id in the shillinq commission feed so the
                 // accounting integration can attribute the sale to the staff
                 // who actually rang it up (which may differ from the NC cashier
@@ -1000,11 +1000,19 @@ class PosTransactionService
         [$register, $schema] = $this->config(schemaKey: 'posTransactionLine_schema');
 
         try {
+            // The register + schema scope MUST live under a nested `@self` block
+            // (OpenRegister's findAll treats flat `filters.register` /
+            // `filters.schema` as ordinary property filters, which match nothing
+            // and silently return zero rows — the bug that left the cart "empty"
+            // and every total at 0). Custom property filters (transaction) stay at
+            // the top of the filters array.
             $results = $this->getObjectService()->findAll(
                 config: [
                     'filters' => [
-                        'register'    => $register,
-                        'schema'      => $schema,
+                        '@self'       => [
+                            'register' => $register,
+                            'schema'   => $schema,
+                        ],
                         'transaction' => $transactionId,
                     ],
                 ]
@@ -1012,7 +1020,7 @@ class PosTransactionService
         } catch (\Throwable $e) {
             $this->logger->warning('Pipelinq: failed to fetch POS lines', ['exception' => $e->getMessage()]);
             return [];
-        }
+        }//end try
 
         $lines = [];
         foreach (($results ?? []) as $result) {
@@ -1035,9 +1043,13 @@ class PosTransactionService
     {
         [$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
 
+        // Register + schema scope under `@self` (flat keys match nothing); status
+        // is a real property filter and stays top-level.
         $filters = [
-            'register' => $register,
-            'schema'   => $schema,
+            '@self' => [
+                'register' => $register,
+                'schema'   => $schema,
+            ],
         ];
         if ($status !== null && $status !== '') {
             $filters['status'] = $status;
@@ -1075,6 +1087,19 @@ class PosTransactionService
         // Never trust client-derived id/uuid; always write to the resolved id.
         unset($transaction['@self']);
 
+        // Drop null-valued properties before persisting. The confirm/settle path
+        // re-saves the whole transaction as fetched from OpenRegister; optional
+        // typed fields that were never set (e.g. consentSyncStatus, a string with
+        // default '') come back as null, and OpenRegister's strict type
+        // validation then rejects null for a non-null-typed property — which
+        // previously failed every confirm with "Property 'consentSyncStatus'
+        // should be type 'string' but is 'null'". Omitting null keys lets OR
+        // re-apply the schema default / treat the optional field as unset.
+        $transaction = array_filter(
+            $transaction,
+            static fn ($value): bool => $value !== null
+        );
+
         $saved = $this->getObjectService()->saveObject(
             object: $transaction,
             extend: [],
@@ -1102,12 +1127,78 @@ class PosTransactionService
         $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
         $schema   = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
 
+        // A deployed app-config frequently leaves the numeric POS schema ids
+        // empty (the OpenRegister schema exists under its canonical slug but the
+        // admin-settings link was never populated — verified on the dev box where
+        // register=16 but posTransaction_schema / posTransactionLine_schema are
+        // blank). The server-authoritative reads use ObjectService::findAll()
+        // whose `@self.schema` filter requires a NUMERIC schema id (a slug
+        // silently returns zero results), so derive the canonical slug from the
+        // config key ('posTransaction_schema' -> 'posTransaction') and resolve it
+        // to its numeric id via OpenRegister's SchemaMapper. This keeps the
+        // confirm / settle / recompute flow functional regardless of config
+        // linkage — mirroring the frontend store slug-fallback (src/store/store.js).
+        if ($schema === '') {
+            $slug   = preg_replace('/_schema$/', '', $schemaKey);
+            $schema = $this->resolveSchemaIdBySlug(slug: (string) $slug);
+        }
+
         if ($register === '' || $schema === '') {
             throw new OCSNotFoundException('POS register of schema is niet geconfigureerd.');
         }
 
         return [$register, $schema];
     }//end config()
+
+    /**
+     * Resolve a schema slug to its numeric OpenRegister schema id.
+     *
+     * Used as the fallback when the `<slug>_schema` app-config key is empty on a
+     * deployed instance. OpenRegister's SchemaMapper::find() accepts an id, uuid
+     * or slug and returns the Schema entity; we read its numeric id so the
+     * downstream findAll() filter (which requires a numeric `@self.schema`)
+     * matches. Returns an empty string when the slug cannot be resolved so the
+     * caller raises the standard "not configured" error rather than silently
+     * querying nothing.
+     *
+     * @param string $slug The canonical schema slug (e.g. 'posTransaction').
+     *
+     * @return string The numeric schema id, or '' when it cannot be resolved.
+     *
+     * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+     */
+    private function resolveSchemaIdBySlug(string $slug): string
+    {
+        if ($slug === '') {
+            return '';
+        }
+
+        try {
+            $schemaMapper = $this->container->get('OCA\OpenRegister\Db\SchemaMapper');
+            // Resolve with RBAC + multi-tenancy disabled: this is a
+            // server-authoritative internal id lookup (not a user-scoped read),
+            // and the POS schemas may be owned by a different organisation than
+            // the acting cashier — the default org-scoped filter would then
+            // throw DoesNotExistException for a schema that genuinely exists.
+            // NOTE: OpenRegister's Schema is an Entity with MAGIC getters, so
+            // method_exists($schema, 'getId') returns false even though
+            // $schema->getId() resolves — call getId() directly (any failure is
+            // caught below and yields the '' "not configured" path).
+            $schema = $schemaMapper->find($slug, [], null, false, false);
+            $id     = '';
+            if (is_object($schema) === true) {
+                $id = (string) $schema->getId();
+            }
+
+            return $id;
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'Pipelinq: could not resolve POS schema slug to id (config fallback)',
+                ['slug' => $slug, 'exception' => $e->getMessage()]
+            );
+            return '';
+        }//end try
+    }//end resolveSchemaIdBySlug()
 
     /**
      * Get the OpenRegister ObjectService.
