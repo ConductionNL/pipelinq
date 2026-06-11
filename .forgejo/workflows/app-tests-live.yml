@@ -9,8 +9,15 @@
 # pre-merge workflows.
 #
 # Gate status for pipelinq (see TESTING-CI-ROLLOUT.md for the evidence table):
-#   deep-e2e: false  — TODO: e2e helper PIPELINQ_REGISTER defaults to numeric '16'; set it to slug 'pipelinq' (env) to arm
-#   newman:   false  — TODO: Newman collection pins register=16 (dev numeric)
+#   deep-e2e: true  — ARMED: the FixtureSession (tests/e2e/workflows/helpers/fixtures.ts)
+#                     resolves the numeric register id from the stable slug 'pipelinq' at
+#                     runtime (GET /openregister/api/registers), so the deep suite survives a
+#                     fresh CI boot where the re-imported register gets a different id; the
+#                     PIPELINQ_REGISTER env var still overrides for manual runs.
+#   newman:   true   — ARMED: the collection "0. Setup / Preflight" request resolves the
+#                     register numeric id from the stable slug 'pipelinq' and sets {{register}};
+#                     POS tender-types is un-quarantined (posTenderType_schema is now mapped on
+#                     import) and the OR anon-read authz cases assert the real 404 contract.
 
 name: app-tests-live
 
@@ -35,11 +42,6 @@ jobs:
     with:
       app-id: pipelinq
       is-openregister: false
-      run-e2e: false
-      run-newman: false
-      # NON-GATING (GAP-5): runs the visual-regression project + uploads
-      # snapshots/diffs as an artifact. Committed baselines are dev-container
-      # native, so they won't byte-match the CI Linux runner until regenerated
-      # in-CI (see tests-live.yml run-visual caveat) — continue-on-error.
-      run-visual: true
+      run-e2e: true
+      run-newman: true
       newman-entrypoint: tests/integration/run-newman.sh

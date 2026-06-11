@@ -28,8 +28,20 @@
  */
 import { Page } from '@playwright/test'
 
-/** The OpenRegister register id that holds pipelinq objects (dev box: 16). */
+/**
+ * The OpenRegister register that holds pipelinq objects.
+ *
+ * The NUMERIC id varies between environments (dev box = 16, a fresh CI boot
+ * re-imports the register by slug and gets a different id). The pipelinq repair
+ * step re-imports its register with the stable slug 'pipelinq', so the fixture
+ * resolves the numeric id from that slug at runtime (see resolveRegister()) and
+ * only falls back to this seed when the registers list is unreachable. An
+ * explicit PIPELINQ_REGISTER env var still overrides everything (manual runs).
+ */
 export const PIPELINQ_REGISTER = process.env.PIPELINQ_REGISTER || '16'
+
+/** The stable OpenRegister slug the pipelinq repair step imports its register under. */
+export const PIPELINQ_REGISTER_SLUG = 'pipelinq'
 
 /** Stable, unique prefix for everything this run creates. */
 export const RUN_ID = `${Date.now().toString(36)}-${Math.floor(Math.random() * 1e4)}`
@@ -48,14 +60,38 @@ interface TrackedObject {
 export class FixtureSession {
 	private readonly page: Page
 	private readonly tracked: TrackedObject[] = []
+	/** Lazily-resolved numeric register id (by slug). Seeded with the fallback. */
+	private register: string = PIPELINQ_REGISTER
+	private registerResolved = false
 
 	constructor(page: Page) {
 		this.page = page
 	}
 
+	/**
+	 * Resolve the numeric register id from the stable slug 'pipelinq' once, so
+	 * the suite survives a fresh CI boot where the re-imported register gets a
+	 * different numeric id. An explicit PIPELINQ_REGISTER env var is treated as
+	 * an override and short-circuits resolution. On any failure the fallback
+	 * (env/seed) id is kept so a transient registers-list hiccup never breaks
+	 * the suite harder than the original hardcoded id would have.
+	 */
+	private async resolveRegister(): Promise<void> {
+		if (this.registerResolved) return
+		this.registerResolved = true
+		if (process.env.PIPELINQ_REGISTER) return // explicit override wins
+		const res = await this.apiFetch('GET', '/index.php/apps/openregister/api/registers?_limit=200')
+		if (!res.ok) return
+		const list = Array.isArray(res.json) ? res.json : (res.json?.results || [])
+		const reg = list.find((r: any) => r.slug === PIPELINQ_REGISTER_SLUG)
+		if (reg && (reg.id || reg.id === 0)) {
+			this.register = String(reg.id)
+		}
+	}
+
 	/** Build the OR objects endpoint for a schema slug (+ optional id / query). */
 	private url(schema: string, idOrQuery = ''): string {
-		const base = `/index.php/apps/openregister/api/objects/${PIPELINQ_REGISTER}/${schema}`
+		const base = `/index.php/apps/openregister/api/objects/${this.register}/${schema}`
 		if (!idOrQuery) return base
 		if (idOrQuery.startsWith('?')) return base + idOrQuery
 		return `${base}/${idOrQuery}`
@@ -93,6 +129,7 @@ export class FixtureSession {
 	 * fixture fails loudly rather than silently seeding nothing.
 	 */
 	async create(schema: string, props: Record<string, unknown>): Promise<any> {
+		await this.resolveRegister()
 		const res = await this.apiFetch('POST', this.url(schema), props)
 		if (!res.ok || !res.json) {
 			throw new Error(`fixture create(${schema}) failed: ${res.status} ${res.text}`)
@@ -105,6 +142,7 @@ export class FixtureSession {
 
 	/** Fetch the collection for a schema with optional query params. */
 	async list(schema: string, params: Record<string, string | number> = {}): Promise<any[]> {
+		await this.resolveRegister()
 		const qs = new URLSearchParams()
 		for (const [k, v] of Object.entries(params)) qs.set(k, String(v))
 		const res = await this.apiFetch('GET', this.url(schema, qs.toString() ? `?${qs}` : ''))
@@ -114,6 +152,7 @@ export class FixtureSession {
 
 	/** Fetch a single object by id. */
 	async get(schema: string, id: string): Promise<any> {
+		await this.resolveRegister()
 		const res = await this.apiFetch('GET', this.url(schema, id))
 		if (!res.ok) throw new Error(`fixture get(${schema}/${id}) failed: ${res.status} ${res.text}`)
 		return res.json
