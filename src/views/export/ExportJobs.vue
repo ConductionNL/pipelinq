@@ -22,7 +22,7 @@
 			@sort="onSort"
 			@row-click="openJob"
 			@page-changed="onPageChange">
-			<template #actions="{ row }">
+			<template #row-actions="{ row }">
 				<NcButton type="tertiary" :disabled="busyId === row.id" @click.stop="testRun(row)">
 					{{ t('pipelinq', 'Test run') }}
 				</NcButton>

@@ -21,7 +21,7 @@
 			@empty-action="createNew"
 			@refresh="refresh"
 			@sort="onSort"
-			@row-click="openRefund"
+			@view="openRefund"
 			@page-changed="onPageChange" />
 	</div>
 </template>

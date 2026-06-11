@@ -13,6 +13,7 @@
 -->
 <template>
 	<CnIndexPage
+		:title="t('pipelinq', 'Leads')"
 		:register="register"
 		:schema="schema"
 		:columns="columns"

@@ -18,9 +18,9 @@
 				@input="$emit('pipeline-change', selectedPipeline ? selectedPipeline.value : null)" />
 		</div>
 
-		<CnEmptyState
+		<NcEmptyContent
 			v-if="!filteredData.length"
-			:title="t('pipelinq', 'No pipeline data')"
+			:name="t('pipelinq', 'No pipeline data')"
 			:description="t('pipelinq', 'There are no leads in this pipeline yet.')" />
 
 		<CnChartWidget
@@ -33,12 +33,12 @@
 </template>
 
 <script>
-import { CnChartWidget, CnEmptyState } from '@conduction/nextcloud-vue'
-import { NcSelect } from '@nextcloud/vue'
+import { CnChartWidget } from '@conduction/nextcloud-vue'
+import { NcSelect, NcEmptyContent } from '@nextcloud/vue'
 
 export default {
 	name: 'PipelineFunnelWidget',
-	components: { CnChartWidget, CnEmptyState, NcSelect },
+	components: { CnChartWidget, NcSelect, NcEmptyContent },
 	props: {
 		data: {
 			type: Array,

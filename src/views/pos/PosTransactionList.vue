@@ -21,7 +21,7 @@
 			@empty-action="createNew"
 			@refresh="refresh"
 			@sort="onSort"
-			@row-click="openTransaction"
+			@view="openTransaction"
 			@page-changed="onPageChange" />
 	</div>
 </template>

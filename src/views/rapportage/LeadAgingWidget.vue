@@ -6,9 +6,9 @@
   @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-006
 -->
 <template>
-	<CnEmptyState
+	<NcEmptyContent
 		v-if="!hasData"
-		:title="t('pipelinq', 'No aging data')"
+		:name="t('pipelinq', 'No aging data')"
 		:description="t('pipelinq', 'There are no open leads to distribute into aging buckets.')" />
 
 	<CnChartWidget
@@ -20,11 +20,12 @@
 </template>
 
 <script>
-import { CnChartWidget, CnEmptyState } from '@conduction/nextcloud-vue'
+import { CnChartWidget } from '@conduction/nextcloud-vue'
+import { NcEmptyContent } from '@nextcloud/vue'
 
 export default {
 	name: 'LeadAgingWidget',
-	components: { CnChartWidget, CnEmptyState },
+	components: { CnChartWidget, NcEmptyContent },
 	props: {
 		data: {
 			type: Array,
