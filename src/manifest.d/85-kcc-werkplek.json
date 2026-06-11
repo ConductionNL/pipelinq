@@ -14,8 +14,7 @@
 			"route": "/werkplek",
 			"type": "custom",
 			"title": "KCC Werkplek",
-			"component": "KccWerkplekPage",
-			"config": { "register": "pipelinq" }
+			"component": "KccWerkplekPage"
 		}
 	]
 }
