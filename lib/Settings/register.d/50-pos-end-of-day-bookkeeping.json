@@ -403,7 +403,7 @@
             },
             {
                 "@self": { "register": "pipelinq", "schema": "posJournalEntryOutbound", "slug": "je-out-2026-05-20-kas01" },
-                "zReport": "zrep-2026-05-20-kas01",
+                "zReport": "@ref:zrep-2026-05-20-kas01",
                 "idempotencyKey": "sha256:a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
                 "payloadVersion": 1,
                 "ledgerLineItems": [
@@ -426,7 +426,7 @@
             },
             {
                 "@self": { "register": "pipelinq", "schema": "posJournalEntryOutbound", "slug": "je-out-2026-05-21-kas01" },
-                "zReport": "zrep-2026-05-21-kas01",
+                "zReport": "@ref:zrep-2026-05-21-kas01",
                 "idempotencyKey": "sha256:b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3",
                 "payloadVersion": 1,
                 "ledgerLineItems": [
@@ -442,7 +442,7 @@
             },
             {
                 "@self": { "register": "pipelinq", "schema": "posJournalEntryOutbound", "slug": "je-out-2026-05-22-kas02" },
-                "zReport": "zrep-2026-05-22-kas02",
+                "zReport": "@ref:zrep-2026-05-22-kas02",
                 "idempotencyKey": "sha256:c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4",
                 "payloadVersion": 1,
                 "ledgerLineItems": [
