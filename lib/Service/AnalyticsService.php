@@ -376,7 +376,10 @@ class AnalyticsService
         $leads     = $this->findObjects(schemaKey: 'lead_schema');
         $requests  = $this->findObjects(schemaKey: 'request_schema');
         $cms       = $this->findObjects(schemaKey: 'contactmoment_schema');
-        $responses = $this->findObjects(schemaKey: 'surveyresponse_schema');
+        // Survey responses migrated to the OpenRegister forms leaf (NC Forms).
+        // CSAT will be re-sourced from form-link responses once the leaf
+        // exposes a query helper; see openspec/changes/migrate-forms-to-forms-leaf.
+        $responses = [];
 
         $current  = $this->aggregateOverviewWindow(
             from: $currentStart,

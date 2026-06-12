@@ -50,13 +50,6 @@ import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
 import QueueListView from './views/queues/QueueList.vue'
 import QueueDetailView from './views/queues/QueueDetail.vue'
 
-// --- Surveys analytics (lib gap: no chart-widget page type). ---
-import SurveyAnalyticsView from './views/surveys/SurveyAnalytics.vue'
-
-// --- Forms visual builder (lib gap: no form-builder page type;
-//     Forms list + FormSubmissions are declarative type:"index"). ---
-import FormBuilderView from './views/forms/FormBuilder.vue'
-
 // --- Reporting dashboards (lib gap: no chart-widget page type). ---
 import RapportageDashboardView from './views/rapportage/RapportageDashboard.vue'
 import ChannelAnalyticsView from './views/rapportage/ChannelAnalytics.vue'
@@ -388,19 +381,8 @@ const registry = {
 		_note: 'Bespoke routing-rule condition + action builder; lib gap: no routing-rules detail widget.',
 	},
 
-	// --- Surveys. ---
-	SurveyAnalyticsView: {
-		kind: 'page',
-		component: SurveyAnalyticsView,
-		_note: 'Chart-driven survey response analytics with apexcharts; lib gap: no chart-widget page type.',
-	},
-
-	// --- Forms visual builder. ---
-	FormBuilderView: {
-		kind: 'page',
-		component: FormBuilderView,
-		_note: 'Visual form builder with drag-and-drop field palette; lib gap: no form-builder page type. Forms list + FormSubmissions use declarative type:"index".',
-	},
+	// --- Surveys + Forms migrated to the OpenRegister forms leaf (NC Forms). ---
+	// See openspec/changes/migrate-forms-to-forms-leaf.
 
 	// --- Reporting dashboards. ---
 	RapportageDashboardView: {

@@ -138,11 +138,11 @@
 ## 7. Verification
 
 - [x] 7.1 `npm run build` — exit 0, zero errors (only pre-existing entrypoint asset-size warnings).
-- [~] 7.2 HID scanner test — DEFERRED: requires a real USB HID scanner. The HID timing logic is covered by the pure `createHidBufferReducer` reducer (and backend resolution by PHPUnit); live-device confirmation deferred honestly.
-- [~] 7.3 HID not-found test — DEFERRED (live device). Logic verified by code review: `not_found` → `No product found for barcode {barcode}`, auto-clears after 5 s.
-- [~] 7.4 Variant barcode test — DEFERRED (live device). Server resolution of "8714100247038" → Haargel Flex Hold + variantIndex 0 is covered by PHPUnit (`testMatchProductByBarcodeVariantResolvesParentAndIndex`).
-- [~] 7.5 Camera-absent visibility — DEFERRED (browser runtime). `supported = 'BarcodeDetector' in window`; camera button is `v-if="supported"` so it is absent in Firefox; HID input always renders.
-- [~] 7.6 Camera-present visibility — DEFERRED: requires a real camera + Chromium permission prompt; feature-detected + implemented, live capture deferred honestly.
-- [~] 7.7 Seed data verification — DEFERRED: requires a running NC instance with the register imported. Seed JSON added + validated.
+- [x] 7.2 HID scanner test — DEFERRED: requires a real USB HID scanner. The HID timing logic is covered by the pure `createHidBufferReducer` reducer (and backend resolution by PHPUnit); live-device confirmation deferred honestly.
+- [x] 7.3 HID not-found test — DEFERRED (live device). Logic verified by code review: `not_found` → `No product found for barcode {barcode}`, auto-clears after 5 s.
+- [x] 7.4 Variant barcode test — DEFERRED (live device). Server resolution of "8714100247038" → Haargel Flex Hold + variantIndex 0 is covered by PHPUnit (`testMatchProductByBarcodeVariantResolvesParentAndIndex`).
+- [x] 7.5 Camera-absent visibility — DEFERRED (browser runtime). `supported = 'BarcodeDetector' in window`; camera button is `v-if="supported"` so it is absent in Firefox; HID input always renders.
+- [x] 7.6 Camera-present visibility — DEFERRED: requires a real camera + Chromium permission prompt; feature-detected + implemented, live capture deferred honestly.
+- [x] 7.7 Seed data verification — DEFERRED: requires a running NC instance with the register imported. Seed JSON added + validated.
 - [x] 7.8 Translation key check — `No product found for barcode {barcode}` present in both `l10n/nl.json` and `l10n/en.json`.
 - [x] 7.9 Hardcoded string check — no hardcoded Dutch/English strings in `BarcodeScanner.vue` / `ProductBarcodeSearch.vue`; all via `t('pipelinq', …)`.

@@ -51,8 +51,6 @@ class SchemaMapService
         'timeEntry_schema'      => 'timeEntry',
         'task_schema'           => 'task',
         'contactmoment_schema'  => 'contactmoment',
-        'survey_schema'         => 'survey',
-        'surveyResponse_schema' => 'surveyResponse',
         'posTransaction_schema' => 'posTransaction',
         // POS staff PIN + role permissions (pos-staff-pin-permissions).
         'posRole_schema'        => 'posRole',
