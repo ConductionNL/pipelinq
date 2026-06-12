@@ -32,18 +32,24 @@ header — never by a widget-local period selector.
   response per period (no duplicate requests on one render pass)
 - AND no widget may render an in-body panel heading (the grid chrome owns titles)
 
-#### Scenario: Period driven by the dashboard date-range header
+#### Scenario: Period driven by widget-header date chips
 
 - WHEN the user views the dashboard
-- THEN a single date-range selector MUST be rendered by the dashboard header
-  (`CnDashboardPage` `dateRange` config), offering the four backend-supported
-  trailing windows: last 7 / 30 / 90 / 365 days
+- THEN the trend chart widgets MUST surface the shared dashboard date range as
+  a date chip in their own widget title bars (`layout[].dateChip: true` on the
+  `CnDashboardPage` `dateRange` mechanism), offering the four
+  backend-supported trailing windows: last 7 / 30 / 90 / 365 days
+- AND the page-level date-range header picker MUST NOT render
+  (`dateRange.showHeaderPicker: false`) — the chips are the only visible
+  range control
+- AND the chips MUST read and write the SHARED dashboard range so picking a
+  preset in either chip updates every analytics widget
 - AND the analytics widgets MUST consume the provided `cnDashboardDateRange`
   and map it to the analytics API `period` parameter
   (`week` / `month` / `quarter` / `year`)
 - AND changing the range MUST re-fetch the analytics endpoints and update all
   analytics widgets
-- AND no analytics widget may render its own period selector
+- AND no analytics widget may render its own period selector in its body
 
 #### Scenario: Trend chart — leads over time
 

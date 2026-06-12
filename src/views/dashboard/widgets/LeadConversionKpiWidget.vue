@@ -36,6 +36,9 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+		 */
 		formatted() {
 			const value = this.overview.leadConversionRate
 			if (value === null || value === undefined) {
