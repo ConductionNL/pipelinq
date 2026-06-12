@@ -11,9 +11,9 @@
  * ("OCA\\OpenRegister\\" => "tests/Stubs/") and is a no-op when the real
  * openregister app is present (class_exists guard).
  *
- * Only the methods used by PublicSurveyController are declared — the real
- * ObjectService has more. PHPUnit's createMock() generates a full mock
- * regardless; the declarations here only exist to satisfy the type system.
+ * Only a minimal surface is declared — the real ObjectService has more.
+ * PHPUnit's createMock() generates a full mock regardless; the declarations
+ * here only exist to satisfy the type system.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Stubs\Service
