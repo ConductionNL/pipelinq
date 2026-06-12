@@ -35,11 +35,17 @@ import ComplaintsWidget from './views/dashboard/widgets/ComplaintsWidget.vue'
 import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
 import ClientOverviewWidget from './views/dashboard/widgets/ClientOverviewWidget.vue'
 
-// --- Dashboard analytics widgets (openspec/changes/dashboard).
-//     Navi AI conversational analytics, the unified cross-module KPI
-//     panel, and the funder report export panel. ---
+// --- Dashboard analytics widgets (openspec/changes/dashboard +
+//     openspec/changes/decompose-unified-analytics). Navi AI
+//     conversational analytics, the cross-module analytics KPI cards +
+//     trend charts, and the funder report export panel. ---
 import NaviAnalyticsWidget from './views/dashboard/widgets/NaviAnalyticsWidget.vue'
-import UnifiedAnalyticsWidget from './views/dashboard/widgets/UnifiedAnalyticsWidget.vue'
+import LeadConversionKpiWidget from './views/dashboard/widgets/LeadConversionKpiWidget.vue'
+import AvgResolutionKpiWidget from './views/dashboard/widgets/AvgResolutionKpiWidget.vue'
+import ContactVolumeKpiWidget from './views/dashboard/widgets/ContactVolumeKpiWidget.vue'
+import SatisfactionKpiWidget from './views/dashboard/widgets/SatisfactionKpiWidget.vue'
+import LeadsOverTimeChartWidget from './views/dashboard/widgets/LeadsOverTimeChartWidget.vue'
+import RequestsByCategoryChartWidget from './views/dashboard/widgets/RequestsByCategoryChartWidget.vue'
 import ReportExportPanel from './views/dashboard/widgets/ReportExportPanel.vue'
 
 // Bespoke kanban board with in-memory search (REQ-PIPE-022).
@@ -356,11 +362,41 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'Conversational analytics chat panel powered by NaviService — natural-language queries return CnChartWidget / CnTableWidget / plain text inline, with up to 3 suggested follow-up chips. openspec/changes/dashboard REQ-DASH-001 / REQ-DASH-003.',
 	},
-	UnifiedAnalyticsWidget: {
+	LeadConversionKpiWidget: {
 		kind: 'widget',
-		component: UnifiedAnalyticsWidget,
+		component: LeadConversionKpiWidget,
+		...KPI_WIDGET_META,
+		_note: 'KPI card: % of leads won in the dashboard date range. Shares one cached GET /api/analytics/overview per period. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
+	},
+	AvgResolutionKpiWidget: {
+		kind: 'widget',
+		component: AvgResolutionKpiWidget,
+		...KPI_WIDGET_META,
+		_note: 'KPI card: mean request resolution time (hours) in the dashboard date range. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
+	},
+	ContactVolumeKpiWidget: {
+		kind: 'widget',
+		component: ContactVolumeKpiWidget,
+		...KPI_WIDGET_META,
+		_note: 'KPI card: contactmoment count in the dashboard date range. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
+	},
+	SatisfactionKpiWidget: {
+		kind: 'widget',
+		component: SatisfactionKpiWidget,
+		...KPI_WIDGET_META,
+		_note: 'KPI card: mean survey score (1–5) in the dashboard date range. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
+	},
+	LeadsOverTimeChartWidget: {
+		kind: 'widget',
+		component: LeadsOverTimeChartWidget,
 		...PANEL_WIDGET_META,
-		_note: 'Cross-module KPI + trend panel (lead conversion / avg request resolution / contactmoment volume / customer satisfaction + leads-over-time line + requests-by-category bar). Driven by GET /api/analytics/overview + /api/analytics/trends. openspec/changes/dashboard REQ-DASH-010 / REQ-DASH-011.',
+		_note: 'Line chart: leads over time from GET /api/analytics/trends?metric=leads. Title comes from the widget chrome. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
+	},
+	RequestsByCategoryChartWidget: {
+		kind: 'widget',
+		component: RequestsByCategoryChartWidget,
+		...PANEL_WIDGET_META,
+		_note: 'Bar chart: requests by category from GET /api/analytics/trends?metric=requests-by-category. Title comes from the widget chrome. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
 	},
 	ReportExportPanel: {
 		kind: 'widget',
