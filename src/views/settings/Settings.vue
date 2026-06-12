@@ -120,6 +120,7 @@
 								:input-label="t('pipelinq', 'Allowed Groups')"
 								:options="groupOptions"
 								:multiple="true"
+								:keep-open="true"
 								:searchable="true"
 								label="displayName"
 								track-by="id"
