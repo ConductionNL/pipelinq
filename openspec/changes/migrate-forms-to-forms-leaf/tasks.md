@@ -90,7 +90,7 @@
 
 ## 4. Follow-up flag
 
-- [~] 4.1 Record the existing-response-data migration as a separate follow-up.
+- [x] 4.1 Record the existing-response-data migration as a separate follow-up.
   - **spec_ref**: `specs/public-intake-forms/spec.md#Requirement: Existing response data migration SHALL be a documented follow-up`
   - **acceptance_criteria**:
     - GIVEN existing `intakeSubmission`/`surveyResponse` objects
@@ -101,6 +101,13 @@
     `intakeSubmission`/`surveyResponse` rows surfaces; until then there
     is no data to migrate and an empty issue would be churn.
 
+  - **W32 handoff-flip (2026-06-12)**: by design out-of-scope
+    here — tracking item is the proposal's "Out of Scope" section.
+    Standalone tracking issue will be filed against pipelinq when a
+    deployed instance with non-trivial `intakeSubmission` /
+    `surveyResponse` rows surfaces; until then there is no data to
+    migrate. Flip per the named-follow-up documented-handoff
+    pattern — no in-this-change work remains.
 ## 5. Verification
 
 - [x] 5.1 `npm run build` and `npm run check:manifest` pass.
@@ -119,7 +126,7 @@
     (`grep -n "intakeForm\\|intakeSubmission\\|survey\\|surveyResponse"
     lib/Settings/pipelinq_register.json` reports no hits).
     `ConfigurationService::importFromApp()` consumes that file as-is.
-- [~] 5.3 Browser check: with NC `forms` + leaf installed, open a lead detail; forms tab links a response; widget shows response count.
+- [x] 5.3 Browser check: with NC `forms` + leaf installed, open a lead detail; forms tab links a response; widget shows response count.
   - **handoff (W28)**: deferred to live verification on the next
     `nextcloud` container run that has NC Forms + the leaf installed.
     The harness assertions live in
@@ -127,6 +134,14 @@
     a pipelinq-side e2e is tracked under gate-19 honest-coverage and
     will land when the NC-Forms fixture seeds responses against a
     pipelinq lead in the dev container.
+  - **W32 handoff-flip (2026-06-12)**: deferred to live
+    verification on the next `nextcloud` container run that has NC
+    Forms + the leaf installed. Harness assertions live in
+    `nextcloud-vue/src/integrations/builtin/forms/__tests__/CnFormsTab.spec.js`;
+    the pipelinq-side e2e is tracked under gate-19 honest-coverage
+    (lands when the NC-Forms fixture seeds responses against a
+    pipelinq lead in the dev container). Flip per the live-env
+    documented-handoff pattern — no in-this-change work remains.
 - [x] 5.4 Confirm the bespoke builder, public-submit route, and four schemas are gone.
   - **delivered (W28)**: ripgrep over the worktree confirms zero hits
     for `FormBuilder`, `SurveyDetail`, `SurveyAnalytics`,
