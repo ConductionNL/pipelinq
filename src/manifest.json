@@ -6,7 +6,8 @@
 		"openconnector",
 		"deck",
 		"workflowengine",
-		"timemanager"
+		"timemanager",
+		"forms"
 	],
 	"menu": [
 		{
@@ -136,13 +137,6 @@
 			"order": 100
 		},
 		{
-			"id": "Surveys",
-			"label": "Surveys",
-			"icon": "icon-comment",
-			"route": "Surveys",
-			"order": 110
-		},
-		{
 			"id": "Queues",
 			"label": "Queues",
 			"icon": "icon-category-workflow",
@@ -177,13 +171,6 @@
 			"icon": "icon-category-organization",
 			"route": "Pipelines",
 			"order": 200
-		},
-		{
-			"id": "Forms",
-			"label": "Forms",
-			"icon": "icon-file",
-			"route": "Forms",
-			"order": 210
 		},
 		{
 			"id": "ExportJobs",
@@ -354,6 +341,14 @@
 								"space": "",
 								"contextQuery": ""
 							}
+						},
+						{
+							"id": "forms",
+							"label": "Forms",
+							"component": "CnFormsTab",
+							"config": {
+								"linkedType": "forms"
+							}
 						}
 					]
 				}
@@ -441,6 +436,14 @@
 							"config": {
 								"space": "",
 								"contextQuery": ""
+							}
+						},
+						{
+							"id": "forms",
+							"label": "Forms",
+							"component": "CnFormsTab",
+							"config": {
+								"linkedType": "forms"
 							}
 						}
 					]
@@ -617,6 +620,14 @@
 							"config": {
 								"space": "",
 								"contextQuery": ""
+							}
+						},
+						{
+							"id": "forms",
+							"label": "Forms",
+							"component": "CnFormsTab",
+							"config": {
+								"linkedType": "forms"
 							}
 						}
 					]
@@ -1076,90 +1087,6 @@
 			}
 		},
 		{
-			"id": "Surveys",
-			"route": "/surveys",
-			"type": "index",
-			"title": "Surveys",
-			"config": {
-				"register": "pipelinq",
-				"schema": "survey",
-				"showViewAction": false,
-				"actions": [
-					{
-						"id": "view",
-						"label": "View",
-						"icon": "Eye",
-						"handler": "navigate",
-						"route": "SurveyDetail"
-					}
-				],
-				"columns": [
-					"title",
-					"status",
-					"responseCount",
-					"_dateCreated"
-				],
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true
-				}
-			}
-		},
-		{
-			"id": "SurveyCreate",
-			"route": "/surveys/new",
-			"type": "custom",
-			"title": "New survey",
-			"component": "CnFormBuilder",
-			"config": {
-				"register": "pipelinq",
-				"schema": "survey"
-			}
-		},
-		{
-			"id": "SurveyDetail",
-			"route": "/surveys/:id",
-			"type": "detail",
-			"title": "Survey",
-			"config": {
-				"register": "pipelinq",
-				"schema": "survey",
-				"sidebar": true
-			}
-		},
-		{
-			"id": "SurveyEdit",
-			"route": "/surveys/:id/edit",
-			"type": "custom",
-			"title": "Edit survey",
-			"component": "CnFormBuilder",
-			"config": {
-				"register": "pipelinq",
-				"schema": "survey"
-			}
-		},
-		{
-			"id": "SurveyAnalyticsView",
-			"route": "/surveys/:id/analytics",
-			"type": "custom",
-			"title": "Survey analytics",
-			"component": "SurveyAnalyticsView"
-		},
-		{
-			"id": "PublicSurvey",
-			"route": "/public/survey/:token",
-			"type": "form",
-			"title": "Survey",
-			"config": {
-				"register": "pipelinq",
-				"schema": "surveyResponse",
-				"mode": "public",
-				"token": "@route.token",
-				"submitEndpoint": "/index.php/apps/pipelinq/api/public/surveys/:token/responses",
-				"submitMethod": "POST"
-			}
-		},
-		{
 			"id": "MyWork",
 			"route": "/my-work",
 			"type": "custom",
@@ -1234,100 +1161,6 @@
 					"isDefault",
 					"_dateCreated"
 				],
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true
-				}
-			}
-		},
-		{
-			"id": "Forms",
-			"route": "/forms",
-			"type": "index",
-			"title": "Forms",
-			"config": {
-				"register": "pipelinq",
-				"schema": "intakeForm",
-				"showViewAction": false,
-				"columns": [
-					"name",
-					"isActive",
-					"submitCount",
-					"targetPipeline"
-				],
-				"actions": [
-					{
-						"id": "view",
-						"label": "View",
-						"icon": "Eye",
-						"handler": "navigate",
-						"route": "FormDetail"
-					},
-					{
-						"id": "submissions",
-						"label": "View submissions",
-						"icon": "FormatListBulleted",
-						"handler": "navigate",
-						"route": "FormSubmissions"
-					}
-				],
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true
-				}
-			}
-		},
-		{
-			"id": "FormNew",
-			"route": "/forms/new",
-			"type": "detail",
-			"title": "New form",
-			"config": {
-				"register": "pipelinq",
-				"schema": "intakeForm",
-				"sidebar": true
-			},
-			"slots": {
-				"default": "FormBuilderView"
-			}
-		},
-		{
-			"id": "FormDetail",
-			"route": "/forms/:id",
-			"type": "detail",
-			"title": "Form",
-			"config": {
-				"register": "pipelinq",
-				"schema": "intakeForm",
-				"sidebar": true
-			},
-			"slots": {
-				"default": "FormBuilderView"
-			}
-		},
-		{
-			"id": "FormSubmissions",
-			"route": "/forms/:id/submissions",
-			"type": "index",
-			"title": "Form submissions",
-			"config": {
-				"register": "pipelinq",
-				"schema": "intakeSubmission",
-				"showViewAction": false,
-				"filter": {
-					"form": "@route.id"
-				},
-				"sortKey": "submittedAt",
-				"sortOrder": "desc",
-				"columns": [
-					"submittedAt",
-					"status",
-					"contactId",
-					"leadId"
-				],
-				"emptyText": "No submissions yet",
-				"showAdd": false,
-				"showFormDialog": false,
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
