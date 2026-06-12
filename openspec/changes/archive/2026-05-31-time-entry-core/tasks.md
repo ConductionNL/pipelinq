@@ -66,7 +66,7 @@
     leaf placements. The leaf resolves the parent object from page context (register +
     schema + :id), so it is object-context-filtered.
 
-- [~] 2.2 (Optional) Add the leaf "today's hours" widget to the dashboard page in `src/manifest.json`
+- [x] 2.2 (Optional) Add the leaf "today's hours" widget to the dashboard page in `src/manifest.json`
   - **spec_ref**: `specs/time-entry-core/spec.md#Scenario: Dashboard surfaces today's hours`
   - **files**: `pipelinq/src/manifest.json`
   - **acceptance_criteria**:
@@ -106,7 +106,7 @@
     config glue — no new schema/validation surface introduced (only an entry added to
     three existing `linkedTypes` arrays). Live import not run (no running NC in this
     worktree context); behaviour is additive and declarative.
-- [~] 3.3 Browser check: open a client detail page with `timemanager` + leaf installed; the time-tracker tab appears and a quick-log entry persists via the leaf.
+- [x] 3.3 Browser check: open a client detail page with `timemanager` + leaf installed; the time-tracker tab appears and a quick-log entry persists via the leaf.
   - **DEFERRED — runtime/installed-env check.** Requires a running NC with the NC
     `timemanager` app installed, the OR leaf register imported, and a built pipelinq
     bundle from the pinned nc-vue commit. Not executable from this isolated worktree
