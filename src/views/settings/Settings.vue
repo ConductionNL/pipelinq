@@ -47,7 +47,6 @@
 			:groups="registerGroups"
 			:configuration="config"
 			:saving="saving"
-			@update:configuration="config = $event"
 			@save="save" />
 
 		<!-- Pipeline Management -->
