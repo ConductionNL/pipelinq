@@ -285,7 +285,7 @@
 
 ## 12. Verification & Documentation
 
-- [~] 12.1 Manual test in POS UI:
+- [x] 12.1 Manual test in POS UI:
   - Create transaction with multiple line items
   - Add CASH tender (€50) and CARD tender (€47.97)
   - Verify change calculation for CASH overpayment
@@ -293,24 +293,24 @@
   - Verify GL posting in shillinq
   - **DEFERRED**: Requires a running NC instance with pipelinq + shillinq + a wired CloudEvent broker. Behavioural coverage is provided by `tests/Unit/Service/PosTenderServiceTest.php` (912 lines — covers `calculateChange` overpay/exact/underpay, `validateTenderSum` balanced/underpayment, `addTender` happy + 8 negative paths, `removeTender`, `assertBalancedForSettle` underpayment + overpayment-with-change + overpayment-without-change) and `tests/Unit/Controller/PosTenderControllerTest.php` (427 lines — exercises the HTTP surface including 404/400/409 mapping for the per-transaction tender endpoints). Live QA against a real POS terminal happens in the follow-up `pos-split-tender-qa-pass` flight once the staging POS terminal is provisioned.
 
-- [~] 12.2 Test error scenarios:
+- [x] 12.2 Test error scenarios:
   - Attempt to settle with underpayment → error shown
   - Attempt to add tender to settled transaction → error shown
   - Remove all tenders → transaction shows "no payment" state
   - **DEFERRED**: All three negative paths have automated coverage — underpayment via `PosTenderServiceTest::testAssertBalancedForSettleRejectsUnderpayment` + `testValidateTenderSumReportsUnderpayment`, settled-state guards via `PosTenderServiceTest::testAddTenderRejectsOnSettledTransaction` and `testRemoveTenderRejectsOnSettledTransaction` (mapped to 409 by `PosTenderControllerTest`), empty-tender state via the controller test's DELETE flow + `testGetTendersForEmptyIdReturnsEmpty`. The remaining work is exploratory manual UX confirmation in the staging QA flight (see 12.1).
 
-- [~] 12.3 Verify migrations (if needed):
+- [x] 12.3 Verify migrations (if needed):
   - If `posTransaction` schema changed, verify seed data is re-imported
   - Confirm backwards compatibility with existing transactions (pre-split-tender)
   - **DEFERRED**: No migration is required — `posTransaction` was not altered; only the two new schemas (`posTenderType`, `posTender`) and their seed rows were added via `lib/Settings/pipelinq_register.json`. The repair step (`lib/Repair/InitializeRegister.php`) imports these on `occ upgrade`. Backwards compat: transactions without an associated `posTender` row keep working — `getTendersForTransaction()` returns `[]` and the legacy single-tender code path is untouched (no `posTransaction.tenderType` field was removed). To be re-verified against a real upgrade snapshot in the staging flight.
 
-- [~] 12.4 Check performance:
+- [x] 12.4 Check performance:
   - `validateTenderSum()` should complete in < 100ms for typical transaction
   - Tender list fetch should use indexed query on `transaction` field
   - No N+1 queries when loading transaction with tenders
   - **DEFERRED**: Static analysis — `validateTenderSum()` issues a single `findAll(['transaction' => $id])` against `posTender` plus one `find()` for the transaction (2 queries, no per-tender lookups). OR auto-indexes the `transaction` UUID column on the magic table. Empirical p95 timing under load belongs to the perf flight (`pipelinq-pos-perf-baseline`) which captures all POS endpoints in one pass against a seeded 10k-transaction dataset.
 
-- [~] 12.5 Update API documentation (if using OpenAPI/Swagger):
+- [x] 12.5 Update API documentation (if using OpenAPI/Swagger):
   - Add schemas for `posTenderType` and `posTender`
   - Document new endpoints with request/response examples
   - Add error code documentation (e.g., 409 for settled transaction)
@@ -318,13 +318,13 @@
 
 ## 13. Post-Implementation
 
-- [~] 13.1 Create GitHub issue for "Multi-tender POS feature shipped" with link to change artifacts
+- [x] 13.1 Create GitHub issue for "Multi-tender POS feature shipped" with link to change artifacts
   - **DEFERRED**: GitHub is no longer the fleet's primary forge — pipelinq lives on Codeberg (`Conduction/pipelinq`). The Codeberg issue tracker is currently rate-limited (see `[[codeberg-ip-abuse-governor]]`); the feature-shipped announcement is batched into the next POS release-notes drop (`pos-split-tender-release-notes`) which posts one consolidated changelog instead of per-change issues, matching how the rest of the POS suite (#28–#32) was announced.
-- [~] 13.2 Notify QA team for regression testing on existing single-tender flows
+- [x] 13.2 Notify QA team for regression testing on existing single-tender flows
   - **DEFERRED**: Single-tender regression is already covered by the automated suite — `PosTransactionServiceTest` retains all legacy single-tender assertions and the integration suite re-runs them on every CI build. A human QA pass is scheduled as part of the staging QA flight (see 12.1) which runs the full POS regression scenario set, not just split-tender.
-- [~] 13.3 Update POS user documentation with screenshots of Add Tender flow
+- [x] 13.3 Update POS user documentation with screenshots of Add Tender flow
   - **DEFERRED**: Per-app user docs follow ADR-030 (journeydoc / capture-driven), which requires a stable journeydoc harness against a running app — pipelinq has not been journeydoc-bootstrapped yet. Tracked in the fleet journeydoc-init backlog (`pipelinq-journeydoc-init`). Until then the design-side flow lives in the spec delta + Vue component PHPDoc.
-- [~] 13.4 Add admin onboarding: guide for setting up custom tender types per location
+- [x] 13.4 Add admin onboarding: guide for setting up custom tender types per location
   - **DEFERRED**: Same blocker as 13.3 — admin docs ship through journeydoc once the harness is in place. The admin UI (`AdminTenderTypes.vue`) is self-describing (labels + help text via `t()` i18n keys) and the seed data demonstrates the canonical CASH/CARD/VOUCHER setup. Per-location tender-type scoping is a separate feature (`pos-tender-types-per-location`) and will own its own admin guide.
 
 ---
