@@ -16,7 +16,9 @@
  *     without the LLM stack wired up) Navi MUST still return a deterministic
  *     structured result for every supported intent.
  *   - NO new schemas — every query reuses the existing pipelinq registers
- *     (`lead`, `request`, `contactmoment`, `surveyResponse`).
+ *     (`lead`, `request`, `contactmoment`). Survey responses now live in
+ *     the OpenRegister forms leaf (NC Forms); a future Navi adapter can
+ *     query the leaf via `FormLinkMapper`.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service

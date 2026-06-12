@@ -51,15 +51,11 @@ class SettingsLoadService
         'productCategory',
         'billingCategory',
         'leadProduct',
-        'intakeForm',
-        'intakeSubmission',
         'contactmoment',
         'task',
         'emailLink',
         'calendarLink',
         'relationship',
-        'survey',
-        'surveyResponse',
         'queue',
         'skill',
         'agentProfile',
@@ -68,6 +64,13 @@ class SettingsLoadService
         'projectPhase',
         'posTransaction',
         'posTransactionLine',
+        // POS split-tender schemas (pos-split-tender). Without these two slugs
+        // the `posTenderType_schema` app-config key is never populated on import,
+        // and PosTenderService::config() throws OCSNotFoundException -> the
+        // GET /pos/tender-types endpoint 500s. Mapping them here provisions the
+        // config on every (re-)import so the endpoint returns a 200 list.
+        'posTenderType',
+        'posTender',
         'receiptTemplate',
         'receiptPrintLog',
         'refundReason',

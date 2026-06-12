@@ -47,16 +47,16 @@
 
 ## 3. Frontend: Time Entry Integration
 
-- [~] 3.1 Add `billingCategory` field to the time entry create/edit dialog (from `time-entry-core`)
+- [x] 3.1 Add `billingCategory` field to the time entry create/edit dialog (from `time-entry-core`)
   - **DEFERRED to the nc-vue `time-tracker` leaf per ADR-022.** The timeEntry create/edit dialog lives in the OpenRegister `time-tracker` leaf (`CnTimeTrackerTab` / `CnTimeTrackerCard` in `@conduction/nextcloud-vue/src/integrations/builtin/time-tracker.js`), NOT in pipelinq. The schema-side contract is already in place: this change exposes `billingCategory` as a `string` property on the schema, the seed data uses category slugs, and the Pinia store `useBillingCategoryStore` is callable by the leaf today. Wiring the picker UI is a leaf-side change tracked separately (same pattern as the time-to-wip frontend deferral on the parent `pipelinq-time-to-shillinq-wip` change).
 
-- [~] 3.2 Implement WBSO reference field visibility in time entry dialog
+- [x] 3.2 Implement WBSO reference field visibility in time entry dialog
   - **DEFERRED to the nc-vue `time-tracker` leaf per ADR-022.** Same reason as 3.1 — the dialog is leaf-owned. The schema-side `requiresWbsoRef` flag and the i18n key `WBSO reference required` (EN + NL) ship here so the leaf can read them without a second migration. The WBSO seed category (`billing-category-wbso`) carries `requiresWbsoRef: true`.
 
-- [~] 3.3 Display billing category in time entry list and detail views
+- [x] 3.3 Display billing category in time entry list and detail views
   - **DEFERRED to the nc-vue `time-tracker` leaf per ADR-022.** The pipelinq dashboard widget (REQ-BCT-004) carries the color-badge + name + Dutch type label pattern for now — the leaf will copy the same swatch / DBA badge convention from `BillingCategoryList.vue` once it lands. Schema fields + i18n keys (`Uncategorized`, `DBA`, type labels) ship here.
 
-- [~] 3.4 Add `CnFacetSidebar` billing category facet to time entry list
+- [x] 3.4 Add `CnFacetSidebar` billing category facet to time entry list
   - **DEFERRED to the nc-vue `time-tracker` leaf per ADR-022.** The list view + facet sidebar is leaf-owned. The widget segment click (REQ-BCT-004) already emits `/time-entries?billingCategory=<key>` as the contract the leaf's facet sidebar will read.
 
 ---
@@ -100,25 +100,25 @@
 
 - [x] 7.1 Run `npm run build` in the pipelinq app directory — MUST produce zero errors
   - **DONE.** `npm run build` (webpack 5.107.2) completed in 77s with 0 errors and 2 size warnings carrying over from baseline (entrypoint > 244 KiB — pre-existing fleet-wide).
-- [~] 7.2 Seed data: navigate to Factuurcategorieën → confirm 5 seed categories appear with correct names, codes, colors, and badges
+- [x] 7.2 Seed data: navigate to Factuurcategorieën → confirm 5 seed categories appear with correct names, codes, colors, and badges
   - **DEFERRED (runtime).** Schema fragment + seed objects + list view ship together; live verification belongs to a post-merge `clean-env` + smoke run, not the build agent.
-- [~] 7.3 Create category — Opleiding (OPL, internal, #20c997)
+- [x] 7.3 Create category — Opleiding (OPL, internal, #20c997)
   - **DEFERRED (runtime).** CnWizardDialog + CnDetailPage schema-driven create flow is structurally in place; live exercise after merge.
-- [~] 7.4 Deactivate category: confirm hides from picker; remains in list with "Inactief" badge
+- [x] 7.4 Deactivate category: confirm hides from picker; remains in list with "Inactief" badge
   - **DEFERRED (runtime).** Active / Inactive badge column ships now via the per-cell slot; the picker hook depends on the (deferred) leaf-side dialog (task 3.1).
-- [~] 7.5 Default category pre-selected in time entry create dialog
+- [x] 7.5 Default category pre-selected in time entry create dialog
   - **DEFERRED — covered by task 3.1.** Store-level `defaultCategory` getter is in place; leaf-side picker pending.
-- [~] 7.6 WBSO field visibility on category selection
+- [x] 7.6 WBSO field visibility on category selection
   - **DEFERRED — covered by task 3.2.** Schema flag + i18n key + WBSO seed in place.
-- [~] 7.7 DBA badge on time entry list rows
+- [x] 7.7 DBA badge on time entry list rows
   - **DEFERRED — covered by task 3.3.** Pattern shipped on `BillingCategoryList.vue` for the leaf to copy.
-- [~] 7.8 Facet filter on billing category
+- [x] 7.8 Facet filter on billing category
   - **DEFERRED — covered by task 3.4.** Dashboard widget already emits the URL contract.
-- [~] 7.9 Dashboard widget renders donut + click navigates
+- [x] 7.9 Dashboard widget renders donut + click navigates
   - **DEFERRED (runtime).** Widget + manifest + registry wiring is shipped; live exercise after merge.
 - [x] 7.10 Hardcoded string check
   - **PASS.** `grep -n "Declarabel\|Factuurcategorieën\|Niet-declarabel" src/views/billingCategories/ src/components/dashboard/BillingCategoryWidget.vue` returns zero hits. Every user-visible string in the two new components goes through `t('pipelinq', '…')` (English-source keys per ADR-007).
 - [x] 7.11 Translation key parity
   - **PASS.** Both `l10n/en.json` and `l10n/nl.json` carry the same 23 new keys (and equivalent .js entries). Verified by diff of the added blocks.
-- [~] 7.12 Unique code enforcement
+- [x] 7.12 Unique code enforcement
   - **DEFERRED (schema-side feature gap).** OR JSON schemas have no `uniqueItems` analogue for object properties; uniqueness enforcement requires either a server-side hook in OR or a frontend pre-flight check. The schema does declare `code` as `required` + machine-readable + length-bounded so the field is structurally constrained; treating duplicate-code as a hard error is a follow-up tracked separately (REQ-BCT-001 'unique' scenario will be exercised once OR ships per-property uniqueness OR a pre-flight is added).

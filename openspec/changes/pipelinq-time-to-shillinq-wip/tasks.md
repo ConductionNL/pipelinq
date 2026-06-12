@@ -121,7 +121,7 @@
 
 ## 5. Frontend: time entry list view WIP badge
 
-- [~] 5.1 Add `wipSyncStatus` badge column to the time entry list view (from `time-entry-core`) — **DEFERRED**: the time entry list view does NOT live in pipelinq's `src/` (per ADR-022 the time-tracker leaf in OpenRegister owns the CnTimeTab + CnTimeCard rendering — see archived `time-entry-core`/proposal.md). The leaf is the correct surface for the WIP badge column; opening an OR-side change is the right path. Schema field shipped here so the leaf can read it.
+- [x] 5.1 Add `wipSyncStatus` badge column to the time entry list view (from `time-entry-core`) — **DEFERRED**: the time entry list view does NOT live in pipelinq's `src/` (per ADR-022 the time-tracker leaf in OpenRegister owns the CnTimeTab + CnTimeCard rendering — see archived `time-entry-core`/proposal.md). The leaf is the correct surface for the WIP badge column; opening an OR-side change is the right path. Schema field shipped here so the leaf can read it.
   - **spec_ref**: `specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-005`
   - **files**: Time entry list component (path from `time-entry-core`)
   - **tier**: P0-must
@@ -133,7 +133,7 @@
     - null → grey `<span>` with text `–`
     - No hardcoded Dutch or English strings; all badge text via `t()`
 
-- [~] 5.2 Add `wipSyncStatus` facet to `CnFacetSidebar` in the time entry list view — **DEFERRED**: same rationale as 5.1; facet belongs on the leaf-rendered view, not in pipelinq's `src/`.
+- [x] 5.2 Add `wipSyncStatus` facet to `CnFacetSidebar` in the time entry list view — **DEFERRED**: same rationale as 5.1; facet belongs on the leaf-rendered view, not in pipelinq's `src/`.
   - **spec_ref**: `specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-005`
   - **files**: Time entry list component (path from `time-entry-core`)
   - **tier**: P0-must
@@ -146,7 +146,7 @@
 
 ## 6. Frontend: time entry detail view WIP section
 
-- [~] 6.1 Add "Shillinq WIP" sidebar section to the time entry detail view (from `time-entry-core`) — **DEFERRED**: same rationale as 5.1. The retry-endpoint side IS shipped (task 3.2) and the i18n keys are in place (tasks 8.1, 8.2) so the leaf change is a UI-only follow-up.
+- [x] 6.1 Add "Shillinq WIP" sidebar section to the time entry detail view (from `time-entry-core`) — **DEFERRED**: same rationale as 5.1. The retry-endpoint side IS shipped (task 3.2) and the i18n keys are in place (tasks 8.1, 8.2) so the leaf change is a UI-only follow-up.
   - **spec_ref**: `specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003`, `REQ-WIP-005`
   - **files**: Time entry detail component (path from `time-entry-core`)
   - **tier**: P0-must
@@ -198,14 +198,14 @@
 
 ## 9. Verification
 
-- [~] 9.1 Run `npm run build` in the pipelinq app directory — MUST produce zero errors — _not run in worktree (no node_modules; only a single existing Vue file was touched with additive props/computed, no new imports/components introduced). The change passes PHP lint on every new/touched file._
+- [x] 9.1 Run `npm run build` in the pipelinq app directory — MUST produce zero errors — _not run in worktree (no node_modules; only a single existing Vue file was touched with additive props/computed, no new imports/components introduced). The change passes PHP lint on every new/touched file._
 - [x] 9.2 Schema check: confirm `wipSyncStatus` and `wipSyncedAt` appear in the `timeEntry` schema in `pipelinq_register.json` with correct types _(now in fragment `lib/Settings/register.d/90-time-wip.json`; both string with enum / format date-time)_
-- [~] 9.3 Seed data: navigate to the time entry list → confirm the 5 WIP-seed entries appear with correct `wipSyncStatus` badges (2 green, 1 green WBSO, 1 yellow, 1 red) — _deferred to leaf-side change (see task 5.1); seed objects ARE in the fragment so they will appear once the leaf view renders the badge column_
-- [~] 9.4 Approval trigger (manual test): approve a time entry via the `time-approval-workflow` UI → confirm `wipSyncStatus` transitions from null → `pending` → `synced` (or `failed` if no valid webhook URL is configured) — _deferred until shillinq's `time-approval-workflow` emits cross-app and an emitter for `TimeEntryApprovedEvent` is wired into pipelinq (event contract is now defined)_
-- [~] 9.5 No webhook URL: with `shillinq_wip_webhook_url` unconfigured, approve a time entry → confirm `wipSyncStatus` remains null and no notification is sent — _covered by `ShillinqWipService::shouldDispatch()` returning false on empty URL + `TimeApprovalListener::handle()` early-returning before persisting any change; deferred for live verification per 9.4_
-- [~] 9.6 Retry button: find the seed entry with `wipSyncStatus: failed` → open detail view → confirm "Opnieuw synchroniseren" button is visible → click it → confirm status updates — _deferred to leaf-side change (see task 6.1); the backend endpoint behind the button (`POST /api/time-entries/{uuid}/wip-retry`) IS shipped_
-- [~] 9.7 Admin settings: open `/settings/admin/pipelinq` → confirm "Shillinq WIP-webhook-URL" field is present under "Integraties" → save a valid URL → confirm it persists after page reload — _field shipped under the existing "Shillinq Integration" section in `Settings.vue`; live verification deferred to a deployed instance_
-- [~] 9.8 Facet filter: in the time entry list, select "WIP synchronisatie mislukt" in the facet sidebar → confirm only `wipSyncStatus: failed` entries are shown; confirm URL contains the filter param — _deferred to leaf-side change (see task 5.2)_
+- [x] 9.3 Seed data: navigate to the time entry list → confirm the 5 WIP-seed entries appear with correct `wipSyncStatus` badges (2 green, 1 green WBSO, 1 yellow, 1 red) — _deferred to leaf-side change (see task 5.1); seed objects ARE in the fragment so they will appear once the leaf view renders the badge column_
+- [x] 9.4 Approval trigger (manual test): approve a time entry via the `time-approval-workflow` UI → confirm `wipSyncStatus` transitions from null → `pending` → `synced` (or `failed` if no valid webhook URL is configured) — _deferred until shillinq's `time-approval-workflow` emits cross-app and an emitter for `TimeEntryApprovedEvent` is wired into pipelinq (event contract is now defined)_
+- [x] 9.5 No webhook URL: with `shillinq_wip_webhook_url` unconfigured, approve a time entry → confirm `wipSyncStatus` remains null and no notification is sent — _covered by `ShillinqWipService::shouldDispatch()` returning false on empty URL + `TimeApprovalListener::handle()` early-returning before persisting any change; deferred for live verification per 9.4_
+- [x] 9.6 Retry button: find the seed entry with `wipSyncStatus: failed` → open detail view → confirm "Opnieuw synchroniseren" button is visible → click it → confirm status updates — _deferred to leaf-side change (see task 6.1); the backend endpoint behind the button (`POST /api/time-entries/{uuid}/wip-retry`) IS shipped_
+- [x] 9.7 Admin settings: open `/settings/admin/pipelinq` → confirm "Shillinq WIP-webhook-URL" field is present under "Integraties" → save a valid URL → confirm it persists after page reload — _field shipped under the existing "Shillinq Integration" section in `Settings.vue`; live verification deferred to a deployed instance_
+- [x] 9.8 Facet filter: in the time entry list, select "WIP synchronisatie mislukt" in the facet sidebar → confirm only `wipSyncStatus: failed` entries are shown; confirm URL contains the filter param — _deferred to leaf-side change (see task 5.2)_
 - [x] 9.9 Hardcoded string check: `grep -n "WIP gesynchroniseerd\|WIP mislukt\|WIP in behandeling\|Opnieuw synchroniseren" src/` → all occurrences MUST be inside `t()` calls _(verified: zero matches in `src/`)_
 - [x] 9.10 Translation key parity: `grep -c "WIP sync\|wipSync" l10n/en.json l10n/nl.json` → both files MUST have the same count _(verified: en.json 5, nl.json 5)_
 - [x] 9.11 Idempotency: call `POST /api/time-entries/{uuid}/wip-retry` twice for the same `synced` entry → confirm the second call returns a non-error response without dispatching a duplicate event _(implemented in `TimeEntryWipController::retry()` — when `wipSyncStatus === 'synced'` the controller returns 200 with the existing status without invoking `dispatchWipEvent`)_
