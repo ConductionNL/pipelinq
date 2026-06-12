@@ -27,10 +27,12 @@ model the rest of the page already follows:
 - Promote the two trend charts to individual chart widgets
   (`leads-over-time`, `requests-by-category`) whose titles come from the
   widget chrome, not an in-body heading.
-- Enable the dashboard-level date-range header (`config.dateRange` on the
-  Dashboard manifest page) with the four backend-supported trailing windows
-  (7/30/90/365 days); all six analytics widgets consume the injected
-  `cnDashboardDateRange` and map it to the analytics API `period` parameter.
+- Enable the dashboard-level `config.dateRange` mechanism with the four
+  backend-supported trailing windows (7/30/90/365 days), surfaced as
+  date chips in the chart widgets' own title bars (`layout[].dateChip: true`
+  + `showHeaderPicker: false` — no page-level picker); all six analytics
+  widgets consume the injected `cnDashboardDateRange` and map it to the
+  analytics API `period` parameter.
 - Share one cached `GET /api/analytics/overview` call per period across the
   four KPI widgets via `dashboardData.js`.
 

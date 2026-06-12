@@ -31,25 +31,28 @@ test('Dashboard: analytics KPIs render as individual widgets, no Unified Analyti
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
-// @e2e dashboard::period-driven-by-the-dashboard-date-range-header
-test('Dashboard: one date-range header drives the analytics period, no widget-local selector', async ({ page }) => {
+// @e2e dashboard::period-driven-by-widget-header-date-chips
+test('Dashboard: widget-header date chips drive the analytics period, no page-level picker', async ({ page }) => {
 	await openApp(page)
 
-	// Date-range header rendered by CnDashboardPage, between header and grid.
-	const rangeHeader = page.getByTestId('cn-dashboard-page-date-range')
-	await expect(rangeHeader).toBeVisible({ timeout: 15000 })
+	// The chart widgets surface the shared range as title-bar chips…
+	const chip = page.getByTestId('cn-dashboard-page-date-chip-leads-over-time')
+	await expect(chip).toBeVisible({ timeout: 15000 })
+	await expect(page.getByTestId('cn-dashboard-page-date-chip-requests-by-category')).toBeVisible()
 
-	// No widget-local "Period" NcSelect anywhere in the grid anymore.
+	// …and the page-level header picker is gone (showHeaderPicker: false),
+	// as is the old widget-local "Period" NcSelect.
+	await expect(page.getByTestId('cn-dashboard-page-date-range')).toHaveCount(0)
 	await expect(page.locator('#content-vue').getByLabel('Period', { exact: true })).toHaveCount(0)
 
-	// Changing the preset re-fetches the analytics endpoints with the
-	// mapped period parameter.
+	// Picking a preset in a chip re-fetches the analytics endpoints with
+	// the mapped period parameter (chips write the SHARED range).
 	const overviewRefetch = page.waitForRequest(
 		(req) => req.url().includes('/apps/pipelinq/api/analytics/overview') && req.url().includes('period=week'),
 		{ timeout: 15000 },
 	)
-	await rangeHeader.getByTestId('cn-date-range-picker-preset').click()
-	await page.getByRole('option', { name: 'Last 7 days' }).click()
+	await chip.getByRole('button').click()
+	await page.getByRole('button', { name: 'Last 7 days' }).click()
 	await overviewRefetch
 })
 

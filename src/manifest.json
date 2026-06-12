@@ -220,6 +220,7 @@
 			"config": {
 				"dateRange": {
 					"enabled": true,
+					"showHeaderPicker": false,
 					"persistKey": "pipelinq-dashboard-range",
 					"default": { "preset": "month" },
 					"presets": [
@@ -258,8 +259,8 @@
 					{ "id": "15", "widgetId": "avg-resolution",        "gridX": 3, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
 					{ "id": "16", "widgetId": "contact-volume",        "gridX": 6, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
 					{ "id": "17", "widgetId": "satisfaction",          "gridX": 9, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
-					{ "id": "18", "widgetId": "leads-over-time",       "gridX": 0, "gridY": 4,  "gridWidth": 6,  "gridHeight": 4 },
-					{ "id": "19", "widgetId": "requests-by-category",  "gridX": 6, "gridY": 4,  "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "18", "widgetId": "leads-over-time",       "gridX": 0, "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
+					{ "id": "19", "widgetId": "requests-by-category",  "gridX": 6, "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
 					{ "id": "5",  "widgetId": "requests-by-status",    "gridX": 0, "gridY": 8,  "gridWidth": 6,  "gridHeight": 4 },
 					{ "id": "6",  "widgetId": "complaints",            "gridX": 6, "gridY": 8,  "gridWidth": 6,  "gridHeight": 4 },
 					{ "id": "11", "widgetId": "navi-analytics",        "gridX": 0, "gridY": 12, "gridWidth": 12, "gridHeight": 6 },

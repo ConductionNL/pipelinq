@@ -39,9 +39,15 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+		 */
 		chartLabels() {
 			return (this.trend?.series || []).map(pt => pt.date)
 		},
+		/**
+		 * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+		 */
 		chartSeries() {
 			const values = (this.trend?.series || []).map(pt => pt.value)
 			return [{ name: this.t('pipelinq', 'Requests'), data: values }]
