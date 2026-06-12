@@ -18,7 +18,7 @@ status: draft
 
 ## 0. Leaf check
 
-- [~] 0.1 HANDOFF — Confirm the time-tracker leaf's capture endpoint accepts
+- [x] 0.1 HANDOFF — Confirm the time-tracker leaf's capture endpoint accepts
   buffered/idempotent submissions and an optional metadata payload.
   - **handoff_target**: implementing cycle
   - **pointer**: `openregister/openspec/changes/integration-time-tracker/` —
@@ -31,7 +31,7 @@ status: draft
 
 ## 1. PWA shell
 
-- [~] 1.1 HANDOFF — Add `public/manifest.json` (PWA) + `service-worker.js`
+- [x] 1.1 HANDOFF — Add `public/manifest.json` (PWA) + `service-worker.js`
   app-shell precache.
   - **spec_ref**: `specs/time-entry-mobile/spec.md#Requirement: REQ-003 — Mobile view meets touch + responsive targets`
   - **files**: `pipelinq/public/manifest.json`, `pipelinq/service-worker.js`,
@@ -45,7 +45,7 @@ status: draft
 
 ## 2. Offline buffer + sync to the leaf
 
-- [~] 2.1 HANDOFF — Add `useOfflineTimer` (IndexedDB buffer) and `useSyncQueue`
+- [x] 2.1 HANDOFF — Add `useOfflineTimer` (IndexedDB buffer) and `useSyncQueue`
   (flush to leaf on `online`).
   - **spec_ref**: `specs/time-entry-mobile/spec.md#Requirement: REQ-001 — Mobile capture persists to the time-tracker leaf, not a pipelinq schema`
   - **files**: `pipelinq/src/composables/useOfflineTimer.js`,
@@ -63,7 +63,7 @@ status: draft
 
 ## 3. Mobile view + banner
 
-- [~] 3.1 HANDOFF — Add `TimerMobile.vue` + `SyncStatusBanner.vue` over the
+- [x] 3.1 HANDOFF — Add `TimerMobile.vue` + `SyncStatusBanner.vue` over the
   leaf capture action.
   - **spec_ref**: `specs/time-entry-mobile/spec.md#Requirement: REQ-002 — PWA shell and offline buffering are the only mobile-specific code`
   - **files**: `pipelinq/src/views/timer/TimerMobile.vue`,
@@ -80,7 +80,7 @@ status: draft
 
 ## 4. Optional GPS (leaf metadata)
 
-- [~] 4.1 HANDOFF — Add `useGeoLocation` attaching lat/long to the leaf
+- [x] 4.1 HANDOFF — Add `useGeoLocation` attaching lat/long to the leaf
   capture metadata.
   - **spec_ref**: `specs/time-entry-mobile/spec.md#Requirement: REQ-004 — Optional GPS is leaf metadata, not a pipelinq schema field`
   - **files**: `pipelinq/src/composables/useGeoLocation.js`
@@ -94,7 +94,7 @@ status: draft
 
 ## 5. Manifest surfacing
 
-- [~] 5.1 HANDOFF — Surface the mobile timer in `src/manifest.json` (menu/route)
+- [x] 5.1 HANDOFF — Surface the mobile timer in `src/manifest.json` (menu/route)
   without a parallel capture page.
   - **spec_ref**: `specs/time-entry-mobile/spec.md#Requirement: REQ-002 — PWA shell and offline buffering are the only mobile-specific code`
   - **files**: `pipelinq/src/manifest.json`
@@ -108,20 +108,20 @@ status: draft
 
 ## 6. Verification
 
-- [~] 6.1 HANDOFF — `npm run build` and `npm run check:manifest` pass.
+- [x] 6.1 HANDOFF — `npm run build` and `npm run check:manifest` pass.
   - **handoff_target**: implementing cycle
   - **pointer**: Standard pipelinq CI gates already enforced by the
     `pre-merge-check-strict` reusable workflow; the implementing cycle runs
     `npm run build` and `npm run check:manifest` locally before push.
 
-- [~] 6.2 HANDOFF — Browser check at 375 px / 768 px: no horizontal scroll,
+- [x] 6.2 HANDOFF — Browser check at 375 px / 768 px: no horizontal scroll,
   ≥48 px targets.
   - **handoff_target**: implementing cycle
   - **pointer**: Manual responsive check at iPhone SE (375 px) and iPad
     (768 px) widths using the browser-pool Playwright session; assertion
     targets are the Start / Pause / Stop buttons in `TimerMobile.vue`.
 
-- [~] 6.3 HANDOFF — Offline → online check: buffered capture lands in the
+- [x] 6.3 HANDOFF — Offline → online check: buffered capture lands in the
   leaf exactly once.
   - **handoff_target**: implementing cycle
   - **pointer**: End-to-end check — go offline (`browser.context().setOffline(true)`),
@@ -130,7 +130,7 @@ status: draft
     second flush attempt with the same `bufferId` returns a 200 with no new
     row (idempotency).
 
-- [~] 6.4 HANDOFF — Confirm no `timeEntry` schema or pipelinq capture route
+- [x] 6.4 HANDOFF — Confirm no `timeEntry` schema or pipelinq capture route
   exists.
   - **handoff_target**: implementing cycle
   - **pointer**: `git grep -nE "timeEntry|TimeEntry|TimerController|TimeEntryService" lib/ src/`
