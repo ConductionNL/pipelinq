@@ -1,13 +1,89 @@
 {
  "info": {
   "name": "Pipelinq API Contract Suite",
-  "description": "Newman/Postman API-contract tests for the Pipelinq (CRM + POS) Nextcloud app. Locks the HTTP contract of pipelinq's controllers (appinfo/routes.php + lib/Controller/*): CRM CRUD (clients/leads/products/contacts via the OpenRegister object API per ADR-022), the POS transaction lifecycle (Phase-0 persistence + confirm/settle/tax-report), tender/payment providers, contactmomenten, request channels/lead sources, reports/rapportage/analytics, settings, and health. Every endpoint family is exercised for a happy path, an error/validation case (4xx not 500), and an authorization case (no/invalid auth -> 401). Self-contained and idempotent: setup seeds OpenRegister objects and teardown deletes everything created.\n\nAUTH MODEL: collection auth is noauth; every authenticated request carries an EXPLICIT basic-auth block (admin:admin via adminUser/adminPass). No-auth requests run against {{noAuthBase}} (127.0.0.1) so the host-scoped NC session cookie set by authed {{baseUrl}} (localhost) requests is never sent, keeping the authz assertions honest. Run with --ignore-redirects so NC's JSON 401 is asserted, not the 303->login.\n\nFIXED (previously quarantined): POST /pos-transactions/{id}/confirm now returns 200 (the OR TransitionEngine re-save no longer rejects a null consentSyncStatus -- the schema defaults it to the non-empty 'pending' and PosTransactionService::sanitizeForTransition coerces null/empty to 'pending' before each transition; a line item is now seeded so the cart is non-empty); and POST lead create now returns 201 (the object-created listener stringifies the lead's translatable array title instead of passing it to a string-typed dispatcher arg).\n\nQUARANTINED (honest, NOT fake passes): GET /pos/tender-types returns 500 because the posTenderType register/schema app-config is not set in this deployment -- a deployment-config gap, asserted as the current 500 so the suite stays green without faking a pass; flip to 200 when configured.\n\nUsage: see run-newman.sh. Pass collection variables baseUrl, noAuthBase, adminUser, adminPass.",
+  "description": "Newman/Postman API-contract tests for the Pipelinq (CRM + POS) Nextcloud app. Locks the HTTP contract of pipelinq's controllers (appinfo/routes.php + lib/Controller/*): CRM CRUD (clients/leads/products/contacts via the OpenRegister object API per ADR-022), the POS transaction lifecycle (Phase-0 persistence + confirm/settle/tax-report), tender/payment providers, contactmomenten, request channels/lead sources, reports/rapportage/analytics, settings, and health. Every endpoint family is exercised for a happy path, an error/validation case (4xx not 500), and an authorization case (no/invalid auth -> 401). Self-contained and idempotent: setup seeds OpenRegister objects and teardown deletes everything created.\n\nAUTH MODEL: collection auth is noauth; every authenticated request carries an EXPLICIT basic-auth block (admin:admin via adminUser/adminPass). No-auth requests run against {{noAuthBase}} (127.0.0.1) so the host-scoped NC session cookie set by authed {{baseUrl}} (localhost) requests is never sent, keeping the authz assertions honest. Run with --ignore-redirects so NC's JSON 401 is asserted, not the 303->login.\n\nFIXED (previously quarantined): POST /pos-transactions/{id}/confirm now returns 200 (the OR TransitionEngine re-save no longer rejects a null consentSyncStatus -- the schema defaults it to the non-empty 'pending' and PosTransactionService::sanitizeForTransition coerces null/empty to 'pending' before each transition; a line item is now seeded so the cart is non-empty); and POST lead create now returns 201 (the object-created listener stringifies the lead's translatable array title instead of passing it to a string-typed dispatcher arg).\n\nPROVISIONED (GAP-4, previously quarantined): GET /pos/tender-types now returns a 200 list. The posTenderType_schema app-config key is populated on register import (SettingsLoadService::SCHEMA_SLUGS maps the 'posTenderType' + 'posTender' slugs), so PosTenderService::config() resolves the register/schema instead of throwing OCSNotFoundException -> no more 500.\n\nUsage: see run-newman.sh. Pass collection variables baseUrl, noAuthBase, adminUser, adminPass.",
   "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
  },
  "item": [
   {
    "name": "0. Setup (seed OpenRegister objects)",
    "item": [
+    {
+     "name": "Preflight: resolve register by slug (CI-durable)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// SLUG-RESOLUTION PREFLIGHT (GAP-2): the numeric OpenRegister register id",
+         "// that holds pipelinq objects varies between environments (dev box = 16, a",
+         "// fresh CI boot re-imports the register by slug and gets a different id). The",
+         "// pipelinq repair step re-imports its register with the stable slug 'pipelinq',",
+         "// so resolve the numeric id from the slug here and set the {{register}} var.",
+         "// Every request below addresses objects as /objects/{{register}}/{{schema}}.",
+         "pm.test('registers list reachable (200)', () => pm.response.to.have.status(200));",
+         "const body = pm.response.json();",
+         "const registers = Array.isArray(body) ? body : (body.results || []);",
+         "pm.expect(registers.length, 'at least one register').to.be.above(0);",
+         "const reg = registers.find(r => r.slug === 'pipelinq');",
+         "pm.test('pipelinq register resolved by slug', () => pm.expect(reg, \"register with slug 'pipelinq' exists\").to.be.an('object'));",
+         "if (reg) {",
+         "    pm.collectionVariables.set('register', String(reg.id));",
+         "    console.log('Resolved register slug=pipelinq -> id=' + reg.id);",
+         "}"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/registers?_limit=200",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "registers"
+       ],
+       "query": [
+        {
+         "key": "_limit",
+         "value": "200"
+        }
+       ]
+      }
+     }
+    },
     {
      "name": "Seed POS draft transaction (cashier set, for confirm)",
      "event": [
@@ -481,7 +557,7 @@
      }
     },
     {
-     "name": "read client ANON (authz: OR object reads are not auth-gated)",
+     "name": "read client ANON (authz: OR object reads are access-controlled -> anon 404)",
      "event": [
       {
        "listen": "prerequest",
@@ -501,10 +577,13 @@
        "listen": "test",
        "script": {
         "exec": [
-         "// OpenRegister object reads are NOT auth-gated (ADR-022): authorization on",
-         "// CRM data is OR's responsibility, not pipelinq's. Honest assertion of the",
-         "// 200 the OR API actually returns to an anonymous read.",
-         "pm.test('OR anon read returns 200', () => pm.response.to.have.status(200));"
+         "// OpenRegister object reads ARE access-controlled (ADR-022): authorization on",
+         "// CRM data is OR's responsibility, not pipelinq's. The current OR contract is",
+         "// that an ANONYMOUS object read is NOT authorized and resolves to 404 (the",
+         "// object is invisible to the unauthenticated principal) -- verified live",
+         "// 2026-06-11: authed read = 200, anon read (127.0.0.1, no cookie) = 404.",
+         "// Honest assertion of the 404 OR actually returns to an anonymous read.",
+         "pm.test('OR anon read is access-controlled (404, not a 5xx)', () => pm.response.to.have.status(404));"
         ],
         "type": "text/javascript"
        }
@@ -1013,7 +1092,7 @@
      }
     },
     {
-     "name": "read product ANON (authz: OR object reads are not auth-gated)",
+     "name": "read product ANON (authz: OR object reads are access-controlled -> anon 404)",
      "event": [
       {
        "listen": "prerequest",
@@ -1033,10 +1112,13 @@
        "listen": "test",
        "script": {
         "exec": [
-         "// OpenRegister object reads are NOT auth-gated (ADR-022): authorization on",
-         "// CRM data is OR's responsibility, not pipelinq's. Honest assertion of the",
-         "// 200 the OR API actually returns to an anonymous read.",
-         "pm.test('OR anon read returns 200', () => pm.response.to.have.status(200));"
+         "// OpenRegister object reads ARE access-controlled (ADR-022): authorization on",
+         "// CRM data is OR's responsibility, not pipelinq's. The current OR contract is",
+         "// that an ANONYMOUS object read is NOT authorized and resolves to 404 (the",
+         "// object is invisible to the unauthenticated principal) -- verified live",
+         "// 2026-06-11: authed read = 200, anon read (127.0.0.1, no cookie) = 404.",
+         "// Honest assertion of the 404 OR actually returns to an anonymous read.",
+         "pm.test('OR anon read is access-controlled (404, not a 5xx)', () => pm.response.to.have.status(404));"
         ],
         "type": "text/javascript"
        }
@@ -1398,7 +1480,7 @@
      }
     },
     {
-     "name": "read contact ANON (authz: OR object reads are not auth-gated)",
+     "name": "read contact ANON (authz: OR object reads are access-controlled -> anon 404)",
      "event": [
       {
        "listen": "prerequest",
@@ -1418,10 +1500,13 @@
        "listen": "test",
        "script": {
         "exec": [
-         "// OpenRegister object reads are NOT auth-gated (ADR-022): authorization on",
-         "// CRM data is OR's responsibility, not pipelinq's. Honest assertion of the",
-         "// 200 the OR API actually returns to an anonymous read.",
-         "pm.test('OR anon read returns 200', () => pm.response.to.have.status(200));"
+         "// OpenRegister object reads ARE access-controlled (ADR-022): authorization on",
+         "// CRM data is OR's responsibility, not pipelinq's. The current OR contract is",
+         "// that an ANONYMOUS object read is NOT authorized and resolves to 404 (the",
+         "// object is invisible to the unauthenticated principal) -- verified live",
+         "// 2026-06-11: authed read = 200, anon read (127.0.0.1, no cookie) = 404.",
+         "// Honest assertion of the 404 OR actually returns to an anonymous read.",
+         "pm.test('OR anon read is access-controlled (404, not a 5xx)', () => pm.response.to.have.status(404));"
         ],
         "type": "text/javascript"
        }
@@ -2025,18 +2110,19 @@
    "name": "6. POS tender + payment providers",
    "item": [
     {
-     "name": "tender-types QUARANTINED (config gap 500: tender register/schema not configured)",
+     "name": "tender-types (happy: 200, lists tender types)",
      "event": [
       {
        "listen": "test",
        "script": {
         "exec": [
-         "// QUARANTINE (honest): GET /pos/tender-types returns 500 in this deployment because",
-         "// the posTenderType register/schema app-config key is not set ('Tender register or",
-         "// schema is not configured'). This is a deployment-config gap surfacing as a 500;",
-         "// when the schema is configured (and ideally the controller returns a clearer 4xx",
-         "// for the unconfigured case), flip this to expect 200.",
-         "pm.test('tender-types currently 500 (unconfigured schema, quarantined)', () => pm.response.to.have.status(500));"
+         "// PROVISIONED (GAP-4): the posTenderType_schema app-config key is now populated",
+         "// on import (SettingsLoadService::SCHEMA_SLUGS maps the 'posTenderType'/'posTender'",
+         "// slugs), so PosTenderService::config() resolves instead of throwing -> the endpoint",
+         "// returns a 200 list shape. (Previously QUARANTINED at 500 for the unconfigured case.)",
+         "pm.test('tender-types 200', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('tender-types returns a list shape', () => pm.expect(b.results || b).to.be.an('array'));"
         ],
         "type": "text/javascript"
        }

@@ -124,15 +124,13 @@ export function objectTypes() {
 		{ slug: 'billingCategory', group: 'core', label: t(APP, 'Billing Category'), description: t(APP, 'Billable categories and tags') },
 		{ slug: 'task', group: 'core', label: t(APP, 'Task'), description: t(APP, 'Work items / tasks') },
 		// Intake & Automation (group: intake)
-		{ slug: 'intakeForm', group: 'intake', label: t(APP, 'Intake Form'), description: t(APP, 'Public intake forms for capturing leads') },
-		{ slug: 'intakeSubmission', group: 'intake', label: t(APP, 'Intake Submission'), description: t(APP, 'Submissions received through intake forms') },
+		// Intake forms + surveys migrated to the OpenRegister forms leaf
+		// (NC Forms app) — see openspec/changes/migrate-forms-to-forms-leaf.
 		{ slug: 'automation', group: 'intake', label: t(APP, 'Automation'), description: t(APP, 'Automation rules') },
 		{ slug: 'automationLog', group: 'intake', label: t(APP, 'Automation Log'), description: t(APP, 'Automation execution logs') },
 		// Service & Feedback (group: service)
 		{ slug: 'contactmoment', group: 'service', label: t(APP, 'Contact Moment'), description: t(APP, 'Registered interactions with a client') },
 		{ slug: 'complaint', group: 'service', label: t(APP, 'Complaint'), description: t(APP, 'Customer complaints for tracking and resolution') },
-		{ slug: 'survey', group: 'service', label: t(APP, 'Survey'), description: t(APP, 'Customer satisfaction (KTO) survey definitions') },
-		{ slug: 'surveyResponse', group: 'service', label: t(APP, 'Survey Response'), description: t(APP, 'Completed survey responses') },
 		// Point of Sale (group: pos)
 		{ slug: 'posTransaction', group: 'pos', label: t(APP, 'POS Transaction'), description: t(APP, 'Point-of-sale transactions (kassabon)') },
 		{ slug: 'posTransactionLine', group: 'pos', label: t(APP, 'POS Line Item'), description: t(APP, 'Line items on a POS transaction') },

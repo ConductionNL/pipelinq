@@ -81,13 +81,10 @@ return [
         ['name' => 'prospectSettings#index', 'url' => '/api/prospect-settings', 'verb' => 'GET'],
         ['name' => 'prospectSettings#update', 'url' => '/api/prospect-settings', 'verb' => 'PUT'],
 
-        // Public intake forms (no auth; camelCase slug matches PublicFormController class name)
-        ['name' => 'publicForm#show', 'url' => '/api/public/forms/{id}', 'verb' => 'GET'],
-        ['name' => 'publicForm#submit', 'url' => '/api/public/forms/{id}/submit', 'verb' => 'POST'],
-
-        // Intake form management (authenticated; camelCase slug matches IntakeFormController class name)
-        ['name' => 'intakeForm#embed', 'url' => '/api/forms/{id}/embed', 'verb' => 'GET'],
-        ['name' => 'intakeForm#export', 'url' => '/api/forms/{id}/submissions/export', 'verb' => 'GET'],
+        // Intake forms migrated to the OpenRegister forms leaf (NC Forms app).
+        // See openspec/changes/migrate-forms-to-forms-leaf — public submission
+        // uses the Forms app's own public links; in-app authoring/management
+        // routes are retired.
         // Rapportage / reporting — specific routes before wildcard catch-all.
         // Klantbeeld 360 — cross-module analytics summary (must precede any wildcard `{slug}` routes).
         ['name' => 'analytics#summary', 'url' => '/api/analytics/summary', 'verb' => 'GET'],
@@ -109,9 +106,8 @@ return [
         ['name' => 'reporting#exportCsv',   'url' => '/api/rapportage/export',   'verb' => 'GET'],
         // Lead-management analytics endpoint (REQ-LM-006). Non-admin accessible.
         ['name' => 'rapportage#getPipelineStats', 'url' => '/api/rapportage/pipeline-stats', 'verb' => 'GET'],
-        // Public survey endpoints (unauthenticated; camelCase slug matches PublicSurveyController class name)
-        ['name' => 'publicSurvey#show', 'url' => '/public/survey/{token}', 'verb' => 'GET'],
-        ['name' => 'publicSurvey#submit', 'url' => '/public/survey/{token}/respond', 'verb' => 'POST'],
+        // Surveys migrated to the OpenRegister forms leaf (NC Forms app) —
+        // see openspec/changes/migrate-forms-to-forms-leaf.
 
         // Contactmomenten (permission-checked delete)
         ['name' => 'contactmoment#destroy', 'url' => '/api/contactmomenten/{id}', 'verb' => 'DELETE'],
