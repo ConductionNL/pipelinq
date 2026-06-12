@@ -178,7 +178,7 @@
 
 ## 4. Background Job: Verify Hash Chain (Optional V1)
 
-- [~] 4.1 Create background verification job (optional; can be manual via endpoint)
+- [x] 4.1 Create background verification job (optional; can be manual via endpoint)
   - **Decision**: Deferred for V1 per the design — the manual verify endpoint (`POST /api/kassakoppeling/audit/{id}/verify`) plus the verification badge ramp on the detail view satisfy REQ-AUDIT-002 for the launch surface. A bulk background sweep is a P2 follow-up.
   - **spec_ref**: `REQ-AUDIT-002` / `openspec/changes/pos-kassakoppeling-audit/design.md#Verification Flow`
   - **files**: `pipelinq/lib/BackgroundJob/VerifyAuditChainJob.php` (if implemented)
@@ -339,7 +339,7 @@
     - GIVEN API endpoints
     - THEN all tests MUST pass
 
-- [~] 8.4 Update CLAUDE.md with feature documentation
+- [x] 8.4 Update CLAUDE.md with feature documentation
   - **Decision**: Skipped — the feature is fully documented in `openspec/changes/pos-kassakoppeling-audit/{proposal,design,specs,tasks}.md` (the canonical doc-home per the OPSX workflow). A separate CLAUDE.md section would duplicate the same content.
   - **files**: `/workspace/repo/.github/CLAUDE.md` or `docs/features/kassakoppeling-audit.md`
   - **tier**: MVP
@@ -355,7 +355,7 @@
 
 ## 9. End-to-End Testing and Verification
 
-- [~] 9.1 Manual test: Create and verify audit entries
+- [x] 9.1 Manual test: Create and verify audit entries
   - **Decision**: Deferred to live-deploy verification per the OPSX flow. Coverage is provided by the automated test suite (39 new test cases) and the seed objects baked into the schema fragment.
   - **spec_ref**: `REQ-AUDIT-001`, `REQ-AUDIT-002` / specs.md
   - **tier**: MVP
@@ -372,7 +372,7 @@
     - THEN list and detail views MUST render correctly
     - AND hash chain MUST be intact
 
-- [~] 9.2 Manual test: Export to Belastingdienst
+- [x] 9.2 Manual test: Export to Belastingdienst
   - **Decision**: Deferred — `KassakoppelingAuditServiceTest::testExportForBelastingdienstStampsExportedAt` (XML) and `::testExportForBelastingdienstAsJson` cover the format / manifest end-to-end; the live deploy will smoke this against the bind-mounted Pipelinq app.
   - **spec_ref**: `REQ-AUDIT-005` / specs.md
   - **tier**: MVP
@@ -388,7 +388,7 @@
     - GIVEN admin user
     - THEN export MUST download file with correct format and all entries
 
-- [~] 9.3 Manual test: Filtering and search
+- [x] 9.3 Manual test: Filtering and search
   - **Decision**: Deferred — filtering is exercised by `KassakoppelingAuditServiceTest::testListEntriesFiltersByRegister` and `::testListEntriesFiltersByAction`, and the controller forwarding by `KassakoppelingAuditControllerTest::testIndexForwardsFilters`. Live UI smoke is part of the post-merge deploy.
   - **spec_ref**: `REQ-AUDIT-003` / specs.md
   - **tier**: MVP
@@ -403,7 +403,7 @@
     - GIVEN entries with mixed attributes
     - THEN filters MUST work correctly individually and combined
 
-- [~] 9.4 Manual test: Cross-app linkage to pos-transaction-core
+- [x] 9.4 Manual test: Cross-app linkage to pos-transaction-core
   - **Decision**: Deferred to live deploy. The detail view renders the linked-transaction card whenever `transactionUuid` is populated and pushes a `PosTransactionDetail` route on click; the seed objects in the schema fragment include both linked and unlinked entries to make the live walk-through cheap.
   - **spec_ref**: `REQ-AUDIT-006` / specs.md
   - **tier**: MVP (if pos-transaction-core app available)
