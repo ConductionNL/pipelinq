@@ -206,8 +206,7 @@
 			"label": "Timesheet approval & billing",
 			"icon": "icon-category-monitoring",
 			"href": "/index.php/apps/shillinq/",
-			"section": "footer",
-			"order": 220
+			"order": 218
 		}
 	],
 	"pages": [
