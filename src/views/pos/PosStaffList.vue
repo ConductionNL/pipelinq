@@ -45,7 +45,9 @@
 					</tr>
 				</tbody>
 			</table>
-			<p v-else>{{ t('pipelinq', 'No staff members defined yet.') }}</p>
+			<p v-else>
+				{{ t('pipelinq', 'No staff members defined yet.') }}
+			</p>
 		</template>
 	</div>
 </template>

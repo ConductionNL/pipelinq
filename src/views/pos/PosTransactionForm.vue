@@ -480,6 +480,8 @@ export default {
 		 *
 		 * @param {object} payload The selector payload.
 		 *
+		 * @param payload.providerName
+		 * @param payload.paymentMethod
 		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
 		 */
 		onPaymentSelectionChange({ providerName, paymentMethod }) {

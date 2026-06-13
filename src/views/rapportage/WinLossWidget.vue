@@ -67,19 +67,19 @@ export default {
 		},
 		statsCards() {
 			return [
-				{ label: t('pipelinq', 'Win rate'),             value: `${(this.data?.winRate || 0)}%` },
-				{ label: t('pipelinq', 'Won'),                  value: this.data?.wonCount || 0 },
-				{ label: t('pipelinq', 'Lost'),                 value: this.data?.lostCount || 0 },
-				{ label: t('pipelinq', 'Avg won deal value'),   value: (this.data?.avgWonValue || 0) > 0 ? `EUR ${(this.data.avgWonValue).toLocaleString('nl-NL')}` : '—' },
-				{ label: t('pipelinq', 'Avg days to close'),    value: (this.data?.avgDaysToClose || 0) > 0 ? `${this.data.avgDaysToClose}d` : '—' },
+				{ label: t('pipelinq', 'Win rate'), value: `${(this.data?.winRate || 0)}%` },
+				{ label: t('pipelinq', 'Won'), value: this.data?.wonCount || 0 },
+				{ label: t('pipelinq', 'Lost'), value: this.data?.lostCount || 0 },
+				{ label: t('pipelinq', 'Avg won deal value'), value: (this.data?.avgWonValue || 0) > 0 ? `EUR ${(this.data.avgWonValue).toLocaleString('nl-NL')}` : '—' },
+				{ label: t('pipelinq', 'Avg days to close'), value: (this.data?.avgDaysToClose || 0) > 0 ? `${this.data.avgDaysToClose}d` : '—' },
 			]
 		},
 		rangeOptions() {
 			return [
-				{ value: '30d',  label: t('pipelinq', 'Last 30 days') },
-				{ value: '90d',  label: t('pipelinq', 'Last 90 days') },
-				{ value: '12m',  label: t('pipelinq', 'Last 12 months') },
-				{ value: 'all',  label: t('pipelinq', 'All time') },
+				{ value: '30d', label: t('pipelinq', 'Last 30 days') },
+				{ value: '90d', label: t('pipelinq', 'Last 90 days') },
+				{ value: '12m', label: t('pipelinq', 'Last 12 months') },
+				{ value: 'all', label: t('pipelinq', 'All time') },
 			]
 		},
 	},

@@ -41,11 +41,11 @@ export default {
 		 */
 		columns() {
 			return [
-				{ key: 'source',         label: t('pipelinq', 'Source'),         sortable: true },
-				{ key: 'total',          label: t('pipelinq', 'Total leads'),    sortable: true, align: 'right' },
-				{ key: 'won',            label: t('pipelinq', 'Won'),            sortable: true, align: 'right' },
-				{ key: 'conversionRate', label: t('pipelinq', 'Conversion %'),   sortable: true, align: 'right', format: v => `${v}%` },
-				{ key: 'avgWonValue',    label: t('pipelinq', 'Avg deal value'), sortable: true, align: 'right', format: v => v > 0 ? `EUR ${v.toLocaleString('nl-NL')}` : '—' },
+				{ key: 'source', label: t('pipelinq', 'Source'), sortable: true },
+				{ key: 'total', label: t('pipelinq', 'Total leads'), sortable: true, align: 'right' },
+				{ key: 'won', label: t('pipelinq', 'Won'), sortable: true, align: 'right' },
+				{ key: 'conversionRate', label: t('pipelinq', 'Conversion %'), sortable: true, align: 'right', format: v => `${v}%` },
+				{ key: 'avgWonValue', label: t('pipelinq', 'Avg deal value'), sortable: true, align: 'right', format: v => v > 0 ? `EUR ${v.toLocaleString('nl-NL')}` : '—' },
 			]
 		},
 		rows() {

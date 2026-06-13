@@ -75,11 +75,21 @@
 					id="kk-filter-action"
 					v-model="filters.action"
 					:aria-label="t('pipelinq', 'Filter op actie')">
-					<option value="">{{ t('pipelinq', 'Alle acties') }}</option>
-					<option value="sale">{{ t('pipelinq', 'Verkoop') }}</option>
-					<option value="void">{{ t('pipelinq', 'Annulering') }}</option>
-					<option value="refund">{{ t('pipelinq', 'Retour') }}</option>
-					<option value="no-sale">{{ t('pipelinq', 'Geen verkoop') }}</option>
+					<option value="">
+						{{ t('pipelinq', 'Alle acties') }}
+					</option>
+					<option value="sale">
+						{{ t('pipelinq', 'Verkoop') }}
+					</option>
+					<option value="void">
+						{{ t('pipelinq', 'Annulering') }}
+					</option>
+					<option value="refund">
+						{{ t('pipelinq', 'Retour') }}
+					</option>
+					<option value="no-sale">
+						{{ t('pipelinq', 'Geen verkoop') }}
+					</option>
 				</select>
 			</div>
 			<div class="filter-cell filter-cell--actions">

@@ -10,8 +10,8 @@
 				</h2>
 				<NcSelect
 					v-if="hasQueueOptions"
-					:input-label="t('pipelinq', 'Queue')"
 					v-model="selectedQueue"
+					:input-label="t('pipelinq', 'Queue')"
 					:options="queueOptions"
 					label="label"
 					:reduce="o => o.value"

@@ -35,7 +35,9 @@
 				:icon="CurrencyEur"
 				variant="primary"
 				horizontal>
-				<template #value>{{ totalValueLabel }}</template>
+				<template #value>
+					{{ totalValueLabel }}
+				</template>
 			</CnStatsBlock>
 			<CnStatsBlock
 				:title="t('pipelinq', 'Win Rate')"
@@ -43,7 +45,9 @@
 				:count-label="t('pipelinq', 'closed deals')"
 				:icon="TrophyOutline"
 				horizontal>
-				<template #value>{{ winRateLabel }}</template>
+				<template #value>
+					{{ winRateLabel }}
+				</template>
 			</CnStatsBlock>
 			<CnStatsBlock
 				:title="t('pipelinq', 'Average Deal Size')"
@@ -51,7 +55,9 @@
 				:count-label="t('pipelinq', 'per active opportunity')"
 				:icon="ChartBar"
 				horizontal>
-				<template #value>{{ avgDealSizeLabel }}</template>
+				<template #value>
+					{{ avgDealSizeLabel }}
+				</template>
 			</CnStatsBlock>
 			<CnStatsBlock
 				:title="t('pipelinq', 'Active Opportunities')"

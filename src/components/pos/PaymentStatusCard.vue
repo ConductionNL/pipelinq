@@ -26,7 +26,9 @@
 			</template>
 			<template v-if="sessionId">
 				<dt>{{ t('pipelinq', 'Sessie') }}</dt>
-				<dd class="payment-status-card__session">{{ sessionId }}</dd>
+				<dd class="payment-status-card__session">
+					{{ sessionId }}
+				</dd>
 			</template>
 		</dl>
 

@@ -77,7 +77,9 @@
 					</tr>
 				</tbody>
 			</table>
-			<p v-else>{{ t('pipelinq', 'No tier data yet.') }}</p>
+			<p v-else>
+				{{ t('pipelinq', 'No tier data yet.') }}
+			</p>
 
 			<NcButton type="secondary" @click="exportCsv">
 				{{ t('pipelinq', 'Export CSV') }}
