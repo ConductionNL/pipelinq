@@ -196,6 +196,20 @@ export function getAnalyticsOverview(period) {
 }
 
 /**
+ * Commercial KPI overview, cached per period so the six commercial KPI
+ * widgets share a single request per render pass.
+ *
+ * @param {string} period - week | month | quarter | year.
+ * @return {Promise<object>} Commercial overview (revenue, wonValue, winRate,
+ *   avgDealSize, weightedForecast, openPipelineValue, previousPeriod).
+ * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+ */
+export function getCommercialOverview(period) {
+	return cached('analytics:commercial:' + period,
+		() => fetchAppJson('/apps/pipelinq/api/analytics/commercial?period=' + encodeURIComponent(period)))
+}
+
+/**
  * Analytics trend series, cached per metric + period.
  *
  * @param {string} metric - leads | requests-by-category | pipeline-value.

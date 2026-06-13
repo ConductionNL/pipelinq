@@ -12,10 +12,17 @@
 	"menu": [
 		{
 			"id": "Dashboard",
-			"label": "Dashboard",
+			"label": "Commercial",
 			"icon": "icon-category-dashboard",
 			"route": "Dashboard",
 			"order": 10
+		},
+		{
+			"id": "OperationalDashboard",
+			"label": "Operational",
+			"icon": "icon-category-monitoring",
+			"route": "OperationalDashboard",
+			"order": 15
 		},
 		{
 			"id": "Clients",
@@ -206,8 +213,7 @@
 			"label": "Timesheet approval & billing",
 			"icon": "icon-category-monitoring",
 			"href": "/index.php/apps/shillinq/",
-			"section": "footer",
-			"order": 220
+			"order": 218
 		}
 	],
 	"pages": [
@@ -215,13 +221,78 @@
 			"id": "Dashboard",
 			"route": "/",
 			"type": "dashboard",
-			"title": "Dashboard",
+			"title": "Commercial overview",
 			"actionsComponent": "DashboardHeaderActions",
 			"config": {
+				"description": "Revenue, pipeline and win performance",
+				"dateRange": {
+					"enabled": true,
+					"showHeaderPicker": true,
+					"persistKey": "pipelinq-commercial-range",
+					"default": { "preset": "month" },
+					"presets": [
+						{ "id": "week",    "label": "Last 7 days",   "days": 7 },
+						{ "id": "month",   "label": "Last 30 days",  "days": 30 },
+						{ "id": "quarter", "label": "Last 90 days",  "days": 90 },
+						{ "id": "year",    "label": "Last 365 days", "days": 365 }
+					]
+				},
+				"widgets": [
+					{ "id": "revenue",            "type": "custom", "title": "Revenue" },
+					{ "id": "won-value",          "type": "custom", "title": "Won Value" },
+					{ "id": "win-rate",           "type": "custom", "title": "Win Rate" },
+					{ "id": "avg-deal",           "type": "custom", "title": "Avg Deal Size" },
+					{ "id": "weighted-forecast",  "type": "custom", "title": "Weighted Forecast" },
+					{ "id": "open-pipeline",      "type": "custom", "title": "Open Pipeline" },
+					{ "id": "revenue-over-time",  "type": "custom", "title": "Revenue over time" },
+					{ "id": "pipeline-by-stage",  "type": "custom", "title": "Pipeline by stage" },
+					{ "id": "revenue-by-category", "type": "custom", "title": "Revenue by product category" },
+					{ "id": "top-customers",      "type": "custom", "title": "Top customers by revenue" },
+					{ "id": "closing-soon",       "type": "custom", "title": "Deals closing soon" },
+					{ "id": "recently-won-lost",  "type": "custom", "title": "Recently won / lost" }
+				],
+				"layout": [
+					{ "id": "c1",  "widgetId": "revenue",            "gridX": 0,  "gridY": 0,  "gridWidth": 2,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c2",  "widgetId": "won-value",          "gridX": 2,  "gridY": 0,  "gridWidth": 2,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c3",  "widgetId": "win-rate",           "gridX": 4,  "gridY": 0,  "gridWidth": 2,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c4",  "widgetId": "avg-deal",           "gridX": 6,  "gridY": 0,  "gridWidth": 2,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c5",  "widgetId": "weighted-forecast",  "gridX": 8,  "gridY": 0,  "gridWidth": 2,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c6",  "widgetId": "open-pipeline",      "gridX": 10, "gridY": 0,  "gridWidth": 2,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c7",  "widgetId": "revenue-over-time",  "gridX": 0,  "gridY": 2,  "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "c8",  "widgetId": "pipeline-by-stage",  "gridX": 6,  "gridY": 2,  "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "c9",  "widgetId": "revenue-by-category", "gridX": 0, "gridY": 6,  "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "c10", "widgetId": "top-customers",      "gridX": 6,  "gridY": 6,  "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "c11", "widgetId": "closing-soon",       "gridX": 0,  "gridY": 10, "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "c12", "widgetId": "recently-won-lost",  "gridX": 6,  "gridY": 10, "gridWidth": 6,  "gridHeight": 4 }
+				]
+			},
+			"slots": {
+				"widget-revenue": "RevenueKpiWidget",
+				"widget-won-value": "WonValueKpiWidget",
+				"widget-win-rate": "WinRateKpiWidget",
+				"widget-avg-deal": "AvgDealSizeKpiWidget",
+				"widget-weighted-forecast": "WeightedForecastKpiWidget",
+				"widget-open-pipeline": "OpenPipelineKpiWidget",
+				"widget-revenue-over-time": "RevenueOverTimeChartWidget",
+				"widget-pipeline-by-stage": "PipelineByStageChartWidget",
+				"widget-revenue-by-category": "RevenueByCategoryChartWidget",
+				"widget-top-customers": "TopCustomersChartWidget",
+				"widget-closing-soon": "ClosingSoonWidget",
+				"widget-recently-won-lost": "RecentlyWonLostWidget"
+			}
+		},
+		{
+			"id": "OperationalDashboard",
+			"route": "/operational",
+			"type": "dashboard",
+			"title": "Operational overview",
+			"actionsComponent": "DashboardHeaderActions",
+			"config": {
+				"description": "Leads, requests, service and team workload",
 				"dateRange": {
 					"enabled": true,
 					"showHeaderPicker": false,
-					"persistKey": "pipelinq-dashboard-range",
+					"persistKey": "pipelinq-operational-range",
 					"default": { "preset": "month" },
 					"presets": [
 						{ "id": "week",    "label": "Last 7 days",   "days": 7 },
