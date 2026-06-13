@@ -41,7 +41,10 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for="req in requests" :key="rowKey(req)" class="avg-dashboard__row" @click="open(req)">
+				<tr v-for="req in requests"
+					:key="rowKey(req)"
+					class="avg-dashboard__row"
+					@click="open(req)">
 					<td>{{ req.kenmerk }}</td>
 					<td>{{ articleLabel(req.artikel) }}</td>
 					<td>{{ maskedName(req.verzoekerNaam) }}</td>
