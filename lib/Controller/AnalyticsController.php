@@ -135,6 +135,41 @@ class AnalyticsController extends Controller
     }//end overview()
 
     /**
+     * GET /api/analytics/commercial.
+     *
+     * Commercial KPI snapshot (revenue, won value, win rate, average deal
+     * size, weighted forecast, open pipeline value) for the Commercial
+     * dashboard. Period defaults to "month". Invalid period -> 400.
+     * OpenRegister outage -> 500 with a static message.
+     *
+     * @return JSONResponse The commercial overview payload, or an error envelope.
+     *
+     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     */
+    #[NoAdminRequired]
+    public function commercial(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        $period = (string) $this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
+
+        try {
+            return new JSONResponse($this->analyticsService->getCommercialOverview(period: $period));
+        } catch (InvalidArgumentException) {
+            return new JSONResponse(['message' => 'Invalid period'], Http::STATUS_BAD_REQUEST);
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                message: '[AnalyticsController] commercial failed',
+                context: ['error' => $e->getMessage()]
+            );
+            return new JSONResponse(['message' => 'Analytics unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
+        }//end try
+    }//end commercial()
+
+    /**
      * GET /api/analytics/trends.
      *
      * Time-series data for the unified analytics charts. Unsupported metric
@@ -163,7 +198,10 @@ class AnalyticsController extends Controller
             // static label so the response envelope never carries through any
             // value derived from $e->getMessage() — both branches return one of
             // two constant strings.
-            $label = $e->getMessage() === 'Invalid period' ? 'Invalid period' : 'Unsupported metric';
+            $label = 'Unsupported metric';
+            if ($e->getMessage() === 'Invalid period') {
+                $label = 'Invalid period';
+            }
             return new JSONResponse(['message' => $label], Http::STATUS_BAD_REQUEST);
         } catch (\Throwable $e) {
             $this->logger->warning(

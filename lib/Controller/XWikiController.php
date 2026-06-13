@@ -69,6 +69,7 @@ class XWikiController extends Controller
      * @return JSONResponse
      *
      * @spec openspec/changes/xwiki-integration/tasks.md#1.2
+     * @no-admin-idor-exempt read-only kennisbank proxy for all authenticated users; no caller-supplied pipelinq object ids — visibility is scoped xwiki-side by the integration service account
      */
     #[NoAdminRequired]
     #[NoCSRFRequired]
@@ -108,6 +109,7 @@ class XWikiController extends Controller
      * @return JSONResponse
      *
      * @spec openspec/changes/xwiki-integration/tasks.md#1.2
+     * @no-admin-idor-exempt read-only kennisbank proxy for all authenticated users; no caller-supplied pipelinq object ids — visibility is scoped xwiki-side by the integration service account
      */
     #[NoAdminRequired]
     #[NoCSRFRequired]
@@ -135,6 +137,7 @@ class XWikiController extends Controller
      * @return JSONResponse
      *
      * @spec openspec/changes/xwiki-integration/tasks.md#1.2
+     * @no-admin-idor-exempt read-only kennisbank proxy for all authenticated users; page refs are xwiki documents (not pipelinq objects) — visibility is scoped xwiki-side by the integration service account, content sanitised before return
      */
     #[NoAdminRequired]
     #[NoCSRFRequired]
@@ -171,6 +174,7 @@ class XWikiController extends Controller
      * @return JSONResponse
      *
      * @spec openspec/changes/xwiki-integration/tasks.md#1.2
+     * @no-admin-idor-exempt availability probe consumed by every user's dashboard widget; returns integration metadata only, no object access
      */
     #[NoAdminRequired]
     #[NoCSRFRequired]

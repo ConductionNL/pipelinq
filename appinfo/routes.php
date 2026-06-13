@@ -92,6 +92,8 @@ return [
         ['name' => 'analytics#overview', 'url' => '/api/analytics/overview', 'verb' => 'GET'],
         ['name' => 'analytics#trends',   'url' => '/api/analytics/trends',   'verb' => 'GET'],
         ['name' => 'analytics#funnels',  'url' => '/api/analytics/funnels',  'verb' => 'GET'],
+        // Commercial dashboard KPI overview (openspec/changes/commercial-dashboard).
+        ['name' => 'analytics#commercial', 'url' => '/api/analytics/commercial', 'verb' => 'GET'],
         ['name' => 'navi#query',         'url' => '/api/navi/query',         'verb' => 'POST'],
         // SLA engine — attainment dashboard endpoint (sla-engine-and-escalation / REQ-006).
         ['name' => 'slaAttainment#attainment', 'url' => '/api/sla/attainment', 'verb' => 'GET'],
