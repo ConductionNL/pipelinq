@@ -113,6 +113,9 @@ Vrij en open source onder de AGPL-licentie.
         <job>OCA\Pipelinq\BackgroundJob\DispatchQueuedMessagesJob</job>
         <job>OCA\Pipelinq\BackgroundJob\FallbackEmailJob</job>
         <job>OCA\Pipelinq\BackgroundJob\SlaDeadlineSweepJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\AvgDeadlineTrackerJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\AvgDpiaPatternDetectionJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\AvgRetentionJob</job>
     </background-jobs>
 
     <navigations>
