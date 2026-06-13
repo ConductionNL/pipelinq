@@ -116,6 +116,11 @@ Vrij en open source onder de AGPL-licentie.
         <job>OCA\Pipelinq\BackgroundJob\AvgDeadlineTrackerJob</job>
         <job>OCA\Pipelinq\BackgroundJob\AvgDpiaPatternDetectionJob</job>
         <job>OCA\Pipelinq\BackgroundJob\AvgRetentionJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\MdmDuplicateDetectionJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\MdmSyncQueueProcessorJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\MdmDataQualityScorerJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\MdmHardDeleteConfirmationJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\MdmOpenRegisterSyncJob</job>
     </background-jobs>
 
     <navigations>
