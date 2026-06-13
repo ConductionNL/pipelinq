@@ -257,6 +257,12 @@ import XWikiDashboardWidget from './views/dashboard/widgets/XWikiDashboardWidget
 import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
 import XWikiSidebarTabComponent from './components/xwiki/XWikiSidebarTab.vue'
 import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
+// --- AVG (GDPR data-subject request) workflow (lib gap: list needs deadline
+//     colour-coding + masked names; detail needs the tabbed evidence/redaction/
+//     bundle/denial lifecycle; intake needs article classification). ---
+import AvgDashboardView from './views/avg/AvgDashboard.vue'
+import AvgRequestDetailView from './views/avg/AvgRequestDetail.vue'
+import AvgIntakeView from './views/avg/AvgIntakeView.vue'
 
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
@@ -953,6 +959,22 @@ const registry = {
 		kind: 'widget',
 		component: XWikiArticleViewer,
 		_note: 'Inline xWiki HTML viewer used by the sidebar tab; consumes the xwiki Pinia store directly.',
+	},
+	// --- AVG (GDPR data-subject request) workflow. ---
+	AvgDashboardView: {
+		kind: 'page',
+		component: AvgDashboardView,
+		_note: 'AVG request dashboard; custom so rows carry deadline colour-coding, masked subject names and a DPIA badge, and the empty state offers "New AVG request".',
+	},
+	AvgRequestDetailView: {
+		kind: 'page',
+		component: AvgRequestDetailView,
+		_note: 'AVG request detail with the tabbed lifecycle (intake/evidence/redaction/bundle/denial), a live deadline counter and the 60-day extension action; lib detail page cannot express the GDPR request lifecycle.',
+	},
+	AvgIntakeView: {
+		kind: 'page',
+		component: AvgIntakeView,
+		_note: 'AVG intake form with article classification + BSN elfproef validation; lib has no classification/intake page type.',
 	},
 }
 
