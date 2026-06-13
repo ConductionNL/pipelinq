@@ -81,7 +81,9 @@
 						<td>{{ formatEur(row.tax) }}</td>
 					</tr>
 					<tr v-if="!(zReport.taxBreakdown || []).length">
-						<td colspan="3">{{ t('pipelinq', 'Geen BTW uitsplitsing — leeg report.') }}</td>
+						<td colspan="3">
+							{{ t('pipelinq', 'Geen BTW uitsplitsing — leeg report.') }}
+						</td>
 					</tr>
 				</tbody>
 			</table>
@@ -101,7 +103,9 @@
 						<td>{{ formatEur(row.amount) }}</td>
 					</tr>
 					<tr v-if="!(zReport.paymentMethodBreakdown || []).length">
-						<td colspan="2">{{ t('pipelinq', 'Geen betaalmethode data.') }}</td>
+						<td colspan="2">
+							{{ t('pipelinq', 'Geen betaalmethode data.') }}
+						</td>
 					</tr>
 				</tbody>
 			</table>

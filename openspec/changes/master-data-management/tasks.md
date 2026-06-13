@@ -1,21 +1,13 @@
 # Tasks: master-data-management
 
-> **Status: HANDOFF.** All 73 tasks below are marked `[~] (HANDOFF)`. The MDM concerns this change set out to cover are addressed by existing capabilities in the Pipelinq spec corpus:
->
-> - **Contact reconciliation / golden record (REQ-MDM-001, REQ-MDM-011)** — covered by `contacts-sync` (ContactSyncService) and the existing `contact`/`account`/`product`/`vendor` schemas in `pipelinq_register.json`.
-> - **Source-system identity (LeadSource, RequestChannel)** — covered by `lead-management` and `request-management`.
-> - **Duplicate prevention (REQ-MDM-002)** — covered by `admin-settings-duplicate-prevention`.
-> - **Downstream sync queue (REQ-MDM-006)** — covered by `queue-management` + openconnector.
-> - **Right-of-deletion (REQ-MDM-009)** — covered by `avg-verzoeken-workflow`.
-> - **Read-API / OR sync (REQ-MDM-010, REQ-MDM-011)** — covered by `openregister-integration` and `pipelinq-or-adoption`.
->
-> Probabilistic matching (REQ-MDM-003), reversible merge tooling (REQ-MDM-004), trust-tier configuration (REQ-MDM-005), data-quality scoring (REQ-MDM-007), and the conflict-resolution wizard (REQ-MDM-012) are **deferred** to future, more narrowly-scoped changes.
->
-> The `## ADDED Requirements` delta in `specs/master-data-management/spec.md` documents the REQ-MDM-001…012 surface as a forward-compatibility marker so this change validates `--strict` and serves as the canonical handoff record.
+> **ADR corrections applied during implementation:**
+> - **ADR-037**: schemas/seeds are NOT written to the monolith `lib/Settings/pipelinq_register.json`. They live in the additive fragment `lib/Settings/register.d/90-master-data-management.json`; `ConfigFileLoaderService::deepMergeConfig` gained an additive-union rule (`unionAdditiveLists`) for `components.objects[]` + per-register `schemas[]` membership, with unit tests.
+> - **ADR-022 / contact = NC entity**: the `contact` entity type reuses pipelinq's existing NC-addressbook-synced `contact` schema; the `account` entity type maps onto the existing `client` schema (pipelinq has no `account` schema); `product` reuses the existing `product` schema. `vendor` is a supported master-entity `entityType` but has no dedicated OR schema, so it is excluded from the OR-sync projection (documented in `OpenRegisterSyncService`). All work uses the real OR ObjectService API (`find`/`findAll`/`saveObject`/`deleteObject`).
+> - **Schema slugs registered** via `SettingsLoadService::SCHEMA_SLUGS` so the `{slug}_schema` app-config keys resolve.
 
 ## 1. Data Layer: Schema Registration & OpenRegister Integration
 
-- [x] 1.1 Register `master-entity` schema in OpenRegister (HANDOFF)
+- [x] 1.1 Register `master-entity` schema in OpenRegister
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-001`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -24,7 +16,7 @@
     - `attributeProvenance` is object with per-attribute metadata
     - Schema is readable by OR API
 
-- [x] 1.2 Register `source-record` schema in OpenRegister (HANDOFF)
+- [x] 1.2 Register `source-record` schema in OpenRegister
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-001`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -32,7 +24,7 @@
     - `sourceRecordId` is composite key (`sourceSystem:nativeId`)
     - Relations to `master-entity` are configured
 
-- [x] 1.3 Register `trust-configuration` schema in OpenRegister (HANDOFF)
+- [x] 1.3 Register `trust-configuration` schema in OpenRegister
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-005`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -40,7 +32,7 @@
     - Supports querying by (entityType, attribute, sourceSystem) tuple
     - Effective-date filtering is supported
 
-- [x] 1.4 Register `merge-operation` schema in OpenRegister (HANDOFF)
+- [x] 1.4 Register `merge-operation` schema in OpenRegister
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-004`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -48,7 +40,7 @@
     - `preMergeSnapshot` is JSON object type
     - Relations to `master-entity` are configured
 
-- [x] 1.5 Register `sync-queue-item` schema in OpenRegister (HANDOFF)
+- [x] 1.5 Register `sync-queue-item` schema in OpenRegister
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-006`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -56,7 +48,7 @@
     - Status enum: queued, sending, sent, acknowledged, failed, dead-letter
     - Relations to `master-entity` are configured
 
-- [x] 1.6 Extend `contact` schema with MDM fields (HANDOFF)
+- [x] 1.6 Extend `contact` schema with MDM fields
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-011`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -64,21 +56,21 @@
     - Add `isMasterRecord` (boolean, optional)
     - Backward-compatible: null for existing contacts
 
-- [x] 1.7 Extend `account` schema with MDM fields (HANDOFF)
+- [x] 1.7 Extend `account` schema with MDM fields
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-011`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
     - Add `masterEntityRef`, `isMasterRecord`
     - Backward-compatible
 
-- [x] 1.8 Extend `product` schema with MDM fields (HANDOFF)
+- [x] 1.8 Extend `product` schema with MDM fields
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-011`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
     - Add `masterEntityRef`, `isMasterRecord`
     - Backward-compatible
 
-- [x] 1.9 Seed data: Create 3 master-entity examples (HANDOFF)
+- [x] 1.9 Seed data: Create 3 master-entity examples
   - **spec_ref**: `specs/master-data-management/design.md#SeedData`
   - **files**: Database migrations or seed script
   - **acceptance_criteria**:
@@ -87,7 +79,7 @@
     - 1 product example (Implementatieservice - 40 uur)
     - All include dataQualityScore, lastReviewedAt, tags
 
-- [x] 1.10 Seed data: Create 3 trust-configuration examples (HANDOFF)
+- [x] 1.10 Seed data: Create 3 trust-configuration examples
   - **spec_ref**: `specs/master-data-management/design.md#SeedData`
   - **files**: Database migrations or seed script
   - **acceptance_criteria**:
@@ -99,7 +91,7 @@
 
 ## 2. Backend: Master Entity Service (REQ-MDM-001)
 
-- [x] 2.1 Create `lib/Service/MasterEntityService.php` (HANDOFF)
+- [x] 2.1 Create `lib/Service/MasterEntityService.php`
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-001`
   - **files**: `pipelinq/lib/Service/MasterEntityService.php`
   - **acceptance_criteria**:
@@ -107,7 +99,7 @@
     - THEN `MasterEntityService` can be instantiated with `ObjectService` dependency
     - AND public methods exist: `recomputeGoldenRecord()`, `linkSourceRecord()`, `unlinkSourceRecord()`
 
-- [x] 2.2 Implement golden-record recomputation algorithm (HANDOFF)
+- [x] 2.2 Implement golden-record recomputation algorithm
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-001`
   - **files**: `pipelinq/lib/Service/MasterEntityService.php`
   - **acceptance_criteria**:
@@ -121,14 +113,14 @@
       5. Update goldenRecord[attribute] and attributeProvenance[attribute]
     - AND the logic handles missing gold-tier sources (falls back to silver, then bronze)
 
-- [x] 2.3 Implement source-record linkage (HANDOFF)
+- [x] 2.3 Implement source-record linkage
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-001`
   - **files**: `pipelinq/lib/Service/MasterEntityService.php`
   - **acceptance_criteria**:
     - `linkSourceRecord(sourceRecord, masterId)` sets currentMasterEntity and calls recomputeGoldenRecord
     - `unlinkSourceRecord(sourceRecordId)` clears the link and recomputes the master entity's golden record
 
-- [x] 2.4 Register listener for source-record changes (HANDOFF)
+- [x] 2.4 Register listener for source-record changes
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-001`
   - **files**: `pipelinq/lib/AppInfo/Application.php`, `pipelinq/lib/Listener/SourceRecordChangedListener.php`
   - **acceptance_criteria**:
@@ -141,7 +133,7 @@
 
 ## 3. Backend: Duplicate Detection Service (REQ-MDM-002, REQ-MDM-003)
 
-- [x] 3.1 Create `lib/Service/DuplicateDetectionService.php` (HANDOFF)
+- [x] 3.1 Create `lib/Service/DuplicateDetectionService.php`
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-002`, `REQ-MDM-003`
   - **files**: `pipelinq/lib/Service/DuplicateDetectionService.php`
   - **acceptance_criteria**:
@@ -149,7 +141,7 @@
     - THEN public method `detectDuplicates(entityType)` exists
     - AND returns array of duplicate-candidate DTOs (not persisted)
 
-- [x] 3.2 Implement deterministic key matching (HANDOFF)
+- [x] 3.2 Implement deterministic key matching
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-002`
   - **files**: `pipelinq/lib/Service/DuplicateDetectionService.php`
   - **acceptance_criteria**:
@@ -159,7 +151,7 @@
     - AND assign linkageConfidence=1.0 and linkageMethod=deterministic-key
     - AND return as candidates
 
-- [x] 3.3 Implement probabilistic matching (Jaro-Winkler + TF-IDF) (HANDOFF)
+- [x] 3.3 Implement probabilistic matching (Jaro-Winkler + TF-IDF)
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-003`
   - **files**: `pipelinq/lib/Service/DuplicateDetectionService.php`
   - **acceptance_criteria**:
@@ -169,7 +161,7 @@
     - AND generate candidates for pairs above threshold with computed linkageConfidence
     - AND support custom threshold configuration
 
-- [x] 3.4 Implement cron job for daily duplicate detection (HANDOFF)
+- [x] 3.4 Implement cron job for daily duplicate detection
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-002`, `REQ-MDM-003`
   - **files**: `pipelinq/lib/Cron/DuplicateDetectionJob.php`, `AppInfo/Application.php`
   - **acceptance_criteria**:
@@ -178,7 +170,7 @@
     - Calls `detectDeterministicDuplicates()` and `detectProbabilisticDuplicates()`
     - Stores results in transient cache or queue for dashboard display
 
-- [x] 3.5 Handle auto-merge threshold for high-confidence candidates (HANDOFF)
+- [x] 3.5 Handle auto-merge threshold for high-confidence candidates
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-002`, `REQ-MDM-003`
   - **files**: `pipelinq/lib/Service/DuplicateDetectionService.php`
   - **acceptance_criteria**:
@@ -191,14 +183,14 @@
 
 ## 4. Backend: Merge Service (REQ-MDM-004)
 
-- [x] 4.1 Create `lib/Service/MergeService.php` (HANDOFF)
+- [x] 4.1 Create `lib/Service/MergeService.php`
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-004`
   - **files**: `pipelinq/lib/Service/MergeService.php`
   - **acceptance_criteria**:
     - GIVEN MasterEntityService, MergeOperationService, SyncQueueService dependencies
     - THEN public methods: `previewMerge()`, `executeMerge()`, `reverseMerge()`
 
-- [x] 4.2 Implement merge preview logic (HANDOFF)
+- [x] 4.2 Implement merge preview logic
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-004`
   - **files**: `pipelinq/lib/Service/MergeService.php`
   - **acceptance_criteria**:
@@ -208,7 +200,7 @@
       - reversal window (30 days default, or until date)
     - No side effects; read-only operation
 
-- [x] 4.3 Implement merge execution with atomicity (HANDOFF)
+- [x] 4.3 Implement merge execution with atomicity
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-004`
   - **files**: `pipelinq/lib/Service/MergeService.php`
   - **acceptance_criteria**:
@@ -223,7 +215,7 @@
       8. Emit audit trail entry
     - All changes persisted within single transaction
 
-- [x] 4.4 Implement merge reversal within 30-day window (HANDOFF)
+- [x] 4.4 Implement merge reversal within 30-day window
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-004`
   - **files**: `pipelinq/lib/Service/MergeService.php`
   - **acceptance_criteria**:
@@ -235,7 +227,7 @@
       4. Mark merge-operation reversedAt, reversedBy
     - If reversible=false, return error with message
 
-- [x] 4.5 Implement merge idempotency check (HANDOFF)
+- [x] 4.5 Implement merge idempotency check
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-004`
   - **files**: `pipelinq/lib/Service/MergeService.php`
   - **acceptance_criteria**:
@@ -245,14 +237,14 @@
 
 ## 5. Backend: Sync Queue Service (REQ-MDM-006)
 
-- [x] 5.1 Create `lib/Service/SyncQueueService.php` (HANDOFF)
+- [x] 5.1 Create `lib/Service/SyncQueueService.php`
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-006`
   - **files**: `pipelinq/lib/Service/SyncQueueService.php`
   - **acceptance_criteria**:
     - GIVEN ObjectService, OpenConnectorService dependencies
     - THEN public methods: `enqueueSync()`, `processQueue()`, `retryItem()`, `markDeadLetter()`
 
-- [x] 5.2 Implement sync queue entry creation (HANDOFF)
+- [x] 5.2 Implement sync queue entry creation
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-006`
   - **files**: `pipelinq/lib/Service/SyncQueueService.php`
   - **acceptance_criteria**:
@@ -260,7 +252,7 @@
     - status=queued, attemptCount=0, priority based on changeType (merges higher than updates)
     - Persists to OpenRegister
 
-- [x] 5.3 Implement background queue processor (cron job) (HANDOFF)
+- [x] 5.3 Implement background queue processor (cron job)
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-006`
   - **files**: `pipelinq/lib/Cron/SyncQueueProcessorJob.php`
   - **acceptance_criteria**:
@@ -274,7 +266,7 @@
       4. On HTTP error/timeout: increment attemptCount, schedule nextRetryAt, keep status=queued
       5. On max attempts (7 days): status=dead-letter, notify admin
 
-- [x] 5.4 Implement exponential backoff retry schedule (HANDOFF)
+- [x] 5.4 Implement exponential backoff retry schedule
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-006`
   - **files**: `pipelinq/lib/Service/SyncQueueService.php`
   - **acceptance_criteria**:
@@ -283,7 +275,7 @@
     - Max attempts = 7
     - After 7 attempts, status=dead-letter
 
-- [x] 5.5 Implement admin manual retry endpoint (HANDOFF)
+- [x] 5.5 Implement admin manual retry endpoint
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-006`
   - **files**: `pipelinq/lib/Controller/SyncQueueAdminController.php`
   - **acceptance_criteria**:
@@ -296,14 +288,14 @@
 
 ## 6. Backend: Data Quality Scorer (REQ-MDM-007)
 
-- [x] 6.1 Create `lib/Service/DataQualityScorer.php` (HANDOFF)
+- [x] 6.1 Create `lib/Service/DataQualityScorer.php`
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-007`
   - **files**: `pipelinq/lib/Service/DataQualityScorer.php`
   - **acceptance_criteria**:
     - GIVEN MasterEntityService, TrustConfigurationService dependencies
     - THEN public method `scoreEntity(masterId)` returns decimal 0-1
 
-- [x] 6.2 Implement completeness scoring (HANDOFF)
+- [x] 6.2 Implement completeness scoring
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-007`
   - **files**: `pipelinq/lib/Service/DataQualityScorer.php`
   - **acceptance_criteria**:
@@ -311,7 +303,7 @@
     - `completeness = (filled_required / total_required)`
     - Null or empty string counts as not filled
 
-- [x] 6.3 Implement freshness scoring (HANDOFF)
+- [x] 6.3 Implement freshness scoring
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-007`
   - **files**: `pipelinq/lib/Service/DataQualityScorer.php`
   - **acceptance_criteria**:
@@ -319,7 +311,7 @@
     - Use attributeProvenance.lastUpdated (most recent across all attributes)
     - Yields 1.0 for today, ~0.37 for 6 months ago, ~0.05 for 1 year ago
 
-- [x] 6.4 Implement agreement scoring (HANDOFF)
+- [x] 6.4 Implement agreement scoring
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-007`
   - **files**: `pipelinq/lib/Service/DataQualityScorer.php`
   - **acceptance_criteria**:
@@ -327,7 +319,7 @@
     - `agreement = 1.0 - (conflicting_attributes / total_attributes)`
     - Attributes with only 1 source or where all sources agree = no conflict
 
-- [x] 6.5 Implement weighted overall score (HANDOFF)
+- [x] 6.5 Implement weighted overall score
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-007`
   - **files**: `pipelinq/lib/Service/DataQualityScorer.php`
   - **acceptance_criteria**:
@@ -335,7 +327,7 @@
     - Result is decimal 0-1, saved to master-entity object
     - Rounding to 2 decimal places
 
-- [x] 6.6 Implement nightly scoring job (HANDOFF)
+- [x] 6.6 Implement nightly scoring job
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-007`
   - **files**: `pipelinq/lib/Cron/DataQualityScorerJob.php`
   - **acceptance_criteria**:
@@ -348,14 +340,14 @@
 
 ## 7. Backend: AVG Right-of-Deletion Service (REQ-MDM-009)
 
-- [x] 7.1 Create `lib/Service/AVGWorkflowService.php` (HANDOFF)
+- [x] 7.1 Create `lib/Service/AVGWorkflowService.php`
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-009`
   - **files**: `pipelinq/lib/Service/AVGWorkflowService.php`
   - **acceptance_criteria**:
     - GIVEN MasterEntityService, SyncQueueService, NotificationService dependencies
     - THEN public methods: `initiateRightOfDeletion()`, `approveAndExecuteRightOfDeletion()`, `confirmHardDelete()`
 
-- [x] 7.2 Implement deletion workflow initiation (HANDOFF)
+- [x] 7.2 Implement deletion workflow initiation
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-009`
   - **files**: `pipelinq/lib/Service/AVGWorkflowService.php`
   - **acceptance_criteria**:
@@ -364,7 +356,7 @@
     - Sets task status to pending-review
     - Notifies assigned steward
 
-- [x] 7.3 Implement approved deletion execution (HANDOFF)
+- [x] 7.3 Implement approved deletion execution
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-009`
   - **files**: `pipelinq/lib/Service/AVGWorkflowService.php`
   - **acceptance_criteria**:
@@ -377,7 +369,7 @@
       6. Log to audit trail with GDPR request ID and approval timestamp
     - All within transaction
 
-- [x] 7.4 Implement audit trail anonymization (HANDOFF)
+- [x] 7.4 Implement audit trail anonymization
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-009`
   - **files**: `pipelinq/lib/Service/AVGWorkflowService.php`
   - **acceptance_criteria**:
@@ -385,7 +377,7 @@
     - Event structure and timestamps remain visible for compliance proof
     - Entries like "Merge on 2025-03-15" still show date and action, but masterId values are hashed/opaque
 
-- [x] 7.5 Implement hard-delete confirmation callback (HANDOFF)
+- [x] 7.5 Implement hard-delete confirmation callback
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-009`
   - **files**: `pipelinq/lib/Cron/HardDeleteConfirmationJob.php`
   - **acceptance_criteria**:
@@ -400,14 +392,14 @@
 
 ## 8. Backend: Read-API (REQ-MDM-010)
 
-- [x] 8.1 Create `lib/Controller/MdmApiController.php` (HANDOFF)
+- [x] 8.1 Create `lib/Controller/MdmApiController.php`
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-010`
   - **files**: `pipelinq/lib/Controller/MdmApiController.php`
   - **acceptance_criteria**:
     - Implements OCP\AppFramework\ApiController
     - Public endpoints for querying Master Entities
 
-- [x] 8.2 Implement query by masterId endpoint (HANDOFF)
+- [x] 8.2 Implement query by masterId endpoint
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-010`
   - **files**: `pipelinq/lib/Controller/MdmApiController.php`
   - **acceptance_criteria**:
@@ -416,7 +408,7 @@
     - If master-entity not found: HTTP 404
     - If merged-into-other: return current master record + note about merge
 
-- [x] 8.3 Implement query by natural key endpoint (HANDOFF)
+- [x] 8.3 Implement query by natural key endpoint
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-010`
   - **files**: `pipelinq/lib/Controller/MdmApiController.php`
   - **acceptance_criteria**:
@@ -425,7 +417,7 @@
     - Returns master entity matching natural key
     - If multiple matches: return error (data integrity issue; requires manual review)
 
-- [x] 8.4 Implement query by alias endpoint (HANDOFF)
+- [x] 8.4 Implement query by alias endpoint
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-010`
   - **files**: `pipelinq/lib/Controller/MdmApiController.php`
   - **acceptance_criteria**:
@@ -433,7 +425,7 @@
     - Recognizes aliasId (pre-merge masterId) and returns current master with merger info
     - Response includes note: "This masterId was merged into [current-id] on [date]"
 
-- [x] 8.5 Implement authentication & authorization (HANDOFF)
+- [x] 8.5 Implement authentication & authorization
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-010`
   - **files**: `pipelinq/lib/Controller/MdmApiController.php`
   - **acceptance_criteria**:
@@ -445,14 +437,14 @@
 
 ## 9. Backend: OpenRegister Sync Job (REQ-MDM-011)
 
-- [x] 9.1 Create `lib/Service/OpenRegisterSyncService.php` (HANDOFF)
+- [x] 9.1 Create `lib/Service/OpenRegisterSyncService.php`
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-011`
   - **files**: `pipelinq/lib/Service/OpenRegisterSyncService.php`
   - **acceptance_criteria**:
     - GIVEN ObjectService, MasterEntityService dependencies
     - THEN public method `syncMasterToRegister(masterId)` exists
 
-- [x] 9.2 Implement sync master-entity → OR schema (HANDOFF)
+- [x] 9.2 Implement sync master-entity → OR schema
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-011`
   - **files**: `pipelinq/lib/Service/OpenRegisterSyncService.php`
   - **acceptance_criteria**:
@@ -461,7 +453,7 @@
     - Set `isMasterRecord = true` only on the canonical OR object
     - Handle case where no OR object exists (create one, or mark for manual review)
 
-- [x] 9.3 Implement background sync job (HANDOFF)
+- [x] 9.3 Implement background sync job
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-011`
   - **files**: `pipelinq/lib/Cron/OpenRegisterSyncJob.php`
   - **acceptance_criteria**:
@@ -474,14 +466,14 @@
 
 ## 10. Backend: Trust Configuration Service (Helper)
 
-- [x] 10.1 Create `lib/Service/TrustConfigurationService.php` (HANDOFF)
+- [x] 10.1 Create `lib/Service/TrustConfigurationService.php`
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-005`
   - **files**: `pipelinq/lib/Service/TrustConfigurationService.php`
   - **acceptance_criteria**:
     - GIVEN ObjectService dependency
     - THEN public methods: `getTrustTier()`, `getTrustConfig()`, `updateTrustConfig()`, `applyFreshnessDecay()`
 
-- [x] 10.2 Implement trust-tier lookup (HANDOFF)
+- [x] 10.2 Implement trust-tier lookup
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-005`
   - **files**: `pipelinq/lib/Service/TrustConfigurationService.php`
   - **acceptance_criteria**:
@@ -489,7 +481,7 @@
     - Respects `effectiveFrom` date
     - Returns null if no config exists (caller decides default)
 
-- [x] 10.3 Implement freshness decay (HANDOFF)
+- [x] 10.3 Implement freshness decay
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-005`
   - **files**: `pipelinq/lib/Service/TrustConfigurationService.php`
   - **acceptance_criteria**:
@@ -501,7 +493,7 @@
 
 ## 11. Frontend: Master Entity List View
 
-- [x] 11.1 Create Master Entity list component (HANDOFF)
+- [x] 11.1 Create Master Entity list component
   - **spec_ref**: `specs/master-data-management/design.md#MasterEntityListView`
   - **files**: `src/components/MasterEntityList.vue`
   - **acceptance_criteria**:
@@ -510,7 +502,7 @@
     - Sortable by dataQualityScore, lastReviewedAt
     - Action buttons: open detail, duplicate-candidates, bulk actions
 
-- [x] 11.2 Create Master Entity detail view component (HANDOFF)
+- [x] 11.2 Create Master Entity detail view component
   - **spec_ref**: `specs/master-data-management/design.md#MasterEntityDetailView`
   - **files**: `src/components/MasterEntityDetail.vue`
   - **acceptance_criteria**:
@@ -520,7 +512,7 @@
     - Audit Trail timeline (read-only)
     - Action buttons: merge, conflict-resolution, tag, request-deletion
 
-- [x] 11.3 Create Duplicate Candidates Dashboard (HANDOFF)
+- [x] 11.3 Create Duplicate Candidates Dashboard
   - **spec_ref**: `specs/master-data-management/design.md#DuplicateCandidatesDashboard`
   - **files**: `src/components/DuplicateCandidateDashboard.vue`
   - **acceptance_criteria**:
@@ -529,7 +521,7 @@
     - Expandable rows: side-by-side preview of entities, downstream impact list
     - Action buttons: open merge wizard, dismiss, mark false-positive
 
-- [x] 11.4 Create Merge Wizard component (HANDOFF)
+- [x] 11.4 Create Merge Wizard component
   - **spec_ref**: `specs/master-data-management/design.md#MergeWizard`
   - **files**: `src/components/MergeWizard.vue`
   - **acceptance_criteria**:
@@ -539,7 +531,7 @@
     - Step 4: Confirmation with merge reason
     - On execute: calls API, shows result, navigation to merge-operation detail
 
-- [x] 11.5 Create Conflict Resolution Wizard component (HANDOFF)
+- [x] 11.5 Create Conflict Resolution Wizard component
   - **spec_ref**: `specs/master-data-management/design.md#ConflictResolutionWizard`
   - **files**: `src/components/ConflictResolutionWizard.vue`
   - **acceptance_criteria**:
@@ -549,7 +541,7 @@
     - Rationale text field
     - On save: applies decision, optionally creates/updates trust-configuration
 
-- [x] 11.6 Create Data Quality Dashboard (HANDOFF)
+- [x] 11.6 Create Data Quality Dashboard
   - **spec_ref**: `specs/master-data-management/design.md#DataQualityDashboard`
   - **files**: `src/components/DataQualityDashboard.vue`
   - **acceptance_criteria**:
@@ -564,7 +556,7 @@
 
 ## 12. Frontend: Admin & Configuration UI
 
-- [x] 12.1 Create Trust Configuration admin panel (HANDOFF)
+- [x] 12.1 Create Trust Configuration admin panel
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-005`
   - **files**: `src/components/TrustConfigAdmin.vue`
   - **acceptance_criteria**:
@@ -575,7 +567,7 @@
     - Date picker for effectiveFrom
     - Delete confirmation
 
-- [x] 12.2 Create Sync Queue admin panel (HANDOFF)
+- [x] 12.2 Create Sync Queue admin panel
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-006`
   - **files**: `src/components/SyncQueueAdmin.vue`
   - **acceptance_criteria**:
@@ -584,7 +576,7 @@
     - Manual retry button for dead-letter items
     - Bulk retry for filtered items
 
-- [x] 12.3 Create AVG Right-of-Deletion admin panel (HANDOFF)
+- [x] 12.3 Create AVG Right-of-Deletion admin panel
   - **spec_ref**: `specs/master-data-management/spec.md#REQ-MDM-009`
   - **files**: `src/components/AVGWorkflowAdmin.vue`
   - **acceptance_criteria**:
@@ -597,7 +589,7 @@
 
 ## 13. API Routes & Endpoints
 
-- [x] 13.1 Register API routes (HANDOFF)
+- [x] 13.1 Register API routes
   - **spec_ref**: All API specs in specs.md
   - **files**: `appinfo/routes.php`
   - **acceptance_criteria**:
@@ -611,7 +603,7 @@
 
 ## 14. i18n (Dutch + English)
 
-- [x] 14.1 Add i18n keys for all UI labels and messages (HANDOFF)
+- [x] 14.1 Add i18n keys for all UI labels and messages
   - **spec_ref**: ADR-005 (i18n keys)
   - **files**: `l10n/en.json`, `l10n/nl.json`
   - **acceptance_criteria**:
@@ -625,7 +617,7 @@
 
 ## 15. Testing & QA
 
-- [x] 15.1 Unit tests for MasterEntityService (HANDOFF)
+- [x] 15.1 Unit tests for MasterEntityService
   - **spec_ref**: REQ-MDM-001
   - **files**: `tests/unit/Service/MasterEntityServiceTest.php`
   - **acceptance_criteria**:
@@ -633,7 +625,7 @@
     - Test source-record linkage and unlinkage
     - Test listener registration and firing
 
-- [x] 15.2 Unit tests for DuplicateDetectionService (HANDOFF)
+- [x] 15.2 Unit tests for DuplicateDetectionService
   - **spec_ref**: REQ-MDM-002, REQ-MDM-003
   - **files**: `tests/unit/Service/DuplicateDetectionServiceTest.php`
   - **acceptance_criteria**:
@@ -641,7 +633,7 @@
     - Test probabilistic matching (Jaro-Winkler, TF-IDF)
     - Test threshold filtering
 
-- [x] 15.3 Unit tests for MergeService (HANDOFF)
+- [x] 15.3 Unit tests for MergeService
   - **spec_ref**: REQ-MDM-004
   - **files**: `tests/unit/Service/MergeServiceTest.php`
   - **acceptance_criteria**:
@@ -649,7 +641,7 @@
     - Test merge execution (atomicity, snapshot, sync-queue creation)
     - Test merge reversal within and beyond window
 
-- [x] 15.4 Unit tests for DataQualityScorer (HANDOFF)
+- [x] 15.4 Unit tests for DataQualityScorer
   - **spec_ref**: REQ-MDM-007
   - **files**: `tests/unit/Service/DataQualityScorerTest.php`
   - **acceptance_criteria**:
@@ -657,7 +649,7 @@
     - Test overall weighted score
     - Test edge cases (null values, no source records)
 
-- [x] 15.5 Integration tests for full MDM workflow (HANDOFF)
+- [x] 15.5 Integration tests for full MDM workflow
   - **spec_ref**: All specs
   - **files**: `tests/integration/MdmWorkflowTest.php`
   - **acceptance_criteria**:
@@ -667,7 +659,7 @@
     - Verify OpenRegister sync
     - Verify audit trail
 
-- [x] 15.6 Frontend tests for UI components (HANDOFF)
+- [x] 15.6 Frontend tests for UI components
   - **spec_ref**: ADR-008 (testing)
   - **files**: `tests/frontend/*.spec.js`
   - **acceptance_criteria**:
@@ -680,7 +672,7 @@
 
 ## 16. Documentation & Deployment
 
-- [x] 16.1 Write administrator guide (HANDOFF)
+- [ ] 16.1 Write administrator guide _(DEFERRED: docs/ is a Docusaurus site; prose guides need sidebar integration and are not load-bearing for the feature — to be authored in a follow-up docs PR)_
   - **spec_ref**: All specs
   - **files**: `docs/admin/master-data-management.md`
   - **acceptance_criteria**:
@@ -689,7 +681,7 @@
     - Daily operations (dedup review, conflict resolution)
     - Troubleshooting sync failures
 
-- [x] 16.2 Write API documentation (HANDOFF)
+- [ ] 16.2 Write API documentation _(DEFERRED: same Docusaurus-sidebar reason as 16.1; the read-API endpoints are fully specified in specs.md REQ-MDM-010 and the controller docblocks)_
   - **spec_ref**: REQ-MDM-010
   - **files**: `docs/api/mdm-read-api.md`
   - **acceptance_criteria**:
@@ -697,7 +689,7 @@
     - Request/response examples
     - Authentication & rate-limiting
 
-- [x] 16.3 Write AVG right-of-deletion procedure (HANDOFF)
+- [ ] 16.3 Write AVG right-of-deletion procedure _(DEFERRED: same Docusaurus-sidebar reason; the workflow + audit/redaction behaviour is fully specified in specs.md REQ-MDM-009 and AVGWorkflowService)_
   - **spec_ref**: REQ-MDM-009
   - **files**: `docs/compliance/avg-right-of-deletion.md`
   - **acceptance_criteria**:
@@ -706,16 +698,16 @@
     - Audit trail proof examples
     - Data retention policy for cooling-off period
 
-- [x] 16.4 Database migration script (HANDOFF)
+- [x] 16.4 Database migration script _(CORRECTED per ADR-037: schema creation + field extensions + seeds are delivered via the `lib/Settings/register.d/90-master-data-management.json` fragment merged by ConfigFileLoaderService and imported by the existing repair step — NOT a bespoke DB migration. masterEntityRef is optional so existing entities backfill as null automatically.)_
   - **spec_ref**: All data layer tasks
-  - **files**: `database/migrations/XXXXXX_create_mdm_schemas.php`
+  - **files**: `lib/Settings/register.d/90-master-data-management.json`, `lib/Service/ConfigFileLoaderService.php`
   - **acceptance_criteria**:
     - Creates all new schemas in OpenRegister
     - Adds fields to existing schemas (contact, account, product, vendor)
     - Seeds trust-configuration defaults
     - Backfill existing entities with null masterEntityRef (for migration phase)
 
-- [x] 16.5 npm build verification (HANDOFF)
+- [x] 16.5 npm build verification
   - **spec_ref**: All frontend tasks
   - **files**: N/A (build output)
   - **acceptance_criteria**:

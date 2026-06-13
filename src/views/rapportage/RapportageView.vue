@@ -82,10 +82,10 @@ export default {
 		 */
 		widgets() {
 			return [
-				{ id: 'funnel',   title: t('pipelinq', 'Pipeline funnel'),    span: 2 },
-				{ id: 'sources',  title: t('pipelinq', 'Source performance'), span: 2 },
-				{ id: 'aging',    title: t('pipelinq', 'Lead aging'),         span: 1 },
-				{ id: 'winloss',  title: t('pipelinq', 'Win/loss'),           span: 1 },
+				{ id: 'funnel', title: t('pipelinq', 'Pipeline funnel'), span: 2 },
+				{ id: 'sources', title: t('pipelinq', 'Source performance'), span: 2 },
+				{ id: 'aging', title: t('pipelinq', 'Lead aging'), span: 1 },
+				{ id: 'winloss', title: t('pipelinq', 'Win/loss'), span: 1 },
 			]
 		},
 	},

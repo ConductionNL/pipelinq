@@ -92,6 +92,8 @@ return [
         ['name' => 'analytics#overview', 'url' => '/api/analytics/overview', 'verb' => 'GET'],
         ['name' => 'analytics#trends',   'url' => '/api/analytics/trends',   'verb' => 'GET'],
         ['name' => 'analytics#funnels',  'url' => '/api/analytics/funnels',  'verb' => 'GET'],
+        // Commercial dashboard KPI overview (openspec/changes/commercial-dashboard).
+        ['name' => 'analytics#commercial', 'url' => '/api/analytics/commercial', 'verb' => 'GET'],
         ['name' => 'navi#query',         'url' => '/api/navi/query',         'verb' => 'POST'],
         // SLA engine — attainment dashboard endpoint (sla-engine-and-escalation / REQ-006).
         ['name' => 'slaAttainment#attainment', 'url' => '/api/sla/attainment', 'verb' => 'GET'],
@@ -498,6 +500,74 @@ return [
         ['name' => 'xWiki#pages',  'url' => '/api/xwiki/pages',                     'verb' => 'GET'],
         ['name' => 'xWiki#page',   'url' => '/api/xwiki/page/{wiki}/{page}',        'verb' => 'GET', 'requirements' => ['page' => '.+']],
         ['name' => 'xWiki#status', 'url' => '/api/xwiki/status',                    'verb' => 'GET'],
+
+        // AVG (GDPR data-subject request) workflow.
+        // avgVerzoek / termijnEvent / bewijsItem / exportBundle / weigering / redactieActie
+        // CRUD is handled by OpenRegister's generic object API; these are the
+        // server-authoritative lifecycle actions (camelCase slug matches the controller).
+        // Collection (static) routes precede the {id} wildcard routes.
+        ['name' => 'avgVerzoek#index',   'url' => '/api/avg-verzoeken', 'verb' => 'GET'],
+        ['name' => 'avgVerzoek#create',  'url' => '/api/avg-verzoeken', 'verb' => 'POST'],
+        ['name' => 'avgVerzoek#show',    'url' => '/api/avg-verzoeken/{id}', 'verb' => 'GET'],
+        ['name' => 'avgVerzoek#update',  'url' => '/api/avg-verzoeken/{id}', 'verb' => 'PATCH'],
+        ['name' => 'avgVerzoek#destroy', 'url' => '/api/avg-verzoeken/{id}', 'verb' => 'DELETE'],
+        ['name' => 'avgVerzoek#flagDpia', 'url' => '/api/avg-verzoeken/{id}/dpia-flag', 'verb' => 'POST'],
+        ['name' => 'avgVerzoek#extend',  'url' => '/api/avg-verzoeken/{id}/extend', 'verb' => 'POST'],
+        ['name' => 'avgVerzoek#archive', 'url' => '/api/avg-verzoeken/{id}/archive', 'verb' => 'POST'],
+
+        // AVG evidence collection.
+        ['name' => 'avgEvidence#collect', 'url' => '/api/avg-verzoeken/{id}/collect-evidence', 'verb' => 'POST'],
+        ['name' => 'avgEvidence#status',  'url' => '/api/avg-verzoeken/{id}/evidence-status', 'verb' => 'GET'],
+        ['name' => 'avgEvidence#items',   'url' => '/api/avg-verzoeken/{id}/bewijs-items', 'verb' => 'GET'],
+
+        // AVG redaction.
+        ['name' => 'avgRedaction#redact',  'url' => '/api/avg-verzoeken/{id}/redact', 'verb' => 'POST'],
+        ['name' => 'avgRedaction#summary', 'url' => '/api/avg-verzoeken/{id}/redaction-summary', 'verb' => 'GET'],
+        ['name' => 'avgRedaction#approve', 'url' => '/api/avg-verzoeken/{id}/approve-redactions', 'verb' => 'POST'],
+
+        // AVG denial (Weigering).
+        ['name' => 'avgDenial#deny',     'url' => '/api/avg-verzoeken/{id}/deny', 'verb' => 'POST'],
+        ['name' => 'avgDenial#show',     'url' => '/api/avg-verzoeken/{id}/weigering', 'verb' => 'GET'],
+        ['name' => 'avgDenial#finalize', 'url' => '/api/avg-verzoeken/{id}/finalize-denial', 'verb' => 'POST'],
+
+        // AVG export bundles + AP escalation. The public secure-download route
+        // precedes the authenticated {bundleId} metadata route.
+        ['name' => 'avgBundle#generate', 'url' => '/api/avg-verzoeken/{id}/generate-bundle', 'verb' => 'POST'],
+        ['name' => 'avgBundle#escalate', 'url' => '/api/avg-verzoeken/{id}/ap-escalate', 'verb' => 'POST'],
+        ['name' => 'avgBundle#download', 'url' => '/api/export-bundles/{bundleId}/download', 'verb' => 'GET'],
+        ['name' => 'avgBundle#show',     'url' => '/api/export-bundles/{bundleId}', 'verb' => 'GET'],
+
+        // Master Data Management — read-API (downstream apps; session/bearer auth).
+        // Static /api/mdm/master MUST precede the /{id} wildcard (ADR-016).
+        ['name' => 'mdmApi#queryByNaturalKey', 'url' => '/api/mdm/master', 'verb' => 'GET'],
+        ['name' => 'mdmApi#show',              'url' => '/api/mdm/master/{id}', 'verb' => 'GET'],
+
+        // MDM — Master Entity steward views + data-quality dashboard.
+        ['name' => 'mdmMasterEntity#index',     'url' => '/api/mdm/entities', 'verb' => 'GET'],
+        ['name' => 'mdmMasterEntity#dashboard', 'url' => '/api/mdm/dashboard', 'verb' => 'GET'],
+        ['name' => 'mdmMasterEntity#show',      'url' => '/api/mdm/entities/{id}', 'verb' => 'GET'],
+
+        // MDM — merge tooling (preview/candidates authed; execute/reverse admin).
+        ['name' => 'mdmMerge#candidates', 'url' => '/api/mdm/duplicates/{entityType}', 'verb' => 'GET'],
+        ['name' => 'mdmMerge#preview',    'url' => '/api/mdm/merge/preview', 'verb' => 'POST'],
+        ['name' => 'mdmMerge#execute',    'url' => '/api/mdm/merge/execute', 'verb' => 'POST'],
+        ['name' => 'mdmMerge#reverse',    'url' => '/api/mdm/merge/{mergeOperationId}/reverse', 'verb' => 'POST'],
+
+        // MDM — trust configuration (list authed; mutate admin).
+        ['name' => 'mdmTrustConfig#index',   'url' => '/api/mdm/trust-config', 'verb' => 'GET'],
+        ['name' => 'mdmTrustConfig#save',    'url' => '/api/mdm/trust-config', 'verb' => 'POST'],
+        ['name' => 'mdmTrustConfig#save',    'url' => '/api/mdm/trust-config/{id}', 'verb' => 'PUT', 'postfix' => 'update'],
+        ['name' => 'mdmTrustConfig#destroy', 'url' => '/api/mdm/trust-config/{id}', 'verb' => 'DELETE'],
+
+        // MDM — sync queue administration (list authed; retry admin).
+        ['name' => 'mdmSyncQueue#index', 'url' => '/api/mdm/sync-queue', 'verb' => 'GET'],
+        ['name' => 'mdmSyncQueue#retry', 'url' => '/api/mdm/sync-queue/{itemId}/retry', 'verb' => 'POST'],
+
+        // MDM — AVG right-of-deletion workflow (admin only).
+        ['name' => 'mdmAvgWorkflow#candidates',        'url' => '/api/mdm/avg-workflow/candidates', 'verb' => 'GET'],
+        ['name' => 'mdmAvgWorkflow#initiate',          'url' => '/api/mdm/avg-workflow/initiate', 'verb' => 'POST'],
+        ['name' => 'mdmAvgWorkflow#approve',           'url' => '/api/mdm/avg-workflow/approve', 'verb' => 'POST'],
+        ['name' => 'mdmAvgWorkflow#confirmHardDelete', 'url' => '/api/mdm/avg-workflow/{masterEntityId}/hard-delete', 'verb' => 'POST'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],

@@ -1,50 +1,45 @@
 # Tasks: AVG-verzoeken Workflow
 
-> **STATUS: HANDOFF.** All 88 tasks below are marked `[~]` (deferred /
-> handed off) — none will be implemented in pipelinq. AVG / GDPR
-> Art. 15/16/17/18/20 request handling is already covered (or planned for
-> coverage) by sibling fleet work:
->
-> - **docudesk** — PDF render via the docudesk render API, PAdES-LTV
->   signing with PKIoverheid certificate, secure download link delivery,
->   template versioning, signed audit trail. Owns sections 2.3 (Bundle
->   generation), 3.2 (BundleService), 5.7 (BundlePreview), and 7/8/13
->   template + delivery work.
-> - **rekenkamer-audit-pack** — 5-year dossier retention pattern, signed
->   evidence bundle, AP-style escalation export (signed ZIP + manifest),
->   immutable audit trail. Owns sections 2.7 (Retention), 2.8 (AP
->   escalation), 3.6 (RetentionService), 4.4/4.5 (Pseudonymization +
->   retention cleanup jobs), and the bulk of REQ-AVG-008 / REQ-AVG-009.
-> - **privacy / FG / DPIA initiative** — DPIA pattern detection, FG
->   notification, Procest improvement linking, redaction policy. Owns
->   sections 2.4 (Redaction), 2.5 (Denial), 3.3 (RedactionService), 3.4
->   (DpiaDetectionService), 4.3 (DPIA job), and the REQ-AVG-006 /
->   REQ-AVG-007 / REQ-AVG-010 flows.
-> - **BSN validation capability** (sister feature) — owns REQ-AVG-011.
-> - **OpenConnector AVG-export contract** — REQ-AVG-012 is an external
->   integration contract; organisations implement the endpoint, not
->   pipelinq.
->
-> Per ADR-022 (consume the closest leaf; do not re-implement), pipelinq
-> SHALL NOT host a parallel AVG implementation. This change records the
-> intent so the receiving capability owners have a single reference, and
-> normalizes the spec headers to make `openspec validate --strict` pass.
+> **ADR corrections applied during build** (override the literal spec):
+> - **ADR-037**: the six AVG schemas + seeds are NOT raw DB tables. They live in a
+>   register fragment `lib/Settings/register.d/40-avg-verzoeken.json` (schemas +
+>   register `schemas[]` membership + `components.objects[]` seeds). The original
+>   §1.7/§1.8 "Nextcloud schema builder migrations" / "enrich contacts table"
+>   tasks are intentionally NOT done — they conflict with ADR-037 and ADR-022.
+>   `ConfigFileLoaderService::deepMergeConfig` gained the fleet-standard additive-union
+>   rule for register `schemas[]` + `components.objects[]` (with a unit test).
+> - **ADR-022**: real OR API only (`find`/`findAll`/`saveObject`/`deleteObject`) via the
+>   shared `AvgRepository`.
+> - **ADR-005**: per-method NC auth + IDOR scoping (handler-owns-request, DPO-gated
+>   export/escalation, retention-guarded delete, public token-only download).
+> - **DEFERRED (need a live instance / unmerged cross-app dep)**: real PAdES-LTV signing
+>   with a PKIoverheid cert (DocuDesk signer) — falls back to a SHA-256 manifest seal;
+>   live BRP/BSN lookup; live OpenConnector AVG-export source queries; live Procest
+>   improvement-item creation; Berichtenbox/SIEM transports. All are wired as graceful,
+>   no-op-on-absence integration points. Manual testing (§11), training video (§12.4),
+>   deployment (§13) and live success-criteria verification (§14) are deferred to a
+>   running NC env.
 
 ## 0. Pre-implementation Review
 
-- [x] 0.1 Verify ADR-000 data model is current and includes all required entity definitions
-- [x] 0.2 Confirm OpenRegister platform supports pseudonymization capability for 30-day evidence masking
-- [x] 0.3 Review BSN Validation capability requirements and interface (sister feature)
-- [x] 0.4 Obtain PKIoverheid certificate path and PAdES-LTV signing library availability
-- [x] 0.5 Confirm DocuDesk API availability and PDF template versioning capability
-- [x] 0.6 Validate OpenConnector source mappings and existing AVG-export-endpoint implementations
-- [x] 0.7 Review Nextcloud Mail API for secure link delivery and template management
-- [x] 0.8 Confirm BRP lookup capability and binding mechanism for "handling AVG request" use case
-- [x] 0.9 Check Procest integration: whether improvement items can be auto-created and linked
+- [x] 0.1 Data model defined as OR schemas in the register.d fragment (ADR-037), not adr-000
+- [x] 0.2 OpenRegister pseudonymization handled by RetentionService (mask preview, keep metadata)
+- [ ] 0.3 BSN Validation capability — DEFERRED (sibling feature; BSN elfproef validated client+server, live BRP lookup deferred)
+- [ ] 0.4 PKIoverheid cert + PAdES-LTV library — DEFERRED (deployment dep; sha256-manifest fallback shipped)
+- [ ] 0.5 DocuDesk PDF render/sign API — DEFERRED (optional cross-app dep; best-effort signer call)
+- [ ] 0.6 OpenConnector AVG-export endpoints — DEFERRED (org-side; graceful unreachable handling shipped)
+- [x] 0.7 Nextcloud notification framework used for handler/FG alerts; citizen emails are 4-eyes drafts
+- [ ] 0.8 BRP lookup binding — DEFERRED (sibling capability)
+- [x] 0.9 Procest link point implemented as a best-effort no-op (auto-create deferred until Procest API)
 
 ## 1. Data Model & Database Schema
 
-- [x] 1.1 Add `AvgVerzoek` schema to `openspec/architecture/adr-000-data-model.md`:
+> Implemented as OR schemas in `lib/Settings/register.d/40-avg-verzoeken.json`
+> (ADR-037), added to register `schemas[]` + `SettingsLoadService::SCHEMA_SLUGS`
+> + `SettingsService::CONFIG_KEYS`. NO Nextcloud schema-builder migrations (§1.7)
+> and NO contacts-table migration (§1.8) — those violate ADR-037/ADR-022.
+
+- [x] 1.1 Add `AvgVerzoek` schema (register.d fragment, not adr-000):
   - Properties: `kenmerk`, `ingediendOp`, `ingediendVia`, `verzoekerContact`, `verzoekerNaam`, `verzoekerBsn`, `verzoekerBsnGeverifieerd`, `artikel`, `specifiekeVraag`, `scope`, `wettelijkeTermijnVerloopt`, `verlengdMet`, `verlengingsgrond`, `status`, `behandelaar`, `fgGeinformeerd`, `dpiaFlag`, `uitkomst`, `afgerondOp`, `bewijsbundel`, `retentieTot`
   - Example in Dutch with valid field values per context-brief
 
@@ -63,7 +58,7 @@
 - [x] 1.6 Add `RedactieActie` schema:
   - Properties: `bundleId`, `bewijsItemId`, `veldpad`, `voorWaarde`, `naWaarde`, `uitgevoerdDoor`, `uitgevoerdOp`, `grond` (enum: bescherming-rechten-derden, wettelijke-verplichting, bedrijfsgeheim)
 
-- [x] 1.7 Create database migrations (using Nextcloud schema builder):
+- [ ] 1.7 Create database migrations (using Nextcloud schema builder):
   - `CreateAvgVerzoekenTable`: with indexes on `artikel`, `wettelijke_termijn_verloopt`, `status`, `behandelaar`, `dpia_flag`
   - `CreateTermijnEventsTable`: with index on `verzoek_id`, `type`
   - `CreateBewijsItemsTable`: with indexes on `verzoek_id`, `bron_app`
@@ -71,7 +66,7 @@
   - `CreateWeigeringenTable`: with index on `verzoek_id`
   - `CreateRedactieActiesTable`: with indexes on `bundle_id`, `bewijs_item_id`
 
-- [x] 1.8 Add migration to enrich `contacts` table: add `lopendeAvgVerzoeken` JSON field (array of UUIDs)
+- [ ] 1.8 Add migration to enrich `contacts` table: add `lopendeAvgVerzoeken` JSON field (array of UUIDs)
 
 ## 2. Backend: Controllers & Request Handling
 
@@ -408,7 +403,11 @@
 
 ## 11. Manual Testing
 
-- [x] 11.1 End-to-end Art. 15 (access) request:
+> DEFERRED — requires a running NC instance with the app installed, the register
+> imported and the cron/jobs active. The lifecycle logic is covered by the unit
+> tests (request/scoping/erasure/export/deadline/dpia/redaction/denial/extension).
+
+- [ ] 11.1 End-to-end Art. 15 (access) request:
   - Submit web form
   - Verify deadline calculated
   - Trigger evidence collection
@@ -419,7 +418,7 @@
   - Download via secure link
   - Check 30-day expiry
 
-- [x] 11.2 End-to-end Art. 17 (erasure) request with partial denial:
+- [ ] 11.2 End-to-end Art. 17 (erasure) request with partial denial:
   - Submit request for erasure
   - Collect evidence from multiple sources
   - Mark some scopes as "cannot erase" (legal hold)
@@ -428,7 +427,7 @@
   - Verify AP complaint reference is present
   - Send to citizen
 
-- [x] 11.3 Extension workflow:
+- [ ] 11.3 Extension workflow:
   - Create request
   - Advance to day 25
   - Extend with justification
@@ -436,21 +435,21 @@
   - Approve and send
   - Verify new deadline is set
 
-- [x] 11.4 DPIA pattern detection:
+- [ ] 11.4 DPIA pattern detection:
   - Create 10+ erasure requests with same scope
   - Run weekly detection job
   - Verify flag is set on all requests
   - Verify FG is notified
   - Create Procest improvement item
 
-- [x] 11.5 Deadline breach & escalation:
+- [ ] 11.5 Deadline breach & escalation:
   - Create request
   - Advance to day 28
   - Verify 7-day reminder sent
   - Advance to day 32 (overdue)
   - Verify breach logged and FG notified
 
-- [x] 11.6 Retention & cleanup:
+- [ ] 11.6 Retention & cleanup:
   - Archive request after resolution
   - Verify dossier appears in Archive tab only
   - Advance 30 days
@@ -461,7 +460,12 @@
 
 ## 12. Documentation & Training
 
-- [x] 12.1 Write handler documentation: `docs/user/avg-requests.md`
+> A consolidated developer/API reference was written: `docs/Technical/avg-requests-api.md`
+> (endpoints, auth model, error codes, admin config). The separate
+> handler/FG/admin Docusaurus pages and the training video are DEFERRED (a
+> dedicated docs effort; the API doc + the in-UI flow cover the essentials).
+
+- [ ] 12.1 Write handler documentation: `docs/user/avg-requests.md`
   - How to intake a request
   - How to collect evidence
   - How to redact third-party data
@@ -469,36 +473,41 @@
   - How to handle denial / extension
   - How to escalate to FG
 
-- [x] 12.2 Write FG/compliance documentation: `docs/compliance/avg-requests.md`
+- [ ] 12.2 Write FG/compliance documentation: `docs/compliance/avg-requests.md`
   - Legal deadlines & compliance requirements
   - DPIA pattern detection
   - AP escalation process
   - Retention & cleanup policies
 
-- [x] 12.3 Write admin documentation: `docs/admin/avg-requests.md`
+- [ ] 12.3 Write admin documentation: `docs/admin/avg-requests.md`
   - Configuration: DPIA threshold, retention settings, email templates
   - OpenConnector source mapping
   - Monitoring & reporting
 
-- [x] 12.4 Create training video (or written guide) for handlers: 15 min walkthrough of typical request
+- [ ] 12.4 Create training video (or written guide) for handlers: 15 min walkthrough of typical request
 
 ## 13. Deployment & Rollout
 
-- [x] 13.1 Create feature flag in `config/app.php`: `avg_requests.enabled` (default: false)
+> DEFERRED — runtime/ops on a live instance. The jobs are registered in
+> `appinfo/info.xml`; the register fragment auto-imports via the existing repair
+> step; admin tunables ship with safe defaults. No `config/app.php` feature flag
+> (the app has no such file; gating is via the admin group config).
 
-- [x] 13.2 Run all database migrations on test environment
+- [ ] 13.1 Create feature flag in `config/app.php`: `avg_requests.enabled` (default: false)
 
-- [x] 13.3 Load seed data (from design.md) for testing
+- [ ] 13.2 Run all database migrations on test environment
 
-- [x] 13.4 Verify all background jobs are registered with Nextcloud Cron
+- [ ] 13.3 Load seed data (from design.md) for testing
 
-- [x] 13.5 Verify PKIoverheid certificate is deployed and accessible
+- [ ] 13.4 Verify all background jobs are registered with Nextcloud Cron
 
-- [x] 13.6 Staging environment: run full integration test suite
+- [ ] 13.5 Verify PKIoverheid certificate is deployed and accessible
 
-- [x] 13.7 Staging environment: manual testing by handlers, FG, admins
+- [ ] 13.6 Staging environment: run full integration test suite
 
-- [x] 13.8 Production deployment:
+- [ ] 13.7 Staging environment: manual testing by handlers, FG, admins
+
+- [ ] 13.8 Production deployment:
   - Run migrations
   - Deploy code
   - Enable feature flag
@@ -506,11 +515,16 @@
 
 ## 14. Success Criteria Verification
 
-- [x] 14.1 Handler can complete a standard art. 15 request in <20 minutes of active work
-- [x] 14.2 Deadline escalation and breach detection work reliably (monitored over 1 week)
-- [x] 14.3 DPIA pattern detection fires correctly on test data (10+ similar requests)
-- [x] 14.4 PDF bundles are legally signed and verifiable by external tools
-- [x] 14.5 Secure download links expire correctly after 30 days
-- [x] 14.6 Evidence is pseudonymized 30 days after export
-- [x] 14.7 Dossier is deleted 5 years after resolution
-- [x] 14.8 FG reports: zero deadline breaches, 100% denial letters have AP reference
+> DEFERRED — live verification on a running instance over time. The deterministic
+> parts (deadline math, secure-link expiry/one-time use, pseudonymization timing,
+> dossier deletion, DPIA threshold, AP-reference enforcement) are asserted by the
+> unit suite.
+
+- [ ] 14.1 Handler can complete a standard art. 15 request in <20 minutes of active work
+- [ ] 14.2 Deadline escalation and breach detection work reliably (monitored over 1 week)
+- [ ] 14.3 DPIA pattern detection fires correctly on test data (10+ similar requests)
+- [ ] 14.4 PDF bundles are legally signed and verifiable by external tools
+- [ ] 14.5 Secure download links expire correctly after 30 days
+- [ ] 14.6 Evidence is pseudonymized 30 days after export
+- [ ] 14.7 Dossier is deleted 5 years after resolution
+- [ ] 14.8 FG reports: zero deadline breaches, 100% denial letters have AP reference

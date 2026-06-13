@@ -109,6 +109,19 @@ class SettingsLoadService
         // SLA engine (sla-engine-and-escalation) — separate sla register.
         'slaPolicy',
         'slaBreachEvent',
+        // AVG/GDPR data-subject-request workflow (avg-verzoeken-workflow).
+        'avgVerzoek',
+        'termijnEvent',
+        'bewijsItem',
+        'exportBundle',
+        'weigering',
+        'redactieActie',
+        // Master-data-management golden-record governance (master-data-management).
+        'masterEntity',
+        'sourceRecord',
+        'trustConfiguration',
+        'mergeOperation',
+        'syncQueueItem',
     ];
 
     /**

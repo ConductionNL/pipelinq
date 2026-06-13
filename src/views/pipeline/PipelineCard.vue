@@ -41,7 +41,10 @@
 			<span class="pipeline-card__title">
 				{{ item.title }}
 			</span>
-			<span v-if="item.priority && item.priority !== 'normal'" class="priority-indicator" :class="'priority--' + item.priority" :title="getPriorityLabel(item.priority)" />
+			<span v-if="item.priority && item.priority !== 'normal'"
+				class="priority-indicator"
+				:class="'priority--' + item.priority"
+				:title="getPriorityLabel(item.priority)" />
 			<span v-if="item.value" class="card-meta">
 				{{ formatNumber(item.value) }}
 			</span>
@@ -115,7 +118,7 @@ import AccountPlus from 'vue-material-design-icons/AccountPlus.vue'
 import Flag from 'vue-material-design-icons/Flag.vue'
 import ClockAlert from 'vue-material-design-icons/ClockAlert.vue'
 import { getPriorityLabel, getPriorityColor, getStatusLabel } from '../../services/requestStatus.js'
-import { getDaysAge, isStale, getAgingClass, formatAge, getStaleThreshold } from '../../services/pipelineUtils.js'
+import { getDaysAge, getAgingClass, formatAge, getStaleThreshold } from '../../services/pipelineUtils.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
 // eslint-disable-next-line no-unused-vars -- used in template via Options API fallthrough
