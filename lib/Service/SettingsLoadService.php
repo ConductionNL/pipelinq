@@ -116,6 +116,12 @@ class SettingsLoadService
         'exportBundle',
         'weigering',
         'redactieActie',
+        // Master-data-management golden-record governance (master-data-management).
+        'masterEntity',
+        'sourceRecord',
+        'trustConfiguration',
+        'mergeOperation',
+        'syncQueueItem',
     ];
 
     /**
