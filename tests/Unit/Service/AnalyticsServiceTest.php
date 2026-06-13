@@ -261,10 +261,6 @@ class AnalyticsServiceTest extends TestCase
                 ['contactedAt' => $recent],
                 ['contactedAt' => $earlier],
             ],
-            'surveyresponse_schema' => [
-                ['submittedAt' => $recent, 'score' => 4],
-                ['submittedAt' => $recent, 'score' => 5],
-            ],
         ]);
 
         $overview = $service->getOverview(period: 'month');
@@ -272,7 +268,10 @@ class AnalyticsServiceTest extends TestCase
         $this->assertSame(33.3, $overview['leadConversionRate']);
         $this->assertSame(0.0, $overview['avgRequestResolutionTime']);
         $this->assertSame(2, $overview['contactMomentVolume']);
-        $this->assertSame(4.5, $overview['customerSatisfactionScore']);
+        // CSAT is sourced from the OpenRegister forms leaf (NC Forms) and is
+        // null until that leaf exposes a query helper; see
+        // openspec/changes/migrate-forms-to-forms-leaf.
+        $this->assertNull($overview['customerSatisfactionScore']);
         $this->assertSame('month', $overview['period']);
         $this->assertArrayHasKey('previousPeriod', $overview);
         $this->assertArrayHasKey('leadConversionRate', $overview['previousPeriod']);
