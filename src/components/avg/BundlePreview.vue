@@ -30,7 +30,9 @@
 				<dt>{{ t('pipelinq', 'Signature') }}</dt>
 				<dd>{{ bundle.ondertekeningsType }}</dd>
 				<dt>{{ t('pipelinq', 'Integrity hash (SHA-256)') }}</dt>
-				<dd class="avg-bundle__hash">{{ bundle.sha256 }}</dd>
+				<dd class="avg-bundle__hash">
+					{{ bundle.sha256 }}
+				</dd>
 				<dt>{{ t('pipelinq', 'Download expires') }}</dt>
 				<dd>{{ bundle.downloadVerloopt }}</dd>
 			</dl>
