@@ -50,7 +50,7 @@
 						min="0"
 						max="100"
 						step="1"
-						:aria-label="t('pipelinq', 'Maximum discount percentage')" />
+						:aria-label="t('pipelinq', 'Maximum discount percentage')">
 				</label>
 				<p v-if="errorMessage" class="pos-role-form__error" role="alert">
 					{{ errorMessage }}
@@ -61,7 +61,10 @@
 				<NcButton type="primary" :disabled="saving || !canSave" @click="save">
 					{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 				</NcButton>
-				<NcButton v-if="!isNew" :disabled="saving" type="error" @click="confirmDelete">
+				<NcButton v-if="!isNew"
+					:disabled="saving"
+					type="error"
+					@click="confirmDelete">
 					{{ t('pipelinq', 'Delete') }}
 				</NcButton>
 			</div>

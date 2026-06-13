@@ -59,7 +59,9 @@
 					⌫
 				</NcButton>
 			</div>
-			<p v-if="errorMessage" class="pin-login__error" role="alert">{{ errorMessage }}</p>
+			<p v-if="errorMessage" class="pin-login__error" role="alert">
+				{{ errorMessage }}
+			</p>
 			<p v-if="lockedUntil" class="pin-login__error" role="alert">
 				{{ t('pipelinq', 'Account is locked. Try again after {time}.', { time: lockedUntil }) }}
 			</p>

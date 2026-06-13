@@ -35,12 +35,37 @@ import ComplaintsWidget from './views/dashboard/widgets/ComplaintsWidget.vue'
 import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
 import ClientOverviewWidget from './views/dashboard/widgets/ClientOverviewWidget.vue'
 
-// --- Dashboard analytics widgets (openspec/changes/dashboard).
-//     Navi AI conversational analytics, the unified cross-module KPI
-//     panel, and the funder report export panel. ---
+// --- Dashboard analytics widgets (openspec/changes/dashboard +
+//     openspec/changes/decompose-unified-analytics). Navi AI
+//     conversational analytics, the cross-module analytics KPI cards +
+//     trend charts, and the funder report export panel. ---
 import NaviAnalyticsWidget from './views/dashboard/widgets/NaviAnalyticsWidget.vue'
-import UnifiedAnalyticsWidget from './views/dashboard/widgets/UnifiedAnalyticsWidget.vue'
+import LeadConversionKpiWidget from './views/dashboard/widgets/LeadConversionKpiWidget.vue'
+import AvgResolutionKpiWidget from './views/dashboard/widgets/AvgResolutionKpiWidget.vue'
+import ContactVolumeKpiWidget from './views/dashboard/widgets/ContactVolumeKpiWidget.vue'
+import SatisfactionKpiWidget from './views/dashboard/widgets/SatisfactionKpiWidget.vue'
+import LeadsOverTimeChartWidget from './views/dashboard/widgets/LeadsOverTimeChartWidget.vue'
+import RequestsByCategoryChartWidget from './views/dashboard/widgets/RequestsByCategoryChartWidget.vue'
 import ReportExportPanel from './views/dashboard/widgets/ReportExportPanel.vue'
+
+// Commercial dashboard widgets (openspec/changes/commercial-dashboard).
+// Six KPI cards from one cached GET /api/analytics/commercial per period,
+// four charts from GET /api/analytics/trends (revenue / pipeline-by-stage /
+// revenue-by-product-category / top-customers), and two deal tables built
+// client-side from the cached lead dataset. All share the dashboard
+// date-range + Refresh action via the analytics mixins.
+import RevenueKpiWidget from './views/dashboard/widgets/RevenueKpiWidget.vue'
+import WonValueKpiWidget from './views/dashboard/widgets/WonValueKpiWidget.vue'
+import WinRateKpiWidget from './views/dashboard/widgets/WinRateKpiWidget.vue'
+import AvgDealSizeKpiWidget from './views/dashboard/widgets/AvgDealSizeKpiWidget.vue'
+import WeightedForecastKpiWidget from './views/dashboard/widgets/WeightedForecastKpiWidget.vue'
+import OpenPipelineKpiWidget from './views/dashboard/widgets/OpenPipelineKpiWidget.vue'
+import RevenueOverTimeChartWidget from './views/dashboard/widgets/RevenueOverTimeChartWidget.vue'
+import PipelineByStageChartWidget from './views/dashboard/widgets/PipelineByStageChartWidget.vue'
+import RevenueByCategoryChartWidget from './views/dashboard/widgets/RevenueByCategoryChartWidget.vue'
+import TopCustomersChartWidget from './views/dashboard/widgets/TopCustomersChartWidget.vue'
+import ClosingSoonWidget from './views/dashboard/widgets/ClosingSoonWidget.vue'
+import RecentlyWonLostWidget from './views/dashboard/widgets/RecentlyWonLostWidget.vue'
 
 // Bespoke kanban board with in-memory search (REQ-PIPE-022).
 // See openspec/changes/2026-03-20-pipeline/design.md.
@@ -232,6 +257,18 @@ import XWikiDashboardWidget from './views/dashboard/widgets/XWikiDashboardWidget
 import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
 import XWikiSidebarTabComponent from './components/xwiki/XWikiSidebarTab.vue'
 import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
+// --- AVG (GDPR data-subject request) workflow (lib gap: list needs deadline
+//     colour-coding + masked names; detail needs the tabbed evidence/redaction/
+//     bundle/denial lifecycle; intake needs article classification). ---
+import AvgDashboardView from './views/avg/AvgDashboard.vue'
+import AvgRequestDetailView from './views/avg/AvgRequestDetail.vue'
+import AvgIntakeView from './views/avg/AvgIntakeView.vue'
+// --- Master Data Management (MDM) bespoke steward views. ---
+import MdmMasterEntityListView from './views/mdm/MdmMasterEntityListView.vue'
+import MdmMasterEntityDetailView from './views/mdm/MdmMasterEntityDetailView.vue'
+import MdmDataQualityDashboard from './views/mdm/MdmDataQualityDashboard.vue'
+import MdmDuplicateCandidatesDashboard from './views/mdm/MdmDuplicateCandidatesDashboard.vue'
+import MdmSyncQueueAdmin from './views/mdm/MdmSyncQueueAdmin.vue'
 
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
@@ -356,17 +393,121 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'Conversational analytics chat panel powered by NaviService — natural-language queries return CnChartWidget / CnTableWidget / plain text inline, with up to 3 suggested follow-up chips. openspec/changes/dashboard REQ-DASH-001 / REQ-DASH-003.',
 	},
-	UnifiedAnalyticsWidget: {
+	LeadConversionKpiWidget: {
 		kind: 'widget',
-		component: UnifiedAnalyticsWidget,
+		component: LeadConversionKpiWidget,
+		...KPI_WIDGET_META,
+		_note: 'KPI card: % of leads won in the dashboard date range. Shares one cached GET /api/analytics/overview per period. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
+	},
+	AvgResolutionKpiWidget: {
+		kind: 'widget',
+		component: AvgResolutionKpiWidget,
+		...KPI_WIDGET_META,
+		_note: 'KPI card: mean request resolution time (hours) in the dashboard date range. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
+	},
+	ContactVolumeKpiWidget: {
+		kind: 'widget',
+		component: ContactVolumeKpiWidget,
+		...KPI_WIDGET_META,
+		_note: 'KPI card: contactmoment count in the dashboard date range. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
+	},
+	SatisfactionKpiWidget: {
+		kind: 'widget',
+		component: SatisfactionKpiWidget,
+		...KPI_WIDGET_META,
+		_note: 'KPI card: mean survey score (1–5) in the dashboard date range. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
+	},
+	LeadsOverTimeChartWidget: {
+		kind: 'widget',
+		component: LeadsOverTimeChartWidget,
 		...PANEL_WIDGET_META,
-		_note: 'Cross-module KPI + trend panel (lead conversion / avg request resolution / contactmoment volume / customer satisfaction + leads-over-time line + requests-by-category bar). Driven by GET /api/analytics/overview + /api/analytics/trends. openspec/changes/dashboard REQ-DASH-010 / REQ-DASH-011.',
+		_note: 'Line chart: leads over time from GET /api/analytics/trends?metric=leads. Title comes from the widget chrome. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
+	},
+	RequestsByCategoryChartWidget: {
+		kind: 'widget',
+		component: RequestsByCategoryChartWidget,
+		...PANEL_WIDGET_META,
+		_note: 'Bar chart: requests by category from GET /api/analytics/trends?metric=requests-by-category. Title comes from the widget chrome. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
 	},
 	ReportExportPanel: {
 		kind: 'widget',
 		component: ReportExportPanel,
 		...PANEL_WIDGET_META,
 		_note: 'Collapsible funder-reporting export panel; delegates the format picker + download to CnMassExportDialog / ExportService — no custom export controller. openspec/changes/dashboard REQ-DASH-020 / REQ-DASH-021.',
+	},
+
+	// --- Commercial dashboard widgets (openspec/changes/commercial-dashboard). ---
+	RevenueKpiWidget: {
+		kind: 'widget',
+		component: RevenueKpiWidget,
+		...KPI_WIDGET_META,
+		_note: 'KPI card: settled POS turnover + won-deal value in the dashboard date range. Shares one cached GET /api/analytics/commercial per period.',
+	},
+	WonValueKpiWidget: {
+		kind: 'widget',
+		component: WonValueKpiWidget,
+		...KPI_WIDGET_META,
+		_note: 'KPI card: value of deals won in the dashboard date range.',
+	},
+	WinRateKpiWidget: {
+		kind: 'widget',
+		component: WinRateKpiWidget,
+		...KPI_WIDGET_META,
+		_note: 'KPI card: won / (won + lost) deals closed in the dashboard date range.',
+	},
+	AvgDealSizeKpiWidget: {
+		kind: 'widget',
+		component: AvgDealSizeKpiWidget,
+		...KPI_WIDGET_META,
+		_note: 'KPI card: mean value of won deals in the dashboard date range.',
+	},
+	WeightedForecastKpiWidget: {
+		kind: 'widget',
+		component: WeightedForecastKpiWidget,
+		...KPI_WIDGET_META,
+		_note: 'KPI card: open pipeline value weighted by win probability (forward-looking).',
+	},
+	OpenPipelineKpiWidget: {
+		kind: 'widget',
+		component: OpenPipelineKpiWidget,
+		...KPI_WIDGET_META,
+		_note: 'KPI card: total value of open leads (forward-looking).',
+	},
+	RevenueOverTimeChartWidget: {
+		kind: 'widget',
+		component: RevenueOverTimeChartWidget,
+		...PANEL_WIDGET_META,
+		_note: 'Line chart: revenue over time from GET /api/analytics/trends?metric=revenue. Title comes from the widget chrome.',
+	},
+	PipelineByStageChartWidget: {
+		kind: 'widget',
+		component: PipelineByStageChartWidget,
+		...PANEL_WIDGET_META,
+		_note: 'Horizontal bar funnel: open-lead value per stage from GET /api/analytics/trends?metric=pipeline-by-stage.',
+	},
+	RevenueByCategoryChartWidget: {
+		kind: 'widget',
+		component: RevenueByCategoryChartWidget,
+		...PANEL_WIDGET_META,
+		_note: 'Donut: POS revenue by product category from GET /api/analytics/trends?metric=revenue-by-product-category.',
+	},
+	TopCustomersChartWidget: {
+		kind: 'widget',
+		component: TopCustomersChartWidget,
+		...PANEL_WIDGET_META,
+		_note: 'Horizontal bar: top customers by revenue from GET /api/analytics/trends?metric=top-customers.',
+	},
+	ClosingSoonWidget: {
+		kind: 'widget',
+		component: ClosingSoonWidget,
+		...PANEL_WIDGET_META,
+		_note: 'Table: open deals ordered by expected close date, built client-side from the cached lead dataset.',
+	},
+	RecentlyWonLostWidget: {
+		kind: 'widget',
+		component: RecentlyWonLostWidget,
+		...PANEL_WIDGET_META,
+		_note: 'Table: recently won/lost deals, built client-side from the cached lead dataset.',
 	},
 
 	// --- Queues / routing rules. ---
@@ -824,6 +965,51 @@ const registry = {
 		kind: 'widget',
 		component: XWikiArticleViewer,
 		_note: 'Inline xWiki HTML viewer used by the sidebar tab; consumes the xwiki Pinia store directly.',
+	},
+	// --- AVG (GDPR data-subject request) workflow. ---
+	AvgDashboardView: {
+		kind: 'page',
+		component: AvgDashboardView,
+		_note: 'AVG request dashboard; custom so rows carry deadline colour-coding, masked subject names and a DPIA badge, and the empty state offers "New AVG request".',
+	},
+	AvgRequestDetailView: {
+		kind: 'page',
+		component: AvgRequestDetailView,
+		_note: 'AVG request detail with the tabbed lifecycle (intake/evidence/redaction/bundle/denial), a live deadline counter and the 60-day extension action; lib detail page cannot express the GDPR request lifecycle.',
+	},
+	AvgIntakeView: {
+		kind: 'page',
+		component: AvgIntakeView,
+		_note: 'AVG intake form with article classification + BSN elfproef validation; lib has no classification/intake page type.',
+	},
+	// --- Master Data Management (MDM) steward surfaces. The list/detail,
+	//     duplicate-candidates and data-quality dashboards aggregate across
+	//     master-entity + source-record + sync-queue reads that the declarative
+	//     typed pages cannot express, so they ship as bespoke views. ---
+	MdmMasterEntityListView: {
+		kind: 'page',
+		component: MdmMasterEntityListView,
+		_note: 'Master entity list with entityType + low-quality filters and a data-quality badge per row.',
+	},
+	MdmMasterEntityDetailView: {
+		kind: 'page',
+		component: MdmMasterEntityDetailView,
+		_note: 'Golden record + source-record lineage + per-attribute provenance, with the conflict-resolution modal.',
+	},
+	MdmDataQualityDashboard: {
+		kind: 'page',
+		component: MdmDataQualityDashboard,
+		_note: 'Aggregate quality buckets, worst-entity table and sync-queue health with dead-letter retry.',
+	},
+	MdmDuplicateCandidatesDashboard: {
+		kind: 'page',
+		component: MdmDuplicateCandidatesDashboard,
+		_note: 'Deterministic + probabilistic duplicate candidates with the merge wizard modal.',
+	},
+	MdmSyncQueueAdmin: {
+		kind: 'page',
+		component: MdmSyncQueueAdmin,
+		_note: 'Outbound sync queue with status filter and manual retry of failed / dead-letter items.',
 	},
 }
 

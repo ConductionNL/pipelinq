@@ -91,8 +91,35 @@ class AnalyticsService
      * @var array<int, string>
      *
      * @spec openspec/changes/dashboard/tasks.md#task-2.2
+     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
      */
-    public const ALLOWED_TREND_METRICS = ['leads', 'requests-by-category', 'pipeline-value'];
+    public const ALLOWED_TREND_METRICS = [
+        'leads',
+        'requests-by-category',
+        'pipeline-value',
+        'revenue',
+        'pipeline-by-stage',
+        'revenue-by-product-category',
+        'top-customers',
+    ];
+
+    /**
+     * POS transaction statuses that count as realised revenue.
+     *
+     * @var array<int, string>
+     *
+     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     */
+    private const REVENUE_POS_STATUSES = ['settled', 'confirmed'];
+
+    /**
+     * How many customers the top-customers breakdown returns.
+     *
+     * @var int
+     *
+     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     */
+    private const TOP_CUSTOMERS_LIMIT = 8;
 
     /**
      * Trailing-window days per period (used by both summary and overview).
@@ -373,9 +400,9 @@ class AnalyticsService
         $currentStart  = $now->modify(sprintf('-%d days', $days));
         $previousStart = $currentStart->modify(sprintf('-%d days', $days));
 
-        $leads     = $this->findObjects(schemaKey: 'lead_schema');
-        $requests  = $this->findObjects(schemaKey: 'request_schema');
-        $cms       = $this->findObjects(schemaKey: 'contactmoment_schema');
+        $leads    = $this->findObjects(schemaKey: 'lead_schema');
+        $requests = $this->findObjects(schemaKey: 'request_schema');
+        $cms      = $this->findObjects(schemaKey: 'contactmoment_schema');
         // Survey responses migrated to the OpenRegister forms leaf (NC Forms).
         // CSAT will be re-sourced from form-link responses once the leaf
         // exposes a query helper; see openspec/changes/migrate-forms-to-forms-leaf.
@@ -413,8 +440,8 @@ class AnalyticsService
      *
      * Stateless helper called twice from getOverview() (current + previous).
      *
-     * @param DateTimeInterface             $from      Inclusive lower bound.
-     * @param DateTimeInterface             $to        Exclusive upper bound.
+     * @param DateTimeInterface                $from      Inclusive lower bound.
+     * @param DateTimeInterface                $to        Exclusive upper bound.
      * @param array<int, array<string, mixed>> $leads     Lead rows.
      * @param array<int, array<string, mixed>> $requests  Request rows.
      * @param array<int, array<string, mixed>> $cms       Contactmoment rows.
@@ -437,41 +464,53 @@ class AnalyticsService
         $totalLeads = 0;
         $wonLeads   = 0;
         foreach ($leads as $lead) {
-            $ts = $this->extractTimestamp($lead, ['createdAt', 'created', 'expectedCloseDate']);
+            $ts = $this->extractTimestamp(row: $lead, fields: ['createdAt', 'created', 'expectedCloseDate']);
             if ($ts === null || $ts < $fromTs || $ts >= $toTs) {
                 continue;
             }
+
             $totalLeads++;
             if (((string) ($lead['status'] ?? '')) === 'won') {
                 $wonLeads++;
             }
         }
-        $leadConversionRate = $totalLeads === 0 ? null : round(($wonLeads * 100.0) / $totalLeads, 1);
+
+        $leadConversionRate = null;
+        if ($totalLeads > 0) {
+            $leadConversionRate = round(($wonLeads * 100.0) / $totalLeads, 1);
+        }
 
         // Avg request resolution time.
         $resolutionHours = 0.0;
         $resolvedCount   = 0;
         foreach ($requests as $request) {
-            $requestedTs = $this->extractTimestamp($request, ['requestedAt']);
-            $completedTs = $this->extractTimestamp($request, ['completedAt']);
+            $requestedTs = $this->extractTimestamp(row: $request, fields: ['requestedAt']);
+            $completedTs = $this->extractTimestamp(row: $request, fields: ['completedAt']);
             if ($requestedTs === null || $completedTs === null) {
                 continue;
             }
+
             if ($completedTs < $fromTs || $completedTs >= $toTs) {
                 continue;
             }
+
             $resolutionHours += max(0, ($completedTs - $requestedTs) / 3600.0);
             $resolvedCount++;
         }
-        $avgRequestResolutionTime = $resolvedCount === 0 ? null : round($resolutionHours / $resolvedCount, 2);
+
+        $avgRequestResolutionTime = null;
+        if ($resolvedCount > 0) {
+            $avgRequestResolutionTime = round($resolutionHours / $resolvedCount, 2);
+        }
 
         // Contact moment volume.
         $cmCount = 0;
         foreach ($cms as $cm) {
-            $ts = $this->extractTimestamp($cm, ['contactedAt', 'createdAt']);
+            $ts = $this->extractTimestamp(row: $cm, fields: ['contactedAt', 'createdAt']);
             if ($ts === null || $ts < $fromTs || $ts >= $toTs) {
                 continue;
             }
+
             $cmCount++;
         }
 
@@ -479,17 +518,23 @@ class AnalyticsService
         $scoreSum = 0.0;
         $scoreN   = 0;
         foreach ($responses as $r) {
-            $ts = $this->extractTimestamp($r, ['submittedAt', 'createdAt']);
+            $ts = $this->extractTimestamp(row: $r, fields: ['submittedAt', 'createdAt']);
             if ($ts === null || $ts < $fromTs || $ts >= $toTs) {
                 continue;
             }
+
             if (isset($r['score']) === false || is_numeric($r['score']) === false) {
                 continue;
             }
+
             $scoreSum += (float) $r['score'];
             $scoreN++;
         }
-        $customerSatisfactionScore = $scoreN === 0 ? null : round($scoreSum / $scoreN, 2);
+
+        $customerSatisfactionScore = null;
+        if ($scoreN > 0) {
+            $customerSatisfactionScore = round($scoreSum / $scoreN, 2);
+        }
 
         return [
             'leadConversionRate'        => $leadConversionRate,
@@ -523,15 +568,19 @@ class AnalyticsService
         if (in_array($metric, self::ALLOWED_TREND_METRICS, true) === false) {
             throw new InvalidArgumentException(message: 'Unsupported metric');
         }
+
         if (in_array($period, self::ALLOWED_OVERVIEW_PERIODS, true) === false) {
             throw new InvalidArgumentException(message: 'Invalid period');
         }
 
-        if ($metric === 'requests-by-category') {
-            return $this->buildCategorySeries(period: $period);
-        }
-
-        return $this->buildTimeBucketSeries(metric: $metric, period: $period);
+        return match ($metric) {
+            'requests-by-category'        => $this->buildCategorySeries(period: $period),
+            'revenue'                     => $this->buildRevenueSeries(period: $period),
+            'pipeline-by-stage'           => $this->buildPipelineByStageSeries(period: $period),
+            'revenue-by-product-category' => $this->buildRevenueByCategorySeries(period: $period),
+            'top-customers'               => $this->buildTopCustomersSeries(period: $period),
+            default                       => $this->buildTimeBucketSeries(metric: $metric, period: $period),
+        };
     }//end getTrends()
 
     /**
@@ -544,32 +593,37 @@ class AnalyticsService
      */
     private function buildTimeBucketSeries(string $metric, string $period): array
     {
-        $leads  = $this->findObjects(schemaKey: 'lead_schema');
-        $days   = self::PERIOD_DAYS[$period];
-        $now    = new DateTimeImmutable();
-        $start  = $now->modify(sprintf('-%d days', $days));
+        $leads   = $this->findObjects(schemaKey: 'lead_schema');
+        $days    = self::PERIOD_DAYS[$period];
+        $now     = new DateTimeImmutable();
+        $start   = $now->modify(sprintf('-%d days', $days));
         $startTs = $start->getTimestamp();
         $nowTs   = $now->getTimestamp();
 
         // Bucket granularity: day for week/month, week for quarter, month for year.
         $bucketSize = match ($period) {
-            'week', 'month' => 86400,            // 1 day.
-            'quarter'       => 86400 * 7,        // 1 week.
-            'year'          => 86400 * 30,       // ~1 month.
+            'week', 'month' => 86400,
+            // 1 day.
+            'quarter'       => 86400 * 7,
+            // 1 week.
+            'year'          => 86400 * 30,
+            // ~1 month.
             default         => 86400,
         };
 
         $buckets = [];
         foreach ($leads as $lead) {
-            $ts = $this->extractTimestamp($lead, ['createdAt', 'created', 'expectedCloseDate']);
+            $ts = $this->extractTimestamp(row: $lead, fields: ['createdAt', 'created', 'expectedCloseDate']);
             if ($ts === null || $ts < $startTs || $ts > $nowTs) {
                 continue;
             }
+
             $bucketTs = $startTs + ((int) floor(($ts - $startTs) / $bucketSize)) * $bucketSize;
             $key      = date('Y-m-d', $bucketTs);
             if (isset($buckets[$key]) === false) {
                 $buckets[$key] = 0;
             }
+
             if ($metric === 'leads') {
                 $buckets[$key] += 1;
             } else {
@@ -580,7 +634,11 @@ class AnalyticsService
         ksort($buckets);
         $series = [];
         foreach ($buckets as $date => $value) {
-            $series[] = ['date' => $date, 'value' => $metric === 'leads' ? (int) $value : round((float) $value, 2)];
+            $bucketValue = round((float) $value, 2);
+            if ($metric === 'leads') {
+                $bucketValue = (int) $value;
+            }
+            $series[] = ['date' => $date, 'value' => $bucketValue];
         }
 
         return ['metric' => $metric, 'period' => $period, 'series' => $series];
@@ -604,17 +662,20 @@ class AnalyticsService
 
         $counts = [];
         foreach ($requests as $request) {
-            $ts = $this->extractTimestamp($request, ['requestedAt', 'createdAt']);
+            $ts = $this->extractTimestamp(row: $request, fields: ['requestedAt', 'createdAt']);
             if ($ts === null || $ts < $startTs || $ts > $nowTs) {
                 continue;
             }
+
             $category = (string) ($request['category'] ?? '');
             if ($category === '') {
                 continue;
             }
+
             if (isset($counts[$category]) === false) {
                 $counts[$category] = 0;
             }
+
             $counts[$category]++;
         }
 
@@ -626,6 +687,7 @@ class AnalyticsService
             if ($count <= 0) {
                 continue;
             }
+
             $series[] = ['date' => $category, 'value' => $count];
         }
 
@@ -660,10 +722,12 @@ class AnalyticsService
                 $leadCounts[$status]++;
             }
         }
-        $leadTotal           = $leadCounts['open'] + $leadCounts['won'] + $leadCounts['lost'];
-        $leadConversionRate  = $leadTotal === 0
-            ? null
-            : round(($leadCounts['won'] * 100.0) / $leadTotal, 1);
+
+        $leadTotal          = $leadCounts['open'] + $leadCounts['won'] + $leadCounts['lost'];
+        $leadConversionRate = null;
+        if ($leadTotal > 0) {
+            $leadConversionRate = round(($leadCounts['won'] * 100.0) / $leadTotal, 1);
+        }
 
         $requestCounts = ['new' => 0, 'in_progress' => 0, 'completed' => 0, 'rejected' => 0];
         foreach ($requests as $request) {
@@ -672,16 +736,570 @@ class AnalyticsService
                 $requestCounts[$status]++;
             }
         }
-        $requestTotal     = array_sum($requestCounts);
-        $resolutionRate   = $requestTotal === 0
-            ? null
-            : round(($requestCounts['completed'] * 100.0) / $requestTotal, 1);
+
+        $requestTotal   = array_sum($requestCounts);
+        $resolutionRate = null;
+        if ($requestTotal > 0) {
+            $resolutionRate = round(($requestCounts['completed'] * 100.0) / $requestTotal, 1);
+        }
 
         return [
             'leadFunnel'    => array_merge($leadCounts, ['conversionRate' => $leadConversionRate]),
             'requestFunnel' => array_merge($requestCounts, ['resolutionRate' => $resolutionRate]),
         ];
     }//end getFunnels()
+
+    /**
+     * Commercial KPI overview for the Commercial dashboard.
+     *
+     * Computes, for the trailing window of $period:
+     *   - revenue:           settled-POS turnover + won-deal value closed in window
+     *   - wonValue:          sum of won-lead value closed in window
+     *   - winRate:           won / (won + lost) leads closed in window (0-100, null if none)
+     *   - avgDealSize:       mean won-lead value in window (null if none)
+     *   - weightedForecast:  sum over OPEN leads of value * probability/100 (forward-looking)
+     *   - openPipelineValue: sum of value over OPEN leads (forward-looking)
+     *   - previousPeriod:    windowed figures for the preceding equal-length window
+     *
+     * @param string $period One of ALLOWED_OVERVIEW_PERIODS.
+     *
+     * @return array{
+     *   revenue: float,
+     *   wonValue: float,
+     *   winRate: float|null,
+     *   avgDealSize: float|null,
+     *   weightedForecast: float,
+     *   openPipelineValue: float,
+     *   period: string,
+     *   previousPeriod: array<string, float|null>
+     * }
+     *
+     * @throws InvalidArgumentException When the period is not recognised.
+     * @throws RuntimeException         When OpenRegister is unreachable.
+     *
+     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     */
+    public function getCommercialOverview(string $period=self::DEFAULT_PERIOD): array
+    {
+        if (in_array($period, self::ALLOWED_OVERVIEW_PERIODS, true) === false) {
+            throw new InvalidArgumentException(message: 'Invalid period');
+        }
+
+        $days = self::PERIOD_DAYS[$period];
+        $now  = new DateTimeImmutable();
+
+        $currentStart  = $now->modify(sprintf('-%d days', $days));
+        $previousStart = $currentStart->modify(sprintf('-%d days', $days));
+
+        $leads = $this->findObjects(schemaKey: 'lead_schema');
+        $pos   = $this->findObjects(schemaKey: 'posTransaction_schema');
+
+        $current  = $this->aggregateCommercialWindow(from: $currentStart, to: $now, leads: $leads, pos: $pos);
+        $previous = $this->aggregateCommercialWindow(from: $previousStart, to: $currentStart, leads: $leads, pos: $pos);
+
+        $forecast = $this->aggregateOpenPipeline(leads: $leads);
+
+        return [
+            'revenue'           => $current['revenue'],
+            'wonValue'          => $current['wonValue'],
+            'winRate'           => $current['winRate'],
+            'avgDealSize'       => $current['avgDealSize'],
+            'weightedForecast'  => $forecast['weightedForecast'],
+            'openPipelineValue' => $forecast['openPipelineValue'],
+            'period'            => $period,
+            'previousPeriod'    => $previous,
+        ];
+    }//end getCommercialOverview()
+
+    /**
+     * Aggregate the windowed commercial figures for one time window.
+     *
+     * @param DateTimeInterface                $from  Inclusive lower bound.
+     * @param DateTimeInterface                $to    Exclusive upper bound.
+     * @param array<int, array<string, mixed>> $leads Lead rows.
+     * @param array<int, array<string, mixed>> $pos   POS transaction rows.
+     *
+     * @return array{revenue: float, wonValue: float, winRate: float|null, avgDealSize: float|null}
+     *
+     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     */
+    private function aggregateCommercialWindow(
+        DateTimeInterface $from,
+        DateTimeInterface $to,
+        array $leads,
+        array $pos,
+    ): array {
+        $fromTs = $from->getTimestamp();
+        $toTs   = $to->getTimestamp();
+
+        $posRevenue = 0.0;
+        foreach ($pos as $txn) {
+            $ts = $this->posRevenueTimestamp(txn: $txn);
+            if ($this->isRevenueTransaction(txn: $txn) === false || $ts === null || $ts < $fromTs || $ts >= $toTs) {
+                continue;
+            }
+
+            $posRevenue += (float) ($txn['total'] ?? 0);
+        }
+
+        $wonValue  = 0.0;
+        $wonCount  = 0;
+        $lostCount = 0;
+        foreach ($leads as $lead) {
+            $status = (string) ($lead['status'] ?? '');
+            if ($status !== 'won' && $status !== 'lost') {
+                continue;
+            }
+
+            $ts = $this->leadCloseTimestamp(lead: $lead);
+            if ($ts === null || $ts < $fromTs || $ts >= $toTs) {
+                continue;
+            }
+
+            if ($status === 'won') {
+                $wonValue += (float) ($lead['value'] ?? 0);
+                $wonCount++;
+            } else {
+                $lostCount++;
+            }
+        }
+
+        $closed = ($wonCount + $lostCount);
+
+        $winRate = null;
+        if ($closed > 0) {
+            $winRate = round(($wonCount * 100.0) / $closed, 1);
+        }
+
+        $avgDealSize = null;
+        if ($wonCount > 0) {
+            $avgDealSize = round($wonValue / $wonCount, 2);
+        }
+
+        return [
+            'revenue'     => round(($posRevenue + $wonValue), 2),
+            'wonValue'    => round($wonValue, 2),
+            'winRate'     => $winRate,
+            'avgDealSize' => $avgDealSize,
+        ];
+    }//end aggregateCommercialWindow()
+
+    /**
+     * Forward-looking open-pipeline figures (current state, not windowed).
+     *
+     * @param array<int, array<string, mixed>> $leads Lead rows.
+     *
+     * @return array{weightedForecast: float, openPipelineValue: float}
+     *
+     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     */
+    private function aggregateOpenPipeline(array $leads): array
+    {
+        $weightedForecast  = 0.0;
+        $openPipelineValue = 0.0;
+        foreach ($leads as $lead) {
+            if (((string) ($lead['status'] ?? '')) !== 'open') {
+                continue;
+            }
+
+            $value       = (float) ($lead['value'] ?? 0);
+            $probability = (float) ($lead['probability'] ?? 0);
+            $openPipelineValue += $value;
+            $weightedForecast  += ($value * ($probability / 100.0));
+        }
+
+        return [
+            'weightedForecast'  => round($weightedForecast, 2),
+            'openPipelineValue' => round($openPipelineValue, 2),
+        ];
+    }//end aggregateOpenPipeline()
+
+    /**
+     * Time-bucketed revenue series: settled-POS turnover + won-deal value.
+     *
+     * @param string $period One of ALLOWED_OVERVIEW_PERIODS.
+     *
+     * @return array{metric: string, period: string, series: array<int, array<string, mixed>>}
+     *
+     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     */
+    private function buildRevenueSeries(string $period): array
+    {
+        $pos   = $this->findObjects(schemaKey: 'posTransaction_schema');
+        $leads = $this->findObjects(schemaKey: 'lead_schema');
+
+        $days       = self::PERIOD_DAYS[$period];
+        $now        = new DateTimeImmutable();
+        $startTs    = $now->modify(sprintf('-%d days', $days))->getTimestamp();
+        $nowTs      = $now->getTimestamp();
+        $bucketSize = $this->bucketSizeForPeriod(period: $period);
+
+        $buckets = [];
+        foreach ($pos as $txn) {
+            if ($this->isRevenueTransaction(txn: $txn) === false) {
+                continue;
+            }
+
+            $key = $this->bucketKey(ts: $this->posRevenueTimestamp(txn: $txn), startTs: $startTs, nowTs: $nowTs, bucketSize: $bucketSize);
+            if ($key !== null) {
+                $buckets[$key] = (($buckets[$key] ?? 0.0) + (float) ($txn['total'] ?? 0));
+            }
+        }
+
+        foreach ($leads as $lead) {
+            if (((string) ($lead['status'] ?? '')) !== 'won') {
+                continue;
+            }
+
+            $key = $this->bucketKey(ts: $this->leadCloseTimestamp(lead: $lead), startTs: $startTs, nowTs: $nowTs, bucketSize: $bucketSize);
+            if ($key !== null) {
+                $buckets[$key] = (($buckets[$key] ?? 0.0) + (float) ($lead['value'] ?? 0));
+            }
+        }
+
+        ksort($buckets);
+        $series = [];
+        foreach ($buckets as $date => $value) {
+            $series[] = ['date' => $date, 'value' => round((float) $value, 2)];
+        }
+
+        return ['metric' => 'revenue', 'period' => $period, 'series' => $series];
+    }//end buildRevenueSeries()
+
+    /**
+     * Open-lead value summed per pipeline stage, ordered by stage order.
+     *
+     * @param string $period One of ALLOWED_OVERVIEW_PERIODS (echoed only).
+     *
+     * @return array{metric: string, period: string, series: array<int, array<string, mixed>>}
+     *
+     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     */
+    private function buildPipelineByStageSeries(string $period): array
+    {
+        $leads = $this->findObjects(schemaKey: 'lead_schema');
+
+        $byStage = [];
+        $order   = [];
+        foreach ($leads as $lead) {
+            if (((string) ($lead['status'] ?? '')) !== 'open') {
+                continue;
+            }
+
+            $stage = (string) ($lead['stage'] ?? '');
+            if ($stage === '') {
+                $stage = 'Unassigned';
+            }
+
+            $byStage[$stage] = (($byStage[$stage] ?? 0.0) + (float) ($lead['value'] ?? 0));
+            if (isset($order[$stage]) === false) {
+                $order[$stage] = (int) ($lead['stageOrder'] ?? 999);
+            }
+        }
+
+        $rows = [];
+        foreach ($byStage as $stage => $value) {
+            $rows[] = ['date' => (string) $stage, 'value' => round((float) $value, 2), 'order' => $order[$stage]];
+        }
+
+        usort(
+            $rows,
+            static function (array $left, array $right): int {
+                return ($left['order'] <=> $right['order']);
+            }
+        );
+
+        $series = [];
+        foreach ($rows as $row) {
+            $series[] = ['date' => $row['date'], 'value' => $row['value']];
+        }
+
+        return ['metric' => 'pipeline-by-stage', 'period' => $period, 'series' => $series];
+    }//end buildPipelineByStageSeries()
+
+    /**
+     * POS line revenue grouped by the linked product's category.
+     *
+     * Only lines whose parent transaction is a realised-revenue
+     * transaction settled within the window contribute. Lines with no
+     * resolvable category are summed under an "Other" entry.
+     *
+     * @param string $period One of ALLOWED_OVERVIEW_PERIODS.
+     *
+     * @return array{metric: string, period: string, series: array<int, array<string, mixed>>}
+     *
+     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     */
+    private function buildRevenueByCategorySeries(string $period): array
+    {
+        $days    = self::PERIOD_DAYS[$period];
+        $now     = new DateTimeImmutable();
+        $startTs = $now->modify(sprintf('-%d days', $days))->getTimestamp();
+        $nowTs   = $now->getTimestamp();
+
+        $pos        = $this->findObjects(schemaKey: 'posTransaction_schema');
+        $lines      = $this->findObjects(schemaKey: 'posTransactionLine_schema');
+        $products   = $this->findObjects(schemaKey: 'product_schema');
+        $categories = $this->findObjects(schemaKey: 'productCategory_schema');
+
+        $eligibleTxn = [];
+        foreach ($pos as $txn) {
+            $ts = $this->posRevenueTimestamp(txn: $txn);
+            if ($this->isRevenueTransaction(txn: $txn) === false || $ts === null || $ts < $startTs || $ts > $nowTs) {
+                continue;
+            }
+
+            $id = $this->objectId(row: $txn);
+            if ($id !== '') {
+                $eligibleTxn[$id] = true;
+            }
+        }
+
+        $categoryByProduct = $this->productCategoryIndex(products: $products);
+        // product.category is a UUID reference to a productCategory; resolve
+        // it to the display name. Legacy free-text categories (no matching
+        // productCategory row) fall through to their own value.
+        $categoryNames = $this->categoryNameIndex(categories: $categories);
+
+        $byCategory = [];
+        foreach ($lines as $line) {
+            $txnId = (string) ($line['transaction'] ?? '');
+            if ($txnId === '' || isset($eligibleTxn[$txnId]) === false) {
+                continue;
+            }
+
+            $categoryRef = ($categoryByProduct[(string) ($line['product'] ?? '')] ?? '');
+            $category    = ($categoryNames[$categoryRef] ?? $categoryRef);
+            if ($category === '') {
+                $category = 'Other';
+            }
+
+            $byCategory[$category] = (($byCategory[$category] ?? 0.0) + (float) ($line['lineTotal'] ?? 0));
+        }
+
+        arsort($byCategory);
+        $series = [];
+        foreach ($byCategory as $category => $value) {
+            $series[] = ['date' => (string) $category, 'value' => round((float) $value, 2)];
+        }
+
+        return ['metric' => 'revenue-by-product-category', 'period' => $period, 'series' => $series];
+    }//end buildRevenueByCategorySeries()
+
+    /**
+     * Won-deal + POS revenue grouped by client, top N by value.
+     *
+     * @param string $period One of ALLOWED_OVERVIEW_PERIODS.
+     *
+     * @return array{metric: string, period: string, series: array<int, array<string, mixed>>}
+     *
+     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     */
+    private function buildTopCustomersSeries(string $period): array
+    {
+        $days    = self::PERIOD_DAYS[$period];
+        $now     = new DateTimeImmutable();
+        $startTs = $now->modify(sprintf('-%d days', $days))->getTimestamp();
+        $nowTs   = $now->getTimestamp();
+
+        $leads   = $this->findObjects(schemaKey: 'lead_schema');
+        $pos     = $this->findObjects(schemaKey: 'posTransaction_schema');
+        $clients = $this->findObjects(schemaKey: 'client_schema');
+
+        $nameByClient = $this->clientNameIndex(clients: $clients);
+
+        $byClient = [];
+        foreach ($leads as $lead) {
+            $ts = $this->leadCloseTimestamp(lead: $lead);
+            if (((string) ($lead['status'] ?? '')) !== 'won' || $ts === null || $ts < $startTs || $ts > $nowTs) {
+                continue;
+            }
+
+            $client            = (string) ($lead['client'] ?? '');
+            $byClient[$client] = (($byClient[$client] ?? 0.0) + (float) ($lead['value'] ?? 0));
+        }
+
+        foreach ($pos as $txn) {
+            $ts = $this->posRevenueTimestamp(txn: $txn);
+            if ($this->isRevenueTransaction(txn: $txn) === false || $ts === null || $ts < $startTs || $ts > $nowTs) {
+                continue;
+            }
+
+            $client            = (string) ($txn['client'] ?? ($txn['customer'] ?? ''));
+            $byClient[$client] = (($byClient[$client] ?? 0.0) + (float) ($txn['total'] ?? 0));
+        }
+
+        arsort($byClient);
+        $series = [];
+        $count  = 0;
+        foreach ($byClient as $client => $value) {
+            if ($count >= self::TOP_CUSTOMERS_LIMIT) {
+                break;
+            }
+
+            if ((string) $client === '') {
+                continue;
+            }
+
+            $series[] = ['date' => ($nameByClient[(string) $client] ?? (string) $client), 'value' => round((float) $value, 2)];
+            $count++;
+        }
+
+        return ['metric' => 'top-customers', 'period' => $period, 'series' => $series];
+    }//end buildTopCustomersSeries()
+
+    /**
+     * Whether a POS transaction counts as realised revenue.
+     *
+     * @param array<string, mixed> $txn POS transaction row.
+     *
+     * @return bool
+     */
+    private function isRevenueTransaction(array $txn): bool
+    {
+        return in_array((string) ($txn['status'] ?? ''), self::REVENUE_POS_STATUSES, true);
+    }//end isRevenueTransaction()
+
+    /**
+     * Timestamp at which a POS transaction realised revenue.
+     *
+     * @param array<string, mixed> $txn POS transaction row.
+     *
+     * @return int|null
+     */
+    private function posRevenueTimestamp(array $txn): ?int
+    {
+        return $this->extractTimestamp(row: $txn, fields: ['settledAt', 'confirmedAt', 'created', 'createdAt']);
+    }//end posRevenueTimestamp()
+
+    /**
+     * Timestamp at which a lead closed (won/lost).
+     *
+     * @param array<string, mixed> $lead Lead row.
+     *
+     * @return int|null
+     */
+    private function leadCloseTimestamp(array $lead): ?int
+    {
+        return $this->extractTimestamp(row: $lead, fields: ['stageEnteredAt', 'expectedCloseDate', 'created', 'createdAt']);
+    }//end leadCloseTimestamp()
+
+    /**
+     * Bucket key (`Y-m-d`) for a timestamp, or null when out of range.
+     *
+     * @param int|null $ts         Unix timestamp.
+     * @param int      $startTs    Window start.
+     * @param int      $nowTs      Window end.
+     * @param int      $bucketSize Bucket width in seconds.
+     *
+     * @return string|null
+     */
+    private function bucketKey(?int $ts, int $startTs, int $nowTs, int $bucketSize): ?string
+    {
+        if ($ts === null || $ts < $startTs || $ts > $nowTs) {
+            return null;
+        }
+
+        $bucketTs = ($startTs + ((int) floor((($ts - $startTs) / $bucketSize)) * $bucketSize));
+        return date('Y-m-d', $bucketTs);
+    }//end bucketKey()
+
+    /**
+     * Bucket width in seconds for a period (day/week/month granularity).
+     *
+     * @param string $period One of ALLOWED_OVERVIEW_PERIODS.
+     *
+     * @return int
+     */
+    private function bucketSizeForPeriod(string $period): int
+    {
+        return match ($period) {
+            'week', 'month' => 86400,
+            'quarter'       => (86400 * 7),
+            'year'          => (86400 * 30),
+            default         => 86400,
+        };
+    }//end bucketSizeForPeriod()
+
+    /**
+     * Extract the canonical object id from a row (`@self.id` or `id`).
+     *
+     * @param array<string, mixed> $row Object row.
+     *
+     * @return string
+     */
+    private function objectId(array $row): string
+    {
+        if (isset($row['@self']) === true && is_array($row['@self']) === true && isset($row['@self']['id']) === true) {
+            return (string) $row['@self']['id'];
+        }
+
+        if (isset($row['id']) === true) {
+            return (string) $row['id'];
+        }
+
+        return '';
+    }//end objectId()
+
+    /**
+     * Map product object id -> category name.
+     *
+     * @param array<int, array<string, mixed>> $products Product rows.
+     *
+     * @return array<string, string>
+     */
+    private function productCategoryIndex(array $products): array
+    {
+        $index = [];
+        foreach ($products as $product) {
+            $id = $this->objectId(row: $product);
+            if ($id !== '') {
+                $index[$id] = (string) ($product['category'] ?? '');
+            }
+        }
+
+        return $index;
+    }//end productCategoryIndex()
+
+    /**
+     * Map client object id -> display name.
+     *
+     * @param array<int, array<string, mixed>> $clients Client rows.
+     *
+     * @return array<string, string>
+     */
+    private function clientNameIndex(array $clients): array
+    {
+        $index = [];
+        foreach ($clients as $client) {
+            $id = $this->objectId(row: $client);
+            if ($id !== '') {
+                $index[$id] = (string) ($client['name'] ?? $id);
+            }
+        }
+
+        return $index;
+    }//end clientNameIndex()
+
+    /**
+     * Map productCategory object id -> display name.
+     *
+     * @param array<int, array<string, mixed>> $categories Product-category rows.
+     *
+     * @return array<string, string>
+     */
+    private function categoryNameIndex(array $categories): array
+    {
+        $index = [];
+        foreach ($categories as $category) {
+            $id = $this->objectId(row: $category);
+            if ($id !== '') {
+                $index[$id] = (string) ($category['name'] ?? $id);
+            }
+        }
+
+        return $index;
+    }//end categoryNameIndex()
 
     /**
      * Extract a unix timestamp from one of several candidate fields.
@@ -697,15 +1315,18 @@ class AnalyticsService
             if (isset($row[$field]) === false) {
                 continue;
             }
+
             $value = (string) $row[$field];
             if ($value === '') {
                 continue;
             }
+
             $ts = strtotime($value);
             if ($ts !== false) {
                 return $ts;
             }
         }
+
         return null;
     }//end extractTimestamp()
 }//end class

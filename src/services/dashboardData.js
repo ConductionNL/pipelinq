@@ -144,9 +144,10 @@ export function getClients() {
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-18
  */
 export function getMyLeads() {
-	if (!OC.currentUser) return Promise.resolve([])
+	const uid = window.OC?.getCurrentUser?.()?.uid
+	if (!uid) return Promise.resolve([])
 	return cached('lead:mine', () => fetchRaw('lead', {
-		assignee: OC.currentUser,
+		assignee: uid,
 		_limit: 200,
 	}))
 }
@@ -155,11 +156,71 @@ export function getMyLeads() {
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-19
  */
 export function getMyRequests() {
-	if (!OC.currentUser) return Promise.resolve([])
+	const uid = window.OC?.getCurrentUser?.()?.uid
+	if (!uid) return Promise.resolve([])
 	return cached('request:mine', () => fetchRaw('request', {
-		assignee: OC.currentUser,
+		assignee: uid,
 		_limit: 200,
 	}))
+}
+
+/**
+ * Authenticated GET against a pipelinq app endpoint (not OR objects).
+ *
+ * @param {string} path - App-relative path (e.g. '/apps/pipelinq/api/…').
+ * @return {Promise<object>} Parsed JSON body.
+ */
+async function fetchAppJson(path) {
+	const response = await fetch(generateUrl(path), {
+		headers: {
+			'Content-Type': 'application/json',
+			requesttoken: OC.requestToken,
+			'OCS-APIREQUEST': 'true',
+		},
+	})
+	if (!response.ok) throw new Error('Failed to fetch ' + path)
+	return response.json()
+}
+
+/**
+ * Cross-module analytics overview, cached per period so the four
+ * analytics KPI widgets share a single request per render pass.
+ *
+ * @param {string} period - week | month | quarter | year.
+ * @return {Promise<object>} Overview payload (REQ-DASH-011).
+ * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+ */
+export function getAnalyticsOverview(period) {
+	return cached('analytics:overview:' + period,
+		() => fetchAppJson('/apps/pipelinq/api/analytics/overview?period=' + encodeURIComponent(period)))
+}
+
+/**
+ * Commercial KPI overview, cached per period so the six commercial KPI
+ * widgets share a single request per render pass.
+ *
+ * @param {string} period - week | month | quarter | year.
+ * @return {Promise<object>} Commercial overview (revenue, wonValue, winRate,
+ *   avgDealSize, weightedForecast, openPipelineValue, previousPeriod).
+ * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+ */
+export function getCommercialOverview(period) {
+	return cached('analytics:commercial:' + period,
+		() => fetchAppJson('/apps/pipelinq/api/analytics/commercial?period=' + encodeURIComponent(period)))
+}
+
+/**
+ * Analytics trend series, cached per metric + period.
+ *
+ * @param {string} metric - leads | requests-by-category | pipeline-value.
+ * @param {string} period - week | month | quarter | year.
+ * @return {Promise<object>} `{ metric, period, series }` (REQ-DASH-011).
+ * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+ */
+export function getAnalyticsTrend(metric, period) {
+	return cached('analytics:trend:' + metric + ':' + period,
+		() => fetchAppJson('/apps/pipelinq/api/analytics/trends?metric=' + encodeURIComponent(metric)
+			+ '&period=' + encodeURIComponent(period)))
 }
 
 /**
