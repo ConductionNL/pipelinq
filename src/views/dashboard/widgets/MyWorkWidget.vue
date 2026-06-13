@@ -139,7 +139,7 @@ export default {
 			}
 		},
 		/**
-		 * @param item
+		 * @param {object} item - Work item row (lead or request) to navigate to.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-11
 		 */
 		openItem(item) {
