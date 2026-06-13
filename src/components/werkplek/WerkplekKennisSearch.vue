@@ -22,7 +22,9 @@
 			<button type="button" class="werkplek-kennis__back" @click="collapseArticle">
 				{{ t('pipelinq', 'Back to results') }}
 			</button>
-			<h4 class="werkplek-kennis__article-title">{{ expandedArticle.title }}</h4>
+			<h4 class="werkplek-kennis__article-title">
+				{{ expandedArticle.title }}
+			</h4>
 			<div class="werkplek-kennis__article-categories">
 				<span
 					v-for="cat in articleCategories(expandedArticle)"
@@ -58,8 +60,12 @@
 				tabindex="0"
 				@click="expand(article)"
 				@keydown.enter="expand(article)">
-				<div class="werkplek-kennis__result-title">{{ article.title }}</div>
-				<div class="werkplek-kennis__result-snippet">{{ snippet(article) }}</div>
+				<div class="werkplek-kennis__result-title">
+					{{ article.title }}
+				</div>
+				<div class="werkplek-kennis__result-snippet">
+					{{ snippet(article) }}
+				</div>
 				<div class="werkplek-kennis__result-categories">
 					<span
 						v-for="cat in articleCategories(article)"
@@ -83,9 +89,10 @@ import { useObjectStore } from '../../store/modules/object.js'
 
 let renderMarkdown
 try {
-	// `marked` is the project's documented Markdown renderer; if it's missing
-	// (e.g. older webpack alias) we fall back to a safe text-only render.
-	// eslint-disable-next-line global-require
+	// `marked` is an optional, defensively-loaded Markdown renderer; if it's
+	// missing the catch below falls back to a safe text-only render, so it is
+	// intentionally not declared as a hard dependency.
+	// eslint-disable-next-line global-require, n/no-extraneous-require
 	const m = require('marked')
 	renderMarkdown = (typeof m === 'function') ? m : (m && (m.marked || m.parse))
 } catch {
@@ -138,6 +145,12 @@ export default {
 		noResultsLabel() {
 			return this.t('pipelinq', 'No articles found for \'{term}\'', { term: this.term })
 		},
+	},
+
+	beforeDestroy() {
+		if (this.debounceHandle) {
+			clearTimeout(this.debounceHandle)
+		}
 	},
 
 	methods: {
@@ -307,12 +320,6 @@ export default {
 				this.feedbackSending = false
 			}
 		},
-	},
-
-	beforeDestroy() {
-		if (this.debounceHandle) {
-			clearTimeout(this.debounceHandle)
-		}
 	},
 }
 </script>
