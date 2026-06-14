@@ -1,14 +1,8 @@
 # commercial-dashboard Specification
 
 ## Purpose
-
-Surface the commercial position of the business — revenue, pipeline,
-win rate, deal size, forecast, top customers, product mix — as the
-default dashboard, with the existing operational widgets moved to a
-secondary dashboard.
-
+TBD - created by archiving change commercial-dashboard. Update Purpose after archive.
 ## Requirements
-
 ### Requirement: Commercial overview KPI endpoint
 
 `AnalyticsService::getCommercialOverview(period)` SHALL return, for
@@ -96,13 +90,13 @@ and Refresh action.
 
 ### Requirement: Operational dashboard preserved
 
-Every widget on the pre-change Dashboard (open leads, open requests,
-pipeline value, overdue, lead conversion, avg resolution, contact
-volume, satisfaction, leads-over-time, requests-by-category,
-requests-by-status, complaints, my work, client overview, billing
-categories, Navi, report export, knowledge base) SHALL remain
-available on a dedicated Operational overview dashboard reachable
-from the navigation.
+The app SHALL preserve every widget on the pre-change Dashboard
+(open leads, open requests, pipeline value, overdue, lead conversion,
+avg resolution, contact volume, satisfaction, leads-over-time,
+requests-by-category, requests-by-status, complaints, my work,
+client overview, billing categories, Navi, report export, knowledge
+base) on a dedicated Operational overview dashboard reachable from
+the navigation.
 
 #### Scenario: Operational widgets reachable after the split
 
@@ -138,3 +132,4 @@ empty.
 - **GIVEN** a running Nextcloud with pipelinq
 - **WHEN** the operator runs `scripts/seed-demo-commercial.py`
 - **THEN** every Commercial dashboard widget renders non-empty data
+
