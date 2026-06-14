@@ -12,7 +12,7 @@
 import { test, expect } from '@playwright/test'
 import { openApp, trackPipelinqErrors, assertNoHardError } from '../helpers/pipelinq'
 
-// @e2e commercial-dashboard::commercial-dashboard-is-the-default-landing
+// @e2e commercial-dashboard::commercial-dashboard-renders-kpis-and-charts
 test('Commercial dashboard: KPI strip + sales charts render on the landing page', async ({ page }) => {
 	const errs = trackPipelinqErrors(page)
 	await openApp(page)
@@ -40,7 +40,7 @@ test('Commercial dashboard: KPI strip + sales charts render on the landing page'
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
-// @e2e commercial-dashboard::operational-dashboard-preserved
+// @e2e commercial-dashboard::operational-widgets-reachable-after-the-split
 test('Operational dashboard: previous widgets remain reachable from the nav', async ({ page }) => {
 	await openApp(page)
 

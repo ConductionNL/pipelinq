@@ -1,14 +1,8 @@
 # commercial-dashboard Specification
 
 ## Purpose
-
-Surface the commercial position of the business — revenue, pipeline,
-win rate, deal size, forecast, top customers, product mix — as the
-default dashboard, with the existing operational widgets moved to a
-secondary dashboard.
-
+TBD - created by archiving change commercial-dashboard. Update Purpose after archive.
 ## Requirements
-
 ### Requirement: Commercial overview KPI endpoint
 
 `AnalyticsService::getCommercialOverview(period)` SHALL return, for
@@ -22,6 +16,7 @@ figures for the preceding equal-length window. An unknown period
 SHALL raise `InvalidArgumentException`.
 
 #### Scenario: Commercial overview computes the six figures
+@e2e exclude backend aggregation math, covered by PHPUnit CommercialAnalyticsServiceTest
 
 - **GIVEN** leads with mixed status/value/probability and settled
   POS transactions in the window
@@ -50,6 +45,7 @@ eight by value). Each SHALL return the established
 breakdown metrics carry the label in `date`.
 
 #### Scenario: Pipeline-by-stage sums open-lead value per stage
+@e2e exclude backend trend-builder math, covered by PHPUnit CommercialAnalyticsServiceTest
 
 - **GIVEN** open leads across several pipeline stages
 - **WHEN** `getTrends('pipeline-by-stage', 'quarter')` is called
@@ -57,6 +53,7 @@ breakdown metrics carry the label in `date`.
   value, ordered by stage order
 
 #### Scenario: Revenue-by-category buckets unresolved lines under Other
+@e2e exclude backend trend-builder math, covered by PHPUnit CommercialAnalyticsServiceTest
 
 - **GIVEN** POS lines, some linked to categorised products and some
   with no resolvable category
@@ -96,13 +93,13 @@ and Refresh action.
 
 ### Requirement: Operational dashboard preserved
 
-Every widget on the pre-change Dashboard (open leads, open requests,
-pipeline value, overdue, lead conversion, avg resolution, contact
-volume, satisfaction, leads-over-time, requests-by-category,
-requests-by-status, complaints, my work, client overview, billing
-categories, Navi, report export, knowledge base) SHALL remain
-available on a dedicated Operational overview dashboard reachable
-from the navigation.
+The app SHALL preserve every widget on the pre-change Dashboard
+(open leads, open requests, pipeline value, overdue, lead conversion,
+avg resolution, contact volume, satisfaction, leads-over-time,
+requests-by-category, requests-by-status, complaints, my work,
+client overview, billing categories, Navi, report export, knowledge
+base) on a dedicated Operational overview dashboard reachable from
+the navigation.
 
 #### Scenario: Operational widgets reachable after the split
 
@@ -118,6 +115,7 @@ soon lists open leads ordered by expected close date ascending;
 recently won/lost lists won/lost leads ordered by close recency.
 
 #### Scenario: Closing-soon lists open leads by close date
+@e2e exclude client-side table ordering, covered by vitest commercialFormat.spec
 
 - **GIVEN** open leads with various expected close dates
 - **WHEN** the Commercial dashboard loads
@@ -138,3 +136,4 @@ empty.
 - **GIVEN** a running Nextcloud with pipelinq
 - **WHEN** the operator runs `scripts/seed-demo-commercial.py`
 - **THEN** every Commercial dashboard widget renders non-empty data
+
