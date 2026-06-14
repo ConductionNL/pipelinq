@@ -1080,6 +1080,16 @@
 			}
 		},
 		{
+			"id": "PosCustomerSettings",
+			"route": "/admin/pos-customer-link",
+			"type": "custom",
+			"title": "POS customer lookup",
+			"component": "PosCustomerSettingsView",
+			"config": {
+				"register": "pipelinq"
+			}
+		},
+		{
 			"id": "BrpMonitor",
 			"route": "/admin/brp-monitor",
 			"type": "custom",
