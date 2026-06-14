@@ -137,6 +137,36 @@
 			"order": 99
 		},
 		{
+			"id": "SalesCrm",
+			"label": "Sales & CRM",
+			"icon": "icon-category-organization",
+			"order": 20
+		},
+		{
+			"id": "Service",
+			"label": "Service",
+			"icon": "icon-category-workflow",
+			"order": 40
+		},
+		{
+			"id": "PointOfSale",
+			"label": "Point Of Sale",
+			"icon": "icon-category-app-bundles",
+			"order": 93
+		},
+		{
+			"id": "AnalyticsGroup",
+			"label": "Analytics",
+			"icon": "icon-category-monitoring",
+			"order": 150
+		},
+		{
+			"id": "Administration",
+			"label": "Administration",
+			"icon": "icon-settings",
+			"order": 200
+		},
+		{
 			"id": "Pipeline",
 			"label": "Pipeline",
 			"icon": "icon-category-organization",
@@ -159,7 +189,7 @@
 		},
 		{
 			"id": "Rapportage",
-			"label": "Analytics",
+			"label": "Reporting",
 			"icon": "icon-category-monitoring",
 			"route": "Rapportage",
 			"order": 150
@@ -225,9 +255,10 @@
 			"actionsComponent": "DashboardHeaderActions",
 			"config": {
 				"description": "Revenue, pipeline and win performance",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"dateRange": {
 					"enabled": true,
-					"showHeaderPicker": true,
+					"showHeaderPicker": false,
 					"persistKey": "pipelinq-commercial-range",
 					"default": { "preset": "month" },
 					"presets": [
@@ -258,10 +289,10 @@
 					{ "id": "c4",  "widgetId": "avg-deal",           "gridX": 6,  "gridY": 0,  "gridWidth": 2,  "gridHeight": 2, "showTitle": false },
 					{ "id": "c5",  "widgetId": "weighted-forecast",  "gridX": 8,  "gridY": 0,  "gridWidth": 2,  "gridHeight": 2, "showTitle": false },
 					{ "id": "c6",  "widgetId": "open-pipeline",      "gridX": 10, "gridY": 0,  "gridWidth": 2,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c7",  "widgetId": "revenue-over-time",  "gridX": 0,  "gridY": 2,  "gridWidth": 6,  "gridHeight": 4 },
-					{ "id": "c8",  "widgetId": "pipeline-by-stage",  "gridX": 6,  "gridY": 2,  "gridWidth": 6,  "gridHeight": 4 },
-					{ "id": "c9",  "widgetId": "revenue-by-category", "gridX": 0, "gridY": 6,  "gridWidth": 6,  "gridHeight": 4 },
-					{ "id": "c10", "widgetId": "top-customers",      "gridX": 6,  "gridY": 6,  "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "c7",  "widgetId": "revenue-over-time",   "gridX": 0,  "gridY": 2,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
+					{ "id": "c8",  "widgetId": "pipeline-by-stage",   "gridX": 6,  "gridY": 2,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
+					{ "id": "c9",  "widgetId": "revenue-by-category",  "gridX": 0, "gridY": 6,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
+					{ "id": "c10", "widgetId": "top-customers",        "gridX": 6,  "gridY": 6,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
 					{ "id": "c11", "widgetId": "closing-soon",       "gridX": 0,  "gridY": 10, "gridWidth": 6,  "gridHeight": 4 },
 					{ "id": "c12", "widgetId": "recently-won-lost",  "gridX": 6,  "gridY": 10, "gridWidth": 6,  "gridHeight": 4 }
 				]
@@ -289,6 +320,7 @@
 			"actionsComponent": "DashboardHeaderActions",
 			"config": {
 				"description": "Leads, requests, service and team workload",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"dateRange": {
 					"enabled": true,
 					"showHeaderPicker": false,
@@ -371,6 +403,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "client",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
 					{
@@ -460,6 +493,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "request",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
 					{
@@ -491,6 +525,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "request",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true,
@@ -556,6 +591,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "complaint",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
 					{
@@ -588,7 +624,8 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "complaint",
-				"sidebar": true
+				"sidebar": true,
+				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
 		},
 		{
@@ -599,6 +636,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "contact",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
 					{
@@ -675,6 +713,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "lead",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true,
@@ -740,6 +779,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "contactmoment",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
 					{
@@ -782,7 +822,8 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "contactmoment",
-				"sidebar": true
+				"sidebar": true,
+				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
 		},
 		{
@@ -793,6 +834,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "task",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
 					{
@@ -836,7 +878,8 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "task",
-				"sidebar": true
+				"sidebar": true,
+				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
 		},
 		{
@@ -847,6 +890,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "product",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
 					{
@@ -889,7 +933,8 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "product",
-				"sidebar": true
+				"sidebar": true,
+				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
 		},
 		{
@@ -1151,6 +1196,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "queue",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
 					{
@@ -1181,7 +1227,8 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "queue",
-				"sidebar": true
+				"sidebar": true,
+				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
 		},
 		{
@@ -1252,6 +1299,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "pipeline",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"columns": [
 					"title",
