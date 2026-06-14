@@ -2409,7 +2409,13 @@ OC.L10N.register(
     "The merge preview could not be generated." : "De voorbeeldweergave van de samenvoeging kon niet worden gegenereerd.",
     "This merge can be reversed until {date}." : "Deze samenvoeging kan tot {date} ongedaan worden gemaakt.",
     "Winning source" : "Winnende bron",
-    "Winning value" : "Winnende waarde"
+    "Winning value" : "Winnende waarde",
+    "Activities will appear here once contactmomenten, tasks, emails or calendar entries are linked to this record." : "Activiteiten worden hier weergegeven zodra contactmomenten, taken, e-mails of kalenderitems zijn gekoppeld aan dit record.",
+    "Activity type filter" : "Activiteitstype filter",
+    "Calendar" : "Kalender",
+    "Contact Information" : "Contactgegevens",
+    "Contact moments" : "Contactmomenten",
+    "Credit" : "Krediet"
 },
 "nplurals=2; plural=(n != 1);"
 );

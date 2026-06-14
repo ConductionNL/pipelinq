@@ -2,10 +2,10 @@
 	"menu": [
 		{
 			"id": "KccWerkplek",
-			"label": "KCC Werkplek",
+			"label": "Customer Care",
 			"icon": "icon-comment",
 			"route": "KccWerkplek",
-			"order": 1
+			"order": 17
 		}
 	],
 	"pages": [
