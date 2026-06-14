@@ -1,13 +1,13 @@
-# Delta Spec: pipelinq-product-vendor-master
+# Spec: product-vendor-master
 
-**Status:** proposed
+**Status:** implemented (Phase 3 active registry-announcement + Phase 5 cross-app round-trip deferred — blocked on the `shillinq-product-vendor-to-pipelinq` counterpart)
 **Scope:** pipelinq
 **Tier:** MVP
 **Depends on:** `shillinq-product-vendor-to-pipelinq` (counterpart export), pipelinq `contacts-sync` (implemented), pipelinq `master-data-management` (`masterEntity`/`sourceRecord`), OpenRegister `pluggable-integration-registry` (ADR-019)
 
-This delta makes pipelinq the canonical owner of the Product master and the Supplier commercial master per CROSS-APP INTERFACE CONTRACT #1. It EXTENDS the existing `product` schema, ADDS a `supplier` schema keyed by `contactsUid` (identity = Nextcloud Contact), declares the registry read surface shillinq consumes, and ingests the shillinq master-data export without dropping fields.
+pipelinq is the canonical owner of the Product master and the Supplier commercial master per CROSS-APP INTERFACE CONTRACT #1. It EXTENDS the existing `product` schema, ADDS a `supplier` schema keyed by `contactsUid` (identity = Nextcloud Contact), declares the registry read surface shillinq consumes, and ingests the shillinq master-data export without dropping fields.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: REQ-PVM-001 — The system SHALL extend the existing `product` schema with supply-side master-data fields
 
