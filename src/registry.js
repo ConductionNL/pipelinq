@@ -150,6 +150,7 @@ import PosTenderTypeListView from './views/pos/PosTenderTypeList.vue'
 import ZReportListView from './views/pos/ZReportList.vue'
 import ZReportDetailView from './views/pos/ZReportDetail.vue'
 import PosBookkeepingSettingsView from './views/admin/PosBookkeepingSettings.vue'
+import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
 
 // --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
 //     view aggregating the BrpMonitorJob output (lookups / cache-hits / errors /
@@ -718,6 +719,11 @@ const registry = {
 		kind: 'page',
 		component: PosBookkeepingSettingsView,
 		_note: 'Admin settings panel for the POS bookkeeping pipeline: daily Z-report time, Shillinq endpoint + bearer token (isSensitive), alert email and max retry attempts (pos-end-of-day-bookkeeping-post).',
+	},
+	PosCustomerSettingsView: {
+		kind: 'page',
+		component: PosCustomerSettingsView,
+		_note: 'Admin settings panel for the POS customer-link lookup: search fields, purchase-history depth, marketing-consent sync toggle and the on-account-requires-customer invariant (pos-customer-link, REQ-PCL-006).',
 	},
 	BrpMonitorView: {
 		kind: 'page',
