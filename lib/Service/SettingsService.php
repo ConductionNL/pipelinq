@@ -140,6 +140,9 @@ class SettingsService
         'sla_breach_event_schema',
         // Optional callback schema (callback-management) — referenced by SLA sweep job.
         'callback_schema',
+        // Supplier commercial master (pipelinq-product-vendor-master) — keyed by
+        // contactsUid; read by ProductVendorProviderService + IngestProductVendorMaster.
+        'supplier_schema',
     ];
 
     /**

@@ -81,6 +81,7 @@ Vrij en open source onder de AGPL-licentie.
             <step>OCA\Pipelinq\Repair\InitializeSettings</step>
             <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
             <step>OCA\Pipelinq\Repair\InitSlaStatus</step>
+            <step>OCA\Pipelinq\Repair\IngestProductVendorMaster</step>
         </post-migration>
     </repair-steps>
 
