@@ -147,9 +147,12 @@ class AvgBundleController extends Controller
      * Consume the one-time secure download link.
      *
      * Public: the data subject is authenticated by possession of the one-time
-     * token alone (delivered out-of-band). The token is validated against the
-     * stored hash in constant time and the link expiry is enforced server-side;
-     * an invalid or expired token yields a 403 without leaking any data.
+     * token alone (delivered out-of-band). All access control lives in
+     * BundleService::consumeDownload, which validates the token against the
+     * stored hash in constant time, enforces the link expiry server-side and
+     * raises a 403 for an empty, invalid or expired token without leaking any
+     * data. The controller therefore performs no body auth branch — the token
+     * is the sole authenticator, consistent with #[PublicPage].
      *
      * @param string $bundleId The bundle UUID.
      *
@@ -161,12 +164,6 @@ class AvgBundleController extends Controller
     public function download(string $bundleId): JSONResponse
     {
         $token = (string) $this->request->getParam('token', '');
-        if ($token === '') {
-            return new JSONResponse(
-                ['error' => $this->l10n->t('A download token is required')],
-                Http::STATUS_FORBIDDEN
-            );
-        }
 
         return $this->run(
             action: function () use ($bundleId, $token): array {

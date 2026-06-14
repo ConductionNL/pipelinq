@@ -367,6 +367,19 @@
 
 ## 10. Integration Tests
 
+> **Delivered as unit tests, not Integration tests.** The coverage below lives in
+> `tests/Unit/Service/Avg/` (driven over a real `AvgRepository` on top of an
+> in-memory fake OR ObjectService — see `AvgTestSupport.php`), not as the literally
+> named `tests/Integration/*Test.php` files. Unit-level is the honest home: it
+> needs no live Nextcloud/OR and exercises the same service logic deterministically.
+> Files: `AvgRequestServiceTest`, `EvidenceCollectionServiceTest`,
+> `BundleServiceTest`, `RedactionServiceTest`, `DeadlineServiceTest`,
+> `DeadlineTrackerServiceTest`, `DpiaDetectionServiceTest`, `DenialServiceTest`,
+> `ExtensionServiceTest`, `RetentionServiceTest`, `AvgNotificationServiceTest`
+> (47 tests). The `DeadlineTrackerService`, `EvidenceCollectionService` and
+> `AvgNotificationService` suites were added 2026-06-14 to close their coverage gap.
+> The `[x]` boxes below mark the test *intent* as covered at unit level.
+
 - [x] 10.1 Create `tests/Integration/AvgIntakeTest.php`:
   - Test intake form submission with valid BSN
   - Test invalid BSN rejection
