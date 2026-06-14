@@ -40,7 +40,6 @@ Built-in automation engines are a standard expectation in modern CRM platforms. 
 > `ActivityService`, `NotificationService`) still lives in the app and fires CRM
 > events; the *automation* of those events (triggers → actions) is delegated to
 > the Flow leaf, not to an app-local automation engine (hydra ADR-022).
-
 ## Requirements
 
 ---
@@ -460,6 +459,112 @@ The system MUST handle automation failures gracefully and provide monitoring too
 - AND MUST log the full chain of triggered automations
 
 ---
+
+### Requirement: Automation is provided by the Flow leaf + n8n, not an in-app engine
+
+Pipelinq SHALL NOT ship a bespoke automation engine; automation rule authoring
+and execution SHALL be provided by the NC workflowengine (Flow) and n8n,
+surfaced for object-level visibility by the OpenRegister flow leaf
+(`integration-flow`) (hydra ADR-022).
+
+#### Scenario: Bespoke automation engine and schemas are removed
+
+- **GIVEN** the migrate-automation-to-flow-leaf change is applied
+- **THEN** `src/views/automations/AutomationBuilder.vue`, the webhook-firing/DMN
+  automation service, and the automation controller/routes SHALL be removed
+- **AND** the `automation` and `automationLog` schemas SHALL be retired
+- **AND** rule authoring SHALL live in NC Flow admin / n8n.
+
+#### Scenario: CRM triggers execute via Flow / n8n
+
+- **GIVEN** a CRM event (lead stage change, new lead, etc.)
+- **WHEN** an automation should fire
+- **THEN** it SHALL be wired as an NC Flow rule, with rich orchestration
+  delegated to **n8n** via the existing n8n integration
+- **AND** Pipelinq SHALL fire no webhooks from a bespoke automation service.
+
+### Requirement: CRM objects expose the flow leaf
+
+The `lead`, `request`, and `client` schemas SHALL declare `flow` in
+`linkedTypes` so the leaf's tab and widget appear on those objects.
+
+#### Scenario: Flow tab and widget show wired rules + recent fires
+
+- **GIVEN** NC `workflowengine` is enabled and the flow leaf is registered
+- **WHEN** a user opens a `lead`, `request`, or `client` detail page
+- **THEN** the leaf's `CnFlowTab` SHALL list flow rules scoped to that
+  object/schema with last-fire timestamps and a recent-events panel
+- **AND** the `CnFlowCard` widget SHALL show automation status.
+
+### Requirement: Flow leaf is placed via the app manifest
+
+The flow leaf's tab and widget SHALL be surfaced through `src/manifest.json`
+(ADR-024), and `workflowengine` SHALL be declared as a dependency.
+
+#### Scenario: Manifest places tab/widget and declares dependency
+
+- **GIVEN** Pipelinq's `src/manifest.json`
+- **THEN** the lead/request/client detail pages' `sidebar` config SHALL include
+  the flow leaf tab
+- **AND** detail pages (and optionally the dashboard) MAY include the
+  `CnFlowCard` widget
+- **AND** `dependencies[]` SHALL include `workflowengine`.
+
+### Requirement: Existing automation migration is a documented follow-up
+
+Migration of existing `automation` / `automationLog` objects SHALL NOT be
+performed by this change and SHALL be documented as a separate follow-up
+(ADR-032 bounded scope).
+
+#### Scenario: Follow-up is recorded, not silently dropped
+
+- **GIVEN** existing `automation` rules and `automationLog` history
+- **WHEN** this migration is applied
+- **THEN** those objects SHALL be left in place and a follow-up tracking item
+  SHALL be recorded for re-creating active rules as NC Flow rules / n8n
+  workflows.
+
+### Requirement: Automation UI — documented operations
+
+The automation rule editor screens implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `actionOptions`, `addAction`, `addCondition`, `buildConditions`, `canSave`, `loadAutomation`). Each listed method realises an observable part of automation rule editor screens and MUST behave as implemented in the current codebase.
+
+**Feature tier**: V1
+
+#### Scenario: Documented operations are available
+
+- GIVEN the frontend component/store is loaded
+- WHEN a caller invokes one of the documented operations for automation rule editor screens
+- THEN the operation MUST execute and return a result consistent with the current implementation
+
+---
+
+### Requirement: Automation UI — results derived from current CRM state
+
+Operations for automation rule editor screens MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
+
+**Feature tier**: V1
+
+#### Scenario: Results reflect live state
+
+- GIVEN CRM data backing automation rule editor screens
+- WHEN a documented operation runs
+- THEN its output MUST be derived from that data
+- AND it MUST change when the underlying data changes
+
+---
+
+### Requirement: Automation UI — defensive handling of absent or invalid input
+
+Operations for automation rule editor screens MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
+
+**Feature tier**: V1
+
+#### Scenario: Missing input does not crash the flow
+
+- GIVEN an operation for automation rule editor screens is called with absent or invalid input
+- WHEN it executes
+- THEN it MUST return a safe default or a validation result
+- AND it MUST NOT raise an unhandled exception
 
 ## Dependencies
 - n8n MCP integration (workflow creation and execution via mcp__n8n__* tools)
