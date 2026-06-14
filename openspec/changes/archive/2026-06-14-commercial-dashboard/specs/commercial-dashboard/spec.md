@@ -22,6 +22,7 @@ figures for the preceding equal-length window. An unknown period
 SHALL raise `InvalidArgumentException`.
 
 #### Scenario: Commercial overview computes the six figures
+@e2e exclude backend aggregation math, covered by PHPUnit CommercialAnalyticsServiceTest
 
 - **GIVEN** leads with mixed status/value/probability and settled
   POS transactions in the window
@@ -50,6 +51,7 @@ eight by value). Each SHALL return the established
 breakdown metrics carry the label in `date`.
 
 #### Scenario: Pipeline-by-stage sums open-lead value per stage
+@e2e exclude backend trend-builder math, covered by PHPUnit CommercialAnalyticsServiceTest
 
 - **GIVEN** open leads across several pipeline stages
 - **WHEN** `getTrends('pipeline-by-stage', 'quarter')` is called
@@ -57,6 +59,7 @@ breakdown metrics carry the label in `date`.
   value, ordered by stage order
 
 #### Scenario: Revenue-by-category buckets unresolved lines under Other
+@e2e exclude backend trend-builder math, covered by PHPUnit CommercialAnalyticsServiceTest
 
 - **GIVEN** POS lines, some linked to categorised products and some
   with no resolvable category
@@ -118,6 +121,7 @@ soon lists open leads ordered by expected close date ascending;
 recently won/lost lists won/lost leads ordered by close recency.
 
 #### Scenario: Closing-soon lists open leads by close date
+@e2e exclude client-side table ordering, covered by vitest commercialFormat.spec
 
 - **GIVEN** open leads with various expected close dates
 - **WHEN** the Commercial dashboard loads
