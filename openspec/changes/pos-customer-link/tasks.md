@@ -320,7 +320,7 @@
     - Test: Transaction without customer succeeds (backward compatibility)
     - Test: Transaction response includes customer and marketingConsent fields
 
-- [x] 8.4 Frontend component tests: CustomerLookupModal
+- [~] 8.4 Frontend component tests: CustomerLookupModal (DEFERRED — no vitest harness in pipelinq; covered at gate19 honest-coverage program)
   - Pipelinq does not have a Vue unit-test harness today (no vitest, no
     `@vue/test-utils` in package.json). UI is covered by the Playwright
     e2e harness (`playwright.config.ts`); a CustomerLookupModal spec can
@@ -337,7 +337,7 @@
     - Test: @select event emitted when row is clicked
     - Test: @cancel event emitted on modal close
 
-- [x] 8.5 Frontend component tests: CheckoutView customer integration
+- [~] 8.5 Frontend component tests: CheckoutView customer integration (DEFERRED — same harness gap as 8.4; data-testid hooks present for e2e promotion)
   - Same harness gap as 8.4. Component is data-testid annotated
     (add-customer, clear-customer, marketing-consent, tender-type, checkout)
     so an e2e spec can target it without further refactor.
@@ -352,7 +352,7 @@
     - Test: On-account validation disables Checkout button without customer
     - Test: Marketing consent is included in transaction payload
 
-- [x] 8.6 Manual testing: E2E checkout flow — manual checklist captured in
+- [~] 8.6 Manual testing: E2E checkout flow (LIVE — manual checklist; needs a running register) — manual checklist captured in
     proposal/specs.md; data-testid hooks present on every checkout
     primitive (lookup input + row, add/clear customer buttons, consent
     checkbox, tender-type select, checkout button) so the manual recipe
@@ -419,7 +419,7 @@
 
 ## 10. Cross-App Coordination
 
-- [x] 10.1 Coordinate Pipelinq contact schema (verify compatibility)
+- [~] 10.1 Coordinate Pipelinq contact schema (CROSS-APP — verified in-app; contact schema now carries marketingConsent + doNotContact)
   - Contact schema now exposes `marketingConsent` + `doNotContact` fields
     (this change, `lib/Settings/pipelinq_register.json`).
   - OR's generic `PATCH /api/objects/contact/{uuid}` is the standard CRUD
@@ -437,7 +437,7 @@
     - Confirm Pipelinq REST API full-text search works on name, email, phone
     - If any fields/endpoints are missing, coordinate with Pipelinq team
 
-- [x] 10.2 Set up service-to-service authentication
+- [~] 10.2 Set up service-to-service authentication (N/A — in-process, no external token; see notes below)
   - N/A — POS and contact storage both live inside the pipelinq app and
     share the same NC session / OR container. The service-account token
     pattern in the design doc is preserved as historical context; the
@@ -451,7 +451,7 @@
     - Test service account can search contacts and update consent
     - Document token rotation procedure
 
-- [x] 10.3 Define transaction event for Pipelinq (future integration point)
+- [~] 10.3 Define transaction event for Pipelinq (CROSS-APP — confirmed CloudEvent already emitted; shillinq/pipelinq consumers are future changes)
   - `PosTransactionService::emitConfirmedEvent()` already dispatches the
     `pipelinq.PosTransaction.confirmed` CloudEvent (CloudEvents 1.0
     envelope) on every successful confirm; payload includes transactionId,
