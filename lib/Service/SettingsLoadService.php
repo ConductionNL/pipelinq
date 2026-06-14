@@ -122,6 +122,9 @@ class SettingsLoadService
         'trustConfiguration',
         'mergeOperation',
         'syncQueueItem',
+        // Contract & renewal tracking (contract-renewal-tracking) — recurring-revenue
+        // contracts with renewal-window detection and churn metrics.
+        'contract',
     ];
 
     /**
