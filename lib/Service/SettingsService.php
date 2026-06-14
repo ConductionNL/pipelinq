@@ -140,6 +140,10 @@ class SettingsService
         'sla_breach_event_schema',
         // Optional callback schema (callback-management) — referenced by SLA sweep job.
         'callback_schema',
+        // Contract & renewal tracking (contract-renewal-tracking).
+        'contract_schema',
+        // Renewal engine tuning (contract-renewal-tracking).
+        'renewal_default_lead_time_days',
     ];
 
     /**
