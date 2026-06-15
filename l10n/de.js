@@ -220,6 +220,8 @@ OC.L10N.register(
         "Barcode": "Barcode",
         "Barcode (EAN/UPC)": "Barcode (EAN/UPC)",
         "Barcode lookup": "Barcode-Suche",
+        "Catalog": "Katalog",
+        "Point of Sale": "Kasse",
         "Barcode lookup failed": "Barcode-Suche fehlgeschlagen",
         "Base": "Basis",
         "Basis": "Basis",
