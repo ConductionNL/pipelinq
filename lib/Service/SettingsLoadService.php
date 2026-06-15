@@ -122,6 +122,11 @@ class SettingsLoadService
         'trustConfiguration',
         'mergeOperation',
         'syncQueueItem',
+        // Supplier commercial master (pipelinq-product-vendor-master). Without
+        // this slug the `supplier_schema` app-config key is never populated on
+        // import, so ProductVendorProviderService::resolveSupplier() and the
+        // IngestProductVendorMaster repair step cannot locate supplier objects.
+        'supplier',
         // Contract & renewal tracking (contract-renewal-tracking) — recurring-revenue
         // contracts with renewal-window detection and churn metrics.
         'contract',
