@@ -77,7 +77,9 @@
 				<div v-else-if="address" class="brp-panel__address">
 					<div>{{ address.straat }} {{ address.huisnummer }}{{ address.huisletter }}</div>
 					<div>{{ address.postcode }} {{ address.woonplaats }}</div>
-					<div v-if="address.land && address.land !== 'Nederland'">{{ address.land }}</div>
+					<div v-if="address.land && address.land !== 'Nederland'">
+						{{ address.land }}
+					</div>
 				</div>
 			</div>
 		</div>

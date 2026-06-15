@@ -57,6 +57,7 @@ use OCA\Pipelinq\Listener\BerichtenboxZaakStatusListener;
 use OCA\Pipelinq\Listener\ProjectPhaseStatusListener;
 use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
+use OCA\Pipelinq\Listener\SourceRecordChangedListener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Mcp\PipelinqToolProvider;
 use OCA\Pipelinq\Service\AppointmentCalendarLeafProvider;
@@ -190,6 +191,17 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(
             event: ObjectUpdatedEvent::class,
             listener: SlaObjectUpdatedListener::class
+        );
+
+        // MDM: recompute a Master Entity's golden record when a linked
+        // source-record is created or updated (REQ-MDM-001).
+        $context->registerEventListener(
+            event: ObjectCreatedEvent::class,
+            listener: SourceRecordChangedListener::class
+        );
+        $context->registerEventListener(
+            event: ObjectUpdatedEvent::class,
+            listener: SourceRecordChangedListener::class
         );
 
         $context->registerDashboardWidget(DealsOverviewWidget::class);

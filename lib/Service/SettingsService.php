@@ -89,6 +89,13 @@ class SettingsService
         'exportJob_schema',
         'exportRun_schema',
         'exportSchemaSnapshot_schema',
+        // AVG/GDPR data-subject-request workflow (avg-verzoeken-workflow).
+        'avgVerzoek_schema',
+        'termijnEvent_schema',
+        'bewijsItem_schema',
+        'exportBundle_schema',
+        'weigering_schema',
+        'redactieActie_schema',
         'complaint_sla_service',
         'complaint_sla_product',
         'complaint_sla_communication',
@@ -133,6 +140,13 @@ class SettingsService
         'sla_breach_event_schema',
         // Optional callback schema (callback-management) — referenced by SLA sweep job.
         'callback_schema',
+        // Supplier commercial master (pipelinq-product-vendor-master) — keyed by
+        // contactsUid; read by ProductVendorProviderService + IngestProductVendorMaster.
+        'supplier_schema',
+        // Contract & renewal tracking (contract-renewal-tracking).
+        'contract_schema',
+        // Renewal engine tuning (contract-renewal-tracking).
+        'renewal_default_lead_time_days',
     ];
 
     /**
@@ -215,6 +229,16 @@ class SettingsService
         'sla_actor_manager'                        => '',
         'sla_actor_director'                       => '',
         'sla_resolved_statuses'                    => 'resolved,completed,closed,afgehandeld',
+        // AVG (GDPR data-subject request) workflow tunables.
+        'avg_dpia_threshold'                       => '10',
+        'avg_evidence_retention_days'              => '30',
+        'avg_download_validity_days'               => '30',
+        'avg_pki_cert_path'                        => '',
+        'avg_evidence_sources'                     => '',
+        'avg_dpia_auto_procest'                    => 'no',
+        'avg_handler_group'                        => '',
+        'avg_teamlead_group'                       => '',
+        'avg_dpo_group'                            => '',
     ];
 
     /**

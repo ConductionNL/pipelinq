@@ -15,6 +15,10 @@
 
 ---
 
+## Purpose
+
+Move the POS transaction and refund lifecycles onto OpenRegister's declarative `x-openregister-lifecycle` machinery: route every state transition through `TransitionEngine`, enforce per-object authorization in `LifecycleGuardInterface` guards (closing the confirmed IDOR), and recompute totals server-side — removing the bespoke PHP state machines and the hand-rolled `isManager` check.
+
 ## Requirements
 
 ### REQ-PLG-001: Declarative POS lifecycle
@@ -105,9 +109,7 @@ confirm guard MUST recompute totals before the transition is applied.
 
 ### REQ-PLG-006: Non-transition POS endpoints are object-scoped
 
-`PosReceiptController::preview/email/print`, the product price/barcode lookup,
-and `PosTransactionController::taxReport` MUST enforce authorization beyond bare
-session auth.
+Non-transition POS endpoints MUST enforce authorization beyond bare session auth: `PosReceiptController::preview/email/print`, the product price/barcode lookup, and `PosTransactionController::taxReport`.
 
 #### Scenario: Receipt actions require object access
 

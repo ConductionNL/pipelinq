@@ -12,10 +12,17 @@
 	"menu": [
 		{
 			"id": "Dashboard",
-			"label": "Dashboard",
+			"label": "Commercial",
 			"icon": "icon-category-dashboard",
 			"route": "Dashboard",
 			"order": 10
+		},
+		{
+			"id": "OperationalDashboard",
+			"label": "Operational",
+			"icon": "icon-category-monitoring",
+			"route": "OperationalDashboard",
+			"order": 15
 		},
 		{
 			"id": "Clients",
@@ -106,14 +113,16 @@
 			"label": "POS medewerkers",
 			"icon": "icon-user",
 			"route": "PosStaffList",
-			"order": 98
+			"section": "settings",
+			"order": 70
 		},
 		{
 			"id": "PosRoleList",
 			"label": "POS rollen",
 			"icon": "icon-rename",
 			"route": "PosRoleList",
-			"order": 99
+			"section": "settings",
+			"order": 71
 		},
 		{
 			"id": "ZReports",
@@ -128,6 +137,42 @@
 			"icon": "icon-checkmark",
 			"route": "KassakoppelingAuditList",
 			"order": 99
+		},
+		{
+			"id": "SalesCrm",
+			"label": "Sales & CRM",
+			"icon": "icon-category-organization",
+			"order": 20
+		},
+		{
+			"id": "Service",
+			"label": "Service",
+			"icon": "icon-category-workflow",
+			"order": 40
+		},
+		{
+			"id": "PointOfSale",
+			"label": "Point of Sale",
+			"icon": "icon-category-monitoring",
+			"order": 90
+		},
+		{
+			"id": "Catalog",
+			"label": "Catalog",
+			"icon": "icon-category-app-bundles",
+			"order": 92
+		},
+		{
+			"id": "AnalyticsGroup",
+			"label": "Analytics",
+			"icon": "icon-category-monitoring",
+			"order": 150
+		},
+		{
+			"id": "Administration",
+			"label": "Administration",
+			"icon": "icon-settings",
+			"order": 200
 		},
 		{
 			"id": "Pipeline",
@@ -152,7 +197,7 @@
 		},
 		{
 			"id": "Rapportage",
-			"label": "Analytics",
+			"label": "Reporting",
 			"icon": "icon-category-monitoring",
 			"route": "Rapportage",
 			"order": 150
@@ -206,8 +251,7 @@
 			"label": "Timesheet approval & billing",
 			"icon": "icon-category-monitoring",
 			"href": "/index.php/apps/shillinq/",
-			"section": "footer",
-			"order": 220
+			"order": 218
 		}
 	],
 	"pages": [
@@ -215,39 +259,134 @@
 			"id": "Dashboard",
 			"route": "/",
 			"type": "dashboard",
-			"title": "Dashboard",
+			"title": "Commercial overview",
 			"actionsComponent": "DashboardHeaderActions",
 			"config": {
 				"showRefresh": false,
+				"description": "Revenue, pipeline and win performance",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"dateRange": {
+					"enabled": true,
+					"showHeaderPicker": false,
+					"persistKey": "pipelinq-commercial-range",
+					"default": { "preset": "month" },
+					"presets": [
+						{ "id": "week",    "label": "Last 7 days",   "days": 7 },
+						{ "id": "month",   "label": "Last 30 days",  "days": 30 },
+						{ "id": "quarter", "label": "Last 90 days",  "days": 90 },
+						{ "id": "year",    "label": "Last 365 days", "days": 365 }
+					]
+				},
 				"widgets": [
-					{ "id": "open-leads",         "type": "custom", "title": "Open Leads" },
-					{ "id": "open-requests",      "type": "custom", "title": "Open Requests" },
-					{ "id": "pipeline-value",     "type": "custom", "title": "Pipeline Value" },
-					{ "id": "overdue",            "type": "custom", "title": "Overdue" },
-					{ "id": "requests-by-status", "type": "custom", "title": "Requests by Status" },
-					{ "id": "complaints",         "type": "custom", "title": "Complaints" },
-					{ "id": "my-work",            "type": "custom", "title": "My Work" },
-					{ "id": "client-overview",    "type": "custom", "title": "Client Overview" },
-					{ "id": "billing-categories", "type": "custom", "title": "Hours by billing category" },
-					{ "id": "unified-analytics",  "type": "custom", "title": "Unified Analytics" },
-					{ "id": "navi-analytics",     "type": "custom", "title": "Ask Navi" },
-					{ "id": "report-export",      "type": "custom", "title": "Report Export" },
-					{ "id": "xwiki-knowledge",    "type": "custom", "title": "Knowledge base" }
+					{ "id": "revenue",            "type": "custom", "title": "Revenue" },
+					{ "id": "won-value",          "type": "custom", "title": "Won Value" },
+					{ "id": "win-rate",           "type": "custom", "title": "Win Rate" },
+					{ "id": "avg-deal",           "type": "custom", "title": "Avg Deal Size" },
+					{ "id": "weighted-forecast",  "type": "custom", "title": "Weighted Forecast" },
+					{ "id": "open-pipeline",      "type": "custom", "title": "Open Pipeline" },
+					{ "id": "mrr",                "type": "custom", "title": "Recurring revenue (MRR)" },
+						{ "id": "renewals-due",       "type": "custom", "title": "Renewals due" },
+						{ "id": "revenue-over-time",  "type": "custom", "title": "Revenue over time" },
+					{ "id": "pipeline-by-stage",  "type": "custom", "title": "Pipeline by stage" },
+					{ "id": "revenue-by-category", "type": "custom", "title": "Revenue by product category" },
+					{ "id": "top-customers",      "type": "custom", "title": "Top customers by revenue" },
+					{ "id": "closing-soon",       "type": "custom", "title": "Deals closing soon" },
+					{ "id": "recently-won-lost",  "type": "custom", "title": "Recently won / lost" }
 				],
 				"layout": [
-					{ "id": "1",  "widgetId": "open-leads",         "gridX": 0, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
-					{ "id": "2",  "widgetId": "open-requests",      "gridX": 3, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
-					{ "id": "3",  "widgetId": "pipeline-value",     "gridX": 6, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
-					{ "id": "4",  "widgetId": "overdue",            "gridX": 9, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
-					{ "id": "10", "widgetId": "unified-analytics",  "gridX": 0, "gridY": 2,  "gridWidth": 12, "gridHeight": 5 },
-					{ "id": "5",  "widgetId": "requests-by-status", "gridX": 0, "gridY": 7,  "gridWidth": 6,  "gridHeight": 4 },
-					{ "id": "6",  "widgetId": "complaints",         "gridX": 6, "gridY": 7,  "gridWidth": 6,  "gridHeight": 4 },
-					{ "id": "11", "widgetId": "navi-analytics",     "gridX": 0, "gridY": 11, "gridWidth": 12, "gridHeight": 6 },
-					{ "id": "7",  "widgetId": "my-work",            "gridX": 0, "gridY": 17, "gridWidth": 6,  "gridHeight": 4 },
-					{ "id": "8",  "widgetId": "client-overview",    "gridX": 6, "gridY": 17, "gridWidth": 6,  "gridHeight": 4 },
-					{ "id": "9",  "widgetId": "billing-categories", "gridX": 0, "gridY": 21, "gridWidth": 6,  "gridHeight": 4 },
-					{ "id": "12", "widgetId": "report-export",      "gridX": 0, "gridY": 25, "gridWidth": 12, "gridHeight": 3 },
-					{ "id": "13", "widgetId": "xwiki-knowledge",    "gridX": 0, "gridY": 28, "gridWidth": 6,  "gridHeight": 5 }
+					{ "id": "c1",  "widgetId": "revenue",            "gridX": 0,  "gridY": 0,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c2",  "widgetId": "won-value",          "gridX": 4,  "gridY": 0,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c3",  "widgetId": "win-rate",           "gridX": 8,  "gridY": 0,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c4",  "widgetId": "avg-deal",           "gridX": 0,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c5",  "widgetId": "weighted-forecast",  "gridX": 4,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c6",  "widgetId": "open-pipeline",      "gridX": 8,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c7",  "widgetId": "revenue-over-time",   "gridX": 0,  "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
+					{ "id": "c8",  "widgetId": "pipeline-by-stage",   "gridX": 6,  "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
+					{ "id": "c9",  "widgetId": "revenue-by-category",  "gridX": 0, "gridY": 8,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
+					{ "id": "c10", "widgetId": "top-customers",        "gridX": 6,  "gridY": 8,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
+					{ "id": "c11", "widgetId": "closing-soon",       "gridX": 0,  "gridY": 12, "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "c12", "widgetId": "recently-won-lost",  "gridX": 6,  "gridY": 12, "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "c13", "widgetId": "mrr",                "gridX": 0,  "gridY": 16, "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c14", "widgetId": "renewals-due",       "gridX": 4,  "gridY": 16, "gridWidth": 6,  "gridHeight": 4 }
+				]
+			},
+			"slots": {
+				"widget-revenue": "RevenueKpiWidget",
+				"widget-won-value": "WonValueKpiWidget",
+				"widget-win-rate": "WinRateKpiWidget",
+				"widget-avg-deal": "AvgDealSizeKpiWidget",
+				"widget-weighted-forecast": "WeightedForecastKpiWidget",
+				"widget-open-pipeline": "OpenPipelineKpiWidget",
+				"widget-revenue-over-time": "RevenueOverTimeChartWidget",
+				"widget-pipeline-by-stage": "PipelineByStageChartWidget",
+				"widget-revenue-by-category": "RevenueByCategoryChartWidget",
+				"widget-top-customers": "TopCustomersChartWidget",
+				"widget-closing-soon": "ClosingSoonWidget",
+				"widget-recently-won-lost": "RecentlyWonLostWidget",
+				"widget-mrr": "MrrKpiWidget",
+				"widget-renewals-due": "RenewalsDueWidget"
+			}
+		},
+		{
+			"id": "OperationalDashboard",
+			"route": "/operational",
+			"type": "dashboard",
+			"title": "Operational overview",
+			"actionsComponent": "DashboardHeaderActions",
+			"config": {
+				"description": "Leads, requests, service and team workload",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"dateRange": {
+					"enabled": true,
+					"showHeaderPicker": false,
+					"persistKey": "pipelinq-operational-range",
+					"default": { "preset": "month" },
+					"presets": [
+						{ "id": "week",    "label": "Last 7 days",   "days": 7 },
+						{ "id": "month",   "label": "Last 30 days",  "days": 30 },
+						{ "id": "quarter", "label": "Last 90 days",  "days": 90 },
+						{ "id": "year",    "label": "Last 365 days", "days": 365 }
+					]
+				},
+				"widgets": [
+					{ "id": "open-leads",            "type": "custom", "title": "Open Leads" },
+					{ "id": "open-requests",         "type": "custom", "title": "Open Requests" },
+					{ "id": "pipeline-value",        "type": "custom", "title": "Pipeline Value" },
+					{ "id": "overdue",               "type": "custom", "title": "Overdue" },
+					{ "id": "lead-conversion",       "type": "custom", "title": "Lead Conversion Rate" },
+					{ "id": "avg-resolution",        "type": "custom", "title": "Avg Request Resolution" },
+					{ "id": "contact-volume",        "type": "custom", "title": "Contact Moment Volume" },
+					{ "id": "satisfaction",          "type": "custom", "title": "Customer Satisfaction" },
+					{ "id": "leads-over-time",       "type": "custom", "title": "Leads over time" },
+					{ "id": "requests-by-category",  "type": "custom", "title": "Requests by category" },
+					{ "id": "requests-by-status",    "type": "custom", "title": "Requests by Status" },
+					{ "id": "complaints",            "type": "custom", "title": "Complaints" },
+					{ "id": "my-work",               "type": "custom", "title": "My Work" },
+					{ "id": "client-overview",       "type": "custom", "title": "Client Overview" },
+					{ "id": "billing-categories",    "type": "custom", "title": "Hours by billing category" },
+					{ "id": "navi-analytics",        "type": "custom", "title": "Ask Navi" },
+					{ "id": "report-export",         "type": "custom", "title": "Report Export" },
+					{ "id": "xwiki-knowledge",       "type": "custom", "title": "Knowledge base" }
+				],
+				"layout": [
+					{ "id": "1",  "widgetId": "open-leads",            "gridX": 0, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
+					{ "id": "2",  "widgetId": "open-requests",         "gridX": 3, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
+					{ "id": "3",  "widgetId": "pipeline-value",        "gridX": 6, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
+					{ "id": "4",  "widgetId": "overdue",               "gridX": 9, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
+					{ "id": "14", "widgetId": "lead-conversion",       "gridX": 0, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
+					{ "id": "15", "widgetId": "avg-resolution",        "gridX": 3, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
+					{ "id": "16", "widgetId": "contact-volume",        "gridX": 6, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
+					{ "id": "17", "widgetId": "satisfaction",          "gridX": 9, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
+					{ "id": "18", "widgetId": "leads-over-time",       "gridX": 0, "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
+					{ "id": "19", "widgetId": "requests-by-category",  "gridX": 6, "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
+					{ "id": "5",  "widgetId": "requests-by-status",    "gridX": 0, "gridY": 8,  "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "6",  "widgetId": "complaints",            "gridX": 6, "gridY": 8,  "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "11", "widgetId": "navi-analytics",        "gridX": 0, "gridY": 12, "gridWidth": 12, "gridHeight": 6 },
+					{ "id": "7",  "widgetId": "my-work",               "gridX": 0, "gridY": 18, "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "8",  "widgetId": "client-overview",       "gridX": 6, "gridY": 18, "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "9",  "widgetId": "billing-categories",    "gridX": 0, "gridY": 22, "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "12", "widgetId": "report-export",         "gridX": 0, "gridY": 26, "gridWidth": 12, "gridHeight": 3 },
+					{ "id": "13", "widgetId": "xwiki-knowledge",       "gridX": 0, "gridY": 29, "gridWidth": 6,  "gridHeight": 5 }
 				]
 			},
 			"slots": {
@@ -255,12 +394,17 @@
 				"widget-open-requests": "OpenRequestsKpiWidget",
 				"widget-pipeline-value": "PipelineValueKpiWidget",
 				"widget-overdue": "OverdueKpiWidget",
+				"widget-lead-conversion": "LeadConversionKpiWidget",
+				"widget-avg-resolution": "AvgResolutionKpiWidget",
+				"widget-contact-volume": "ContactVolumeKpiWidget",
+				"widget-satisfaction": "SatisfactionKpiWidget",
+				"widget-leads-over-time": "LeadsOverTimeChartWidget",
+				"widget-requests-by-category": "RequestsByCategoryChartWidget",
 				"widget-requests-by-status": "RequestsByStatusWidget",
 				"widget-complaints": "ComplaintsWidget",
 				"widget-my-work": "MyWorkWidget",
 				"widget-client-overview": "ClientOverviewWidget",
 				"widget-billing-categories": "BillingCategoryWidget",
-				"widget-unified-analytics": "UnifiedAnalyticsWidget",
 				"widget-navi-analytics": "NaviAnalyticsWidget",
 				"widget-report-export": "ReportExportPanel",
 				"widget-xwiki-knowledge": "XWikiDashboardWidget"
@@ -274,6 +418,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "client",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
 					{
@@ -363,6 +508,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "request",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
 					{
@@ -394,6 +540,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "request",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true,
@@ -459,6 +606,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "complaint",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
 					{
@@ -491,7 +639,8 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "complaint",
-				"sidebar": true
+				"sidebar": true,
+				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
 		},
 		{
@@ -502,6 +651,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "contact",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
 					{
@@ -578,6 +728,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "lead",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true,
@@ -643,6 +794,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "contactmoment",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
 					{
@@ -685,7 +837,8 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "contactmoment",
-				"sidebar": true
+				"sidebar": true,
+				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
 		},
 		{
@@ -696,6 +849,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "task",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
 					{
@@ -739,7 +893,8 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "task",
-				"sidebar": true
+				"sidebar": true,
+				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
 		},
 		{
@@ -750,6 +905,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "product",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
 					{
@@ -792,7 +948,8 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "product",
-				"sidebar": true
+				"sidebar": true,
+				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
 		},
 		{
@@ -938,6 +1095,16 @@
 			}
 		},
 		{
+			"id": "PosCustomerSettings",
+			"route": "/admin/pos-customer-link",
+			"type": "custom",
+			"title": "POS customer lookup",
+			"component": "PosCustomerSettingsView",
+			"config": {
+				"register": "pipelinq"
+			}
+		},
+		{
 			"id": "BrpMonitor",
 			"route": "/admin/brp-monitor",
 			"type": "custom",
@@ -1054,6 +1221,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "queue",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
 					{
@@ -1084,7 +1252,8 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "queue",
-				"sidebar": true
+				"sidebar": true,
+				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
 		},
 		{
@@ -1155,6 +1324,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "pipeline",
+				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"columns": [
 					"title",

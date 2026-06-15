@@ -109,6 +109,27 @@ class SettingsLoadService
         // SLA engine (sla-engine-and-escalation) — separate sla register.
         'slaPolicy',
         'slaBreachEvent',
+        // AVG/GDPR data-subject-request workflow (avg-verzoeken-workflow).
+        'avgVerzoek',
+        'termijnEvent',
+        'bewijsItem',
+        'exportBundle',
+        'weigering',
+        'redactieActie',
+        // Master-data-management golden-record governance (master-data-management).
+        'masterEntity',
+        'sourceRecord',
+        'trustConfiguration',
+        'mergeOperation',
+        'syncQueueItem',
+        // Supplier commercial master (pipelinq-product-vendor-master). Without
+        // this slug the `supplier_schema` app-config key is never populated on
+        // import, so ProductVendorProviderService::resolveSupplier() and the
+        // IngestProductVendorMaster repair step cannot locate supplier objects.
+        'supplier',
+        // Contract & renewal tracking (contract-renewal-tracking) — recurring-revenue
+        // contracts with renewal-window detection and churn metrics.
+        'contract',
     ];
 
     /**

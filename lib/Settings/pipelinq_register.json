@@ -329,6 +329,14 @@
           "forms"
         ],
         "configuration": {
+          "linkedTypes": [
+            "mail"
+          ],
+          "mailObjectTemplate": {
+            "title": "{{subject}}",
+            "source": "email",
+            "notes": "From: {{senderName}} <{{sender}}>\nReceived: {{date}}\nMail: {{mailRef}}\n\n{{preview}}"
+          },
           "x-openregister-relations": [
             {
               "type": "deck",
