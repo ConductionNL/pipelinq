@@ -22,7 +22,6 @@
 			<NcSelect
 				v-model="selected"
 				:options="tenderTypes"
-				:label="t('pipelinq', 'Tender type')"
 				:input-label="t('pipelinq', 'Tender type')"
 				label="name"
 				track-by="code"

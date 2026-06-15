@@ -219,6 +219,22 @@ class ConfigFileLoaderService
                 $childPath = (string) $key;
             }
 
+            // An empty override array (a JSON `{}` or `[]`) carries no data to
+            // merge. PHP decodes both to `[]`, which `isList()` reports as a
+            // list, so without this guard an empty `{}` placeholder (e.g. a
+            // fragment declaring `registers.pipelinq: {}` to anchor schema
+            // overrides elsewhere) would fall through to the replace branch and
+            // clobber a populated base associative array — silently dropping a
+            // sibling fragment's register membership (ADR-037 union semantics).
+            if (is_array($value) === true
+                && $value === []
+                && isset($base[$key]) === true
+                && is_array($base[$key]) === true
+                && $base[$key] !== []
+            ) {
+                continue;
+            }
+
             if (is_array($value) === true
                 && isset($base[$key]) === true
                 && is_array($base[$key]) === true

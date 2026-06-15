@@ -31,7 +31,10 @@
 			</label>
 
 			<p class="loyalty-enrollment__terms">
-				<a v-if="termsUrl" :href="termsUrl" target="_blank" rel="noopener noreferrer">
+				<a v-if="termsUrl"
+					:href="termsUrl"
+					target="_blank"
+					rel="noopener noreferrer">
 					{{ t('pipelinq', 'Read the programme terms') }}
 				</a>
 			</p>

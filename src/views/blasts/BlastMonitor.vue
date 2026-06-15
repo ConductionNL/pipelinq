@@ -16,7 +16,11 @@
 
 		<section v-else class="blast-monitor__body">
 			<div class="blast-monitor__progress">
-				<div class="blast-monitor__bar" role="progressbar" :aria-valuenow="progressPercent" aria-valuemin="0" aria-valuemax="100">
+				<div class="blast-monitor__bar"
+					role="progressbar"
+					:aria-valuenow="progressPercent"
+					aria-valuemin="0"
+					aria-valuemax="100">
 					<div class="blast-monitor__bar-fill" :style="{ width: progressPercent + '%' }" />
 				</div>
 				<p class="blast-monitor__progress-meta">
@@ -108,8 +112,8 @@ export default {
 			timeline: [],
 			cancelling: false,
 			cancelError: '',
-			_pollHandle: null,
-			_startedAt: null,
+			pollHandle: null,
+			startedAt: null,
 		}
 	},
 	computed: {
@@ -164,10 +168,10 @@ export default {
 		 * @return {string}
 		 */
 		etaLabel() {
-			if (!this._startedAt || this.audienceTotal === 0 || this.processed === 0) {
+			if (!this.startedAt || this.audienceTotal === 0 || this.processed === 0) {
 				return ''
 			}
-			const elapsedMs = Date.now() - this._startedAt
+			const elapsedMs = Date.now() - this.startedAt
 			const rate = this.processed / (elapsedMs / 1000)
 			const remaining = (this.totals.queued || 0) / Math.max(rate, 0.001)
 			if (!isFinite(remaining) || remaining < 1) {
@@ -185,7 +189,7 @@ export default {
 		},
 	},
 	mounted() {
-		this._startedAt = Date.now()
+		this.startedAt = Date.now()
 		this.fetchOnce()
 		this.startPolling()
 	},
@@ -197,18 +201,18 @@ export default {
 		 * Start the 2-second polling loop.
 		 */
 		startPolling() {
-			if (this._pollHandle) {
+			if (this.pollHandle) {
 				return
 			}
-			this._pollHandle = setInterval(() => this.fetchOnce(), POLL_INTERVAL_MS)
+			this.pollHandle = setInterval(() => this.fetchOnce(), POLL_INTERVAL_MS)
 		},
 		/**
 		 * Stop the polling loop and clear the handle.
 		 */
 		stopPolling() {
-			if (this._pollHandle) {
-				clearInterval(this._pollHandle)
-				this._pollHandle = null
+			if (this.pollHandle) {
+				clearInterval(this.pollHandle)
+				this.pollHandle = null
 			}
 		},
 		/**

@@ -10,15 +10,19 @@ status: implemented
 
 Enable printing and emailing of receipts from POS transactions to thermal printers and customer email addresses. Receipts are generated from customizable templates with optional legal invoice mode for Dutch VAT compliance on high-value transactions (≥ EUR 100).
 
+@e2e exclude thermal-printer spooling (ESC/POS over a socket), live SMTP delivery, and template rendering have no deterministic Playwright surface (require printer hardware, environment-gated SMTP, and seeded transaction+template fixtures); the ESC/POS byte stream, IMailer send path, and placeholder template engine are covered by PHPUnit and Newman.
+
 > **Implementation note**: rendering uses a safe placeholder template engine (no Twig / no expression evaluation), so a malicious template body cannot execute code or trigger SSRF. Tax lines reuse the persisted `invoiceBreakdown` from PosTransactionService (never re-derived). Live thermal-printer spooling and live SMTP delivery are environment-gated; the ESC/POS byte stream and the IMailer send path are implemented and audited.
 
 ---
 
-## REQ-PRE-001: Print receipt to thermal printer [MVP]
+## Requirements
+
+### REQ-PRE-001: Print receipt to thermal printer [MVP]
 
 When a user triggers "Print Receipt" on a transaction detail view and selects a template and printer, the system MUST render the receipt using the selected template, generate ESC/POS commands, connect to the configured printer, and return success or failure status.
 
-### Scenario: Print successful to available printer
+#### Scenario: Print successful to available printer
 
 - GIVEN a transaction with €45.50 total and a "Standard Receipt" template
 - WHEN the user clicks "Print Receipt" → selects printer "192.168.1.100:9100" → template "Standaard Bonnetje"
@@ -30,7 +34,7 @@ When a user triggers "Print Receipt" on a transaction detail view and selects a 
   - Display "Receipt printed successfully"
   - Create a receiptPrintLog entry with status=success and action=print
 
-### Scenario: Print fails when printer offline
+#### Scenario: Print fails when printer offline
 
 - GIVEN the same transaction and template, but the printer at 192.168.1.100:9100 is offline
 - WHEN the user clicks "Print Receipt" → selects the offline printer
@@ -40,7 +44,7 @@ When a user triggers "Print Receipt" on a transaction detail view and selects a 
   - Create a receiptPrintLog entry with status=failed and errorMessage="Connection timeout"
   - NOT show a success message
 
-### Scenario: Print creates audit log entry
+#### Scenario: Print creates audit log entry
 
 - GIVEN a successful print
 - WHEN the print completes
@@ -54,11 +58,11 @@ When a user triggers "Print Receipt" on a transaction detail view and selects a 
 
 ---
 
-## REQ-PRE-002: Email receipt to customer [MVP]
+### REQ-PRE-002: Email receipt to customer [MVP]
 
 When a user triggers "Email Receipt" on a transaction and provides a customer email address, the system MUST render the receipt, format it for email delivery, and submit to Pipelinq Mail queue.
 
-### Scenario: Email receipt successful
+#### Scenario: Email receipt successful
 
 - GIVEN a transaction with €45.50 total and "Standard Receipt" template
 - WHEN the user clicks "Email Receipt" → enters "klant@example.nl" → confirms
@@ -69,7 +73,7 @@ When a user triggers "Email Receipt" on a transaction and provides a customer em
   - Display "Receipt sent successfully"
   - Create a receiptPrintLog with action=email, emailRecipient="klant@example.nl", status=success
 
-### Scenario: Email fails with invalid recipient
+#### Scenario: Email fails with invalid recipient
 
 - GIVEN a transaction and email form
 - WHEN the user enters an invalid email "not-an-email"
@@ -78,7 +82,7 @@ When a user triggers "Email Receipt" on a transaction and provides a customer em
   - Display "Invalid email address" error
   - NOT create a receiptPrintLog entry
 
-### Scenario: Email creates audit log entry
+#### Scenario: Email creates audit log entry
 
 - GIVEN a successful email submission
 - WHEN the email is queued in MailerService
@@ -91,11 +95,11 @@ When a user triggers "Email Receipt" on a transaction and provides a customer em
 
 ---
 
-## REQ-PRE-003: Receipt template management [MVP]
+### REQ-PRE-003: Receipt template management [MVP]
 
 The admin MUST be able to create, read, update, and delete receipt templates with Twig syntax support and live preview.
 
-### Scenario: Create template with default layout
+#### Scenario: Create template with default layout
 
 - GIVEN the admin is on Settings → Receipts → Templates
 - WHEN the admin clicks "Create Template" → enters name "My Custom Receipt" → saves
@@ -106,7 +110,7 @@ The admin MUST be able to create, read, update, and delete receipt templates wit
   - body = blank or starter template
   - organization = current user's organization
 
-### Scenario: Edit template body with Twig
+#### Scenario: Edit template body with Twig
 
 - GIVEN an existing template "Standaard Bonnetje"
 - WHEN the admin opens the template editor → modifies the Twig body → clicks Save
@@ -116,7 +120,7 @@ The admin MUST be able to create, read, update, and delete receipt templates wit
   - Save the template if syntax is valid
   - Update the updatedAt timestamp
 
-### Scenario: Preview template with sample transaction
+#### Scenario: Preview template with sample transaction
 
 - GIVEN a template with Twig body and a sample transaction
 - WHEN the admin is editing the template and looks at the Preview pane
@@ -125,7 +129,7 @@ The admin MUST be able to create, read, update, and delete receipt templates wit
   - Display the rendered receipt in a monospace font preview
   - Update the preview in real-time as the Twig source is edited
 
-### Scenario: Publish template to active status
+#### Scenario: Publish template to active status
 
 - GIVEN a template with status=draft
 - WHEN the admin clicks "Publish" / "Activate"
@@ -133,7 +137,7 @@ The admin MUST be able to create, read, update, and delete receipt templates wit
 - AND the template MUST now appear in the template dropdown on transaction detail views
 - AND the previous active template (if any) MAY remain or be archived per admin choice
 
-### Scenario: Delete / archive template
+#### Scenario: Delete / archive template
 
 - GIVEN an active template
 - WHEN the admin clicks "Archive" or "Delete"
@@ -143,11 +147,11 @@ The admin MUST be able to create, read, update, and delete receipt templates wit
 
 ---
 
-## REQ-PRE-004: Invoice mode for high-value transactions [MVP]
+### REQ-PRE-004: Invoice mode for high-value transactions [MVP]
 
 When a transaction total is ≥ EUR 100, the receipt MUST automatically render in invoice mode with BTW breakdown, compliance metadata, and formal invoice styling.
 
-### Scenario: Standard receipt below EUR 100
+#### Scenario: Standard receipt below EUR 100
 
 - GIVEN a transaction with €75.00 total
 - WHEN the user selects "Standaard Bonnetje" template (isInvoiceMode=false) and prints
@@ -156,7 +160,7 @@ When a transaction total is ≥ EUR 100, the receipt MUST automatically render i
   - NOT include legal compliance footer
   - Display simple transaction summary and total
 
-### Scenario: Invoice receipt at or above EUR 100
+#### Scenario: Invoice receipt at or above EUR 100
 
 - GIVEN a transaction with €125.00 total, including €21.84 BTW
 - WHEN the user selects "Juridische Factuur" template (isInvoiceMode=true) and prints
@@ -166,7 +170,7 @@ When a transaction total is ≥ EUR 100, the receipt MUST automatically render i
   - Render with 80-character width for invoice formatting
   - Include barcode or reference number for archival
 
-### Scenario: Template enforces invoice mode on high-value transactions
+#### Scenario: Template enforces invoice mode on high-value transactions
 
 - GIVEN a transaction with €125.00 total and a simple "Standaard Bonnetje" template (isInvoiceMode=false)
 - WHEN the system auto-detects transaction >= EUR 100
@@ -177,11 +181,11 @@ When a transaction total is ≥ EUR 100, the receipt MUST automatically render i
 
 ---
 
-## REQ-PRE-005: Receipt print log audit trail [MVP]
+### REQ-PRE-005: Receipt print log audit trail [MVP]
 
 Every print and email action MUST be logged to receiptPrintLog for compliance audit and reprinting.
 
-### Scenario: Print log records device and status
+#### Scenario: Print log records device and status
 
 - GIVEN a successful print to printer "192.168.1.100:9100"
 - WHEN the print completes
@@ -191,7 +195,7 @@ Every print and email action MUST be logged to receiptPrintLog for compliance au
   - status = "success"
   - printedAt = ISO timestamp of completion
 
-### Scenario: Email log records recipient
+#### Scenario: Email log records recipient
 
 - GIVEN a successful email to "klant@example.nl"
 - WHEN the email is queued
@@ -200,7 +204,7 @@ Every print and email action MUST be logged to receiptPrintLog for compliance au
   - action = "email"
   - status = "success"
 
-### Scenario: Failed log entry preserves error message
+#### Scenario: Failed log entry preserves error message
 
 - GIVEN a print that fails (printer offline)
 - WHEN the print attempt completes with error
@@ -211,11 +215,11 @@ Every print and email action MUST be logged to receiptPrintLog for compliance au
 
 ---
 
-## REQ-PRE-006: ESC/POS printer protocol support [MVP]
+### REQ-PRE-006: ESC/POS printer protocol support [MVP]
 
 The system MUST support standard ESC/POS thermal printers (Star, Epson, AURA) via socket connection and MUST generate valid ESC/POS command sequences.
 
-### Scenario: Connect to printer and detect status
+#### Scenario: Connect to printer and detect status
 
 - GIVEN a printer at IP 192.168.1.100, port 9100
 - WHEN the system initiates a socket connection
@@ -225,7 +229,7 @@ The system MUST support standard ESC/POS thermal printers (Star, Epson, AURA) vi
   - Receive a status byte indicating online/offline/error
   - Return the status to the UI
 
-### Scenario: Generate ESC/POS commands for text formatting
+#### Scenario: Generate ESC/POS commands for text formatting
 
 - GIVEN receipt text with formatting requirements (bold, font size, alignment)
 - WHEN the system generates ESC/POS commands
@@ -236,7 +240,7 @@ The system MUST support standard ESC/POS thermal printers (Star, Epson, AURA) vi
   - Emit GS/V (full cut or partial cut) at the end
   - Result MUST be valid binary compatible with Star/Epson firmware
 
-### Scenario: Print respects layout width setting
+#### Scenario: Print respects layout width setting
 
 - GIVEN a template with layoutWidth=42
 - WHEN the system renders the template and streams to printer
@@ -247,24 +251,24 @@ The system MUST support standard ESC/POS thermal printers (Star, Epson, AURA) vi
 
 ---
 
-## REQ-PRE-007: Admin settings for receipt configuration [MVP]
+### REQ-PRE-007: Admin settings for receipt configuration [MVP]
 
 Administrators MUST be able to configure default printer, email sender, and default template via admin settings.
 
-### Scenario: Configure printer IP and port
+#### Scenario: Configure printer IP and port
 
 - GIVEN the admin is in Settings → POS Receipts
 - WHEN the admin sets "Printer IP" = "192.168.1.100" and "Port" = "9100"
 - THEN these values MUST be saved to the settings table
 - AND all subsequent print requests MUST default to this printer
 
-### Scenario: Configure email sender
+#### Scenario: Configure email sender
 
 - GIVEN the admin sets "Email Sender Address" = "receipts@company.nl"
 - WHEN a receipt is emailed
 - THEN the email MUST have From: "receipts@company.nl"
 
-### Scenario: Select default template
+#### Scenario: Select default template
 
 - GIVEN the admin sets "Default Template" = "Standaard Bonnetje"
 - WHEN a user opens the print/email modal without selecting a template
@@ -272,11 +276,11 @@ Administrators MUST be able to configure default printer, email sender, and defa
 
 ---
 
-## REQ-PRE-008: Transaction detail print/email buttons [MVP]
+### REQ-PRE-008: Transaction detail print/email buttons [MVP]
 
 The transaction detail view MUST expose "Print Receipt" and "Email Receipt" action buttons with modal dialogs for selecting printer and template.
 
-### Scenario: Print Receipt modal workflow
+#### Scenario: Print Receipt modal workflow
 
 - GIVEN a transaction detail view
 - WHEN the user clicks "Print Receipt"
@@ -286,7 +290,7 @@ The transaction detail view MUST expose "Print Receipt" and "Email Receipt" acti
   - "Preview" pane showing the rendered receipt
   - "Print" and "Cancel" buttons
 
-### Scenario: Email Receipt modal workflow
+#### Scenario: Email Receipt modal workflow
 
 - GIVEN a transaction detail view
 - WHEN the user clicks "Email Receipt"
@@ -296,7 +300,7 @@ The transaction detail view MUST expose "Print Receipt" and "Email Receipt" acti
   - "Preview" pane showing rendered receipt
   - "Send" and "Cancel" buttons
 
-### Scenario: Modal closes on successful action
+#### Scenario: Modal closes on successful action
 
 - GIVEN a modal open (print or email)
 - WHEN the action completes successfully
@@ -305,17 +309,17 @@ The transaction detail view MUST expose "Print Receipt" and "Email Receipt" acti
 
 ---
 
-## REQ-PRE-009: Twig template rendering with transaction context [MVP]
+### REQ-PRE-009: Twig template rendering with transaction context [MVP]
 
 Receipt templates MUST support Twig template syntax with access to transaction, company, and system variables.
 
-### Scenario: Template accesses transaction data
+#### Scenario: Template accesses transaction data
 
 - GIVEN a Twig template with {{ transaction.total|number_format(2) }}
 - WHEN the template is rendered for a transaction with €125.50
 - THEN the output MUST contain "125.50"
 
-### Scenario: Template accesses line items loop
+#### Scenario: Template accesses line items loop
 
 - GIVEN a Twig template with:
   ```twig
@@ -326,13 +330,13 @@ Receipt templates MUST support Twig template syntax with access to transaction, 
 - WHEN rendered for a transaction with 3 line items
 - THEN the output MUST show all 3 lines with description, quantity, and total
 
-### Scenario: Template accesses company metadata
+#### Scenario: Template accesses company metadata
 
 - GIVEN a Twig template with {{ company.name }}, {{ company.address }}, {{ company.phone }}
 - WHEN rendered
 - THEN the output MUST contain the organization's configured values
 
-### Scenario: Template syntax error is caught
+#### Scenario: Template syntax error is caught
 
 - GIVEN a template with invalid Twig syntax: {{ transaction.nonexistent|undefined_filter }}
 - WHEN the template is rendered
@@ -344,11 +348,11 @@ Receipt templates MUST support Twig template syntax with access to transaction, 
 
 ---
 
-## REQ-PRE-010: Receipt reprinting for same transaction [MVP]
+### REQ-PRE-010: Receipt reprinting for same transaction [MVP]
 
 A user MUST be able to reprint a receipt for a transaction without creating a duplicate entry in the transaction's totals or inventory.
 
-### Scenario: Reprint same template
+#### Scenario: Reprint same template
 
 - GIVEN a transaction that was already printed once
 - WHEN the user clicks "Print Receipt" again and selects the same template and printer
@@ -357,7 +361,7 @@ A user MUST be able to reprint a receipt for a transaction without creating a du
   - Create a NEW receiptPrintLog entry (second print is audited separately)
   - NOT modify the transaction's status or totals
 
-### Scenario: Print with different template
+#### Scenario: Print with different template
 
 - GIVEN a transaction printed once with "Standaard Bonnetje"
 - WHEN the user prints again with "Horeca Bonnetje Compact"
@@ -368,17 +372,17 @@ A user MUST be able to reprint a receipt for a transaction without creating a du
 
 ---
 
-## REQ-PRE-011: Multi-language support in templates [MVP]
+### REQ-PRE-011: Multi-language support in templates [MVP]
 
 Receipt templates MUST support language variables for multi-language receipts without template duplication.
 
-### Scenario: Template uses i18n keys
+#### Scenario: Template uses i18n keys
 
 - GIVEN a template with {{ t('Thank you for your purchase') }}
 - WHEN rendered in Dutch language context
 - THEN the output MUST show the Dutch translation "Bedankt voor uw aankoop"
 
-### Scenario: Template respects system locale
+#### Scenario: Template respects system locale
 
 - GIVEN a template with {{ transaction.createdAt|date('d-m-Y H:i') }}
 - WHEN the system locale is Dutch
@@ -386,11 +390,11 @@ Receipt templates MUST support language variables for multi-language receipts wi
 
 ---
 
-## REQ-PRE-012: Printer device status polling [MVP]
+### REQ-PRE-012: Printer device status polling [MVP]
 
 The system MUST be able to check the status of a configured printer without sending a receipt.
 
-### Scenario: Check printer online status
+#### Scenario: Check printer online status
 
 - GIVEN the admin clicks "Test Printer" in Settings
 - WHEN the system sends an ESC/POS status request
@@ -401,25 +405,25 @@ The system MUST be able to check the status of a configured printer without send
 
 ---
 
-## REQ-PRE-013: HTML/PDF receipt format for email [MVP]
+### REQ-PRE-013: HTML/PDF receipt format for email [MVP]
 
 Email receipts MUST support both plain-text and HTML/PDF formats per template configuration.
 
-### Scenario: Email plain-text receipt
+#### Scenario: Email plain-text receipt
 
 - GIVEN a template configured for plain-text email
 - WHEN a receipt is emailed
 - THEN the email body MUST be formatted as plain text
 - AND the email MUST not have attachments
 
-### Scenario: Email HTML receipt
+#### Scenario: Email HTML receipt
 
 - GIVEN a template configured for HTML email with CSS styling
 - WHEN a receipt is emailed
 - THEN the email body MUST be formatted as HTML with embedded styles
 - AND the email MUST render correctly in common email clients
 
-### Scenario: Email receipt as PDF attachment
+#### Scenario: Email receipt as PDF attachment
 
 - GIVEN a template configured for PDF attachment
 - WHEN a receipt is emailed
@@ -430,11 +434,11 @@ Email receipts MUST support both plain-text and HTML/PDF formats per template co
 
 ---
 
-## REQ-PRE-014: Batch reprint from receipt log [MVP]
+### REQ-PRE-014: Batch reprint from receipt log [MVP]
 
 Administrators MUST be able to reprint receipts from historical print logs for compliance or customer requests.
 
-### Scenario: Reprint from log entry
+#### Scenario: Reprint from log entry
 
 - GIVEN a receiptPrintLog entry from 2026-05-20 for transaction ABC123
 - WHEN the admin navigates to Receipts → Print Log → clicks "Reprint" on the entry

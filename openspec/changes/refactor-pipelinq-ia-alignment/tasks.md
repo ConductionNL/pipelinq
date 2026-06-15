@@ -1,11 +1,28 @@
 # Tasks: Pipelinq IA Alignment
 
-Each task is atomic and scoped to be completable by a junior dev in
-under ~15 minutes. Tasks are grouped by file. Route paths are
-preserved throughout — only the `menu` structure and one new route
-(`/prospects`) change.
+**Status (2026-06-15): PARTIALLY SUPERSEDED.** The bulk of this proposal — the
+6-wrapper Dutch menu restructure (Mijn werk / Contacten / Pipeline / Klachten &
+Verzoeken / Catalogus / Beheer with relabels) — was written against a flat,
+15-item, English nav that **no longer exists**. The live `src/manifest.json`
+already groups via the `children`-array mechanism (see `manifest.d/30-expenses.json`)
+and has diverged substantially: two dashboards (Commercial + Operational), five
+existing group entries (Sales & CRM / Service / Point Of Sale / Analytics /
+Administration), and ~40 entries spanning POS, loyalty, AVG, MDM, berichtenbox,
+etc. Applying the proposed Dutch wrappers verbatim would **regress** the current,
+more-evolved IA (rename English→Dutch, collapse the two dashboards into one,
+fight the existing group entries). The menu-restructure tasks (1–18, 24–27) are
+therefore **deferred-as-superseded** `[~]`; a fresh IA audit against the current
+nav is the correct follow-up (and the proposal already flags one in task 30).
+
+**Built (concrete, non-regressive):** the new **Prospects** full page + nav (the
+one genuinely-unbuilt deliverable — `prospect-discovery` previously had only a
+dashboard widget + admin settings + the `prospect#index` API). Tasks 19–23.
 
 ## 1. Manifest menu restructure (`src/manifest.json`)
+
+> `[~]` SUPERSEDED — see the status note above. The proposed Dutch 6-wrapper
+> restructure targets a stale baseline; not applied to avoid regressing the
+> current `children`-grouped, two-dashboard, ~40-entry nav.
 
 1. Add a `Mijn werk` parent menu entry: `id: "MijnWerk"`, `label: "Mijn werk"`, `icon: "icon-user"`, `order: 10`, no `route` (parent only).
 2. Change the existing `Dashboard` menu entry to set `parent: "MijnWerk"` (or move it into a `children` array on `MijnWerk` — match whichever grouping form the manifest schema supports today; verify against `@conduction/nextcloud-vue` app-manifest-v2 schema before committing).
@@ -26,19 +43,21 @@ preserved throughout — only the `menu` structure and one new route
 17. Re-order remaining out-of-scope top-menu entries (Tasks, Contactmomenten, Surveys, Queues, Kennisbank, MyWork-replaced-by-MijnWerk, Rapportage, Documentation) so their `order` values do not collide with the new parent groups — keep them as flat top-level entries pending a future audit pass.
 18. Validate the manifest against the schema referenced in `$schema` (run the project's manifest-validate script if one exists, otherwise `node -e "require('ajv')..."` or visual JSON-parse check).
 
-## 2. New Prospects page (`src/manifest.json` + `src/views/`)
+## 2. New Prospects page (`src/manifest.d/` + `src/views/`) — BUILT
 
-19. Add a new `pages` entry to `src/manifest.json`: `id: "Prospects"`, `route: "/prospects"`, `type: "custom"`, `title: "Prospects"`, `component: "ProspectsView"`, `_note: "Full-page expansion of ProspectWidget; lib gap: no declarative type for scored-prospect list with external-source enrichment."`.
-20. Create `src/views/prospects/ProspectsView.vue` based on the existing `src/components/ProspectWidget.vue` — promote it from widget-card to full `CnPage` layout, keep the same Pinia store (`store/modules/prospect.js`), render scored results in a `CnIndexPage`-like list with sortable columns, and add row-level actions: "View details", "Convert to lead".
-21. Register `ProspectsView` in `src/registry.js` with `kind: "page"`, `_note` capturing the lib gap.
-22. Register `ProspectsView` in `src/customComponents.js` for v1-fallback compatibility (mirror how `DashboardView` is registered in both files).
-23. Verify in dev container that `/prospects` resolves and that `Pipeline → Prospects` menu entry routes there.
+- [x] 19. Page entry added via the modular fragment `src/manifest.d/45-prospects.json` (`id: Prospects`, `route: /prospects`, `type: custom`, `component: ProspectsView`, with the lib-gap `_note`). Fragment used instead of the monolith per the current ADR-037 convention.
+- [x] 20. `src/views/prospects/ProspectsView.vue` created — promotes ProspectWidget to a full page over the same `store/modules/prospect.js` Pinia store, with a sortable scored-prospect table (score/company/employees) and a row-level "Convert to lead" action (calls `createLeadFromProspect`). ("View details" omitted — prospects are external KvK/OpenCorporates records with no in-app detail object until converted.)
+- [x] 21. `ProspectsView` registered in `src/registry.js` (`kind: "page"`, lib-gap `_note`).
+- [~] 22. `src/customComponents.js` does not exist in this app (the v1-fallback file was retired in the manifest-v2 migration); registry.js is the single registration surface. N/A.
+- [x] 23. `npm run build` compiles the page + fragment + registry cleanly; gate-22 manifest-validation PASS. Live-container nav verification deferred to CI/manual (no dev container in this build env).
 
 ## 3. Sync settings menu exposure (`src/manifest.json`)
 
 (Covered by task 7 above; no additional file changes needed — `SyncSettings` already has a `pages` entry, `customComponents.js` already exports `SyncSettingsView`, and `registry.js` already maps it.)
 
 ## 4. Backwards-compat smoke tests
+
+> `[~]` SUPERSEDED — these smoke checks assert the Dutch 6-wrapper IA that was not applied. The new `/prospects` route is covered by `npm run build` + gate-22; the existing preserved URLs are unchanged by this PR.
 
 24. With the new menu live, navigate directly to each preserved URL and confirm the page renders and the correct (new) menu entry is marked active:
     - `/` → Mijn werk → Dashboard

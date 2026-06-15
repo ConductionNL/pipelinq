@@ -81,8 +81,8 @@ export default {
 			estimatedSize: null,
 			errors: {},
 			validationError: '',
-			_estimateTimer: null,
-			_validateTimer: null,
+			estimateTimer: null,
+			validateTimer: null,
 		}
 	},
 	computed: {
@@ -118,11 +118,11 @@ export default {
 		},
 	},
 	beforeUnmount() {
-		if (this._estimateTimer) {
-			clearTimeout(this._estimateTimer)
+		if (this.estimateTimer) {
+			clearTimeout(this.estimateTimer)
 		}
-		if (this._validateTimer) {
-			clearTimeout(this._validateTimer)
+		if (this.validateTimer) {
+			clearTimeout(this.validateTimer)
 		}
 	},
 	methods: {
@@ -176,8 +176,8 @@ export default {
 		 * @spec openspec/changes/marketing-segmentation-and-blast-07-segment-blast-views/specs/marketing-ui/spec.md#scenario-live-size-estimate-shown
 		 */
 		scheduleEstimate() {
-			if (this._estimateTimer) {
-				clearTimeout(this._estimateTimer)
+			if (this.estimateTimer) {
+				clearTimeout(this.estimateTimer)
 			}
 			if (!this.hasAnyLeaf) {
 				this.estimatedSize = 0
@@ -187,7 +187,7 @@ export default {
 			}
 			this.estimating = true
 			this.estimateError = false
-			this._estimateTimer = setTimeout(() => this.runEstimate(), DEBOUNCE_ESTIMATE_MS)
+			this.estimateTimer = setTimeout(() => this.runEstimate(), DEBOUNCE_ESTIMATE_MS)
 		},
 		/**
 		 * Perform the size estimate by posting the current rules to the
@@ -219,10 +219,10 @@ export default {
 		 * @spec openspec/changes/marketing-segmentation-and-blast-07-segment-blast-views/specs/marketing-ui/spec.md#scenario-visual-rule-tree-with-live-validation
 		 */
 		scheduleValidate() {
-			if (this._validateTimer) {
-				clearTimeout(this._validateTimer)
+			if (this.validateTimer) {
+				clearTimeout(this.validateTimer)
 			}
-			this._validateTimer = setTimeout(() => this.runValidate(), DEBOUNCE_VALIDATE_MS)
+			this.validateTimer = setTimeout(() => this.runValidate(), DEBOUNCE_VALIDATE_MS)
 		},
 		/**
 		 * Validate the current rule tree against the server-side SegmentService

@@ -82,7 +82,10 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 					:aria-describedby="error ? 'portal-requests-error' : null"
 					:aria-invalid="error ? 'true' : null" />
 			</div>
-			<p v-if="submitMessage" role="status" aria-live="polite" class="portal-success">
+			<p v-if="submitMessage"
+				role="status"
+				aria-live="polite"
+				class="portal-success">
 				{{ submitMessage }}
 			</p>
 			<button type="submit" :disabled="submitting" class="portal-button-primary">

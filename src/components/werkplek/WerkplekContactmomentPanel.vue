@@ -19,22 +19,20 @@
 			</button>
 		</div>
 
-		<div class="werkplek-cm-panel__row">
-			<div class="werkplek-cm-panel__field">
-				<NcSelect
-					v-model="form.channel"
-					:options="channelOptions"
-					:input-label="t('pipelinq', 'Channel')"
-					label="label"
-					:reduce="o => o.value"
-					:clearable="false" />
-			</div>
+		<div class="werkplek-cm-panel__field">
+			<NcSelect
+				v-model="form.channel"
+				:options="channelOptions"
+				:input-label="t('pipelinq', 'Channel')"
+				label="label"
+				:reduce="o => o.value"
+				:clearable="false" />
+		</div>
 
-			<div class="werkplek-cm-panel__field werkplek-cm-panel__field--timer">
-				<CallTimer
-					v-if="form.channel === 'telefoon'"
-					@stopped="onTimerStopped" />
-			</div>
+		<div
+			v-if="form.channel === 'telefoon'"
+			class="werkplek-cm-panel__field werkplek-cm-panel__field--timer">
+			<CallTimer @stopped="onTimerStopped" />
 		</div>
 
 		<div class="werkplek-cm-panel__field">
@@ -436,14 +434,11 @@ export default {
 .werkplek-cm-panel__context-label { font-weight: 600; }
 .werkplek-cm-panel__context-clear { margin-left: auto; background: transparent; border: 0; font-size: 1.2em; cursor: pointer; }
 
-.werkplek-cm-panel__row {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 12px;
-}
-
-.werkplek-cm-panel__field { display: flex; flex-direction: column; gap: 4px; }
-.werkplek-cm-panel__field--timer { justify-content: flex-end; }
+.werkplek-cm-panel__field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.werkplek-cm-panel__field--timer { align-items: flex-start; }
+/* The call timer is a wide horizontal control — let it wrap instead of
+   overflowing the panel on narrow widths. */
+.werkplek-cm-panel__field--timer :deep(.call-timer) { flex-wrap: wrap; max-width: 100%; }
 
 .werkplek-cm-panel__label { font-weight: 500; font-size: 0.9em; }
 .werkplek-cm-panel__textarea {
