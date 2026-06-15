@@ -1629,6 +1629,104 @@
             "description": "Additional internal notes (schema:text / Contactmoment.notitie)",
             "visible": false
           }
+        },
+        "x-openregister-notifications": {
+          "incomingCall": {
+            "trigger": {
+              "type": "created",
+              "filter": {
+                "field": "channel",
+                "operator": "equals",
+                "value": "telefoon"
+              }
+            },
+            "enabled": true,
+            "originApp": "pipelinq",
+            "channels": [
+              "nc-notification",
+              "web-push"
+            ],
+            "recipients": [
+              {
+                "kind": "field",
+                "field": "agent"
+              },
+              {
+                "kind": "groups",
+                "groups": [
+                  "sales"
+                ]
+              }
+            ],
+            "subject": {
+              "nl": "Inkomende oproep van {{client}}",
+              "en": "Incoming call from {{client}}"
+            },
+            "actions": [
+              {
+                "label": {
+                  "nl": "Klant openen",
+                  "en": "Open client"
+                },
+                "primary": true,
+                "target": {
+                  "kind": "object-detail",
+                  "object": {
+                    "kind": "relation",
+                    "field": "client"
+                  }
+                }
+              }
+            ]
+          },
+          "incomingEmail": {
+            "trigger": {
+              "type": "created",
+              "filter": {
+                "field": "channel",
+                "operator": "equals",
+                "value": "email"
+              }
+            },
+            "enabled": true,
+            "originApp": "pipelinq",
+            "channels": [
+              "nc-notification",
+              "web-push"
+            ],
+            "recipients": [
+              {
+                "kind": "field",
+                "field": "agent"
+              },
+              {
+                "kind": "groups",
+                "groups": [
+                  "sales"
+                ]
+              }
+            ],
+            "subject": {
+              "nl": "Inkomende e-mail van {{client}}",
+              "en": "Incoming email from {{client}}"
+            },
+            "actions": [
+              {
+                "label": {
+                  "nl": "Klant openen",
+                  "en": "Open client"
+                },
+                "primary": true,
+                "target": {
+                  "kind": "object-detail",
+                  "object": {
+                    "kind": "relation",
+                    "field": "client"
+                  }
+                }
+              }
+            ]
+          }
         }
       },
       "task": {
