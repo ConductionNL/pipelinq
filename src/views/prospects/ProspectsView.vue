@@ -109,6 +109,12 @@ export default {
 		Magnify,
 		AlertCircle,
 	},
+	/**
+	 * Expose the prospect Pinia store to the component.
+	 *
+	 * @spec exclude Pinia store wiring — no business logic
+	 * @return {object} The setup bindings.
+	 */
 	setup() {
 		return { prospectStore: useProspectStore() }
 	},
@@ -142,9 +148,20 @@ export default {
 		this.prospectStore.fetchProspects()
 	},
 	methods: {
+		/**
+		 * Force a fresh prospect fetch (bypass cache).
+		 *
+		 * @spec exclude trivial store passthrough — no business logic
+		 */
 		refresh() {
 			this.prospectStore.fetchProspects(true)
 		},
+		/**
+		 * Toggle/select the active sort column.
+		 *
+		 * @param {string} key - The column key.
+		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+		 */
 		setSort(key) {
 			if (this.sortKey === key) {
 				this.sortAsc = !this.sortAsc
@@ -153,10 +170,24 @@ export default {
 				this.sortAsc = false
 			}
 		},
+		/**
+		 * The sort arrow for a column header.
+		 *
+		 * @param {string} key - The column key.
+		 * @spec exclude presentational sort-arrow helper — no business logic
+		 * @return {string} The indicator glyph.
+		 */
 		sortIndicator(key) {
 			if (this.sortKey !== key) return ''
 			return this.sortAsc ? ' ▲' : ' ▼'
 		},
+		/**
+		 * Map a fit score to a CSS severity class.
+		 *
+		 * @param {number} score - The prospect fit score (0-100).
+		 * @spec exclude presentational score-band helper — no business logic
+		 * @return {string} The CSS class.
+		 */
 		scoreClass(score) {
 			const s = score || 0
 			if (s > 70) return 'score--high'
