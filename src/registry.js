@@ -147,12 +147,12 @@ import PosStaffFormView from './views/pos/PosStaffForm.vue'
 //     CRUD inline (no separate detail route). ---
 import PosTenderTypeListView from './views/pos/PosTenderTypeList.vue'
 
-// --- POS end-of-day bookkeeping (lib gap: index/detail pages cannot express the
-//     server-authoritative Z-report aggregation + Shillinq submission timeline
-//     + manager-gated retry). ---
+// --- POS end-of-day Z-report (lib gap: index/detail pages cannot express the
+//     server-authoritative Z-report aggregation + shillinq journal-raise status
+//     + manager-gated re-raise). The GL-mapping admin surface is delegated to
+//     shillinq (pipelinq-bookkeeping-to-shillinq) and removed here. ---
 import ZReportListView from './views/pos/ZReportList.vue'
 import ZReportDetailView from './views/pos/ZReportDetail.vue'
-import PosBookkeepingSettingsView from './views/admin/PosBookkeepingSettings.vue'
 import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
 
 // --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
@@ -727,17 +727,12 @@ const registry = {
 	ZReportListView: {
 		kind: 'page',
 		component: ZReportListView,
-		_note: 'Daily Z-report list with status / date / terminal filters; rows navigate to the per-report detail with GL mapping, submission timeline and manager-gated retry (pos-end-of-day-bookkeeping-post).',
+		_note: 'Daily Z-report list with status / date / terminal filters; rows navigate to the per-report detail with the shillinq journal-raise status and manager-gated re-raise (pipelinq-bookkeeping-to-shillinq).',
 	},
 	ZReportDetailView: {
 		kind: 'page',
 		component: ZReportDetailView,
-		_note: 'Z-report detail: server-authoritative summary, tax breakdown, payment-method breakdown, GL ledger line items (read-only), submission timeline and the manager-gated retry-submission action (pos-end-of-day-bookkeeping-post).',
-	},
-	PosBookkeepingSettingsView: {
-		kind: 'page',
-		component: PosBookkeepingSettingsView,
-		_note: 'Admin settings panel for the POS bookkeeping pipeline: daily Z-report time, Shillinq endpoint + bearer token (isSensitive), alert email and max retry attempts (pos-end-of-day-bookkeeping-post).',
+		_note: 'Z-report detail: server-authoritative summary, tax breakdown, payment-method breakdown, shillinq bookkeeping-status projection and the manager-gated re-raise action. The GL journal itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq).',
 	},
 	PosCustomerSettingsView: {
 		kind: 'page',

@@ -3,11 +3,12 @@
 /**
  * Unit tests for PosBookkeepingService.
  *
- * Exercises the four-stage end-of-day pipeline (aggregate -> stage -> POST ->
- * event emit) end-to-end against in-memory fakes of OpenRegister's
- * ObjectService + WebhookService, a stubbed IClientService + IResponse, a
- * fake IJobList and a memoryless IMailer. The real PosAccessPolicy is used
- * so the manager-gate is exercised against a mocked group manager.
+ * Exercises the operational Z-report aggregation and the registry-mediated
+ * journal raise (shillinq.JournalEntry.raise) against in-memory fakes of
+ * OpenRegister's ObjectService + WebhookService. The real PosAccessPolicy is
+ * used so the manager-gate is exercised against a mocked group manager. The
+ * GL chart + the journal entry itself live in shillinq — this service only
+ * sends business facts and projects the outcome onto the Z-report.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service
@@ -23,7 +24,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#7.1
+ * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
  */
 
 declare(strict_types=1);
@@ -32,13 +33,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Service\PosBookkeepingService;
-use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
-use OCP\AppFramework\OCS\OCSNotFoundException;
-use OCP\BackgroundJob\IJobList;
-use OCP\Http\Client\IClient;
-use OCP\Http\Client\IClientService;
-use OCP\Http\Client\IResponse;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\Mail\IMailer;
@@ -80,23 +75,7 @@ class BookkeepingFakeObjectService
     {
         $filters = $config['filters'] ?? [];
         $schema  = (string) ($filters['schema'] ?? '');
-        $rows    = array_values($this->store[$schema] ?? []);
-
-        $filterKeys = ['zReport', 'status'];
-        return array_values(
-            array_filter(
-                $rows,
-                function (array $row) use ($filters, $filterKeys): bool {
-                    foreach ($filterKeys as $key) {
-                        if (isset($filters[$key]) === true && ($row[$key] ?? null) !== $filters[$key]) {
-                            return false;
-                        }
-                    }
-
-                    return true;
-                }
-            )
-        );
+        return array_values($this->store[$schema] ?? []);
     }//end findAll()
 
     /**
@@ -118,7 +97,7 @@ class BookkeepingFakeObjectService
 }//end class
 
 /**
- * Fake WebhookService capturing dispatched CloudEvents.
+ * Fake WebhookService capturing dispatched CloudEvents (optionally failing).
  */
 class BookkeepingFakeWebhookService
 {
@@ -129,10 +108,19 @@ class BookkeepingFakeWebhookService
     public array $events = [];
 
     /**
+     * @var boolean
+     */
+    public bool $fail = false;
+
+    /**
      * @param array<string, mixed> $payload
      */
     public function dispatchEvent(object $_event, string $eventName, array $payload): void
     {
+        if ($this->fail === true) {
+            throw new \RuntimeException('webhook delivery failed');
+        }
+
         $this->events[] = ['eventName' => $eventName, 'payload' => $payload];
     }//end dispatchEvent()
 }//end class
@@ -157,34 +145,9 @@ class PosBookkeepingServiceTest extends TestCase
     private IAppConfig $appConfig;
 
     /**
-     * @var array<int, array{uri: string, options: array<string, mixed>}>
-     */
-    private array $httpCalls = [];
-
-    /**
-     * @var integer
-     */
-    private int $nextHttpStatus = 202;
-
-    /**
-     * @var array<string, mixed>
-     */
-    private array $nextHttpBody = ['message' => 'Accepted', 'eventId' => 'evt-shillinq-test'];
-
-    /**
-     * @var \Throwable|null
-     */
-    private ?\Throwable $nextHttpThrow = null;
-
-    /**
      * @var array<int, string>
      */
     private array $admins = [];
-
-    /**
-     * @var array<int, array{className: string, argument: array<string, mixed>}>
-     */
-    private array $jobScheduled = [];
 
     /**
      * @var array<int, array{to: string, subject: string, body: string}>
@@ -195,11 +158,10 @@ class PosBookkeepingServiceTest extends TestCase
      * @var array<string, string>
      */
     private array $appConfigStore = [
-        'register'                   => 'reg',
-        'pos_eod.shillinq_endpoint'  => 'https://shillinq.example.org',
-        'pos_eod.shillinq_token'     => 'sk_test_xyz',
-        'pos_eod.alert_email'        => 'accounting@example.org',
-        'pos_eod.max_retry_attempts' => '5',
+        'register'                      => 'reg',
+        'shillinq_journal_webhook_url'  => 'https://shillinq.example.org/webhook',
+        'pos_eod.alert_email'           => 'accounting@example.org',
+        'pos_eod.max_retry_attempts'    => '5',
     ];
 
     protected function setUp(): void
@@ -253,36 +215,6 @@ class PosBookkeepingServiceTest extends TestCase
                 }
                 );
 
-        $httpClient = $this->createMock(IClient::class);
-        $httpClient->method('post')->willReturnCallback(
-            function (string $uri, array $options): IResponse {
-                $this->httpCalls[] = ['uri' => $uri, 'options' => $options];
-                if ($this->nextHttpThrow !== null) {
-                    $err = $this->nextHttpThrow;
-                    $this->nextHttpThrow = null;
-                    throw $err;
-                }
-
-                $response = $this->createMock(IResponse::class);
-                $response->method('getStatusCode')->willReturn($this->nextHttpStatus);
-                $response->method('getBody')->willReturn(json_encode($this->nextHttpBody));
-                return $response;
-            }
-        );
-
-        $clientService = $this->createMock(IClientService::class);
-        $clientService->method('newClient')->willReturn($httpClient);
-
-        $jobList = $this->createMock(IJobList::class);
-        $jobList->method('add')->willReturnCallback(
-            function (string $className, $argument): void {
-                $this->jobScheduled[] = [
-                    'className' => $className,
-                    'argument'  => is_array($argument) ? $argument : [],
-                ];
-            }
-        );
-
         $mailer   = $this->createMock(IMailer::class);
         $message  = $this->createMock(IMessage::class);
         $captured = ['to' => '', 'subject' => '', 'body' => ''];
@@ -315,8 +247,6 @@ class PosBookkeepingServiceTest extends TestCase
         $this->service = new PosBookkeepingService(
             $container,
             $this->appConfig,
-            $clientService,
-            $jobList,
             $mailer,
             $policy,
             $this->createMock(LoggerInterface::class),
@@ -330,24 +260,6 @@ class PosBookkeepingServiceTest extends TestCase
     {
         $this->admins[] = $uid;
     }//end asAdmin()
-
-    /**
-     * Seed a default GL mapping covering 9% + 21% with a bank clearing account.
-     */
-    private function seedMapping(): void
-    {
-        $this->objects->store['glAccountMapping_schema']['mapping-1'] = [
-            'id'              => 'mapping-1',
-            'name'            => 'Standaard',
-            'isDefault'       => true,
-            'taxRateMappings' => [
-                ['taxRate' => 0,  'debitAccount' => '1200', 'creditAccount' => '5100'],
-                ['taxRate' => 9,  'debitAccount' => '1200', 'creditAccount' => '5010'],
-                ['taxRate' => 21, 'debitAccount' => '1200', 'creditAccount' => '5000'],
-            ],
-            'bankAccount'     => '1000',
-        ];
-    }//end seedMapping()
 
     /**
      * Seed two confirmed transactions on the same date.
@@ -381,31 +293,34 @@ class PosBookkeepingServiceTest extends TestCase
     }//end seedTransactions()
 
     /**
-     * Seed a ready Z-report ready for outbound staging.
+     * Seed a ready Z-report (pending bookkeeping) for the journal raise.
      *
      * @return string The Z-report id.
      */
     private function seedZReport(): string
     {
         $this->objects->store['posZReport_schema']['zr-1'] = [
-            'id'           => 'zr-1',
-            'reference'    => 'Z-2026-05-20-KAS01',
-            'reportDate'   => '2026-05-20',
-            'terminalId'   => 'kassa-01',
-            'subtotal'     => 300.00,
-            'totalTax'     => 51.00,
-            'total'        => 351.00,
-            'taxBreakdown' => [
+            'id'                => 'zr-1',
+            'reference'         => 'Z-2026-05-20-KAS01',
+            'reportDate'        => '2026-05-20',
+            'terminalId'        => 'kassa-01',
+            'transactionCount'  => 2,
+            'subtotal'          => 300.00,
+            'totalTax'          => 51.00,
+            'total'             => 351.00,
+            'taxBreakdown'      => [
                 ['rate' => 9,  'base' => 100.00, 'tax' => 9.00],
                 ['rate' => 21, 'base' => 200.00, 'tax' => 42.00],
             ],
-            'status'       => 'ready',
+            'status'            => 'ready',
+            'bookkeepingStatus' => 'pending',
         ];
         return 'zr-1';
     }//end seedZReport()
 
     /**
-     * generateZReport aggregates the day's confirmed/settled transactions.
+     * generateZReport aggregates the day's confirmed/settled transactions and
+     * opens the bookkeeping projection as pending.
      *
      * @return void
      */
@@ -420,9 +335,10 @@ class PosBookkeepingServiceTest extends TestCase
         $this->assertSame(51.00, $report['totalTax']);
         $this->assertSame(351.00, $report['total']);
         $this->assertSame('ready', $report['status']);
+        $this->assertSame('pending', $report['bookkeepingStatus']);
         $this->assertSame('Z-2026-05-20-KASSA-01', $report['reference']);
 
-        // CloudEvent emitted.
+        // PosZReport.submitted CloudEvent emitted.
         $this->assertNotEmpty($this->webhooks->events);
         $this->assertSame(PosBookkeepingService::EVENT_ZREPORT_SUBMITTED, $this->webhooks->events[0]['eventName']);
     }//end testGenerateZReportAggregatesConfirmedAndSettled()
@@ -440,83 +356,6 @@ class PosBookkeepingServiceTest extends TestCase
         $this->assertSame(0.0, $report['total']);
         $this->assertSame('draft', $report['status']);
     }//end testGenerateZReportEmptyDayProducesDraft()
-
-    /**
-     * generateZReport excludes draft / refunded transactions.
-     *
-     * @return void
-     */
-    public function testGenerateZReportExcludesNonConfirmed(): void
-    {
-        $this->seedTransactions();
-        // Add a draft txn on the same day; must NOT contribute to the Z-report.
-        $this->objects->store['posTransaction_schema']['txn-3'] = [
-            'id'           => 'txn-3',
-            'status'       => 'draft',
-            'terminalId'   => 'kassa-01',
-            'total'        => 99.99,
-            'taxBreakdown' => [],
-            'settledAt'    => '2026-05-20T16:00:00+00:00',
-        ];
-
-        $report = $this->service->generateZReport(reportDate: '2026-05-20', terminalId: 'kassa-01');
-
-        $this->assertSame(2, $report['transactionCount']);
-        $this->assertSame(351.00, $report['total']);
-    }//end testGenerateZReportExcludesNonConfirmed()
-
-    /**
-     * createOutboundMessage stages balanced GL line items and a deterministic key.
-     *
-     * @return void
-     */
-    public function testCreateOutboundMessageStagesBalancedGlLines(): void
-    {
-        $this->seedMapping();
-        $zid = $this->seedZReport();
-
-        $outbound = $this->service->createOutboundMessage(zReportId: $zid);
-
-        $this->assertSame('draft', $outbound['status']);
-        $this->assertSame(0, $outbound['attemptCount']);
-        $this->assertSame('2026-05-20', $outbound['postingDate']);
-        $this->assertStringStartsWith('sha256:', $outbound['idempotencyKey']);
-
-        $lines = $outbound['ledgerLineItems'];
-        $this->assertNotEmpty($lines);
-
-        $debit  = 0.0;
-        $credit = 0.0;
-        foreach ($lines as $l) {
-            $debit  += (float) ($l['debit'] ?? 0);
-            $credit += (float) ($l['credit'] ?? 0);
-        }
-
-        $this->assertEqualsWithDelta($debit, $credit, 0.001, 'GL lines must balance');
-    }//end testCreateOutboundMessageStagesBalancedGlLines()
-
-    /**
-     * createOutboundMessage refuses when GL mapping for a rate is missing.
-     *
-     * @return void
-     */
-    public function testCreateOutboundMessageMissingMappingThrows(): void
-    {
-        // Mapping covers only 9% — the Z-report's 21% rate is unmapped.
-        $this->objects->store['glAccountMapping_schema']['mapping-1'] = [
-            'id'              => 'mapping-1',
-            'name'            => 'Partial',
-            'isDefault'       => true,
-            'taxRateMappings' => [
-                ['taxRate' => 9, 'debitAccount' => '1200', 'creditAccount' => '5010'],
-            ],
-            'bankAccount'     => '1000',
-        ];
-        $this->seedZReport();
-
-        $this->expectException(OCSBadRequestException::class);
-        $this->service->createOutboundMessage('zr-1');
-    }//end testCreateOutboundMessageMissingMappingThrows()
 
     /**
      * computeIdempotencyKey is deterministic for the same Z-report and date.
@@ -539,228 +378,147 @@ class PosBookkeepingServiceTest extends TestCase
     }//end testComputeIdempotencyKeyIsDeterministicAndUnique()
 
     /**
-     * postToShillinq fails closed for a non-manager.
+     * raiseJournalEntry fails closed for a non-manager.
      *
      * @return void
      */
-    public function testPostToShillinqRequiresManager(): void
+    public function testRaiseJournalEntryRequiresManager(): void
     {
-        $this->seedMapping();
         $this->seedZReport();
-        $out = $this->service->createOutboundMessage('zr-1');
 
         $this->expectException(OCSForbiddenException::class);
-        $this->service->postToShillinq($out['id'], 'clerk');
-    }//end testPostToShillinqRequiresManager()
+        $this->service->raiseJournalEntry('zr-1', 'clerk');
+    }//end testRaiseJournalEntryRequiresManager()
 
     /**
-     * postToShillinq with 202 transitions to posted and emits the CloudEvent.
+     * A ready raise dispatches the registry message and projects raised.
      *
      * @return void
      */
-    public function testPostToShillinqSuccessTransitionsToPosted(): void
+    public function testRaiseDispatchesRegistryMessageAndProjectsRaised(): void
     {
         $this->asAdmin();
-        $this->seedMapping();
         $this->seedZReport();
-        $out = $this->service->createOutboundMessage('zr-1');
 
-        $this->nextHttpStatus = 202;
-        $this->nextHttpBody   = [
-            'message'        => 'Accepted',
-            'eventId'        => 'evt-shillinq-001',
-            'journalEntryId' => 'je-shillinq-001',
-            'glReference'    => 'GL-2026-05-20-001',
-        ];
+        $result = $this->service->raiseJournalEntry('zr-1', 'boss');
 
-        $result = $this->service->postToShillinq($out['id'], 'boss');
+        $this->assertSame('raised', $result['bookkeepingStatus']);
+        $this->assertNotEmpty($result['shillinqJournalEntryId']);
 
-        $this->assertSame('posted', $result['status']);
-        $this->assertSame(1, $result['attemptCount']);
-        $this->assertSame('evt-shillinq-001', $result['shillinqEventId']);
-        $this->assertSame('je-shillinq-001', $result['shillinqJournalEntryId']);
-        $this->assertSame('GL-2026-05-20-001', $result['glReference']);
-
-        // Idempotency + Bearer headers were sent.
-        $this->assertNotEmpty($this->httpCalls);
-        $headers = $this->httpCalls[0]['options']['headers'] ?? [];
-        $this->assertSame($out['idempotencyKey'], $headers['X-Idempotency-Key'] ?? null);
-        $this->assertSame('Bearer sk_test_xyz', $headers['Authorization'] ?? null);
-
-        // Z-report transitioned to posted.
-        $this->assertSame('posted', $this->objects->store['posZReport_schema']['zr-1']['status']);
-
-        // pipelinq.PosJournalEntry.posted CloudEvent emitted.
+        // Registry message dispatched with business facts (no GL lines).
         $eventNames = array_column($this->webhooks->events, 'eventName');
-        $this->assertContains(PosBookkeepingService::EVENT_JOURNAL_POSTED, $eventNames);
-    }//end testPostToShillinqSuccessTransitionsToPosted()
+        $this->assertContains(PosBookkeepingService::EVENT_JOURNAL_RAISE, $eventNames);
+        $raise = $this->webhooks->events[count($this->webhooks->events) - 1];
+        $this->assertSame(PosBookkeepingService::EVENT_JOURNAL_RAISE, $raise['eventName']);
+        $this->assertArrayNotHasKey('ledgerLineItems', $raise['payload']['data']);
+        $this->assertArrayHasKey('taxBreakdown', $raise['payload']['data']);
+
+        // Idempotency key is the deterministic SHA256(zReport.uuid + reportDate).
+        $expectedKey = $this->service->computeIdempotencyKey(['id' => 'zr-1', 'reportDate' => '2026-05-20']);
+        $this->assertSame($expectedKey, $raise['payload']['data']['idempotencyKey']);
+        $this->assertSame($expectedKey, $result['shillinqJournalEntryId']);
+    }//end testRaiseDispatchesRegistryMessageAndProjectsRaised()
 
     /**
-     * postToShillinq with 422 marks failed terminally and sends alert.
+     * A re-raise reuses the identical idempotency key (no double booking).
      *
      * @return void
      */
-    public function testPostToShillinq422IsTerminalFailureWithAlert(): void
+    public function testReRaisePreservesIdempotencyKey(): void
     {
         $this->asAdmin();
-        $this->seedMapping();
         $this->seedZReport();
-        $out = $this->service->createOutboundMessage('zr-1');
 
-        $this->nextHttpStatus = 422;
-        $this->nextHttpBody   = ['message' => 'Unprocessable Entity: GL account 1999 does not exist'];
+        $first  = $this->service->raiseJournalEntry('zr-1', 'boss');
+        $second = $this->service->raiseJournalEntry('zr-1', 'boss');
 
-        $result = $this->service->postToShillinq($out['id'], 'boss');
+        $this->assertSame($first['shillinqJournalEntryId'], $second['shillinqJournalEntryId']);
 
-        $this->assertSame('failed', $result['status']);
-        $this->assertSame('422', $result['lastErrorCode']);
-        $this->assertNull($result['nextRetryAt']);
-        $this->assertSame('failed', $this->objects->store['posZReport_schema']['zr-1']['status']);
-
-        // No retry job scheduled, alert sent.
-        $this->assertEmpty($this->jobScheduled);
-        $this->assertNotEmpty($this->emailsSent);
-        $this->assertSame('accounting@example.org', $this->emailsSent[0]['to']);
-    }//end testPostToShillinq422IsTerminalFailureWithAlert()
-
-    /**
-     * postToShillinq with 503 schedules an exponential-backoff retry.
-     *
-     * @return void
-     */
-    public function testPostToShillinq503SchedulesBackoffRetry(): void
-    {
-        $this->asAdmin();
-        $this->seedMapping();
-        $this->seedZReport();
-        $out = $this->service->createOutboundMessage('zr-1');
-
-        $this->nextHttpStatus = 503;
-        $this->nextHttpBody   = ['message' => 'Service Unavailable'];
-
-        $result = $this->service->postToShillinq($out['id'], 'boss');
-
-        $this->assertSame('failed', $result['status']);
-        $this->assertSame('503', $result['lastErrorCode']);
-        $this->assertNotEmpty($result['nextRetryAt']);
-        $this->assertCount(1, $this->jobScheduled);
-        $this->assertSame(
-            'OCA\Pipelinq\BackgroundJob\PosRetryBackoffJob',
-            $this->jobScheduled[0]['className']
+        $keys = array_map(
+            fn (array $e): string => (string) ($e['payload']['data']['idempotencyKey'] ?? ''),
+            array_filter(
+                $this->webhooks->events,
+                fn (array $e): bool => $e['eventName'] === PosBookkeepingService::EVENT_JOURNAL_RAISE
+            )
         );
-        $this->assertSame($out['id'], $this->jobScheduled[0]['argument']['outboundMessageId']);
-    }//end testPostToShillinq503SchedulesBackoffRetry()
+        $this->assertCount(2, $keys);
+        $this->assertSame($keys[0], $keys[array_key_last($keys)]);
+    }//end testReRaisePreservesIdempotencyKey()
 
     /**
-     * Exponential backoff schedule matches the 1min/5min/15min/1hr table.
+     * An unconfigured integration leaves the projection pending (POS day closes).
      *
      * @return void
      */
-    public function testScheduleNextRetryFollowsBackoffSchedule(): void
-    {
-        $now = time();
-
-        $next1 = strtotime($this->service->scheduleNextRetry(1));
-        $next2 = strtotime($this->service->scheduleNextRetry(2));
-        $next3 = strtotime($this->service->scheduleNextRetry(3));
-        $next4 = strtotime($this->service->scheduleNextRetry(4));
-        $next5 = strtotime($this->service->scheduleNextRetry(5));
-
-        // Allow 5s slack for execution time.
-        $this->assertGreaterThanOrEqual($now + 55, $next1);
-        $this->assertLessThan($now + 70, $next1);
-        $this->assertGreaterThanOrEqual($now + 295, $next2);
-        $this->assertLessThan($now + 310, $next2);
-        $this->assertGreaterThanOrEqual($now + 895, $next3);
-        $this->assertLessThan($now + 910, $next3);
-        $this->assertGreaterThanOrEqual($now + 3595, $next4);
-        $this->assertLessThan($now + 3610, $next4);
-        // 5th retry caps at the last entry (1hr).
-        $this->assertGreaterThanOrEqual($now + 3595, $next5);
-    }//end testScheduleNextRetryFollowsBackoffSchedule()
-
-    /**
-     * After max attempts a transient failure becomes terminal.
-     *
-     * @return void
-     */
-    public function testPostToShillinqMaxAttemptsBecomesTerminal(): void
+    public function testUnconfiguredIntegrationLeavesPending(): void
     {
         $this->asAdmin();
-        $this->seedMapping();
+        $this->appConfigStore['shillinq_journal_webhook_url'] = '';
         $this->seedZReport();
-        $out = $this->service->createOutboundMessage('zr-1');
 
+        $result = $this->service->raiseJournalEntry('zr-1', 'boss');
+
+        $this->assertSame('pending', $result['bookkeepingStatus']);
+        $this->assertEmpty(
+            array_filter(
+                $this->webhooks->events,
+                fn (array $e): bool => $e['eventName'] === PosBookkeepingService::EVENT_JOURNAL_RAISE
+            )
+        );
+    }//end testUnconfiguredIntegrationLeavesPending()
+
+    /**
+     * A failed dispatch below the cap stays pending for retry.
+     *
+     * @return void
+     */
+    public function testTransientDispatchFailureStaysPending(): void
+    {
+        $this->asAdmin();
+        $this->webhooks->fail = true;
+        $this->seedZReport();
+
+        $result = $this->service->raiseJournalEntry('zr-1', 'boss');
+
+        $this->assertSame('pending', $result['bookkeepingStatus']);
+        $this->assertSame(1, $result['bookkeepingAttempts']);
+        $this->assertEmpty($this->emailsSent);
+    }//end testTransientDispatchFailureStaysPending()
+
+    /**
+     * Reaching the max attempts flips the projection to failed and alerts.
+     *
+     * @return void
+     */
+    public function testMaxAttemptsBecomesFailedWithAlert(): void
+    {
+        $this->asAdmin();
+        $this->webhooks->fail = true;
+        $this->seedZReport();
         // Pre-stamp 4 prior attempts so this 5th attempt hits the cap.
-        $out['attemptCount']       = 4;
-        $out['submissionAttempts'] = [];
-        $this->objects->store['posJournalEntryOutbound_schema'][$out['id']] = $out;
+        $this->objects->store['posZReport_schema']['zr-1']['bookkeepingAttempts'] = 4;
 
-        $this->nextHttpStatus = 503;
-        $this->nextHttpBody   = ['message' => 'Service Unavailable'];
+        $result = $this->service->raiseJournalEntry('zr-1', 'boss');
 
-        $result = $this->service->postToShillinq($out['id'], 'boss');
-
-        $this->assertSame('failed', $result['status']);
-        $this->assertSame(5, $result['attemptCount']);
-        $this->assertNull($result['nextRetryAt']);
-        $this->assertEmpty($this->jobScheduled, 'no further retries after max attempts');
+        $this->assertSame('failed', $result['bookkeepingStatus']);
+        $this->assertSame(5, $result['bookkeepingAttempts']);
         $this->assertNotEmpty($this->emailsSent, 'alert sent on max-attempts');
-    }//end testPostToShillinqMaxAttemptsBecomesTerminal()
+        $this->assertSame('accounting@example.org', $this->emailsSent[0]['to']);
+    }//end testMaxAttemptsBecomesFailedWithAlert()
 
     /**
-     * postToShillinq refuses when no Shillinq endpoint is configured.
+     * shouldDispatch only enables on a valid HTTPS webhook URL.
      *
      * @return void
      */
-    public function testPostToShillinqRequiresEndpoint(): void
+    public function testShouldDispatchRequiresHttpsUrl(): void
     {
-        $this->asAdmin();
-        $this->appConfigStore['pos_eod.shillinq_endpoint'] = '';
-        $this->seedMapping();
-        $this->seedZReport();
-        $out = $this->service->createOutboundMessage('zr-1');
+        $this->assertTrue($this->service->shouldDispatch());
 
-        $this->expectException(OCSBadRequestException::class);
-        $this->service->postToShillinq($out['id'], 'boss');
-    }//end testPostToShillinqRequiresEndpoint()
+        $this->appConfigStore['shillinq_journal_webhook_url'] = 'http://insecure.example.org';
+        $this->assertFalse($this->service->shouldDispatch());
 
-    /**
-     * postToShillinq treats a thrown exception as transient (NETWORK_ERROR) by default.
-     *
-     * @return void
-     */
-    public function testPostToShillinqNetworkExceptionIsTransient(): void
-    {
-        $this->asAdmin();
-        $this->seedMapping();
-        $this->seedZReport();
-        $out = $this->service->createOutboundMessage('zr-1');
-
-        $this->nextHttpThrow = new \RuntimeException('Connection reset');
-
-        $result = $this->service->postToShillinq($out['id'], 'boss');
-
-        $this->assertSame('failed', $result['status']);
-        $this->assertSame('NETWORK_ERROR', $result['lastErrorCode']);
-        $this->assertNotEmpty($result['nextRetryAt']);
-        $this->assertNotEmpty($this->jobScheduled);
-    }//end testPostToShillinqNetworkExceptionIsTransient()
-
-    /**
-     * Missing default GL mapping triggers an alert and refuses staging.
-     *
-     * @return void
-     */
-    public function testCreateOutboundMessageWithoutMappingAlerts(): void
-    {
-        $this->seedZReport();
-
-        $this->expectException(OCSNotFoundException::class);
-        try {
-            $this->service->createOutboundMessage('zr-1');
-        } finally {
-            $this->assertNotEmpty($this->emailsSent, 'an alert email must be sent when no default mapping exists');
-        }
-    }//end testCreateOutboundMessageWithoutMappingAlerts()
+        $this->appConfigStore['shillinq_journal_webhook_url'] = '';
+        $this->assertFalse($this->service->shouldDispatch());
+    }//end testShouldDispatchRequiresHttpsUrl()
 }//end class

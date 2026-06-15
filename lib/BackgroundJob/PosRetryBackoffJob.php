@@ -3,18 +3,15 @@
 /**
  * Pipelinq PosRetryBackoffJob.
  *
- * On-demand background job that retries a failed posJournalEntryOutbound
- * submission to Shillinq once its `nextRetryAt` is reached. Scheduled by
- * {@see PosBookkeepingService::onTransientFailure()} on a 5xx / network
- * timeout; reschedules itself with the next exponential backoff entry on
- * continued transient failure; goes terminal (no reschedule) on a 4xx or
- * after the configured max attempts.
- *
- * The job runs as the synthetic `system:pipelinq-bookkeeping` user — the
- * service's POS-manager gate is enforced by checking the configured
- * `pipelinq.pos_manager_group` (or admin); this synthetic user is treated as
- * an admin for the purpose of the manager predicate because the retry is the
- * server's continuation of an already-authorised manual submission.
+ * Periodic background job that re-raises the journal entry for any posZReport
+ * whose shillinq bookkeeping projection is still `pending` — i.e. the
+ * registry-mediated `shillinq.JournalEntry.raise` has not yet been accepted
+ * (shillinq was unreachable / the integration was unconfigured at close). The
+ * re-raise reuses the deterministic SHA256(zReport.uuid + reportDate)
+ * idempotency key so shillinq de-duplicates against any journal it already
+ * created; a permanent failure (max attempts) flips the projection to `failed`
+ * and alerts the accounting administrator. The POS day is never blocked: this
+ * job is purely the server's continuation of an already-closed Z-report.
  *
  * @category BackgroundJob
  * @package  OCA\Pipelinq\BackgroundJob
@@ -30,39 +27,34 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#3.2
+ * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use DateTimeImmutable;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\PosBookkeepingService;
 use OCP\AppFramework\Utility\ITimeFactory;
-use OCP\BackgroundJob\Job;
+use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Retry-backoff job for a failed posJournalEntryOutbound submission.
+ * Periodic re-raise job for pending POS-day journal entries.
  *
- * @spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#3.2
+ * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
  */
-class PosRetryBackoffJob extends Job
+class PosRetryBackoffJob extends TimedJob
 {
     /**
-     * Synthetic system user UID used to bypass the manager gate on the
-     * retry path. The user does not need to exist in Nextcloud — the
-     * PosBookkeepingService manager predicate falls back to the admin
-     * group via PosAccessPolicy::isManager, and this UID is used only for
-     * audit logging. The actual permission decision is enforced upstream
-     * when the operator first submits.
+     * Polling interval in seconds (15 minutes).
      *
-     * @var string
+     * @var int
      */
-    private const SYSTEM_USER = 'system:pipelinq-bookkeeping';
+    private const INTERVAL = 900;
 
     /**
      * Constructor.
@@ -70,123 +62,142 @@ class PosRetryBackoffJob extends Job
      * @param ITimeFactory          $time      The time factory.
      * @param IAppConfig            $appConfig The app config.
      * @param PosBookkeepingService $service   The bookkeeping service.
+     * @param ContainerInterface    $container The DI container (OR ObjectService).
      * @param LoggerInterface       $logger    The logger.
      */
     public function __construct(
         ITimeFactory $time,
         private IAppConfig $appConfig,
         private PosBookkeepingService $service,
+        private ContainerInterface $container,
         private LoggerInterface $logger,
     ) {
         parent::__construct(time: $time);
+        $this->setInterval(seconds: self::INTERVAL);
     }//end __construct()
 
     /**
-     * Run the retry attempt for the supplied outbound message id.
+     * Re-raise every posZReport still pending its shillinq journal entry.
      *
-     * Argument shape: `['outboundMessageId' => '<uuid>', 'scheduledAt' => '<iso>']`.
+     * Best-effort: the job never throws and never re-raises a Z-report whose
+     * projection is already `raised` or terminally `failed`. When the shillinq
+     * integration is unreachable the service leaves the projection `pending`,
+     * so the next poll picks it up again.
      *
-     * @param mixed $argument The retry payload.
+     * @param mixed $argument Optional payload (unused).
      *
      * @return void
      *
-     * @spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#3.2
+     * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
      */
     protected function run(mixed $argument): void
     {
-        if (is_array($argument) === false) {
-            $this->logger->warning('PosRetryBackoffJob: invalid argument (not an array)');
+        if ($this->service->shouldDispatch() === false) {
+            // No configured shillinq journal integration — nothing to retry.
             return;
         }
 
-        $outboundId  = (string) ($argument['outboundMessageId'] ?? '');
-        $scheduledAt = (string) ($argument['scheduledAt'] ?? '');
-        if ($outboundId === '') {
-            $this->logger->warning('PosRetryBackoffJob: missing outboundMessageId');
-            return;
-        }
-
-        if ($scheduledAt !== '' && $this->isStillScheduled(scheduledAt: $scheduledAt) === true) {
-            // Job picked up earlier than scheduledAt — defer by reposting itself
-            // through the JobList; Nextcloud's IJobList already discards a
-            // duplicate (jobs are deduplicated by class+argument hash).
-            $this->logger->debug(
-                'PosRetryBackoffJob: retry not yet due, deferring',
-                ['outboundId' => $outboundId, 'scheduledAt' => $scheduledAt]
-            );
-            return;
-        }
-
-        try {
-            $outbound     = $this->service->fetchOutbound(id: $outboundId);
-            $currentState = (string) ($outbound['status'] ?? '');
-            if (in_array($currentState, ['failed', 'pending'], true) === false) {
+        $pending = $this->findPendingZReports();
+        foreach ($pending as $zReport) {
+            try {
+                $result = $this->service->dispatchRaise(zReport: $zReport);
                 $this->logger->info(
-                    'PosRetryBackoffJob: outbound no longer needs retry',
-                    ['outboundId' => $outboundId, 'status' => $currentState]
+                    'PosRetryBackoffJob: journal raise retried',
+                    [
+                        'zReportId'         => (string) ($zReport['id'] ?? ''),
+                        'bookkeepingStatus' => (string) ($result['bookkeepingStatus'] ?? ''),
+                    ]
                 );
-                return;
+            } catch (\Throwable $e) {
+                $this->logger->warning(
+                    'PosRetryBackoffJob: journal raise retry failed',
+                    ['zReportId' => (string) ($zReport['id'] ?? ''), 'exception' => $e->getMessage()]
+                );
+            }//end try
+        }
+    }//end run()
+
+    /**
+     * Read every posZReport whose bookkeepingStatus is still `pending`.
+     *
+     * Best-effort: any failure to read OpenRegister returns an empty list so the
+     * upgrade / cron run is never failed by a bookkeeping outage.
+     *
+     * @return array<int, array<string, mixed>> The pending Z-reports.
+     */
+    private function findPendingZReports(): array
+    {
+        try {
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+            $register      = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+            $schema        = $this->appConfig->getValueString(Application::APP_ID, 'posZReport_schema', '');
+            if ($register === '' || $schema === '') {
+                return [];
             }
 
-            $result = $this->service->postToShillinq(
-                outboundMessageId: $outboundId,
-                userId: $this->resolveSystemUser()
-            );
-
-            $this->logger->info(
-                'PosRetryBackoffJob: retry completed',
-                [
-                    'outboundId'   => $outboundId,
-                    'finalStatus'  => (string) ($result['status'] ?? ''),
-                    'attemptCount' => (int) ($result['attemptCount'] ?? 0),
+            $rows = $objectService->findAll(
+                config: [
+                    'filters' => [
+                        'register' => $register,
+                        'schema'   => $schema,
+                    ],
                 ]
             );
         } catch (\Throwable $e) {
             $this->logger->warning(
-                'PosRetryBackoffJob: retry failed',
-                ['outboundId' => $outboundId, 'exception' => $e->getMessage()]
+                'PosRetryBackoffJob: failed to read pending Z-reports',
+                ['exception' => $e->getMessage()]
             );
+            return [];
         }//end try
-    }//end run()
 
-    /**
-     * Whether the scheduled ISO timestamp is still in the future.
-     *
-     * @param string $scheduledAt The scheduled ISO 8601 timestamp.
-     *
-     * @return bool True when the retry shouldn't run yet.
-     */
-    private function isStillScheduled(string $scheduledAt): bool
-    {
-        try {
-            $when = new DateTimeImmutable($scheduledAt);
-            $now  = new DateTimeImmutable();
-            return $when->getTimestamp() > $now->getTimestamp();
-        } catch (\Throwable $e) {
-            return false;
-        }
-    }//end isStillScheduled()
+        $pending = [];
+        foreach (($rows ?? []) as $row) {
+            $data   = $this->toArray(object: $row);
+            $status = (string) ($data['bookkeepingStatus'] ?? 'pending');
+            if ($status !== 'pending') {
+                continue;
+            }
 
-    /**
-     * Resolve the user UID to attribute the retry to.
-     *
-     * Reads the admin-configured fallback UID (`pos_eod.retry_actor_uid`) if
-     * set; otherwise uses the synthetic system identifier. The service's
-     * manager gate accepts a Nextcloud admin — when no admin UID is wired in
-     * this slot, the retry will fail closed (403) on the manager predicate,
-     * which is the safe default rather than silently bypassing.
-     *
-     * @return string The acting user UID.
-     */
-    private function resolveSystemUser(): string
-    {
-        $configured = trim(
-            $this->appConfig->getValueString(Application::APP_ID, 'pos_eod.retry_actor_uid', '')
-        );
-        if ($configured !== '') {
-            return $configured;
+            // Only re-raise Z-reports that actually carry takings (a draft / empty
+            // day has no journal consequence).
+            if ((int) ($data['transactionCount'] ?? 0) <= 0) {
+                continue;
+            }
+
+            $pending[] = $data;
         }
 
-        return self::SYSTEM_USER;
-    }//end resolveSystemUser()
+        return $pending;
+    }//end findPendingZReports()
+
+    /**
+     * Normalise an OR object (entity or array) into a plain array.
+     *
+     * @param mixed $object The OR object.
+     *
+     * @return array<string, mixed> The object as an array.
+     */
+    private function toArray(mixed $object): array
+    {
+        if (is_array($object) === true) {
+            return $object;
+        }
+
+        if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
+            $serialized = $object->jsonSerialize();
+            if (is_array($serialized) === true) {
+                return $serialized;
+            }
+        }
+
+        if (is_object($object) === true && method_exists($object, 'getObject') === true) {
+            $data = $object->getObject();
+            if (is_array($data) === true) {
+                return $data;
+            }
+        }
+
+        return (array) $object;
+    }//end toArray()
 }//end class

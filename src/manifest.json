@@ -125,13 +125,6 @@
 			"order": 71
 		},
 		{
-			"id": "ZReports",
-			"label": "Boekhoudkundige Afhandeling",
-			"icon": "icon-category-monitoring",
-			"route": "ZReports",
-			"order": 99
-		},
-		{
 			"id": "KassakoppelingAuditList",
 			"label": "Kassakoppeling audit",
 			"icon": "icon-checkmark",
@@ -215,13 +208,22 @@
 			"label": "Pipelines",
 			"icon": "icon-category-organization",
 			"route": "Pipelines",
+			"section": "settings",
 			"order": 200
+		},
+		{
+			"id": "SettingsIntegrationsCaption",
+			"label": "Integrations",
+			"type": "caption",
+			"section": "settings",
+			"order": 205
 		},
 		{
 			"id": "ExportJobs",
 			"label": "BI export",
 			"icon": "icon-category-integration",
 			"route": "ExportJobs",
+			"section": "settings",
 			"order": 215
 		},
 		{
@@ -229,6 +231,7 @@
 			"label": "StUF endpoints",
 			"icon": "icon-category-integration",
 			"route": "StufEndpoints",
+			"section": "settings",
 			"order": 216
 		},
 		{
@@ -236,6 +239,7 @@
 			"label": "StUF audit log",
 			"icon": "icon-category-monitoring",
 			"route": "StufAuditLog",
+			"section": "settings",
 			"order": 217
 		},
 		{
@@ -248,7 +252,7 @@
 		},
 		{
 			"id": "BillingApproval",
-			"label": "Timesheet approval & billing",
+			"label": "Timesheet approval",
 			"icon": "icon-category-monitoring",
 			"href": "/index.php/apps/shillinq/",
 			"order": 218
@@ -1082,16 +1086,6 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "posZReport"
-			}
-		},
-		{
-			"id": "PosBookkeepingSettings",
-			"route": "/admin/pos-bookkeeping",
-			"type": "custom",
-			"title": "POS bookkeeping",
-			"component": "PosBookkeepingSettingsView",
-			"config": {
-				"register": "pipelinq"
 			}
 		},
 		{

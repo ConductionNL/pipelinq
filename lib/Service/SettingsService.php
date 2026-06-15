@@ -77,9 +77,10 @@ class SettingsService
         'posRole_schema',
         'posStaff_schema',
         // POS end-of-day bookkeeping post pipeline (pos-end-of-day-bookkeeping-post).
+        // The journal entry + GL chart delegate to shillinq via the ADR-019 integration
+        // registry (pipelinq-bookkeeping-to-shillinq); only the operational posZReport
+        // (cash-drawer / takings reconciliation) stays owned by pipelinq.
         'posZReport_schema',
-        'posJournalEntryOutbound_schema',
-        'glAccountMapping_schema',
         // POS split-tender (multi-method payment on a single transaction; pos-split-tender).
         'posTenderType_schema',
         'posTender_schema',
@@ -194,6 +195,16 @@ class SettingsService
         'shillinq_wip_webhook_url'                 => '',
         // Shillinq AP webhook for expense voucher dispatch (REQ-AP-004). Empty disables the integration.
         'shillinq_ap_webhook_url'                  => '',
+        // Shillinq journal-entry registry endpoint for the POS-day journal raise
+        // (pipelinq-bookkeeping-to-shillinq / REQ-PBTS-001). The ADR-019 integration
+        // registry resolves the shillinq.JournalEntry.raise dispatch through this
+        // webhook URL; empty or non-HTTPS disables the integration. Replaces the
+        // retired hard-coded pos_eod.shillinq_endpoint POST to /api/JournalEntry.
+        'shillinq_journal_webhook_url'             => '',
+        // Base URL of the configured shillinq deployment, used to resolve the
+        // "Timesheet approval" billing entry point through the registry instead of
+        // the hard-coded /index.php/apps/shillinq/ path (REQ-PBTS-003).
+        'shillinq_app_url'                         => '',
         // Lead-management: number of inactivity days before a lead is flagged stale.
         // Default mirrors REQ-LM-002 (14 days). Tenant-tunable through admin settings.
         // spec: openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002.
@@ -203,10 +214,11 @@ class SettingsService
         'export.default_compression'               => 'none',
         'export.failure_notification_email'        => '',
         'export.at_risk_warning_hours'             => '24',
-        // POS end-of-day bookkeeping (pos-end-of-day-bookkeeping-post).
+        // POS end-of-day Z-report generation + alerting (pos-end-of-day-bookkeeping-post).
+        // The journal raise itself now delegates to shillinq via shillinq_journal_webhook_url
+        // (pipelinq-bookkeeping-to-shillinq); these keys only tune the operational
+        // Z-report close and the failure alert.
         'pos_eod.z_report_time'                    => '23:59',
-        'pos_eod.shillinq_endpoint'                => '',
-        // pos_eod.shillinq_token is stored via setValueString with isSensitive=true and never exposed in getSettings().
         'pos_eod.alert_email'                      => '',
         'pos_eod.max_retry_attempts'               => '5',
         // xWiki integration (xwiki-integration). The default direct URL points at

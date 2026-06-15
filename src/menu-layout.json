@@ -9,7 +9,6 @@
 		"Contacts": "SalesCrm",
 		"Leads": "SalesCrm",
 		"Pipeline": "SalesCrm",
-		"Pipelines": "SalesCrm",
 		"Forecast": "SalesCrm",
 		"Loyalty": "SalesCrm",
 
@@ -26,7 +25,6 @@
 		"PosTransactions": "PointOfSale",
 		"PosRefunds": "PointOfSale",
 		"CashShifts": "PointOfSale",
-		"ZReports": "PointOfSale",
 		"KassakoppelingAuditList": "PointOfSale",
 		"PosTenderTypeList": "PointOfSale",
 		"PaymentSettings": "PointOfSale",
@@ -37,7 +35,6 @@
 		"Rapportage": "AnalyticsGroup",
 		"Analytics": "AnalyticsGroup",
 		"PipelineAnalytics": "AnalyticsGroup",
-		"ExportJobs": "AnalyticsGroup",
 		"BillingCategories": "AnalyticsGroup",
 
 		"AvgRequests": "Administration",
@@ -46,8 +43,6 @@
 		"MdmDuplicates": "Administration",
 		"MarketingGroup": "Administration",
 		"ExpensesGroup": "Administration",
-		"StufEndpoints": "Administration",
-		"StufAuditLog": "Administration",
 		"CtiSettings": "Administration",
 		"CtiEventLog": "Administration",
 		"BillingApproval": "Administration"
