@@ -338,6 +338,7 @@
 			"title": "Operational overview",
 			"actionsComponent": "DashboardHeaderActions",
 			"config": {
+				"showRefresh": false,
 				"description": "Leads, requests, service and team workload",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"dateRange": {
