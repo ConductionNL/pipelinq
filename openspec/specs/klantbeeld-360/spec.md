@@ -25,7 +25,7 @@ The klantbeeld aggregates data from multiple sources into a unified view per per
 - **Leads and Requests**: Existing CRM entities linked to this client
 - **BRP/KVK data**: Enrichment from base registries via OpenConnector sources
 
-## ADDED Requirements
+## Requirements
 
 ---
 

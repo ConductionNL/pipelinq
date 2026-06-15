@@ -15,6 +15,9 @@
 
 ---
 
+## Purpose
+
+Provide a server-side Dutch BTW (VAT) computation engine on top of pos-transaction-core: per-rate `taxBreakdown`/`invoiceBreakdown` (GL split with Dutch descriptions) for shillinq, end-to-end tax-inclusive vs tax-exclusive computation (`priceMode`, not display-only), a `GET /api/pos-transactions/tax-report` compliance endpoint, and a CloudEvent payload shillinq consumes for its general ledger.
 
 ## Requirements
 

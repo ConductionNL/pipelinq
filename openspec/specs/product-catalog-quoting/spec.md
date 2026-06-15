@@ -21,7 +21,7 @@ The existing product-catalog spec covers product entities and categories. This s
 
 ---
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Quote entity [Enterprise]
 The system MUST provide a Quote entity stored as an OpenRegister object in the `pipelinq` register, using the `schema:Offer` type annotation. Each Quote is linked to a lead and contains metadata for the proposal lifecycle.
