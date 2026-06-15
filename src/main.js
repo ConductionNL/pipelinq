@@ -6,6 +6,7 @@ import VueRouter from 'vue-router'
 import { PiniaVuePlugin, setActivePinia } from 'pinia'
 import { translate as t, translatePlural as n, loadTranslations } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
+import { loadState } from '@nextcloud/initial-state'
 import {
 	CnPageRenderer,
 	defaultPageTypes,
@@ -213,7 +214,7 @@ function applyMenuRelocations(menu, relocations) {
 			}
 		})
 	}
-	return menu.filter((m) => m.route || m.href || m.action
+	return menu.filter((m) => m.type === 'caption' || m.route || m.href || m.action
 		|| (Array.isArray(m.children) && m.children.length > 0))
 }
 
@@ -240,7 +241,42 @@ function applyMenuRemovals(menu, removals) {
 	return menu.filter((node) => !(drop.has(node.id) && isLeaf(node)))
 }
 
-const mergedManifest = mergeManifestFragments(bundledManifest)
+/**
+ * Resolve the "Timesheet approval" billing entry point (BillingApproval menu
+ * entry) through the ADR-019 integration registry: the configured shillinq
+ * deployment URL is provided as the `shillinq_app_url` initial state by
+ * Application::boot(). When set it overrides the hard-coded
+ * /index.php/apps/shillinq/ href in the manifest so the entry points at the
+ * configured shillinq instance; when empty the manifest default wins
+ * (pipelinq-bookkeeping-to-shillinq / REQ-PBTS-003).
+ *
+ * @param {object} manifest The merged manifest (with `menu[]`).
+ * @return {object} The manifest with the billing href resolved.
+ */
+function applyRegistryBillingHref(manifest) {
+	let shillinqUrl = ''
+	try {
+		shillinqUrl = (loadState('pipelinq', 'shillinq_app_url', '') || '').trim()
+	} catch {
+		shillinqUrl = ''
+	}
+	if (!shillinqUrl) {
+		return manifest
+	}
+	const walk = (items) => {
+		if (!Array.isArray(items)) return
+		items.forEach((item) => {
+			if (item && item.id === 'BillingApproval') {
+				item.href = shillinqUrl
+			}
+			if (Array.isArray(item?.children)) walk(item.children)
+		})
+	}
+	walk(manifest.menu)
+	return manifest
+}
+
+const mergedManifest = applyRegistryBillingHref(mergeManifestFragments(bundledManifest))
 
 /**
  * Build the vue-router config from the manifest. Each manifest page

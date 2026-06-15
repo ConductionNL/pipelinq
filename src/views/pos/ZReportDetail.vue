@@ -3,15 +3,17 @@
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -
   - Per-Z-report detail view: summary card, tax breakdown, payment-method
-  - breakdown, GL line items (read-only), submission timeline and the
-  - manager-gated "Retry Submission" action.
+  - breakdown and the shillinq bookkeeping-status projection with the
+  - manager-gated "Re-raise journal entry" action. The GL journal itself is
+  - owned by shillinq (pipelinq-bookkeeping-to-shillinq); pipelinq only mirrors
+  - the bookkeepingStatus + shillinqJournalEntryId outcome here.
   -
-  - @spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#5.2
+  - @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
   -->
 <template>
 	<CnDetailPage
 		:title="zReport.reference || t('pipelinq', 'Z-report')"
-		:subtitle="t('pipelinq', 'Boekhoudkundige Afhandeling')"
+		:subtitle="t('pipelinq', 'POS end-of-day')"
 		:back-route="{ name: 'ZReports' }"
 		:back-label="t('pipelinq', 'Terug naar lijst')"
 		:loading="loading"
@@ -25,7 +27,7 @@
 				:disabled="busy"
 				data-testid="pos-eod-retry"
 				@click="confirmAndRetry">
-				{{ t('pipelinq', 'Opnieuw indienen bij Shillinq') }}
+				{{ t('pipelinq', 'Opnieuw raisen bij shillinq') }}
 			</NcButton>
 		</template>
 
@@ -62,6 +64,26 @@
 			</div>
 			<p v-if="zReport.notes" class="z-report__notes">
 				{{ zReport.notes }}
+			</p>
+		</CnDetailCard>
+
+		<CnDetailCard :title="t('pipelinq', 'Boekhoudkundige status')">
+			<div class="info-grid">
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Inboekstatus shillinq') }}</label>
+					<CnStatusBadge
+						data-testid="pos-eod-bookkeeping-status"
+						:value="zReport.bookkeepingStatus || 'pending'"
+						:label="bookkeepingStatusLabel" />
+				</div>
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Shillinq journaalpost-id') }}</label>
+					<code v-if="zReport.shillinqJournalEntryId" data-testid="pos-eod-journal-id">{{ zReport.shillinqJournalEntryId }}</code>
+					<span v-else>—</span>
+				</div>
+			</div>
+			<p class="z-report__hint">
+				{{ t('pipelinq', 'Het grootboek, de BTW-boeking en de journaalpost worden beheerd in shillinq. Pipelinq raise alleen de bedrijfsfeiten van deze POS-dag via de integratie-registry.') }}
 			</p>
 		</CnDetailCard>
 
@@ -110,37 +132,6 @@
 				</tbody>
 			</table>
 		</CnDetailCard>
-
-		<CnDetailCard v-if="outbound" :title="t('pipelinq', 'GL grootboek regels')">
-			<table class="z-report__table" data-testid="z-report-ledger-table">
-				<thead>
-					<tr>
-						<th>{{ t('pipelinq', 'Rekening') }}</th>
-						<th>{{ t('pipelinq', 'Debet') }}</th>
-						<th>{{ t('pipelinq', 'Credit') }}</th>
-						<th>{{ t('pipelinq', 'Omschrijving') }}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="(line, idx) in (outbound.ledgerLineItems || [])" :key="idx">
-						<td><code>{{ line.account }}</code></td>
-						<td>{{ formatEur(line.debit) }}</td>
-						<td>{{ formatEur(line.credit) }}</td>
-						<td>{{ line.description }}</td>
-					</tr>
-				</tbody>
-			</table>
-			<p class="z-report__idem">
-				{{ t('pipelinq', 'Idempotency key:') }}
-				<code data-testid="pos-eod-idempotency-key">{{ outbound.idempotencyKey }}</code>
-			</p>
-		</CnDetailCard>
-
-		<CnDetailCard v-if="outbound" :title="t('pipelinq', 'Submission geschiedenis')">
-			<SubmissionTimeline
-				:attempts="outbound.submissionAttempts || []"
-				:next-retry-at="outbound.nextRetryAt || ''" />
-		</CnDetailCard>
 	</CnDetailPage>
 </template>
 
@@ -150,8 +141,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { formatEur } from '../../services/posTotals.js'
-import { postJournalEntry } from '../../services/posBookkeepingApi.js'
-import SubmissionTimeline from '../../components/SubmissionTimeline.vue'
+import { raiseJournalEntry } from '../../services/posBookkeepingApi.js'
 
 const STATUS_LABELS = {
 	draft: 'Concept',
@@ -162,6 +152,12 @@ const STATUS_LABELS = {
 	reconciled: 'Gereconcilieerd',
 }
 
+const BOOKKEEPING_STATUS_LABELS = {
+	pending: 'In wachtrij',
+	raised: 'Geraised in shillinq',
+	failed: 'Raise gefaald',
+}
+
 export default {
 	name: 'ZReportDetail',
 	components: {
@@ -169,7 +165,6 @@ export default {
 		CnDetailPage,
 		CnDetailCard,
 		CnStatusBadge,
-		SubmissionTimeline,
 	},
 	props: {
 		posZReportId: {
@@ -180,7 +175,6 @@ export default {
 	data() {
 		return {
 			zReport: {},
-			outbound: null,
 			loading: false,
 			busy: false,
 		}
@@ -198,7 +192,7 @@ export default {
 			return this.posZReportId || this.$route.params.id || null
 		},
 		/**
-		 * Translated status label.
+		 * Translated lifecycle status label.
 		 *
 		 * @return {string} The label.
 		 */
@@ -207,19 +201,27 @@ export default {
 			return t('pipelinq', STATUS_LABELS[key] || key)
 		},
 		/**
-		 * Whether the manager-gated retry button is shown. Server-side gate is
-		 * authoritative; this only hides the button for non-admin users.
+		 * Translated shillinq bookkeeping-status label.
 		 *
-		 * @return {boolean} Whether retry is allowed.
+		 * @return {string} The label.
+		 */
+		bookkeepingStatusLabel() {
+			const key = this.zReport.bookkeepingStatus || 'pending'
+			return t('pipelinq', BOOKKEEPING_STATUS_LABELS[key] || key)
+		},
+		/**
+		 * Whether the manager-gated re-raise button is shown. The server-side
+		 * gate is authoritative; this only hides the button for non-managers and
+		 * for already-raised days.
+		 *
+		 * @return {boolean} Whether re-raise is allowed.
 		 */
 		canRetry() {
-			if (!this.outbound) {
-				return false
-			}
-			const status = this.outbound.status || 'draft'
-			const isCandidate = ['draft', 'failed', 'pending'].includes(status)
+			const status = this.zReport.bookkeepingStatus || 'pending'
+			const isCandidate = ['pending', 'failed'].includes(status)
+			const hasTakings = Number(this.zReport.transactionCount || 0) > 0
 			const isManager = typeof window.OC?.isUserAdmin === 'function' ? window.OC.isUserAdmin() : false
-			return isCandidate && isManager
+			return isCandidate && hasTakings && isManager
 		},
 	},
 	async mounted() {
@@ -228,16 +230,12 @@ export default {
 	methods: {
 		formatEur,
 		/**
-		 * Load the Z-report + linked outbound message (if any).
+		 * Load the Z-report.
 		 */
 		async load() {
 			this.loading = true
 			try {
 				this.zReport = await this.objectStore.fetchObject('posZReport', this.zReportId) || {}
-				const outbounds = await this.objectStore.fetchObjects('posJournalEntryOutbound', {
-					filters: { zReport: this.zReportId },
-				}) || []
-				this.outbound = Array.isArray(outbounds) && outbounds.length ? outbounds[0] : null
 			} catch (err) {
 				showError(err?.response?.data?.error || t('pipelinq', 'Z-report niet kunnen laden.'))
 			} finally {
@@ -245,26 +243,26 @@ export default {
 			}
 		},
 		/**
-		 * Confirm + trigger a manager-gated retry submission.
+		 * Confirm + trigger a manager-gated re-raise of the shillinq journal entry.
 		 */
 		async confirmAndRetry() {
-			if (!this.outbound?.id) {
+			if (!this.zReportId) {
 				return
 			}
-			if (!window.confirm(t('pipelinq', 'Opnieuw indienen bij Shillinq? Dit triggert een POST met dezelfde idempotency key.'))) {
+			if (!window.confirm(t('pipelinq', 'Journaalpost opnieuw raisen bij shillinq? Dit gebruikt dezelfde idempotency key, dus shillinq voorkomt dubbele boekingen.'))) {
 				return
 			}
 
 			this.busy = true
 			try {
-				const updated = await postJournalEntry(this.outbound.id)
+				const updated = await raiseJournalEntry(this.zReportId)
 				if (updated) {
-					this.outbound = updated
+					this.zReport = updated
 				}
-				showSuccess(t('pipelinq', 'Submission gestart.'))
+				showSuccess(t('pipelinq', 'Journaalpost geraised bij shillinq.'))
 				await this.load()
 			} catch (err) {
-				showError(err?.response?.data?.error || t('pipelinq', 'Submission mislukt.'))
+				showError(err?.response?.data?.error || t('pipelinq', 'Raise mislukt.'))
 			} finally {
 				this.busy = false
 			}
@@ -296,6 +294,12 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
+.z-report__hint {
+	margin-top: 8px;
+	color: var(--color-text-maxcontrast);
+	font-size: 0.9em;
+}
+
 .z-report__table {
 	width: 100%;
 	border-collapse: collapse;
@@ -310,11 +314,5 @@ export default {
 
 .z-report__table th {
 	font-weight: 600;
-}
-
-.z-report__idem {
-	margin-top: 8px;
-	color: var(--color-text-maxcontrast);
-	font-size: 0.9em;
 }
 </style>
