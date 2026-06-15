@@ -75,6 +75,8 @@ class RenewalEngineService
      * The admin-configured default renewal lead time, floored at the fallback.
      *
      * @return int Days.
+     *
+     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
      */
     public function getDefaultLeadTimeDays(): int
     {
@@ -137,6 +139,8 @@ class RenewalEngineService
      * @param array<string,mixed> $contract The contract.
      *
      * @return float The annualized value.
+     *
+     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-renewal-lead-automation
      */
     public function annualizedValue(array $contract): float
     {

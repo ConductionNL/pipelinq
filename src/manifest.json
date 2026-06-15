@@ -275,7 +275,9 @@
 					{ "id": "avg-deal",           "type": "custom", "title": "Avg Deal Size" },
 					{ "id": "weighted-forecast",  "type": "custom", "title": "Weighted Forecast" },
 					{ "id": "open-pipeline",      "type": "custom", "title": "Open Pipeline" },
-					{ "id": "revenue-over-time",  "type": "custom", "title": "Revenue over time" },
+					{ "id": "mrr",                "type": "custom", "title": "Recurring revenue (MRR)" },
+						{ "id": "renewals-due",       "type": "custom", "title": "Renewals due" },
+						{ "id": "revenue-over-time",  "type": "custom", "title": "Revenue over time" },
 					{ "id": "pipeline-by-stage",  "type": "custom", "title": "Pipeline by stage" },
 					{ "id": "revenue-by-category", "type": "custom", "title": "Revenue by product category" },
 					{ "id": "top-customers",      "type": "custom", "title": "Top customers by revenue" },
@@ -294,7 +296,9 @@
 					{ "id": "c9",  "widgetId": "revenue-by-category",  "gridX": 0, "gridY": 6,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
 					{ "id": "c10", "widgetId": "top-customers",        "gridX": 6,  "gridY": 6,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
 					{ "id": "c11", "widgetId": "closing-soon",       "gridX": 0,  "gridY": 10, "gridWidth": 6,  "gridHeight": 4 },
-					{ "id": "c12", "widgetId": "recently-won-lost",  "gridX": 6,  "gridY": 10, "gridWidth": 6,  "gridHeight": 4 }
+					{ "id": "c12", "widgetId": "recently-won-lost",  "gridX": 6,  "gridY": 10, "gridWidth": 6,  "gridHeight": 4 },
+						{ "id": "c13", "widgetId": "mrr",                "gridX": 0,  "gridY": 14, "gridWidth": 2,  "gridHeight": 2, "showTitle": false },
+						{ "id": "c14", "widgetId": "renewals-due",       "gridX": 2,  "gridY": 14, "gridWidth": 6,  "gridHeight": 4 }
 				]
 			},
 			"slots": {
@@ -309,7 +313,9 @@
 				"widget-revenue-by-category": "RevenueByCategoryChartWidget",
 				"widget-top-customers": "TopCustomersChartWidget",
 				"widget-closing-soon": "ClosingSoonWidget",
-				"widget-recently-won-lost": "RecentlyWonLostWidget"
+				"widget-recently-won-lost": "RecentlyWonLostWidget",
+				"widget-mrr": "MrrKpiWidget",
+				"widget-renewals-due": "RenewalsDueWidget"
 			}
 		},
 		{

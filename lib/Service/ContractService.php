@@ -206,6 +206,8 @@ class ContractService
      * Resolve the configured register and contract-schema IDs.
      *
      * @return array{0:string,1:string} [registerId, schemaId].
+     *
+     * @spec exclude config-key plumbing — resolves the OR register/schema ids the lifecycle ops scope to
      */
     public function getRegisterAndSchema(): array
     {
@@ -222,6 +224,8 @@ class ContractService
      * @param string|null         $uuid The existing UUID, or null to create.
      *
      * @return array<string,mixed>|null The saved object (array), or null on failure.
+     *
+     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
      */
     public function save(array $data, ?string $uuid = null): ?array
     {
@@ -254,6 +258,8 @@ class ContractService
      * Load all contracts from OpenRegister ([] on failure).
      *
      * @return array<int, array<string,mixed>> The contract objects.
+     *
+     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
      */
     public function loadAll(): array
     {
