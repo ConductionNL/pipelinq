@@ -44,7 +44,10 @@ test('Commercial dashboard: KPI strip + sales charts render on the landing page'
 test('Operational dashboard: previous widgets remain reachable from the nav', async ({ page }) => {
 	await openApp(page)
 
-	await page.goto('/apps/pipelinq/operational')
+	// Deep-link the OperationalDashboard via the SPA hash (`/operational`); a
+	// path-form goto boots the shell at the default Commercial dashboard.
+	await page.goto('/apps/pipelinq/#/operational')
+	await page.reload()
 
 	const content = page.locator('#content-vue')
 	// Operational KPIs/panels that used to live on the old Dashboard.
