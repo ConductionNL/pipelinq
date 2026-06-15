@@ -15,6 +15,7 @@ const REVENUE_STATUSES = ['active', 'expiring']
  * @param {string} billingInterval - monthly | quarterly | annual | one-off.
  * @param {number} valuePerInterval - The value per billing interval.
  * @return {number} The normalized monthly value (0 for one-off).
+ * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
  */
 export function normalizeToMonthly(billingInterval, valuePerInterval) {
 	const value = Number(valuePerInterval) || 0
@@ -31,6 +32,7 @@ export function normalizeToMonthly(billingInterval, valuePerInterval) {
  *
  * @param {Array<object>} contracts - The contract records.
  * @return {number} The monthly recurring revenue, rounded to cents.
+ * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
  */
 export function computeMrr(contracts) {
 	let mrr = 0
@@ -46,6 +48,7 @@ export function computeMrr(contracts) {
  *
  * @param {Array<object>} contracts - The contract records.
  * @return {number} The annual recurring revenue.
+ * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
  */
 export function computeArr(contracts) {
 	return Math.round(computeMrr(contracts) * 12 * 100) / 100
@@ -57,6 +60,7 @@ export function computeArr(contracts) {
  * @param {Array<object>} contracts - The contract records.
  * @param {string} clientRef - The client UUID.
  * @return {number} The client's monthly recurring value.
+ * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
  */
 export function computeClientMrr(contracts, clientRef) {
 	return computeMrr((contracts || []).filter(c => c.clientRef === clientRef))
