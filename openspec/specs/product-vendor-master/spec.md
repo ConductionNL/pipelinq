@@ -1,8 +1,14 @@
-# product-vendor-master Specification
+# Spec: product-vendor-master
 
-## Purpose
-TBD - created by archiving change pipelinq-product-vendor-master. Update Purpose after archive.
+**Status:** implemented (Phase 3 active registry-announcement + Phase 5 cross-app round-trip deferred — blocked on the `shillinq-product-vendor-to-pipelinq` counterpart)
+**Scope:** pipelinq
+**Tier:** MVP
+**Depends on:** `shillinq-product-vendor-to-pipelinq` (counterpart export), pipelinq `contacts-sync` (implemented), pipelinq `master-data-management` (`masterEntity`/`sourceRecord`), OpenRegister `pluggable-integration-registry` (ADR-019)
+
+pipelinq is the canonical owner of the Product master and the Supplier commercial master per CROSS-APP INTERFACE CONTRACT #1. It EXTENDS the existing `product` schema, ADDS a `supplier` schema keyed by `contactsUid` (identity = Nextcloud Contact), declares the registry read surface shillinq consumes, and ingests the shillinq master-data export without dropping fields.
+
 ## Requirements
+
 ### Requirement: REQ-PVM-001 — The system SHALL extend the existing `product` schema with supply-side master-data fields
 
 pipelinq MUST add supply-side master-data fields to its **existing** canonical `product` schema (in `lib/Settings/pipelinq_register.json`) via the extension fragment `lib/Settings/register.d/92-product-supply-master.json`. It MUST NOT create a second product register. New fields: `productId`, `gtin`, `manufacturer`, `unitOfMeasure`, `weight`, `dimensions`, `hazardClass`, `preferredSupplier`, `stockTracked`, `consumableBy`. All additive; all `visible:false` by default.
@@ -61,6 +67,8 @@ pipelinq MUST add a new `supplier` schema (fragment `lib/Settings/register.d/91-
 ### Requirement: REQ-PVM-004 — The system SHALL link a supplier catalog to products by `productId`
 
 A `supplier.catalog[]` entry MUST reference a pipelinq `product` by `productId` (with `supplierSku`, `listPrice`, `currency`, `moq`), and `product.preferredSupplier` MUST reference a supplier by `contactsUid`.
+
+@e2e exclude backend integration — catalog↔product `productId` resolution and `preferredSupplier` linkage are schema/object-relationship contracts with no UI surface; covered by PHPUnit
 
 #### Scenario: Catalog entry references a product master
 - GIVEN a `supplier` with a `catalog` entry `{ productId: pX, supplierSku: "S-99", listPrice: 12.50, currency: "EUR", moq: 24 }`
@@ -139,4 +147,3 @@ pipelinq MUST accept the vendor master-data export by resolving or creating a Ne
 - WHEN the ingest repair runs
 - THEN the `contacts-actions` provider MUST match both to the same NC contact (`contactsUid = uV`)
 - AND at most one `supplier` MUST exist for `contactsUid = uV` (the second fills/updates rather than duplicates)
-

@@ -1,0 +1,183 @@
+{
+	"components": {
+		"schemas": {
+			"contract": {
+				"slug": "contract",
+				"title": "Contract",
+				"icon": "icon-category-organization",
+				"summary": "Recurring-revenue contract with renewal lifecycle",
+				"description": "A recurring or one-off contract between the organization and a client. Drives MRR/ARR, renewal-window detection, renewal-lead automation and churn metrics. References an existing client object (identity is never duplicated). Field names contractNumber/startDate/endDate/value/status are read by the customer-portal contract reader without mapping.",
+				"@type": "object",
+				"type": "object",
+				"x-openregister-notifications": {
+					"contractExpiring": {
+						"trigger": {
+							"type": "transition",
+							"field": "status",
+							"to": "expiring"
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "field",
+								"field": "ownerId"
+							}
+						],
+						"subject": {
+							"nl": "Contract verloopt binnenkort: {{title}}",
+							"en": "Contract approaching renewal: {{title}}"
+						},
+						"message": {
+							"nl": "Het contract {{contractNumber}} ({{title}}) nadert het einde van de looptijd. Beoordeel de verlenging.",
+							"en": "Contract {{contractNumber}} ({{title}}) is approaching its end date. Review the renewal."
+						}
+					}
+				},
+				"required": [
+					"title",
+					"clientRef",
+					"billingInterval",
+					"valuePerInterval",
+					"startDate"
+				],
+				"properties": {
+					"contractNumber": {
+						"type": "string",
+						"description": "Auto-generated unique contract number (C-{year}-{seq}). Read by customer-portal."
+					},
+					"clientRef": {
+						"type": "string",
+						"description": "UUID reference to the existing client object. Client identity is never duplicated into the contract.",
+						"format": "uuid"
+					},
+					"title": {
+						"type": "string",
+						"description": "Human-readable contract title, e.g. 'Support & maintenance'."
+					},
+					"lineItems": {
+						"type": "array",
+						"description": "Contract line items referencing the existing product/service catalog.",
+						"items": {
+							"type": "object",
+							"properties": {
+								"productRef": {
+									"type": "string",
+									"description": "UUID reference to a product/service in the catalog."
+								},
+								"description": {
+									"type": "string"
+								},
+								"quantity": {
+									"type": "number",
+									"default": 1,
+									"minimum": 0
+								},
+								"unitValue": {
+									"type": "number",
+									"minimum": 0
+								}
+							}
+						}
+					},
+					"billingInterval": {
+						"type": "string",
+						"description": "Billing cadence used to normalize MRR.",
+						"enum": [
+							"monthly",
+							"quarterly",
+							"annual",
+							"one-off"
+						],
+						"default": "monthly"
+					},
+					"valuePerInterval": {
+						"type": "number",
+						"description": "Recurring value per billing interval in the contract currency.",
+						"minimum": 0
+					},
+					"value": {
+						"type": "number",
+						"description": "Alias of valuePerInterval for the customer-portal contract reader (kept in sync on save)."
+					},
+					"currency": {
+						"type": "string",
+						"default": "EUR"
+					},
+					"startDate": {
+						"type": "string",
+						"format": "date",
+						"description": "Contract start date."
+					},
+					"endDate": {
+						"type": "string",
+						"format": "date",
+						"description": "Contract end date. Recommended even for indefinite contracts so the renewal engine can act."
+					},
+					"autoRenew": {
+						"type": "boolean",
+						"default": false,
+						"description": "Whether the contract renews automatically unless cancelled by the notice deadline."
+					},
+					"noticePeriodDays": {
+						"type": "integer",
+						"default": 0,
+						"minimum": 0,
+						"description": "Notice period in days before endDate; widens the renewal window."
+					},
+					"status": {
+						"type": "string",
+						"description": "Lifecycle status. 'expiring' is set only by the renewal engine; terminal states reject further transitions.",
+						"enum": [
+							"draft",
+							"active",
+							"expiring",
+							"renewed",
+							"churned",
+							"cancelled"
+						],
+						"default": "draft"
+					},
+					"ownerId": {
+						"type": "string",
+						"description": "Owning account-manager user ID; defaults to the client's owner."
+					},
+					"renewalLeadRef": {
+						"type": "string",
+						"description": "UUID of the renewal lead created when the contract enters its renewal window.",
+						"format": "uuid"
+					},
+					"predecessorContractRef": {
+						"type": "string",
+						"description": "UUID of the contract this one succeeds (set on a drafted successor).",
+						"format": "uuid"
+					},
+					"cancellationReason": {
+						"type": "string",
+						"description": "Required when transitioning to 'cancelled'."
+					},
+					"renewalLeadOutcome": {
+						"type": "string",
+						"description": "Reconciliation marker for the renewal lead: 'won' or 'lost'.",
+						"enum": [
+							"",
+							"won",
+							"lost"
+						],
+						"default": ""
+					},
+					"noticeReminderSent": {
+						"type": "boolean",
+						"default": false,
+						"description": "Idempotency marker: the notice-deadline My Work entry has been created."
+					},
+					"notes": {
+						"type": "string"
+					}
+				}
+			}
+		}
+	}
+}
