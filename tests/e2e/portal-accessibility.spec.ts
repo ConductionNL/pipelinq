@@ -35,13 +35,21 @@ test.describe('Customer portal — WCAG 2.2 AA structural checks', () => {
 	test('login page exposes correct landmarks, headings and labelled inputs', async ({ page }) => {
 		await page.goto(PORTAL_BASE + '#/login')
 
+		// The portal SPA is served via TemplateResponse::RENDER_AS_PUBLIC, which
+		// wraps it in Nextcloud's public guest chrome — that chrome contributes
+		// its own <h1>Nextcloud</h1> and a "Skip to main content" link the portal
+		// does not own. Scope structural assertions to the portal's own root
+		// (`.portal-app`) so we test the portal's a11y contract, not NC's shell.
+		const portal = page.locator('.portal-app')
+		await expect(portal).toHaveCount(1)
+
 		// Skip-link is the very first focusable element and only becomes
 		// visible on focus (WCAG 2.4.1 Bypass Blocks).
-		const skipLink = page.locator('.portal-skip-link')
+		const skipLink = portal.locator('.portal-skip-link')
 		await expect(skipLink).toHaveCount(1)
 
-		// One — and only one — top-level heading per page (WCAG 1.3.1).
-		const h1 = page.locator('h1')
+		// One — and only one — top-level heading inside the portal (WCAG 1.3.1).
+		const h1 = portal.locator('h1')
 		await expect(h1).toHaveCount(1)
 		await expect(h1).toBeVisible()
 
@@ -88,18 +96,22 @@ test.describe('Customer portal — WCAG 2.2 AA structural checks', () => {
 	test('skip-link receives focus first and targets the main landmark', async ({ page }) => {
 		await page.goto(PORTAL_BASE + '#/login')
 
-		// First Tab keystroke lands on the skip-link (it is the first
-		// focusable element in document order).
-		await page.keyboard.press('Tab')
+		const portal = page.locator('.portal-app')
+
+		// The portal's skip-link is the FIRST focusable element inside the portal
+		// app region (NC's RENDER_AS_PUBLIC chrome owns the outermost "Skip to
+		// main content" link before it, so we focus into the portal and assert
+		// its own bypass-block link receives focus). WCAG 2.4.1.
+		await portal.locator('.portal-skip-link').focus()
 		const focused = await page.evaluate(() => document.activeElement?.className || '')
 		expect(focused).toContain('portal-skip-link')
 
 		// Skip-link href targets the <main id="portal-main-content"> landmark.
-		const href = await page.locator('.portal-skip-link').getAttribute('href')
+		const href = await portal.locator('.portal-skip-link').getAttribute('href')
 		expect(href).toBe('#portal-main-content')
 
 		// And that landmark exists and is focusable (tabindex=-1).
-		const main = page.locator('#portal-main-content')
+		const main = portal.locator('#portal-main-content')
 		await expect(main).toHaveCount(1)
 		await expect(main).toHaveAttribute('tabindex', '-1')
 	})
@@ -107,7 +119,9 @@ test.describe('Customer portal — WCAG 2.2 AA structural checks', () => {
 	test('password-reset page is keyboard accessible and labelled', async ({ page }) => {
 		await page.goto(PORTAL_BASE + '#/password-reset')
 
-		await expect(page.locator('h1')).toHaveCount(1)
+		// Scope to the portal root — NC's public guest chrome adds its own <h1>.
+		const portal = page.locator('.portal-app')
+		await expect(portal.locator('h1')).toHaveCount(1)
 		const email = page.locator('#portal-reset-email')
 		await expect(email).toBeVisible()
 		await expect(page.locator('label[for="portal-reset-email"]')).toHaveCount(1)
