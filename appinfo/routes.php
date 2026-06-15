@@ -569,6 +569,14 @@ return [
         ['name' => 'mdmAvgWorkflow#approve',           'url' => '/api/mdm/avg-workflow/approve', 'verb' => 'POST'],
         ['name' => 'mdmAvgWorkflow#confirmHardDelete', 'url' => '/api/mdm/avg-workflow/{masterEntityId}/hard-delete', 'verb' => 'POST'],
 
+        // Contract & renewal tracking (contract-renewal-tracking) — app-logic only
+        // (numbering, guarded transitions, recurring-revenue metrics). Plain CRUD
+        // reads go through OpenRegister directly via useObjectStore (ADR-022).
+        ['name' => 'contract#create',         'url' => '/api/contracts', 'verb' => 'POST'],
+        ['name' => 'contract#transition',     'url' => '/api/contracts/{id}/transition', 'verb' => 'POST'],
+        ['name' => 'contract#summary',        'url' => '/api/contracts/metrics/summary', 'verb' => 'GET'],
+        ['name' => 'contract#renewalMetrics', 'url' => '/api/contracts/metrics/renewal', 'verb' => 'GET'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],

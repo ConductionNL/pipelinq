@@ -1,6 +1,12 @@
 OC.L10N.register(
     "pipelinq",
     {
+    "Recurring revenue (MRR)" : "Terugkerende omzet (MRR)",
+    "Renewals due" : "Verlengingen aanstaande",
+    "No renewals due" : "Geen verlengingen aanstaande",
+    "Contracts" : "Contracten",
+    "Contract" : "Contract",
+    "ARR €{arr}" : "ARR €{arr}",
     "(no title)" : "(geen titel)",
     "Accounts" : "Accounts",
     "Active accounts" : "Actieve accounts",
