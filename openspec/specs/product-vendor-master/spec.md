@@ -68,6 +68,8 @@ pipelinq MUST add a new `supplier` schema (fragment `lib/Settings/register.d/91-
 
 A `supplier.catalog[]` entry MUST reference a pipelinq `product` by `productId` (with `supplierSku`, `listPrice`, `currency`, `moq`), and `product.preferredSupplier` MUST reference a supplier by `contactsUid`.
 
+@e2e exclude backend integration — catalog↔product `productId` resolution and `preferredSupplier` linkage are schema/object-relationship contracts with no UI surface; covered by PHPUnit
+
 #### Scenario: Catalog entry references a product master
 - GIVEN a `supplier` with a `catalog` entry `{ productId: pX, supplierSku: "S-99", listPrice: 12.50, currency: "EUR", moq: 24 }`
 - WHEN the entry is saved
