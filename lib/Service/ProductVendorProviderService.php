@@ -235,7 +235,7 @@ class ProductVendorProviderService
     {
         try {
             $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-            $registerId    = $this->appConfig->getValueString(Application::APP_ID, 'register_pipelinq', '');
+            $registerId    = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
             $schemaId      = $this->appConfig->getValueString(Application::APP_ID, "{$schema}_schema", '');
 
             if ($registerId === '' || $schemaId === '') {
