@@ -8,13 +8,16 @@ import { test, expect } from '@playwright/test'
 test.describe('Rapportage (Reporting)', () => {
 
 	test.beforeEach(async ({ page }) => {
-		// Deep-link `goto('/rapportage')` lands on the app shell but the
-		// manifest-driven SPA router resets to the Dashboard. Navigate via the
-		// in-app "Reporting" sidebar link instead so the rapportage view mounts.
-		await page.goto('/apps/pipelinq/')
+		// The contactmomenten Reporting Dashboard (KPI cards) lives at the
+		// `/rapportage/contactmomenten` page (manifest id RapportageContactmomenten
+		// → RapportageDashboard.vue). The "Reporting" sidebar link now points at
+		// the Lead-analytics page (`/rapportage`), so deep-link the dashboard
+		// route directly via the SPA hash. A path-form goto boots the shell at the
+		// Dashboard; a hash goto mounts the target view. Reload once so the view
+		// re-queries its KPI data after the same-document hash change.
+		await page.goto('/apps/pipelinq/#/rapportage/contactmomenten')
 		await expect(page.locator('body')).not.toContainText('Internal Server Error')
-		const nav = page.locator('[id^="app-navigation"]').first()
-		await nav.getByRole('link', { name: 'Reporting' }).click()
+		await page.reload()
 	})
 
 	/**
@@ -77,14 +80,18 @@ test.describe('Rapportage (Reporting)', () => {
 	})
 
 	test('channel analytics page loads', async ({ page }) => {
-		await page.goto('/apps/pipelinq/rapportage/channels')
+		// Deep-link via the SPA hash; a path-form goto boots the shell at the
+		// Dashboard instead of the target view.
+		await page.goto('/apps/pipelinq/#/rapportage/channels')
+		await page.reload()
 		await expect(
 			page.getByRole('heading', { name: /Channel Analytics|Kanaalanalyse/i }),
 		).toBeVisible({ timeout: 15000 })
 	})
 
 	test('agent performance page loads', async ({ page }) => {
-		await page.goto('/apps/pipelinq/rapportage/agents')
+		await page.goto('/apps/pipelinq/#/rapportage/agents')
+		await page.reload()
 		await expect(
 			page.getByRole('heading', { name: /Agent Performance|Agentprestaties/i }),
 		).toBeVisible({ timeout: 15000 })
