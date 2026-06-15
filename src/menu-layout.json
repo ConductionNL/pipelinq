@@ -9,7 +9,6 @@
 		"Contacts": "SalesCrm",
 		"Leads": "SalesCrm",
 		"Pipeline": "SalesCrm",
-		"Pipelines": "SalesCrm",
 		"Forecast": "SalesCrm",
 		"Loyalty": "SalesCrm",
 
@@ -36,7 +35,6 @@
 		"Rapportage": "AnalyticsGroup",
 		"Analytics": "AnalyticsGroup",
 		"PipelineAnalytics": "AnalyticsGroup",
-		"ExportJobs": "AnalyticsGroup",
 		"BillingCategories": "AnalyticsGroup",
 
 		"AvgRequests": "Administration",
@@ -45,8 +43,6 @@
 		"MdmDuplicates": "Administration",
 		"MarketingGroup": "Administration",
 		"ExpensesGroup": "Administration",
-		"StufEndpoints": "Administration",
-		"StufAuditLog": "Administration",
 		"CtiSettings": "Administration",
 		"CtiEventLog": "Administration",
 		"BillingApproval": "Administration"
