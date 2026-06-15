@@ -228,6 +228,8 @@
         "Barcode": "Code-barres",
         "Barcode (EAN/UPC)": "Code-barres (EAN/UPC)",
         "Barcode lookup": "Recherche par code-barres",
+        "Catalog": "Catalogue",
+        "Point of Sale": "Point de vente",
         "Barcode lookup failed": "La recherche par code-barres a échoué",
         "Base": "Base",
         "Basis": "Base",
