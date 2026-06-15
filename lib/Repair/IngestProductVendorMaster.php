@@ -280,7 +280,7 @@ class IngestProductVendorMaster implements IRepairStep
     {
         try {
             $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-            $registerId    = $this->appConfig->getValueString(Application::APP_ID, 'register_pipelinq', '');
+            $registerId    = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
             $schemaId      = $this->appConfig->getValueString(Application::APP_ID, 'product_schema', '');
 
             if ($registerId === '' || $schemaId === '') {
@@ -383,7 +383,7 @@ class IngestProductVendorMaster implements IRepairStep
 
         try {
             $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-            $registerId    = $this->appConfig->getValueString(Application::APP_ID, 'register_pipelinq', '');
+            $registerId    = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
             $schemaId      = $this->appConfig->getValueString(Application::APP_ID, 'supplier_schema', '');
 
             if ($registerId === '' || $schemaId === '') {

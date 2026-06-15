@@ -127,6 +127,17 @@ export function getPipelines() {
 }
 
 /**
+ * Get all contracts (contract-renewal-tracking). Returns [] when the contract
+ * schema is not registered (graceful no-op for instances without the feature).
+ *
+ * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
+ * @return {Promise<Array>} The contract records.
+ */
+export function getContracts() {
+	return cached('contract', () => fetchRaw('contract', { _limit: 1000 }))
+}
+
+/**
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-16
  */
 export function getComplaints() {
