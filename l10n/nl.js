@@ -248,6 +248,8 @@ OC.L10N.register(
     "Barcode" : "Barcode",
     "Barcode (EAN/UPC)" : "Barcode (EAN/UPC)",
     "Barcode lookup" : "Barcode zoeken",
+    "Catalog" : "Catalogus",
+    "Point of Sale" : "Kassa",
     "Barcode lookup failed" : "Barcode zoeken mislukt",
     "Base" : "Grondslag",
     "Basis" : "Basis",
