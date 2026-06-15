@@ -1,5 +1,13 @@
 {
         "translations": {
+                "Prospects": "Prospects",
+                "Score": "Score",
+                "Industry": "Branche",
+                "Convert to lead": "Omzetten naar lead",
+                "No prospects found": "Geen prospects gevonden",
+                "Could not load prospects": "Kon prospects niet laden",
+                "No Ideal Customer Profile configured": "Geen ideaal klantprofiel ingesteld",
+                "No companies currently match your Ideal Customer Profile.": "Er zijn momenteel geen bedrijven die voldoen aan je ideale klantprofiel.",
                 "Recurring revenue (MRR)": "Terugkerende omzet (MRR)",
                 "Renewals due": "Verlengingen aanstaande",
                 "No renewals due": "Geen verlengingen aanstaande",

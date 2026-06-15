@@ -21,6 +21,7 @@
 
 // --- MyWork — bespoke per-user surface mixing tasks + leads + requests. ---
 import MyWorkView from './views/MyWork.vue'
+import ProspectsView from './views/prospects/ProspectsView.vue'
 
 // --- Dashboard (manifest-driven type:"dashboard") — header actions and
 //     per-widget slot components. The page itself is rendered by
@@ -327,6 +328,11 @@ const registry = {
 		kind: 'page',
 		component: MyWorkView,
 		_note: 'Personalised work surface mixing tasks + leads + requests for the current user; no single-entity typed page captures multi-entity user dashboard.',
+	},
+	ProspectsView: {
+		kind: 'page',
+		component: ProspectsView,
+		_note: 'Full-page expansion of ProspectWidget (refactor-pipelinq-ia-alignment): scored-prospect list with sortable columns + convert-to-lead action over the prospect Pinia store; lib has no declarative type for scored external-source enrichment.',
 	},
 
 	// --- Dashboard widgets (rendered as #widget-{id} slots inside
