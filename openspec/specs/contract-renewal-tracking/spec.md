@@ -1,9 +1,10 @@
-# Contract & Renewal Tracking — Spec Delta
+# Spec: Contract & Renewal Tracking
 
+**Status:** implemented (seed contracts, client Contracts tab, and the pipeline-insights block deferred — see the change tasks)
 **Spec refs**: ADR-000 (data model), ADR-022 (apps consume OR abstractions), ADR-031 (x-openregister-notifications dialect), `client-management`, `lead-management`, `pipeline`, `product-service-catalog`, `my-work`, `customer-portal` (consumer)
 **Standards**: SaaS metrics conventions (MRR/ARR/churn), Dutch BW 6:236/237 (stilzwijgende verlenging consumer notice rules — copy guidance only), peer practice: HubSpot renewal pipelines, Pipedrive recurring revenue, Salesforce contract/renewal opportunities
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Contract Schema Registration
 
