@@ -42,9 +42,24 @@
 			</NcButton>
 		</template>
 
-		<CnDetailCard :title="t('pipelinq', 'Contact Information')">
+		<!--
+			Contact-person role record. `role` and the parent-account link are the
+			pipelinq-authoritative fields; identity (name/email/phone) is a
+			denormalised read-only mirror of the linked Nextcloud Contact
+			(CROSS-APP INTERFACE CONTRACT #2 / pipelinq-unify-client-contact
+			REQ-PUCC-002 / REQ-PUCC-004). Edit identity in the addressbook.
+		-->
+		<CnDetailCard :title="t('pipelinq', 'Contact person')">
+			<template #actions>
+				<NcButton
+					v-if="contactData.contactsUid"
+					@click="editIdentityInContacts">
+					{{ t('pipelinq', 'Edit in Contacts') }}
+				</NcButton>
+			</template>
+
 			<div v-if="contactData.contactsUid" class="sync-badge">
-				{{ t('pipelinq', 'Synced with Contacts') }}
+				{{ t('pipelinq', 'Identity from Nextcloud Contacts') }}
 			</div>
 
 			<div class="info-grid">
@@ -71,6 +86,9 @@
 					<span v-else>-</span>
 				</div>
 			</div>
+			<p class="identity-hint">
+				{{ t('pipelinq', 'Name, email and phone are sourced from the linked Nextcloud contact and are read-only here. Edit them in Contacts. Role and the linked organisation are managed here.') }}
+			</p>
 		</CnDetailCard>
 
 		<!-- Parent Organisation — REQ-KB360-030 / REQ-KB360-031 -->
@@ -423,6 +441,18 @@ export default {
 			}
 		},
 		/**
+		 * Deep-link to the Nextcloud Contacts app for the linked contact so the
+		 * user edits the authoritative identity there. Identity is a Nextcloud
+		 * Contact keyed by `contactsUid`; the pipelinq mirror is read-only.
+		 *
+		 * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-004
+		 */
+		editIdentityInContacts() {
+			const uid = this.contactData.contactsUid
+			if (!uid) return
+			window.open(generateUrl('/apps/contacts/All contacts/{uid}', { uid }), '_blank', 'noopener')
+		},
+		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-36
 		 */
 		onFormCancel() {
@@ -481,6 +511,12 @@ export default {
 	color: var(--color-primary);
 	cursor: pointer;
 	text-decoration: underline;
+}
+
+.identity-hint {
+	margin: 12px 0 0;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
 }
 
 .client-link:hover {

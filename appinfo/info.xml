@@ -83,6 +83,7 @@ Vrij en open source onder de AGPL-licentie.
             <step>OCA\Pipelinq\Repair\InitSlaStatus</step>
             <step>OCA\Pipelinq\Repair\IngestProductVendorMaster</step>
             <step>OCA\Pipelinq\Repair\MigratePosBookkeepingToShillinq</step>
+            <step>OCA\Pipelinq\Repair\UnifyClientContactIdentity</step>
         </post-migration>
     </repair-steps>
 
