@@ -8,7 +8,6 @@
 		"Clients": "SalesCrm",
 		"Contacts": "SalesCrm",
 		"Leads": "SalesCrm",
-		"Products": "SalesCrm",
 		"Pipeline": "SalesCrm",
 		"Pipelines": "SalesCrm",
 		"Forecast": "SalesCrm",
@@ -26,14 +25,14 @@
 
 		"PosTransactions": "PointOfSale",
 		"PosRefunds": "PointOfSale",
-		"ProductBarcodeSearch": "PointOfSale",
 		"CashShifts": "PointOfSale",
 		"ZReports": "PointOfSale",
 		"KassakoppelingAuditList": "PointOfSale",
-		"PosStaffList": "PointOfSale",
-		"PosRoleList": "PointOfSale",
 		"PosTenderTypeList": "PointOfSale",
 		"PaymentSettings": "PointOfSale",
+
+		"Products": "Catalog",
+		"ProductBarcodeSearch": "Catalog",
 
 		"Rapportage": "AnalyticsGroup",
 		"Analytics": "AnalyticsGroup",

@@ -113,14 +113,16 @@
 			"label": "POS medewerkers",
 			"icon": "icon-user",
 			"route": "PosStaffList",
-			"order": 98
+			"section": "settings",
+			"order": 70
 		},
 		{
 			"id": "PosRoleList",
 			"label": "POS rollen",
 			"icon": "icon-rename",
 			"route": "PosRoleList",
-			"order": 99
+			"section": "settings",
+			"order": 71
 		},
 		{
 			"id": "ZReports",
@@ -150,9 +152,15 @@
 		},
 		{
 			"id": "PointOfSale",
-			"label": "Point Of Sale",
+			"label": "Point of Sale",
+			"icon": "icon-category-monitoring",
+			"order": 90
+		},
+		{
+			"id": "Catalog",
+			"label": "Catalog",
 			"icon": "icon-category-app-bundles",
-			"order": 93
+			"order": 92
 		},
 		{
 			"id": "AnalyticsGroup",
