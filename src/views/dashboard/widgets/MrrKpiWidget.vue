@@ -34,9 +34,21 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * Formatted MRR euro label for the KPI count.
+		 *
+		 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
+		 * @return {string} The formatted MRR.
+		 */
 		mrrLabel() {
 			return '€' + this.mrr.toLocaleString('nl-NL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
 		},
+		/**
+		 * Formatted ARR sub-label.
+		 *
+		 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
+		 * @return {string} The formatted ARR label.
+		 */
 		arrLabel() {
 			return t('pipelinq', 'ARR €{arr}', { arr: this.arr.toLocaleString('nl-NL', { maximumFractionDigits: 0 }) })
 		},
