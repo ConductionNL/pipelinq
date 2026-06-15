@@ -126,6 +126,8 @@ class RecurringRevenueService
      * @param array<int, array<string,mixed>> $contracts The contract objects.
      *
      * @return float The annual recurring revenue.
+     *
+     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
      */
     public function computeArr(array $contracts): float
     {

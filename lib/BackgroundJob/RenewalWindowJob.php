@@ -73,6 +73,8 @@ class RenewalWindowJob extends TimedJob
      * @return void
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     *
+     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
      */
     protected function run($argument): void
     {
