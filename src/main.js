@@ -214,7 +214,7 @@ function applyMenuRelocations(menu, relocations) {
 			}
 		})
 	}
-	return menu.filter((m) => m.route || m.href || m.action
+	return menu.filter((m) => m.type === 'caption' || m.route || m.href || m.action
 		|| (Array.isArray(m.children) && m.children.length > 0))
 }
 
