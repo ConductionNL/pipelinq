@@ -15,9 +15,16 @@
 			</div>
 			<div class="pos-tender-type-list__actions">
 				<NcButton :disabled="loading" @click="refresh">
+					<template #icon>
+						<NcLoadingIcon v-if="loading" :size="20" />
+						<Refresh v-else :size="20" />
+					</template>
 					{{ t('pipelinq', 'Refresh') }}
 				</NcButton>
 				<NcButton type="primary" @click="createNew">
+					<template #icon>
+						<Plus :size="20" />
+					</template>
 					{{ t('pipelinq', 'New tender type') }}
 				</NcButton>
 			</div>
@@ -62,9 +69,15 @@
 					</td>
 					<td class="pos-tender-type-list__col-actions">
 						<NcButton @click="editType(type)">
+							<template #icon>
+								<Pencil :size="20" />
+							</template>
 							{{ t('pipelinq', 'Edit') }}
 						</NcButton>
 						<NcButton type="error" @click="deleteType(type)">
+							<template #icon>
+								<Delete :size="20" />
+							</template>
 							{{ t('pipelinq', 'Delete') }}
 						</NcButton>
 					</td>
@@ -93,11 +106,15 @@ import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
+import Pencil from 'vue-material-design-icons/Pencil.vue'
+import Delete from 'vue-material-design-icons/Delete.vue'
 import PosTenderTypeFormDialog from '../../modals/PosTenderTypeFormDialog.vue'
 
 export default {
 	name: 'PosTenderTypeList',
-	components: { NcButton, NcLoadingIcon, PosTenderTypeFormDialog },
+	components: { NcButton, NcLoadingIcon, Refresh, Plus, Pencil, Delete, PosTenderTypeFormDialog },
 	data() {
 		return {
 			tenderTypes: [],

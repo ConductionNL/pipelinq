@@ -22,6 +22,7 @@
 					:placeholder="t('pipelinq', 'Choose schemas to export…')"
 					label="label"
 					:multiple="true"
+					:keep-open="true"
 					@input="onSchemasSelect" />
 				<NcSelect
 					:value="selectedDestination"
