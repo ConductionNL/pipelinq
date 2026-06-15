@@ -268,9 +268,11 @@ export default {
 }
 
 /* Overdue row highlighting (REQ-LM-004 Scenario 11). Scoped class applied
-   via CnIndexPage's row-class prop. */
+   via CnIndexPage's row-class prop. Uses an inset box-shadow (matching the
+   library's .cn-table-row--selected accent) rather than border-left, which
+   would shift the row's content sideways. */
 :deep(.lead-overdue) {
-	border-left: 3px solid var(--color-error);
+	box-shadow: inset 3px 0 0 0 var(--color-error);
 }
 
 .overdue-cell {
