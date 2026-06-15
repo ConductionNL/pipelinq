@@ -125,13 +125,6 @@
 			"order": 71
 		},
 		{
-			"id": "ZReports",
-			"label": "Boekhoudkundige Afhandeling",
-			"icon": "icon-category-monitoring",
-			"route": "ZReports",
-			"order": 99
-		},
-		{
 			"id": "KassakoppelingAuditList",
 			"label": "Kassakoppeling audit",
 			"icon": "icon-checkmark",
@@ -248,7 +241,7 @@
 		},
 		{
 			"id": "BillingApproval",
-			"label": "Timesheet approval & billing",
+			"label": "Timesheet approval",
 			"icon": "icon-category-monitoring",
 			"href": "/index.php/apps/shillinq/",
 			"order": 218
@@ -1081,16 +1074,6 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "posZReport"
-			}
-		},
-		{
-			"id": "PosBookkeepingSettings",
-			"route": "/admin/pos-bookkeeping",
-			"type": "custom",
-			"title": "POS bookkeeping",
-			"component": "PosBookkeepingSettingsView",
-			"config": {
-				"register": "pipelinq"
 			}
 		},
 		{
