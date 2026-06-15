@@ -127,6 +127,9 @@ class SettingsLoadService
         // import, so ProductVendorProviderService::resolveSupplier() and the
         // IngestProductVendorMaster repair step cannot locate supplier objects.
         'supplier',
+        // Contract & renewal tracking (contract-renewal-tracking) — recurring-revenue
+        // contracts with renewal-window detection and churn metrics.
+        'contract',
     ];
 
     /**

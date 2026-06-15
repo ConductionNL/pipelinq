@@ -143,6 +143,10 @@ class SettingsService
         // Supplier commercial master (pipelinq-product-vendor-master) — keyed by
         // contactsUid; read by ProductVendorProviderService + IngestProductVendorMaster.
         'supplier_schema',
+        // Contract & renewal tracking (contract-renewal-tracking).
+        'contract_schema',
+        // Renewal engine tuning (contract-renewal-tracking).
+        'renewal_default_lead_time_days',
     ];
 
     /**

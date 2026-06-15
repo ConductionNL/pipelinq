@@ -1,9 +1,10 @@
-# Contract & Renewal Tracking — Spec Delta
+# Spec: Contract & Renewal Tracking
 
+**Status:** implemented (seed contracts, client Contracts tab, and the pipeline-insights block deferred — see the change tasks)
 **Spec refs**: ADR-000 (data model), ADR-022 (apps consume OR abstractions), ADR-031 (x-openregister-notifications dialect), `client-management`, `lead-management`, `pipeline`, `product-service-catalog`, `my-work`, `customer-portal` (consumer)
 **Standards**: SaaS metrics conventions (MRR/ARR/churn), Dutch BW 6:236/237 (stilzwijgende verlenging consumer notice rules — copy guidance only), peer practice: HubSpot renewal pipelines, Pipedrive recurring revenue, Salesforce contract/renewal opportunities
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Contract Schema Registration
 
@@ -144,3 +145,38 @@ The system MUST compute recurring-revenue metrics from `active` and `expiring` c
 - GIVEN a client with two active contracts of €750/month and €12,000/year
 - WHEN the client's Contracts tab loads
 - THEN the recurring value summary MUST show €1,750 MRR for that client
+
+---
+
+### Requirement: MRR KPI Card
+
+The main dashboard MUST include an MRR KPI card showing current MRR and ARR, computed by the recurring-revenue roll-up over active + expiring contracts.
+
+**Feature tier**: MVP
+
+#### Scenario: MRR card reflects contract changes
+
+- GIVEN a dashboard showing MRR €2,000
+- WHEN a new €500/month contract is activated
+- THEN the MRR card MUST show €2,500 on next load
+
+---
+
+### Requirement: Renewals Due Widget
+
+The main dashboard MUST include a "Renewals due" widget listing `expiring` contracts ordered by endDate, each deep-linking to the contract detail view, with an empty state when no contracts are in their renewal window.
+
+**Feature tier**: MVP
+
+#### Scenario: Expiring contracts listed by urgency
+
+- GIVEN three `expiring` contracts with different end dates
+- WHEN the dashboard loads
+- THEN the widget MUST list them ordered by soonest endDate first
+- AND clicking an entry MUST open that contract's detail view
+
+#### Scenario: Renewals widget empty state
+
+- GIVEN no contracts in their renewal window
+- WHEN the dashboard loads
+- THEN the widget MUST show an explanatory empty state instead of an empty list
