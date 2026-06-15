@@ -285,20 +285,20 @@
 					{ "id": "recently-won-lost",  "type": "custom", "title": "Recently won / lost" }
 				],
 				"layout": [
-					{ "id": "c1",  "widgetId": "revenue",            "gridX": 0,  "gridY": 0,  "gridWidth": 2,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c2",  "widgetId": "won-value",          "gridX": 2,  "gridY": 0,  "gridWidth": 2,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c3",  "widgetId": "win-rate",           "gridX": 4,  "gridY": 0,  "gridWidth": 2,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c4",  "widgetId": "avg-deal",           "gridX": 6,  "gridY": 0,  "gridWidth": 2,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c5",  "widgetId": "weighted-forecast",  "gridX": 8,  "gridY": 0,  "gridWidth": 2,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c6",  "widgetId": "open-pipeline",      "gridX": 10, "gridY": 0,  "gridWidth": 2,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c7",  "widgetId": "revenue-over-time",   "gridX": 0,  "gridY": 2,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
-					{ "id": "c8",  "widgetId": "pipeline-by-stage",   "gridX": 6,  "gridY": 2,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
-					{ "id": "c9",  "widgetId": "revenue-by-category",  "gridX": 0, "gridY": 6,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
-					{ "id": "c10", "widgetId": "top-customers",        "gridX": 6,  "gridY": 6,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
-					{ "id": "c11", "widgetId": "closing-soon",       "gridX": 0,  "gridY": 10, "gridWidth": 6,  "gridHeight": 4 },
-					{ "id": "c12", "widgetId": "recently-won-lost",  "gridX": 6,  "gridY": 10, "gridWidth": 6,  "gridHeight": 4 },
-						{ "id": "c13", "widgetId": "mrr",                "gridX": 0,  "gridY": 14, "gridWidth": 2,  "gridHeight": 2, "showTitle": false },
-						{ "id": "c14", "widgetId": "renewals-due",       "gridX": 2,  "gridY": 14, "gridWidth": 6,  "gridHeight": 4 }
+					{ "id": "c1",  "widgetId": "revenue",            "gridX": 0,  "gridY": 0,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c2",  "widgetId": "won-value",          "gridX": 4,  "gridY": 0,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c3",  "widgetId": "win-rate",           "gridX": 8,  "gridY": 0,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c4",  "widgetId": "avg-deal",           "gridX": 0,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c5",  "widgetId": "weighted-forecast",  "gridX": 4,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c6",  "widgetId": "open-pipeline",      "gridX": 8,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c7",  "widgetId": "revenue-over-time",   "gridX": 0,  "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
+					{ "id": "c8",  "widgetId": "pipeline-by-stage",   "gridX": 6,  "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
+					{ "id": "c9",  "widgetId": "revenue-by-category",  "gridX": 0, "gridY": 8,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
+					{ "id": "c10", "widgetId": "top-customers",        "gridX": 6,  "gridY": 8,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
+					{ "id": "c11", "widgetId": "closing-soon",       "gridX": 0,  "gridY": 12, "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "c12", "widgetId": "recently-won-lost",  "gridX": 6,  "gridY": 12, "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "c13", "widgetId": "mrr",                "gridX": 0,  "gridY": 16, "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c14", "widgetId": "renewals-due",       "gridX": 4,  "gridY": 16, "gridWidth": 6,  "gridHeight": 4 }
 				]
 			},
 			"slots": {

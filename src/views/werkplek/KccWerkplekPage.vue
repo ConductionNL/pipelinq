@@ -250,7 +250,9 @@ export default {
 	justify-content: space-between;
 	align-items: center;
 	gap: 16px;
-	padding: 12px 16px;
+	/* Reserve room on the left for the Nextcloud app-navigation toggle so it
+	   never overlaps the page title. */
+	padding: 12px 16px 12px 52px;
 	border-bottom: 1px solid var(--color-border);
 	background: var(--color-main-background);
 }
@@ -271,7 +273,7 @@ export default {
 
 .kcc-werkplek-page__layout {
 	display: grid;
-	grid-template-columns: 300px 1fr 280px;
+	grid-template-columns: minmax(280px, 320px) minmax(0, 1fr) minmax(260px, 300px);
 	gap: 12px;
 	padding: 12px;
 	flex: 1;
@@ -285,18 +287,23 @@ export default {
 	overflow: hidden;
 	display: flex;
 	flex-direction: column;
+	/* Allow the panel to shrink inside its grid track so wide children
+	   (selects, the call timer) wrap instead of overflowing the tile. */
+	min-width: 0;
 }
 
 .kcc-werkplek-page__panel--center { flex: 1; }
 
-@media (max-width: 768px) {
+/* Stack to a single column before the center tile gets too narrow to hold
+   the interaction form comfortably. */
+@media (max-width: 900px) {
 	.kcc-werkplek-page__layout {
 		grid-template-columns: 1fr;
 		grid-template-rows: auto auto auto;
 	}
 	.kcc-werkplek-page__panel--inbox,
 	.kcc-werkplek-page__panel--kennis {
-		max-height: 300px;
+		max-height: 320px;
 	}
 }
 </style>
