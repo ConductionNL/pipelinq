@@ -50,6 +50,8 @@ export default {
 		/**
 		 * Refresh handler for the Actions-menu Refresh item. Drives the
 		 * CnIndexPage `:refreshing` spinner around the underlying fetch.
+		 *
+		 * @spec exclude presentational refresh-button spinner wiring — no business logic
 		 */
 		async onRefresh() {
 			this.refreshing = true

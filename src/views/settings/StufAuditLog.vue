@@ -162,10 +162,20 @@ export default {
 		clearTimeout(this.endpointIdTimer)
 	},
 	methods: {
+		/**
+		 * Debounced wrapper around reload() for the free-text endpoint filter.
+		 *
+		 * @spec exclude presentational debounce helper — no business logic
+		 */
 		debouncedReload() {
 			clearTimeout(this.endpointIdTimer)
 			this.endpointIdTimer = setTimeout(() => this.reload(), 400)
 		},
+		/**
+		 * Reload the STUF audit log from the backing store.
+		 *
+		 * @spec exclude presentational reload helper — no business logic
+		 */
 		async reload() {
 			this.loading = true
 			try {
