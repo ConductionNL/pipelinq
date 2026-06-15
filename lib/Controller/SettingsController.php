@@ -400,6 +400,7 @@ class SettingsController extends Controller
                     [
                         'success' => false,
                         'message' => $this->l10n->t('An unexpected error occurred'),
+                        'error'   => $e->getMessage(),
                     ],
                     500
                     );

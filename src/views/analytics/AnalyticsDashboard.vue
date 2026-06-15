@@ -5,7 +5,9 @@
 	<CnDashboardPage
 		:title="t('pipelinq', 'Analytics')"
 		:subtitle="t('pipelinq', 'Cross-module KPI overview')"
-		:loading="loading">
+		:loading="loading"
+		:refreshing="loading"
+		@refresh="fetchSummary">
 		<template #header-actions>
 			<NcSelect
 				v-model="selectedPeriod"

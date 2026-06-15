@@ -15,6 +15,7 @@
 			:objects="objects"
 			:pagination="pagination"
 			:loading="loading"
+			:refreshing="refreshing"
 			:sort-key="sortKey"
 			:sort-order="sortOrder"
 			:selectable="true"
@@ -23,7 +24,7 @@
 			:empty-action-label="t('pipelinq', 'New role')"
 			@add="createNew"
 			@empty-action="createNew"
-			@refresh="refresh"
+			@refresh="onRefresh"
 			@sort="onSort"
 			@row-click="openRole"
 			@page-changed="onPageChange" />
@@ -43,12 +44,31 @@ export default {
 		const objectStore = useObjectStore()
 		return useListView('posRole', { sidebarState, objectStore })
 	},
+	data() {
+		return {
+			refreshing: false,
+		}
+	},
 	computed: {
 		visibleColumns() {
 			return ['name', 'canVoid', 'maxDiscountPercent', 'canRefund', 'canNoSale']
 		},
 	},
 	methods: {
+		/**
+		 * Refresh handler for the Actions-menu Refresh item. Drives the
+		 * CnIndexPage `:refreshing` spinner around the underlying fetch.
+		 *
+		 * @spec exclude presentational refresh-button spinner wiring — no business logic
+		 */
+		async onRefresh() {
+			this.refreshing = true
+			try {
+				await this.refresh()
+			} finally {
+				this.refreshing = false
+			}
+		},
 		openRole(row) {
 			this.$router.push({ name: 'PosRoleDetail', params: { id: row.id } })
 		},

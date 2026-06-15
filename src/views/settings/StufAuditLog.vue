@@ -28,8 +28,11 @@
 				:options="statusOptions"
 				:input-label="t('pipelinq', 'Status')"
 				clearable />
-			<NcButton type="primary" @click="reload">
-				{{ t('pipelinq', 'Reload') }}
+			<NcButton type="primary" :disabled="loading" @click="reload">
+				<template v-if="loading" #icon>
+					<NcLoadingIcon :size="20" />
+				</template>
+				{{ loading ? t('pipelinq', 'Reloading…') : t('pipelinq', 'Reload') }}
 			</NcButton>
 			<NcButton type="tertiary" @click="exportCsv">
 				{{ t('pipelinq', 'Export CSV') }}
@@ -119,17 +122,18 @@
 </template>
 
 <script>
-import { NcButton, NcDialog, NcSelect, NcSettingsSection, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcLoadingIcon, NcSelect, NcSettingsSection, NcTextField } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import { listMessages } from '../../services/stufApi.js'
 
 export default {
 	name: 'StufAuditLog',
-	components: { NcButton, NcDialog, NcSelect, NcSettingsSection, NcTextField },
+	components: { NcButton, NcDialog, NcLoadingIcon, NcSelect, NcSettingsSection, NcTextField },
 	data() {
 		return {
 			messages: [],
 			loadError: '',
+			loading: false,
 			inspectRow: null,
 			filters: {
 				endpointId: '',
@@ -146,11 +150,34 @@ export default {
 			return ['verzonden', 'bevestigd', 'fout', 'wacht_op_retry']
 		},
 	},
+	watch: {
+		'filters.berichtSoort': 'reload',
+		'filters.status': 'reload',
+		'filters.endpointId': 'debouncedReload',
+	},
 	mounted() {
 		this.reload()
 	},
+	beforeDestroy() {
+		clearTimeout(this.endpointIdTimer)
+	},
 	methods: {
+		/**
+		 * Debounced wrapper around reload() for the free-text endpoint filter.
+		 *
+		 * @spec exclude presentational debounce helper — no business logic
+		 */
+		debouncedReload() {
+			clearTimeout(this.endpointIdTimer)
+			this.endpointIdTimer = setTimeout(() => this.reload(), 400)
+		},
+		/**
+		 * Reload the STUF audit log from the backing store.
+		 *
+		 * @spec exclude presentational reload helper — no business logic
+		 */
 		async reload() {
+			this.loading = true
 			try {
 				const data = await listMessages({
 					endpointId: this.filters.endpointId,
@@ -163,6 +190,8 @@ export default {
 			} catch (e) {
 				this.loadError = t('pipelinq', 'Failed to load StUF audit log')
 				showError(this.loadError)
+			} finally {
+				this.loading = false
 			}
 		},
 		inspect(row) {

@@ -969,21 +969,25 @@ const registry = {
 	XWikiDashboardWidget: {
 		kind: 'widget',
 		component: XWikiDashboardWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Dashboard wrapper for the reusable XWikiWidget — pre-binds admin-configured xwiki_default_space + showSearch=true. Rendered as widget-xwiki on the Dashboard page.',
 	},
 	XWikiWidget: {
 		kind: 'widget',
 		component: XWikiWidgetComponent,
+		...PANEL_WIDGET_META,
 		_note: 'Reusable compact xWiki article-list card. Consumed by the dashboard widget wrapper, detail-page widgets, and ad-hoc embeds. Filters by space / tags / query.',
 	},
 	XWikiSidebarTab: {
 		kind: 'widget',
 		component: XWikiSidebarTabComponent,
+		...SIDEBAR_TAB_META,
 		_note: 'xWiki detail-sidebar panel with search / space-browser / article-viewer modes. Mounted on client / lead / request detail pages.',
 	},
 	XWikiArticleViewer: {
 		kind: 'widget',
 		component: XWikiArticleViewer,
+		...PANEL_WIDGET_META,
 		_note: 'Inline xWiki HTML viewer used by the sidebar tab; consumes the xwiki Pinia store directly.',
 	},
 	// --- AVG (GDPR data-subject request) workflow. ---

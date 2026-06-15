@@ -20,11 +20,12 @@
 			:objects="objects"
 			:pagination="pagination"
 			:loading="loading"
+			:refreshing="refreshing"
 			:sort-key="sortKey"
 			:sort-order="sortOrder"
 			:include-columns="visibleColumns"
 			:empty-title="t('pipelinq', 'No bookings yet')"
-			@refresh="refresh"
+			@refresh="onRefresh"
 			@sort="onSort"
 			@row-click="openBooking"
 			@page-changed="onPageChange">
@@ -66,12 +67,31 @@ export default {
 		const objectStore = useObjectStore()
 		return useListView('booking', { sidebarState, objectStore })
 	},
+	data() {
+		return {
+			refreshing: false,
+		}
+	},
 	computed: {
 		visibleColumns() {
 			return ['customerId', 'serviceId', 'startAt', 'status', 'source']
 		},
 	},
 	methods: {
+		/**
+		 * Refresh handler for the Actions-menu Refresh item. Drives the
+		 * CnIndexPage `:refreshing` spinner around the underlying fetch.
+		 *
+		 * @spec exclude presentational refresh-button spinner wiring — no business logic
+		 */
+		async onRefresh() {
+			this.refreshing = true
+			try {
+				await this.refresh()
+			} finally {
+				this.refreshing = false
+			}
+		},
 		openBooking(row) {
 			this.$router.push({ name: 'BookingDetail', params: { id: row.id } })
 		},

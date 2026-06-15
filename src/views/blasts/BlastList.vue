@@ -8,6 +8,7 @@
 		:objects="objects"
 		:pagination="pagination"
 		:loading="loading"
+		:refreshing="refreshing"
 		:sort-key="sortKey"
 		:sort-order="sortOrder"
 		:include-columns="visibleColumns"
@@ -15,7 +16,7 @@
 		:empty-action-label="t('pipelinq', 'New blast')"
 		@add="createNew"
 		@empty-action="createNew"
-		@refresh="refresh"
+		@refresh="onRefresh"
 		@sort="onSort"
 		@row-click="openBlast"
 		@page-changed="onPageChange" />
@@ -36,6 +37,11 @@ export default {
 		const objectStore = useObjectStore()
 		return useListView('blast', { sidebarState, objectStore })
 	},
+	data() {
+		return {
+			refreshing: false,
+		}
+	},
 	computed: {
 		/**
 		 * Columns shown on the blast list, in order.
@@ -47,6 +53,20 @@ export default {
 		},
 	},
 	methods: {
+		/**
+		 * Refresh handler for the Actions-menu Refresh item. Drives the
+		 * CnIndexPage `:refreshing` spinner around the underlying fetch.
+		 *
+		 * @spec exclude presentational refresh-button spinner wiring — no business logic
+		 */
+		async onRefresh() {
+			this.refreshing = true
+			try {
+				await this.refresh()
+			} finally {
+				this.refreshing = false
+			}
+		},
 		/**
 		 * Navigate to the blast monitor for the clicked row.
 		 *
