@@ -154,8 +154,7 @@ are being refunded, and how much of each (supporting partial refunds).
 
 ### REQ-REF-004: Refund Reason per Item [MVP]
 
-Each refund line MAY have its own reason (e.g., one item damaged, another unwanted).
-The overall refund also has a primary reason.
+The system SHALL allow each refund line to carry its own reason (e.g., one item damaged, another unwanted), and the overall refund MUST also record a primary reason.
 
 #### Scenario 10: Set per-item return reason
 
@@ -249,8 +248,8 @@ movement events for restocked items.
 
 ### REQ-REF-007: Reject Refund [MVP]
 
-A pending refund MAY be rejected by a manager with a reason code. Rejected refunds are
-immutable and do not trigger any events or stock changes.
+The system SHALL allow a pending refund to be rejected by a manager with a reason code. Rejected refunds MUST be
+immutable and MUST NOT trigger any events or stock changes.
 
 #### Scenario 18: Reject pending refund
 
@@ -474,8 +473,8 @@ The system MUST handle error conditions gracefully.
 
 ### REQ-REF-015: Refund Statistics and Reporting [V1]
 
-The system SHOULD provide basic refund statistics for reporting (e.g., refund count, total amount,
-top refund reasons).
+The system SHALL provide basic refund statistics for reporting (e.g., refund count, total amount,
+top refund reasons). This is a V1 capability and the reporting widget SHOULD be available on the dashboard.
 
 #### Scenario 36: Dashboard widget shows refund metrics
 
@@ -490,8 +489,8 @@ top refund reasons).
 
 ### REQ-REF-016: Bulk Refund Processing [V1]
 
-The system SHOULD support processing multiple refunds at once (batch confirm) to save time
-during end-of-day reconciliation.
+The system SHALL support processing multiple refunds at once (batch confirm) to save time
+during end-of-day reconciliation. This is a V1 capability.
 
 #### Scenario 37: Select and confirm multiple refunds
 
@@ -504,7 +503,7 @@ during end-of-day reconciliation.
 
 ### REQ-REF-017: Mobile Refund Processing [V1]
 
-The refund form SHOULD be optimized for mobile devices (small screens, touch-friendly).
+The refund form SHALL be optimized for mobile devices (small screens, touch-friendly). This is a V1 capability.
 
 #### Scenario 38: Process refund on mobile POS terminal
 

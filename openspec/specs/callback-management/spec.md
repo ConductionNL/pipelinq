@@ -1,3 +1,7 @@
+## Purpose
+
+Manage callback requests (terugbelverzoeken), follow-up tasks (opvolgtaken), and information requests (informatievragen) in Pipelinq via a `task` schema mapped to VNG `InterneTaak` and Schema.org `Action`. The capability lets agents register, assign, schedule, and track these tasks through to completion.
+
 ## ADDED Requirements
 
 @e2e exclude backend schema/register config — task schema registration is a PHP repair-step; covered by PHPUnit

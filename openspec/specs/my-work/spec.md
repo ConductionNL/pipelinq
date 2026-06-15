@@ -146,7 +146,7 @@ Each item MUST be clickable, navigating to the full detail view.
 
 ### Requirement: Cross-App Workload [V1]
 
-The system SHOULD include items from Procest (cases and tasks assigned to the current user) in the My Work view.
+The system SHALL support including items from Procest (cases and tasks assigned to the current user) in the My Work view. Where cross-app integration is enabled, Procest items MUST appear alongside Pipelinq items; this remains a V1 (SHOULD) capability until that integration ships.
 
 #### Scenario: Include Procest tasks
 @e2e exclude V1 Procest integration; not yet implemented

@@ -281,7 +281,7 @@ The system MUST support tracking the intake channel. Channel values come from Sy
 
 ### Requirement: Request Category/Product Classification [V1]
 
-The system SHOULD support categorizing requests by product or service type. Categories are free-text strings that MAY be pre-populated from admin configuration.
+The system SHALL support categorizing requests by product or service type. Categories are free-text strings that MAY be pre-populated from admin configuration.
 
 #### Scenario: Set category during creation
 @e2e exclude requires category configuration
@@ -330,7 +330,7 @@ The system MUST support converting a request to a case in Procest.
 
 ### Requirement: Request on Pipeline [MVP]
 
-A request MAY optionally be placed on a pipeline. When on a pipeline, the request has a `stage`, `stageOrder`, and appears on the kanban board.
+A request MAY optionally be placed on a pipeline. When on a pipeline, the request MUST have a `stage` and `stageOrder` and SHALL appear on the kanban board.
 
 #### Scenario: Place request on pipeline
 @e2e exclude requires pipeline with stages
