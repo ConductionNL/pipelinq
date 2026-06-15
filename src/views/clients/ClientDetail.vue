@@ -46,9 +46,23 @@
 			</NcButton>
 		</template>
 
-		<CnDetailCard :title="t('pipelinq', 'Client Information')">
+		<!--
+			Identity — denormalised read-only mirror of the linked Nextcloud
+			Contact (CROSS-APP INTERFACE CONTRACT #2). The contact is authoritative;
+			editing identity deep-links to the addressbook (pipelinq-unify-client-contact
+			REQ-PUCC-001 / REQ-PUCC-004).
+		-->
+		<CnDetailCard :title="t('pipelinq', 'Identity')">
+			<template #actions>
+				<NcButton
+					v-if="clientData.contactsUid"
+					@click="editIdentityInContacts">
+					{{ t('pipelinq', 'Edit in Contacts') }}
+				</NcButton>
+			</template>
+
 			<div v-if="clientData.contactsUid" class="sync-badge">
-				{{ t('pipelinq', 'Synced with Contacts') }}
+				{{ t('pipelinq', 'Identity from Nextcloud Contacts') }}
 			</div>
 
 			<div class="info-grid">
@@ -71,6 +85,38 @@
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'Address') }}</label>
 					<span>{{ clientData.address || '-' }}</span>
+				</div>
+			</div>
+			<p class="identity-hint">
+				{{ t('pipelinq', 'Name, email, phone, address and website are sourced from the linked Nextcloud contact and are read-only here. Edit them in Contacts.') }}
+			</p>
+		</CnDetailCard>
+
+		<!--
+			Account / relationship — the CRM-specific fields that make this a
+			relationship record rather than an identity card (REQ-PUCC-001).
+		-->
+		<CnDetailCard :title="t('pipelinq', 'Account & relationship')">
+			<div class="info-grid">
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Lifecycle stage') }}</label>
+					<span>{{ clientData.lifecycleStage || '-' }}</span>
+				</div>
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Segment') }}</label>
+					<span>{{ clientData.segment || '-' }}</span>
+				</div>
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Account owner') }}</label>
+					<span>{{ clientData.accountOwner || '-' }}</span>
+				</div>
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Account status') }}</label>
+					<span>{{ clientData.accountStatus || '-' }}</span>
+				</div>
+				<div class="info-field">
+					<label>{{ t('pipelinq', 'Industry') }}</label>
+					<span>{{ clientData.industry || '-' }}</span>
 				</div>
 			</div>
 			<div v-if="clientData.notes" class="info-field info-field--full">
@@ -878,6 +924,19 @@ export default {
 			this.$router.push({ name: 'ContactDetail', params: { id: 'new' }, query: { client: this.clientId } })
 		},
 		/**
+		 * Deep-link to the Nextcloud Contacts app for the linked contact so the
+		 * user can edit the authoritative identity there. Identity is a Nextcloud
+		 * Contact keyed by `contactsUid` (CROSS-APP INTERFACE CONTRACT #2); the
+		 * pipelinq mirror is read-only.
+		 *
+		 * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-004
+		 */
+		editIdentityInContacts() {
+			const uid = this.clientData.contactsUid
+			if (!uid) return
+			window.open(generateUrl('/apps/contacts/All contacts/{uid}', { uid }), '_blank', 'noopener')
+		},
+		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-6
 		 */
 		createComplaint() {
@@ -1021,6 +1080,12 @@ export default {
 	font-size: 12px;
 	font-weight: 600;
 	margin-bottom: 16px;
+}
+
+.identity-hint {
+	margin: 12px 0 0;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
 }
 
 .summary-grid {
