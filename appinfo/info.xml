@@ -121,6 +121,7 @@ Vrij en open source onder de AGPL-licentie.
         <job>OCA\Pipelinq\BackgroundJob\MdmDataQualityScorerJob</job>
         <job>OCA\Pipelinq\BackgroundJob\MdmHardDeleteConfirmationJob</job>
         <job>OCA\Pipelinq\BackgroundJob\MdmOpenRegisterSyncJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\RenewalWindowJob</job>
     </background-jobs>
 
     <navigations>
