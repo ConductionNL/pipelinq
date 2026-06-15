@@ -945,7 +945,7 @@
             "recipients": [
               {
                 "kind": "field",
-                "field": "assignee"
+                "field": "assignedTo"
               }
             ],
             "subject": {
@@ -1646,7 +1646,7 @@
             "recipients": [
               {
                 "kind": "field",
-                "field": "assignee"
+                "field": "assigneeUserId"
               }
             ],
             "subject": {
@@ -1666,7 +1666,7 @@
             "recipients": [
               {
                 "kind": "field",
-                "field": "assignee"
+                "field": "assigneeUserId"
               }
             ],
             "subject": {
