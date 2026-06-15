@@ -3,11 +3,12 @@
 /**
  * Pipelinq PosBookkeepingController.
  *
- * Thin controller for the POS end-of-day bookkeeping submission endpoint.
- * Authorisation, server-authoritative payload building and the
- * idempotent Shillinq POST live in PosBookkeepingService; this controller is
- * the HTTP edge. Plain CRUD on posZReport / posJournalEntryOutbound /
- * glAccountMapping is handled by OpenRegister's generic object API.
+ * Thin controller for the POS end-of-day journal-raise endpoint.
+ * Authorisation, the server-authoritative business-fact payload and the
+ * registry-mediated shillinq.JournalEntry.raise dispatch live in
+ * PosBookkeepingService; this controller is the HTTP edge. Plain CRUD on
+ * posZReport is handled by OpenRegister's generic object API. The GL chart and
+ * the journal entry itself are owned by shillinq (cross-app contract #3).
  *
  * @category Controller
  * @package  OCA\Pipelinq\Controller
@@ -78,15 +79,17 @@ class PosBookkeepingController extends Controller
     }//end __construct()
 
     /**
-     * Submit (or resubmit) a posJournalEntryOutbound to Shillinq.
+     * Raise (or re-raise) the journal entry for a posZReport in shillinq.
      *
-     * Reads the outboundMessageId from the request body; the service performs
-     * the role check, builds the GL payload, posts with the idempotency
-     * header, handles 2xx/4xx/5xx and returns the persisted outbound.
+     * Reads the zReportId from the request body; the service performs the
+     * role check, builds the business-fact payload, dispatches the
+     * registry-mediated shillinq.JournalEntry.raise with the deterministic
+     * idempotency key and returns the persisted Z-report with its updated
+     * bookkeepingStatus projection.
      *
-     * @return JSONResponse The persisted outbound message envelope, or an error.
+     * @return JSONResponse The persisted Z-report envelope, or an error.
      *
-     * @spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#2.2
+     * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
      */
     #[NoAdminRequired]
     public function post(): JSONResponse
@@ -96,18 +99,18 @@ class PosBookkeepingController extends Controller
             return $uid;
         }
 
-        $outboundMessageId = (string) $this->request->getParam('outboundMessageId', '');
-        if ($outboundMessageId === '') {
+        $zReportId = (string) $this->request->getParam('zReportId', '');
+        if ($zReportId === '') {
             return new JSONResponse(
-                ['error' => $this->l10n->t('outboundMessageId is required')],
+                ['error' => $this->l10n->t('zReportId is required')],
                 Http::STATUS_BAD_REQUEST
             );
         }
 
         return $this->run(
             action: fn (): array => [
-                'outbound' => $this->service->postToShillinq(
-                    outboundMessageId: $outboundMessageId,
+                'zReport' => $this->service->raiseJournalEntry(
+                    zReportId: $zReportId,
                     userId: $uid
                 ),
             ],

@@ -26,7 +26,6 @@
 		"PosTransactions": "PointOfSale",
 		"PosRefunds": "PointOfSale",
 		"CashShifts": "PointOfSale",
-		"ZReports": "PointOfSale",
 		"KassakoppelingAuditList": "PointOfSale",
 		"PosTenderTypeList": "PointOfSale",
 		"PaymentSettings": "PointOfSale",

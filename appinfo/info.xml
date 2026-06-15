@@ -82,6 +82,7 @@ Vrij en open source onder de AGPL-licentie.
             <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
             <step>OCA\Pipelinq\Repair\InitSlaStatus</step>
             <step>OCA\Pipelinq\Repair\IngestProductVendorMaster</step>
+            <step>OCA\Pipelinq\Repair\MigratePosBookkeepingToShillinq</step>
         </post-migration>
     </repair-steps>
 
@@ -102,6 +103,7 @@ Vrij en open source onder de AGPL-licentie.
         <job>OCA\Pipelinq\BackgroundJob\AvailabilityCacheRefreshJob</job>
         <job>OCA\Pipelinq\BackgroundJob\AppointmentDepositTimeoutJob</job>
         <job>OCA\Pipelinq\BackgroundJob\GenerateZReportJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\PosRetryBackoffJob</job>
         <job>OCA\Pipelinq\BackgroundJob\TenderPostedRetryJob</job>
         <job>OCA\Pipelinq\BackgroundJob\EmailMatchJob</job>
         <job>OCA\Pipelinq\BackgroundJob\BrpHealthCheckJob</job>
