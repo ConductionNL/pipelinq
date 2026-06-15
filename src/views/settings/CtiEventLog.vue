@@ -119,6 +119,11 @@ export default {
 		this.reload()
 	},
 	methods: {
+		/**
+		 * Reload the CTI event log from the backing store.
+		 *
+		 * @spec exclude presentational reload helper — no business logic
+		 */
 		async reload() {
 			this.loading = true
 			try {
