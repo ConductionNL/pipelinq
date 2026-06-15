@@ -1,0 +1,47 @@
+{
+	"menu": [
+		{
+			"id": "Contracts",
+			"label": "Contracts",
+			"icon": "icon-category-organization",
+			"route": "Contracts",
+			"order": 52
+		}
+	],
+	"pages": [
+		{
+			"id": "Contracts",
+			"route": "/contracts",
+			"type": "index",
+			"title": "Contracts",
+			"config": {
+				"register": "pipelinq",
+				"schema": "contract",
+				"columns": [
+					"contractNumber",
+					"title",
+					"status",
+					"billingInterval",
+					"valuePerInterval",
+					"endDate"
+				],
+				"filters": [
+					"status",
+					"ownerId",
+					"clientRef"
+				]
+			}
+		},
+		{
+			"id": "ContractDetail",
+			"route": "/contracts/:id",
+			"type": "detail",
+			"title": "Contract",
+			"config": {
+				"register": "pipelinq",
+				"schema": "contract",
+				"sidebar": true
+			}
+		}
+	]
+}
