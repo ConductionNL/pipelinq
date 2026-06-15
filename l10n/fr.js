@@ -884,6 +884,7 @@ OC.L10N.register(
         "Install OpenRegister": "Installer OpenRegister",
         "Intake forms": "Formulaires de saisie",
         "Integraties": "Intégrations",
+        "Integrations": "Intégrations",
         "Internal": "Interne",
         "Internal (agents only)": "Interne (agents uniquement)",
         "Invalid URL format": "Format d'URL invalide",
