@@ -4763,6 +4763,7 @@
         },
         "name": "Gemeente Demo — Entity Notes Showcase",
         "type": "organization",
+        "contactsUid": "demo-gemeente-001",
         "email": "info@gemeente-demo.nl",
         "phone": "085-9999999",
         "industry": "Lokale overheid",
