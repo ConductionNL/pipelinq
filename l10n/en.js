@@ -1,6 +1,14 @@
 OC.L10N.register(
     "pipelinq",
     {
+    "Prospects" : "Prospects",
+    "Score" : "Score",
+    "Industry" : "Industry",
+    "Convert to lead" : "Convert to lead",
+    "No prospects found" : "No prospects found",
+    "Could not load prospects" : "Could not load prospects",
+    "No Ideal Customer Profile configured" : "No Ideal Customer Profile configured",
+    "No companies currently match your Ideal Customer Profile." : "No companies currently match your Ideal Customer Profile.",
     "(no title)" : "(no title)",
     "Accounts" : "Accounts",
     "Active accounts" : "Active accounts",
