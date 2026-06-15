@@ -5,6 +5,8 @@
 **Tier:** MVP
 **Depends on:** `shillinq-product-vendor-to-pipelinq` (counterpart export), pipelinq `contacts-sync` (implemented), pipelinq `master-data-management` (`masterEntity`/`sourceRecord`), OpenRegister `pluggable-integration-registry` (ADR-019)
 
+## Purpose
+
 pipelinq is the canonical owner of the Product master and the Supplier commercial master per CROSS-APP INTERFACE CONTRACT #1. It EXTENDS the existing `product` schema, ADDS a `supplier` schema keyed by `contactsUid` (identity = Nextcloud Contact), declares the registry read surface shillinq consumes, and ingests the shillinq master-data export without dropping fields.
 
 ## Requirements

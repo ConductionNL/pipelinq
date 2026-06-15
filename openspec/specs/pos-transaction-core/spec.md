@@ -15,6 +15,10 @@
 
 ---
 
+## Purpose
+
+Provide the core POS transaction model for Pipelinq: two OpenRegister schemas (`posTransaction` with the draft→parked→confirmed→settled→refunded lifecycle, per-rate tax breakdown and grand total; `posTransactionLine` with qty/discount/computed tax), a server-authoritative PosTransactionService (totals, lifecycle, CloudEvent to shillinq) and PosTransactionController, plus Vue list/detail/cart views.
+
 ## Requirements
 
 ### REQ-POS-001: Transaction Creation (Draft)

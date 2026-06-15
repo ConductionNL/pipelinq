@@ -4,6 +4,10 @@
 **Spec refs**: ADR-000 (data model), ADR-022 (apps consume OR abstractions), ADR-031 (x-openregister-notifications dialect), `client-management`, `lead-management`, `pipeline`, `product-service-catalog`, `my-work`, `customer-portal` (consumer)
 **Standards**: SaaS metrics conventions (MRR/ARR/churn), Dutch BW 6:236/237 (stilzwijgende verlenging consumer notice rules — copy guidance only), peer practice: HubSpot renewal pipelines, Pipedrive recurring revenue, Salesforce contract/renewal opportunities
 
+## Purpose
+
+Track customer contracts and their renewal lifecycle in Pipelinq: register a `contract` schema linked to existing clients and catalog line items, surface a Contracts tab on the client, and drive renewal pipelines and recurring-revenue metrics (MRR/ARR/churn) without duplicating client identity.
+
 ## Requirements
 
 ### Requirement: Contract Schema Registration

@@ -161,7 +161,7 @@ The system SHALL create default skills during the repair step to provide an out-
 
 ---
 
-### Current Implementation Status
+**Current Implementation Status**
 
 **Implemented:**
 - **Skill Definition Entity:** Fully implemented. Skill schema defined in `lib/Settings/pipelinq_register.json` with `@type: schema:DefinedTerm`. CRUD via `src/store/modules/skills.js` Pinia store. Admin UI in `src/components/admin/SkillSettings.vue`.

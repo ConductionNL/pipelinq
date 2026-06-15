@@ -19,6 +19,10 @@ These additions make the product catalog usable as a POS-grade product master fo
 
 ---
 
+## Purpose
+
+Extend the existing `product` schema into a POS-grade product master (variants matrix, modifier groups, quantity price tiers, explicit Dutch BTW class, barcode/EAN, service duration) backed by a server-authoritative ProductCatalogService and Controller. These additions make the catalog usable as a POS product master for Shillinq and retail/salon POS integrations while preserving backward compatibility with the existing flat CRM product fields.
+
 ## Requirements
 
 ### REQ-PPC-001: Product Variants
