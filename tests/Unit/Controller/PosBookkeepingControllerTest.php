@@ -3,9 +3,9 @@
 /**
  * Unit tests for PosBookkeepingController.
  *
- * Asserts the HTTP surface of the POS end-of-day submission endpoint: each
+ * Asserts the HTTP surface of the POS end-of-day journal-raise endpoint: the
  * action requires an authenticated user (401 otherwise), delegates the
- * server-authoritative work to PosBookkeepingService with the manager uid
+ * server-authoritative raise to PosBookkeepingService with the manager uid
  * taken from the session (never the body), maps the service's OCS exceptions
  * to 404 / 403 / 422 and never leaks internal error detail on 500.
  *
@@ -23,7 +23,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#7.2
+ * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
  */
 
 declare(strict_types=1);
@@ -114,7 +114,7 @@ class PosBookkeepingControllerTest extends TestCase
     public function testPostRequiresAuthentication(): void
     {
         $this->userSession->method('getUser')->willReturn(null);
-        $this->service->expects($this->never())->method('postToShillinq');
+        $this->service->expects($this->never())->method('raiseJournalEntry');
 
         $response = $this->controller->post();
 
@@ -122,11 +122,11 @@ class PosBookkeepingControllerTest extends TestCase
     }//end testPostRequiresAuthentication()
 
     /**
-     * post() returns 400 when the body is missing the outboundMessageId.
+     * post() returns 400 when the body is missing the zReportId.
      *
      * @return void
      */
-    public function testPostRejectsEmptyOutboundId(): void
+    public function testPostRejectsEmptyZReportId(): void
     {
         $this->loginAs('boss');
         $this->request->method('getParam')->willReturn('');
@@ -134,28 +134,28 @@ class PosBookkeepingControllerTest extends TestCase
         $response = $this->controller->post();
 
         $this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
-    }//end testPostRejectsEmptyOutboundId()
+    }//end testPostRejectsEmptyZReportId()
 
     /**
-     * post() with a valid outboundMessageId delegates with the session uid.
+     * post() with a valid zReportId delegates with the session uid.
      *
      * @return void
      */
     public function testPostDelegatesWithSessionUid(): void
     {
         $this->loginAs('boss');
-        $this->request->method('getParam')->willReturn('out-1');
+        $this->request->method('getParam')->willReturn('zr-1');
 
         $this->service->expects($this->once())
-            ->method('postToShillinq')
-            ->with('out-1', 'boss')
-            ->willReturn(['id' => 'out-1', 'status' => 'posted']);
+            ->method('raiseJournalEntry')
+            ->with('zr-1', 'boss')
+            ->willReturn(['id' => 'zr-1', 'bookkeepingStatus' => 'raised']);
 
         $response = $this->controller->post();
 
         $this->assertSame(Http::STATUS_ACCEPTED, $response->getStatus());
         $data = $response->getData();
-        $this->assertSame('posted', $data['outbound']['status']);
+        $this->assertSame('raised', $data['zReport']['bookkeepingStatus']);
     }//end testPostDelegatesWithSessionUid()
 
     /**
@@ -166,9 +166,9 @@ class PosBookkeepingControllerTest extends TestCase
     public function testPostMapsForbiddenTo403(): void
     {
         $this->loginAs('clerk');
-        $this->request->method('getParam')->willReturn('out-1');
+        $this->request->method('getParam')->willReturn('zr-1');
 
-        $this->service->method('postToShillinq')
+        $this->service->method('raiseJournalEntry')
             ->willThrowException(new OCSForbiddenException('not a manager'));
 
         $response = $this->controller->post();
@@ -177,16 +177,16 @@ class PosBookkeepingControllerTest extends TestCase
     }//end testPostMapsForbiddenTo403()
 
     /**
-     * post() maps OCSNotFoundException to 404 (outbound not found).
+     * post() maps OCSNotFoundException to 404 (Z-report not found).
      *
      * @return void
      */
     public function testPostMapsNotFoundTo404(): void
     {
         $this->loginAs('boss');
-        $this->request->method('getParam')->willReturn('out-missing');
+        $this->request->method('getParam')->willReturn('zr-missing');
 
-        $this->service->method('postToShillinq')
+        $this->service->method('raiseJournalEntry')
             ->willThrowException(new OCSNotFoundException('not found'));
 
         $response = $this->controller->post();
@@ -202,10 +202,10 @@ class PosBookkeepingControllerTest extends TestCase
     public function testPostMapsBadRequestTo422(): void
     {
         $this->loginAs('boss');
-        $this->request->method('getParam')->willReturn('out-1');
+        $this->request->method('getParam')->willReturn('zr-1');
 
-        $this->service->method('postToShillinq')
-            ->willThrowException(new OCSBadRequestException('endpoint not configured'));
+        $this->service->method('raiseJournalEntry')
+            ->willThrowException(new OCSBadRequestException('register not configured'));
 
         $response = $this->controller->post();
 
@@ -220,9 +220,9 @@ class PosBookkeepingControllerTest extends TestCase
     public function testPostMapsUnexpectedTo500(): void
     {
         $this->loginAs('boss');
-        $this->request->method('getParam')->willReturn('out-1');
+        $this->request->method('getParam')->willReturn('zr-1');
 
-        $this->service->method('postToShillinq')
+        $this->service->method('raiseJournalEntry')
             ->willThrowException(new \RuntimeException('SECRET TOKEN xyz'));
 
         $response = $this->controller->post();

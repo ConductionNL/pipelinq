@@ -10,11 +10,12 @@
  * `pos_eod.z_report_time` HH:MM matches the current UTC hour:minute window —
  * an admin-tunable daily schedule with no extra scheduler infrastructure.
  *
- * The job never POSTs to Shillinq directly: PosBookkeepingService creates the
- * outbound staging record (status=draft); the manager-gated controller / UI
- * issues the submission. This split keeps the daily run cheap and
- * accountable, and lets a failed Shillinq endpoint never block the next day's
- * Z-report generation.
+ * The job never raises the shillinq journal directly: it only generates the
+ * operational posZReport (status=ready, bookkeepingStatus=pending). The
+ * manager-gated controller / UI issues the registry-mediated
+ * shillinq.JournalEntry.raise, and PosRetryBackoffJob re-raises any that stay
+ * pending. This split keeps the daily run cheap and lets an unreachable shillinq
+ * never block the next day's Z-report generation.
  *
  * @category BackgroundJob
  * @package  OCA\Pipelinq\BackgroundJob
@@ -58,8 +59,8 @@ use Psr\Log\LoggerInterface;
  *      (terminals that didn't sell are not reported).
  *   2. For each terminal, calls PosBookkeepingService::generateZReport, which
  *      persists the Z-report and emits pipelinq.PosZReport.submitted.
- *   3. Returns without auto-posting to Shillinq — staging is created by the
- *      separate manager-gated workflow.
+ *   3. Returns without raising the shillinq journal — the registry-mediated
+ *      raise is the separate manager-gated / retry-job workflow.
  *
  * @spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#3.1
  */

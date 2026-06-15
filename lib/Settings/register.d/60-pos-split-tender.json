@@ -33,8 +33,6 @@
                     "cashCount",
                     "cashDiff",
                     "posZReport",
-                    "posJournalEntryOutbound",
-                    "glAccountMapping",
                     "posTenderType",
                     "posTender"
                 ]

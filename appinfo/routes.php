@@ -235,12 +235,12 @@ return [
         ['name' => 'posPayment#test',     'url' => '/api/payment-providers/{name}/test', 'verb' => 'POST'],
         ['name' => 'posPayment#webhook',  'url' => '/api/pos-payment-webhook/{provider}', 'verb' => 'POST'],
 
-        // POS end-of-day bookkeeping post pipeline (pos-end-of-day-bookkeeping-post).
-        // Manager-gated submit / resubmit of a posJournalEntryOutbound to Shillinq.
-        // Admin GET / POST for the daily Z-report time + Shillinq endpoint + bearer token.
+        // POS end-of-day journal raise (pipelinq-bookkeeping-to-shillinq / REQ-PBTS-001).
+        // Manager-gated raise / re-raise of a posZReport's journal entry in shillinq
+        // through the ADR-019 integration registry. The GL chart + journal are owned
+        // by shillinq; pipelinq only sends the Z-report business facts. The retired
+        // /api/admin/pos-bookkeeping/config GL-mapping admin endpoint is removed.
         ['name' => 'posBookkeeping#post',         'url' => '/api/pos-bookkeeping/post',         'verb' => 'POST'],
-        ['name' => 'posBookkeepingConfig#index',  'url' => '/api/admin/pos-bookkeeping/config', 'verb' => 'GET'],
-        ['name' => 'posBookkeepingConfig#update', 'url' => '/api/admin/pos-bookkeeping/config', 'verb' => 'POST'],
 
         // POS split-tender (pos-split-tender). Admin tender-type CRUD +
         // cashier-facing per-transaction tender CRUD + validate-only helper
