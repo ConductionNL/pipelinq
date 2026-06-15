@@ -20,7 +20,8 @@
 		:sidebar="sidebarConfig"
 		:row-class="rowClassFor"
 		:items-filter="itemsFilter"
-		:actions="actionsBar">
+		:actions="actionsBar"
+		@view="openLead">
 		<template #header-extra>
 			<div class="lead-list__filters">
 				<NcCheckboxRadioSwitch
@@ -183,6 +184,14 @@ export default {
 	methods: {
 		isLeadOverdue,
 		getOverdueDays,
+		/**
+		 * Open a lead's detail page (CnIndexPage row "View" action).
+		 *
+		 * @param {object} row The lead row.
+		 */
+		openLead(row) {
+			this.$router.push({ name: 'LeadDetail', params: { id: row.id } })
+		},
 		/**
 		 * Compute the row CSS class for the given lead. Drives the
 		 * `.lead-overdue` highlighting on the list rows.
