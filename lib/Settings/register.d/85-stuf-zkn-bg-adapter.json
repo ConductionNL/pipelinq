@@ -381,7 +381,9 @@
                                 "veld": {
                                     "type": "string"
                                 },
-                                "waarde": {},
+                                "waarde": {
+                                    "type": "string"
+                                },
                                 "geplandOp": {
                                     "type": "string",
                                     "format": "date-time"

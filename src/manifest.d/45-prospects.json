@@ -16,8 +16,7 @@
 			"title": "Prospects",
 			"component": "ProspectsView",
 			"config": {
-				"register": "pipelinq",
-				"_note": "Full-page expansion of ProspectWidget; lib gap: no declarative type for a scored-prospect list with external-source (KvK/OpenCorporates) enrichment."
+				"_note": "Full-page expansion of ProspectWidget; lib gap: no declarative type for a scored-prospect list with external-source (KvK/OpenCorporates) enrichment. Data comes from useProspectStore (custom API), not an OpenRegister register/schema — so no config.register/schema."
 			}
 		}
 	]

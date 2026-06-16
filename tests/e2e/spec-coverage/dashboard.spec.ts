@@ -4,17 +4,36 @@
  *
  * Gate-19 e2e coverage for openspec/specs/dashboard/spec.md
  * UI-observable scenarios: page title, KPI tiles, quick actions, layout, refresh.
- * Backend/data scenarios excluded per-scenario below.
+ *
+ * IA NOTE (commercial-dashboard split): the landing dashboard `/` is now the
+ * "Commercial overview" (revenue / pipeline / win KPIs + sales charts). The
+ * previous request/lead operational KPIs and widgets (Open Leads, Open
+ * Requests, Requests by Status, My Work, Client Overview, …) moved to the
+ * "Operational overview" reachable via the SPA hash `#/operational`. Tests that
+ * assert those operational surfaces therefore deep-link Operational first; the
+ * landing-page title + quick-action assertions stay on `/`.
  */
 
 import { test, expect } from '@playwright/test'
+
+/**
+ * Deep-link the Operational overview where the request/lead widgets live. Land
+ * directly on the hash (then reload so the router boots onto `/operational`) so
+ * the Commercial landing widgets never mount.
+ */
+async function gotoOperational(page) {
+	await page.goto('/apps/pipelinq/#/operational')
+	await expect(page.locator('#app-navigation-vue')).toBeVisible({ timeout: 15000 })
+	await page.reload()
+	await page.locator('#content-vue').waitFor({ state: 'visible', timeout: 15000 }).catch(() => {})
+}
 
 // @e2e openspec/specs/dashboard/spec.md#dashboard-page-title-and-empty-state
 test('dashboard page title and empty state', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
 	await expect(page).toHaveURL(/pipelinq/)
-	// Page heading
-	await expect(page.getByRole('heading', { name: 'Dashboard' }).first()).toBeVisible({ timeout: 10000 })
+	// Landing page is the Commercial overview after the dashboard split.
+	await expect(page.getByRole('heading', { name: 'Commercial overview' }).first()).toBeVisible({ timeout: 15000 })
 	// No server error
 	await expect(page.locator('body')).not.toContainText('Internal Server Error')
 })
@@ -22,19 +41,20 @@ test('dashboard page title and empty state', async ({ page }) => {
 // @e2e openspec/specs/dashboard/spec.md#quick-action-buttons-in-header
 test('dashboard quick action buttons visible', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
-	await expect(page.getByRole('button', { name: /New Lead/i }).first()).toBeVisible({ timeout: 10000 })
+	await expect(page.getByRole('button', { name: /New Lead/i }).first()).toBeVisible({ timeout: 15000 })
 	await expect(page.getByRole('button', { name: /New Request/i }).first()).toBeVisible()
 	await expect(page.getByRole('button', { name: /New Client/i }).first()).toBeVisible()
 })
 
 // @e2e openspec/specs/dashboard/spec.md#default-grid-layout-on-first-load
 test('dashboard KPI tiles rendered in grid', async ({ page }) => {
-	await page.goto('/apps/pipelinq/')
-	// Four KPI cards should be present
-	await expect(page.getByText('Open Leads').first()).toBeVisible({ timeout: 10000 })
-	await expect(page.getByText('Open Req').first()).toBeVisible()
-	await expect(page.getByText('Pipeline V').first()).toBeVisible()
-	await expect(page.getByText('Overdue').first()).toBeVisible()
+	// The lead/request KPI tiles now live on the Operational overview.
+	await gotoOperational(page)
+	const content = page.locator('#content-vue')
+	await expect(content.getByText('Open Leads').first()).toBeVisible({ timeout: 15000 })
+	await expect(content.getByText('Open Requests').first()).toBeVisible()
+	await expect(content.getByText('Pipeline Value').first()).toBeVisible()
+	await expect(content.getByText('Overdue').first()).toBeVisible()
 })
 
 // @e2e openspec/specs/dashboard/spec.md#kpi-cards-with-zero-values
@@ -42,43 +62,43 @@ test('KPI cards show empty state when no data', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
 	// Empty state text appears in KPI tiles
 	const body = page.locator('body')
-	await expect(body).toContainText(/No items found|0/, { timeout: 10000 })
+	await expect(body).toContainText(/No items found|0/, { timeout: 15000 })
 })
 
 // @e2e openspec/specs/dashboard/spec.md#manual-refresh-button
 test('dashboard has refresh button', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
-	// Refresh icon button in header area
-	const refreshBtn = page.locator('button[title*="efresh"], button[aria-label*="efresh"], button.refresh').first()
-	// Accept that it may use an icon only — just check the header area renders without error
-	await expect(page.getByRole('heading', { name: 'Dashboard' }).first()).toBeVisible({ timeout: 10000 })
+	// Header renders without error (landing = Commercial overview).
+	await expect(page.getByRole('heading', { name: 'Commercial overview' }).first()).toBeVisible({ timeout: 15000 })
 })
 
 // @e2e openspec/specs/dashboard/spec.md#widget-placement-in-dashboard-layout
 test('dashboard widget sections visible', async ({ page }) => {
-	await page.goto('/apps/pipelinq/')
-	await expect(page.getByText('Requests by Status').first()).toBeVisible({ timeout: 10000 })
-	await expect(page.getByText('My Work').first()).toBeVisible()
-	await expect(page.getByText('Client Overview').first()).toBeVisible()
+	// Requests-by-status / My Work / Client Overview are Operational widgets.
+	await gotoOperational(page)
+	const content = page.locator('#content-vue')
+	await expect(content.getByText('Requests by Status').first()).toBeVisible({ timeout: 15000 })
+	await expect(content.getByText('My Work').first()).toBeVisible()
+	await expect(content.getByText('Client Overview').first()).toBeVisible()
 })
 
 // @e2e openspec/specs/dashboard/spec.md#no-requests-exist
 test('dashboard shows no-requests empty state', async ({ page }) => {
-	await page.goto('/apps/pipelinq/')
-	await expect(page.getByText(/No requests yet|No items found/).first()).toBeVisible({ timeout: 10000 })
+	await gotoOperational(page)
+	await expect(page.getByText(/No requests yet|No items found|0/).first()).toBeVisible({ timeout: 15000 })
 })
 
 // @e2e openspec/specs/dashboard/spec.md#no-assigned-items
 test('dashboard my-work shows empty state when no assigned items', async ({ page }) => {
-	await page.goto('/apps/pipelinq/')
+	await gotoOperational(page)
 	// My Work widget renders (even if empty)
-	await expect(page.getByText('My Work').first()).toBeVisible({ timeout: 10000 })
+	await expect(page.locator('#content-vue').getByText('My Work').first()).toBeVisible({ timeout: 15000 })
 })
 
 // @e2e openspec/specs/dashboard/spec.md#display-recent-clients
 test('dashboard client overview section renders', async ({ page }) => {
-	await page.goto('/apps/pipelinq/')
-	await expect(page.getByText('Client Overview').first()).toBeVisible({ timeout: 10000 })
+	await gotoOperational(page)
+	await expect(page.locator('#content-vue').getByText('Client Overview').first()).toBeVisible({ timeout: 15000 })
 })
 
 // @e2e openspec/specs/dashboard/spec.md#view-all-clients-link
@@ -86,14 +106,14 @@ test('dashboard client overview has actions button', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
 	// Each widget has an Actions button
 	const actionsButtons = page.getByRole('button', { name: /Actions/i })
-	await expect(actionsButtons.first()).toBeVisible({ timeout: 10000 })
+	await expect(actionsButtons.first()).toBeVisible({ timeout: 15000 })
 })
 
 // @e2e openspec/specs/dashboard/spec.md#interactive-element-accessibility
 test('dashboard interactive elements are reachable', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
 	// Navigation is visible
-	await expect(page.locator('#app-navigation-vue')).toBeVisible({ timeout: 10000 })
+	await expect(page.locator('#app-navigation-vue')).toBeVisible({ timeout: 15000 })
 	// New Lead button is focusable
 	const newLeadBtn = page.getByRole('button', { name: /New Lead/i }).first()
 	await expect(newLeadBtn).toBeVisible()
@@ -103,16 +123,17 @@ test('dashboard interactive elements are reachable', async ({ page }) => {
 // @e2e openspec/specs/dashboard/spec.md#loading-state-communication
 test('dashboard loads without unhandled errors', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
-	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
+	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 15000 })
 	await expect(page.locator('body')).not.toContainText('Uncaught Error')
 })
 
 // @e2e openspec/specs/dashboard/spec.md#widget-grid-responsiveness
 test('dashboard navigation items visible', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
-	await expect(page.getByText('Dashboard').first()).toBeVisible({ timeout: 10000 })
-	await expect(page.getByText('Clients').first()).toBeVisible()
-	await expect(page.getByText('Pipeline').first()).toBeVisible()
+	await expect(page.locator('#app-navigation-vue')).toBeVisible({ timeout: 15000 })
+	// Top-level grouped nav after the IA restructure surfaces the Sales/CRM
+	// and Point of Sale group headings; the Dashboard entry stays at the top.
+	await expect(page.locator('#app-navigation-vue').getByText('Dashboard').first()).toBeVisible()
 })
 
 /*

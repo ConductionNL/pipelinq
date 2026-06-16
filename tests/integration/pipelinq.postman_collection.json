@@ -347,7 +347,7 @@
       ],
       "body": {
        "mode": "raw",
-       "raw": "{\n  \"name\": \"NEWMAN Client\",\n  \"type\": \"organization\"\n}"
+       "raw": "{\n  \"name\": \"NEWMAN Client\",\n  \"type\": \"organization\",\n  \"contactsUid\": \"newman-client-uid-0001\"\n}"
       },
       "url": {
        "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{clientSchema}}",
@@ -471,7 +471,7 @@
       ],
       "body": {
        "mode": "raw",
-       "raw": "{\n  \"name\": \"NEWMAN Client v2\",\n  \"type\": \"organization\"\n}"
+       "raw": "{\n  \"name\": \"NEWMAN Client v2\",\n  \"type\": \"organization\",\n  \"contactsUid\": \"newman-client-uid-0001\"\n}"
       },
       "url": {
        "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{clientSchema}}/{{clientId}}",
@@ -1270,7 +1270,7 @@
       ],
       "body": {
        "mode": "raw",
-       "raw": "{\n  \"name\": \"NEWMAN Contact\"\n}"
+       "raw": "{\n  \"name\": \"NEWMAN Contact\",\n  \"contactsUid\": \"newman-contact-uid-0001\"\n}"
       },
       "url": {
        "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{contactSchema}}",
@@ -1394,7 +1394,7 @@
       ],
       "body": {
        "mode": "raw",
-       "raw": "{\n  \"name\": \"NEWMAN Contact v2\"\n}"
+       "raw": "{\n  \"name\": \"NEWMAN Contact v2\",\n  \"contactsUid\": \"newman-contact-uid-0001\"\n}"
       },
       "url": {
        "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{contactSchema}}/{{contactId}}",

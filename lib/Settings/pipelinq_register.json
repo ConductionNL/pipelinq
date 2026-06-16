@@ -362,12 +362,9 @@
                 ],
                 "to": "won",
                 "description": "Close the lead as won. Authorization: assignee or a member of the sales group.",
-                "authorization": {
-                  "field": "assignee",
-                  "groups": [
-                    "sales"
-                  ]
-                }
+                "authorization": [
+                  "sales"
+                ]
               },
               "lose": {
                 "from": [
@@ -375,12 +372,9 @@
                 ],
                 "to": "lost",
                 "description": "Close the lead as lost. Authorization: assignee or a member of the sales group.",
-                "authorization": {
-                  "field": "assignee",
-                  "groups": [
-                    "sales"
-                  ]
-                }
+                "authorization": [
+                  "sales"
+                ]
               }
             }
           },
@@ -779,22 +773,16 @@
                 ],
                 "to": "in_progress",
                 "description": "Pick up the request for handling. Authorization: the assignee or a member of the sales group.",
-                "authorization": {
-                  "field": "assignee",
-                  "groups": [
-                    "sales"
-                  ]
-                }
+                "authorization": [
+                  "sales"
+                ]
               },
               "complete": {
                 "from": [
                   "in_progress"
                 ],
                 "to": "completed",
-                "description": "Resolve the request successfully. Authorization: the assignee.",
-                "authorization": {
-                  "field": "assignee"
-                }
+                "description": "Resolve the request successfully. Authorization: the assignee (enforced by OpenRegister per-object owner RBAC; no extra group gate)."
               },
               "reject": {
                 "from": [
@@ -803,22 +791,16 @@
                 ],
                 "to": "rejected",
                 "description": "Reject the request. Authorization: the assignee or a member of the sales group.",
-                "authorization": {
-                  "field": "assignee",
-                  "groups": [
-                    "sales"
-                  ]
-                }
+                "authorization": [
+                  "sales"
+                ]
               },
               "convert": {
                 "from": [
                   "in_progress"
                 ],
                 "to": "converted",
-                "description": "Convert the request into a case (Procest). Authorization: the assignee.",
-                "authorization": {
-                  "field": "assignee"
-                }
+                "description": "Convert the request into a case (Procest). Authorization: the assignee (enforced by OpenRegister per-object owner RBAC; no extra group gate)."
               }
             }
           }
@@ -945,7 +927,7 @@
             "recipients": [
               {
                 "kind": "field",
-                "field": "assignee"
+                "field": "assignedTo"
               }
             ],
             "subject": {
@@ -975,22 +957,16 @@
                 ],
                 "to": "in_progress",
                 "description": "Begin handling the complaint. Authorization: the assignee or a member of the sales group.",
-                "authorization": {
-                  "field": "assignee",
-                  "groups": [
-                    "sales"
-                  ]
-                }
+                "authorization": [
+                  "sales"
+                ]
               },
               "resolve": {
                 "from": [
                   "in_progress"
                 ],
                 "to": "resolved",
-                "description": "Resolve the complaint to the customer's satisfaction. Authorization: the assignee.",
-                "authorization": {
-                  "field": "assignee"
-                }
+                "description": "Resolve the complaint to the customer's satisfaction. Authorization: the assignee (enforced by OpenRegister per-object owner RBAC; no extra group gate)."
               },
               "reject": {
                 "from": [
@@ -999,12 +975,9 @@
                 ],
                 "to": "rejected",
                 "description": "Reject the complaint as unfounded or out of scope. Authorization: the assignee or a member of the sales group.",
-                "authorization": {
-                  "field": "assignee",
-                  "groups": [
-                    "sales"
-                  ]
-                }
+                "authorization": [
+                  "sales"
+                ]
               }
             }
           }
@@ -1662,6 +1635,10 @@
               "nl": "Inkomende oproep van {{client}}",
               "en": "Incoming call from {{client}}"
             },
+            "message": {
+              "nl": "{{client}} is een contact in Pipelinq. Openen in Nextcloud?",
+              "en": "{{client}} is a contact in Pipelinq. Open it in Nextcloud?"
+            },
             "actions": [
               {
                 "label": {
@@ -1710,6 +1687,62 @@
               "nl": "Inkomende e-mail van {{client}}",
               "en": "Incoming email from {{client}}"
             },
+            "message": {
+              "nl": "{{client}} is een contact in Pipelinq. E-mail openen in Nextcloud?",
+              "en": "{{client}} is a contact in Pipelinq. Open the email in Nextcloud?"
+            },
+            "actions": [
+              {
+                "label": {
+                  "nl": "Klant openen",
+                  "en": "Open client"
+                },
+                "primary": true,
+                "target": {
+                  "kind": "object-detail",
+                  "object": {
+                    "kind": "relation",
+                    "field": "client"
+                  }
+                }
+              }
+            ]
+          },
+          "incomingChat": {
+            "trigger": {
+              "type": "created",
+              "filter": {
+                "field": "channel",
+                "operator": "equals",
+                "value": "chat"
+              }
+            },
+            "enabled": true,
+            "originApp": "pipelinq",
+            "channels": [
+              "nc-notification",
+              "web-push"
+            ],
+            "recipients": [
+              {
+                "kind": "field",
+                "field": "agent"
+              },
+              {
+                "kind": "groups",
+                "groups": [
+                  "sales"
+                ]
+              }
+            ],
+            "subject": {
+              "nl": "Inkomend chatbericht van {{client}}",
+              "en": "Incoming chat from {{client}}"
+            },
+            "message": {
+              "nl": "{{client}} is een contact in Pipelinq. Gesprek openen in Nextcloud?",
+              "en": "{{client}} is a contact in Pipelinq. Open the conversation in Nextcloud?"
+            },
             "actions": [
               {
                 "label": {
@@ -1744,7 +1777,7 @@
             "recipients": [
               {
                 "kind": "field",
-                "field": "assignee"
+                "field": "assigneeUserId"
               }
             ],
             "subject": {
@@ -1764,7 +1797,7 @@
             "recipients": [
               {
                 "kind": "field",
-                "field": "assignee"
+                "field": "assigneeUserId"
               }
             ],
             "subject": {
@@ -2219,12 +2252,9 @@
                 ],
                 "to": "confirmed",
                 "description": "Confirm a draft or parked cart. Authorization: the cashier who owns the transaction, a member of the POS group, or an admin. The server recomputes totals and rejects an empty cart.",
-                "authorization": {
-                  "field": "cashier",
-                  "groups": [
-                    "pos"
-                  ]
-                },
+                "authorization": [
+                  "pos"
+                ],
                 "requires": "OCA\\Pipelinq\\Lifecycle\\PosTransactionConfirmGuard"
               },
               "settle": {
@@ -2233,12 +2263,9 @@
                 ],
                 "to": "settled",
                 "description": "Mark a confirmed transaction as paid. Authorization: the cashier, a POS-group member, or an admin.",
-                "authorization": {
-                  "field": "cashier",
-                  "groups": [
-                    "pos"
-                  ]
-                },
+                "authorization": [
+                  "pos"
+                ],
                 "requires": "OCA\\Pipelinq\\Lifecycle\\PosTransactionAccessGuard"
               },
               "park": {
@@ -2247,12 +2274,9 @@
                 ],
                 "to": "parked",
                 "description": "Park a draft cart for later. Authorization: the cashier, a POS-group member, or an admin.",
-                "authorization": {
-                  "field": "cashier",
-                  "groups": [
-                    "pos"
-                  ]
-                },
+                "authorization": [
+                  "pos"
+                ],
                 "requires": "OCA\\Pipelinq\\Lifecycle\\PosTransactionAccessGuard"
               },
               "resume": {
@@ -2261,12 +2285,9 @@
                 ],
                 "to": "draft",
                 "description": "Resume a parked cart to draft. Authorization: the cashier, a POS-group member, or an admin.",
-                "authorization": {
-                  "field": "cashier",
-                  "groups": [
-                    "pos"
-                  ]
-                },
+                "authorization": [
+                  "pos"
+                ],
                 "requires": "OCA\\Pipelinq\\Lifecycle\\PosTransactionAccessGuard"
               },
               "refund": {
@@ -2276,11 +2297,9 @@
                 ],
                 "to": "refunded",
                 "description": "Refund / void a confirmed or settled transaction. Authorization: a POS manager (member of the configured manager group) or an admin only.",
-                "authorization": {
-                  "groups": [
-                    "pos_managers"
-                  ]
-                },
+                "authorization": [
+                  "pos_managers"
+                ],
                 "requires": "OCA\\Pipelinq\\Lifecycle\\PosTransactionRefundGuard"
               }
             }
@@ -2659,11 +2678,9 @@
                 ],
                 "to": "completed",
                 "description": "Confirm a pending refund (emits reversal + stock events). Authorization: a POS manager or admin only. The cumulative over-refund cap is enforced and amounts are recomputed server-side.",
-                "authorization": {
-                  "groups": [
-                    "pos_managers"
-                  ]
-                },
+                "authorization": [
+                  "pos_managers"
+                ],
                 "requires": "OCA\\Pipelinq\\Lifecycle\\PosRefundManagerGuard"
               },
               "reject": {
@@ -2672,11 +2689,9 @@
                 ],
                 "to": "rejected",
                 "description": "Reject a pending refund. Authorization: a POS manager or admin only.",
-                "authorization": {
-                  "groups": [
-                    "pos_managers"
-                  ]
-                },
+                "authorization": [
+                  "pos_managers"
+                ],
                 "requires": "OCA\\Pipelinq\\Lifecycle\\PosRefundManagerGuard"
               }
             }
@@ -4861,6 +4876,7 @@
         },
         "name": "Gemeente Demo — Entity Notes Showcase",
         "type": "organization",
+        "contactsUid": "demo-gemeente-001",
         "email": "info@gemeente-demo.nl",
         "phone": "085-9999999",
         "industry": "Lokale overheid",
