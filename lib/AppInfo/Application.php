@@ -65,6 +65,7 @@ use OCA\Pipelinq\Service\AvailabilityService;
 use OCA\Pipelinq\Service\BookingService;
 use OCA\Pipelinq\Service\WalkInQueueService;
 use Throwable;
+use OCP\App\IAppManager;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -450,6 +451,51 @@ class Application extends App implements IBootstrap
             $appConfig   = $this->getContainer()->get(IAppConfig::class);
             $shillinqUrl = trim($appConfig->getValueString('pipelinq', 'shillinq_app_url', ''));
             $initialState->provideInitialState('shillinq_app_url', $shillinqUrl);
+
+            $manifestPath = __DIR__.'/../../src/manifest.json';
+            $dependencies = [];
+            if (is_file($manifestPath) === true) {
+                $manifest     = json_decode((string) file_get_contents($manifestPath), associative: true);
+                $dependencies = is_array($manifest['dependencies'] ?? null) ? $manifest['dependencies'] : [];
+            }
+
+            $appManager     = $this->getContainer()->get(IAppManager::class);
+            $appStoreLookup = [];
+            try {
+                $appFetcher = $server->get(\OC\App\AppStore\Fetcher\AppFetcher::class);
+                foreach ($appFetcher->get() as $storeApp) {
+                    if (!empty($storeApp['id']) && !empty($storeApp['categories'])) {
+                        $appStoreLookup[$storeApp['id']] = (array) $storeApp['categories'];
+                    }
+                }
+            } catch (\Throwable) {
+            }
+
+            $dependencyStatus = [];
+            foreach ($dependencies as $depId) {
+                $onDisk   = false;
+                $category = 'organization';
+                try {
+                    $appManager->getAppPath($depId);
+                    $onDisk  = true;
+                    $appInfo = \OC_App::getAppInfo($depId);
+                    if (is_array($appInfo) && !empty($appInfo['category'])) {
+                        $category = (string) ((array) $appInfo['category'])[0];
+                    }
+                } catch (\Throwable) {
+                    if (!empty($appStoreLookup[$depId][0])) {
+                        $category = (string) $appStoreLookup[$depId][0];
+                    }
+                }
+
+                $dependencyStatus[$depId] = [
+                    'installed' => $onDisk,
+                    'enabled'   => $appManager->isEnabledForUser($depId),
+                    'category'  => $category,
+                ];
+            }
+
+            $initialState->provideInitialState('dependency_statuses', $dependencyStatus);
         } catch (\Exception $e) {
             // Initial state unavailable — Features tab will fall back to [].
         }//end try
