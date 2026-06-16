@@ -25,6 +25,7 @@ use OCA\OpenRegister\Event\DeepLinkRegistrationEvent;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
+use OCA\Pipelinq\Event\TimeEntryApprovedEvent;
 use OCA\Pipelinq\Adapter\AzureDataLakeExportAdapter;
 use OCA\Pipelinq\Adapter\BigQueryExportAdapter;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
@@ -48,8 +49,24 @@ use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
 use OCA\Pipelinq\Listener\DealCreatedListener;
 use OCA\Pipelinq\Listener\DealUpdatedListener;
 use OCA\Pipelinq\Listener\DeepLinkRegistrationListener;
+use OCA\Pipelinq\Listener\ExpenseApprovalListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
+use OCA\Pipelinq\Listener\PosTransactionCompletedListener;
+use OCA\Pipelinq\Listener\ProjectCreationListener;
+use OCA\Pipelinq\Listener\BerichtenboxZaakStatusListener;
+use OCA\Pipelinq\Listener\ProjectPhaseStatusListener;
+use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
+use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
+use OCA\Pipelinq\Listener\SourceRecordChangedListener;
+use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Mcp\PipelinqToolProvider;
+use OCA\Pipelinq\Service\AppointmentCalendarLeafProvider;
+use OCA\Pipelinq\Service\AppointmentEmailService;
+use OCA\Pipelinq\Service\AppointmentPaymentProvider;
+use OCA\Pipelinq\Service\AvailabilityService;
+use OCA\Pipelinq\Service\BookingService;
+use OCA\Pipelinq\Service\WalkInQueueService;
+use Throwable;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -110,6 +127,82 @@ class Application extends App implements IBootstrap
             event: ObjectUpdatedEvent::class,
             listener: DealUpdatedListener::class
         );
+        $context->registerEventListener(
+            event: ObjectCreatedEvent::class,
+            listener: ProjectCreationListener::class
+        );
+        $context->registerEventListener(
+            event: ObjectUpdatedEvent::class,
+            listener: ProjectPhaseStatusListener::class
+        );
+
+        // Burgerportaal / MijnOverheid Berichtenbox bridge:
+        // listen for zaak status transitions and queue an outbound
+        // Berichtenbox message via BerichtenboxService
+        // (burgerportaal-mijnoverheid-bridge / REQ-OUTBOUND-001).
+        $context->registerEventListener(
+            event: ObjectUpdatedEvent::class,
+            listener: BerichtenboxZaakStatusListener::class
+        );
+
+        // Shillinq WIP integration: time-entry approval dispatches a CloudEvent
+        // to the configured shillinq webhook (pipelinq-time-to-shillinq-wip /
+        // REQ-WIP-001). The listener is idempotent and a no-op when the
+        // shillinq_wip_webhook_url app-config value is unset.
+        $context->registerEventListener(
+            event: TimeEntryApprovedEvent::class,
+            listener: TimeApprovalListener::class
+        );
+
+        // Loyalty program: POS transaction completion fires the loyalty engine
+        // (loyalty-program / REQ-LOY-002). The listener filters to posTransaction
+        // entities + completed/settled/paid statuses, catches all errors, and never
+        // throws so the POS flow is unaffected (REQ-LOY-002-05).
+        $context->registerEventListener(
+            event: ObjectCreatedEvent::class,
+            listener: PosTransactionCompletedListener::class
+        );
+        $context->registerEventListener(
+            event: ObjectUpdatedEvent::class,
+            listener: PosTransactionCompletedListener::class
+        );
+
+        // Expense → Shillinq AP voucher dispatch on status=approved transitions
+        // (pipelinq-expense-to-shillinq-ap / REQ-AP-002). Listener is filtered
+        // to the expense schema and idempotent on apSyncStatus=synced so a
+        // re-fired update event cannot create a duplicate AP voucher.
+        $context->registerEventListener(
+            event: ObjectCreatedEvent::class,
+            listener: ExpenseApprovalListener::class
+        );
+        $context->registerEventListener(
+            event: ObjectUpdatedEvent::class,
+            listener: ExpenseApprovalListener::class
+        );
+
+        // SLA engine (sla-engine-and-escalation / REQ-001, REQ-003, REQ-007):
+        // initialise slaStatus on tracked-object create, re-evaluate /
+        // pause / resume / escalate on update. Listener exceptions are
+        // swallowed (REQ-007 fail-safe).
+        $context->registerEventListener(
+            event: ObjectCreatedEvent::class,
+            listener: SlaObjectCreatedListener::class
+        );
+        $context->registerEventListener(
+            event: ObjectUpdatedEvent::class,
+            listener: SlaObjectUpdatedListener::class
+        );
+
+        // MDM: recompute a Master Entity's golden record when a linked
+        // source-record is created or updated (REQ-MDM-001).
+        $context->registerEventListener(
+            event: ObjectCreatedEvent::class,
+            listener: SourceRecordChangedListener::class
+        );
+        $context->registerEventListener(
+            event: ObjectUpdatedEvent::class,
+            listener: SourceRecordChangedListener::class
+        );
 
         $context->registerDashboardWidget(DealsOverviewWidget::class);
         $context->registerDashboardWidget(MyLeadsWidget::class);
@@ -126,6 +219,20 @@ class Application extends App implements IBootstrap
         $context->registerServiceAlias(
             'OCA\\OpenRegister\\Mcp\\IMcpToolProvider::pipelinq',
             PipelinqToolProvider::class
+        );
+
+        // Wave-4 external-API ports (low-volume families).
+        //
+        // - Logius Berichtenbox (burgerportaal-mijnoverheid-bridge):
+        //   the BBK 1.7 dispatch/verify/mailbox-check seam. The
+        //   existing concrete `LogiusConnector` HTTP client is
+        //   intentionally NOT bound here — it stays available for a
+        //   downstream activation step to wire in. The default
+        //   binding is the dormant log-only adapter so test +
+        //   staging environments never contact Logius.
+        $context->registerServiceAlias(
+            \OCA\Pipelinq\Service\External\Berichtenbox\BerichtenboxAdapterInterface::class,
+            \OCA\Pipelinq\Service\External\Berichtenbox\LogBerichtenboxAdapter::class
         );
 
         $this->registerPosLifecycleGuards(context: $context);
@@ -265,6 +372,16 @@ class Application extends App implements IBootstrap
             }
 
             $initialState->provideInitialState('features_roadmap_features', $features);
+
+            // Resolve the "Timesheet approval" billing entry point through the
+            // ADR-019 integration registry: the configured shillinq deployment
+            // URL (shillinq_app_url) overrides the hard-coded
+            // /index.php/apps/shillinq/ menu href in src/main.js
+            // (pipelinq-bookkeeping-to-shillinq / REQ-PBTS-003). Empty when the
+            // integration is unconfigured, in which case the manifest default wins.
+            $appConfig   = $this->getContainer()->get(IAppConfig::class);
+            $shillinqUrl = trim($appConfig->getValueString('pipelinq', 'shillinq_app_url', ''));
+            $initialState->provideInitialState('shillinq_app_url', $shillinqUrl);
         } catch (\Exception $e) {
             // Initial state unavailable — Features tab will fall back to [].
         }
@@ -298,5 +415,106 @@ class Application extends App implements IBootstrap
         } catch (\Exception $e) {
             // Comments manager not available — skip registration.
         }//end try
+
+        $this->wireAppointmentEmailSeam();
+
+        // Wire the walk-in queue rebalance seam (member 09) into the booking
+        // lifecycle so a Booking completion fires WalkInQueueService::rebalance.
+        try {
+            $bookingService     = $this->getContainer()->get(BookingService::class);
+            $walkInQueueService = $this->getContainer()->get(WalkInQueueService::class);
+            $bookingService->setWalkInQueueRebalance(service: $walkInQueueService);
+        } catch (\Exception $e) {
+            // Booking / walk-in surfaces not available — leave rebalance seam unset.
+        }
+
+        $this->wireAppointmentCalendarSeam();
+        $this->wireAppointmentPaymentSeam();
     }//end boot()
+
+    /**
+     * Inject {@see AppointmentEmailService} into {@see BookingService} as the
+     * confirmation email seam (member 07 of the appointment-booking chain).
+     *
+     * BookingService is constructed without the email provider and uses a
+     * setter seam so the lifecycle code never depends on the email transport;
+     * we wire the provider at boot so confirmation emails go out automatically
+     * on booking create / confirm.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/appointment-booking-07-email-confirmation-reminder/specs/appointment-booking/spec.md#req-apt-006
+     */
+    private function wireAppointmentEmailSeam(): void
+    {
+        try {
+            $container      = $this->getContainer();
+            $bookingService = $container->get(BookingService::class);
+            $emailProvider  = $container->get(AppointmentEmailService::class);
+            $bookingService->setEmailProvider(provider: $emailProvider);
+        } catch (Throwable $e) {
+            // OpenRegister or one of the collaborators is unavailable — the
+            // seam stays null and bookings still transition; this is the
+            // documented graceful-degradation path from BookingService.
+        }
+    }//end wireAppointmentEmailSeam()
+
+    /**
+     * Inject {@see AppointmentCalendarLeafProvider} into the appointment
+     * services as the calendar-leaf seam (member 10 of the chain).
+     *
+     * AvailabilityService consumes the seam in `getBlockedTimes` to merge
+     * leaf-synced staff calendar VEVENTs into the slot computation;
+     * BookingService consumes it after every confirmed-transition to push
+     * the booking to staff calendars (REQ-APT-018). Setter seams keep the
+     * lifecycle code independent of the calendar transport; we wire the
+     * provider at boot so the merge + push happen automatically.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
+     */
+    private function wireAppointmentCalendarSeam(): void
+    {
+        try {
+            $container           = $this->getContainer();
+            $calendarProvider    = $container->get(AppointmentCalendarLeafProvider::class);
+            $availabilityService = $container->get(AvailabilityService::class);
+            $bookingService      = $container->get(BookingService::class);
+            $availabilityService->setCalendarProvider(provider: $calendarProvider);
+            $bookingService->setCalendarProvider(provider: $calendarProvider);
+        } catch (Throwable $e) {
+            // OpenRegister or one of the collaborators is unavailable — the
+            // seam stays null and bookings still transition; this is the
+            // documented graceful-degradation path from BookingService.
+        }
+    }//end wireAppointmentCalendarSeam()
+
+    /**
+     * Inject {@see AppointmentPaymentProvider} into {@see BookingService} as
+     * the no-show + late-cancellation fee payment seam (member 08 of the
+     * appointment-booking chain).
+     *
+     * The provider routes the BookingService::chargeNoShowFee /
+     * chargeCancellationFee invocations through openconnector. The seam is
+     * optional: when either service cannot be resolved BookingService keeps
+     * recording the fee intent in statusHistory but skips the transport.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-011a
+     */
+    private function wireAppointmentPaymentSeam(): void
+    {
+        try {
+            $container       = $this->getContainer();
+            $bookingService  = $container->get(BookingService::class);
+            $paymentProvider = $container->get(AppointmentPaymentProvider::class);
+            $bookingService->setPaymentProvider(provider: $paymentProvider);
+        } catch (Throwable $e) {
+            // OpenRegister or one of the collaborators is unavailable — the
+            // seam stays null and bookings still transition; the fee is then
+            // recorded in statusHistory only, never transported.
+        }
+    }//end wireAppointmentPaymentSeam()
 }//end class

@@ -49,20 +49,19 @@ class SettingsService
         'product_schema',
         'productCategory_schema',
         'leadProduct_schema',
-        'intakeForm_schema',
-        'intakeSubmission_schema',
-        'automation_schema',
-        'automationLog_schema',
         'contactmoment_schema',
         'task_schema',
         'emailLink_schema',
         'calendarLink_schema',
         'relationship_schema',
-        'survey_schema',
-        'surveyResponse_schema',
         'queue_schema',
         'skill_schema',
         'agentProfile_schema',
+        'project_schema',
+        'projectPhase_schema',
+        'projectTask_schema',
+        'projectActivity_schema',
+        'timeEntry_schema',
         'posTransaction_schema',
         'posTransactionLine_schema',
         'receiptTemplate_schema',
@@ -70,10 +69,34 @@ class SettingsService
         'refundReason_schema',
         'posRefund_schema',
         'posRefundLine_schema',
+        'cashShift_schema',
+        'cashDrop_schema',
+        'cashCount_schema',
+        'cashDiff_schema',
+        // POS staff PIN + role permissions (pos-staff-pin-permissions).
+        'posRole_schema',
+        'posStaff_schema',
+        // POS end-of-day bookkeeping post pipeline (pos-end-of-day-bookkeeping-post).
+        // The journal entry + GL chart delegate to shillinq via the ADR-019 integration
+        // registry (pipelinq-bookkeeping-to-shillinq); only the operational posZReport
+        // (cash-drawer / takings reconciliation) stays owned by pipelinq.
+        'posZReport_schema',
+        // POS split-tender (multi-method payment on a single transaction; pos-split-tender).
+        'posTenderType_schema',
+        'posTender_schema',
+        // POS Kassakoppeling-compliant Audit Log (pos-kassakoppeling-audit).
+        'kassakoppelingAuditLog_schema',
         'exportDestination_schema',
         'exportJob_schema',
         'exportRun_schema',
         'exportSchemaSnapshot_schema',
+        // AVG/GDPR data-subject-request workflow (avg-verzoeken-workflow).
+        'avgVerzoek_schema',
+        'termijnEvent_schema',
+        'bewijsItem_schema',
+        'exportBundle_schema',
+        'weigering_schema',
+        'redactieActie_schema',
         'complaint_sla_service',
         'complaint_sla_product',
         'complaint_sla_communication',
@@ -86,6 +109,45 @@ class SettingsService
         'portalDelegation_schema',
         'portalAuditEvent_schema',
         'portalTenantConfig_schema',
+        // Loyalty programme schemas (loyalty-program).
+        'loyaltyProgramme_schema',
+        'pointsRule_schema',
+        'tierRule_schema',
+        'klantLoyaltyAccount_schema',
+        'pointsLedgerEntry_schema',
+        'redemptionOption_schema',
+        'redemption_schema',
+        'giftCard_schema',
+        'giftCardTransaction_schema',
+        // Expense → Shillinq AP integration (pipelinq-expense-to-shillinq-ap).
+        'expense_schema',
+        // Billing categories (billable-categories-and-tags) — REQ-BCT-001.
+        'billingCategory_schema',
+        // Appointment booking schemas (appointment-booking 01..11).
+        'service_schema',
+        'resource_schema',
+        'booking_schema',
+        'walkInTicket_schema',
+        'availabilityCache_schema',
+        // Berichtenbox bridge (burgerportaal-mijnoverheid-bridge).
+        'berichtenboxMessage_schema',
+        'berichtenboxReply_schema',
+        'berichtenboxTemplate_schema',
+        'mailboxResolution_schema',
+        'deliveryAuditLog_schema',
+        // SLA engine (sla-engine-and-escalation) — separate register identifier.
+        'sla_register',
+        'sla_policy_schema',
+        'sla_breach_event_schema',
+        // Optional callback schema (callback-management) — referenced by SLA sweep job.
+        'callback_schema',
+        // Supplier commercial master (pipelinq-product-vendor-master) — keyed by
+        // contactsUid; read by ProductVendorProviderService + IngestProductVendorMaster.
+        'supplier_schema',
+        // Contract & renewal tracking (contract-renewal-tracking).
+        'contract_schema',
+        // Renewal engine tuning (contract-renewal-tracking).
+        'renewal_default_lead_time_days',
     ];
 
     /**
@@ -129,6 +191,66 @@ class SettingsService
         'receipt_printer_host'                     => '',
         'receipt_printer_port'                     => '9100',
         'receipt_default_template'                 => '',
+        'shillinq_ledger_webhook_url'              => '',
+        'shillinq_wip_webhook_url'                 => '',
+        // Shillinq AP webhook for expense voucher dispatch (REQ-AP-004). Empty disables the integration.
+        'shillinq_ap_webhook_url'                  => '',
+        // Shillinq journal-entry registry endpoint for the POS-day journal raise
+        // (pipelinq-bookkeeping-to-shillinq / REQ-PBTS-001). The ADR-019 integration
+        // registry resolves the shillinq.JournalEntry.raise dispatch through this
+        // webhook URL; empty or non-HTTPS disables the integration. Replaces the
+        // retired hard-coded pos_eod.shillinq_endpoint POST to /api/JournalEntry.
+        'shillinq_journal_webhook_url'             => '',
+        // Base URL of the configured shillinq deployment, used to resolve the
+        // "Timesheet approval" billing entry point through the registry instead of
+        // the hard-coded /index.php/apps/shillinq/ path (REQ-PBTS-003).
+        'shillinq_app_url'                         => '',
+        // Lead-management: number of inactivity days before a lead is flagged stale.
+        // Default mirrors REQ-LM-002 (14 days). Tenant-tunable through admin settings.
+        // spec: openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002.
+        'lead_stale_threshold_days'                => '14',
+        // BI export + data-warehouse sink — admin settings (bi-export-and-data-warehouse-sink#14.1).
+        'export.retention_days'                    => '365',
+        'export.default_compression'               => 'none',
+        'export.failure_notification_email'        => '',
+        'export.at_risk_warning_hours'             => '24',
+        // POS end-of-day Z-report generation + alerting (pos-end-of-day-bookkeeping-post).
+        // The journal raise itself now delegates to shillinq via shillinq_journal_webhook_url
+        // (pipelinq-bookkeeping-to-shillinq); these keys only tune the operational
+        // Z-report close and the failure alert.
+        'pos_eod.z_report_time'                    => '23:59',
+        'pos_eod.alert_email'                      => '',
+        'pos_eod.max_retry_attempts'               => '5',
+        // xWiki integration (xwiki-integration). The default direct URL points at
+        // the dev compose stack so a fresh install renders content without manual
+        // configuration; admins can override or clear it to disable the fallback.
+        'xwiki_default_space'                      => '',
+        'xwiki_cache_ttl'                          => '300',
+        'xwiki_direct_url'                         => '',
+        // SLA engine (sla-engine-and-escalation) — admin settings.
+        // @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-008
+        'sla_sweep_interval_seconds'               => '300',
+        'sla_business_hours_start'                 => '09:00',
+        'sla_business_hours_end'                   => '17:00',
+        'sla_default_holiday_calendar'             => 'nl-feestdagen-rijksoverheid',
+        'sla_tenant_holiday_overrides'             => '',
+        'sla_bevrijdingsdag_yearly'                => 'false',
+        'sla_actor_fallback'                       => '',
+        'sla_actor_assignee'                       => '',
+        'sla_actor_team-lead'                      => '',
+        'sla_actor_manager'                        => '',
+        'sla_actor_director'                       => '',
+        'sla_resolved_statuses'                    => 'resolved,completed,closed,afgehandeld',
+        // AVG (GDPR data-subject request) workflow tunables.
+        'avg_dpia_threshold'                       => '10',
+        'avg_evidence_retention_days'              => '30',
+        'avg_download_validity_days'               => '30',
+        'avg_pki_cert_path'                        => '',
+        'avg_evidence_sources'                     => '',
+        'avg_dpia_auto_procest'                    => 'no',
+        'avg_handler_group'                        => '',
+        'avg_teamlead_group'                       => '',
+        'avg_dpo_group'                            => '',
     ];
 
     /**

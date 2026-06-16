@@ -8,6 +8,31 @@
 		draggable="true"
 		@dragstart="onDragStart"
 		@click="$emit('open', item)">
+		<!-- Quick actions menu (top-right) — kept off the keyboard tab-order
+		     for the card itself; CnRowActions handles its own focus.        -->
+		<div class="pipeline-card__menu" @click.stop>
+			<NcActions :force-menu="true" :inline="0" :aria-label="t('pipelinq', 'Card actions')">
+				<NcActionButton @click="openMoveMenu">
+					<template #icon>
+						<ArrowRightThick :size="18" />
+					</template>
+					{{ t('pipelinq', 'Move to stage') }}
+				</NcActionButton>
+				<NcActionButton @click="openAssignMenu">
+					<template #icon>
+						<AccountPlus :size="18" />
+					</template>
+					{{ t('pipelinq', 'Assign') }}
+				</NcActionButton>
+				<NcActionButton @click="openPriorityMenu">
+					<template #icon>
+						<Flag :size="18" />
+					</template>
+					{{ t('pipelinq', 'Priority') }}
+				</NcActionButton>
+			</NcActions>
+		</div>
+
 		<!-- Compact single-row layout: badge → title → meta → age -->
 		<div class="pipeline-card__row">
 			<span class="entity-badge" :class="'badge--' + entityType">
@@ -16,7 +41,10 @@
 			<span class="pipeline-card__title">
 				{{ item.title }}
 			</span>
-			<span v-if="item.priority && item.priority !== 'normal'" class="priority-indicator" :class="'priority--' + item.priority" />
+			<span v-if="item.priority && item.priority !== 'normal'"
+				class="priority-indicator"
+				:class="'priority--' + item.priority"
+				:title="getPriorityLabel(item.priority)" />
 			<span v-if="item.value" class="card-meta">
 				{{ formatNumber(item.value) }}
 			</span>
@@ -24,39 +52,75 @@
 				{{ item.assignee }}
 			</span>
 			<span v-if="daysAge > 0" class="aging-badge" :class="agingClass">
-				{{ agingLabel }}
+				{{ agingLabel }} {{ t('pipelinq', 'in stage') }}
+			</span>
+			<span v-if="isStaleItem" class="stale-badge" :title="t('pipelinq', 'No activity for over {days} days', { days: staleThreshold })">
+				{{ daysAge }}d {{ t('pipelinq', 'stale') }}
 			</span>
 			<span v-if="item.expectedCloseDate" class="card-date" :class="{ 'card-date--overdue': isOverdue }">
+				<ClockAlert v-if="isOverdue" :size="14" class="card-date__icon" />
 				{{ formatDate(item.expectedCloseDate) }}
 			</span>
 		</div>
-		<!-- Quick actions row (click.stop prevents card navigation) -->
-		<div class="pipeline-card__actions" @click.stop>
+
+		<!-- Sub-menus rendered as dialogs when activated; keep markup compact. -->
+		<NcDialog
+			v-if="moveMenuOpen"
+			:name="t('pipelinq', 'Move to stage')"
+			@closing="moveMenuOpen = false">
+			<div class="dialog-list">
+				<NcButton
+					v-for="stage in stages"
+					:key="stage.name"
+					type="secondary"
+					class="dialog-list__item"
+					@click="onPickStage(stage)">
+					{{ stage.name }}
+				</NcButton>
+			</div>
+		</NcDialog>
+
+		<NcDialog
+			v-if="assignMenuOpen"
+			:name="t('pipelinq', 'Assign user')"
+			@closing="assignMenuOpen = false">
 			<NcSelect
-				v-model="selectedStage"
-				:options="stageOptions"
-				:clearable="false"
-				:placeholder="t('pipelinq', 'Stage')"
-				:input-label="t('pipelinq', 'Stage')"
-				class="quick-select"
-				@input="onStageChange" />
-			<NcSelect
-				v-model="selectedAssignee"
+				v-model="pickedAssignee"
 				:options="userOptions"
 				:clearable="true"
-				:placeholder="t('pipelinq', 'Assign')"
-				:input-label="t('pipelinq', 'Assign')"
-				class="quick-select"
-				@input="onAssignChange" />
-		</div>
+				:input-label="t('pipelinq', 'Assignee')"
+				@input="onPickAssignee" />
+		</NcDialog>
+
+		<NcDialog
+			v-if="priorityMenuOpen"
+			:name="t('pipelinq', 'Set priority')"
+			@closing="priorityMenuOpen = false">
+			<div class="dialog-list">
+				<NcButton
+					v-for="p in priorityOptions"
+					:key="p.value"
+					:type="item.priority === p.value ? 'primary' : 'secondary'"
+					class="dialog-list__item"
+					@click="onPickPriority(p.value)">
+					{{ p.label }}
+				</NcButton>
+			</div>
+		</NcDialog>
 	</div>
 </template>
 
 <script>
-import { NcSelect } from '@nextcloud/vue'
+import { NcSelect, NcActions, NcActionButton, NcButton, NcDialog } from '@nextcloud/vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import ArrowRightThick from 'vue-material-design-icons/ArrowRightThick.vue'
+import AccountPlus from 'vue-material-design-icons/AccountPlus.vue'
+import Flag from 'vue-material-design-icons/Flag.vue'
+import ClockAlert from 'vue-material-design-icons/ClockAlert.vue'
 import { getPriorityLabel, getPriorityColor, getStatusLabel } from '../../services/requestStatus.js'
-import { getDaysAge, isStale, getAgingClass, formatAge } from '../../services/pipelineUtils.js'
+import { getDaysAge, getAgingClass, formatAge, getStaleThreshold } from '../../services/pipelineUtils.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import { useSettingsStore } from '../../store/modules/settings.js'
 // eslint-disable-next-line no-unused-vars -- used in template via Options API fallthrough
 import { formatNumber, formatDate as formatLocaleDate } from '../../services/localeUtils.js'
 
@@ -67,6 +131,14 @@ export default {
 	name: 'PipelineCard',
 	components: {
 		NcSelect,
+		NcActions,
+		NcActionButton,
+		NcButton,
+		NcDialog,
+		ArrowRightThick,
+		AccountPlus,
+		Flag,
+		ClockAlert,
 	},
 	props: {
 		item: {
@@ -91,6 +163,10 @@ export default {
 			users: [],
 			selectedStage: null,
 			selectedAssignee: null,
+			moveMenuOpen: false,
+			assignMenuOpen: false,
+			priorityMenuOpen: false,
+			pickedAssignee: null,
 		}
 	},
 	computed: {
@@ -101,6 +177,24 @@ export default {
 			return useObjectStore()
 		},
 		/**
+		 * Pinia settings store — holds the stale-threshold configuration
+		 * surfaced through the existing settings endpoint.
+		 *
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+		 */
+		settingsStore() {
+			return useSettingsStore()
+		},
+		/**
+		 * Resolved stale threshold (days) from settings; defaults to 14 if
+		 * the store hasn't been initialised yet.
+		 *
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+		 */
+		staleThreshold() {
+			return getStaleThreshold(this.settingsStore.config)
+		},
+		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-36
 		 */
 		currentColumnValue() {
@@ -108,10 +202,15 @@ export default {
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-004
 		 */
 		isOverdue() {
 			if (this.entityType === 'lead') {
 				if (!this.item.expectedCloseDate) return false
+				if (this.item.status === 'won' || this.item.status === 'lost') return false
+				// Cards in stages flagged isClosed never show overdue
+				const currentStage = this.stages.find(s => s.name === this.item.stage)
+				if (currentStage && currentStage.isClosed) return false
 				return new Date(this.item.expectedCloseDate) < new Date()
 			}
 			if (this.entityType === 'request') {
@@ -139,8 +238,15 @@ export default {
 		agingLabel() {
 			return formatAge(this.daysAge)
 		},
+		/**
+		 * Stale = no activity for `staleThreshold` days. Driven by the
+		 * settings store, not a hardcoded constant.
+		 *
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+		 */
 		isStaleItem() {
-			return isStale(this.item, this.entityType)
+			if (this.entityType !== 'lead') return false
+			return this.daysAge >= this.staleThreshold
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-46
@@ -153,6 +259,19 @@ export default {
 		 */
 		userOptions() {
 			return this.users
+		},
+		/**
+		 * Priority levels exposed in the quick action menu.
+		 *
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-001
+		 */
+		priorityOptions() {
+			return [
+				{ value: 'low', label: t('pipelinq', 'Low') },
+				{ value: 'normal', label: t('pipelinq', 'Normal') },
+				{ value: 'high', label: t('pipelinq', 'High') },
+				{ value: 'urgent', label: t('pipelinq', 'Urgent') },
+			]
 		},
 	},
 	watch: {
@@ -222,10 +341,16 @@ export default {
 				delete updated._entityType
 				delete updated._schemaSlug
 				updated[this.columnProperty] = newStage
+				const targetStage = this.stages.find(s => s.name === newStage)
+				if (targetStage && typeof targetStage.order === 'number' && this.columnProperty === 'stage') {
+					updated.stageOrder = targetStage.order
+				}
 				await this.objectStore.saveObject(this.entityType, updated)
+				showSuccess(t('pipelinq', 'Lead moved to {stage}', { stage: newStage }))
 				this.$emit('refresh')
-			} catch {
+			} catch (e) {
 				this.selectedStage = this.currentColumnValue
+				showError(t('pipelinq', 'Failed to move lead. Please try again.'))
 			}
 		},
 
@@ -241,9 +366,84 @@ export default {
 				delete updated._schemaSlug
 				updated.assignee = newAssignee || ''
 				await this.objectStore.saveObject(this.entityType, updated)
+				showSuccess(t('pipelinq', 'Assignee updated'))
 				this.$emit('refresh')
-			} catch {
+			} catch (e) {
 				this.selectedAssignee = this.item.assignee
+				showError(t('pipelinq', 'Failed to update assignee.'))
+			}
+		},
+
+		/**
+		 * Open the move-to-stage dialog.
+		 *
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-001
+		 */
+		openMoveMenu() {
+			this.moveMenuOpen = true
+		},
+
+		/**
+		 * Open the assignee picker dialog.
+		 *
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-001
+		 */
+		openAssignMenu() {
+			this.pickedAssignee = this.item.assignee || null
+			this.assignMenuOpen = true
+		},
+
+		/**
+		 * Open the priority picker dialog.
+		 *
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-001
+		 */
+		openPriorityMenu() {
+			this.priorityMenuOpen = true
+		},
+
+		/**
+		 * Handle stage selection from the move dialog.
+		 *
+		 * @param {object} stage The selected stage.
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-001
+		 */
+		async onPickStage(stage) {
+			this.moveMenuOpen = false
+			await this.onStageChange(stage.name)
+		},
+
+		/**
+		 * Handle assignee selection from the assign dialog.
+		 *
+		 * @param {string|null} uid The selected user id.
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-001
+		 */
+		async onPickAssignee(uid) {
+			this.assignMenuOpen = false
+			await this.onAssignChange(uid)
+		},
+
+		/**
+		 * Handle priority selection from the priority dialog. Wraps store
+		 * writes in try/catch with user-visible feedback per REQ-LM-001.
+		 *
+		 * @param {string} priority The chosen priority.
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-001
+		 */
+		async onPickPriority(priority) {
+			this.priorityMenuOpen = false
+			if (priority === this.item.priority) return
+			try {
+				const updated = { ...this.item }
+				delete updated._entityType
+				delete updated._schemaSlug
+				updated.priority = priority
+				await this.objectStore.saveObject(this.entityType, updated)
+				showSuccess(t('pipelinq', 'Priority updated'))
+				this.$emit('refresh')
+			} catch (e) {
+				showError(t('pipelinq', 'Failed to update priority.'))
 			}
 		},
 
@@ -285,8 +485,46 @@ export default {
 	background: var(--color-background-hover);
 }
 
+.pipeline-card {
+	position: relative;
+}
+
 .pipeline-card--overdue {
 	border-left: 3px solid var(--color-error);
+}
+
+.pipeline-card__menu {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	z-index: 2;
+}
+
+.stale-badge {
+	font-size: 10px;
+	font-weight: 600;
+	padding: 0 5px;
+	border-radius: 3px;
+	flex-shrink: 0;
+	background: var(--color-warning, #f59e0b);
+	color: var(--color-primary-text, #fff);
+}
+
+.card-date__icon {
+	margin-right: 2px;
+	vertical-align: middle;
+}
+
+.dialog-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 12px;
+}
+
+.dialog-list__item {
+	width: 100%;
+	justify-content: flex-start;
 }
 
 .pipeline-card__row {

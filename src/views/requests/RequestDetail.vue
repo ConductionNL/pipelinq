@@ -25,7 +25,7 @@
 		:back-route="{ name: 'Requests' }"
 		:back-label="t('pipelinq', 'Back to list')"
 		:loading="loading"
-		:sidebar="!isNew && !loading"
+		:sidebar="{ enabled: !isNew && !loading }"
 		object-type="pipelinq_request"
 		:object-id="requestId"
 		:sidebar-props="sidebarProps">
@@ -251,6 +251,15 @@
 			<ActivityTimeline :entity-type="'request'" :entity-id="requestId" />
 		</CnDetailCard>
 
+		<!--
+			Communication History — paginated contactmoment feed for this entity.
+			@spec openspec/changes/entity-notes/tasks.md#task-6.4
+		-->
+		<CommunicationHistory
+			v-if="!isNew && !loading && !editing"
+			entity-type="request"
+			:entity-id="requestId" />
+
 		<!-- Contactmoment quick-log dialog -->
 		<NcDialog
 			v-if="showContactmomentQuickLog"
@@ -291,6 +300,7 @@ import RequestForm from './RequestForm.vue'
 import RoutingSuggestionPanel from '../../components/RoutingSuggestionPanel.vue'
 import ContactmomentQuickLog from '../../components/ContactmomentQuickLog.vue'
 import ActivityTimeline from '../../components/ActivityTimeline.vue'
+import CommunicationHistory from '../../components/CommunicationHistory.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useQueuesStore } from '../../store/modules/queues.js'
 import {
@@ -313,6 +323,7 @@ export default {
 		RoutingSuggestionPanel,
 		ContactmomentQuickLog,
 		ActivityTimeline,
+		CommunicationHistory,
 	},
 	props: {
 		requestId: {

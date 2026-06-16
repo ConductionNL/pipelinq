@@ -24,7 +24,7 @@ The KCC werkplek is a composite view that orchestrates data from multiple source
 - **Kennisartikel**: OpenRegister object in the `pipelinq` register using the `kennisartikel` schema (see kennisbank spec)
 - **Taak/Terugbelverzoek**: OpenRegister object for backoffice routing and callback requests
 
-## ADDED Requirements
+## Requirements
 
 ---
 
@@ -220,10 +220,6 @@ The system MUST provide quick-action buttons for common KCC operations to minimi
 - WHEN the agent clicks "Status mededelen" on the zaak
 - THEN the system MUST display the current status in a citizen-friendly format
 - AND the agent MUST be able to mark the contactmoment as "Status informatieverzoek - afgehandeld"
-
----
-
-## ADDED Requirements
 
 ---
 
@@ -687,6 +683,8 @@ The system MUST allow agents to set their availability status, which affects que
 - AND break duration MUST be tracked for workforce reporting
 
 ---
+
+## Notes
 
 ### Current Implementation Status
 

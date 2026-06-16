@@ -1,0 +1,24 @@
+{
+	"menu": [
+		{
+			"id": "Prospects",
+			"label": "Prospects",
+			"icon": "icon-search",
+			"route": "Prospects",
+			"order": 45
+		}
+	],
+	"pages": [
+		{
+			"id": "Prospects",
+			"route": "/prospects",
+			"type": "custom",
+			"title": "Prospects",
+			"component": "ProspectsView",
+			"config": {
+				"register": "pipelinq",
+				"_note": "Full-page expansion of ProspectWidget; lib gap: no declarative type for a scored-prospect list with external-source (KvK/OpenCorporates) enrichment."
+			}
+		}
+	]
+}

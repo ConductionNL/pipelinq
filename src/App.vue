@@ -2,25 +2,11 @@
 <!-- Copyright (C) 2026 Conduction B.V. -->
 
 <!--
- Pipelinq app shell. Mounts CnAppRoot with the bundled manifest and
- the v2 kind-tagged registry prop (ADR-036); provides the
- `objectSidebarState` channel so detail pages (CnDetailPage) can drive
- a single host-rendered CnObjectSidebar through the #sidebar slot.
-
- The deprecated `customComponents` prop has been replaced by the v2
- `registry` prop (ADR-036). Each page/widget component is wrapped as
- `{ kind, component }` in src/registry.js and resolved by CnPageRenderer
- at render time. See nextcloud-vue#458 and openregister#1988.
-
- The legacy `sidebarState` channel is still provided as a no-op
- surface for any straggler view that injects it (notably the dead
- `views/clients/ClientList.vue`), but App.vue no longer renders a
- CnIndexSidebar — the lib's CnAppRoot auto-hoists CnIndexPage's
- sidebar at NcContent level, so rendering one here too produced the
- double-sidebar bug visible on every index page.
-
- The bespoke PipelineSidebar was removed with the pipeline board migration
- to the OpenRegister deck leaf. See openspec/changes/migrate-pipeline-to-deck-leaf/.
+ Pipelinq app shell. Mounts CnAppRoot with the bundled manifest and the v2
+ kind-tagged registry prop (ADR-036); provides `objectSidebarState` so detail
+ pages drive a single host-rendered CnObjectSidebar via the #sidebar slot.
+ App.vue renders no CnIndexSidebar itself — CnAppRoot auto-hoists CnIndexPage's
+ sidebar, so rendering one here too caused a double sidebar on index pages.
 
  @spec openspec/changes/pipelinq-manifest-v1/tasks.md
 -->
@@ -28,13 +14,20 @@
 	<CnAppRoot
 		:manifest="manifest"
 		:registry="registry"
-		:custom-components="customComponents"
+		:cell-widgets="cellWidgets"
 		:page-types="pageTypes"
 		app-id="pipelinq"
 		:translate="translateForApp"
 		:permissions="permissions"
 		:requires-apps="[]">
 		<template #sidebar>
+			<!--
+				Host-rendered CnObjectSidebar. Detail pages declare their tabs in
+				config.sidebar.tabs by component name; sidebarComponents resolves
+				those names to the library's integration leaves. Passing `tabs` with
+				:use-registry=false puts it in open-enum mode (manifest is the single
+				source of truth, avoids the registry-vs-tabs warning).
+			-->
 			<CnObjectSidebar
 				v-if="objectSidebarState.active"
 				:title="objectSidebarState.title"
@@ -45,6 +38,8 @@
 				:schema="objectSidebarState.schema"
 				:hidden-tabs="objectSidebarState.hiddenTabs"
 				:tabs="objectSidebarState.tabs"
+				:custom-components="sidebarComponents"
+				:use-registry="false"
 				:open="objectSidebarState.open"
 				@update:open="objectSidebarState.open = $event" />
 		</template>
@@ -54,7 +49,9 @@
 <script>
 import Vue from 'vue'
 import { translate as ncT } from '@nextcloud/l10n'
-import { CnAppRoot, CnObjectSidebar } from '@conduction/nextcloud-vue'
+import { CnAppRoot, CnObjectSidebar, builtinIntegrations } from '@conduction/nextcloud-vue'
+import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
+import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 
 export default {
 	name: 'App',
@@ -148,24 +145,33 @@ export default {
 			return window.OC?.currentUser?.permissions ?? []
 		},
 		/**
-		 * Flattened `{ name: component }` map derived from the v2 `registry`
-		 * prop, passed to CnAppRoot as the legacy `customComponents` prop.
+		 * Cell-widget registry for CnAppRoot, keyed by the `widget` id a
+		 * manifest column references (ADR-036).
 		 *
-		 * The monorepo dev build aliases @conduction/nextcloud-vue to the
-		 * local `../nextcloud-vue/src`, which may be an older version that
-		 * predates the ADR-036 v2 `registry` prop and resolves custom page
-		 * components only via `customComponents`. Without this, every
-		 * `type: "custom"` page renders blank ("[CnPageRenderer] Custom
-		 * component X not found in registry"). A v2-capable library still
-		 * prefers `registry` and treats `customComponents` as a fallback,
-		 * so passing both is safe regardless of the resolved lib version.
+		 * @return {Record<string, object>}
+		 * @spec openspec/changes/klantbeeld-360/tasks.md#task-6.1
+		 * @spec openspec/changes/klantbeeld-360/tasks.md#task-6.2
 		 */
-		customComponents() {
-			return Object.fromEntries(
-				Object.entries(this.registry)
-					.filter(([, entry]) => entry && entry.component)
-					.map(([name, entry]) => [name, entry.component]),
-			)
+		cellWidgets() {
+			return {
+				'lead-close-date': LeadCloseDateCell,
+				'lead-probability': LeadProbabilityCell,
+			}
+		},
+		/**
+		 * Component registry for the host CnObjectSidebar, keyed by component
+		 * name. Maps the library's integration tab/widget leaves so manifest
+		 * `sidebar.tabs[].component` strings resolve.
+		 *
+		 * @return {Record<string, object>}
+		 */
+		sidebarComponents() {
+			const map = {}
+			for (const i of builtinIntegrations) {
+				if (i.tab && i.tab.name) map[i.tab.name] = i.tab
+				if (i.widget && i.widget.name) map[i.widget.name] = i.widget
+			}
+			return map
 		},
 	},
 

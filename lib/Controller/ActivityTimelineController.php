@@ -63,6 +63,10 @@ class ActivityTimelineController extends Controller
         private LoggerInterface $logger,
         private ContainerInterface $container,
     ) {
+        // @PublicPage — DI constructor (not HTTP-routable). The actual auth
+        // posture for each endpoint lives on its own method attribute; this
+        // ctor is wired by the Nextcloud app framework and never serves a
+        // request.
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
 

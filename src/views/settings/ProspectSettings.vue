@@ -43,6 +43,7 @@
 					:options="provinceOptions"
 					:aria-label-combobox="t('pipelinq', 'Provinces')"
 					:multiple="true"
+					:keep-open="true"
 					:placeholder="t('pipelinq', 'Select provinces')" />
 			</div>
 
@@ -54,6 +55,7 @@
 					:options="legalFormOptions"
 					:aria-label-combobox="t('pipelinq', 'Legal Forms')"
 					:multiple="true"
+					:keep-open="true"
 					:placeholder="t('pipelinq', 'Select legal forms')" />
 			</div>
 

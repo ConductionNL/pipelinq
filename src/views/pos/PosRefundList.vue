@@ -11,6 +11,7 @@
 			:objects="objects"
 			:pagination="pagination"
 			:loading="loading"
+			:refreshing="refreshing"
 			:sort-key="sortKey"
 			:sort-order="sortOrder"
 			:selectable="true"
@@ -19,9 +20,9 @@
 			:empty-action-label="t('pipelinq', 'Nieuwe retour')"
 			@add="createNew"
 			@empty-action="createNew"
-			@refresh="refresh"
+			@refresh="onRefresh"
 			@sort="onSort"
-			@row-click="openRefund"
+			@view="openRefund"
 			@page-changed="onPageChange" />
 	</div>
 </template>
@@ -41,6 +42,11 @@ export default {
 		const objectStore = useObjectStore()
 		return useListView('posRefund', { sidebarState, objectStore })
 	},
+	data() {
+		return {
+			refreshing: false,
+		}
+	},
 	computed: {
 		/**
 		 * Columns shown on the list, in order.
@@ -52,6 +58,20 @@ export default {
 		},
 	},
 	methods: {
+		/**
+		 * Refresh handler for the Actions-menu Refresh item. Drives the
+		 * CnIndexPage `:refreshing` spinner around the underlying fetch.
+		 *
+		 * @spec exclude presentational refresh-button spinner wiring — no business logic
+		 */
+		async onRefresh() {
+			this.refreshing = true
+			try {
+				await this.refresh()
+			} finally {
+				this.refreshing = false
+			}
+		},
 		/**
 		 * Navigate to a refund's detail.
 		 *

@@ -36,6 +36,13 @@ abstract class ObjectEntity
     abstract public function getUuid(): string;
 
     /**
+     * Return the schema id/slug the object belongs to.
+     *
+     * @return string|null
+     */
+    abstract public function getSchema(): ?string;
+
+    /**
      * Return a JSON-serializable representation of the entity.
      *
      * @return array<string,mixed>

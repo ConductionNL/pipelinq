@@ -4,6 +4,8 @@
 **Capability**: pos-nl-btw-engine
 **Schema.org mapping**: `schema:Order` (posTransaction), `schema:OrderItem` (posTransactionLine)
 
+@e2e exclude server-side Dutch BTW computation engine: per-rate taxBreakdown/invoiceBreakdown computation in PosTransactionService::recalculateTotals, tax-inclusive/exclusive priceMode math, the GET /api/pos-transactions/tax-report endpoint, CloudEvent payload shape, and shillinq GL consumption — covered by PHPUnit and Newman. The TaxBreakdownCard render scenarios are data-dependent on a seeded confirmed transaction carrying breakdown data (no stable fixture) and are asserted via component/PHPUnit tests, not Playwright.
+
 **OpenSpec changes**:
 - `pos-nl-btw-engine` (archived 2026-05-31) — Dutch BTW engine on top of pos-transaction-core: per-rate `invoiceBreakdown` (GL split with Dutch descriptions) for shillinq, end-to-end tax-inclusive vs tax-exclusive computation (`priceMode`, not display-only), `GET /api/pos-transactions/tax-report` compliance endpoint, `TaxBreakdownCard.vue` (tax summary + invoice breakdown), price-mode toggle, mixed-rate seeds, PHPUnit + nl/en i18n.
 
@@ -13,6 +15,9 @@
 
 ---
 
+## Purpose
+
+Provide a server-side Dutch BTW (VAT) computation engine on top of pos-transaction-core: per-rate `taxBreakdown`/`invoiceBreakdown` (GL split with Dutch descriptions) for shillinq, end-to-end tax-inclusive vs tax-exclusive computation (`priceMode`, not display-only), a `GET /api/pos-transactions/tax-report` compliance endpoint, and a CloudEvent payload shillinq consumes for its general ledger.
 
 ## Requirements
 

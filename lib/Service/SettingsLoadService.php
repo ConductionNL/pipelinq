@@ -49,28 +49,38 @@ class SettingsLoadService
         'pipeline',
         'product',
         'productCategory',
+        'billingCategory',
         'leadProduct',
-        'intakeForm',
-        'intakeSubmission',
-        'automation',
-        'automationLog',
         'contactmoment',
         'task',
         'emailLink',
         'calendarLink',
         'relationship',
-        'survey',
-        'surveyResponse',
         'queue',
         'skill',
         'agentProfile',
+        // Project ledger schemas (project-to-shillinq-ledger integration).
+        'project',
+        'projectPhase',
         'posTransaction',
         'posTransactionLine',
+        // POS split-tender schemas (pos-split-tender). Without these two slugs
+        // the `posTenderType_schema` app-config key is never populated on import,
+        // and PosTenderService::config() throws OCSNotFoundException -> the
+        // GET /pos/tender-types endpoint 500s. Mapping them here provisions the
+        // config on every (re-)import so the endpoint returns a 200 list.
+        'posTenderType',
+        'posTender',
         'receiptTemplate',
         'receiptPrintLog',
         'refundReason',
         'posRefund',
         'posRefundLine',
+        // POS cash-drawer (pos-cash-management).
+        'cashShift',
+        'cashDrop',
+        'cashCount',
+        'cashDiff',
         // Customer portal schemas (live in the separate pipelinq-portal register).
         'portalAccount',
         'portalSession',
@@ -82,6 +92,44 @@ class SettingsLoadService
         'exportJob',
         'exportRun',
         'exportSchemaSnapshot',
+        // Loyalty programme schemas (loyalty-program).
+        'loyaltyProgramme',
+        'pointsRule',
+        'tierRule',
+        'klantLoyaltyAccount',
+        'pointsLedgerEntry',
+        'redemptionOption',
+        'redemption',
+        'giftCard',
+        'giftCardTransaction',
+        // CTI screen-pop / click-to-dial adapter schemas (cti-screenpop-adapter).
+        'ctiAdapterConfig',
+        'ctiEventLog',
+        'ctiAgentPresence',
+        // SLA engine (sla-engine-and-escalation) — separate sla register.
+        'slaPolicy',
+        'slaBreachEvent',
+        // AVG/GDPR data-subject-request workflow (avg-verzoeken-workflow).
+        'avgVerzoek',
+        'termijnEvent',
+        'bewijsItem',
+        'exportBundle',
+        'weigering',
+        'redactieActie',
+        // Master-data-management golden-record governance (master-data-management).
+        'masterEntity',
+        'sourceRecord',
+        'trustConfiguration',
+        'mergeOperation',
+        'syncQueueItem',
+        // Supplier commercial master (pipelinq-product-vendor-master). Without
+        // this slug the `supplier_schema` app-config key is never populated on
+        // import, so ProductVendorProviderService::resolveSupplier() and the
+        // IngestProductVendorMaster repair step cannot locate supplier objects.
+        'supplier',
+        // Contract & renewal tracking (contract-renewal-tracking) — recurring-revenue
+        // contracts with renewal-window detection and churn metrics.
+        'contract',
     ];
 
     /**
@@ -90,6 +138,13 @@ class SettingsLoadService
      * @var string
      */
     private const PORTAL_REGISTER_SLUG = 'pipelinq-portal';
+
+    /**
+     * Slug of the cross-cutting SLA engine register.
+     *
+     * @var string
+     */
+    private const SLA_REGISTER_SLUG = 'sla';
 
     /**
      * Constructor.
@@ -167,6 +222,25 @@ class SettingsLoadService
         );
         if ($portalRegisterId !== null) {
             $this->appConfig->setValueString(Application::APP_ID, 'portal_register', (string) $portalRegisterId);
+        }
+
+        $slaRegisterId = $this->resolveRegisterIdBySlug(
+            registers: ($importResult['registers'] ?? []),
+            slug: self::SLA_REGISTER_SLUG
+        );
+        if ($slaRegisterId !== null) {
+            $this->appConfig->setValueString(Application::APP_ID, 'sla_register', (string) $slaRegisterId);
+        }
+
+        // SLA schema config keys diverge from the auto-derived `<slug>_schema`
+        // naming because the engine expects `sla_policy_schema` and
+        // `sla_breach_event_schema` rather than `slaPolicy_schema`.
+        if (isset($schemaMap['slaPolicy']) === true && $schemaMap['slaPolicy'] !== null) {
+            $this->appConfig->setValueString(Application::APP_ID, 'sla_policy_schema', (string) $schemaMap['slaPolicy']);
+        }
+
+        if (isset($schemaMap['slaBreachEvent']) === true && $schemaMap['slaBreachEvent'] !== null) {
+            $this->appConfig->setValueString(Application::APP_ID, 'sla_breach_event_schema', (string) $schemaMap['slaBreachEvent']);
         }
 
         foreach (self::SCHEMA_SLUGS as $slug) {

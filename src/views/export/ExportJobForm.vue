@@ -22,6 +22,7 @@
 					:placeholder="t('pipelinq', 'Choose schemas to export…')"
 					label="label"
 					:multiple="true"
+					:keep-open="true"
 					@input="onSchemasSelect" />
 				<NcSelect
 					:value="selectedDestination"
@@ -69,7 +70,7 @@
 					v-if="isEdit"
 					type="tertiary"
 					:disabled="busy"
-					@click="testRun">
+					@click="openTestRunModal">
 					{{ t('pipelinq', 'Test run') }}
 				</NcButton>
 				<NcButton type="primary" :disabled="busy || !model.name" @click="save">
@@ -80,6 +81,10 @@
 				</NcButton>
 			</template>
 		</CnDetailCard>
+		<ExportTestRunModal
+			v-if="testRunOpen"
+			:job-id="jobId"
+			@close="testRunOpen = false" />
 	</CnDetailPage>
 </template>
 
@@ -88,7 +93,7 @@ import { NcButton, NcTextField, NcSelect } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../store/modules/object.js'
-import { exportApi } from '../../services/exportApi.js'
+import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
 
 // The pipelinq schemas the export pipeline may read.
 const EXPORTABLE_SCHEMAS = ['client', 'contact', 'lead', 'request', 'task', 'contactmoment', 'complaint', 'product']
@@ -103,6 +108,7 @@ export default {
 		NcSelect,
 		CnDetailPage,
 		CnDetailCard,
+		ExportTestRunModal,
 	},
 	props: {
 		exportJobId: {
@@ -123,6 +129,7 @@ export default {
 			busy: false,
 			destinations: [],
 			allowlistText: '',
+			testRunOpen: false,
 			model: {
 				name: '',
 				description: '',
@@ -297,22 +304,17 @@ export default {
 			}
 		},
 		/**
-		 * Trigger a non-destructive test run.
+		 * Open the dedicated test-run modal, which auto-executes the run.
+		 *
+		 * Surfaces validation status, sample row count, optional sample file
+		 * download link and any errors per REQ-BIE-003.
 		 */
-		async testRun() {
-			this.busy = true
-			try {
-				const result = await exportApi.testRun(this.jobId)
-				if (result.success) {
-					showSuccess(this.t('pipelinq', 'Test run succeeded ({rows} sample rows)', { rows: result.sample_rows }))
-				} else {
-					showError(this.t('pipelinq', 'Test run failed: {error}', { error: (result.errors || []).join('; ') }))
-				}
-			} catch (e) {
-				showError(e.message || this.t('pipelinq', 'Test run failed'))
-			} finally {
-				this.busy = false
+		openTestRunModal() {
+			if (!this.jobId) {
+				showError(this.t('pipelinq', 'Save the job before running a test'))
+				return
 			}
+			this.testRunOpen = true
 		},
 		/**
 		 * Navigate back to the job list.

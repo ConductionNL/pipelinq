@@ -11,6 +11,7 @@
 			:objects="objects"
 			:pagination="pagination"
 			:loading="loading"
+			:refreshing="refreshing"
 			:sort-key="sortKey"
 			:sort-order="sortOrder"
 			:include-columns="visibleColumns"
@@ -18,11 +19,11 @@
 			:empty-action-label="t('pipelinq', 'New destination')"
 			@add="createNew"
 			@empty-action="createNew"
-			@refresh="refresh"
+			@refresh="onRefresh"
 			@sort="onSort"
 			@row-click="openDestination"
 			@page-changed="onPageChange">
-			<template #actions="{ row }">
+			<template #row-actions="{ row }">
 				<NcButton type="tertiary" :disabled="busyId === row.id" @click.stop="testConnection(row)">
 					{{ t('pipelinq', 'Test connection') }}
 				</NcButton>
@@ -53,6 +54,7 @@ export default {
 	data() {
 		return {
 			busyId: null,
+			refreshing: false,
 		}
 	},
 	computed: {
@@ -66,6 +68,20 @@ export default {
 		},
 	},
 	methods: {
+		/**
+		 * Refresh handler for the Actions-menu Refresh item. Drives the
+		 * CnIndexPage `:refreshing` spinner around the underlying fetch.
+		 *
+		 * @spec exclude presentational refresh-button spinner wiring — no business logic
+		 */
+		async onRefresh() {
+			this.refreshing = true
+			try {
+				await this.refresh()
+			} finally {
+				this.refreshing = false
+			}
+		},
 		/**
 		 * Navigate to a destination's edit form.
 		 *

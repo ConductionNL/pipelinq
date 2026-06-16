@@ -1,6 +1,17 @@
 # kennisbank
 
-**Status:** Planned
+**Status:** Deprecated — superseded by the xWiki integration.
+
+> The bespoke in-app kennisbank (Pipelinq's original Markdown article
+> editor + `kennisartikel` / `kenniscategorie` / `kennisfeedback` schemas)
+> was removed as part of the `migrate-kennisbank-to-xwiki-leaf` change.
+> Knowledge content now lives in xWiki and is surfaced via the OpenRegister
+> `integration-xwiki` leaf when configured, with the in-app
+> `xwiki-integration` proxy (this change) providing a graceful fallback
+> for tenants whose leaf environment is not yet wired. See
+> `openspec/changes/xwiki-integration/proposal.md` and
+> `openspec/changes/migrate-kennisbank-to-xwiki-leaf/proposal.md` for
+> details.
 
 ## Overview
 

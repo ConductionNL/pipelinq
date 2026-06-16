@@ -25,6 +25,15 @@ return [
         ['name' => 'settings#saveOAuth', 'url' => '/api/settings/oauth', 'verb' => 'POST'],
         ['name' => 'settings#saveMcp', 'url' => '/api/settings/mcp', 'verb' => 'POST'],
 
+        // Admin — Shillinq project ledger manual re-dispatch (project-to-shillinq-ledger).
+        ['name' => 'ledger#retry', 'url' => '/api/ledger/retry/{projectId}', 'verb' => 'POST'],
+
+        // Admin — Shillinq WIP manual re-dispatch (pipelinq-time-to-shillinq-wip / REQ-WIP-003).
+        ['name' => 'timeEntryWip#retry', 'url' => '/api/time-entries/{uuid}/wip-retry', 'verb' => 'POST'],
+
+        // Admin — Shillinq AP voucher manual re-dispatch (pipelinq-expense-to-shillinq-ap / REQ-AP-003 Scenario 11).
+        ['name' => 'shillinqAp#retry', 'url' => '/api/expenses/{id}/shillinq-ap/retry', 'verb' => 'POST'],
+
         // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g. CnSupportDialog)
         ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
         ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
@@ -40,11 +49,23 @@ return [
         ['name' => 'contactSync#import', 'url' => '/api/contacts-sync/import', 'verb' => 'POST'],
         ['name' => 'contactSync#writeBack', 'url' => '/api/contacts-sync/write-back', 'verb' => 'POST'],
 
+        // Email matching (leaf-first email-calendar-sync) — per-user settings + trigger + status.
+        // The matching job links Nextcloud Mail messages to CRM entities via the OR `email` leaf.
+        ['name' => 'emailSync#getSettings', 'url' => '/api/sync/email/settings', 'verb' => 'GET'],
+        ['name' => 'emailSync#saveSettings', 'url' => '/api/sync/email/settings', 'verb' => 'POST'],
+        ['name' => 'emailSync#trigger', 'url' => '/api/sync/email/trigger', 'verb' => 'POST'],
+        ['name' => 'emailSync#getStatus', 'url' => '/api/sync/email/status', 'verb' => 'GET'],
+
         // Entity notes
         ['name' => 'notes#list', 'url' => '/api/notes/{objectType}/{objectId}', 'verb' => 'GET'],
         ['name' => 'notes#create', 'url' => '/api/notes/{objectType}/{objectId}', 'verb' => 'POST'],
         ['name' => 'notes#deleteAll', 'url' => '/api/notes/{objectType}/{objectId}', 'verb' => 'DELETE'],
         ['name' => 'notes#deleteSingle', 'url' => '/api/notes/single/{noteId}', 'verb' => 'DELETE'],
+
+        // Entity activity feed — per-entity contactmoment + note REST aggregation
+        // (entity-notes change). camelCase slug matches EntityActivityController
+        // class name; placed BEFORE any wildcard {slug} routes (ADR-003-backend).
+        ['name' => 'entityActivity#index', 'url' => '/api/activity/{entityType}/{entityId}', 'verb' => 'GET'],
 
         // Request channels (camelCase slug matches RequestChannelController class name)
         ['name' => 'requestChannel#index', 'url' => '/api/settings/request-channels', 'verb' => 'GET'],
@@ -60,26 +81,50 @@ return [
         ['name' => 'prospectSettings#index', 'url' => '/api/prospect-settings', 'verb' => 'GET'],
         ['name' => 'prospectSettings#update', 'url' => '/api/prospect-settings', 'verb' => 'PUT'],
 
-        // Public intake forms (no auth; camelCase slug matches PublicFormController class name)
-        ['name' => 'publicForm#show', 'url' => '/api/public/forms/{id}', 'verb' => 'GET'],
-        ['name' => 'publicForm#submit', 'url' => '/api/public/forms/{id}/submit', 'verb' => 'POST'],
-
-        // Intake form management (authenticated; camelCase slug matches IntakeFormController class name)
-        ['name' => 'intakeForm#embed', 'url' => '/api/forms/{id}/embed', 'verb' => 'GET'],
-        ['name' => 'intakeForm#export', 'url' => '/api/forms/{id}/submissions/export', 'verb' => 'GET'],
+        // Intake forms migrated to the OpenRegister forms leaf (NC Forms app).
+        // See openspec/changes/migrate-forms-to-forms-leaf — public submission
+        // uses the Forms app's own public links; in-app authoring/management
+        // routes are retired.
         // Rapportage / reporting — specific routes before wildcard catch-all.
+        // Klantbeeld 360 — cross-module analytics summary (must precede any wildcard `{slug}` routes).
+        ['name' => 'analytics#summary', 'url' => '/api/analytics/summary', 'verb' => 'GET'],
+        // Dashboard analytics & Navi (openspec/changes/dashboard).
+        ['name' => 'analytics#overview', 'url' => '/api/analytics/overview', 'verb' => 'GET'],
+        ['name' => 'analytics#trends',   'url' => '/api/analytics/trends',   'verb' => 'GET'],
+        ['name' => 'analytics#funnels',  'url' => '/api/analytics/funnels',  'verb' => 'GET'],
+        // Commercial dashboard KPI overview (openspec/changes/commercial-dashboard).
+        ['name' => 'analytics#commercial', 'url' => '/api/analytics/commercial', 'verb' => 'GET'],
+        ['name' => 'navi#query',         'url' => '/api/navi/query',         'verb' => 'POST'],
+        // SLA engine — attainment dashboard endpoint (sla-engine-and-escalation / REQ-006).
+        ['name' => 'slaAttainment#attainment', 'url' => '/api/sla/attainment', 'verb' => 'GET'],
+        // SLA engine — admin-gated policy CRUD with justification enforcement (REQ-009).
+        ['name' => 'slaPolicy#create', 'url' => '/api/sla/policies',      'verb' => 'POST'],
+        ['name' => 'slaPolicy#update', 'url' => '/api/sla/policies/{id}', 'verb' => 'PUT'],
         ['name' => 'reporting#getKpis',     'url' => '/api/rapportage/kpis',     'verb' => 'GET'],
         ['name' => 'reporting#getChannels', 'url' => '/api/rapportage/channels', 'verb' => 'GET'],
         ['name' => 'reporting#getAgents',   'url' => '/api/rapportage/agents',   'verb' => 'GET'],
         ['name' => 'reporting#getSla',      'url' => '/api/rapportage/sla',      'verb' => 'GET'],
         ['name' => 'reporting#updateSla',   'url' => '/api/rapportage/sla',      'verb' => 'PUT'],
         ['name' => 'reporting#exportCsv',   'url' => '/api/rapportage/export',   'verb' => 'GET'],
-        // Public survey endpoints (unauthenticated; camelCase slug matches PublicSurveyController class name)
-        ['name' => 'publicSurvey#show', 'url' => '/public/survey/{token}', 'verb' => 'GET'],
-        ['name' => 'publicSurvey#submit', 'url' => '/public/survey/{token}/respond', 'verb' => 'POST'],
+        // Lead-management analytics endpoint (REQ-LM-006). Non-admin accessible.
+        ['name' => 'rapportage#getPipelineStats', 'url' => '/api/rapportage/pipeline-stats', 'verb' => 'GET'],
+        // Surveys migrated to the OpenRegister forms leaf (NC Forms app) —
+        // see openspec/changes/migrate-forms-to-forms-leaf.
 
         // Contactmomenten (permission-checked delete)
         ['name' => 'contactmoment#destroy', 'url' => '/api/contactmomenten/{id}', 'verb' => 'DELETE'],
+
+        // CTI screen-pop / click-to-dial adapter endpoints (cti-screenpop-adapter).
+        // Routes are listed BEFORE the SPA / wildcard catch-alls (ADR-016).
+        ['name' => 'cti#webhook',          'url' => '/api/cti/webhook/{platform}',         'verb' => 'POST'],
+        ['name' => 'cti#screenPop',        'url' => '/api/cti/screen-pop',                 'verb' => 'POST'],
+        ['name' => 'cti#clickToDial',      'url' => '/api/cti/click-to-dial',              'verb' => 'POST'],
+        ['name' => 'cti#disposition',      'url' => '/api/cti/contactmoment/{id}/disposition', 'verb' => 'POST'],
+        ['name' => 'cti#attachRecording',  'url' => '/api/cti/contactmoment/{id}/recording',   'verb' => 'POST'],
+        ['name' => 'cti#getConfig',        'url' => '/api/cti/config',                     'verb' => 'GET'],
+        ['name' => 'cti#updateConfig',     'url' => '/api/cti/config',                     'verb' => 'PUT'],
+        ['name' => 'cti#testConnection',   'url' => '/api/cti/test-connection',            'verb' => 'GET'],
+        ['name' => 'cti#eventLog',         'url' => '/api/cti/event-log',                  'verb' => 'GET'],
 
         // Callback management endpoints
         ['name' => 'callback#attempt', 'url' => '/api/callbacks/{id}/attempts', 'verb' => 'POST'],
@@ -118,6 +163,17 @@ return [
         ['name' => 'posTransaction#park',    'url' => '/api/pos-transactions/{id}/park',    'verb' => 'POST'],
         ['name' => 'posTransaction#resume',  'url' => '/api/pos-transactions/{id}/resume',  'verb' => 'POST'],
 
+        // POS customer-link surface (search, attach, detach, history) — pos-customer-link.
+        // Static /search route precedes the wildcard /{id} routes per Symfony ordering.
+        ['name' => 'posCustomer#search',  'url' => '/api/pos-customers/search',          'verb' => 'GET'],
+        ['name' => 'posCustomer#history', 'url' => '/api/pos-customers/{id}/history',    'verb' => 'GET'],
+        ['name' => 'posCustomer#attach',  'url' => '/api/pos-transactions/{id}/customer', 'verb' => 'POST'],
+        ['name' => 'posCustomer#detach',  'url' => '/api/pos-transactions/{id}/customer', 'verb' => 'DELETE'],
+
+        // POS customer-link admin settings (admin-only via #[AuthorizedAdminSetting]).
+        ['name' => 'posCustomerSettings#index',  'url' => '/api/admin/pos-customer-settings', 'verb' => 'GET'],
+        ['name' => 'posCustomerSettings#update', 'url' => '/api/admin/pos-customer-settings', 'verb' => 'POST'],
+
         // POS product catalogue resolution (barcode lookup + server-authoritative price).
         ['name' => 'productCatalog#lookupBarcode', 'url' => '/api/products/barcode-lookup', 'verb' => 'POST'],
         ['name' => 'productCatalog#resolvePrice',  'url' => '/api/products/resolve-price',  'verb' => 'POST'],
@@ -134,6 +190,83 @@ return [
         // object API; these are the manager-gated confirm/reject lifecycle actions.
         ['name' => 'posRefund#confirm', 'url' => '/api/pos-refunds/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'posRefund#reject',  'url' => '/api/pos-refunds/{id}/reject',  'verb' => 'POST'],
+
+        // POS cash-drawer lifecycle (camelCase slug matches CashShiftController class name).
+        // cashShift / cashDrop / cashCount / cashDiff CRUD reads are handled by OpenRegister's
+        // generic object API; these are the server-authoritative lifecycle actions. The static
+        // open route precedes every {id} wildcard route below it (ADR-016).
+        ['name' => 'cashShift#open',    'url' => '/api/pos-shifts',                   'verb' => 'POST'],
+        ['name' => 'cashShift#drop',    'url' => '/api/pos-shifts/{id}/drop',         'verb' => 'POST'],
+        ['name' => 'cashShift#count',   'url' => '/api/pos-shifts/{id}/count',        'verb' => 'POST'],
+        ['name' => 'cashShift#approve', 'url' => '/api/pos-shifts/{id}/diff/approve', 'verb' => 'POST'],
+        ['name' => 'cashShift#reject',  'url' => '/api/pos-shifts/{id}/diff/reject',  'verb' => 'POST'],
+
+        // POS staff + role permissions (pos-staff-pin-permissions). Static auth
+        // route precedes the {id} wildcard routes for the same resource.
+        ['name' => 'posStaff#authenticate', 'url' => '/api/pos/staff/auth', 'verb' => 'POST'],
+
+        ['name' => 'posRole#index',   'url' => '/api/pos/roles',         'verb' => 'GET'],
+        ['name' => 'posRole#create',  'url' => '/api/pos/roles',         'verb' => 'POST'],
+        ['name' => 'posRole#show',    'url' => '/api/pos/roles/{id}',    'verb' => 'GET'],
+        ['name' => 'posRole#update',  'url' => '/api/pos/roles/{id}',    'verb' => 'PUT'],
+        ['name' => 'posRole#destroy', 'url' => '/api/pos/roles/{id}',    'verb' => 'DELETE'],
+
+        ['name' => 'posStaff#index',   'url' => '/api/pos/staff',        'verb' => 'GET'],
+        ['name' => 'posStaff#create',  'url' => '/api/pos/staff',        'verb' => 'POST'],
+        ['name' => 'posStaff#show',    'url' => '/api/pos/staff/{id}',   'verb' => 'GET'],
+        ['name' => 'posStaff#update',  'url' => '/api/pos/staff/{id}',   'verb' => 'PUT'],
+        ['name' => 'posStaff#destroy', 'url' => '/api/pos/staff/{id}',   'verb' => 'DELETE'],
+
+        // Per-staff sales report (pos-staff-pin-permissions REQ-PSP-008).
+        ['name' => 'posStaffReport#staffSales', 'url' => '/api/pos/reports/staff-sales', 'verb' => 'GET'],
+
+        // POS payment provider adapter (pos-payment-provider-adapter).
+        // - /api/pos-payments/{id}/* are the per-transaction payment actions (cashier-facing).
+        // - /api/payment-providers* are the admin-only credential + connection management endpoints.
+        // - /api/pos-payment-webhook/{provider} is the public, signature-validated webhook
+        //   inbound from Mollie / CCV / Adyen / Stripe (REQ-PAY-006).
+        // Specific routes precede any wildcard {path} catch-all (ADR-016).
+        ['name' => 'posPayment#initiate', 'url' => '/api/pos-payments/{id}/initiate', 'verb' => 'POST'],
+        ['name' => 'posPayment#capture',  'url' => '/api/pos-payments/{id}/capture',  'verb' => 'POST'],
+        ['name' => 'posPayment#refund',   'url' => '/api/pos-payments/{id}/refund',   'verb' => 'POST'],
+        ['name' => 'posPayment#index',    'url' => '/api/payment-providers',          'verb' => 'GET'],
+        ['name' => 'posPayment#show',     'url' => '/api/payment-providers/{name}',   'verb' => 'GET'],
+        ['name' => 'posPayment#update',   'url' => '/api/payment-providers/{name}',   'verb' => 'PUT'],
+        ['name' => 'posPayment#test',     'url' => '/api/payment-providers/{name}/test', 'verb' => 'POST'],
+        ['name' => 'posPayment#webhook',  'url' => '/api/pos-payment-webhook/{provider}', 'verb' => 'POST'],
+
+        // POS end-of-day journal raise (pipelinq-bookkeeping-to-shillinq / REQ-PBTS-001).
+        // Manager-gated raise / re-raise of a posZReport's journal entry in shillinq
+        // through the ADR-019 integration registry. The GL chart + journal are owned
+        // by shillinq; pipelinq only sends the Z-report business facts. The retired
+        // /api/admin/pos-bookkeeping/config GL-mapping admin endpoint is removed.
+        ['name' => 'posBookkeeping#post',         'url' => '/api/pos-bookkeeping/post',         'verb' => 'POST'],
+
+        // POS split-tender (pos-split-tender). Admin tender-type CRUD +
+        // cashier-facing per-transaction tender CRUD + validate-only helper
+        // for the settle preflight. Specific routes precede the {id}/{tenderId}
+        // wildcards (ADR-016). Tender-type CRUD is admin-only via
+        // #[AuthorizedAdminSetting]; transaction-scoped routes are #[NoAdminRequired].
+        ['name' => 'posTender#indexTypes',  'url' => '/api/pos/tender-types',        'verb' => 'GET'],
+        ['name' => 'posTender#createType',  'url' => '/api/pos/tender-types',        'verb' => 'POST'],
+        ['name' => 'posTender#showType',    'url' => '/api/pos/tender-types/{id}',   'verb' => 'GET'],
+        ['name' => 'posTender#updateType',  'url' => '/api/pos/tender-types/{id}',   'verb' => 'PUT'],
+        ['name' => 'posTender#destroyType', 'url' => '/api/pos/tender-types/{id}',   'verb' => 'DELETE'],
+        ['name' => 'posTender#summary',     'url' => '/api/pos-transactions/{transactionId}/tenders/summary', 'verb' => 'GET'],
+        ['name' => 'posTender#indexTenders','url' => '/api/pos-transactions/{transactionId}/tenders',         'verb' => 'GET'],
+        ['name' => 'posTender#addTender',   'url' => '/api/pos-transactions/{transactionId}/tenders',         'verb' => 'POST'],
+        ['name' => 'posTender#removeTender','url' => '/api/pos-transactions/{transactionId}/tenders/{tenderId}', 'verb' => 'DELETE'],
+
+        // POS Kassakoppeling-compliant Audit Log (pos-kassakoppeling-audit).
+        // Append-only signed audit entries with per-register hash chain + admin-gated
+        // Belastingdienst export. The static `/export` route precedes the `{id}`
+        // wildcard so the Symfony router never mistakes "export" for an id (ADR-016).
+        // camelCase slug matches KassakoppelingAuditController class name.
+        ['name' => 'kassakoppelingAudit#index',  'url' => '/api/kassakoppeling/audit',           'verb' => 'GET'],
+        ['name' => 'kassakoppelingAudit#create', 'url' => '/api/kassakoppeling/audit',           'verb' => 'POST'],
+        ['name' => 'kassakoppelingAudit#export', 'url' => '/api/kassakoppeling/audit/export',    'verb' => 'GET'],
+        ['name' => 'kassakoppelingAudit#verify', 'url' => '/api/kassakoppeling/audit/{id}/verify', 'verb' => 'POST'],
+        ['name' => 'kassakoppelingAudit#show',   'url' => '/api/kassakoppeling/audit/{id}',      'verb' => 'GET'],
 
         // ---------------------------------------------------------------------
         // Customer portal (separate auth domain — ADR-005). All /portal/api/*
@@ -204,6 +337,18 @@ return [
         ['name' => 'portalAdmin#accounts',     'url' => '/portal/api/admin/accounts',      'verb' => 'GET'],
         ['name' => 'portalAdmin#auditEvents',  'url' => '/portal/api/admin/audit-events',  'verb' => 'GET'],
 
+        // Appointment booking portal (anonymous customer self-booking; ADR-005 /
+        // ADR-016). Lives under /portal/api/booking/* so the portalPage SPA
+        // catch-all (excludes /portal/api/*) does not eat the GETs. All endpoints
+        // carry @PublicPage in PortalController.php — reschedule/cancel require
+        // an HMAC-SHA256 signed token (member 05 of the appointment-booking chain).
+        ['name' => 'portal#services',     'url' => '/portal/api/booking/services',            'verb' => 'GET'],
+        ['name' => 'portal#availability', 'url' => '/portal/api/booking/availability',        'verb' => 'GET'],
+        ['name' => 'portal#book',         'url' => '/portal/api/booking/book',                'verb' => 'POST'],
+        ['name' => 'portal#reschedule',   'url' => '/portal/api/booking/reschedule',          'verb' => 'POST'],
+        ['name' => 'portal#cancel',       'url' => '/portal/api/booking/cancel',              'verb' => 'POST'],
+        ['name' => 'portal#getBooking',   'url' => '/portal/api/booking/{bookingId}',         'verb' => 'GET'],
+
         // Public portal SPA shell. Registered AFTER all /portal/api/* routes so
         // the API wins, and BEFORE the main-app catch-all so /portal serves the
         // isolated portal bundle rather than the Nextcloud-authenticated app.
@@ -234,6 +379,203 @@ return [
         ['name' => 'exportRun#listRuns', 'url' => '/api/export/runs',           'verb' => 'GET'],
         ['name' => 'exportRun#showRun',  'url' => '/api/export/runs/{id}',       'verb' => 'GET'],
         ['name' => 'exportRun#retryRun', 'url' => '/api/export/runs/{id}/retry', 'verb' => 'POST'],
+
+        // Appointment booking — admin lifecycle actions (member 11 of 12).
+        // All endpoints require an authenticated user (#[NoAdminRequired]);
+        // BookingService runs the per-status transition + IDOR guards.
+        ['name' => 'bookingAdmin#reschedule',     'url' => '/api/bookings/{id}/reschedule',     'verb' => 'POST'],
+        ['name' => 'bookingAdmin#cancel',         'url' => '/api/bookings/{id}/cancel',         'verb' => 'POST'],
+        ['name' => 'bookingAdmin#markCompleted',  'url' => '/api/bookings/{id}/complete',       'verb' => 'POST'],
+        ['name' => 'bookingAdmin#markNoShow',     'url' => '/api/bookings/{id}/no-show',        'verb' => 'POST'],
+        ['name' => 'bookingAdmin#sendReminder',   'url' => '/api/bookings/{id}/send-reminder',  'verb' => 'POST'],
+        ['name' => 'bookingAdmin#confirmDeposit', 'url' => '/api/bookings/{id}/confirm-deposit', 'verb' => 'POST'],
+
+        // Loyalty program (loyalty-program — REQ-LOY-001..010).
+        ['name' => 'loyalty#getAccount',         'url' => '/api/loyalty/accounts/{accountId}',          'verb' => 'GET'],
+        ['name' => 'loyalty#getAccountHistory',  'url' => '/api/loyalty/accounts/{accountId}/history',  'verb' => 'GET'],
+        ['name' => 'loyalty#getRedemptionOptions',    'url' => '/api/loyalty/redemption/options/{programmeId}/{accountId}', 'verb' => 'GET'],
+        ['name' => 'loyalty#initiateRedemption',      'url' => '/api/loyalty/redemption/initiate/{accountId}/{optionId}',   'verb' => 'POST'],
+        ['name' => 'loyalty#lookupRedemptionCode',    'url' => '/api/loyalty/redemption/{code}/validate',                   'verb' => 'POST'],
+        ['name' => 'loyalty#useRedemptionCode',       'url' => '/api/loyalty/redemption/{code}/use',                        'verb' => 'POST'],
+        ['name' => 'loyalty#lookupGiftCard',    'url' => '/api/loyalty/gift-card/validate',              'verb' => 'POST'],
+        ['name' => 'loyalty#redeemGiftCard',    'url' => '/api/loyalty/gift-card/redeem',                'verb' => 'POST'],
+        ['name' => 'loyalty#activateGiftCard',  'url' => '/api/loyalty/gift-card/activate/{giftCardId}', 'verb' => 'POST'],
+        ['name' => 'loyalty#activateProgramme', 'url' => '/api/loyalty/programme/{programmeId}/activate', 'verb' => 'POST'],
+        ['name' => 'loyaltyReporting#kpis',               'url' => '/api/loyalty/reporting/{programmeId}/kpis',          'verb' => 'GET'],
+        ['name' => 'loyaltyReporting#liability',          'url' => '/api/loyalty/reporting/{programmeId}/liability',     'verb' => 'GET'],
+        ['name' => 'loyaltyReporting#tierDistribution',   'url' => '/api/loyalty/reporting/{programmeId}/tiers',         'verb' => 'GET'],
+        ['name' => 'loyaltyReporting#expiryForecast',     'url' => '/api/loyalty/reporting/{programmeId}/expiry-forecast', 'verb' => 'GET'],
+        ['name' => 'loyaltyGdpr#export',                  'url' => '/api/loyalty/gdpr/{klantId}/export',                 'verb' => 'GET'],
+        ['name' => 'loyaltyGdpr#delete',                  'url' => '/api/loyalty/gdpr/{klantId}',                        'verb' => 'DELETE'],
+
+        // CRM workflow automation has been migrated to the OpenRegister
+        // flow leaf (NC Flow / n8n) per migrate-automation-to-flow-leaf;
+        // no automation / webhook / dmn endpoints remain in pipelinq.
+
+        // Marketing blast provider webhooks (signature-verified, PublicPage)
+        // marketing-segmentation-and-blast-05-jobs-and-webhooks.
+        // camelCase slug matches BlastWebhookController class name.
+        ['name' => 'blastWebhook#sendgrid', 'url' => '/api/blast-webhooks/sendgrid', 'verb' => 'POST'],
+        ['name' => 'blastWebhook#ses',      'url' => '/api/blast-webhooks/ses',      'verb' => 'POST'],
+        ['name' => 'blastWebhook#twilio',   'url' => '/api/blast-webhooks/twilio',   'verb' => 'POST'],
+
+        // Appointment booking — deposit payment webhook (signature-verified, PublicPage)
+        // appointment-booking-08-deposit-payment / REQ-APT-010.
+        // openconnector hits this URL with the payment outcome.
+        ['name' => 'appointmentPaymentWebhook#callback', 'url' => '/api/appointment-payment-webhook', 'verb' => 'POST'],
+
+        // ZGW API bridge — NRC notification inbox (bearer-authenticated, PublicPage)
+        // zgw-api-bridge / REQ-ZGW-007. Open Notificaties posts here on every
+        // zaak/status/besluit/catalogi event for a subscribed gemeente.
+        ['name' => 'zgwNotification#inbox', 'url' => '/api/zgw/notificaties/inbox', 'verb' => 'POST'],
+
+        // WhatsApp / SMS messaging webhooks (signature-verified, PublicPage)
+        // whatsapp-sms-channel-adapter / REQ-003. Specific routes precede
+        // any wildcard catch-alls (ADR-016).
+        ['name' => 'messagingWebhook#whatsapp', 'url' => '/api/messaging-webhooks/whatsapp/{providerId}', 'verb' => 'POST'],
+        ['name' => 'messagingWebhook#sms',      'url' => '/api/messaging-webhooks/sms/{providerId}',      'verb' => 'POST'],
+        // Berichtenbox bridge (burgerportaal-mijnoverheid-bridge).
+        // Logius webhooks for read-receipt + inbound replies — HMAC-SHA256
+        // signature-verified (REQ-RECEIPT-005 / REQ-INBOUND-006).
+        ['name' => 'berichtenboxWebhook#readReceipt',  'url' => '/api/webhook/berichtenbox/read',  'verb' => 'POST'],
+        ['name' => 'berichtenboxWebhook#inboundReply', 'url' => '/api/webhook/berichtenbox/reply', 'verb' => 'POST'],
+        // Admin ops — retry a failed message + read aggregate stats.
+        ['name' => 'berichtenboxAdmin#retry', 'url' => '/api/admin/berichtenbox/message/{id}/retry', 'verb' => 'POST'],
+        ['name' => 'berichtenboxAdmin#stats', 'url' => '/api/admin/berichtenbox/stats',              'verb' => 'GET'],
+        // Marketing — Segments (marketing-segmentation-and-blast chain member 06).
+        // Specific routes precede any wildcard {slug} routes (ADR-016).
+        ['name' => 'segment#index',         'url' => '/api/segments',                  'verb' => 'GET'],
+        ['name' => 'segment#create',        'url' => '/api/segments',                  'verb' => 'POST'],
+        ['name' => 'segment#refreshSize',   'url' => '/api/segments/{id}/size',        'verb' => 'POST'],
+        ['name' => 'segment#members',       'url' => '/api/segments/{id}/members',     'verb' => 'GET'],
+        ['name' => 'segment#show',          'url' => '/api/segments/{id}',             'verb' => 'GET'],
+
+        // Marketing — CampaignTemplates (marketing-segmentation-and-blast chain member 06).
+        // Specific routes precede any wildcard {slug} routes (ADR-016).
+        ['name' => 'template#index',  'url' => '/api/templates',      'verb' => 'GET'],
+        ['name' => 'template#create', 'url' => '/api/templates',      'verb' => 'POST'],
+        ['name' => 'template#show',   'url' => '/api/templates/{id}', 'verb' => 'GET'],
+        ['name' => 'template#update', 'url' => '/api/templates/{id}', 'verb' => 'PATCH'],
+
+        // Marketing — Blasts (marketing-segmentation-and-blast chain member 06).
+        // Specific routes precede any wildcard {slug} routes (ADR-016).
+        ['name' => 'blast#index',      'url' => '/api/blasts',                     'verb' => 'GET'],
+        ['name' => 'blast#create',     'url' => '/api/blasts',                     'verb' => 'POST'],
+        ['name' => 'blast#send',       'url' => '/api/blasts/{id}/send',           'verb' => 'POST'],
+        ['name' => 'blast#cancel',     'url' => '/api/blasts/{id}/cancel',         'verb' => 'POST'],
+        ['name' => 'blast#deliveries', 'url' => '/api/blasts/{id}/deliveries',     'verb' => 'GET'],
+        ['name' => 'blast#attribution', 'url' => '/api/blasts/{id}/attribution',   'verb' => 'GET'],
+        ['name' => 'blast#show',       'url' => '/api/blasts/{id}',                'verb' => 'GET'],
+        ['name' => 'blast#update',     'url' => '/api/blasts/{id}',                'verb' => 'PATCH'],
+
+        // BRP / BSN — Haalcentraal Personen integration (bsn-validatie-en-brp-lookup).
+        // Specific routes precede any wildcard {slug} routes (ADR-016).
+        ['name' => 'brp#validate',         'url' => '/api/brp/validate',                  'verb' => 'POST'],
+        ['name' => 'brp#lookup',           'url' => '/api/brp/lookup',                    'verb' => 'POST'],
+        ['name' => 'brp#revealAddress',    'url' => '/api/brp/contact/{id}/reveal-address', 'verb' => 'POST'],
+        ['name' => 'brp#optOutCreate',     'url' => '/api/brp/opt-out',                   'verb' => 'POST'],
+        ['name' => 'brp#mutationWebhook',  'url' => '/api/brp/mutations',                 'verb' => 'POST'],
+        ['name' => 'brp#monitor',          'url' => '/api/brp/monitor',                   'verb' => 'GET'],
+        ['name' => 'brpAdmin#get',                 'url' => '/api/brp/settings',                  'verb' => 'GET'],
+        ['name' => 'brpAdmin#save',                'url' => '/api/brp/settings',                  'verb' => 'POST'],
+        ['name' => 'brpAdmin#rotateWebhookSecret', 'url' => '/api/brp/settings/webhook-secret',   'verb' => 'POST'],
+        // StUF-ZKN/BG adapter (stuf-zkn-bg-adapter — REQ-STUF-001..012).
+        // camelCase slug matches StufController class name. Specific routes precede any wildcard {slug} routes.
+        // The /inkomend endpoint is PublicPage so the zaaksysteem can post notifications
+        // without a user session; it authenticates via WSSE UsernameToken (verified in the controller).
+        ['name' => 'stuf#outbound',  'url' => '/api/stuf/outbound',  'verb' => 'POST'],
+        ['name' => 'stuf#inkomend',  'url' => '/api/stuf/inkomend',  'verb' => 'POST'],
+        ['name' => 'stuf#endpoints', 'url' => '/api/stuf/endpoints', 'verb' => 'GET'],
+        ['name' => 'stuf#messages',  'url' => '/api/stuf/messages',  'verb' => 'GET'],
+
+        // KCC Werkplek — unified agent workspace (kcc-werkplek).
+        // Specific routes precede any wildcard {path} catch-all (ADR-016).
+        ['name' => 'kccWerkplek#stateAction',           'url' => '/api/kcc-werkplek/state',        'verb' => 'GET'],
+        ['name' => 'kccWerkplek#setAvailabilityAction', 'url' => '/api/kcc-werkplek/availability', 'verb' => 'PUT'],
+
+        // xWiki integration proxy (xwiki-integration). Thin GET proxy to the
+        // xWiki REST API; all endpoints are #[NoAdminRequired] + #[NoCSRFRequired]
+        // and admin-tunable via xwiki_* settings.
+        ['name' => 'xWiki#search', 'url' => '/api/xwiki/search',                    'verb' => 'GET'],
+        ['name' => 'xWiki#pages',  'url' => '/api/xwiki/pages',                     'verb' => 'GET'],
+        ['name' => 'xWiki#page',   'url' => '/api/xwiki/page/{wiki}/{page}',        'verb' => 'GET', 'requirements' => ['page' => '.+']],
+        ['name' => 'xWiki#status', 'url' => '/api/xwiki/status',                    'verb' => 'GET'],
+
+        // AVG (GDPR data-subject request) workflow.
+        // avgVerzoek / termijnEvent / bewijsItem / exportBundle / weigering / redactieActie
+        // CRUD is handled by OpenRegister's generic object API; these are the
+        // server-authoritative lifecycle actions (camelCase slug matches the controller).
+        // Collection (static) routes precede the {id} wildcard routes.
+        ['name' => 'avgVerzoek#index',   'url' => '/api/avg-verzoeken', 'verb' => 'GET'],
+        ['name' => 'avgVerzoek#create',  'url' => '/api/avg-verzoeken', 'verb' => 'POST'],
+        ['name' => 'avgVerzoek#show',    'url' => '/api/avg-verzoeken/{id}', 'verb' => 'GET'],
+        ['name' => 'avgVerzoek#update',  'url' => '/api/avg-verzoeken/{id}', 'verb' => 'PATCH'],
+        ['name' => 'avgVerzoek#destroy', 'url' => '/api/avg-verzoeken/{id}', 'verb' => 'DELETE'],
+        ['name' => 'avgVerzoek#flagDpia', 'url' => '/api/avg-verzoeken/{id}/dpia-flag', 'verb' => 'POST'],
+        ['name' => 'avgVerzoek#extend',  'url' => '/api/avg-verzoeken/{id}/extend', 'verb' => 'POST'],
+        ['name' => 'avgVerzoek#archive', 'url' => '/api/avg-verzoeken/{id}/archive', 'verb' => 'POST'],
+
+        // AVG evidence collection.
+        ['name' => 'avgEvidence#collect', 'url' => '/api/avg-verzoeken/{id}/collect-evidence', 'verb' => 'POST'],
+        ['name' => 'avgEvidence#status',  'url' => '/api/avg-verzoeken/{id}/evidence-status', 'verb' => 'GET'],
+        ['name' => 'avgEvidence#items',   'url' => '/api/avg-verzoeken/{id}/bewijs-items', 'verb' => 'GET'],
+
+        // AVG redaction.
+        ['name' => 'avgRedaction#redact',  'url' => '/api/avg-verzoeken/{id}/redact', 'verb' => 'POST'],
+        ['name' => 'avgRedaction#summary', 'url' => '/api/avg-verzoeken/{id}/redaction-summary', 'verb' => 'GET'],
+        ['name' => 'avgRedaction#approve', 'url' => '/api/avg-verzoeken/{id}/approve-redactions', 'verb' => 'POST'],
+
+        // AVG denial (Weigering).
+        ['name' => 'avgDenial#deny',     'url' => '/api/avg-verzoeken/{id}/deny', 'verb' => 'POST'],
+        ['name' => 'avgDenial#show',     'url' => '/api/avg-verzoeken/{id}/weigering', 'verb' => 'GET'],
+        ['name' => 'avgDenial#finalize', 'url' => '/api/avg-verzoeken/{id}/finalize-denial', 'verb' => 'POST'],
+
+        // AVG export bundles + AP escalation. The public secure-download route
+        // precedes the authenticated {bundleId} metadata route.
+        ['name' => 'avgBundle#generate', 'url' => '/api/avg-verzoeken/{id}/generate-bundle', 'verb' => 'POST'],
+        ['name' => 'avgBundle#escalate', 'url' => '/api/avg-verzoeken/{id}/ap-escalate', 'verb' => 'POST'],
+        ['name' => 'avgBundle#download', 'url' => '/api/export-bundles/{bundleId}/download', 'verb' => 'GET'],
+        ['name' => 'avgBundle#show',     'url' => '/api/export-bundles/{bundleId}', 'verb' => 'GET'],
+
+        // Master Data Management — read-API (downstream apps; session/bearer auth).
+        // Static /api/mdm/master MUST precede the /{id} wildcard (ADR-016).
+        ['name' => 'mdmApi#queryByNaturalKey', 'url' => '/api/mdm/master', 'verb' => 'GET'],
+        ['name' => 'mdmApi#show',              'url' => '/api/mdm/master/{id}', 'verb' => 'GET'],
+
+        // MDM — Master Entity steward views + data-quality dashboard.
+        ['name' => 'mdmMasterEntity#index',     'url' => '/api/mdm/entities', 'verb' => 'GET'],
+        ['name' => 'mdmMasterEntity#dashboard', 'url' => '/api/mdm/dashboard', 'verb' => 'GET'],
+        ['name' => 'mdmMasterEntity#show',      'url' => '/api/mdm/entities/{id}', 'verb' => 'GET'],
+
+        // MDM — merge tooling (preview/candidates authed; execute/reverse admin).
+        ['name' => 'mdmMerge#candidates', 'url' => '/api/mdm/duplicates/{entityType}', 'verb' => 'GET'],
+        ['name' => 'mdmMerge#preview',    'url' => '/api/mdm/merge/preview', 'verb' => 'POST'],
+        ['name' => 'mdmMerge#execute',    'url' => '/api/mdm/merge/execute', 'verb' => 'POST'],
+        ['name' => 'mdmMerge#reverse',    'url' => '/api/mdm/merge/{mergeOperationId}/reverse', 'verb' => 'POST'],
+
+        // MDM — trust configuration (list authed; mutate admin).
+        ['name' => 'mdmTrustConfig#index',   'url' => '/api/mdm/trust-config', 'verb' => 'GET'],
+        ['name' => 'mdmTrustConfig#save',    'url' => '/api/mdm/trust-config', 'verb' => 'POST'],
+        ['name' => 'mdmTrustConfig#save',    'url' => '/api/mdm/trust-config/{id}', 'verb' => 'PUT', 'postfix' => 'update'],
+        ['name' => 'mdmTrustConfig#destroy', 'url' => '/api/mdm/trust-config/{id}', 'verb' => 'DELETE'],
+
+        // MDM — sync queue administration (list authed; retry admin).
+        ['name' => 'mdmSyncQueue#index', 'url' => '/api/mdm/sync-queue', 'verb' => 'GET'],
+        ['name' => 'mdmSyncQueue#retry', 'url' => '/api/mdm/sync-queue/{itemId}/retry', 'verb' => 'POST'],
+
+        // MDM — AVG right-of-deletion workflow (admin only).
+        ['name' => 'mdmAvgWorkflow#candidates',        'url' => '/api/mdm/avg-workflow/candidates', 'verb' => 'GET'],
+        ['name' => 'mdmAvgWorkflow#initiate',          'url' => '/api/mdm/avg-workflow/initiate', 'verb' => 'POST'],
+        ['name' => 'mdmAvgWorkflow#approve',           'url' => '/api/mdm/avg-workflow/approve', 'verb' => 'POST'],
+        ['name' => 'mdmAvgWorkflow#confirmHardDelete', 'url' => '/api/mdm/avg-workflow/{masterEntityId}/hard-delete', 'verb' => 'POST'],
+
+        // Contract & renewal tracking (contract-renewal-tracking) — app-logic only
+        // (numbering, guarded transitions, recurring-revenue metrics). Plain CRUD
+        // reads go through OpenRegister directly via useObjectStore (ADR-022).
+        ['name' => 'contract#create',         'url' => '/api/contracts', 'verb' => 'POST'],
+        ['name' => 'contract#transition',     'url' => '/api/contracts/{id}/transition', 'verb' => 'POST'],
+        ['name' => 'contract#summary',        'url' => '/api/contracts/metrics/summary', 'verb' => 'GET'],
+        ['name' => 'contract#renewalMetrics', 'url' => '/api/contracts/metrics/renewal', 'verb' => 'GET'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],

@@ -35,7 +35,10 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 			</button>
 		</form>
 
-		<p v-if="message" role="alert" class="portal-success">
+		<p v-if="message"
+			role="status"
+			aria-live="polite"
+			class="portal-success">
 			{{ message }}
 		</p>
 		<p v-if="error"

@@ -195,7 +195,7 @@ The system SHALL create default queues during the repair step to provide an out-
 
 ---
 
-### Current Implementation Status
+**Current Implementation Status**
 
 **Implemented:**
 - **Queue Entity CRUD:** Fully implemented. Queue schema defined in `lib/Settings/pipelinq_register.json` with `@type: schema:ItemList`. Properties include title, description, categories, isActive, maxCapacity, sortOrder, assignedAgents. CRUD via OpenRegister API through `src/store/modules/queues.js` Pinia store.

@@ -246,6 +246,17 @@ class Notifier implements INotifier
                 );
                 break;
 
+            case 'wip_sync_failed':
+                $title = (string) ($params['title'] ?? '');
+                $notification->setParsedSubject(
+                    $l->t('WIP sync failed for time entry %1$s', [$title])
+                );
+                $notification->setRichSubject(
+                    $l->t('WIP sync failed for time entry {title}'),
+                    $this->buildRichParams(notification: $notification, title: $title)
+                );
+                break;
+
             default:
                 throw new UnknownNotificationException();
         }//end switch
