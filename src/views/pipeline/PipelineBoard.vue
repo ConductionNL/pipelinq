@@ -26,6 +26,7 @@
 				<NcTextField
 					:value="searchQuery"
 					type="search"
+					label-outside
 					:placeholder="t('pipelinq', 'Search pipeline...')"
 					:aria-label="t('pipelinq', 'Search pipeline...')"
 					class="pipeline-search"

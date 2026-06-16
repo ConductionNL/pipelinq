@@ -21,7 +21,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\AppInfo;
 
-use OCA\OpenRegister\Event\DeepLinkRegistrationEvent;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
@@ -48,7 +47,6 @@ use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
 use OCA\Pipelinq\Listener\DealCreatedListener;
 use OCA\Pipelinq\Listener\DealUpdatedListener;
-use OCA\Pipelinq\Listener\DeepLinkRegistrationListener;
 use OCA\Pipelinq\Listener\ExpenseApprovalListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCA\Pipelinq\Listener\PosTransactionCompletedListener;
@@ -107,10 +105,12 @@ class Application extends App implements IBootstrap
      */
     public function register(IRegistrationContext $context): void
     {
-        $context->registerEventListener(
-            event: DeepLinkRegistrationEvent::class,
-            listener: DeepLinkRegistrationListener::class
-        );
+        // AppHost (ADR-040): offload the mechanical observability + deep-link
+        // ceremony to OpenRegister's shared engine. Scoped to the parity-safe,
+        // fully-built halves — see registerAppHost() for why the Settings /
+        // Preferences / repair plumbing stays bespoke.
+        $this->registerAppHost(context: $context);
+
         $context->registerEventListener(
             event: ObjectCreatedEvent::class,
             listener: ObjectEventListener::class
@@ -224,12 +224,12 @@ class Application extends App implements IBootstrap
         // Wave-4 external-API ports (low-volume families).
         //
         // - Logius Berichtenbox (burgerportaal-mijnoverheid-bridge):
-        //   the BBK 1.7 dispatch/verify/mailbox-check seam. The
-        //   existing concrete `LogiusConnector` HTTP client is
-        //   intentionally NOT bound here — it stays available for a
-        //   downstream activation step to wire in. The default
-        //   binding is the dormant log-only adapter so test +
-        //   staging environments never contact Logius.
+        // the BBK 1.7 dispatch/verify/mailbox-check seam. The
+        // existing concrete `LogiusConnector` HTTP client is
+        // intentionally NOT bound here — it stays available for a
+        // downstream activation step to wire in. The default
+        // binding is the dormant log-only adapter so test +
+        // staging environments never contact Logius.
         $context->registerServiceAlias(
             \OCA\Pipelinq\Service\External\Berichtenbox\BerichtenboxAdapterInterface::class,
             \OCA\Pipelinq\Service\External\Berichtenbox\LogBerichtenboxAdapter::class
@@ -238,6 +238,74 @@ class Application extends App implements IBootstrap
         $this->registerPosLifecycleGuards(context: $context);
         $this->registerExportServices(context: $context);
     }//end register()
+
+    /**
+     * Wire the OpenRegister AppHost engine (ADR-040), scoped to the parity-safe
+     * halves: declarative observability (health + metrics) and the
+     * manifest-driven deep-link listener.
+     *
+     * Each registration is a `registerService(name, Closure)`; the closure body
+     * is the only place an `OCA\OpenRegister\AppHost\…` class is referenced, so
+     * the closure runs lazily at dispatch time. A disabled / absent OpenRegister
+     * therefore never fatals NC bootstrap — the first hit on an aliased route
+     * surfaces a 5xx (the correct degraded behaviour) and `/api/health` reports
+     * `orAvailable: failed`. This mirrors `AppHost\Bootstrap::register()`.
+     *
+     * Why this is NOT a single `Bootstrap::register(...)` call: `Bootstrap`
+     * additionally aliases this app's `PreferencesController`, `SettingsController`,
+     * `SettingsService`, `AdminSettings`, `SettingsSection` and the install repair
+     * steps to its generics. Those cannot be adopted here without a regression:
+     *   - OpenRegister `development` ships no `GenericPreferencesController` yet,
+     *     so aliasing `PreferencesController` would 500 the `/api/preferences`
+     *     route (the bespoke per-user `pref_` store is kept).
+     *   - pipelinq's Settings stack (`SettingsService` + `SettingsLoadService` +
+     *     `SettingsMapBuilder` + `SettingsController`) and its `AdminSettings`
+     *     (which passes a `config` payload to `settings/admin`) are richer than
+     *     the generic `['register']`-only service, and `InitializeSettings` is a
+     *     domain repair step that seeds through that stack. These stay bespoke
+     *     (adopt-apphost task 2.8).
+     *
+     * @param IRegistrationContext $context The registration context.
+     *
+     * @return void
+     *
+     * @psalm-suppress UndefinedClass The engine listener + the leaf listener
+     *         alias are referenced as runtime-resolved string class names (the
+     *         disabled-OpenRegister-safe pattern); neither is a compile-time
+     *         dependency, so static analysis cannot resolve them.
+     *
+     * @spec openspec/changes/adopt-apphost/tasks.md#task-2.1
+     */
+    private function registerAppHost(IRegistrationContext $context): void
+    {
+        $appId = self::APP_ID;
+
+        // /api/health + /api/metrics are served by thin subclasses of the
+        // engine's GenericHealth/GenericMetricsController (see
+        // lib/Controller/HealthController.php + MetricsController.php). They
+        // autowire their OR collaborators and the parent class is only
+        // autoloaded on route dispatch, so a disabled OpenRegister never fatals
+        // bootstrap. No explicit registration is needed here for them.
+        // Replace the bespoke DeepLinkRegistrationListener with the engine's
+        // manifest-driven GenericDeepLinkRegistrationListener (reads the
+        // `deepLinks` block from src/manifest.json).
+        $deepLinkFactory = static function (ContainerInterface $c) use ($appId) {
+            $class = 'OCA\\OpenRegister\\AppHost\\Listener\\GenericDeepLinkRegistrationListener';
+            return new $class(
+                appId: $appId,
+                appManager: $c->get('OCP\\App\\IAppManager'),
+                logger: $c->get('Psr\\Log\\LoggerInterface')
+            );
+        };
+        $context->registerService(
+            'OCA\\Pipelinq\\Listener\\DeepLinkRegistrationListener',
+            $deepLinkFactory
+        );
+        $context->registerEventListener(
+            'OCA\\OpenRegister\\Event\\DeepLinkRegistrationEvent',
+            'OCA\\Pipelinq\\Listener\\DeepLinkRegistrationListener'
+        );
+    }//end registerAppHost()
 
     /**
      * Register the BI-export sink registry and the schema-change listener.
@@ -384,7 +452,7 @@ class Application extends App implements IBootstrap
             $initialState->provideInitialState('shillinq_app_url', $shillinqUrl);
         } catch (\Exception $e) {
             // Initial state unavailable — Features tab will fall back to [].
-        }
+        }//end try
 
         try {
             $commentsManager = $server->get(ICommentsManager::class);

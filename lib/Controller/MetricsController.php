@@ -3,7 +3,22 @@
 /**
  * Pipelinq Metrics Controller
  *
- * Exposes application metrics in Prometheus text exposition format.
+ * Thin adopter of the OpenRegister AppHost engine's GenericMetricsController
+ * (ADR-040). The Prometheus metric set is now declared in `src/manifest.json`
+ * (`observability.metrics`) and rendered by the engine through OpenRegister's
+ * portable object/table aggregation — no PHP-side JSON aggregation. This
+ * subclass exists only because Nextcloud resolves the `metrics#index` route to
+ * this app-namespaced class by name.
+ *
+ * Auth posture is the engine's: there is intentionally NO `#[NoAdminRequired]`
+ * / `#[PublicPage]`, so NC requires an admin session (ADR-006). This is a
+ * deliberate change from the previous public endpoint — Prometheus scrapers
+ * now need admin credentials. Only `#[NoCSRFRequired]` is set (machine clients
+ * carry no CSRF token).
+ *
+ * The parent class is only autoloaded when NC instantiates this controller on a
+ * request to `/api/metrics`, so a disabled / absent OpenRegister does not fatal
+ * Nextcloud bootstrap.
  *
  * @category Controller
  * @package  OCA\Pipelinq\Controller
@@ -16,108 +31,65 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-53
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-54
+ * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\OpenRegister\AppHost\Controller\GenericMetricsController;
+use OCA\OpenRegister\AppHost\Observability\ManifestLoader;
+use OCA\OpenRegister\AppHost\Observability\MetricsEngine;
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\MetricsFormatter;
-use OCA\Pipelinq\Service\MetricsRepository;
-use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http\Attribute\NoAdminRequired;
-use OCP\AppFramework\Http\Attribute\PublicPage;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TextPlainResponse;
 use OCP\IRequest;
-use OCP\App\IAppManager;
 
 /**
- * Controller for exposing Prometheus metrics.
+ * Admin-only declarative Prometheus metrics endpoint backed by the AppHost engine.
  *
  * @psalm-suppress UnusedClass
+ *
+ * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
  */
-class MetricsController extends Controller
+class MetricsController extends GenericMetricsController
 {
     /**
      * Constructor.
      *
-     * @param IRequest          $request    The HTTP request.
-     * @param IAppManager       $appManager App manager.
-     * @param MetricsRepository $repository Metrics data repository.
-     * @param MetricsFormatter  $formatter  Metrics text formatter.
+     * Pins the engine's `$appName` to pipelinq so the engine reads pipelinq's
+     * manifest metric descriptors.
+     *
+     * @param IRequest       $request        The HTTP request.
+     * @param ManifestLoader $manifestLoader Loads pipelinq's observability config.
+     * @param MetricsEngine  $engine         Renders the declarative metrics.
      */
     public function __construct(
         IRequest $request,
-        private IAppManager $appManager,
-        private MetricsRepository $repository,
-        private MetricsFormatter $formatter,
+        ManifestLoader $manifestLoader,
+        MetricsEngine $engine
     ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
+        parent::__construct(
+            appName: Application::APP_ID,
+            request: $request,
+            manifestLoader: $manifestLoader,
+            engine: $engine
+        );
     }//end __construct()
 
     /**
-     * Return Prometheus metrics in text exposition format.
+     * GET /api/metrics — declarative Prometheus metrics (admin-only, ADR-006).
      *
-     * @return TextPlainResponse Prometheus-formatted metrics.
+     * Admin-only by the deliberate absence of `#[NoAdminRequired]`.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-53
+     * @return TextPlainResponse Prometheus text exposition 0.0.4.
+     *
+     * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
      */
-    #[PublicPage]
-    #[NoAdminRequired]
+    #[NoCSRFRequired]
     public function index(): TextPlainResponse
     {
-        // @PublicPage by attribute — Prometheus scrape target must be reachable
-        // by the metrics collector without an authenticated NC user.
-        $metrics  = $this->collectMetrics();
-        $response = new TextPlainResponse($metrics);
-        $response->addHeader('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
-
-        return $response;
+        return parent::index();
     }//end index()
-
-    /**
-     * Collect all metrics and format as Prometheus text.
-     *
-     * @return string Prometheus exposition format text.
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-54
-     */
-    private function collectMetrics(): string
-    {
-        $lines = array_merge(
-            $this->formatter->formatAppInfo(version: $this->getAppVersion(), phpVersion: PHP_VERSION),
-            $this->formatter->formatLeadCounts(leadCounts: $this->repository->getLeadCounts()),
-            $this->formatter->formatLeadValues(valueCounts: $this->repository->getLeadValueByPipeline()),
-            $this->formatter->formatGauge(
-                name: 'pipelinq_clients_total',
-                help: 'Total clients',
-                value: $this->repository->countObjectsBySchemaPattern(pattern: '%client%')
-            ),
-            $this->formatter->formatGauge(
-                name: 'pipelinq_contacts_total',
-                help: 'Total contacts',
-                value: $this->repository->countObjectsBySchemaPattern(pattern: '%contact%')
-            ),
-            $this->formatter->formatRequestCounts(requestCounts: $this->repository->getRequestCounts())
-        );
-
-        return implode("\n", $lines)."\n";
-    }//end collectMetrics()
-
-    /**
-     * Get the app version.
-     *
-     * @return string The app version.
-     */
-    private function getAppVersion(): string
-    {
-        try {
-            return $this->appManager->getAppVersion(Application::APP_ID);
-        } catch (\Exception $e) {
-            return 'unknown';
-        }
-    }//end getAppVersion()
 }//end class

@@ -1,12 +1,15 @@
 <template>
 	<CnStatsBlock
 		:title="t('pipelinq', 'Recurring revenue (MRR)')"
-		:count="mrrLabel"
+		:count="mrr"
 		:count-label="arrLabel"
 		:icon="Repeat"
 		variant="success"
 		horizontal
-		:route="{ name: 'Contracts' }" />
+		show-zero-count
+		:route="{ name: 'Contracts' }">
+		<template #value>{{ mrrLabel }}</template>
+	</CnStatsBlock>
 </template>
 
 <script>

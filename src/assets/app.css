@@ -97,3 +97,13 @@
 	outline: 2px solid var(--portal-brand-primary, #21468B);
 	outline-offset: 2px;
 }
+
+/* The Administration main-menu entry uses the generic `icon-settings` gear.
+ * Unlike the `icon-category-*` icons the other entries use, it ships without
+ * Nextcloud's theme-adaptive invert filter, so it renders pure black on the
+ * dark navigation instead of matching the rest. Apply the same filter the
+ * category icons use so the gear stays the right color (and still adapts to
+ * light themes). */
+.app-navigation .icon-settings {
+	filter: var(--background-invert-if-dark);
+}

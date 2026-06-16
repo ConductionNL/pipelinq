@@ -21,8 +21,7 @@
 			"route": "/analytics",
 			"type": "custom",
 			"title": "Analytics",
-			"component": "AnalyticsDashboard",
-			"config": { "register": "pipelinq" }
+			"component": "AnalyticsDashboard"
 		},
 		{
 			"id": "PipelineAnalytics",

@@ -51,8 +51,6 @@ class SettingsService
         'leadProduct_schema',
         'contactmoment_schema',
         'task_schema',
-        'emailLink_schema',
-        'calendarLink_schema',
         'relationship_schema',
         'queue_schema',
         'skill_schema',
@@ -135,12 +133,12 @@ class SettingsService
         'berichtenboxTemplate_schema',
         'mailboxResolution_schema',
         'deliveryAuditLog_schema',
+        // Marketing segmentation & blast (marketing-segmentation-blast).
+        'blast_schema',
         // SLA engine (sla-engine-and-escalation) — separate register identifier.
         'sla_register',
         'sla_policy_schema',
         'sla_breach_event_schema',
-        // Optional callback schema (callback-management) — referenced by SLA sweep job.
-        'callback_schema',
         // Supplier commercial master (pipelinq-product-vendor-master) — keyed by
         // contactsUid; read by ProductVendorProviderService + IngestProductVendorMaster.
         'supplier_schema',
