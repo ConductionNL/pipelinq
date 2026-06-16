@@ -14,8 +14,7 @@
 			"route": "/sla/attainment",
 			"type": "custom",
 			"title": "SLA attainment",
-			"component": "SlaAttainmentDashboard",
-			"config": { "register": "pipelinq" }
+			"component": "SlaAttainmentDashboard"
 		}
 	]
 }

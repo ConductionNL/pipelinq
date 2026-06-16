@@ -927,7 +927,7 @@
             "recipients": [
               {
                 "kind": "field",
-                "field": "assignee"
+                "field": "assignedTo"
               }
             ],
             "subject": {
@@ -1717,7 +1717,7 @@
             "recipients": [
               {
                 "kind": "field",
-                "field": "assignee"
+                "field": "assigneeUserId"
               }
             ],
             "subject": {
@@ -1737,7 +1737,7 @@
             "recipients": [
               {
                 "kind": "field",
-                "field": "assignee"
+                "field": "assigneeUserId"
               }
             ],
             "subject": {
@@ -4816,6 +4816,7 @@
         },
         "name": "Gemeente Demo — Entity Notes Showcase",
         "type": "organization",
+        "contactsUid": "demo-gemeente-001",
         "email": "info@gemeente-demo.nl",
         "phone": "085-9999999",
         "industry": "Lokale overheid",

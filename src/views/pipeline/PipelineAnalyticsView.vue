@@ -8,7 +8,9 @@
 		:back-route="{ name: 'Dashboard' }"
 		:back-label="t('pipelinq', 'Back to dashboard')"
 		:loading="loading"
-		:sidebar="{ enabled: false }">
+		:refreshing="refreshing"
+		:sidebar="{ enabled: false }"
+		@refresh="refresh">
 		<template #actions>
 			<NcSelect
 				v-model="selectedPipelineId"
@@ -133,6 +135,7 @@ export default {
 			ChartBar,
 			TrendingUp,
 			loading: false,
+			refreshing: false,
 			error: null,
 			selectedPipelineId: null,
 			leads: [],
@@ -311,16 +314,42 @@ export default {
 			await this.fetchLeads()
 		},
 		/**
-		 * Fetch all leads for the currently-selected pipeline.
+		 * Handle the CnDetailPage header Refresh action — re-fetch the
+		 * pipeline collection and the current pipeline's leads, keeping the
+		 * user's pipeline selection. Drives the `refreshing` state (button
+		 * disabled + spinner) instead of the full-page `loading` skeleton, so
+		 * the current cards stay visible while data reloads.
 		 *
 		 * @return {Promise<void>}
 		 */
-		async fetchLeads() {
+		async refresh() {
+			this.refreshing = true
+			this.error = null
+			try {
+				await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
+				await this.fetchLeads({ silent: true })
+			} catch (e) {
+				// eslint-disable-next-line no-console
+				console.warn('[PipelineAnalyticsView] refresh failed', e)
+			} finally {
+				this.refreshing = false
+			}
+		},
+		/**
+		 * Fetch all leads for the currently-selected pipeline.
+		 *
+		 * @param {object} [options] Fetch options.
+		 * @param {boolean} [options.silent] When true, skip the full-page
+		 *   `loading` skeleton (used by `refresh()`, which drives its own
+		 *   `refreshing` state).
+		 * @return {Promise<void>}
+		 */
+		async fetchLeads({ silent = false } = {}) {
 			if (!this.selectedPipelineId) {
 				this.leads = []
 				return
 			}
-			this.loading = true
+			if (!silent) this.loading = true
 			this.error = null
 			try {
 				const leads = await this.objectStore.fetchCollection('lead', {
@@ -334,7 +363,7 @@ export default {
 				// eslint-disable-next-line no-console
 				console.warn('[PipelineAnalyticsView] fetchLeads failed', e)
 			} finally {
-				this.loading = false
+				if (!silent) this.loading = false
 			}
 		},
 		/**

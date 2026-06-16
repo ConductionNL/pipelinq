@@ -384,6 +384,7 @@
 			"title": "Operational overview",
 			"actionsComponent": "DashboardHeaderActions",
 			"config": {
+				"showRefresh": false,
 				"description": "Leads, requests, service and team workload",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"dateRange": {
@@ -1139,20 +1140,14 @@
 			"route": "/admin/pos-customer-link",
 			"type": "custom",
 			"title": "POS customer lookup",
-			"component": "PosCustomerSettingsView",
-			"config": {
-				"register": "pipelinq"
-			}
+			"component": "PosCustomerSettingsView"
 		},
 		{
 			"id": "BrpMonitor",
 			"route": "/admin/brp-monitor",
 			"type": "custom",
 			"title": "BRP Monitor",
-			"component": "BrpMonitorView",
-			"config": {
-				"register": "pipelinq"
-			}
+			"component": "BrpMonitorView"
 		},
 		{
 			"id": "KassakoppelingAuditList",
