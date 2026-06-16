@@ -224,12 +224,12 @@ class Application extends App implements IBootstrap
         // Wave-4 external-API ports (low-volume families).
         //
         // - Logius Berichtenbox (burgerportaal-mijnoverheid-bridge):
-        //   the BBK 1.7 dispatch/verify/mailbox-check seam. The
-        //   existing concrete `LogiusConnector` HTTP client is
-        //   intentionally NOT bound here — it stays available for a
-        //   downstream activation step to wire in. The default
-        //   binding is the dormant log-only adapter so test +
-        //   staging environments never contact Logius.
+        // the BBK 1.7 dispatch/verify/mailbox-check seam. The
+        // existing concrete `LogiusConnector` HTTP client is
+        // intentionally NOT bound here — it stays available for a
+        // downstream activation step to wire in. The default
+        // binding is the dormant log-only adapter so test +
+        // staging environments never contact Logius.
         $context->registerServiceAlias(
             \OCA\Pipelinq\Service\External\Berichtenbox\BerichtenboxAdapterInterface::class,
             \OCA\Pipelinq\Service\External\Berichtenbox\LogBerichtenboxAdapter::class
@@ -269,41 +269,23 @@ class Application extends App implements IBootstrap
      *
      * @return void
      *
+     * @psalm-suppress UndefinedClass The engine listener + the leaf listener
+     *         alias are referenced as runtime-resolved string class names (the
+     *         disabled-OpenRegister-safe pattern); neither is a compile-time
+     *         dependency, so static analysis cannot resolve them.
+     *
      * @spec openspec/changes/adopt-apphost/tasks.md#task-2.1
      */
     private function registerAppHost(IRegistrationContext $context): void
     {
         $appId = self::APP_ID;
 
-        // Re-point /api/health at the engine's GenericHealthController.
-        $context->registerService(
-            'OCA\\Pipelinq\\Controller\\HealthController',
-            static function (ContainerInterface $c) use ($appId) {
-                $class = 'OCA\\OpenRegister\\AppHost\\Controller\\GenericHealthController';
-                return new $class(
-                    appName: $appId,
-                    request: $c->get('OCP\\IRequest'),
-                    manifestLoader: $c->get('OCA\\OpenRegister\\AppHost\\Observability\\ManifestLoader'),
-                    executor: $c->get('OCA\\OpenRegister\\AppHost\\Observability\\HealthCheckExecutor')
-                );
-            }
-        );
-
-        // Re-point /api/metrics at the engine's GenericMetricsController
-        // (admin-only by attribute absence — ADR-006).
-        $context->registerService(
-            'OCA\\Pipelinq\\Controller\\MetricsController',
-            static function (ContainerInterface $c) use ($appId) {
-                $class = 'OCA\\OpenRegister\\AppHost\\Controller\\GenericMetricsController';
-                return new $class(
-                    appName: $appId,
-                    request: $c->get('OCP\\IRequest'),
-                    manifestLoader: $c->get('OCA\\OpenRegister\\AppHost\\Observability\\ManifestLoader'),
-                    engine: $c->get('OCA\\OpenRegister\\AppHost\\Observability\\MetricsEngine')
-                );
-            }
-        );
-
+        // /api/health + /api/metrics are served by thin subclasses of the
+        // engine's GenericHealth/GenericMetricsController (see
+        // lib/Controller/HealthController.php + MetricsController.php). They
+        // autowire their OR collaborators and the parent class is only
+        // autoloaded on route dispatch, so a disabled OpenRegister never fatals
+        // bootstrap. No explicit registration is needed here for them.
         // Replace the bespoke DeepLinkRegistrationListener with the engine's
         // manifest-driven GenericDeepLinkRegistrationListener (reads the
         // `deepLinks` block from src/manifest.json).
@@ -470,7 +452,7 @@ class Application extends App implements IBootstrap
             $initialState->provideInitialState('shillinq_app_url', $shillinqUrl);
         } catch (\Exception $e) {
             // Initial state unavailable — Features tab will fall back to [].
-        }
+        }//end try
 
         try {
             $commentsManager = $server->get(ICommentsManager::class);
