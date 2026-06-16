@@ -252,6 +252,8 @@ class DeliveryAuditLogger
      * @param DateTimeInterface|null $from     Anchor (defaults to now).
      *
      * @return DateTimeImmutable
+     *
+     * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-audit-009
      */
     public function calculateRetentionUntil(string $zaaktype, ?DateTimeInterface $from=null): DateTimeImmutable
     {
@@ -263,10 +265,18 @@ class DeliveryAuditLogger
         if ($years <= 0) {
             $years = self::DEFAULT_RETENTION_YEARS;
         }
-        $anchor = ($from instanceof DateTimeInterface)
-            ? DateTimeImmutable::createFromInterface($from)
-            : new DateTimeImmutable('now', new DateTimeZone('UTC'));
-        return $anchor->modify('+'.$years.' years');
+
+        $anchor = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        if ($from instanceof DateTimeInterface) {
+            $anchor = DateTimeImmutable::createFromInterface($from);
+        }
+
+        $retentionUntil = $anchor->modify('+'.$years.' years');
+        if ($retentionUntil === false) {
+            return $anchor;
+        }
+
+        return $retentionUntil;
     }//end calculateRetentionUntil()
 
     /**
