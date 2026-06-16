@@ -9,6 +9,52 @@
 		"timemanager",
 		"forms"
 	],
+	"observability": {
+		"health": {
+			"checks": [
+				{ "id": "database", "type": "database" },
+				{ "id": "filesystem", "type": "filesystem", "severity": "degraded" }
+			]
+		},
+		"metrics": [
+			{
+				"name": "leads_total",
+				"type": "gauge",
+				"help": "Total leads by status and pipeline",
+				"source": { "kind": "objectCount", "register": "pipelinq", "schema": "lead", "groupBy": ["status", "pipeline"] }
+			},
+			{
+				"name": "leads_value_total",
+				"type": "gauge",
+				"help": "Total pipeline value in EUR",
+				"source": { "kind": "objectSum", "register": "pipelinq", "schema": "lead", "field": "value", "groupBy": ["pipeline"] }
+			},
+			{
+				"name": "clients_total",
+				"type": "gauge",
+				"help": "Total clients",
+				"source": { "kind": "objectCount", "register": "pipelinq", "schema": "client" }
+			},
+			{
+				"name": "contacts_total",
+				"type": "gauge",
+				"help": "Total contacts",
+				"source": { "kind": "objectCount", "register": "pipelinq", "schema": "contact" }
+			},
+			{
+				"name": "service_requests_total",
+				"type": "gauge",
+				"help": "Total service requests by status",
+				"source": { "kind": "objectCount", "register": "pipelinq", "schema": "request", "groupBy": ["status"] }
+			}
+		]
+	},
+	"deepLinks": [
+		{ "registerSlug": "pipelinq", "schemaSlug": "client", "urlTemplate": "/apps/pipelinq/clients/{uuid}", "displayName": "Client" },
+		{ "registerSlug": "pipelinq", "schemaSlug": "lead", "urlTemplate": "/apps/pipelinq/leads/{uuid}", "displayName": "Lead" },
+		{ "registerSlug": "pipelinq", "schemaSlug": "request", "urlTemplate": "/apps/pipelinq/requests/{uuid}", "displayName": "Request" },
+		{ "registerSlug": "pipelinq", "schemaSlug": "contact", "urlTemplate": "/apps/pipelinq/contacts/{uuid}", "displayName": "Contact" }
+	],
 	"menu": [
 		{
 			"id": "Dashboard",
