@@ -3,9 +3,10 @@
 
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import { PiniaVuePlugin } from 'pinia'
+import { PiniaVuePlugin, setActivePinia } from 'pinia'
 import { translate as t, translatePlural as n, loadTranslations } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
+import { loadState } from '@nextcloud/initial-state'
 import {
 	CnPageRenderer,
 	defaultPageTypes,
@@ -15,9 +16,10 @@ import {
 import pinia from './pinia.js'
 import App from './App.vue'
 import bundledManifest from './manifest.json'
+import menuLayout from './menu-layout.json'
 import registry from './registry.js'
 import appIcons from './icons.js'
-import { initializeStores } from './store/store.js'
+import { initializeStores, registerObjectTypes } from './store/store.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 // eslint-disable-next-line import/no-unresolved -- CSS subpath resolved by webpack alias, not ESLint's resolver
@@ -68,58 +70,213 @@ function tryLoadTranslations() {
 const RoutePageRenderer = { ...CnPageRenderer }
 
 /**
- * Deep-merge an override object onto a base object. Plain objects merge
- * recursively; arrays concatenate (so fragment `pages`/`menu` entries are
- * appended to the bundled manifest); scalars from the override win.
+ * Merge an array of incoming menu items into a target array, keyed by `id`.
+ * New ids are appended; existing ids are merged in place: the first
+ * definition of `label` / `icon` / `route` / `order` wins (the base manifest
+ * loads first, so its canonical group definitions take precedence), and
+ * `children` are unioned recursively by the same rule. Fragments may
+ * therefore extend an existing group by re-declaring only its `id` plus
+ * their own `children`.
  *
- * @param {object} base The base object (mutated and returned).
- * @param {object} override The override object.
- * @return {object} The merged base.
+ * @param {Array<object>} target The accumulated menu (mutated in place).
+ * @param {Array<object>} incoming Menu items from a fragment.
+ * @return {void}
  */
-function deepMergeManifest(base, override) {
-	for (const key of Object.keys(override)) {
-		const value = override[key]
-		if (Array.isArray(value)) {
-			base[key] = (Array.isArray(base[key]) ? base[key] : []).concat(value)
-		} else if (value && typeof value === 'object') {
-			base[key] = deepMergeManifest(
-				(base[key] && typeof base[key] === 'object' && !Array.isArray(base[key])) ? base[key] : {},
-				value,
-			)
-		} else {
-			base[key] = value
+function mergeMenuItems(target, incoming) {
+	incoming.forEach((item) => {
+		const existing = target.find((t) => t.id === item.id)
+		if (!existing) {
+			target.push({ ...item, children: Array.isArray(item.children) ? [...item.children] : item.children })
+			return
 		}
-	}
-	return base
+		for (const key of ['label', 'icon', 'route', 'order', 'section', 'featureFlag', 'permission', 'visibleIf', 'href', 'action']) {
+			if (existing[key] === undefined && item[key] !== undefined) {
+				existing[key] = item[key]
+			}
+		}
+		if (Array.isArray(item.children) && item.children.length > 0) {
+			if (!Array.isArray(existing.children)) {
+				existing.children = []
+			}
+			mergeMenuItems(existing.children, item.children)
+		}
+	})
 }
 
 /**
- * Merge modular manifest fragments (src/manifest.d/*.json) onto the bundled
- * manifest (ADR-037). Fragments let concurrent same-app builds add pages/menu
- * entries by dropping a new JSON file instead of editing the shared
- * manifest.json, eliminating merge conflicts. The `require.context` glob is
- * resolved at build time; a placeholder fragment guarantees ≥1 match.
+ * Merge fragment pages onto the accumulated page list by `id` — a later
+ * declaration REPLACES an earlier one wholesale (overlay semantic per ADR-037).
  *
- * @param {object} manifest The bundled manifest.
- * @return {object} A new manifest with all fragments merged in.
+ * @param {Array<object>} target Accumulated pages (mutated in place).
+ * @param {Array<object>} incoming Pages from a fragment.
+ * @return {void}
  */
-function mergeManifestFragments(manifest) {
-	const merged = JSON.parse(JSON.stringify(manifest))
-	try {
-		const context = require.context('./manifest.d', false, /\.json$/)
-		context.keys().sort().forEach((key) => {
-			const fragment = context(key)
-			deepMergeManifest(merged, (fragment && fragment.default) ? fragment.default : fragment)
-		})
-	} catch (e) {
-		// Non-fatal — if the fragment dir is absent the bundled manifest stands.
-		// eslint-disable-next-line no-console
-		console.warn('[pipelinq] manifest fragment merge skipped', e)
-	}
+function mergePages(target, incoming) {
+	incoming.forEach((page) => {
+		const idx = target.findIndex((p) => p.id === page.id)
+		if (idx === -1) {
+			target.push(page)
+		} else {
+			target[idx] = page
+		}
+	})
+}
+
+/**
+ * ADR-037: merge modular manifest fragments from src/manifest.d/*.json onto the
+ * bundled base manifest. Each OpenSpec change drops its own fragment (pages/menu)
+ * instead of editing the monolith src/manifest.json, so concurrent builds touch
+ * disjoint files. `pages` are merged by `id` (later replaces earlier); `menu`
+ * items are merged by `id` (top-level and children) so fragments that re-declare
+ * an existing group extend it instead of duplicating it in the navigation.
+ * After merging, src/menu-layout.json relocations and removals are applied to
+ * consolidate entries into their canonical navigation clusters.
+ *
+ * @param {object} base The bundled base manifest.
+ * @return {object} The manifest with all fragment pages/menu merged in.
+ */
+function mergeManifestFragments(base) {
+	const merged = { ...base, pages: [...(base.pages || [])], menu: [] }
+	mergeMenuItems(merged.menu, base.menu || [])
+	const ctx = require.context('./manifest.d/', false, /\.json$/)
+	ctx.keys().sort().forEach((key) => {
+		const frag = ctx(key)
+		if (Array.isArray(frag.pages)) {
+			mergePages(merged.pages, frag.pages)
+		}
+		if (Array.isArray(frag.menu)) {
+			mergeMenuItems(merged.menu, frag.menu)
+		}
+	})
+	merged.menu = applyMenuRelocations(merged.menu, menuLayout.relocations)
+	merged.menu = applyMenuRemovals(merged.menu, menuLayout.removals)
 	return merged
 }
 
-const mergedManifest = mergeManifestFragments(bundledManifest)
+/**
+ * Re-home merged menu entries onto the canonical navigation layout declared
+ * by `src/menu-layout.json#relocations` (`{ sourceId: targetGroupId }`).
+ *
+ * Fragments stay the canonical source of WHAT exists in the menu (per
+ * ADR-037 they drop entries wherever their change authored them); this map
+ * is the single place that decides WHERE entries live, so the navigation
+ * can be consolidated without rewriting dozens of fragments:
+ *
+ *  - A relocated GROUP dissolves: its children merge (by id) into the
+ *    target group and the now-empty shell is dropped.
+ *  - A relocated LEAF (top-level or child of any group) moves under the
+ *    target group.
+ *  - A child group relocated onto its own parent flattens into it.
+ *  - Unknown source ids are inert; a missing target group keeps the entry
+ *    at the top level so nothing silently disappears.
+ *
+ * Runs in passes until stable (children freed by a dissolved group can
+ * themselves be relocated on the next pass).
+ *
+ * @param {Array<object>} menu The merged menu (mutated in place).
+ * @param {Record<string, string>|undefined} relocations Source-id → target-group-id map.
+ * @return {Array<object>} The menu with relocations applied.
+ */
+function applyMenuRelocations(menu, relocations) {
+	if (!relocations || typeof relocations !== 'object') return menu
+	for (let pass = 0; pass < 5; pass++) {
+		const moves = []
+		for (let i = menu.length - 1; i >= 0; i--) {
+			const node = menu[i]
+			const target = relocations[node.id]
+			if (target && target !== node.id) {
+				menu.splice(i, 1)
+				moves.push({ node, target })
+				continue
+			}
+			if (!Array.isArray(node.children)) continue
+			for (let j = node.children.length - 1; j >= 0; j--) {
+				const child = node.children[j]
+				const childTarget = relocations[child.id]
+				if (!childTarget) continue
+				if (childTarget === node.id && !Array.isArray(child.children)) continue
+				node.children.splice(j, 1)
+				moves.push({ node: child, target: childTarget })
+			}
+		}
+		if (moves.length === 0) break
+		moves.forEach(({ node, target }) => {
+			const group = menu.find((m) => m.id === target)
+			if (!group) {
+				menu.push(node)
+				return
+			}
+			if (!Array.isArray(group.children)) group.children = []
+			if (Array.isArray(node.children)) {
+				mergeMenuItems(group.children, node.children)
+			} else {
+				mergeMenuItems(group.children, [node])
+			}
+		})
+	}
+	return menu.filter((m) => m.type === 'caption' || m.route || m.href || m.action
+		|| (Array.isArray(m.children) && m.children.length > 0))
+}
+
+/**
+ * Remove individual menu entries by id after relocation — used to retire
+ * duplicate navigation entries whose PAGE must stay routable (deep links
+ * and e2e specs hit the route directly). Declared in
+ * `src/menu-layout.json#removals`. Only leaf entries are removed; group ids
+ * are ignored so a removal can never silently hide a whole cluster.
+ *
+ * @param {Array<object>} menu The merged menu (mutated in place).
+ * @param {Array<string>|undefined} removals Menu-entry ids to drop.
+ * @return {Array<object>} The menu without the removed entries.
+ */
+function applyMenuRemovals(menu, removals) {
+	if (!Array.isArray(removals) || removals.length === 0) return menu
+	const drop = new Set(removals)
+	const isLeaf = (n) => !Array.isArray(n.children) || n.children.length === 0
+	menu.forEach((node) => {
+		if (Array.isArray(node.children)) {
+			node.children = node.children.filter((c) => !(drop.has(c.id) && isLeaf(c)))
+		}
+	})
+	return menu.filter((node) => !(drop.has(node.id) && isLeaf(node)))
+}
+
+/**
+ * Resolve the "Timesheet approval" billing entry point (BillingApproval menu
+ * entry) through the ADR-019 integration registry: the configured shillinq
+ * deployment URL is provided as the `shillinq_app_url` initial state by
+ * Application::boot(). When set it overrides the hard-coded
+ * /index.php/apps/shillinq/ href in the manifest so the entry points at the
+ * configured shillinq instance; when empty the manifest default wins
+ * (pipelinq-bookkeeping-to-shillinq / REQ-PBTS-003).
+ *
+ * @param {object} manifest The merged manifest (with `menu[]`).
+ * @return {object} The manifest with the billing href resolved.
+ */
+function applyRegistryBillingHref(manifest) {
+	let shillinqUrl = ''
+	try {
+		shillinqUrl = (loadState('pipelinq', 'shillinq_app_url', '') || '').trim()
+	} catch {
+		shillinqUrl = ''
+	}
+	if (!shillinqUrl) {
+		return manifest
+	}
+	const walk = (items) => {
+		if (!Array.isArray(items)) return
+		items.forEach((item) => {
+			if (item && item.id === 'BillingApproval') {
+				item.href = shillinqUrl
+			}
+			if (Array.isArray(item?.children)) walk(item.children)
+		})
+	}
+	walk(manifest.menu)
+	return manifest
+}
+
+const mergedManifest = applyRegistryBillingHref(mergeManifestFragments(bundledManifest))
 
 /**
  * Build the vue-router config from the manifest. Each manifest page
@@ -138,13 +295,21 @@ function routesFromManifest(manifest) {
 		component: RoutePageRenderer,
 		props: page.route.includes(':'),
 	}))
+	// vue-router matches in declaration order, so a param route like `/pos/:id`
+	// would otherwise swallow a static sibling like `/pos/tender-types` on a
+	// direct (non-SPA) load. Manifest page order isn't guaranteed — manifest.d
+	// fragments are appended last — so order routes by parameter count ascending
+	// (static before parameterised). Array.sort is stable, so each group keeps
+	// its original relative order.
+	const paramCount = (path) => (path.match(/:/g) || []).length
+	routes.sort((a, b) => paramCount(a.path) - paramCount(b.path))
 	// Catch-all redirect to dashboard, preserving prior router behaviour.
 	routes.push({ path: '*', redirect: '/' })
 	return routes
 }
 
 const router = new VueRouter({
-	mode: 'history',
+	mode: 'hash',
 	base: generateUrl('/apps/pipelinq'),
 	routes: routesFromManifest(mergedManifest),
 })
@@ -162,19 +327,30 @@ tryLoadTranslations()
 const pageTypesProp = { ...defaultPageTypes }
 const registryProp = { ...registry }
 
-// Create and mount Vue instance immediately so the App renders.
-new Vue({
-	pinia,
-	router,
-	render: (h) => h(App, {
-		props: {
-			manifest: mergedManifest,
-			registry: registryProp,
-			pageTypes: pageTypesProp,
-		},
-	}),
-}).$mount('#content')
+// Register object types synchronously before mount, so the store registry is
+// populated before any view's onMounted fetchSchema() runs. setActivePinia lets
+// the store be used before the Vue instance exists.
+setActivePinia(pinia)
+registerObjectTypes()
 
-// Initialize stores in parallel — the useListView retry logic will wait
-// for registerObjectType to complete.
-initializeStores()
+/** Mount the Vue instance onto #content. */
+function mountApp() {
+	new Vue({
+		pinia,
+		router,
+		render: (h) => h(App, {
+			props: {
+				manifest: mergedManifest,
+				registry: registryProp,
+				pageTypes: pageTypesProp,
+			},
+		}),
+	}).$mount('#content')
+}
+
+// Gate the mount on initializeStores() so types are registered and settings
+// loaded before the first view fetches. A settings failure still mounts the
+// shell (catch/finally) — views then degrade to their own empty/retry state.
+initializeStores().catch(() => {}).finally(() => {
+	mountApp()
+})

@@ -1,0 +1,98 @@
+{
+	"menu": [
+		{
+			"id": "BookingsGroup",
+			"label": "Appointments",
+			"icon": "icon-calendar",
+			"order": 150,
+			"children": [
+				{
+					"id": "Services",
+					"label": "Services",
+					"icon": "icon-toggle-pictures",
+					"route": "Services"
+				},
+				{
+					"id": "Resources",
+					"label": "Resources",
+					"icon": "icon-user",
+					"route": "Resources"
+				},
+				{
+					"id": "Bookings",
+					"label": "Bookings",
+					"icon": "icon-calendar",
+					"route": "Bookings"
+				}
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "Services",
+			"route": "/services",
+			"type": "custom",
+			"title": "Services",
+			"component": "ServiceListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "service"
+			}
+		},
+		{
+			"id": "ServiceDetail",
+			"route": "/services/:id",
+			"type": "custom",
+			"title": "Service",
+			"component": "ServiceDetailView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "service"
+			}
+		},
+		{
+			"id": "Resources",
+			"route": "/resources",
+			"type": "custom",
+			"title": "Resources",
+			"component": "ResourceListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "resource"
+			}
+		},
+		{
+			"id": "ResourceDetail",
+			"route": "/resources/:id",
+			"type": "custom",
+			"title": "Resource",
+			"component": "ResourceDetailView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "resource"
+			}
+		},
+		{
+			"id": "Bookings",
+			"route": "/bookings",
+			"type": "custom",
+			"title": "Bookings",
+			"component": "BookingListView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "booking"
+			}
+		},
+		{
+			"id": "BookingDetail",
+			"route": "/bookings/:id",
+			"type": "custom",
+			"title": "Booking",
+			"component": "BookingDetailView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "booking"
+			}
+		}
+	]
+}

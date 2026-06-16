@@ -8,9 +8,16 @@ import { test, expect } from '@playwright/test'
 test.describe('Rapportage (Reporting)', () => {
 
 	test.beforeEach(async ({ page }) => {
-		await page.goto('/apps/pipelinq/rapportage')
-		// Wait for the Vue app to finish mounting.
+		// The contactmomenten Reporting Dashboard (KPI cards) lives at the
+		// `/rapportage/contactmomenten` page (manifest id RapportageContactmomenten
+		// → RapportageDashboard.vue). The "Reporting" sidebar link now points at
+		// the Lead-analytics page (`/rapportage`), so deep-link the dashboard
+		// route directly via the SPA hash. A path-form goto boots the shell at the
+		// Dashboard; a hash goto mounts the target view. Reload once so the view
+		// re-queries its KPI data after the same-document hash change.
+		await page.goto('/apps/pipelinq/#/rapportage/contactmomenten')
 		await expect(page.locator('body')).not.toContainText('Internal Server Error')
+		await page.reload()
 	})
 
 	/**
@@ -49,8 +56,11 @@ test.describe('Rapportage (Reporting)', () => {
 		await expect(channelBtn).toBeVisible()
 		await channelBtn.click()
 
-		// Should navigate to the channel analytics route.
-		await expect(page).toHaveURL(/\/rapportage\/channels?$|\/rapportage\/channel/, { timeout: 10000 })
+		// The manifest-driven SPA router can rewrite the URL on in-app
+		// navigation, so assert the channel analytics view rendered instead.
+		await expect(
+			page.getByRole('heading', { name: /Channel Analytics|Kanaalanalyse/i }),
+		).toBeVisible({ timeout: 10000 })
 	})
 
 	test('rapportage page navigates to agent performance', async ({ page }) => {
@@ -62,19 +72,26 @@ test.describe('Rapportage (Reporting)', () => {
 		await expect(agentBtn).toBeVisible()
 		await agentBtn.click()
 
-		// Should navigate to the agent performance route.
-		await expect(page).toHaveURL(/\/rapportage\/agents?$|\/rapportage\/agent/, { timeout: 10000 })
+		// The manifest-driven SPA router can rewrite the URL on in-app
+		// navigation, so assert the agent performance view rendered instead.
+		await expect(
+			page.getByRole('heading', { name: /Agent Performance|Agentprestaties/i }),
+		).toBeVisible({ timeout: 10000 })
 	})
 
 	test('channel analytics page loads', async ({ page }) => {
-		await page.goto('/apps/pipelinq/rapportage/channels')
+		// Deep-link via the SPA hash; a path-form goto boots the shell at the
+		// Dashboard instead of the target view.
+		await page.goto('/apps/pipelinq/#/rapportage/channels')
+		await page.reload()
 		await expect(
 			page.getByRole('heading', { name: /Channel Analytics|Kanaalanalyse/i }),
 		).toBeVisible({ timeout: 15000 })
 	})
 
 	test('agent performance page loads', async ({ page }) => {
-		await page.goto('/apps/pipelinq/rapportage/agents')
+		await page.goto('/apps/pipelinq/#/rapportage/agents')
+		await page.reload()
 		await expect(
 			page.getByRole('heading', { name: /Agent Performance|Agentprestaties/i }),
 		).toBeVisible({ timeout: 15000 })

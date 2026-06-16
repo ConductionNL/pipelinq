@@ -44,10 +44,31 @@ class SchemaMapService
         'queue_schema'          => 'queue',
         'skill_schema'          => 'skill',
         'agentProfile_schema'   => 'agentProfile',
+        'project_schema'        => 'project',
+        'projectPhase_schema'   => 'projectPhase',
+        'projectTask_schema'    => 'projectTask',
+        'projectActivity_schema' => 'projectActivity',
+        'timeEntry_schema'      => 'timeEntry',
         'task_schema'           => 'task',
         'contactmoment_schema'  => 'contactmoment',
-        'survey_schema'         => 'survey',
-        'surveyResponse_schema' => 'surveyResponse',
+        'posTransaction_schema' => 'posTransaction',
+        // POS staff PIN + role permissions (pos-staff-pin-permissions).
+        'posRole_schema'        => 'posRole',
+        'posStaff_schema'       => 'posStaff',
+        // Loyalty programme schemas (loyalty-program).
+        'loyaltyProgramme_schema'    => 'loyaltyProgramme',
+        'pointsRule_schema'          => 'pointsRule',
+        'tierRule_schema'            => 'tierRule',
+        'klantLoyaltyAccount_schema' => 'klantLoyaltyAccount',
+        'pointsLedgerEntry_schema'   => 'pointsLedgerEntry',
+        'redemptionOption_schema'    => 'redemptionOption',
+        'redemption_schema'          => 'redemption',
+        'giftCard_schema'            => 'giftCard',
+        'giftCardTransaction_schema' => 'giftCardTransaction',
+        // Expense → Shillinq AP integration (pipelinq-expense-to-shillinq-ap / REQ-AP-001).
+        'expense_schema'             => 'expense',
+        // Billing categories (billable-categories-and-tags / REQ-BCT-001).
+        'billingCategory_schema'     => 'billingCategory',
     ];
 
     /**

@@ -11,6 +11,7 @@
 			:objects="objects"
 			:pagination="pagination"
 			:loading="loading"
+			:refreshing="refreshing"
 			:sort-key="sortKey"
 			:sort-order="sortOrder"
 			:include-columns="visibleColumns"
@@ -18,11 +19,11 @@
 			:empty-action-label="t('pipelinq', 'New export job')"
 			@add="createNew"
 			@empty-action="createNew"
-			@refresh="refresh"
+			@refresh="onRefresh"
 			@sort="onSort"
 			@row-click="openJob"
 			@page-changed="onPageChange">
-			<template #actions="{ row }">
+			<template #row-actions="{ row }">
 				<NcButton type="tertiary" :disabled="busyId === row.id" @click.stop="testRun(row)">
 					{{ t('pipelinq', 'Test run') }}
 				</NcButton>
@@ -31,6 +32,10 @@
 				</NcButton>
 			</template>
 		</CnIndexPage>
+		<ExportTestRunModal
+			v-if="testRunJobId"
+			:job-id="testRunJobId"
+			@close="testRunJobId = null" />
 	</div>
 </template>
 
@@ -41,12 +46,14 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { exportApi } from '../../services/exportApi.js'
+import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
 
 export default {
 	name: 'ExportJobs',
 	components: {
 		CnIndexPage,
 		NcButton,
+		ExportTestRunModal,
 	},
 	setup() {
 		const sidebarState = inject('sidebarState', null)
@@ -56,6 +63,8 @@ export default {
 	data() {
 		return {
 			busyId: null,
+			testRunJobId: null,
+			refreshing: false,
 		}
 	},
 	computed: {
@@ -69,6 +78,20 @@ export default {
 		},
 	},
 	methods: {
+		/**
+		 * Refresh handler for the Actions-menu Refresh item. Drives the
+		 * CnIndexPage `:refreshing` spinner around the underlying fetch.
+		 *
+		 * @spec exclude presentational refresh-button spinner wiring — no business logic
+		 */
+		async onRefresh() {
+			this.refreshing = true
+			try {
+				await this.refresh()
+			} finally {
+				this.refreshing = false
+			}
+		},
 		/**
 		 * Navigate to a job's detail/edit form.
 		 *
@@ -84,24 +107,12 @@ export default {
 			this.$router.push({ name: 'ExportJobNew' })
 		},
 		/**
-		 * Trigger a non-destructive test run for a job.
+		 * Open the test-run modal for a job. The modal auto-executes the run.
 		 *
 		 * @param {object} row The job row.
 		 */
-		async testRun(row) {
-			this.busyId = row.id
-			try {
-				const result = await exportApi.testRun(row.id)
-				if (result.success) {
-					showSuccess(this.t('pipelinq', 'Test run succeeded ({rows} sample rows)', { rows: result.sample_rows }))
-				} else {
-					showError(this.t('pipelinq', 'Test run failed: {error}', { error: (result.errors || []).join('; ') }))
-				}
-			} catch (e) {
-				showError(this.t('pipelinq', 'Test run failed'))
-			} finally {
-				this.busyId = null
-			}
+		testRun(row) {
+			this.testRunJobId = row.id
 		},
 		/**
 		 * Enable or disable a job.

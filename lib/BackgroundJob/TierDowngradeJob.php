@@ -1,0 +1,173 @@
+<?php
+
+/**
+ * Pipelinq TierDowngradeJob.
+ *
+ * Daily job that processes scheduled tier downgrades. Iterates accounts whose
+ * tierGeldigTot has passed, re-evaluates the tier via TierService, and applies
+ * a downgrade when warranted (also emits the tier-changed event for notifications).
+ *
+ * @category BackgroundJob
+ * @package  OCA\Pipelinq\BackgroundJob
+ *
+ * @author    Conduction <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * @version GIT: <git_id>
+ *
+ * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-003
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Pipelinq\BackgroundJob;
+
+use DateTimeImmutable;
+use DateTimeZone;
+use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\LoyaltyAccountService;
+use OCA\Pipelinq\Service\TierService;
+use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\BackgroundJob\TimedJob;
+use OCP\IAppConfig;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
+use Throwable;
+
+/**
+ * Daily scheduled tier downgrade processor (loyalty-program REQ-LOY-003).
+ */
+class TierDowngradeJob extends TimedJob
+{
+    private const DEFAULT_INTERVAL = 86400;
+
+    /**
+     * Constructor.
+     *
+     * @param ITimeFactory          $time                  The time factory.
+     * @param IAppConfig            $appConfig             The app configuration.
+     * @param ContainerInterface    $container             The DI container.
+     * @param LoyaltyAccountService $loyaltyAccountService The account service.
+     * @param TierService           $tierService           The tier service.
+     * @param LoggerInterface       $logger                The logger.
+     */
+    public function __construct(
+        ITimeFactory $time,
+        private IAppConfig $appConfig,
+        private ContainerInterface $container,
+        private LoyaltyAccountService $loyaltyAccountService,
+        private TierService $tierService,
+        private LoggerInterface $logger,
+    ) {
+        parent::__construct(time: $time);
+        $this->setInterval(
+            seconds: $this->appConfig->getValueInt(
+                Application::APP_ID,
+                'loyalty.tier_downgrade.poll_interval_seconds',
+                self::DEFAULT_INTERVAL
+            )
+        );
+    }//end __construct()
+
+    /**
+     * Run the downgrade processor.
+     *
+     * @param mixed $argument Cron argument (unused).
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    protected function run($argument): void
+    {
+        $programmes = $this->getActiveProgrammes();
+        $now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
+
+        foreach ($programmes as $programme) {
+            $programmeId = $this->extractUuid($programme);
+            if ($programmeId === null) {
+                continue;
+            }
+
+            $accounts = $this->loyaltyAccountService->listAccountsForProgramme(
+                programmeId: $programmeId,
+                limit: 10000
+            );
+
+            foreach ($accounts as $account) {
+                $accountId    = (string) $this->extractUuid($account);
+                $tierGeldigTot = (string) ($account['tierGeldigTot'] ?? '');
+                if ($accountId === '' || $tierGeldigTot === '' || $tierGeldigTot > $now) {
+                    continue;
+                }
+
+                try {
+                    $this->tierService->updateTierIfNeeded(accountId: $accountId);
+                } catch (Throwable $e) {
+                    $this->logger->warning(
+                        'Pipelinq: tier downgrade processing failed for account',
+                        ['accountId' => $accountId, 'exception' => $e->getMessage()]
+                    );
+                }
+            }
+        }
+    }//end run()
+
+    /**
+     * Get active programmes.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function getActiveProgrammes(): array
+    {
+        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $schema   = $this->appConfig->getValueString(Application::APP_ID, 'loyaltyProgramme_schema', '');
+        if ($register === '' || $schema === '') {
+            return [];
+        }
+
+        try {
+            $rows = $this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
+                filters: ['status' => 'actief'],
+                register: $register,
+                schema: $schema,
+                limit: 500
+            );
+        } catch (Throwable $e) {
+            return [];
+        }
+
+        $result = [];
+        foreach (is_array($rows) === true ? $rows : [] as $row) {
+            if (is_array($row) === true) {
+                $result[] = $row;
+            } elseif (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+                $s = $row->jsonSerialize();
+                if (is_array($s) === true) {
+                    $result[] = $s;
+                }
+            }
+        }
+
+        return $result;
+    }//end getActiveProgrammes()
+
+    /**
+     * Extract UUID from an OR entity array.
+     *
+     * @param array<string, mixed> $object The OR entity.
+     *
+     * @return ?string
+     */
+    private function extractUuid(array $object): ?string
+    {
+        $self = $object['@self'] ?? [];
+        if (is_array($self) === true && isset($self['id']) === true) {
+            return (string) $self['id'];
+        }
+        return $object['accountId'] ?? $object['programmeId'] ?? $object['uuid'] ?? $object['id'] ?? null;
+    }//end extractUuid()
+}//end class

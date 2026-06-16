@@ -146,7 +146,7 @@ Each item MUST be clickable, navigating to the full detail view.
 
 ### Requirement: Cross-App Workload [V1]
 
-The system SHOULD include items from Procest (cases and tasks assigned to the current user) in the My Work view.
+The system SHALL support including items from Procest (cases and tasks assigned to the current user) in the My Work view. Where cross-app integration is enabled, Procest items MUST appear alongside Pipelinq items; this remains a V1 (SHOULD) capability until that integration ships.
 
 #### Scenario: Include Procest tasks
 @e2e exclude V1 Procest integration; not yet implemented
@@ -235,6 +235,8 @@ The personal work overview screen implemented in this app MUST provide the opera
 
 #### Scenario: Documented operations are available
 
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
+
 - GIVEN the frontend component/store is loaded
 - WHEN a caller invokes one of the documented operations for personal work overview screen
 - THEN the operation MUST execute and return a result consistent with the current implementation
@@ -248,6 +250,8 @@ Operations for personal work overview screen MUST read their inputs from the rel
 **Feature tier**: V1
 
 #### Scenario: Results reflect live state
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN CRM data backing personal work overview screen
 - WHEN a documented operation runs
@@ -263,6 +267,8 @@ Operations for personal work overview screen MUST tolerate missing, empty, or ma
 **Feature tier**: V1
 
 #### Scenario: Missing input does not crash the flow
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN an operation for personal work overview screen is called with absent or invalid input
 - WHEN it executes

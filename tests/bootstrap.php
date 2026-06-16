@@ -71,8 +71,9 @@ if (interface_exists(\OCA\OpenRegister\Mcp\IMcpToolProvider::class) === false) {
     require_once __DIR__ . '/Stubs/Mcp/IMcpToolProvider.php';
 }
 
-// Load the ObjectService stub so PublicSurveyController tests can create
-// PHPUnit mocks without requiring the openregister app to be installed.
+// Load the ObjectService stub so unit tests can create PHPUnit mocks for
+// OpenRegister's ObjectService without requiring the openregister app to be
+// installed.
 if (class_exists(\OCA\OpenRegister\Service\ObjectService::class) === false) {
     require_once __DIR__ . '/Stubs/Service/ObjectService.php';
 }

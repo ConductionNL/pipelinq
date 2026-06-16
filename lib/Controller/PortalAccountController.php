@@ -79,7 +79,7 @@ class PortalAccountController extends PortalApiController
     {
         return $this->guarded(
                 handler: function (): array {
-                    $ctx = $this->context();
+                    $ctx = $this->requireSession();
                     return [$this->profile->present($ctx['account']), Http::STATUS_OK];
                 }
                 );
@@ -98,7 +98,7 @@ class PortalAccountController extends PortalApiController
     {
         return $this->guarded(
                 handler: function (): array {
-                    $ctx     = $this->context();
+                    $ctx     = $this->requireSession();
                     $changes = [];
                     foreach (['displayName', 'phone', 'locale', 'address', 'jobTitle', 'email'] as $field) {
                         $value = $this->request->getParam($field, null);
@@ -129,7 +129,7 @@ class PortalAccountController extends PortalApiController
     {
         return $this->guarded(
                 handler: function (): array {
-                    $tenantId = $this->guard->resolveTenant(request: $this->request);
+                    $tenantId = $this->requireTenant();
                     $ok       = $this->profile->verifyEmail($this->strParam(name: 'token'), $tenantId);
                     if ($ok === false) {
                         return [['errorCode' => 'invalidToken', 'message' => 'Ongeldige of verlopen link.'], Http::STATUS_BAD_REQUEST];
@@ -153,7 +153,7 @@ class PortalAccountController extends PortalApiController
     {
         return $this->guarded(
                 handler: function (): array {
-                    $ctx    = $this->context();
+                    $ctx    = $this->requireSession();
                     $result = $this->export->requestExport($ctx['account'], $ctx['tenantId']);
                     return [$result, Http::STATUS_ACCEPTED];
                 }
@@ -173,7 +173,7 @@ class PortalAccountController extends PortalApiController
     {
         return $this->guarded(
                 handler: function (): array {
-                    $ctx = $this->context();
+                    $ctx = $this->requireSession();
                     $this->account->requestClosure(account: $ctx['account'], tenantId: $ctx['tenantId']);
                     return [['status' => 'closure-requested'], Http::STATUS_OK];
                 }
@@ -193,7 +193,7 @@ class PortalAccountController extends PortalApiController
     {
         return $this->guarded(
                 handler: function (): array {
-                    $tenantId = $this->guard->resolveTenant(request: $this->request);
+                    $tenantId = $this->requireTenant();
                     $this->account->close(token: $this->strParam(name: 'token'), tenantId: $tenantId);
                     return [['status' => 'account-closed'], Http::STATUS_OK];
                 }

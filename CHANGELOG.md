@@ -9,6 +9,134 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **StUF-ZKN/BG adapter** (`stuf-zkn-bg-adapter`): SOAP 1.1 + StUF 0310
+  bridge to legacy zaaksystemen (Centric Key2Zaken, Atos PinkRoccade, ...)
+  enabling municipalities without ZGW REST APIs to use Pipelinq as a
+  modern KCC front-end. Implements the four core ZKN operations
+  (`creeerZaak`, `actualiseerZaak`, `geefZaakDetails`,
+  `genereerZaakIdentificatie`) plus `vrijeBerichten`. Per-call audit log
+  (`StufMessage`), bidirectional mapping (`ZaaksysteemMapping`),
+  WSSE UsernameToken + mutual TLS authentication, document base64
+  embedding with a 25 MiB ceiling, retry with exponential backoff
+  (5s, 30s, 2m, 10m) reusing the same referentienummer for idempotency,
+  per-endpoint circuit breaker (4 failures → 5 min cooldown) with
+  needs-input escalation to admins. Admin UI under
+  `Settings → StUF endpoints` and `Settings → StUF audit log`.
+- **BSN-validatie + BRP-lookup (HaalCentraal Personen v2.0)**: complete
+  integration with RvIG's HaalCentraal BRP API
+  (`bsn-validatie-en-brp-lookup`). Adds five OpenRegister schemas
+  (`bsnValidatie`, `brpLookupVerzoek`, `brpPersoon`, `bsnAuditRecord`,
+  `optOutVlag`) plus three new contact fields (`verifiedBSN`,
+  `brpPersoonId`, `geheimhouding`). Backend services: client-side
+  11-proef (`BsnValidationService`, mirrored in `src/services/bsnValidation.js`),
+  OAuth2 + mTLS REST client (`HaalCentraalClient`), TTL-based response cache
+  with HMAC-verified webhook invalidation (`BrpCacheService` +
+  `BrpMutationWebhookListener`), immutable audit-trail with 5-year retention
+  and RTBF pseudonymisation (`BsnAuditService`), and opt-out / geheimhouding
+  handling (`OptOutService`). REST surface (`BrpController`,
+  `BrpAdminController`): lookup, validate, reveal-address, opt-out create,
+  webhook, monitor, settings + webhook-secret rotation. Three background
+  jobs: daily certificate health-check with admin notifications when expiry
+  is within 30 days, daily SLA monitor producing the admin BRP-Monitor tile,
+  daily retention sweep that deletes expired `brpPersoon` records and resets
+  the linked contact. Vue UI: BSN input + lookup button + Persoon detail
+  panel on contact-detail, doelbinding modal in its own file (ADR-004),
+  admin BRP-Monitor view at `/admin/brp-monitor`. Dutch + English
+  translations (~60 strings). 22 unit tests cover 11-proef, masking,
+  SHA-256 hashing, IP anonymisation, webhook HMAC signature verification,
+  and the unconfigured-fallback paths. ADR-005-compliant throughout: raw BSN
+  is **never** persisted, logged, or returned to the UI; the schemas store
+  only the SHA-256 hash, logs and audit records carry the `***XXXX*` mask,
+  and `hash_equals()` guards every signature comparison.
+
+- **POS Bookkeeping**: Automated Z-report generation and idempotent submission
+  to Shillinq (pos-end-of-day-bookkeeping-post). Adds three OpenRegister
+  schemas (`posZReport`, `posJournalEntryOutbound`, `glAccountMapping`),
+  `PosBookkeepingService` for the four-stage pipeline (aggregate → stage
+  with deterministic SHA256(zReportId+date) idempotency key → POST to
+  `/api/JournalEntry` with `X-Idempotency-Key` + Bearer → emit
+  CloudEvent), a manager-gated `/api/pos-bookkeeping/post` endpoint, an
+  admin settings panel (daily Z-report time, Shillinq endpoint +
+  sensitive bearer token, alert email, max retry attempts), a daily
+  `GenerateZReportJob` (TimedJob) and an on-demand `PosRetryBackoffJob`
+  with 1min/5min/15min/1hr exponential backoff (max 5 attempts; 4xx
+  fails terminally + sends alert, 5xx / timeout schedules retry). UI
+  ships a "Boekhoudkundige Afhandeling" sidebar entry plus a Z-report
+  list + detail with GL line items + submission timeline.
+- **Burgerportaal MijnOverheid Berichtenbox bridge**
+  (burgerportaal-mijnoverheid-bridge) — connects Pipelinq zaak status
+  transitions to the citizen's MijnOverheid mailbox via the Logius
+  Berichtenbox-koppelvlak (BBK) 1.7 API, with email fallback after 5 Dutch
+  working days unread and inbound-reply ingestion as new Contactmomenten on
+  the parent zaak. Ships five new OR schemas (berichtenboxMessage / Reply /
+  Template, mailboxResolution, deliveryAuditLog), the BerichtenboxService
+  state machine + LogiusConnector (OAuth 2.0 client-credentials, BBK 1.7
+  payload validation, RSA-SHA256 PKI-overheid request signing, webhook
+  HMAC verification), the EncryptionService for AES-256-GCM BSN crypto
+  with HMAC-SHA256 index hashing (constant-time compare via hash_equals
+  per ADR-005), DispatchQueuedMessagesJob (5-min, exponential-backoff
+  retries) + FallbackEmailJob (daily, DutchHolidayCalendar-aware), a
+  zaakafhandelapp event-bus listener, four endpoints (two HMAC-verified
+  Logius webhooks + two admin ops endpoints), three seed templates, full
+  user/admin documentation at docs/Integrations/berichtenbox-integration.md,
+  and 58 unit + 5 integration tests covering BBK 1.7 conformance, the full
+  state machine including retry semantics, crypto round-trips with vault
+  precedence, the Dutch holiday calendar, and webhook signature handling.
+
+- Marketing segmentation and blast campaigns (marketing-segmentation-and-blast,
+  11-slice chain — this entry covers the user-visible feature; slice 10
+  ships docs, slice 11 the manual verification + pre-merge review
+  checklist):
+  - **Rule-based segments:** the `segment` schema and `SegmentService`
+    validate and evaluate AND/OR rule trees against contact/customer
+    data, estimate audience size with TTL caching, and project the
+    per-recipient send list (`getMembersForBlast`). Rules are live
+    queries — every send re-evaluates against current data, picking
+    up newly-qualifying contacts automatically.
+  - **Multi-channel sends:** the `blast` schema and `BlastService`
+    orchestrate email and SMS sends through pluggable provider
+    connectors (SendGrid, SES, Twilio); `BlastSendJob` drains
+    scheduled blasts every 5 minutes; deliveries dispatch with a
+    configurable per-second rate limit (default 100/s) to respect
+    provider quotas.
+  - **Compliance enforcement (GDPR / CAN-SPAM):** `ComplianceService`
+    validates every template against per-channel requirements
+    (`{{unsubscribe_url}}` merge field, sender address, `STOP`
+    keyword for SMS), runs a per-segment consent preflight before
+    a blast leaves draft, and routes unsubscribe / complaint webhook
+    events into a contact's consent record so a single click on the
+    List-Unsubscribe header removes them from every future segment.
+  - **A/B testing:** a blast can declare a second template variant
+    and a split percentage; `BlastService::sliceMembersForAb` does a
+    deterministic hash-bucket split so the same recipient lands in
+    the same arm on every re-evaluation; `PerformanceDashboard`
+    surfaces the chi-square significance test once both arms have at
+    least 100 deliveries.
+  - **Revenue attribution:** `AttributionService` records click
+    events from tracked links and links blast deliveries to
+    downstream deals on a first-click model within a configurable
+    attribution window (default 30 days); the **Attribution** tab on
+    the performance dashboard reports the attributed deal count and
+    summed attributed EUR per blast.
+  - **REST surface:** `GET`/`POST /api/segments`,
+    `GET /api/segments/{id}`, `GET /api/segments/{id}/members`,
+    `POST /api/segments/{id}/size`; `GET`/`POST /api/templates`,
+    `GET`/`PATCH /api/templates/{id}`; `GET`/`POST /api/blasts`,
+    `GET`/`PATCH /api/blasts/{id}`, `POST /api/blasts/{id}/send`,
+    `POST /api/blasts/{id}/cancel`, `GET /api/blasts/{id}/deliveries`,
+    `GET /api/blasts/{id}/attribution`; provider webhooks at
+    `POST /api/blast-webhooks/sendgrid|ses|twilio`
+    (HMAC-verified, `#[PublicPage]`).
+  - **Frontend (manifest v2):** new **Marketing** navigation group
+    with **Blasts** (list + 6-step wizard with consent-preflight
+    modal), **Blast monitor** (live delivery log) and **Blast
+    performance** (Overview / A-B / Attribution tabs).
+  - **Docs:** user guide at `docs/user/marketing-blasts.md`
+    (English) and `docs/user/marketing-blasts.nl.md` (Dutch) — covers
+    segment building, compliant template authoring, the send
+    workflow, A/B testing, and monitoring / attribution.
+  - **i18n:** Dutch and English translations for all marketing
+    strings.
 - Sales forecast roll-up and categories (forecast-roll-up-and-categories) —
   category-driven forecasting that aggregates existing lead/pipeline data
   (ADR-022) into server-authoritative roll-ups (ADR-005):

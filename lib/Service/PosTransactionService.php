@@ -125,6 +125,23 @@ class PosTransactionService
     private const DEFAULT_PRICE_MODE = 'excl';
 
     /**
+     * Map of optional, non-null-typed string fields on the posTransaction
+     * schema to the non-empty default they must hold before a lifecycle
+     * transition, keyed by property name.
+     *
+     * Such a field materialises as null when it was never written (the magic
+     * column exists but the value is null), and OpenRegister's strict type
+     * validation then rejects null when the TransitionEngine re-saves the whole
+     * object — failing every confirm/settle/refund/park/resume with a 500.
+     * Writing the schema default '' does NOT help: OpenRegister coerces a stored
+     * empty string back to null. Only a NON-EMPTY enum member persists, so each
+     * field is coerced to its non-empty default here. See sanitizeForTransition().
+     *
+     * @var array<string, string>
+     */
+    private const TRANSITION_STRING_DEFAULTS = ['consentSyncStatus' => 'pending'];
+
+    /**
      * Human-readable Dutch GL descriptions per common BTW rate, used to label
      * the invoiceBreakdown lines shillinq posts. Falls back to a generated
      * "X% BTW" string for any rate not listed here.
@@ -533,9 +550,15 @@ class PosTransactionService
         // verifies the non-empty-cart precondition and the per-object access
         // rule that closes the IDOR; the engine validates the from-state).
         $transaction = $this->fetchTransaction(id: $id);
-        $mode        = $this->normalizePriceMode(mode: ($transaction['priceMode'] ?? null));
-        $lines       = $this->fetchLines(transactionId: $id);
-        $totals      = $this->computeTotals(lines: $lines, priceMode: $mode);
+
+        // Pos-customer-link / REQ-PCL-005: 'op rekening' (onAccount) tender
+        // requires a linked customer. Enforced server-side here (the UI
+        // disables the Afrekenen button but the contract is the server's).
+        $this->assertOnAccountHasCustomer(transaction: $transaction);
+
+        $mode   = $this->normalizePriceMode(mode: ($transaction['priceMode'] ?? null));
+        $lines  = $this->fetchLines(transactionId: $id);
+        $totals = $this->computeTotals(lines: $lines, priceMode: $mode);
 
         $transaction = array_merge(
             $transaction,
@@ -583,15 +606,65 @@ class PosTransactionService
     public function settleTransaction(string $id, string $userId): array
     {
         $transaction = $this->fetchTransaction(id: $id);
+
+        // Tender-sum gate (pos-split-tender REQ-PST-004): sum of tenders MUST
+        // equal the transaction total before settle. Resolved lazily via the
+        // container so this service does not pull PosTenderService into its
+        // constructor signature (avoids a circular DI graph with the routes
+        // that wire both controllers together).
+        $tenderService = $this->resolveTenderService();
+        if ($tenderService !== null) {
+            $tenderService->assertBalancedForSettle(transactionId: $id);
+        }
+
         $transaction['settledAt'] = $this->now();
         $this->saveTransaction(id: $id, transaction: $transaction);
 
         $saved = $this->transitionObject(id: $id, action: 'settle');
 
+        // Emit a TenderPostedEvent per tender so Shillinq posts each leg to
+        // its configured GL account (pos-split-tender REQ-PST-006). The
+        // emitter is fire-and-forget — failure NEVER aborts the settle path
+        // (a tender that did not post is picked up by TenderPostedRetryJob).
+        if ($tenderService !== null) {
+            try {
+                $tenderService->emitTendersPosted(transactionId: $id);
+            } catch (\Throwable $e) {
+                $this->logger->warning(
+                    'Pipelinq: tender CloudEvent emission failed; retry job will pick up',
+                    ['id' => $id, 'exception' => $e->getMessage()]
+                );
+            }
+        }
+
         $this->logger->info('Pipelinq: POS transaction settled', ['id' => $id, 'userId' => $userId]);
 
         return $saved;
     }//end settleTransaction()
+
+    /**
+     * Lazy resolver for the tender-domain service. Returns null when OR /
+     * tender schemas are not configured (so older fleet apps without the
+     * split-tender migration applied keep working).
+     *
+     * @return PosTenderService|null The service, or null when unavailable.
+     *
+     * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-004
+     */
+    private function resolveTenderService(): ?PosTenderService
+    {
+        try {
+            $service = $this->container->get(PosTenderService::class);
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        if ($service instanceof PosTenderService) {
+            return $service;
+        }
+
+        return null;
+    }//end resolveTenderService()
 
     /**
      * Refund / void a confirmed or settled transaction (manager only).
@@ -687,6 +760,34 @@ class PosTransactionService
     }//end resumeTransaction()
 
     /**
+     * Assert that an on-account ('op rekening') transaction has a linked customer.
+     *
+     * Mirrors PosCustomerLinkService::assertOnAccountHasCustomer; duplicated
+     * here to avoid a circular service dependency at confirm-time. The check
+     * is a single guarded comparison so duplication has negligible cost and
+     * the invariant is enforced by the same module the lifecycle owns.
+     *
+     * @param array<string, mixed> $transaction The transaction data.
+     *
+     * @return void
+     *
+     * @throws OCSBadRequestException When tenderType is 'onAccount' without a customer.
+     *
+     * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-005
+     */
+    private function assertOnAccountHasCustomer(array $transaction): void
+    {
+        $tender   = (string) ($transaction['tenderType'] ?? '');
+        $customer = (string) ($transaction['customer'] ?? '');
+
+        if ($tender === 'onAccount' && $customer === '') {
+            throw new OCSBadRequestException(
+                "Klant is verplicht voor 'op rekening' transacties."
+            );
+        }
+    }//end assertOnAccountHasCustomer()
+
+    /**
      * Apply a named lifecycle transition through OpenRegister's TransitionEngine.
      *
      * The engine validates the declarative x-openregister-lifecycle table on the
@@ -709,6 +810,19 @@ class PosTransactionService
      */
     private function transitionObject(string $id, string $action): array
     {
+        // Cleanse the STORED object before the engine re-saves it. The
+        // TransitionEngine re-reads the whole persisted transaction
+        // ($object->getObject()) and re-saves it; OpenRegister's strict type
+        // validation then rejects an optional, non-null-typed string field that
+        // is stored as null (e.g. `consentSyncStatus`, schema type 'string'
+        // default '') with "should be type 'string' but is 'null'" — failing
+        // every confirm/settle/refund/park/resume with a 500. saveTransaction()
+        // only null-FILTERS its own direct-save path, which leaves the prior
+        // stored null untouched, so the engine path bypasses that guard. Coerce
+        // the null back to the schema default here so the engine's whole-object
+        // re-save validates.
+        $this->sanitizeForTransition(id: $id);
+
         try {
             $saved = $this->getTransitionEngine()->transition(objectId: $id, action: $action);
         } catch (\Throwable $e) {
@@ -717,6 +831,52 @@ class PosTransactionService
 
         return $this->toArray(object: $saved);
     }//end transitionObject()
+
+    /**
+     * Coerce null-valued optional string fields to their schema default before
+     * a TransitionEngine re-save.
+     *
+     * Only persists when a coercion is actually needed (so the happy path adds
+     * no extra write). `consentSyncStatus` is the known offender: it is a
+     * non-null-typed string with default '' that materialises as null when the
+     * marketing-consent sync never ran, and the engine's whole-object re-save
+     * then fails OR's strict type validation.
+     *
+     * @param string $id The transaction UUID.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
+     */
+    private function sanitizeForTransition(string $id): void
+    {
+        try {
+            $transaction = $this->fetchTransaction(id: $id);
+        } catch (\Throwable $e) {
+            // A missing object is surfaced by the engine call itself as 404; do
+            // not mask it here.
+            return;
+        }
+
+        $needsSave = false;
+        foreach (self::TRANSITION_STRING_DEFAULTS as $field => $default) {
+            // Coerce the null AND the empty-string case to a NON-EMPTY default.
+            // Null is what the engine's whole-object re-save chokes on; an empty
+            // string is no use because OpenRegister stores it back as null. A
+            // non-empty enum member persists and lets the transition succeed.
+            // The `?? ''` collapses a missing/null value to '', so testing for
+            // '' alone covers both the absent and the explicit-null cases.
+            $value = ($transaction[$field] ?? '');
+            if ($value === '') {
+                $transaction[$field] = $default;
+                $needsSave           = true;
+            }
+        }
+
+        if ($needsSave === true) {
+            $this->saveTransaction(id: $id, transaction: $transaction);
+        }
+    }//end sanitizeForTransition()
 
     /**
      * Map a TransitionEngine throwable to the correct OCS exception.
@@ -855,6 +1015,15 @@ class PosTransactionService
                 'transactionId'    => (string) ($transaction['id'] ?? $transaction['uuid'] ?? ''),
                 'reference'        => (string) ($transaction['reference'] ?? ''),
                 'cashier'          => (string) ($transaction['cashier'] ?? ''),
+                'customer'         => (string) ($transaction['customer'] ?? ''),
+                'tenderType'       => (string) ($transaction['tenderType'] ?? 'cash'),
+                'marketingConsent' => (bool) ($transaction['marketingConsent'] ?? false),
+                // Pos-staff-pin-permissions REQ-PSP-009: include the active
+                // POS staff member id in the shillinq commission feed so the
+                // accounting integration can attribute the sale to the staff
+                // who actually rang it up (which may differ from the NC cashier
+                // user). Empty when no staff session was opened.
+                'staffMemberId'    => (string) ($transaction['staffMemberId'] ?? ''),
                 'total'            => (float) ($transaction['total'] ?? 0),
                 'totalTax'         => (float) ($transaction['totalTax'] ?? 0),
                 'priceMode'        => $this->normalizePriceMode(mode: ($transaction['priceMode'] ?? null)),
@@ -907,11 +1076,19 @@ class PosTransactionService
         [$register, $schema] = $this->config(schemaKey: 'posTransactionLine_schema');
 
         try {
+            // The register + schema scope MUST live under a nested `@self` block
+            // (OpenRegister's findAll treats flat `filters.register` /
+            // `filters.schema` as ordinary property filters, which match nothing
+            // and silently return zero rows — the bug that left the cart "empty"
+            // and every total at 0). Custom property filters (transaction) stay at
+            // the top of the filters array.
             $results = $this->getObjectService()->findAll(
                 config: [
                     'filters' => [
-                        'register'    => $register,
-                        'schema'      => $schema,
+                        '@self'       => [
+                            'register' => $register,
+                            'schema'   => $schema,
+                        ],
                         'transaction' => $transactionId,
                     ],
                 ]
@@ -919,7 +1096,7 @@ class PosTransactionService
         } catch (\Throwable $e) {
             $this->logger->warning('Pipelinq: failed to fetch POS lines', ['exception' => $e->getMessage()]);
             return [];
-        }
+        }//end try
 
         $lines = [];
         foreach (($results ?? []) as $result) {
@@ -942,9 +1119,13 @@ class PosTransactionService
     {
         [$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
 
+        // Register + schema scope under `@self` (flat keys match nothing); status
+        // is a real property filter and stays top-level.
         $filters = [
-            'register' => $register,
-            'schema'   => $schema,
+            '@self' => [
+                'register' => $register,
+                'schema'   => $schema,
+            ],
         ];
         if ($status !== null && $status !== '') {
             $filters['status'] = $status;
@@ -982,6 +1163,19 @@ class PosTransactionService
         // Never trust client-derived id/uuid; always write to the resolved id.
         unset($transaction['@self']);
 
+        // Drop null-valued properties before persisting. The confirm/settle path
+        // re-saves the whole transaction as fetched from OpenRegister; optional
+        // typed fields that were never set (e.g. consentSyncStatus, a string with
+        // default '') come back as null, and OpenRegister's strict type
+        // validation then rejects null for a non-null-typed property — which
+        // previously failed every confirm with "Property 'consentSyncStatus'
+        // should be type 'string' but is 'null'". Omitting null keys lets OR
+        // re-apply the schema default / treat the optional field as unset.
+        $transaction = array_filter(
+            $transaction,
+            static fn ($value): bool => $value !== null
+        );
+
         $saved = $this->getObjectService()->saveObject(
             object: $transaction,
             extend: [],
@@ -1009,12 +1203,78 @@ class PosTransactionService
         $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
         $schema   = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
 
+        // A deployed app-config frequently leaves the numeric POS schema ids
+        // empty (the OpenRegister schema exists under its canonical slug but the
+        // admin-settings link was never populated — verified on the dev box where
+        // register=16 but posTransaction_schema / posTransactionLine_schema are
+        // blank). The server-authoritative reads use ObjectService::findAll()
+        // whose `@self.schema` filter requires a NUMERIC schema id (a slug
+        // silently returns zero results), so derive the canonical slug from the
+        // config key ('posTransaction_schema' -> 'posTransaction') and resolve it
+        // to its numeric id via OpenRegister's SchemaMapper. This keeps the
+        // confirm / settle / recompute flow functional regardless of config
+        // linkage — mirroring the frontend store slug-fallback (src/store/store.js).
+        if ($schema === '') {
+            $slug   = preg_replace('/_schema$/', '', $schemaKey);
+            $schema = $this->resolveSchemaIdBySlug(slug: (string) $slug);
+        }
+
         if ($register === '' || $schema === '') {
             throw new OCSNotFoundException('POS register of schema is niet geconfigureerd.');
         }
 
         return [$register, $schema];
     }//end config()
+
+    /**
+     * Resolve a schema slug to its numeric OpenRegister schema id.
+     *
+     * Used as the fallback when the `<slug>_schema` app-config key is empty on a
+     * deployed instance. OpenRegister's SchemaMapper::find() accepts an id, uuid
+     * or slug and returns the Schema entity; we read its numeric id so the
+     * downstream findAll() filter (which requires a numeric `@self.schema`)
+     * matches. Returns an empty string when the slug cannot be resolved so the
+     * caller raises the standard "not configured" error rather than silently
+     * querying nothing.
+     *
+     * @param string $slug The canonical schema slug (e.g. 'posTransaction').
+     *
+     * @return string The numeric schema id, or '' when it cannot be resolved.
+     *
+     * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+     */
+    private function resolveSchemaIdBySlug(string $slug): string
+    {
+        if ($slug === '') {
+            return '';
+        }
+
+        try {
+            $schemaMapper = $this->container->get('OCA\OpenRegister\Db\SchemaMapper');
+            // Resolve with RBAC + multi-tenancy disabled: this is a
+            // server-authoritative internal id lookup (not a user-scoped read),
+            // and the POS schemas may be owned by a different organisation than
+            // the acting cashier — the default org-scoped filter would then
+            // throw DoesNotExistException for a schema that genuinely exists.
+            // NOTE: OpenRegister's Schema is an Entity with MAGIC getters, so
+            // method_exists($schema, 'getId') returns false even though
+            // $schema->getId() resolves — call getId() directly (any failure is
+            // caught below and yields the '' "not configured" path).
+            $schema = $schemaMapper->find($slug, [], null, false, false);
+            $id     = '';
+            if (is_object($schema) === true) {
+                $id = (string) $schema->getId();
+            }
+
+            return $id;
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'Pipelinq: could not resolve POS schema slug to id (config fallback)',
+                ['slug' => $slug, 'exception' => $e->getMessage()]
+            );
+            return '';
+        }//end try
+    }//end resolveSchemaIdBySlug()
 
     /**
      * Get the OpenRegister ObjectService.

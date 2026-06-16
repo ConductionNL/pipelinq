@@ -5,6 +5,10 @@
 
 ---
 
+## Purpose
+
+Bring the Pipelinq documentation site into conformance with the `@conduction/docusaurus-preset` product-pages standard: a canonical folder taxonomy, an installation guide, a Redocusaurus `/api` mount, an `nl` locale, and consistent typography. Conformance is a docs-site structure concern verified by CI file-tree checks, not a Nextcloud app UI.
+
 ## Requirements
 
 @e2e exclude documentation CI concern — folder taxonomy conformance is a docs-site structure check, not a Nextcloud app UI; covered by CI file-tree checks

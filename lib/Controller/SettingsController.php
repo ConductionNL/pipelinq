@@ -140,11 +140,15 @@ class SettingsController extends Controller
         $user    = $this->userSession->getUser();
         $isAdmin = $user !== null && $this->groupManager->isAdmin($user->getUID());
 
+        $config   = $this->settingsService->getSettings();
         $response = [
-            'success'       => true,
-            'openRegisters' => in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()),
-            'isAdmin'       => $isAdmin,
-            'config'        => $this->settingsService->getSettings(),
+            'success'                 => true,
+            'openRegisters'           => in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()),
+            'isAdmin'                 => $isAdmin,
+            'config'                  => $config,
+            // Surfaced as a top-level camelCase property so the Vue settings
+            // store can read it without parsing the raw config map (REQ-LM-002).
+            'leadStaleThresholdDays'  => (int) ($config['lead_stale_threshold_days'] ?? 14),
         ];
 
         if ($isAdmin === true) {
@@ -396,6 +400,7 @@ class SettingsController extends Controller
                     [
                         'success' => false,
                         'message' => $this->l10n->t('An unexpected error occurred'),
+                        'error'   => $e->getMessage(),
                     ],
                     500
                     );

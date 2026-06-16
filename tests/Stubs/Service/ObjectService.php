@@ -11,9 +11,9 @@
  * ("OCA\\OpenRegister\\" => "tests/Stubs/") and is a no-op when the real
  * openregister app is present (class_exists guard).
  *
- * Only the methods used by PublicSurveyController are declared — the real
- * ObjectService has more. PHPUnit's createMock() generates a full mock
- * regardless; the declarations here only exist to satisfy the type system.
+ * Only a minimal surface is declared — the real ObjectService has more.
+ * PHPUnit's createMock() generates a full mock regardless; the declarations
+ * here only exist to satisfy the type system.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Stubs\Service
@@ -35,7 +35,6 @@ if (class_exists(ObjectService::class) === false) {
      */
     class ObjectService
     {
-
         /**
          * Find a single object by ID.
          *
@@ -45,19 +44,23 @@ if (class_exists(ObjectService::class) === false) {
          *
          * @return array<string, mixed>|object|null
          */
-        public function find(string $id, string $register = '', string $schema = ''): array|object|null
+        public function find(string $id, string $register='', string $schema=''): array|object|null
         {
             return null;
         }//end find()
 
         /**
-         * Find all objects matching the given filters.
+         * Find all objects matching the given configuration.
          *
-         * @param array<string, mixed> $filters Search filters and options.
+         * Mirrors the real OR ObjectService signature so test mocks that call
+         * `findAll(config: ['filters' => ...])` (the documented form used by
+         * pipelinq services) do not blow up with "Unknown named parameter".
          *
-         * @return array<string, mixed>
+         * @param array<string, mixed> $config Configuration with `filters`, `sort`, etc.
+         *
+         * @return array<int, mixed>
          */
-        public function findAll(array $filters = []): array
+        public function findAll(array $config=[]): array
         {
             return [];
         }//end findAll()
@@ -65,20 +68,25 @@ if (class_exists(ObjectService::class) === false) {
         /**
          * Save (create or update) an object.
          *
-         * @param array<string, mixed>|object $objectOrArray The data to persist.
-         * @param array<string, mixed>        $extend        Additional field values.
-         * @param string                      $register      Register slug or ID.
-         * @param string                      $schema        Schema slug or ID.
-         * @param string|null                 $uuid          UUID for update; null for create.
+         * Mirrors the real OR ObjectService signature (parameter is `$object`,
+         * not `$objectOrArray`) so test mocks that use the named-arg form
+         * (`saveObject(object: ..., register: ..., schema: ..., uuid: ...)`)
+         * do not blow up with "Unknown named parameter".
+         *
+         * @param array<string, mixed>|object $object   The data to persist.
+         * @param array<string, mixed>|null   $extend   Additional field values.
+         * @param string|int|null             $register Register slug or ID.
+         * @param string|int|null             $schema   Schema slug or ID.
+         * @param string|null                 $uuid     UUID for update; null for create.
          *
          * @return array<string, mixed>|object
          */
         public function saveObject(
-            array|object $objectOrArray,
-            array $extend = [],
-            string $register = '',
-            string $schema = '',
-            ?string $uuid = null,
+            array|object $object,
+            ?array $extend=[],
+            string|int|null $register=null,
+            string|int|null $schema=null,
+            ?string $uuid=null,
         ): array|object {
             return [];
         }//end saveObject()
@@ -120,6 +128,5 @@ if (class_exists(ObjectService::class) === false) {
         {
             return true;
         }//end deleteObject()
-
     }//end class
 }//end if

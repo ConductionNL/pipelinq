@@ -33,6 +33,20 @@ export const useSettingsStore = defineStore('settings', {
 			const value = parseInt(state.config[key], 10)
 			return isNaN(value) ? 0 : value
 		},
+		/**
+		 * Days a lead can stay untouched before it is flagged as stale.
+		 * Drives the kanban stale badge + the LeadList stale filter.
+		 *
+		 * @param {object} state Store state.
+		 * @return {number}
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+		 */
+		getLeadStaleThresholdDays: (state) => {
+			if (!state.config) return 14
+			const value = parseInt(state.config.lead_stale_threshold_days, 10)
+			if (!Number.isFinite(value) || value <= 0) return 14
+			return value
+		},
 	},
 	actions: {
 		/**

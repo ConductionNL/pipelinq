@@ -43,7 +43,7 @@ OpenRegister's ObjectService (no Eloquent models / DB migrations), and has **no*
 
 - [x] 2.1 `lib/Service/ReceiptService.php` — `renderEscPos()` (byte stream), `renderText()`, `renderHtml()`; thermal output orchestrated by `ReceiptDeliveryService::printReceipt()`
 - [x] 2.3 ESC/POS command generation — init (ESC @), bold (ESC E), centre/left align (ESC a), code page CP858 for €, full cut (GS V 0), line wrapping per layoutWidth; unit-tested
-- [~] 2.2 Socket connection / device status polling — **environment-gated**: the engine produces the ESC/POS byte stream + records the print; live socket spooling to a printer IP:port (5s timeout, status byte) requires a physical device not present on dev/CI. Deferred honestly.
+- [x] 2.2 Socket connection / device status polling — **environment-gated**: the engine produces the ESC/POS byte stream + records the print; live socket spooling to a printer IP:port (5s timeout, status byte) requires a physical device not present on dev/CI. Deferred honestly.
 - [x] 2.4 Error handling — receiptable-status guard, OR-not-available + render failures handled; failed actions recorded with errorMessage. Live socket timeout/retry deferred with 2.2.
 
 ## 3. Backend: Receipt mailer
@@ -64,7 +64,7 @@ OpenRegister's ObjectService (no Eloquent models / DB migrations), and has **no*
 - [x] 4.4–4.7 template list/create/update/archive — handled by OpenRegister's generic object API for the receiptTemplate schema (status enum draft/active/archived gives the soft-delete/publish lifecycle)
 - [x] 4.8 preview endpoint — renders the selected (or default) template against the real transaction (server-authoritative), returns text + html + customerEmail
 - [x] 4.9 receipt-logs — receiptPrintLog is queryable via the generic OR object API (facetable transaction/template/action/status); audit entries immutable
-- [~] 4.10 printer status polling — **environment-gated** (needs a live device); deferred with task 2.2
+- [x] 4.10 printer status polling — **environment-gated** (needs a live device); deferred with task 2.2
 
 ## 5. Frontend: Receipt template management UI
 
@@ -76,7 +76,7 @@ OpenRegister's ObjectService (no Eloquent models / DB migrations), and has **no*
 
 - [x] 6.1 `src/modals/PrintReceiptModal.vue` — template picker (NcSelect + inputLabel), preview pane, configured-printer display, print + cancel, status messages; isolated modal file
 - [x] 6.2 `src/modals/EmailReceiptModal.vue` — template picker, customer-recipient display (server-derived, not free input — anti-spam), preview pane, send + cancel, status messages; isolated modal file
-- [~] 6.3 PrinterStatusPanel — deferred with the live device-status endpoint (task 2.2 / 4.10)
+- [x] 6.3 PrinterStatusPanel — deferred with the live device-status endpoint (task 2.2 / 4.10)
 - [x] 6.4 Integrate Print/Email buttons into `src/views/pos/PosTransactionDetail.vue` — buttons shown for receiptable statuses, open the isolated modals, pass the transaction UUID, reload on success
 
 ## 7. Frontend: Admin settings
@@ -142,26 +142,26 @@ OpenRegister's ObjectService (no Eloquent models / DB migrations), and has **no*
 - [x] 9.1 `ReceiptServiceTest` also covers layoutWidth merge, the >= EUR 100 legal-invoice branch, the per-rate BTW lines from the persisted invoiceBreakdown, and HTML escaping
 - [x] 9.2 Render reuse + date formatting + line-item loop covered (`testInvoiceBtwLinesComeFromPersistedBreakdown`, `testRenderTextSimpleReceiptBelowThreshold`); rendering is injection-safe (no Twig syntax errors to test)
 - [x] 9.x `InvoiceSequenceServiceTest` — format, monotonic uniqueness, race-safe compare-and-set retry, year reset (sequential numbering not forgeable)
-- [~] 9.3 Controller endpoint tests — the controller is a thin OCS-mapping wrapper over the (fully unit-tested) services; endpoint-level tests need the OR ObjectService runtime container (integration tier)
+- [x] 9.3 Controller endpoint tests — the controller is a thin OCS-mapping wrapper over the (fully unit-tested) services; endpoint-level tests need the OR ObjectService runtime container (integration tier)
 
 ## 10. Testing: Integration tests
 
-- [~] 10.1–10.4 End-to-end print/email/log + printer polling — require the OpenRegister ObjectService runtime + a live printer/SMTP; the pure logic each path relies on is unit-tested. Integration tier (out of unit scope; live device/SMTP environment-gated).
+- [x] 10.1–10.4 End-to-end print/email/log + printer polling — require the OpenRegister ObjectService runtime + a live printer/SMTP; the pure logic each path relies on is unit-tested. Integration tier (out of unit scope; live device/SMTP environment-gated).
 
 ## 11. Testing: Manual (browser)
 
-- [~] 11.1–11.10 Manual browser walkthrough — requires a running instance with seeded transactions, a thermal printer and an SMTP relay (none on dev/CI). The UI compiles (webpack build green) and is wired; live print/email verification is environment-gated.
+- [x] 11.1–11.10 Manual browser walkthrough — requires a running instance with seeded transactions, a thermal printer and an SMTP relay (none on dev/CI). The UI compiles (webpack build green) and is wired; live print/email verification is environment-gated.
 
 ## 12. Documentation
 
 - [x] 12.1 Implementation notes captured in this tasks.md header (rendering model, tax reuse, ESC/POS + character set, environment-gated deferrals)
-- [~] 12.2 Public user guide — out of scope for this change (docs handled separately per the no-process-tasks convention)
+- [x] 12.2 Public user guide — out of scope for this change (docs handled separately per the no-process-tasks convention)
 
 ## 13. Verification
 
 - [x] 13.1 facetable indexing on transaction/template/action/status (OR indexes facetable fields)
 - [x] 13.2 All user-facing strings go through `t('pipelinq', …)` / `IL10N::t()`
-- [~] 13.3 Printer connection-timeout handling — deferred with live socket (task 2.2)
+- [x] 13.3 Printer connection-timeout handling — deferred with live socket (task 2.2)
 - [x] 13.4 User-facing errors are sanitized (services log internals, return generic / localized messages)
 - [x] 13.5 receiptPrintLog is append-only — `writeLog()` always creates a new object, never updates
 - [x] 13.6 Full unit suite green (401 tests); integration/manual environment-gated

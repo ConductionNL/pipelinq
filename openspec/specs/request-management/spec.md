@@ -281,7 +281,7 @@ The system MUST support tracking the intake channel. Channel values come from Sy
 
 ### Requirement: Request Category/Product Classification [V1]
 
-The system SHOULD support categorizing requests by product or service type. Categories are free-text strings that MAY be pre-populated from admin configuration.
+The system SHALL support categorizing requests by product or service type. Categories are free-text strings that MAY be pre-populated from admin configuration.
 
 #### Scenario: Set category during creation
 @e2e exclude requires category configuration
@@ -330,7 +330,7 @@ The system MUST support converting a request to a case in Procest.
 
 ### Requirement: Request on Pipeline [MVP]
 
-A request MAY optionally be placed on a pipeline. When on a pipeline, the request has a `stage`, `stageOrder`, and appears on the kanban board.
+A request MAY optionally be placed on a pipeline. When on a pipeline, the request MUST have a `stage` and `stageOrder` and SHALL appear on the kanban board.
 
 #### Scenario: Place request on pipeline
 @e2e exclude requires pipeline with stages
@@ -420,6 +420,8 @@ The service request list and detail screens implemented in this app MUST provide
 
 #### Scenario: Documented operations are available
 
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
+
 - GIVEN the frontend component/store is loaded
 - WHEN a caller invokes one of the documented operations for service request list and detail screens
 - THEN the operation MUST execute and return a result consistent with the current implementation
@@ -433,6 +435,8 @@ Operations for service request list and detail screens MUST read their inputs fr
 **Feature tier**: V1
 
 #### Scenario: Results reflect live state
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN CRM data backing service request list and detail screens
 - WHEN a documented operation runs
@@ -448,6 +452,8 @@ Operations for service request list and detail screens MUST tolerate missing, em
 **Feature tier**: V1
 
 #### Scenario: Missing input does not crash the flow
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
 
 - GIVEN an operation for service request list and detail screens is called with absent or invalid input
 - WHEN it executes
