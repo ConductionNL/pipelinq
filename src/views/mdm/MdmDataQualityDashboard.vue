@@ -48,7 +48,10 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 						{{ buckets.poor }}
 					</div>
 					<div class="mdm-dq__label">
-						{{ t('pipelinq', 'Poor (< 0.6)') }}
+						<!-- sanitize:false — DOMPurify (t()'s default) encodes the
+						     literal "<" to "&lt;" since it reads as a malformed tag;
+						     this is a trusted static label with no markup/vars. -->
+						{{ t('pipelinq', 'Poor (< 0.6)', undefined, undefined, { sanitize: false }) }}
 					</div>
 				</div>
 			</div>

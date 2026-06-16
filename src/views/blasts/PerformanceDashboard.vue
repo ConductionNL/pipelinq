@@ -602,10 +602,13 @@ export default {
 			if (!significant) {
 				return this.t('pipelinq', 'Not significant (p>0.05).')
 			}
+			// sanitize:false — DOMPurify (t()'s default) encodes the literal
+			// "<" in "p<0.05" to "&lt;" since it reads as a malformed tag;
+			// these are trusted static labels with no markup/vars.
 			if (b.clickRate > a.clickRate) {
-				return this.t('pipelinq', 'Variant B significantly higher (p<0.05).')
+				return this.t('pipelinq', 'Variant B significantly higher (p<0.05).', undefined, undefined, { sanitize: false })
 			}
-			return this.t('pipelinq', 'Variant A significantly higher (p<0.05).')
+			return this.t('pipelinq', 'Variant A significantly higher (p<0.05).', undefined, undefined, { sanitize: false })
 		},
 		/**
 		 * Format a 0..1 fraction as a percentage with one decimal place.

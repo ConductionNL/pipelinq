@@ -363,6 +363,7 @@ const registry = {
 	RenewalsDueWidget: {
 		kind: 'widget',
 		component: RenewalsDueWidget,
+		...PANEL_WIDGET_META,
 		_note: 'Renewals-due list (contract-renewal-tracking) — expiring contracts by endDate with deep links and empty state; aggregation the declarative stats-block shorthand cannot express.',
 	},
 	OpenRequestsKpiWidget: {
