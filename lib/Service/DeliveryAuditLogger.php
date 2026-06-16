@@ -252,6 +252,8 @@ class DeliveryAuditLogger
      * @param DateTimeInterface|null $from     Anchor (defaults to now).
      *
      * @return DateTimeImmutable
+     *
+     * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-audit-009
      */
     public function calculateRetentionUntil(string $zaaktype, ?DateTimeInterface $from=null): DateTimeImmutable
     {
