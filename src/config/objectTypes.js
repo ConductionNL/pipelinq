@@ -36,13 +36,6 @@ export function objectTypeGroups() {
 			registerSlug: 'pipelinq',
 		},
 		{
-			key: 'intake',
-			name: t(APP, 'Intake & Automation'),
-			description: t(APP, 'Public intake forms and automation'),
-			registerConfigKey: 'register',
-			registerSlug: 'pipelinq',
-		},
-		{
 			key: 'service',
 			name: t(APP, 'Service & Feedback'),
 			description: t(APP, 'Contact moments, complaints and customer surveys'),
@@ -91,13 +84,6 @@ export function objectTypeGroups() {
 			registerConfigKey: 'register',
 			registerSlug: 'pipelinq',
 		},
-		{
-			key: 'knowledge',
-			name: t(APP, 'Knowledge base'),
-			description: t(APP, 'Knowledge articles (kennisartikelen)'),
-			registerConfigKey: 'register',
-			registerSlug: 'pipelinq',
-		},
 	]
 }
 
@@ -123,11 +109,6 @@ export function objectTypes() {
 		{ slug: 'agentProfile', group: 'core', label: t(APP, 'Agent Profile'), description: t(APP, 'Agent skill profiles') },
 		{ slug: 'billingCategory', group: 'core', label: t(APP, 'Billing Category'), description: t(APP, 'Billable categories and tags') },
 		{ slug: 'task', group: 'core', label: t(APP, 'Task'), description: t(APP, 'Work items / tasks') },
-		// Intake & Automation (group: intake)
-		// Intake forms + surveys migrated to the OpenRegister forms leaf
-		// (NC Forms app) — see openspec/changes/migrate-forms-to-forms-leaf.
-		{ slug: 'automation', group: 'intake', label: t(APP, 'Automation'), description: t(APP, 'Automation rules') },
-		{ slug: 'automationLog', group: 'intake', label: t(APP, 'Automation Log'), description: t(APP, 'Automation execution logs') },
 		// Service & Feedback (group: service)
 		{ slug: 'contactmoment', group: 'service', label: t(APP, 'Contact Moment'), description: t(APP, 'Registered interactions with a client') },
 		{ slug: 'complaint', group: 'service', label: t(APP, 'Complaint'), description: t(APP, 'Customer complaints for tracking and resolution') },
@@ -165,8 +146,6 @@ export function objectTypes() {
 		{ slug: 'expense', group: 'finance', label: t(APP, 'Expense'), description: t(APP, 'Expenses synced to Shillinq accounts-payable') },
 		// Marketing (marketing-segmentation-and-blast)
 		{ slug: 'blast', group: 'marketing', label: t(APP, 'Blast'), description: t(APP, 'Marketing blasts / campaigns') },
-		// Knowledge base (werkplek kennis)
-		{ slug: 'kennisartikel', group: 'knowledge', label: t(APP, 'Knowledge Article'), description: t(APP, 'Knowledge base articles') },
 	]
 }
 

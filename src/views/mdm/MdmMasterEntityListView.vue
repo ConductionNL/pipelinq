@@ -15,7 +15,10 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 				<NcCheckboxRadioSwitch :model-value="onlyLowQuality"
 					type="switch"
 					@update:model-value="toggleLowQuality">
-					{{ t('pipelinq', 'Only low quality (< 0.6)') }}
+					<!-- sanitize:false — DOMPurify (t()'s default) encodes the
+					     literal "<" to "&lt;" since it reads as a malformed tag;
+					     this is a trusted static label with no markup/vars. -->
+					{{ t('pipelinq', 'Only low quality (< 0.6)', undefined, undefined, { sanitize: false }) }}
 				</NcCheckboxRadioSwitch>
 			</div>
 		</div>
