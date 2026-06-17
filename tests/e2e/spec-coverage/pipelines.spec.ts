@@ -7,13 +7,29 @@
  * Maps to openspec/specs/pipeline/spec.md.
  */
 import { test, expect } from '@playwright/test'
-import { openApp, navClick, trackPipelinqErrors, assertNoHardError, dismissSupportDialog } from '../helpers/pipelinq'
+import { trackPipelinqErrors, assertNoHardError, dismissSupportDialog } from '../helpers/pipelinq'
+
+/**
+ * The IA restructure relocated the Pipelines definition list out of the main
+ * sidebar and into the bottom "Settings" list (cn-app-nav__settings-list),
+ * which is collapsed until the settings toggle is opened. The route
+ * (#/pipelines) is unchanged, so land on it via the SPA hash + reload so the
+ * router boots straight onto the page rather than clicking through the hidden
+ * settings flyout.
+ */
+async function openPipelines(page) {
+	await page.goto('/apps/pipelinq/#/pipelines')
+	await expect(page.locator('#app-navigation-vue')).toBeVisible({ timeout: 15000 })
+	await page.reload()
+	await dismissSupportDialog(page)
+	await expect(page.locator('#content-vue').getByRole('heading', { name: 'Pipelines' }).first())
+		.toBeVisible({ timeout: 15000 })
+}
 
 // @e2e openspec/specs/pipeline/spec.md#pipelines-index
 test('Pipelines: navigates from sidebar and shows index surface', async ({ page }) => {
 	const errs = trackPipelinqErrors(page)
-	await openApp(page)
-	await navClick(page, 'Pipelines', /\/pipelines/)
+	await openPipelines(page)
 
 	await expect(page.locator('#content-vue').getByRole('heading', { name: 'Pipelines' }).first()).toBeVisible()
 	await expect(page.locator('[data-testid="cn-index-page"]').first()).toBeVisible()
@@ -23,8 +39,7 @@ test('Pipelines: navigates from sidebar and shows index surface', async ({ page 
 
 // @e2e openspec/specs/pipeline/spec.md#pipelines-list-table
 test('Pipelines: list table, pagination and primary actions render', async ({ page }) => {
-	await openApp(page)
-	await navClick(page, 'Pipelines', /\/pipelines/)
+	await openPipelines(page)
 
 	const content = page.locator('#content-vue')
 	await expect(content.getByRole('button', { name: 'Add Pipeline' })).toBeVisible()
@@ -33,8 +48,7 @@ test('Pipelines: list table, pagination and primary actions render', async ({ pa
 
 // @e2e openspec/specs/pipeline/spec.md#pipelines-create-modal
 test('Pipelines: Add Pipeline opens a create modal with a form', async ({ page }) => {
-	await openApp(page)
-	await navClick(page, 'Pipelines', /\/pipelines/)
+	await openPipelines(page)
 	await dismissSupportDialog(page)
 
 	await page.locator('#content-vue').getByRole('button', { name: 'Add Pipeline' }).click()
