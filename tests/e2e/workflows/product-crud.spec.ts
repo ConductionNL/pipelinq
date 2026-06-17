@@ -52,11 +52,22 @@ async function pickFormSelect(dialog: Locator, field: string, text: string): Pro
  * product collection — not a stale neighbouring index collection — is mounted
  * (the manifest index pages share list state; verified live 2026-06-10).
  */
-async function openProductsList(page: Page): Promise<void> {
+async function openProductsList(page: Page, search?: string): Promise<void> {
 	await navClick(page, 'Products', /products/)
 	await page.reload()
 	await page.waitForTimeout(2000)
 	await dismissSupportDialog(page)
+	// The register holds many products (paginated ~20/page), so a run-scoped row
+	// can land on a later page. Type the name into the list search so the target
+	// row surfaces on page 1 regardless of sort/pagination.
+	if (search) {
+		const box = page.locator('#content-vue input[placeholder*="search" i]').first()
+		if (await box.count()) {
+			await box.fill('')
+			await box.fill(search)
+			await page.waitForTimeout(1500)
+		}
+	}
 }
 
 let fx: FixtureSession
@@ -112,7 +123,7 @@ test.describe('Products — full CRUD with persistence', () => {
 		expect(Number(created.unitPrice), 'unitPrice persisted exactly (49.95)').toBe(PRICE)
 
 		// --- READ: row present (NOT empty-state) + renders the name -----------
-		await openProductsList(page)
+		await openProductsList(page, NAME)
 		await expect(page.locator('.cn-index-page__empty')).toHaveCount(0)
 		const row = page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME }).first()
 		await expect(row).toBeVisible({ timeout: 10000 })
@@ -125,12 +136,12 @@ test.describe('Products — full CRUD with persistence', () => {
 		expect(persisted.name, 'name unchanged after price edit').toBe(NAME)
 
 		// The row still shows the product after the edit.
-		await openProductsList(page)
+		await openProductsList(page, NAME)
 		await expect(page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME })).toBeVisible({ timeout: 10000 })
 
 		// --- DELETE: remove + assert the row is gone from the list ------------
 		await fx.remove('product', createdId)
-		await openProductsList(page)
+		await openProductsList(page, NAME)
 		await expect(page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME })).toHaveCount(0)
 		const remaining = await fx.list('product', { _limit: 5, name: NAME }).catch(() => [])
 		expect(remaining.length, 'deleted product no longer returned by OR API').toBe(0)
