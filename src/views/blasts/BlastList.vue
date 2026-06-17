@@ -12,6 +12,8 @@
 		:sort-key="sortKey"
 		:sort-order="sortOrder"
 		:include-columns="visibleColumns"
+		:show-view-action="false"
+		:actions="rowActions"
 		:empty-title="t('pipelinq', 'No blasts yet')"
 		:empty-action-label="t('pipelinq', 'New blast')"
 		@add="createNew"
@@ -25,6 +27,7 @@
 <script>
 import { inject } from 'vue'
 import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
+import Monitor from 'vue-material-design-icons/Monitor.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -50,6 +53,21 @@ export default {
 		 */
 		visibleColumns() {
 			return ['name', 'channel', 'status', 'scheduledFor', 'sentAt']
+		},
+		/**
+		 * Row actions for the blast list. Replaces the default View action with
+		 * a Monitor action that opens the live send monitor for the row.
+		 *
+		 * @return {Array<object>}
+		 */
+		rowActions() {
+			return [
+				{
+					label: t('pipelinq', 'Monitor'),
+					icon: Monitor,
+					handler: (row) => this.openBlast(row),
+				},
+			]
 		},
 	},
 	methods: {
