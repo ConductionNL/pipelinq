@@ -23,7 +23,9 @@ import { test, expect } from '@playwright/test'
 
 // @e2e openspec/specs/pos-transaction-core/spec.md#display-transaction-list-with-key-columns
 test('POS transaction list (Kassabon) page renders the real list shell', async ({ page }) => {
-	await page.goto('/apps/pipelinq/pos')
+	// Hash-mode router: the POS list lives at #/pos (the path-form /pos no longer
+	// resolves and falls back to the Dashboard).
+	await page.goto('/apps/pipelinq/#/pos')
 	await expect(page).toHaveURL(/pos/, { timeout: 10000 })
 	await expect(page.locator('body')).not.toContainText('Internal Server Error')
 	// The real CnIndexPage list surface (not just the shell mount) — its host
@@ -40,7 +42,7 @@ test('POS transaction list (Kassabon) page renders the real list shell', async (
 
 // @e2e openspec/specs/pos-transaction-core/spec.md#empty-state
 test('POS transaction list shows the real empty state (or populated rows) without error', async ({ page }) => {
-	await page.goto('/apps/pipelinq/pos')
+	await page.goto('/apps/pipelinq/#/pos')
 	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
 	await expect(page.locator('[data-testid="cn-index-page"]').first()).toBeVisible({ timeout: 10000 })
 	// Either the empty-state placeholder (bare env: no transactions) or a
