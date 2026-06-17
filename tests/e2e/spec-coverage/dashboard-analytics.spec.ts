@@ -30,6 +30,12 @@ async function openOperational(page) {
 	await expect(page.locator('#app-navigation-vue')).toBeVisible({ timeout: 15000 })
 	await page.reload()
 	await page.locator('#content-vue').waitFor({ state: 'visible', timeout: 15000 }).catch(() => {})
+	// Wait for the dashboard chrome + its first widget to actually mount before
+	// asserting, so a test never races the widget grid's initial render.
+	await expect(page.getByTestId('cn-dashboard-page')).toBeVisible({ timeout: 15000 })
+	await expect(
+		page.locator('#content-vue').getByRole('heading', { name: 'Operational overview' }),
+	).toBeVisible({ timeout: 15000 })
 }
 
 // @e2e dashboard::cross-module-kpi-cards-as-individual-dashboard-widgets
@@ -51,30 +57,13 @@ test('Dashboard: analytics KPIs render as individual widgets, no Unified Analyti
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
-// @e2e dashboard::period-driven-by-widget-header-date-chips
-test('Dashboard: widget-header date chips drive the analytics period, no page-level picker', async ({ page }) => {
-	await openOperational(page)
-
-	// The chart widgets surface the shared range as title-bar chips…
-	const chip = page.getByTestId('cn-dashboard-page-date-chip-leads-over-time')
-	await expect(chip).toBeVisible({ timeout: 15000 })
-	await expect(page.getByTestId('cn-dashboard-page-date-chip-requests-by-category')).toBeVisible()
-
-	// …and the page-level header picker is gone (showHeaderPicker: false),
-	// as is the old widget-local "Period" NcSelect.
-	await expect(page.getByTestId('cn-dashboard-page-date-range')).toHaveCount(0)
-	await expect(page.locator('#content-vue').getByLabel('Period', { exact: true })).toHaveCount(0)
-
-	// Picking a preset in a chip re-fetches the analytics endpoints with
-	// the mapped period parameter (chips write the SHARED range).
-	const overviewRefetch = page.waitForRequest(
-		(req) => req.url().includes('/apps/pipelinq/api/analytics/overview') && req.url().includes('period=week'),
-		{ timeout: 15000 },
-	)
-	await chip.getByRole('button').click()
-	await page.getByRole('button', { name: 'Last 7 days' }).click()
-	await overviewRefetch
-})
+// Removed: the "widget-header date chips drive the analytics period" feature
+// (cn-dashboard-page-date-chip-* chips + chip-driven /analytics/overview
+// refetch) was dropped in the IA restructure. The Operational overview now
+// renders the chart widgets statically with no per-widget date chips and no
+// page-level date-range picker, so there is no period-selection surface left to
+// assert. The "no page-level picker" half of the old assertion is now the
+// dashboard's permanent state rather than a behaviour worth a dedicated test.
 
 // @e2e dashboard::trend-chart-leads-over-time
 test('Dashboard: leads-over-time renders as a chrome-titled chart widget', async ({ page }) => {
