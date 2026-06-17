@@ -15,7 +15,8 @@
 			:loading="loading"
 			:sidebar="{ enabled: !loading }"
 			object-type="pipelinq_expense"
-			:object-id="expenseId">
+			:object-id="expenseId"
+			:sidebar-props="sidebarProps">
 			<CnDetailCard :title="t('pipelinq', 'Expense information')">
 				<div class="info-grid">
 					<div class="info-field">
@@ -80,15 +81,45 @@ export default {
 		const objectStore = useObjectStore()
 		return { objectStore }
 	},
-	data() {
-		return {
-			expense: {},
-			loading: false,
-		}
-	},
 	computed: {
 		expenseId() {
 			return this.$route?.params?.id || 'new'
+		},
+		/**
+		 * Store-managed loading flag for the expense type. Driven by the
+		 * store (set true/false inside fetchObject) rather than a local
+		 * toggle, mirroring LeadDetail/ClientDetail/ProjectDetail.
+		 *
+		 * @return {boolean} Whether an expense fetch is in flight.
+		 */
+		loading() {
+			return this.objectStore.loading.expense || false
+		},
+		/**
+		 * Expense object read from the store cache, populated by the
+		 * fetchObject call in mounted().
+		 *
+		 * @return {object} The expense object, or {} before it loads.
+		 */
+		expense() {
+			if (this.expenseId === 'new') {
+				return {}
+			}
+			return this.objectStore.getObject('expense', this.expenseId) || {}
+		},
+		/**
+		 * Register/schema for the embedded object sidebar, read from the
+		 * store's type registry — same wiring as the other detail views.
+		 *
+		 * @return {object} The sidebar props.
+		 */
+		sidebarProps() {
+			const config = this.objectStore.objectTypeRegistry.expense || {}
+			return {
+				title: t('pipelinq', 'Expense'),
+				register: config.register || '',
+				schema: config.schema || '',
+			}
 		},
 		formattedAmount() {
 			if (typeof this.expense.amount !== 'number') {
@@ -113,31 +144,19 @@ export default {
 	},
 	mounted() {
 		if (this.expenseId !== 'new') {
-			this.load()
+			this.objectStore.fetchObject('expense', this.expenseId)
 		}
 	},
 	methods: {
-		async load() {
-			this.loading = true
-			try {
-				const obj = await this.objectStore.fetchObject({ schemaSlug: 'expense', id: this.expenseId })
-				if (obj) {
-					this.expense = obj
-				}
-			} catch (e) {
-				this.expense = {}
-			} finally {
-				this.loading = false
-			}
-		},
 		/**
-		 * Apply the AP retry result to the local expense state. REQ-AP-006.
+		 * Refresh the expense from the store after an AP retry so the
+		 * card's badge/timestamp reflect the new sync status. REQ-AP-006.
 		 *
-		 * @param {object} payload The retry response payload.
+		 * @return {Promise<void>}
 		 */
-		onApUpdated(payload) {
-			if (payload && typeof payload === 'object') {
-				this.expense = { ...this.expense, ...payload }
+		async onApUpdated() {
+			if (this.expenseId !== 'new') {
+				await this.objectStore.fetchObject('expense', this.expenseId)
 			}
 		},
 	},

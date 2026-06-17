@@ -27,6 +27,7 @@
 			@refresh="onRefresh"
 			@sort="onSort"
 			@row-click="openExpense"
+			@view="openExpense"
 			@page-changed="onPageChange">
 			<template #cell-apSyncStatus="{ row }">
 				<span class="ap-status-badge"
