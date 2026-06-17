@@ -32,9 +32,60 @@ export async function dismissSupportDialog(page: Page): Promise<void> {
 	}
 }
 
-/** Click a sidebar nav link by exact label and wait for the URL to settle. */
+/**
+ * Expand every collapsed top-level nav group so its child entries become
+ * clickable. The IA restructure groups routes under collapsible parents
+ * (Sales & CRM, Service, Point of Sale, Catalog, Analytics, Administration,
+ * Integrations) whose caption link carries `href="#"` and toggles a child
+ * `<ul>`. A child route can be hidden behind a collapsed parent, so expand
+ * them all before attempting an entry click.
+ */
+export async function expandAllNavGroups(page: Page): Promise<void> {
+	const nav = page.locator('#app-navigation-vue')
+	// Group captions are entry links whose href is the bare hash "#".
+	const groupLinks = nav.locator('a.app-navigation-entry-link[href$="#"]')
+	const count = await groupLinks.count().catch(() => 0)
+	for (let i = 0; i < count; i++) {
+		const link = groupLinks.nth(i)
+		const expanded = await link.getAttribute('aria-expanded').catch(() => null)
+		if (expanded === 'false') {
+			await link.click().catch(() => {})
+		}
+	}
+}
+
+/**
+ * Navigate to a sidebar entry by its stable `cn-nav-entry-<id>` testid (set on
+ * the wrapping `<li>`), expanding any collapsed parent group first. Hash-mode
+ * deep-links reset the SPA to the Dashboard, so navigation MUST go through a
+ * real nav-link click — this clicks the link inside the testid'd wrapper and
+ * waits for the hash URL to settle.
+ */
+export async function navById(page: Page, entryId: string, urlRe: RegExp): Promise<void> {
+	await expandAllNavGroups(page)
+	const wrapper = page.locator(`[data-testid="cn-nav-entry-${entryId}"]`)
+	const link = wrapper.locator('a.app-navigation-entry-link').first()
+	await expect(link).toBeVisible({ timeout: 10000 })
+	await link.click()
+	await expect(page).toHaveURL(urlRe, { timeout: 10000 })
+	await dismissSupportDialog(page)
+	await page.locator('#content-vue').waitFor({ state: 'visible', timeout: 10000 }).catch(() => {})
+}
+
+/**
+ * Click a sidebar nav link by exact label and wait for the URL to settle.
+ * Group-aware: collapsed parent groups are expanded first, and a routing
+ * entry (its href is a real `#/route`, never the bare group `#`) is preferred
+ * over a same-named group caption so label collisions resolve to the page.
+ */
 export async function navClick(page: Page, label: string, urlRe: RegExp): Promise<void> {
-	const link = page.locator('#app-navigation-vue').getByRole('link', { name: label, exact: true }).first()
+	await expandAllNavGroups(page)
+	const nav = page.locator('#app-navigation-vue')
+	// Prefer a routing link (href containing "#/") over a group caption ("#").
+	const routing = nav.locator('a.app-navigation-entry-link[href*="#/"]').filter({ hasText: label })
+	const link = (await routing.count().catch(() => 0)) > 0
+		? routing.first()
+		: nav.getByRole('link', { name: label, exact: true }).first()
 	await expect(link).toBeVisible({ timeout: 10000 })
 	await link.click()
 	await expect(page).toHaveURL(urlRe, { timeout: 10000 })

@@ -75,9 +75,17 @@ async function globalSetup(config: FullConfig): Promise<void> {
 	const page = await context.newPage()
 
 	await page.goto('/index.php/login')
-	await page.locator('input[name="user"]').fill(user)
-	await page.locator('input[name="password"]').fill(password)
-	await page.locator('button[type="submit"], input[type="submit"]').first().click()
+	// The NC34 login form is a Vue component whose v-model only updates on real
+	// input events, so a bulk `.fill()` can submit an empty model. Type the
+	// credentials character-by-character to trigger the input handlers, then
+	// submit by pressing Enter from the password field.
+	const userInput = page.locator('input[name="user"]')
+	const passInput = page.locator('input[name="password"]')
+	await userInput.click()
+	await userInput.pressSequentially(user, { delay: 20 })
+	await passInput.click()
+	await passInput.pressSequentially(password, { delay: 20 })
+	await passInput.press('Enter')
 	// Nextcloud bounces to /apps/dashboard/ on success. Wait for the
 	// global header, which only renders on authenticated pages.
 	await page.waitForSelector('#header, header.header', { timeout: 30_000 })

@@ -6,13 +6,18 @@
  * (/analytics). Maps to openspec/specs/pipeline-insights/spec.md.
  */
 import { test, expect } from '@playwright/test'
-import { openApp, navClick, trackPipelinqErrors, assertNoHardError } from '../helpers/pipelinq'
+import { openApp, navById, trackPipelinqErrors, assertNoHardError } from '../helpers/pipelinq'
+
+// The Analytics report moved under the collapsible "Analytics" nav group in the
+// IA restructure; its stable testid is cn-nav-entry-Analytics (route #/analytics).
+// A sibling "Pipeline Analytics" entry shares the substring, so navigate by the
+// exact entry id rather than by label.
 
 // @e2e openspec/specs/pipeline-insights/spec.md#analytics-dashboard
 test('Analytics: navigates from sidebar and shows the analytics surface', async ({ page }) => {
 	const errs = trackPipelinqErrors(page)
 	await openApp(page)
-	await navClick(page, 'Analytics', /\/analytics/)
+	await navById(page, 'Analytics', /#\/analytics$/)
 
 	await expect(page.locator('#content-vue').getByRole('heading', { name: 'Analytics' }).first()).toBeVisible()
 	await assertNoHardError(page)
@@ -22,7 +27,7 @@ test('Analytics: navigates from sidebar and shows the analytics surface', async 
 // @e2e openspec/specs/pipeline-insights/spec.md#analytics-actions
 test('Analytics: exposes an Actions menu on the report', async ({ page }) => {
 	await openApp(page)
-	await navClick(page, 'Analytics', /\/analytics/)
+	await navById(page, 'Analytics', /#\/analytics$/)
 
 	await expect(page.locator('#content-vue').getByRole('button', { name: 'Actions' }).first()).toBeVisible()
 })
