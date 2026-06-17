@@ -68,8 +68,14 @@ test('requests page loads without error', async ({ page }) => {
 
 // @e2e openspec/specs/request-management/spec.md#request-status-distribution-on-dashboard
 test('requests by status widget on dashboard', async ({ page }) => {
-	await page.goto('/apps/pipelinq/')
-	await expect(page.getByText('Requests by Status').first()).toBeVisible({ timeout: 10000 })
+	// The IA dashboard split moved the request-status distribution widget onto
+	// the Operational overview (#/operational); the landing Commercial overview
+	// carries the revenue/pipeline KPIs instead.
+	await page.goto('/apps/pipelinq/#/operational')
+	await expect(page.locator('#app-navigation-vue')).toBeVisible({ timeout: 15000 })
+	await page.reload()
+	await expect(page.locator('#content-vue').getByText('Requests by Status').first())
+		.toBeVisible({ timeout: 15000 })
 })
 
 // @e2e openspec/specs/request-management/spec.md#request-card-displays-key-information
