@@ -16,7 +16,8 @@
 			:sidebar="{ enabled: !loading }"
 			object-type="pipelinq_expense"
 			:object-id="expenseId"
-			:sidebar-props="sidebarProps">
+			:sidebar-props="sidebarProps"
+			@refresh="refresh">
 			<CnDetailCard :title="t('pipelinq', 'Expense information')">
 				<div class="info-grid">
 					<div class="info-field">
@@ -86,9 +87,9 @@ export default {
 			return this.$route?.params?.id || 'new'
 		},
 		/**
-		 * Store-managed loading flag for the expense type. Driven by the
-		 * store (set true/false inside fetchObject) rather than a local
-		 * toggle, mirroring LeadDetail/ClientDetail/ProjectDetail.
+		 * Store-managed loading flag for the expense type. CnDetailPage
+		 * shows the full-page spinner only on the first load and refreshes
+		 * in place afterwards, so this can stay a plain store passthrough.
 		 *
 		 * @return {boolean} Whether an expense fetch is in flight.
 		 */
@@ -143,21 +144,35 @@ export default {
 		},
 	},
 	mounted() {
+		// Initial load: let the store's loading flag drive the full-page
+		// spinner (there is no content to preserve yet).
 		if (this.expenseId !== 'new') {
 			this.objectStore.fetchObject('expense', this.expenseId)
 		}
 	},
 	methods: {
 		/**
-		 * Refresh the expense from the store after an AP retry so the
-		 * card's badge/timestamp reflect the new sync status. REQ-AP-006.
+		 * Re-fetch the expense from the store. Drives the page-header
+		 * Refresh action (CnDetailPage runs in legacy objectType mode, so
+		 * the host owns fetching — without an @refresh listener the action
+		 * does nothing) and the AP-retry refresh (REQ-AP-006). CnDetailPage
+		 * keeps content in place and spins only the action button.
 		 *
 		 * @return {Promise<void>}
 		 */
-		async onApUpdated() {
+		async refresh() {
 			if (this.expenseId !== 'new') {
 				await this.objectStore.fetchObject('expense', this.expenseId)
 			}
+		},
+		/**
+		 * Refresh the expense after an AP retry so the card's
+		 * badge/timestamp reflect the new sync status. REQ-AP-006.
+		 *
+		 * @return {Promise<void>}
+		 */
+		onApUpdated() {
+			return this.refresh()
 		},
 	},
 }
