@@ -18,10 +18,18 @@ test('pipeline page renders with sidebar', async ({ page }) => {
 
 // @e2e openspec/specs/pipeline/spec.md#view-stage-list-in-sidebar
 test('pipeline sidebar shows Details and Stages tabs or empty state', async ({ page }) => {
-	await page.goto('/apps/pipelinq/pipeline')
-	// Either pipeline selector is present or we see empty state
-	const hasSelector = await page.locator('select, [role="combobox"]').first().isVisible().catch(() => false)
-	const hasEmptyState = await page.getByText(/No pipeline|pipeline selected|no pipeline/i).isVisible().catch(() => false)
+	await page.goto('/apps/pipelinq/#/pipeline')
+	await expect(page.locator('#content-vue').getByRole('heading', { name: 'Pipeline' }).first())
+		.toBeVisible({ timeout: 15000 })
+	// The IA pipeline page surfaces a "Select pipeline" NcSelect (.pipeline-selector)
+	// once it has loaded; on an empty data state it renders an empty-state message
+	// instead. Either is an acceptable rendered surface.
+	const content = page.locator('#content-vue')
+	const hasSelector = await content.locator('.pipeline-selector')
+		.first().isVisible().catch(() => false)
+	const hasEmptyState = await content
+		.getByText(/No pipeline|pipeline selected|no pipeline|geen pipeline/i)
+		.first().isVisible().catch(() => false)
 	expect(hasSelector || hasEmptyState).toBe(true)
 })
 
@@ -64,9 +72,14 @@ test('pipeline page renders without server error after navigation', async ({ pag
 
 // @e2e openspec/specs/pipeline/spec.md#pipeline-value-kpi-widget
 test('pipeline value KPI widget visible on dashboard', async ({ page }) => {
-	await page.goto('/apps/pipelinq/')
-	// Pipeline Value KPI tile rendered
-	await expect(page.getByText(/Pipeline V/i).first()).toBeVisible({ timeout: 10000 })
+	await page.goto('/apps/pipelinq/#/')
+	// The IA restructure relabelled the pipeline-value KPI to "Open Pipeline"
+	// and surfaces it among the Commercial overview KPI tiles. Wait for the
+	// dashboard chrome first so the KPI grid has mounted.
+	await expect(page.locator('#content-vue').getByRole('heading', { name: 'Commercial overview' }))
+		.toBeVisible({ timeout: 15000 })
+	await expect(page.locator('#content-vue').getByText('Open Pipeline').first())
+		.toBeVisible({ timeout: 15000 })
 })
 
 /*
