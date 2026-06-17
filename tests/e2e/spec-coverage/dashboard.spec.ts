@@ -131,9 +131,12 @@ test('dashboard loads without unhandled errors', async ({ page }) => {
 test('dashboard navigation items visible', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
 	await expect(page.locator('#app-navigation-vue')).toBeVisible({ timeout: 15000 })
-	// Top-level grouped nav after the IA restructure surfaces the Sales/CRM
-	// and Point of Sale group headings; the Dashboard entry stays at the top.
-	await expect(page.locator('#app-navigation-vue').getByText('Dashboard').first()).toBeVisible()
+	// The IA restructure split the single "Dashboard" entry into the Commercial
+	// (cn-nav-entry-Dashboard, route #/) and Operational
+	// (cn-nav-entry-OperationalDashboard, route #/operational) overviews, both
+	// pinned to the top of the sidebar. Assert against the stable testids.
+	await expect(page.getByTestId('cn-nav-entry-Dashboard')).toBeVisible()
+	await expect(page.getByTestId('cn-nav-entry-OperationalDashboard')).toBeVisible()
 })
 
 /*
