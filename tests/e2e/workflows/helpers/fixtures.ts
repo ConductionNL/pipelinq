@@ -83,9 +83,18 @@ export class FixtureSession {
 		const res = await this.apiFetch('GET', '/index.php/apps/openregister/api/registers?_limit=200')
 		if (!res.ok) return
 		const list = Array.isArray(res.json) ? res.json : (res.json?.results || [])
-		const reg = list.find((r: any) => r.slug === PIPELINQ_REGISTER_SLUG)
-		if (reg && (reg.id || reg.id === 0)) {
-			this.register = String(reg.id)
+		// The dev box can carry more than one register under the 'pipelinq' slug
+		// (a stale re-import duplicate alongside the original). Object reads via the
+		// slug resolve to the ORIGINAL register — the lowest numeric id — so the
+		// fixture must pin the same one, otherwise it writes into the duplicate and
+		// its objects never appear in the UI list. Prefer the lowest matching id.
+		const matches = list
+			.filter((r: any) => r.slug === PIPELINQ_REGISTER_SLUG && (r.id || r.id === 0))
+			.map((r: any) => Number(r.id))
+			.filter((n: number) => !Number.isNaN(n))
+			.sort((a: number, b: number) => a - b)
+		if (matches.length > 0) {
+			this.register = String(matches[0])
 		}
 	}
 

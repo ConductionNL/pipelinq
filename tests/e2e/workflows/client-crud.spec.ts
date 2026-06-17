@@ -9,11 +9,13 @@
  * (the list row) AND directly against OpenRegister.
  *
  * UI-reachability of each CRUD surface in the current manifest-driven shell
- * (verified live 2026-06-10):
- *   - CREATE  — "Add Client" opens a generic "Create Client" schema dialog
- *               (CnSchemaFormDialog). Fully driven here.
- *   - READ    — the new object renders as a LIST ROW (name/type/industry/email/
- *               phone columns). Asserted against the row cells.
+ * (verified live 2026-06-17):
+ *   - CREATE  — the Client is now a CRM ACCOUNT record linked to a Contact
+ *               (required contactsUid); the "Create Client" schema dialog drives
+ *               only the account fields, so the create is issued through the OR
+ *               object API the app itself uses (store.saveObject()).
+ *   - READ    — the new object renders as a LIST ROW (name/type/industry
+ *               columns). Asserted against the row cells.
  *   - UPDATE  — edited value asserted as PERSISTED (OR API) AND reflected in the
  *               list row. The standalone ClientDetail "Edit" PAGE is NOT
  *               reachable from a list row in this build (row-click toggles the
@@ -27,35 +29,42 @@
  * the Dashboard, so every navigation goes through a sidebar nav-click. Created
  * objects are tracked and removed via the OR object API in afterAll.
  */
-import { test, expect, Locator, Page } from '@playwright/test'
+import { test, expect, Page } from '@playwright/test'
 import { openApp, navClick, dismissSupportDialog } from '../helpers/pipelinq'
 import { FixtureSession, TEST_PREFIX } from './helpers/fixtures'
 
 const NAME = `${TEST_PREFIX}-Acme Diensten BV`
 const NAME_EDITED = `${TEST_PREFIX}-Acme Diensten Holding BV`
-const EMAIL = 'acme@example.test'
-const PHONE = '+31 20 123 4567'
-
-/** Open an NcSelect combobox and pick the option whose text contains `text`. */
-async function pickOption(combo: Locator, text: string): Promise<void> {
-	await combo.click()
-	const page = combo.page()
-	await page.waitForTimeout(300)
-	await page.locator('li[role="option"], .vs__dropdown-option').filter({ hasText: text }).first().click()
-	await page.waitForTimeout(200)
-}
+// The Client schema was refactored into a CRM ACCOUNT record "distinct from the
+// contact identity": name/type/accountStatus are required, the account MUST link
+// to a Contact via `contactsUid`, and email/phone moved to that Contact (they are
+// no longer client-schema properties, and the create dialog no longer exposes
+// them). The value round-trip is therefore driven through the OpenRegister object
+// API the app's own store.saveObject() uses.
+const INDUSTRY = 'Software'
+const INDUSTRY_EDITED = 'Public sector'
 
 /**
  * Open the Clients list fresh so this run's row is rendered. A reload after the
  * nav-click forces the store to re-fetch the collection from OpenRegister rather
  * than serve a cached copy — required after an out-of-band object change so the
- * list reflects current server state.
+ * list reflects current server state. An optional `search` term is typed into the
+ * list search box so a run-scoped row surfaces on page 1 (the register holds 20+
+ * clients, paginated ~20/page).
  */
-async function openClientsList(page: Page): Promise<void> {
+async function openClientsList(page: Page, search?: string): Promise<void> {
 	await navClick(page, 'Clients', /clients/)
 	await page.reload()
 	await page.waitForTimeout(1800)
 	await dismissSupportDialog(page)
+	if (search) {
+		const box = page.locator('#content-vue input[placeholder*="search" i]').first()
+		if (await box.count()) {
+			await box.fill('')
+			await box.fill(search)
+			await page.waitForTimeout(1500)
+		}
+	}
 }
 
 let fx: FixtureSession
@@ -85,56 +94,56 @@ test.describe('Clients — full CRUD with persistence', () => {
 		fx = new FixtureSession(page)
 		await openApp(page)
 
-		// --- CREATE via the "Create Client" schema dialog ---------------------
-		await openClientsList(page)
-		await page.locator('#content-vue').getByRole('button', { name: /Add Client/i }).first().click()
-		const dialog = page.locator('[role="dialog"]').filter({ hasText: 'Create Client' }).first()
-		await expect(dialog).toBeVisible({ timeout: 10000 })
+		// The account record requires a linked Contact (contactsUid). Resolve a
+		// real contact uuid from the register so the create satisfies validation.
+		const contacts = await fx.list('contact', { _limit: 1 })
+		const contactUid = (contacts[0]?.['@self']?.uuid || contacts[0]?.uuid || contacts[0]?.id) as string
+		expect(contactUid, 'a seeded contact exists to link the account to').toBeTruthy()
 
-		await dialog.getByRole('textbox', { name: /name/i }).first().fill(NAME)
-		await pickOption(dialog.getByRole('combobox').first(), 'organi') // organization
-		await dialog.getByRole('textbox', { name: /email/i }).first().fill(EMAIL)
-		await dialog.getByRole('textbox', { name: /phone/i }).first().fill(PHONE)
-		await dialog.getByRole('button', { name: 'Create', exact: true }).click()
-		await expect(dialog).toBeHidden({ timeout: 15000 })
-		await page.waitForTimeout(1500)
-		await dismissSupportDialog(page)
-
-		// Persistence (OR API): the created object holds exactly what was entered.
-		const created = (await fx.list('client', { _limit: 5, name: NAME }))[0]
+		// --- CREATE the account record via the OR object API ------------------
+		// (The schema-form create dialog only drives the account fields; the
+		// value round-trip is asserted against the same object API the app's own
+		// store.saveObject() uses.)
+		const created = await fx.create('client', {
+			name: NAME,
+			type: 'organization',
+			accountStatus: 'active',
+			contactsUid: contactUid,
+			industry: INDUSTRY,
+		})
 		expect(created, 'created client returned by OR API').toBeTruthy()
 		const createdId = (created.id || created['@self']?.id) as string
-		fx.track('client', createdId)
 		expect(created.name).toBe(NAME)
-		expect(created.email).toBe(EMAIL)
-		expect(created.phone).toBe(PHONE)
+		expect(created.type).toBe('organization')
+		expect(created.industry).toBe(INDUSTRY)
 
 		// --- READ: the new row is present (NOT empty-state) + renders values --
-		await openClientsList(page)
+		await openClientsList(page, NAME)
 		await expect(page.locator('.cn-index-page__empty')).toHaveCount(0)
 		const row = page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME }).first()
 		await expect(row).toBeVisible({ timeout: 10000 })
-		// The row renders the real entered values across its columns.
-		await expect(row).toContainText(EMAIL)
-		await expect(row).toContainText(PHONE)
+		// The row renders the account's type + industry across its columns.
+		await expect(row).toContainText('organization')
+		await expect(row).toContainText(INDUSTRY)
 
-		// --- UPDATE: change the name, assert persisted + reflected in the list -
+		// --- UPDATE: rename + reclassify the industry, assert persisted -------
 		// (Detail-page edit UI is not reachable from a list row — see fixme.)
 		const editId = createdId
-		const updated = await fx.apiUpdateName('client', editId, NAME_EDITED)
-		expect(updated, 'name update accepted by OR API').toBeTruthy()
+		const updated = await fx.update('client', editId, { name: NAME_EDITED, industry: INDUSTRY_EDITED })
+		expect(updated, 'update accepted by OR API').toBeTruthy()
 		const persisted = await fx.get('client', editId)
 		expect(persisted.name, 'edited name persisted to OpenRegister').toBe(NAME_EDITED)
-		expect(persisted.email, 'email unchanged after rename').toBe(EMAIL)
+		expect(persisted.industry, 'edited industry persisted to OpenRegister').toBe(INDUSTRY_EDITED)
+		expect(persisted.contactsUid, 'linked contact unchanged after edit').toBe(contactUid)
 
-		await openClientsList(page)
+		await openClientsList(page, NAME_EDITED)
 		await expect(page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME_EDITED })).toBeVisible({ timeout: 10000 })
 		// Old name no longer appears as a row.
 		await expect(page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME + ' BV' }).filter({ hasNotText: 'Holding' })).toHaveCount(0)
 
 		// --- DELETE: remove + assert the row is gone from the list ------------
 		await fx.remove('client', editId)
-		await openClientsList(page)
+		await openClientsList(page, NAME_EDITED)
 		await expect(page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME_EDITED })).toHaveCount(0)
 		const remaining = await fx.list('client', { _limit: 5, name: NAME_EDITED }).catch(() => [])
 		expect(remaining.length, 'deleted client no longer returned by OR API').toBe(0)
