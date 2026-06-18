@@ -102,7 +102,7 @@
 		</div>
 
 		<!-- Actions -->
-		<div class="form-actions">
+		<div v-if="showActions" class="form-actions">
 			<NcButton type="tertiary" @click="$emit('cancel')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
@@ -131,6 +131,15 @@ export default {
 		lead: {
 			type: Object,
 			default: null,
+		},
+		/**
+		 * Render the built-in Cancel / Save buttons. Set to `false` when the
+		 * host supplies its own action buttons (e.g. a parent NcDialog driving
+		 * the form via a ref + the `update:valid` event).
+		 */
+		showActions: {
+			type: Boolean,
+			default: true,
 		},
 	},
 	data() {
@@ -256,6 +265,16 @@ export default {
 		},
 		isValid() {
 			return Object.keys(this.errors).length === 0 && this.form.title?.trim()
+		},
+	},
+	watch: {
+		// Surface validity so a host (e.g. a parent NcDialog) can enable or
+		// disable its own submit button.
+		isValid: {
+			immediate: true,
+			handler(val) {
+				this.$emit('update:valid', !!val)
+			},
 		},
 	},
 	/**
