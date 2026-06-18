@@ -1,3 +1,7 @@
+---
+status: done
+---
+
 ## Purpose
 
 Run the periodic background jobs that keep task state current without user interaction: a TimedJob that expires tasks past their deadline (status → "verlopen") and deadline-escalation notifications. These run in PHP cron with no UI surface and are covered by PHPUnit.

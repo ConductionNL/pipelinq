@@ -1,3 +1,7 @@
+---
+status: done
+---
+
 # Spec: Admin Settings — Duplicate Prevention
 
 ## Purpose

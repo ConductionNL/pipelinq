@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # pipelinq-pos-grouping Specification
 
 ## Purpose
-TBD - created by archiving change pipelinq-pos-grouping. Update Purpose after archive.
+Organizes the point-of-sale and product navigation into coherent groups without changing any routes. Groups the till runtime leaves under a single "Point of Sale" entry, places product master data under a separate "Catalog" group, moves POS staff and role configuration into the Settings foldout, and keeps the pages array unchanged so every affected deep link still resolves.
 ## Requirements
 ### Requirement: REQ-PPOS-001 — The system SHALL group the till runtime POS leaves under a single "Point of Sale" top-level navigation entry
 

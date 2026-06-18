@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # marketing-analytics Specification
 
 ## Purpose
-TBD - created by archiving change marketing-segmentation-and-blast-08-performance-dashboard. Update Purpose after archive.
+Provides a marketing performance dashboard that reports per-blast delivery metrics, A/B click-rate significance via a chi-square test, and revenue attribution. It surfaces an overview table of recent blasts (open/click rates, unsubscribes), an A/B testing tab with statistical significance once each arm reaches sufficient volume, and an attribution tab summing attributed deal value per blast.
 ## Requirements
 ### Requirement: A/B Significance Reported in Dashboard
 

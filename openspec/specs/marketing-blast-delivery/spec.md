@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # marketing-blast-delivery Specification
 
 ## Purpose
-TBD - created by archiving change marketing-segmentation-and-blast-05-jobs-and-webhooks. Update Purpose after archive.
+Drives blast delivery via a background job that dispatches queued sends every few minutes and processes provider webhooks without one blast's failure aborting the others. It propagates unsubscribes to consent records within a minute, handles hard and soft bounces to protect sender reputation, and records click events (first-click time, clicked URLs, UTM campaign) for attribution.
 ## Requirements
 ### Requirement: Background Job Dispatches Sending Blasts
 
