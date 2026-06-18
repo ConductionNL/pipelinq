@@ -42,6 +42,18 @@ export async function navClick(page: Page, label: string, urlRe: RegExp): Promis
 		.locator('#app-navigation-vue a.app-navigation-entry-link[href*="#/"]')
 		.filter({ hasText: new RegExp(`^\\s*${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`) })
 		.first()
+	// The entry is always present in the DOM, but some leaves live inside the
+	// NcAppNavigation Settings flyout (`button.settings-button`), which is
+	// collapsed (display:none) by default. If the entry is not visible, open the
+	// Settings flyout first so the leaf renders before we click it.
+	await link.waitFor({ state: 'attached', timeout: 10000 })
+	if (!(await link.isVisible().catch(() => false))) {
+		const settingsBtn = page.locator('#app-navigation-vue button.settings-button[aria-expanded="false"]').first()
+		if (await settingsBtn.isVisible().catch(() => false)) {
+			await settingsBtn.click().catch(() => {})
+			await link.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {})
+		}
+	}
 	await expect(link).toBeVisible({ timeout: 10000 })
 	await link.click()
 	await expect(page).toHaveURL(urlRe, { timeout: 10000 })
