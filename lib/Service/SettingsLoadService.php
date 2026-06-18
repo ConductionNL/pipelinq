@@ -53,8 +53,6 @@ class SettingsLoadService
         'leadProduct',
         'contactmoment',
         'task',
-        'emailLink',
-        'calendarLink',
         'relationship',
         'queue',
         'skill',
@@ -62,6 +60,11 @@ class SettingsLoadService
         // Project ledger schemas (project-to-shillinq-ledger integration).
         'project',
         'projectPhase',
+        // Project / WBS hierarchy (project-task-hierarchy).
+        'projectTask',
+        'projectActivity',
+        // Time & WIP tracking (time-wip).
+        'timeEntry',
         'posTransaction',
         'posTransactionLine',
         // POS split-tender schemas (pos-split-tender). Without these two slugs
@@ -81,6 +84,12 @@ class SettingsLoadService
         'cashDrop',
         'cashCount',
         'cashDiff',
+        // POS staff/roles (pos-end-of-day-bookkeeping) and end-of-day Z-reports.
+        'posRole',
+        'posStaff',
+        'posZReport',
+        // POS kassakoppeling audit trail (pos-kassakoppeling-audit).
+        'kassakoppelingAuditLog',
         // Customer portal schemas (live in the separate pipelinq-portal register).
         'portalAccount',
         'portalSession',
@@ -130,6 +139,22 @@ class SettingsLoadService
         // Contract & renewal tracking (contract-renewal-tracking) — recurring-revenue
         // contracts with renewal-window detection and churn metrics.
         'contract',
+        // Appointment booking (appointment-booking).
+        'service',
+        'resource',
+        'booking',
+        'walkInTicket',
+        'availabilityCache',
+        // Expense-to-Shillinq accounts-payable sync (expense-shillinq-ap).
+        'expense',
+        // Marketing segmentation & blast (marketing-segmentation-blast).
+        'blast',
+        // Berichtenbox messaging channel (berichtenbox).
+        'berichtenboxMessage',
+        'berichtenboxReply',
+        'berichtenboxTemplate',
+        'mailboxResolution',
+        'deliveryAuditLog',
     ];
 
     /**

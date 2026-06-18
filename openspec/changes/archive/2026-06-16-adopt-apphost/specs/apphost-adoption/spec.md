@@ -12,7 +12,7 @@ Pipelinq's health/metrics endpoints and boilerplate plumbing (dashboard SPA serv
 
 ---
 
-## Requirements
+## ADDED Requirements
 
 ### Requirement: Declarative Observability with Engine-Side Aggregation
 

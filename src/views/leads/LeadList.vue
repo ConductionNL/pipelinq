@@ -20,7 +20,8 @@
 		:sidebar="sidebarConfig"
 		:row-class="rowClassFor"
 		:items-filter="itemsFilter"
-		:actions="actionsBar">
+		:actions="actionsBar"
+		@view="openLead">
 		<template #header-extra>
 			<div class="lead-list__filters">
 				<NcCheckboxRadioSwitch
@@ -184,6 +185,14 @@ export default {
 		isLeadOverdue,
 		getOverdueDays,
 		/**
+		 * Open a lead's detail page (CnIndexPage row "View" action).
+		 *
+		 * @param {object} row The lead row.
+		 */
+		openLead(row) {
+			this.$router.push({ name: 'LeadDetail', params: { id: row.id } })
+		},
+		/**
 		 * Compute the row CSS class for the given lead. Drives the
 		 * `.lead-overdue` highlighting on the list rows.
 		 *
@@ -268,9 +277,11 @@ export default {
 }
 
 /* Overdue row highlighting (REQ-LM-004 Scenario 11). Scoped class applied
-   via CnIndexPage's row-class prop. */
+   via CnIndexPage's row-class prop. Uses an inset box-shadow (matching the
+   library's .cn-table-row--selected accent) rather than border-left, which
+   would shift the row's content sideways. */
 :deep(.lead-overdue) {
-	border-left: 3px solid var(--color-error);
+	box-shadow: inset 3px 0 0 0 var(--color-error);
 }
 
 .overdue-cell {

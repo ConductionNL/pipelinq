@@ -9,6 +9,52 @@
 		"timemanager",
 		"forms"
 	],
+	"observability": {
+		"health": {
+			"checks": [
+				{ "id": "database", "type": "database" },
+				{ "id": "filesystem", "type": "filesystem", "severity": "degraded" }
+			]
+		},
+		"metrics": [
+			{
+				"name": "leads_total",
+				"type": "gauge",
+				"help": "Total leads by status and pipeline",
+				"source": { "kind": "objectCount", "register": "pipelinq", "schema": "lead", "groupBy": ["status", "pipeline"] }
+			},
+			{
+				"name": "leads_value_total",
+				"type": "gauge",
+				"help": "Total pipeline value in EUR",
+				"source": { "kind": "objectSum", "register": "pipelinq", "schema": "lead", "field": "value", "groupBy": ["pipeline"] }
+			},
+			{
+				"name": "clients_total",
+				"type": "gauge",
+				"help": "Total clients",
+				"source": { "kind": "objectCount", "register": "pipelinq", "schema": "client" }
+			},
+			{
+				"name": "contacts_total",
+				"type": "gauge",
+				"help": "Total contacts",
+				"source": { "kind": "objectCount", "register": "pipelinq", "schema": "contact" }
+			},
+			{
+				"name": "service_requests_total",
+				"type": "gauge",
+				"help": "Total service requests by status",
+				"source": { "kind": "objectCount", "register": "pipelinq", "schema": "request", "groupBy": ["status"] }
+			}
+		]
+	},
+	"deepLinks": [
+		{ "registerSlug": "pipelinq", "schemaSlug": "client", "urlTemplate": "/apps/pipelinq/clients/{uuid}", "displayName": "Client" },
+		{ "registerSlug": "pipelinq", "schemaSlug": "lead", "urlTemplate": "/apps/pipelinq/leads/{uuid}", "displayName": "Lead" },
+		{ "registerSlug": "pipelinq", "schemaSlug": "request", "urlTemplate": "/apps/pipelinq/requests/{uuid}", "displayName": "Request" },
+		{ "registerSlug": "pipelinq", "schemaSlug": "contact", "urlTemplate": "/apps/pipelinq/contacts/{uuid}", "displayName": "Contact" }
+	],
 	"menu": [
 		{
 			"id": "Dashboard",
@@ -338,6 +384,7 @@
 			"title": "Operational overview",
 			"actionsComponent": "DashboardHeaderActions",
 			"config": {
+				"showRefresh": false,
 				"description": "Leads, requests, service and team workload",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"dateRange": {
@@ -448,6 +495,7 @@
 		},
 		{
 			"id": "ClientDetail",
+			"_note": "Bespoke 360-degree client record (ClientDetail.vue): edit/new mode toggle plus a custom header and eleven CnDetailCard panels wired to klantbeeld-360 relations (contacts, deals, contactmomenten, invoices) and inline NcDialog editors; the standard 'detail' page type renders a single object's fields and cannot host this aggregated multi-relation layout.",
 			"route": "/clients/:id",
 			"type": "custom",
 			"title": "Client",
@@ -680,6 +728,7 @@
 		},
 		{
 			"id": "ContactDetail",
+			"_note": "Bespoke contact record (ContactDetail.vue): edit/new mode with a custom header and CnDetailCard panels for linked client, contactmomenten and a CnFormDialog inline editor; the standard 'detail' type shows only one schema's fields and cannot express the cross-relation klantbeeld-360 layout.",
 			"route": "/contacts/:id",
 			"type": "custom",
 			"title": "Contact",
@@ -692,6 +741,7 @@
 		},
 		{
 			"id": "Leads",
+			"_note": "LeadList.vue extends a CnIndexPage with lead-specific bulk controls (NcCheckboxRadioSwitch quick-filters plus CnMassImportDialog / CnMassExportDialog) that the declarative 'index' page type does not expose; kept as a host-app component until those bulk actions are promoted to the library.",
 			"route": "/leads",
 			"type": "custom",
 			"title": "Leads",
@@ -935,6 +985,7 @@
 		},
 		{
 			"id": "ProductBarcodeSearch",
+			"_note": "ProductBarcodeSearch.vue is a single-purpose scanner surface: a barcode/EAN input that resolves one product and shows an NcEmptyContent fallback when nothing matches; it is neither a list nor an object-detail page, so no standard page type fits.",
 			"route": "/products-barcode",
 			"type": "custom",
 			"title": "Barcode lookup",
@@ -958,6 +1009,7 @@
 		},
 		{
 			"id": "PosTransactions",
+			"_note": "PosTransactionList.vue is a CnIndexPage specialised for the point-of-sale receipt ledger (POS-specific columns, status badges and row actions wired to the posTransaction schema); kept as a host-app component while those POS column/action presets live outside the library.",
 			"route": "/pos",
 			"type": "custom",
 			"title": "Kassabon",
@@ -969,6 +1021,7 @@
 		},
 		{
 			"id": "PosTransactionNew",
+			"_note": "PosTransactionForm.vue is a bespoke cart/checkout form (line-item rows, NcSelect tender pickers, totals math) for ringing up a sale; the standard form/detail page types cannot host the interactive line-item editing the POS register requires.",
 			"route": "/pos/new",
 			"type": "custom",
 			"title": "Nieuwe transactie",
@@ -980,6 +1033,7 @@
 		},
 		{
 			"id": "PosTransactionEdit",
+			"_note": "Reuses PosTransactionForm.vue (the bespoke cart/checkout editor with line-item rows and tender pickers) in edit mode; no standard form/detail page type can host the interactive line-item editing.",
 			"route": "/pos/:id/edit",
 			"type": "custom",
 			"title": "Transactie bewerken",
@@ -991,6 +1045,7 @@
 		},
 		{
 			"id": "PosRefunds",
+			"_note": "PosRefundList.vue is a CnIndexPage specialised for the POS refund ledger (refund-specific columns and status badges on the posRefund schema); kept as a host-app component while those presets live outside the library.",
 			"route": "/pos/refunds",
 			"type": "custom",
 			"title": "Retouren",
@@ -1002,6 +1057,7 @@
 		},
 		{
 			"id": "PosRefundNewFromTransaction",
+			"_note": "Reuses PosRefundForm.vue (bespoke refund editor: per-line refund selection and tender NcSelect) pre-seeded from the originating transaction; the interactive line-selection logic has no standard form page-type equivalent.",
 			"route": "/pos/refunds/new/:transactionId",
 			"type": "custom",
 			"title": "Nieuwe retour",
@@ -1013,6 +1069,7 @@
 		},
 		{
 			"id": "PosRefundNew",
+			"_note": "Reuses PosRefundForm.vue (bespoke refund editor with per-line refund selection and tender NcSelect) for a standalone refund; the interactive line-selection logic has no standard form page-type equivalent.",
 			"route": "/pos/refunds/new",
 			"type": "custom",
 			"title": "Nieuwe retour",
@@ -1024,6 +1081,7 @@
 		},
 		{
 			"id": "PosRefundEdit",
+			"_note": "Reuses PosRefundForm.vue (bespoke refund editor with per-line refund selection and tender NcSelect) in edit mode; the interactive line-selection logic has no standard form page-type equivalent.",
 			"route": "/pos/refunds/:id/edit",
 			"type": "custom",
 			"title": "Retour bewerken",
@@ -1035,6 +1093,7 @@
 		},
 		{
 			"id": "PosRefundDetail",
+			"_note": "PosRefundDetail.vue is a CnDetailPage composed with refund-specific CnDetailCard panels, a CnStatusBadge and refund-only actions; the declarative 'detail' type renders flat schema fields and cannot lay out these grouped refund cards.",
 			"route": "/pos/refunds/:id",
 			"type": "custom",
 			"title": "Retour",
@@ -1046,6 +1105,7 @@
 		},
 		{
 			"id": "CashShifts",
+			"_note": "CashShiftList.vue is a CnIndexPage specialised for the cash-drawer shift register (shift-specific columns/state on the cashShift schema); kept as a host-app component while those presets live outside the library.",
 			"route": "/pos/shifts",
 			"type": "custom",
 			"title": "Kassalade",
@@ -1057,6 +1117,7 @@
 		},
 		{
 			"id": "CashShiftDetail",
+			"_note": "CashShiftDetail.vue is a CnDetailPage with cash-drawer-specific CnDetailCard panels (opening/closing float, counted-vs-expected variance), CnStatusBadge and open/close actions; the standard 'detail' type cannot express this reconciliation layout.",
 			"route": "/pos/shifts/:id",
 			"type": "custom",
 			"title": "Shift",
@@ -1068,6 +1129,7 @@
 		},
 		{
 			"id": "ZReports",
+			"_note": "ZReportList.vue is a CnIndexPage specialised for the daily Z-report (end-of-day close) ledger on the zReport schema; kept as a host-app component while those accounting-close presets live outside the library.",
 			"route": "/pos/z-reports",
 			"type": "custom",
 			"title": "Boekhoudkundige Afhandeling",
@@ -1079,6 +1141,7 @@
 		},
 		{
 			"id": "ZReportDetail",
+			"_note": "ZReportDetail.vue is a CnDetailPage with Z-report-specific CnDetailCard panels (per-tender totals, tax breakdown, drawer reconciliation) and CnStatusBadge; the declarative 'detail' type cannot lay out these aggregated accounting summaries.",
 			"route": "/pos/z-reports/:id",
 			"type": "custom",
 			"title": "Z-report",
@@ -1090,26 +1153,23 @@
 		},
 		{
 			"id": "PosCustomerSettings",
+			"_note": "PosCustomerSettings.vue is an in-app settings surface (NcSettingsSection with the POS customer-lookup configuration form); it edits app configuration rather than register objects, so no object-oriented page type applies.",
 			"route": "/admin/pos-customer-link",
 			"type": "custom",
 			"title": "POS customer lookup",
-			"component": "PosCustomerSettingsView",
-			"config": {
-				"register": "pipelinq"
-			}
+			"component": "PosCustomerSettingsView"
 		},
 		{
 			"id": "BrpMonitor",
+			"_note": "BrpMonitor.vue is a bespoke operational monitor for BRP (Dutch persons-registry) connection health and recent lookups, with its own status/refresh layout; it is a live diagnostics panel, not a list or detail of register objects, so no standard page type fits.",
 			"route": "/admin/brp-monitor",
 			"type": "custom",
 			"title": "BRP Monitor",
-			"component": "BrpMonitorView",
-			"config": {
-				"register": "pipelinq"
-			}
+			"component": "BrpMonitorView"
 		},
 		{
 			"id": "KassakoppelingAuditList",
+			"_note": "KassakoppelingAuditList.vue is a bespoke audit-trail viewer for the kassakoppeling (cash-register fiscalisation link) with append-only entries and verification actions rendered in a custom layout; the generic 'index' type cannot express the immutable-audit presentation and per-row verify controls.",
 			"route": "/kassakoppeling/audit",
 			"type": "custom",
 			"title": "Kassakoppeling audit",
@@ -1121,6 +1181,7 @@
 		},
 		{
 			"id": "KassakoppelingAuditDetail",
+			"_note": "KassakoppelingAuditDetail.vue is a CnDetailPage with audit-specific CnDetailCard panels showing the signed payload, hash chain and verification result of one fiscalisation entry; the standard 'detail' type cannot render this signed/verifiable audit layout.",
 			"route": "/kassakoppeling/audit/:id",
 			"type": "custom",
 			"title": "Audit entry",
@@ -1132,6 +1193,7 @@
 		},
 		{
 			"id": "PosTransactionDetail",
+			"_note": "PosTransactionDetail.vue is a CnDetailPage with five receipt-specific CnDetailCard panels (line items, tenders, taxes, customer, linked refunds), CnStatusBadge and nine contextual actions (refund, reprint, email); the flat 'detail' type cannot host this grouped receipt layout.",
 			"route": "/pos/:id",
 			"type": "custom",
 			"title": "Transactie",
@@ -1143,6 +1205,7 @@
 		},
 		{
 			"id": "PosRoleList",
+			"_note": "PosRoleList.vue is a CnIndexPage specialised for POS role definitions (permission-summary columns on the posRole schema); kept as a host-app component while those POS-permission presets live outside the library.",
 			"route": "/pos/roles",
 			"type": "custom",
 			"title": "POS rollen",
@@ -1154,6 +1217,7 @@
 		},
 		{
 			"id": "PosRoleNew",
+			"_note": "Uses PosRoleForm.vue, a bespoke role editor with a grid of NcCheckboxRadioSwitch permission toggles; the per-capability toggle matrix has no standard form page-type representation.",
 			"route": "/pos/roles/new",
 			"type": "custom",
 			"title": "Nieuwe rol",
@@ -1165,6 +1229,7 @@
 		},
 		{
 			"id": "PosRoleDetail",
+			"_note": "Reuses PosRoleForm.vue (bespoke role editor with a permission-toggle grid) in edit mode; the per-capability NcCheckboxRadioSwitch matrix has no standard form/detail page-type representation.",
 			"route": "/pos/roles/:id",
 			"type": "custom",
 			"title": "POS rol",
@@ -1176,6 +1241,7 @@
 		},
 		{
 			"id": "PosStaffList",
+			"_note": "PosStaffList.vue is a CnIndexPage specialised for POS staff accounts (role/PIN-status columns on the posStaff schema) with staff-only row actions; kept as a host-app component while those presets live outside the library.",
 			"route": "/pos/staff",
 			"type": "custom",
 			"title": "POS medewerkers",
@@ -1187,6 +1253,7 @@
 		},
 		{
 			"id": "PosStaffNew",
+			"_note": "Uses PosStaffForm.vue, a bespoke staff editor combining identity NcTextFields, a role NcSelect and a PIN/active NcCheckboxRadioSwitch; the mixed credential + role-assignment form has no standard form page-type representation.",
 			"route": "/pos/staff/new",
 			"type": "custom",
 			"title": "Nieuwe medewerker",
@@ -1198,6 +1265,7 @@
 		},
 		{
 			"id": "PosStaffDetail",
+			"_note": "Reuses PosStaffForm.vue (bespoke staff editor: identity fields, role NcSelect, PIN/active toggles) in edit mode; the mixed credential + role-assignment form has no standard form/detail page-type representation.",
 			"route": "/pos/staff/:id",
 			"type": "custom",
 			"title": "POS medewerker",
@@ -1252,6 +1320,7 @@
 		},
 		{
 			"id": "MyWork",
+			"_note": "MyWork.vue is a personal cross-entity worklist: it merges tasks, deals and contactmomenten assigned to the current user into grouped, due-date-coloured sections with entity badges and quick-filter buttons; no single-register 'index' page can aggregate across these schemas.",
 			"route": "/my-work",
 			"type": "custom",
 			"title": "My Work",
@@ -1277,6 +1346,7 @@
 		},
 		{
 			"id": "Rapportage",
+			"_note": "RapportageView.vue is a bespoke analytics surface: a CnDashboardPage whose widget slots are filled with custom-computed report blocks fetched once and shared across slots, rather than the manifest-declared widget set the standard 'dashboard' type supports.",
 			"route": "/rapportage",
 			"type": "custom",
 			"title": "Analytics",
@@ -1284,6 +1354,7 @@
 		},
 		{
 			"id": "RapportageContactmomenten",
+			"_note": "RapportageDashboard.vue is a bespoke contact-reporting analytics view with a date-range selector, a custom KPI-card grid and hand-rendered channel bar charts; the standard 'dashboard' type only composes declared widgets and cannot host these custom-drawn charts.",
 			"route": "/rapportage/contactmomenten",
 			"type": "custom",
 			"title": "Contact reporting",
@@ -1291,6 +1362,7 @@
 		},
 		{
 			"id": "ChannelAnalyticsView",
+			"_note": "ChannelAnalytics.vue is a bespoke analytics report: a date-range selector over a custom comparison data-table of per-channel metrics with colour-keyed channel dots; this tabular cross-channel comparison has no standard list/dashboard page-type representation.",
 			"route": "/rapportage/channels",
 			"type": "custom",
 			"title": "Channel analytics",
@@ -1298,6 +1370,7 @@
 		},
 		{
 			"id": "AgentPerformanceView",
+			"_note": "AgentPerformance.vue is a bespoke analytics report: a date-range selector over a sortable per-agent data-table (resolution time, volume, satisfaction); the sortable multi-metric leaderboard has no standard list/dashboard page-type representation.",
 			"route": "/rapportage/agents",
 			"type": "custom",
 			"title": "Agent performance",
@@ -1305,6 +1378,7 @@
 		},
 		{
 			"id": "Pipeline",
+			"_note": "PipelineBoard.vue is a bespoke drag-and-drop kanban of deals across pipeline stages, with a pipeline selector, search and list/board view toggle; the standard 'index' type renders a flat table and cannot provide the stage-column drag interaction.",
 			"route": "/pipeline",
 			"type": "custom",
 			"title": "Pipeline",
@@ -1343,6 +1417,7 @@
 		},
 		{
 			"id": "ExportJobs",
+			"_note": "ExportJobs.vue is a CnIndexPage specialised for BI export jobs with run/schedule controls in the page header; kept as a host-app component while those export-trigger actions live outside the library.",
 			"route": "/export/jobs",
 			"type": "custom",
 			"title": "BI export jobs",
@@ -1354,6 +1429,7 @@
 		},
 		{
 			"id": "ExportJobNew",
+			"_note": "ExportJobForm.vue is a bespoke export-job builder (destination NcSelect, dataset/field selection and schedule NcTextFields rendered as a CnDetailPage); the multi-section job configuration has no standard form page-type representation.",
 			"route": "/export/jobs/new",
 			"type": "custom",
 			"title": "New export job",
@@ -1365,6 +1441,7 @@
 		},
 		{
 			"id": "ExportJobDetail",
+			"_note": "Reuses ExportJobForm.vue (bespoke export-job builder with destination, dataset and schedule sections) in edit mode; the multi-section job configuration has no standard form/detail page-type representation.",
 			"route": "/export/jobs/:id",
 			"type": "custom",
 			"title": "Export job",
@@ -1376,6 +1453,7 @@
 		},
 		{
 			"id": "ExportDestinations",
+			"_note": "ExportDestinations.vue is a CnIndexPage specialised for export destinations with a connection-test action in the header; kept as a host-app component while that test-connection action lives outside the library.",
 			"route": "/export/destinations",
 			"type": "custom",
 			"title": "Export destinations",
@@ -1387,6 +1465,7 @@
 		},
 		{
 			"id": "ExportDestinationNew",
+			"_note": "ExportDestinationForm.vue is a bespoke connection editor: transport NcSelect plus credential NcTextFields and an NcCheckboxRadioSwitch whose visible fields change per destination type; this conditional connection form has no standard form page-type representation.",
 			"route": "/export/destinations/new",
 			"type": "custom",
 			"title": "New export destination",
@@ -1398,6 +1477,7 @@
 		},
 		{
 			"id": "ExportDestinationDetail",
+			"_note": "Reuses ExportDestinationForm.vue (bespoke connection editor with type-conditional credential fields) in edit mode; this conditional connection form has no standard form/detail page-type representation.",
 			"route": "/export/destinations/:id",
 			"type": "custom",
 			"title": "Export destination",
@@ -1409,6 +1489,7 @@
 		},
 		{
 			"id": "ExportRuns",
+			"_note": "ExportRuns.vue is a CnIndexPage specialised for the export run history with a re-run action in the header; kept as a host-app component while that re-run action lives outside the library.",
 			"route": "/export/runs",
 			"type": "custom",
 			"title": "Export runs",
@@ -1420,6 +1501,7 @@
 		},
 		{
 			"id": "ExportRunDetail",
+			"_note": "ExportRunDetail.vue is a CnDetailPage with run-specific CnDetailCard panels (row counts, duration, error log) and a CnStatusBadge; the flat 'detail' type cannot lay out these execution-result cards.",
 			"route": "/export/runs/:id",
 			"type": "custom",
 			"title": "Export run",
@@ -1431,6 +1513,7 @@
 		},
 		{
 			"id": "StufEndpoints",
+			"_note": "StufEndpoints.vue is an in-app settings surface (NcSettingsSection listing the configured StUF SOAP endpoints and their toggles); it edits app configuration rather than register objects, so no object-oriented page type applies.",
 			"route": "/stuf/endpoints",
 			"type": "custom",
 			"title": "StUF endpoints",
@@ -1442,6 +1525,7 @@
 		},
 		{
 			"id": "StufAuditLog",
+			"_note": "StufAuditLog.vue is a bespoke StUF message audit viewer inside an NcSettingsSection, with type/status NcSelect filters over the request/response envelope log; the message-envelope filtering and presentation has no standard list page-type equivalent.",
 			"route": "/stuf/audit-log",
 			"type": "custom",
 			"title": "StUF audit log",
