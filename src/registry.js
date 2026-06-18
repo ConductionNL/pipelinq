@@ -92,6 +92,10 @@ import LeadForecastTab from './views/leads/LeadForecastTab.vue'
 //     Wraps CnIndexPage to add the stale filter, overdue row highlighting
 //     and CSV import/export via the platform mass dialogs. ---
 import LeadListView from './views/leads/LeadList.vue'
+// ClientList wraps CnIndexPage and overrides @add to route to the bespoke,
+// contact-aware ClientForm create flow (client-contact unification) instead of
+// the generic schema dialog, which cannot supply the required contactsUid.
+import ClientListView from './views/clients/ClientList.vue'
 
 // --- Lead-management analytics dashboard (lead-management REQ-LM-006..008).
 //     RapportageView uses CnDashboardPage with four widget slots backed by
@@ -593,6 +597,13 @@ const registry = {
 		kind: 'page',
 		component: LeadListView,
 		_note: 'Wraps CnIndexPage with the lead-management stale filter, overdue row highlighting and platform mass import/export dialogs (REQ-LM-002/004/005).',
+	},
+
+	// --- Clients list with contact-aware create. ---
+	ClientListView: {
+		kind: 'page',
+		component: ClientListView,
+		_note: 'Wraps CnIndexPage and routes Add to the bespoke contact-aware ClientForm create (client-contact unification): the generic schema dialog cannot supply the required contactsUid, so every create through it 400s.',
 	},
 
 	// --- Lead-management analytics. ---

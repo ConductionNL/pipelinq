@@ -463,8 +463,10 @@
 		},
 		{
 			"id": "Clients",
+			"_note": "ClientList.vue wraps CnIndexPage and overrides @add to route to the bespoke contact-aware ClientForm create flow (client-contact unification). The declarative 'index' type falls through to the generic schema create dialog, which cannot supply the schema-required contactsUid (the authoritative NC addressbook contact FK) and so 400s on every create.",
 			"route": "/clients",
-			"type": "index",
+			"type": "custom",
+			"component": "ClientListView",
 			"title": "Clients",
 			"config": {
 				"register": "pipelinq",
