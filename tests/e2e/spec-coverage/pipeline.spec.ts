@@ -8,17 +8,18 @@
  */
 
 import { test, expect } from '@playwright/test'
+import { openApp, navClick } from '../helpers/pipelinq'
 
 // @e2e openspec/specs/pipeline/spec.md#view-pipeline-details-in-sidebar
 test('pipeline page renders with sidebar', async ({ page }) => {
-	await page.goto('/apps/pipelinq/pipeline')
+	await page.goto('/apps/pipelinq/#/pipeline')
 	await expect(page).toHaveURL(/pipeline/, { timeout: 10000 })
 	await expect(page.locator('body')).not.toContainText('Internal Server Error')
 })
 
 // @e2e openspec/specs/pipeline/spec.md#view-stage-list-in-sidebar
 test('pipeline sidebar shows Details and Stages tabs or empty state', async ({ page }) => {
-	await page.goto('/apps/pipelinq/pipeline')
+	await page.goto('/apps/pipelinq/#/pipeline')
 	// Either pipeline selector is present or we see empty state
 	const hasSelector = await page.locator('select, [role="combobox"]').first().isVisible().catch(() => false)
 	const hasEmptyState = await page.getByText(/No pipeline|pipeline selected|no pipeline/i).isVisible().catch(() => false)
@@ -27,7 +28,7 @@ test('pipeline sidebar shows Details and Stages tabs or empty state', async ({ p
 
 // @e2e openspec/specs/pipeline/spec.md#sidebar-does-not-block-board-interaction
 test('pipeline page main content area is accessible', async ({ page }) => {
-	await page.goto('/apps/pipelinq/pipeline')
+	await page.goto('/apps/pipelinq/#/pipeline')
 	// Main content renders without blocking overlay
 	const mainContent = page.locator('#app-content, .app-content, main').first()
 	await expect(mainContent).toBeVisible({ timeout: 10000 })
@@ -35,38 +36,44 @@ test('pipeline page main content area is accessible', async ({ page }) => {
 
 // @e2e openspec/specs/pipeline/spec.md#kanban-card-display---request-card
 test('pipeline page loads without error', async ({ page }) => {
-	await page.goto('/apps/pipelinq/pipeline')
+	await page.goto('/apps/pipelinq/#/pipeline')
 	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
 	await expect(page.locator('body')).not.toContainText('Uncaught Error')
 })
 
 // @e2e openspec/specs/pipeline/spec.md#remember-view-mode-preference
 test('pipeline navigation item exists in sidebar', async ({ page }) => {
-	await page.goto('/apps/pipelinq/')
-	const nav = page.locator('#app-navigation-vue')
-	await expect(nav.getByRole('link', { name: 'Pipeline' }).first()).toBeVisible({ timeout: 10000 })
+	await openApp(page)
+	// The Pipeline leaf lives in the collapsed "Sales & CRM" nav group, so it is
+	// present in the DOM but not visible until the group is expanded. Assert the
+	// entry exists and points at the #/pipeline route.
+	const entry = page
+		.locator('#app-navigation-vue a.app-navigation-entry-link[href$="#/pipeline"]')
+		.filter({ hasText: /^\s*Pipeline\s*$/ })
+	await expect(entry).toHaveCount(1, { timeout: 10000 })
+	await expect(entry.first()).toHaveAttribute('href', /#\/pipeline$/)
 })
 
 // @e2e openspec/specs/pipeline/spec.md#remember-selected-pipeline-across-navigation
 test('pipeline page navigates from dashboard nav', async ({ page }) => {
-	await page.goto('/apps/pipelinq/')
-	const nav = page.locator('#app-navigation-vue')
-	await nav.getByRole('link', { name: 'Pipeline' }).first().click()
-	await expect(page).toHaveURL(/pipeline/, { timeout: 10000 })
+	await openApp(page)
+	await navClick(page, 'Pipeline', /#\/pipeline/)
 })
 
 // @e2e openspec/specs/pipeline/spec.md#mixed-entity-kanban
 test('pipeline page renders without server error after navigation', async ({ page }) => {
-	await page.goto('/apps/pipelinq/pipeline')
+	await page.goto('/apps/pipelinq/#/pipeline')
 	await page.waitForTimeout(2000)
 	await expect(page.locator('body')).not.toContainText('Internal Server Error')
 })
 
 // @e2e openspec/specs/pipeline/spec.md#pipeline-value-kpi-widget
 test('pipeline value KPI widget visible on dashboard', async ({ page }) => {
-	await page.goto('/apps/pipelinq/')
-	// Pipeline Value KPI tile rendered
-	await expect(page.getByText(/Pipeline V/i).first()).toBeVisible({ timeout: 10000 })
+	await openApp(page)
+	// The Commercial overview dashboard exposes the pipeline-value KPI as the
+	// "Open Pipeline" tile (relabelled in the IA restructure). Wait for the
+	// KPI surface to settle before asserting to avoid a fetch race.
+	await expect(page.locator('#content-vue').getByText('Open Pipeline').first()).toBeVisible({ timeout: 15000 })
 })
 
 /*
