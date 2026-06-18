@@ -313,6 +313,7 @@
 			"actionsComponent": "DashboardHeaderActions",
 			"config": {
 				"showRefresh": false,
+				"widgetShowRefresh": false,
 				"description": "Revenue, pipeline and win performance",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"dateRange": {
@@ -385,6 +386,7 @@
 			"actionsComponent": "DashboardHeaderActions",
 			"config": {
 				"showRefresh": false,
+				"widgetShowRefresh": false,
 				"description": "Leads, requests, service and team workload",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"dateRange": {
