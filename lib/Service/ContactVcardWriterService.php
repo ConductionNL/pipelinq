@@ -107,6 +107,51 @@ class ContactVcardWriterService
     }//end writeToAddressBook()
 
     /**
+     * Write a vCard to the user's default addressbook WITHOUT touching any
+     * Pipelinq object. Used by the contact-FIRST create orchestration, where the
+     * Nextcloud contact must exist (so its UID can satisfy the required
+     * `contactsUid`) BEFORE the client/contact object is saved — there is no
+     * object yet to store the UID back on.
+     *
+     * @param array   $properties  The vCard properties (FN/EMAIL/TEL/...).
+     * @param ?string $existingUid An existing UID to update in place, or null to create.
+     *
+     * @return ?string The created/updated contact UID, or null when no addressbook
+     *                 is available or the write failed.
+     *
+     * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-003
+     */
+    public function writeVcard(array $properties, ?string $existingUid=null): ?string
+    {
+        $addressBooks = $this->contactsManager->getUserAddressBooks();
+        if (empty($addressBooks) === true) {
+            $this->logger->debug('Pipelinq: No addressbooks available for contact provisioning');
+            return null;
+        }
+
+        $addressBook = reset($addressBooks);
+
+        if ($existingUid !== null && $existingUid !== '') {
+            $properties['UID'] = $existingUid;
+        }
+
+        try {
+            $result = $addressBook->createOrUpdate($properties);
+        } catch (\Exception $e) {
+            $this->logger->error(
+                'Pipelinq: Failed to provision contact in addressbook',
+                ['exception' => $e->getMessage()]
+            );
+            return null;
+        }
+
+        return $this->extractContactsUid(
+            result: $result,
+            existingUid: $existingUid
+        );
+    }//end writeVcard()
+
+    /**
      * Extract the contacts UID from an addressbook create/update result.
      *
      * @param mixed   $result      The result from createOrUpdate.

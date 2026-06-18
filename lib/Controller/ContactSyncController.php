@@ -139,6 +139,53 @@ class ContactSyncController extends Controller
     }//end import()
 
     /**
+     * Contact-FIRST create of a client/contact: provision the authoritative
+     * Nextcloud contact from the form fields, then save the object with the
+     * required `contactsUid`. Returns 201 with the created object.
+     *
+     * This is the create path the bespoke ClientForm + the generic add flow post
+     * to, so a client is always backed by a real NC contact and the required
+     * `contactsUid` is never missing (client-contact unification).
+     *
+     * @return JSONResponse The created object (201) or an error.
+     *
+     * @NoAdminRequired
+     *
+     * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-003
+     */
+    public function create(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+        }
+
+        $objectType = $this->request->getParam('objectType', 'client');
+        $object     = $this->request->getParam('object', []);
+
+        if (in_array($objectType, ['client', 'contact'], true) === false) {
+            return new JSONResponse(['error' => $this->l10n->t('Invalid objectType -- must be client or contact')], 400);
+        }
+
+        if (is_array($object) === false || trim((string) ($object['name'] ?? '')) === '') {
+            return new JSONResponse(['error' => $this->l10n->t('Name is required')], 400);
+        }
+
+        try {
+            $created = $this->contactSyncService->createWithContact(
+                objectType: $objectType,
+                form: $object
+            );
+            return new JSONResponse(['success' => true, 'object' => $created], Http::STATUS_CREATED);
+        } catch (\RuntimeException $e) {
+            return new JSONResponse(['error' => $e->getMessage()], 400);
+        } catch (\Exception $e) {
+            $this->logger->error('ContactSyncController::create failed', ['exception' => $e]);
+            return new JSONResponse(['error' => $this->l10n->t('An unexpected error occurred')], 500);
+        }
+    }//end create()
+
+    /**
      * Sync a Pipelinq object to Nextcloud Contacts (write-back).
      *
      * @return JSONResponse The sync result.

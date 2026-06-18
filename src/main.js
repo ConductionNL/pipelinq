@@ -12,7 +12,9 @@ import {
 	defaultPageTypes,
 	registerIcons,
 	registerTranslations,
+	mergeManifestDelta,
 } from '@conduction/nextcloud-vue'
+import axios from '@nextcloud/axios'
 import pinia from './pinia.js'
 import App from './App.vue'
 import bundledManifest from './manifest.json'
@@ -334,13 +336,13 @@ setActivePinia(pinia)
 registerObjectTypes()
 
 /** Mount the Vue instance onto #content. */
-function mountApp() {
+function mountApp(manifestToUse) {
 	new Vue({
 		pinia,
 		router,
 		render: (h) => h(App, {
 			props: {
-				manifest: mergedManifest,
+				manifest: manifestToUse,
 				registry: registryProp,
 				pageTypes: pageTypesProp,
 			},
@@ -348,9 +350,33 @@ function mountApp() {
 	}).$mount('#content')
 }
 
+/**
+ * Fetch this app's in-place manifest override (ADR-041) from OpenBuild and merge
+ * it over the bundled manifest, so user edits saved via the in-app editor survive
+ * a reload. Returns the bundled manifest unchanged when OpenBuild is absent or
+ * there is no stored override.
+ *
+ * @param {object} manifest The bundled (fragment-merged) manifest.
+ * @return {Promise<object>} The manifest with the stored delta applied.
+ */
+async function loadAppOverride(manifest) {
+	try {
+		const res = await axios.get(generateUrl('/apps/openbuild/api/app-overrides/pipelinq'))
+		const delta = res && res.data
+		if (delta && typeof delta === 'object' && Object.keys(delta).length > 0) {
+			return mergeManifestDelta(manifest, delta).manifest
+		}
+	} catch (e) {
+		// OpenBuild not installed / no override / not reachable — use bundled manifest.
+	}
+	return manifest
+}
+
 // Gate the mount on initializeStores() so types are registered and settings
 // loaded before the first view fetches. A settings failure still mounts the
 // shell (catch/finally) — views then degrade to their own empty/retry state.
-initializeStores().catch(() => {}).finally(() => {
-	mountApp()
+// The OpenBuild override is merged in just before mount so saved edits persist.
+initializeStores().catch(() => {}).finally(async () => {
+	const manifest = await loadAppOverride(mergedManifest)
+	mountApp(manifest)
 })
