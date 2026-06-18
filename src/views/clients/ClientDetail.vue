@@ -469,6 +469,7 @@ import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import ClientForm from './ClientForm.vue'
+import { createClientWithContact } from './createClientWithContact.js'
 import ContactRelationships from '../../components/ContactRelationships.vue'
 import ContactmomentQuickLog from '../../components/ContactmomentQuickLog.vue'
 import ActivityTimeline from '../../components/ActivityTimeline.vue'
@@ -727,15 +728,27 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-16
 		 */
 		async onFormSave(formData) {
+			// CREATE: contact-FIRST through the backend so the required
+			// `contactsUid` is provisioned/linked before the client is saved
+			// (the raw saveObject path 400s — client-contact unification). EDIT
+			// keeps the plain saveObject + post-save sync, since an existing
+			// client already carries its contactsUid.
+			if (this.isNew) {
+				try {
+					const created = await createClientWithContact(generateUrl, formData)
+					const newId = created.id || created['@self']?.id
+					this.$router.push({ name: 'ClientDetail', params: { id: newId } })
+				} catch (e) {
+					showError(e?.message || t('pipelinq', 'Failed to save client. Please try again.'))
+				}
+				return
+			}
+
 			const result = await this.objectStore.saveObject('client', formData)
 			if (result) {
 				this.syncToContacts(result.id || this.clientId)
-				if (this.isNew) {
-					this.$router.push({ name: 'ClientDetail', params: { id: result.id } })
-				} else {
-					await this.objectStore.fetchObject('client', this.clientId)
-					this.editing = false
-				}
+				await this.objectStore.fetchObject('client', this.clientId)
+				this.editing = false
 			} else {
 				const error = this.objectStore.getError('client')
 				showError(error?.message || t('pipelinq', 'Failed to save client. Please try again.'))

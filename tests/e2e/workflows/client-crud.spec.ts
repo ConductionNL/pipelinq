@@ -80,59 +80,45 @@ test.describe('Clients — full CRUD with persistence', () => {
 		}
 	})
 
-	// LEFT SKIPPED — blocked by a NEW backend bug, NOT the register binding.
+	// CREATE→LIST→VALUES is now driven through the BESPOKE, contact-aware
+	// ClientForm (fix/client-contact-unification). The `client` schema marks
+	// `contactsUid` REQUIRED (the authoritative NC addressbook contact FK), which
+	// no raw saveObject create could supply, so every UI create used to 400 with
+	// "The required property (contactsUid) is missing". The fix wires create
+	// through a contact-FIRST backend endpoint (POST /api/contacts-sync/create):
+	// it provisions/links the NC contact, then saves the client with contactsUid +
+	// the identity mirror. The Clients index now hosts ClientList.vue (manifest
+	// page type:custom, component ClientListView), whose Add routes to the bespoke
+	// ClientForm at /clients/new (testids client-name-input / client-type-select /
+	// client-email-input / client-phone-input) instead of the generic schema
+	// dialog that omitted name + contactsUid.
 	//
-	// The register binding is fixed (the fixture now addresses the OR object API
-	// by the 'pipelinq' slug — see helpers/fixtures.ts — and the sibling product +
-	// POS round-trips green against it). What blocks the CLIENT create round-trip
-	// is a distinct schema-vs-form defect found live 2026-06-18:
-	//
-	//   The `client` schema (OR schema 60) marks `contactsUid` as REQUIRED, but no
-	//   client-create UI supplies it, so EVERY UI create is rejected 400 by
-	//   OpenRegister with: "The required property (contactsUid) is missing."
-	//   Two independent create surfaces both fail:
-	//     • Clients list → "Add Client" opens the GENERIC CnSchemaFormDialog, whose
-	//       rendered fields are Account owner / Account status / Industry /
-	//       Lifecycle stage / Master entity ref / Segment / Client type — it omits
-	//       BOTH required `name` and required `contactsUid` (verified live: it
-	//       fails 400 on "name, contactsUid missing").
-	//     • Dashboard → "New Client" opens the bespoke ClientForm
-	//       (src/views/clients/ClientForm.vue, testids client-name-input /
-	//       client-type-select / client-email-input / …) which DOES drive
-	//       name/type/email/phone, but its save payload still omits `contactsUid`,
-	//       so it also fails 400 (reproduced live).
-	//
-	// Net: there is no UI path that can persist a client today, so a
-	// create→list→values UI round-trip cannot be made to pass without an app/schema
-	// fix (make `contactsUid` nullable, or have a create form provide it). That fix
-	// is out of scope for this register-binding e2e reconciliation. Kept as fixme
-	// with the bug recorded above so it is no longer conflated with the (resolved)
-	// register binding. When the create path is fixed, drive the bespoke ClientForm
-	// via Dashboard → "New Client" (its testids are listed above) and assert
-	// name/email persistence, then list→values via the index sidebar search (the
-	// list orders created-ascending and paginates 20/page, so a fresh row needs the
-	// search to surface — see product-crud.spec.ts searchInList()).
-	test.fixme('create → list → values → edit → delete round-trips real data', async ({ page }) => {
+	// The UPDATE/DELETE here go through the OR object API (the standalone
+	// ClientDetail edit/delete PAGE is still not reachable from a list row in the
+	// manifest shell — that distinct UI-shell gap stays captured by the separate
+	// test.fixme below).
+	test('create → list → values → edit → delete round-trips real data', async ({ page }) => {
 		test.setTimeout(90000)
 		fx = new FixtureSession(page)
 		await openApp(page)
 
-		// --- CREATE via the "Create Client" schema dialog ---------------------
+		// --- CREATE via the bespoke contact-aware ClientForm ------------------
 		await openClientsList(page)
 		await page.locator('#content-vue').getByRole('button', { name: /Add Client/i }).first().click()
-		const dialog = page.locator('[role="dialog"]').filter({ hasText: 'Create Client' }).first()
-		await expect(dialog).toBeVisible({ timeout: 10000 })
+		// Add routes to the bespoke ClientForm at /clients/new.
+		const form = page.locator('[data-testid="client-form"]')
+		await expect(form).toBeVisible({ timeout: 10000 })
 
-		await dialog.getByRole('textbox', { name: /name/i }).first().fill(NAME)
-		await pickOption(dialog.getByRole('combobox').first(), 'organi') // organization
-		await dialog.getByRole('textbox', { name: /email/i }).first().fill(EMAIL)
-		await dialog.getByRole('textbox', { name: /phone/i }).first().fill(PHONE)
-		await dialog.getByRole('button', { name: 'Create', exact: true }).click()
-		await expect(dialog).toBeHidden({ timeout: 15000 })
-		await page.waitForTimeout(1500)
+		await form.locator('[data-testid="client-name-input"] input').fill(NAME)
+		await pickOption(form.locator('[data-testid="client-type-select"]'), 'organi') // organization
+		await form.locator('[data-testid="client-email-input"] input').fill(EMAIL)
+		await form.locator('[data-testid="client-phone-input"] input').fill(PHONE)
+		await form.locator('[data-testid="client-form-save"]').click()
+		await page.waitForTimeout(1800)
 		await dismissSupportDialog(page)
 
-		// Persistence (OR API): the created object holds exactly what was entered.
+		// Persistence (OR API): the created object holds exactly what was entered
+		// AND carries the required contactsUid resolved from the NC contact.
 		const created = (await fx.list('client', { _limit: 5, name: NAME }))[0]
 		expect(created, 'created client returned by OR API').toBeTruthy()
 		const createdId = (created.id || created['@self']?.id) as string
@@ -140,6 +126,8 @@ test.describe('Clients — full CRUD with persistence', () => {
 		expect(created.name).toBe(NAME)
 		expect(created.email).toBe(EMAIL)
 		expect(created.phone).toBe(PHONE)
+		// The client-contact unification invariant: a real NC contact backs it.
+		expect(created.contactsUid, 'required contactsUid populated from the NC contact').toBeTruthy()
 
 		// --- READ: the new row is present (NOT empty-state) + renders values --
 		await openClientsList(page)

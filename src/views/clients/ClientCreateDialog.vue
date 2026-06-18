@@ -18,8 +18,10 @@
 <script>
 import { NcButton } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
 import ClientForm from './ClientForm.vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import { createClientWithContact } from './createClientWithContact.js'
 
 export default {
 	name: 'ClientCreateDialog',
@@ -42,12 +44,16 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-2
 		 */
 		async onSave(formData) {
-			const result = await this.objectStore.saveObject('client', formData)
-			if (result) {
-				this.$emit('created', result.id)
-			} else {
-				const error = this.objectStore.getError('client')
-				showError(error?.message || t('pipelinq', 'Failed to create client.'))
+			// Contact-FIRST create: the client schema requires `contactsUid`
+			// (the authoritative NC addressbook contact), which the raw
+			// objectStore.saveObject path cannot supply — it 400s. The backend
+			// endpoint provisions/links the NC contact, then saves the client
+			// with contactsUid + the identity mirror (client-contact unification).
+			try {
+				const result = await createClientWithContact(generateUrl, formData)
+				this.$emit('created', result.id || result['@self']?.id)
+			} catch (e) {
+				showError(e?.message || t('pipelinq', 'Failed to create client.'))
 			}
 		},
 	},
