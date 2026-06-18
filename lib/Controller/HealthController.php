@@ -3,7 +3,18 @@
 /**
  * Pipelinq Health Controller
  *
- * Exposes health check endpoint for container orchestration and monitoring.
+ * Thin adopter of the OpenRegister AppHost engine's GenericHealthController
+ * (ADR-040). The health checks + the `{status, app, version, checks}` shape
+ * are now declared in `src/manifest.json` (`observability.health`) and executed
+ * by the engine; this subclass exists only because Nextcloud resolves the
+ * `health#index` route to this app-namespaced class by name. The auth posture
+ * (`#[PublicPage]`) is re-declared here so it is visible to NC's middleware and
+ * to the route-auth gate, then delegates to the engine.
+ *
+ * The parent class is only autoloaded when NC instantiates this controller on a
+ * request to `/api/health` — never at `Application::register()` — so a disabled
+ * or absent OpenRegister does not fatal Nextcloud bootstrap; the first health
+ * request degrades to a 5xx instead.
  *
  * @category Controller
  * @package  OCA\Pipelinq\Controller
@@ -16,148 +27,65 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-58
+ * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\OpenRegister\AppHost\Controller\GenericHealthController;
+use OCA\OpenRegister\AppHost\Observability\HealthCheckExecutor;
+use OCA\OpenRegister\AppHost\Observability\ManifestLoader;
 use OCA\Pipelinq\AppInfo\Application;
-use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
-use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IDBConnection;
 use OCP\IRequest;
-use OCP\App\IAppManager;
-use Psr\Log\LoggerInterface;
 
 /**
- * Controller for health check endpoints.
+ * Public, declarative health endpoint backed by the AppHost engine.
  *
  * @psalm-suppress UnusedClass
+ *
+ * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
  */
-class HealthController extends Controller
+class HealthController extends GenericHealthController
 {
     /**
      * Constructor.
      *
-     * @param IRequest        $request    The HTTP request
-     * @param IDBConnection   $db         Database connection
-     * @param IAppManager     $appManager App manager
-     * @param LoggerInterface $logger     Logger
+     * Pins the engine's `$appName` to pipelinq so the engine reads pipelinq's
+     * manifest + resolves pipelinq's version.
+     *
+     * @param IRequest            $request        The HTTP request.
+     * @param ManifestLoader      $manifestLoader Loads pipelinq's observability config.
+     * @param HealthCheckExecutor $executor       Runs the declarative checks.
      */
     public function __construct(
         IRequest $request,
-        private IDBConnection $db,
-        private IAppManager $appManager,
-        private LoggerInterface $logger,
+        ManifestLoader $manifestLoader,
+        HealthCheckExecutor $executor
     ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
+        parent::__construct(
+            appName: Application::APP_ID,
+            request: $request,
+            manifestLoader: $manifestLoader,
+            executor: $executor
+        );
     }//end __construct()
 
     /**
-     * Health check endpoint.
+     * GET /api/health — declarative health check (ADR-006), public probe.
      *
-     * @return JSONResponse Health status
+     * @return JSONResponse `{status, app, version, checks}` with HTTP code per policy.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-58
+     * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
      */
     #[PublicPage]
-    #[NoAdminRequired]
+    #[NoCSRFRequired]
     public function index(): JSONResponse
     {
-        // @PublicPage by attribute — health probe must be reachable by
-        // unauthenticated infra (kube readiness/liveness, uptime monitors).
-        $checks = [];
-        $status = 'ok';
-
-        // Check database connectivity.
-        $checks['database'] = $this->checkDatabase();
-        if ($checks['database'] !== 'ok') {
-            $status = 'error';
-        }
-
-        // Check filesystem.
-        $checks['filesystem'] = $this->checkFilesystem();
-        if ($checks['filesystem'] !== 'ok' && $status !== 'error') {
-            $status = 'degraded';
-        }
-
-        $httpStatus = Http::STATUS_SERVICE_UNAVAILABLE;
-        if ($status === 'ok') {
-            $httpStatus = Http::STATUS_OK;
-        }
-
-        return new JSONResponse(
-            [
-                'status'  => $status,
-                'version' => $this->getAppVersion(),
-                'checks'  => $checks,
-            ],
-            $httpStatus
-        );
+        return parent::index();
     }//end index()
-
-    /**
-     * Check database connectivity.
-     *
-     * @return string 'ok' or error message
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-58
-     */
-    private function checkDatabase(): string
-    {
-        try {
-            $qb = $this->db->getQueryBuilder();
-            $qb->select($qb->createFunction('1'));
-            $result = $qb->executeQuery();
-            $result->closeCursor();
-
-            return 'ok';
-        } catch (\Exception $e) {
-            $this->logger->error('[HealthController] Database check failed', ['error' => $e->getMessage()]);
-            return 'failed: '.$e->getMessage();
-        }
-    }//end checkDatabase()
-
-    /**
-     * Check filesystem access.
-     *
-     * @return string 'ok' or error message
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-58
-     */
-    private function checkFilesystem(): string
-    {
-        try {
-            $tmpFile = sys_get_temp_dir().'/pipelinq_health_'.getmypid();
-            $written = file_put_contents($tmpFile, 'health');
-            if ($written === false) {
-                return 'failed: cannot write to temp directory';
-            }
-
-            unlink($tmpFile);
-
-            return 'ok';
-        } catch (\Exception $e) {
-            return 'failed: '.$e->getMessage();
-        }
-    }//end checkFilesystem()
-
-    /**
-     * Get the app version.
-     *
-     * @return string The app version
-     */
-    private function getAppVersion(): string
-    {
-        try {
-            return $this->appManager->getAppVersion(Application::APP_ID);
-        } catch (\Exception $e) {
-            return 'unknown';
-        }
-    }//end getAppVersion()
 }//end class
