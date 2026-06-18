@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # unify-client-contact Specification
 
 ## Purpose
-TBD - created by archiving change pipelinq-unify-client-contact. Update Purpose after archive.
+Keys the `client` and `contact` records to a Nextcloud Contact via a required `contactsUid`, demoting their identity fields to denormalised read-only mirrors while keeping CRM and governance fields authoritative, and links `contactmoment` interactions to the party by `contactsUid`. Refreshes the mirrors through the existing contact-sync flow with the Nextcloud Contact as the source of truth, and provides an idempotent, non-destructive repair that resolves or creates contacts and re-keys existing objects while preserving all three people-surface nav entries and routes.
 ## Requirements
 ### Requirement: REQ-PUCC-001 — The system SHALL key the `client` relationship record by a Nextcloud Contact and demote its identity fields to denormalised mirrors
 

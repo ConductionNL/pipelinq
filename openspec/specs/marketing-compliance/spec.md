@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # marketing-compliance Specification
 
 ## Purpose
-TBD - created by archiving change marketing-segmentation-and-blast-03-compliance-service. Update Purpose after archive.
+Enforces lawful-basis consent and anti-spam rules before a marketing blast can be sent. Blocks sends to contacts that lack a consent record for the target channel, requires an unsubscribe token and physical-address block on email templates, and propagates consent withdrawals from unsubscribes and hard bounces so queued deliveries are skipped.
 ## Requirements
 ### Requirement: Blast Cannot Send Without Lawful Basis
 

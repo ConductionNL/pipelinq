@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # marketing-blast Specification
 
 ## Purpose
-TBD - created by archiving change marketing-segmentation-and-blast-04-blast-attribution-services. Update Purpose after archive.
+Sends marketing email blasts to contact segments, dispatching through openconnector's per-tenant send-mail provider so provider credentials never live in pipelinq code. It supports deterministic A/B splitting (each contact always gets the same variant), respects per-source rate limits, and creates revenue attribution links that join blasts to closed deals with first-click timestamps and attributed value.
 ## Requirements
 ### Requirement: A/B Test Splits Segment Deterministically
 
