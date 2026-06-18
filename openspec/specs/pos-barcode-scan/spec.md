@@ -1,3 +1,7 @@
+---
+status: done
+---
+
 # POS Barcode Scan (HID + camera)
 
 **Status**: active

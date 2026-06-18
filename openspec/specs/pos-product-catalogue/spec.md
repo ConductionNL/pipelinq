@@ -1,3 +1,7 @@
+---
+status: done
+---
+
 # POS Product Catalogue
 
 **Status**: active

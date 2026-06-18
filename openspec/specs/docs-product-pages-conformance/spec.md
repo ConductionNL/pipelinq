@@ -1,3 +1,7 @@
+---
+status: done
+---
+
 **Capability**: docs-product-pages-conformance
 **Status**: in-progress
 **OpenSpec changes**:
