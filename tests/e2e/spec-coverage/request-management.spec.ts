@@ -8,17 +8,18 @@
  */
 
 import { test, expect } from '@playwright/test'
+import { openApp, navClick } from '../helpers/pipelinq'
 
 // @e2e openspec/specs/request-management/spec.md#default-list-display
 test('requests list page renders', async ({ page }) => {
-	await page.goto('/apps/pipelinq/requests')
+	await page.goto('/apps/pipelinq/#/requests')
 	await expect(page).toHaveURL(/requests/, { timeout: 10000 })
 	await expect(page.locator('body')).not.toContainText('Internal Server Error')
 })
 
 // @e2e openspec/specs/request-management/spec.md#create-a-minimal-request
 test('request create form has title field', async ({ page }) => {
-	await page.goto('/apps/pipelinq/requests')
+	await page.goto('/apps/pipelinq/#/requests')
 	const addBtn = page.getByRole('button', { name: /Add|New Request/i }).first()
 	if (await addBtn.isVisible().catch(() => false)) {
 		await addBtn.click()
@@ -26,14 +27,14 @@ test('request create form has title field', async ({ page }) => {
 		await expect(titleField).toBeVisible({ timeout: 10000 })
 	} else {
 		// Navigate directly to new form
-		await page.goto('/apps/pipelinq/requests/new').catch(() => {})
+		await page.goto('/apps/pipelinq/#/requests/new').catch(() => {})
 		await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
 	}
 })
 
 // @e2e openspec/specs/request-management/spec.md#validation---title-is-required
 test('request form save disabled without title', async ({ page }) => {
-	await page.goto('/apps/pipelinq/requests')
+	await page.goto('/apps/pipelinq/#/requests')
 	const addBtn = page.getByRole('button', { name: /Add|New/i }).first()
 	if (await addBtn.isVisible().catch(() => false)) {
 		await addBtn.click()
@@ -46,47 +47,47 @@ test('request form save disabled without title', async ({ page }) => {
 
 // @e2e openspec/specs/request-management/spec.md#set-channel-during-creation
 test('request form channel field visible', async ({ page }) => {
-	await page.goto('/apps/pipelinq/requests')
+	await page.goto('/apps/pipelinq/#/requests')
 	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
 })
 
 // @e2e openspec/specs/request-management/spec.md#set-priority-during-creation
 test('request list page accessible from navigation', async ({ page }) => {
-	await page.goto('/apps/pipelinq/')
-	const nav = page.locator('#app-navigation-vue')
-	await expect(nav.getByText('Requests')).toBeVisible({ timeout: 10000 })
-	await nav.getByText('Requests').click()
-	await expect(page).toHaveURL(/requests/)
+	await openApp(page)
+	await navClick(page, 'Requests', /#\/requests/)
 })
 
 // @e2e openspec/specs/request-management/spec.md#priority-visual-indicators
 test('requests page loads without error', async ({ page }) => {
-	await page.goto('/apps/pipelinq/requests')
+	await page.goto('/apps/pipelinq/#/requests')
 	await page.waitForTimeout(1000)
 	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
 })
 
 // @e2e openspec/specs/request-management/spec.md#request-status-distribution-on-dashboard
 test('requests by status widget on dashboard', async ({ page }) => {
-	await page.goto('/apps/pipelinq/')
-	await expect(page.getByText('Requests by Status').first()).toBeVisible({ timeout: 10000 })
+	// The request-status distribution widget lives on the Operational overview
+	// dashboard (#/operational), not the landing Commercial overview — the IA
+	// restructure split the dashboards by audience.
+	await page.goto('/apps/pipelinq/#/operational')
+	await expect(page.locator('#content-vue').getByText('Requests by Status').first()).toBeVisible({ timeout: 15000 })
 })
 
 // @e2e openspec/specs/request-management/spec.md#request-card-displays-key-information
 test('request page main content renders', async ({ page }) => {
-	await page.goto('/apps/pipelinq/requests')
+	await page.goto('/apps/pipelinq/#/requests')
 	await expect(page.locator('#app-content, .app-content, main').first()).toBeVisible({ timeout: 10000 })
 })
 
 // @e2e openspec/specs/request-management/spec.md#request-without-queue
 test('requests page renders correctly', async ({ page }) => {
-	await page.goto('/apps/pipelinq/requests')
+	await page.goto('/apps/pipelinq/#/requests')
 	await expect(page.locator('body')).not.toContainText('Uncaught Error', { timeout: 10000 })
 })
 
 // @e2e openspec/specs/request-management/spec.md#bulk-actions-bar-visibility
 test('request list page fully loads', async ({ page }) => {
-	await page.goto('/apps/pipelinq/requests')
+	await page.goto('/apps/pipelinq/#/requests')
 	await page.waitForLoadState('networkidle').catch(() => {})
 	await expect(page.locator('body')).not.toContainText('Internal Server Error')
 })
