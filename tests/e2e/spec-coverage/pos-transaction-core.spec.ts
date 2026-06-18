@@ -20,10 +20,11 @@
  */
 
 import { test, expect } from '@playwright/test'
+import { openApp, navClick } from '../helpers/pipelinq'
 
 // @e2e openspec/specs/pos-transaction-core/spec.md#display-transaction-list-with-key-columns
 test('POS transaction list (Kassabon) page renders the real list shell', async ({ page }) => {
-	await page.goto('/apps/pipelinq/pos')
+	await page.goto('/apps/pipelinq/#/pos')
 	await expect(page).toHaveURL(/pos/, { timeout: 10000 })
 	await expect(page.locator('body')).not.toContainText('Internal Server Error')
 	// The real CnIndexPage list surface (not just the shell mount) — its host
@@ -40,7 +41,7 @@ test('POS transaction list (Kassabon) page renders the real list shell', async (
 
 // @e2e openspec/specs/pos-transaction-core/spec.md#empty-state
 test('POS transaction list shows the real empty state (or populated rows) without error', async ({ page }) => {
-	await page.goto('/apps/pipelinq/pos')
+	await page.goto('/apps/pipelinq/#/pos')
 	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
 	await expect(page.locator('[data-testid="cn-index-page"]').first()).toBeVisible({ timeout: 10000 })
 	// Either the empty-state placeholder (bare env: no transactions) or a
@@ -52,15 +53,10 @@ test('POS transaction list shows the real empty state (or populated rows) withou
 
 // @e2e openspec/specs/pos-transaction-core/spec.md#create-a-new-draft-transaction
 test('Kassabon (POS) page exposes the new-transaction entry point and nav', async ({ page }) => {
-	await page.goto('/apps/pipelinq/')
-	// The global sidebar now renders the Kassabon entry (manifest deps satisfied).
-	const nav = page.locator('#app-navigation-vue')
-	const kassabon = nav.getByText('Kassabon', { exact: true }).first()
-	await expect(kassabon).toBeVisible({ timeout: 10000 })
-	// Navigate via the nav entry rather than a bare deep-link (more robust than
-	// goto, which can reset the manifest router to Dashboard).
-	await kassabon.click()
-	await expect(page).toHaveURL(/pos/, { timeout: 10000 })
+	await openApp(page)
+	// Navigate via the Kassabon nav entry rather than a bare deep-link (more
+	// robust than goto, which can reset the manifest router to Dashboard).
+	await navClick(page, 'Kassabon', /#\/pos/)
 	await expect(page.locator('body')).not.toContainText('Internal Server Error')
 	// The new-draft-transaction entry point is the CnActionsBar primary CTA
 	// ("Add") that calls createNew() → PosTransactionNew route.
