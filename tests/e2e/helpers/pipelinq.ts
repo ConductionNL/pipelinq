@@ -42,16 +42,30 @@ export async function navClick(page: Page, label: string, urlRe: RegExp): Promis
 		.locator('#app-navigation-vue a.app-navigation-entry-link[href*="#/"]')
 		.filter({ hasText: new RegExp(`^\\s*${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`) })
 		.first()
-	// The entry is always present in the DOM, but some leaves live inside the
-	// NcAppNavigation Settings flyout (`button.settings-button`), which is
-	// collapsed (display:none) by default. If the entry is not visible, open the
-	// Settings flyout first so the leaf renders before we click it.
+	// The entry is always present in the DOM, but a leaf can be hidden because
+	// its container is collapsed by default:
+	//  (a) a standard NcAppNavigation GROUP — the leaf sits inside a
+	//      `li.app-navigation-entry--collapsible` whose caption anchor
+	//      (`a[href="#"][aria-expanded="false"]`) toggles it; OR
+	//  (b) the NcAppNavigation Settings flyout (`button.settings-button`).
+	// If the entry is not visible, expand its collapsed container first, then
+	// click the now-visible leaf.
 	await link.waitFor({ state: 'attached', timeout: 10000 })
 	if (!(await link.isVisible().catch(() => false))) {
-		const settingsBtn = page.locator('#app-navigation-vue button.settings-button[aria-expanded="false"]').first()
-		if (await settingsBtn.isVisible().catch(() => false)) {
-			await settingsBtn.click().catch(() => {})
+		const groupCaption = link
+			.locator('xpath=ancestor::li[contains(concat(" ", normalize-space(@class), " "), " app-navigation-entry--collapsible ")][1]')
+			.locator('a.app-navigation-entry-link[href="#"]')
+			.first()
+		if (await groupCaption.count().catch(() => 0)) {
+			await groupCaption.click().catch(() => {})
 			await link.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {})
+		}
+		if (!(await link.isVisible().catch(() => false))) {
+			const settingsBtn = page.locator('#app-navigation-vue button.settings-button[aria-expanded="false"]').first()
+			if (await settingsBtn.isVisible().catch(() => false)) {
+				await settingsBtn.click().catch(() => {})
+				await link.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {})
+			}
 		}
 	}
 	await expect(link).toBeVisible({ timeout: 10000 })
