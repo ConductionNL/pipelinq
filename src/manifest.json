@@ -391,7 +391,7 @@
 					{ "id": "open-leads",            "type": "stat", "title": "Open Leads", "content": { "label": "Open Leads", "icon": "FilterVariant", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "count", "filter": { "status": "open" } } } },
 					{ "id": "open-requests",         "type": "stat", "title": "Requests", "content": { "label": "Requests", "icon": "ClipboardList", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "request", "metric": "count", "filter": {} } } },
 					{ "id": "pipeline-value",        "type": "stat", "title": "Pipeline Value", "content": { "label": "Pipeline Value", "icon": "Cash", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": {} } } },
-					{ "id": "overdue",               "type": "custom", "title": "Overdue" },
+					{ "id": "overdue",               "type": "stat", "title": "Overdue", "content": { "label": "Overdue", "icon": "ScaleBalance", "valueColor": "#e9322d", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "count", "filter": { "status": "open", "expectedCloseDate": { "lt": "@today" } } } } },
 					{ "id": "lead-conversion",       "type": "stat", "title": "Lead Conversion Rate", "content": { "label": "Lead Conversion Rate", "icon": "TrendingUp", "valueColor": "#46ba61", "format": { "style": "percent", "decimals": 1 }, "source": { "kind": "ratio", "register": "pipelinq", "schema": "lead", "metric": "count", "numerator": { "filter": { "status": "won" } }, "denominator": { "filter": {} } } } },
 					{ "id": "avg-resolution",        "type": "custom", "title": "Avg Request Resolution" },
 					{ "id": "contact-volume",        "type": "stat", "title": "Contact Moment Volume", "content": { "label": "Contacts", "icon": "Account", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "contact", "metric": "count", "filter": {} } } },
@@ -400,7 +400,7 @@
 					{ "id": "requests-by-category",  "type": "chart", "title": "Requests by category", "content": { "chartKind": "donut", "dataSource": { "register": "pipelinq", "schema": "request", "filter": {}, "groupBy": { "field": "category", "metric": "count", "sort": "desc" } } } },
 					{ "id": "requests-by-status",    "type": "chart", "title": "Requests by Status", "content": { "chartKind": "bar", "dataSource": { "register": "pipelinq", "schema": "request", "filter": {}, "groupBy": { "field": "status", "metric": "count", "sort": "desc" } } } },
 					{ "id": "complaints",            "type": "object-list", "title": "Complaints", "content": { "register": "pipelinq", "schema": "complaint", "filter": {}, "sort": { "field": "priority", "dir": "desc" }, "limit": 6, "columns": [{ "key": "title", "label": "Complaint" }, { "key": "status", "label": "Status" }, { "key": "priority", "label": "Priority" }] } },
-					{ "id": "my-work",               "type": "custom", "title": "My Work" },
+					{ "id": "my-work",               "type": "object-list", "title": "My Work", "content": { "register": "pipelinq", "schema": "lead", "filter": { "assignee": "@me" }, "sort": { "field": "expectedCloseDate", "dir": "asc" }, "limit": 6, "columns": [{ "key": "title", "label": "Lead" }, { "key": "priority", "label": "Priority" }, { "key": "stage", "label": "Stage" }] } },
 					{ "id": "client-overview",       "type": "object-list", "title": "Client Overview", "content": { "register": "pipelinq", "schema": "client", "filter": {}, "sort": { "field": "name", "dir": "asc" }, "limit": 6, "columns": [{ "key": "name", "label": "Client" }, { "key": "type", "label": "Type" }, { "key": "industry", "label": "Industry" }] } },
 					{ "id": "billing-categories",    "type": "custom", "title": "Hours by billing category" },
 					{ "id": "navi-analytics",        "type": "custom", "title": "Ask Navi" },
@@ -429,10 +429,8 @@
 				]
 			},
 			"slots": {
-				"widget-overdue": "OverdueKpiWidget",
 				"widget-avg-resolution": "AvgResolutionKpiWidget",
 				"widget-satisfaction": "SatisfactionKpiWidget",
-				"widget-my-work": "MyWorkWidget",
 				"widget-billing-categories": "BillingCategoryWidget",
 				"widget-navi-analytics": "NaviAnalyticsWidget",
 				"widget-report-export": "ReportExportPanel",
