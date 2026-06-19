@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # commercial-dashboard Specification
 
 ## Purpose
-TBD - created by archiving change commercial-dashboard. Update Purpose after archive.
+Provides a commercial overview dashboard as the default landing page, showing revenue, won value, win rate, average deal size, weighted forecast, and open pipeline value alongside trend charts and closing-soon/recently-won deal tables. Backed by an authenticated analytics endpoint and a seeded demo dataset, it splits commercial KPIs from the operational widgets, which move to a dedicated Operational overview.
 ## Requirements
 ### Requirement: Commercial overview KPI endpoint
 

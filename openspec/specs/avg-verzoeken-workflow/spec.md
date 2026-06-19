@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # avg-verzoeken-workflow Specification
 
 ## Purpose
-TBD - created by archiving change avg-verzoeken-workflow. Update Purpose after archive.
+Defines the handling of AVG (GDPR) data-subject requests — classification, 30-day deadline tracking, extensions, federated evidence collection, redaction, signed export bundles, denials, AP escalation, and retention. Every requirement is a handoff: pipelinq itself does not implement these workflows but delegates them to the canonical owners (docudesk, the AVG dossier capability, and rekenkamer-audit-pack), documenting the integration contracts those owners must satisfy.
 ## Requirements
 ### Requirement: REQ-AVG-001 — Automatic Article Classification at Intake [HANDOFF]
 

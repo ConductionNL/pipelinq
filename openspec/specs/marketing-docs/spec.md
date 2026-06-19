@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # marketing-docs Specification
 
 ## Purpose
-TBD - created by archiving change marketing-segmentation-and-blast-10-docs. Update Purpose after archive.
+Documents the marketing blast feature in the CHANGELOG and a user guide. The user guide covers creating segments and compliant templates, scheduling and sending blasts, A/B testing, and monitoring delivery and revenue attribution, and is available in Dutch and English.
 ## Requirements
 ### Requirement: Feature Documentation
 

@@ -1,5 +1,5 @@
 ---
-status: implemented
+status: done
 ---
 
 # Time Entry Core Specification

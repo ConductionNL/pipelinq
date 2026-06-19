@@ -1,3 +1,7 @@
+---
+status: done
+---
+
 # Klachtenregistratie (Complaint Registration) — Delta Spec
 
 ## Purpose

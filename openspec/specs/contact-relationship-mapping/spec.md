@@ -1,5 +1,5 @@
 ---
-status: partial
+status: done
 ---
 
 # Contact Relationship Mapping Specification

@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # marketing-api Specification
 
 ## Purpose
-TBD - created by archiving change marketing-segmentation-and-blast-06-rest-controllers. Update Purpose after archive.
+Exposes the REST API for marketing blasts, segments, and campaign templates with standard CRUD, pagination, and filtering. It derives user identity from the server session rather than trusting the request body, validates segment rule trees and template compliance before saving, and returns generic error messages that do not leak internal details.
 ## Requirements
 ### Requirement: API Endpoints CRUD and Query
 

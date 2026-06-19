@@ -80,15 +80,38 @@ test.describe('Clients — full CRUD with persistence', () => {
 		}
 	})
 
-	// LIVE-VERIFIED 2026-06-18: the schema-driven "Create Client" dialog no
-	// longer exposes name / email / phone inputs — its fields are now Account
-	// owner, Account status, Industry, Lifecycle stage, Master entity ref,
-	// Segment and the required Client type. The whole journey is anchored on
-	// entering + asserting those three identity fields through the dialog, which
-	// is no longer possible. This is a client-schema form change (not the IA nav
-	// drift this suite reconciles); the nav into the Clients list now works via
-	// the fixed navClick. Skipped until the create form is re-aligned (or the
-	// journey is rewritten against the new account-centric field set).
+	// LEFT SKIPPED — blocked by a NEW backend bug, NOT the register binding.
+	//
+	// The register binding is fixed (the fixture now addresses the OR object API
+	// by the 'pipelinq' slug — see helpers/fixtures.ts — and the sibling product +
+	// POS round-trips green against it). What blocks the CLIENT create round-trip
+	// is a distinct schema-vs-form defect found live 2026-06-18:
+	//
+	//   The `client` schema (OR schema 60) marks `contactsUid` as REQUIRED, but no
+	//   client-create UI supplies it, so EVERY UI create is rejected 400 by
+	//   OpenRegister with: "The required property (contactsUid) is missing."
+	//   Two independent create surfaces both fail:
+	//     • Clients list → "Add Client" opens the GENERIC CnSchemaFormDialog, whose
+	//       rendered fields are Account owner / Account status / Industry /
+	//       Lifecycle stage / Master entity ref / Segment / Client type — it omits
+	//       BOTH required `name` and required `contactsUid` (verified live: it
+	//       fails 400 on "name, contactsUid missing").
+	//     • Dashboard → "New Client" opens the bespoke ClientForm
+	//       (src/views/clients/ClientForm.vue, testids client-name-input /
+	//       client-type-select / client-email-input / …) which DOES drive
+	//       name/type/email/phone, but its save payload still omits `contactsUid`,
+	//       so it also fails 400 (reproduced live).
+	//
+	// Net: there is no UI path that can persist a client today, so a
+	// create→list→values UI round-trip cannot be made to pass without an app/schema
+	// fix (make `contactsUid` nullable, or have a create form provide it). That fix
+	// is out of scope for this register-binding e2e reconciliation. Kept as fixme
+	// with the bug recorded above so it is no longer conflated with the (resolved)
+	// register binding. When the create path is fixed, drive the bespoke ClientForm
+	// via Dashboard → "New Client" (its testids are listed above) and assert
+	// name/email persistence, then list→values via the index sidebar search (the
+	// list orders created-ascending and paginates 20/page, so a fresh row needs the
+	// search to surface — see product-crud.spec.ts searchInList()).
 	test.fixme('create → list → values → edit → delete round-trips real data', async ({ page }) => {
 		test.setTimeout(90000)
 		fx = new FixtureSession(page)
@@ -150,13 +173,15 @@ test.describe('Clients — full CRUD with persistence', () => {
 	})
 
 	/**
-	 * The standalone ClientDetail page (with its Edit form + Delete confirmation
-	 * dialog) is implemented in src/views/clients/ClientDetail.vue + ClientForm.vue
-	 * but is NOT reachable from the manifest-driven Clients list: clicking a list
-	 * row toggles the list's filter/columns sidebar instead of routing to
-	 * /clients/:id (verified live 2026-06-10). Until the manifest index wires
-	 * row-click to the detail route, the in-UI edit/delete journey cannot be
-	 * driven; the persistence round-trip is covered above through the object API.
+	 * UI-SHELL GAP (left skipped on purpose; NOT the register binding bug, which is
+	 * fixed). The standalone ClientDetail page (with its Edit form + Delete
+	 * confirmation) is implemented in src/views/clients/ClientDetail.vue +
+	 * ClientForm.vue and a route exists at /clients/:id, but the manifest Clients
+	 * index does not wire a list-row click to that route: clicking a row toggles
+	 * the index filter/columns sidebar instead of routing to /clients/:id (the page
+	 * sets showViewAction:false, so no in-row "View" affordance reaches it either).
+	 * Until the manifest index routes a row to its detail page, the in-UI
+	 * edit/delete journey cannot be driven from the list.
 	 */
 	test.fixme('edit + delete via the ClientDetail page UI (unreachable from list row in current shell)', async () => {})
 })

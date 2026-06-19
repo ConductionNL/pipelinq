@@ -1,3 +1,7 @@
+---
+status: done
+---
+
 # Skill-Based Routing Specification
 
 ## Purpose

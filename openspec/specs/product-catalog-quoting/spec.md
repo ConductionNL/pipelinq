@@ -1,5 +1,5 @@
 ---
-status: draft
+status: done
 ---
 
 # product-catalog-quoting Specification

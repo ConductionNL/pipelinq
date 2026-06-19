@@ -31,16 +31,26 @@ import { Page } from '@playwright/test'
 /**
  * The OpenRegister register that holds pipelinq objects.
  *
- * The NUMERIC id varies between environments (dev box = 16, a fresh CI boot
- * re-imports the register by slug and gets a different id). The pipelinq repair
- * step re-imports its register with the stable slug 'pipelinq', so the fixture
- * resolves the numeric id from that slug at runtime (see resolveRegister()) and
- * only falls back to this seed when the registers list is unreachable. An
- * explicit PIPELINQ_REGISTER env var still overrides everything (manual runs).
+ * IMPORTANT — address the register by its STABLE SLUG, never a numeric id. The
+ * pipelinq app itself POSTs/GETs against `/objects/pipelinq/<schema>` (verified
+ * live 2026-06-18 in the browser network log), so OpenRegister resolves the
+ * slug `pipelinq` server-side to whichever register that slug owns. On a box
+ * that has imported the register more than once there can be MULTIPLE registers
+ * sharing the slug `pipelinq` (e.g. dev box = ids 16 AND 446): the server
+ * resolves the slug to ONE of them for both reads and writes, but the
+ * registers-LIST endpoint may return the OTHER duplicate first. A fixture that
+ * resolved a numeric id from the registers list could therefore read a
+ * different register than the one the UI writes to, and every round-trip
+ * read-back would spuriously find nothing.
+ *
+ * Using the slug in the object-API path makes the fixture resolve EXACTLY the
+ * register the app uses — no numeric-id lookup, no duplicate-ordering hazard.
+ * An explicit PIPELINQ_REGISTER env var still overrides (manual runs against a
+ * pinned numeric id).
  */
-export const PIPELINQ_REGISTER = process.env.PIPELINQ_REGISTER || '16'
+export const PIPELINQ_REGISTER = process.env.PIPELINQ_REGISTER || 'pipelinq'
 
-/** The stable OpenRegister slug the pipelinq repair step imports its register under. */
+/** The stable OpenRegister slug the pipelinq app addresses its register under. */
 export const PIPELINQ_REGISTER_SLUG = 'pipelinq'
 
 /** Stable, unique prefix for everything this run creates. */
@@ -69,24 +79,25 @@ export class FixtureSession {
 	}
 
 	/**
-	 * Resolve the numeric register id from the stable slug 'pipelinq' once, so
-	 * the suite survives a fresh CI boot where the re-imported register gets a
-	 * different numeric id. An explicit PIPELINQ_REGISTER env var is treated as
-	 * an override and short-circuits resolution. On any failure the fallback
-	 * (env/seed) id is kept so a transient registers-list hiccup never breaks
-	 * the suite harder than the original hardcoded id would have.
+	 * Resolve which register the OR object API should be addressed under.
+	 *
+	 * The app addresses the register by its STABLE SLUG (`/objects/pipelinq/…`),
+	 * so by default the fixture does the same: `this.register` is the slug and the
+	 * server resolves it to the exact register the UI writes to — even when the
+	 * box has multiple registers sharing that slug. This is deliberately NOT a
+	 * numeric-id lookup against the registers list: that list can return a
+	 * DIFFERENT duplicate first than the one the slug resolves to for objects,
+	 * which would make every round-trip read-back read the wrong register.
+	 *
+	 * An explicit PIPELINQ_REGISTER env var (a pinned numeric id) overrides the
+	 * slug for manual runs against a specific register.
 	 */
 	private async resolveRegister(): Promise<void> {
 		if (this.registerResolved) return
 		this.registerResolved = true
-		if (process.env.PIPELINQ_REGISTER) return // explicit override wins
-		const res = await this.apiFetch('GET', '/index.php/apps/openregister/api/registers?_limit=200')
-		if (!res.ok) return
-		const list = Array.isArray(res.json) ? res.json : (res.json?.results || [])
-		const reg = list.find((r: any) => r.slug === PIPELINQ_REGISTER_SLUG)
-		if (reg && (reg.id || reg.id === 0)) {
-			this.register = String(reg.id)
-		}
+		// `this.register` already holds the slug (or the env override). Addressing
+		// the OR object API by slug mirrors the app exactly, so there is nothing
+		// further to resolve.
 	}
 
 	/** Build the OR objects endpoint for a schema slug (+ optional id / query). */

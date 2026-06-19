@@ -1,3 +1,7 @@
+---
+status: done
+---
+
 # POS Lifecycle Guard Adoption
 
 **Status**: done

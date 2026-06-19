@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # master-data-management Specification
 
 ## Purpose
-TBD - created by archiving change master-data-management. Update Purpose after archive.
+Maintains a single authoritative golden record per master entity by resolving conflicting attribute values through configurable per-source trust tiers, detecting deterministic and probabilistic duplicates, and providing reversible merge tooling with preview. Computes a data-quality score, records an audit trail of merges and gold-record mutations, executes AVG right-of-deletion, and publishes golden records to downstream apps via a read API and a retrying sync queue.
 ## Requirements
 ### Requirement: REQ-MDM-001 — Golden Record per Master Entity
 

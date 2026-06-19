@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # cti-screenpop-adapter Specification
 
 ## Purpose
-TBD - created by archiving change cti-screenpop-adapter. Update Purpose after archive.
+Integrates pipelinq with telephony platforms so inbound calls screen-pop the caller's CRM record and phone fields offer one-click click-to-dial. Every call creates a contactmoment with disposition workflow, recording metadata, and agent presence sync, via a pluggable per-platform adapter (CallVoip, RingCentral, Asterisk) with verified webhooks, plus admin configuration and an event log.
 ## Requirements
 ### Requirement: Inbound Screen-Pop on Call Answer (REQ-CTI-001)
 
