@@ -36,9 +36,11 @@
 				</div>
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'Original transaction') }}</label>
-					<a v-if="refund.originalTransaction" href="#" @click.prevent="openTransaction">
+					<router-link
+						v-if="refund.originalTransaction"
+						:to="{ name: 'PosTransactionDetail', params: { id: refund.originalTransaction } }">
 						{{ originalTransaction.reference || refund.originalTransaction }}
-					</a>
+					</router-link>
 					<span v-else>-</span>
 				</div>
 				<div class="info-field">
@@ -303,12 +305,6 @@ export default {
 			} finally {
 				this.loading = false
 			}
-		},
-		/**
-		 * Navigate to the original transaction detail.
-		 */
-		openTransaction() {
-			this.$router.push({ name: 'PosTransactionDetail', params: { id: this.refund.originalTransaction } })
 		},
 		/**
 		 * Call a lifecycle action endpoint and reload.

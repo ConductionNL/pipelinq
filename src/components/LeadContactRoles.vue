@@ -19,11 +19,11 @@
 				<tbody>
 					<tr v-for="role in sortedContactRoles" :key="role.id" class="viewTableRow">
 						<td>
-							<a
+							<router-link
 								class="contact-link"
-								@click.prevent="$router.push({ name: 'ContactDetail', params: { id: role.toContact } })">
+								:to="{ name: 'ContactDetail', params: { id: role.toContact } }">
 								{{ getEntityName(role.toContact) }}
-							</a>
+							</router-link>
 						</td>
 						<td>
 							<span class="role-badge" :class="'role-badge--' + role.type">

@@ -132,9 +132,13 @@
 							class="viewTableRow"
 							@click="openLead(item)">
 							<td>
-								<a href="#" @click.prevent.stop="openLead(item)">
+								<router-link
+									v-if="item.lead"
+									:to="{ name: 'LeadDetail', params: { id: item.lead } }"
+									@click.native.stop>
 									{{ item.leadTitle || t('pipelinq', '[Deleted lead]') }}
-								</a>
+								</router-link>
+								<span v-else>{{ item.leadTitle || t('pipelinq', '[Deleted lead]') }}</span>
 							</td>
 							<td>{{ item.leadStage || '-' }}</td>
 							<td>{{ item.quantity }}</td>

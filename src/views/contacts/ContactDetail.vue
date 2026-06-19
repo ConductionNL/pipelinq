@@ -77,12 +77,12 @@
 				</div>
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'Client') }}</label>
-					<a
+					<router-link
 						v-if="contactData.client"
 						class="client-link"
-						@click="$router.push({ name: 'ClientDetail', params: { id: contactData.client } })">
+						:to="{ name: 'ClientDetail', params: { id: contactData.client } }">
 						{{ clientName }}
-					</a>
+					</router-link>
 					<span v-else>-</span>
 				</div>
 			</div>
@@ -95,12 +95,11 @@
 		<CnDetailCard v-if="!isNew" :title="t('pipelinq', 'Parent Organisation')">
 			<div v-if="contactData.client" class="parent-org">
 				<div class="parent-org__name">
-					<a
-						href="#"
+					<router-link
 						class="parent-org__link"
-						@click.prevent="$router.push({ name: 'ClientDetail', params: { id: contactData.client } })">
+						:to="{ name: 'ClientDetail', params: { id: contactData.client } }">
 						{{ clientName }}
-					</a>
+					</router-link>
 				</div>
 				<div class="parent-org__type">
 					{{ clientType || '-' }}
