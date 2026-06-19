@@ -12,6 +12,7 @@ import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
 import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
 import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
+import Calendar from 'vue-material-design-icons/Calendar.vue'
 import CalendarCheck from 'vue-material-design-icons/CalendarCheck.vue'
 import CardAccountDetails from 'vue-material-design-icons/CardAccountDetails.vue'
 import CartArrowDown from 'vue-material-design-icons/CartArrowDown.vue'
@@ -45,6 +46,7 @@ export default {
 	AccountMultiple,
 	AlertCircleOutline,
 	BookOpenPageVariant,
+	Calendar,
 	CalendarCheck,
 	CardAccountDetails,
 	CartArrowDown,

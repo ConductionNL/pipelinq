@@ -3,7 +3,7 @@
 		{
 			"id": "BookingsGroup",
 			"label": "Appointments",
-			"icon": "icon-calendar",
+			"icon": "Calendar",
 			"order": 150,
 			"children": [
 				{
@@ -21,7 +21,7 @@
 				{
 					"id": "Bookings",
 					"label": "Bookings",
-					"icon": "icon-calendar",
+					"icon": "Calendar",
 					"route": "Bookings"
 				}
 			]
