@@ -26,7 +26,7 @@
 			@empty-action="createNew"
 			@refresh="onRefresh"
 			@sort="onSort"
-			@row-click="openService"
+			@view="openService"
 			@page-changed="onPageChange">
 			<template #cell-durationMinutes="{ row }">
 				{{ formatDuration(row.durationMinutes) }}

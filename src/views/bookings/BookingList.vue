@@ -27,7 +27,7 @@
 			:empty-title="t('pipelinq', 'No bookings yet')"
 			@refresh="onRefresh"
 			@sort="onSort"
-			@row-click="openBooking"
+			@view="openBooking"
 			@page-changed="onPageChange">
 			<template #cell-startAt="{ row }">
 				{{ formatDateTime(row.startAt) }}

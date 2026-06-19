@@ -21,7 +21,7 @@
 			@empty-action="createNew"
 			@refresh="onRefresh"
 			@sort="onSort"
-			@row-click="openDestination"
+			@view="openDestination"
 			@page-changed="onPageChange">
 			<template #row-actions="{ row }">
 				<NcButton type="tertiary" :disabled="busyId === row.id" @click.stop="testConnection(row)">

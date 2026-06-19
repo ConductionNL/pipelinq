@@ -20,7 +20,7 @@
 		@empty-action="createNew"
 		@refresh="onRefresh"
 		@sort="onSort"
-		@row-click="openBlast"
+		@view="openBlast"
 		@page-changed="onPageChange" />
 </template>
 

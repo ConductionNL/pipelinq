@@ -27,7 +27,7 @@
 		@empty-action="createNew"
 		@refresh="onRefresh"
 		@sort="onSort"
-		@row-click="openProject"
+		@view="openProject"
 		@page-changed="onPageChange">
 		<template #cell-status="{ row }">
 			<span class="status-pill" :class="statusClass(row.status)">

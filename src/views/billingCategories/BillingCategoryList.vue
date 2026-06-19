@@ -30,7 +30,7 @@
 			@empty-action="createNew"
 			@refresh="onRefresh"
 			@sort="onSort"
-			@row-click="openCategory"
+			@view="openCategory"
 			@page-changed="onPageChange">
 			<template #cell-name="{ row }">
 				<span class="billing-cat-name-cell">

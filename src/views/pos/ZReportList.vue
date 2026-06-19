@@ -25,7 +25,7 @@
 			:empty-title="t('pipelinq', 'Geen Z-reports gevonden')"
 			@refresh="onRefresh"
 			@sort="onSort"
-			@row-click="openDetail"
+			@view="openDetail"
 			@page-changed="onPageChange" />
 	</div>
 </template>
