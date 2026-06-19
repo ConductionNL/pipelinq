@@ -342,7 +342,9 @@
 					{ "id": "revenue-by-category", "type": "chart", "title": "Revenue by source", "content": { "chartKind": "donut", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "groupBy": { "field": "source", "metric": "sum", "metricField": "value", "sort": "desc" } } } },
 					{ "id": "top-customers",      "type": "chart", "title": "Top customers by revenue", "content": { "chartKind": "bar", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "groupBy": { "field": "client", "metric": "sum", "metricField": "value", "sort": "desc", "limit": 5 } } } },
 					{ "id": "closing-soon",       "type": "object-list", "title": "Deals closing soon", "content": { "register": "pipelinq", "schema": "lead", "filter": { "status": "open" }, "sort": { "field": "expectedCloseDate", "dir": "asc" }, "limit": 6, "columns": [{ "key": "title", "label": "Deal" }, { "key": "value", "label": "Value" }, { "key": "stage", "label": "Stage" }] } },
-					{ "id": "recently-won-lost",  "type": "object-list", "title": "Recently won / lost", "content": { "register": "pipelinq", "schema": "lead", "filter": {}, "sort": { "field": "expectedCloseDate", "dir": "desc" }, "limit": 6, "columns": [{ "key": "title", "label": "Deal" }, { "key": "status", "label": "Status" }, { "key": "value", "label": "Value" }] } }
+					{ "id": "recently-won-lost",  "type": "object-list", "title": "Recently won / lost", "content": { "register": "pipelinq", "schema": "lead", "filter": {}, "sort": { "field": "expectedCloseDate", "dir": "desc" }, "limit": 6, "columns": [{ "key": "title", "label": "Deal" }, { "key": "status", "label": "Status" }, { "key": "value", "label": "Value" }] } },
+						{ "id": "pipeline-coverage", "type": "gauge", "title": "Pipeline coverage", "content": { "label": "Open pipeline vs target", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "status": "open" } }, "target": { "kind": "static", "value": 500000 }, "thresholds": { "warn": 60, "danger": 90, "invert": true } } },
+						{ "id": "won-vs-open",        "type": "delta", "title": "Won vs open", "content": { "label": "Won deals", "icon": "Trophy", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "count", "goodDirection": "up", "current": { "filter": { "status": "won" } }, "previous": { "filter": { "status": "open" } } } } }
 				],
 				"layout": [
 					{ "id": "c1",  "widgetId": "revenue",            "gridX": 0,  "gridY": 0,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
@@ -359,7 +361,9 @@
 					{ "id": "c12", "widgetId": "recently-won-lost",  "gridX": 6,  "gridY": 12, "gridWidth": 6,  "gridHeight": 4 },
 					{ "id": "c13", "widgetId": "mrr",                "gridX": 0,  "gridY": 16, "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
 					{ "id": "c14", "widgetId": "renewals-due",       "gridX": 4,  "gridY": 16, "gridWidth": 6,  "gridHeight": 4 },
-					{ "id": "c15", "widgetId": "total-leads",       "gridX": 10, "gridY": 16, "gridWidth": 2,  "gridHeight": 2, "showTitle": false }
+					{ "id": "c15", "widgetId": "total-leads",       "gridX": 10, "gridY": 16, "gridWidth": 2,  "gridHeight": 2, "showTitle": false },
+						{ "id": "c16", "widgetId": "pipeline-coverage",  "gridX": 0,  "gridY": 18, "gridWidth": 6,  "gridHeight": 2, "showTitle": false },
+						{ "id": "c17", "widgetId": "won-vs-open",        "gridX": 6,  "gridY": 18, "gridWidth": 6,  "gridHeight": 2, "showTitle": false }
 				]
 			},
 			"slots": {
