@@ -114,9 +114,9 @@
 
 		<CnDetailCard :title="t('pipelinq', 'Client')">
 			<div v-if="clientData" class="client-link">
-				<a href="#" @click.prevent="$router.push({ name: 'ClientDetail', params: { id: clientData.id } })">
+				<router-link :to="{ name: 'ClientDetail', params: { id: clientData.id } }">
 					{{ clientData.name }}
-				</a>
+				</router-link>
 				<span v-if="clientData.email" class="client-meta">{{ clientData.email }}</span>
 				<span v-if="clientData.phone" class="client-meta">{{ clientData.phone }}</span>
 			</div>
@@ -163,9 +163,9 @@
 			</template>
 
 			<div v-if="queueData" class="queue-link">
-				<a href="#" @click.prevent="$router.push({ name: 'QueueDetail', params: { id: queueData.id } })">
+				<router-link :to="{ name: 'QueueDetail', params: { id: queueData.id } }">
 					{{ queueData.title }}
-				</a>
+				</router-link>
 			</div>
 			<p v-else-if="isConverted" class="section-empty">
 				{{ t('pipelinq', 'Not in a queue') }}

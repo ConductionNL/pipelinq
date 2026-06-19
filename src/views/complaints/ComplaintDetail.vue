@@ -131,9 +131,9 @@
 
 		<CnDetailCard :title="t('pipelinq', 'Client')">
 			<div v-if="clientData" class="client-link">
-				<a href="#" @click.prevent="$router.push({ name: 'ClientDetail', params: { id: clientData.id } })">
+				<router-link :to="{ name: 'ClientDetail', params: { id: clientData.id } }">
 					{{ clientData.name }}
-				</a>
+				</router-link>
 				<span v-if="clientData.email" class="client-meta">{{ clientData.email }}</span>
 				<span v-if="clientData.phone" class="client-meta">{{ clientData.phone }}</span>
 			</div>
@@ -146,9 +146,9 @@
 
 			<div v-if="contactData" class="contact-link">
 				<label>{{ t('pipelinq', 'Contact person') }}</label>
-				<a href="#" @click.prevent="$router.push({ name: 'ContactDetail', params: { id: contactData.id } })">
+				<router-link :to="{ name: 'ContactDetail', params: { id: contactData.id } }">
 					{{ contactData.name }}
-				</a>
+				</router-link>
 			</div>
 		</CnDetailCard>
 

@@ -112,9 +112,9 @@
 				<div v-if="booking.previousBookingId" class="info-field">
 					<label>{{ t('pipelinq', 'Rescheduled from') }}</label>
 					<span>
-						<a href="#" @click.prevent="openPrevious">
+						<router-link :to="{ name: 'BookingDetail', params: { id: booking.previousBookingId } }">
 							{{ booking.previousBookingId }}
-						</a>
+						</router-link>
 					</span>
 				</div>
 			</div>
@@ -458,11 +458,6 @@ export default {
 						this.resourceLookup = { ...this.resourceLookup, [id]: resource.name }
 					}
 				} catch { /* tolerated */ }
-			}
-		},
-		openPrevious() {
-			if (this.booking.previousBookingId) {
-				this.$router.push({ name: 'BookingDetail', params: { id: this.booking.previousBookingId } })
 			}
 		},
 		async saveNotes() {
