@@ -22,7 +22,7 @@
 			@empty-action="openShift"
 			@refresh="onRefresh"
 			@sort="onSort"
-			@row-click="openDetail"
+			@view="openDetail"
 			@page-changed="onPageChange" />
 
 		<CashShiftOpenDialog

@@ -25,7 +25,7 @@
 			@empty-action="createNew"
 			@refresh="onRefresh"
 			@sort="onSort"
-			@row-click="openResource"
+			@view="openResource"
 			@page-changed="onPageChange">
 			<template #cell-type="{ row }">
 				{{ typeLabel(row.type) }}
