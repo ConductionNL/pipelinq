@@ -1,5 +1,5 @@
 ---
-status: implemented
+status: done
 ---
 
 # Prospect Discovery Specification

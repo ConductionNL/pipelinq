@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # marketing-testing Specification
 
 ## Purpose
-TBD - created by archiving change marketing-segmentation-and-blast-09-unit-integration-tests. Update Purpose after archive.
+Defines the test coverage for the marketing blast services. PHPUnit unit tests cover rule validation and evaluation, consent gating, template validation and withdrawal, and send, dispatch, A/B, and throttle behaviour, and an end-to-end integration test exercises segment creation through blast send using the real ObjectService.
 ## Requirements
 ### Requirement: Service Unit Test Coverage
 

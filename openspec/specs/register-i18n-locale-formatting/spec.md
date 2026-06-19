@@ -1,3 +1,7 @@
+---
+status: done
+---
+
 # Spec: Locale-Aware Formatting
 
 ## Purpose

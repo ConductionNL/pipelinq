@@ -1,5 +1,5 @@
 ---
-status: draft
+status: done
 ---
 
 # crm-workflow-automation Specification

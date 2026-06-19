@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # marketing-verification Specification
 
 ## Purpose
-TBD - created by archiving change marketing-segmentation-and-blast-11-quality-verification. Update Purpose after archive.
+Defines the end-to-end verification and pre-merge checklist for the marketing blast feature. Requires the unit and integration suites to pass with at least 80% service coverage, the full draft-to-sent send workflow, compliance blocking, A/B, and unsubscribe behaviour to be verified, and a security checklist confirming pattern invariants such as ObjectService-only CRUD, consent gating on every send, and template enforcement.
 ## Requirements
 ### Requirement: End-to-End Verification Passes
 

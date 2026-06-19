@@ -1,5 +1,5 @@
 ---
-status: implemented
+status: done
 ---
 
 # Notifications & Activity Stream Specification

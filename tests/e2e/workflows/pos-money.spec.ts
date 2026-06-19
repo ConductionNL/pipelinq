@@ -131,19 +131,14 @@ test.describe('POS — money workflow computes correct totals', () => {
 	})
 
 	/**
-	 * FIXED 2026-06-10 — completing the sale now persists a posTransaction + line.
+	 * FIXED 2026-06-10 — completing the sale persists a posTransaction + line.
 	 *
-	 * Previously the POS "Checkout" button called
-	 * objectStore.saveObject('posTransaction', …) but `posTransaction` was NOT
-	 * registered in the app's object store (the store guarded registration on a
-	 * numeric posTransaction_schema app-config id that is empty on a deployed
-	 * box), so the save threw "Object type posTransaction is not registered in
-	 * the store", no POST was issued and the form stayed on /pos/new. The store
-	 * now registers posTransaction / posTransactionLine with the canonical-slug
-	 * fallback (src/store/store.js) — OpenRegister resolves the slug against the
-	 * register — and the form now sends the schema-required `cashier` +
-	 * `consentSyncStatus`, so the OpenRegister POST validates. Checkout therefore
-	 * persists the sale and navigates to the transaction detail page.
+	 * The POS "Checkout" button calls objectStore.saveObject('posTransaction', …);
+	 * the store registers posTransaction / posTransactionLine with the
+	 * canonical-slug fallback (src/store/store.js) so OpenRegister resolves the
+	 * slug against the register, and the form sends the schema-required `cashier`
+	 * + `consentSyncStatus`, so the OpenRegister POST validates. Checkout persists
+	 * the sale and navigates to the transaction detail page.
 	 *
 	 * Asserts the sale persisted: the URL moved to the created transaction's
 	 * detail (/pos/{uuid}), the posTransaction is readable, and exactly one line
@@ -154,17 +149,17 @@ test.describe('POS — money workflow computes correct totals', () => {
 	 * request's tenancy scope — so the persisted header `total` is asserted to be
 	 * present (a number) rather than the exact grand total, which is verified to
 	 * the cent by the math test above against the same formula.
+	 *
+	 * UN-FIXME 2026-06-18 — the earlier "no posTransaction persisted" reading was
+	 * a fixture register-binding artefact, NOT a backend regression: the app POSTs
+	 * to `/objects/pipelinq/<schema>` (the register SLUG), but the fixture had
+	 * resolved a NUMERIC register id from the registers list, which on this box
+	 * returns a DUPLICATE register (446) ahead of the one the slug resolves to
+	 * (16). The read-back therefore queried the wrong register and found nothing.
+	 * The fixture now addresses the OR object API by the same slug the app uses
+	 * (helpers/fixtures.ts), so reads hit exactly the register checkout writes to.
 	 */
-	// LIVE-VERIFIED 2026-06-18 (NC34 dev box, pipelinq register 16): completing
-	// the sale routes the SPA to /pos/{uuid} but no posTransaction object is
-	// persisted to OpenRegister (`GET .../objects/16/posTransaction` returns
-	// total:0 after checkout), so the fixture read-back of the "created"
-	// transaction never resolves. This is a backend POS-persistence regression,
-	// independent of the IA-restructure nav drift this suite is reconciling
-	// (the navigation + checkout interaction itself now works via the fixed
-	// navClick). Skipped until POS checkout persistence is restored; the cart
-	// math it would re-assert is already proven to the cent by the test above.
-	test.fixme('completing the sale persists a transaction with the correct line total', async ({ page }) => {
+	test('completing the sale persists a transaction with the correct line total', async ({ page }) => {
 		test.setTimeout(120000)
 		const fx = new FixtureSession(page)
 		await openApp(page)
@@ -176,34 +171,52 @@ test.describe('POS — money workflow computes correct totals', () => {
 		await page.waitForURL(/pos\/[0-9a-f-]{36}/i, { timeout: 10000 })
 		const txId = page.url().match(/pos\/([0-9a-f-]{36})/i)![1]
 		fx.track('posTransaction', txId)
+		// Move OFF the freshly-created transaction-detail route before issuing the
+		// in-page API reads. That detail view keeps its execution context busy
+		// (its own object + relation loaders run on mount), and a fetch issued via
+		// page.evaluate() against a busy/transitioning context stalls. Returning to
+		// the stable app shell gives page.evaluate() a quiet context to run in; the
+		// reads still ride the same authenticated session + requesttoken.
+		await openApp(page)
+		await page.waitForTimeout(500)
 		const tx = await fx.get('posTransaction', txId)
 		// The header persisted with the cashier and a numeric total field.
 		expect(tx.cashier, 'cashier persisted on the transaction').toBeTruthy()
 		expect(Number.isFinite(Number(tx.total)), 'total is a number').toBe(true)
 		// Exactly one line persisted, carrying the correct computed line total.
-		const lines = await fx.list('posTransactionLine', { transaction: txId, _limit: 10 })
+		// (The OR object search is slow for this filter on the dev box — allow it
+		// a generous poll window so a multi-second response never flakes the read.)
+		let lines: any[] = []
+		await expect.poll(
+			async () => {
+				lines = await fx.list('posTransactionLine', { transaction: txId, _limit: 10 })
+				return lines.length
+			},
+			{ timeout: 30000, intervals: [1000, 2000, 3000] },
+		).toBe(1)
 		for (const l of lines) fx.track('posTransactionLine', l.id || l['@self']?.id)
-		expect(lines.length).toBe(1)
 		expect(Number(lines[0].lineTotal)).toBe(24.2)
 		await fx.cleanup()
 	})
 
 	/**
-	 * FIXED 2026-06-10 — the POS line product picker now lists the catalogue.
+	 * FIXED 2026-06-10 — the POS line product picker lists the catalogue.
 	 *
 	 * PosTransactionForm.loadProducts() calls fetchCollection('product'); the
 	 * `product` type is registered with the same canonical-slug fallback
 	 * (src/store/store.js), and the on-mount "not registered" errors that used to
 	 * abort the form mount are gone, so the "Search product…" dropdown lists the
 	 * seeded catalogue. Selecting a product prefills the line's unitPrice + VAT.
+	 *
+	 * UN-FIXME 2026-06-18 — the seeded product now round-trips through the SAME
+	 * register the picker reads. The earlier "collection not populated for this
+	 * register" reading was the fixture register-binding artefact (see the
+	 * persistence test above): the fixture seeded the product against a numeric
+	 * register id resolved from the registers list (446, a duplicate) while the
+	 * app picker reads the `pipelinq` slug (register 16). The fixture now seeds +
+	 * lists via the slug, matching the picker's register.
 	 */
-	// LIVE-VERIFIED 2026-06-18: depends on the same POS persistence path — the
-	// seeded product must round-trip through OpenRegister and surface in the POS
-	// line picker. On the NC34 dev box the product collection the picker reads is
-	// not populated for this register, so the prefill cannot be driven headlessly.
-	// Backend/data-environment issue, not IA-restructure nav drift. Skipped until
-	// the POS product catalogue read path is restored.
-	test.fixme('selecting a catalogue product prefills the line price + VAT', async ({ page }) => {
+	test('selecting a catalogue product prefills the line price + VAT', async ({ page }) => {
 		test.setTimeout(120000)
 		const fx = new FixtureSession(page)
 		await openApp(page)

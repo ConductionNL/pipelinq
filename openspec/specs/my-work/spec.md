@@ -1,5 +1,5 @@
 ---
-status: implemented
+status: done
 ---
 
 # My Work (Werkvoorraad) Specification

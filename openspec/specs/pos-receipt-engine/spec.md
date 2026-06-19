@@ -1,5 +1,5 @@
 ---
-status: implemented
+status: done
 ---
 
 # Spec: POS Receipt Engine
