@@ -336,6 +336,7 @@
 					{ "id": "open-pipeline",      "type": "stat", "title": "Open Pipeline", "content": { "label": "Open Pipeline", "icon": "FilterVariant", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "status": "open" } } } },
 					{ "id": "mrr",                "type": "custom", "title": "Recurring revenue (MRR)" },
 						{ "id": "renewals-due",       "type": "custom", "title": "Renewals due" },
+						{ "id": "total-leads",        "type": "stats-block", "title": "Total Leads", "props": { "countLabel": "leads", "variant": "primary" }, "dataSource": { "register": "pipelinq", "schema": "lead", "aggregate": "count" } },
 						{ "id": "revenue-over-time", "type": "chart", "title": "Revenue over time", "content": { "chartKind": "area", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "bucket": { "field": "expectedCloseDate", "interval": "month", "metric": "sum", "metricField": "value" } } } },
 					{ "id": "pipeline-by-stage",  "type": "chart", "title": "Pipeline by stage", "content": { "chartKind": "bar", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "groupBy": { "field": "stage", "metric": "sum", "metricField": "value", "sort": "desc" } } } },
 					{ "id": "revenue-by-category", "type": "chart", "title": "Revenue by source", "content": { "chartKind": "donut", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "groupBy": { "field": "source", "metric": "sum", "metricField": "value", "sort": "desc" } } } },
@@ -357,7 +358,8 @@
 					{ "id": "c11", "widgetId": "closing-soon",       "gridX": 0,  "gridY": 12, "gridWidth": 6,  "gridHeight": 4 },
 					{ "id": "c12", "widgetId": "recently-won-lost",  "gridX": 6,  "gridY": 12, "gridWidth": 6,  "gridHeight": 4 },
 					{ "id": "c13", "widgetId": "mrr",                "gridX": 0,  "gridY": 16, "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c14", "widgetId": "renewals-due",       "gridX": 4,  "gridY": 16, "gridWidth": 6,  "gridHeight": 4 }
+					{ "id": "c14", "widgetId": "renewals-due",       "gridX": 4,  "gridY": 16, "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "c15", "widgetId": "total-leads",       "gridX": 10, "gridY": 16, "gridWidth": 2,  "gridHeight": 2, "showTitle": false }
 				]
 			},
 			"slots": {
