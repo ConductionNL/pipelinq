@@ -13,6 +13,17 @@ import {
 	registerIcons,
 	registerTranslations,
 } from '@conduction/nextcloud-vue'
+// Import the integration-registry functions from their DEFINITION modules
+// (0 re-export hops) rather than the barrel: pipelinq splits the library into
+// a separate `shared-nc-vue.js` chunk and its 9 entry points have no shared
+// runtimeChunk, so the barrel's 3-hop re-exports of these functions resolve to
+// `undefined` across the chunk boundary (components, used directly, are fine).
+// eslint-disable-next-line import/no-unresolved -- subpath resolved by webpack alias
+import { installIntegrationRegistry } from '@conduction/nextcloud-vue/integrations/registry.js'
+// eslint-disable-next-line import/no-unresolved -- subpath resolved by webpack alias
+import { registerBuiltinIntegrations } from '@conduction/nextcloud-vue/integrations/builtin/index.js'
+// eslint-disable-next-line import/no-unresolved -- subpath resolved by webpack alias
+import { registerLeafIntegrations } from '@conduction/nextcloud-vue/integrations/builtin/leaves.js'
 import pinia from './pinia.js'
 import App from './App.vue'
 import bundledManifest from './manifest.json'
@@ -34,6 +45,16 @@ Vue.use(VueRouter)
 // Without this every schema `icon` name fails the CnIcon registry lookup
 // and falls back to a help-circle (page headers, empty states).
 registerIcons(appIcons)
+
+// Pluggable integration registry (ADR-019 / Phase 7). Install the registry +
+// register the built-in core/leaf integrations (xwiki / calendar / files /
+// notes / …) so manifest `type: 'integration'` widgets resolve from the
+// registry. Imported from the definition modules above (not the barrel) so the
+// bindings resolve across pipelinq's split-out `shared-nc-vue.js` chunk.
+installIntegrationRegistry()
+registerBuiltinIntegrations()
+registerLeafIntegrations()
+
 try {
 	registerTranslations()
 } catch (e) {

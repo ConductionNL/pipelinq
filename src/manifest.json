@@ -411,7 +411,7 @@
 					{ "id": "billing-categories",    "type": "custom", "title": "Hours by billing category" },
 					{ "id": "navi-analytics",        "type": "custom", "title": "Ask Navi" },
 					{ "id": "report-export",         "type": "custom", "title": "Report Export" },
-					{ "id": "xwiki-knowledge",       "type": "custom", "title": "Knowledge base" }
+					{ "id": "xwiki-knowledge",       "type": "integration", "integrationId": "xwiki", "title": "Knowledge base" }
 				],
 				"layout": [
 					{ "id": "1",  "widgetId": "open-leads",            "gridX": 0, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
@@ -439,8 +439,7 @@
 				"widget-satisfaction": "SatisfactionKpiWidget",
 				"widget-billing-categories": "BillingCategoryWidget",
 				"widget-navi-analytics": "NaviAnalyticsWidget",
-				"widget-report-export": "ReportExportPanel",
-				"widget-xwiki-knowledge": "XWikiDashboardWidget"
+				"widget-report-export": "ReportExportPanel"
 			}
 		},
 		{
