@@ -264,6 +264,8 @@ export default {
 			resourceLookup: {},
 			service: null,
 			customer: null,
+			loadedCustomerId: null,
+			contextLoading: false,
 		}
 	},
 	computed: {
@@ -432,32 +434,42 @@ export default {
 		 * Fetch the linked Service / Customer / Resource records so the
 		 * detail page can display human-readable names instead of UUIDs.
 		 * Failures are silent — the page falls back to UUIDs.
+		 *
+		 * Guarded against re-entrancy and redundant fetches: the `booking`
+		 * watcher can fire repeatedly (e.g. after an action re-fetches the
+		 * booking), so each linked record is only resolved once.
 		 */
 		async loadContext() {
-			if (this.booking.serviceId && !this.service) {
-				try {
-					this.service = await this.objectStore.fetchObject('service', this.booking.serviceId)
-				} catch { /* tolerated */ }
-			}
-			if (this.booking.customerId && !this.customer) {
-				try {
-					this.customer = await this.objectStore.fetchObject('contact', this.booking.customerId)
-				} catch {
-					try {
-						this.customer = await this.objectStore.fetchObject('client', this.booking.customerId)
-					} catch { /* tolerated */ }
+			if (this.contextLoading) return
+			this.contextLoading = true
+			try {
+				const booking = this.booking
+				if (booking.serviceId && !this.service) {
+					this.service = await this.objectStore.fetchObject('service', booking.serviceId)
 				}
-			}
-			const resourceIds = (this.assignments || [])
-				.map(a => a?.resourceId)
-				.filter(id => id && !this.resourceLookup[id])
-			for (const id of resourceIds) {
-				try {
+				// Resolve the customer once per id. fetchObject returns null
+				// (it does not throw) on a 404, so fall back to `client` on a
+				// null contact rather than in a catch — and record the id so a
+				// genuinely missing customer is not refetched on every run.
+				if (booking.customerId && this.loadedCustomerId !== booking.customerId) {
+					this.loadedCustomerId = booking.customerId
+					const contact = await this.objectStore.fetchObject('contact', booking.customerId)
+					this.customer = contact || await this.objectStore.fetchObject('client', booking.customerId)
+				}
+				// De-duplicate resource ids: a booking has one assignment row
+				// per step/time-slot, so the same resource recurs across rows.
+				const resourceIds = [...new Set((this.assignments || [])
+					.map(a => a?.resourceId)
+					.filter(Boolean))]
+					.filter(id => !this.resourceLookup[id])
+				for (const id of resourceIds) {
 					const resource = await this.objectStore.fetchObject('resource', id)
 					if (resource?.name) {
 						this.resourceLookup = { ...this.resourceLookup, [id]: resource.name }
 					}
-				} catch { /* tolerated */ }
+				}
+			} finally {
+				this.contextLoading = false
 			}
 		},
 		async saveNotes() {
