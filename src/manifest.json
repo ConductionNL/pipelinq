@@ -328,20 +328,20 @@
 					]
 				},
 				"widgets": [
-					{ "id": "revenue",            "type": "custom", "title": "Revenue" },
-					{ "id": "won-value",          "type": "custom", "title": "Won Value" },
-					{ "id": "win-rate",           "type": "custom", "title": "Win Rate" },
-					{ "id": "avg-deal",           "type": "custom", "title": "Avg Deal Size" },
-					{ "id": "weighted-forecast",  "type": "custom", "title": "Weighted Forecast" },
-					{ "id": "open-pipeline",      "type": "custom", "title": "Open Pipeline" },
+					{ "id": "revenue",            "type": "stat", "title": "Revenue", "content": { "label": "Revenue", "icon": "Cash", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": {} } } },
+					{ "id": "won-value",          "type": "stat", "title": "Won Value", "content": { "label": "Won Value", "icon": "Trophy", "valueColor": "#46ba61", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "status": "won" } } } },
+					{ "id": "win-rate",           "type": "stat", "title": "Win Rate", "content": { "label": "Win Rate", "icon": "TrendingUp", "valueColor": "#46ba61", "format": { "style": "percent", "decimals": 1 }, "source": { "kind": "ratio", "register": "pipelinq", "schema": "lead", "metric": "count", "numerator": { "filter": { "status": "won" } }, "denominator": { "filter": {} } } } },
+					{ "id": "avg-deal",           "type": "stat", "title": "Avg Deal Size", "content": { "label": "Avg Deal Size", "icon": "ScaleBalance", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "avg", "field": "value", "filter": {} } } },
+					{ "id": "weighted-forecast",  "type": "stat", "title": "Weighted Forecast", "content": { "label": "Weighted Forecast", "icon": "ChartLine", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "kind": "weighted", "register": "pipelinq", "schema": "lead", "field": "value", "weightField": "probability", "divisor": 100, "filter": {} } } },
+					{ "id": "open-pipeline",      "type": "stat", "title": "Open Pipeline", "content": { "label": "Open Pipeline", "icon": "FilterVariant", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "status": "open" } } } },
 					{ "id": "mrr",                "type": "custom", "title": "Recurring revenue (MRR)" },
 						{ "id": "renewals-due",       "type": "custom", "title": "Renewals due" },
-						{ "id": "revenue-over-time",  "type": "custom", "title": "Revenue over time" },
-					{ "id": "pipeline-by-stage",  "type": "custom", "title": "Pipeline by stage" },
-					{ "id": "revenue-by-category", "type": "custom", "title": "Revenue by product category" },
-					{ "id": "top-customers",      "type": "custom", "title": "Top customers by revenue" },
-					{ "id": "closing-soon",       "type": "custom", "title": "Deals closing soon" },
-					{ "id": "recently-won-lost",  "type": "custom", "title": "Recently won / lost" }
+						{ "id": "revenue-over-time", "type": "chart", "title": "Revenue over time", "content": { "chartKind": "area", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "bucket": { "field": "expectedCloseDate", "interval": "month", "metric": "sum", "metricField": "value" } } } },
+					{ "id": "pipeline-by-stage",  "type": "chart", "title": "Pipeline by stage", "content": { "chartKind": "bar", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "groupBy": { "field": "stage", "metric": "sum", "metricField": "value", "sort": "desc" } } } },
+					{ "id": "revenue-by-category", "type": "chart", "title": "Revenue by source", "content": { "chartKind": "donut", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "groupBy": { "field": "source", "metric": "sum", "metricField": "value", "sort": "desc" } } } },
+					{ "id": "top-customers",      "type": "chart", "title": "Top customers by revenue", "content": { "chartKind": "bar", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "groupBy": { "field": "client", "metric": "sum", "metricField": "value", "sort": "desc", "limit": 5 } } } },
+					{ "id": "closing-soon",       "type": "object-list", "title": "Deals closing soon", "content": { "register": "pipelinq", "schema": "lead", "filter": { "status": "open" }, "sort": { "field": "expectedCloseDate", "dir": "asc" }, "limit": 6, "columns": [{ "key": "title", "label": "Deal" }, { "key": "value", "label": "Value" }, { "key": "stage", "label": "Stage" }] } },
+					{ "id": "recently-won-lost",  "type": "object-list", "title": "Recently won / lost", "content": { "register": "pipelinq", "schema": "lead", "filter": {}, "sort": { "field": "expectedCloseDate", "dir": "desc" }, "limit": 6, "columns": [{ "key": "title", "label": "Deal" }, { "key": "status", "label": "Status" }, { "key": "value", "label": "Value" }] } }
 				],
 				"layout": [
 					{ "id": "c1",  "widgetId": "revenue",            "gridX": 0,  "gridY": 0,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
@@ -361,18 +361,6 @@
 				]
 			},
 			"slots": {
-				"widget-revenue": "RevenueKpiWidget",
-				"widget-won-value": "WonValueKpiWidget",
-				"widget-win-rate": "WinRateKpiWidget",
-				"widget-avg-deal": "AvgDealSizeKpiWidget",
-				"widget-weighted-forecast": "WeightedForecastKpiWidget",
-				"widget-open-pipeline": "OpenPipelineKpiWidget",
-				"widget-revenue-over-time": "RevenueOverTimeChartWidget",
-				"widget-pipeline-by-stage": "PipelineByStageChartWidget",
-				"widget-revenue-by-category": "RevenueByCategoryChartWidget",
-				"widget-top-customers": "TopCustomersChartWidget",
-				"widget-closing-soon": "ClosingSoonWidget",
-				"widget-recently-won-lost": "RecentlyWonLostWidget",
 				"widget-mrr": "MrrKpiWidget",
 				"widget-renewals-due": "RenewalsDueWidget"
 			}
