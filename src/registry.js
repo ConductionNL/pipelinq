@@ -274,6 +274,17 @@ import MdmDataQualityDashboard from './views/mdm/MdmDataQualityDashboard.vue'
 import MdmDuplicateCandidatesDashboard from './views/mdm/MdmDuplicateCandidatesDashboard.vue'
 import MdmSyncQueueAdmin from './views/mdm/MdmSyncQueueAdmin.vue'
 
+// --- Contact-aware create overrides (kind:"create-override"). The
+//     client/contact schemas mark `contactsUid` REQUIRED, so a plain
+//     objectStore.saveObject() 400s. These handlers post the create-form to
+//     POST /api/contacts-sync/create (provisions the NC addressbook contact +
+//     fills the FK) and return the created object — the same path the bespoke
+//     ClientCreateDialog uses. CnPageRenderer resolves a manifest
+//     `config.createOverride` string to one of these and forwards it to
+//     CnIndexPage's createOverride prop, so the GENERIC Add button on the
+//     declarative Clients/Contacts index pages is contact-aware too. ---
+import { createWithContact } from './services/contactSyncApi.js'
+
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
 /*
@@ -1035,6 +1046,20 @@ const registry = {
 		kind: 'page',
 		component: MdmSyncQueueAdmin,
 		_note: 'Outbound sync queue with status filter and manual retry of failed / dead-letter items.',
+	},
+
+	// Contact-aware create for the generic Add button on the Clients index page.
+	createClientContactAware: {
+		kind: 'create-override',
+		handler: (formData) => createWithContact('client', formData),
+		_note: 'Routes a generic client create through POST /api/contacts-sync/create so the required contactsUid (FK to a NC addressbook contact) is provisioned + filled instead of 400ing on a straight OpenRegister save.',
+	},
+
+	// Contact-aware create for the generic Add button on the Contacts index page.
+	createContactContactAware: {
+		kind: 'create-override',
+		handler: (formData) => createWithContact('contact', formData),
+		_note: 'Same contact-FIRST path for the contact schema (also marks contactsUid REQUIRED).',
 	},
 }
 
