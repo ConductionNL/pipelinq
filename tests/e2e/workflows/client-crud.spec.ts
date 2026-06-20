@@ -108,11 +108,13 @@ test.describe('Clients — full CRUD with persistence', () => {
 	// contactsUid + the denormalised name/email/phone mirror.
 	//
 	// The GENERIC "Add Client" surface on the Clients list (the library's
-	// CnIndexPage self-store create / CnFormDialog) still posts straight to OR and
-	// CANNOT be made contact-aware without a nextcloud-vue change (CnIndexPage has
-	// no per-schema create-override hook on its self-mode save path). That generic
-	// surface therefore remains limited; this journey uses the fixed bespoke flow,
-	// which is the supported contact-aware create path.
+	// CnIndexPage self-store create / CnFormDialog) is now ALSO contact-aware:
+	// the manifest Clients page declares `config.createOverride:
+	// "createClientContactAware"` (resolved by CnPageRenderer to the registry
+	// handler that posts to /api/contacts-sync/create) plus
+	// `config.fieldOverrides` that un-skip the schema-readOnly name/email/phone so
+	// they can be collected on create. See the dedicated generic-surface test
+	// below. This bespoke-flow journey remains the deep CRUD round-trip.
 	test('create → list → values → edit → delete round-trips real data', async ({ page }) => {
 		test.setTimeout(90000)
 		fx = new FixtureSession(page)
@@ -178,6 +180,71 @@ test.describe('Clients — full CRUD with persistence', () => {
 		await expect(page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME_EDITED })).toHaveCount(0)
 		const remaining = await fx.list('client', { _limit: 5, name: NAME_EDITED }).catch(() => [])
 		expect(remaining.length, 'deleted client no longer returned by OR API').toBe(0)
+	})
+
+	/**
+	 * GENERIC "Add Client" surface (the library CnIndexPage form on the Clients
+	 * list), now contact-aware via the manifest `config.createOverride` +
+	 * `config.fieldOverrides` wiring. Proves the regression this work closes:
+	 * the generic Add button must NOT 400 on the required contactsUid — it must
+	 * route through POST /api/contacts-sync/create, provision the NC contact,
+	 * and persist the client with contactsUid populated. @spec
+	 * openspec/specs/unify-client-contact/spec.md#REQ-PUCC-004
+	 */
+	test('generic "Add Client" list button creates contact-aware (201 + contactsUid)', async ({ page }) => {
+		test.setTimeout(90000)
+		fx = new FixtureSession(page)
+		await openApp(page)
+		await dismissSupportDialog(page)
+
+		const GEN_NAME = `${TEST_PREFIX}-Generic Surface BV`
+		const GEN_EMAIL = 'generic-surface@example.test'
+		const GEN_PHONE = '+31 20 765 4321'
+
+		// Open the Clients list and click the generic CnIndexPage "Add Client".
+		await openClientsList(page)
+		await page.getByRole('button', { name: /Add Client/i }).first().click()
+
+		// The generic CnFormDialog. fieldOverrides un-skip name/email/phone (which
+		// are schema-readOnly mirrors) so they can be collected on create.
+		const dialog = page.locator('.modal-container').filter({ hasText: /Create Client/i }).first()
+		await expect(dialog).toBeVisible({ timeout: 10000 })
+		await dialog.getByRole('textbox', { name: /^Name/i }).fill(GEN_NAME)
+		await dialog.getByRole('textbox', { name: /Email/i }).fill(GEN_EMAIL)
+		await dialog.getByRole('textbox', { name: /Phone/i }).fill(GEN_PHONE)
+		await pickOption(dialog.locator('.v-select').filter({ hasText: /Client type/i }).first(), 'organi')
+
+		// Submit and capture the contact-aware POST — it MUST hit the contacts-sync
+		// create endpoint (not a straight OR object POST) and return 201.
+		const createResp = page.waitForResponse(
+			(r) => /\/api\/contacts-sync\/create$/.test(r.url()) && r.request().method() === 'POST',
+			{ timeout: 15000 },
+		)
+		await dialog.getByRole('button', { name: /^Create$/i }).click()
+		const resp = await createResp
+		expect(resp.status(), 'contact-aware create returns 201').toBe(201)
+		const payload = await resp.json()
+		expect(payload.success).toBe(true)
+		expect(payload.object.contactsUid, 'required contactsUid populated by the contact-aware path').toBeTruthy()
+
+		// Persistence (OR API): the client exists with the FK + entered mirror values.
+		const created = (await fx.list('client', { _limit: 5, name: GEN_NAME }))[0]
+		expect(created, 'generic-surface client persisted to OpenRegister').toBeTruthy()
+		const createdId = (created.id || created['@self']?.id) as string
+		fx.track('client', createdId)
+		expect(created.contactsUid, 'contactsUid persisted on the object').toBeTruthy()
+		expect(created.name).toBe(GEN_NAME)
+		expect(created.email).toBe(GEN_EMAIL)
+		expect(created.phone).toBe(GEN_PHONE)
+
+		// A real vCard now backs it in the addressbook (resolvable by name).
+		const search = await page.evaluate(async (q) => {
+			const r = await fetch('/apps/pipelinq/api/contacts-sync/search?q=' + encodeURIComponent(q), { headers: { 'OCS-APIRequest': 'true' } })
+			return r.json()
+		}, GEN_NAME)
+		expect(search.results?.some((c: any) => c.uid === created.contactsUid), 'addressbook vCard exists with the linked uid').toBe(true)
+
+		await fx.remove('client', createdId)
 	})
 
 	/**
