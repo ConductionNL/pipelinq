@@ -33,8 +33,6 @@ import PipelineValueKpiWidget from './views/dashboard/widgets/PipelineValueKpiWi
 import OverdueKpiWidget from './views/dashboard/widgets/OverdueKpiWidget.vue'
 import RequestsByStatusWidget from './views/dashboard/widgets/RequestsByStatusWidget.vue'
 import ComplaintsWidget from './views/dashboard/widgets/ComplaintsWidget.vue'
-import MrrKpiWidget from './views/dashboard/widgets/MrrKpiWidget.vue'
-import RenewalsDueWidget from './views/dashboard/widgets/RenewalsDueWidget.vue'
 import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
 import ClientOverviewWidget from './views/dashboard/widgets/ClientOverviewWidget.vue'
 
@@ -364,18 +362,6 @@ const registry = {
 		component: OpenLeadsKpiWidget,
 		...KPI_WIDGET_META,
 		_note: 'KPI card for open leads (leads minus those in pipeline stages flagged isClosed). Renders <CnStatsBlock>.',
-	},
-	MrrKpiWidget: {
-		kind: 'widget',
-		component: MrrKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'MRR KPI card (contract-renewal-tracking) — current monthly recurring revenue with ARR sub-label, computed from active + expiring contracts. Renders <CnStatsBlock>.',
-	},
-	RenewalsDueWidget: {
-		kind: 'widget',
-		component: RenewalsDueWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Renewals-due list (contract-renewal-tracking) — expiring contracts by endDate with deep links and empty state; aggregation the declarative stats-block shorthand cannot express.',
 	},
 	OpenRequestsKpiWidget: {
 		kind: 'widget',
