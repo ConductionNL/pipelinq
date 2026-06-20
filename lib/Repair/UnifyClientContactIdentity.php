@@ -201,13 +201,13 @@ class UnifyClientContactIdentity implements IRepairStep
 
                 if ($outcome['status'] === 'linked') {
                     $clientsLinked++;
-                } elseif ($outcome['status'] === 'skipped') {
+                } else if ($outcome['status'] === 'skipped') {
                     $skipped++;
                 } else {
                     $unresolved++;
                 }
-            }
-        }
+            }//end foreach
+        }//end if
 
         if ($contactSchema !== '') {
             foreach ($this->readAll(objectService: $objectService, register: $register, schema: $contactSchema) as $contact) {
@@ -226,13 +226,13 @@ class UnifyClientContactIdentity implements IRepairStep
 
                 if ($outcome['status'] === 'linked') {
                     $contactsLinked++;
-                } elseif ($outcome['status'] === 'skipped') {
+                } else if ($outcome['status'] === 'skipped') {
                     $skipped++;
                 } else {
                     $unresolved++;
                 }
-            }
-        }
+            }//end foreach
+        }//end if
 
         if ($momentSchema !== '' && $clientUidByRef !== []) {
             $momentsRekeyed = $this->rekeyContactmomenten(
@@ -436,8 +436,8 @@ class UnifyClientContactIdentity implements IRepairStep
         array $object,
         string $contactsUid,
     ): void {
-        $objectId           = (string) ($object['id'] ?? $object['uuid'] ?? '');
-        $payload            = $object;
+        $objectId = (string) ($object['id'] ?? $object['uuid'] ?? '');
+        $payload  = $object;
         $payload['contactsUid'] = $contactsUid;
         unset($payload['@self']);
 
@@ -466,10 +466,10 @@ class UnifyClientContactIdentity implements IRepairStep
      * contactmoment.client untouched (soft back-reference). Idempotent: skips a
      * moment whose contactsUid is already set.
      *
-     * @param object                $objectService  The OR ObjectService.
-     * @param string                $register       The register id/slug.
-     * @param string                $schema         The contactmoment schema id/slug.
-     * @param array<string,string>  $clientUidByRef Map of client ref => contactsUid.
+     * @param object               $objectService  The OR ObjectService.
+     * @param string               $register       The register id/slug.
+     * @param string               $schema         The contactmoment schema id/slug.
+     * @param array<string,string> $clientUidByRef Map of client ref => contactsUid.
      *
      * @return int The number of contactmomenten re-keyed.
      */
@@ -491,8 +491,8 @@ class UnifyClientContactIdentity implements IRepairStep
                 continue;
             }
 
-            $momentId            = (string) ($moment['id'] ?? $moment['uuid'] ?? '');
-            $payload             = $moment;
+            $momentId = (string) ($moment['id'] ?? $moment['uuid'] ?? '');
+            $payload  = $moment;
             $payload['contactsUid'] = $clientUidByRef[$clientRef];
             unset($payload['@self']);
 
@@ -514,7 +514,7 @@ class UnifyClientContactIdentity implements IRepairStep
                     ['momentId' => $momentId, 'exception' => $e->getMessage()]
                 );
             }
-        }
+        }//end foreach
 
         return $rekeyed;
     }//end rekeyContactmomenten()
@@ -581,7 +581,7 @@ class UnifyClientContactIdentity implements IRepairStep
                 'Identity unify: sourceRecord provenance write failed',
                 ['nativeId' => $nativeId, 'exception' => $e->getMessage()]
             );
-        }
+        }//end try
     }//end writeSourceRecord()
 
     /**

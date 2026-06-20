@@ -57,10 +57,10 @@ class MessagingWebhookController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest        $request          Request.
-     * @param WhatsAppAdapter $whatsAppAdapter  WhatsApp adapter.
-     * @param SmsAdapter      $smsAdapter       SMS adapter.
-     * @param LoggerInterface $logger           Logger.
+     * @param IRequest        $request         Request.
+     * @param WhatsAppAdapter $whatsAppAdapter WhatsApp adapter.
+     * @param SmsAdapter      $smsAdapter      SMS adapter.
+     * @param LoggerInterface $logger          Logger.
      *
      * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.1
      */
@@ -119,10 +119,17 @@ class MessagingWebhookController extends Controller
     #[NoCSRFRequired]
     public function sms(string $providerId): JSONResponse
     {
-        $rawBody   = $this->readRawBody();
-        $signature = (string) ($this->request->getHeader('X-Twilio-Signature')
-            ?: $this->request->getHeader('messagebird-signature')
-            ?: $this->request->getHeader('X-Cmcom-Signature'));
+        $rawBody      = $this->readRawBody();
+        $signatureRaw = $this->request->getHeader('X-Twilio-Signature');
+        if ($signatureRaw === '') {
+            $signatureRaw = $this->request->getHeader('messagebird-signature');
+        }
+
+        if ($signatureRaw === '') {
+            $signatureRaw = $this->request->getHeader('X-Cmcom-Signature');
+        }
+
+        $signature = (string) $signatureRaw;
 
         try {
             $result = $this->smsAdapter->handleInboundWebhook(
@@ -175,6 +182,10 @@ class MessagingWebhookController extends Controller
     private function readRawBody(): string
     {
         $body = @file_get_contents('php://input');
-        return ($body === false) ? '' : $body;
+        if ($body === false) {
+            return '';
+        }
+
+        return $body;
     }//end readRawBody()
 }//end class

@@ -38,10 +38,10 @@ use Psr\Log\LoggerInterface;
 /**
  * Service for the AVG request lifecycle.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Aggregates the collaborators a
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Aggregates the collaborators a
  *  request-lifecycle service legitimately needs (repository, deadline logic,
  *  access-control, notifications, logger).
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)   The public surface is the small
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)     The public surface is the small
  *  set of lifecycle verbs (intake/list/get/update/archive/delete/flagDpia),
  *  each single-purpose and unit-tested.
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The class aggregates the

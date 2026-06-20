@@ -46,7 +46,7 @@ use RuntimeException;
 /**
  * Berichtenbox message lifecycle service.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Orchestration root — by
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Orchestration root — by
  *  design ties together every collaborator (resolver, connector, logger,
  *  template renderer, fallback sender). Splitting would just shuffle
  *  coupling between two halves of a state machine.
@@ -79,16 +79,16 @@ class BerichtenboxService
     /**
      * Constructor.
      *
-     * @param ContainerInterface   $container       DI container.
-     * @param IAppConfig           $appConfig       App config.
-     * @param EncryptionService    $encryption      Encryption helper.
+     * @param ContainerInterface   $container        DI container.
+     * @param IAppConfig           $appConfig        App config.
+     * @param EncryptionService    $encryption       Encryption helper.
      * @param TemplateRenderer     $templateRenderer Template renderer.
-     * @param MailboxResolver      $mailboxResolver Mailbox resolver.
-     * @param LogiusConnector      $logius          Logius API wrapper.
-     * @param EmailFallbackSender  $emailFallback   Email fallback sender.
-     * @param DeliveryAuditLogger  $auditLogger     Audit logger.
-     * @param DutchHolidayCalendar $holidayCalendar Working-day helper.
-     * @param LoggerInterface      $logger          NC logger.
+     * @param MailboxResolver      $mailboxResolver  Mailbox resolver.
+     * @param LogiusConnector      $logius           Logius API wrapper.
+     * @param EmailFallbackSender  $emailFallback    Email fallback sender.
+     * @param DeliveryAuditLogger  $auditLogger      Audit logger.
+     * @param DutchHolidayCalendar $holidayCalendar  Working-day helper.
+     * @param LoggerInterface      $logger           NC logger.
      */
     public function __construct(
         private readonly ContainerInterface $container,
@@ -107,16 +107,17 @@ class BerichtenboxService
     /**
      * Queue an outbound message for a zaak status transition.
      *
-     * @param string      $zaakId          External zaak id.
-     * @param string|null $contactmomentId Linked Contactmoment id (optional).
-     * @param string      $status          New zaak status.
-     * @param string      $bsn             Burger's plaintext BSN (validated upstream).
+     * @param string      $zaakId           External zaak id.
+     * @param string|null $contactmomentId  Linked Contactmoment id (optional).
+     * @param string      $status           New zaak status.
+     * @param string      $bsn              Burger's plaintext BSN (validated upstream).
      * @param array|null  $templateOverride Optional explicit BerichtenboxTemplate
      *                                      payload (skips registry lookup).
-     * @param array       $extraVariables  Additional template variables
+     * @param array       $extraVariables   Additional template variables
      *                                      (e.g. gemeente, deadline).
-     * @param array       $attachments     Attachment array per BBK 1.7
-     *                                      (filename / mime / sizeBytes / openregisterFileRef).
+     * @param array       $attachments      Attachment array per BBK 1.7
+     *                                      (filename / mime / sizeBytes
+     *                                      / openregisterFileRef).
      *
      * @return array The persisted BerichtenboxMessage object.
      *
@@ -137,7 +138,7 @@ class BerichtenboxService
             status: $status,
             language: (string) ($extraVariables['language'] ?? 'nl')
         ));
-        $template = ($template ?? $this->fallbackTemplate($zaakId, $status));
+        $template = ($template ?? $this->fallbackTemplate(zaakId: $zaakId, status: $status));
 
         $variables = array_merge(
             [
@@ -160,21 +161,21 @@ class BerichtenboxService
         $bsnHash     = $this->encryption->hashBsn($bsn, $tenantId);
 
         $payload = [
-            'uuid'              => $messageUuid,
-            'bsn'               => $this->encryption->encrypt($bsn, $tenantId),
-            'bsnHash'           => $bsnHash,
-            'contactmomentId'   => ($contactmomentId ?? ''),
-            'zaakId'            => $zaakId,
-            'subject'           => $rendered['subject'],
-            'body'              => $rendered['body'],
-            'templateId'        => (string) ($template['id'] ?? $template['uuid'] ?? 'inline'),
-            'attachments'       => $attachments,
-            'deliveryStatus'    => 'queued',
-            'retryCount'        => 0,
-            'mailboxAvailable'  => null,
+            'uuid'             => $messageUuid,
+            'bsn'              => $this->encryption->encrypt($bsn, $tenantId),
+            'bsnHash'          => $bsnHash,
+            'contactmomentId'  => ($contactmomentId ?? ''),
+            'zaakId'           => $zaakId,
+            'subject'          => $rendered['subject'],
+            'body'             => $rendered['body'],
+            'templateId'       => (string) ($template['id'] ?? $template['uuid'] ?? 'inline'),
+            'attachments'      => $attachments,
+            'deliveryStatus'   => 'queued',
+            'retryCount'       => 0,
+            'mailboxAvailable' => null,
         ];
 
-        $saved = $this->saveMessage($payload);
+        $saved = $this->saveMessage(payload: $payload);
         $this->auditLogger->logQueued(
             messageId: $messageUuid,
             payloadHash: $this->auditLogger->hashPayload($rendered['body']),
@@ -193,11 +194,11 @@ class BerichtenboxService
      */
     public function dispatchQueuedMessages(int $limit=100): int
     {
-        $messages = $this->findDispatchableMessages($limit);
+        $messages  = $this->findDispatchableMessages(limit: $limit);
         $processed = 0;
         foreach ($messages as $message) {
             try {
-                $this->dispatchOne($message);
+                $this->dispatchOne(message: $message);
             } catch (\Throwable $e) {
                 $this->logger->error(
                     'BerichtenboxService dispatch failed.',
@@ -207,8 +208,10 @@ class BerichtenboxService
                     ]
                 );
             }
+
             $processed++;
         }
+
         return $processed;
     }//end dispatchQueuedMessages()
 
@@ -221,21 +224,31 @@ class BerichtenboxService
      */
     public function dispatchOne(array $message): void
     {
-        $tenantId    = $this->resolveTenantId();
-        $messageId   = (string) ($message['uuid'] ?? $message['id'] ?? '');
-        $bsnHash     = (string) ($message['bsnHash'] ?? '');
-        $bsnPlain    = $this->decryptBsn($message, $tenantId);
-        $bodyHash    = $this->auditLogger->hashPayload((string) ($message['body'] ?? ''));
+        $tenantId  = $this->resolveTenantId();
+        $messageId = (string) ($message['uuid'] ?? $message['id'] ?? '');
+        $bsnHash   = (string) ($message['bsnHash'] ?? '');
+        $bsnPlain  = $this->decryptBsn(row: $message, tenantId: $tenantId);
+        $bodyHash  = $this->auditLogger->hashPayload((string) ($message['body'] ?? ''));
 
         $resolution = $this->mailboxResolver->resolve($bsnPlain, $tenantId);
 
         if ($resolution['mailboxAvailable'] === true && $resolution['optedOut'] === false) {
-            $this->dispatchToBerichtenbox($message, $messageId, $bsnPlain, $bodyHash);
+            $this->dispatchToBerichtenbox(
+                message: $message,
+                messageId: $messageId,
+                bsnPlain: $bsnPlain,
+                bodyHash: $bodyHash
+            );
             return;
         }
 
         // Opted-out or no-mailbox → fallback path.
-        $this->dispatchFallback($message, $messageId, $bodyHash, $resolution['optedOut']);
+        $this->dispatchFallback(
+            message: $message,
+            messageId: $messageId,
+            bodyHash: $bodyHash,
+            optedOut: $resolution['optedOut']
+        );
     }//end dispatchOne()
 
     /**
@@ -248,7 +261,7 @@ class BerichtenboxService
      */
     public function handleReadReceipt(string $logiusMessageId, string $readAtIso): bool
     {
-        $message = $this->findMessageByLogiusId($logiusMessageId);
+        $message = $this->findMessageByLogiusId(logiusMessageId: $logiusMessageId);
         if ($message === null) {
             $this->logger->warning(
                 'Berichtenbox readReceipt for unknown logiusMessageId.',
@@ -259,7 +272,7 @@ class BerichtenboxService
 
         $message['readAt']         = $readAtIso;
         $message['deliveryStatus'] = 'read';
-        $this->saveMessage($message);
+        $this->saveMessage(payload: $message);
 
         $this->auditLogger->logRead(
             messageId: (string) ($message['uuid'] ?? $message['id'] ?? ''),
@@ -283,11 +296,13 @@ class BerichtenboxService
             if ($sentToBerichtenboxAt === '') {
                 continue;
             }
+
             try {
                 $sentDate = new DateTimeImmutable($sentToBerichtenboxAt);
             } catch (\Throwable) {
                 continue;
             }
+
             $eligibleAt = $this->holidayCalendar->addWorkingDays($sentDate, 5);
             if ($eligibleAt > $now) {
                 continue;
@@ -312,11 +327,11 @@ class BerichtenboxService
                 continue;
             }
 
-            $message['deliveryStatus']     = 'fallback-emailed';
+            $message['deliveryStatus']      = 'fallback-emailed';
             $message['fallbackTriggeredAt'] = $now->format(DATE_ATOM);
-            $message['fallbackEmail']      = $burgerEmail;
-            $message['fallbackSentAt']     = $now->format(DATE_ATOM);
-            $this->saveMessage($message);
+            $message['fallbackEmail']       = $burgerEmail;
+            $message['fallbackSentAt']      = $now->format(DATE_ATOM);
+            $this->saveMessage(payload: $message);
 
             $this->auditLogger->logFallback(
                 messageId: (string) ($message['uuid'] ?? ''),
@@ -324,7 +339,8 @@ class BerichtenboxService
                 payloadHash: $this->auditLogger->hashPayload((string) ($message['body'] ?? ''))
             );
             $sent++;
-        }
+        }//end foreach
+
         return $sent;
     }//end processFallbackQueue()
 
@@ -348,17 +364,17 @@ class BerichtenboxService
         string $bodyText,
         array $attachments=[]
     ): array {
-        $parent = $this->findMessageByUuid($parentMessageId);
+        $parent = $this->findMessageByUuid(uuid: $parentMessageId);
         if ($parent === null) {
             throw new RuntimeException(
                 'Berichtenbox inbound reply: parent message not found: '.$parentMessageId
             );
         }
 
-        $tenantId  = $this->resolveTenantId();
-        $bsnPlain  = $this->decryptBsn($parent, $tenantId);
-        $bsnHash   = $this->encryption->hashBsn($bsnPlain, $tenantId);
-        $now       = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $tenantId = $this->resolveTenantId();
+        $bsnPlain = $this->decryptBsn(row: $parent, tenantId: $tenantId);
+        $bsnHash  = $this->encryption->hashBsn($bsnPlain, $tenantId);
+        $now      = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 
         $reply = [
             'uuid'            => $this->logius->newUuidV4(),
@@ -372,7 +388,7 @@ class BerichtenboxService
         ];
 
         try {
-            $reply = $this->saveReply($reply);
+            $reply = $this->saveReply(payload: $reply);
         } catch (\Throwable $e) {
             $this->auditLogger->logProcessingError(
                 messageId: $reply['uuid'],
@@ -384,13 +400,13 @@ class BerichtenboxService
 
         $contactmomentId = null;
         try {
-            $contactmomentId = $this->createContactmomentFromReply($parent, $reply);
+            $contactmomentId = $this->createContactmomentFromReply(parent: $parent, reply: $reply);
             $reply['createdContactmomentId'] = $contactmomentId;
             $reply['processedAt']            = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DATE_ATOM);
-            $this->saveReply($reply);
+            $this->saveReply(payload: $reply);
         } catch (\Throwable $e) {
             $reply['processingError'] = $e->getMessage();
-            $this->saveReply($reply);
+            $this->saveReply(payload: $reply);
             $this->auditLogger->logProcessingError(
                 messageId: $reply['uuid'],
                 reason: $e->getMessage(),
@@ -425,11 +441,12 @@ class BerichtenboxService
 
         $total = 0;
         foreach (['berichtenboxMessage_schema', 'berichtenboxReply_schema', 'mailboxResolution_schema'] as $schemaKey) {
-            $schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+            $schemaId   = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
             $registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
             if ($schemaId === '' || $registerId === '') {
                 continue;
             }
+
             try {
                 $rows = $this->getObjectService()->findAll(
                     config: [
@@ -447,11 +464,13 @@ class BerichtenboxService
                 );
                 continue;
             }
+
             foreach (($rows ?? []) as $row) {
-                $data = $this->toArray($row);
+                $data = $this->toArray(row: $row);
                 if ($data === null) {
                     continue;
                 }
+
                 $data['bsn'] = $shredBlob;
                 try {
                     $this->getObjectService()->saveObject(
@@ -468,8 +487,9 @@ class BerichtenboxService
                         ['exception' => $e->getMessage(), 'schemaKey' => $schemaKey]
                     );
                 }
-            }
-        }
+            }//end foreach
+        }//end foreach
+
         return $total;
     }//end cryptoShred()
 
@@ -478,7 +498,7 @@ class BerichtenboxService
     /**
      * Dispatch to Berichtenbox via Logius.
      *
-     * @param array  $message  Message payload.
+     * @param array  $message   Message payload.
      * @param string $messageId UUID.
      * @param string $bsnPlain  BSN.
      * @param string $bodyHash  SHA-256 of body.
@@ -495,9 +515,9 @@ class BerichtenboxService
         $key  = $this->appConfig->getValueString(Application::APP_ID, 'pki_key', '');
         try {
             $message['bsnPlain'] = $bsnPlain;
-            $response = $this->logius->sendMessage($message, $cert, $key);
+            $response            = $this->logius->sendMessage($message, $cert, $key);
         } catch (\Throwable $e) {
-            $this->markFailedOrRetry($message, $e->getMessage(), $bodyHash);
+            $this->markFailedOrRetry(message: $message, reason: $e->getMessage(), bodyHash: $bodyHash);
             return;
         }
 
@@ -508,7 +528,7 @@ class BerichtenboxService
         $message['deliveryStatus']       = 'sent';
         $message['mailboxAvailable']     = true;
         $message['failureReason']        = '';
-        $this->saveMessage($message);
+        $this->saveMessage(payload: $message);
 
         $this->auditLogger->logSent(
             messageId: $messageId,
@@ -520,7 +540,7 @@ class BerichtenboxService
     /**
      * Dispatch via email-fallback path (no-mailbox / opted-out).
      *
-     * @param array  $message  Message payload.
+     * @param array  $message   Message payload.
      * @param string $messageId UUID.
      * @param string $bodyHash  SHA-256 of body.
      * @param bool   $optedOut  Whether the burger opted out.
@@ -533,8 +553,12 @@ class BerichtenboxService
         string $bodyHash,
         bool $optedOut
     ): void {
-        $reason       = $optedOut ? 'opted-out' : 'no-mailbox';
-        $burgerEmail  = (string) ($message['burgerEmail'] ?? '');
+        $reason = 'no-mailbox';
+        if ($optedOut === true) {
+            $reason = 'opted-out';
+        }
+
+        $burgerEmail = (string) ($message['burgerEmail'] ?? '');
 
         if ($burgerEmail === '') {
             $this->logger->warning(
@@ -543,28 +567,29 @@ class BerichtenboxService
             );
             if ($optedOut === true) {
                 $message['deliveryStatus'] = 'opted-out';
-                $this->saveMessage($message);
+                $this->saveMessage(payload: $message);
                 $this->auditLogger->logOptedOut(
                     messageId: $messageId,
                     payloadHash: $bodyHash
                 );
             }
+
             return;
         }
 
         try {
             $this->emailFallback->send($message, $burgerEmail, false);
         } catch (\Throwable $e) {
-            $this->markFailedOrRetry($message, $e->getMessage(), $bodyHash);
+            $this->markFailedOrRetry(message: $message, reason: $e->getMessage(), bodyHash: $bodyHash);
             return;
         }
 
         $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-        $message['deliveryStatus']     = 'fallback-emailed';
+        $message['deliveryStatus']      = 'fallback-emailed';
         $message['fallbackTriggeredAt'] = $now->format(DATE_ATOM);
-        $message['fallbackEmail']      = $burgerEmail;
-        $message['fallbackSentAt']     = $now->format(DATE_ATOM);
-        $this->saveMessage($message);
+        $message['fallbackEmail']       = $burgerEmail;
+        $message['fallbackSentAt']      = $now->format(DATE_ATOM);
+        $this->saveMessage(payload: $message);
 
         $this->auditLogger->logFallback(
             messageId: $messageId,
@@ -592,7 +617,7 @@ class BerichtenboxService
         if ($retryCount >= self::MAX_RETRIES) {
             $message['deliveryStatus'] = 'failed';
             $message['failureReason']  = $reason;
-            $this->saveMessage($message);
+            $this->saveMessage(payload: $message);
             $this->auditLogger->logFailed(
                 messageId: $messageId,
                 reason: $reason,
@@ -606,7 +631,7 @@ class BerichtenboxService
         $message['deliveryStatus'] = 'queued';
         $message['failureReason']  = $reason;
         $message['nextRetryAt']    = $now->modify('+'.$delay.' seconds')->format(DATE_ATOM);
-        $this->saveMessage($message);
+        $this->saveMessage(payload: $message);
 
         $this->auditLogger->logFailed(
             messageId: $messageId,
@@ -633,7 +658,7 @@ class BerichtenboxService
                         'schema'         => $schema,
                         'deliveryStatus' => 'queued',
                     ],
-                    'limit' => $limit,
+                    'limit'   => $limit,
                 ]
             );
         } catch (\Throwable $e) {
@@ -647,10 +672,11 @@ class BerichtenboxService
         $now    = new DateTimeImmutable('now', new DateTimeZone('UTC'));
         $result = [];
         foreach (($rows ?? []) as $row) {
-            $data = $this->toArray($row);
+            $data = $this->toArray(row: $row);
             if ($data === null) {
                 continue;
             }
+
             $nextRetryAt = ($data['nextRetryAt'] ?? '');
             if (is_string($nextRetryAt) === true && $nextRetryAt !== '') {
                 try {
@@ -661,8 +687,10 @@ class BerichtenboxService
                     // Treat unparseable as eligible.
                 }
             }
+
             $result[] = $data;
         }
+
         return $result;
     }//end findDispatchableMessages()
 
@@ -694,15 +722,18 @@ class BerichtenboxService
 
         $unread = [];
         foreach (($rows ?? []) as $row) {
-            $data = $this->toArray($row);
+            $data = $this->toArray(row: $row);
             if ($data === null) {
                 continue;
             }
+
             if (($data['readAt'] ?? '') !== '' && $data['readAt'] !== null) {
                 continue;
             }
+
             $unread[] = $data;
         }
+
         return $unread;
     }//end findUnreadSentMessages()
 
@@ -720,11 +751,11 @@ class BerichtenboxService
             $rows = $this->getObjectService()->findAll(
                 config: [
                     'filters' => [
-                        'register'         => $register,
-                        'schema'           => $schema,
-                        'logiusMessageId'  => $logiusMessageId,
+                        'register'        => $register,
+                        'schema'          => $schema,
+                        'logiusMessageId' => $logiusMessageId,
                     ],
-                    'limit' => 1,
+                    'limit'   => 1,
                 ]
             );
         } catch (\Throwable $e) {
@@ -732,8 +763,9 @@ class BerichtenboxService
         }
 
         foreach (($rows ?? []) as $row) {
-            return $this->toArray($row);
+            return $this->toArray(row: $row);
         }
+
         return null;
     }//end findMessageByLogiusId()
 
@@ -752,7 +784,8 @@ class BerichtenboxService
         } catch (\Throwable $e) {
             return null;
         }
-        return $this->toArray($row);
+
+        return $this->toArray(row: $row);
     }//end findMessageByUuid()
 
     /**
@@ -786,7 +819,7 @@ class BerichtenboxService
                         'status'   => $status,
                         'language' => $language,
                     ],
-                    'limit' => 1,
+                    'limit'   => 1,
                 ]
             );
         } catch (\Throwable $e) {
@@ -794,8 +827,9 @@ class BerichtenboxService
         }
 
         foreach (($rows ?? []) as $row) {
-            return $this->toArray($row);
+            return $this->toArray(row: $row);
         }
+
         return null;
     }//end findTemplate()
 
@@ -810,9 +844,11 @@ class BerichtenboxService
     private function fallbackTemplate(string $zaakId, string $status): array
     {
         return [
-            'id'      => 'fallback',
-            'subject' => 'Status update voor zaak {{zaakId}}',
-            'body'    => '<p>Geachte burger,</p><p>De status van uw zaak {{zaakId}} is nu: <strong>{{status}}</strong>.</p><p>Met vriendelijke groet,<br/>{{gemeente}}</p>',
+            'id'               => 'fallback',
+            'subject'          => 'Status update voor zaak {{zaakId}}',
+            'body'             => '<p>Geachte burger,</p>'
+                .'<p>De status van uw zaak {{zaakId}} is nu: <strong>{{status}}</strong>.</p>'
+                .'<p>Met vriendelijke groet,<br/>{{gemeente}}</p>',
             'requiresDeepLink' => false,
         ];
     }//end fallbackTemplate()
@@ -831,6 +867,7 @@ class BerichtenboxService
         if ($ciphertext === '') {
             return '';
         }
+
         return $this->encryption->decrypt($ciphertext, $tenantId);
     }//end decryptBsn()
 
@@ -852,24 +889,24 @@ class BerichtenboxService
         }
 
         $payload = [
-            'subject'  => 'Re: '.((string) ($parent['subject'] ?? '')),
-            'summary'  => (string) ($reply['bodyText'] ?? ''),
-            'kanaal'   => 'berichtenbox',
-            'outcome'  => 'opvolging-nodig',
-            'zaakId'   => (string) ($parent['zaakId'] ?? ''),
-            'parentMessageId'   => (string) ($parent['uuid'] ?? ''),
+            'subject'             => 'Re: '.((string) ($parent['subject'] ?? '')),
+            'summary'             => (string) ($reply['bodyText'] ?? ''),
+            'kanaal'              => 'berichtenbox',
+            'outcome'             => 'opvolging-nodig',
+            'zaakId'              => (string) ($parent['zaakId'] ?? ''),
+            'parentMessageId'     => (string) ($parent['uuid'] ?? ''),
             'berichtenboxReplyId' => (string) ($reply['uuid'] ?? ''),
         ];
 
-        $saved = $this->getObjectService()->saveObject(
+        $saved      = $this->getObjectService()->saveObject(
             object: $payload,
             extend: [],
             register: $register,
             schema: $schema,
             uuid: null
         );
-        $savedArray = $this->toArray($saved);
-        $uuid = (string) ($savedArray['uuid'] ?? $savedArray['id'] ?? '');
+        $savedArray = $this->toArray(row: $saved);
+        $uuid       = (string) ($savedArray['uuid'] ?? $savedArray['id'] ?? '');
 
         // Routing — best-effort; the skill-routing service is optional in dev.
         try {
@@ -906,7 +943,7 @@ class BerichtenboxService
             schema: $schema,
             uuid: ($payload['uuid'] ?? null)
         );
-        return ($this->toArray($saved) ?? $payload);
+        return ($this->toArray(row: $saved) ?? $payload);
     }//end saveMessage()
 
     /**
@@ -927,6 +964,7 @@ class BerichtenboxService
         if ($register === '' || $schema === '') {
             throw new RuntimeException('BerichtenboxReply register or schema not configured.');
         }
+
         $saved = $this->getObjectService()->saveObject(
             object: $payload,
             extend: [],
@@ -934,7 +972,7 @@ class BerichtenboxService
             schema: $schema,
             uuid: ($payload['uuid'] ?? null)
         );
-        return ($this->toArray($saved) ?? $payload);
+        return ($this->toArray(row: $saved) ?? $payload);
     }//end saveReply()
 
     /**
@@ -953,6 +991,7 @@ class BerichtenboxService
         if ($register === '' || $schema === '') {
             throw new RuntimeException('BerichtenboxMessage register or schema not configured.');
         }
+
         return [$register, $schema];
     }//end messageConfig()
 
@@ -967,6 +1006,7 @@ class BerichtenboxService
         if ($tenant === '') {
             return self::DEFAULT_TENANT_ID;
         }
+
         return $tenant;
     }//end resolveTenantId()
 
@@ -998,6 +1038,7 @@ class BerichtenboxService
         if (is_array($row) === true) {
             return $row;
         }
+
         if (is_object($row) === true) {
             if (method_exists($row, 'jsonSerialize') === true) {
                 $s = $row->jsonSerialize();
@@ -1005,6 +1046,7 @@ class BerichtenboxService
                     return $s;
                 }
             }
+
             if (method_exists($row, 'getObject') === true) {
                 $inner = $row->getObject();
                 if (is_array($inner) === true) {
@@ -1012,6 +1054,7 @@ class BerichtenboxService
                 }
             }
         }
+
         return null;
     }//end toArray()
 }//end class

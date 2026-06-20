@@ -171,10 +171,10 @@ class StufController extends Controller
             return new DataResponse(data: 'invalid signature', statusCode: Http::STATUS_UNPROCESSABLE_ENTITY);
         }
 
-        $berichtSoort   = $this->detectBerichtSoort(envelopeXml: $rawXml);
-        $crossRef       = $this->extractCrossRefnummer(envelopeXml: $rawXml);
-        $functie        = $this->extractFunctie(envelopeXml: $rawXml);
-        $zaakId         = ($this->parser->parseBevestiging(responseXml: $rawXml)['zaakIdentificatie'] ?? null);
+        $berichtSoort = $this->detectBerichtSoort(envelopeXml: $rawXml);
+        $crossRef     = $this->extractCrossRefnummer(envelopeXml: $rawXml);
+        $functie      = $this->extractFunctie(envelopeXml: $rawXml);
+        $zaakId       = ($this->parser->parseBevestiging(responseXml: $rawXml)['zaakIdentificatie'] ?? null);
 
         $this->messageHandler->logInbound(
             endpoint: $endpoint,
@@ -265,7 +265,8 @@ class StufController extends Controller
      */
     private function resolveInboundEndpoint(string $envelopeXml): ?array
     {
-        if (preg_match(pattern: '#<stuf:zender>.*?<stuf:applicatie>([^<]+)</stuf:applicatie>.*?</stuf:zender>#s', subject: $envelopeXml, matches: $matches) === 1) {
+        $zenderPattern = '#<stuf:zender>.*?<stuf:applicatie>([^<]+)</stuf:applicatie>.*?</stuf:zender>#s';
+        if (preg_match(pattern: $zenderPattern, subject: $envelopeXml, matches: $matches) === 1) {
             $applicatie = trim(string: $matches[1]);
             $endpoint   = $this->register->findOne(
                 schema: StufRegisterAccess::SCHEMA_ENDPOINT,
@@ -295,10 +296,10 @@ class StufController extends Controller
      */
     private function verifyWsse(string $envelopeXml, array $endpoint): bool
     {
-        $auth = ($endpoint['authenticatie'] ?? []);
-        $expectedUser     = (string) ($auth['gebruikersnaam'] ?? '');
+        $auth         = ($endpoint['authenticatie'] ?? []);
+        $expectedUser = (string) ($auth['gebruikersnaam'] ?? '');
         $expectedPasswordRef = (string) ($auth['wachtwoordKluisRef'] ?? '');
-        $expectedPassword = $this->vault->resolveSecret(reference: $expectedPasswordRef);
+        $expectedPassword    = $this->vault->resolveSecret(reference: $expectedPasswordRef);
 
         if ($expectedUser === '' || $expectedPassword === '') {
             return false;
@@ -395,8 +396,8 @@ class StufController extends Controller
      */
     private function enrichEndpointWithHealth(array $endpoint): array
     {
-        $snapshot          = $this->circuitBreaker->snapshot(endpointId: (string) ($endpoint['id'] ?? ''));
-        $recent            = $this->register->findAll(
+        $snapshot = $this->circuitBreaker->snapshot(endpointId: (string) ($endpoint['id'] ?? ''));
+        $recent   = $this->register->findAll(
             schema: StufRegisterAccess::SCHEMA_MESSAGE,
             filters: ['endpointId' => (string) ($endpoint['id'] ?? '')],
             limit: 5

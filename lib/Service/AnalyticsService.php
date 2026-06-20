@@ -638,6 +638,7 @@ class AnalyticsService
             if ($metric === 'leads') {
                 $bucketValue = (int) $value;
             }
+
             $series[] = ['date' => $date, 'value' => $bucketValue];
         }
 
@@ -1056,7 +1057,7 @@ class AnalyticsService
         }
 
         $categoryByProduct = $this->productCategoryIndex(products: $products);
-        // product.category is a UUID reference to a productCategory; resolve
+        // Product.category is a UUID reference to a productCategory; resolve
         // it to the display name. Legacy free-text categories (no matching
         // productCategory row) fall through to their own value.
         $categoryNames = $this->categoryNameIndex(categories: $categories);

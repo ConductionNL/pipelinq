@@ -45,8 +45,6 @@ use OCP\IUserSession;
  */
 class RapportageController extends Controller
 {
-
-
     /**
      * Constructor.
      *
@@ -62,7 +60,6 @@ class RapportageController extends Controller
         parent::__construct(appName: Application::APP_ID, request: $request);
 
     }//end __construct()
-
 
     /**
      * Aggregate lead analytics for the Rapportage dashboard.
@@ -87,16 +84,31 @@ class RapportageController extends Controller
         $dateFrom   = (string) $this->request->getParam('dateFrom', '');
         $dateTo     = (string) $this->request->getParam('dateTo', '');
 
+        $pipelineIdArg = null;
+        if ($pipelineId !== '') {
+            $pipelineIdArg = $pipelineId;
+        }
+
+        $dateFromArg = null;
+        if ($dateFrom !== '') {
+            $dateFromArg = $dateFrom;
+        }
+
+        $dateToArg = null;
+        if ($dateTo !== '') {
+            $dateToArg = $dateTo;
+        }
+
         try {
-            $stageValues       = $this->rapportageService->getStageValues(pipelineId: ($pipelineId !== '' ? $pipelineId : null));
+            $stageValues       = $this->rapportageService->getStageValues(pipelineId: $pipelineIdArg);
             $sourcePerformance = $this->rapportageService->getSourcePerformance(
-                dateFrom: ($dateFrom !== '' ? $dateFrom : null),
-                dateTo: ($dateTo !== '' ? $dateTo : null),
+                dateFrom: $dateFromArg,
+                dateTo: $dateToArg,
             );
             $agingBuckets      = $this->rapportageService->getAgingBuckets();
             $winLoss           = $this->rapportageService->getWinLossAnalysis(
-                dateFrom: ($dateFrom !== '' ? $dateFrom : null),
-                dateTo: ($dateTo !== '' ? $dateTo : null),
+                dateFrom: $dateFromArg,
+                dateTo: $dateToArg,
             );
         } catch (\Throwable) {
             return new JSONResponse(data: ['message' => 'Operation failed'], statusCode: Http::STATUS_INTERNAL_SERVER_ERROR);
@@ -112,5 +124,4 @@ class RapportageController extends Controller
         );
 
     }//end getPipelineStats()
-
 }//end class
