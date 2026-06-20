@@ -74,13 +74,13 @@ class EmailFallbackSender
     /**
      * Send a fallback email for the given BerichtenboxMessage payload.
      *
-     * @param array  $message  The OR object array form of the message
-     *                         (uses subject + body).
-     * @param string $toEmail  Recipient address (typically burger.email).
+     * @param array  $message      The OR object array form of the message
+     *                             (uses subject + body).
+     * @param string $toEmail      Recipient address (typically burger.email).
      * @param bool   $appendNotice Whether to prepend the MijnOverheid notice
-     *                              (true for 5-day fallback; false for
-     *                              no-mailbox/opted-out where the burger
-     *                              never had access).
+     *                             (true for 5-day fallback; false for
+     *                             no-mailbox/opted-out where the burger
+     *                             never had access).
      *
      * @return bool True iff IMailer accepted the message.
      *
@@ -122,6 +122,6 @@ class EmailFallbackSender
                 ['exception' => $e->getMessage()]
             );
             throw new RuntimeException('Fallback email dispatch failed: '.$e->getMessage(), 0, $e);
-        }
+        }//end try
     }//end send()
 }//end class

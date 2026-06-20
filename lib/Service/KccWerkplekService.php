@@ -65,9 +65,9 @@ class KccWerkplekService
      * Constructor.
      *
      * @param ContainerInterface $container DI container — used to resolve the
-     *                                       OpenRegister `ObjectService` lazily.
+     *                                      OpenRegister `ObjectService` lazily.
      * @param IAppConfig         $appConfig App config — used to read the
-     *                                       register slug and schema slugs.
+     *                                      register slug and schema slugs.
      * @param LoggerInterface    $logger    Logger.
      *
      * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
@@ -141,15 +141,18 @@ class KccWerkplekService
         if (is_array($object) === true) {
             return $object;
         }
+
         if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
             $serialised = $object->jsonSerialize();
             if (is_array($serialised) === true) {
                 return $serialised;
             }
         }
+
         if (is_object($object) === true) {
             return (array) $object;
         }
+
         return [];
     }//end toArray()
 
@@ -166,7 +169,7 @@ class KccWerkplekService
     private function findAllSafe(string $schemaKey): array
     {
         $register = $this->getRegister();
-        $schema   = $this->getSchema($schemaKey);
+        $schema   = $this->getSchema(schemaKey: $schemaKey);
         if ($register === '' || $schema === '') {
             $this->logger->info(
                 message: '[KccWerkplekService] register or schema not configured',
@@ -191,6 +194,7 @@ class KccWerkplekService
         foreach (($results ?? []) as $result) {
             $out[] = $this->toArray(object: $result);
         }
+
         return $out;
     }//end findAllSafe()
 
@@ -203,17 +207,19 @@ class KccWerkplekService
      *
      * @param string $userId Nextcloud user UID of the agent.
      *
-     * @return array{agentProfile: array<string, mixed>, assignedRequests: array<int, array<string, mixed>>, openTasks: array<int, array<string, mixed>>, queueCounts: array<string, int>, queues: array<int, array<string, mixed>>} Workspace state.
+     * @return array{agentProfile: array<string, mixed>, assignedRequests: array<int, array<string, mixed>>,
+     *               openTasks: array<int, array<string, mixed>>, queueCounts: array<string, int>,
+     *               queues: array<int, array<string, mixed>>} Workspace state.
      *
      * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
      */
     public function getWorkspaceState(string $userId): array
     {
         // Parallel-fetch (single-threaded but each backend round-trip is independent).
-        $allRequests = $this->findAllSafe('request_schema');
-        $allTasks    = $this->findAllSafe('task_schema');
-        $allAgents   = $this->findAllSafe('agentProfile_schema');
-        $allQueues   = $this->findAllSafe('queue_schema');
+        $allRequests = $this->findAllSafe(schemaKey: 'request_schema');
+        $allTasks    = $this->findAllSafe(schemaKey: 'task_schema');
+        $allAgents   = $this->findAllSafe(schemaKey: 'agentProfile_schema');
+        $allQueues   = $this->findAllSafe(schemaKey: 'queue_schema');
 
         // Filter requests assigned to the current user with an open status.
         $assignedRequests = [];
@@ -263,12 +269,14 @@ class KccWerkplekService
                 $queueCounts[$slug] = 0;
             }
         }
+
         foreach ($allRequests as $request) {
             $status   = (string) ($request['status'] ?? '');
             $queueRef = (string) ($request['queue'] ?? '');
             if ($queueRef === '' || in_array($status, self::OPEN_REQUEST_STATUSES, true) === false) {
                 continue;
             }
+
             // Match queue by id or slug (the request may store either).
             foreach ($allQueues as $queue) {
                 $qSlug = (string) ($queue['@self']['slug'] ?? $queue['slug'] ?? '');
@@ -286,6 +294,7 @@ class KccWerkplekService
             if ((bool) ($queue['isActive'] ?? true) === false) {
                 continue;
             }
+
             $queues[] = [
                 'id'          => (string) ($queue['@self']['id'] ?? $queue['id'] ?? ''),
                 'slug'        => (string) ($queue['@self']['slug'] ?? $queue['slug'] ?? ''),
@@ -294,6 +303,7 @@ class KccWerkplekService
                 'maxCapacity' => $queue['maxCapacity'] ?? null,
             ];
         }
+
         usort(
             $queues,
             static fn (array $a, array $b): int => ($a['sortOrder'] ?? 0) <=> ($b['sortOrder'] ?? 0)
@@ -327,7 +337,7 @@ class KccWerkplekService
     public function setAvailability(string $userId, bool $available): array
     {
         $register = $this->getRegister();
-        $schema   = $this->getSchema('agentProfile_schema');
+        $schema   = $this->getSchema(schemaKey: 'agentProfile_schema');
         if ($register === '' || $schema === '') {
             throw new RuntimeException('agentProfile schema is not configured');
         }
@@ -357,24 +367,30 @@ class KccWerkplekService
         }
 
         // Merge the existing data with the new flag — preserves skills, maxConcurrent etc.
-        $payload = array_filter(
+        $payload           = array_filter(
             $existingData,
             static fn (string $k): bool => $k !== '@self' && $k !== 'id',
             ARRAY_FILTER_USE_KEY
         );
-        $payload['userId']      = $userId;
+        $payload['userId'] = $userId;
         $payload['isAvailable'] = $available;
         if (isset($payload['maxConcurrent']) === false) {
             $payload['maxConcurrent'] = 1;
         }
 
         try {
+            if ($existingId !== '') {
+                $saveId = $existingId;
+            } else {
+                $saveId = null;
+            }
+
             $objectService->saveObject(
                 $payload,
                 [],
                 $register,
                 $schema,
-                $existingId !== '' ? $existingId : null
+                $saveId
             );
         } catch (\Throwable $e) {
             $this->logger->error(
@@ -382,7 +398,7 @@ class KccWerkplekService
                 context: ['error' => $e->getMessage()]
             );
             throw new RuntimeException('Failed to update agent availability', 0, $e);
-        }
+        }//end try
 
         return [
             'userId'      => $userId,
