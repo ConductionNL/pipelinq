@@ -45,12 +45,12 @@ class TwilioSmsClient implements SmsProviderClientInterface
     /**
      * Constructor.
      *
-     * @param ContainerInterface   $container   DI container (for SourceService).
-     * @param LoggerInterface      $logger      Logger.
-     * @param array<string, mixed> $credentials Decoded credentials bag.
-     * @param string               $fromNumber  Sender phone number (E.164).
+     * @param ContainerInterface   $container     DI container (for SourceService).
+     * @param LoggerInterface      $logger        Logger.
+     * @param array<string, mixed> $credentials   Decoded credentials bag.
+     * @param string               $fromNumber    Sender phone number (E.164).
      * @param string               $webhookSecret Shared HMAC secret for signature checks.
-     * @param string|null          $sourceId    openconnector source id (or null in tests).
+     * @param string|null          $sourceId      openconnector source id (or null in tests).
      *
      * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
      */
@@ -152,7 +152,7 @@ class TwilioSmsClient implements SmsProviderClientInterface
         try {
             $sourceService = $this->container->get('OCA\\OpenConnector\\Service\\SourceService');
         } catch (Throwable $e) {
-            throw new TransientSmsProviderException('openconnector unavailable: ' . $e->getMessage());
+            throw new TransientSmsProviderException('openconnector unavailable: '.$e->getMessage());
         }
 
         if (method_exists($sourceService, 'executeAction') === false) {
@@ -177,6 +177,10 @@ class TwilioSmsClient implements SmsProviderClientInterface
             throw new PermanentSmsProviderException($message, $code, $e);
         }
 
-        return is_array($result) ? $result : [];
+        if (is_array($result) === true) {
+            return $result;
+        }
+
+        return [];
     }//end dispatchViaOpenConnector()
 }//end class

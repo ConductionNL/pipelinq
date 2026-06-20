@@ -69,7 +69,7 @@ use Throwable;
  *  tender service legitimately needs: OR container (ObjectService + WebhookService),
  *  IAppConfig for schema-key resolution, IEventDispatcher for TenderPostedEvent
  *  emission and logger. Splitting them would scatter one cohesive concern.
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)    The public surface mirrors
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)   The public surface mirrors
  *  REQ-PST-001..006 plus the schema-key lookups exposed for the retry job /
  *  controller. Each method is unit-tested independently.
  *
@@ -136,7 +136,7 @@ class PosTenderService
      *
      * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-001
      */
-    public function listTenderTypes(bool $activeOnly = false): array
+    public function listTenderTypes(bool $activeOnly=false): array
     {
         [$register, $schema] = $this->config(schemaKey: 'posTenderType_schema');
 
@@ -161,6 +161,7 @@ class PosTenderService
             if ($activeOnly === true && ($row['isActive'] ?? true) !== true) {
                 continue;
             }
+
             $types[] = $row;
         }
 
@@ -276,10 +277,10 @@ class PosTenderService
      */
     public function updateTenderType(string $id, array $data): array
     {
-        $current  = $this->getTenderTypeById(id: $id);
-        $merged   = array_merge($current, $data);
+        $current        = $this->getTenderTypeById(id: $id);
+        $merged         = array_merge($current, $data);
         $merged['code'] = (string) ($current['code'] ?? '');
-        $payload  = $this->validateTenderTypePayload(data: $merged, allowMissingCode: true);
+        $payload        = $this->validateTenderTypePayload(data: $merged, allowMissingCode: true);
 
         return $this->saveTenderType(id: $id, payload: $payload);
     }//end updateTenderType()
@@ -364,6 +365,7 @@ class PosTenderService
             if ((string) ($row['transaction'] ?? '') !== $transactionId) {
                 continue;
             }
+
             $tenders[] = $row;
         }
 
@@ -412,6 +414,7 @@ class PosTenderService
         if ($tenderTypeId === '') {
             throw new InvalidTenderException('Tender type is required', statusCode: 400);
         }
+
         $type = $this->getTenderTypeById(id: $tenderTypeId);
 
         if (($type['isActive'] ?? true) !== true) {
@@ -531,6 +534,7 @@ class PosTenderService
         foreach ($tenders as $tender) {
             $tenderSum += (float) ($tender['amount'] ?? 0);
         }
+
         $tenderSum = round($tenderSum, 2);
         $variance  = round($total - $tenderSum, 2);
 
@@ -618,6 +622,7 @@ class PosTenderService
         foreach ($this->getTendersForTransaction(transactionId: $transactionId) as $tender) {
             $changeSum += (float) ($tender['change'] ?? 0);
         }
+
         $changeSum = round($changeSum, 2);
         $excess    = round(abs($variance), 2);
 
@@ -859,16 +864,24 @@ class PosTenderService
         if ($name === '') {
             throw new OCSBadRequestException('Name is required');
         }
+
         if ($allowMissingCode === false && $code === '') {
             throw new OCSBadRequestException('Code is required');
         }
+
         if ($glAccount === '') {
             throw new OCSBadRequestException('GL account is required');
         }
 
+        if ($code !== '') {
+            $resolvedCode = $code;
+        } else {
+            $resolvedCode = (string) ($data['code'] ?? '');
+        }
+
         return [
             'name'              => $name,
-            'code'              => ($code !== '' ? $code : (string) ($data['code'] ?? '')),
+            'code'              => $resolvedCode,
             'description'       => (string) ($data['description'] ?? ''),
             'glAccount'         => $glAccount,
             'requiresReference' => (bool) ($data['requiresReference'] ?? false),

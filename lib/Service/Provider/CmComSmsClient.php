@@ -136,7 +136,7 @@ class CmComSmsClient implements SmsProviderClientInterface
         try {
             $sourceService = $this->container->get('OCA\\OpenConnector\\Service\\SourceService');
         } catch (Throwable $e) {
-            throw new TransientSmsProviderException('openconnector unavailable: ' . $e->getMessage());
+            throw new TransientSmsProviderException('openconnector unavailable: '.$e->getMessage());
         }
 
         if (method_exists($sourceService, 'executeAction') === false) {
@@ -154,9 +154,14 @@ class CmComSmsClient implements SmsProviderClientInterface
             if ($code === 0 || ($code >= 500 && $code < 600)) {
                 throw new TransientSmsProviderException($e->getMessage(), $code, $e);
             }
+
             throw new PermanentSmsProviderException($e->getMessage(), $code, $e);
         }
 
-        return is_array($result) ? $result : [];
+        if (is_array($result) === true) {
+            return $result;
+        }
+
+        return [];
     }//end dispatchViaOpenConnector()
 }//end class

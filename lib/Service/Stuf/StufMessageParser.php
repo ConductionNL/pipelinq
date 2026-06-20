@@ -73,24 +73,36 @@ class StufMessageParser
             return ['crossRefnummer' => '', 'zaakIdentificatie' => null, 'raw' => []];
         }
 
-        $crossRef = $this->firstTextValue(xml: $xml, paths: [
-            '//stuf:stuurgegevens/stuf:crossRefnummer',
-            '//stuf:crossRefnummer',
-        ]);
+        $crossRef = $this->firstTextValue(
+                xml: $xml,
+                paths: [
+                    '//stuf:stuurgegevens/stuf:crossRefnummer',
+                    '//stuf:crossRefnummer',
+                ]
+                );
 
-        $zaakId = $this->firstTextValue(xml: $xml, paths: [
-            '//stuf:antwoord/zkn:object/zkn:identificatie',
-            '//zkn:identificatie',
-        ]);
+        $zaakId = $this->firstTextValue(
+                xml: $xml,
+                paths: [
+                    '//stuf:antwoord/zkn:object/zkn:identificatie',
+                    '//zkn:identificatie',
+                ]
+                );
 
         $this->logger->debug(
             message: 'StUF parseBevestiging: crossRef={cross}, zaakId={zaak}',
             context: ['cross' => $crossRef, 'zaak' => ($zaakId ?? '')]
         );
 
+        if ($zaakId === '') {
+            $zaakIdentificatie = null;
+        } else {
+            $zaakIdentificatie = $zaakId;
+        }
+
         return [
             'crossRefnummer'    => $crossRef,
-            'zaakIdentificatie' => ($zaakId === '' ? null : $zaakId),
+            'zaakIdentificatie' => $zaakIdentificatie,
             'raw'               => [],
         ];
     }//end parseBevestiging()
@@ -198,7 +210,11 @@ class StufMessageParser
         }
 
         $value = $this->firstTextValue(xml: $doc, paths: [$xpath]);
-        return ($value === '' ? null : $value);
+        if ($value === '') {
+            return null;
+        }
+
+        return $value;
     }//end extractNamespaceValue()
 
     /**
