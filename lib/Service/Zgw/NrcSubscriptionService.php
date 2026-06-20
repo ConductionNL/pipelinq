@@ -61,7 +61,6 @@ class NrcSubscriptionService
     ) {
     }//end __construct()
 
-
     /**
      * Register an abonnement at NRC and persist the NrcAbonnement record.
      *
@@ -77,10 +76,12 @@ class NrcSubscriptionService
     {
         $client = $this->registers->findClientForEndpoint($endpoint);
         if ($client === null) {
-            throw new NrcSubscriptionFailedException(sprintf(
+            throw new NrcSubscriptionFailedException(
+                    sprintf(
                 'ZGW NRC: ZgwEndpoint "%s" has no resolvable client',
                 (string) ($endpoint['id'] ?? '?')
-            ));
+            )
+                    );
         }
 
         $nrcUrl = (string) ($endpoint['componenten']['nrc'] ?? '');
@@ -92,7 +93,7 @@ class NrcSubscriptionService
         $body   = [
             'callbackUrl' => $callbackUrl,
             'auth'        => 'Bearer '.$bearer,
-            'kanalen'     => $this->normaliseKanalen($kanalen),
+            'kanalen'     => $this->normaliseKanalen(kanalen: $kanalen),
         ];
 
         try {
@@ -122,14 +123,13 @@ class NrcSubscriptionService
             'abonnementUrl' => $abonnementUrl,
             'callbackUrl'   => $callbackUrl,
             'callbackAuth'  => $bearer,
-            'kanalen'       => $this->normaliseKanalen($kanalen),
+            'kanalen'       => $this->normaliseKanalen(kanalen: $kanalen),
             'actief'        => true,
         ];
 
         $saved = $this->registers->save(ZgwRegisterAccess::SCHEMA_ABONN, $record);
         return $saved ?? $record;
     }//end registerAbonnement()
-
 
     /**
      * Reconcile a stored NrcAbonnement against a new desired kanalen list.
@@ -142,19 +142,24 @@ class NrcSubscriptionService
      */
     public function syncAbonnement(array $endpoint, array $abonnement, array $newKanalen): array
     {
-        $current = $this->normaliseKanalen($abonnement['kanalen'] ?? []);
-        $desired = $this->normaliseKanalen($newKanalen);
+        $current = $this->normaliseKanalen(kanalen: ($abonnement['kanalen'] ?? []));
+        $desired = $this->normaliseKanalen(kanalen: $newKanalen);
         if ($current === $desired) {
             return $abonnement;
         }
+
         try {
-            $this->unregisterAbonnement($endpoint, $abonnement);
+            $this->unregisterAbonnement(endpoint: $endpoint, abonnement: $abonnement);
         } catch (Throwable $e) {
             $this->logger->warning('ZGW NRC: syncAbonnement unregister failed', ['err' => $e->getMessage()]);
         }
-        return $this->registerAbonnement($endpoint, $desired, (string) ($abonnement['callbackUrl'] ?? ''));
-    }//end syncAbonnement()
 
+        return $this->registerAbonnement(
+            endpoint: $endpoint,
+            kanalen: $desired,
+            callbackUrl: (string) ($abonnement['callbackUrl'] ?? '')
+        );
+    }//end syncAbonnement()
 
     /**
      * Remove an abonnement at NRC and mark the local record inactive.
@@ -172,6 +177,7 @@ class NrcSubscriptionService
         if ($client === null) {
             throw new NrcSubscriptionFailedException('ZGW NRC: endpoint has no resolvable client');
         }
+
         $abonnementUrl = (string) ($abonnement['abonnementUrl'] ?? '');
         if ($abonnementUrl !== '') {
             try {
@@ -189,11 +195,17 @@ class NrcSubscriptionService
                 );
             }
         }
+
         $abonnement['actief'] = false;
         $uuid = (string) ($abonnement['@self']['uuid'] ?? $abonnement['id'] ?? '');
-        $this->registers->save(ZgwRegisterAccess::SCHEMA_ABONN, $abonnement, $uuid !== '' ? $uuid : null);
-    }//end unregisterAbonnement()
+        if ($uuid !== '') {
+            $saveUuid = $uuid;
+        } else {
+            $saveUuid = null;
+        }
 
+        $this->registers->save(ZgwRegisterAccess::SCHEMA_ABONN, $abonnement, $saveUuid);
+    }//end unregisterAbonnement()
 
     /**
      * Generate a fresh 256-bit callback bearer token.
@@ -204,7 +216,6 @@ class NrcSubscriptionService
     {
         return bin2hex(random_bytes(32));
     }//end generateCallbackBearer()
-
 
     /**
      * Normalise the kanalen list (drop empties, sort for deterministic compare).
@@ -220,20 +231,22 @@ class NrcSubscriptionService
             if (is_array($entry) === false) {
                 continue;
             }
+
             $naam = (string) ($entry['naam'] ?? '');
             if ($naam === '') {
                 continue;
             }
+
             $filters = $entry['filters'] ?? [];
             if (is_array($filters) === false) {
                 $filters = [];
             }
+
             ksort($filters);
             $out[] = ['naam' => $naam, 'filters' => $filters];
         }
+
         usort($out, static fn (array $a, array $b): int => strcmp($a['naam'], $b['naam']));
         return $out;
     }//end normaliseKanalen()
-
-
 }//end class

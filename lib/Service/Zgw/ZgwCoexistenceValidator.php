@@ -58,7 +58,6 @@ class ZgwCoexistenceValidator
     ) {
     }//end __construct()
 
-
     /**
      * Validate that at most one write path is active for a gemeente.
      *
@@ -74,24 +73,26 @@ class ZgwCoexistenceValidator
             return;
         }
 
-        $zgwWriters = $this->activeZgwWriters($gemeenteCode);
-        $stufWriters = $this->activeStufWriters($gemeenteCode);
+        $zgwWriters  = $this->activeZgwWriters(gemeenteCode: $gemeenteCode);
+        $stufWriters = $this->activeStufWriters(gemeenteCode: $gemeenteCode);
 
         if ($zgwWriters !== [] && $stufWriters !== []) {
             $conflicting = array_values(array_unique(array_merge($zgwWriters, $stufWriters)));
-            $msg = sprintf(
+            $msg         = sprintf(
                 'ZGW: dubbele schrijfpad-conflict voor gemeente "%s" — schakel een van de volgende endpoints uit: %s',
                 $gemeenteCode,
                 implode(', ', $conflicting)
             );
-            $this->logger->warning('ZGW: double-write conflict detected', [
-                'gemeente'    => $gemeenteCode,
-                'conflicting' => $conflicting,
-            ]);
+            $this->logger->warning(
+                    'ZGW: double-write conflict detected',
+                    [
+                        'gemeente'    => $gemeenteCode,
+                        'conflicting' => $conflicting,
+                    ]
+                    );
             throw new DoubleWritePathException($msg, $conflicting);
         }
     }//end validateWritePath()
-
 
     /**
      * IDs of all active ZGW write endpoints for a gemeente.
@@ -106,21 +107,22 @@ class ZgwCoexistenceValidator
             ZgwRegisterAccess::SCHEMA_ENDPOINT,
             ['gemeenteCode' => $gemeenteCode]
         );
-        $ids = [];
+        $ids  = [];
         foreach ($rows as $row) {
             $actief   = (bool) ($row['actief'] ?? false);
             $readOnly = (bool) ($row['readOnly'] ?? false);
             if ($actief === false || $readOnly === true) {
                 continue;
             }
+
             $id = (string) ($row['id'] ?? ($row['@self']['slug'] ?? ''));
             if ($id !== '') {
                 $ids[] = 'zgw:'.$id;
             }
         }
+
         return $ids;
     }//end activeZgwWriters()
-
 
     /**
      * IDs of all active StUF write endpoints for a gemeente.
@@ -135,19 +137,19 @@ class ZgwCoexistenceValidator
             self::STUF_ENDPOINT_SCHEMA,
             ['gemeenteCode' => $gemeenteCode]
         );
-        $ids = [];
+        $ids  = [];
         foreach ($rows as $row) {
             $write = (string) ($row['write'] ?? ($row['richting'] ?? ''));
             if ($write !== 'on' && $write !== 'true' && $write !== '1') {
                 continue;
             }
+
             $id = (string) ($row['id'] ?? ($row['@self']['slug'] ?? ''));
             if ($id !== '') {
                 $ids[] = 'stuf:'.$id;
             }
         }
+
         return $ids;
     }//end activeStufWriters()
-
-
 }//end class
