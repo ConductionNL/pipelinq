@@ -162,6 +162,7 @@ import ContactRelationships from '../../components/ContactRelationships.vue'
 import CommunicationHistory from '../../components/CommunicationHistory.vue'
 import BrpContactPanel from '../../components/BrpContactPanel.vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import { createWithContact } from '../../services/contactSyncApi.js'
 
 export default {
 	name: 'ContactDetail',
@@ -406,16 +407,35 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-37
 		 */
 		async onFormSave(formData) {
+			// Contact-FIRST create: the `contact` schema marks `contactsUid`
+			// REQUIRED (the authoritative identity is the NC addressbook contact,
+			// never minted locally), so a plain saveObject('contact', …) 400s on a
+			// new contact. Route NEW contacts through the backend orchestration that
+			// provisions the NC contact and saves with the resolved contactsUid;
+			// EDITS keep the existing update-then-writeback flow (the contactsUid
+			// already exists and is mirrored).
+			if (this.isNew) {
+				try {
+					const created = await createWithContact('contact', formData)
+					const id = created?.id ?? created?.['@self']?.id
+					if (id) {
+						this.$router.push({ name: 'ContactDetail', params: { id } })
+						return
+					}
+					showError(t('pipelinq', 'Failed to save contact. Please try again.'))
+				} catch (error) {
+					const message = error?.response?.data?.error
+					showError(message || t('pipelinq', 'Failed to save contact. Please try again.'))
+				}
+				return
+			}
+
 			const result = await this.objectStore.saveObject('contact', formData)
 			if (result) {
 				this.syncToContacts(result.id || this.contactId)
-				if (this.isNew) {
-					this.$router.push({ name: 'ContactDetail', params: { id: result.id } })
-				} else {
-					await this.objectStore.fetchObject('contact', this.contactId)
-					this.loadClientName()
-					this.editing = false
-				}
+				await this.objectStore.fetchObject('contact', this.contactId)
+				this.loadClientName()
+				this.editing = false
 			} else {
 				const error = this.objectStore.getError('contact')
 				showError(error?.message || t('pipelinq', 'Failed to save contact. Please try again.'))
