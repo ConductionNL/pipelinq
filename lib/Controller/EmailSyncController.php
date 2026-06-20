@@ -47,8 +47,6 @@ use Throwable;
  */
 class EmailSyncController extends Controller
 {
-
-
     /**
      * Constructor.
      *
@@ -68,7 +66,6 @@ class EmailSyncController extends Controller
         parent::__construct(appName: Application::APP_ID, request: $request);
 
     }//end __construct()
-
 
     /**
      * Return the current user's matching settings.
@@ -98,7 +95,6 @@ class EmailSyncController extends Controller
         }
 
     }//end getSettings()
-
 
     /**
      * Persist the current user's matching settings.
@@ -152,7 +148,6 @@ class EmailSyncController extends Controller
 
     }//end saveSettings()
 
-
     /**
      * Run the matching job once for the current user.
      *
@@ -187,7 +182,6 @@ class EmailSyncController extends Controller
 
     }//end trigger()
 
-
     /**
      * Return the current user's last-run status.
      *
@@ -217,7 +211,6 @@ class EmailSyncController extends Controller
 
     }//end getStatus()
 
-
     /**
      * Project the internal settings shape onto the public response.
      *
@@ -229,15 +222,17 @@ class EmailSyncController extends Controller
      */
     private function responseShape(array $settings): array
     {
+        if (is_array($settings['excludedAddresses'] ?? null) === true) {
+            $excludedAddresses = array_values($settings['excludedAddresses']);
+        } else {
+            $excludedAddresses = [];
+        }
+
         return [
             'account'           => (int) ($settings['account'] ?? 0),
             'enabled'           => (bool) ($settings['enabled'] ?? false),
-            'excludedAddresses' => is_array($settings['excludedAddresses'] ?? null)
-                ? array_values($settings['excludedAddresses'])
-                : [],
+            'excludedAddresses' => $excludedAddresses,
         ];
 
     }//end responseShape()
-
-
 }//end class

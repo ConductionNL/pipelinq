@@ -100,27 +100,36 @@ class BrpRetentionJob extends TimedJob
 
             $deleted = 0;
             foreach (($records ?? []) as $record) {
-                $arr = is_array($record) ? $record : (method_exists($record, 'jsonSerialize') ? (array) $record->jsonSerialize() : []);
+                if (is_array($record) === true) {
+                    $arr = $record;
+                } else if (method_exists($record, 'jsonSerialize') === true) {
+                    $arr = (array) $record->jsonSerialize();
+                } else {
+                    $arr = [];
+                }
+
                 $retentieTo = (string) ($arr['retentieTot'] ?? '');
                 if ($retentieTo === '') {
                     continue;
                 }
+
                 try {
                     $retentieDt = new DateTimeImmutable($retentieTo, new DateTimeZone('UTC'));
                 } catch (Throwable $e) {
                     continue;
                 }
+
                 if ($retentieDt > $now) {
                     continue;
                 }
 
-                $uuid       = (string) ($arr['@self']['id'] ?? $arr['id'] ?? '');
-                $contactId  = (string) ($arr['gekoppeldContact'] ?? '');
+                $uuid      = (string) ($arr['@self']['id'] ?? $arr['id'] ?? '');
+                $contactId = (string) ($arr['gekoppeldContact'] ?? '');
 
                 try {
                     $objects->setRegister($register)
-                            ->setSchema($persoonSchema)
-                            ->deleteObject(uuid: $uuid);
+                        ->setSchema($persoonSchema)
+                        ->deleteObject(uuid: $uuid);
                     $deleted++;
                 } catch (Throwable $e) {
                     $this->logger->warning(
@@ -131,14 +140,20 @@ class BrpRetentionJob extends TimedJob
                 }
 
                 if ($contactId !== '' && $contactSchema !== '') {
-                    $this->resetContact($objects, $register, $contactSchema, $contactId, $uuid);
+                    $this->resetContact(
+                        objects: $objects,
+                        register: $register,
+                        contactSchema: $contactSchema,
+                        contactId: $contactId,
+                        persoonUuid: $uuid
+                    );
                 }
-            }
+            }//end foreach
 
             $this->logger->info('BRP retention sweep complete', ['deleted' => $deleted]);
         } catch (Throwable $e) {
             $this->logger->error('BRP retention job failed', ['error' => $e->getMessage()]);
-        }
+        }//end try
     }//end run()
 
     /**
@@ -163,13 +178,22 @@ class BrpRetentionJob extends TimedJob
                 register: $register,
                 schema: $contactSchema,
             );
-            $existingArr = is_array($existing) ? $existing : (method_exists($existing, 'jsonSerialize') ? (array) $existing->jsonSerialize() : []);
-            if (empty($existingArr)) {
+            if (is_array($existing) === true) {
+                $existingArr = $existing;
+            } else if (method_exists($existing, 'jsonSerialize') === true) {
+                $existingArr = (array) $existing->jsonSerialize();
+            } else {
+                $existingArr = [];
+            }
+
+            if (empty($existingArr) === true) {
                 return;
             }
+
             if ((string) ($existingArr['brpPersoonId'] ?? '') !== $persoonUuid) {
                 return;
             }
+
             $existingArr['verifiedBSN'] = false;
             // Per spec REQ-BSN-008-01: brpPersoonId stays (dangling pointer to deleted record).
             $objects->saveObject(
@@ -184,6 +208,6 @@ class BrpRetentionJob extends TimedJob
                 'BRP retention: contact reset failed',
                 ['contactId' => $contactId, 'error' => $e->getMessage()]
             );
-        }
+        }//end try
     }//end resetContact()
 }//end class

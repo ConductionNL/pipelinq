@@ -51,12 +51,12 @@ class BrpAdminController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest         $request       Request.
-     * @param IAppConfig       $appConfig     App config.
-     * @param ICrypto          $crypto        Crypto for secret encryption.
-     * @param ISecureRandom    $secureRandom  Secure random for webhook secret rotation.
-     * @param IL10N            $l10n          i18n.
-     * @param LoggerInterface  $logger        Logger.
+     * @param IRequest        $request      Request.
+     * @param IAppConfig      $appConfig    App config.
+     * @param ICrypto         $crypto       Crypto for secret encryption.
+     * @param ISecureRandom   $secureRandom Secure random for webhook secret rotation.
+     * @param IL10N           $l10n         i18n.
+     * @param LoggerInterface $logger       Logger.
      */
     public function __construct(
         IRequest $request,
@@ -79,22 +79,25 @@ class BrpAdminController extends Controller
     #[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
     public function get(): JSONResponse
     {
-        $hasSecret = $this->appConfig->getValueString(Application::APP_ID, 'brp.client_secret_encrypted', '') !== '';
+        $hasSecret        = $this->appConfig->getValueString(Application::APP_ID, 'brp.client_secret_encrypted', '') !== '';
         $hasWebhookSecret = $this->appConfig->getValueString(Application::APP_ID, 'brp.webhook_secret', '') !== '';
-        return new JSONResponse([
-            'baseUrl'           => $this->appConfig->getValueString(Application::APP_ID, 'brp.base_url', ''),
-            'oauthEndpoint'     => $this->appConfig->getValueString(Application::APP_ID, 'brp.oauth_endpoint', ''),
-            'clientId'          => $this->appConfig->getValueString(Application::APP_ID, 'brp.client_id', ''),
-            'clientSecretSet'   => $hasSecret,
-            'certPath'          => $this->appConfig->getValueString(Application::APP_ID, 'brp.cert_path', ''),
-            'keyPath'           => $this->appConfig->getValueString(Application::APP_ID, 'brp.key_path', ''),
-            'caBundle'          => $this->appConfig->getValueString(Application::APP_ID, 'brp.ca_bundle', ''),
-            'cacheTtlHours'     => (int) $this->appConfig->getValueString(Application::APP_ID, 'brp.cache_ttl_hours', '24'),
-            'retentionDays'     => (int) $this->appConfig->getValueString(Application::APP_ID, 'brp.retention_days', '7'),
-            'healthTimezone'    => $this->appConfig->getValueString(Application::APP_ID, 'brp.health_timezone', 'UTC'),
-            'allowedGroups'     => $this->appConfig->getValueString(Application::APP_ID, 'brp.allowed_groups', ''),
-            'webhookSecretSet'  => $hasWebhookSecret,
-        ], Http::STATUS_OK);
+        return new JSONResponse(
+                [
+                    'baseUrl'          => $this->appConfig->getValueString(Application::APP_ID, 'brp.base_url', ''),
+                    'oauthEndpoint'    => $this->appConfig->getValueString(Application::APP_ID, 'brp.oauth_endpoint', ''),
+                    'clientId'         => $this->appConfig->getValueString(Application::APP_ID, 'brp.client_id', ''),
+                    'clientSecretSet'  => $hasSecret,
+                    'certPath'         => $this->appConfig->getValueString(Application::APP_ID, 'brp.cert_path', ''),
+                    'keyPath'          => $this->appConfig->getValueString(Application::APP_ID, 'brp.key_path', ''),
+                    'caBundle'         => $this->appConfig->getValueString(Application::APP_ID, 'brp.ca_bundle', ''),
+                    'cacheTtlHours'    => (int) $this->appConfig->getValueString(Application::APP_ID, 'brp.cache_ttl_hours', '24'),
+                    'retentionDays'    => (int) $this->appConfig->getValueString(Application::APP_ID, 'brp.retention_days', '7'),
+                    'healthTimezone'   => $this->appConfig->getValueString(Application::APP_ID, 'brp.health_timezone', 'UTC'),
+                    'allowedGroups'    => $this->appConfig->getValueString(Application::APP_ID, 'brp.allowed_groups', ''),
+                    'webhookSecretSet' => $hasWebhookSecret,
+                ],
+                Http::STATUS_OK
+                );
     }//end get()
 
     /**
@@ -125,21 +128,25 @@ class BrpAdminController extends Controller
             if ($value === null) {
                 continue;
             }
+
             $this->appConfig->setValueString(Application::APP_ID, $configKey, (string) $value);
         }
 
         // Client secret — encrypt on save.
         $clientSecret = $this->request->getParam('clientSecret');
-        if (is_string($clientSecret) && $clientSecret !== '') {
+        if (is_string($clientSecret) === true && $clientSecret !== '') {
             try {
                 $encrypted = $this->crypto->encrypt($clientSecret);
                 $this->appConfig->setValueString(Application::APP_ID, 'brp.client_secret_encrypted', $encrypted);
             } catch (Throwable $e) {
                 $this->logger->error('Failed to encrypt BRP client secret', ['error' => $e->getMessage()]);
-                return new JSONResponse([
-                    'errorCode'    => 'crypto-failed',
-                    'errorMessage' => $this->l10n->t('Kon BRP client-secret niet versleutelen.'),
-                ], Http::STATUS_INTERNAL_SERVER_ERROR);
+                return new JSONResponse(
+                        [
+                            'errorCode'    => 'crypto-failed',
+                            'errorMessage' => $this->l10n->t('Kon BRP client-secret niet versleutelen.'),
+                        ],
+                        Http::STATUS_INTERNAL_SERVER_ERROR
+                        );
             }
         }
 

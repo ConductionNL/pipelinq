@@ -414,7 +414,6 @@ class Application extends App implements IBootstrap
         );
     }//end registerPosLifecycleGuards()
 
-
     /**
      * Build the Features & Roadmap list from openspec/specs at runtime so the
      * surface stays current with the specs without depending on a committed
@@ -436,7 +435,7 @@ class Application extends App implements IBootstrap
             return $cached;
         }
 
-        $features = $this->extractFeaturesFromSpecs(__DIR__.'/../../openspec/specs');
+        $features = $this->extractFeaturesFromSpecs(specsDir: __DIR__.'/../../openspec/specs');
         if ($features === []) {
             $path = __DIR__.'/../../docs/features.json';
             if (is_file($path) === true) {
@@ -450,7 +449,6 @@ class Application extends App implements IBootstrap
         $cache->set($cacheKey, $features, 86400);
         return $features;
     }//end loadRoadmapFeatures()
-
 
     /**
      * Parse `status: done` capability specs into feature entries. Mirrors the
@@ -499,8 +497,13 @@ class Application extends App implements IBootstrap
 
             $summary = '';
             if (preg_match('/^##\s+Purpose\s*$/m', $body, $pm, PREG_OFFSET_CAPTURE) === 1) {
-                $rest    = substr($body, ($pm[0][1] + strlen($pm[0][0])));
-                $nextPos = (preg_match('/\n##\s/', $rest, $nm, PREG_OFFSET_CAPTURE) === 1) ? $nm[0][1] : strlen($rest);
+                $rest = substr($body, ($pm[0][1] + strlen($pm[0][0])));
+                if (preg_match('/\n##\s/', $rest, $nm, PREG_OFFSET_CAPTURE) === 1) {
+                    $nextPos = $nm[0][1];
+                } else {
+                    $nextPos = strlen($rest);
+                }
+
                 $section = trim(substr($rest, 0, $nextPos));
                 $para    = (preg_split('/\n\s*\n/', $section)[0] ?? '');
                 $summary = trim((string) preg_replace('/\s+/', ' ', $para));
@@ -519,7 +522,6 @@ class Application extends App implements IBootstrap
         usort($entries, static fn(array $a, array $b): int => strcmp($a['slug'], $b['slug']));
         return $entries;
     }//end extractFeaturesFromSpecs()
-
 
     /**
      * Boot the application and register comment display name resolvers.
@@ -557,8 +559,12 @@ class Application extends App implements IBootstrap
             $manifestPath = __DIR__.'/../../src/manifest.json';
             $dependencies = [];
             if (is_file($manifestPath) === true) {
-                $manifest     = json_decode((string) file_get_contents($manifestPath), associative: true);
-                $dependencies = is_array($manifest['dependencies'] ?? null) ? $manifest['dependencies'] : [];
+                $manifest = json_decode((string) file_get_contents($manifestPath), associative: true);
+                if (is_array($manifest['dependencies'] ?? null) === true) {
+                    $dependencies = $manifest['dependencies'];
+                } else {
+                    $dependencies = [];
+                }
             }
 
             $appManager     = $this->getContainer()->get(IAppManager::class);
@@ -566,11 +572,12 @@ class Application extends App implements IBootstrap
             try {
                 $appFetcher = $server->get(\OC\App\AppStore\Fetcher\AppFetcher::class);
                 foreach ($appFetcher->get() as $storeApp) {
-                    if (!empty($storeApp['id']) && !empty($storeApp['categories'])) {
+                    if (empty($storeApp['id']) === false && empty($storeApp['categories']) === false) {
                         $appStoreLookup[$storeApp['id']] = (array) $storeApp['categories'];
                     }
                 }
             } catch (\Throwable) {
+                // Intentionally ignored.
             }
 
             $dependencyStatus = [];
@@ -581,11 +588,11 @@ class Application extends App implements IBootstrap
                     $appManager->getAppPath($depId);
                     $onDisk  = true;
                     $appInfo = \OC_App::getAppInfo($depId);
-                    if (is_array($appInfo) && !empty($appInfo['category'])) {
+                    if (is_array($appInfo) === true && empty($appInfo['category']) === false) {
                         $category = (string) ((array) $appInfo['category'])[0];
                     }
                 } catch (\Throwable) {
-                    if (!empty($appStoreLookup[$depId][0])) {
+                    if (empty($appStoreLookup[$depId][0]) === false) {
                         $category = (string) $appStoreLookup[$depId][0];
                     }
                 }
@@ -595,7 +602,7 @@ class Application extends App implements IBootstrap
                     'enabled'   => $appManager->isEnabledForUser($depId),
                     'category'  => $category,
                 ];
-            }
+            }//end foreach
 
             $initialState->provideInitialState('dependency_statuses', $dependencyStatus);
         } catch (\Exception $e) {
