@@ -46,9 +46,9 @@ class CircuitBreakerService
     /**
      * Constructor.
      *
-     * @param IAppConfig            $appConfig          The app config.
-     * @param NeedsInputDispatcher  $needsInputDispatcher The needs-input dispatcher.
-     * @param LoggerInterface       $logger             The logger.
+     * @param IAppConfig           $appConfig            The app config.
+     * @param NeedsInputDispatcher $needsInputDispatcher The needs-input dispatcher.
+     * @param LoggerInterface      $logger               The logger.
      */
     public function __construct(
         private IAppConfig $appConfig,
@@ -190,7 +190,7 @@ class CircuitBreakerService
 
         if ($openedAt > 0 && (time() - $openedAt) < self::COOLDOWN_SECONDS) {
             $state = 'circuit_open';
-        } elseif ($failureCount > 0) {
+        } else if ($failureCount > 0) {
             $state = 'degraded';
         } else {
             $state = 'ok';

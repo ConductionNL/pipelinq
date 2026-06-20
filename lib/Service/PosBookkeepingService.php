@@ -83,12 +83,12 @@ use Psr\Log\LoggerInterface;
  * called by the background job; it is not directly exposed to a
  * #[NoAdminRequired] endpoint.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Wires the collaborators the
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the collaborators the
  *  pipeline legitimately needs (OR container for ObjectService + WebhookService,
  *  app config, mailer for alerts, shared POS access policy, logger).
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)     The public surface mirrors
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)   The public surface mirrors
  *  the lifecycle stages, each unit-tested independently.
- * @SuppressWarnings(PHPMD.TooManyMethods)           Private helpers (fetch /
+ * @SuppressWarnings(PHPMD.TooManyMethods)         Private helpers (fetch /
  *  save / sum / time / hash / dispatch) are deliberately small and
  *  single-purpose; merging them would only obscure the lifecycle.
  *

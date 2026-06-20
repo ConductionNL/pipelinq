@@ -71,8 +71,8 @@ class RecurringRevenueService
     /**
      * Normalize a single contract's interval value to a monthly figure.
      *
-     * @param string     $billingInterval The billing interval.
-     * @param float      $valuePerInterval The value per interval.
+     * @param string $billingInterval  The billing interval.
+     * @param float  $valuePerInterval The value per interval.
      *
      * @return float The normalized monthly recurring revenue (0 for one-off).
      *
@@ -112,8 +112,8 @@ class RecurringRevenueService
             }
 
             $mrr += $this->normalizeToMonthly(
-                (string) ($contract['billingInterval'] ?? ''),
-                (float) ($contract['valuePerInterval'] ?? 0)
+                billingInterval: (string) ($contract['billingInterval'] ?? ''),
+                valuePerInterval: (float) ($contract['valuePerInterval'] ?? 0)
             );
         }
 
@@ -131,7 +131,7 @@ class RecurringRevenueService
      */
     public function computeArr(array $contracts): float
     {
-        return round(($this->computeMrr($contracts) * 12.0), 2);
+        return round(($this->computeMrr(contracts: $contracts) * 12.0), 2);
     }//end computeArr()
 
     /**
@@ -151,7 +151,7 @@ class RecurringRevenueService
             static fn (array $c): bool => ((string) ($c['clientRef'] ?? '')) === $clientRef
         );
 
-        return $this->computeMrr(array_values($clientContracts));
+        return $this->computeMrr(contracts: array_values($clientContracts));
     }//end computeClientMrr()
 
     /**
@@ -187,8 +187,8 @@ class RecurringRevenueService
             } else if ($status === 'churned') {
                 $churned++;
                 $churnedMrr += $this->normalizeToMonthly(
-                    (string) ($contract['billingInterval'] ?? ''),
-                    (float) ($contract['valuePerInterval'] ?? 0)
+                    billingInterval: (string) ($contract['billingInterval'] ?? ''),
+                    valuePerInterval: (float) ($contract['valuePerInterval'] ?? 0)
                 );
             }
         }//end foreach
@@ -277,8 +277,8 @@ class RecurringRevenueService
         }
 
         return [
-            'mrr'           => $this->computeMrr($contracts),
-            'arr'           => $this->computeArr($contracts),
+            'mrr'           => $this->computeMrr(contracts: $contracts),
+            'arr'           => $this->computeArr(contracts: $contracts),
             'activeCount'   => $activeCount,
             'expiringCount' => $expiringCount,
         ];

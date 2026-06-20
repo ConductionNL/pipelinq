@@ -71,11 +71,11 @@ class StufEnvelopeBuilder
     /**
      * Build an Lk01 creeerZaak envelope from a Request and the target endpoint.
      *
-     * @param array       $request   The pipelinq Request as a plain array (id, type, omschrijving,
-     *                               startdatum, einddatum, betrokkenen[], documenten[]).
-     * @param array       $endpoint  The StufEndpoint object (array).
-     * @param string|null $zaakId    Optional pre-allocated zaak identificatie.
-     * @param array       $opts      Options: includeDocuments (bool), payloadLimitBytes (int).
+     * @param array       $request  The pipelinq Request as a plain array (id, type, omschrijving,
+     *                              startdatum, einddatum, betrokkenen[], documenten[]).
+     * @param array       $endpoint The StufEndpoint object (array).
+     * @param string|null $zaakId   Optional pre-allocated zaak identificatie.
+     * @param array       $opts     Options: includeDocuments (bool), payloadLimitBytes (int).
      *
      * @return string The signed envelope XML.
      *
@@ -135,9 +135,9 @@ class StufEnvelopeBuilder
         $this->logger->debug(
             message: 'StUF Lk01 envelope built',
             context: [
-                'endpoint' => ($endpoint['id'] ?? ''),
+                'endpoint'         => ($endpoint['id'] ?? ''),
                 'referentienummer' => $referentienummer,
-                'snippet' => substr(string: $envelope, offset: 0, length: 500),
+                'snippet'          => substr(string: $envelope, offset: 0, length: 500),
             ]
         );
 
@@ -169,7 +169,7 @@ class StufEnvelopeBuilder
         $zaakId = (string) ($mapping['externIdentificatie'] ?? '');
         $body   = '<zkn:zakLk02>'.$stuurgegevens
             .'<zkn:object stuf:entiteittype="ZAK" stuf:verwerkingssoort="W">'
-            .'<zkn:identificatie>'.$this->escape($zaakId).'</zkn:identificatie>'
+            .'<zkn:identificatie>'.$this->escape(value: $zaakId).'</zkn:identificatie>'
             .$this->renderZaakMutatieElements(request: $request)
             .'</zkn:object>'
             .'</zkn:zakLk02>';
@@ -180,9 +180,9 @@ class StufEnvelopeBuilder
     /**
      * Build an Lv01 geefZaakDetails envelope.
      *
-     * @param string $zaakId             The zaak identificatie to query.
-     * @param array  $endpoint           The StufEndpoint.
-     * @param array  $gewensteElementen  The list of zkn element names to request.
+     * @param string $zaakId            The zaak identificatie to query.
+     * @param array  $endpoint          The StufEndpoint.
+     * @param array  $gewensteElementen The list of zkn element names to request.
      *
      * @return string The envelope XML.
      *
@@ -201,12 +201,12 @@ class StufEnvelopeBuilder
 
         $scope = '';
         foreach ($gewensteElementen as $element) {
-            $scope .= '<zkn:'.$this->escape((string) $element).' />';
+            $scope .= '<zkn:'.$this->escape(value: (string) $element).' />';
         }
 
         $body = '<zkn:zakLv01>'.$stuurgegevens
             .'<zkn:gelijk stuf:entiteittype="ZAK">'
-            .'<zkn:identificatie>'.$this->escape($zaakId).'</zkn:identificatie>'
+            .'<zkn:identificatie>'.$this->escape(value: $zaakId).'</zkn:identificatie>'
             .'</zkn:gelijk>'
             .'<zkn:scope><zkn:object stuf:entiteittype="ZAK">'.$scope.'</zkn:object></zkn:scope>'
             .'</zkn:zakLv01>';
@@ -287,12 +287,13 @@ class StufEnvelopeBuilder
 
         $payloadXml = '';
         foreach ($payload as $veld => $waarde) {
-            $payloadXml .= '<zkn:'.$this->escape((string) $veld).'>'.$this->escape((string) $waarde).'</zkn:'.$this->escape((string) $veld).'>';
+            $veldNaam    = $this->escape(value: (string) $veld);
+            $payloadXml .= '<zkn:'.$veldNaam.'>'.$this->escape(value: (string) $waarde).'</zkn:'.$veldNaam.'>';
         }
 
-        $body = '<zkn:'.$this->escape($name).'_Du01>'.$stuurgegevens
+        $body = '<zkn:'.$this->escape(value: $name).'_Du01>'.$stuurgegevens
             .'<zkn:parameters>'.$payloadXml.'</zkn:parameters>'
-            .'</zkn:'.$this->escape($name).'_Du01>';
+            .'</zkn:'.$this->escape(value: $name).'_Du01>';
 
         return $this->wrapEnvelope(bodyXml: $body, endpoint: $endpoint);
     }//end buildDu01VrijBericht()
@@ -300,12 +301,12 @@ class StufEnvelopeBuilder
     /**
      * Build the StUF stuurgegevens header XML.
      *
-     * @param string $berichtCode     The bericht-code (Lk01, Lk02, Bv01, ...).
-     * @param array  $endpoint        The StufEndpoint array.
-     * @param string $entiteittype    The entiteittype (ZAK).
-     * @param string $functie         The functie (creeerZaak, ...).
+     * @param string $berichtCode      The bericht-code (Lk01, Lk02, Bv01, ...).
+     * @param array  $endpoint         The StufEndpoint array.
+     * @param string $entiteittype     The entiteittype (ZAK).
+     * @param string $functie          The functie (creeerZaak, ...).
      * @param string $referentienummer The unique referentienummer.
-     * @param string $tijdstipBericht The yyyyMMddHHmmssSSS timestamp.
+     * @param string $tijdstipBericht  The yyyyMMddHHmmssSSS timestamp.
      *
      * @return string The stuurgegevens XML snippet.
      *
@@ -320,20 +321,20 @@ class StufEnvelopeBuilder
         string $tijdstipBericht
     ): string {
         return '<zkn:stuurgegevens>'
-            .'<stuf:berichtcode>'.$this->escape($berichtCode).'</stuf:berichtcode>'
+            .'<stuf:berichtcode>'.$this->escape(value: $berichtCode).'</stuf:berichtcode>'
             .'<stuf:zender>'
-            .'<stuf:organisatie>'.$this->escape((string) ($endpoint['zenderOrganisatie'] ?? '')).'</stuf:organisatie>'
-            .'<stuf:applicatie>'.$this->escape((string) ($endpoint['zenderApplicatie'] ?? '')).'</stuf:applicatie>'
+            .'<stuf:organisatie>'.$this->escape(value: (string) ($endpoint['zenderOrganisatie'] ?? '')).'</stuf:organisatie>'
+            .'<stuf:applicatie>'.$this->escape(value: (string) ($endpoint['zenderApplicatie'] ?? '')).'</stuf:applicatie>'
             .'</stuf:zender>'
             .'<stuf:ontvanger>'
-            .'<stuf:organisatie>'.$this->escape((string) ($endpoint['ontvangerOrganisatie'] ?? '')).'</stuf:organisatie>'
-            .'<stuf:applicatie>'.$this->escape((string) ($endpoint['ontvangerApplicatie'] ?? '')).'</stuf:applicatie>'
-            .'<stuf:gebruiker>'.$this->escape((string) ($endpoint['ontvangerGebruiker'] ?? '')).'</stuf:gebruiker>'
+            .'<stuf:organisatie>'.$this->escape(value: (string) ($endpoint['ontvangerOrganisatie'] ?? '')).'</stuf:organisatie>'
+            .'<stuf:applicatie>'.$this->escape(value: (string) ($endpoint['ontvangerApplicatie'] ?? '')).'</stuf:applicatie>'
+            .'<stuf:gebruiker>'.$this->escape(value: (string) ($endpoint['ontvangerGebruiker'] ?? '')).'</stuf:gebruiker>'
             .'</stuf:ontvanger>'
-            .'<stuf:referentienummer>'.$this->escape($referentienummer).'</stuf:referentienummer>'
-            .'<stuf:tijdstipBericht>'.$this->escape($tijdstipBericht).'</stuf:tijdstipBericht>'
-            .'<stuf:entiteittype>'.$this->escape($entiteittype).'</stuf:entiteittype>'
-            .'<stuf:functie>'.$this->escape($functie).'</stuf:functie>'
+            .'<stuf:referentienummer>'.$this->escape(value: $referentienummer).'</stuf:referentienummer>'
+            .'<stuf:tijdstipBericht>'.$this->escape(value: $tijdstipBericht).'</stuf:tijdstipBericht>'
+            .'<stuf:entiteittype>'.$this->escape(value: $entiteittype).'</stuf:entiteittype>'
+            .'<stuf:functie>'.$this->escape(value: $functie).'</stuf:functie>'
             .'</zkn:stuurgegevens>';
     }//end buildStuurgegevens()
 
@@ -419,11 +420,11 @@ class StufEnvelopeBuilder
     /**
      * Render the zkn:zakLk01 body element.
      *
-     * @param string      $stuurgegevens         The stuurgegevens XML.
-     * @param string|null $zaakId                Pre-allocated zaak ID (when applicable).
-     * @param string      $zaaktypeOmschrijving  The mapped zaaktype omschrijving.
-     * @param array       $request               The Request as array.
-     * @param array       $documents             Encoded documents.
+     * @param string      $stuurgegevens        The stuurgegevens XML.
+     * @param string|null $zaakId               Pre-allocated zaak ID (when applicable).
+     * @param string      $zaaktypeOmschrijving The mapped zaaktype omschrijving.
+     * @param array       $request              The Request as array.
+     * @param array       $documents            Encoded documents.
      *
      * @return string The XML body fragment.
      */
@@ -436,18 +437,18 @@ class StufEnvelopeBuilder
     ): string {
         $identificatie = '';
         if ($zaakId !== null && $zaakId !== '') {
-            $identificatie = '<zkn:identificatie>'.$this->escape($zaakId).'</zkn:identificatie>';
+            $identificatie = '<zkn:identificatie>'.$this->escape(value: $zaakId).'</zkn:identificatie>';
         }
 
-        $omschrijving = $this->escape((string) ($request['omschrijving'] ?? ''));
-        $startdatum   = $this->escape((string) ($request['startdatum'] ?? ''));
+        $omschrijving = $this->escape(value: (string) ($request['omschrijving'] ?? ''));
+        $startdatum   = $this->escape(value: (string) ($request['startdatum'] ?? ''));
 
         $betrokkenen = '';
         foreach (($request['betrokkenen'] ?? []) as $bet) {
             $bsn  = (string) ($bet['bsn'] ?? '');
-            $rol  = $this->escape((string) ($bet['rol'] ?? 'heeftAlsInitiator'));
+            $rol  = $this->escape(value: (string) ($bet['rol'] ?? 'heeftAlsInitiator'));
             $body = '<zkn:gerelateerde stuf:entiteittype="NPS">'
-                .'<bg:inp.bsn>'.$this->escape($bsn).'</bg:inp.bsn>'
+                .'<bg:inp.bsn>'.$this->escape(value: $bsn).'</bg:inp.bsn>'
                 .'</zkn:gerelateerde>';
 
             $betrokkenen .= '<zkn:'.$rol.'>'.$body.'</zkn:'.$rol.'>';
@@ -457,8 +458,8 @@ class StufEnvelopeBuilder
         foreach ($documents as $doc) {
             $documentenXml .= '<zkn:heeftRelevant>'
                 .'<zkn:gerelateerde stuf:entiteittype="EDC">'
-                .'<stuf:bestandsnaam>'.$this->escape($doc['name']).'</stuf:bestandsnaam>'
-                .'<stuf:formaat>'.$this->escape($doc['mime']).'</stuf:formaat>'
+                .'<stuf:bestandsnaam>'.$this->escape(value: $doc['name']).'</stuf:bestandsnaam>'
+                .'<stuf:formaat>'.$this->escape(value: $doc['mime']).'</stuf:formaat>'
                 .'<stuf:bestandsinhoud>'.$doc['base64'].'</stuf:bestandsinhoud>'
                 .'</zkn:gerelateerde>'
                 .'</zkn:heeftRelevant>';
@@ -470,7 +471,7 @@ class StufEnvelopeBuilder
             .'<zkn:omschrijving>'.$omschrijving.'</zkn:omschrijving>'
             .'<zkn:startdatum>'.$startdatum.'</zkn:startdatum>'
             .'<zkn:zaaktype>'
-            .'<zkn:omschrijving>'.$this->escape($zaaktypeOmschrijving).'</zkn:omschrijving>'
+            .'<zkn:omschrijving>'.$this->escape(value: $zaaktypeOmschrijving).'</zkn:omschrijving>'
             .'</zkn:zaaktype>'
             .$betrokkenen
             .$documentenXml
@@ -490,7 +491,7 @@ class StufEnvelopeBuilder
         $out = '';
         foreach (['omschrijving', 'einddatum', 'resultaattoelichting'] as $field) {
             if (array_key_exists(key: $field, array: $request) === true && $request[$field] !== null) {
-                $out .= '<zkn:'.$field.'>'.$this->escape((string) $request[$field]).'</zkn:'.$field.'>';
+                $out .= '<zkn:'.$field.'>'.$this->escape(value: (string) $request[$field]).'</zkn:'.$field.'>';
             }
         }
 
@@ -513,9 +514,9 @@ class StufEnvelopeBuilder
     private function wrapEnvelope(string $bodyXml, array $endpoint): string
     {
         $auth        = ($endpoint['authenticatie'] ?? []);
-        $username    = $this->escape((string) ($auth['gebruikersnaam'] ?? ''));
+        $username    = $this->escape(value: (string) ($auth['gebruikersnaam'] ?? ''));
         $passwordRef = (string) ($auth['wachtwoordKluisRef'] ?? '');
-        $password    = $this->escape($this->vault->resolveSecret(reference: $passwordRef));
+        $password    = $this->escape(value: $this->vault->resolveSecret(reference: $passwordRef));
 
         $security = '<wsse:Security>'
             .'<wsse:UsernameToken>'

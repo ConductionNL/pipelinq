@@ -140,7 +140,16 @@ class ShillinqApService
     private function buildApPayload(array $expense, string $approvedBy, string $approvedAt): array
     {
         $expenseId = (string) ($expense['uuid'] ?? $expense['id'] ?? '');
-        $time      = $approvedAt !== '' ? $approvedAt : $this->now();
+        if ($approvedAt !== '') {
+            $time = $approvedAt;
+        } else {
+            $time = $this->now();
+        }
+
+        $projectId = null;
+        if (isset($expense['project']) === true && $expense['project'] !== '') {
+            $projectId = (string) $expense['project'];
+        }
 
         return [
             'specversion'     => '1.0',
@@ -155,7 +164,7 @@ class ShillinqApService
                 'currency'   => (string) ($expense['currency'] ?? 'EUR'),
                 'categoryId' => (string) ($expense['category'] ?? ''),
                 'clientId'   => (string) ($expense['client'] ?? ''),
-                'projectId'  => isset($expense['project']) && $expense['project'] !== '' ? (string) $expense['project'] : null,
+                'projectId'  => $projectId,
                 'billable'   => (bool) ($expense['billable'] ?? false),
                 'approvedBy' => $approvedBy,
                 'approvedAt' => $approvedAt,
