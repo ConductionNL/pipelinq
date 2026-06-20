@@ -92,10 +92,10 @@ class PointsExpiryBatchJob extends TimedJob
     protected function run($argument): void
     {
         $programmes = $this->getActiveProgrammes();
-        $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $now        = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 
         foreach ($programmes as $programme) {
-            $programmeId = $this->extractUuid($programme);
+            $programmeId = $this->extractUuid(object: $programme);
             if ($programmeId === null) {
                 continue;
             }
@@ -104,6 +104,7 @@ class PointsExpiryBatchJob extends TimedJob
             if (is_array($policy) === false) {
                 continue;
             }
+
             $type   = (string) ($policy['type'] ?? 'none');
             $months = (int) ($policy['value'] ?? 0);
             $notice = (int) ($policy['advanceNoticeDays'] ?? 30);
@@ -111,8 +112,8 @@ class PointsExpiryBatchJob extends TimedJob
                 continue;
             }
 
-            $cutoff      = $now->modify("-{$months} months");
-            $noticeCutoff = $now->modify("-" . max(0, $months - (int) ceil($notice / 30)) . " months");
+            $cutoff       = $now->modify("-{$months} months");
+            $noticeCutoff = $now->modify("-".max(0, $months - (int) ceil($notice / 30))." months");
 
             $accounts = $this->loyaltyAccountService->listAccountsForProgramme(
                 programmeId: $programmeId,
@@ -130,20 +131,20 @@ class PointsExpiryBatchJob extends TimedJob
                 } catch (Throwable $e) {
                     $this->logger->warning(
                         'Pipelinq: expiry batch failed for one account; continuing',
-                        ['accountId' => $this->extractUuid($account), 'exception' => $e->getMessage()]
+                        ['accountId' => $this->extractUuid(object: $account), 'exception' => $e->getMessage()]
                     );
                 }
             }
-        }
+        }//end foreach
     }//end run()
 
     /**
      * Process a single account.
      *
-     * @param array<string, mixed> $account     The account.
-     * @param DateTimeImmutable    $cutoff      Cutoff for expiry.
+     * @param array<string, mixed> $account      The account.
+     * @param DateTimeImmutable    $cutoff       Cutoff for expiry.
      * @param DateTimeImmutable    $noticeCutoff Cutoff for advance notice.
-     * @param int                  $notice      Advance notice days.
+     * @param int                  $notice       Advance notice days.
      *
      * @return void
      */
@@ -153,7 +154,7 @@ class PointsExpiryBatchJob extends TimedJob
         DateTimeImmutable $noticeCutoff,
         int $notice
     ): void {
-        $accountId = (string) $this->extractUuid($account);
+        $accountId = (string) $this->extractUuid(object: $account);
         if ($accountId === '') {
             return;
         }
@@ -190,9 +191,9 @@ class PointsExpiryBatchJob extends TimedJob
                     userId: $klantId,
                     subject: 'loyalty_points_expiring',
                     parameters: [
-                        'points'       => $balance,
-                        'noticeDays'   => $notice,
-                        'accountId'    => $accountId,
+                        'points'     => $balance,
+                        'noticeDays' => $notice,
+                        'accountId'  => $accountId,
                     ],
                     objectType: 'klantLoyaltyAccount',
                     objectId: $accountId
@@ -204,7 +205,7 @@ class PointsExpiryBatchJob extends TimedJob
                     ['accountId' => $accountId, 'exception' => $e->getMessage()]
                 );
             }
-        }
+        }//end if
     }//end processAccount()
 
     /**
@@ -232,9 +233,16 @@ class PointsExpiryBatchJob extends TimedJob
         }
 
         $result = [];
-        foreach (is_array($rows) === true ? $rows : [] as $row) {
-            $result[] = $this->toArray($row);
+        if (is_array($rows) === true) {
+            $list = $rows;
+        } else {
+            $list = [];
         }
+
+        foreach ($list as $row) {
+            $result[] = $this->toArray(object: $row);
+        }
+
         return $result;
     }//end getActiveProgrammes()
 
@@ -251,6 +259,7 @@ class PointsExpiryBatchJob extends TimedJob
         if (is_array($self) === true && isset($self['id']) === true) {
             return (string) $self['id'];
         }
+
         return $object['programmeId'] ?? $object['accountId'] ?? $object['uuid'] ?? $object['id'] ?? null;
     }//end extractUuid()
 
@@ -266,18 +275,21 @@ class PointsExpiryBatchJob extends TimedJob
         if (is_array($object) === true) {
             return $object;
         }
+
         if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
             $s = $object->jsonSerialize();
             if (is_array($s) === true) {
                 return $s;
             }
         }
+
         if (is_object($object) === true && method_exists($object, 'getObject') === true) {
             $d = $object->getObject();
             if (is_array($d) === true) {
                 return $d;
             }
         }
+
         return [];
     }//end toArray()
 }//end class

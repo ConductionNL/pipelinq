@@ -202,6 +202,7 @@ class AnalyticsController extends Controller
             if ($e->getMessage() === 'Invalid period') {
                 $label = 'Invalid period';
             }
+
             return new JSONResponse(['message' => $label], Http::STATUS_BAD_REQUEST);
         } catch (\Throwable $e) {
             $this->logger->warning(
