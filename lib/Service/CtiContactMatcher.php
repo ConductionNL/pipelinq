@@ -82,7 +82,7 @@ class CtiContactMatcher
      *
      * @return array{matches: array<int,array<string,mixed>>, totalMatches: int}
      */
-    public function findByPhoneNumber(?string $e164Number, ?string $orgId = null): array
+    public function findByPhoneNumber(?string $e164Number, ?string $orgId=null): array
     {
         if ($e164Number === null || $e164Number === '') {
             return ['matches' => [], 'totalMatches' => 0];
@@ -149,10 +149,10 @@ class CtiContactMatcher
      * against any common phone-number property (`phone`, `phoneNumber`,
      * `mobile`, `telephone`).
      *
-     * @param string             $register The register ID.
-     * @param string             $schema   The schema ID.
-     * @param array<int,string>  $needles  Digit fragments to test against.
-     * @param string             $type     Tag (contact|client) added to each result.
+     * @param string            $register The register ID.
+     * @param string            $schema   The schema ID.
+     * @param array<int,string> $needles  Digit fragments to test against.
+     * @param string            $type     Tag (contact|client) added to each result.
      *
      * @return array<int,array<string,mixed>>
      */
@@ -163,7 +163,10 @@ class CtiContactMatcher
         }
 
         try {
-            /** @var \OCA\OpenRegister\Service\ObjectService $objectService */
+            /*
+             * @var \OCA\OpenRegister\Service\ObjectService $objectService
+             */
+
             $objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
             $objects       = $objectService->findAll(
                 [
@@ -180,7 +183,7 @@ class CtiContactMatcher
                 ['exception' => $e->getMessage(), 'schema' => $schema]
             );
             return [];
-        }
+        }//end try
 
         if (is_array($objects) === false) {
             return [];
@@ -293,7 +296,10 @@ class CtiContactMatcher
 
         foreach (array_filter([$contactSchema, $clientSchema]) as $schema) {
             try {
-                /** @var \OCA\OpenRegister\Service\ObjectService $objectService */
+                /*
+                 * @var \OCA\OpenRegister\Service\ObjectService $objectService
+                 */
+
                 $objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
                 $objects       = $objectService->findAll(
                     [
@@ -310,7 +316,7 @@ class CtiContactMatcher
                     ['exception' => $e->getMessage(), 'schema' => $schema]
                 );
                 continue;
-            }
+            }//end try
 
             if (is_array($objects) === false) {
                 continue;

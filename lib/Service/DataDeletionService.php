@@ -183,7 +183,7 @@ class DataDeletionService
             return [];
         }
 
-        return array_map(fn (mixed $row): array => $this->toArray($row), array_values($rows));
+        return array_map(fn (mixed $row): array => $this->toArray(object: $row), array_values($rows));
     }//end findBookingsForCustomer()
 
     /**
