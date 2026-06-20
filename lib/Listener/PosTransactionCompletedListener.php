@@ -82,7 +82,7 @@ class PosTransactionCompletedListener implements IEventListener
                 return;
             }
 
-            $data = $this->getEntityData($entity);
+            $data = $this->getEntityData(entity: $entity);
 
             // Only fire for completed/settled transactions.
             $status = (string) ($data['status'] ?? '');
@@ -102,7 +102,7 @@ class PosTransactionCompletedListener implements IEventListener
                 'channel'          => (string) ($data['kanaal'] ?? $data['channel'] ?? 'offline'),
                 'segment'          => (string) ($data['segment'] ?? ''),
                 'timestamp'        => (string) ($data['voltooidOp'] ?? $data['timestamp'] ?? ''),
-                'posTransactionId' => (string) ($data['transactieId'] ?? $data['transactionId'] ?? $this->getEntityUuid($entity)),
+                'posTransactionId' => (string) ($data['transactieId'] ?? $data['transactionId'] ?? $this->getEntityUuid(entity: $entity)),
                 'posTerminalId'    => (string) ($data['posTerminalId'] ?? $data['terminalId'] ?? ''),
                 'trigger'          => 'purchase',
             ];
@@ -114,7 +114,7 @@ class PosTransactionCompletedListener implements IEventListener
                 'Pipelinq: loyalty listener failed; POS flow unaffected',
                 ['exception' => $e->getMessage()]
             );
-        }
+        }//end try
     }//end handle()
 
     /**
@@ -155,12 +155,14 @@ class PosTransactionCompletedListener implements IEventListener
                 return $data;
             }
         }
+
         if (method_exists($entity, 'jsonSerialize') === true) {
             $serialized = $entity->jsonSerialize();
             if (is_array($serialized) === true) {
                 return $serialized;
             }
         }
+
         return [];
     }//end getEntityData()
 
@@ -176,6 +178,7 @@ class PosTransactionCompletedListener implements IEventListener
         if (method_exists($entity, 'getUuid') === true) {
             return (string) $entity->getUuid();
         }
+
         return '';
     }//end getEntityUuid()
 }//end class

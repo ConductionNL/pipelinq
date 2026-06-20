@@ -59,9 +59,9 @@ class RenewalEngineService
      * Constructor.
      *
      * @param IAppConfig         $appConfig       The app config.
-     * @param ContainerInterface $container        The DI container (ObjectService lookup).
+     * @param ContainerInterface $container       The DI container (ObjectService lookup).
      * @param ContractService    $contractService The contract lifecycle service.
-     * @param LoggerInterface    $logger           The logger.
+     * @param LoggerInterface    $logger          The logger.
      */
     public function __construct(
         private IAppConfig $appConfig,
@@ -129,7 +129,10 @@ class RenewalEngineService
             return false;
         }
 
-        $windowOpen = $this->dateMinusDays($endDate, $this->renewalWindowDays($contract));
+        $windowOpen = $this->dateMinusDays(
+            isoDate: $endDate,
+            days: $this->renewalWindowDays(contract: $contract)
+        );
         return ($windowOpen !== '' && $today >= $windowOpen);
     }//end isInRenewalWindow()
 
@@ -169,13 +172,13 @@ class RenewalEngineService
     public function buildRenewalLead(array $contract): array
     {
         return [
-            'title'    => sprintf('Renewal: %s', (string) ($contract['title'] ?? '')),
-            'client'   => (string) ($contract['clientRef'] ?? ''),
-            'value'    => $this->annualizedValue($contract),
-            'assignee' => (string) ($contract['ownerId'] ?? ''),
-            'status'   => 'open',
-            'tags'     => ['renewal'],
-            'source'   => 'contract-renewal',
+            'title'       => sprintf('Renewal: %s', (string) ($contract['title'] ?? '')),
+            'client'      => (string) ($contract['clientRef'] ?? ''),
+            'value'       => $this->annualizedValue(contract: $contract),
+            'assignee'    => (string) ($contract['ownerId'] ?? ''),
+            'status'      => 'open',
+            'tags'        => ['renewal'],
+            'source'      => 'contract-renewal',
             'contractRef' => (string) ($contract['id'] ?? ($contract['uuid'] ?? '')),
         ];
     }//end buildRenewalLead()
@@ -202,15 +205,18 @@ class RenewalEngineService
             $endDate = (string) ($contract['endDate'] ?? '');
             $outcome = (string) ($contract['renewalLeadOutcome'] ?? '');
             if ($endDate !== '' && $today > $endDate && $outcome === '') {
-                $this->transition($contract, 'churned', $uuid);
+                $this->transition(contract: $contract, newStatus: 'churned', uuid: $uuid);
                 return 'churned-silent';
             }
 
             // Notice-deadline My Work entry (idempotent).
             if ((bool) ($contract['noticeReminderSent'] ?? false) === false) {
-                $deadline = $this->dateMinusDays($endDate, (int) ($contract['noticePeriodDays'] ?? 0));
+                $deadline = $this->dateMinusDays(
+                    isoDate: $endDate,
+                    days: (int) ($contract['noticePeriodDays'] ?? 0)
+                );
                 if ($deadline !== '' && $today >= $deadline) {
-                    $this->createNoticeMyWorkEntry($contract);
+                    $this->createNoticeMyWorkEntry(contract: $contract);
                     $contract['noticeReminderSent'] = true;
                     $this->contractService->save($contract, $uuid);
                     return 'noticed';
@@ -221,11 +227,11 @@ class RenewalEngineService
         }//end if
 
         // Window detection: flip active -> expiring and create the renewal lead.
-        if ($this->isInRenewalWindow($contract, $today) === true
+        if ($this->isInRenewalWindow(contract: $contract, today: $today) === true
             && ((string) ($contract['renewalLeadRef'] ?? '')) === ''
         ) {
-            $leadUuid = $this->createRenewalLead($contract);
-            $contract['status']         = 'expiring';
+            $leadUuid           = $this->createRenewalLead(contract: $contract);
+            $contract['status'] = 'expiring';
             $contract['renewalLeadRef'] = $leadUuid;
             // Guarded transition (engine path).
             $this->contractService->assertTransitionAllowed($contract, 'expiring', true);
@@ -254,14 +260,14 @@ class RenewalEngineService
         $outcome = (string) ($contract['renewalLeadOutcome'] ?? '');
 
         if ($outcome === 'won') {
-            $this->transition($contract, 'renewed', $uuid);
+            $this->transition(contract: $contract, newStatus: 'renewed', uuid: $uuid);
             $successor = $this->contractService->buildSuccessorDraft($contract);
             $this->contractService->save($successor, null);
             return 'renewed';
         }
 
         if ($outcome === 'lost') {
-            $this->transition($contract, 'churned', $uuid);
+            $this->transition(contract: $contract, newStatus: 'churned', uuid: $uuid);
             return 'churned';
         }
 
@@ -302,14 +308,18 @@ class RenewalEngineService
         try {
             $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
             $saved         = $objectService->saveObject(
-                $this->buildRenewalLead($contract),
+                $this->buildRenewalLead(contract: $contract),
                 [],
                 $registerId,
                 $leadSchema,
                 null
             );
-            $arr = (is_object($saved) === true && method_exists($saved, 'jsonSerialize') === true)
-                ? $saved->jsonSerialize() : (array) $saved;
+            if (is_object($saved) === true && method_exists($saved, 'jsonSerialize') === true) {
+                $arr = $saved->jsonSerialize();
+            } else {
+                $arr = (array) $saved;
+            }
+
             return (string) ($arr['id'] ?? ($arr['uuid'] ?? ''));
         } catch (Throwable $e) {
             $this->logger->error('RenewalEngineService: renewal-lead creation failed', ['error' => $e->getMessage()]);
@@ -333,26 +343,28 @@ class RenewalEngineService
         }
 
         $autoRenew = (bool) ($contract['autoRenew'] ?? false);
-        $title     = $autoRenew === true
-            ? sprintf(
+        if ($autoRenew === true) {
+            $title = sprintf(
                 'Contract %s renews automatically unless cancelled by the notice deadline',
                 (string) ($contract['contractNumber'] ?? '')
-            )
-            : sprintf(
+            );
+        } else {
+            $title = sprintf(
                 'Renewal decision due for contract %s',
                 (string) ($contract['contractNumber'] ?? '')
             );
+        }
 
         try {
             $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
             $objectService->saveObject(
                 [
-                    'type'             => 'follow_up',
-                    'subject'          => $title,
-                    'status'           => 'open',
-                    'assigneeUserId'   => (string) ($contract['ownerId'] ?? ''),
+                    'type'              => 'follow_up',
+                    'subject'           => $title,
+                    'status'            => 'open',
+                    'assigneeUserId'    => (string) ($contract['ownerId'] ?? ''),
                     'relatedEntityType' => 'contract',
-                    'relatedEntityId'  => (string) ($contract['id'] ?? ($contract['uuid'] ?? '')),
+                    'relatedEntityId'   => (string) ($contract['id'] ?? ($contract['uuid'] ?? '')),
                 ],
                 [],
                 $registerId,

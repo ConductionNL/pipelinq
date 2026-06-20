@@ -54,7 +54,7 @@ class InvalidTenderException extends Exception
      * @param string $message    The user-facing safe message.
      * @param int    $statusCode The HTTP status the controller should map to (400 or 409).
      */
-    public function __construct(string $message, private int $statusCode = 400)
+    public function __construct(string $message, private int $statusCode=400)
     {
         parent::__construct(message: $message);
     }//end __construct()

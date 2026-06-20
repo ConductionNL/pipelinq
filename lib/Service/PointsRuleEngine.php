@@ -65,7 +65,7 @@ class PointsRuleEngine
      */
     public function evaluateRules(string $programmeId, string $trigger, array $context): array
     {
-        $rules = $this->loadRules(programmeId: $programmeId, trigger: $trigger);
+        $rules   = $this->loadRules(programmeId: $programmeId, trigger: $trigger);
         $matches = [];
 
         foreach ($rules as $rule) {
@@ -122,7 +122,7 @@ class PointsRuleEngine
         }
 
         if (isset($conditie['excludeCategory']) === true) {
-            $excluded = (array) $conditie['excludeCategory'];
+            $excluded        = (array) $conditie['excludeCategory'];
             $contextCategory = (string) ($context['category'] ?? '');
             if ($contextCategory !== '' && in_array($contextCategory, $excluded, true) === true) {
                 return false;
@@ -130,7 +130,7 @@ class PointsRuleEngine
         }
 
         if (isset($conditie['category']) === true) {
-            $allowed = (array) $conditie['category'];
+            $allowed         = (array) $conditie['category'];
             $contextCategory = (string) ($context['category'] ?? '');
             if ($contextCategory === '' || in_array($contextCategory, $allowed, true) === false) {
                 return false;
@@ -138,7 +138,7 @@ class PointsRuleEngine
         }
 
         if (isset($conditie['segment']) === true) {
-            $allowed = (array) $conditie['segment'];
+            $allowed        = (array) $conditie['segment'];
             $contextSegment = (string) ($context['segment'] ?? '');
             if ($contextSegment === '' || in_array($contextSegment, $allowed, true) === false) {
                 return false;
@@ -146,7 +146,7 @@ class PointsRuleEngine
         }
 
         if (isset($conditie['channel']) === true) {
-            $allowed = (array) $conditie['channel'];
+            $allowed        = (array) $conditie['channel'];
             $contextChannel = (string) ($context['channel'] ?? '');
             if ($contextChannel === '' || in_array($contextChannel, $allowed, true) === false) {
                 return false;
@@ -155,7 +155,7 @@ class PointsRuleEngine
 
         if (isset($conditie['dayOfWeek']) === true) {
             $allowed = array_map('strtolower', (array) $conditie['dayOfWeek']);
-            $day = $this->dayOfWeekFor((string) ($context['timestamp'] ?? ''));
+            $day     = $this->dayOfWeekFor(ts: (string) ($context['timestamp'] ?? ''));
             if (in_array($day, $allowed, true) === false) {
                 return false;
             }
@@ -183,7 +183,7 @@ class PointsRuleEngine
      *
      * @return int Points awarded (floored).
      */
-    public function calculatePoints(array $formule, float $amount, float $multiplier = 1.0): int
+    public function calculatePoints(array $formule, float $amount, float $multiplier=1.0): int
     {
         $type = (string) ($formule['type'] ?? '');
 
@@ -208,7 +208,7 @@ class PointsRuleEngine
                 break;
             default:
                 $raw = 0.0;
-        }
+        }//end switch
 
         $multiplied = $raw * max(0.0, $multiplier);
 
@@ -221,9 +221,9 @@ class PointsRuleEngine
      * Counts ledger credit entries for the rule in the period (day/week/month/year)
      * and returns the remaining quota (0 when reached).
      *
-     * @param int                          $alreadyEarnedInPeriod Points already credited under this rule in the period.
-     * @param int                          $pointsToAward         Points the formula would award.
-     * @param ?int                         $max                   The max per period (null = no cap).
+     * @param int  $alreadyEarnedInPeriod Points already credited under this rule in the period.
+     * @param int  $pointsToAward         Points the formula would award.
+     * @param ?int $max                   The max per period (null = no cap).
      *
      * @return int Points to actually award (0..pointsToAward).
      */
@@ -267,7 +267,13 @@ class PointsRuleEngine
             return [];
         }
 
-        return array_map([$this, 'toArray'], is_array($rows) === true ? array_values($rows) : []);
+        if (is_array($rows) === true) {
+            $ruleList = array_values($rows);
+        } else {
+            $ruleList = [];
+        }
+
+        return array_map([$this, 'toArray'], $ruleList);
     }//end loadRules()
 
     /**
@@ -291,6 +297,7 @@ class PointsRuleEngine
         if ($from !== '' && substr($ts, 0, 10) < substr($from, 0, 10)) {
             return false;
         }
+
         if ($to !== '' && substr($ts, 0, 10) > substr($to, 0, 10)) {
             return false;
         }
@@ -308,7 +315,11 @@ class PointsRuleEngine
     private function dayOfWeekFor(string $ts): string
     {
         try {
-            $dt = $ts !== '' ? new DateTimeImmutable($ts) : new DateTimeImmutable('now');
+            if ($ts !== '') {
+                $dt = new DateTimeImmutable($ts);
+            } else {
+                $dt = new DateTimeImmutable('now');
+            }
         } catch (\Throwable $e) {
             $dt = new DateTimeImmutable('now');
         }
@@ -332,7 +343,11 @@ class PointsRuleEngine
         }
 
         try {
-            $dt = $timestamp !== '' ? new DateTimeImmutable($timestamp) : new DateTimeImmutable('now');
+            if ($timestamp !== '') {
+                $dt = new DateTimeImmutable($timestamp);
+            } else {
+                $dt = new DateTimeImmutable('now');
+            }
         } catch (\Throwable $e) {
             $dt = new DateTimeImmutable('now');
         }

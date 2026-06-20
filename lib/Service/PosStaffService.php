@@ -47,7 +47,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the collaborators a
  *  staff service legitimately needs (OR container, app config, role lookup,
  *  logger) — splitting them would add indirection without reducing coupling.
- * @SuppressWarnings(PHPMD.TooManyPublicMethods) Cohesive CRUD + auth surface;
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)   Cohesive CRUD + auth surface;
  *  every method is single-purpose.
  *
  * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#3
@@ -79,10 +79,10 @@ class PosStaffService
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container       The DI container.
-     * @param IAppConfig         $appConfig       The app config.
-     * @param PosRoleService     $posRoleService  The POS role service (for permission lookup).
-     * @param LoggerInterface    $logger          The logger.
+     * @param ContainerInterface $container      The DI container.
+     * @param IAppConfig         $appConfig      The app config.
+     * @param PosRoleService     $posRoleService The POS role service (for permission lookup).
+     * @param LoggerInterface    $logger         The logger.
      */
     public function __construct(
         private ContainerInterface $container,
@@ -177,7 +177,7 @@ class PosStaffService
             }
         }
 
-        $pin = (string) ($data['pin'] ?? '');
+        $pin  = (string) ($data['pin'] ?? '');
         $hash = '';
         if ($isUpdate === true && $existing !== null) {
             $hash = (string) ($existing['pinHash'] ?? '');
@@ -188,7 +188,7 @@ class PosStaffService
                 throw new OCSBadRequestException('PIN moet 4 tot 6 cijfers bevatten.');
             }
 
-            // password_hash with PASSWORD_BCRYPT always returns a non-empty
+            // Password_hash with PASSWORD_BCRYPT always returns a non-empty
             // string on PHP 8 (the deprecated false-on-failure return is
             // gone), so no fallback is needed at this layer.
             $hash = password_hash($pin, PASSWORD_BCRYPT, ['cost' => self::BCRYPT_COST]);
@@ -357,8 +357,8 @@ class PosStaffService
     public function authorizeStaff(string $staffId, string $userId): array
     {
         $staff = $this->fetchStaff(id: $staffId);
-        unset($userId); // Admin is enforced at the controller; this is the schema-scope guard.
-
+        unset($userId);
+        // Admin is enforced at the controller; this is the schema-scope guard.
         return $staff;
     }//end authorizeStaff()
 
@@ -500,7 +500,7 @@ class PosStaffService
         ];
 
         if ($next >= self::LOCKOUT_THRESHOLD) {
-            $update['lockedUntil'] = (new DateTimeImmutable('+'.self::LOCKOUT_SECONDS.' seconds'))
+            $update['lockedUntil']       = (new DateTimeImmutable('+'.self::LOCKOUT_SECONDS.' seconds'))
                 ->format(DateTimeInterface::ATOM);
             $update['failedPinAttempts'] = 0;
         }

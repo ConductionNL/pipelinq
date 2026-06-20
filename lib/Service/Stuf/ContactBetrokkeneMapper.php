@@ -55,10 +55,10 @@ class ContactBetrokkeneMapper
      * Reuses an existing mapping when one already exists for the same
      * pipelinqId+endpointId combo (idempotent on retry).
      *
-     * @param array  $contact     The pipelinq Contact (array with id, bsn).
-     * @param string $betrokkene  The external betrokkene identificatie.
-     * @param array  $endpoint    The StufEndpoint.
-     * @param string $entiteit    The external entiteit (NPS|NNP).
+     * @param array  $contact    The pipelinq Contact (array with id, bsn).
+     * @param string $betrokkene The external betrokkene identificatie.
+     * @param array  $endpoint   The StufEndpoint.
+     * @param string $entiteit   The external entiteit (NPS|NNP).
      *
      * @return array The persisted ZaaksysteemMapping.
      *
@@ -90,9 +90,9 @@ class ContactBetrokkeneMapper
      * betrokkene identificatie or `null`. This signature keeps the mapper
      * free of HTTP/SOAP knowledge and trivially mockable.
      *
-     * @param array    $contact         The Contact array (must carry a BSN for natural-person lookup).
-     * @param array    $endpoint        The StufEndpoint.
-     * @param callable $lookupCallable  function(string $bsn, array $endpoint): ?string.
+     * @param array    $contact        The Contact array (must carry a BSN for natural-person lookup).
+     * @param array    $endpoint       The StufEndpoint.
+     * @param callable $lookupCallable function(string $bsn, array $endpoint): ?string.
      *
      * @return string The betrokkene identificatie (existing or freshly returned).
      *

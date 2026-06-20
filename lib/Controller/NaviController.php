@@ -95,7 +95,12 @@ class NaviController extends Controller
 
         try {
             $payload = $this->naviService->processQuery(query: $query, userId: $user->getUID());
-            $payload['conversationId'] = $conversationId === '' ? null : $conversationId;
+            if ($conversationId === '') {
+                $payload['conversationId'] = null;
+            } else {
+                $payload['conversationId'] = $conversationId;
+            }
+
             return new JSONResponse($payload);
         } catch (\Throwable $e) {
             $this->logger->warning(

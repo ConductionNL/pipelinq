@@ -94,7 +94,10 @@ class ExportJobController extends Controller
     #[NoAdminRequired]
     public function listDestinations(): JSONResponse
     {
-        return $this->requireExportAdmin(action: fn (): array => ['destinations' => $this->destinations->listDestinations()], label: 'listDestinations');
+        return $this->requireExportAdmin(
+            action: fn (): array => ['destinations' => $this->destinations->listDestinations()],
+            label: 'listDestinations'
+        );
     }//end listDestinations()
 
     /**

@@ -141,7 +141,11 @@ class LoyaltyProgrammeService
             return null;
         }
 
-        return $object === null ? null : $this->toArray($object);
+        if ($object === null) {
+            return null;
+        }
+
+        return $this->toArray(object: $object);
     }//end getProgramme()
 
     /**
@@ -170,7 +174,11 @@ class LoyaltyProgrammeService
             return 0;
         }
 
-        return is_array($rows) === true ? count($rows) : 0;
+        if (is_array($rows) === true) {
+            return count($rows);
+        }
+
+        return 0;
     }//end countByProgramme()
 
     /**
@@ -196,7 +204,7 @@ class LoyaltyProgrammeService
             uuid: $uuid
         );
 
-        return $this->toArray($saved);
+        return $this->toArray(object: $saved);
     }//end persist()
 
     /**

@@ -48,7 +48,7 @@ use Throwable;
  * Loyalty REST controller.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004
+ * @spec                                           openspec/changes/loyalty-program/specs.md#REQ-LOY-004
  */
 class LoyaltyController extends Controller
 {
@@ -223,7 +223,7 @@ class LoyaltyController extends Controller
 
         $result = $this->redemptionService->validateCode(code: $code);
         return new JSONResponse($result);
-    }//end validateRedemptionCode()
+    }//end lookupRedemptionCode()
 
     /**
      * Mark a redemption code as used (POS settlement).
@@ -256,17 +256,27 @@ class LoyaltyController extends Controller
             return new JSONResponse(['error' => 'Redemption missing'], Http::STATUS_BAD_REQUEST);
         }
 
-        $self = $redemption['@self'] ?? [];
-        $redemptionId = (string) (is_array($self) === true ? ($self['id'] ?? '') : '');
+        $self   = $redemption['@self'] ?? [];
+        $selfId = '';
+        if (is_array($self) === true) {
+            $selfId = ($self['id'] ?? '');
+        }
+
+        $redemptionId = (string) $selfId;
         if ($redemptionId === '') {
             $redemptionId = (string) ($redemption['uuid'] ?? $redemption['id'] ?? '');
         }
 
         try {
-            $posTransactionId = $this->request->getParam('posTransactionId');
+            $posTransactionId      = $this->request->getParam('posTransactionId');
+            $posTransactionIdValue = null;
+            if (is_string($posTransactionId) === true) {
+                $posTransactionIdValue = $posTransactionId;
+            }
+
             $updated = $this->redemptionService->markRedemptionUsed(
                 redemptionId: $redemptionId,
-                posTransactionId: is_string($posTransactionId) ? $posTransactionId : null
+                posTransactionId: $posTransactionIdValue
             );
             return new JSONResponse($updated);
         } catch (Throwable $e) {
@@ -303,7 +313,7 @@ class LoyaltyController extends Controller
 
         $result = $this->giftCardService->validateBySerial(serial: $serial, pin: $pin);
         return new JSONResponse($result);
-    }//end validateGiftCard()
+    }//end lookupGiftCard()
 
     /**
      * Redeem (debit) an amount from a gift card.
@@ -323,9 +333,9 @@ class LoyaltyController extends Controller
             );
         }
 
-        $giftCardId       = (string) $this->request->getParam('giftCardId', '');
-        $pin              = (string) $this->request->getParam('pin', '');
-        $amount           = (float) $this->request->getParam('amount', 0);
+        $giftCardId = (string) $this->request->getParam('giftCardId', '');
+        $pin        = (string) $this->request->getParam('pin', '');
+        $amount     = (float) $this->request->getParam('amount', 0);
         $posTransactionId = $this->request->getParam('posTransactionId');
         if ($giftCardId === '' || $pin === '' || $amount <= 0) {
             return new JSONResponse(
@@ -334,12 +344,17 @@ class LoyaltyController extends Controller
             );
         }
 
+        $posTransactionIdValue = null;
+        if (is_string($posTransactionId) === true) {
+            $posTransactionIdValue = $posTransactionId;
+        }
+
         try {
             $result = $this->giftCardService->redeemGiftCard(
                 giftCardId: $giftCardId,
                 pin: $pin,
                 amount: $amount,
-                posTransactionId: is_string($posTransactionId) ? $posTransactionId : null
+                posTransactionId: $posTransactionIdValue
             );
             return new JSONResponse($result);
         } catch (Throwable $e) {
@@ -367,10 +382,15 @@ class LoyaltyController extends Controller
             );
         }
 
-        $posTransactionId = $this->request->getParam('posTransactionId');
+        $posTransactionId      = $this->request->getParam('posTransactionId');
+        $posTransactionIdValue = null;
+        if (is_string($posTransactionId) === true) {
+            $posTransactionIdValue = $posTransactionId;
+        }
+
         $card = $this->giftCardService->activateGiftCard(
             giftCardId: $giftCardId,
-            posTransactionId: is_string($posTransactionId) ? $posTransactionId : null
+            posTransactionId: $posTransactionIdValue
         );
         if ($card === null) {
             return new JSONResponse(

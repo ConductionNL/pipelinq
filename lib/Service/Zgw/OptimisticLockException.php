@@ -42,18 +42,17 @@ class OptimisticLockException extends ZgwException
     /**
      * Constructor.
      *
-     * @param string                $message              Human-readable error message.
-     * @param array<string, mixed>  $staleRepresentation  Stale pre-image we sent.
-     * @param array<string, mixed>  $freshRepresentation  Fresh server representation.
-     * @param string                $conflictingField     Field whose mismatch caused the 412.
+     * @param string               $message             Human-readable error message.
+     * @param array<string, mixed> $staleRepresentation Stale pre-image we sent.
+     * @param array<string, mixed> $freshRepresentation Fresh server representation.
+     * @param string               $conflictingField    Field whose mismatch caused the 412.
      */
     public function __construct(
         string $message,
         public readonly array $staleRepresentation,
         public readonly array $freshRepresentation,
-        public readonly string $conflictingField = '',
+        public readonly string $conflictingField='',
     ) {
-        parent::__construct($message);
+        parent::__construct(message: $message);
     }//end __construct()
-
 }//end class

@@ -103,9 +103,9 @@ class RedemptionService
             }
         }
 
-        $code        = $this->generateBeloningCode();
-        $now         = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
-        $redemption  = [
+        $code       = $this->generateBeloningCode();
+        $now        = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
+        $redemption = [
             'accountId'      => $accountId,
             'klantId'        => $account['klantId'] ?? null,
             'optionId'       => $optionId,
@@ -120,7 +120,7 @@ class RedemptionService
         $saved = $this->persist(payload: $redemption, uuid: null);
 
         // Debit AFTER the redemption record exists so the brondocument points at the redemption.
-        $redemptionUuid = $this->extractUuid($saved);
+        $redemptionUuid = $this->extractUuid(object: $saved);
         try {
             $this->ledgerService->debitPoints(
                 accountId: $accountId,
@@ -138,7 +138,8 @@ class RedemptionService
             if ($redemptionUuid !== null) {
                 $this->deleteRedemption(redemptionId: (string) $redemptionUuid);
             }
-            throw new RuntimeException('Debit failed: ' . $e->getMessage(), 0, $e);
+
+            throw new RuntimeException('Debit failed: '.$e->getMessage(), 0, $e);
         }
 
         return $saved;
@@ -160,14 +161,14 @@ class RedemptionService
 
         $status = (string) ($redemption['status'] ?? '');
         if ($status !== 'gereserveerd') {
-            return ['valid' => false, 'redemption' => $redemption, 'reason' => 'Status is ' . $status];
+            return ['valid' => false, 'redemption' => $redemption, 'reason' => 'Status is '.$status];
         }
 
         $geldigTot = (string) ($redemption['geldigTot'] ?? '');
         $now       = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
         if ($geldigTot !== '' && $geldigTot < $now) {
             // Mark as expired in place.
-            $this->markExpired(redemptionId: $this->extractUuid($redemption) ?? '');
+            $this->markExpired(redemptionId: $this->extractUuid(object: $redemption) ?? '');
             return ['valid' => false, 'redemption' => $redemption, 'reason' => 'Redemption code expired'];
         }
 
@@ -177,12 +178,12 @@ class RedemptionService
     /**
      * Mark a redemption as used.
      *
-     * @param string  $redemptionId    The Redemption UUID.
+     * @param string  $redemptionId     The Redemption UUID.
      * @param ?string $posTransactionId Optional POS transaction id.
      *
      * @return array<string, mixed> The updated redemption.
      */
-    public function markRedemptionUsed(string $redemptionId, ?string $posTransactionId = null): array
+    public function markRedemptionUsed(string $redemptionId, ?string $posTransactionId=null): array
     {
         $redemption = $this->getRedemption(redemptionId: $redemptionId);
         if ($redemption === null) {
@@ -209,7 +210,7 @@ class RedemptionService
      *
      * @return array<string, mixed> The updated redemption.
      */
-    public function cancelRedemption(string $redemptionId, string $reason = ''): array
+    public function cancelRedemption(string $redemptionId, string $reason=''): array
     {
         $redemption = $this->getRedemption(redemptionId: $redemptionId);
         if ($redemption === null) {
@@ -265,7 +266,11 @@ class RedemptionService
     public function getValidRedemptionOptions(string $accountId, string $programmeId): array
     {
         $account = $this->loyaltyAccountService->getAccount(accountId: $accountId);
-        $balance = $account === null ? 0 : (int) ($account['currentBalance'] ?? 0);
+        if ($account === null) {
+            $balance = 0;
+        } else {
+            $balance = (int) ($account['currentBalance'] ?? 0);
+        }
 
         [$register, $schema] = $this->config(schemaKey: 'redemptionOption_schema');
         if ($register === '' || $schema === '') {
@@ -283,7 +288,13 @@ class RedemptionService
             return [];
         }
 
-        $options = array_map([$this, 'toArray'], is_array($rows) === true ? array_values($rows) : []);
+        if (is_array($rows) === true) {
+            $rowList = array_values($rows);
+        } else {
+            $rowList = [];
+        }
+
+        $options = array_map([$this, 'toArray'], $rowList);
 
         return array_values(
             array_filter(
@@ -314,7 +325,11 @@ class RedemptionService
             return null;
         }
 
-        return $object === null ? null : $this->toArray($object);
+        if ($object === null) {
+            return null;
+        }
+
+        return $this->toArray(object: $object);
     }//end getRedemption()
 
     /**
@@ -342,12 +357,17 @@ class RedemptionService
             return null;
         }
 
-        $rows = is_array($rows) === true ? array_values($rows) : [];
+        if (is_array($rows) === true) {
+            $rows = array_values($rows);
+        } else {
+            $rows = [];
+        }
+
         if ($rows === []) {
             return null;
         }
 
-        return $this->toArray(reset($rows));
+        return $this->toArray(object: reset($rows));
     }//end findByCode()
 
     /**
@@ -402,7 +422,11 @@ class RedemptionService
             return 0;
         }
 
-        return is_array($rows) === true ? count($rows) : 0;
+        if (is_array($rows) === true) {
+            return count($rows);
+        }
+
+        return 0;
     }//end countUsedRedemptions()
 
     /**
@@ -420,9 +444,11 @@ class RedemptionService
         if ($from !== '' && $today < $from) {
             return false;
         }
+
         if ($to !== '' && $today > $to) {
             return false;
         }
+
         return true;
     }//end isOptionValid()
 
@@ -446,7 +472,11 @@ class RedemptionService
             return null;
         }
 
-        return $object === null ? null : $this->toArray($object);
+        if ($object === null) {
+            return null;
+        }
+
+        return $this->toArray(object: $object);
     }//end getOption()
 
     /**
@@ -456,7 +486,7 @@ class RedemptionService
      */
     private function generateBeloningCode(): string
     {
-        return 'RDM-' . strtoupper(bin2hex(random_bytes(4)));
+        return 'RDM-'.strtoupper(bin2hex(random_bytes(4)));
     }//end generateBeloningCode()
 
     /**
@@ -516,7 +546,7 @@ class RedemptionService
             uuid: $uuid
         );
 
-        return $this->toArray($saved);
+        return $this->toArray(object: $saved);
     }//end persist()
 
     /**
@@ -547,6 +577,7 @@ class RedemptionService
         if (is_array($self) === true && isset($self['id']) === true) {
             return (string) $self['id'];
         }
+
         return $object['redemptionId'] ?? $object['uuid'] ?? $object['id'] ?? null;
     }//end extractUuid()
 
@@ -562,18 +593,21 @@ class RedemptionService
         if (is_array($object) === true) {
             return $object;
         }
+
         if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
             $s = $object->jsonSerialize();
             if (is_array($s) === true) {
                 return $s;
             }
         }
+
         if (is_object($object) === true && method_exists($object, 'getObject') === true) {
             $d = $object->getObject();
             if (is_array($d) === true) {
                 return $d;
             }
         }
+
         return [];
     }//end toArray()
 
