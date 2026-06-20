@@ -475,6 +475,7 @@ import ActivityTimeline from '../../components/ActivityTimeline.vue'
 import CommunicationHistory from '../../components/CommunicationHistory.vue'
 import BookingsCard from '../../components/bookings/BookingsCard.vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import { createWithContact } from '../../services/contactSyncApi.js'
 
 export default {
 	name: 'ClientDetail',
@@ -727,15 +728,34 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-16
 		 */
 		async onFormSave(formData) {
+			// Contact-FIRST create: the `client` schema marks `contactsUid`
+			// REQUIRED (the authoritative identity is the NC addressbook contact,
+			// never minted locally), so a plain saveObject('client', …) 400s on a
+			// new client. Route NEW clients through the backend orchestration that
+			// provisions the NC contact and saves with the resolved contactsUid;
+			// EDITS keep the existing update-then-writeback flow (the contactsUid
+			// already exists and is mirrored).
+			if (this.isNew) {
+				try {
+					const created = await createWithContact('client', formData)
+					const id = created?.id ?? created?.['@self']?.id
+					if (id) {
+						this.$router.push({ name: 'ClientDetail', params: { id } })
+						return
+					}
+					showError(t('pipelinq', 'Failed to save client. Please try again.'))
+				} catch (error) {
+					const message = error?.response?.data?.error
+					showError(message || t('pipelinq', 'Failed to save client. Please try again.'))
+				}
+				return
+			}
+
 			const result = await this.objectStore.saveObject('client', formData)
 			if (result) {
 				this.syncToContacts(result.id || this.clientId)
-				if (this.isNew) {
-					this.$router.push({ name: 'ClientDetail', params: { id: result.id } })
-				} else {
-					await this.objectStore.fetchObject('client', this.clientId)
-					this.editing = false
-				}
+				await this.objectStore.fetchObject('client', this.clientId)
+				this.editing = false
 			} else {
 				const error = this.objectStore.getError('client')
 				showError(error?.message || t('pipelinq', 'Failed to save client. Please try again.'))
