@@ -64,10 +64,10 @@ class BerichtenboxZaakStatusListener implements IEventListener
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container DI container.
-     * @param IAppConfig         $appConfig App config.
+     * @param ContainerInterface  $container    DI container.
+     * @param IAppConfig          $appConfig    App config.
      * @param BerichtenboxService $berichtenbox Bridge service.
-     * @param LoggerInterface    $logger    Logger.
+     * @param LoggerInterface     $logger       Logger.
      */
     public function __construct(
         private readonly ContainerInterface $container,
@@ -91,20 +91,22 @@ class BerichtenboxZaakStatusListener implements IEventListener
      */
     public function handle(Event $event): void
     {
-        if ($this->isZaakUpdate($event) === false) {
+        if ($this->isZaakUpdate(event: $event) === false) {
             return;
         }
 
         try {
-            [$oldData, $newData] = $this->extractObjectPair($event);
+            [$oldData, $newData] = $this->extractObjectPair(event: $event);
             if ($newData === null) {
                 return;
             }
+
             $newStatus = (string) ($newData['status'] ?? '');
             $oldStatus = (string) ($oldData['status'] ?? '');
             if ($newStatus === '' || $newStatus === $oldStatus) {
                 return;
             }
+
             if (in_array($newStatus, self::TRIGGER_STATUSES, true) === false) {
                 return;
             }
@@ -113,9 +115,10 @@ class BerichtenboxZaakStatusListener implements IEventListener
             if ($bsn === '') {
                 // Try the linked Contactmoment.
                 $bsn = $this->resolveBsnViaContactmoment(
-                    (string) ($newData['contactmomentId'] ?? '')
+                    contactmomentId: (string) ($newData['contactmomentId'] ?? '')
                 );
             }
+
             if ($bsn === '') {
                 $this->logger->info(
                     'BerichtenboxZaakStatusListener: no BSN resolved, skipping.',
@@ -141,7 +144,7 @@ class BerichtenboxZaakStatusListener implements IEventListener
                 'BerichtenboxZaakStatusListener: dispatch suppressed.',
                 ['exception' => $e->getMessage()]
             );
-        }
+        }//end try
     }//end handle()
 
     /**
@@ -157,14 +160,17 @@ class BerichtenboxZaakStatusListener implements IEventListener
         if (str_contains($class, 'ObjectUpdatedEvent') === false) {
             return false;
         }
+
         // Best-effort schema detection.
         if (method_exists($event, 'getNewObject') === false) {
             return false;
         }
+
         $new = $event->getNewObject();
         if ($new === null || method_exists($new, 'getSchema') === false) {
             return false;
         }
+
         $schemaId   = (string) $new->getSchema();
         $zaakSchema = $this->appConfig->getValueString(
             Application::APP_ID,
@@ -194,6 +200,7 @@ class BerichtenboxZaakStatusListener implements IEventListener
                 }
             }
         }
+
         if (method_exists($event, 'getNewObject') === true) {
             $new = $event->getNewObject();
             if ($new !== null && method_exists($new, 'getObject') === true) {
@@ -203,6 +210,7 @@ class BerichtenboxZaakStatusListener implements IEventListener
                 }
             }
         }
+
         return [$oldData, $newData];
     }//end extractObjectPair()
 
@@ -218,18 +226,26 @@ class BerichtenboxZaakStatusListener implements IEventListener
         if ($contactmomentId === '') {
             return '';
         }
+
         try {
-            $service = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+            $service  = $this->container->get('OCA\OpenRegister\Service\ObjectService');
             $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
             $schema   = $this->appConfig->getValueString(Application::APP_ID, 'contactmoment_schema', '');
             if ($register === '' || $schema === '') {
                 return '';
             }
+
             $row = $service->find(id: $contactmomentId, register: $register, schema: $schema);
             if ($row === null) {
                 return '';
             }
-            $data = (is_array($row) === true) ? $row : ($row->getObject() ?? []);
+
+            if (is_array($row) === true) {
+                $data = $row;
+            } else {
+                $data = ($row->getObject() ?? []);
+            }
+
             return (string) ($data['bsn'] ?? '');
         } catch (\Throwable $e) {
             $this->logger->info(
@@ -237,6 +253,6 @@ class BerichtenboxZaakStatusListener implements IEventListener
                 ['exception' => $e->getMessage()]
             );
             return '';
-        }
+        }//end try
     }//end resolveBsnViaContactmoment()
 }//end class
