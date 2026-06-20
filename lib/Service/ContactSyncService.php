@@ -24,7 +24,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\AppInfo\Application;
 use OCP\Contacts\IManager as IContactsManager;
+use OCP\IAppConfig;
+use Psr\Container\ContainerInterface;
 use RuntimeException;
 
 /**
@@ -45,8 +48,99 @@ class ContactSyncService
         private ContactImportService $contactImportService,
         private ContactVcardService $contactVcardService,
         private ContactLinkedUidsService $linkedUidsService,
+        private IAppConfig $appConfig,
+        private ContainerInterface $container,
     ) {
     }//end __construct()
+
+    /**
+     * Contact-FIRST create of a client/contact: provision (resolve or create)
+     * the authoritative Nextcloud addressbook contact from the create-form
+     * fields, then save the object with the resulting `contactsUid` and the
+     * denormalised identity mirror.
+     *
+     * Without this, every UI create is rejected 400 by OpenRegister because the
+     * `client`/`contact` schema marks `contactsUid` REQUIRED but no create
+     * surface can supply it — `contactsUid` is resolved/created via
+     * ContactVcardService, never minted locally (client-contact unification).
+     *
+     * @param string $objectType The object type ('client' or 'contact').
+     * @param array  $form        The raw create-form fields (name/type/email/phone/...).
+     *
+     * @return array The created object data (serialised).
+     *
+     * @throws RuntimeException When name is missing or the contact cannot be provisioned.
+     *
+     * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-003
+     */
+    public function createWithContact(string $objectType, array $form): array
+    {
+        if (in_array($objectType, ['client', 'contact'], true) === false) {
+            throw new RuntimeException('Invalid objectType -- must be client or contact');
+        }
+
+        if (trim((string) ($form['name'] ?? '')) === '') {
+            throw new RuntimeException('Name is required');
+        }
+
+        $provision = $this->contactVcardService->provisionContactFromForm(
+            form: $form,
+            objectType: $objectType
+        );
+
+        if ($provision === null) {
+            throw new RuntimeException('Could not provision the Nextcloud contact -- is the Contacts app enabled?');
+        }
+
+        // Build the object payload: caller fields + the resolved identity. The
+        // denormalised name/email/phone mirror the authoritative contact.
+        $payload = $form;
+        unset($payload['id'], $payload['@self']);
+        $payload['contactsUid'] = $provision['contactsUid'];
+        $payload['name']        = $provision['name'];
+        if ($provision['email'] !== '') {
+            $payload['email'] = $provision['email'];
+        }
+
+        if ($provision['phone'] !== '') {
+            $payload['phone'] = $provision['phone'];
+        }
+
+        $registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $schemaId   = $this->appConfig->getValueString(Application::APP_ID, "{$objectType}_schema", '');
+
+        if ($registerId === '' || $schemaId === '') {
+            throw new RuntimeException('Pipelinq register or schema is not configured');
+        }
+
+        $created = $this->getObjectService()->saveObject(
+            $payload,
+            [],
+            $registerId,
+            $schemaId,
+            null
+        );
+
+        if (is_object($created) === true && method_exists($created, 'jsonSerialize') === true) {
+            return $created->jsonSerialize();
+        }
+
+        if (is_array($created) === true) {
+            return $created;
+        }
+
+        return [];
+    }//end createWithContact()
+
+    /**
+     * Get the OpenRegister ObjectService via the container.
+     *
+     * @return object The object service.
+     */
+    private function getObjectService(): object
+    {
+        return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+    }//end getObjectService()
 
     /**
      * Search Nextcloud addressbooks for contacts matching a query.
