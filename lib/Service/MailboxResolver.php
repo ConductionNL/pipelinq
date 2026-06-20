@@ -55,11 +55,11 @@ class MailboxResolver
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container         DI container (lazy OR object service).
-     * @param IAppConfig         $appConfig         App config service.
-     * @param EncryptionService  $encryption        Encryption service (BSN hashing + crypto).
-     * @param LogiusConnector    $logiusConnector   Logius API wrapper.
-     * @param LoggerInterface    $logger            Logger.
+     * @param ContainerInterface $container       DI container (lazy OR object service).
+     * @param IAppConfig         $appConfig       App config service.
+     * @param EncryptionService  $encryption      Encryption service (BSN hashing + crypto).
+     * @param LogiusConnector    $logiusConnector Logius API wrapper.
+     * @param LoggerInterface    $logger          Logger.
      */
     public function __construct(
         private readonly ContainerInterface $container,
@@ -83,7 +83,7 @@ class MailboxResolver
     public function resolve(string $bsn, string $tenantId): array
     {
         $bsnHash = $this->encryption->hashBsn($bsn, $tenantId);
-        $cached  = $this->lookupCache($bsnHash);
+        $cached  = $this->lookupCache(bsnHash: $bsnHash);
         if ($cached !== null) {
             $cached['source'] = 'cache';
             return $cached;
@@ -111,7 +111,7 @@ class MailboxResolver
             'optedOut'         => false,
         ];
 
-        $this->writeCache($row);
+        $this->writeCache(row: $row);
 
         return [
             'mailboxAvailable' => $available,
@@ -144,7 +144,7 @@ class MailboxResolver
             'optedOut'         => true,
         ];
 
-        $this->writeCache($row);
+        $this->writeCache(row: $row);
     }//end markOptedOut()
 
     /**
@@ -177,19 +177,22 @@ class MailboxResolver
 
         $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
         foreach (($rows ?? []) as $row) {
-            $data = $this->toArray($row);
+            $data = $this->toArray(row: $row);
             if ($data === null) {
                 continue;
             }
+
             $expiresAt = $data['expiresAt'] ?? null;
             if (is_string($expiresAt) === false) {
                 continue;
             }
+
             try {
                 $expires = new DateTimeImmutable($expiresAt);
             } catch (\Throwable) {
                 continue;
             }
+
             if ($expires > $now) {
                 return [
                     'mailboxAvailable' => (bool) ($data['mailboxAvailable'] ?? false),
@@ -200,7 +203,7 @@ class MailboxResolver
                     'source'           => 'cache',
                 ];
             }
-        }
+        }//end foreach
 
         return null;
     }//end lookupCache()
@@ -280,6 +283,7 @@ class MailboxResolver
         if (is_array($row) === true) {
             return $row;
         }
+
         if (is_object($row) === true) {
             if (method_exists($row, 'jsonSerialize') === true) {
                 $serialised = $row->jsonSerialize();
@@ -287,6 +291,7 @@ class MailboxResolver
                     return $serialised;
                 }
             }
+
             if (method_exists($row, 'getObject') === true) {
                 $inner = $row->getObject();
                 if (is_array($inner) === true) {
@@ -294,6 +299,7 @@ class MailboxResolver
                 }
             }
         }
+
         return null;
     }//end toArray()
 }//end class

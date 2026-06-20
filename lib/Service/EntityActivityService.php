@@ -1,7 +1,5 @@
 <?php
 
-// SPDX-License-Identifier: EUPL-1.2
-
 /**
  * Pipelinq EntityActivityService.
  *
@@ -10,6 +8,7 @@
  * `/api/activity/{entityType}/{entityId}` REST endpoint.
  *
  * SPDX-FileCopyrightText: 2024 Conduction B.V.
+ * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Service
  * @package  OCA\Pipelinq\Service
@@ -366,20 +365,13 @@ class EntityActivityService
                 'id'        => (string) ($note['id'] ?? ''),
                 'subject'   => (string) ($note['title'] ?? ''),
                 'agent'     => (string) (
-                    $note['author']
-                    ?? $note['user']
-                    ?? ''
+                    $note['author'] ?? $note['user'] ?? ''
                 ),
                 'timestamp' => (string) (
-                    $note['createdAt']
-                    ?? $note['timestamp']
-                    ?? ''
+                    $note['createdAt'] ?? $note['timestamp'] ?? ''
                 ),
                 'summary'   => (string) (
-                    $note['message']
-                    ?? $note['content']
-                    ?? $note['text']
-                    ?? ''
+                    $note['message'] ?? $note['content'] ?? $note['text'] ?? ''
                 ),
             ];
         }//end foreach
@@ -520,7 +512,7 @@ class EntityActivityService
             }
 
             $output[] = (array) $item;
-        }
+        }//end foreach
 
         return $output;
     }//end normaliseResults()

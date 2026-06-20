@@ -41,12 +41,12 @@ class LoyaltyGdprService
     /**
      * Constructor.
      *
-     * @param ContainerInterface     $container             The DI container.
-     * @param IAppConfig             $appConfig             The app configuration.
-     * @param LoyaltyAccountService  $loyaltyAccountService The account service.
-     * @param PointsLedgerService    $ledgerService         The ledger service.
-     * @param GiftCardService        $giftCardService       The gift card service.
-     * @param LoggerInterface        $logger                The logger.
+     * @param ContainerInterface    $container             The DI container.
+     * @param IAppConfig            $appConfig             The app configuration.
+     * @param LoyaltyAccountService $loyaltyAccountService The account service.
+     * @param PointsLedgerService   $ledgerService         The ledger service.
+     * @param GiftCardService       $giftCardService       The gift card service.
+     * @param LoggerInterface       $logger                The logger.
      */
     public function __construct(
         private ContainerInterface $container,
@@ -83,6 +83,7 @@ class LoyaltyGdprService
             if ($accountId === '') {
                 continue;
             }
+
             $ledger = array_merge($ledger, $this->ledgerService->getLedgerHistory(accountId: $accountId));
         }
 
@@ -139,7 +140,7 @@ class LoyaltyGdprService
         $redemptions = $this->findAllByFilter(schemaKey: 'redemption_schema', filters: ['klantId' => $klantId]);
         foreach ($redemptions as $r) {
             $r['klantId'] = null;
-            $uuid = (string) ($r['redemptionId'] ?? $r['@self']['id'] ?? $r['uuid'] ?? '');
+            $uuid         = (string) ($r['redemptionId'] ?? $r['@self']['id'] ?? $r['uuid'] ?? '');
             if ($uuid !== '') {
                 $this->persist(schemaKey: 'redemption_schema', payload: $r, uuid: $uuid);
                 $summary['redemptions']++;
@@ -164,10 +165,10 @@ class LoyaltyGdprService
     }//end deleteLoyaltyData()
 
     /**
-     * findAll helper.
+     * FindAll helper.
      *
-     * @param string                $schemaKey The schema config key.
-     * @param array<string, mixed>  $filters   The filters.
+     * @param string               $schemaKey The schema config key.
+     * @param array<string, mixed> $filters   The filters.
      *
      * @return array<int, array<string, mixed>>
      */
@@ -190,7 +191,13 @@ class LoyaltyGdprService
             return [];
         }
 
-        return array_map([$this, 'toArray'], is_array($rows) === true ? array_values($rows) : []);
+        if (is_array($rows) === true) {
+            $list = array_values($rows);
+        } else {
+            $list = [];
+        }
+
+        return array_map([$this, 'toArray'], $list);
     }//end findAllByFilter()
 
     /**
@@ -238,18 +245,21 @@ class LoyaltyGdprService
         if (is_array($object) === true) {
             return $object;
         }
+
         if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
             $s = $object->jsonSerialize();
             if (is_array($s) === true) {
                 return $s;
             }
         }
+
         if (is_object($object) === true && method_exists($object, 'getObject') === true) {
             $d = $object->getObject();
             if (is_array($d) === true) {
                 return $d;
             }
         }
+
         return [];
     }//end toArray()
 

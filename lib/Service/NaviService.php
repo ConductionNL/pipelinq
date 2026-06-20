@@ -99,7 +99,7 @@ class NaviService
      *
      * @param string $query  Natural-language query from the user.
      * @param string $userId Authenticated user id (used only for logging,
-     *                      OpenRegister enforces multi-tenancy itself).
+     *                       OpenRegister enforces multi-tenancy itself).
      *
      * @return array{
      *   query: string,
@@ -172,12 +172,15 @@ class NaviService
         if (preg_match('/\b(trend|verloop|over time|groei|growth)\b/u', $lower) === 1) {
             return 'trend';
         }
+
         if (preg_match('/\b(conversie|conversion|win rate|win-rate|won|gewonnen|verloren)\b/u', $lower) === 1) {
             return 'conversion';
         }
+
         if (preg_match('/\b(groep|breakdown|per (categorie|stage|fase|kanaal|channel)|by category|by stage|by channel)\b/u', $lower) === 1) {
             return 'breakdown';
         }
+
         if (preg_match('/\b(hoeveel|aantal|count|how many)\b/u', $lower) === 1) {
             return 'count';
         }
@@ -188,8 +191,8 @@ class NaviService
     /**
      * Fetch the OpenRegister objects required to answer the given intent.
      *
-     * @param string                $intent One of self::INTENTS.
-     * @param array<string, mixed>  $params Free-form params (currently only `query`).
+     * @param string               $intent One of self::INTENTS.
+     * @param array<string, mixed> $params Free-form params (currently only `query`).
      *
      * @return array<int, array<string, mixed>> Plain-array rows.
      *
@@ -225,12 +228,15 @@ class NaviService
         if (preg_match('/\b(lead|leads|kans|kansen)\b/u', $lower) === 1) {
             return 'lead_schema';
         }
+
         if (preg_match('/\b(request|verzoek|verzoeken|aanvraag|aanvragen)\b/u', $lower) === 1) {
             return 'request_schema';
         }
+
         if (preg_match('/\b(contactmoment|contactmomenten|contact)\b/u', $lower) === 1) {
             return 'contactmoment_schema';
         }
+
         return 'lead_schema';
     }//end guessCountSchema()
 
@@ -240,9 +246,9 @@ class NaviService
      * Deterministic — no actual LLM call required; the OpenRegister
      * `ChatService` is reserved for free-form summarisation in V2.
      *
-     * @param string                            $intent  Recognised intent.
-     * @param string                            $query   Trimmed query.
-     * @param array<int, array<string, mixed>>  $context Object rows from buildContext.
+     * @param string                           $intent  Recognised intent.
+     * @param string                           $query   Trimmed query.
+     * @param array<int, array<string, mixed>> $context Object rows from buildContext.
      *
      * @return array<string, mixed> The intermediate LLM-response shape.
      */
@@ -276,13 +282,16 @@ class NaviService
             if ($created === '') {
                 continue;
             }
+
             $ts = strtotime($created);
             if ($ts === false) {
                 continue;
             }
+
             $week           = date('o-\WW', $ts);
             $buckets[$week] = ($buckets[$week] ?? 0) + 1;
         }
+
         ksort($buckets);
 
         return [
@@ -319,8 +328,13 @@ class NaviService
                 $counts[$status]++;
             }
         }
+
         $total = array_sum($counts);
-        $rate  = $total === 0 ? 0.0 : round(($counts['won'] * 100.0) / $total, 1);
+        if ($total === 0) {
+            $rate = 0.0;
+        } else {
+            $rate = round(($counts['won'] * 100.0) / $total, 1);
+        }
 
         return [
             'resultType'         => 'table',
@@ -357,8 +371,10 @@ class NaviService
             if ($cat === '') {
                 continue;
             }
+
             $counts[$cat] = ($counts[$cat] ?? 0) + 1;
         }
+
         arsort($counts);
 
         return [
@@ -404,9 +420,9 @@ class NaviService
     /**
      * Shape the final API response envelope.
      *
-     * @param string                            $query        Original user query.
-     * @param array<string, mixed>              $llmResponse  Intermediate envelope.
-     * @param array<int, array<string, mixed>>  $rawData      Raw rows (unused in V1).
+     * @param string                           $query       Original user query.
+     * @param array<string, mixed>             $llmResponse Intermediate envelope.
+     * @param array<int, array<string, mixed>> $rawData     Raw rows (unused in V1).
      *
      * @return array<string, mixed>
      *
@@ -430,6 +446,7 @@ class NaviService
         if (isset($llmResponse['chartData']) === true) {
             $envelope['chartData'] = (array) $llmResponse['chartData'];
         }
+
         if (isset($llmResponse['tableData']) === true) {
             $envelope['tableData'] = (array) $llmResponse['tableData'];
         }
@@ -497,6 +514,7 @@ class NaviService
                 $objects[] = $result;
                 continue;
             }
+
             if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
                 $serialized = $result->jsonSerialize();
                 if (is_array($serialized) === true) {
@@ -504,13 +522,14 @@ class NaviService
                     continue;
                 }
             }
+
             if (is_object($result) === true && method_exists($result, 'getObject') === true) {
                 $data = $result->getObject();
                 if (is_array($data) === true) {
                     $objects[] = $data;
                 }
             }
-        }
+        }//end foreach
 
         return $objects;
     }//end findObjects()
