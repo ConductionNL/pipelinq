@@ -42,6 +42,8 @@ class ContactSyncService
      * @param ContactImportService     $contactImportService The contact import service.
      * @param ContactVcardService      $contactVcardService  The vCard sync service.
      * @param ContactLinkedUidsService $linkedUidsService    The linked UIDs service.
+     * @param IAppConfig               $appConfig            The app configuration.
+     * @param ContainerInterface       $container            The service container.
      */
     public function __construct(
         private IContactsManager $contactsManager,
@@ -65,7 +67,7 @@ class ContactSyncService
      * ContactVcardService, never minted locally (client-contact unification).
      *
      * @param string $objectType The object type ('client' or 'contact').
-     * @param array  $form        The raw create-form fields (name/type/email/phone/...).
+     * @param array  $form       The raw create-form fields (name/type/email/phone/...).
      *
      * @return array The created object data (serialised).
      *

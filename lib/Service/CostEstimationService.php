@@ -53,32 +53,32 @@ class CostEstimationService
      * @var array<string, array<string, array<string, array<string, float>>>>
      */
     private const DEFAULT_PRICE_TABLE = [
-        'meta' => [
+        'meta'      => [
             'whatsapp' => [
-                'utility' => [
-                    'NL' => 0.012,
-                    'BE' => 0.012,
-                    'DE' => 0.015,
+                'utility'        => [
+                    'NL'      => 0.012,
+                    'BE'      => 0.012,
+                    'DE'      => 0.015,
                     'default' => 0.020,
                 ],
-                'marketing' => [
-                    'NL' => 0.060,
-                    'BE' => 0.060,
-                    'DE' => 0.070,
+                'marketing'      => [
+                    'NL'      => 0.060,
+                    'BE'      => 0.060,
+                    'DE'      => 0.070,
                     'default' => 0.080,
                 ],
                 'authentication' => [
-                    'NL' => 0.015,
-                    'BE' => 0.015,
-                    'DE' => 0.018,
+                    'NL'      => 0.015,
+                    'BE'      => 0.015,
+                    'DE'      => 0.018,
                     'default' => 0.022,
                 ],
             ],
         ],
         '360dialog' => [
             'whatsapp' => [
-                'utility' => ['default' => 0.025],
-                'marketing' => ['default' => 0.090],
+                'utility'        => ['default' => 0.025],
+                'marketing'      => ['default' => 0.090],
                 'authentication' => ['default' => 0.025],
             ],
         ],
@@ -133,7 +133,11 @@ class CostEstimationService
 
         $catRow = ($channelRow[$category] ?? ($channelRow['default'] ?? null));
         if (is_array($catRow) === false) {
-            return is_numeric($catRow) ? (float) $catRow : 0.0;
+            if (is_numeric($catRow) === true) {
+                return (float) $catRow;
+            }
+
+            return 0.0;
         }
 
         if (isset($catRow[$country]) === true && is_numeric($catRow[$country]) === true) {

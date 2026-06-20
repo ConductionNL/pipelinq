@@ -83,7 +83,7 @@ class DeliveryAuditLogger
         ?DateTimeInterface $retentionUntil=null,
         string $actor='system'
     ): void {
-        $this->writeEvent($messageId, 'queued', $payloadHash, $retentionUntil, $actor);
+        $this->writeEvent(messageId: $messageId, event: 'queued', payloadHash: $payloadHash, retentionUntil: $retentionUntil, actor: $actor);
     }//end logQueued()
 
     /**
@@ -105,12 +105,12 @@ class DeliveryAuditLogger
         string $actor='system'
     ): void {
         $this->writeEvent(
-            $messageId,
-            'sent',
-            $payloadHash,
-            $retentionUntil,
-            $actor,
-            ['logiusMessageId' => $logiusMessageId]
+            messageId: $messageId,
+            event: 'sent',
+            payloadHash: $payloadHash,
+            retentionUntil: $retentionUntil,
+            actor: $actor,
+            extras: ['logiusMessageId' => $logiusMessageId]
         );
     }//end logSent()
 
@@ -130,7 +130,7 @@ class DeliveryAuditLogger
         ?DateTimeInterface $retentionUntil=null,
         string $actor='system'
     ): void {
-        $this->writeEvent($messageId, 'read', $payloadHash, $retentionUntil, $actor);
+        $this->writeEvent(messageId: $messageId, event: 'read', payloadHash: $payloadHash, retentionUntil: $retentionUntil, actor: $actor);
     }//end logRead()
 
     /**
@@ -151,7 +151,14 @@ class DeliveryAuditLogger
         ?DateTimeInterface $retentionUntil=null,
         string $actor='system'
     ): void {
-        $this->writeEvent($messageId, 'fallback', $payloadHash, $retentionUntil, $actor, ['reason' => $reason]);
+        $this->writeEvent(
+            messageId: $messageId,
+            event: 'fallback',
+            payloadHash: $payloadHash,
+            retentionUntil: $retentionUntil,
+            actor: $actor,
+            extras: ['reason' => $reason]
+        );
     }//end logFallback()
 
     /**
@@ -172,7 +179,14 @@ class DeliveryAuditLogger
         ?DateTimeInterface $retentionUntil=null,
         string $actor='system'
     ): void {
-        $this->writeEvent($messageId, 'failed', $payloadHash, $retentionUntil, $actor, ['reason' => $reason]);
+        $this->writeEvent(
+            messageId: $messageId,
+            event: 'failed',
+            payloadHash: $payloadHash,
+            retentionUntil: $retentionUntil,
+            actor: $actor,
+            extras: ['reason' => $reason]
+        );
     }//end logFailed()
 
     /**
@@ -191,7 +205,7 @@ class DeliveryAuditLogger
         ?DateTimeInterface $retentionUntil=null,
         string $actor='system'
     ): void {
-        $this->writeEvent($replyId, 'reply-received', $payloadHash, $retentionUntil, $actor);
+        $this->writeEvent(messageId: $replyId, event: 'reply-received', payloadHash: $payloadHash, retentionUntil: $retentionUntil, actor: $actor);
     }//end logReplyReceived()
 
     /**
@@ -213,12 +227,12 @@ class DeliveryAuditLogger
         string $actor='system'
     ): void {
         $this->writeEvent(
-            $messageId,
-            'processing-error',
-            $payloadHash,
-            $retentionUntil,
-            $actor,
-            ['reason' => $reason]
+            messageId: $messageId,
+            event: 'processing-error',
+            payloadHash: $payloadHash,
+            retentionUntil: $retentionUntil,
+            actor: $actor,
+            extras: ['reason' => $reason]
         );
     }//end logProcessingError()
 
@@ -238,7 +252,7 @@ class DeliveryAuditLogger
         ?DateTimeInterface $retentionUntil=null,
         string $actor='system'
     ): void {
-        $this->writeEvent($messageId, 'opted-out', $payloadHash, $retentionUntil, $actor);
+        $this->writeEvent(messageId: $messageId, event: 'opted-out', payloadHash: $payloadHash, retentionUntil: $retentionUntil, actor: $actor);
     }//end logOptedOut()
 
     /**
@@ -312,7 +326,7 @@ class DeliveryAuditLogger
         array $extras=[]
     ): void {
         $now       = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-        $retention = ($retentionUntil ?? $this->calculateRetentionUntil(''));
+        $retention = ($retentionUntil ?? $this->calculateRetentionUntil(zaaktype: ''));
 
         $row = array_merge(
             $extras,
@@ -377,6 +391,7 @@ class DeliveryAuditLogger
         if ($register === '' || $schema === '') {
             throw new RuntimeException('DeliveryAuditLog register or schema not configured.');
         }
+
         return [$register, $schema];
     }//end config()
 }//end class
