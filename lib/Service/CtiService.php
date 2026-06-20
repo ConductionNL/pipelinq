@@ -52,13 +52,13 @@ class CtiService
     /**
      * Constructor.
      *
-     * @param ContainerInterface   $container       DI container for OR lookups.
-     * @param IAppConfig           $appConfig       The app config.
-     * @param AdapterRegistry      $adapterRegistry Adapter registry.
-     * @param PhoneNormaliser      $phoneNormaliser Phone normaliser.
-     * @param CtiContactMatcher    $contactMatcher  Contact matcher.
+     * @param ContainerInterface    $container          DI container for OR lookups.
+     * @param IAppConfig            $appConfig          The app config.
+     * @param AdapterRegistry       $adapterRegistry    Adapter registry.
+     * @param PhoneNormaliser       $phoneNormaliser    Phone normaliser.
+     * @param CtiContactMatcher     $contactMatcher     Contact matcher.
      * @param CtiDispositionService $dispositionService Disposition service.
-     * @param LoggerInterface      $logger          Logger.
+     * @param LoggerInterface       $logger             Logger.
      */
     public function __construct(
         private ContainerInterface $container,
@@ -80,24 +80,30 @@ class CtiService
      *   - ended            → write call duration and recording fields
      *   - presence         → update ctiAgentPresence
      *
-     * @param string              $platform       Platform identifier.
-     * @param array<string,mixed> $payload        Decoded webhook body.
-     * @param string|null         $rawBody        Raw body (for signature recheck).
-     * @param string|null         $signature      Signature header from the request.
+     * @param string              $platform  Platform identifier.
+     * @param array<string,mixed> $payload   Decoded webhook body.
+     * @param string|null         $rawBody   Raw body (for signature recheck).
+     * @param string|null         $signature Signature header from the request.
      *
      * @return array{logged: bool, valid: bool, contactmomentId: string|null}
      */
     public function handleWebhook(
         string $platform,
         array $payload,
-        ?string $rawBody = null,
-        ?string $signature = null,
+        ?string $rawBody=null,
+        ?string $signature=null,
     ): array {
         $adapter   = $this->adapterRegistry->get($platform);
         $valid     = true;
         $rawForSig = ($rawBody ?? json_encode($payload));
         if ($signature !== null) {
-            $valid = $adapter->verifyWebhookSignature($rawForSig === false ? '' : (string) $rawForSig, $signature);
+            if ($rawForSig === false) {
+                $rawForSigString = '';
+            } else {
+                $rawForSigString = (string) $rawForSig;
+            }
+
+            $valid = $adapter->verifyWebhookSignature($rawForSigString, $signature);
         }
 
         $normalised      = $adapter->handleInboundWebhook($payload);
@@ -160,7 +166,7 @@ class CtiService
      *
      * @return ScreenPopResult The screen-pop result for the frontend.
      */
-    public function initiateScreenPop(string $fromNumber, ?string $orgId = null): ScreenPopResult
+    public function initiateScreenPop(string $fromNumber, ?string $orgId=null): ScreenPopResult
     {
         $normalised = $this->phoneNormaliser->normaliseForOrg($fromNumber, $orgId);
         $result     = $this->contactMatcher->findByPhoneNumber($normalised['e164'], $orgId);
@@ -183,12 +189,12 @@ class CtiService
     /**
      * Create a pending contactmoment.
      *
-     * @param string $direction  inbound|outbound.
-     * @param string $fromNumber Caller number.
-     * @param string $toNumber   Callee number.
-     * @param string $userId     Acting agent UID.
-     * @param string $extension  Agent extension.
-     * @param array<string,mixed> $extra Extra fields to merge in.
+     * @param string              $direction  inbound|outbound.
+     * @param string              $fromNumber Caller number.
+     * @param string              $toNumber   Callee number.
+     * @param string              $userId     Acting agent UID.
+     * @param string              $extension  Agent extension.
+     * @param array<string,mixed> $extra      Extra fields to merge in.
      *
      * @return string|null The new contactmoment UUID or null on failure.
      */
@@ -198,7 +204,7 @@ class CtiService
         string $toNumber,
         string $userId,
         string $extension,
-        array $extra = [],
+        array $extra=[],
     ): ?string {
         $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
         $schema   = $this->appConfig->getValueString(Application::APP_ID, 'contactmoment_schema', '');
@@ -212,14 +218,14 @@ class CtiService
 
         $payload = array_merge(
             [
-                'channel'         => 'telephony',
-                'direction'       => $direction,
-                'from_number'     => ($fromE164 ?? $fromNumber),
-                'to_number'       => ($toE164 ?? $toNumber),
-                'cti_extension'   => $extension,
-                'agent'           => $userId,
-                'started_at'      => gmdate('Y-m-d\TH:i:s\Z'),
-                'subject'         => 'CTI '.$direction.' call',
+                'channel'       => 'telephony',
+                'direction'     => $direction,
+                'from_number'   => ($fromE164 ?? $fromNumber),
+                'to_number'     => ($toE164 ?? $toNumber),
+                'cti_extension' => $extension,
+                'agent'         => $userId,
+                'started_at'    => gmdate('Y-m-d\TH:i:s\Z'),
+                'subject'       => 'CTI '.$direction.' call',
             ],
             $extra
         );
@@ -240,11 +246,11 @@ class CtiService
     /**
      * Update a contactmoment with final metadata once the call ended.
      *
-     * @param string $contactmomentId   Contactmoment UUID.
-     * @param int    $durationSeconds   Talk duration.
-     * @param string $outcome           Disposition outcome (may be empty).
+     * @param string $contactmomentId    Contactmoment UUID.
+     * @param int    $durationSeconds    Talk duration.
+     * @param string $outcome            Disposition outcome (may be empty).
      * @param string $dispositionSubject Disposition subject.
-     * @param string $dispositionNotes  Disposition notes.
+     * @param string $dispositionNotes   Disposition notes.
      *
      * @return void
      */
@@ -263,12 +269,18 @@ class CtiService
 
         try {
             $objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
+            if ($outcome !== '') {
+                $dispositionOutcome = $outcome;
+            } else {
+                $dispositionOutcome = 'resolved';
+            }
+
             $objectService->saveObject(
                 [
                     'duration_seconds'    => $durationSeconds,
                     'ended_at'            => gmdate('Y-m-d\TH:i:s\Z'),
                     'disposition_subject' => $dispositionSubject,
-                    'disposition_outcome' => ($outcome !== '' ? $outcome : 'resolved'),
+                    'disposition_outcome' => $dispositionOutcome,
                     'disposition_notes'   => $dispositionNotes,
                 ],
                 [],
@@ -281,7 +293,7 @@ class CtiService
                 'CTI completeContactmoment failed',
                 ['exception' => $e->getMessage(), 'contactmomentId' => $contactmomentId]
             );
-        }
+        }//end try
     }//end completeContactmoment()
 
     /**
@@ -344,7 +356,7 @@ class CtiService
         $callerId = (string) ($config['default_outbound_caller_id'] ?? '');
 
         try {
-            $adapter   = $this->adapterRegistry->get($platform);
+            $adapter    = $this->adapterRegistry->get($platform);
             $callResult = $adapter->originateCall(
                 extension: $extension,
                 targetNumber: $targetNumber,
@@ -392,7 +404,7 @@ class CtiService
      *
      * @return void
      */
-    public function syncPresence(string $userId, string $presenceState, ?string $extension = null, ?string $platform = null): void
+    public function syncPresence(string $userId, string $presenceState, ?string $extension=null, ?string $platform=null): void
     {
         $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
         $schema   = $this->appConfig->getValueString(Application::APP_ID, 'ctiAgentPresence_schema', '');
@@ -409,7 +421,7 @@ class CtiService
                         'schema'   => $schema,
                         'user_id'  => $userId,
                     ],
-                    'limit' => 1,
+                    'limit'   => 1,
                 ]
             );
 
@@ -437,7 +449,7 @@ class CtiService
                 'CTI syncPresence failed',
                 ['exception' => $e->getMessage(), 'userId' => $userId]
             );
-        }
+        }//end try
     }//end syncPresence()
 
     /**
@@ -472,7 +484,7 @@ class CtiService
                         'register' => $register,
                         'schema'   => $schema,
                     ],
-                    'limit' => 1,
+                    'limit'   => 1,
                 ]
             );
             if (is_array($existing) === true && count($existing) > 0) {
@@ -484,7 +496,7 @@ class CtiService
                 'CTI loadConfig failed',
                 ['exception' => $e->getMessage()]
             );
-        }
+        }//end try
 
         return [];
     }//end loadConfig()
@@ -512,7 +524,7 @@ class CtiService
                         'register' => $register,
                         'schema'   => $schema,
                     ],
-                    'limit' => 1,
+                    'limit'   => 1,
                 ]
             );
 
@@ -529,7 +541,7 @@ class CtiService
                 ['exception' => $e->getMessage()]
             );
             return [];
-        }
+        }//end try
     }//end saveConfig()
 
     /**
@@ -573,7 +585,7 @@ class CtiService
      *
      * @return array<int,array<string,mixed>>
      */
-    public function listEventLog(array $filters = [], int $limit = 50, int $offset = 0): array
+    public function listEventLog(array $filters=[], int $limit=50, int $offset=0): array
     {
         $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
         $schema   = $this->appConfig->getValueString(Application::APP_ID, 'ctiEventLog_schema', '');
@@ -592,9 +604,9 @@ class CtiService
                             static fn($v): bool => ($v !== null && $v !== '')
                         )
                     ),
-                    'limit'  => $limit,
-                    'offset' => $offset,
-                    'sort'   => ['received_at' => 'desc'],
+                    'limit'   => $limit,
+                    'offset'  => $offset,
+                    'sort'    => ['received_at' => 'desc'],
                 ]
             );
 
@@ -614,7 +626,7 @@ class CtiService
                 ['exception' => $e->getMessage()]
             );
             return [];
-        }
+        }//end try
     }//end listEventLog()
 
     /**
@@ -640,7 +652,7 @@ class CtiService
                         'register' => $register,
                         'schema'   => $schema,
                     ],
-                    'limit' => 1000,
+                    'limit'   => 1000,
                 ]
             );
 
@@ -670,7 +682,7 @@ class CtiService
                         ['exception' => $e->getMessage(), 'id' => $id]
                     );
                 }
-            }
+            }//end foreach
 
             return $deleted;
         } catch (\Throwable $e) {
@@ -679,7 +691,7 @@ class CtiService
                 ['exception' => $e->getMessage()]
             );
             return 0;
-        }
+        }//end try
     }//end purgeOldEventLog()
 
     /**
@@ -727,7 +739,7 @@ class CtiService
                 'CTI logEvent failed',
                 ['exception' => $e->getMessage()]
             );
-        }
+        }//end try
     }//end logEvent()
 
     /**
@@ -916,7 +928,7 @@ class CtiService
                         'schema'           => $schema,
                         'external_call_id' => $externalCallId,
                     ],
-                    'limit' => 1,
+                    'limit'   => 1,
                 ]
             );
             if (is_array($found) === true && count($found) > 0) {
@@ -927,7 +939,7 @@ class CtiService
                 'CTI findContactmomentByCallId failed',
                 ['exception' => $e->getMessage(), 'externalCallId' => $externalCallId]
             );
-        }
+        }//end try
 
         return null;
     }//end findContactmomentByCallId()
@@ -992,7 +1004,11 @@ class CtiService
     {
         if (is_array($object) === true) {
             $id = ($object['id'] ?? ($object['uuid'] ?? null));
-            return $id !== null ? (string) $id : null;
+            if ($id !== null) {
+                return (string) $id;
+            }
+
+            return null;
         }
 
         if (is_object($object) === true) {
@@ -1009,10 +1025,14 @@ class CtiService
                 $serialised = $object->jsonSerialize();
                 if (is_array($serialised) === true) {
                     $id = ($serialised['id'] ?? ($serialised['uuid'] ?? null));
-                    return $id !== null ? (string) $id : null;
+                    if ($id !== null) {
+                        return (string) $id;
+                    }
+
+                    return null;
                 }
             }
-        }
+        }//end if
 
         return null;
     }//end extractId()

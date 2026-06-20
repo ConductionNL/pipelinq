@@ -55,7 +55,6 @@ class EmailMatchJob extends TimedJob
      */
     private const INTERVAL = 300;
 
-
     /**
      * Constructor.
      *
@@ -74,7 +73,6 @@ class EmailMatchJob extends TimedJob
         $this->setInterval(seconds: self::INTERVAL);
 
     }//end __construct()
-
 
     /**
      * Run the matching pass for every user.
@@ -127,6 +125,4 @@ class EmailMatchJob extends TimedJob
         );
 
     }//end run()
-
-
 }//end class

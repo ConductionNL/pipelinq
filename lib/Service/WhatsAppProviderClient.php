@@ -289,17 +289,17 @@ class WhatsAppProviderClient
     {
         $sourceId = (string) ($channelProvider['sourceId'] ?? ($channelProvider['openconnectorSourceId'] ?? ''));
         if ($sourceId === '') {
-            throw new PermanentSmsProviderException('WhatsApp provider source not configured');
+            throw new PermanentSmsProviderException(message: 'WhatsApp provider source not configured');
         }
 
         try {
             $sourceService = $this->container->get('OCA\\OpenConnector\\Service\\SourceService');
         } catch (Throwable $e) {
-            throw new TransientSmsProviderException('openconnector unavailable: ' . $e->getMessage());
+            throw new TransientSmsProviderException(message: 'openconnector unavailable: '.$e->getMessage());
         }
 
         if (method_exists($sourceService, 'executeAction') === false) {
-            throw new PermanentSmsProviderException('openconnector SourceService lacks executeAction');
+            throw new PermanentSmsProviderException(message: 'openconnector SourceService lacks executeAction');
         }
 
         try {
@@ -311,12 +311,17 @@ class WhatsAppProviderClient
                 ['action' => $action, 'code' => $code, 'message' => $e->getMessage()]
             );
             if ($code === 0 || ($code >= 500 && $code < 600)) {
-                throw new TransientSmsProviderException($e->getMessage(), $code, $e);
+                throw new TransientSmsProviderException(message: $e->getMessage(), code: $code, previous: $e);
             }
-            throw new PermanentSmsProviderException($e->getMessage(), $code, $e);
+
+            throw new PermanentSmsProviderException(message: $e->getMessage(), code: $code, previous: $e);
         }
 
-        return is_array($result) ? $result : [];
+        if (is_array($result) === true) {
+            return $result;
+        }
+
+        return [];
     }//end dispatch()
 
     /**

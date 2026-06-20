@@ -135,7 +135,7 @@ class StufRequestIntegrationService
                         message: 'StUF geefBetrokkene lookup failed: {error}',
                         context: ['error' => $e->getMessage()]
                     );
-                }
+                }//end try
 
                 return null;
             }

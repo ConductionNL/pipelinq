@@ -68,14 +68,13 @@ class AcClient
      */
     private array $cache = [];
 
-
     /**
      * Constructor.
      *
-     * @param ZgwApiClient      $api        Base HTTP transport.
-     * @param ZgwRegisterAccess $registers  ObjectService facade.
-     * @param IAppConfig        $appConfig  App config (refresh interval).
-     * @param LoggerInterface   $logger     PSR-3 logger.
+     * @param ZgwApiClient      $api       Base HTTP transport.
+     * @param ZgwRegisterAccess $registers ObjectService facade.
+     * @param IAppConfig        $appConfig App config (refresh interval).
+     * @param LoggerInterface   $logger    PSR-3 logger.
      */
     public function __construct(
         private ZgwApiClient $api,
@@ -84,7 +83,6 @@ class AcClient
         private LoggerInterface $logger,
     ) {
     }//end __construct()
-
 
     /**
      * Refresh the in-memory scope cache for an endpoint.
@@ -133,9 +131,14 @@ class AcClient
             if (is_array($entry) === false) {
                 continue;
             }
+
             $entryClient = (string) ($entry['component'] ?? $entry['clientIds'][0] ?? '');
             $clientIds   = $entry['clientIds'] ?? [];
-            if (is_array($clientIds) === true && $clientIdentifier !== '' && in_array($clientIdentifier, $clientIds, true) === false && $entryClient !== $clientIdentifier) {
+            if (is_array($clientIds) === true
+                && $clientIdentifier !== ''
+                && in_array($clientIdentifier, $clientIds, true) === false
+                && $entryClient !== $clientIdentifier
+            ) {
                 continue;
             }
 
@@ -143,24 +146,28 @@ class AcClient
             if (is_array($autorisaties) === false) {
                 continue;
             }
+
             foreach ($autorisaties as $auth) {
                 if (is_array($auth) === false) {
                     continue;
                 }
+
                 $resource = (string) ($auth['zaaktype'] ?? $auth['besluittype'] ?? $auth['informatieobjecttype'] ?? '*');
                 $list     = $auth['scopes'] ?? [];
                 if (is_array($list) === false) {
                     continue;
                 }
+
                 foreach ($list as $scope) {
                     if (is_string($scope) === false || $scope === '') {
                         continue;
                     }
+
                     $scopes[$resource]   = $scopes[$resource] ?? [];
                     $scopes[$resource][] = $scope;
                 }
             }
-        }
+        }//end foreach
 
         // De-duplicate.
         foreach ($scopes as $resource => $list) {
@@ -169,7 +176,6 @@ class AcClient
 
         $this->cache[$endpointId] = ['refreshedAt' => time(), 'scopes' => $scopes];
     }//end refreshScopes()
-
 
     /**
      * Check whether the configured client holds a scope on a target resource.
@@ -196,8 +202,9 @@ class AcClient
         if ($bucket === null || (time() - $bucket['refreshedAt']) > $this->refreshInterval()) {
             $client = $this->registers->findClientForEndpoint($endpoint);
             if ($client !== null) {
-                $this->refreshScopes($endpoint, $client);
+                $this->refreshScopes(endpoint: $endpoint, client: $client);
             }
+
             $bucket = $this->cache[$endpointId] ?? null;
         }
 
@@ -214,7 +221,6 @@ class AcClient
         return in_array($scope, $list, true);
     }//end hasScope()
 
-
     /**
      * Return all scopes granted on a specific resource URL.
      *
@@ -229,16 +235,21 @@ class AcClient
         if ($endpointId === '') {
             return [];
         }
+
         $bucket = $this->cache[$endpointId] ?? null;
         if ($bucket === null) {
             return [];
         }
-        return array_values(array_unique(array_merge(
+
+        return array_values(
+                array_unique(
+                array_merge(
             $bucket['scopes'][$resourceUrl] ?? [],
             $bucket['scopes']['*'] ?? []
-        )));
+                )
+                )
+                );
     }//end getScopesFor()
-
 
     /**
      * Pre-flight guard helper: raise on missing scope.
@@ -253,9 +264,10 @@ class AcClient
      */
     public function require(array $endpoint, string $resourceUrl, string $scope): void
     {
-        if ($this->hasScope($endpoint, $resourceUrl, $scope) === true) {
+        if ($this->hasScope(endpoint: $endpoint, resourceUrl: $resourceUrl, scope: $scope) === true) {
             return;
         }
+
         throw new InsufficientScopeException(
             scope: $scope,
             zaaktypeUrl: $resourceUrl,
@@ -263,21 +275,20 @@ class AcClient
         );
     }//end require()
 
-
     /**
      * Inject a pre-built scope cache (testing helper).
      *
-     * @param string                                $endpointId Endpoint id.
-     * @param array<string, array<int, string>>     $scopes     Resource → scopes map.
-     * @param int|null                              $refreshedAt Optional override timestamp.
+     * @param string                            $endpointId  Endpoint id.
+     * @param array<string, array<int, string>> $scopes      Resource →
+     *                                                       scopes map.
+     * @param int|null                          $refreshedAt Optional override timestamp.
      *
      * @return void
      */
-    public function primeCache(string $endpointId, array $scopes, ?int $refreshedAt = null): void
+    public function primeCache(string $endpointId, array $scopes, ?int $refreshedAt=null): void
     {
         $this->cache[$endpointId] = ['refreshedAt' => $refreshedAt ?? time(), 'scopes' => $scopes];
     }//end primeCache()
-
 
     /**
      * Effective refresh interval (seconds).
@@ -287,8 +298,10 @@ class AcClient
     private function refreshInterval(): int
     {
         $value = $this->appConfig->getValueInt(Application::APP_ID, 'zgw.ac_refresh_interval', self::DEFAULT_REFRESH_S);
-        return $value > 0 ? $value : self::DEFAULT_REFRESH_S;
+        if ($value > 0) {
+            return $value;
+        }
+
+        return self::DEFAULT_REFRESH_S;
     }//end refreshInterval()
-
-
 }//end class

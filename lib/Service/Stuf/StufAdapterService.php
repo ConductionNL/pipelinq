@@ -140,11 +140,16 @@ class StufAdapterService
             $mapping = $this->persistRequestMapping(request: $request, externId: $serverZaakId, endpoint: $endpoint);
         }
 
+        $zaakIdentificatie = $serverZaakId;
+        if ($serverZaakId === '') {
+            $zaakIdentificatie = null;
+        }
+
         return [
             'success'           => $result['success'],
             'referentienummer'  => $referentienummer,
             'stufMessageId'     => (string) ($result['messageId'] ?? ($msg['id'] ?? '')),
-            'zaakIdentificatie' => ($serverZaakId === '' ? null : $serverZaakId),
+            'zaakIdentificatie' => $zaakIdentificatie,
             'mappingId'         => ($mapping['id'] ?? null),
             'fout'              => ($result['fout'] ?? null),
         ];
@@ -183,13 +188,18 @@ class StufAdapterService
                 'success'          => false,
                 'referentienummer' => '',
                 'stufMessageId'    => '',
-                'fout'             => ['code' => 'NO_MAPPING', 'omschrijving' => 'Geen mapping voor request', 'details' => '', 'soort' => 'permanent'],
+                'fout'             => [
+                    'code'         => 'NO_MAPPING',
+                    'omschrijving' => 'Geen mapping voor request',
+                    'details'      => '',
+                    'soort'        => 'permanent',
+                ],
             ];
         }
 
         $envelope         = $this->builder->buildLk02ActualiseerZaak(request: $request, mapping: $mapping, endpoint: $endpoint);
         $referentienummer = $this->extractReferentienummer(envelope: $envelope);
-        $msg              = $this->messageHandler->logOutbound(
+        $msg = $this->messageHandler->logOutbound(
             endpoint: $endpoint,
             envelopeXml: $envelope,
             referentienummer: $referentienummer,
@@ -218,8 +228,8 @@ class StufAdapterService
     /**
      * Synchronously query zaak details (Lv01 → La01, up to 30s).
      *
-     * @param string $zaakId   The zaak identificatie.
-     * @param array  $endpoint The StufEndpoint.
+     * @param string $zaakId            The zaak identificatie.
+     * @param array  $endpoint          The StufEndpoint.
      * @param array  $gewensteElementen Optional gewenste zkn elements to scope.
      *
      * @return array|null The Zaak object array, or null on parse failure.
@@ -236,7 +246,7 @@ class StufAdapterService
 
         $envelope         = $this->builder->buildLv01GeefDetails(zaakId: $zaakId, endpoint: $endpoint, gewensteElementen: $gewensteElementen);
         $referentienummer = $this->extractReferentienummer(envelope: $envelope);
-        $msg              = $this->messageHandler->logOutbound(
+        $msg = $this->messageHandler->logOutbound(
             endpoint: $endpoint,
             envelopeXml: $envelope,
             referentienummer: $referentienummer,
@@ -252,20 +262,32 @@ class StufAdapterService
             timeoutSeconds: StufHttpClient::DEFAULT_TIMEOUT_SECONDS
         );
 
-        if ($response['httpStatus'] === 0 && isset($response['fout']['code']) && $response['fout']['code'] === 'TIMEOUT') {
-            $this->messageHandler->transitionStatus(msg: $msg, newStatus: 'fout', extras: ['fout' => $response['fout'], 'duurMs' => ($response['durationMs'] ?? 0)]);
-            $this->needsInput->dispatch(type: 'stuf_timeout', context: ['endpointId' => ($endpoint['id'] ?? ''), 'stufMessageId' => ($msg['id'] ?? '')]);
+        if ($response['httpStatus'] === 0 && isset($response['fout']['code']) === true && $response['fout']['code'] === 'TIMEOUT') {
+            $this->messageHandler->transitionStatus(
+                msg: $msg,
+                newStatus: 'fout',
+                extras: ['fout' => $response['fout'], 'duurMs' => ($response['durationMs'] ?? 0)]
+            );
+            $this->needsInput->dispatch(
+                type: 'stuf_timeout',
+                context: ['endpointId' => ($endpoint['id'] ?? ''), 'stufMessageId' => ($msg['id'] ?? '')]
+            );
             throw new TimeoutException(message: 'StUF geefZaakDetails timed out');
+        }
+
+        $detailStatus = 'fout';
+        if ($response['httpStatus'] >= 200 && $response['httpStatus'] < 300) {
+            $detailStatus = 'bevestigd';
         }
 
         $this->messageHandler->transitionStatus(
             msg: $msg,
-            newStatus: ($response['httpStatus'] >= 200 && $response['httpStatus'] < 300 ? 'bevestigd' : 'fout'),
+            newStatus: $detailStatus,
             extras: [
-                'httpStatus'         => ($response['httpStatus'] ?? 0),
-                'duurMs'             => ($response['durationMs'] ?? 0),
+                'httpStatus'          => ($response['httpStatus'] ?? 0),
+                'duurMs'              => ($response['durationMs'] ?? 0),
                 'responseEnvelopeXml' => ($response['responseXml'] ?? ''),
-                'fout'               => ($response['fout'] ?? null),
+                'fout'                => ($response['fout'] ?? null),
             ]
         );
 
@@ -298,13 +320,18 @@ class StufAdapterService
         $envelope         = $this->builder->buildDu01VrijBericht(name: $name, payload: $payload, endpoint: $endpoint);
         $referentienummer = $this->extractReferentienummer(envelope: $envelope);
         $zaakId           = (string) ($payload['zaakIdentificatie'] ?? '');
-        $msg              = $this->messageHandler->logOutbound(
+        $zaakIdArg        = $zaakId;
+        if ($zaakId === '') {
+            $zaakIdArg = null;
+        }
+
+        $msg = $this->messageHandler->logOutbound(
             endpoint: $endpoint,
             envelopeXml: $envelope,
             referentienummer: $referentienummer,
             berichtSoort: 'Du01',
             functie: $name,
-            zaakId: ($zaakId === '' ? null : $zaakId)
+            zaakId: $zaakIdArg
         );
 
         $result = $this->dispatch(
@@ -336,7 +363,7 @@ class StufAdapterService
     {
         $envelope         = $this->builder->buildDu01GenereerZaakId(endpoint: $endpoint);
         $referentienummer = $this->extractReferentienummer(envelope: $envelope);
-        $msg              = $this->messageHandler->logOutbound(
+        $msg = $this->messageHandler->logOutbound(
             endpoint: $endpoint,
             envelopeXml: $envelope,
             referentienummer: $referentienummer,
@@ -352,9 +379,15 @@ class StufAdapterService
         );
 
         $bv = $this->parser->parseBevestiging(responseXml: (string) ($response['responseXml'] ?? ''));
+
+        $vrijStatus = 'fout';
+        if ($response['httpStatus'] >= 200 && $response['httpStatus'] < 300) {
+            $vrijStatus = 'bevestigd';
+        }
+
         $this->messageHandler->transitionStatus(
             msg: $msg,
-            newStatus: ($response['httpStatus'] >= 200 && $response['httpStatus'] < 300 ? 'bevestigd' : 'fout'),
+            newStatus: $vrijStatus,
             extras: [
                 'httpStatus'          => ($response['httpStatus'] ?? 0),
                 'duurMs'              => ($response['durationMs'] ?? 0),
@@ -445,11 +478,11 @@ class StufAdapterService
     /**
      * Handle an HTTP response: parse Bv01/Fo02, classify, persist, and retry on transient.
      *
-     * @param array $endpoint The StufEndpoint.
-     * @param array $response The httpClient response.
-     * @param array $message  The StufMessage row.
-     * @param string $functie The functie.
-     * @param int    $attempt The current attempt number (1-indexed).
+     * @param array  $endpoint The StufEndpoint.
+     * @param array  $response The httpClient response.
+     * @param array  $message  The StufMessage row.
+     * @param string $functie  The functie.
+     * @param int    $attempt  The current attempt number (1-indexed).
      *
      * @return array{success:bool,messageId:string,zaakIdentificatie:?string,fout:?array<string,mixed>}
      */
@@ -463,7 +496,7 @@ class StufAdapterService
         $transport  = ($response['fout'] ?? null);
 
         if ($httpStatus >= 200 && $httpStatus < 300) {
-            $bv = $this->parser->parseBevestiging(responseXml: $body);
+            $bv     = $this->parser->parseBevestiging(responseXml: $body);
             $extras = [
                 'httpStatus'          => $httpStatus,
                 'duurMs'              => $duration,
@@ -472,6 +505,7 @@ class StufAdapterService
             if (($bv['zaakIdentificatie'] ?? null) !== null) {
                 $extras['zaakIdentificatie'] = $bv['zaakIdentificatie'];
             }
+
             $this->messageHandler->transitionStatus(msg: $message, newStatus: 'bevestigd', extras: $extras);
             $this->circuitBreaker->resetEndpoint(endpoint: $endpoint);
             return [
@@ -555,15 +589,19 @@ class StufAdapterService
                 'endpointId'       => (string) ($endpoint['id'] ?? ''),
             ]
         );
-        $data = ($existing ?? [
+        $data     = ($existing ?? [
             'id'               => 'map-'.bin2hex(string: random_bytes(length: 6)),
             'pipelinqEntiteit' => 'request',
             'pipelinqId'       => (string) ($request['id'] ?? ''),
             'endpointId'       => (string) ($endpoint['id'] ?? ''),
             'externEntiteit'   => 'ZAK',
         ]);
-        $data['externIdentificatie']  = $externId;
-        $data['laatsteSynchronisatie'] = (new DateTimeImmutable(datetime: 'now', timezone: new DateTimeZone(timezone: 'Europe/Amsterdam')))->format(format: 'c');
+        $data['externIdentificatie'] = $externId;
+        $syncMoment = new DateTimeImmutable(
+            datetime: 'now',
+            timezone: new DateTimeZone(timezone: 'Europe/Amsterdam')
+        );
+        $data['laatsteSynchronisatie'] = $syncMoment->format(format: 'c');
         $data['synchronisatieStatus']  = 'in_sync';
         return $this->register->saveObject(schema: StufRegisterAccess::SCHEMA_MAPPING, data: $data);
     }//end persistRequestMapping()

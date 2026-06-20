@@ -47,14 +47,14 @@ class LoyaltyEngineService
     /**
      * Constructor.
      *
-     * @param ContainerInterface     $container             The DI container.
-     * @param IAppConfig             $appConfig             The app configuration.
-     * @param LoyaltyAccountService  $loyaltyAccountService The account service.
-     * @param PointsLedgerService    $ledgerService         The ledger service.
-     * @param PointsRuleEngine       $ruleEngine            The rule engine.
-     * @param TierService            $tierService           The tier service.
-     * @param IEventDispatcher       $eventDispatcher       The dispatcher.
-     * @param LoggerInterface        $logger                The logger.
+     * @param ContainerInterface    $container             The DI container.
+     * @param IAppConfig            $appConfig             The app configuration.
+     * @param LoyaltyAccountService $loyaltyAccountService The account service.
+     * @param PointsLedgerService   $ledgerService         The ledger service.
+     * @param PointsRuleEngine      $ruleEngine            The rule engine.
+     * @param TierService           $tierService           The tier service.
+     * @param IEventDispatcher      $eventDispatcher       The dispatcher.
+     * @param LoggerInterface       $logger                The logger.
      */
     public function __construct(
         private ContainerInterface $container,
@@ -75,10 +75,10 @@ class LoyaltyEngineService
      * uses it in the ledger entry brondocument. Duplicate calls produce
      * additional ledger entries — at-most-once is the caller's responsibility.
      *
-     * @param string $klantId         The Nextcloud contact UID.
+     * @param string               $klantId     The Nextcloud contact UID.
      * @param array<string, mixed> $transaction Transaction context (amount,
-     *                              category, channel, posTransactionId, segment,
-     *                              timestamp, posTerminalId).
+     *                                          category, channel, posTransactionId, segment,
+     *                                          timestamp, posTerminalId).
      *
      * @return array<int, array<string, mixed>> One result per programme: status
      *                              (credited / skipped / blocked / error),
@@ -90,10 +90,10 @@ class LoyaltyEngineService
             return [];
         }
 
-        $results = [];
+        $results    = [];
         $programmes = $this->getActiveProgrammes();
         foreach ($programmes as $programme) {
-            $programmeId = $this->extractProgrammeUuid($programme);
+            $programmeId = $this->extractProgrammeUuid(programme: $programme);
             if ($programmeId === null) {
                 continue;
             }
@@ -119,8 +119,8 @@ class LoyaltyEngineService
                     'status'      => 'error',
                     'reason'      => $e->getMessage(),
                 ];
-            }
-        }
+            }//end try
+        }//end foreach
 
         return $results;
     }//end processPosTransaction()
@@ -128,8 +128,8 @@ class LoyaltyEngineService
     /**
      * Process for a single programme.
      *
-     * @param string $klantId     The contact UID.
-     * @param string $programmeId The programme UUID.
+     * @param string               $klantId     The contact UID.
+     * @param string               $programmeId The programme UUID.
      * @param array<string, mixed> $programme   The programme object.
      * @param array<string, mixed> $transaction The transaction context.
      *
@@ -155,7 +155,7 @@ class LoyaltyEngineService
             ];
         }
 
-        $accountId = (string) $this->extractUuid($account);
+        $accountId = (string) $this->extractUuid(object: $account);
         if ((string) ($account['status'] ?? '') !== 'actief') {
             $this->logger->info(
                 'Pipelinq: account disabled, points credit skipped',
@@ -165,7 +165,7 @@ class LoyaltyEngineService
                 'programmeId' => $programmeId,
                 'accountId'   => $accountId,
                 'status'      => 'blocked',
-                'reason'      => 'account ' . (string) ($account['status'] ?? 'unknown'),
+                'reason'      => 'account '.(string) ($account['status'] ?? 'unknown'),
             ];
         }
 
@@ -182,7 +182,7 @@ class LoyaltyEngineService
             trigger: (string) ($transaction['trigger'] ?? 'purchase'),
             context: $context
         );
-        $rule = $this->ruleEngine->getHighestPriorityRule($matches);
+        $rule    = $this->ruleEngine->getHighestPriorityRule($matches);
         if ($rule === null) {
             return [
                 'programmeId' => $programmeId,
@@ -193,12 +193,12 @@ class LoyaltyEngineService
         }
 
         // Apply tier multiplier (REQ-LOY-003-03).
-        $multiplier = 1.0;
+        $multiplier    = 1.0;
         $currentTierId = (string) ($account['currentTierId'] ?? '');
         if ($currentTierId !== '') {
             $tierRules = $this->tierService->getTierRules(programmeId: $programmeId);
             foreach ($tierRules as $tr) {
-                if ((string) $this->extractUuid($tr) === $currentTierId) {
+                if ((string) $this->extractUuid(object: $tr) === $currentTierId) {
                     $multiplier = $this->tierService->applyTierBenefits(tier: $tr);
                     break;
                 }
@@ -223,21 +223,27 @@ class LoyaltyEngineService
         if ($max !== null && (int) $max > 0) {
             $already = $this->countAlreadyEarned(
                 accountId: $accountId,
-                ruleId: (string) $this->extractUuid($rule),
+                ruleId: (string) $this->extractUuid(object: $rule),
                 period: $period
             );
+        }
+
+        if ($max !== null) {
+            $maxInt = (int) $max;
+        } else {
+            $maxInt = null;
         }
 
         $toAward = $this->ruleEngine->applyMaxPerCustomer(
             alreadyEarnedInPeriod: $already,
             pointsToAward: $rawPoints,
-            max: $max !== null ? (int) $max : null
+            max: $maxInt
         );
 
         if ($toAward <= 0) {
             $this->logger->info(
                 'Pipelinq: max-per-period reached or zero points; skipping credit',
-                ['accountId' => $accountId, 'ruleId' => $this->extractUuid($rule)]
+                ['accountId' => $accountId, 'ruleId' => $this->extractUuid(object: $rule)]
             );
             return [
                 'programmeId' => $programmeId,
@@ -251,7 +257,7 @@ class LoyaltyEngineService
         $ledgerEntry = $this->ledgerService->creditPoints(
             accountId: $accountId,
             amount: $toAward,
-            ruleId: $this->extractUuid($rule),
+            ruleId: $this->extractUuid(object: $rule),
             brondocument: [
                 'transactionId' => $transaction['posTransactionId'] ?? null,
                 'amount'        => $context['amount'],
@@ -270,13 +276,13 @@ class LoyaltyEngineService
         );
 
         return [
-            'programmeId'  => $programmeId,
-            'accountId'    => $accountId,
-            'status'       => 'credited',
-            'points'       => $toAward,
-            'ruleId'       => $this->extractUuid($rule),
-            'tierChanged'  => $tierResult['changed'] ?? false,
-            'multiplier'   => $multiplier,
+            'programmeId' => $programmeId,
+            'accountId'   => $accountId,
+            'status'      => 'credited',
+            'points'      => $toAward,
+            'ruleId'      => $this->extractUuid(object: $rule),
+            'tierChanged' => $tierResult['changed'] ?? false,
+            'multiplier'  => $multiplier,
         ];
     }//end processForProgramme()
 
@@ -304,7 +310,13 @@ class LoyaltyEngineService
             return [];
         }
 
-        return array_map([$this, 'toArray'], is_array($rows) === true ? array_values($rows) : []);
+        if (is_array($rows) === true) {
+            $values = array_values($rows);
+        } else {
+            $values = [];
+        }
+
+        return array_map([$this, 'toArray'], $values);
     }//end getActiveProgrammes()
 
     /**
@@ -318,9 +330,9 @@ class LoyaltyEngineService
      */
     private function countAlreadyEarned(string $accountId, string $ruleId, string $period): int
     {
-        $from = $this->periodStart(period: $period);
+        $from    = $this->periodStart(period: $period);
         $history = $this->ledgerService->getLedgerHistory(accountId: $accountId, from: $from);
-        $sum = 0;
+        $sum     = 0;
         foreach ($history as $e) {
             if ((string) ($e['type'] ?? '') === 'credit' && (string) ($e['regelId'] ?? '') === $ruleId) {
                 $sum += (int) ($e['aantal'] ?? 0);
@@ -349,7 +361,7 @@ class LoyaltyEngineService
                 $start = $now->modify('first day of this month 00:00:00');
                 break;
             case 'year':
-                $start = $now->modify('first day of January ' . $now->format('Y') . ' 00:00:00');
+                $start = $now->modify('first day of January '.$now->format('Y').' 00:00:00');
                 break;
             case 'day':
             default:
@@ -400,6 +412,7 @@ class LoyaltyEngineService
         if (is_array($self) === true && isset($self['id']) === true) {
             return (string) $self['id'];
         }
+
         return $programme['programmeId'] ?? $programme['uuid'] ?? $programme['id'] ?? null;
     }//end extractProgrammeUuid()
 
@@ -416,6 +429,7 @@ class LoyaltyEngineService
         if (is_array($self) === true && isset($self['id']) === true) {
             return (string) $self['id'];
         }
+
         return $object['uuid'] ?? $object['id'] ?? null;
     }//end extractUuid()
 
@@ -431,18 +445,21 @@ class LoyaltyEngineService
         if (is_array($object) === true) {
             return $object;
         }
+
         if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
             $s = $object->jsonSerialize();
             if (is_array($s) === true) {
                 return $s;
             }
         }
+
         if (is_object($object) === true && method_exists($object, 'getObject') === true) {
             $d = $object->getObject();
             if (is_array($d) === true) {
                 return $d;
             }
         }
+
         return [];
     }//end toArray()
 

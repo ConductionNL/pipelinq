@@ -59,15 +59,14 @@ class DrcClient
      */
     private const DEFAULT_INLINE_THRESHOLD = 4194304;
 
-
     /**
      * Constructor.
      *
-     * @param ZgwApiClient      $api        Base transport.
-     * @param ZgwRegisterAccess $registers  Register facade.
-     * @param AcClient          $ac         Scope cache (pre-flight guards).
-     * @param IAppConfig        $appConfig  App config (threshold tuning).
-     * @param LoggerInterface   $logger     PSR-3 logger.
+     * @param ZgwApiClient      $api       Base transport.
+     * @param ZgwRegisterAccess $registers Register facade.
+     * @param AcClient          $ac        Scope cache (pre-flight guards).
+     * @param IAppConfig        $appConfig App config (threshold tuning).
+     * @param LoggerInterface   $logger    PSR-3 logger.
      */
     public function __construct(
         private ZgwApiClient $api,
@@ -78,7 +77,6 @@ class DrcClient
     ) {
     }//end __construct()
 
-
     /**
      * Create an enkelvoudiginformatieobject (EIO).
      *
@@ -87,11 +85,11 @@ class DrcClient
      * a `bestandsdelen[]` plan; the caller MUST drive `uploadBestandsdelen()`
      * before the EIO is durable.
      *
-     * @param array<string, mixed> $endpoint  ZgwEndpoint payload.
-     * @param array<string, mixed> $document  Pipelinq Document payload (must include
+     * @param array<string, mixed> $endpoint ZgwEndpoint payload.
+     * @param array<string, mixed> $document Pipelinq Document payload (must include
      *                                       'pipelinqId', 'bytes' OR 'inhoud',
      *                                       'bestandsnaam', 'formaat').
-     * @param array<string, mixed> $metadata  Extra DRC metadata (auteur, beschrijving,
+     * @param array<string, mixed> $metadata Extra DRC metadata (auteur, beschrijving,
      *                                       informatieobjecttype, etc).
      *
      * @return array<string, mixed> Saved ZgwResourceMapping (with zgwUrl, zgwUuid, etag,
@@ -104,19 +102,28 @@ class DrcClient
         array $document,
         array $metadata,
     ): array {
-        $client = $this->requireClient($endpoint);
-        $drcUrl = $this->requireComponentUrl($endpoint, 'drc');
+        $client = $this->requireClient(endpoint: $endpoint);
+        $drcUrl = $this->requireComponentUrl(endpoint: $endpoint, key: 'drc');
 
         // AC scope is component-level for DRC (not zaaktype-specific); the wildcard
         // bucket carries it.
         $this->ac->require($endpoint, '*', self::SCOPE_AANMAKEN);
 
-        $bytes     = (string) ($document['bytes'] ?? '');
-        $size      = isset($document['bestandsomvang']) === true
-            ? (int) $document['bestandsomvang']
-            : strlen($bytes);
+        $bytes = (string) ($document['bytes'] ?? '');
+        if (isset($document['bestandsomvang']) === true) {
+            $size = (int) $document['bestandsomvang'];
+        } else {
+            $size = strlen($bytes);
+        }
+
         $threshold = $this->inlineThreshold();
         $useInline = ($bytes !== '' && $size <= $threshold);
+
+        if ($useInline === true) {
+            $inhoud = ['inhoud' => base64_encode($bytes)];
+        } else {
+            $inhoud = ['inhoud' => null];
+        }
 
         $body = array_merge(
             [
@@ -130,7 +137,7 @@ class DrcClient
                 'bestandsomvang'       => $size,
                 'formaat'              => (string) ($document['formaat'] ?? 'application/octet-stream'),
             ],
-            $useInline === true ? ['inhoud' => base64_encode($bytes)] : ['inhoud' => null]
+            $inhoud
         );
 
         $response = $this->api->callComponent(
@@ -143,7 +150,7 @@ class DrcClient
 
         $url  = (string) ($response['headers']['location'] ?? $response['body']['url'] ?? '');
         $etag = (string) ($response['headers']['etag'] ?? '');
-        $uuid = self::extractUuid($url);
+        $uuid = self::extractUuid(url: $url);
 
         $mapping = [
             'pipelinqEntiteit'      => 'document',
@@ -165,9 +172,12 @@ class DrcClient
         }
 
         $saved = $this->registers->save(ZgwRegisterAccess::SCHEMA_MAPPING, $mapping);
-        return $saved !== null ? array_merge($saved, $mapping) : $mapping;
-    }//end createEnkelvoudigInformatieobject()
+        if ($saved !== null) {
+            return array_merge($saved, $mapping);
+        }
 
+        return $mapping;
+    }//end createEnkelvoudigInformatieobject()
 
     /**
      * Drive the bestandsdelen[]/unlock protocol for a large-file EIO.
@@ -176,10 +186,10 @@ class DrcClient
      * with the corresponding slice of `$document['bytes']`. After every part
      * succeeds POST `.../unlock` with the lock id captured during creation.
      *
-     * @param array<string, mixed> $endpoint    ZgwEndpoint payload.
-     * @param array<string, mixed> $eioMapping  Mapping returned by createEnkelvoudigInformatieobject
-     *                                          (must contain `plan.lock`, `plan.bestandsdelen`).
-     * @param array<string, mixed> $document    Document payload (with `bytes`).
+     * @param array<string, mixed> $endpoint   ZgwEndpoint payload.
+     * @param array<string, mixed> $eioMapping Mapping returned by createEnkelvoudigInformatieobject
+     *                                         (must contain `plan.lock`, `plan.bestandsdelen`).
+     * @param array<string, mixed> $document   Document payload (with `bytes`).
      *
      * @return void
      *
@@ -195,12 +205,13 @@ class DrcClient
         }
 
         $bytes  = (string) ($document['bytes'] ?? '');
-        $client = $this->requireClient($endpoint);
+        $client = $this->requireClient(endpoint: $endpoint);
 
         foreach ($parts as $part) {
             if (is_array($part) === false) {
                 continue;
             }
+
             $partUrl = (string) ($part['url'] ?? '');
             $start   = (int) ($part['begin'] ?? 0);
             $end     = (int) ($part['einde'] ?? strlen($bytes));
@@ -219,6 +230,7 @@ class DrcClient
         if ($unlockUrl === '') {
             return;
         }
+
         $this->api->callComponent(
             componentUrl: $unlockUrl,
             method: 'POST',
@@ -227,7 +239,6 @@ class DrcClient
             body: ['lock' => $lock]
         );
     }//end uploadBestandsdelen()
-
 
     /**
      * Link an EIO to a zaak via POST /zaakinformatieobjecten on the ZRC.
@@ -243,8 +254,8 @@ class DrcClient
         array $zaakMapping,
         array $eioMapping,
     ): string {
-        $client = $this->requireClient($endpoint);
-        $zrcUrl = $this->requireComponentUrl($endpoint, 'zrc');
+        $client = $this->requireClient(endpoint: $endpoint);
+        $zrcUrl = $this->requireComponentUrl(endpoint: $endpoint, key: 'zrc');
 
         $response = $this->api->callComponent(
             componentUrl: $zrcUrl,
@@ -252,14 +263,13 @@ class DrcClient
             path: '/zaakinformatieobjecten',
             client: $client,
             body: [
-                'zaak'              => (string) ($zaakMapping['zgwUrl'] ?? ''),
-                'informatieobject'  => (string) ($eioMapping['zgwUrl'] ?? ''),
+                'zaak'             => (string) ($zaakMapping['zgwUrl'] ?? ''),
+                'informatieobject' => (string) ($eioMapping['zgwUrl'] ?? ''),
             ]
         );
 
         return (string) ($response['headers']['location'] ?? $response['body']['url'] ?? '');
     }//end linkZaakinformatieobject()
-
 
     /**
      * Effective inline-upload threshold (bytes).
@@ -269,9 +279,12 @@ class DrcClient
     public function inlineThreshold(): int
     {
         $value = $this->appConfig->getValueInt(Application::APP_ID, 'zgw.drc_inline_threshold', self::DEFAULT_INLINE_THRESHOLD);
-        return $value > 0 ? $value : self::DEFAULT_INLINE_THRESHOLD;
-    }//end inlineThreshold()
+        if ($value > 0) {
+            return $value;
+        }
 
+        return self::DEFAULT_INLINE_THRESHOLD;
+    }//end inlineThreshold()
 
     /**
      * Resolve and return the ZgwClient for an endpoint, raising on miss.
@@ -286,15 +299,17 @@ class DrcClient
     {
         $client = $this->registers->findClientForEndpoint($endpoint);
         if ($client === null) {
-            throw new ZgwException(sprintf(
+            throw new ZgwException(
+                    sprintf(
                 'ZGW: ZgwEndpoint "%s" references unknown clientId "%s"',
                 (string) ($endpoint['id'] ?? '?'),
                 (string) ($endpoint['clientId'] ?? '?')
-            ));
+            )
+                    );
         }
+
         return $client;
     }//end requireClient()
-
 
     /**
      * Return the URL for a named component, raising on miss.
@@ -312,9 +327,9 @@ class DrcClient
         if ($url === '') {
             throw new ZgwException(sprintf('ZGW: endpoint missing "%s" component URL', $key));
         }
+
         return $url;
     }//end requireComponentUrl()
-
 
     /**
      * Extract the trailing UUID from a ZGW URL.
@@ -328,10 +343,19 @@ class DrcClient
         if ($url === '') {
             return '';
         }
-        $tail = basename(parse_url($url, PHP_URL_PATH) ?: '');
-        return preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $tail) === 1 ? $tail : '';
-    }//end extractUuid()
 
+        $path = parse_url($url, PHP_URL_PATH);
+        if ($path === false || $path === null || $path === '') {
+            $path = '';
+        }
+
+        $tail = basename($path);
+        if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $tail) === 1) {
+            return $tail;
+        }
+
+        return '';
+    }//end extractUuid()
 
     /**
      * Today's ISO date (UTC).
@@ -343,7 +367,6 @@ class DrcClient
         return (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d');
     }//end today()
 
-
     /**
      * Current ISO 8601 timestamp (UTC).
      *
@@ -353,6 +376,4 @@ class DrcClient
     {
         return (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
     }//end nowIso()
-
-
 }//end class

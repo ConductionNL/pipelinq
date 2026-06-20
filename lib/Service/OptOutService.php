@@ -64,7 +64,7 @@ class OptOutService
      */
     public function hasOptOut(string $rawBsn): bool
     {
-        return $this->getOptOut($rawBsn) !== null;
+        return $this->getOptOut(rawBsn: $rawBsn) !== null;
     }//end hasOptOut()
 
     /**
@@ -89,8 +89,8 @@ class OptOutService
 
             $today = new DateTimeImmutable('now', new DateTimeZone('UTC'));
             foreach (($results ?? []) as $object) {
-                $arr = self::toArray($object);
-                if ($this->isActive($arr, $today)) {
+                $arr = self::toArray(object: $object);
+                if ($this->isActive(arr: $arr, today: $today) === true) {
                     return $arr;
                 }
             }
@@ -99,7 +99,8 @@ class OptOutService
                 'OptOut lookup failed',
                 ['error' => $e->getMessage()]
             );
-        }
+        }//end try
+
         return null;
     }//end getOptOut()
 
@@ -120,9 +121,11 @@ class OptOutService
         if ($indicatieGeheim !== '1') {
             return false;
         }
-        if ($this->hasOptOut($rawBsn)) {
+
+        if ($this->hasOptOut(rawBsn: $rawBsn) === true) {
             return false;
         }
+
         try {
             [$register, $schema] = $this->config();
             $today  = new DateTimeImmutable('now', new DateTimeZone('UTC'));
@@ -146,7 +149,7 @@ class OptOutService
                 ['error' => $e->getMessage()]
             );
             return false;
-        }
+        }//end try
     }//end recordFromBrpResponse()
 
     /**
@@ -160,7 +163,7 @@ class OptOutService
      *
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006-02
      */
-    public function recordLocalOptOut(string $rawBsn, string $actor, ?string $notitie = null): bool
+    public function recordLocalOptOut(string $rawBsn, string $actor, ?string $notitie=null): bool
     {
         try {
             [$register, $schema] = $this->config();
@@ -188,7 +191,7 @@ class OptOutService
                 ['error' => $e->getMessage()]
             );
             return false;
-        }
+        }//end try
     }//end recordLocalOptOut()
 
     /**
@@ -201,29 +204,34 @@ class OptOutService
      */
     private function isActive(array $arr, DateTimeImmutable $today): bool
     {
-        $ingang   = (string) ($arr['ingangsdatum'] ?? '');
+        $ingang    = (string) ($arr['ingangsdatum'] ?? '');
         $einddatum = $arr['einddatum'] ?? null;
         if ($ingang === '') {
             return false;
         }
+
         try {
             $ingangDt = new DateTimeImmutable($ingang, new DateTimeZone('UTC'));
         } catch (Throwable $e) {
             return false;
         }
+
         if ($ingangDt > $today) {
             return false;
         }
+
         if ($einddatum !== null && $einddatum !== '') {
             try {
                 $eindDt = new DateTimeImmutable((string) $einddatum, new DateTimeZone('UTC'));
             } catch (Throwable $e) {
                 return true;
             }
+
             if ($today > $eindDt) {
                 return false;
             }
         }
+
         return true;
     }//end isActive()
 
@@ -236,13 +244,19 @@ class OptOutService
      */
     private static function toArray(mixed $object): array
     {
-        if (is_array($object)) {
+        if (is_array($object) === true) {
             return $object;
         }
-        if (is_object($object) && method_exists($object, 'jsonSerialize')) {
+
+        if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
             $serial = $object->jsonSerialize();
-            return is_array($serial) ? $serial : [];
+            if (is_array($serial) === true) {
+                return $serial;
+            }
+
+            return [];
         }
+
         return [];
     }//end toArray()
 
@@ -260,6 +274,7 @@ class OptOutService
         if ($register === '' || $schema === '') {
             throw new \RuntimeException('optOutVlag register/schema not configured.');
         }
+
         return [$register, $schema];
     }//end config()
 

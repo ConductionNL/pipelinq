@@ -65,11 +65,11 @@ class MediaAttachmentService
     /**
      * Constructor.
      *
-     * @param ContainerInterface     $container     DI container.
-     * @param IAppConfig             $appConfig     App config.
-     * @param IRootFolder            $rootFolder    NC Files root.
+     * @param ContainerInterface     $container      DI container.
+     * @param IAppConfig             $appConfig      App config.
+     * @param IRootFolder            $rootFolder     NC Files root.
      * @param WhatsAppProviderClient $providerClient Vendor transport.
-     * @param LoggerInterface        $logger        Logger.
+     * @param LoggerInterface        $logger         Logger.
      *
      * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.7
      */
@@ -147,9 +147,14 @@ class MediaAttachmentService
 
         $quarantined = ($this->virusScan(bytes: $bytes) === false);
 
-        $resolvedMime = ((string) ($handle['mimeType'] ?? '') !== '') ? (string) $handle['mimeType'] : $mimeType;
-        $extension    = $this->extensionFor(mimeType: $resolvedMime);
-        $fileName     = sprintf('%s%s', $mediaId, $extension);
+        if ((string) ($handle['mimeType'] ?? '') !== '') {
+            $resolvedMime = (string) $handle['mimeType'];
+        } else {
+            $resolvedMime = $mimeType;
+        }
+
+        $extension = $this->extensionFor(mimeType: $resolvedMime);
+        $fileName  = sprintf('%s%s', $mediaId, $extension);
 
         $path = $this->writeFile(
             conversationId: $conversationId,
@@ -241,6 +246,7 @@ class MediaAttachmentService
             if ($userFolder->nodeExists($relative) === false) {
                 $userFolder->newFolder($relative);
             }
+
             $folder = $userFolder->get($relative);
         } catch (NotFoundException $e) {
             try {
@@ -259,7 +265,7 @@ class MediaAttachmentService
                 ['path' => $relative, 'exception' => $e->getMessage()]
             );
             return '';
-        }
+        }//end try
 
         if (method_exists($folder, 'newFile') === false) {
             return '';
@@ -321,7 +327,7 @@ class MediaAttachmentService
             }
 
             return (string) $body;
-        }
+        }//end if
 
         $body = @file_get_contents($url);
         if ($body === false) {

@@ -142,13 +142,13 @@ class SettingsController extends Controller
 
         $config   = $this->settingsService->getSettings();
         $response = [
-            'success'                 => true,
-            'openRegisters'           => in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()),
-            'isAdmin'                 => $isAdmin,
-            'config'                  => $config,
+            'success'                => true,
+            'openRegisters'          => in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()),
+            'isAdmin'                => $isAdmin,
+            'config'                 => $config,
             // Surfaced as a top-level camelCase property so the Vue settings
             // store can read it without parsing the raw config map (REQ-LM-002).
-            'leadStaleThresholdDays'  => (int) ($config['lead_stale_threshold_days'] ?? 14),
+            'leadStaleThresholdDays' => (int) ($config['lead_stale_threshold_days'] ?? 14),
         ];
 
         if ($isAdmin === true) {

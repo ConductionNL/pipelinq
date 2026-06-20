@@ -76,7 +76,11 @@ class SmsProviderFactory
         $sourceId    = (string) ($channelProvider['sourceId'] ?? ($channelProvider['openconnectorSourceId'] ?? ''));
         $credentials = (array) ($channelProvider['credentials'] ?? []);
 
-        $sourceIdOrNull = ($sourceId === '') ? null : $sourceId;
+        if ($sourceId === '') {
+            $sourceIdOrNull = null;
+        } else {
+            $sourceIdOrNull = $sourceId;
+        }
 
         return match ($vendor) {
             'twilio'      => new TwilioSmsClient(
@@ -104,6 +108,6 @@ class SmsProviderFactory
                 sourceId: $sourceIdOrNull,
             ),
             default       => null,
-        };
+        };//end match
     }//end create()
 }//end class

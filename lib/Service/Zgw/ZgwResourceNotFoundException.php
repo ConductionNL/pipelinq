@@ -42,7 +42,6 @@ class ZgwResourceNotFoundException extends ZgwException
      */
     public function __construct(public readonly string $url)
     {
-        parent::__construct(sprintf('ZGW: resource not found at URL "%s"', $url));
+        parent::__construct(message: sprintf('ZGW: resource not found at URL "%s"', $url));
     }//end __construct()
-
 }//end class
