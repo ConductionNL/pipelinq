@@ -73,6 +73,7 @@ use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\AppFramework\Services\IInitialState;
 use OCP\Comments\ICommentsManager;
 use OCP\IAppConfig;
+use OCP\ICacheFactory;
 use OCP\IGroupManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -413,6 +414,113 @@ class Application extends App implements IBootstrap
         );
     }//end registerPosLifecycleGuards()
 
+
+    /**
+     * Build the Features & Roadmap list from openspec/specs at runtime so the
+     * surface stays current with the specs without depending on a committed
+     * docs/features.json (which can drift). Cached per app version — the specs
+     * only change when the app updates — with the committed docs/features.json
+     * as a fallback for deploys that ship without openspec/.
+     *
+     * @return array<int, array{slug:string, title:string, summary:string, docsUrl:string}>
+     */
+    private function loadRoadmapFeatures(): array
+    {
+        $container = $this->getContainer();
+        $version   = (string) $container->get(IAppManager::class)->getAppVersion('pipelinq');
+        $cache     = $container->get(ICacheFactory::class)->createLocal('pipelinq_features');
+        $cacheKey  = 'v'.$version;
+
+        $cached = $cache->get($cacheKey);
+        if (is_array($cached) === true) {
+            return $cached;
+        }
+
+        $features = $this->extractFeaturesFromSpecs(__DIR__.'/../../openspec/specs');
+        if ($features === []) {
+            $path = __DIR__.'/../../docs/features.json';
+            if (is_file($path) === true) {
+                $decoded = json_decode((string) file_get_contents($path), associative: true);
+                if (is_array($decoded) === true) {
+                    $features = $decoded;
+                }
+            }
+        }
+
+        $cache->set($cacheKey, $features, 86400);
+        return $features;
+    }//end loadRoadmapFeatures()
+
+
+    /**
+     * Parse `status: done` capability specs into feature entries. Mirrors the
+     * org-wide extract-features.py and the docusaurus extractFeatures.js: the
+     * status is read straight off the frontmatter line (resilient to YAML
+     * typos in sibling fields), the title is the H1 minus a trailing
+     * "Specification", and the summary is the first paragraph under `## Purpose`.
+     *
+     * @param string $specsDir Absolute path to openspec/specs.
+     *
+     * @return array<int, array{slug:string, title:string, summary:string, docsUrl:string}>
+     */
+    private function extractFeaturesFromSpecs(string $specsDir): array
+    {
+        if (is_dir($specsDir) === false) {
+            return [];
+        }
+
+        $paths = glob($specsDir.'/*/spec.md');
+        if ($paths === false) {
+            return [];
+        }
+
+        $entries = [];
+        foreach ($paths as $specPath) {
+            $text = (string) file_get_contents($specPath);
+            if (preg_match('/^---\s*\n(.*?\n)---\s*\n(.*)$/s', $text, $m) !== 1) {
+                continue;
+            }
+
+            $front = $m[1];
+            $body  = $m[2];
+            if (preg_match('/^status:\s*(.+?)\s*$/m', $front, $sm) !== 1) {
+                continue;
+            }
+
+            if (strtolower(trim($sm[1], " \t\"'")) !== 'done') {
+                continue;
+            }
+
+            $slug  = basename(dirname($specPath));
+            $title = $slug;
+            if (preg_match('/^#\s+(.+?)\s*$/m', $body, $tm) === 1) {
+                $title = trim((string) preg_replace('/\s+specification\s*$/i', '', trim($tm[1])));
+            }
+
+            $summary = '';
+            if (preg_match('/^##\s+Purpose\s*$/m', $body, $pm, PREG_OFFSET_CAPTURE) === 1) {
+                $rest    = substr($body, ($pm[0][1] + strlen($pm[0][0])));
+                $nextPos = (preg_match('/\n##\s/', $rest, $nm, PREG_OFFSET_CAPTURE) === 1) ? $nm[0][1] : strlen($rest);
+                $section = trim(substr($rest, 0, $nextPos));
+                $para    = (preg_split('/\n\s*\n/', $section)[0] ?? '');
+                $summary = trim((string) preg_replace('/\s+/', ' ', $para));
+            }
+
+            $entries[] = [
+                'slug'    => $slug,
+                'title'   => $title,
+                'summary' => $summary,
+                'docsUrl' => 'openspec/specs/'.$slug.'/spec.md',
+            ];
+        }//end foreach
+
+        // Sort by slug (not full path) to match extract-features.py and
+        // extractFeatures.js, which order by the capability slug.
+        usort($entries, static fn(array $a, array $b): int => strcmp($a['slug'], $b['slug']));
+        return $entries;
+    }//end extractFeaturesFromSpecs()
+
+
     /**
      * Boot the application and register comment display name resolvers.
      *
@@ -424,23 +532,17 @@ class Application extends App implements IBootstrap
     {
         $server = $context->getServerContainer();
 
-        // Hand the Features & Roadmap surface its build-time feature list.
-        // docs/features.json is regenerated from openspec/specs/ by the
-        // org-wide Features Extract workflow stage (.github/workflows/quality.yml).
-        // Pull IInitialState from the per-app container so the serialized key
-        // is correctly namespaced as `initial-state-pipelinq-<key>`.
+        // Hand the Features & Roadmap surface its feature list, derived from
+        // openspec/specs at runtime so it always reflects the current specs
+        // (cached per app version; see loadRoadmapFeatures). Pull IInitialState
+        // from the per-app container so the serialized key is correctly
+        // namespaced as `initial-state-pipelinq-<key>`.
         try {
             $initialState = $this->getContainer()->get(IInitialState::class);
-            $featuresPath = __DIR__.'/../../docs/features.json';
-            $features     = [];
-            if (is_file($featuresPath) === true) {
-                $decoded = json_decode((string) file_get_contents($featuresPath), associative: true);
-                if (is_array($decoded) === true) {
-                    $features = $decoded;
-                }
-            }
-
-            $initialState->provideInitialState('features_roadmap_features', $features);
+            $initialState->provideInitialState(
+                'features_roadmap_features',
+                $this->loadRoadmapFeatures()
+            );
 
             // Resolve the "Timesheet approval" billing entry point through the
             // ADR-019 integration registry: the configured shillinq deployment
