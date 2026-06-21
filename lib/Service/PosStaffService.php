@@ -104,9 +104,13 @@ class PosStaffService
         [$register, $schema] = $this->config(schemaKey: 'posStaff_schema');
 
         $results = $this->getObjectService()->findAll(
-            register: $register,
-            schema: $schema,
-            limit: 2000
+            config: [
+                'filters' => [
+                    'register' => $register,
+                    'schema'   => $schema,
+                ],
+                'limit'   => 2000,
+            ]
         );
 
         $out = [];
