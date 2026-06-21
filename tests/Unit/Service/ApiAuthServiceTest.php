@@ -280,25 +280,4 @@ class ApiAuthServiceTest extends TestCase
         $this->assertArrayHasKey(key: 'oauth_client_id', array: $config);
         $this->assertArrayHasKey(key: 'oauth_secret_configured', array: $config);
     }//end testGetOAuthConfigExcludesSecret()
-
-    /**
-     * Test that getMcpConfig returns non-sensitive fields only.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/admin-settings/tasks.md#task-2.1
-     */
-    public function testGetMcpConfigExcludesSecrets(): void
-    {
-        $this->appConfig->method('getValueString')
-            ->willReturn('');
-
-        $config = $this->service->getMcpConfig();
-
-        $this->assertArrayNotHasKey(key: 'mcp_api_key', array: $config);
-        $this->assertArrayNotHasKey(key: 'mcp_oauth_client_secret', array: $config);
-        $this->assertArrayHasKey(key: 'mcp_endpoint', array: $config);
-        $this->assertArrayHasKey(key: 'mcp_api_key_configured', array: $config);
-        $this->assertArrayHasKey(key: 'mcp_oauth_secret_configured', array: $config);
-    }//end testGetMcpConfigExcludesSecrets()
 }//end class

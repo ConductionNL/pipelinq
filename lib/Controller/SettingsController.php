@@ -26,7 +26,6 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ApiAuthService;
-use OCA\Pipelinq\Service\ObjectenAccessService;
 use OCA\Pipelinq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -62,16 +61,15 @@ class SettingsController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest              $request               The request.
-     * @param ContainerInterface    $container             The container.
-     * @param IAppManager           $appManager            The app manager.
-     * @param IGroupManager         $groupManager          The group manager.
-     * @param SettingsService       $settingsService       The settings service.
-     * @param ApiAuthService        $apiAuthService        The API auth service.
-     * @param ObjectenAccessService $objectenAccessService The objecten access service.
-     * @param IUserSession          $userSession           The user session.
-     * @param IL10N                 $l10n                  The localization service.
-     * @param LoggerInterface       $logger                The logger.
+     * @param IRequest           $request         The request.
+     * @param ContainerInterface $container       The container.
+     * @param IAppManager        $appManager      The app manager.
+     * @param IGroupManager      $groupManager    The group manager.
+     * @param SettingsService    $settingsService The settings service.
+     * @param ApiAuthService     $apiAuthService  The API auth service.
+     * @param IUserSession       $userSession     The user session.
+     * @param IL10N              $l10n            The localization service.
+     * @param LoggerInterface    $logger          The logger.
      */
     public function __construct(
         IRequest $request,
@@ -80,7 +78,6 @@ class SettingsController extends Controller
         private readonly IGroupManager $groupManager,
         private SettingsService $settingsService,
         private ApiAuthService $apiAuthService,
-        private ObjectenAccessService $objectenAccessService,
         private IUserSession $userSession,
         private IL10N $l10n,
         private LoggerInterface $logger,
@@ -127,7 +124,7 @@ class SettingsController extends Controller
     /**
      * Get current Pipelinq settings.
      *
-     * Admins also receive objectenAccess, apiTokens, oauthConfig (no secret), and mcpConfig (no secrets).
+     * Admins also receive apiTokens and oauthConfig (no secret).
      *
      * @return JSONResponse The settings response.
      *
@@ -152,96 +149,13 @@ class SettingsController extends Controller
         ];
 
         if ($isAdmin === true) {
-            $response['objectenAccess'] = $this->objectenAccessService->getAccessMap();
-            $response['apiTokens']      = $this->apiAuthService->listTokens();
-            $response['oauthConfig']    = $this->apiAuthService->getOAuthConfig();
-            $response['mcpConfig']      = $this->apiAuthService->getMcpConfig();
+            $response['apiTokens']   = $this->apiAuthService->listTokens();
+            $response['oauthConfig'] = $this->apiAuthService->getOAuthConfig();
         }
 
         return new JSONResponse(data: $response);
 
     }//end index()
-
-    /**
-     * Get the full Objects API access map and check the current user's access to a schema.
-     *
-     * Returns the full map for admins; for non-admins returns only the access check result
-     * for the requested schema.
-     *
-     * @return JSONResponse The access map or per-schema access check result.
-     *
-     * @spec openspec/changes/admin-settings/tasks.md#task-3.1
-     */
-    #[NoAdminRequired]
-    public function getObjectenAccess(): JSONResponse
-    {
-        $schemaSlug = $this->request->getParam('schema', '');
-        $user       = $this->userSession->getUser();
-        $isAdmin    = $user !== null && $this->groupManager->isAdmin($user->getUID());
-
-        if ($isAdmin === true) {
-            return new JSONResponse(
-                data: [
-                    'success'        => true,
-                    'objectenAccess' => $this->objectenAccessService->getAccessMap(),
-                ]
-            );
-        }
-
-        if ($schemaSlug === '' || $user === null) {
-            return new JSONResponse(data: ['message' => 'schema parameter is required'], statusCode: Http::STATUS_BAD_REQUEST);
-        }
-
-        $allowed = $this->objectenAccessService->isAllowed(
-            schemaSlug: $schemaSlug,
-            userId: $user->getUID()
-        );
-
-        return new JSONResponse(
-            data: [
-                'success' => true,
-                'allowed' => $allowed,
-                'schema'  => $schemaSlug,
-            ]
-        );
-
-    }//end getObjectenAccess()
-
-    /**
-     * Save per-schema Objects API access groups.
-     *
-     * @return JSONResponse The updated access map.
-     *
-     * @spec openspec/changes/admin-settings/tasks.md#task-3.1
-     */
-    #[AuthorizedAdminSetting(Application::APP_ID)]
-    public function saveObjectenAccess(): JSONResponse
-    {
-        $schemaSlug = $this->request->getParam('schemaSlug', '');
-        $groupIds   = $this->request->getParam('groupIds', []);
-
-        if ($schemaSlug === '') {
-            return new JSONResponse(data: ['message' => 'schemaSlug is required'], statusCode: Http::STATUS_BAD_REQUEST);
-        }
-
-        $normalizedGroupIds = [];
-        if (is_array($groupIds) === true) {
-            $normalizedGroupIds = $groupIds;
-        }
-
-        $this->objectenAccessService->setSchemaAccess(
-            schemaSlug: $schemaSlug,
-            groupIds: $normalizedGroupIds
-        );
-
-        return new JSONResponse(
-            data: [
-                'success'        => true,
-                'objectenAccess' => $this->objectenAccessService->getAccessMap(),
-            ]
-        );
-
-    }//end saveObjectenAccess()
 
     /**
      * List all API tokens (metadata only — no hashes).
@@ -323,28 +237,6 @@ class SettingsController extends Controller
         );
 
     }//end saveOAuth()
-
-    /**
-     * Save MCP server configuration.
-     *
-     * @return JSONResponse The saved MCP config (no secrets).
-     *
-     * @spec openspec/changes/admin-settings/tasks.md#task-3.4
-     */
-    #[AuthorizedAdminSetting(Application::APP_ID)]
-    public function saveMcp(): JSONResponse
-    {
-        $data = $this->request->getParams();
-        $this->apiAuthService->saveMcpConfig(config: $data);
-
-        return new JSONResponse(
-            data: [
-                'success'   => true,
-                'mcpConfig' => $this->apiAuthService->getMcpConfig(),
-            ]
-        );
-
-    }//end saveMcp()
 
     /**
      * Update Pipelinq settings.
