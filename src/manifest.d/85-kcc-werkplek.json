@@ -2,7 +2,7 @@
 	"menu": [
 		{
 			"id": "KccWerkplek",
-			"label": "KCC Werkplek",
+			"label": "Customer Support",
 			"icon": "icon-comment",
 			"route": "KccWerkplek",
 			"order": 1
@@ -13,7 +13,7 @@
 			"id": "KccWerkplek",
 			"route": "/werkplek",
 			"type": "custom",
-			"title": "KCC Werkplek",
+			"title": "Customer Support",
 			"component": "KccWerkplekPage"
 		}
 	]
