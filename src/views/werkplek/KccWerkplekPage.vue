@@ -6,7 +6,7 @@
 		<header class="kcc-werkplek-page__header">
 			<div class="kcc-werkplek-page__header-left">
 				<h2 class="kcc-werkplek-page__title">
-					{{ t('pipelinq', 'KCC Werkplek') }}
+					{{ t('pipelinq', 'Customer Support') }}
 				</h2>
 				<NcSelect
 					v-if="hasQueueOptions"
