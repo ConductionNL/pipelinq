@@ -317,7 +317,7 @@
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"dateRange": {
 					"enabled": true,
-					"showHeaderPicker": false,
+					"showHeaderPicker": true,
 					"persistKey": "pipelinq-commercial-range",
 					"default": { "preset": "month" },
 					"presets": [
