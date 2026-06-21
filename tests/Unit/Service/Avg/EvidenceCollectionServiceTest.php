@@ -43,6 +43,7 @@ require_once __DIR__.'/AvgTestSupport.php';
  */
 class EvidenceCollectionServiceTest extends TestCase
 {
+
     /**
      * The fake OR ObjectService.
      *
@@ -72,6 +73,16 @@ class EvidenceCollectionServiceTest extends TestCase
     private array $orObjects = [];
 
     /**
+     * The filter array passed to the OR ObjectService::findAll for the
+     * cross-entity subject query — captured so the OR-consumption-boundary
+     * test (REQ-AVG-014) can assert a plain equality filter is used rather
+     * than the admin-gated OR DsarService PII-index path.
+     *
+     * @var array<string, mixed>
+     */
+    private array $orFilters = [];
+
+    /**
      * Set up the test.
      *
      * @return void
@@ -81,7 +92,7 @@ class EvidenceCollectionServiceTest extends TestCase
         $this->objectService = new FakeAvgObjectService();
         $appConfig           = $this->createMock(IAppConfig::class);
         $appConfig->method('getValueString')->willReturnCallback(
-            static fn (string $app, string $key, string $default = '', bool $lazy = false): string
+            static fn (string $app, string $key, string $default='', bool $lazy=false): string
                 => ($key === 'register' ? 'reg' : $key)
         );
         $this->repository = AvgRepositoryFactory::build($this->objectService, $appConfig);
@@ -92,17 +103,20 @@ class EvidenceCollectionServiceTest extends TestCase
         // schema for everything else. We delegate to a small wrapper so the same
         // fake backs the repository while answering the cross-entity BSN query.
         $orObjects     = &$this->orObjects;
+        $orFilters     = &$this->orFilters;
         $objectService = $this->objectService;
-        $container     = new class($objectService, $orObjects) implements ContainerInterface {
+        $container     = new class($objectService, $orObjects, $orFilters) implements ContainerInterface {
             /**
              * @param FakeAvgObjectService             $objectService The AVG store.
              * @param array<int, array<string, mixed>> $orObjects     The BSN result set.
+             * @param array<string, mixed>             $orFilters     Captured OR find filters.
              */
             public function __construct(
                 private FakeAvgObjectService $objectService,
-                private array &$orObjects
+                private array &$orObjects,
+                private array &$orFilters
             ) {
-            }
+            }//end __construct()
 
             /**
              * @param string $id The service id.
@@ -114,16 +128,19 @@ class EvidenceCollectionServiceTest extends TestCase
                 if ($id === 'OCA\OpenRegister\Service\ObjectService') {
                     $store     = $this->objectService;
                     $orObjects = &$this->orObjects;
-                    return new class($store, $orObjects) {
+                    $orFilters = &$this->orFilters;
+                    return new class($store, $orObjects, $orFilters) {
                         /**
                          * @param FakeAvgObjectService             $store     The AVG store.
                          * @param array<int, array<string, mixed>> $orObjects The BSN result set.
+                         * @param array<string, mixed>             $orFilters Captured OR find filters.
                          */
                         public function __construct(
                             private FakeAvgObjectService $store,
-                            private array &$orObjects
+                            private array &$orObjects,
+                            private array &$orFilters
                         ) {
-                        }
+                        }//end __construct()
 
                         /**
                          * @param array<string, mixed> $config The find config.
@@ -134,11 +151,12 @@ class EvidenceCollectionServiceTest extends TestCase
                         {
                             $filters = (array) ($config['filters'] ?? []);
                             if (isset($filters['bsn']) === true) {
+                                $this->orFilters = $filters;
                                 return $this->orObjects;
                             }
 
                             return $this->store->findAll($config);
-                        }
+                        }//end findAll()
 
                         /**
                          * @param array<string, mixed> $object   The object.
@@ -149,10 +167,10 @@ class EvidenceCollectionServiceTest extends TestCase
                          *
                          * @return array<string, mixed> The saved object.
                          */
-                        public function saveObject(array $object, array $extend, string $register, string $schema, ?string $uuid = null): array
+                        public function saveObject(array $object, array $extend, string $register, string $schema, ?string $uuid=null): array
                         {
                             return $this->store->saveObject($object, $extend, $register, $schema, $uuid);
-                        }
+                        }//end saveObject()
 
                         /**
                          * @param string $id       The id.
@@ -164,12 +182,12 @@ class EvidenceCollectionServiceTest extends TestCase
                         public function find(string $id, string $register, string $schema): ?array
                         {
                             return $this->store->find($id, $register, $schema);
-                        }
+                        }//end find()
                     };
                 }//end if
 
                 throw new \RuntimeException('not found: '.$id);
-            }
+            }//end get()
 
             /**
              * @param string $id The service id.
@@ -179,7 +197,7 @@ class EvidenceCollectionServiceTest extends TestCase
             public function has(string $id): bool
             {
                 return ($id === 'OCA\OpenRegister\Service\ObjectService');
-            }
+            }//end has()
         };
 
         $sourcesConfig = $this->createMock(IAppConfig::class);
@@ -201,7 +219,7 @@ class EvidenceCollectionServiceTest extends TestCase
      *
      * @return array<string, mixed> The stored request.
      */
-    private function seedRequest(array $overrides = []): array
+    private function seedRequest(array $overrides=[]): array
     {
         return $this->objectService->saveObject(
             object: array_merge(
@@ -257,7 +275,7 @@ class EvidenceCollectionServiceTest extends TestCase
             $this->orObject('zaken', 'zaak', ['naam' => 'Aanvraag A']),
             $this->orObject('contacten', 'contact', ['naam' => 'Burger']),
         ];
-        $request = $this->seedRequest();
+        $request         = $this->seedRequest();
 
         $result = $this->service->collect(request: $request);
 
@@ -276,7 +294,7 @@ class EvidenceCollectionServiceTest extends TestCase
             $this->orObject('zaken', 'zaak', ['naam' => 'In scope']),
             $this->orObject('financien', 'factuur', ['bedrag' => 10]),
         ];
-        $request = $this->seedRequest(['scope' => ['zaken']]);
+        $request         = $this->seedRequest(['scope' => ['zaken']]);
 
         $result = $this->service->collect(request: $request);
 
@@ -296,7 +314,7 @@ class EvidenceCollectionServiceTest extends TestCase
             $this->orObject('zaken', 'zaak', $payload),
             $this->orObject('archief', 'zaak', $payload),
         ];
-        $request = $this->seedRequest();
+        $request         = $this->seedRequest();
 
         $this->service->collect(request: $request);
 
@@ -323,4 +341,28 @@ class EvidenceCollectionServiceTest extends TestCase
         $this->assertSame(0, $result['collected']);
         $this->assertCount(0, $this->evidenceFor($this->repository->idOf($request)));
     }//end testNoBsnIsNoOp()
+
+    /**
+     * REQ-AVG-014 boundary: the subject find delegates to OR's generic
+     * ObjectService::findAll with a PLAIN equality filter on `bsn` — not the
+     * admin-gated OR DsarService PII-index path. Pinning this guards against a
+     * future Seam-3 migration silently changing the find surface (the OR
+     * compliance subsystem matches the openregister_entities PII index and
+     * throws for non-admin callers; the AVG handler must not depend on that).
+     *
+     * @return void
+     */
+    public function testSubjectFindUsesPlainEqualityFilterNotDsar(): void
+    {
+        $this->orObjects = [$this->orObject('zaken', 'zaak', ['naam' => 'A'])];
+        $request         = $this->seedRequest(['verzoekerBsn' => '123456782']);
+
+        $this->service->collect(request: $request);
+
+        // Exactly a plain equality filter on the subject identifier reached OR.
+        $this->assertSame(['bsn' => '123456782'], $this->orFilters);
+        // No PII-index / type / mode keys (the DsarService contract) leaked in.
+        $this->assertArrayNotHasKey('type', $this->orFilters);
+        $this->assertArrayNotHasKey('mode', $this->orFilters);
+    }//end testSubjectFindUsesPlainEqualityFilterNotDsar()
 }//end class
