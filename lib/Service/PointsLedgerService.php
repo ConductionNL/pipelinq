@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -239,13 +240,35 @@ class PointsLedgerService
      */
     public function getAccountBalance(string $accountId): int
     {
-        $entries = $this->getLedgerHistory(accountId: $accountId);
-        $sum     = 0;
-        foreach ($entries as $e) {
-            $sum += (int) ($e['aantal'] ?? 0);
+        [$register, $schema] = $this->config();
+        if ($register === '' || $schema === '' || $accountId === '') {
+            return 0;
         }
 
-        return $sum;
+        // Push the full-ledger balance SUM down into OpenRegister: SUM over the
+        // signed `aantal` column across every ledger entry for the account.
+        // There is NO date window here, so the SQL SUM is exactly the prior PHP
+        // sum over the unfiltered ledger history (verified live). On an empty
+        // ledger the runner returns null, which casts to 0 — matching the prior
+        // "no entries" result. Degrades to 0 when OpenRegister is unavailable,
+        // mirroring getLedgerHistory()'s findAll-failure path.
+        try {
+            $query  = AggregationQuery::create(
+                metric: 'sum',
+                field: 'aantal',
+                filter: ['accountId' => $accountId],
+            );
+            $result = $this->getAggregationRunner()->runAdhocByRef(
+                registerRef: $register,
+                schemaRef: $schema,
+                query: $query
+            );
+        } catch (\Throwable $e) {
+            $this->logger->debug('Pipelinq: ledger balance aggregation failed', ['exception' => $e->getMessage()]);
+            return 0;
+        }
+
+        return (int) round((float) ($result['value'] ?? 0));
     }//end getAccountBalance()
 
     /**
@@ -494,4 +517,24 @@ class PointsLedgerService
             throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
         }
     }//end getObjectService()
+
+    /**
+     * Get the OpenRegister ad-hoc AggregationRunner.
+     *
+     * Resolved from the DI container the same way ObjectService is, so the
+     * full-ledger balance SUM is computed by OpenRegister (ADR-022) instead of
+     * hydrating the whole ledger and reducing in PHP.
+     *
+     * @return object The aggregation runner.
+     *
+     * @throws RuntimeException If OpenRegister is unavailable.
+     */
+    private function getAggregationRunner(): object
+    {
+        try {
+            return $this->container->get('OCA\OpenRegister\Service\Aggregation\AggregationRunner');
+        } catch (\Throwable $e) {
+            throw new RuntimeException('OpenRegister aggregation runner is unavailable.', 0, $e);
+        }
+    }//end getAggregationRunner()
 }//end class

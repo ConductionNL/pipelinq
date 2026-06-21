@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -184,6 +185,67 @@ class LoyaltyReportingService
      */
     public function getTierReport(string $programmeId): array
     {
+        // Push the per-tier account COUNT down into OpenRegister: COUNT grouped
+        // by `currentTierId`, filtered to the programme. The prior PHP path
+        // hydrated every account just to bucket-count them; the grouped COUNT
+        // returns the same buckets (verified live). The only domain rule that
+        // stays in PHP is the default bucket: accounts with a missing/empty
+        // `currentTierId` come back from the grouped aggregation under a `null`
+        // (or empty-string) key, which we fold into the `unassigned` bucket to
+        // preserve the original `(string) ($a['currentTierId'] ?? 'unassigned')`
+        // semantics. On OpenRegister failure we fall back to the PHP path so the
+        // report still renders.
+        try {
+            [$register, $schema] = $this->accountConfig();
+            $query  = AggregationQuery::create(
+                metric: 'count',
+                filter: ['programmeId' => $programmeId],
+                groupBy: ['field' => 'currentTierId'],
+            );
+            $result = $this->getAggregationRunner()->runAdhocByRef(
+                registerRef: $register,
+                schemaRef: $schema,
+                query: $query
+            );
+        } catch (\Throwable $e) {
+            $this->logger->debug('Pipelinq: tier-report aggregation failed; using PHP fallback', ['exception' => $e->getMessage()]);
+            return $this->getTierReportPhp(programmeId: $programmeId);
+        }
+
+        $byTier = [];
+        foreach (($result['groups'] ?? []) as $group) {
+            // Fold a missing/empty tier key into the `unassigned` bucket,
+            // matching the prior `?? 'unassigned'` default. Two source buckets
+            // (e.g. null and '') therefore merge into one, so accumulate.
+            $key = $group['key'] ?? null;
+            if ($key === null || $key === '') {
+                $tierId = 'unassigned';
+            } else {
+                $tierId = (string) $key;
+            }
+
+            $byTier[$tierId] = ($byTier[$tierId] ?? 0) + (int) ($group['value'] ?? 0);
+        }
+
+        $report = [];
+        foreach ($byTier as $tierId => $count) {
+            $report[] = ['tierId' => $tierId, 'accountCount' => $count];
+        }
+
+        return $report;
+    }//end getTierReport()
+
+    /**
+     * PHP fallback for {@see getTierReport()} — the original hydrate-and-bucket
+     * implementation, retained as the degradation path when the OpenRegister
+     * aggregation runner is unavailable.
+     *
+     * @param string $programmeId The programme UUID.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function getTierReportPhp(string $programmeId): array
+    {
         $accounts = $this->loyaltyAccountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
 
         $byTier = [];
@@ -198,7 +260,7 @@ class LoyaltyReportingService
         }
 
         return $result;
-    }//end getTierReport()
+    }//end getTierReportPhp()
 
     /**
      * Expiry forecast: how many points are scheduled to expire in the next $days days.
@@ -360,4 +422,45 @@ class LoyaltyReportingService
             throw new \RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
         }
     }//end getObjectService()
+
+    /**
+     * Get the OpenRegister ad-hoc AggregationRunner.
+     *
+     * Resolved from the DI container the same way ObjectService is, so the
+     * per-tier account COUNT is computed by OpenRegister (ADR-022) instead of
+     * hydrating every account and bucketing in PHP.
+     *
+     * @return object The aggregation runner.
+     *
+     * @throws \RuntimeException If OpenRegister is unavailable.
+     */
+    private function getAggregationRunner(): object
+    {
+        try {
+            return $this->container->get('OCA\OpenRegister\Service\Aggregation\AggregationRunner');
+        } catch (\Throwable $e) {
+            throw new \RuntimeException('OpenRegister aggregation runner is unavailable.', 0, $e);
+        }
+    }//end getAggregationRunner()
+
+    /**
+     * Resolve the register + KlantLoyaltyAccount schema refs for aggregation.
+     *
+     * Mirrors the refs LoyaltyAccountService uses for its account findAll calls
+     * so the grouped COUNT aggregates the same object set.
+     *
+     * @return array{0: string, 1: string} The [register, schema] refs.
+     *
+     * @throws \RuntimeException When the register or schema is not configured.
+     */
+    private function accountConfig(): array
+    {
+        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $schema   = $this->appConfig->getValueString(Application::APP_ID, 'klantLoyaltyAccount_schema', '');
+        if ($register === '' || $schema === '') {
+            throw new \RuntimeException('KlantLoyaltyAccount register/schema is not configured.');
+        }
+
+        return [$register, $schema];
+    }//end accountConfig()
 }//end class

@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use RuntimeException;
+use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
@@ -71,8 +72,188 @@ class PosStaffReportService
      */
     public function staffSalesReport(): array
     {
-        $rows = $this->fetchFinalTransactions();
+        try {
+            $byStaff = $this->aggregateStaffTotals();
+        } catch (\Throwable $e) {
+            // OpenRegister aggregation unavailable — fall back to the original
+            // hydrate-and-reduce path so the report still renders.
+            $this->logger->debug(
+                'Pipelinq: staff-sales aggregation failed; using PHP fallback',
+                ['exception' => $e->getMessage()]
+            );
+            $byStaff = $this->aggregateStaffTotalsPhp(rows: $this->fetchFinalTransactions());
+        }
 
+        // Resolve display names from posStaff. Failures fall back to the UUID.
+        foreach ($byStaff as $staffId => $_row) {
+            try {
+                $staff = $this->posStaffService->getStaff(id: $staffId);
+                $byStaff[$staffId]['displayName'] = (string) ($staff['displayName'] ?? $staffId);
+            } catch (\Throwable $e) {
+                $byStaff[$staffId]['displayName'] = $staffId;
+            }
+        }
+
+        // Round monetary values to cents (server-authoritative).
+        foreach ($byStaff as $staffId => $_row) {
+            $byStaff[$staffId]['total']    = round($byStaff[$staffId]['total'], 2);
+            $byStaff[$staffId]['totalTax'] = round($byStaff[$staffId]['totalTax'], 2);
+        }
+
+        return array_values($byStaff);
+    }//end staffSalesReport()
+
+    /**
+     * Compute the per-staff totals by pushing five grouped aggregations down
+     * into OpenRegister, then combining them in PHP.
+     *
+     * The original PHP reduce applied a per-row sign (+1 for confirmed/settled,
+     * -1 for refunded) before summing `total` / `totalTax` grouped by
+     * `staffMemberId`. A single grouped SUM cannot express that per-row sign, so
+     * the refund-netting is reconstructed from two grouped SUMs:
+     *
+     *   total(staff)    = SUM(total | confirmed,settled)   - SUM(total | refunded)
+     *   totalTax(staff) = SUM(totalTax | confirmed,settled) - SUM(totalTax | refunded)
+     *
+     * The `transactionCount` is a grouped COUNT over all three final statuses
+     * (refunds count toward the transaction count, exactly as before). Rows with
+     * an empty `staffMemberId` are excluded server-side via the COUNT grouping
+     * (an empty key is folded out below) to match the prior `if ($staffId === '')
+     * continue;` guard. Verified live to match the PHP reduce, refund netting
+     * included.
+     *
+     * @return array<string, array{staffMemberId: string, displayName: string, transactionCount: int, total: float, totalTax: float}>
+     *         Keyed by staffMemberId.
+     *
+     * @throws \RuntimeException When OpenRegister is unavailable.
+     */
+    private function aggregateStaffTotals(): array
+    {
+        [$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
+        $runner = $this->getAggregationRunner();
+
+        $finalStatuses = ['confirmed', 'settled', 'refunded'];
+        $positive      = ['confirmed', 'settled'];
+
+        $counts      = $this->groupedAgg(
+            runner: $runner,
+            register: $register,
+            schema: $schema,
+            metric: 'count',
+            field: null,
+            filter: ['status' => ['in' => $finalStatuses]]
+        );
+        $posTotal    = $this->groupedAgg(
+            runner: $runner,
+            register: $register,
+            schema: $schema,
+            metric: 'sum',
+            field: 'total',
+            filter: ['status' => ['in' => $positive]]
+        );
+        $refTotal    = $this->groupedAgg(
+            runner: $runner,
+            register: $register,
+            schema: $schema,
+            metric: 'sum',
+            field: 'total',
+            filter: ['status' => 'refunded']
+        );
+        $posTotalTax = $this->groupedAgg(
+            runner: $runner,
+            register: $register,
+            schema: $schema,
+            metric: 'sum',
+            field: 'totalTax',
+            filter: ['status' => ['in' => $positive]]
+        );
+        $refTotalTax = $this->groupedAgg(
+            runner: $runner,
+            register: $register,
+            schema: $schema,
+            metric: 'sum',
+            field: 'totalTax',
+            filter: ['status' => 'refunded']
+        );
+
+        $staffIds = array_keys(
+            ($counts + $posTotal + $refTotal + $posTotalTax + $refTotalTax)
+        );
+
+        $byStaff = [];
+        foreach ($staffIds as $staffId) {
+            // Drop the empty-staffMemberId bucket — the prior PHP path skipped
+            // rows with an empty staff id.
+            if ((string) $staffId === '') {
+                continue;
+            }
+
+            $byStaff[(string) $staffId] = [
+                'staffMemberId'    => (string) $staffId,
+                'displayName'      => '',
+                'transactionCount' => (int) ($counts[$staffId] ?? 0),
+                'total'            => ((float) ($posTotal[$staffId] ?? 0.0) - (float) ($refTotal[$staffId] ?? 0.0)),
+                'totalTax'         => ((float) ($posTotalTax[$staffId] ?? 0.0) - (float) ($refTotalTax[$staffId] ?? 0.0)),
+            ];
+        }
+
+        return $byStaff;
+    }//end aggregateStaffTotals()
+
+    /**
+     * Run one grouped aggregation and flatten its groups into a
+     * `staffMemberId => value` map.
+     *
+     * @param object               $runner   The OpenRegister aggregation runner.
+     * @param string               $register The register ref.
+     * @param string               $schema   The schema ref.
+     * @param string               $metric   count|sum.
+     * @param string|null          $field    The metric field (null for count).
+     * @param array<string, mixed> $filter   The filter map.
+     *
+     * @return array<string, float|int> Map of staffMemberId to the aggregated value.
+     */
+    private function groupedAgg(
+        object $runner,
+        string $register,
+        string $schema,
+        string $metric,
+        ?string $field,
+        array $filter
+    ): array {
+        $query  = AggregationQuery::create(
+            metric: $metric,
+            field: $field,
+            filter: $filter,
+            groupBy: ['field' => 'staffMemberId'],
+        );
+        $result = $runner->runAdhocByRef(registerRef: $register, schemaRef: $schema, query: $query);
+
+        $map = [];
+        foreach (($result['groups'] ?? []) as $group) {
+            $key = $group['key'] ?? null;
+            if ($key === null) {
+                continue;
+            }
+
+            $map[(string) $key] = ($group['value'] ?? 0);
+        }
+
+        return $map;
+    }//end groupedAgg()
+
+    /**
+     * PHP fallback reduce — the original hydrate-and-sum implementation, applied
+     * to an already-fetched transaction set. Retained as the degradation path
+     * when the OpenRegister aggregation runner is unavailable.
+     *
+     * @param array<int, array<string, mixed>> $rows The final-status transactions.
+     *
+     * @return array<string, array{staffMemberId: string, displayName: string, transactionCount: int, total: float, totalTax: float}>
+     *         Keyed by staffMemberId.
+     */
+    private function aggregateStaffTotalsPhp(array $rows): array
+    {
         $byStaff = [];
         foreach ($rows as $tx) {
             $staffId = (string) ($tx['staffMemberId'] ?? '');
@@ -100,24 +281,8 @@ class PosStaffReportService
             $byStaff[$staffId]['totalTax'] += ($sign * (float) ($tx['totalTax'] ?? 0));
         }//end foreach
 
-        // Resolve display names from posStaff. Failures fall back to the UUID.
-        foreach ($byStaff as $staffId => $_row) {
-            try {
-                $staff = $this->posStaffService->getStaff(id: $staffId);
-                $byStaff[$staffId]['displayName'] = (string) ($staff['displayName'] ?? $staffId);
-            } catch (\Throwable $e) {
-                $byStaff[$staffId]['displayName'] = $staffId;
-            }
-        }
-
-        // Round monetary values to cents (server-authoritative).
-        foreach ($byStaff as $staffId => $_row) {
-            $byStaff[$staffId]['total']    = round($byStaff[$staffId]['total'], 2);
-            $byStaff[$staffId]['totalTax'] = round($byStaff[$staffId]['totalTax'], 2);
-        }
-
-        return array_values($byStaff);
-    }//end staffSalesReport()
+        return $byStaff;
+    }//end aggregateStaffTotalsPhp()
 
     /**
      * Read posTransaction objects that count toward the report (final statuses).
@@ -192,6 +357,26 @@ class PosStaffReportService
             throw new RuntimeException('OpenRegister service is not available.');
         }
     }//end getObjectService()
+
+    /**
+     * Get the OpenRegister ad-hoc AggregationRunner.
+     *
+     * Resolved from the DI container the same way ObjectService is, so the
+     * per-staff COUNT and signed SUMs are computed by OpenRegister (ADR-022)
+     * instead of hydrating every transaction and reducing in PHP.
+     *
+     * @return object The aggregation runner.
+     *
+     * @throws RuntimeException If OpenRegister is not available.
+     */
+    private function getAggregationRunner(): object
+    {
+        try {
+            return $this->container->get('OCA\OpenRegister\Service\Aggregation\AggregationRunner');
+        } catch (\Throwable $e) {
+            throw new RuntimeException('OpenRegister aggregation runner is not available.');
+        }
+    }//end getAggregationRunner()
 
     /**
      * Normalise an OR object into a plain array.
