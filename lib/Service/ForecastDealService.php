@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\IAppConfig;
 
 /**
@@ -34,25 +35,51 @@ use OCP\IAppConfig;
  * listeners ({@see \OCA\Pipelinq\Listener\DealCreatedListener},
  * {@see \OCA\Pipelinq\Listener\DealUpdatedListener}) call into this service and
  * apply its decisions to the persisted object.
+ *
+ * Lifecycle source of truth (ADR-031): the open/closed forecast-category
+ * partition and the create-default live in the lead schema's
+ * `configuration.x-pipelinq-forecast-lifecycle` annotation. They are read here
+ * via {@see SchemaLifecycleGraph::configurationFor()}, with the constants below
+ * as a never-regress fallback. This is a SECOND state machine on the lead schema;
+ * OpenRegister's `x-openregister-lifecycle` already owns the `status` field and
+ * supports only one enforced lifecycle field per schema, so this one is enforced
+ * in PHP (the deal listeners' revert-after-write), NOT by OR's listener.
  */
 class ForecastDealService
 {
     /**
-     * Forecast categories that represent a closed (locked) deal.
+     * Schema slug whose `x-pipelinq-forecast-lifecycle` declares the partition.
+     *
+     * @var string
+     */
+    private const LEAD_SCHEMA_SLUG = 'lead';
+
+    /**
+     * Configuration key holding the forecast-category lifecycle annotation.
+     *
+     * @var string
+     */
+    private const FORECAST_LIFECYCLE_KEY = 'x-pipelinq-forecast-lifecycle';
+
+    /**
+     * Fallback closed (locked) forecast categories. The canonical source of truth
+     * is the lead schema's `x-pipelinq-forecast-lifecycle.closed`; this mirrors it.
      *
      * @var array<int, string>
      */
     public const CLOSED_CATEGORIES = ['closed_won', 'closed_lost'];
 
     /**
-     * The default forecast category assigned to a new deal.
+     * Fallback default forecast category assigned to a new deal. The canonical
+     * source of truth is `x-pipelinq-forecast-lifecycle.default`.
      *
      * @var string
      */
     public const DEFAULT_CATEGORY = 'pipeline';
 
     /**
-     * Open forecast categories a rep may freely choose.
+     * Fallback open forecast categories a rep may freely choose. The canonical
+     * source of truth is `x-pipelinq-forecast-lifecycle.open`.
      *
      * @var array<int, string>
      */
@@ -82,12 +109,78 @@ class ForecastDealService
     /**
      * Constructor.
      *
-     * @param IAppConfig $appConfig The app configuration.
+     * @param IAppConfig           $appConfig      The app configuration.
+     * @param SchemaLifecycleGraph $lifecycleGraph Reads the forecast-category partition from the lead schema.
      */
     public function __construct(
         private IAppConfig $appConfig,
+        private SchemaLifecycleGraph $lifecycleGraph=new SchemaLifecycleGraph(),
     ) {
     }//end __construct()
+
+    /**
+     * Resolve the forecast-category lifecycle annotation from the lead schema.
+     *
+     * @return array<string, mixed> The annotation, or an empty array when unreadable.
+     */
+    private function forecastLifecycle(): array
+    {
+        $annotation = $this->lifecycleGraph->configurationFor(
+            schemaSlug: self::LEAD_SCHEMA_SLUG,
+            key: self::FORECAST_LIFECYCLE_KEY
+        );
+
+        if (is_array($annotation) === true) {
+            return $annotation;
+        }
+
+        return [];
+    }//end forecastLifecycle()
+
+    /**
+     * The closed (locked) forecast categories, sourced from the schema.
+     *
+     * @return array<int, string> The closed categories (falls back to the constant).
+     */
+    private function closedCategories(): array
+    {
+        $closed = ($this->forecastLifecycle()['closed'] ?? null);
+        if (is_array($closed) === false || $closed === []) {
+            return self::CLOSED_CATEGORIES;
+        }
+
+        return array_map(static fn ($value): string => (string) $value, $closed);
+    }//end closedCategories()
+
+    /**
+     * The open forecast categories, sourced from the schema.
+     *
+     * @return array<int, string> The open categories (falls back to the constant).
+     */
+    private function openCategories(): array
+    {
+        $open = ($this->forecastLifecycle()['open'] ?? null);
+        if (is_array($open) === false || $open === []) {
+            return self::OPEN_CATEGORIES;
+        }
+
+        return array_map(static fn ($value): string => (string) $value, $open);
+    }//end openCategories()
+
+    /**
+     * The default forecast category, sourced from the schema.
+     *
+     * @return string The default category (falls back to the constant).
+     */
+    private function defaultCategory(): string
+    {
+        $default = ($this->forecastLifecycle()['default'] ?? null);
+        if (is_string($default) === true && $default !== '') {
+            return $default;
+        }
+
+        return self::DEFAULT_CATEGORY;
+    }//end defaultCategory()
 
     /**
      * Whether a forecast category is a closed (locked) category.
@@ -100,7 +193,7 @@ class ForecastDealService
      */
     public function isClosedCategory(?string $category): bool
     {
-        return $category !== null && in_array($category, self::CLOSED_CATEGORIES, true);
+        return $category !== null && in_array($category, $this->closedCategories(), true);
     }//end isClosedCategory()
 
     /**
@@ -122,7 +215,7 @@ class ForecastDealService
             return null;
         }
 
-        $data['forecast_category'] = self::DEFAULT_CATEGORY;
+        $data['forecast_category'] = $this->defaultCategory();
         return $data;
     }//end applyDefaultCategory()
 
@@ -151,7 +244,7 @@ class ForecastDealService
             && is_string($newCategory) === true
             && $oldCategory !== $newCategory
             && $this->isClosedCategory(category: $oldCategory) === true
-            && in_array($newCategory, self::OPEN_CATEGORIES, true) === true
+            && in_array($newCategory, $this->openCategories(), true) === true
         ) {
             return 'forecast.error.closed_deal_locked';
         }
@@ -233,7 +326,7 @@ class ForecastDealService
         $nowOpen   = $newStatus !== null && in_array($newStatus, $closedStatuses, true) === false;
 
         if ($wasClosed === true && $nowOpen === true) {
-            $newData['forecast_category'] = self::DEFAULT_CATEGORY;
+            $newData['forecast_category'] = $this->defaultCategory();
             return $newData;
         }
 
