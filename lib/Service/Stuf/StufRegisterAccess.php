@@ -100,10 +100,12 @@ class StufRegisterAccess
     {
         try {
             $service = $this->getObjectService();
-            $objects = $service->findAll([
-                'filters' => array_merge(['register' => $this->getRegisterId(), 'schema' => $schema], $filters),
-                'limit'   => $limit,
-            ]);
+            $objects = $service->findAll(
+                    [
+                        'filters' => array_merge(['register' => $this->getRegisterId(), 'schema' => $schema], $filters),
+                        'limit'   => $limit,
+                    ]
+                    );
         } catch (\Throwable $e) {
             $this->logger->warning(
                 message: 'StUF register findAll failed: {err}',

@@ -58,6 +58,8 @@ class RingCentralAdapter implements CtiAdapterInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return string The platform identifier.
      */
     public function getPlatform(): string
     {
@@ -74,6 +76,10 @@ class RingCentralAdapter implements CtiAdapterInterface
      *       "from": { "phoneNumber": "+31..." },
      *       "to":   { "phoneNumber": "+31..." },
      *       "status": { "code": "Answered" } }] } }
+     *
+     * @param array $payload The raw webhook payload.
+     *
+     * @return CtiWebhookResult The normalised webhook result.
      */
     public function handleInboundWebhook(array $payload): CtiWebhookResult
     {
@@ -82,13 +88,19 @@ class RingCentralAdapter implements CtiAdapterInterface
         $party = (array) $party;
 
         $statusCode = strtolower((string) (($party['status']['code'] ?? '')));
-        $eventType  = match ($statusCode) {
+        if ($statusCode !== '') {
+            $defaultEventType = $statusCode;
+        } else {
+            $defaultEventType = 'unknown';
+        }
+
+        $eventType = match ($statusCode) {
             'setup', 'proceeding' => 'ringing',
             'answered'            => 'answered',
             'disconnected'        => 'ended',
             'voicemail'           => 'abandoned',
             'parked'              => 'transferred',
-            default               => ($statusCode !== '' ? $statusCode : 'unknown'),
+            default               => $defaultEventType,
         };
 
         $directionRaw = strtolower((string) ($party['direction'] ?? ''));
@@ -98,19 +110,64 @@ class RingCentralAdapter implements CtiAdapterInterface
             default    => null,
         };
 
+        $fromNumber = null;
+        if (isset($party['from']['phoneNumber']) === true) {
+            $fromNumber = (string) $party['from']['phoneNumber'];
+        }
+
+        $toNumber = null;
+        if (isset($party['to']['phoneNumber']) === true) {
+            $toNumber = (string) $party['to']['phoneNumber'];
+        }
+
+        $extension = null;
+        if (isset($party['extensionId']) === true) {
+            $extension = (string) $party['extensionId'];
+        }
+
+        $userId = null;
+        if (isset($party['accountId']) === true) {
+            $userId = (string) $party['accountId'];
+        }
+
+        $durationSeconds = null;
+        if (isset($body['duration']) === true) {
+            $durationSeconds = (int) $body['duration'];
+        }
+
+        $recordingUrl = null;
+        if (isset($body['recording']['contentUri']) === true) {
+            $recordingUrl = (string) $body['recording']['contentUri'];
+        }
+
+        $recordingExpiresAt = null;
+        if (isset($body['recording']['expirationTime']) === true) {
+            $recordingExpiresAt = (string) $body['recording']['expirationTime'];
+        }
+
+        $presenceState = null;
+        if (isset($body['presenceStatus']) === true) {
+            $presenceState = (string) $body['presenceStatus'];
+        }
+
+        $queueName = null;
+        if (isset($body['queue']) === true) {
+            $queueName = (string) $body['queue'];
+        }
+
         return new CtiWebhookResult(
             eventType: $eventType,
             externalCallId: (string) ($body['telephonySessionId'] ?? ($body['sessionId'] ?? '')),
             direction: $direction,
-            fromNumber: isset($party['from']['phoneNumber']) === true ? (string) $party['from']['phoneNumber'] : null,
-            toNumber: isset($party['to']['phoneNumber']) === true ? (string) $party['to']['phoneNumber'] : null,
-            extension: isset($party['extensionId']) === true ? (string) $party['extensionId'] : null,
-            userId: isset($party['accountId']) === true ? (string) $party['accountId'] : null,
-            durationSeconds: isset($body['duration']) === true ? (int) $body['duration'] : null,
-            recordingUrl: isset($body['recording']['contentUri']) === true ? (string) $body['recording']['contentUri'] : null,
-            recordingExpiresAt: isset($body['recording']['expirationTime']) === true ? (string) $body['recording']['expirationTime'] : null,
-            presenceState: isset($body['presenceStatus']) === true ? (string) $body['presenceStatus'] : null,
-            queueName: isset($body['queue']) === true ? (string) $body['queue'] : null,
+            fromNumber: $fromNumber,
+            toNumber: $toNumber,
+            extension: $extension,
+            userId: $userId,
+            durationSeconds: $durationSeconds,
+            recordingUrl: $recordingUrl,
+            recordingExpiresAt: $recordingExpiresAt,
+            presenceState: $presenceState,
+            queueName: $queueName,
             raw: $payload,
         );
     }//end handleInboundWebhook()
@@ -119,11 +176,17 @@ class RingCentralAdapter implements CtiAdapterInterface
      * {@inheritDoc}
      *
      * Posts to the RingCentral "ring-out" endpoint with the OAuth bearer token.
+     *
+     * @param string $extension    The originating extension.
+     * @param string $targetNumber The number to dial.
+     * @param string $callerId     The caller ID to present.
+     *
+     * @return CtiCallResult The call origination result.
      */
     public function originateCall(string $extension, string $targetNumber, string $callerId): CtiCallResult
     {
-        $baseUrl    = $this->appConfig->getValueString(Application::APP_ID, 'cti_ringcentral_api_base_url', '');
-        $authToken  = $this->appConfig->getValueString(Application::APP_ID, 'cti_ringcentral_access_token', '');
+        $baseUrl   = $this->appConfig->getValueString(Application::APP_ID, 'cti_ringcentral_api_base_url', '');
+        $authToken = $this->appConfig->getValueString(Application::APP_ID, 'cti_ringcentral_access_token', '');
         if ($baseUrl === '') {
             return new CtiCallResult(
                 success: false,
@@ -143,9 +206,9 @@ class RingCentralAdapter implements CtiAdapterInterface
                     ],
                     'body'    => json_encode(
                         [
-                            'from'    => ['phoneNumber' => $callerId],
-                            'to'      => ['phoneNumber' => $targetNumber],
-                            'caller'  => ['phoneNumber' => $callerId],
+                            'from'       => ['phoneNumber' => $callerId],
+                            'to'         => ['phoneNumber' => $targetNumber],
+                            'caller'     => ['phoneNumber' => $callerId],
                             'playPrompt' => false,
                         ]
                     ),
@@ -155,11 +218,20 @@ class RingCentralAdapter implements CtiAdapterInterface
 
             $bodyContents = (string) $response->getBody();
             $body         = json_decode($bodyContents, true);
-            $callId       = is_array($body) === true ? ($body['id'] ?? null) : null;
+            if (is_array($body) === true) {
+                $callId = ($body['id'] ?? null);
+            } else {
+                $callId = null;
+            }
+
+            $externalCallId = null;
+            if ($callId !== null) {
+                $externalCallId = (string) $callId;
+            }
 
             return new CtiCallResult(
                 success: true,
-                externalCallId: $callId !== null ? (string) $callId : null,
+                externalCallId: $externalCallId,
                 platform: $this->getPlatform(),
             );
         } catch (\Throwable $e) {
@@ -180,6 +252,11 @@ class RingCentralAdapter implements CtiAdapterInterface
      *
      * RingCentral pushes presence events via the subscription stream; this method
      * issues the subscribe-extension event filter.
+     *
+     * @param string $userId    The user identifier.
+     * @param string $extension The extension to subscribe.
+     *
+     * @return void
      */
     public function subscribeToPresence(string $userId, string $extension): void
     {
@@ -217,7 +294,7 @@ class RingCentralAdapter implements CtiAdapterInterface
                     'userId'    => $userId,
                 ]
             );
-        }
+        }//end try
     }//end subscribeToPresence()
 
     /**
@@ -225,6 +302,11 @@ class RingCentralAdapter implements CtiAdapterInterface
      *
      * RingCentral webhook validation: the `Validation-Token` header must match
      * the configured OAuth access token (constant-time compare).
+     *
+     * @param string $payload   The raw request body.
+     * @param string $signature The signature/validation token to verify.
+     *
+     * @return bool True when the signature is valid.
      */
     public function verifyWebhookSignature(string $payload, string $signature): bool
     {

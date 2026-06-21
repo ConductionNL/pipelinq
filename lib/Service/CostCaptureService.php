@@ -83,7 +83,7 @@ class CostCaptureService
         string $category='utility',
         string $country='NL'
     ): array {
-        // Twilio: { "Price": "-0.0075", "PriceUnit": "USD" }
+        // Twilio: { "Price": "-0.0075", "PriceUnit": "USD" }.
         if (isset($payload['Price']) === true && isset($payload['PriceUnit']) === true) {
             $rawPrice = abs((float) $payload['Price']);
             $currency = strtoupper((string) $payload['PriceUnit']);
@@ -92,11 +92,11 @@ class CostCaptureService
                 return [
                     'costEur'  => 0.0,
                     'metadata' => [
-                        'costSource'           => 'webhook',
-                        'costCurrency'         => $currency,
-                        'costSourceAmount'     => $rawPrice,
-                        'costCurrencyPending'  => true,
-                        'costEstimated'        => false,
+                        'costSource'          => 'webhook',
+                        'costCurrency'        => $currency,
+                        'costSourceAmount'    => $rawPrice,
+                        'costCurrencyPending' => true,
+                        'costEstimated'       => false,
                     ],
                 ];
             }
@@ -111,15 +111,15 @@ class CostCaptureService
                     'costEstimated'       => false,
                 ],
             ];
-        }
+        }//end if
 
         // Vendors that pre-compute EUR (some BSPs).
         if (isset($payload['costEur']) === true && is_numeric($payload['costEur']) === true) {
             return [
                 'costEur'  => (float) $payload['costEur'],
                 'metadata' => [
-                    'costSource'   => 'webhook',
-                    'costCurrency' => 'EUR',
+                    'costSource'    => 'webhook',
+                    'costCurrency'  => 'EUR',
                     'costEstimated' => false,
                 ],
             ];
@@ -136,8 +136,8 @@ class CostCaptureService
         return [
             'costEur'  => $estimate,
             'metadata' => [
-                'costSource'   => 'estimate',
-                'costCurrency' => 'EUR',
+                'costSource'    => 'estimate',
+                'costCurrency'  => 'EUR',
                 'costEstimated' => true,
             ],
         ];

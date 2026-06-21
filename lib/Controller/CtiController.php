@@ -93,13 +93,24 @@ class CtiController extends Controller
     public function webhook(string $platform): JSONResponse
     {
         $rawBody   = (string) file_get_contents('php://input');
-        $signature = ($this->request->getHeader('X-Pipelinq-Signature')
-            ?: ($this->request->getHeader('Validation-Token')
-                ?: ($this->request->getParam('signature', '') ?? '')));
+        $signature = (string) $this->request->getHeader('X-Pipelinq-Signature');
+        if ($signature === '') {
+            $signature = (string) $this->request->getHeader('Validation-Token');
+        }
+
+        if ($signature === '') {
+            $signature = (string) ($this->request->getParam('signature', '') ?? '');
+        }
 
         $payload = json_decode($rawBody, true);
         if (is_array($payload) === false) {
             $payload = (array) $this->request->getParams();
+        }
+
+        if ($signature === '') {
+            $signatureArg = null;
+        } else {
+            $signatureArg = $signature;
         }
 
         try {
@@ -107,7 +118,7 @@ class CtiController extends Controller
                 platform: $platform,
                 payload: $payload,
                 rawBody: $rawBody,
-                signature: ($signature === '' ? null : (string) $signature),
+                signature: $signatureArg,
             );
         } catch (\RuntimeException $e) {
             $this->logger->warning(
@@ -187,7 +198,12 @@ class CtiController extends Controller
             targetNumber: $targetNumber,
         );
 
-        $status = $result->success === true ? Http::STATUS_OK : Http::STATUS_BAD_GATEWAY;
+        if ($result->success === true) {
+            $status = Http::STATUS_OK;
+        } else {
+            $status = Http::STATUS_BAD_GATEWAY;
+        }
+
         return new JSONResponse($result->toArray(), $status);
     }//end clickToDial()
 
@@ -376,10 +392,12 @@ class CtiController extends Controller
             return new JSONResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
         }
 
-        $filters = array_filter([
-            'platform'   => (string) $this->request->getParam('platform', ''),
-            'event_type' => (string) $this->request->getParam('event_type', ''),
-        ]);
+        $filters = array_filter(
+                [
+                    'platform'   => (string) $this->request->getParam('platform', ''),
+                    'event_type' => (string) $this->request->getParam('event_type', ''),
+                ]
+                );
 
         $limit  = (int) $this->request->getParam('limit', 50);
         $offset = (int) $this->request->getParam('offset', 0);

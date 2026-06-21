@@ -48,9 +48,9 @@ class StufHttpClient
     /**
      * Constructor.
      *
-     * @param IClientService    $clientService The Nextcloud HTTP client service.
-     * @param StufVaultService  $vault         The vault adapter.
-     * @param LoggerInterface   $logger        The logger.
+     * @param IClientService   $clientService The Nextcloud HTTP client service.
+     * @param StufVaultService $vault         The vault adapter.
+     * @param LoggerInterface  $logger        The logger.
      */
     public function __construct(
         private IClientService $clientService,
@@ -62,10 +62,10 @@ class StufHttpClient
     /**
      * Send an envelope to the configured endpoint.
      *
-     * @param array  $endpoint        The StufEndpoint as array.
-     * @param string $envelopeXml     The pre-built envelope XML.
-     * @param string $soapActionFunc  The SOAPAction value (typically the StUF functie).
-     * @param int    $timeoutSeconds  Read timeout in seconds.
+     * @param array  $endpoint       The StufEndpoint as array.
+     * @param string $envelopeXml    The pre-built envelope XML.
+     * @param string $soapActionFunc The SOAPAction value (typically the StUF functie).
+     * @param int    $timeoutSeconds Read timeout in seconds.
      *
      * @return array{httpStatus:int,responseXml:string,durationMs:int,fout:array<string,string>|null}
      *
@@ -85,7 +85,12 @@ class StufHttpClient
                 'httpStatus'  => 0,
                 'responseXml' => '',
                 'durationMs'  => 0,
-                'fout'        => ['code' => 'TRANSPORT_NON_HTTPS', 'omschrijving' => 'Endpoint URL is not HTTPS', 'details' => '', 'soort' => 'permanent'],
+                'fout'        => [
+                    'code'         => 'TRANSPORT_NON_HTTPS',
+                    'omschrijving' => 'Endpoint URL is not HTTPS',
+                    'details'      => '',
+                    'soort'        => 'permanent',
+                ],
             ];
         }
 
@@ -103,10 +108,15 @@ class StufHttpClient
                     'httpStatus'  => 0,
                     'responseXml' => '',
                     'durationMs'  => 0,
-                    'fout'        => ['code' => 'TLS_CERT_LOAD_FAILED', 'omschrijving' => 'mTLS client certificate could not be loaded', 'details' => '', 'soort' => 'permanent'],
+                    'fout'        => [
+                        'code'         => 'TLS_CERT_LOAD_FAILED',
+                        'omschrijving' => 'mTLS client certificate could not be loaded',
+                        'details'      => '',
+                        'soort'        => 'permanent',
+                    ],
                 ];
             }
-        }
+        }//end if
 
         $client  = $this->clientService->newClient();
         $headers = [
@@ -149,6 +159,12 @@ class StufHttpClient
                 message: 'StUF HTTP transport error: {error}',
                 context: ['error' => $e->getMessage(), 'endpoint' => ($endpoint['id'] ?? '')]
             );
+            if ($code === 'TIMEOUT') {
+                $soort = 'transient';
+            } else {
+                $soort = 'transient';
+            }
+
             return [
                 'httpStatus'  => 0,
                 'responseXml' => '',
@@ -157,7 +173,7 @@ class StufHttpClient
                     'code'         => $code,
                     'omschrijving' => 'Transport error',
                     'details'      => $e->getMessage(),
-                    'soort'        => ($code === 'TIMEOUT' ? 'transient' : 'transient'),
+                    'soort'        => $soort,
                 ],
             ];
         }//end try
@@ -190,11 +206,13 @@ class StufHttpClient
 
         file_put_contents(filename: $tmpPath, data: $pem);
         chmod(filename: $tmpPath, permissions: 0o600);
-        register_shutdown_function(callback: static function () use ($tmpPath): void {
-            if (file_exists(filename: $tmpPath) === true) {
-                @unlink(filename: $tmpPath);
-            }
-        });
+        register_shutdown_function(
+                callback: static function () use ($tmpPath): void {
+                    if (file_exists(filename: $tmpPath) === true) {
+                        @unlink(filename: $tmpPath);
+                    }
+                }
+                );
 
         return $tmpPath;
     }//end materialiseClientCertificate()

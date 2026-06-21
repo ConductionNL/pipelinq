@@ -95,12 +95,12 @@ class StufMessageHandler
     /**
      * Create an inbound audit row from a received envelope.
      *
-     * @param array       $endpoint        The StufEndpoint that received.
-     * @param string      $responseXml     The full inbound envelope XML.
-     * @param string      $berichtSoort    The bericht code (Bv01, Lk02, ...).
-     * @param string      $crossRefnummer  The crossRefnummer (matches an outbound referentienummer).
-     * @param string|null $zaakId          Optional zaak identificatie.
-     * @param string|null $functie         Optional functie.
+     * @param array       $endpoint       The StufEndpoint that received.
+     * @param string      $responseXml    The full inbound envelope XML.
+     * @param string      $berichtSoort   The bericht code (Bv01, Lk02, ...).
+     * @param string      $crossRefnummer The crossRefnummer (matches an outbound referentienummer).
+     * @param string|null $zaakId         Optional zaak identificatie.
+     * @param string|null $functie        Optional functie.
      *
      * @return array The persisted StufMessage as array.
      *
@@ -115,18 +115,18 @@ class StufMessageHandler
         ?string $functie=null
     ): array {
         $data = [
-            'id'                  => $this->newId(prefix: 'stuf-msg'),
-            'endpointId'          => (string) ($endpoint['id'] ?? ''),
-            'richting'            => 'inkomend',
-            'berichtSoort'        => $berichtSoort,
-            'functie'             => ($functie ?? ''),
-            'entiteittype'        => 'ZAK',
-            'crossRefnummer'      => $crossRefnummer,
-            'zaakIdentificatie'   => ($zaakId ?? ''),
-            'envelopeXml'         => $responseXml,
-            'verzondenOp'         => $this->isoNow(),
-            'ontvangenOp'         => $this->isoNow(),
-            'status'              => 'bevestigd',
+            'id'                => $this->newId(prefix: 'stuf-msg'),
+            'endpointId'        => (string) ($endpoint['id'] ?? ''),
+            'richting'          => 'inkomend',
+            'berichtSoort'      => $berichtSoort,
+            'functie'           => ($functie ?? ''),
+            'entiteittype'      => 'ZAK',
+            'crossRefnummer'    => $crossRefnummer,
+            'zaakIdentificatie' => ($zaakId ?? ''),
+            'envelopeXml'       => $responseXml,
+            'verzondenOp'       => $this->isoNow(),
+            'ontvangenOp'       => $this->isoNow(),
+            'status'            => 'bevestigd',
         ];
         return $this->register->saveObject(schema: StufRegisterAccess::SCHEMA_MESSAGE, data: $data);
     }//end logInbound()
@@ -146,16 +146,16 @@ class StufMessageHandler
      */
     public function recordRetry(array $msg, int $attempt, int $httpStatus, array $fout, int $durationMs): array
     {
-        $retries          = (array) ($msg['retries'] ?? []);
-        $retries[]        = [
+        $retries           = (array) ($msg['retries'] ?? []);
+        $retries[]         = [
             'poging'     => $attempt,
             'timestamp'  => $this->isoNow(),
             'httpStatus' => $httpStatus,
             'duurMs'     => $durationMs,
             'fout'       => $fout,
         ];
-        $msg['retries']   = $retries;
-        $msg['status']    = 'wacht_op_retry';
+        $msg['retries']    = $retries;
+        $msg['status']     = 'wacht_op_retry';
         $msg['httpStatus'] = $httpStatus;
         return $this->register->saveObject(schema: StufRegisterAccess::SCHEMA_MESSAGE, data: $msg);
     }//end recordRetry()
@@ -163,9 +163,9 @@ class StufMessageHandler
     /**
      * Transition the message lifecycle status.
      *
-     * @param array  $msg              The existing message row.
-     * @param string $newStatus        One of verzonden, bevestigd, fout, wacht_op_retry.
-     * @param array  $extras           Optional extra fields to merge (httpStatus, duurMs, fout, responseEnvelopeXml, ontvangenOp).
+     * @param array  $msg       The existing message row.
+     * @param string $newStatus One of verzonden, bevestigd, fout, wacht_op_retry.
+     * @param array  $extras    Optional extra fields to merge (httpStatus, duurMs, fout, responseEnvelopeXml, ontvangenOp).
      *
      * @return array The updated row.
      *

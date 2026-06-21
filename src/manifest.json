@@ -441,6 +441,12 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "client",
+				"createOverride": "createClientContactAware",
+				"fieldOverrides": {
+					"name": { "readOnly": false },
+					"email": { "readOnly": false },
+					"phone": { "readOnly": false }
+				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
@@ -675,6 +681,12 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "contact",
+				"createOverride": "createContactContactAware",
+				"fieldOverrides": {
+					"name": { "readOnly": false },
+					"email": { "readOnly": false },
+					"phone": { "readOnly": false }
+				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [

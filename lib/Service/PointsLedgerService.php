@@ -62,11 +62,11 @@ class PointsLedgerService
     /**
      * Credit points to an account (atomic ledger entry + balance update).
      *
-     * @param string $accountId    The account UUID.
-     * @param int    $amount       Positive integer points to credit.
-     * @param ?string $ruleId      The PointsRule UUID that produced the credit.
+     * @param string               $accountId    The account UUID.
+     * @param int                  $amount       Positive integer points to credit.
+     * @param ?string              $ruleId       The PointsRule UUID that produced the credit.
      * @param array<string, mixed> $brondocument Source linkage (transactionId etc.).
-     * @param string $verwerktDoor Who/what processed it (POS terminal id, system).
+     * @param string               $verwerktDoor Who/what processed it (POS terminal id, system).
      *
      * @return array<string, mixed> The created PointsLedgerEntry.
      *
@@ -99,11 +99,11 @@ class PointsLedgerService
     /**
      * Debit points (redemption-style).
      *
-     * @param string $accountId    The account UUID.
-     * @param int    $amount       Positive integer points to debit.
-     * @param string $redemptionId The Redemption UUID.
+     * @param string               $accountId    The account UUID.
+     * @param int                  $amount       Positive integer points to debit.
+     * @param string               $redemptionId The Redemption UUID.
      * @param array<string, mixed> $brondocument Source linkage.
-     * @param string $verwerktDoor Who/what processed it.
+     * @param string               $verwerktDoor Who/what processed it.
      *
      * @return array<string, mixed> The PointsLedgerEntry.
      *
@@ -240,7 +240,7 @@ class PointsLedgerService
     public function getAccountBalance(string $accountId): int
     {
         $entries = $this->getLedgerHistory(accountId: $accountId);
-        $sum = 0;
+        $sum     = 0;
         foreach ($entries as $e) {
             $sum += (int) ($e['aantal'] ?? 0);
         }
@@ -257,7 +257,7 @@ class PointsLedgerService
      *
      * @return array<int, array<string, mixed>> The ledger entries, oldest first.
      */
-    public function getLedgerHistory(string $accountId, ?string $from = null, ?string $to = null): array
+    public function getLedgerHistory(string $accountId, ?string $from=null, ?string $to=null): array
     {
         [$register, $schema] = $this->config();
         if ($register === '' || $schema === '' || $accountId === '') {
@@ -276,7 +276,13 @@ class PointsLedgerService
             return [];
         }
 
-        $rows = array_map([$this, 'toArray'], is_array($rows) === true ? array_values($rows) : []);
+        if (is_array($rows) === true) {
+            $rowsToMap = array_values($rows);
+        } else {
+            $rowsToMap = [];
+        }
+
+        $rows = array_map([$this, 'toArray'], $rowsToMap);
 
         $filtered = array_filter(
             $rows,
@@ -285,9 +291,11 @@ class PointsLedgerService
                 if ($from !== null && $ts < $from) {
                     return false;
                 }
+
                 if ($to !== null && $ts > $to) {
                     return false;
                 }
+
                 return true;
             }
         );
@@ -313,8 +321,8 @@ class PointsLedgerService
     public function getLedgerEntriesForProgramme(
         string $programmeId,
         string $type,
-        ?string $from = null,
-        ?string $to = null
+        ?string $from=null,
+        ?string $to=null
     ): array {
         // Collect all accounts for the programme then fetch their ledgers.
         $accounts = $this->loyaltyAccountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
@@ -325,6 +333,7 @@ class PointsLedgerService
             if ($accountId === '') {
                 continue;
             }
+
             $history = $this->getLedgerHistory(accountId: $accountId, from: $from, to: $to);
             foreach ($history as $e) {
                 if ((string) ($e['type'] ?? '') === $type) {
@@ -344,13 +353,13 @@ class PointsLedgerService
      * roll back the ledger (ledger is the source of truth — denormalised
      * balance can be recomputed via getAccountBalance).
      *
-     * @param string  $accountId     The account UUID.
-     * @param string  $type          One of credit/debit/expiry/adjustment/refund.
-     * @param int     $signedAantal  Signed delta.
-     * @param ?string $ruleId        Optional PointsRule UUID.
-     * @param array<string, mixed> $brondocument Source linkage.
-     * @param string  $verwerktDoor  Processor identifier.
-     * @param int     $lifetimeDelta Positive contribution to lifetimePoints (credits only).
+     * @param string               $accountId     The account UUID.
+     * @param string               $type          One of credit/debit/expiry/adjustment/refund.
+     * @param int                  $signedAantal  Signed delta.
+     * @param ?string              $ruleId        Optional PointsRule UUID.
+     * @param array<string, mixed> $brondocument  Source linkage.
+     * @param string               $verwerktDoor  Processor identifier.
+     * @param int                  $lifetimeDelta Positive contribution to lifetimePoints (credits only).
      *
      * @return array<string, mixed> The ledger entry.
      */
@@ -426,7 +435,7 @@ class PointsLedgerService
             uuid: null
         );
 
-        return $this->toArray($saved);
+        return $this->toArray(object: $saved);
     }//end persist()
 
     /**

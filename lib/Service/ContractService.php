@@ -92,7 +92,7 @@ class ContractService
      *
      * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
      */
-    public function assertTransitionAllowed(array $contract, string $newStatus, bool $byEngine = false): void
+    public function assertTransitionAllowed(array $contract, string $newStatus, bool $byEngine=false): void
     {
         if (in_array($newStatus, self::VALID_STATES, true) === false) {
             throw new InvalidArgumentException(sprintf('Unknown contract status "%s".', $newStatus));
@@ -125,14 +125,14 @@ class ContractService
      * Sequence is derived from the count of existing contracts in the current
      * calendar year plus one; uniqueness is re-checked against existing numbers.
      *
-     * @param array<int, array<string,mixed>> $existing  Existing contract objects.
-     * @param int|null                        $year      The year (defaults to current).
+     * @param array<int, array<string,mixed>> $existing Existing contract objects.
+     * @param int|null                        $year     The year (defaults to current).
      *
      * @return string The next contract number.
      *
      * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
      */
-    public function generateContractNumber(array $existing, ?int $year = null): string
+    public function generateContractNumber(array $existing, ?int $year=null): string
     {
         $year ??= (int) date('Y');
         $prefix = sprintf('C-%d-', $year);
@@ -140,7 +140,7 @@ class ContractService
         $maxSeq = 0;
         $taken  = [];
         foreach ($existing as $contract) {
-            $number = (string) ($contract['contractNumber'] ?? '');
+            $number         = (string) ($contract['contractNumber'] ?? '');
             $taken[$number] = true;
             if (str_starts_with($number, $prefix) === true) {
                 $seq = (int) substr($number, strlen($prefix));
@@ -161,7 +161,7 @@ class ContractService
     /**
      * Build a successor-contract draft from a renewed predecessor.
      *
-     * startDate = predecessor endDate + 1 day; status `draft`;
+     * StartDate = predecessor endDate + 1 day; status `draft`;
      * predecessorContractRef set; renewal-specific fields reset.
      *
      * @param array<string,mixed> $predecessor The renewed contract.
@@ -227,7 +227,7 @@ class ContractService
      *
      * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
      */
-    public function save(array $data, ?string $uuid = null): ?array
+    public function save(array $data, ?string $uuid=null): ?array
     {
         [$registerId, $schemaId] = $this->getRegisterAndSchema();
         if ($registerId === '' || $schemaId === '') {

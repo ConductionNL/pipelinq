@@ -46,11 +46,11 @@ use Throwable;
  */
 class ZtcClient
 {
-    public const RESOURCE_ZAAKTYPE     = 'zaaktypen';
-    public const RESOURCE_STATUSTYPE   = 'statustypen';
-    public const RESOURCE_ROLTYPE      = 'roltypen';
+    public const RESOURCE_ZAAKTYPE      = 'zaaktypen';
+    public const RESOURCE_STATUSTYPE    = 'statustypen';
+    public const RESOURCE_ROLTYPE       = 'roltypen';
     public const RESOURCE_RESULTAATTYPE = 'resultaattypen';
-    public const RESOURCE_BESLUITTYPE  = 'besluittypen';
+    public const RESOURCE_BESLUITTYPE   = 'besluittypen';
 
     private const DEFAULT_TTL_S = 3600;
 
@@ -66,14 +66,13 @@ class ZtcClient
      */
     private array $cache = [];
 
-
     /**
      * Constructor.
      *
-     * @param ZgwApiClient      $api        Base transport.
-     * @param ZgwRegisterAccess $registers  Register facade (client lookup).
-     * @param IAppConfig        $appConfig  App config (cache TTL).
-     * @param LoggerInterface   $logger     PSR-3 logger.
+     * @param ZgwApiClient      $api       Base transport.
+     * @param ZgwRegisterAccess $registers Register facade (client lookup).
+     * @param IAppConfig        $appConfig App config (cache TTL).
+     * @param LoggerInterface   $logger    PSR-3 logger.
      */
     public function __construct(
         private ZgwApiClient $api,
@@ -82,7 +81,6 @@ class ZtcClient
         private LoggerInterface $logger,
     ) {
     }//end __construct()
-
 
     /**
      * Resolve a zaaktype URL by omschrijving.
@@ -96,13 +94,17 @@ class ZtcClient
      */
     public function resolveZaaktype(array $endpoint, string $omschrijving): string
     {
-        $hit = $this->resolveByOmschrijving($endpoint, self::RESOURCE_ZAAKTYPE, $omschrijving);
+        $hit = $this->resolveByOmschrijving(
+            endpoint: $endpoint,
+            resourceType: self::RESOURCE_ZAAKTYPE,
+            omschrijving: $omschrijving
+        );
         if ($hit === null) {
             throw new ZaaktypeNotInCatalogusException($omschrijving);
         }
+
         return $hit['url'];
     }//end resolveZaaktype()
-
 
     /**
      * Resolve a statustype URL by omschrijving + parent zaaktype.
@@ -118,17 +120,17 @@ class ZtcClient
     public function resolveStatustype(array $endpoint, string $zaaktypeUrl, string $omschrijving): string
     {
         $hit = $this->resolveByOmschrijving(
-            $endpoint,
-            self::RESOURCE_STATUSTYPE,
-            $omschrijving,
-            ['zaaktype' => $zaaktypeUrl]
+            endpoint: $endpoint,
+            resourceType: self::RESOURCE_STATUSTYPE,
+            omschrijving: $omschrijving,
+            extraQuery: ['zaaktype' => $zaaktypeUrl]
         );
         if ($hit === null) {
             throw new ZaaktypeNotInCatalogusException($omschrijving);
         }
+
         return $hit['url'];
     }//end resolveStatustype()
-
 
     /**
      * Resolve a roltype URL by omschrijving + parent zaaktype.
@@ -144,17 +146,17 @@ class ZtcClient
     public function resolveRoltype(array $endpoint, string $zaaktypeUrl, string $omschrijving): string
     {
         $hit = $this->resolveByOmschrijving(
-            $endpoint,
-            self::RESOURCE_ROLTYPE,
-            $omschrijving,
-            ['zaaktype' => $zaaktypeUrl]
+            endpoint: $endpoint,
+            resourceType: self::RESOURCE_ROLTYPE,
+            omschrijving: $omschrijving,
+            extraQuery: ['zaaktype' => $zaaktypeUrl]
         );
         if ($hit === null) {
             throw new ZaaktypeNotInCatalogusException($omschrijving);
         }
+
         return $hit['url'];
     }//end resolveRoltype()
-
 
     /**
      * Resolve a besluittype URL by omschrijving.
@@ -168,13 +170,17 @@ class ZtcClient
      */
     public function resolveBesluittype(array $endpoint, string $omschrijving): string
     {
-        $hit = $this->resolveByOmschrijving($endpoint, self::RESOURCE_BESLUITTYPE, $omschrijving);
+        $hit = $this->resolveByOmschrijving(
+            endpoint: $endpoint,
+            resourceType: self::RESOURCE_BESLUITTYPE,
+            omschrijving: $omschrijving
+        );
         if ($hit === null) {
             throw new BesluittypeNotInCatalogusException($omschrijving);
         }
+
         return $hit['url'];
     }//end resolveBesluittype()
-
 
     /**
      * Lookup the statustype omschrijving for a fully-qualified statustype URL.
@@ -183,7 +189,7 @@ class ZtcClient
      * we GET the status URL → extract its statustype URL → call this method
      * → use the omschrijving to update the pipelinq Request.status field.
      *
-     * @param array<string, mixed> $endpoint     ZgwEndpoint payload.
+     * @param array<string, mixed> $endpoint      ZgwEndpoint payload.
      * @param string               $statustypeUrl Fully-qualified statustype URL.
      *
      * @return string|null Omschrijving (or null when the lookup fails).
@@ -195,7 +201,11 @@ class ZtcClient
         foreach ($bucket as $entry) {
             if ($entry['url'] === $statustypeUrl) {
                 $omsch = $entry['data']['omschrijving'] ?? null;
-                return is_string($omsch) === true ? $omsch : null;
+                if (is_string($omsch) === true) {
+                    return $omsch;
+                }
+
+                return null;
             }
         }
 
@@ -217,10 +227,14 @@ class ZtcClient
             $this->logger->warning('ZGW ZTC: resolveOmschrijvingFromUrl failed', ['err' => $e->getMessage()]);
             return null;
         }
-        $omsch = $response['body']['omschrijving'] ?? null;
-        return is_string($omsch) === true ? $omsch : null;
-    }//end resolveOmschrijvingFromUrl()
 
+        $omsch = $response['body']['omschrijving'] ?? null;
+        if (is_string($omsch) === true) {
+            return $omsch;
+        }
+
+        return null;
+    }//end resolveOmschrijvingFromUrl()
 
     /**
      * Invalidate the cache for one resource type (called on catalogi NRC events).
@@ -230,19 +244,20 @@ class ZtcClient
      *
      * @return void
      */
-    public function invalidateCache(array $endpoint, string $resourceType = '*'): void
+    public function invalidateCache(array $endpoint, string $resourceType='*'): void
     {
         $endpointId = (string) ($endpoint['id'] ?? '');
         if ($endpointId === '') {
             return;
         }
+
         if ($resourceType === '*' || $resourceType === '') {
             unset($this->cache[$endpointId]);
             return;
         }
+
         unset($this->cache[$endpointId][$resourceType]);
     }//end invalidateCache()
-
 
     /**
      * Inject a cache entry (testing helper).
@@ -255,23 +270,27 @@ class ZtcClient
      *
      * @return void
      */
-    public function primeCache(string $endpointId, string $resourceType, string $omschrijving, string $url, array $data = []): void
+    public function primeCache(string $endpointId, string $resourceType, string $omschrijving, string $url, array $data=[]): void
     {
+        $cacheData = $data;
+        if ($data === []) {
+            $cacheData = ['omschrijving' => $omschrijving];
+        }
+
         $this->cache[$endpointId][$resourceType][$omschrijving] = [
             'url'      => $url,
-            'data'     => ($data === [] ? ['omschrijving' => $omschrijving] : $data),
+            'data'     => $cacheData,
             'storedAt' => time(),
         ];
     }//end primeCache()
 
-
     /**
      * Internal: lookup-with-cache for any resource type.
      *
-     * @param array<string, mixed> $endpoint     Endpoint payload.
-     * @param string               $resourceType One of RESOURCE_*.
-     * @param string               $omschrijving Omschrijving to look up.
-     * @param array<string,string|int> $extraQuery Optional extra ZTC filters.
+     * @param array<string, mixed>     $endpoint     Endpoint payload.
+     * @param string                   $resourceType One of RESOURCE_*.
+     * @param string                   $omschrijving Omschrijving to look up.
+     * @param array<string,string|int> $extraQuery   Optional extra ZTC filters.
      *
      * @return array{url:string,data:array<string,mixed>}|null
      */
@@ -279,7 +298,7 @@ class ZtcClient
         array $endpoint,
         string $resourceType,
         string $omschrijving,
-        array $extraQuery = [],
+        array $extraQuery=[],
     ): ?array {
         $endpointId = (string) ($endpoint['id'] ?? '');
         $cacheKey   = $omschrijving.'|'.json_encode($extraQuery, JSON_UNESCAPED_SLASHES);
@@ -324,6 +343,7 @@ class ZtcClient
         if (is_array($entry) === false) {
             return null;
         }
+
         $url = (string) ($entry['url'] ?? '');
         if ($url === '') {
             return null;
@@ -338,7 +358,6 @@ class ZtcClient
         return ['url' => $url, 'data' => $entry];
     }//end resolveByOmschrijving()
 
-
     /**
      * Effective cache TTL (seconds).
      *
@@ -347,8 +366,10 @@ class ZtcClient
     private function ttl(): int
     {
         $value = $this->appConfig->getValueInt(Application::APP_ID, 'zgw.ztc_cache_ttl', self::DEFAULT_TTL_S);
-        return $value > 0 ? $value : self::DEFAULT_TTL_S;
+        if ($value > 0) {
+            return $value;
+        }
+
+        return self::DEFAULT_TTL_S;
     }//end ttl()
-
-
 }//end class

@@ -113,7 +113,6 @@ class EmailMatchService
 
     }//end __construct()
 
-
     /**
      * Match an email address to CRM entities.
      *
@@ -149,7 +148,6 @@ class EmailMatchService
         return $matches;
 
     }//end matchEmailToEntities()
-
 
     /**
      * Match a corporate email domain to an organization client.
@@ -203,7 +201,7 @@ class EmailMatchService
                 ['domain' => $domain]
             );
             return null;
-        }
+        }//end try
 
         if (is_array($rows) === false) {
             return null;
@@ -233,7 +231,6 @@ class EmailMatchService
 
     }//end matchDomainToOrganization()
 
-
     /**
      * Return true when the domain is a public email provider.
      *
@@ -253,7 +250,6 @@ class EmailMatchService
         return in_array($domain, self::PUBLIC_DOMAINS, true);
 
     }//end isPublicDomain()
-
 
     /**
      * Match a single Mail message to CRM entities and link via the leaf.
@@ -283,7 +279,7 @@ class EmailMatchService
             return 0;
         }
 
-        $exclude = $this->getExcludedAddresses(userId: $userId);
+        $exclude  = $this->getExcludedAddresses(userId: $userId);
         $entities = [];
         foreach ($addresses as $address) {
             if (in_array($address, $exclude, true) === true) {
@@ -291,7 +287,7 @@ class EmailMatchService
             }
 
             foreach ($this->matchEmailToEntities(address: $address) as $hit) {
-                $key = $hit['entityType'].':'.$hit['entityId'];
+                $key            = $hit['entityType'].':'.$hit['entityId'];
                 $entities[$key] = $hit;
             }
 
@@ -302,10 +298,10 @@ class EmailMatchService
 
             $org = $this->matchDomainToOrganization(domain: $domain);
             if ($org !== null) {
-                $key = $org['entityType'].':'.$org['entityId'];
+                $key            = $org['entityType'].':'.$org['entityId'];
                 $entities[$key] = $org;
             }
-        }
+        }//end foreach
 
         if ($entities === []) {
             return 0;
@@ -316,7 +312,7 @@ class EmailMatchService
             return 0;
         }
 
-        $register = $this->registerSlug();
+        $register     = $this->registerSlug();
         $createdCount = 0;
         foreach ($entities as $entity) {
             $schemaSlug = $entity['entityType'].'_schema';
@@ -354,13 +350,12 @@ class EmailMatchService
                         'messageId'  => $mailMessageId,
                     ]
                 );
-            }
+            }//end try
         }//end foreach
 
         return $createdCount;
 
     }//end matchAndLinkMessage()
-
 
     /**
      * Run the matching job for one user.
@@ -419,7 +414,6 @@ class EmailMatchService
 
     }//end runForUser()
 
-
     /**
      * Read the matching settings for a user.
      *
@@ -463,11 +457,10 @@ class EmailMatchService
 
     }//end getSettings()
 
-
     /**
      * Persist the matching settings for a user.
      *
-     * @param string                                                                                        $userId   The user id.
+     * @param string                                                                          $userId   The user id.
      * @param array{account:int,enabled:bool,excludedAddresses:array<int,string>,cursor?:int} $settings Settings payload.
      *
      * @return void
@@ -488,7 +481,6 @@ class EmailMatchService
         );
 
     }//end writeSettings()
-
 
     /**
      * Read the last-run status for a user.
@@ -514,15 +506,24 @@ class EmailMatchService
             return ['lastRunAt' => null, 'linked' => 0, 'scanned' => 0, 'error' => null];
         }
 
+        $lastRunAt = null;
+        if (isset($decoded['lastRunAt']) === true) {
+            $lastRunAt = (string) $decoded['lastRunAt'];
+        }
+
+        $error = null;
+        if (isset($decoded['error']) === true) {
+            $error = (string) $decoded['error'];
+        }
+
         return [
-            'lastRunAt' => isset($decoded['lastRunAt']) ? (string) $decoded['lastRunAt'] : null,
+            'lastRunAt' => $lastRunAt,
             'linked'    => (int) ($decoded['linked'] ?? 0),
             'scanned'   => (int) ($decoded['scanned'] ?? 0),
-            'error'     => isset($decoded['error']) ? (string) $decoded['error'] : null,
+            'error'     => $error,
         ];
 
     }//end getStatus()
-
 
     /**
      * Persist the last-run status for a user.
@@ -551,7 +552,6 @@ class EmailMatchService
 
     }//end writeStatus()
 
-
     /**
      * Extract the addresses to match from a Mail message metadata row.
      *
@@ -579,7 +579,6 @@ class EmailMatchService
 
     }//end extractAddresses()
 
-
     /**
      * Extract the domain part from an email address.
      *
@@ -598,7 +597,6 @@ class EmailMatchService
 
     }//end extractDomain()
 
-
     /**
      * Sanitise an excluded-addresses input array.
      *
@@ -609,7 +607,12 @@ class EmailMatchService
     private function sanitiseAddresses(mixed $items): array
     {
         if (is_string($items) === true) {
-            $items = preg_split('/[\\s,]+/', $items) ?: [];
+            $split = preg_split('/[\\s,]+/', $items);
+            if ($split === false) {
+                $split = [];
+            }
+
+            $items = $split;
         }
 
         if (is_array($items) === false) {
@@ -632,7 +635,6 @@ class EmailMatchService
 
     }//end sanitiseAddresses()
 
-
     /**
      * Return the excluded-addresses list for a user.
      *
@@ -645,7 +647,6 @@ class EmailMatchService
         return $this->getSettings(userId: $userId)['excludedAddresses'];
 
     }//end getExcludedAddresses()
-
 
     /**
      * Find object ids whose `email` field equals the address.
@@ -685,7 +686,7 @@ class EmailMatchService
                 ['schemaKey' => $schemaKey]
             );
             return [];
-        }
+        }//end try
 
         if (is_array($rows) === false) {
             return [];
@@ -713,7 +714,6 @@ class EmailMatchService
 
     }//end findObjectsByEmail()
 
-
     /**
      * Resolve the OR ObjectService through DI (null on missing).
      *
@@ -728,7 +728,6 @@ class EmailMatchService
         }
 
     }//end getObjectService()
-
 
     /**
      * Resolve the OR EmailLinkService through DI (null on missing).
@@ -745,7 +744,6 @@ class EmailMatchService
 
     }//end getEmailLinkService()
 
-
     /**
      * Check whether the leaf already holds a link for the (object, account,
      * message) triple. Returns the existing link id when found, null otherwise.
@@ -755,10 +753,10 @@ class EmailMatchService
      * dedup. The count delta will still be correct because the leaf returns
      * the same entity row on the second call.
      *
-     * @param object $linkService    OR EmailLinkService instance.
-     * @param string $objectUuid     Parent OR object uuid.
-     * @param int    $mailAccountId  Mail account id.
-     * @param int    $mailMessageId  Mail message id.
+     * @param object $linkService   OR EmailLinkService instance.
+     * @param string $objectUuid    Parent OR object uuid.
+     * @param int    $mailAccountId Mail account id.
+     * @param int    $mailMessageId Mail message id.
      *
      * @return int|null Existing link id, or null.
      */
@@ -802,7 +800,6 @@ class EmailMatchService
         return null;
 
     }//end existingLinkId()
-
 
     /**
      * Fetch a Mail message's metadata from the Mail app DB.
@@ -869,16 +866,20 @@ class EmailMatchService
             $sentAt = date('c', (int) $row['sent_at']);
         }
 
+        $subject = null;
+        if (isset($row['subject']) === true) {
+            $subject = (string) $row['subject'];
+        }
+
         return [
             'uid'        => (string) ($row['uid'] ?? ''),
-            'subject'    => isset($row['subject']) ? (string) $row['subject'] : null,
+            'subject'    => $subject,
             'sender'     => $sender,
             'recipients' => array_values(array_unique($recipients)),
             'date'       => $sentAt,
         ];
 
     }//end fetchMailMessageMeta()
-
 
     /**
      * List inbound Mail message rows for an account, since a cursor id.
@@ -919,7 +920,6 @@ class EmailMatchService
 
     }//end listInboundMessages()
 
-
     /**
      * Pull the canonical object id from an OR row.
      *
@@ -951,7 +951,6 @@ class EmailMatchService
         return '';
 
     }//end idOf()
-
 
     /**
      * Normalise an OR entity or array to a plain array.
@@ -999,7 +998,6 @@ class EmailMatchService
 
     }//end toArray()
 
-
     /**
      * Resolve the pipelinq register slug.
      *
@@ -1010,7 +1008,6 @@ class EmailMatchService
         return $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 
     }//end registerSlug()
-
 
     /**
      * Resolve a schema slug by app-config key.
@@ -1025,7 +1022,6 @@ class EmailMatchService
 
     }//end schemaSlug()
 
-
     /**
      * Per-user app-config key for matching settings.
      *
@@ -1039,7 +1035,6 @@ class EmailMatchService
 
     }//end settingsKeyFor()
 
-
     /**
      * Per-user app-config key for matching status.
      *
@@ -1052,6 +1047,4 @@ class EmailMatchService
         return self::STATUS_KEY.'.'.$userId;
 
     }//end statusKeyFor()
-
-
 }//end class

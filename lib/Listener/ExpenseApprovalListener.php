@@ -61,13 +61,13 @@ class ExpenseApprovalListener implements IEventListener
     /**
      * Constructor.
      *
-     * @param SchemaMapService    $schemaMapService The schema map service.
-     * @param ShillinqApService   $apService        The Shillinq AP service.
-     * @param ApSyncNotifier      $notifier         The admin failure notifier.
-     * @param IEventDispatcher    $eventDispatcher  The event dispatcher (for ExpenseApprovedEvent fan-out).
-     * @param ContainerInterface  $container        The DI container (OpenRegister ObjectService lookup).
-     * @param IAppConfig          $appConfig        The app configuration.
-     * @param LoggerInterface     $logger           The logger.
+     * @param SchemaMapService   $schemaMapService The schema map service.
+     * @param ShillinqApService  $apService        The Shillinq AP service.
+     * @param ApSyncNotifier     $notifier         The admin failure notifier.
+     * @param IEventDispatcher   $eventDispatcher  The event dispatcher (for ExpenseApprovedEvent fan-out).
+     * @param ContainerInterface $container        The DI container (OpenRegister ObjectService lookup).
+     * @param IAppConfig         $appConfig        The app configuration.
+     * @param LoggerInterface    $logger           The logger.
      */
     public function __construct(
         private SchemaMapService $schemaMapService,
@@ -105,6 +105,7 @@ class ExpenseApprovalListener implements IEventListener
             } else {
                 $entity = $event->getObject();
             }
+
             if ($entity === null || $this->isExpense(entity: $entity) === false) {
                 return;
             }

@@ -63,10 +63,10 @@ class BudgetService
     /**
      * Constructor.
      *
-     * @param ContainerInterface     $container           DI container.
-     * @param IAppConfig             $appConfig           App config.
-     * @param NotificationService    $notificationService Admin notifications.
-     * @param LoggerInterface        $logger              Logger.
+     * @param ContainerInterface  $container           DI container.
+     * @param IAppConfig          $appConfig           App config.
+     * @param NotificationService $notificationService Admin notifications.
+     * @param LoggerInterface     $logger              Logger.
      *
      * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.1
      */
@@ -102,10 +102,10 @@ class BudgetService
             return true;
         }
 
-        $maxMessages   = (int) ($budget['maxMessages'] ?? 0);
-        $currentMsgs   = (int) ($budget['currentPeriodMessages'] ?? 0);
-        $maxCostEur    = (float) ($budget['maxCostEur'] ?? 0);
-        $currentEur    = (float) ($budget['currentPeriodCostEur'] ?? 0);
+        $maxMessages = (int) ($budget['maxMessages'] ?? 0);
+        $currentMsgs = (int) ($budget['currentPeriodMessages'] ?? 0);
+        $maxCostEur  = (float) ($budget['maxCostEur'] ?? 0);
+        $currentEur  = (float) ($budget['currentPeriodCostEur'] ?? 0);
 
         if ($maxMessages > 0 && ($currentMsgs + 1) > $maxMessages) {
             return false;
@@ -147,7 +147,7 @@ class BudgetService
         $thresholdPct = (float) ($budget['alertThresholdPct'] ?? 0.8);
         $alertedAt    = (string) ($budget['alertedAtPeriodStart'] ?? '');
 
-        $payload                          = $budget;
+        $payload = $budget;
         $payload['currentPeriodMessages'] = $newMessages;
         $payload['currentPeriodCostEur']  = $newCost;
 
@@ -198,7 +198,7 @@ class BudgetService
                 continue;
             }
 
-            $payload                          = $row;
+            $payload = $row;
             $payload['currentPeriodMessages'] = 0;
             $payload['currentPeriodCostEur']  = 0;
             $payload['alertedAtPeriodStart']  = '';
@@ -305,11 +305,17 @@ class BudgetService
         }
 
         try {
+            if ($id === '') {
+                $saveUuid = null;
+            } else {
+                $saveUuid = $id;
+            }
+
             $saved = $objectService->saveObject(
                 object: $payload,
                 register: $this->getRegisterSlug(),
                 schema: $this->getSchemaSlug(),
-                uuid: ($id === '' ? null : $id),
+                uuid: $saveUuid,
             );
         } catch (Throwable $e) {
             $this->logger->warning(
@@ -466,7 +472,11 @@ class BudgetService
     private function getRegisterSlug(): string
     {
         $slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        return ($slug !== '') ? $slug : self::DEFAULT_REGISTER_SLUG;
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        return self::DEFAULT_REGISTER_SLUG;
     }//end getRegisterSlug()
 
     /**
@@ -482,7 +492,11 @@ class BudgetService
             ''
         );
 
-        return ($slug !== '') ? $slug : self::DEFAULT_SCHEMA_SLUG;
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        return self::DEFAULT_SCHEMA_SLUG;
     }//end getSchemaSlug()
 
     /**

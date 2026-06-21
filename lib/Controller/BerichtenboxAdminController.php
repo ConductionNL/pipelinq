@@ -92,7 +92,7 @@ class BerichtenboxAdminController extends Controller
             return new JSONResponse(['error' => 'Message not found'], Http::STATUS_NOT_FOUND);
         }
 
-        $data = $this->toArray($message);
+        $data = $this->toArray(row: $message);
         if ($data === null) {
             return new JSONResponse(['error' => 'Unreadable message'], Http::STATUS_INTERNAL_SERVER_ERROR);
         }
@@ -137,7 +137,7 @@ class BerichtenboxAdminController extends Controller
             'failed'           => 0,
             'opted-out'        => 0,
         ];
-        $unread = 0;
+        $unread   = 0;
         if ($register === '' || $schema === '') {
             return new JSONResponse(['counters' => $counters, 'unread' => 0]);
         }
@@ -159,14 +159,16 @@ class BerichtenboxAdminController extends Controller
         }
 
         foreach (($rows ?? []) as $row) {
-            $data   = $this->toArray($row);
+            $data = $this->toArray(row: $row);
             if ($data === null) {
                 continue;
             }
+
             $status = (string) ($data['deliveryStatus'] ?? '');
             if (isset($counters[$status]) === true) {
                 $counters[$status]++;
             }
+
             if ($status === 'sent' && (($data['readAt'] ?? '') === '' || $data['readAt'] === null)) {
                 $unread++;
             }
@@ -197,6 +199,7 @@ class BerichtenboxAdminController extends Controller
         if (is_array($row) === true) {
             return $row;
         }
+
         if (is_object($row) === true) {
             if (method_exists($row, 'jsonSerialize') === true) {
                 $s = $row->jsonSerialize();
@@ -204,6 +207,7 @@ class BerichtenboxAdminController extends Controller
                     return $s;
                 }
             }
+
             if (method_exists($row, 'getObject') === true) {
                 $inner = $row->getObject();
                 if (is_array($inner) === true) {
@@ -211,6 +215,7 @@ class BerichtenboxAdminController extends Controller
                 }
             }
         }
+
         return null;
     }//end toArray()
 }//end class

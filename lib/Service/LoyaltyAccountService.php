@@ -59,9 +59,9 @@ class LoyaltyAccountService
     /**
      * Create a new KlantLoyaltyAccount.
      *
-     * @param string $klantId     The Nextcloud contact UID.
-     * @param string $programmeId The programme UUID.
-     * @param bool   $optIn       Whether the customer accepted opt-in (REQ-LOY-010).
+     * @param string $klantId      The Nextcloud contact UID.
+     * @param string $programmeId  The programme UUID.
+     * @param bool   $optIn        Whether the customer accepted opt-in (REQ-LOY-010).
      * @param string $termsVersion The version of terms accepted.
      *
      * @return array<string, mixed> The created account.
@@ -73,8 +73,8 @@ class LoyaltyAccountService
     public function createAccount(
         string $klantId,
         string $programmeId,
-        bool $optIn = false,
-        string $termsVersion = '1.0'
+        bool $optIn=false,
+        string $termsVersion='1.0'
     ): array {
         if ($klantId === '' || $programmeId === '') {
             throw new RuntimeException('klantId and programmeId are required.');
@@ -128,7 +128,11 @@ class LoyaltyAccountService
             return null;
         }
 
-        return $object === null ? null : $this->toArray($object);
+        if ($object === null) {
+            return null;
+        }
+
+        return $this->toArray(object: $object);
     }//end getAccount()
 
     /**
@@ -136,9 +140,9 @@ class LoyaltyAccountService
      *
      * Enforces composite uniqueness at the application layer by querying first.
      *
-     * @param string $klantId     The Nextcloud contact UID.
-     * @param string $programmeId The programme UUID.
-     * @param bool   $optIn       Whether opt-in was accepted (only applied on creation).
+     * @param string $klantId      The Nextcloud contact UID.
+     * @param string $programmeId  The programme UUID.
+     * @param bool   $optIn        Whether opt-in was accepted (only applied on creation).
      * @param string $termsVersion The terms version.
      *
      * @return array<string, mixed> The existing or newly-created account.
@@ -146,8 +150,8 @@ class LoyaltyAccountService
     public function getOrCreateAccount(
         string $klantId,
         string $programmeId,
-        bool $optIn = true,
-        string $termsVersion = '1.0'
+        bool $optIn=true,
+        string $termsVersion='1.0'
     ): array {
         $existing = $this->findAccountByKlantAndProgramme(klantId: $klantId, programmeId: $programmeId);
         if ($existing !== null) {
@@ -196,7 +200,7 @@ class LoyaltyAccountService
             return null;
         }
 
-        return $this->toArray(reset($result));
+        return $this->toArray(object: reset($result));
     }//end findAccountByKlantAndProgramme()
 
     /**
@@ -256,10 +260,10 @@ class LoyaltyAccountService
      *
      * Called by PointsLedgerService after a credit/debit/expiry/adjustment.
      *
-     * @param string $accountId            The account UUID.
-     * @param int    $newCurrentBalance    The new current balance.
-     * @param int    $lifetimeDelta        How much to add to lifetimePoints (only positive on credit).
-     * @param string $lastActivityDate     ISO-8601 timestamp of the activity.
+     * @param string $accountId         The account UUID.
+     * @param int    $newCurrentBalance The new current balance.
+     * @param int    $lifetimeDelta     How much to add to lifetimePoints (only positive on credit).
+     * @param string $lastActivityDate  ISO-8601 timestamp of the activity.
      *
      * @return array<string, mixed>|null The updated account, or null.
      */
@@ -284,18 +288,18 @@ class LoyaltyAccountService
     /**
      * Set the current tier and validity dates on the account.
      *
-     * @param string  $accountId      The account UUID.
-     * @param ?string $tierId         The new tier ID (null clears).
-     * @param ?string $tierBehaaldOp  Timestamp the tier was reached.
-     * @param ?string $tierGeldigTot  Scheduled downgrade date.
+     * @param string  $accountId     The account UUID.
+     * @param ?string $tierId        The new tier ID (null clears).
+     * @param ?string $tierBehaaldOp Timestamp the tier was reached.
+     * @param ?string $tierGeldigTot Scheduled downgrade date.
      *
      * @return array<string, mixed>|null The updated account.
      */
     public function setTier(
         string $accountId,
         ?string $tierId,
-        ?string $tierBehaaldOp = null,
-        ?string $tierGeldigTot = null
+        ?string $tierBehaaldOp=null,
+        ?string $tierGeldigTot=null
     ): ?array {
         $account = $this->getAccount(accountId: $accountId);
         if ($account === null) {
@@ -306,6 +310,7 @@ class LoyaltyAccountService
         if ($tierBehaaldOp !== null) {
             $account['tierBehaaldOp'] = $tierBehaaldOp;
         }
+
         if ($tierGeldigTot !== null) {
             $account['tierGeldigTot'] = $tierGeldigTot;
         }
@@ -322,7 +327,7 @@ class LoyaltyAccountService
      *
      * @return array<int, array<string, mixed>> The accounts.
      */
-    public function listAccountsForProgramme(string $programmeId, int $limit = 1000, int $offset = 0): array
+    public function listAccountsForProgramme(string $programmeId, int $limit=1000, int $offset=0): array
     {
         [$register, $schema] = $this->config();
         if ($register === '' || $schema === '') {
@@ -341,7 +346,13 @@ class LoyaltyAccountService
             return [];
         }
 
-        return array_map([$this, 'toArray'], is_array($rows) === true ? array_values($rows) : []);
+        if (is_array($rows) === true) {
+            $values = array_values($rows);
+        } else {
+            $values = [];
+        }
+
+        return array_map([$this, 'toArray'], $values);
     }//end listAccountsForProgramme()
 
     /**
@@ -367,7 +378,7 @@ class LoyaltyAccountService
             uuid: $uuid
         );
 
-        return $this->toArray($saved);
+        return $this->toArray(object: $saved);
     }//end persist()
 
     /**

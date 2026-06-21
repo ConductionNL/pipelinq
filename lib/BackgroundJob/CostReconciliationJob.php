@@ -43,9 +43,9 @@ class CostReconciliationJob extends TimedJob
     /**
      * Constructor.
      *
-     * @param ITimeFactory              $time           Time factory.
-     * @param CostReconciliationService $reconciler     Service.
-     * @param LoggerInterface           $logger         Logger.
+     * @param ITimeFactory              $time       Time factory.
+     * @param CostReconciliationService $reconciler Service.
+     * @param LoggerInterface           $logger     Logger.
      *
      * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.3
      */
