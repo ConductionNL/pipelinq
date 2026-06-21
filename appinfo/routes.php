@@ -12,18 +12,13 @@ return [
         ['name' => 'settings#getUserSettings', 'url' => '/api/settings/user', 'verb' => 'GET'],
         ['name' => 'settings#updateUserSettings', 'url' => '/api/settings/user', 'verb' => 'PUT'],
 
-        // Admin — Objects API access control (per-schema group restrictions; ADR-005 / admin-settings spec).
-        ['name' => 'settings#getObjectenAccess', 'url' => '/api/settings/objecten-access', 'verb' => 'GET'],
-        ['name' => 'settings#saveObjectenAccess', 'url' => '/api/settings/objecten-access', 'verb' => 'POST'],
-
         // Admin — REST API token management.
         ['name' => 'settings#listTokens', 'url' => '/api/settings/api-tokens', 'verb' => 'GET'],
         ['name' => 'settings#generateToken', 'url' => '/api/settings/api-tokens', 'verb' => 'POST'],
         ['name' => 'settings#revokeToken', 'url' => '/api/settings/api-tokens/{id}', 'verb' => 'DELETE'],
 
-        // Admin — OAuth 2.0 and MCP server configuration.
+        // Admin — OAuth 2.0 configuration.
         ['name' => 'settings#saveOAuth', 'url' => '/api/settings/oauth', 'verb' => 'POST'],
-        ['name' => 'settings#saveMcp', 'url' => '/api/settings/mcp', 'verb' => 'POST'],
 
         // Admin — Shillinq project ledger manual re-dispatch (project-to-shillinq-ledger).
         ['name' => 'ledger#retry', 'url' => '/api/ledger/retry/{projectId}', 'verb' => 'POST'],

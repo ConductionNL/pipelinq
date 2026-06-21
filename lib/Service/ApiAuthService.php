@@ -262,69 +262,6 @@ class ApiAuthService
     }//end getOAuthConfig()
 
     /**
-     * Save MCP server configuration to IAppConfig.
-     *
-     * Secrets are stored with sensitive=true and skipped when the submitted value equals
-     * the placeholder string.
-     *
-     * @param array $config MCP config fields.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/admin-settings/tasks.md#task-2.1
-     */
-    public function saveMcpConfig(array $config): void
-    {
-        $nonSensitiveFields = ['mcp_endpoint', 'mcp_auth_mode', 'mcp_oauth_client_id'];
-        foreach ($nonSensitiveFields as $field) {
-            if (array_key_exists(key: $field, array: $config) === true) {
-                $this->appConfig->setValueString(
-                    app: Application::APP_ID,
-                    key: $field,
-                    value: (string) $config[$field]
-                );
-            }
-        }
-
-        $secretFields = ['mcp_api_key', 'mcp_oauth_client_secret'];
-        foreach ($secretFields as $field) {
-            if (array_key_exists(key: $field, array: $config) === true
-                && $config[$field] !== self::SECRET_PLACEHOLDER
-                && $config[$field] !== ''
-            ) {
-                $this->appConfig->setValueString(
-                    app: Application::APP_ID,
-                    key: $field,
-                    value: $config[$field],
-                    sensitive: true
-                );
-            }
-        }
-
-        $this->logger->info('ApiAuthService: MCP config saved');
-
-    }//end saveMcpConfig()
-
-    /**
-     * Get MCP server configuration (non-sensitive fields only — secrets excluded).
-     *
-     * @return array MCP config without secrets.
-     *
-     * @spec openspec/changes/admin-settings/tasks.md#task-2.1
-     */
-    public function getMcpConfig(): array
-    {
-        return [
-            'mcp_endpoint'                => $this->appConfig->getValueString(Application::APP_ID, 'mcp_endpoint', ''),
-            'mcp_auth_mode'               => $this->appConfig->getValueString(Application::APP_ID, 'mcp_auth_mode', ''),
-            'mcp_oauth_client_id'         => $this->appConfig->getValueString(Application::APP_ID, 'mcp_oauth_client_id', ''),
-            'mcp_api_key_configured'      => $this->appConfig->getValueString(Application::APP_ID, 'mcp_api_key', '') !== '',
-            'mcp_oauth_secret_configured' => $this->appConfig->getValueString(Application::APP_ID, 'mcp_oauth_client_secret', '') !== '',
-        ];
-
-    }//end getMcpConfig()
-
-    /**
      * Generate a v4-style UUID using ISecureRandom.
      *
      * @return string UUID string in xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx format.

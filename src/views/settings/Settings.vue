@@ -94,55 +94,6 @@
 		<!-- Prospect Discovery Settings -->
 		<ProspectSettings v-if="isConfigured" />
 
-		<!-- Objects API Access -->
-		<NcSettingsSection v-if="isAdmin"
-			:name="t('pipelinq', 'Objects API Access')"
-			:description="t('pipelinq', 'Restrict access to specific object types by Nextcloud group')">
-			<div v-if="!objectenAccessEntries.length" class="settings-empty-state">
-				{{ t('pipelinq', 'No schemas registered. Run re-import first.') }}
-			</div>
-			<table v-else class="settings-table">
-				<thead>
-					<tr>
-						<th>{{ t('pipelinq', 'Schema') }}</th>
-						<th>{{ t('pipelinq', 'Allowed Groups') }}</th>
-						<th>{{ t('pipelinq', 'Actions') }}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="entry in objectenAccessEntries" :key="entry.slug">
-						<td>
-							<strong>{{ entry.slug }}</strong>
-						</td>
-						<td>
-							<NcSelect v-model="entry.selectedGroups"
-								:input-label="t('pipelinq', 'Allowed Groups')"
-								:options="groupOptions"
-								:multiple="true"
-								:keep-open="true"
-								:searchable="true"
-								label="displayName"
-								track-by="id"
-								:placeholder="t('pipelinq', 'All authenticated users (open)')" />
-						</td>
-						<td>
-							<NcButton :disabled="savingAccess === entry.slug"
-								type="primary"
-								@click="saveSchemaAccess(entry)">
-								<template #icon>
-									<NcLoadingIcon v-if="savingAccess === entry.slug" :size="16" />
-								</template>
-								{{ t('pipelinq', 'Save') }}
-							</NcButton>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			<NcNoteCard v-if="accessMessage" :type="accessMessageType">
-				{{ accessMessage }}
-			</NcNoteCard>
-		</NcSettingsSection>
-
 		<!-- REST API Authentication -->
 		<NcSettingsSection v-if="isAdmin"
 			:name="t('pipelinq', 'REST API Authentication')"
@@ -229,45 +180,6 @@
 					{{ oauthMessage }}
 				</NcNoteCard>
 			</div>
-		</NcSettingsSection>
-
-		<!-- MCP Server Administration -->
-		<NcSettingsSection v-if="isAdmin"
-			:name="t('pipelinq', 'MCP Server Administration')"
-			:description="t('pipelinq', 'Configure the MCP server endpoint and authentication credentials')">
-			<NcTextField v-model="mcpForm.mcp_endpoint"
-				:label="t('pipelinq', 'Endpoint URL')"
-				:placeholder="t('pipelinq', 'https://mcp.example.com')" />
-			<NcSelect v-model="mcpForm.mcp_auth_mode"
-				:input-label="t('pipelinq', 'Authentication Mode')"
-				:options="mcpAuthModeOptions"
-				label="label"
-				track-by="value"
-				:placeholder="t('pipelinq', 'Select auth mode')" />
-			<NcTextField v-if="mcpForm.mcp_auth_mode && mcpForm.mcp_auth_mode.value === 'apikey'"
-				v-model="mcpForm.mcp_api_key"
-				:label="t('pipelinq', 'API Key')"
-				:placeholder="mcpConfig.mcp_api_key_configured ? '••••••••' : ''"
-				type="password" />
-			<NcTextField v-if="mcpForm.mcp_auth_mode && mcpForm.mcp_auth_mode.value === 'oauth2'"
-				v-model="mcpForm.mcp_oauth_client_id"
-				:label="t('pipelinq', 'OAuth Client ID')" />
-			<NcTextField v-if="mcpForm.mcp_auth_mode && mcpForm.mcp_auth_mode.value === 'oauth2'"
-				v-model="mcpForm.mcp_oauth_client_secret"
-				:label="t('pipelinq', 'OAuth Client Secret')"
-				:placeholder="mcpConfig.mcp_oauth_secret_configured ? '••••••••' : ''"
-				type="password" />
-			<NcButton type="primary"
-				:disabled="savingMcp"
-				@click="saveMcp">
-				<template #icon>
-					<NcLoadingIcon v-if="savingMcp" :size="16" />
-				</template>
-				{{ t('pipelinq', 'Save MCP Configuration') }}
-			</NcButton>
-			<NcNoteCard v-if="mcpMessage" :type="mcpMessageType">
-				{{ mcpMessage }}
-			</NcNoteCard>
 		</NcSettingsSection>
 
 		<!-- BI Export Configuration -->
@@ -413,7 +325,7 @@
 <script>
 import { loadState } from '@nextcloud/initial-state'
 import { CnRegisterMapping, CnVersionInfoCard } from '@conduction/nextcloud-vue'
-import { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcNoteCard, NcSelect, NcSettingsSection, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcNoteCard, NcSettingsSection, NcTextField } from '@nextcloud/vue'
 import GenerateTokenDialog from '../../dialogs/GenerateTokenDialog.vue'
 import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
@@ -443,7 +355,6 @@ export default {
 		NcLoadingIcon,
 		GenerateTokenDialog,
 		NcNoteCard,
-		NcSelect,
 		NcSettingsSection,
 		NcTextField,
 		Refresh,
@@ -466,12 +377,6 @@ export default {
 			message: '',
 			messageType: 'success',
 			isAdmin: false,
-			// Objects API Access.
-			objectenAccess: {},
-			groupOptions: [],
-			savingAccess: null,
-			accessMessage: '',
-			accessMessageType: 'success',
 			// REST API tokens.
 			apiTokens: [],
 			authTab: 'tokens',
@@ -490,22 +395,6 @@ export default {
 			savingOAuth: false,
 			oauthMessage: '',
 			oauthMessageType: 'success',
-			// MCP.
-			mcpConfig: {},
-			mcpForm: {
-				mcp_endpoint: '',
-				mcp_auth_mode: null,
-				mcp_api_key: '',
-				mcp_oauth_client_id: '',
-				mcp_oauth_client_secret: '',
-			},
-			mcpAuthModeOptions: [
-				{ value: 'apikey', label: t('pipelinq', 'API Key') },
-				{ value: 'oauth2', label: t('pipelinq', 'OAuth 2.0') },
-			],
-			savingMcp: false,
-			mcpMessage: '',
-			mcpMessageType: 'success',
 			// Shillinq ledger integration.
 			savingShillinq: false,
 			shillinqMessage: '',
@@ -605,12 +494,6 @@ export default {
 				return true
 			}
 		},
-		objectenAccessEntries() {
-			return Object.entries(this.objectenAccess).map(([slug, groupIds]) => ({
-				slug,
-				selectedGroups: this.groupOptions.filter(g => groupIds.includes(g.id)),
-			}))
-		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-72
 		 */
@@ -666,23 +549,14 @@ export default {
 			this.staleThresholdInput = Number.isFinite(parsed) && parsed > 0 ? parsed : 14
 
 			if (this.isAdmin) {
-				this.objectenAccess = this.settingsStore.objectenAccess
 				this.apiTokens = this.settingsStore.apiTokens
 				this.oauthConfig = this.settingsStore.oauthConfig
-				this.mcpConfig = this.settingsStore.mcpConfig
 
 				this.oauthForm.oauth_client_id = this.oauthConfig.oauth_client_id || ''
 				this.oauthForm.oauth_token_endpoint = this.oauthConfig.oauth_token_endpoint || ''
 				this.oauthForm.oauth_auth_endpoint = this.oauthConfig.oauth_auth_endpoint || ''
 				this.oauthForm.oauth_scopes = this.oauthConfig.oauth_scopes || ''
 				this.oauthForm.oauth_id_token_forwarding = this.oauthConfig.oauth_id_token_forwarding === 'true'
-
-				this.mcpForm.mcp_endpoint = this.mcpConfig.mcp_endpoint || ''
-				this.mcpForm.mcp_oauth_client_id = this.mcpConfig.mcp_oauth_client_id || ''
-				const storedMode = this.mcpConfig.mcp_auth_mode
-				this.mcpForm.mcp_auth_mode = this.mcpAuthModeOptions.find(o => o.value === storedMode) || null
-
-				await this.loadGroupOptions()
 			}
 		}
 
@@ -806,44 +680,6 @@ export default {
 			return this.countObjectsWithField('request', 'channel', channelName)
 		},
 		/**
-		 * @spec openspec/changes/admin-settings/tasks.md#task-5
-		 */
-		async loadGroupOptions() {
-			try {
-				await axios.get(generateUrl('/apps/pipelinq/api/settings'))
-				// Fetch groups using Nextcloud's groups API.
-				const resp = await axios.get(generateUrl('/ocs/v2.php/cloud/groups'), {
-					params: { limit: 200, format: 'json' },
-					headers: { 'OCS-APIRequest': 'true' },
-				})
-				const groups = resp.data?.ocs?.data?.groups || []
-				this.groupOptions = groups.map(g => ({ id: g, displayName: g }))
-			} catch (e) {
-				this.groupOptions = []
-			}
-		},
-		/**
-		 * @param entry
-		 * @spec openspec/changes/admin-settings/tasks.md#task-5.1
-		 */
-		async saveSchemaAccess(entry) {
-			this.savingAccess = entry.slug
-			this.accessMessage = ''
-			try {
-				await axios.post(generateUrl('/apps/pipelinq/api/settings/objecten-access'), {
-					schemaSlug: entry.slug,
-					groupIds: entry.selectedGroups.map(g => g.id),
-				})
-				this.accessMessage = t('pipelinq', 'Access settings saved.')
-				this.accessMessageType = 'success'
-			} catch (e) {
-				this.accessMessage = e.response?.data?.message || t('pipelinq', 'Failed to save access settings.')
-				this.accessMessageType = 'error'
-			} finally {
-				this.savingAccess = null
-			}
-		},
-		/**
 		 * @param token
 		 * @spec openspec/changes/admin-settings/tasks.md#task-5.2
 		 */
@@ -883,31 +719,6 @@ export default {
 				this.oauthMessageType = 'error'
 			} finally {
 				this.savingOAuth = false
-			}
-		},
-		/**
-		 * @spec openspec/changes/admin-settings/tasks.md#task-5.4
-		 */
-		async saveMcp() {
-			this.savingMcp = true
-			this.mcpMessage = ''
-			try {
-				const payload = {
-					mcp_endpoint: this.mcpForm.mcp_endpoint,
-					mcp_auth_mode: this.mcpForm.mcp_auth_mode?.value || '',
-					mcp_api_key: this.mcpForm.mcp_api_key,
-					mcp_oauth_client_id: this.mcpForm.mcp_oauth_client_id,
-					mcp_oauth_client_secret: this.mcpForm.mcp_oauth_client_secret,
-				}
-				const { data } = await axios.post(generateUrl('/apps/pipelinq/api/settings/mcp'), payload)
-				this.mcpConfig = data.mcpConfig || {}
-				this.mcpMessage = t('pipelinq', 'MCP configuration saved.')
-				this.mcpMessageType = 'success'
-			} catch (e) {
-				this.mcpMessage = e.response?.data?.message || t('pipelinq', 'Failed to save MCP configuration.')
-				this.mcpMessageType = 'error'
-			} finally {
-				this.savingMcp = false
 			}
 		},
 		/**
