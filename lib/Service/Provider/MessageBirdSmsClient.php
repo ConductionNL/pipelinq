@@ -26,10 +26,9 @@ namespace OCA\Pipelinq\Service\Provider;
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
- * MessageBirdSmsClient — MessageBird SMS via openconnector.
+ * MessageBirdSmsClient — MessageBird SMS via the OpenRegister dispatch leaf.
  *
  * Vendor key: `messagebird`. Webhook signatures use MessageBird's
  * static-secret HMAC scheme (the `messagebird-signature` header is
@@ -39,6 +38,15 @@ use Throwable;
  */
 class MessageBirdSmsClient implements SmsProviderClientInterface
 {
+    use MessageDispatchTrait;
+
+    /**
+     * MessageBird messages send path, relative to the source base URL.
+     *
+     * @var string
+     */
+    private const SEND_PATH = 'messages';
+
     /**
      * Constructor.
      *
@@ -71,6 +79,8 @@ class MessageBirdSmsClient implements SmsProviderClientInterface
      *
      * @throws TransientSmsProviderException On 5xx / network.
      * @throws PermanentSmsProviderException On 4xx / config.
+     *
+     * @spec openspec/changes/archive/2026-06-21-pipelinq-messaging-via-or-leaf/tasks.md#1.2
      */
     public function send(string $toNumber, string $body): array
     {
@@ -80,7 +90,11 @@ class MessageBirdSmsClient implements SmsProviderClientInterface
             'body'       => $body,
         ];
 
-        $result = $this->dispatchViaOpenConnector(action: 'send-sms', payload: $payload);
+        $result = $this->dispatchViaLeaf(
+            source: (string) ($this->sourceId ?? ''),
+            body: $payload,
+            path: self::SEND_PATH,
+        );
         $id     = (string) ($result['id'] ?? ($result['externalMessageId'] ?? ''));
 
         return [
@@ -116,53 +130,4 @@ class MessageBirdSmsClient implements SmsProviderClientInterface
     {
         return 'messagebird';
     }//end getVendor()
-
-    /**
-     * Dispatch via openconnector.
-     *
-     * @param string               $action  Action name.
-     * @param array<string, mixed> $payload Payload.
-     *
-     * @return array<string, mixed> Result.
-     *
-     * @throws TransientSmsProviderException On transient.
-     * @throws PermanentSmsProviderException On permanent.
-     */
-    private function dispatchViaOpenConnector(string $action, array $payload): array
-    {
-        if ($this->sourceId === null || $this->sourceId === '') {
-            throw new PermanentSmsProviderException('MessageBird source not configured');
-        }
-
-        try {
-            $sourceService = $this->container->get('OCA\\OpenConnector\\Service\\SourceService');
-        } catch (Throwable $e) {
-            throw new TransientSmsProviderException('openconnector unavailable: '.$e->getMessage());
-        }
-
-        if (method_exists($sourceService, 'executeAction') === false) {
-            throw new PermanentSmsProviderException('openconnector SourceService lacks executeAction');
-        }
-
-        try {
-            $result = $sourceService->executeAction($this->sourceId, $action, $payload);
-        } catch (Throwable $e) {
-            $code = (int) $e->getCode();
-            $this->logger->warning(
-                'MessageBirdSmsClient.dispatchViaOpenConnector: failed',
-                ['code' => $code, 'message' => $e->getMessage()]
-            );
-            if ($code === 0 || ($code >= 500 && $code < 600)) {
-                throw new TransientSmsProviderException($e->getMessage(), $code, $e);
-            }
-
-            throw new PermanentSmsProviderException($e->getMessage(), $code, $e);
-        }
-
-        if (is_array($result) === true) {
-            return $result;
-        }
-
-        return [];
-    }//end dispatchViaOpenConnector()
 }//end class
