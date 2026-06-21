@@ -32,6 +32,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCP\Http\Client\IClient;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
+use OCP\IURLGenerator;
 use OCP\Security\ICrypto;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -66,6 +67,16 @@ class HaalCentraalClient
     private const LOOKUP_TIMEOUT_SECONDS = 5;
 
     /**
+     * Sentinel returned by {@see lookupViaOpenRegister()} for an OR-200 with
+     * zero persons (BSN not found in BRP). Distinguishes "OR answered, nobody
+     * there" (→ not-found, return null) from "OR unusable" (→ null → legacy
+     * fallback). Never returned from {@see lookupPersoon()}.
+     *
+     * @var array<int,string>
+     */
+    private const OR_EMPTY_RESULT = ['__or_brp_empty__'];
+
+    /**
      * Cached access token (in-process only — re-fetched on cold boot).
      *
      * @var array{token: string, expiresAt: DateTimeImmutable}|null
@@ -79,12 +90,14 @@ class HaalCentraalClient
      * @param IAppConfig      $appConfig     App config.
      * @param ICrypto         $crypto        Crypto for decrypting stored secrets.
      * @param LoggerInterface $logger        Logger (never includes raw BSN).
+     * @param IURLGenerator   $urlGenerator  URL generator (resolves the OR BRP leaf endpoint).
      */
     public function __construct(
         private IClientService $clientService,
         private IAppConfig $appConfig,
         private ICrypto $crypto,
         private LoggerInterface $logger,
+        private IURLGenerator $urlGenerator,
     ) {
     }//end __construct()
 
@@ -94,6 +107,17 @@ class HaalCentraalClient
      * Throws HaalCentraalException on transport / auth / server errors so the caller
      * can decide how to surface the failure.
      *
+     * OR-first (ADR-022, safe-partial): the lookup tries the OpenRegister BRP leaf
+     * first. On HTTP 200 the leaf returns the raw HAL+JSON person under `results`
+     * plus the Wet-BRP audit metadata under `meta` ({ correlationId, durationMs,
+     * status }); the person is mapped through the EXACT SAME {@see normalisePerson()}
+     * as the legacy path, and the meta is attached as `_correlationId` /
+     * `_responseDurationMs` / `_responseStatus` so the caller persists a
+     * byte-identical `brpLookupVerzoek` audit record regardless of source. On a
+     * 503 (source unconfigured/down) / non-200 / OR-absent the method falls back
+     * to the legacy OAuth2 + mTLS direct HaalCentraal path below, unchanged, so
+     * configured envs keep working until an operator enables the OR source.
+     *
      * @param string      $bsn              Raw 9-digit BSN.
      * @param string|null $verzoekIdContext Optional context UUID for correlation logging.
      *
@@ -101,13 +125,30 @@ class HaalCentraalClient
      *
      * @throws HaalCentraalException
      *
+     * @spec openspec/changes/pipelinq-brp-via-or-leaf/specs/brp-lookup/spec.md
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-01
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-03
      */
     public function lookupPersoon(string $bsn, ?string $verzoekIdContext=null): ?array
     {
         $maskedBsn = BsnValidationService::mask($bsn);
-        $token     = $this->getAccessToken();
+
+        // OR-first: try the OpenRegister BRP leaf, which relays the raw HAL+JSON
+        // person plus the Wet-BRP audit metadata. Returns the same shape as the
+        // legacy path on success, or null to fall back to the legacy direct path.
+        $viaOr = $this->lookupViaOpenRegister(bsn: $bsn, maskedBsn: $maskedBsn);
+        if ($viaOr !== null) {
+            // Sentinel for an OR-200 with zero persons (BSN not in BRP) — the
+            // leaf returns 200 { results: [] }; preserve the legacy not-found
+            // semantics (return null) without falling through to the legacy call.
+            if ($viaOr === self::OR_EMPTY_RESULT) {
+                return null;
+            }
+
+            return $viaOr;
+        }
+
+        $token = $this->getAccessToken();
 
         $client = $this->buildHttpClient();
         $url    = $this->getBaseUrl().'/personen';
@@ -188,6 +229,122 @@ class HaalCentraalClient
             );
         }//end try
     }//end lookupPersoon()
+
+    /**
+     * Lookup a person via the OpenRegister BRP leaf (ADR-022, safe-partial).
+     *
+     * Calls `GET /apps/openregister/api/integrations/brp/person?bsn=<bsn>`
+     * server-side (internal, OCS-APIREQUEST, allow_local_address). The BSN is
+     * passed in the query (the leaf places it in the upstream request BODY and
+     * never logs it). On HTTP 200 the leaf returns
+     * `{ results: [<raw HAL+JSON person, 0..1>], total, meta: { correlationId,
+     * durationMs, status } }`. This method:
+     *   - maps `results[0]` through the SAME {@see normalisePerson()} the legacy
+     *     path uses (so the BrpPersoon output is identical for the same upstream
+     *     data), and
+     *   - attaches the audit metadata from `meta` exactly as the legacy path
+     *     derives it from the direct response — `meta.correlationId` →
+     *     `_correlationId`, `meta.durationMs` → `_responseDurationMs`,
+     *     `meta.status` → `_responseStatus` — so the caller persists a
+     *     byte-identical `brpLookupVerzoek` audit record.
+     *
+     * Returns:
+     *   - the normalised person array (with `_correlationId` /
+     *     `_responseDurationMs` / `_responseStatus`) on a 200 with a person,
+     *   - {@see OR_EMPTY_RESULT} on a 200 with zero persons (BSN not found —
+     *     the caller maps that to not-found / null without a legacy call), or
+     *   - null when the OR `brp-haalcentraal` source is not usable yet (OR
+     *     responds 503 with `details.cause`, or any non-200, or OR/openregister
+     *     is absent / connection refused) so the caller falls back to the legacy
+     *     OAuth2 + mTLS direct path and configured envs keep working.
+     *
+     * The raw BSN is NEVER logged here (only the masked BSN), mirroring the
+     * legacy path.
+     *
+     * @param string $bsn       Raw 9-digit BSN (placed in the leaf query; never logged).
+     * @param string $maskedBsn The masked BSN used for any logging.
+     *
+     * @return array<string,mixed>|null The normalised+stamped person, OR_EMPTY_RESULT, or null to fall back.
+     *
+     * @spec openspec/changes/pipelinq-brp-via-or-leaf/specs/brp-lookup/spec.md
+     */
+    private function lookupViaOpenRegister(string $bsn, string $maskedBsn): ?array
+    {
+        $params = http_build_query(['bsn' => $bsn]);
+        $url    = $this->urlGenerator->getAbsoluteURL('/apps/openregister/api/integrations/brp/person?'.$params);
+
+        try {
+            $client   = $this->clientService->newClient();
+            $response = $client->get(
+                    $url,
+                    [
+                        'timeout'         => self::LOOKUP_TIMEOUT_SECONDS,
+                        'connect_timeout' => 2,
+                        'headers'         => ['OCS-APIREQUEST' => 'true', 'Accept' => 'application/json'],
+                        'nextcloud'       => ['allow_local_address' => true],
+                    ]
+                    );
+        } catch (Throwable $e) {
+            // 503 (source not usable) surfaces as a client exception here, as
+            // does connection-refused / OR absent — fall back to the legacy path.
+            // Never log the raw BSN; only the masked variant.
+            $this->logger->debug(
+                'BRP OR leaf unavailable, falling back to legacy HaalCentraal path',
+                ['bsn' => $maskedBsn, 'error' => $e->getMessage()]
+            );
+            return null;
+        }//end try
+
+        $status = (int) $response->getStatusCode();
+        if ($status !== 200) {
+            return null;
+        }
+
+        $payload = json_decode((string) $response->getBody(), true);
+        if (is_array($payload) === false || isset($payload['results']) === false || is_array($payload['results']) === false) {
+            return null;
+        }
+
+        $results = $payload['results'];
+        if (empty($results) === true) {
+            // OR answered 200 but nobody is there — not-found, not a fallback.
+            return self::OR_EMPTY_RESULT;
+        }
+
+        $first = $results[0];
+        if (is_array($first) === false) {
+            return null;
+        }
+
+        $persoon = $this->normalisePerson(raw: $first);
+
+        if (is_array($payload['meta'] ?? null) === true) {
+            $meta = $payload['meta'];
+        } else {
+            $meta = [];
+        }
+
+        $correlationId = ($meta['correlationId'] ?? null);
+        if ($correlationId !== null) {
+            $correlationId = (string) $correlationId;
+        }
+
+        $persoon['_correlationId']      = $correlationId;
+        $persoon['_responseDurationMs'] = (int) ($meta['durationMs'] ?? 0);
+        $persoon['_responseStatus']     = (int) ($meta['status'] ?? 200);
+
+        $this->logger->info(
+            'BRP OR leaf lookup succeeded',
+            [
+                'bsn'           => $maskedBsn,
+                'correlationId' => $correlationId,
+                'duration_ms'   => $persoon['_responseDurationMs'],
+                'source'        => 'openregister-leaf',
+            ]
+        );
+
+        return $persoon;
+    }//end lookupViaOpenRegister()
 
     /**
      * Health-check: returns the certificate expiry (UTC) or null when unknown.
