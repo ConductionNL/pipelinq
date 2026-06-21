@@ -193,6 +193,77 @@ final class SchemaLifecycleGraph
     }//end statesFor()
 
     /**
+     * Resolve an arbitrary `configuration.<key>` annotation for a schema slug.
+     *
+     * Used for non-OR-enforced, app-namespaced lifecycle annotations (e.g. the
+     * `x-pipelinq-forecast-lifecycle` second state machine on the lead schema,
+     * which OpenRegister cannot enforce because it already owns the `status`
+     * lifecycle field). Same safe file-scan + json_decode contract as
+     * {@see lifecycleFor()}: returns null when undeclared/unreadable so callers
+     * fall back to their prior hardcoded constants.
+     *
+     * @param string $schemaSlug The schema slug.
+     * @param string $key        The configuration key (e.g. 'x-pipelinq-forecast-lifecycle').
+     *
+     * @return array<string, mixed>|null The annotation, or null when not found.
+     */
+    public function configurationFor(string $schemaSlug, string $key): ?array
+    {
+        $files = [$this->mainRegisterPath];
+        if (is_dir($this->fragmentDir) === true) {
+            $glob = glob($this->fragmentDir.'/*.json');
+            if (is_array($glob) === true) {
+                sort($glob);
+                $files = array_merge($files, $glob);
+            }
+        }
+
+        foreach ($files as $file) {
+            if (is_file($file) === false || is_readable($file) === false) {
+                continue;
+            }
+
+            $raw = file_get_contents($file);
+            if ($raw === false) {
+                continue;
+            }
+
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded) === false) {
+                continue;
+            }
+
+            $schemas = ($decoded['components']['schemas'] ?? []);
+            if (is_array($schemas) === false) {
+                continue;
+            }
+
+            foreach ($schemas as $schemaKey => $schema) {
+                if (is_array($schema) === false) {
+                    continue;
+                }
+
+                $slug = (string) ($schema['slug'] ?? $schemaKey);
+                if ($slug !== $schemaSlug) {
+                    continue;
+                }
+
+                $config = ($schema['configuration'] ?? []);
+                if (is_array($config) === false) {
+                    continue;
+                }
+
+                $annotation = ($config[$key] ?? null);
+                if (is_array($annotation) === true) {
+                    return $annotation;
+                }
+            }
+        }//end foreach
+
+        return null;
+    }//end configurationFor()
+
+    /**
      * Resolve the raw `x-openregister-lifecycle` annotation for a schema slug.
      *
      * @param string $schemaSlug The schema slug.

@@ -92,6 +92,110 @@ class SchemaLifecycleGraphTest extends TestCase
     }//end testLoyaltyProgrammeAdjacencyDeclaresActivateEdge()
 
     /**
+     * The contract FULL graph mirrors the ContractService reachability and seeds
+     * terminal states (renewed/churned/cancelled) as empty-array keys.
+     *
+     * @return void
+     */
+    public function testContractFullAdjacencyMatchesReachability(): void
+    {
+        $this->assertSame(
+            expected: [
+                'draft'     => ['active', 'expiring', 'renewed', 'churned', 'cancelled'],
+                'expiring'  => ['active', 'draft', 'renewed', 'churned', 'cancelled'],
+                'active'    => ['draft', 'expiring', 'renewed', 'churned', 'cancelled'],
+                'renewed'   => [],
+                'churned'   => [],
+                'cancelled' => [],
+            ],
+            actual: $this->graph()->fullAdjacencyFor(schemaSlug: 'contract')
+        );
+    }//end testContractFullAdjacencyMatchesReachability()
+
+    /**
+     * The contract schema declares the canonical terminal states.
+     *
+     * @return void
+     */
+    public function testContractLifecycleDeclaresTerminalStates(): void
+    {
+        $lifecycle = $this->graph()->lifecycleFor(schemaSlug: 'contract');
+        $this->assertIsArray($lifecycle);
+        $this->assertSame(
+            expected: ['renewed', 'churned', 'cancelled'],
+            actual: $lifecycle['terminal']
+        );
+    }//end testContractLifecycleDeclaresTerminalStates()
+
+    /**
+     * The booking FULL graph matches the prior hardcoded allowedTransitions().
+     *
+     * @return void
+     */
+    public function testBookingFullAdjacencyMatchesPriorMap(): void
+    {
+        $this->assertSame(
+            expected: [
+                'pending-deposit'       => [
+                    'confirmed',
+                    'cancelled-by-customer',
+                    'cancelled-by-business',
+                    'rescheduled',
+                ],
+                'confirmed'             => [
+                    'completed',
+                    'no-show',
+                    'cancelled-by-customer',
+                    'cancelled-by-business',
+                    'rescheduled',
+                ],
+                'completed'             => [],
+                'no-show'               => [],
+                'cancelled-by-customer' => [],
+                'cancelled-by-business' => [],
+                'rescheduled'           => [],
+            ],
+            actual: $this->graph()->fullAdjacencyFor(schemaSlug: 'booking')
+        );
+    }//end testBookingFullAdjacencyMatchesPriorMap()
+
+    /**
+     * The lead schema declares the forecast-category partition under the
+     * pipelinq-namespaced (non-OR-enforced) configuration key.
+     *
+     * @return void
+     */
+    public function testForecastLifecycleConfigurationIsResolved(): void
+    {
+        $annotation = $this->graph()->configurationFor(
+            schemaSlug: 'lead',
+            key: 'x-pipelinq-forecast-lifecycle'
+        );
+
+        $this->assertIsArray($annotation);
+        $this->assertSame(expected: 'pipeline', actual: $annotation['default']);
+        $this->assertSame(
+            expected: ['commit', 'best_case', 'pipeline', 'omitted'],
+            actual: $annotation['open']
+        );
+        $this->assertSame(
+            expected: ['closed_won', 'closed_lost'],
+            actual: $annotation['closed']
+        );
+    }//end testForecastLifecycleConfigurationIsResolved()
+
+    /**
+     * configurationFor returns null for an absent key (callers fall back).
+     *
+     * @return void
+     */
+    public function testConfigurationForUnknownKeyYieldsNull(): void
+    {
+        $this->assertNull($this->graph()->configurationFor(schemaSlug: 'lead', key: 'x-does-not-exist'));
+        $this->assertNull($this->graph()->configurationFor(schemaSlug: 'doesNotExist', key: 'x-pipelinq-forecast-lifecycle'));
+    }//end testConfigurationForUnknownKeyYieldsNull()
+
+    /**
      * An unknown schema yields an empty map (callers fall back).
      *
      * @return void

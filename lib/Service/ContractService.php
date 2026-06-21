@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -41,11 +42,21 @@ use Throwable;
  * Contract lifecycle service.
  *
  * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
+ * @spec openspec/changes/pipelinq-lifecycle-batch-b/specs/openregister-integration/spec.md
  */
 class ContractService
 {
     /**
-     * Terminal lifecycle states that reject any further transition.
+     * Schema slug whose `x-openregister-lifecycle` declares the contract status graph.
+     *
+     * @var string
+     */
+    private const CONTRACT_SCHEMA_SLUG = 'contract';
+
+    /**
+     * Fallback terminal lifecycle states used only when the schema declaration is
+     * unreadable. The canonical source of truth is the contract schema's
+     * `x-openregister-lifecycle.terminal` (ADR-031); this constant mirrors it.
      *
      * @var string[]
      */
@@ -54,6 +65,9 @@ class ContractService
     /**
      * All valid contract lifecycle states.
      *
+     * Mirrors the contract schema's `status` enum; used as a fast set-membership
+     * check for the "unknown status" rejection.
+     *
      * @var string[]
      */
     public const VALID_STATES = ['draft', 'active', 'expiring', 'renewed', 'churned', 'cancelled'];
@@ -61,16 +75,58 @@ class ContractService
     /**
      * Constructor.
      *
-     * @param IAppConfig         $appConfig The app config.
-     * @param ContainerInterface $container The DI container (ObjectService lookup).
-     * @param LoggerInterface    $logger    The logger.
+     * @param IAppConfig           $appConfig      The app config.
+     * @param ContainerInterface   $container      The DI container (ObjectService lookup).
+     * @param LoggerInterface      $logger         The logger.
+     * @param SchemaLifecycleGraph $lifecycleGraph Reads the contract status graph from its schema.
      */
     public function __construct(
         private IAppConfig $appConfig,
         private ContainerInterface $container,
         private LoggerInterface $logger,
+        private SchemaLifecycleGraph $lifecycleGraph=new SchemaLifecycleGraph(),
     ) {
     }//end __construct()
+
+    /**
+     * Resolve the contract status-transition graph from the schema declaration.
+     *
+     * The graph lives in the contract schema's `x-openregister-lifecycle`
+     * annotation (ADR-031), which OpenRegister's LifecycleValidationListener also
+     * enforces on save. Falls back to an empty map (no from-restriction beyond the
+     * conditional PHP guards) only when the declaration is unreadable, so a broken
+     * register file never regresses behavior.
+     *
+     * @return array<string, array<int, string>> The `from => [to, ...]` map.
+     */
+    private function transitionGraph(): array
+    {
+        return $this->lifecycleGraph->adjacencyFor(schemaSlug: self::CONTRACT_SCHEMA_SLUG);
+    }//end transitionGraph()
+
+    /**
+     * Resolve the terminal contract states from the schema declaration.
+     *
+     * Reads `x-openregister-lifecycle.terminal` (with a `final` alias) from the
+     * contract schema. Falls back to {@see TERMINAL_STATES} when the declaration is
+     * unreadable so terminal immutability never silently disappears.
+     *
+     * @return array<int, string> The terminal states.
+     */
+    private function terminalStates(): array
+    {
+        $lifecycle = $this->lifecycleGraph->lifecycleFor(schemaSlug: self::CONTRACT_SCHEMA_SLUG);
+        if ($lifecycle === null) {
+            return self::TERMINAL_STATES;
+        }
+
+        $terminal = ($lifecycle['terminal'] ?? ($lifecycle['final'] ?? null));
+        if (is_array($terminal) === false || $terminal === []) {
+            return self::TERMINAL_STATES;
+        }
+
+        return array_map(static fn ($value): string => (string) $value, $terminal);
+    }//end terminalStates()
 
     /**
      * Validate a proposed status transition.
@@ -100,7 +156,7 @@ class ContractService
 
         $current = (string) ($contract['status'] ?? 'draft');
 
-        if (in_array($current, self::TERMINAL_STATES, true) === true) {
+        if (in_array($current, $this->terminalStates(), true) === true) {
             throw new InvalidArgumentException(
                 sprintf('Contract is in terminal state "%s" and cannot transition.', $current)
             );
@@ -116,6 +172,23 @@ class ContractService
 
         if ($newStatus === 'cancelled' && trim((string) ($contract['cancellationReason'] ?? '')) === '') {
             throw new InvalidArgumentException('Cancelling a contract requires a cancellationReason.');
+        }
+
+        // Schema-declared adjacency mirror (ADR-031). The contract schema's
+        // `x-openregister-lifecycle` is the single source of truth for the
+        // from->to graph and OpenRegister's LifecycleValidationListener enforces
+        // it on save; this PHP check rejects the same illegal edges *before* save
+        // with the contract's own message. Same-value transitions are skipped
+        // (OR skips them too). When the declaration is unreadable the graph is
+        // empty and this check is a no-op, leaving the conditional guards above as
+        // the sole gate (never regresses).
+        $graph = $this->transitionGraph();
+        if ($graph !== [] && $current !== $newStatus && isset($graph[$current]) === true) {
+            if (in_array($newStatus, $graph[$current], true) === false) {
+                throw new InvalidArgumentException(
+                    sprintf('Transition from "%s" to "%s" is not allowed.', $current, $newStatus)
+                );
+            }
         }
     }//end assertTransitionAllowed()
 

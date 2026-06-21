@@ -312,6 +312,66 @@
                 "summary": "A scheduled appointment for a customer against one or more resources.",
                 "description": "Owns the lifecycle of a single customer appointment: customer link, service, resource assignments, time window, status (pending-deposit / confirmed / completed / no-show / cancelled-by-customer / cancelled-by-business / rescheduled), audit history, and payment hooks.",
                 "@type": "Reservation",
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "confirmed",
+                        "terminal": [
+                            "completed",
+                            "no-show",
+                            "cancelled-by-customer",
+                            "cancelled-by-business",
+                            "rescheduled"
+                        ],
+                        "transitions": {
+                            "confirm": {
+                                "from": [
+                                    "pending-deposit"
+                                ],
+                                "to": "confirmed",
+                                "description": "Confirm a pending-deposit booking once the deposit clears."
+                            },
+                            "complete": {
+                                "from": [
+                                    "confirmed"
+                                ],
+                                "to": "completed",
+                                "description": "Mark a confirmed booking as completed. Terminal."
+                            },
+                            "noShow": {
+                                "from": [
+                                    "confirmed"
+                                ],
+                                "to": "no-show",
+                                "description": "Mark a confirmed booking as a no-show. Terminal."
+                            },
+                            "cancelByCustomer": {
+                                "from": [
+                                    "pending-deposit",
+                                    "confirmed"
+                                ],
+                                "to": "cancelled-by-customer",
+                                "description": "Customer cancels the booking. Terminal."
+                            },
+                            "cancelByBusiness": {
+                                "from": [
+                                    "pending-deposit",
+                                    "confirmed"
+                                ],
+                                "to": "cancelled-by-business",
+                                "description": "Business cancels the booking. Terminal."
+                            },
+                            "reschedule": {
+                                "from": [
+                                    "pending-deposit",
+                                    "confirmed"
+                                ],
+                                "to": "rescheduled",
+                                "description": "Reschedule the booking (the new slot lives in its own row). Terminal."
+                            }
+                        }
+                    }
+                },
                 "required": [
                     "customerId",
                     "serviceId",
