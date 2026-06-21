@@ -31,6 +31,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -75,6 +76,28 @@ class WalkInQueueService
         'called',
         'served',
         'abandoned',
+    ];
+
+    /**
+     * Schema slug whose `x-openregister-lifecycle` declares the ticket status graph.
+     *
+     * @var string
+     */
+    private const TICKET_SCHEMA_SLUG = 'walkInTicket';
+
+    /**
+     * Fallback ticket state-machine adjacency map, used only when the schema
+     * declaration is unreadable. The canonical source of truth is the walkInTicket
+     * schema's `x-openregister-lifecycle` annotation (ADR-031), which OpenRegister's
+     * LifecycleValidationListener also enforces on save. This constant must mirror it.
+     *
+     * @var array<string, array<int, string>>
+     */
+    private const FALLBACK_TRANSITIONS = [
+        'waiting'   => ['called', 'abandoned'],
+        'called'    => ['served', 'abandoned'],
+        'served'    => [],
+        'abandoned' => [],
     ];
 
     /**
@@ -382,16 +405,24 @@ class WalkInQueueService
     /**
      * WalkInTicket state-machine adjacency map.
      *
+     * Derived from the walkInTicket schema's `x-openregister-lifecycle` declaration
+     * (ADR-031) — the single source of truth that OpenRegister's
+     * LifecycleValidationListener also enforces on save. `fullAdjacencyFor()` seeds
+     * a key for every declared state, so terminal states (served/abandoned) appear
+     * with an empty target list — preserving the "unknown status" vs "invalid
+     * transition" distinction in {@see assertTransitionAllowed()}. Falls back to the
+     * mirrored constant only when the declaration is unreadable.
+     *
      * @return array<string, array<int, string>>
      */
     public static function allowedTransitions(): array
     {
-        return [
-            'waiting'   => ['called', 'abandoned'],
-            'called'    => ['served', 'abandoned'],
-            'served'    => [],
-            'abandoned' => [],
-        ];
+        $graph = (new SchemaLifecycleGraph())->fullAdjacencyFor(schemaSlug: self::TICKET_SCHEMA_SLUG);
+        if ($graph === []) {
+            return self::FALLBACK_TRANSITIONS;
+        }
+
+        return $graph;
     }//end allowedTransitions()
 
     /**

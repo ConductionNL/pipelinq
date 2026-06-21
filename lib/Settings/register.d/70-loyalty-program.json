@@ -23,6 +23,46 @@
 				"summary": "A native loyalty programme owned by a brand/retailer with configurable points rules, tier rules and redemption options.",
 				"description": "A LoyaltyProgramme is the top-level container for one brand/retailer's loyalty economics. It owns its own PointsRule, TierRule and RedemptionOption collections; KlantLoyaltyAccount links a customer (klantId) to exactly one programme. Status transitions from concept→actief are validated against rule and redemption-option presence (REQ-LOY-001).",
 				"@type": "LoyaltyProgramme",
+				"configuration": {
+					"x-openregister-lifecycle": {
+						"field": "status",
+						"initial": "concept",
+						"terminal": [
+							"beeindigd"
+						],
+						"transitions": {
+							"activate": {
+								"from": [
+									"concept"
+								],
+								"to": "actief",
+								"description": "Activate the programme (validated against rule and redemption-option presence, REQ-LOY-001)."
+							},
+							"pause": {
+								"from": [
+									"actief"
+								],
+								"to": "gepauzeerd",
+								"description": "Temporarily pause an active programme."
+							},
+							"resume": {
+								"from": [
+									"gepauzeerd"
+								],
+								"to": "actief",
+								"description": "Resume a paused programme."
+							},
+							"end": {
+								"from": [
+									"actief",
+									"gepauzeerd"
+								],
+								"to": "beeindigd",
+								"description": "End the programme (terminal)."
+							}
+						}
+					}
+				},
 				"required": [
 					"naam",
 					"merk",

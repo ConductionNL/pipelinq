@@ -35,7 +35,6 @@ use Psr\Log\LoggerInterface;
  */
 class WalkInQueueServiceTest extends TestCase
 {
-
     /**
      * Build a WalkInQueueService with overridable mocks.
      *
@@ -80,7 +79,7 @@ class WalkInQueueServiceTest extends TestCase
     }//end buildService()
 
     /**
-     * createTicket() seats a walk-in with status=waiting + arrivedAt populated,
+     * The createTicket() call seats a walk-in with status=waiting + arrivedAt populated,
      * and derives estimatedReadyAt from the earliest AvailabilityService gap.
      *
      * @return void
@@ -150,14 +149,14 @@ class WalkInQueueServiceTest extends TestCase
     }//end testCreateTicketSeatsWaitingAndComputesEta()
 
     /**
-     * createTicket() without a serviceId is allowed (anonymous walk-in not yet
+     * The createTicket() call without a serviceId is allowed (anonymous walk-in not yet
      * triaged) and leaves estimatedReadyAt unset.
      *
      * @return void
      */
     public function testCreateTicketWithoutServiceLeavesEtaUnset(): void
     {
-        $object = $this->createMock(originalClassName: ObjectService::class);
+        $object   = $this->createMock(originalClassName: ObjectService::class);
         $captured = null;
         $object->method('saveObject')->willReturnCallback(
             function (
@@ -184,7 +183,7 @@ class WalkInQueueServiceTest extends TestCase
     }//end testCreateTicketWithoutServiceLeavesEtaUnset()
 
     /**
-     * createTicket() rejects an empty displayName (schema requires it).
+     * The createTicket() call rejects an empty displayName (schema requires it).
      *
      * @return void
      */
@@ -201,7 +200,7 @@ class WalkInQueueServiceTest extends TestCase
     }//end testCreateTicketRejectsEmptyDisplayName()
 
     /**
-     * callNext() picks the oldest waiting ticket by arrivedAt and transitions
+     * The callNext() call picks the oldest waiting ticket by arrivedAt and transitions
      * it to `called`, stamping the supplied assignedResourceId.
      *
      * @return void
@@ -217,7 +216,7 @@ class WalkInQueueServiceTest extends TestCase
         $object = $this->createMock(originalClassName: ObjectService::class);
         $object->method('findAll')->willReturn($rows);
 
-        $captured = null;
+        $captured     = null;
         $capturedUuid = null;
         $object->expects($this->once())->method('saveObject')->willReturnCallback(
             function (
@@ -245,7 +244,7 @@ class WalkInQueueServiceTest extends TestCase
     }//end testCallNextPicksOldestWaitingAndAssignsResource()
 
     /**
-     * callNext() returns '' when the queue holds no waiting tickets.
+     * The callNext() call returns '' when the queue holds no waiting tickets.
      *
      * @return void
      */
@@ -262,17 +261,17 @@ class WalkInQueueServiceTest extends TestCase
     }//end testCallNextReturnsEmptyWhenQueueIsEmpty()
 
     /**
-     * serveTicket() transitions called -> served and stamps actualServedAt.
+     * The serveTicket() call transitions called -> served and stamps actualServedAt.
      *
      * @return void
      */
     public function testServeTicketStampsActualServedAt(): void
     {
         $ticket = [
-            '@self'      => ['id' => 't-called'],
-            'status'     => 'called',
-            'arrivedAt'  => '2026-06-15T10:00:00+00:00',
-            'displayName'=> 'Mr. Jansen',
+            '@self'       => ['id' => 't-called'],
+            'status'      => 'called',
+            'arrivedAt'   => '2026-06-15T10:00:00+00:00',
+            'displayName' => 'Mr. Jansen',
         ];
 
         $object = $this->createMock(originalClassName: ObjectService::class);
@@ -303,7 +302,7 @@ class WalkInQueueServiceTest extends TestCase
     }//end testServeTicketStampsActualServedAt()
 
     /**
-     * abandonTicket() transitions a waiting ticket -> abandoned (also legal
+     * The abandonTicket() call transitions a waiting ticket -> abandoned (also legal
      * from `called`).
      *
      * @return void
@@ -364,6 +363,35 @@ class WalkInQueueServiceTest extends TestCase
         $walkIn->serveTicket(ticketId: 't-done');
 
     }//end testTerminalTicketCannotTransition()
+
+    /**
+     * The ticket state machine is sourced from the walkInTicket schema's
+     * x-openregister-lifecycle declaration (ADR-031), including terminal states
+     * as empty-array keys (so "unknown status" vs "invalid transition" still differ).
+     *
+     * @return void
+     */
+    public function testAllowedTransitionsAreSourcedFromSchema(): void
+    {
+        $schemaGraph = (new \OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph(
+            settingsDir: __DIR__.'/../../../lib/Settings'
+        ))->fullAdjacencyFor(schemaSlug: 'walkInTicket');
+
+        $this->assertSame(
+            expected: WalkInQueueService::allowedTransitions(),
+            actual: $schemaGraph
+        );
+
+        $this->assertSame(
+            expected: [
+                'waiting'   => ['called', 'abandoned'],
+                'called'    => ['served', 'abandoned'],
+                'served'    => [],
+                'abandoned' => [],
+            ],
+            actual: WalkInQueueService::allowedTransitions()
+        );
+    }//end testAllowedTransitionsAreSourcedFromSchema()
 
     /**
      * Rebalance recomputes estimatedReadyAt for every waiting ticket with a
