@@ -34,6 +34,47 @@ if ($autoloader instanceof \Composer\Autoload\ClassLoader && is_dir(__DIR__ . '/
     }
 }
 
+// Deterministic OpenRegister-stub precedence (two-mode harness invariant).
+//
+// The pipelinq UNIT suite is isolated from the real OpenRegister app: it mocks a
+// deliberately-simplified OR surface (e.g. ObjectService::find() returning an
+// array, ObjectEntity::getSchema() / getUuid() as real DECLARED methods,
+// saveObject() returning an array) supplied by the stubs under tests/Stubs/ and
+// mapped via the autoload-dev PSR-4 prefix "OCA\OpenRegister\" => "tests/Stubs/".
+// The deep INTEGRATION tier (tests/e2e/workflows + Newman, run by
+// .forgejo/workflows/tests-live.yml against a live, OR-loaded Nextcloud) is where
+// the suite exercises the REAL OpenRegister classes.
+//
+// When phpunit happens to run INSIDE a Nextcloud that has OpenRegister enabled,
+// NC's app autoloader (registered by lib/base.php / OC_App below) would otherwise
+// resolve OCA\OpenRegister\* to the REAL classes first. Their stricter signatures
+// (find(): ?ObjectEntity, saveObject(): ObjectEntity, no declared getSchema())
+// are incompatible with the unit suite's stub-shaped mocks, producing the
+// ~65 errors / 11 failures (CannotUseOnlyMethods getSchema, IncompatibleReturnValue
+// find/saveObject) — pure stub-vs-real API divergence, NOT real regressions — plus
+// a hard "Declaration must be compatible" fatal on the one anonymous ObjectService
+// subclass. So we EAGERLY declare the OR stub classes here, BEFORE the NC bootstrap
+// registers OR's namespace. Once a stub class is declared, PHP will not load the
+// real same-named class, so every OCA\OpenRegister\* the suite stubs resolves to
+// the stub regardless of whether OR is installed — the bare host run and the
+// OR-loaded container run now behave identically. Non-stubbed OR classes still fall
+// through to the real app (only the listed files are pre-declared). Each require is
+// fault-tolerant: a stub whose dependency is unavailable is skipped, never fatal.
+foreach ([
+    'Db/ObjectEntity.php',
+    'Service/ObjectService.php',
+] as $stubRelativePath) {
+    $stubFile = __DIR__ . '/Stubs/' . $stubRelativePath;
+    if (is_file($stubFile) === true) {
+        try {
+            require_once $stubFile;
+        } catch (\Throwable $e) {
+            // A stub that depends on a class not present in this context is
+            // skipped; the suite continues with whatever surface is available.
+        }
+    }
+}
+
 // Bootstrap Nextcloud if not already done.
 if (!defined('OC_CONSOLE')) {
     // Try to include the main Nextcloud bootstrap.
@@ -61,6 +102,12 @@ if (!defined('OC_CONSOLE')) {
         OC_Hook::clear();
     }
 }
+
+// The OpenRegister stubs are pre-declared above (before the NC bootstrap) so they
+// win deterministically in both run modes. The remaining require_once guards below
+// are kept as defensive no-ops: in a bare run they are already satisfied by the
+// eager preload, and in an OR-loaded run the eager preload has already declared the
+// stub, so each guard's class_exists/interface_exists check short-circuits.
 
 // Load the IMcpToolProvider stub for cross-app classes not available as Composer
 // dependencies (the real interface ships with OpenRegister PR #1466). The stub

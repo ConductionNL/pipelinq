@@ -105,11 +105,19 @@ class QueryPushdownBatch3Test extends TestCase
             /**
              * Return the rows of the requested schema that satisfy the filters.
              *
-             * @param array{filters?: array<string, mixed>} $config The find config.
+             * Signature mirrors the real OCA\OpenRegister\Service\ObjectService::findAll()
+             * (array $config, bool $_rbac, bool $_multitenancy) so this override stays
+             * declaration-compatible whether the OR stub (bare/host phpunit run) OR the
+             * real OpenRegister class (phpunit run inside an OR-loaded Nextcloud) wins
+             * autoloading. The $_rbac / $_multitenancy flags are irrelevant to the fake.
+             *
+             * @param array{filters?: array<string, mixed>} $config        The find config.
+             * @param bool                                  $_rbac         Ignored (real-OR parity).
+             * @param bool                                  $_multitenancy Ignored (real-OR parity).
              *
              * @return array<int, array<string, mixed>> The matching rows.
              */
-            public function findAll(array $config=[]): array
+            public function findAll(array $config=[], bool $_rbac=true, bool $_multitenancy=true): array
             {
                 $filters = (array) ($config['filters'] ?? []);
                 $schema  = (string) ($filters['schema'] ?? '');
