@@ -38,6 +38,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -454,14 +455,27 @@ class CashShiftService
     {
         [$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
 
+        // Push the windowed SUM(total) into OpenRegister: SUM over `total` where
+        // status IN (confirmed, settled) AND confirmedAt in [from, to]. The prior
+        // PHP path bounded the window via toTimestamp() (strtotime → integer
+        // comparison); OpenRegister's native date-range path resolves the same
+        // ISO-8601 bounds identically (verified live, boundary windows included),
+        // so the total is preserved while the per-row hydrate is eliminated.
+        // Degrades to 0.0 when OpenRegister is unavailable, mirroring the prior
+        // findAll-failure path.
         try {
-            $results = $this->getObjectService()->findAll(
-                config: [
-                    'filters' => [
-                        'register' => $register,
-                        'schema'   => $schema,
-                    ],
-                ]
+            $query  = AggregationQuery::create(
+                metric: 'sum',
+                field: 'total',
+                filter: [
+                    'status'      => ['in' => ['confirmed', 'settled']],
+                    'confirmedAt' => ['gte' => $from, 'lte' => $to],
+                ],
+            );
+            $result = $this->getAggregationRunner()->runAdhocByRef(
+                registerRef: $register,
+                schemaRef: $schema,
+                query: $query
             );
         } catch (\Throwable $e) {
             $this->logger->warning(
@@ -469,34 +483,10 @@ class CashShiftService
                 ['exception' => $e->getMessage()]
             );
             return 0.0;
-        }
+        }//end try
 
-        $fromTs = $this->toTimestamp(value: $from);
-        $toTs   = $this->toTimestamp(value: $to);
-
-        $sum = 0.0;
-        foreach (($results ?? []) as $result) {
-            $txn    = $this->toArray(object: $result);
-            $status = (string) ($txn['status'] ?? '');
-            if (in_array($status, ['confirmed', 'settled'], true) === false) {
-                continue;
-            }
-
-            $confirmedTs = $this->toTimestamp(value: (string) ($txn['confirmedAt'] ?? ''));
-            if ($confirmedTs === null) {
-                continue;
-            }
-
-            if ($fromTs !== null && $confirmedTs < $fromTs) {
-                continue;
-            }
-
-            if ($toTs !== null && $confirmedTs > $toTs) {
-                continue;
-            }
-
-            $sum += (float) ($txn['total'] ?? 0);
-        }//end foreach
+        // Empty result set yields null from the runner; treat as 0.0.
+        $sum = (float) ($result['value'] ?? 0.0);
 
         return $this->money(value: $sum);
     }//end sumConfirmedSales()
@@ -838,6 +828,26 @@ class CashShiftService
             throw new RuntimeException('OpenRegister service is not available.');
         }
     }//end getObjectService()
+
+    /**
+     * Get the OpenRegister ad-hoc AggregationRunner.
+     *
+     * Resolves the runner from the DI container the same way the ObjectService
+     * is resolved, so reporting paths can push SUM/COUNT/group work down into
+     * OpenRegister (ADR-022) instead of hydrating and reducing in PHP.
+     *
+     * @return object The aggregation runner.
+     *
+     * @throws RuntimeException If OpenRegister is not available.
+     */
+    private function getAggregationRunner(): object
+    {
+        try {
+            return $this->container->get('OCA\OpenRegister\Service\Aggregation\AggregationRunner');
+        } catch (\Throwable $e) {
+            throw new RuntimeException('OpenRegister aggregation runner is not available.');
+        }
+    }//end getAggregationRunner()
 
     /**
      * Normalise an OR object (entity or array) into a plain array.
