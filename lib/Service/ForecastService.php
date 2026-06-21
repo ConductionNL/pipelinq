@@ -256,25 +256,23 @@ class ForecastService
      */
     private function latestSnapshot(string $ownerId, string $periodId, string $level): array
     {
+        // Push the "most recent" selection down into OpenRegister: sort by
+        // as_of_date descending and take the first row, instead of fetching
+        // every matching snapshot and sorting in PHP.
         $rows = $this->findObjects(
                 schemaKey: 'forecastSnapshot_schema',
                 filters: [
                     'owner_id'  => $ownerId,
                     'period_id' => $periodId,
                     'level'     => $level,
-                ]
+                ],
+                sort: ['as_of_date' => 'DESC'],
+                limit: 1
                 );
 
         if ($rows === []) {
             return $this->rollup->emptyTotals();
         }
-
-        usort(
-                $rows,
-                static function (array $a, array $b): int {
-                    return strcmp((string) ($b['as_of_date'] ?? ''), (string) ($a['as_of_date'] ?? ''));
-                }
-                );
 
         return $rows[0];
     }//end latestSnapshot()
@@ -291,6 +289,8 @@ class ForecastService
      */
     private function latestOverride(string $ownerId, string $periodId, string $level, string $category): ?array
     {
+        // Push the "most recent" selection down into OpenRegister: sort by
+        // created_at descending and take the first row.
         $rows = $this->findObjects(
                 schemaKey: 'forecastOverride_schema',
                 filters: [
@@ -298,19 +298,14 @@ class ForecastService
                     'period_id'         => $periodId,
                     'level'             => $level,
                     'category'          => $category,
-                ]
+                ],
+                sort: ['created_at' => 'DESC'],
+                limit: 1
                 );
 
         if ($rows === []) {
             return null;
         }
-
-        usort(
-                $rows,
-                static function (array $a, array $b): int {
-                    return strcmp((string) ($b['created_at'] ?? ''), (string) ($a['created_at'] ?? ''));
-                }
-                );
 
         return $rows[0];
     }//end latestOverride()
@@ -318,12 +313,14 @@ class ForecastService
     /**
      * Query objects of a configured schema with equality filters.
      *
-     * @param string               $schemaKey The app-config schema key.
-     * @param array<string, mixed> $filters   Additional equality filters.
+     * @param string                $schemaKey The app-config schema key.
+     * @param array<string, mixed>  $filters   Additional equality filters.
+     * @param array<string, string> $sort      Optional sort map (field => ASC|DESC) pushed to OR.
+     * @param int|null              $limit     Optional row limit pushed to OR.
      *
      * @return array<int, array<string, mixed>> The matching objects as arrays.
      */
-    private function findObjects(string $schemaKey, array $filters): array
+    private function findObjects(string $schemaKey, array $filters, array $sort=[], ?int $limit=null): array
     {
         $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
         $schema   = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
@@ -333,8 +330,17 @@ class ForecastService
 
         $allFilters = array_merge(['register' => $register, 'schema' => $schema], $filters);
 
+        $config = ['filters' => $allFilters];
+        if ($sort !== []) {
+            $config['sort'] = $sort;
+        }
+
+        if ($limit !== null) {
+            $config['limit'] = $limit;
+        }
+
         try {
-            $results = $this->getObjectService()->findAll(config: ['filters' => $allFilters]);
+            $results = $this->getObjectService()->findAll(config: $config);
         } catch (\Throwable $e) {
             $this->logger->warning('Pipelinq: forecast query failed', ['exception' => $e->getMessage()]);
             return [];

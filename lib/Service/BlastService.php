@@ -533,9 +533,15 @@ class BlastService
             $filters['status'] = $status;
         }
 
-        $all   = $this->loadObjects(schemaSlug: $this->getBlastSchemaSlug(), filters: $filters);
-        $total = count($all);
-        $slice = array_slice($all, (($page - 1) * $limit), $limit);
+        $schemaSlug = $this->getBlastSchemaSlug();
+        $offset     = (($page - 1) * $limit);
+        $total      = $this->countObjects(schemaSlug: $schemaSlug, filters: $filters);
+        $slice      = $this->loadObjects(
+            schemaSlug: $schemaSlug,
+            filters: $filters,
+            limit: $limit,
+            offset: $offset,
+        );
         return [
             'data'       => $slice,
             'pagination' => [
@@ -754,9 +760,10 @@ class BlastService
             ];
         }
 
-        $all   = $this->loadAllDeliveriesForBlast(blastId: $blastId);
-        $total = count($all);
-        $slice = array_slice($all, (($page - 1) * $limit), $limit);
+        $filters = ['blastId' => $blastId];
+        $offset  = (($page - 1) * $limit);
+        $total   = $this->countDeliveries(filters: $filters);
+        $slice   = $this->loadDeliveries(filters: $filters, limit: $limit, offset: $offset);
         return [
             'data'       => $slice,
             'pagination' => [
@@ -789,14 +796,17 @@ class BlastService
     }//end computePages()
 
     /**
-     * Load every object of the given schema (used by listBlasts).
+     * Load objects of the given schema (used by listBlasts), with optional
+     * server-side paging pushed down to OpenRegister.
      *
      * @param string               $schemaSlug Schema slug.
      * @param array<string, mixed> $filters    Filter map.
+     * @param int|null             $limit      Optional page size pushed to OR.
+     * @param int|null             $offset     Optional offset pushed to OR.
      *
      * @return array<int, array<string, mixed>> Plain payloads.
      */
-    private function loadObjects(string $schemaSlug, array $filters): array
+    private function loadObjects(string $schemaSlug, array $filters, ?int $limit=null, ?int $offset=null): array
     {
         $register = $this->getRegisterSlug();
         if ($register === '' || $schemaSlug === '') {
@@ -808,12 +818,19 @@ class BlastService
             return [];
         }
 
+        $config = [
+            'filters' => array_merge(['register' => $register, 'schema' => $schemaSlug], $filters),
+        ];
+        if ($limit !== null) {
+            $config['limit'] = $limit;
+        }
+
+        if ($offset !== null) {
+            $config['offset'] = $offset;
+        }
+
         try {
-            $rows = $objectService->findAll(
-                filters: $filters,
-                register: $register,
-                schema: $schemaSlug,
-            );
+            $rows = $objectService->findAll(config: $config);
         } catch (Throwable $e) {
             $this->logger->warning(
                 'BlastService.loadObjects: findAll failed',
@@ -829,6 +846,46 @@ class BlastService
 
         return $out;
     }//end loadObjects()
+
+    /**
+     * Count objects of a schema matching the given filters via OpenRegister.
+     *
+     * Pushes the COUNT down into the OR query engine so paginated list
+     * endpoints can report a total without fetching every matching row.
+     *
+     * @param string               $schemaSlug The schema slug.
+     * @param array<string, mixed> $filters    Field filter map.
+     *
+     * @return int The matching row count, or 0 when OR is unavailable.
+     *
+     * @spec openspec/changes/pipelinq-query-pushdown-batch-1/tasks.md#task-5
+     */
+    private function countObjects(string $schemaSlug, array $filters): int
+    {
+        $register = $this->getRegisterSlug();
+        if ($register === '' || $schemaSlug === '') {
+            return 0;
+        }
+
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
+            return 0;
+        }
+
+        try {
+            return $objectService->count(
+                config: [
+                    'filters' => array_merge(['register' => $register, 'schema' => $schemaSlug], $filters),
+                ]
+            );
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'BlastService.countObjects: count failed',
+                ['schema' => $schemaSlug, 'exception' => $e->getMessage()]
+            );
+            return 0;
+        }
+    }//end countObjects()
 
     /**
      * Slice the recipient list into A/B variants deterministically.
@@ -1408,10 +1465,12 @@ class BlastService
      * Run a findAll against BlastDelivery with the given filters.
      *
      * @param array<string, mixed> $filters Filter map.
+     * @param int|null             $limit   Optional page size pushed to OR.
+     * @param int|null             $offset  Optional offset pushed to OR.
      *
      * @return array<int, array<string, mixed>> Matching rows.
      */
-    private function loadDeliveries(array $filters): array
+    private function loadDeliveries(array $filters, ?int $limit=null, ?int $offset=null): array
     {
         $register = $this->getRegisterSlug();
         $schema   = $this->getBlastDeliverySchemaSlug();
@@ -1424,12 +1483,19 @@ class BlastService
             return [];
         }
 
+        $config = [
+            'filters' => array_merge(['register' => $register, 'schema' => $schema], $filters),
+        ];
+        if ($limit !== null) {
+            $config['limit'] = $limit;
+        }
+
+        if ($offset !== null) {
+            $config['offset'] = $offset;
+        }
+
         try {
-            $rows = $objectService->findAll(
-                filters: $filters,
-                register: $register,
-                schema: $schema,
-            );
+            $rows = $objectService->findAll(config: $config);
         } catch (Throwable $e) {
             $this->logger->warning(
                 'BlastService.loadDeliveries: findAll failed',
@@ -1445,6 +1511,43 @@ class BlastService
 
         return $out;
     }//end loadDeliveries()
+
+    /**
+     * Count BlastDelivery rows matching the given filters via OpenRegister.
+     *
+     * @param array<string, mixed> $filters Filter map.
+     *
+     * @return int Matching row count, or 0 when OR is unavailable.
+     *
+     * @spec openspec/changes/pipelinq-query-pushdown-batch-1/tasks.md#task-5
+     */
+    private function countDeliveries(array $filters): int
+    {
+        $register = $this->getRegisterSlug();
+        $schema   = $this->getBlastDeliverySchemaSlug();
+        if ($register === '' || $schema === '') {
+            return 0;
+        }
+
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
+            return 0;
+        }
+
+        try {
+            return $objectService->count(
+                config: [
+                    'filters' => array_merge(['register' => $register, 'schema' => $schema], $filters),
+                ]
+            );
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'BlastService.countDeliveries: count failed',
+                ['filters' => $filters, 'exception' => $e->getMessage()]
+            );
+            return 0;
+        }
+    }//end countDeliveries()
 
     /**
      * Update only the `status` field on a Blast.

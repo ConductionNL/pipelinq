@@ -85,16 +85,17 @@ class ForecastExportService
             $filters['owner_id'] = $ownerId;
         }
 
-        $rows = $this->findObjects(schemaKey: 'forecastSnapshot_schema', filters: $filters);
-        usort(
-                $rows,
-                static function (array $a, array $b): int {
-                    return strcmp((string) ($a['as_of_date'] ?? ''), (string) ($b['as_of_date'] ?? ''));
-                }
+        // Push the ascending sort and the page window down into OpenRegister,
+        // and count the full matching set separately, instead of fetching every
+        // snapshot and sorting/slicing in PHP.
+        $total = $this->countObjects(schemaKey: 'forecastSnapshot_schema', filters: $filters);
+        $page  = $this->findObjects(
+                schemaKey: 'forecastSnapshot_schema',
+                filters: $filters,
+                sort: ['as_of_date' => 'ASC'],
+                limit: $limit,
+                offset: $offset
                 );
-
-        $total = count($rows);
-        $page  = array_slice($rows, $offset, $limit);
 
         $snapshots = [];
         foreach ($page as $row) {
@@ -270,12 +271,15 @@ class ForecastExportService
     /**
      * Query objects of a configured schema with equality filters.
      *
-     * @param string               $schemaKey The app-config schema key.
-     * @param array<string, mixed> $filters   Additional equality filters.
+     * @param string                $schemaKey The app-config schema key.
+     * @param array<string, mixed>  $filters   Additional equality filters.
+     * @param array<string, string> $sort      Optional sort map (field => ASC|DESC) pushed to OR.
+     * @param int|null              $limit     Optional page size pushed to OR.
+     * @param int|null              $offset    Optional offset pushed to OR.
      *
      * @return array<int, array<string, mixed>> The matching objects as arrays.
      */
-    private function findObjects(string $schemaKey, array $filters): array
+    private function findObjects(string $schemaKey, array $filters, array $sort=[], ?int $limit=null, ?int $offset=null): array
     {
         $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
         $schema   = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
@@ -285,8 +289,21 @@ class ForecastExportService
 
         $allFilters = array_merge(['register' => $register, 'schema' => $schema], $filters);
 
+        $config = ['filters' => $allFilters];
+        if ($sort !== []) {
+            $config['sort'] = $sort;
+        }
+
+        if ($limit !== null) {
+            $config['limit'] = $limit;
+        }
+
+        if ($offset !== null) {
+            $config['offset'] = $offset;
+        }
+
         try {
-            $results = $this->getObjectService()->findAll(config: ['filters' => $allFilters]);
+            $results = $this->getObjectService()->findAll(config: $config);
         } catch (\Throwable $e) {
             $this->logger->warning('Pipelinq: forecast export query failed', ['exception' => $e->getMessage()]);
             return [];
@@ -299,6 +316,34 @@ class ForecastExportService
 
         return $objects;
     }//end findObjects()
+
+    /**
+     * Count objects of a configured schema with equality filters via OpenRegister.
+     *
+     * @param string               $schemaKey The app-config schema key.
+     * @param array<string, mixed> $filters   Additional equality filters.
+     *
+     * @return int The matching row count, or 0 when OR is unavailable.
+     *
+     * @spec openspec/changes/pipelinq-query-pushdown-batch-1/tasks.md#task-8
+     */
+    private function countObjects(string $schemaKey, array $filters): int
+    {
+        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $schema   = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+        if ($register === '' || $schema === '') {
+            return 0;
+        }
+
+        $allFilters = array_merge(['register' => $register, 'schema' => $schema], $filters);
+
+        try {
+            return $this->getObjectService()->count(config: ['filters' => $allFilters]);
+        } catch (\Throwable $e) {
+            $this->logger->warning('Pipelinq: forecast export count failed', ['exception' => $e->getMessage()]);
+            return 0;
+        }
+    }//end countObjects()
 
     /**
      * Normalize an OpenRegister entity (or array) to a plain array.

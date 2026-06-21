@@ -72,9 +72,13 @@ class PosRoleService
         [$register, $schema] = $this->config(schemaKey: 'posRole_schema');
 
         $results = $this->getObjectService()->findAll(
-            register: $register,
-            schema: $schema,
-            limit: 1000
+            config: [
+                'filters' => [
+                    'register' => $register,
+                    'schema'   => $schema,
+                ],
+                'limit'   => 1000,
+            ]
         );
 
         $out = [];
@@ -226,10 +230,21 @@ class PosRoleService
         }
 
         try {
+            // Push the role-match filter down into OpenRegister instead of
+            // fetching up to 2000 posStaff records and filtering in PHP. The
+            // previous findAll() argument shape also did not match the OR
+            // ObjectService signature. The `isActive` predicate stays in PHP
+            // because the original semantics treat a *missing* isActive field as
+            // active ((bool) ($staff['isActive'] ?? true)), which a server-side
+            // `isActive == true` equality filter would wrongly exclude.
             $results = $this->getObjectService()->findAll(
-                register: $register,
-                schema: $staffSchema,
-                limit: 2000
+                config: [
+                    'filters' => [
+                        'register' => $register,
+                        'schema'   => $staffSchema,
+                        'posRole'  => $roleId,
+                    ],
+                ]
             );
         } catch (\Throwable $e) {
             return 0;
@@ -238,7 +253,7 @@ class PosRoleService
         $count = 0;
         foreach ($results as $result) {
             $staff = $this->toArray(object: $result);
-            if (($staff['posRole'] ?? '') === $roleId && (bool) ($staff['isActive'] ?? true) === true) {
+            if ((bool) ($staff['isActive'] ?? true) === true) {
                 $count++;
             }
         }
