@@ -86,7 +86,12 @@ class TierService
             return [];
         }
 
-        $rules = array_map([$this, 'toArray'], is_array($rows) === true ? array_values($rows) : []);
+        $rowList = [];
+        if (is_array($rows) === true) {
+            $rowList = array_values($rows);
+        }
+
+        $rules = array_map([$this, 'toArray'], $rowList);
 
         usort(
             $rules,
@@ -109,7 +114,7 @@ class TierService
      */
     public function calculateTier(string $programmeId, int $lifetimePoints): ?array
     {
-        $rules = $this->getTierRules(programmeId: $programmeId);
+        $rules   = $this->getTierRules(programmeId: $programmeId);
         $matched = null;
         foreach ($rules as $rule) {
             $threshold = (float) ($rule['drempelWaarde'] ?? 0);
@@ -144,7 +149,7 @@ class TierService
             return ['from' => $currentTierId, 'to' => null, 'changed' => false];
         }
 
-        $newTierUuid = $this->extractUuid($newTier);
+        $newTierUuid = $this->extractUuid(object: $newTier);
         if ($newTierUuid === $currentTierId) {
             return ['from' => $currentTierId, 'to' => $currentTierId, 'changed' => false];
         }
@@ -167,8 +172,11 @@ class TierService
         }
 
         // Downgrade path: respect end_of_period policy.
-        $currentTier = $this->findRuleByUuid(programmeId: $programmeId, tierId: (string) $currentTierId);
-        $downgradePolicy = $currentTier !== null ? (string) ($currentTier['downgradeBeleid'] ?? 'none') : 'none';
+        $currentTier     = $this->findRuleByUuid(programmeId: $programmeId, tierId: (string) $currentTierId);
+        $downgradePolicy = 'none';
+        if ($currentTier !== null) {
+            $downgradePolicy = (string) ($currentTier['downgradeBeleid'] ?? 'none');
+        }
 
         if ($downgradePolicy === 'end_of_year' || $downgradePolicy === 'end_of_quarter') {
             // Schedule via tierGeldigTot; do NOT change currentTierId now.
@@ -204,11 +212,14 @@ class TierService
     {
         $now    = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
         $policy = (string) ($newTier['downgradeBeleid'] ?? 'none');
-        $valid  = $policy === 'end_of_year' ? $this->endOfPeriodTimestamp(policy: $policy) : null;
+        $valid  = null;
+        if ($policy === 'end_of_year') {
+            $valid = $this->endOfPeriodTimestamp(policy: $policy);
+        }
 
         $this->loyaltyAccountService->setTier(
             accountId: $accountId,
-            tierId: $this->extractUuid($newTier),
+            tierId: $this->extractUuid(object: $newTier),
             tierBehaaldOp: $now,
             tierGeldigTot: $valid
         );
@@ -227,7 +238,7 @@ class TierService
         $now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
         $this->loyaltyAccountService->setTier(
             accountId: $accountId,
-            tierId: $this->extractUuid($newTier),
+            tierId: $this->extractUuid(object: $newTier),
             tierBehaaldOp: $now,
             tierGeldigTot: null
         );
@@ -268,7 +279,7 @@ class TierService
                     'type'       => 'loyalty.tier.changed',
                     'accountId'  => $accountId,
                     'fromTierId' => $fromTierId,
-                    'toTierId'   => $this->extractUuid($toTier),
+                    'toTierId'   => $this->extractUuid(object: $toTier),
                     'toTierNaam' => (string) ($toTier['naam'] ?? ''),
                     'benefits'   => $toTier['benefits'] ?? [],
                 ]
@@ -293,6 +304,7 @@ class TierService
         if ($currentTierId === null || $currentTierId === '') {
             return true;
         }
+
         if ($newTierId === null || $newTierId === '') {
             return false;
         }
@@ -321,7 +333,7 @@ class TierService
         }
 
         foreach ($this->getTierRules(programmeId: $programmeId) as $rule) {
-            if ($this->extractUuid($rule) === $tierId) {
+            if ($this->extractUuid(object: $rule) === $tierId) {
                 return $rule;
             }
         }
@@ -338,18 +350,18 @@ class TierService
      */
     private function endOfPeriodTimestamp(string $policy): string
     {
-        $tz  = new DateTimeZone('UTC');
-        $now = new DateTimeImmutable('now', $tz);
+        $tz   = new DateTimeZone('UTC');
+        $now  = new DateTimeImmutable('now', $tz);
         $year = (int) $now->format('Y');
 
         if ($policy === 'end_of_quarter') {
-            $month = (int) $now->format('n');
+            $month    = (int) $now->format('n');
             $endMonth = ((int) ceil($month / 3)) * 3;
             return (new DateTimeImmutable(sprintf('%d-%02d-01 00:00:00', $year, $endMonth), $tz))
                 ->modify('last day of this month 23:59:59')->format('c');
         }
 
-        // end_of_year (default).
+        // End_of_year (default).
         return (new DateTimeImmutable(sprintf('%d-12-31 23:59:59', $year), $tz))->format('c');
     }//end endOfPeriodTimestamp()
 

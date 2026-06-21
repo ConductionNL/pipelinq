@@ -76,20 +76,20 @@ class TemplateRenderer
         $deepLink = null;
         $requires = (bool) ($template['requiresDeepLink'] ?? false);
         if ($requires === true) {
-            $deepLink = $this->buildDeepLink($template, $variables);
+            $deepLink = $this->buildDeepLink(template: $template, variables: $variables);
             if ($deepLink !== null) {
                 $variables['deepLink'] = $deepLink;
             }
         }
 
-        $subject = $this->renderString((string) ($template['subject'] ?? ''), $variables);
+        $subject = $this->renderString(source: (string) ($template['subject'] ?? ''), variables: $variables);
         if (mb_strlen($subject) > self::MAX_SUBJECT_CHARS) {
             $subject = mb_substr($subject, 0, self::MAX_SUBJECT_CHARS);
         }
 
-        $body = $this->renderString((string) ($template['body'] ?? ''), $variables);
+        $body = $this->renderString(source: (string) ($template['body'] ?? ''), variables: $variables);
 
-        $this->assertValidXhtml($body);
+        $this->assertValidXhtml(body: $body);
 
         return [
             'subject'  => $subject,
@@ -124,7 +124,12 @@ class TemplateRenderer
                 'ref'    => (string) ($variables['messageId'] ?? ''),
             ]
         );
-        $sep = (str_contains($base, '?') === true) ? '&' : '?';
+        if (str_contains($base, '?') === true) {
+            $sep = '&';
+        } else {
+            $sep = '?';
+        }
+
         return $base.$sep.$query;
     }//end buildDeepLink()
 
@@ -175,7 +180,7 @@ class TemplateRenderer
     {
         $previous = libxml_use_internal_errors(true);
         try {
-            $doc = new \DOMDocument();
+            $doc     = new \DOMDocument();
             $wrapped = '<?xml version="1.0" encoding="UTF-8"?><root>'.$body.'</root>';
             if ($doc->loadXML($wrapped) === false) {
                 throw new RuntimeException('Rendered body is not valid XHTML strict.');

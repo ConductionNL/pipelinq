@@ -44,12 +44,12 @@ class LoyaltyReportingService
     /**
      * Constructor.
      *
-     * @param ContainerInterface     $container             The DI container.
-     * @param IAppConfig             $appConfig             The app configuration.
-     * @param LoyaltyAccountService  $loyaltyAccountService The account service.
-     * @param PointsLedgerService    $ledgerService         The ledger service.
-     * @param LoyaltyProgrammeService $programmeService     The programme service.
-     * @param LoggerInterface        $logger                The logger.
+     * @param ContainerInterface      $container             The DI container.
+     * @param IAppConfig              $appConfig             The app configuration.
+     * @param LoyaltyAccountService   $loyaltyAccountService The account service.
+     * @param PointsLedgerService     $ledgerService         The ledger service.
+     * @param LoyaltyProgrammeService $programmeService      The programme service.
+     * @param LoggerInterface         $logger                The logger.
      */
     public function __construct(
         private ContainerInterface $container,
@@ -72,29 +72,30 @@ class LoyaltyReportingService
      *
      * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008-01
      */
-    public function getKpis(string $programmeId, ?string $from = null, ?string $to = null): array
+    public function getKpis(string $programmeId, ?string $from=null, ?string $to=null): array
     {
         $accounts = $this->loyaltyAccountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
 
-        $activeAccounts = 0;
-        $tierDistribution = [];
+        $activeAccounts    = 0;
+        $tierDistribution  = [];
         $outstandingPoints = 0;
         foreach ($accounts as $a) {
             if ((string) ($a['status'] ?? '') === 'actief') {
                 $activeAccounts++;
             }
+
             $tierId = (string) ($a['currentTierId'] ?? 'unassigned');
             $tierDistribution[$tierId] = ($tierDistribution[$tierId] ?? 0) + 1;
-            $outstandingPoints += max(0, (int) ($a['currentBalance'] ?? 0));
+            $outstandingPoints        += max(0, (int) ($a['currentBalance'] ?? 0));
         }
 
-        $credits = $this->ledgerService->getLedgerEntriesForProgramme(
+        $credits  = $this->ledgerService->getLedgerEntriesForProgramme(
             programmeId: $programmeId,
             type: 'credit',
             from: $from,
             to: $to
         );
-        $debits = $this->ledgerService->getLedgerEntriesForProgramme(
+        $debits   = $this->ledgerService->getLedgerEntriesForProgramme(
             programmeId: $programmeId,
             type: 'debit',
             from: $from,
@@ -111,12 +112,19 @@ class LoyaltyReportingService
         $pointsRedeemed = (int) array_sum(array_map(fn(array $e): int => abs((int) ($e['aantal'] ?? 0)), $debits));
         $pointsExpired  = (int) array_sum(array_map(fn(array $e): int => abs((int) ($e['aantal'] ?? 0)), $expiries));
 
-        $breakagePercent = $pointsIssued > 0 ? round($pointsExpired / $pointsIssued * 100, 2) : 0.0;
-        $redemptionRate  = $pointsIssued > 0 ? round($pointsRedeemed / $pointsIssued * 100, 2) : 0.0;
+        $breakagePercent = 0.0;
+        if ($pointsIssued > 0) {
+            $breakagePercent = round($pointsExpired / $pointsIssued * 100, 2);
+        }
 
-        $programme = $this->programmeService->getProgramme(programmeId: $programmeId);
-        $pointValue = (float) ($programme['pointValue'] ?? 0.01);
-        $estimatedLiability = round($outstandingPoints * $pointValue, 2);
+        $redemptionRate = 0.0;
+        if ($pointsIssued > 0) {
+            $redemptionRate = round($pointsRedeemed / $pointsIssued * 100, 2);
+        }
+
+        $programme            = $this->programmeService->getProgramme(programmeId: $programmeId);
+        $pointValue           = (float) ($programme['pointValue'] ?? 0.01);
+        $estimatedLiability   = round($outstandingPoints * $pointValue, 2);
         $programmeCostPercent = $this->estimateProgrammeCostPercent(
             programmeId: $programmeId,
             debits: $debits
@@ -156,7 +164,7 @@ class LoyaltyReportingService
             $outstanding += max(0, (int) ($a['currentBalance'] ?? 0));
         }
 
-        $programme = $this->programmeService->getProgramme(programmeId: $programmeId);
+        $programme  = $this->programmeService->getProgramme(programmeId: $programmeId);
         $pointValue = (float) ($programme['pointValue'] ?? 0.01);
 
         return [
@@ -180,7 +188,7 @@ class LoyaltyReportingService
 
         $byTier = [];
         foreach ($accounts as $a) {
-            $tierId = (string) ($a['currentTierId'] ?? 'unassigned');
+            $tierId          = (string) ($a['currentTierId'] ?? 'unassigned');
             $byTier[$tierId] = ($byTier[$tierId] ?? 0) + 1;
         }
 
@@ -188,6 +196,7 @@ class LoyaltyReportingService
         foreach ($byTier as $tierId => $count) {
             $result[] = ['tierId' => $tierId, 'accountCount' => $count];
         }
+
         return $result;
     }//end getTierReport()
 
@@ -199,13 +208,18 @@ class LoyaltyReportingService
      *
      * @return array{points: int, accounts: int, until: string}
      */
-    public function getExpiryForecast(string $programmeId, int $days = 30): array
+    public function getExpiryForecast(string $programmeId, int $days=30): array
     {
         $accounts = $this->loyaltyAccountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
 
         $programme = $this->programmeService->getProgramme(programmeId: $programmeId);
         $policy    = $programme['expiryPolicy'] ?? [];
-        $type      = (string) (is_array($policy) === true ? ($policy['type'] ?? 'none') : 'none');
+        if (is_array($policy) === true) {
+            $type = (string) ($policy['type'] ?? 'none');
+        } else {
+            $type = 'none';
+        }
+
         if ($type !== 'inactivityMonths') {
             return [
                 'points'   => 0,
@@ -214,17 +228,23 @@ class LoyaltyReportingService
             ];
         }
 
-        $months  = (int) (is_array($policy) === true ? ($policy['value'] ?? 12) : 12);
-        $now     = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-        $cutoff  = $now->modify('-' . max(0, $months - ((int) round($days / 30))) . ' months');
+        if (is_array($policy) === true) {
+            $months = (int) ($policy['value'] ?? 12);
+        } else {
+            $months = 12;
+        }
 
-        $points  = 0;
-        $count   = 0;
+        $now    = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $cutoff = $now->modify('-'.max(0, $months - ((int) round($days / 30))).' months');
+
+        $points = 0;
+        $count  = 0;
         foreach ($accounts as $a) {
             $last = (string) ($a['lastActivityDate'] ?? '');
             if ($last === '') {
                 continue;
             }
+
             if ($last < $cutoff->format('c') && (int) ($a['currentBalance'] ?? 0) > 0) {
                 $points += (int) ($a['currentBalance'] ?? 0);
                 $count++;
@@ -245,8 +265,8 @@ class LoyaltyReportingService
      * matched POS transaction totaal (looked up via posTransaction_schema if
      * present). Returns 0.0 when sales data is unavailable.
      *
-     * @param string                             $programmeId The programme UUID.
-     * @param array<int, array<string, mixed>>   $debits      The debit ledger entries in period.
+     * @param string                           $programmeId The programme UUID.
+     * @param array<int, array<string, mixed>> $debits      The debit ledger entries in period.
      *
      * @return float
      */
@@ -262,10 +282,12 @@ class LoyaltyReportingService
             if (is_array($bron) === false || isset($bron['optionId']) === false) {
                 continue;
             }
+
             $option = $this->getOption(optionId: (string) $bron['optionId']);
             if ($option === null) {
                 continue;
             }
+
             $totalCost += (float) ($option['kostBasisEur'] ?? 0);
         }
 
@@ -307,18 +329,21 @@ class LoyaltyReportingService
         if (is_array($object) === true) {
             return $object;
         }
+
         if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
             $s = $object->jsonSerialize();
             if (is_array($s) === true) {
                 return $s;
             }
         }
+
         if (is_object($object) === true && method_exists($object, 'getObject') === true) {
             $d = $object->getObject();
             if (is_array($d) === true) {
                 return $d;
             }
         }
+
         return null;
     }//end getOption()
 

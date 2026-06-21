@@ -19,7 +19,7 @@
 import { NcButton } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import ClientForm from './ClientForm.vue'
-import { useObjectStore } from '../../store/modules/object.js'
+import { createWithContact } from '../../services/contactSyncApi.js'
 
 export default {
 	name: 'ClientCreateDialog',
@@ -28,26 +28,32 @@ export default {
 		ClientForm,
 	},
 	emits: ['created', 'close'],
-	computed: {
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-1
-		 */
-		objectStore() {
-			return useObjectStore()
-		},
-	},
 	methods: {
 		/**
+		 * Contact-FIRST create: the `client` schema marks `contactsUid` REQUIRED
+		 * (the authoritative identity is the Nextcloud addressbook contact, never
+		 * minted locally), so a plain objectStore.saveObject('client', …) 400s
+		 * with "The required property (contactsUid) is missing". We post the raw
+		 * form fields to the backend, which provisions (resolves or creates) the
+		 * NC contact via ContactVcardService and saves the client with the
+		 * resolved contactsUid + the denormalised name/email/phone mirror.
+		 *
 		 * @param formData
+		 * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-003
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-2
 		 */
 		async onSave(formData) {
-			const result = await this.objectStore.saveObject('client', formData)
-			if (result) {
-				this.$emit('created', result.id)
-			} else {
-				const error = this.objectStore.getError('client')
-				showError(error?.message || t('pipelinq', 'Failed to create client.'))
+			try {
+				const created = await createWithContact('client', formData)
+				const id = created?.id ?? created?.['@self']?.id
+				if (id) {
+					this.$emit('created', id)
+					return
+				}
+				showError(t('pipelinq', 'Failed to create client.'))
+			} catch (error) {
+				const message = error?.response?.data?.error
+				showError(message || t('pipelinq', 'Failed to create client.'))
 			}
 		},
 	},
