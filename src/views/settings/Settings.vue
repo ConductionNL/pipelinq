@@ -94,94 +94,6 @@
 		<!-- Prospect Discovery Settings -->
 		<ProspectSettings v-if="isConfigured" />
 
-		<!-- REST API Authentication -->
-		<NcSettingsSection v-if="isAdmin"
-			:name="t('pipelinq', 'REST API Authentication')"
-			:description="t('pipelinq', 'Manage API tokens and OAuth 2.0 configuration for external integrations')">
-			<div class="auth-tabs">
-				<NcButton :type="authTab === 'tokens' ? 'primary' : 'secondary'" @click="authTab = 'tokens'">
-					{{ t('pipelinq', 'Tokens') }}
-				</NcButton>
-				<NcButton :type="authTab === 'oauth' ? 'primary' : 'secondary'" @click="authTab = 'oauth'">
-					{{ t('pipelinq', 'OAuth 2.0') }}
-				</NcButton>
-			</div>
-
-			<!-- Tokens tab -->
-			<div v-if="authTab === 'tokens'">
-				<NcButton type="primary"
-					class="auth-generate-btn"
-					@click="showGenerateTokenDialog = true">
-					{{ t('pipelinq', 'Generate Token') }}
-				</NcButton>
-				<table v-if="apiTokens.length" class="settings-table">
-					<thead>
-						<tr>
-							<th>{{ t('pipelinq', 'Label') }}</th>
-							<th>{{ t('pipelinq', 'Created') }}</th>
-							<th>{{ t('pipelinq', 'Last Used') }}</th>
-							<th>{{ t('pipelinq', 'Actions') }}</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr v-for="token in apiTokens" :key="token.id">
-							<td>{{ token.label }}</td>
-							<td>{{ token.created }}</td>
-							<td>{{ token.lastUsed || t('pipelinq', 'Never') }}</td>
-							<td>
-								<NcButton type="error"
-									:disabled="revokingToken === token.id"
-									@click="revokeToken(token.id)">
-									<template #icon>
-										<NcLoadingIcon v-if="revokingToken === token.id" :size="16" />
-									</template>
-									{{ t('pipelinq', 'Revoke') }}
-								</NcButton>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-				<p v-else class="settings-empty-state">
-					{{ t('pipelinq', 'No tokens generated yet.') }}
-				</p>
-
-				<GenerateTokenDialog v-if="showGenerateTokenDialog"
-					@close="showGenerateTokenDialog = false"
-					@generated="onTokenGenerated" />
-			</div>
-
-			<!-- OAuth 2.0 tab -->
-			<div v-if="authTab === 'oauth'">
-				<NcTextField v-model="oauthForm.oauth_client_id"
-					:label="t('pipelinq', 'Client ID')" />
-				<NcTextField v-model="oauthForm.oauth_client_secret"
-					:label="t('pipelinq', 'Client Secret')"
-					:placeholder="oauthConfig.oauth_secret_configured ? '••••••••' : ''"
-					type="password" />
-				<NcTextField v-model="oauthForm.oauth_token_endpoint"
-					:label="t('pipelinq', 'Token Endpoint')" />
-				<NcTextField v-model="oauthForm.oauth_auth_endpoint"
-					:label="t('pipelinq', 'Authorization Endpoint')" />
-				<NcTextField v-model="oauthForm.oauth_scopes"
-					:label="t('pipelinq', 'Scopes')"
-					:placeholder="t('pipelinq', 'e.g. openid profile email')" />
-				<NcCheckboxRadioSwitch v-model="oauthForm.oauth_id_token_forwarding">
-					{{ t('pipelinq', 'Forward idToken (OpenID Connect)') }}
-				</NcCheckboxRadioSwitch>
-				<NcButton type="primary"
-					:disabled="savingOAuth"
-					@click="saveOAuth">
-					<template #icon>
-						<NcLoadingIcon v-if="savingOAuth" :size="16" />
-					</template>
-					{{ t('pipelinq', 'Save OAuth Configuration') }}
-				</NcButton>
-				<NcNoteCard v-if="oauthMessage" :type="oauthMessageType">
-					{{ oauthMessage }}
-				</NcNoteCard>
-			</div>
-		</NcSettingsSection>
-
 		<!-- BI Export Configuration -->
 		<ExportConfigurationSettings v-if="isAdmin"
 			:config="config"
@@ -325,10 +237,8 @@
 <script>
 import { loadState } from '@nextcloud/initial-state'
 import { CnRegisterMapping, CnVersionInfoCard } from '@conduction/nextcloud-vue'
-import { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcNoteCard, NcSettingsSection, NcTextField } from '@nextcloud/vue'
-import GenerateTokenDialog from '../../dialogs/GenerateTokenDialog.vue'
+import { NcButton, NcLoadingIcon, NcNoteCard, NcSettingsSection, NcTextField } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
-import axios from '@nextcloud/axios'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import { useSettingsStore } from '../../store/modules/settings.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
@@ -351,9 +261,7 @@ export default {
 		CnRegisterMapping,
 		CnVersionInfoCard,
 		NcButton,
-		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
-		GenerateTokenDialog,
 		NcNoteCard,
 		NcSettingsSection,
 		NcTextField,
@@ -377,24 +285,6 @@ export default {
 			message: '',
 			messageType: 'success',
 			isAdmin: false,
-			// REST API tokens.
-			apiTokens: [],
-			authTab: 'tokens',
-			showGenerateTokenDialog: false,
-			revokingToken: null,
-			// OAuth.
-			oauthConfig: {},
-			oauthForm: {
-				oauth_client_id: '',
-				oauth_client_secret: '',
-				oauth_token_endpoint: '',
-				oauth_auth_endpoint: '',
-				oauth_scopes: '',
-				oauth_id_token_forwarding: false,
-			},
-			savingOAuth: false,
-			oauthMessage: '',
-			oauthMessageType: 'success',
 			// Shillinq ledger integration.
 			savingShillinq: false,
 			shillinqMessage: '',
@@ -547,17 +437,6 @@ export default {
 			// (REQ-LM-002). Falls back to 14 days when unset.
 			const parsed = parseInt(this.config.lead_stale_threshold_days, 10)
 			this.staleThresholdInput = Number.isFinite(parsed) && parsed > 0 ? parsed : 14
-
-			if (this.isAdmin) {
-				this.apiTokens = this.settingsStore.apiTokens
-				this.oauthConfig = this.settingsStore.oauthConfig
-
-				this.oauthForm.oauth_client_id = this.oauthConfig.oauth_client_id || ''
-				this.oauthForm.oauth_token_endpoint = this.oauthConfig.oauth_token_endpoint || ''
-				this.oauthForm.oauth_auth_endpoint = this.oauthConfig.oauth_auth_endpoint || ''
-				this.oauthForm.oauth_scopes = this.oauthConfig.oauth_scopes || ''
-				this.oauthForm.oauth_id_token_forwarding = this.oauthConfig.oauth_id_token_forwarding === 'true'
-			}
 		}
 
 		if (this.isConfigured) {
@@ -678,48 +557,6 @@ export default {
 		 */
 		async checkRequestChannelUsage(channelName) {
 			return this.countObjectsWithField('request', 'channel', channelName)
-		},
-		/**
-		 * @param token
-		 * @spec openspec/changes/admin-settings/tasks.md#task-5.2
-		 */
-		onTokenGenerated(token) {
-			this.apiTokens = [...this.apiTokens, { id: token.id, label: token.label, created: token.created, lastUsed: null }]
-		},
-		/**
-		 * @param id
-		 * @spec openspec/changes/admin-settings/tasks.md#task-5.2
-		 */
-		async revokeToken(id) {
-			this.revokingToken = id
-			try {
-				await axios.delete(generateUrl(`/apps/pipelinq/api/settings/api-tokens/${encodeURIComponent(id)}`))
-				this.apiTokens = this.apiTokens.filter(t => t.id !== id)
-			} catch (e) {
-				alert(e.response?.data?.message || t('pipelinq', 'Failed to revoke token.'))
-			} finally {
-				this.revokingToken = null
-			}
-		},
-		/**
-		 * @spec openspec/changes/admin-settings/tasks.md#task-5.3
-		 */
-		async saveOAuth() {
-			this.savingOAuth = true
-			this.oauthMessage = ''
-			try {
-				const payload = { ...this.oauthForm }
-				payload.oauth_id_token_forwarding = payload.oauth_id_token_forwarding ? 'true' : 'false'
-				const { data } = await axios.post(generateUrl('/apps/pipelinq/api/settings/oauth'), payload)
-				this.oauthConfig = data.oauthConfig || {}
-				this.oauthMessage = t('pipelinq', 'OAuth configuration saved.')
-				this.oauthMessageType = 'success'
-			} catch (e) {
-				this.oauthMessage = e.response?.data?.message || t('pipelinq', 'Failed to save OAuth configuration.')
-				this.oauthMessageType = 'error'
-			} finally {
-				this.savingOAuth = false
-			}
 		},
 		/**
 		 * Persist the Shillinq ledger webhook URL through the standard settings endpoint.
@@ -908,40 +745,5 @@ export default {
 <style scoped>
 .actions-section {
 	margin-top: 16px;
-}
-
-.settings-table {
-	width: 100%;
-	border-collapse: collapse;
-	margin-bottom: 16px;
-}
-
-.settings-table th,
-.settings-table td {
-	padding: 8px 12px;
-	border-bottom: 1px solid var(--color-border);
-	text-align: left;
-	vertical-align: middle;
-}
-
-.settings-empty-state {
-	color: var(--color-text-maxcontrast);
-	padding: 8px 0;
-}
-
-.auth-tabs {
-	display: flex;
-	gap: 8px;
-	margin-bottom: 16px;
-}
-
-.auth-generate-btn {
-	margin-bottom: 12px;
-}
-
-.token-display {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
 }
 </style>
