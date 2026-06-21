@@ -25,7 +25,6 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\ApiAuthService;
 use OCA\Pipelinq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -66,7 +65,6 @@ class SettingsController extends Controller
      * @param IAppManager        $appManager      The app manager.
      * @param IGroupManager      $groupManager    The group manager.
      * @param SettingsService    $settingsService The settings service.
-     * @param ApiAuthService     $apiAuthService  The API auth service.
      * @param IUserSession       $userSession     The user session.
      * @param IL10N              $l10n            The localization service.
      * @param LoggerInterface    $logger          The logger.
@@ -77,7 +75,6 @@ class SettingsController extends Controller
         private readonly IAppManager $appManager,
         private readonly IGroupManager $groupManager,
         private SettingsService $settingsService,
-        private ApiAuthService $apiAuthService,
         private IUserSession $userSession,
         private IL10N $l10n,
         private LoggerInterface $logger,
@@ -124,8 +121,6 @@ class SettingsController extends Controller
     /**
      * Get current Pipelinq settings.
      *
-     * Admins also receive apiTokens and oauthConfig (no secret).
-     *
      * @return JSONResponse The settings response.
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
@@ -148,95 +143,9 @@ class SettingsController extends Controller
             'leadStaleThresholdDays' => (int) ($config['lead_stale_threshold_days'] ?? 14),
         ];
 
-        if ($isAdmin === true) {
-            $response['apiTokens']   = $this->apiAuthService->listTokens();
-            $response['oauthConfig'] = $this->apiAuthService->getOAuthConfig();
-        }
-
         return new JSONResponse(data: $response);
 
     }//end index()
-
-    /**
-     * List all API tokens (metadata only — no hashes).
-     *
-     * @return JSONResponse List of token metadata.
-     *
-     * @spec openspec/changes/admin-settings/tasks.md#task-3.2
-     */
-    #[AuthorizedAdminSetting(Application::APP_ID)]
-    public function listTokens(): JSONResponse
-    {
-        return new JSONResponse(
-            data: [
-                'success' => true,
-                'tokens'  => $this->apiAuthService->listTokens(),
-            ]
-        );
-
-    }//end listTokens()
-
-    /**
-     * Generate a new API token. Returns the plaintext token ONCE.
-     *
-     * @return JSONResponse The new token metadata including plaintext (one-time only).
-     *
-     * @spec openspec/changes/admin-settings/tasks.md#task-3.2
-     */
-    #[AuthorizedAdminSetting(Application::APP_ID)]
-    public function generateToken(): JSONResponse
-    {
-        $label = $this->request->getParam('label', '');
-
-        if ($label === '') {
-            return new JSONResponse(data: ['message' => 'label is required'], statusCode: Http::STATUS_BAD_REQUEST);
-        }
-
-        $token = $this->apiAuthService->generateToken(label: $label);
-
-        return new JSONResponse(data: ['success' => true, 'token' => $token]);
-
-    }//end generateToken()
-
-    /**
-     * Revoke an API token by ID.
-     *
-     * @param string $id The token UUID.
-     *
-     * @return JSONResponse Success response.
-     *
-     * @spec openspec/changes/admin-settings/tasks.md#task-3.2
-     */
-    #[AuthorizedAdminSetting(Application::APP_ID)]
-    public function revokeToken(string $id): JSONResponse
-    {
-        $this->apiAuthService->revokeToken(id: $id);
-
-        return new JSONResponse(data: ['success' => true]);
-
-    }//end revokeToken()
-
-    /**
-     * Save OAuth 2.0 configuration.
-     *
-     * @return JSONResponse The saved OAuth config (no secret).
-     *
-     * @spec openspec/changes/admin-settings/tasks.md#task-3.3
-     */
-    #[AuthorizedAdminSetting(Application::APP_ID)]
-    public function saveOAuth(): JSONResponse
-    {
-        $data = $this->request->getParams();
-        $this->apiAuthService->saveOAuthConfig(config: $data);
-
-        return new JSONResponse(
-            data: [
-                'success'     => true,
-                'oauthConfig' => $this->apiAuthService->getOAuthConfig(),
-            ]
-        );
-
-    }//end saveOAuth()
 
     /**
      * Update Pipelinq settings.
