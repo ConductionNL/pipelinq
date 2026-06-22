@@ -197,7 +197,7 @@
 		},
 		{
 			"id": "Catalog",
-			"label": "Catalog",
+			"label": "Product catalog",
 			"icon": "icon-category-app-bundles",
 			"order": 92
 		},
