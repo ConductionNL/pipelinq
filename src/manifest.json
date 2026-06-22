@@ -318,6 +318,7 @@
 				"dateRange": {
 					"enabled": true,
 					"showHeaderPicker": true,
+					"control": "pills",
 					"persistKey": "pipelinq-commercial-range",
 					"default": { "preset": "month" },
 					"presets": [
@@ -351,13 +352,13 @@
 					{ "id": "c17", "widgetId": "won-vs-open",        "gridX": 0,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
 					{ "id": "c2",  "widgetId": "won-value",          "gridX": 4,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
 					{ "id": "c3",  "widgetId": "win-rate",           "gridX": 8,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c7",  "widgetId": "revenue-over-time",   "gridX": 0,  "gridY": 8,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
-					{ "id": "c8",  "widgetId": "pipeline-by-stage",   "gridX": 6,  "gridY": 8,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
-					{ "id": "c9",  "widgetId": "revenue-by-category",  "gridX": 0, "gridY": 12, "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
-					{ "id": "c10", "widgetId": "top-customers",        "gridX": 6,  "gridY": 12, "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
-					{ "id": "c11", "widgetId": "closing-soon",       "gridX": 0,  "gridY": 16, "gridWidth": 6,  "gridHeight": 4 },
-					{ "id": "c12", "widgetId": "recently-won-lost",  "gridX": 6,  "gridY": 16, "gridWidth": 6,  "gridHeight": 4 },
-					{ "id": "c15", "widgetId": "total-leads",       "gridX": 10, "gridY": 20, "gridWidth": 2,  "gridHeight": 2, "showTitle": false }
+					{ "id": "c7",  "widgetId": "revenue-over-time",   "gridX": 0,  "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
+					{ "id": "c8",  "widgetId": "pipeline-by-stage",   "gridX": 6,  "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
+					{ "id": "c9",  "widgetId": "revenue-by-category",  "gridX": 0, "gridY": 8,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
+					{ "id": "c10", "widgetId": "top-customers",        "gridX": 6,  "gridY": 8,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
+					{ "id": "c11", "widgetId": "closing-soon",       "gridX": 0,  "gridY": 12, "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "c12", "widgetId": "recently-won-lost",  "gridX": 6,  "gridY": 12, "gridWidth": 6,  "gridHeight": 4 },
+					{ "id": "c15", "widgetId": "total-leads",       "gridX": 0,  "gridY": 16, "gridWidth": 3,  "gridHeight": 2, "showTitle": false }
 				]
 			},
 			"slots": {}
