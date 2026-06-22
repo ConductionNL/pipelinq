@@ -493,3 +493,25 @@ Administrators MUST be able to view and debug webhook events, including any proc
 - THEN only events from the last 30 days are displayed
 - AND the view shows: "Showing events from the last 30 days"
 
+### Requirement: CTI administration on one Settings page
+
+The system MUST present the CTI (telephony) integration configuration and the
+CTI webhook event log as a single page in the left-nav Settings section, titled
+"CTI (telephony)", rather than as two separate entries in the Administration
+group. The page MUST show both the integration configuration and the webhook
+event log. The legacy standalone routes MUST remain reachable for deep links.
+
+#### Scenario: Single CTI entry under Settings shows config and log
+
+- GIVEN the user opens the Pipelinq app
+- WHEN they read the left-nav Settings section
+- THEN exactly one "CTI (telephony)" entry MUST be present in Settings
+- AND no separate "CTI integration" or "CTI event log" entry MUST appear in the Administration group
+- AND opening it MUST render both the integration configuration (platform, API base URL, auth method, screen-pop / click-to-dial toggles, save + test connection) and the webhook event-log table
+
+#### Scenario: Legacy CTI deep links still resolve
+
+- GIVEN a deep link to the legacy CTI event-log route `/settings/cti/event-log`
+- WHEN the link is followed
+- THEN the CTI event-log view MUST render
+

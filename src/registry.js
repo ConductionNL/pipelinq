@@ -176,6 +176,7 @@ import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
 //     event log; cti-screenpop-adapter). ---
 import CtiSettingsView from './views/settings/CtiSettings.vue'
 import CtiEventLogView from './views/settings/CtiEventLog.vue'
+import CtiPageView from './views/settings/CtiPage.vue'
 
 // --- POS pluggable payment provider adapter (pos-payment-provider-adapter):
 //     admin-only credential form for Mollie / CCV / Adyen / Stripe with
@@ -867,7 +868,12 @@ const registry = {
 	CtiEventLogView: {
 		kind: 'page',
 		component: CtiEventLogView,
-		_note: 'CTI admin event-log inspector (last 30 days): platform + event-type filters, payload modal; lib gap: no audit/event-log page type that filters by platform.',
+		_note: 'CTI admin event-log inspector (last 30 days): platform + event-type filters, payload modal; lib gap: no audit/event-log page type that filters by platform. Kept registered so the legacy /settings/cti/event-log deep link stays reachable; the navigation now uses the merged CtiPageView.',
+	},
+	CtiPageView: {
+		kind: 'page',
+		component: CtiPageView,
+		_note: 'Merged CTI (telephony) settings page (pipelinq-cti-and-catalog-ia): composes the CtiSettings integration config and the CtiEventLog webhook log into one settings-section page so the former two Administration menu entries become one entry under Settings.',
 	},
 
 	// --- POS pluggable payment provider adapter (pos-payment-provider-adapter). ---
