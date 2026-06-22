@@ -11,13 +11,38 @@
 	"pages": [
 		{
 			"id": "Projects",
+			"_note": "Project/WBS list as a declarative type:index page (pipelinq-views-to-declarative-r2): budgetAmount→EUR currency, billable→boolean indicator, status + ledgerSyncStatus→badges. 'Nieuw project' navigates to ProjectDetail id:'new'; row open navigates to ProjectDetail (stays custom — parallel cross-schema phases/tasks/activities + WBS tree). DROPPED the per-cell overdue end-date red highlight: it was a conditional cell text colour (endDate red+bold when past due and not finalised), and no declarative primitive expresses conditional cell colouring (cell `format` is value-shape only; `rowClass` is a Function prop with no manifest binding). endDate renders as a plain date column.",
 			"route": "/projects",
-			"type": "custom",
+			"type": "index",
 			"title": "Projecten",
-			"component": "ProjectList",
 			"config": {
 				"register": "pipelinq",
-				"schema": "project"
+				"schema": "project",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"showAdd": false,
+				"showFormDialog": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"showMassImport": false,
+				"showMassExport": false,
+				"showMassCopy": false,
+				"showMassDelete": false,
+				"columns": [
+					"name",
+					"client",
+					{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "open": "primary", "in_progress": "warning", "on_hold": "default", "completed": "success", "cancelled": "error" } } },
+					{ "key": "ledgerSyncStatus", "label": "Ledger", "widget": "badge", "widgetProps": { "colorMap": { "synced": "success", "pending": "warning", "failed": "error" } } },
+					{ "key": "billable", "label": "Factureerbaar", "type": "boolean" },
+					{ "key": "budgetAmount", "label": "Budget", "format": { "style": "currency", "currency": "EUR", "decimals": 0 } },
+					{ "key": "endDate", "label": "Einddatum", "format": "date" }
+				],
+				"headerActions": [
+					{ "id": "create", "label": "Nieuw project", "icon": "Plus", "handler": "navigate", "route": "ProjectDetail", "params": { "id": "new" } }
+				],
+				"actions": [
+					{ "id": "view", "label": "Open", "icon": "Eye", "handler": "navigate", "route": "ProjectDetail" }
+				]
 			}
 		},
 		{

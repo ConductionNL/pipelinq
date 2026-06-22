@@ -30,13 +30,36 @@
 	"pages": [
 		{
 			"id": "Services",
+			"_note": "Service catalogue as a declarative type:index page (pipelinq-views-to-declarative-r2). price→EUR currency, durationMinutes→duration format, status→badge, bookableOnline→boolean. 'New service' navigates to the bespoke ServiceDetail create form (id:'new'); row open navigates to ServiceDetail. ServiceDetail stays custom (multiStep sub-table editor + policy cards + cache-invalidation hook).",
 			"route": "/services",
-			"type": "custom",
+			"type": "index",
 			"title": "Services",
-			"component": "ServiceListView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "service"
+				"schema": "service",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"showAdd": false,
+				"showFormDialog": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"showMassImport": false,
+				"showMassExport": false,
+				"showMassCopy": false,
+				"showMassDelete": false,
+				"columns": [
+					"name",
+					{ "key": "durationMinutes", "label": "Duration", "format": { "style": "duration", "unit": "minutes" } },
+					{ "key": "price", "label": "Price", "format": { "style": "currency", "currency": "EUR", "decimals": 2 } },
+					{ "key": "bookableOnline", "label": "Online", "type": "boolean" },
+					{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "active": "success", "draft": "default", "archived": "default" } } }
+				],
+				"headerActions": [
+					{ "id": "create", "label": "New service", "icon": "Plus", "handler": "navigate", "route": "ServiceDetail", "params": { "id": "new" } }
+				],
+				"actions": [
+					{ "id": "view", "label": "Open", "icon": "Eye", "handler": "navigate", "route": "ServiceDetail" }
+				]
 			}
 		},
 		{
@@ -52,14 +75,35 @@
 		},
 		{
 			"id": "Resources",
+			"_note": "Resource catalogue (staff/room/equipment) as a declarative type:index page (pipelinq-views-to-declarative-r2): the literal navigate params primitive now expresses 'New resource' → ResourceDetail id:'new'. type→badge, bookable→boolean, status→badge. ResourceDetail stays custom (workingHours grid + vacation list + cache invalidation).",
 			"route": "/resources",
-			"type": "custom",
+			"type": "index",
 			"title": "Resources",
-			"component": "ResourceListView",
-			"_note": "KEPT custom (pipelinq-views-to-declarative-r1): the 'New resource' entry point navigates to ResourceDetail with id:'new', and the declarative type:index navigate handler always passes {id: row[rowKey]} so it cannot express a create-to-detail action. Convertible once nc-vue gains a static-params header action (or a ResourceNew page is added).",
 			"config": {
 				"register": "pipelinq",
-				"schema": "resource"
+				"schema": "resource",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"showAdd": false,
+				"showFormDialog": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"showMassImport": false,
+				"showMassExport": false,
+				"showMassCopy": false,
+				"showMassDelete": false,
+				"columns": [
+					"name",
+					{ "key": "type", "label": "Type", "widget": "badge", "widgetProps": { "colorMap": { "staff": "primary", "room": "default", "equipment": "default" } } },
+					{ "key": "bookable", "label": "Bookable", "type": "boolean" },
+					{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "active": "success", "inactive": "default", "archived": "default" } } }
+				],
+				"headerActions": [
+					{ "id": "create", "label": "New resource", "icon": "Plus", "handler": "navigate", "route": "ResourceDetail", "params": { "id": "new" } }
+				],
+				"actions": [
+					{ "id": "view", "label": "Open", "icon": "Eye", "handler": "navigate", "route": "ResourceDetail" }
+				]
 			}
 		},
 		{

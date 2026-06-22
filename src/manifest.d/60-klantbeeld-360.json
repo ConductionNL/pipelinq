@@ -18,11 +18,39 @@
 	"pages": [
 		{
 			"id": "Analytics",
-			"_note": "KEPT custom (pipelinq-views-to-declarative-r1). The four KPIs come from a single server-side cross-module summary endpoint (GET /api/analytics/summary?period=, REQ-KB360-020) that pre-aggregates across leads/requests/contactmomenten so large installations never fetch full collections client-side; the declarative dashboard stat-widget dataSource only reads a per-schema OR aggregate, not an arbitrary REST endpoint. The page-level period select (week/month/quarter) re-parametrizes all four KPIs through one fetch, which no declarative widget can express. Convertible once nc-vue gains (a) a stat widget whose dataSource is a custom REST endpoint and (b) a page-level filter primitive that propagates a param to widget dataSources.",
+			"_note": "Cross-module KPI dashboard as a declarative type:dashboard page (pipelinq-views-to-declarative-r2). The four KPIs read the server-side cross-module summary endpoint (GET /apps/pipelinq/api/analytics/summary, REQ-KB360-020/021/022) via the endpoint-bound stat source; the pageFilters period select (week/month/quarter) writes @page.period, interpolated into every KPI's params so one selection re-queries all four. Open Pipeline Value formats as EUR currency.",
 			"route": "/analytics",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Analytics",
-			"component": "AnalyticsDashboard"
+			"config": {
+				"description": "Cross-module KPI overview",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"pageFilters": [
+					{
+						"key": "period",
+						"label": "Period",
+						"type": "select",
+						"default": "month",
+						"options": [
+							{ "value": "week", "label": "This week" },
+							{ "value": "month", "label": "This month" },
+							{ "value": "quarter", "label": "This quarter" }
+						]
+					}
+				],
+				"widgets": [
+					{ "id": "open-pipeline-value", "type": "stat", "title": "Open Pipeline Value", "content": { "label": "Open Pipeline Value", "caption": "active leads", "icon": "ChartLine", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/analytics/summary", "path": "openPipelineValue", "params": { "period": "@page.period" } } } },
+					{ "id": "open-requests", "type": "stat", "title": "Open Requests", "content": { "label": "Open Requests", "caption": "open", "icon": "FileDocument", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/analytics/summary", "path": "openRequests", "params": { "period": "@page.period" } } } },
+					{ "id": "contactmomenten", "type": "stat", "title": "Contactmomenten", "content": { "label": "Contactmomenten", "icon": "MessageText", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/analytics/summary", "path": "contactmomentenCount", "params": { "period": "@page.period" } } } },
+					{ "id": "active-leads", "type": "stat", "title": "Active Leads", "content": { "label": "Active Leads", "caption": "opportunities", "icon": "TrendingUp", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/analytics/summary", "path": "activeLeads", "params": { "period": "@page.period" } } } }
+				],
+				"layout": [
+					{ "id": "a1", "widgetId": "open-pipeline-value", "gridX": 0, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": "a2", "widgetId": "open-requests", "gridX": 3, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": "a3", "widgetId": "contactmomenten", "gridX": 6, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": "a4", "widgetId": "active-leads", "gridX": 9, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false }
+				]
+			}
 		},
 		{
 			"id": "PipelineAnalytics",
