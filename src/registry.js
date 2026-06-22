@@ -147,7 +147,6 @@ import PosTenderTypeListView from './views/pos/PosTenderTypeList.vue'
 //     server-authoritative Z-report aggregation + shillinq journal-raise status
 //     + manager-gated re-raise). The GL-mapping admin surface is delegated to
 //     shillinq (pipelinq-bookkeeping-to-shillinq) and removed here. ---
-import ZReportListView from './views/pos/ZReportList.vue'
 import ZReportDetailView from './views/pos/ZReportDetail.vue'
 import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
 
@@ -242,7 +241,6 @@ import ServiceListView from './views/bookings/ServiceList.vue'
 import ServiceDetailView from './views/bookings/ServiceDetail.vue'
 import ResourceListView from './views/bookings/ResourceList.vue'
 import ResourceDetailView from './views/bookings/ResourceDetail.vue'
-import BookingListView from './views/bookings/BookingList.vue'
 import BookingDetailView from './views/bookings/BookingDetail.vue'
 
 // --- KCC Werkplek (pipelinq-werkplek-declarative): unified KCC agent workspace
@@ -716,12 +714,9 @@ const registry = {
 		_note: 'POS tender-type list (Contant / Betaalpas / Cadeaubon / ...) with inline create / edit / delete via PosTenderTypeFormDialog; admin-only configuration of available payment methods and their GL accounts.',
 	},
 
-	// --- POS end-of-day bookkeeping. ---
-	ZReportListView: {
-		kind: 'page',
-		component: ZReportListView,
-		_note: 'Daily Z-report list with status / date / terminal filters; rows navigate to the per-report detail with the shillinq journal-raise status and manager-gated re-raise (pipelinq-bookkeeping-to-shillinq).',
-	},
+	// --- POS end-of-day bookkeeping. The Z-report list is now a declarative
+	//     type:"index" page (pipelinq-views-to-declarative-r1); only the
+	//     bespoke aggregation detail view stays registered. ---
 	ZReportDetailView: {
 		kind: 'page',
 		component: ZReportDetailView,
@@ -942,11 +937,9 @@ const registry = {
 		component: ResourceDetailView,
 		_note: 'Resource detail + edit page with the 7-weekday workingHours grid, vacation list, validation (open<close, startDate<=endDate) and per-resource cache invalidation on save (REQ-APT-002).',
 	},
-	BookingListView: {
-		kind: 'page',
-		component: BookingListView,
-		_note: 'Booking list with formatted start-time and status badge; admins create bookings through the public portal on a customer\'s behalf, no inline create.',
-	},
+	// --- The booking list is now a declarative type:"index" page
+	//     (pipelinq-views-to-declarative-r1); only the bespoke lifecycle
+	//     detail view stays registered. ---
 	BookingDetailView: {
 		kind: 'page',
 		component: BookingDetailView,
