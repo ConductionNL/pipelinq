@@ -122,10 +122,8 @@ import ExportRunDetailView from './views/export/ExportRunDetail.vue'
 // --- POS transactions (lib gap: list needs custom row navigation to the cart
 //     editor; detail needs lifecycle action buttons + tax breakdown; form is a
 //     bespoke cart editor with real-time totals). ---
-import PosTransactionListView from './views/pos/PosTransactionList.vue'
 import PosTransactionDetailView from './views/pos/PosTransactionDetail.vue'
 import PosTransactionFormView from './views/pos/PosTransactionForm.vue'
-import PosRefundListView from './views/pos/PosRefundList.vue'
 import PosRefundDetailView from './views/pos/PosRefundDetail.vue'
 import PosRefundFormView from './views/pos/PosRefundForm.vue'
 
@@ -233,7 +231,6 @@ import ProjectActivityList from './views/projects/ProjectActivityList.vue'
 //     the monitor polls /api/blasts/:id every 2s and stops on terminal status.
 //     SegmentBuilder + SegmentRuleNode live under components/ for reuse by
 //     forthcoming SegmentEditor / dashboard surfaces (slice 08). ---
-import BlastListView from './views/blasts/BlastList.vue'
 import BlastFormView from './views/blasts/BlastForm.vue'
 import BlastMonitorView from './views/blasts/BlastMonitor.vue'
 import BlastPerformanceDashboardView from './views/blasts/PerformanceDashboard.vue'
@@ -651,12 +648,9 @@ const registry = {
 		_note: 'External integration sync configuration panel; lib gap: no settings rich-section type for complex integration config.',
 	},
 
-	// --- POS transactions. ---
-	PosTransactionListView: {
-		kind: 'page',
-		component: PosTransactionListView,
-		_note: 'POS receipt list; custom so rows navigate to the cart editor / detail and the empty state offers "Nieuwe transactie".',
-	},
+	// --- POS transactions. The PosTransactions list is now a declarative
+	//     type:"index" page (pipelinq-declarative-pages-round1); only the
+	//     bespoke cart-editor detail/form views stay registered. ---
 	PosTransactionDetailView: {
 		kind: 'page',
 		component: PosTransactionDetailView,
@@ -668,12 +662,8 @@ const registry = {
 		_note: 'Bespoke cart editor: inline line-item rows with product picker + real-time totals; lib has no cart/line-editor page type.',
 	},
 
-	// --- POS refunds / returns. ---
-	PosRefundListView: {
-		kind: 'page',
-		component: PosRefundListView,
-		_note: 'Refund list; custom so rows navigate to the refund detail and the empty state offers "Nieuwe retour".',
-	},
+	// --- POS refunds / returns. The PosRefunds list is now a declarative
+	//     type:"index" page (pipelinq-declarative-pages-round1). ---
 	PosRefundDetailView: {
 		kind: 'page',
 		component: PosRefundDetailView,
@@ -912,12 +902,9 @@ const registry = {
 		_note: 'StUF per-call audit log inspector (REQ-STUF-008): direction + bericht + status filters, inline envelope XML inspection, retries[] history and fout payload; CSV export. Lib gap: no envelope-style audit-log page type.',
 	},
 
-	// --- Marketing blasts (marketing-segmentation-and-blast slice 07). ---
-	BlastListView: {
-		kind: 'page',
-		component: BlastListView,
-		_note: 'Blasts list (marketing-segmentation-and-blast 07): CnIndexPage with bespoke columns (name, channel, status, scheduledFor, sentAt) and a "New blast" header action routing to the multi-step wizard.',
-	},
+	// --- Marketing blasts (marketing-segmentation-and-blast slice 07). The
+	//     Blasts list is now a declarative type:"index" page
+	//     (pipelinq-declarative-pages-round1). ---
 	BlastFormView: {
 		kind: 'page',
 		component: BlastFormView,
