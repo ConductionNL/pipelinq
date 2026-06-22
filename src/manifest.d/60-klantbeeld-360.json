@@ -18,6 +18,7 @@
 	"pages": [
 		{
 			"id": "Analytics",
+			"_note": "KEPT custom (pipelinq-views-to-declarative-r1). The four KPIs come from a single server-side cross-module summary endpoint (GET /api/analytics/summary?period=, REQ-KB360-020) that pre-aggregates across leads/requests/contactmomenten so large installations never fetch full collections client-side; the declarative dashboard stat-widget dataSource only reads a per-schema OR aggregate, not an arbitrary REST endpoint. The page-level period select (week/month/quarter) re-parametrizes all four KPIs through one fetch, which no declarative widget can express. Convertible once nc-vue gains (a) a stat widget whose dataSource is a custom REST endpoint and (b) a page-level filter primitive that propagates a param to widget dataSources.",
 			"route": "/analytics",
 			"type": "custom",
 			"title": "Analytics",
