@@ -404,7 +404,7 @@ const registry = {
 		kind: 'widget',
 		component: NaviAnalyticsWidget,
 		...PANEL_WIDGET_META,
-		_note: 'Conversational analytics chat panel powered by NaviService — natural-language queries return CnChartWidget / CnTableWidget / plain text inline, with up to 3 suggested follow-up chips. openspec/changes/dashboard REQ-DASH-001 / REQ-DASH-003.',
+		_note: 'Conversational analytics chat panel powered by NaviService — natural-language queries return CnChartWidget / CnDataTable / plain text inline, with up to 3 suggested follow-up chips. openspec/changes/dashboard REQ-DASH-001 / REQ-DASH-003.',
 	},
 	LeadConversionKpiWidget: {
 		kind: 'widget',
