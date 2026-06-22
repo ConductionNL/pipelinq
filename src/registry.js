@@ -408,7 +408,7 @@ const registry = {
 		kind: 'widget',
 		component: ClientOverviewWidget,
 		...PANEL_WIDGET_META,
-		_note: 'Top-5 recent clients with a view-all link to ClientList.',
+		_note: 'Top-5 recent clients with a view-all link to the Clients index page.',
 	},
 	NaviAnalyticsWidget: {
 		kind: 'widget',
