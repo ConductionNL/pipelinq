@@ -993,14 +993,31 @@
 		},
 		{
 			"id": "PosTransactions",
-			"_note": "PosTransactionList.vue is a CnIndexPage specialised for the point-of-sale receipt ledger (POS-specific columns, status badges and row actions wired to the posTransaction schema); kept as a host-app component while those POS column/action presets live outside the library.",
+			"_note": "POS receipt ledger as a declarative type:index page (pipelinq-declarative-pages-round1). Row view + Add both navigate to the bespoke cart editor routes (PosTransactionDetail / PosTransactionNew), which stay custom because they host interactive line-item editing.",
 			"route": "/pos",
-			"type": "custom",
+			"type": "index",
 			"title": "Kassabon",
-			"component": "PosTransactionListView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "posTransaction"
+				"schema": "posTransaction",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"showAdd": false,
+				"showFormDialog": false,
+				"showViewAction": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"showMassImport": false,
+				"showMassExport": false,
+				"showMassCopy": false,
+				"showMassDelete": false,
+				"includeColumns": ["reference", "cashier", "terminalId", "status", "priceMode", "total", "created"],
+				"headerActions": [
+					{ "id": "create", "label": "Nieuwe transactie", "icon": "Plus", "handler": "navigate", "route": "PosTransactionNew" }
+				],
+				"actions": [
+					{ "id": "view", "label": "Openen", "icon": "Eye", "handler": "navigate", "route": "PosTransactionDetail" }
+				]
 			}
 		},
 		{
@@ -1029,14 +1046,31 @@
 		},
 		{
 			"id": "PosRefunds",
-			"_note": "PosRefundList.vue is a CnIndexPage specialised for the POS refund ledger (refund-specific columns and status badges on the posRefund schema); kept as a host-app component while those presets live outside the library.",
+			"_note": "POS refund ledger as a declarative type:index page (pipelinq-declarative-pages-round1). Row view navigates to the bespoke refund editor (PosRefundDetail); Add navigates to PosRefundNew. Both editors stay custom (interactive per-line refund selection).",
 			"route": "/pos/refunds",
-			"type": "custom",
+			"type": "index",
 			"title": "Retouren",
-			"component": "PosRefundListView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "posRefund"
+				"schema": "posRefund",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"showAdd": false,
+				"showFormDialog": false,
+				"showViewAction": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"showMassImport": false,
+				"showMassExport": false,
+				"showMassCopy": false,
+				"showMassDelete": false,
+				"includeColumns": ["reference", "originalTransaction", "refundReason", "refundAmount", "status", "created"],
+				"headerActions": [
+					{ "id": "create", "label": "Nieuwe retour", "icon": "Plus", "handler": "navigate", "route": "PosRefundNew" }
+				],
+				"actions": [
+					{ "id": "view", "label": "Openen", "icon": "Eye", "handler": "navigate", "route": "PosRefundDetail" }
+				]
 			}
 		},
 		{
