@@ -329,10 +329,10 @@
 					]
 				},
 				"widgets": [
-					{ "id": "revenue",            "type": "stat", "title": "Revenue", "content": { "label": "Revenue", "route": { "name": "Leads" }, "icon": "Cash", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": {} } } },
-					{ "id": "won-value",          "type": "stat", "title": "Won Value", "content": { "label": "Won Value", "route": { "name": "Leads" }, "icon": "Trophy", "valueColor": "#46ba61", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "status": "won" } } } },
-					{ "id": "win-rate",           "type": "stat", "title": "Win Rate", "content": { "label": "Win Rate", "route": { "name": "Leads" }, "icon": "TrendingUp", "valueColor": "#46ba61", "format": { "style": "percent", "decimals": 1 }, "source": { "kind": "ratio", "register": "pipelinq", "schema": "lead", "metric": "count", "numerator": { "filter": { "status": "won" } }, "denominator": { "filter": {} } } } },
-					{ "id": "weighted-forecast",  "type": "stat", "title": "Weighted Forecast", "content": { "label": "Weighted Forecast", "route": { "name": "Leads" }, "icon": "ChartLine", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "kind": "weighted", "register": "pipelinq", "schema": "lead", "field": "value", "weightField": "probability", "divisor": 100, "filter": {} } } },
+					{ "id": "revenue",            "type": "stat", "title": "Revenue", "content": { "label": "Revenue", "route": { "name": "Leads" }, "icon": "Cash", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } } } },
+					{ "id": "won-value",          "type": "stat", "title": "Won Value", "content": { "label": "Won Value", "route": { "name": "Leads" }, "icon": "Trophy", "valueColor": "#46ba61", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "status": "won", "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } } } },
+					{ "id": "win-rate",           "type": "stat", "title": "Win Rate", "content": { "label": "Win Rate", "route": { "name": "Leads" }, "icon": "TrendingUp", "valueColor": "#46ba61", "format": { "style": "percent", "decimals": 1 }, "source": { "kind": "ratio", "register": "pipelinq", "schema": "lead", "metric": "count", "numerator": { "filter": { "status": "won", "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } }, "denominator": { "filter": { "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } } } } },
+					{ "id": "weighted-forecast",  "type": "stat", "title": "Weighted Forecast", "content": { "label": "Weighted Forecast", "route": { "name": "Leads" }, "icon": "ChartLine", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "kind": "weighted", "register": "pipelinq", "schema": "lead", "field": "value", "weightField": "probability", "divisor": 100, "filter": { "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } } } },
 					{ "id": "mrr",                "type": "stat", "title": "Recurring revenue", "requiresApp": "shillinq", "content": { "label": "Recurring revenue (run-rate)", "route": { "name": "Contracts" }, "icon": "Repeat", "valueColor": "#46ba61", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "register": "shillinq", "schema": "SalesOrderLine", "metric": "sum", "field": "maandWaarde", "filter": { "nature": "RECURRING" } } } },
 						{ "id": "total-leads",        "type": "stats-block", "title": "Total Leads", "props": { "countLabel": "leads", "variant": "primary" }, "dataSource": { "register": "pipelinq", "schema": "lead", "aggregate": "count" } },
 						{ "id": "revenue-over-time", "type": "chart", "title": "Revenue over time", "content": { "chartKind": "area", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "bucket": { "field": "expectedCloseDate", "interval": "month", "metric": "sum", "metricField": "value" } } } },
@@ -342,7 +342,7 @@
 					{ "id": "closing-soon",       "type": "object-list", "title": "Deals closing soon", "content": { "register": "pipelinq", "schema": "lead", "filter": { "status": "open" }, "sort": { "field": "expectedCloseDate", "dir": "asc" }, "limit": 6, "columns": [{ "key": "title", "label": "Deal" }, { "key": "value", "label": "Value" }, { "key": "stage", "label": "Stage" }] } },
 					{ "id": "recently-won-lost",  "type": "object-list", "title": "Recently won / lost", "content": { "register": "pipelinq", "schema": "lead", "filter": {}, "sort": { "field": "expectedCloseDate", "dir": "desc" }, "limit": 6, "columns": [{ "key": "title", "label": "Deal" }, { "key": "status", "label": "Status" }, { "key": "value", "label": "Value" }] } },
 						{ "id": "pipeline-coverage", "type": "gauge", "title": "Pipeline coverage", "content": { "label": "Open pipeline vs target", "route": { "name": "Pipeline" }, "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "status": "open" } }, "target": { "kind": "static", "value": 500000 }, "thresholds": { "warn": 60, "danger": 90, "invert": true } } },
-						{ "id": "won-vs-open",        "type": "delta", "title": "Won vs open", "content": { "label": "Won deals", "route": { "name": "Pipeline" }, "icon": "Trophy", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "count", "goodDirection": "up", "current": { "filter": { "status": "won" } }, "previous": { "filter": { "status": "open" } } } } }
+						{ "id": "won-vs-open",        "type": "delta", "title": "Won vs open", "content": { "label": "Won deals", "route": { "name": "Pipeline" }, "icon": "Trophy", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "count", "goodDirection": "up", "current": { "filter": { "status": "won", "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } }, "previous": { "filter": { "status": "open" } } } } }
 				],
 				"layout": [
 					{ "id": "c16", "widgetId": "pipeline-coverage",  "gridX": 0,  "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
@@ -474,14 +474,149 @@
 		},
 		{
 			"id": "ClientDetail",
-			"_note": "Bespoke 360-degree client record (ClientDetail.vue): edit/new mode toggle plus a custom header and eleven CnDetailCard panels wired to klantbeeld-360 relations (contacts, deals, contactmomenten, invoices) and inline NcDialog editors; the standard 'detail' page type renders a single object's fields and cannot host this aggregated multi-relation layout.",
+			"_note": "Client 360 record as a declarative type:detail page (pipelinq-client-contact-detail-declarative). Identity + account/relationship fields auto-render in the body (CnObjectDataWidget; name/email/phone/address/website are sourced from the linked NC contact and stay read-only via the index fieldOverrides). KPI chips come from summaryAggregates; related lists (contacts/leads/requests/projecten/contactmomenten/complaints, FK 'client') from relatedCollections; the rich sub-features (Relationships / Activity / Communication / Bookings / contactmoment quick-log) stay in the page body via bodyWidgets registered as kind:'section'. KEPT-AS-NOTE: (1) the 'Edit in Contacts' deep-link and the delete-with-linked-entity warning have no declarative primitive — the page Delete uses CnDetailPage's standard delete and 'Edit in Contacts' is reachable from the linked NC contact; (2) summaryAggregates filters are equality-only, so 'Open leads'=status:open (the lead enum is open|won|lost) and 'Open requests' counts status:new (in_progress not expressible as one equality chip); (3) the contactmoment quick-log no longer auto-refreshes the related list on save — use the page Refresh action.",
 			"route": "/clients/:id",
-			"type": "custom",
+			"type": "detail",
 			"title": "Client",
-			"component": "ClientDetail",
 			"config": {
 				"register": "pipelinq",
 				"schema": "client",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"summaryAggregates": [
+					{ "label": "Open leads", "register": "pipelinq", "schema": "lead", "metric": "count", "filter": { "client": "@objectId", "status": "open" } },
+					{ "label": "Open leads value", "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "client": "@objectId", "status": "open" }, "format": "currency" },
+					{ "label": "Won leads", "register": "pipelinq", "schema": "lead", "metric": "count", "filter": { "client": "@objectId", "status": "won" } },
+					{ "label": "Won leads value", "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "client": "@objectId", "status": "won" }, "format": "currency" },
+					{ "label": "New requests", "register": "pipelinq", "schema": "request", "metric": "count", "filter": { "client": "@objectId", "status": "new" } }
+				],
+				"relatedCollections": [
+					{
+						"title": "Contacts",
+						"register": "pipelinq",
+						"schema": "contact",
+						"filter": { "client": "@objectId" },
+						"columns": [
+							{ "key": "name", "label": "Name" },
+							{ "key": "role", "label": "Role" },
+							{ "key": "email", "label": "Email" },
+							{ "key": "phone", "label": "Phone" }
+						],
+						"limit": 50,
+						"rowRoute": "ContactDetail"
+					},
+					{
+						"title": "Leads",
+						"register": "pipelinq",
+						"schema": "lead",
+						"filter": { "client": "@objectId" },
+						"sort": { "field": "updatedAt", "dir": "desc" },
+						"columns": [
+							{ "key": "title", "label": "Title" },
+							{ "key": "stage", "label": "Stage" },
+							{ "key": "value", "label": "Value" },
+							{ "key": "probability", "label": "Probability" },
+							{ "key": "expectedCloseDate", "label": "Expected close" }
+						],
+						"limit": 10,
+						"rowRoute": "LeadDetail"
+					},
+					{
+						"title": "Requests",
+						"register": "pipelinq",
+						"schema": "request",
+						"filter": { "client": "@objectId" },
+						"sort": { "field": "requestedAt", "dir": "desc" },
+						"columns": [
+							{ "key": "title", "label": "Title" },
+							{ "key": "status", "label": "Status" },
+							{ "key": "priority", "label": "Priority" },
+							{ "key": "requestedAt", "label": "Requested" }
+						],
+						"limit": 10,
+						"rowRoute": "RequestDetail"
+					},
+					{
+						"title": "Projecten",
+						"register": "pipelinq",
+						"schema": "project",
+						"filter": { "client": "@objectId" },
+						"sort": { "field": "_dateCreated", "dir": "desc" },
+						"columns": [
+							{ "key": "name", "label": "Name" },
+							{ "key": "status", "label": "Status" },
+							{ "key": "billable", "label": "Billable" },
+							{ "key": "budgetHours", "label": "Budget hours" },
+							{ "key": "endDate", "label": "End date" }
+						],
+						"limit": 10,
+						"rowRoute": "ProjectDetail"
+					},
+					{
+						"title": "Contactmomenten",
+						"register": "pipelinq",
+						"schema": "contactmoment",
+						"filter": { "client": "@objectId" },
+						"sort": { "field": "contactedAt", "dir": "desc" },
+						"columns": [
+							{ "key": "subject", "label": "Subject" },
+							{ "key": "channel", "label": "Channel" },
+							{ "key": "contactedAt", "label": "Date" },
+							{ "key": "agent", "label": "Agent" },
+							{ "key": "outcome", "label": "Outcome" }
+						],
+						"limit": 10,
+						"rowRoute": "ContactmomentDetail"
+					},
+					{
+						"title": "Complaints",
+						"register": "pipelinq",
+						"schema": "complaint",
+						"filter": { "client": "@objectId" },
+						"sort": { "field": "_dateCreated", "dir": "desc" },
+						"columns": [
+							{ "key": "title", "label": "Title" },
+							{ "key": "status", "label": "Status" },
+							{ "key": "_dateCreated", "label": "Date" }
+						],
+						"limit": 50,
+						"rowRoute": "ComplaintDetail"
+					}
+				],
+				"bodyWidgets": [
+					{
+						"id": "relationships",
+						"component": "ContactRelationships",
+						"title": "Relationships",
+						"placement": "after-related",
+						"props": { "entityId": "@objectId", "entityType": "client", "entityName": "@object.name" }
+					},
+					{
+						"id": "activity",
+						"component": "ActivityTimeline",
+						"title": "Activity",
+						"placement": "after-related",
+						"props": { "entityId": "@objectId", "entityType": "client" }
+					},
+					{
+						"id": "communication-history",
+						"component": "CommunicationHistory",
+						"placement": "after-related",
+						"props": { "entityId": "@objectId", "entityType": "client" }
+					},
+					{
+						"id": "bookings",
+						"component": "BookingsCard",
+						"placement": "after-related",
+						"props": { "customerId": "@objectId" }
+					},
+					{
+						"id": "contactmoment-quick-log",
+						"component": "ContactmomentQuickLog",
+						"title": "Log contactmoment",
+						"placement": "end",
+						"props": { "clientId": "@objectId", "inline": true }
+					}
+				],
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true,
@@ -713,14 +848,46 @@
 		},
 		{
 			"id": "ContactDetail",
-			"_note": "Bespoke contact record (ContactDetail.vue): edit/new mode with a custom header and CnDetailCard panels for linked client, contactmomenten and a CnFormDialog inline editor; the standard 'detail' type shows only one schema's fields and cannot express the cross-relation klantbeeld-360 layout.",
+			"_note": "Contact record as a declarative type:detail page (pipelinq-client-contact-detail-declarative). The contact-person fields (role, email, phone, client FK) auto-render in the body (CnObjectDataWidget; name/email/phone are read-only NC-contact mirror via the index fieldOverrides). The parent-organisation link is a relationLinks entry (fkField 'client', labelField 'name') — its search-and-link modal replaces the bespoke CnFormDialog organisation linker, and the linked client is shown by the auto data widget's 'client' field. BRP / Relationships / Communication stay in the page body via bodyWidgets registered as kind:'section'. KEPT-AS-NOTE: (1) the bespoke 'Parent Organisation' card also rendered the client name+type as a clickable deep-link; the declarative client FK shows the id/name in the data widget and relationLinks drives the link/relink — the separate type-line is dropped; (2) BrpContactPanel emits @contact-updated to trigger a re-fetch — in declarative mode the panel updates the contact server-side and the user refreshes via the page Refresh action; (3) 'Edit in Contacts' deep-link has no declarative primitive — identity is editable from the linked NC contact.",
 			"route": "/contacts/:id",
-			"type": "custom",
+			"type": "detail",
 			"title": "Contact",
-			"component": "ContactDetail",
 			"config": {
 				"register": "pipelinq",
 				"schema": "contact",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"relationLinks": [
+					{
+						"label": "Link to Organisation",
+						"title": "Link to Organisation",
+						"register": "pipelinq",
+						"schema": "client",
+						"fkField": "client",
+						"labelField": "name"
+					}
+				],
+				"bodyWidgets": [
+					{
+						"id": "brp",
+						"component": "BrpContactPanel",
+						"title": "BSN / BRP",
+						"placement": "after-data",
+						"props": { "contactId": "@objectId" }
+					},
+					{
+						"id": "relationships",
+						"component": "ContactRelationships",
+						"title": "Relationships",
+						"placement": "after-related",
+						"props": { "entityId": "@objectId", "entityType": "contact", "entityName": "@object.name" }
+					},
+					{
+						"id": "communication-history",
+						"component": "CommunicationHistory",
+						"placement": "after-related",
+						"props": { "entityId": "@objectId", "entityType": "contact" }
+					}
+				],
 				"sidebar": true
 			}
 		},
