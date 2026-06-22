@@ -247,11 +247,15 @@ import ResourceDetailView from './views/bookings/ResourceDetail.vue'
 import BookingListView from './views/bookings/BookingList.vue'
 import BookingDetailView from './views/bookings/BookingDetail.vue'
 
-// --- KCC Werkplek (kcc-werkplek): unified KCC agent workspace combining
-//     inbox + contactmoment registration + inline knowledge search +
-//     availability toggle in a single three-panel page. Lib gap: no
-//     multi-panel workspace page type exists. ---
-import KccWerkplekPage from './views/werkplek/KccWerkplekPage.vue'
+// --- KCC Werkplek (pipelinq-werkplek-declarative): unified KCC agent workspace
+//     rendered as a declarative type:"dashboard" page. Requests, Tasks, the
+//     queue filter, the active-interaction form, the summary-driven knowledge
+//     base and the client overview are all widgets on the standard dashboard
+//     grid (header + actions + single scroll region). Only two small host
+//     widgets remain: the queue filter (pipelinq-specific /state endpoint) and
+//     the header agent-availability toggle. ---
+import WerkplekQueueFilter from './views/werkplek/widgets/WerkplekQueueFilter.vue'
+import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
 
 // --- xWiki integration (xwiki-integration): dashboard widget wrapper +
 //     reusable widget / sidebar / viewer / list components. ---
@@ -956,11 +960,22 @@ const registry = {
 		_note: 'Booking detail with context-sensitive lifecycle buttons (Reschedule / Cancel / Mark Completed / Mark No-show / Send Reminder / Confirm Deposit) wired to the BookingAdminController endpoints, inline notes editor, audit-trail card and a chronological timeline (REQ-APT-015).',
 	},
 
-	// --- KCC Werkplek — unified agent workspace (kcc-werkplek). ---
-	KccWerkplekPage: {
-		kind: 'page',
-		component: KccWerkplekPage,
-		_note: 'Three-panel KCC agent workspace combining inbox, contactmoment quick-log and inline knowledge search; lib gap: no multi-panel workspace page type and the aggregated state endpoint requires a bespoke controller.',
+	// --- KCC Werkplek — declarative agent workspace (pipelinq-werkplek-declarative).
+	//     The page is a type:"dashboard"; these two host widgets cover the
+	//     pieces that aren't pure OpenRegister data: the queue filter (reads the
+	//     aggregated /api/kcc-werkplek/state counts and writes selectedQueue into
+	//     the page workspace context) and the header agent-availability toggle. ---
+	WerkplekQueueFilter: {
+		kind: 'widget',
+		component: WerkplekQueueFilter,
+		...PANEL_WIDGET_META,
+		_note: 'Queue filter widget: lists queues + open-request counts from /api/kcc-werkplek/state and writes selectedQueue into the workspace context so the Requests/Tasks object-list widgets filter on @workspace.selectedQueue.',
+	},
+	WerkplekHeaderActions: {
+		kind: 'widget',
+		component: WerkplekHeaderActions,
+		...HEADER_ACTIONS_META,
+		_note: 'Workspace header actionsComponent: agent availability toggle, hydrated from /api/kcc-werkplek/state.',
 	},
 
 	// --- xWiki integration (xwiki-integration). ---
