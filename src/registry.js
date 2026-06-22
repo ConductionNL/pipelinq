@@ -202,14 +202,24 @@ import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.
 // --- Klantbeeld 360 (lib gap: no cross-module KPI dashboard with a
 //     trailing-period filter wired to a domain-specific aggregation
 //     endpoint, and no pipeline KPI / stage-funnel page driving four
-//     bespoke ratio KPIs off lead-collection client-side aggregation;
-//     ClientDetail + ContactDetail aggregate 5 cross-schema sections
-//     with per-section loading and a contact->client linking dialog,
-//     beyond what a declarative type:"detail" page can express). ---
+//     bespoke ratio KPIs off lead-collection client-side aggregation). ---
 import SlaAttainmentDashboard from './views/sla/SlaAttainmentDashboard.vue'
 import PipelineAnalyticsView from './views/pipeline/PipelineAnalyticsView.vue'
-import ClientDetail from './views/clients/ClientDetail.vue'
-import ContactDetail from './views/contacts/ContactDetail.vue'
+
+// --- Client / Contact 360 detail sub-features (pipelinq-client-contact-detail-
+//     declarative). The ClientDetail / ContactDetail monolithic page-host views
+//     are gone — the pages are declarative type:"detail" manifest entries whose
+//     identity/account fields auto-render in the body, KPI chips come from
+//     `summaryAggregates`, related lists from `relatedCollections`, the parent-
+//     org link from `relationLinks`, and these rich sub-features stay in the
+//     page body via `bodyWidgets` (kind:'section'). Each reads the live object
+//     via props (token-resolved `@objectId`) — no page host needed. ---
+import ContactRelationships from './components/ContactRelationships.vue'
+import ActivityTimeline from './components/ActivityTimeline.vue'
+import CommunicationHistory from './components/CommunicationHistory.vue'
+import BookingsCard from './components/bookings/BookingsCard.vue'
+import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
+import BrpContactPanel from './components/BrpContactPanel.vue'
 
 // --- Project / WBS hierarchy (project-task-hierarchy):
 //     four schemas (project / projectPhase / projectTask / projectActivity)
@@ -781,18 +791,41 @@ const registry = {
 		_note: 'Per-pipeline KPI cards (Total Pipeline Value / Win Rate / Avg Deal Size / Active Opportunities) and a horizontal stage-funnel CnChartWidget; client-side aggregation is appropriate (< 500 leads per pipeline) and gives instant updates on pipeline switch.',
 	},
 
-	// --- Klantbeeld 360 — Client 360 view. ---
-	ClientDetail: {
-		kind: 'page',
-		component: ClientDetail,
-		_note: 'Aggregates 5 cross-schema relation sections (leads / contactmomenten / requests / contacts / complaints) with per-section loading + per-section error state, summary statistics card and delete-with-link-warning dialog; declarative type:"detail" cannot express the parallel cross-schema fetches with section-isolation.',
+	// --- Client / Contact 360 detail in-body sections (kind:'section').
+	//     Registered for the declarative type:"detail" ClientDetail /
+	//     ContactDetail pages' `config.bodyWidgets`. Each is a self-fetching
+	//     sub-feature that reads the live object via props (token-resolved
+	//     `@objectId`). CnBodySections renders them as titled body sections
+	//     (NOT sidebar tabs) and also `provide`s `cnSectionContext`. ---
+	ContactRelationships: {
+		kind: 'section',
+		component: ContactRelationships,
+		_note: 'Outbound/inbound relationship graph for a client or contact; self-fetches by entityId/entityType.',
 	},
-
-	// --- Klantbeeld 360 — Contact detail with parent-organisation card. ---
-	ContactDetail: {
-		kind: 'page',
-		component: ContactDetail,
-		_note: 'Parent Organisation card with quick-link CnFormDialog for setting contact.client; declarative type:"detail" has no way to drive a searchable client-select dialog tied to the contact save flow.',
+	ActivityTimeline: {
+		kind: 'section',
+		component: ActivityTimeline,
+		_note: 'Chronological activity feed for an entity; self-fetches by entityType/entityId.',
+	},
+	CommunicationHistory: {
+		kind: 'section',
+		component: CommunicationHistory,
+		_note: 'Paginated contactmoment feed for an entity; self-fetches by entityType/entityId.',
+	},
+	BookingsCard: {
+		kind: 'section',
+		component: BookingsCard,
+		_note: 'Appointment-booking timeline for a customer (client); self-fetches by customerId (REQ-APT-014).',
+	},
+	ContactmomentQuickLog: {
+		kind: 'section',
+		component: ContactmomentQuickLog,
+		_note: 'Inline contactmoment quick-log form pre-bound to the client (clientId, inline mode). On save it emits @saved; in declarative mode the page is refreshed via the CnDetailPage Refresh action rather than an imperative re-fetch.',
+	},
+	BrpContactPanel: {
+		kind: 'section',
+		component: BrpContactPanel,
+		_note: 'BSN / BRP lookup + reveal panel for a contact; self-fetches by contactId, emits @contact-updated (bsn-validatie-en-brp-lookup).',
 	},
 
 	// --- BI export + data-warehouse sink. ---
