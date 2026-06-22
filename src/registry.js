@@ -197,7 +197,6 @@ import ExpenseDetailView from './views/expenses/ExpenseDetail.vue'
 //     bespoke color-swatch + DBA / active badge column layout the
 //     declarative type:"index" page cannot express. Donut widget for the
 //     dashboard (hours per billing category) registered as a slot. ---
-import BillingCategoryListView from './views/billingCategories/BillingCategoryList.vue'
 import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.vue'
 
 // --- Klantbeeld 360 (lib gap: no cross-module KPI dashboard with a
@@ -207,7 +206,6 @@ import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.
 //     ClientDetail + ContactDetail aggregate 5 cross-schema sections
 //     with per-section loading and a contact->client linking dialog,
 //     beyond what a declarative type:"detail" page can express). ---
-import AnalyticsDashboard from './views/analytics/AnalyticsDashboard.vue'
 import SlaAttainmentDashboard from './views/sla/SlaAttainmentDashboard.vue'
 import PipelineAnalyticsView from './views/pipeline/PipelineAnalyticsView.vue'
 import ClientDetail from './views/clients/ClientDetail.vue'
@@ -220,7 +218,6 @@ import ContactDetail from './views/contacts/ContactDetail.vue'
 //     because the declarative type:"detail" cannot drive the cross-schema
 //     parallel relation fetch, the resolved-billable inheritance chain or
 //     the inline-add CnFormDialogs feeding three different schemas. ---
-import ProjectList from './views/projects/ProjectList.vue'
 import ProjectDetail from './views/projects/ProjectDetail.vue'
 import ProjectActivityList from './views/projects/ProjectActivityList.vue'
 
@@ -237,9 +234,7 @@ import BlastPerformanceDashboardView from './views/blasts/PerformanceDashboard.v
 // --- Appointment booking — admin surface (appointment-booking 11 of 12).
 //     Service / Resource / Booking list + detail views; resolved by the v2
 //     renderer from the manifest.d fragment at render time. ---
-import ServiceListView from './views/bookings/ServiceList.vue'
 import ServiceDetailView from './views/bookings/ServiceDetail.vue'
-import ResourceListView from './views/bookings/ResourceList.vue'
 import ResourceDetailView from './views/bookings/ResourceDetail.vue'
 import BookingDetailView from './views/bookings/BookingDetail.vue'
 
@@ -765,23 +760,11 @@ const registry = {
 	},
 
 	// --- Billing categories (billable-categories-and-tags). ---
-	BillingCategoryListView: {
-		kind: 'page',
-		component: BillingCategoryListView,
-		_note: 'Billing-category management list (REQ-BCT-001) with color-swatch + DBA / active / default badges and client-side billable→non-billable→internal sort.',
-	},
 	BillingCategoryWidget: {
 		kind: 'widget',
 		component: BillingCategoryWidget,
 		...PANEL_WIDGET_META,
 		_note: 'Donut chart of hours per billing category for the Dashboard (REQ-BCT-004). Clicking a segment navigates to the time entry list filtered by that category.',
-	},
-
-	// --- Klantbeeld 360 — cross-module analytics dashboard. ---
-	AnalyticsDashboard: {
-		kind: 'page',
-		component: AnalyticsDashboard,
-		_note: 'Cross-module KPI dashboard (Open Pipeline Value / Open Requests / Contactmomenten / Active Leads) with a trailing-period filter; driven by a server-side aggregation endpoint so large installations are not forced to fetch full collections client-side.',
 	},
 
 	// --- SLA engine — attainment dashboard (sla-engine-and-escalation Feature 12). ---
@@ -869,11 +852,6 @@ const registry = {
 	},
 
 	// --- Project / WBS hierarchy (project-task-hierarchy). ---
-	ProjectList: {
-		kind: 'page',
-		component: ProjectList,
-		_note: 'Project list view wrapping CnIndexPage with per-cell slot overrides for status pill, billable indicator, budget/logged progress and overdue-end-date treatment (REQ-PTH-006).',
-	},
 	ProjectDetail: {
 		kind: 'page',
 		component: ProjectDetail,
@@ -917,20 +895,10 @@ const registry = {
 	},
 
 	// --- Appointment booking — admin views (appointment-booking 11 of 12). ---
-	ServiceListView: {
-		kind: 'page',
-		component: ServiceListView,
-		_note: 'Service catalogue list with formatted duration / currency cells and a status badge; lib gap: declarative index page cannot express the duration / currency cell renderers.',
-	},
 	ServiceDetailView: {
 		kind: 'page',
 		component: ServiceDetailView,
 		_note: 'Service detail + edit page with the multiStep sub-table editor, deposit / cancellation policy cards and a best-effort availabilityCache invalidation hook on save (REQ-APT-015).',
-	},
-	ResourceListView: {
-		kind: 'page',
-		component: ResourceListView,
-		_note: 'Resource list (staff / room / equipment) with type + bookable + status badges.',
 	},
 	ResourceDetailView: {
 		kind: 'page',

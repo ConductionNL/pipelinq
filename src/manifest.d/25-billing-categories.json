@@ -11,13 +11,41 @@
 	"pages": [
 		{
 			"id": "BillingCategories",
+			"_note": "Billing-category management as a declarative type:index page (pipelinq-views-to-declarative-r2): name→swatch (colorField:'color'), isDba→DBA boolean badge, isActive→active badge, isDefault→boolean, defaultSort type-then-name. 'New category' navigates to the bespoke BillingCategoryNew wizard (CnWizardDialog); row open navigates to the declarative BillingCategoryDetail page.",
 			"route": "/billing-categories",
-			"type": "custom",
+			"type": "index",
 			"title": "Billing categories",
-			"component": "BillingCategoryListView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "billingCategory"
+				"schema": "billingCategory",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"showAdd": false,
+				"showFormDialog": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"showMassImport": false,
+				"showMassExport": false,
+				"showMassCopy": false,
+				"showMassDelete": false,
+				"defaultSort": [
+					{ "field": "type", "order": "asc" },
+					{ "field": "name", "order": "asc" }
+				],
+				"columns": [
+					{ "key": "name", "label": "Name", "format": { "style": "swatch", "colorField": "color" } },
+					"code",
+					"type",
+					{ "key": "isDba", "label": "DBA", "type": "boolean" },
+					{ "key": "isDefault", "label": "Default", "type": "boolean" },
+					{ "key": "isActive", "label": "Active", "type": "boolean" }
+				],
+				"headerActions": [
+					{ "id": "create", "label": "New category", "icon": "Plus", "handler": "navigate", "route": "BillingCategoryNew" }
+				],
+				"actions": [
+					{ "id": "view", "label": "Open", "icon": "Eye", "handler": "navigate", "route": "BillingCategoryDetail" }
+				]
 			}
 		},
 		{
