@@ -1171,7 +1171,7 @@
 					"terminalId",
 					"transactionCount",
 					"total",
-					{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "synced": "success", "pending": "warning", "failed": "error", "open": "info" } } },
+					{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "posted": "success", "submitted": "primary", "synced": "success", "pending": "warning", "failed": "error", "draft": "default", "open": "info" } } },
 					{ "key": "createdAt", "label": "Aangemaakt", "format": "date-time" }
 				],
 				"actions": [
