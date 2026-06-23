@@ -6,7 +6,6 @@ import VueRouter from 'vue-router'
 import { PiniaVuePlugin, setActivePinia } from 'pinia'
 import { translate as t, translatePlural as n, loadTranslations } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { loadState } from '@nextcloud/initial-state'
 import {
 	CnPageRenderer,
 	defaultPageTypes,
@@ -170,8 +169,33 @@ function mergeManifestFragments(base) {
 		}
 	})
 	merged.menu = applyMenuRelocations(merged.menu, menuLayout.relocations)
+	merged.menu = applyMenuSections(merged.menu, menuLayout.sections)
 	merged.menu = applyMenuRemovals(merged.menu, menuLayout.removals)
 	return merged
+}
+
+/**
+ * Assign top-level menu leaves to a navigation section declared by
+ * `src/menu-layout.json#sections` (`{ menuEntryId: sectionName }`). Section
+ * `settings` makes the entry render inside the NC gear-icon settings foldout
+ * (CnAppNav) instead of as a top-level item — so genuinely-admin/config
+ * entries (e.g. AVG-verzoeken, the MDM steward views) live under Settings
+ * rather than a duplicate top-level Administration group, while operational
+ * groups (Marketing/Blasts) stay top-level. Fragments stay the source of WHAT
+ * exists (ADR-037); this map keeps the WHERE decision in the canonical layout
+ * file. Only top-level entries are sectioned; unknown ids are inert.
+ *
+ * @param {Array<object>} menu The merged menu (mutated in place).
+ * @param {Record<string, string>|undefined} sections Menu-entry id → section name.
+ * @return {Array<object>} The menu with sections applied.
+ */
+function applyMenuSections(menu, sections) {
+	if (!sections || typeof sections !== 'object') return menu
+	menu.forEach((node) => {
+		const section = sections[node.id]
+		if (section) node.section = section
+	})
+	return menu
 }
 
 /**
@@ -262,42 +286,7 @@ function applyMenuRemovals(menu, removals) {
 	return menu.filter((node) => !(drop.has(node.id) && isLeaf(node)))
 }
 
-/**
- * Resolve the "Timesheet approval" billing entry point (BillingApproval menu
- * entry) through the ADR-019 integration registry: the configured shillinq
- * deployment URL is provided as the `shillinq_app_url` initial state by
- * Application::boot(). When set it overrides the hard-coded
- * /index.php/apps/shillinq/ href in the manifest so the entry points at the
- * configured shillinq instance; when empty the manifest default wins
- * (pipelinq-bookkeeping-to-shillinq / REQ-PBTS-003).
- *
- * @param {object} manifest The merged manifest (with `menu[]`).
- * @return {object} The manifest with the billing href resolved.
- */
-function applyRegistryBillingHref(manifest) {
-	let shillinqUrl = ''
-	try {
-		shillinqUrl = (loadState('pipelinq', 'shillinq_app_url', '') || '').trim()
-	} catch {
-		shillinqUrl = ''
-	}
-	if (!shillinqUrl) {
-		return manifest
-	}
-	const walk = (items) => {
-		if (!Array.isArray(items)) return
-		items.forEach((item) => {
-			if (item && item.id === 'BillingApproval') {
-				item.href = shillinqUrl
-			}
-			if (Array.isArray(item?.children)) walk(item.children)
-		})
-	}
-	walk(manifest.menu)
-	return manifest
-}
-
-const mergedManifest = applyRegistryBillingHref(mergeManifestFragments(bundledManifest))
+const mergedManifest = mergeManifestFragments(bundledManifest)
 
 /**
  * Build the vue-router config from the manifest. Each manifest page
