@@ -94,6 +94,26 @@ class AvgRequestService
     ];
 
     /**
+     * Map a Dutch AVG-article identifier onto OpenRegister's generic
+     * `dataSubjectRequest.type` vocabulary.
+     *
+     * Pipelinq's avgVerzoek keeps its jurisdiction-specific `artikel` field as
+     * the Dutch overlay, but data-subject-rights fulfilment is now routed through
+     * OR's generic capability, which is keyed on the EU-generic request type. This
+     * map is the canonical bridge between the two and is recorded in
+     * openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md.
+     *
+     * @var array<string, string>
+     */
+    private const ARTICLE_TO_OR_TYPE = [
+        'art-15-inzage'        => 'access',
+        'art-16-rectificatie'  => 'rectification',
+        'art-17-wissing'       => 'erasure',
+        'art-18-beperking'     => 'restriction',
+        'art-20-portabiliteit' => 'portability',
+    ];
+
+    /**
      * Schema slug whose `x-openregister-lifecycle` declares the request status graph.
      *
      * @var string
@@ -210,6 +230,23 @@ class AvgRequestService
 
         return null;
     }//end classifyArticle()
+
+    /**
+     * Map a Dutch AVG-article identifier to OR's generic data-subject-request type.
+     *
+     * Returns null when the article has no generic counterpart (e.g. `geen-avg`),
+     * so the caller can skip routing a non-AVG request through OR's capability.
+     *
+     * @param string $article The avgVerzoek article identifier.
+     *
+     * @return string|null The OR `dataSubjectRequest.type`, or null when unmapped.
+     *
+     * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
+     */
+    public function orRequestTypeFor(string $article): ?string
+    {
+        return (self::ARTICLE_TO_OR_TYPE[$article] ?? null);
+    }//end orRequestTypeFor()
 
     /**
      * Register a new AVG request (intake).
