@@ -37,12 +37,20 @@
 		"PipelineAnalytics": "AnalyticsGroup",
 		"BillingCategories": "AnalyticsGroup"
 	},
-	"sections": {
-		"_note": "AvgRequests (AVG/DSAR) and MdmDataQuality/MdmDuplicates are placed under Settings now, but are EARMARKED to move out of pipelinq later: AVG-verzoeken -> OpenRegister's AVG/DSAR subsystem (admin-gated, different data model — a prior seam found pipelinq cannot cleanly consume it yet), and DataQuality+Duplicates -> the OR-MDM abstraction (not built yet). Kept in pipelinq under Settings until those OR seams land.",
-		"AvgRequests": "settings",
-		"MdmMasterEntities": "settings",
-		"MdmDataQuality": "settings",
-		"MdmDuplicates": "settings"
-	},
+	"sections": {},
+	"settingsSection": [
+		"Pipelines",
+		"SettingsIntegrationsCaption",
+		"ExportJobs",
+		"StufEndpoints",
+		"Cti",
+		"PosRoleList",
+		"PosStaffList",
+		"AvgRequests",
+		"MdmMasterEntities",
+		"MdmDataQuality",
+		"MdmDuplicates"
+	],
+	"_settingsSectionNote": "Promoted into the NC settings foldout (the bottom-left gear, OUTSIDE the scrollable nav) by applySettingsSection in main.js. Config/admin/integration/master-data-setup entries only; operational lists stay top-level. Pipelines (pipeline definitions/config), Integrations caption + BI export + StUF endpoints + CTI (integrations/connections), POS rollen + POS medewerkers (POS master-data/admin). StufAuditLog and KassakoppelingAuditList are audit REPORTS and stay in the main nav. AvgRequests (AVG/DSAR) and MdmDataQuality/MdmDuplicates/MdmMasterEntities are EARMARKED to move out of pipelinq later: AVG-verzoeken -> OpenRegister's AVG/DSAR subsystem (admin-gated, different data model — a prior seam found pipelinq cannot cleanly consume it yet), and the MDM views -> the OR-MDM abstraction (not built yet). Kept in pipelinq under Settings until those OR seams land.",
 	"removals": []
 }

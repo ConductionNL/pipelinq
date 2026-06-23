@@ -5,7 +5,6 @@
 			"label": "CTI (telephony)",
 			"icon": "icon-phone",
 			"route": "Cti",
-			"section": "settings",
 			"order": 218
 		}
 	],
