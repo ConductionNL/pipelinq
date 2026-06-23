@@ -247,12 +247,6 @@
 			"order": 150
 		},
 		{
-			"id": "Administration",
-			"label": "Administration",
-			"icon": "icon-settings",
-			"order": 200
-		},
-		{
 			"id": "Pipeline",
 			"label": "Pipeline",
 			"icon": "icon-category-organization",
@@ -336,11 +330,18 @@
 			"order": 230
 		},
 		{
-			"id": "BillingApproval",
+			"id": "TimesheetApproval",
 			"label": "Timesheet approval",
 			"icon": "icon-category-monitoring",
-			"href": "/index.php/apps/shillinq/",
+			"href": "/index.php/apps/hrmq/timesheets/approval",
 			"order": 218
+		},
+		{
+			"id": "Expenses",
+			"label": "Expenses",
+			"icon": "icon-toggle",
+			"href": "/index.php/apps/hrmq/expenses",
+			"order": 219
 		}
 	],
 	"pages": [

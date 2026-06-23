@@ -202,12 +202,6 @@ import PaymentSettingsForm from './views/settings/PaymentSettingsForm.vue'
 import StufEndpointsView from './views/settings/StufEndpoints.vue'
 import StufAuditLogView from './views/settings/StufAuditLog.vue'
 
-// --- Expense → Shillinq AP (pipelinq-expense-to-shillinq-ap): list with
-//     apSyncStatus badge column, detail with embedded Shillinq AP card
-//     (REQ-AP-005 / REQ-AP-006).
-import ExpenseListView from './views/expenses/ExpenseList.vue'
-import ExpenseDetailView from './views/expenses/ExpenseDetail.vue'
-
 // --- Billing categories (billable-categories-and-tags): list view with a
 //     bespoke color-swatch + DBA / active badge column layout the
 //     declarative type:"index" page cannot express. Donut widget for the
@@ -786,18 +780,6 @@ const registry = {
 		kind: 'page',
 		component: ProductBarcodeSearchView,
 		_note: 'Scan-to-navigate barcode search; resolves via the server-authoritative scoped barcode-lookup API and routes to the matching product (highlighting a matched variant).',
-	},
-
-	// --- Expense → Shillinq AP (pipelinq-expense-to-shillinq-ap). ---
-	ExpenseListView: {
-		kind: 'page',
-		component: ExpenseListView,
-		_note: 'Expenses list with apSyncStatus badge column (REQ-AP-005).',
-	},
-	ExpenseDetailView: {
-		kind: 'page',
-		component: ExpenseDetailView,
-		_note: 'Expense detail with embedded Shillinq AP card + retry button on failed dispatches (REQ-AP-006).',
 	},
 
 	// --- Billing categories (billable-categories-and-tags). ---
