@@ -6,6 +6,7 @@ import VueRouter from 'vue-router'
 import { PiniaVuePlugin, setActivePinia } from 'pinia'
 import { translate as t, translatePlural as n, loadTranslations } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
+import { loadState } from '@nextcloud/initial-state'
 import {
 	CnPageRenderer,
 	defaultPageTypes,
@@ -171,6 +172,7 @@ function mergeManifestFragments(base) {
 	merged.menu = applyMenuRelocations(merged.menu, menuLayout.relocations)
 	merged.menu = applyMenuSections(merged.menu, menuLayout.sections)
 	merged.menu = applyMenuRemovals(merged.menu, menuLayout.removals)
+	merged.menu = applySettingsSection(merged.menu, menuLayout.settingsSection)
 	return merged
 }
 
@@ -286,7 +288,72 @@ function applyMenuRemovals(menu, removals) {
 	return menu.filter((node) => !(drop.has(node.id) && isLeaf(node)))
 }
 
-const mergedManifest = mergeManifestFragments(bundledManifest)
+/**
+ * Promote the menu entries listed in `src/menu-layout.json#settingsSection`
+ * into Nextcloud's settings foldout — the NcAppNavigationSettings gear at the
+ * bottom-left of the navigation, OUTSIDE the scrollable list. CnAppNav renders
+ * every TOP-LEVEL item carrying `section: "settings"` as a flat entry inside
+ * that foldout (with an auto-prepended "Personal settings"). This lifts each
+ * listed id out of wherever it currently sits, tags it `section: "settings"`,
+ * flattens it (the foldout has no nested groups), and appends it to the top
+ * level. Empty non-clickable groups left behind are dropped; a clickable group
+ * (one with route/href/action) is kept.
+ *
+ * @param {Array<object>} menu        The merged + relocated + pruned menu.
+ * @param {Array<string>|undefined} settingsIds Entry ids to move to the foldout.
+ * @return {Array<object>} The menu with the settings entries lifted out.
+ */
+function applySettingsSection(menu, settingsIds) {
+	if (!Array.isArray(settingsIds) || settingsIds.length === 0) return menu
+	const want = new Set(settingsIds)
+	const isClickable = (n) => n.route !== undefined || n.href !== undefined || n.action !== undefined
+	const lifted = []
+	const strip = (nodes) => nodes.reduce((acc, n) => {
+		if (want.has(n.id)) {
+			const { children, ...leaf } = n
+			lifted.push({ ...leaf, section: 'settings' })
+			return acc
+		}
+		if (Array.isArray(n.children)) {
+			const children = strip(n.children)
+			if (children.length === 0 && n.children.length > 0 && !isClickable(n)) return acc
+			acc.push({ ...n, children })
+			return acc
+		}
+		acc.push(n)
+		return acc
+	}, [])
+	const remaining = strip(menu)
+	return [...remaining, ...lifted]
+}
+
+/**
+ * Seed the page-level app config onto every `type: "dashboard"` page's
+ * `config.appConfig`. CnPageRenderer forwards each `config.*` key to the
+ * dispatched page component's props, so this lands on CnDashboardPage's
+ * `appConfig` prop — the source the library's `@config.<key>` token resolver
+ * reads (via the `cnAppConfig` inject it provides to descendant stat widgets).
+ * Backed by the `config` initial state the app's Application::boot() provides
+ * (currently the reporting `currency` captured by the setup wizard, default
+ * EUR). With this seed a manifest widget's `format: { style: "currency",
+ * currency: "@config.currency" }` formats with the configured currency instead
+ * of the literal EUR fallback. An explicit per-page `config.appConfig` (none
+ * today) still wins.
+ *
+ * @param {object} manifest The merged manifest (with `pages[]`).
+ * @return {object} The same manifest, with dashboard pages' appConfig seeded.
+ */
+function seedDashboardAppConfig(manifest) {
+	const appConfig = loadState('pipelinq', 'config', {})
+	for (const page of manifest.pages || []) {
+		if (page.type === 'dashboard') {
+			page.config = { appConfig, ...(page.config || {}) }
+		}
+	}
+	return manifest
+}
+
+const mergedManifest = seedDashboardAppConfig(mergeManifestFragments(bundledManifest))
 
 /**
  * Build the vue-router config from the manifest. Each manifest page
