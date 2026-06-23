@@ -33,5 +33,6 @@
 ## 5. Verify
 - [x] `openspec validate pipelinq-getting-started-tour --strict` passes.
 - [x] pipelinq manifest validates; nc-vue touched-component tests green (152).
-- [ ] Live (empty env, :8080): first visit auto-starts the tour; each step gates on
-      the real action; ids captured + interpolated; finish hands off — NOT yet run.
+- [x] Live (empty env, :8080): first-visit auto-starts the tour; Next advances;
+      collapsed-nav targets degrade gracefully (engine fix); route-match advance +
+      the visible index Add button spotlights with a real cutout. Verified 2026-06-23.
