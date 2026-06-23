@@ -92,7 +92,7 @@ class AvgRequestServiceTest extends TestCase
 
         $this->service = new AvgRequestService(
             repository: $this->repository,
-            deadline: new DeadlineService(),
+            deadline: new DeadlineService(orGdpr: OrGdprBridgeFactory::build(new FakeOrGdpr())),
             access: $access,
             events: $events,
             logger: new NullLogger()
@@ -100,8 +100,8 @@ class AvgRequestServiceTest extends TestCase
     }//end setUp()
 
     /**
-     * Intake classifies an explicit article, computes a 30-day deadline, sets the
-     * reference and records a receipt event.
+     * Intake classifies an explicit article, computes the EU art-12 one-month
+     * deadline (via OR), sets the reference and records a receipt event.
      *
      * @return void
      */

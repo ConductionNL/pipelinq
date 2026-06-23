@@ -3,10 +3,17 @@
 /**
  * Pipelinq DeadlineService.
  *
- * Server-authoritative legal-deadline logic for AVG requests: computing the
- * 30-day statutory deadline (and the 60-day extension), classifying remaining
- * urgency, and detecting escalation / breach states. All date arithmetic lives
- * here so the controllers, jobs and tests share one source of truth.
+ * Server-authoritative legal-deadline logic for AVG requests. The base deadline
+ * computation ADOPTS OpenRegister's canonical EU GDPR art-12(3) mechanic via
+ * {@see OrGdprBridge}: the response term is ONE MONTH from receipt (not the
+ * earlier NL 30-day approximation) and a single extension adds TWO MONTHS (not
+ * the earlier 60-day approximation). This authorized behavioural change is
+ * recorded in openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md.
+ *
+ * The escalation chain that OR does NOT own — the 7-day advance reminder, the
+ * <72h team-lead escalation and the breach classification — stays in pipelinq
+ * as the Dutch operational overlay, but it is now computed FROM the OR-derived
+ * EU deadline.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service\Avg
@@ -19,7 +26,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/avg-verzoeken-workflow/tasks.md#3.5
+ * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
  */
 
 declare(strict_types=1);
@@ -31,32 +38,15 @@ use DateTimeImmutable;
 use DateTimeInterface;
 
 /**
- * Pure deadline computation for the AVG workflow.
- *
- * Intentionally dependency-light (no OR / config) so the legal-deadline rules
- * are unit-testable in isolation and deterministic.
+ * Deadline computation for the AVG workflow, anchored on OR's EU art-12 maths.
  *
  * @SuppressWarnings(PHPMD.StaticAccess) DateTimeImmutable::createFromInterface
  *  is the idiomatic immutable-date factory; there is no instance alternative.
  *
- * @spec openspec/changes/avg-verzoeken-workflow/tasks.md#3.5
+ * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
  */
 class DeadlineService
 {
-    /**
-     * Statutory base term in days (AVG art. 12 lid 3).
-     *
-     * @var int
-     */
-    public const BASE_TERM_DAYS = 30;
-
-    /**
-     * Extension term in days when a justified extension is granted.
-     *
-     * @var int
-     */
-    public const EXTENSION_DAYS = 60;
-
     /**
      * Remaining-hours threshold below which a request escalates to the team lead.
      *
@@ -72,25 +62,50 @@ class DeadlineService
     public const REMINDER_DAYS = 7;
 
     /**
+     * Marker value passed as `extensionDays` to request the EU art-12 extension.
+     *
+     * The legal extension is "a further two months" (a calendar interval), not a
+     * fixed day count, so this is a non-zero sentinel meaning "apply the single
+     * permitted extension" rather than a literal number of days.
+     *
+     * @var int
+     */
+    public const EXTENSION_DAYS = 1;
+
+    /**
+     * Constructor.
+     *
+     * @param OrGdprBridge $orGdpr Bridge onto OR's canonical EU art-12 deadline maths.
+     */
+    public function __construct(
+        private OrGdprBridge $orGdpr,
+    ) {
+    }//end __construct()
+
+    /**
      * Compute the legal deadline from an intake timestamp.
      *
-     * The deadline is the end of the day BASE_TERM_DAYS after intake (plus the
-     * extension when one was granted), so the citizen always has the full final
-     * calendar day.
+     * The base term is ONE MONTH from receipt (OR `DataSubjectDeadline`, EU
+     * art-12(3)); when an extension is requested the single permitted TWO-MONTH
+     * extension is applied on top of the base. The deadline is normalised to the
+     * end of its calendar day so the citizen always has the full final day — the
+     * one piece of NL operational presentation kept on top of the OR mechanic.
      *
      * @param DateTimeInterface $submittedAt   The intake timestamp.
-     * @param int               $extensionDays Extra days granted (0 or EXTENSION_DAYS).
+     * @param int               $extensionDays Non-zero to apply the single EU extension.
      *
      * @return DateTimeImmutable The legal deadline.
      *
-     * @spec openspec/changes/avg-verzoeken-workflow/tasks.md#3.5
+     * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
      */
     public function computeDeadline(DateTimeInterface $submittedAt, int $extensionDays=0): DateTimeImmutable
     {
-        $days = self::BASE_TERM_DAYS + max(0, $extensionDays);
-        $base = DateTimeImmutable::createFromInterface($submittedAt);
+        $due = $this->orGdpr->computeDueAt(receivedAt: $submittedAt);
+        if ($extensionDays > 0) {
+            $due = $this->orGdpr->extend(dueAt: $due);
+        }
 
-        return $base->add(new DateInterval('P'.$days.'D'))->setTime(23, 59, 59);
+        return $due->setTime(23, 59, 59);
     }//end computeDeadline()
 
     /**
@@ -101,7 +116,7 @@ class DeadlineService
      *
      * @return int The number of whole days remaining.
      *
-     * @spec openspec/changes/avg-verzoeken-workflow/tasks.md#3.5
+     * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
      */
     public function daysRemaining(DateTimeInterface $deadline, DateTimeInterface $now): int
     {
@@ -118,7 +133,7 @@ class DeadlineService
      *
      * @return float The number of hours remaining.
      *
-     * @spec openspec/changes/avg-verzoeken-workflow/tasks.md#3.5
+     * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
      */
     public function hoursRemaining(DateTimeInterface $deadline, DateTimeInterface $now): float
     {
@@ -129,14 +144,14 @@ class DeadlineService
      * Classify the urgency colour for a deadline.
      *
      * Red: breached or < ESCALATION_HOURS remaining; yellow: <= REMINDER_DAYS
-     * remaining; green otherwise.
+     * remaining; green otherwise. Operational overlay over the OR deadline.
      *
      * @param DateTimeInterface $deadline The legal deadline.
      * @param DateTimeInterface $now      The reference time.
      *
      * @return string One of 'red', 'yellow', 'green'.
      *
-     * @spec openspec/changes/avg-verzoeken-workflow/tasks.md#3.5
+     * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
      */
     public function urgency(DateTimeInterface $deadline, DateTimeInterface $now): string
     {
@@ -153,15 +168,14 @@ class DeadlineService
     }//end urgency()
 
     /**
-     * Whether a request should escalate (within ESCALATION_HOURS and not breached
-     * is still escalation; breached is also escalation).
+     * Whether a request should escalate (within ESCALATION_HOURS or breached).
      *
      * @param DateTimeInterface $deadline The legal deadline.
      * @param DateTimeInterface $now      The reference time.
      *
      * @return bool True when the request needs team-lead escalation.
      *
-     * @spec openspec/changes/avg-verzoeken-workflow/tasks.md#3.5
+     * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
      */
     public function shouldEscalate(DateTimeInterface $deadline, DateTimeInterface $now): bool
     {
@@ -176,7 +190,7 @@ class DeadlineService
      *
      * @return bool True when the deadline is in the past.
      *
-     * @spec openspec/changes/avg-verzoeken-workflow/tasks.md#3.5
+     * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
      */
     public function isBreached(DateTimeInterface $deadline, DateTimeInterface $now): bool
     {
@@ -194,7 +208,7 @@ class DeadlineService
      *
      * @return bool True when the reminder is due.
      *
-     * @spec openspec/changes/avg-verzoeken-workflow/tasks.md#3.5
+     * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
      */
     public function isReminderDue(DateTimeInterface $deadline, DateTimeInterface $now): bool
     {

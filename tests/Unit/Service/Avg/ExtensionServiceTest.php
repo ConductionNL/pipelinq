@@ -71,7 +71,7 @@ class ExtensionServiceTest extends TestCase
 
         $this->service = new ExtensionService(
             repository: $repository,
-            deadline: new DeadlineService(),
+            deadline: new DeadlineService(orGdpr: OrGdprBridgeFactory::build(new FakeOrGdpr())),
             events: $events,
             logger: new NullLogger()
         );
@@ -118,7 +118,8 @@ class ExtensionServiceTest extends TestCase
         );
 
         $this->assertSame(DeadlineService::EXTENSION_DAYS, $updated['verlengdMet']);
-        $this->assertSame('2026-07-07', (new DateTimeImmutable((string) $updated['wettelijkeTermijnVerloopt']))->format('Y-m-d'));
+        // EU art-12(3): intake 2026-04-08 -> base +1mo (2026-05-08) -> extended +2mo (2026-07-08).
+        $this->assertSame('2026-07-08', (new DateTimeImmutable((string) $updated['wettelijkeTermijnVerloopt']))->format('Y-m-d'));
 
         $events = $this->objectService->findAll(
             ['filters' => ['schema' => AvgRepository::SCHEMA_TERMIJN_EVENT, 'type' => 'verlenging-gecommuniceerd']]

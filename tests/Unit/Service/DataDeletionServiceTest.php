@@ -1,7 +1,15 @@
 <?php
 
 /**
- * Unit tests for DataDeletionService (AVG pseudonymisation of Bookings).
+ * Unit tests for DataDeletionService (AVG erasure of customer Bookings).
+ *
+ * These tests assert the NEW, authorized behaviour: booking erasure is routed
+ * through OpenRegister's canonical, legal-hold-aware erasure
+ * (`DataSubjectRequestService::erase` in `pseudonymise` mode, surfaced via
+ * {@see \OCA\Pipelinq\Service\Avg\OrGdprBridge}) instead of the earlier
+ * named-field SHA-256 hashing. The critical retention invariant — a Booking row
+ * held by the NL Boekhoudplicht 7-year retention SURVIVES erasure — is verified
+ * here: held objects come back in the `held` bucket and are never erased.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service
@@ -14,90 +22,89 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/appointment-booking-12-compliance-i18n/specs/appointment-booking/spec.md#REQ-APT-017
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Avg\OrGdprBridge;
 use OCA\Pipelinq\Service\DataDeletionService;
-use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
- * Fake ObjectService used by DataDeletionServiceTest.
+ * Minimal fake of OR's GDPR capability for the DataDeletionService tests.
  *
- * Holds an in-memory list of bookings keyed by uuid; records every save so the
- * tests can assert which fields were pseudonymised. `findAll()` mirrors the OR
- * signature used by the service (filters + register + schema + limit).
+ * Models legal-hold-aware field-level pseudonymise erasure: every matched object
+ * is erased (row retained) unless its uuid is held, in which case it is reported
+ * back in the `held` bucket and never mutated.
  */
-class FakeDataDeletionObjectService
+class FakeBookingErase
 {
 
     /**
-     * @var array<string, array<string, mixed>>
-     */
-    public array $bookings = [];
-
-    /**
-     * @var array<int, array{uuid: string, payload: array<string, mixed>}>
-     */
-    public array $saves = [];
-
-    public string $expectedRegister = '';
-
-    public string $expectedSchema = '';
-
-    /**
-     * @var array<string, mixed>
-     */
-    public array $lastFilters = [];
-
-    /**
-     * Mirror OR ObjectService::findAll for the customerId filter only.
+     * Booking object uuids the erase will discover for the subject.
      *
-     * @param array<string, mixed> $filters
-     *
-     * @return array<int, array<string, mixed>>
+     * @var array<int, string>
      */
-    public function findAll(array $filters, string $register, string $schema, int $limit): array
+    public array $matchedUuids = [];
+
+    /**
+     * Uuids that are held (legal hold / immutable) — reported, never erased.
+     *
+     * @var array<int, string>
+     */
+    public array $heldUuids = [];
+
+    /**
+     * Captured erase call arguments.
+     *
+     * @var array<string, mixed>|null
+     */
+    public ?array $lastErase = null;
+
+    /**
+     * Legal-hold-aware field-level pseudonymise erasure (row retained).
+     *
+     * @param string      $subjectId The subject identifier value.
+     * @param string|null $type      Optional type filter.
+     * @param string      $eraseMode The erase mode.
+     * @param bool         $dryRun    Whether this is a dry run.
+     *
+     * @return array<string, mixed> OR's erase summary.
+     */
+    public function erase(string $subjectId, ?string $type = null, string $eraseMode = 'pseudonymise', bool $dryRun = false): array
     {
-        $this->expectedRegister = $register;
-        $this->expectedSchema   = $schema;
-        $this->lastFilters      = $filters;
-        $customerId = (string) ($filters['customerId'] ?? '');
-        if ($customerId === '') {
-            return array_values($this->bookings);
+        $this->lastErase = ['subjectId' => $subjectId, 'type' => $type, 'eraseMode' => $eraseMode, 'dryRun' => $dryRun];
+
+        $erased = [];
+        $held   = [];
+        foreach ($this->matchedUuids as $uuid) {
+            if (in_array($uuid, $this->heldUuids, true) === true) {
+                $held[] = ['uuid' => $uuid, 'reason' => 'legal-hold'];
+                continue;
+            }
+
+            $erased[] = ['uuid' => $uuid];
         }
 
-        return array_values(
-                array_filter(
-            $this->bookings,
-            static fn (array $b): bool => ($b['customerId'] ?? null) === $customerId
-        )
-                );
-    }//end findAll()
-
-    /**
-     * Mirror OR ObjectService::saveObject.
-     *
-     * @param array<string, mixed> $object
-     * @param array<int, string>   $extend
-     *
-     * @return array<string, mixed>
-     */
-    public function saveObject(array $object, array $extend, string $register, string $schema, string $uuid): array
-    {
-        $object['id']          = $uuid;
-        $this->bookings[$uuid] = $object;
-        $this->saves[]         = ['uuid' => $uuid, 'payload' => $object];
-
-        return $object;
-    }//end saveObject()
+        return [
+            'subject'      => $subjectId,
+            'eraseMode'    => $eraseMode,
+            'dryRun'       => $dryRun,
+            'matchedCount' => count($this->matchedUuids),
+            'erased'       => $erased,
+            'held'         => $held,
+            'failed'       => [],
+            'complete'     => true,
+        ];
+    }//end erase()
 }//end class
 
 /**
@@ -108,249 +115,130 @@ class DataDeletionServiceTest extends TestCase
 
     /**
      * The service under test.
+     *
+     * @var DataDeletionService
      */
     private DataDeletionService $service;
 
     /**
-     * The fake ObjectService backing the service.
-     */
-    private FakeDataDeletionObjectService $objectService;
-
-    /**
-     * The mock app config.
+     * The fake OR erase backing the service.
      *
-     * @var IAppConfig
+     * @var FakeBookingErase
      */
-    private IAppConfig $appConfig;
+    private FakeBookingErase $erase;
 
     /**
      * Set up the test.
+     *
+     * @return void
      */
     protected function setUp(): void
     {
-        $this->objectService = new FakeDataDeletionObjectService();
+        $this->erase = new FakeBookingErase();
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')
-            ->with('OCA\OpenRegister\Service\ObjectService')
-            ->willReturn($this->objectService);
+        $fake      = $this->erase;
+        $container = new class($fake) implements ContainerInterface {
+            /**
+             * @param FakeBookingErase $fake The fake erase.
+             */
+            public function __construct(private FakeBookingErase $fake)
+            {
+            }
 
-        $this->appConfig = $this->createMock(IAppConfig::class);
-        $this->appConfig->method('getValueString')
-            ->willReturnCallback(
-                    static function (string $app, string $key, string $default=''): string {
-                        if ($app !== Application::APP_ID) {
-                            return $default;
-                        }
+            /**
+             * @param string $id The service id.
+             *
+             * @return mixed The service.
+             */
+            public function get(string $id): mixed
+            {
+                if ($id === OrGdprBridge::OR_REQUEST_SERVICE || $id === OrGdprBridge::OR_DEADLINE) {
+                    return $this->fake;
+                }
 
-                        return match ($key) {
-                            'register'       => 'pipelinq',
-                            'booking_schema' => 'booking',
-                            default          => $default,
-                        };
-                    }
-                    );
+                throw new \RuntimeException('not found: '.$id);
+            }
 
-        $logger = $this->createMock(LoggerInterface::class);
+            /**
+             * @param string $id The service id.
+             *
+             * @return bool Whether the service exists.
+             */
+            public function has(string $id): bool
+            {
+                return ($id === OrGdprBridge::OR_REQUEST_SERVICE || $id === OrGdprBridge::OR_DEADLINE);
+            }
+        };
 
-        $this->service = new DataDeletionService(
-            container: $container,
-            appConfig: $this->appConfig,
-            logger: $logger,
-        );
+        $bridge        = new OrGdprBridge(container: $container, logger: new NullLogger());
+        $this->service = new DataDeletionService(orGdpr: $bridge, logger: new NullLogger());
     }//end setUp()
 
     /**
-     * Returns the empty summary when the customer id is blank.
+     * Returns the empty summary when the customer id is blank (no erase call).
+     *
+     * @return void
      */
-    public function testPseudonymizeRejectsEmptyCustomerId(): void
+    public function testRejectsEmptyCustomerId(): void
     {
         $summary = $this->service->pseudonymizeCustomerBookings('');
 
-        $this->assertSame(['bookings' => 0], $summary);
-        $this->assertSame([], $this->objectService->saves, 'No saves should occur for an empty id.');
-    }//end testPseudonymizeRejectsEmptyCustomerId()
+        $this->assertSame(['bookings' => 0, 'held' => 0], $summary);
+        $this->assertNull($this->erase->lastErase, 'No erase should occur for an empty id.');
+    }//end testRejectsEmptyCustomerId()
 
     /**
-     * Replaces customer name, email, and phone with SHA-256 hashes.
+     * Delegates to OR's erase in pseudonymise mode with the customer as subject.
+     *
+     * @return void
      */
-    public function testPseudonymizationHashesCustomerFields(): void
+    public function testDelegatesToOrEraseInPseudonymiseMode(): void
     {
-        $this->objectService->bookings['b1'] = [
-            'bookingId'     => 'b1',
-            'customerId'    => 'cust-7',
-            'customerName'  => 'Sarah de Vries',
-            'customerEmail' => 'sarah@example.com',
-            'customerPhone' => '+31 6 1234 5678',
-            'serviceId'     => 'svc-haircut',
-            'status'        => 'confirmed',
-            'price'         => 25.0,
-            'startAt'       => '2026-06-10T10:00:00+02:00',
-        ];
+        $this->erase->matchedUuids = ['b1', 'b2'];
 
         $summary = $this->service->pseudonymizeCustomerBookings('cust-7');
+
+        $this->assertSame(2, $summary['bookings']);
+        $this->assertSame(0, $summary['held']);
+        $this->assertNotNull($this->erase->lastErase);
+        $this->assertSame('cust-7', $this->erase->lastErase['subjectId']);
+        $this->assertSame('pseudonymise', $this->erase->lastErase['eraseMode']);
+        $this->assertFalse($this->erase->lastErase['dryRun']);
+    }//end testDelegatesToOrEraseInPseudonymiseMode()
+
+    /**
+     * CRITICAL retention invariant: a Booking held by the Boekhoudplicht 7-year
+     * retention (legal hold / immutable) SURVIVES erasure — it is reported in the
+     * `held` bucket and never erased. The row is retained; only unheld objects'
+     * PII is removed. This is the legal floor that must hold.
+     *
+     * @return void
+     */
+    public function testHeldBookingRowSurvivesErasure(): void
+    {
+        $this->erase->matchedUuids = ['b1', 'b2-held'];
+        $this->erase->heldUuids    = ['b2-held'];
+
+        $summary = $this->service->pseudonymizeCustomerBookings('cust-7');
+
+        // The unheld booking is erased; the held (Boekhoudplicht) booking is kept.
+        $this->assertSame(1, $summary['bookings'], 'Only the unheld booking is erased.');
+        $this->assertSame(1, $summary['held'], 'The held Boekhoudplicht booking survives.');
+    }//end testHeldBookingRowSurvivesErasure()
+
+    /**
+     * A dry run reports matches/holds without mutating (dryRun passed through).
+     *
+     * @return void
+     */
+    public function testDryRunPassesThroughWithoutMutating(): void
+    {
+        $this->erase->matchedUuids = ['b1'];
+
+        $summary = $this->service->pseudonymizeCustomerBookings('cust-7', dryRun: true);
 
         $this->assertSame(1, $summary['bookings']);
-        $stored = $this->objectService->bookings['b1'];
-        $this->assertSame(hash('sha256', 'Sarah de Vries'), $stored['customerName']);
-        $this->assertSame(hash('sha256', 'sarah@example.com'), $stored['customerEmail']);
-        $this->assertSame(hash('sha256', '+31 6 1234 5678'), $stored['customerPhone']);
-    }//end testPseudonymizationHashesCustomerFields()
-
-    /**
-     * Retains the Booking record (no delete) and preserves aggregate fields.
-     */
-    public function testPseudonymizationRetainsRecordsAndAggregates(): void
-    {
-        $this->objectService->bookings['b1'] = [
-            'bookingId'     => 'b1',
-            'customerId'    => 'cust-7',
-            'customerName'  => 'Sarah de Vries',
-            'customerEmail' => 'sarah@example.com',
-            'customerPhone' => '+31 6 1234 5678',
-            'serviceId'     => 'svc-haircut',
-            'resourceId'    => 'res-1',
-            'status'        => 'completed',
-            'price'         => 25.0,
-            'currency'      => 'EUR',
-            'startAt'       => '2026-06-10T10:00:00+02:00',
-            'endAt'         => '2026-06-10T10:30:00+02:00',
-        ];
-        $this->objectService->bookings['b2'] = [
-            'bookingId'     => 'b2',
-            'customerId'    => 'cust-7',
-            'customerName'  => 'Sarah de Vries',
-            'customerEmail' => 'sarah@example.com',
-            'customerPhone' => '+31 6 1234 5678',
-            'serviceId'     => 'svc-color',
-            'resourceId'    => 'res-2',
-            'status'        => 'cancelled',
-            'price'         => 75.0,
-            'currency'      => 'EUR',
-            'startAt'       => '2026-05-22T14:00:00+02:00',
-            'endAt'         => '2026-05-22T15:30:00+02:00',
-        ];
-
-        $summary = $this->service->pseudonymizeCustomerBookings('cust-7');
-
-        // Both records still exist (Boekhoudplicht retention).
-        $this->assertCount(2, $this->objectService->bookings);
-        $this->assertSame(2, $summary['bookings']);
-
-        // Aggregate-relevant fields untouched: total revenue and counts are preserved.
-        $total = 0.0;
-        foreach ($this->objectService->bookings as $b) {
-            $total += (float) $b['price'];
-            $this->assertSame('EUR', $b['currency']);
-            $this->assertArrayHasKey('serviceId', $b);
-            $this->assertArrayHasKey('startAt', $b);
-            $this->assertArrayHasKey('status', $b);
-        }
-
-        $this->assertSame(100.0, $total);
-
-        // Each record carries a pseudonymisation timestamp.
-        foreach ($this->objectService->bookings as $b) {
-            $this->assertArrayHasKey('pseudonymizedAt', $b);
-            $this->assertNotEmpty($b['pseudonymizedAt']);
-        }
-    }//end testPseudonymizationRetainsRecordsAndAggregates()
-
-    /**
-     * Other customers' bookings are not touched.
-     */
-    public function testPseudonymizationOnlyTouchesMatchingCustomer(): void
-    {
-        $this->objectService->bookings['b1'] = [
-            'bookingId'     => 'b1',
-            'customerId'    => 'cust-7',
-            'customerName'  => 'Sarah de Vries',
-            'customerEmail' => 'sarah@example.com',
-        ];
-        $this->objectService->bookings['b2'] = [
-            'bookingId'     => 'b2',
-            'customerId'    => 'cust-other',
-            'customerName'  => 'Other Person',
-            'customerEmail' => 'other@example.com',
-        ];
-
-        $this->service->pseudonymizeCustomerBookings('cust-7');
-
-        $this->assertSame(hash('sha256', 'Sarah de Vries'), $this->objectService->bookings['b1']['customerName']);
-        $this->assertSame('Other Person', $this->objectService->bookings['b2']['customerName']);
-        $this->assertSame('other@example.com', $this->objectService->bookings['b2']['customerEmail']);
-    }//end testPseudonymizationOnlyTouchesMatchingCustomer()
-
-    /**
-     * Missing or empty fields are nulled (not hashed to a constant).
-     */
-    public function testPseudonymizationHandlesMissingFields(): void
-    {
-        $this->objectService->bookings['b1'] = [
-            'bookingId'    => 'b1',
-            'customerId'   => 'cust-7',
-            'customerName' => 'Sarah',
-            // No email, no phone.
-        ];
-
-        $this->service->pseudonymizeCustomerBookings('cust-7');
-
-        $stored = $this->objectService->bookings['b1'];
-        $this->assertSame(hash('sha256', 'Sarah'), $stored['customerName']);
-        $this->assertNull($stored['customerEmail']);
-        $this->assertNull($stored['customerPhone']);
-    }//end testPseudonymizationHandlesMissingFields()
-
-    /**
-     * Returns the empty summary (and skips) when register or schema not configured.
-     */
-    public function testPseudonymizationSkipsWhenSchemaUnconfigured(): void
-    {
-        $appConfig = $this->createMock(IAppConfig::class);
-        $appConfig->method('getValueString')->willReturnCallback(
-            static fn (string $app, string $key, string $default=''): string => $default
-        );
-
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturn($this->objectService);
-        $logger = $this->createMock(LoggerInterface::class);
-
-        $service = new DataDeletionService(
-            container: $container,
-            appConfig: $appConfig,
-            logger: $logger,
-        );
-
-        $summary = $service->pseudonymizeCustomerBookings('cust-7');
-
-        $this->assertSame(['bookings' => 0], $summary);
-        $this->assertSame([], $this->objectService->saves);
-    }//end testPseudonymizationSkipsWhenSchemaUnconfigured()
-
-    /**
-     * REQ-AVG-014 boundary: the Art-17 find delegates to OR's generic
-     * ObjectService::findAll with a PLAIN equality filter on `customerId`,
-     * scoped to the booking register + schema — NOT the admin-gated OR
-     * DsarService PII-index path (which soft-deletes whole objects). Pinning
-     * this guards against a future Seam-3 migration changing the find surface
-     * or the field-level pseudonymise-and-keep erasure semantics.
-     */
-    public function testFindUsesPlainCustomerIdEqualityScopedToBookingSchema(): void
-    {
-        $this->objectService->bookings['b1'] = [
-            'bookingId'    => 'b1',
-            'customerId'   => 'cust-7',
-            'customerName' => 'Sarah',
-        ];
-
-        $this->service->pseudonymizeCustomerBookings('cust-7');
-
-        // Exactly a plain equality filter on the customer identifier.
-        $this->assertSame(['customerId' => 'cust-7'], $this->objectService->lastFilters);
-        // Scoped to the configured booking register + schema (not a global PII scan).
-        $this->assertSame('pipelinq', $this->objectService->expectedRegister);
-        $this->assertSame('booking', $this->objectService->expectedSchema);
-        // The record is retained (no soft-delete / no object removal).
-        $this->assertArrayHasKey('b1', $this->objectService->bookings);
-    }//end testFindUsesPlainCustomerIdEqualityScopedToBookingSchema()
+        $this->assertNotNull($this->erase->lastErase);
+        $this->assertTrue($this->erase->lastErase['dryRun']);
+    }//end testDryRunPassesThroughWithoutMutating()
 }//end class
