@@ -301,20 +301,6 @@
 			"order": 215
 		},
 		{
-			"id": "StufEndpoints",
-			"label": "StUF endpoints",
-			"icon": "icon-category-integration",
-			"route": "StufEndpoints",
-			"order": 216
-		},
-		{
-			"id": "StufAuditLog",
-			"label": "StUF audit log",
-			"icon": "icon-category-monitoring",
-			"route": "StufAuditLog",
-			"order": 217
-		},
-		{
 			"id": "FeaturesRoadmapMenu",
 			"label": "Features & roadmap",
 			"icon": "icon-toggle",
@@ -1891,30 +1877,6 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "exportRun"
-			}
-		},
-		{
-			"id": "StufEndpoints",
-			"_note": "StufEndpoints.vue is an in-app settings surface (NcSettingsSection listing the configured StUF SOAP endpoints and their toggles); it edits app configuration rather than register objects, so no object-oriented page type applies.",
-			"route": "/stuf/endpoints",
-			"type": "custom",
-			"title": "StUF endpoints",
-			"component": "StufEndpointsView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "stufEndpoint"
-			}
-		},
-		{
-			"id": "StufAuditLog",
-			"_note": "StufAuditLog.vue is a bespoke StUF message audit viewer inside an NcSettingsSection, with type/status NcSelect filters over the request/response envelope log; the message-envelope filtering and presentation has no standard list page-type equivalent.",
-			"route": "/stuf/audit-log",
-			"type": "custom",
-			"title": "StUF audit log",
-			"component": "StufAuditLogView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "stufMessage"
 			}
 		}
 	]

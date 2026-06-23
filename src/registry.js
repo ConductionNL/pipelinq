@@ -195,12 +195,6 @@ import CtiPageView from './views/settings/CtiPage.vue'
 //     encrypted-at-rest secrets and a per-provider "Verbinding testen" button.
 //     Lib gap: no payment-provider-settings page type. ---
 import PaymentSettingsForm from './views/settings/PaymentSettingsForm.vue'
-// --- StUF-ZKN/BG adapter (stuf-zkn-bg-adapter): admin endpoint list with
-//     per-endpoint circuit-breaker health badge and per-call audit log
-//     (REQ-STUF-008, REQ-STUF-011). Lib gap: no envelope-style audit-log
-//     page type with CSV export and inline XML inspection. ---
-import StufEndpointsView from './views/settings/StufEndpoints.vue'
-import StufAuditLogView from './views/settings/StufAuditLog.vue'
 
 // --- Billing categories (billable-categories-and-tags): list view with a
 //     bespoke color-swatch + DBA / active badge column layout the
@@ -907,18 +901,6 @@ const registry = {
 		kind: 'page',
 		component: ProjectActivityList,
 		_note: 'Time-entry list for one project with date/user/task/billable filters and a totals row that applies the billable inheritance chain (REQ-PTH-004 / REQ-PTH-005 / REQ-PTH-008).',
-	},
-
-	// --- StUF-ZKN/BG adapter (stuf-zkn-bg-adapter). ---
-	StufEndpointsView: {
-		kind: 'page',
-		component: StufEndpointsView,
-		_note: 'StUF endpoint configuration list with per-endpoint circuit-breaker health badge (REQ-STUF-011); lib gap: no admin page type that shows the running circuit-breaker state alongside the endpoint row.',
-	},
-	StufAuditLogView: {
-		kind: 'page',
-		component: StufAuditLogView,
-		_note: 'StUF per-call audit log inspector (REQ-STUF-008): direction + bericht + status filters, inline envelope XML inspection, retries[] history and fout payload; CSV export. Lib gap: no envelope-style audit-log page type.',
 	},
 
 	// --- Marketing blasts (marketing-segmentation-and-blast slice 07). The
