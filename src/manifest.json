@@ -819,7 +819,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "complaint",
-				"sidebar": true,
+				"sidebar": { "enabled": true },
 				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
 		},
@@ -902,7 +902,7 @@
 						"props": { "entityId": "@objectId", "entityType": "contact" }
 					}
 				],
-				"sidebar": true
+				"sidebar": { "enabled": true }
 			}
 		},
 		{
@@ -1057,7 +1057,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "contactmoment",
-				"sidebar": true,
+				"sidebar": { "enabled": true },
 				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
 		},
@@ -1113,7 +1113,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "task",
-				"sidebar": true,
+				"sidebar": { "enabled": true },
 				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
 		},
@@ -1169,7 +1169,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "product",
-				"sidebar": true,
+				"sidebar": { "enabled": true },
 				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
 		},
@@ -1309,7 +1309,7 @@
 						"props": { "refundId": "@objectId" }
 					}
 				],
-				"sidebar": true
+				"sidebar": { "enabled": true }
 			}
 		},
 		{
@@ -1358,7 +1358,7 @@
 						"props": { "shiftId": "@objectId" }
 					}
 				],
-				"sidebar": true
+				"sidebar": { "enabled": true }
 			}
 		},
 		{
@@ -1414,7 +1414,7 @@
 						"props": { "zReportId": "@objectId" }
 					}
 				],
-				"sidebar": true
+				"sidebar": { "enabled": true }
 			}
 		},
 		{
@@ -1493,7 +1493,7 @@
 						"props": { "transactionId": "@objectId" }
 					}
 				],
-				"sidebar": true
+				"sidebar": { "enabled": true }
 			}
 		},
 		{
@@ -1607,7 +1607,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "queue",
-				"sidebar": true,
+				"sidebar": { "enabled": true },
 				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
 		},
