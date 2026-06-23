@@ -40,6 +40,7 @@ class SettingsService
 {
     private const CONFIG_KEYS = [
         'register',
+        'currency',
         'client_schema',
         'contact_schema',
         'lead_schema',
