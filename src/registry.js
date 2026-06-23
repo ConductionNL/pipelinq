@@ -293,7 +293,7 @@ import AvgIntakeView from './views/avg/AvgIntakeView.vue'
 //     resolution modal live in one kind:'section' bodyWidget. ---
 import MdmMasterEntityListView from './views/mdm/MdmMasterEntityListView.vue'
 import MdmGoldenRecordSection from './components/mdm/MdmGoldenRecordSection.vue'
-import MdmDataQualityDashboard from './views/mdm/MdmDataQualityDashboard.vue'
+import MdmDataQualitySection from './components/mdm/MdmDataQualitySection.vue'
 import MdmDuplicateCandidatesDashboard from './views/mdm/MdmDuplicateCandidatesDashboard.vue'
 import MdmSyncQueueAdmin from './views/mdm/MdmSyncQueueAdmin.vue'
 
@@ -1048,10 +1048,10 @@ const registry = {
 		component: MdmGoldenRecordSection,
 		_note: 'MDM golden-record in-body section for the declarative type:"detail" MdmMasterEntityDetail page. The masterEntity register fields auto-render and its raw sourceRecord children are a relatedCollections table; this section adds the server-COMPUTED golden record (merge-rule survivorship) with per-attribute provenance + the derived lineage, fetched from GET /api/mdm/entities/{id} (a projection, not stored flat on the schema), plus the conflict-resolution modal that recomputes the golden record on save. Self-fetches by @objectId.',
 	},
-	MdmDataQualityDashboard: {
-		kind: 'page',
-		component: MdmDataQualityDashboard,
-		_note: 'Aggregate quality buckets, worst-entity table and sync-queue health with dead-letter retry.',
+	MdmDataQualitySection: {
+		kind: 'section',
+		component: MdmDataQualitySection,
+		_note: 'In-body section for the declarative type:"dashboard" MdmDataQuality page (pipelinq-dashboards-declarative). The four headline KPIs (average quality score + good/fair/poor buckets) are endpoint-bound stat widgets reading GET /api/mdm/dashboard; this section hosts what the stat grid cannot express — the lowest-quality master-entity table, the sync-queue health cards, and the dead-letter retry table (Retry POSTs to /api/mdm/sync-queue/{id}/retry, a re-queue side-effect). Self-fetches /api/mdm/dashboard.',
 	},
 	MdmDuplicateCandidatesDashboard: {
 		kind: 'page',
